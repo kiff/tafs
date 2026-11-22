@@ -25,7 +25,7 @@
   "taf.halt.resume_prompt": "استئناف {taf}",
   "taf.halt.resume_with": "الاستئناف بـ {biometry}",
   "taf.halt.resuming": "جارٍ الاستئناف…",
-  "taf.halt.title": "التجميد",
+  "taf.halt.title": "تجميد",
   "taf.halt.title_all": "تجميد الكل",
   "taf.halt.who_holds": "من يمسك التجميد",
   "taf.its_work": "عمله",

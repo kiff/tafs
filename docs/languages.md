@@ -578,8 +578,8 @@ menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i 
 
 ## Batch 3: Arabic (being written)
 
-Arabic is the first right-to-left language the apps ship (the owner said yes, 21 Nov). Its catalog is in `all`, not `shipped`,
-until its review and the right-to-left PR that carries it ships.
+Arabic is the first right-to-left language the apps ship (the owner said yes, 21 Nov). Its right-to-left code shipped with
+tafs#1697; the owner's rule of 22 Nov (native reads gate nothing) puts its catalog in `shipped`, with tafs#1704.
 
 ### Arabic (ar)
 
@@ -634,7 +634,7 @@ Every count line in `ar/` writes all six. A line may leave the number out in `ze
 | Inbox | الوارد |
 | Overview | نظرة عامة |
 | Calendar | التقويم |
-| Setup (the agent's name / a screen title) | Setup in Latin letters / الإعداد (`setup.title`, `taf.section.setup`) |
+| Setup (a screen title; the agent's name stays Setup in Latin letters) | الإعداد |
 | Usage | الاستخدام |
 | brief | الملخص |
 | receipt | الإيصال |
