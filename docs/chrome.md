@@ -74,8 +74,12 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    `POST /v1/extension/pairings/{lookup}` (unauthenticated, rate-limited per lookup) with:
    ```
    {key: <SPKI, base64url>, version, manifest_hash (64 lower-case hex), browser, os, kiff_offer,
-    proof: HMAC(secret, "tafs-chrome/ext/v1" ‖ key ‖ kiff_offer)}
+    proof: HMAC(secret, "tafs-chrome/ext/v1" ‖ key ‖ kiff_offer),
+    profile_id, one_touch: true,
+    one_touch_proof: HMAC(secret, "tafs-chrome/ext-one-touch/v1" ‖ key ‖ kiff_offer)}
    ```
+   `profile_id`, `one_touch` and `one_touch_proof` are the newer fields (below). A planque that predates them refuses the
+   body (`400`, "unknown field"), so the extension sends the offer once more without them: it then pairs the old way.
 3. **The phone reads the pairing** (`GET …/pairings/{pairing}`: `status` is `waiting_for_chrome`, then
    `waiting_for_phone` with the extension's `key`, `key_sha256`, `proof`, `version`, `browser` and `os`, then
    `confirmed`; `contested` when a second Chrome posted on the code, which planque then spends; an expired pairing
@@ -103,6 +107,11 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
      of the three is refused. Without them `phone_sig` is checked over the pairing alone, as before.
    - **The offer carries `profile_id`**, an id the extension keeps for its Chrome profile (see "What's kept"). The phone
      uses it only to pre-select which Chrome a re-pairing replaces; it isn't covered by the proof and authenticates nothing.
+   - **`one_touch: true` says this extension checks the combined signature**, and `one_touch_proof` is what makes the flag
+     the extension's: the key's proof under its own label, so it is made only with the code's secret, which planque never
+     sees. The phone sends the combined signature only when `one_touch_proof` verifies, else the two signatures of today,
+     so a phone that doesn't know the flag, and an extension that predates it, pair as before. The key's `proof` is
+     unchanged, as the phones verify it today.
    - The secret then leaves memory.
    - A new phone (a new device key) pairs again; planque never carries a phone key over.
 - **Several Chromes:** each paired Chrome has its name, and a grant names the one it uses.

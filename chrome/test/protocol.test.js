@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat, signingBytes, requestsMessage } from "../src/crypto.js";
 import { profileId } from "../src/store.js";
 import { Nonces, checkStep, clockOffset, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS, MAX_OFFSET_MS, SKEW_MS, SKEW_KNOWN_MS } from "../src/protocol.js";
-import { parseCode, offer, checkConfirmation, extensionProof, ALPHABET, hex } from "../src/pairing.js";
+import { parseCode, offer, checkConfirmation, extensionProof, oneTouchProof, postOffer, ALPHABET, hex } from "../src/pairing.js";
 import { Relay, MAX_RESULT_BYTES } from "../src/relay.js";
 
 const pub = async (k) => b64u(await publicSPKI(k.publicKey));
@@ -184,6 +184,52 @@ test("one fingerprint confirms the pairing and KIFF's request: the extension che
     assert.equal(await checkConfirmation(secret, ext, { ...alone, [k]: "x" }), null, "a pairing-only signature with only " + k + " added");
   }
   assert.equal(await checkConfirmation(secret, ext, { ...answer, tenant: undefined, signed_at: undefined, kiff_request_sha256: undefined }), null, "a combined signature given as a pairing-only one");
+});
+
+test("the offer says the extension checks one fingerprint, under a proof only the code's holder can make", async () => {
+  const secret = "29XMDPQRSTVWXYZ23";
+  const ext = await newKeyPair();
+  const spki = await publicSPKI(ext.publicKey);
+  const offered = await offer(secret, ext, { version: "0.1.0", manifestHash: "h", browser: "Chrome 131", os: "macOS", kiffOffer: '{"v":"kiff.pair.v1"}' });
+  assert.equal(offered.one_touch, true);
+  assert.equal(offered.one_touch_proof, await oneTouchProof(secret, spki, '{"v":"kiff.pair.v1"}'), "the phone recomputes it from the secret, the key and the KIFF offer");
+  assert.notEqual(offered.one_touch_proof, offered.proof, "its own label: the flag's proof is never the key's proof");
+  assert.notEqual(offered.one_touch_proof, await oneTouchProof("ZZZZZZZZZZZZZZZZZ", spki, '{"v":"kiff.pair.v1"}'), "under the secret, which planque never sees");
+  assert.notEqual(offered.one_touch_proof, await oneTouchProof(secret, spki, '{"v":"other"}'), "covers the KIFF offer, as the key's proof does");
+  assert.equal(offered.proof, await extensionProof(secret, spki, '{"v":"kiff.pair.v1"}'), "the key's proof is what today's phones check, unchanged");
+});
+
+test("an offer planque refuses for a field it doesn't know goes again without the newer fields, and only then", async () => {
+  const body = { key: "k", version: "0.1.0", manifest_hash: "h", browser: "Chrome 131", os: "macOS", proof: "p", profile_id: "a".repeat(32), one_touch: true, one_touch_proof: "q" };
+  const calls = [];
+  const planque = (strict) => async (url, init) => {
+    const sent = JSON.parse(init.body);
+    calls.push(sent);
+    const unknown = Object.keys(sent).find((k) => strict.includes(k));
+    return unknown ? new Response(JSON.stringify({ error: "the body must be a JSON object with the documented fields: unknown field \"" + unknown + "\"" }), { status: 400 }) : new Response("{}", { status: 202 });
+  };
+  // A planque that takes everything: one request, everything sent.
+  assert.equal((await postOffer(planque([]), "u", body)).status, 202);
+  assert.deepEqual(calls, [body]);
+  // One that predates the fields: a second request, without them and with all the rest.
+  calls.length = 0;
+  assert.equal((await postOffer(planque(["profile_id", "one_touch", "one_touch_proof"]), "u", body)).status, 202);
+  assert.equal(calls.length, 2);
+  assert.deepEqual(calls[1], { key: "k", version: "0.1.0", manifest_hash: "h", browser: "Chrome 131", os: "macOS", proof: "p" });
+  // A 400 for another reason is the answer, not a reason to send less; nor is any other status.
+  calls.length = 0;
+  const other = async (url, init) => (calls.push(init.body), new Response(JSON.stringify({ error: "the proof does not match" }), { status: 400 }));
+  assert.equal((await postOffer(other, "u", body)).status, 400);
+  assert.equal(calls.length, 1);
+  calls.length = 0;
+  const refused = async (url, init) => (calls.push(init.body), new Response("{}", { status: 403 }));
+  assert.equal((await postOffer(refused, "u", body)).status, 403);
+  assert.equal(calls.length, 1);
+  // An offer without the newer fields isn't sent twice either.
+  calls.length = 0;
+  const { profile_id: _a, one_touch: _b, one_touch_proof: _c, ...plain } = body;
+  assert.equal((await postOffer(planque(["key"]), "u", plain)).status, 400);
+  assert.equal(calls.length, 1);
 });
 
 test("what the phone signs once for two requests is the same lines KIFF and planque build, the hashes sorted", () => {

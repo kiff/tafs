@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { LABEL, b64u, fromB64u, hmac, sha256, concat, signingBytes } from "../src/crypto.js";
-import { extensionProof, hex } from "../src/pairing.js";
+import { extensionProof, oneTouchProof, hex } from "../src/pairing.js";
 
 const v = JSON.parse(readFileSync(new URL("../../vectors/chrome-pairing.json", import.meta.url), "utf8"));
 
@@ -20,6 +20,8 @@ test("the extension's proof, the phone's proof and the signed bytes are the vect
   assert.equal(b64u(signingBytes(LABEL.pair, body)), v.signed_bytes);
   // With the KIFF device's offer, the proof covers it too, as the phones check it.
   assert.equal(await extensionProof(v.secret, chromeKey, v.kiff_offer), v.extension_proof_with_kiff_offer);
+  assert.equal(await oneTouchProof(v.secret, chromeKey, v.kiff_offer), v.one_touch_proof_with_kiff_offer, "the proof of the one-fingerprint flag, written apart in Python");
+  assert.notEqual(v.one_touch_proof_with_kiff_offer, v.extension_proof_with_kiff_offer);
 });
 
 // vectors/chrome-grant.json and chrome-sensitive.json: what the phones sign when they approve a browser grant, and the

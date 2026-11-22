@@ -17,6 +17,7 @@ export const LABEL = Object.freeze({
   sites: "tafs-chrome/sites/v1", // the phone signs a grant's sites when the owner approves it
   screenshot: "tafs-chrome/screenshot/v1", // the extension signs the picture it keeps of an act, for planque to store against that step
   extProof: "tafs-chrome/ext/v1", // HMAC: the extension's key, under the pairing code's secret
+  extOneTouch: "tafs-chrome/ext-one-touch/v1", // HMAC: the same, under another label: this extension checks one fingerprint for the pairing and KIFF's request
   phoneProof: "tafs-chrome/phone/v1", // HMAC: the phone's key and the extension's, under the same secret
 });
 
