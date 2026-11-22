@@ -2234,10 +2234,10 @@
     <string name="settings_sign_in_code_not_available">Кодоор нэвтрэх боломж хараахан алга.</string>
     <string name="settings_sign_in_code_not_changed">Өөрчлөгдсөнгүй. %1$s</string>
     <string name="settings_sign_in_code_not_loaded">Энэ тохиргоог ачаалж чадсангүй. %1$s</string>
-    <string name="settings_sign_in_code_off">Унтарсан</string>
-    <string name="settings_sign_in_code_on">Асаалттай</string>
+    <string name="settings_sign_in_code_off">Унтраасан</string>
+    <string name="settings_sign_in_code_on">Асаасан</string>
     <string name="settings_sign_in_code_saved">Хадгалагдлаа. Өөрчлөлтийн талаар имэйл илгээсэн.</string>
-    <string name="settings_sign_in_code_title">Нэвтрэлт</string>
+    <string name="settings_sign_in_code_title">Нэвтрэх</string>
     <string name="settings_sign_in_code_turn_off">Унтраах</string>
     <string name="settings_sign_in_code_turn_on">Асаах</string>
     <string name="settings_sign_in_code_turn_on_in_browser">Асаахад KIFF-ийн нэвтрэх хуудас нээгдэж, та тэнд өөрөө мөн гэдгээ баталгаажуулна.</string>
