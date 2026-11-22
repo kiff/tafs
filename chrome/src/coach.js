@@ -54,11 +54,14 @@ export class Coach {
     return this.coachID;
   }
 
-  /** The chat as the apps read it: the messages (owner's and Coach's), and whether Coach is at work. */
-  async thread() {
+  /**
+   * The chat as the apps read it: the messages (owner's and Coach's), and whether Coach is at work. `session` names one
+   * of the person's chats (`GET …/conversation/{session}`); none reads the live one.
+   */
+  async thread(session = null) {
     const id = await this.coach();
     if (!id) return null;
-    const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation");
+    const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation" + (session ? "/" + encodeURIComponent(session) : ""));
     return {
       messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, session: m.session })),
       working: t.working ? t.working.session : null,
@@ -67,12 +70,31 @@ export class Coach {
     };
   }
 
-  /** Sends the owner's words, with the shared page when there is one, into their live Coach chat. */
-  async send(words, { page = null, clientID } = {}) {
+  /**
+   * The person's chats with Coach, newest first, as the phone's Previous conversations lists them: `{session, title,
+   * updated}`. A chat they set aside carries `set_aside` and isn't offered.
+   */
+  async chats() {
+    const id = await this.coach();
+    if (!id) return [];
+    const r = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/chats");
+    return (r.chats || [])
+      .filter((c) => c && typeof c.session === "string" && c.session && !c.set_aside)
+      .map((c) => ({ session: c.session, title: typeof c.title === "string" ? c.title : "", updated: c.updated }));
+  }
+
+  /**
+   * Sends the owner's words, with the shared page when there is one: into the live chat, into the chat `session` names, or,
+   * with `newChat`, into a new one (the answer says its `session`).
+   */
+  async send(words, { page = null, clientID, session = null, newChat = false } = {}) {
     const id = await this.coach();
     if (!id) throw Object.assign(new Error("Coach isn't started"), { code: "no_coach" });
     const text = withSharedPage(words, page);
     if (!text) throw Object.assign(new Error("nothing to send"), { code: "empty" });
-    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", { text, client_message_id: clientID });
+    const body = { text, client_message_id: clientID };
+    if (newChat) body.new_chat = true;
+    else if (session) body.session = session;
+    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", body);
   }
 }

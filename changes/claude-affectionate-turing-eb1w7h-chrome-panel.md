@@ -1,0 +1,1 @@
+- **Chrome's side panel opens on a new conversation with Coach**, with New conversation and Previous conversations as on the phone, and every line of the panel, "Saved sign-ins" included, reads in the language of the browser in all 40 languages the apps speak ([docs/chrome.md](docs/chrome.md)).

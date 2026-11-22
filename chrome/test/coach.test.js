@@ -56,3 +56,31 @@ test("Coach is read and written through tafs cloud's own routes, as the session'
   assert.equal(sent[3].client_message_id, "m1");
   assert.equal(calls.filter((x) => x[1].endsWith("/v1/setup")).length, 1, "Coach's id read once");
 });
+
+test("Coach reads a chosen chat, lists the earlier ones, and sends into a chosen chat or a new one", async () => {
+  const calls = [];
+  const fetch = async (url, init) => {
+    calls.push([init.method, url, init.body && JSON.parse(init.body)]);
+    const body = url.endsWith("/v1/setup")
+      ? { setup: { id: "taf-coach" } }
+      : url.endsWith("/chats")
+        ? { chats: [{ session: "s2", title: "Late parcels", updated: "2026-11-22T10:00:00Z" }, { session: "s3", title: "Old", set_aside: true }, { title: "no session" }] }
+        : url.includes("/conversation")
+          ? { messages: [{ from: "owner", text: "hi", session: "s2" }], working: null }
+          : { session: "s9", new_session: true, run: "r1" };
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const c = new Coach({ token: "kiff_session_view_only", fetch, base: "https://cloud.test" });
+  assert.deepEqual(await c.chats(), [{ session: "s2", title: "Late parcels", updated: "2026-11-22T10:00:00Z" }], "set aside and nameless-session chats aren't offered");
+  await c.thread("s 2");
+  assert.equal(calls.at(-1)[1], "https://cloud.test/v1/tafs/taf-coach/conversation/s%202", "a chosen chat's own route, its session escaped");
+  await c.thread();
+  assert.equal(calls.at(-1)[1], "https://cloud.test/v1/tafs/taf-coach/conversation", "none reads the live chat");
+  await c.send("hello", { newChat: true, clientID: "m1" });
+  assert.deepEqual(calls.at(-1)[2], { text: "hello", client_message_id: "m1", new_chat: true });
+  await c.send("again", { session: "s9", clientID: "m2" });
+  assert.deepEqual(calls.at(-1)[2], { text: "again", client_message_id: "m2", session: "s9" });
+  await c.send("live", { clientID: "m3" });
+  assert.deepEqual(calls.at(-1)[2], { text: "live", client_message_id: "m3" }, "no choice: the live chat");
+});
+
