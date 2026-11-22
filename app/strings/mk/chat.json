@@ -116,7 +116,7 @@
   },
   "chat.worked_steps_failed": {
     "one": "Работеше {took} · {count} чекор, {failed} не успеа",
-    "other": "Работеше {took} · {count} чекори, {failed} не успеаа"
+    "other": "Работеше {took} · {count} чекори, {failed} не успеа"
   },
   "chat.working": "Работам…",
   "chat.working_on": "{step}…",
