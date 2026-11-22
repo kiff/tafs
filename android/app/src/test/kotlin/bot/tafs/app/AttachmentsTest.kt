@@ -378,6 +378,18 @@ class AttachmentsTest {
     assertFalse(copy.exists())
   }
 
+  @Test fun neitherTheIdNorTheNameCanReachOutsideTheAppsFolder() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/taf_1/attachments/../../shared_prefs", 200, """{"url":"https://storage.example/down/x?sig=s"}""")
+    transport.answer("GET /down/x", 200, "the receipt")
+    val m = model()
+    val copy = m.openFile(bot.tafs.app.model.AttachmentRef("../../shared_prefs", "pdf", "application/pdf", "..", 11), "refunds-1")!!
+    assertEquals("the receipt", copy.readText())
+    assertTrue("inside the app's folder", copy.canonicalPath.startsWith(opened.canonicalPath + java.io.File.separator))
+    assertEquals("a name that is only a path step is a plain file", "file", copy.name)
+    assertEquals("the id keeps only its plain characters", "shared_prefs", copy.parentFile!!.name)
+  }
+
   @Test fun aFileThatCantBeOpenedSaysSo() = runTest {
     reads()
     transport.answer("GET /v1/tafs/taf_1/attachments/$att2", 404, """{"error":"not found"}""")
