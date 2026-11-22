@@ -15,7 +15,13 @@ struct ScaledFont: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        content.font(.system(size: size, weight: weight, design: design))
+        content.font(.system(size: size, weight: weight, design: ScaledFont.design(design, language: Words.locale.language.languageCode?.identifier)))
+    }
+
+    /// The face a line is set in: the monospaced face pulls Arabic's joined letters apart (the labels and times that use it),
+    /// so in Arabic it is the plain face. Every other language keeps the design asked for.
+    static func design(_ asked: Font.Design, language: String?) -> Font.Design {
+        asked == .monospaced && language == "ar" ? .default : asked
     }
 }
 
