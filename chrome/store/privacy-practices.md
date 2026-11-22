@@ -21,8 +21,8 @@ Each permission in `chrome/manifest.json`, and why. The manifest asks for **no h
 | Permission | Justification |
 |---|---|
 | `storage` | `chrome.storage.session` only, which Chrome keeps in memory: the pairing code while it is being typed, the extension's own status for the side panel, and the list of phone releases already used, so a step replayed after Chrome stops the service worker can't run twice. Nothing is written to disk with it. (The pairing, the keys, the sealed sign-ins and the KIFF device session token live in IndexedDB, which `storage` does not cover; unpairing wipes them.) |
-| `alarms` | One alarm, once a minute: it wakes the service worker so the extension can reconnect to tafs cloud while it is paired, close the window of a run that nobody has sent a step to for a while, and close a connection that has been idle. |
-| `scripting` | Reads the page of a run's own tab as text and form fields, with password, card and code fields removed, and does one act (a click, a fill, a choice) that tafs cloud asked for and the extension checked. Also stops the page's dialogs from blocking a run's own tab. Only on a site the person has allowed. |
+| `alarms` | One alarm, once a minute: it wakes the service worker so the extension can reconnect to KIFF's connection service while it is paired, close the window of a run that nobody has sent a step to for a while, and close a connection that has been idle. |
+| `scripting` | Reads the page of a run's own tab as text and form fields, with password, card and code fields removed, and does one act (a click, a fill, a choice) that KIFF asked for and the extension checked. Also stops the page's dialogs from blocking a run's own tab. Only on a site the person has allowed. |
 | `sidePanel` | The side panel is the whole interface: pairing with the phone, what a taf is doing with Pause, Resume and Stop, the sites to allow, saved sign-ins, and Coach. |
 | `tabs` | Opens the run's own window and tabs, reads the address and title of a run's tab to keep it on the sites the run lists, and, when the person clicks "Share this page", reads the title and address of the tab in front, once. Never any other tab. |
 | `tabGroups` | Puts a run's tabs in one visible group named for the taf ("tafs · Refunds"), so the person can see which tabs a taf is using. |
@@ -36,8 +36,8 @@ Not requested: `debugger`, `downloads`, `cookies`, `history`, `bookmarks`, `webR
 ## Remote code
 
 **No.** All the code is in the package: no remote script, no `eval`, no `Function` from a string, and the extension
-pages' policy is `script-src 'self'; object-src 'none'`. What tafs cloud sends is data, a step (open this site, click
-this element), signed by tafs cloud, checked by the extension against the sites the run lists, and never run as code.
+pages' policy is `script-src 'self'; object-src 'none'`. What KIFF's connection service sends is data, a step (open this site, click
+this element), signed by it, checked by the extension against the sites the run lists, and never run as code.
 
 ## Data usage
 
@@ -45,7 +45,7 @@ Answers for the category checkboxes. "Collected" means it leaves the person's co
 
 | Category | Declare | What and why |
 |---|---|---|
-| Website content | **Yes** | The text and form fields of the pages a taf works on, on allowed sites, with password, card and one-time-code fields removed, secrets by their shape removed, and the page address's query and fragment dropped. It goes to tafs cloud (and the AI provider that runs the task) as part of the run. For each change a taf makes, KIFF keeps the page before and after, as text, for at most 30 days. The one page the person shares with Coach is the same, read once, on the person's click. |
+| Website content | **Yes** | The text and form fields of the pages a taf works on, on allowed sites, with password, card and one-time-code fields removed, secrets by their shape removed, and the page address's query and fragment dropped. It goes to KIFF's connection service (planque) and the AI provider that runs the task, as part of the run. For each change a taf makes, KIFF keeps the page before and after, as text, for at most 30 days. The one page the person shares with Coach is read the same way, once, on the person's click, and goes to tafs cloud as part of the chat. |
 | Personal communications | **Yes** | What the person types to Coach in the side panel, which is the same chat as in the tafs app. |
 | User activity | **Yes** | Each step a taf does goes on the Record with its site and the name of the field, never what was typed into a secret field. |
 | Web history | **Yes** (see the first judgment call) | The sites a taf opens in its own tabs, in the Record. Never the person's own browsing, and the extension has no `history` permission. |
