@@ -1,0 +1,27 @@
+{
+  "work.answer_within": "ຕອບພາຍໃນ",
+  "work.answer_within_days": {
+    "other": "{count} ມື້"
+  },
+  "work.answer_within_hours": {
+    "other": "{count} ຊົ່ວໂມງ"
+  },
+  "work.answer_within_line": "ທ່ານຈະຖືກບອກເມື່ອກໍລະນີລໍຖ້ານານກວ່ານີ້.",
+  "work.answer_within_none": "ບໍ່ໄດ້ຕັ້ງ",
+  "work.answer_within_not_set": "ຕັ້ງບໍ່ໄດ້. {why}",
+  "work.asking_kiff_run": "ກຳລັງຂໍໃຫ້ KIFF ເຮັດວຽກ {tool}…",
+  "work.did_not_stop": "ມັນບໍ່ໄດ້ຢຸດ: {why}",
+  "work.duration.minutes": "{minutes} ນາທີ {seconds} ວິນາທີ",
+  "work.duration.seconds": "{seconds} ວິນາທີ",
+  "work.its_runs": "ການເຮັດວຽກຂອງມັນ",
+  "work.not_read": "ອ່ານວຽກຂອງມັນບໍ່ໄດ້. {why}",
+  "work.not_sent_again": "ມັນບໍ່ໄດ້ຖືກສົ່ງອີກ. {why}",
+  "work.request.try_reply_now": "ລອງຕອບດຽວນີ້",
+  "work.requests_need_you": {
+    "other": "{count} ຄຳຂອງຕ້ອງການທ່ານ"
+  },
+  "work.send_again": "ສົ່ງອີກ",
+  "work.sending_again": "ກຳລັງສົ່ງອີກ…",
+  "work.stop_run": "ຢຸດການເຮັດວຽກ",
+  "work.stopped_part_way_before_finished": "{taf} ຢຸດກາງທາງ ກ່ອນຈະສຳເລັດ."
+}
