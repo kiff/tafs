@@ -1,1 +1,0 @@
-Testversie van tafs op Wear OS: praten met één tik, niet afgebroken als je pauzeert, tijden in elke chat, en het opent meteen. Het toont ook hoe lang het horloge op je telefoon wacht; die tijden bevatten nooit je berichten.

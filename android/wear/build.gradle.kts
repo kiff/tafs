@@ -36,7 +36,7 @@ android {
     versionCode = 400_000_010
     // "-test": an internal build for a test on a real watch, with the timing readout (below). A build for production has a
     // plain name, so it never shows it.
-    versionName = "0.4.5-timing"
+    versionName = "0.4.5"
   }
 
   buildTypes {
