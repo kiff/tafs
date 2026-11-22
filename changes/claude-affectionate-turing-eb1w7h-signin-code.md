@@ -1,2 +1,3 @@
 - **Sign in with a code sent by email, as a setting in the apps.** Account › Sign-in shows whether it is on, turns it off at once, and opens KIFF's sign-in page to turn it on (the page asks you to confirm it's you). It is off for everyone until they turn it on ([docs/ios-app.md](docs/ios-app.md)).
 - **The Chrome pairing code has a Copy button on iPhone and iPad.** It stays on the clipboard for a few minutes, so a code left there lapses with it ([docs/chrome.md](docs/chrome.md)).
+- **Chrome's pairing field takes the whole code.** The side panel's code field held 13 characters, so a pasted or typed code (21 characters, 26 with its dashes) was cut off. It now holds a whole code, with its dashes or spaces, in any case ([docs/chrome.md](docs/chrome.md)).
