@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name}-ийг хавсаргах боломжгүй.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs энэ файлыг хавсаргаж чадахгүй: энэ нь хүлээн авдаг төрөл эсвэл хэмжээ биш байна. Өөр файл сонгоно уу.",
+  "attachment.photo": "Зураг",
+  "attachment.photo_could_not_read": "Тэр зургийг уншиж чадсангүй.",
+  "attachment.photo_numbered": "Зураг {n}",
+  "attachment.too_large": "{name} нь {size}; дээд хэмжээ нь {limit}.",
+  "attachment.wrong_kind": "{name}-ийг хавсаргах боломжгүй. Зураг, PDF, текст, CSV, Markdown, Word болон Excel файлыг хавсаргаж болно."
+}

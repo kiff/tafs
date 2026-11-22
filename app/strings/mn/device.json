@@ -1,0 +1,7 @@
+{
+  "device.linux": "компьютер",
+  "device.mac": "Mac",
+  "device.phone": "утас",
+  "device.tablet": "таблет",
+  "device.windows": "Windows компьютер"
+}
