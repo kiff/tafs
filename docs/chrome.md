@@ -134,6 +134,12 @@ or switching never leaves a connection pointing at a Chrome that's gone. Nothing
    same `profile_id` (an id the extension keeps for its Chrome profile, kept across key changes and updates); else, when
    the extension was reinstalled and its id is new, the one Chrome on the same browser and system that hasn't connected
    since the new one arrived. The owner can pick none ("a new Chrome") or another. With nothing chosen, nothing moves.
+   Each connection's sites are signed for one Chrome (`tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`), so a
+   moved connection needs its sites for the new Chrome under the same fingerprint: the pairing body the phone signs
+   (`tafs-chrome/pair`, inside the one `phone_sig`) carries `carried: [{grant, sites}]`, one entry per connection the
+   replace moves, read from the old Chrome's signed sites. The extension keeps each entry as that grant's signed sites,
+   as if the phone had signed them for this Chrome; planque moves exactly those grants and no other. A connection the
+   phone didn't list stays on the old Chrome and ends with it (3).
 2. **"Your Chrome" is a choice per connection.** Each browser connection names one Chrome. A new connection takes the most
    recently approved Chrome by default; Coach says which and the owner can pick another. Switching an existing
    connection to another Chrome is one signed planque call (`PUT /v1/accounts/{t}/grants/{grant}/chrome {chrome_id}`,
