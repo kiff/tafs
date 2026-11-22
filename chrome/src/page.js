@@ -481,28 +481,57 @@
    * Puts an opaque box over each secret field, and says whether every one is covered: `{ok, masked}`. `ok` is false when a
    * field's middle shows something that isn't its box (the picture would show the field), and then nothing is captured.
    */
+  const MAX_TEXT_NODES = 6000;
+
+  /** The page rectangles of the text in visible text nodes that looks like a card number or a key (`TafsMask.secretSpans`). */
+  function secretTextRects() {
+    const rects = [];
+    const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT);
+    let seen = 0;
+    for (let node = walker.nextNode(); node && seen < MAX_TEXT_NODES; node = walker.nextNode()) {
+      seen++;
+      const text = node.nodeValue || "";
+      if (text.length < 13) continue;
+      const parent = node.parentElement;
+      if (!parent || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/.test(parent.tagName) || !visible(parent)) continue;
+      for (const [start, end] of M.secretSpans(text)) {
+        const range = document.createRange();
+        range.setStart(node, start);
+        range.setEnd(node, end);
+        for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) rects.push(r);
+      }
+    }
+    return rects;
+  }
+
+  function addShotBox(r) {
+    const box = document.createElement("div");
+    box.setAttribute("data-tafs-shot-mask", "");
+    box.style.cssText = `position:fixed;left:${r.left - 2}px;top:${r.top - 2}px;width:${r.width + 4}px;height:${r.height + 4}px;background:#000;z-index:2147483647;margin:0;padding:0;border:0;`;
+    document.documentElement.append(box);
+    shotBoxes.push(box);
+  }
+
+  /**
+   * Puts an opaque box over each secret field and each run of text that looks like a card number or a key, and says whether
+   * every one is covered: `{ok, masked}`. `ok` is false when the middle of a covered spot shows something that isn't its box
+   * (the picture would show it), and then nothing is captured.
+   */
   function maskForShot() {
     unmaskShot();
     const fields = secretFields();
-    for (const el of fields) {
-      const r = el.getBoundingClientRect();
-      const box = document.createElement("div");
-      box.setAttribute("data-tafs-shot-mask", "");
-      box.style.cssText = `position:fixed;left:${r.left - 2}px;top:${r.top - 2}px;width:${r.width + 4}px;height:${r.height + 4}px;background:#000;z-index:2147483647;margin:0;padding:0;border:0;`;
-      document.documentElement.append(box);
-      shotBoxes.push(box);
-    }
+    const rects = [...fields.map((el) => el.getBoundingClientRect()), ...secretTextRects()];
+    for (const r of rects) addShotBox(r);
     let ok = true;
-    for (const el of fields) {
-      const r = el.getBoundingClientRect();
+    for (const r of rects) {
       const x = r.left + r.width / 2;
       const y = r.top + r.height / 2;
-      // A field scrolled out of the picture isn't in it.
+      // A spot scrolled out of the picture isn't in it.
       if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue;
       const top = document.elementFromPoint(x, y);
       if (!top || !top.hasAttribute("data-tafs-shot-mask")) ok = false;
     }
-    return { ok, masked: fields.length };
+    return { ok, masked: rects.length };
   }
 
   /** Takes the boxes away again. Safe to call twice. */
