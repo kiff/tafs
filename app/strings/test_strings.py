@@ -102,7 +102,7 @@ class SharedWords(unittest.TestCase):
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
         # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
         # ships only once every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr"])
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
         self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
@@ -220,7 +220,8 @@ class SharedWords(unittest.TestCase):
                 self.assertIn(key[:-len("_mac")], self.source, f"{key}: the phone's line beside it")
                 for text in generate.forms_of(line):
                     bare = generate.PLACEHOLDER.sub("", text).strip()
-                    self.assertTrue(bare[:1].isupper(), f"{lang} {key} doesn't open a sentence: {text!r}")
+                    # A script with no capitals (Arabic, Korean, Japanese) opens a sentence with its first letter.
+                    self.assertTrue(bare[:1].isupper() or bare[:1].lower() == bare[:1].upper(), f"{lang} {key} doesn't open a sentence: {text!r}")
                     self.assertTrue(bare.endswith((".", "!", "?", "。")), f"{lang} {key} doesn't end a sentence: {text!r}")
                     phone = self.lines[lang][key[:-len("_mac")]]
                     if "›" in (phone if isinstance(phone, str) else "") and key.startswith("voice."):

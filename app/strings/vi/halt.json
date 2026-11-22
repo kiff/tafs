@@ -1,0 +1,13 @@
+{
+  "halt.again": "Đóng băng lại",
+  "halt.all_now": "Đóng băng tất cả ngay",
+  "halt.explain.halted": "Đã đóng băng. Tiếp tục chỉ bắt đầu công việc mới.",
+  "halt.explain.halted_since": "Từ {time}. Tiếp tục chỉ bắt đầu công việc mới.",
+  "halt.explain.halting": "Không có gì mới bắt đầu. Trạng thái Đã đóng băng hiện ra khi KIFF và kết nối cùng xác nhận.",
+  "halt.explain.running_all": "Đóng băng dừng các tafs của bạn cho đến khi bạn tiếp tục. Một lệnh gọi đã gửi vẫn có thể đến nơi.",
+  "halt.explain.running_one": "Đóng băng dừng nó cho đến khi bạn tiếp tục. Một lệnh gọi đã gửi vẫn có thể đến nơi.",
+  "halt.halting_stops_no_run_starts": "Đóng băng dừng {who} cho đến khi bạn tiếp tục. Một lệnh gọi đã gửi vẫn có thể đến nơi.",
+  "halt.now": "Đóng băng ngay",
+  "halt.row_running": "Dừng nó cho đến khi bạn tiếp tục",
+  "halt.your_tafs_lower": "các tafs của bạn"
+}

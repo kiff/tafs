@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Özetler",
+  "push.channel.briefs_description": "Özetiniz, belirlenen saatlerde.",
+  "push.channel.holds_description": "Bir çağrı yanıtınızı bekliyor. Siz onaylayana kadar hiçbir şey gönderilmez.",
+  "push.channel.other": "Diğer uyarılar",
+  "push.channel.other_description": "Görev istekleri ve yanıtları, sessiz.",
+  "push.channel.urgent_description": "Bir sonraki özetinizi bekleyemeyenler, sesli.",
+  "push.open_needs_you": "Yanıtlamak için Sizi bekliyor'u açın.",
+  "push.open_taf": "Görmek için taf'ı açın.",
+  "push.open_usage": "Görmek için Plan ve kullanım'ı açın."
+}

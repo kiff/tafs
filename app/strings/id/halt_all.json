@@ -1,0 +1,15 @@
+{
+  "halt_all.description": "Menghentikan setiap taf sekaligus. Tidak ada yang baru dikirim sampai Anda melanjutkannya di tafs.",
+  "halt_all.failed": "tafs tidak dapat membekukan tafs Anda. {why} Buka tafs untuk membekukannya.",
+  "halt_all.halted": {
+    "other": "{count} taf dibekukan. Tidak ada yang baru dikirim sampai Anda melanjutkan."
+  },
+  "halt_all.halted_all": "Semua tafs Anda dibekukan. Tidak ada yang baru dikirim sampai Anda melanjutkan.",
+  "halt_all.halting": {
+    "other": "Membekukan {count} taf: tidak ada eksekusi yang dimulai. KIFF belum mengonfirmasi setiap bagian; tafs akan menampilkannya saat sudah."
+  },
+  "halt_all.halting_all": "Membekukan semua tafs Anda: tidak ada eksekusi yang dimulai. KIFF belum mengonfirmasi setiap bagian; tafs akan menampilkannya saat sudah.",
+  "halt_all.running": "tafs tidak dapat membekukan tafs Anda. Buka tafs untuk membekukannya.",
+  "halt_all.signed_out": "Anda keluar dari tafs. Masuk untuk membekukan tafs Anda.",
+  "halt_all.title": "Bekukan semua tafs"
+}

@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "สรุป",
+  "push.channel.briefs_description": "สรุปของคุณตามเวลาที่ตั้งไว้",
+  "push.channel.holds_description": "มีการเรียกที่ถูกพักไว้รอคำตอบของคุณ จะไม่มีอะไรถูกส่งจนกว่าคุณจะอนุมัติ",
+  "push.channel.other": "การแจ้งเตือนอื่น ๆ",
+  "push.channel.other_description": "คำขอให้ทำงานและคำตอบของคำขอ โดยไม่มีเสียง",
+  "push.channel.urgent_description": "สิ่งที่รอสรุปครั้งถัดไปของคุณไม่ได้ พร้อมเสียง",
+  "push.open_needs_you": "เปิดรอคุณอยู่เพื่อตอบ",
+  "push.open_taf": "เปิด taf เพื่อดู",
+  "push.open_usage": "เปิดแพ็กเกจและการใช้งานเพื่อดู"
+}

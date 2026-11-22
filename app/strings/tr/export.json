@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Sohbetleriniz dışa aktarılmadı. {why}",
+  "export.not_offered": "Dosyalar bu telefona kaydedilemedi. Biraz yer açıp tekrar deneyin.",
+  "export.own_chats_each_taf_coach": "Her taf'la olan kendi sohbetleriniz (Coach'unkiler dahil), eklediğiniz dosyaların adları ve notlarınız; okunabilir bir dosya ve JSON olarak. Bunları yalnızca siz dışa aktarabilirsiniz.",
+  "export.preparing": "Sohbetleriniz hazırlanıyor…",
+  "export.ready_share_again": "Hazır: {files}. Tekrar paylaş",
+  "export.row": "Sohbetlerimi dışa aktar",
+  "export.sign_in_first": "Sohbetlerinizi dışa aktarmak için KIFF ile oturum açın."
+}

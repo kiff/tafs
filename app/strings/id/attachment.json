@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} tidak dapat dilampirkan.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs tidak dapat melampirkan file ini: jenis atau ukurannya tidak diterima. Pilih file lain.",
+  "attachment.photo": "Foto",
+  "attachment.photo_could_not_read": "Foto itu tidak dapat dibaca.",
+  "attachment.photo_numbered": "Foto {n}",
+  "attachment.too_large": "{name} berukuran {size}; batas maksimalnya {limit}.",
+  "attachment.wrong_kind": "{name} tidak dapat dilampirkan. Yang bisa dilampirkan: foto, PDF, teks, CSV, Markdown, serta file Word dan Excel."
+}

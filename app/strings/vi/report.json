@@ -1,0 +1,17 @@
+{
+  "report.already": "Bạn đã báo cáo câu trả lời này rồi.",
+  "report.cant_from_here": "Không thể báo cáo câu trả lời này từ đây.",
+  "report.menu": "Báo cáo câu trả lời này",
+  "report.not_sent": "Báo cáo của bạn chưa được gửi. {why}",
+  "report.not_sent_why": "Chưa gửi: {failed}",
+  "report.note_hint": "Thêm ghi chú (không bắt buộc)",
+  "report.note_most_characters": "Ghi chú tối đa 1.000 ký tự.",
+  "report.person_kiff_reads_your_report": "Một người ở KIFF sẽ đọc báo cáo của bạn, cùng với câu trả lời đúng như đã viết.",
+  "report.reason.harmful": "Có hại",
+  "report.reason.offensive": "Xúc phạm",
+  "report.reason.other": "Khác",
+  "report.reason.wrong": "Sai",
+  "report.runs_not_loaded": "Không thể tải các lượt chạy của nó. {why}",
+  "report.thanks": "Cảm ơn. Ai đó ở KIFF sẽ đọc báo cáo của bạn.",
+  "report.what_wrong": "Có gì sai ở đó?"
+}

@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "摘要",
+  "push.channel.briefs_description": "在設定的時間送上您的摘要。",
+  "push.channel.holds_description": "有一項呼叫已保留，等待您的回覆。在您核准之前不會傳送任何內容。",
+  "push.channel.other": "其他通知",
+  "push.channel.other_description": "任務請求及其回覆，不發出聲音。",
+  "push.channel.urgent_description": "等不到下次摘要的事項，會發出聲音。",
+  "push.open_needs_you": "開啟「等您處理」以回覆。",
+  "push.open_taf": "開啟 taf 查看。",
+  "push.open_usage": "開啟「方案與用量」查看。"
+}

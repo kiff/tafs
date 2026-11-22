@@ -1,0 +1,7 @@
+{
+  "device.linux": "คอมพิวเตอร์",
+  "device.mac": "Mac",
+  "device.phone": "โทรศัพท์",
+  "device.tablet": "แท็บเล็ต",
+  "device.windows": "พีซี Windows"
+}

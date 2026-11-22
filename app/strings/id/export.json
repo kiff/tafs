@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Obrolan Anda tidak diekspor. {why}",
+  "export.not_offered": "File tidak dapat disimpan di ponsel ini. Kosongkan sedikit ruang, lalu coba lagi.",
+  "export.own_chats_each_taf_coach": "Obrolan Anda sendiri dengan setiap taf, termasuk obrolan Coach, nama file yang Anda lampirkan, dan catatan Anda, sebagai file yang dapat dibaca dan sebagai JSON. Hanya Anda yang dapat mengekspornya.",
+  "export.preparing": "Menyiapkan obrolan Anda…",
+  "export.ready_share_again": "Siap: {files}. Bagikan lagi",
+  "export.row": "Ekspor obrolan saya",
+  "export.sign_in_first": "Masuk dengan KIFF untuk mengekspor obrolan Anda."
+}

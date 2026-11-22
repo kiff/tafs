@@ -576,6 +576,191 @@ menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i 
 | receipt | potvrda |
 | Cancel / Continue | Odustanite / Nastavite |
 
+## Batch 3: Turkish, Indonesian, Vietnamese, Thai and Traditional Chinese (being written)
+
+For the countries whose language the apps don't have yet. Each catalog is in `all`, not `shipped`, until its review: no app
+shows it yet. Arabic is its own piece (tafs#1697), with the right-to-left rules.
+
+### Turkish (tr)
+
+Addressed as **siz** (the polite plural, as Turkish business software writes it); buttons are plain imperatives ("Onayla",
+"Reddet", "Devam et"), and sentences address the reader with -(y)In forms ("Tekrar deneyin"). taf, Card, Coach, KIFF and
+Setup are names and stay as they are. A value is a name and doesn't take Turkish's suffixes, so a line that would need
+one words around it: "{taf} taf'ı", "şu Card: {owner}", "bu {device} cihazı". A door is "kapı", a call "çağrı", a request
+"istek", a held call "tutulan çağrı", a receipt "makbuz", a brief "özet". Apple's menu paths are the Turkish ones ("Ayarlar",
+"Sistem Ayarları", "Gizlilik ve Güvenlik"). The plural forms are one and other, and a number takes the singular noun
+("5 görev").
+
+| English | Turkish |
+|---|---|
+| Needs you | Sizi bekliyor |
+| Approve / Approve once | Onayla / Bir kez onayla |
+| Refuse | Reddet |
+| held | tutuldu |
+| Halt / Halted | Dondur / Donduruldu |
+| Stopped | Durduruldu |
+| Pause / Paused | Duraklat / Duraklatıldı |
+| Resume | Sürdür |
+| Revoke | İptal et |
+| Record | Kayıt |
+| Connect / connection | Bağla / bağlantı |
+| Pair / Unpair | Eşleştir / Eşleştirmeyi kaldır |
+| Account | Hesap |
+| limit / spend limit | limit / harcama limiti |
+| credits / credit pack | krediler / kredi paketi |
+| passkey | geçiş anahtarı |
+| security key | güvenlik anahtarı |
+| Sign in / Sign out | Oturum aç / Oturumu kapat |
+| Inbox | Gelen kutusu |
+| Overview | Genel bakış |
+| Calendar | Takvim |
+| Usage | Kullanım |
+| Cancel / Continue | Vazgeç / Devam et |
+
+### Indonesian (id)
+
+Addressed as **Anda**; buttons are plain imperatives ("Setujui", "Tolak", "Lanjutkan"). taf, Card, Coach, KIFF and Setup are
+names and stay as they are. Indonesian doesn't decline or conjugate for a name, so "{taf}" stands where English has it.
+A door is "pintu", a call "panggilan", a request "permintaan", a held call "panggilan yang ditahan", a receipt "tanda
+terima", a brief "ringkasan". Apple's menu paths are the Indonesian ones ("Pengaturan", "Pengaturan Sistem", "Privasi &
+Keamanan"). There is one plural form (other): a number takes the same noun ("5 tugas").
+
+| English | Indonesian |
+|---|---|
+| Needs you | Menunggu Anda |
+| Approve / Approve once | Setujui / Setujui sekali |
+| Refuse | Tolak |
+| held | ditahan |
+| Halt / Halted | Bekukan / Dibekukan |
+| Stopped | Dihentikan |
+| Pause / Paused | Jeda / Dijeda |
+| Resume | Lanjutkan |
+| Revoke | Cabut |
+| Record | Catatan |
+| Connect / connection | Hubungkan / koneksi |
+| Pair / Unpair | Pasangkan / Lepas pasangan |
+| Account | Akun |
+| limit / spend limit | batas / batas pengeluaran |
+| credits / credit pack | kredit / paket kredit |
+| passkey | kunci sandi |
+| security key | kunci keamanan |
+| Sign in / Sign out | Masuk / Keluar |
+| Inbox | Kotak Masuk |
+| Overview | Ikhtisar |
+| Calendar | Kalender |
+| Usage | Penggunaan |
+| Cancel / Continue | Batal / Lanjutkan |
+
+### Vietnamese (vi)
+
+Addressed as **bạn**; buttons are plain verbs ("Phê duyệt", "Từ chối", "Tiếp tục") and sentences are plain statements with no
+sentence-final particles. taf, Card, Coach, KIFF and Setup are names and stay as they are. Vietnamese doesn't decline or
+conjugate for a name, so "{taf}" stands where English has it, and a possessive is "của {name}" ("Card của {owner}"). A door is
+"cửa", a call "lượt gọi", a request "yêu cầu", a held call "lượt gọi đang giữ", a receipt "biên nhận", a brief "bản tóm tắt",
+the dial "núm xoay". Apple's menu paths are the Vietnamese ones ("Cài đặt", "Cài đặt hệ thống", "Quyền riêng tư & Bảo mật").
+There is one plural form (other): a number takes the same noun ("5 nhiệm vụ").
+
+| English | Vietnamese |
+|---|---|
+| Needs you | Đang chờ bạn |
+| Approve / Approve once | Phê duyệt / Phê duyệt một lần |
+| Refuse | Từ chối |
+| held | đang giữ |
+| Halt / Halted | Đóng băng / Đã đóng băng |
+| Stopped | Đã dừng |
+| Pause / Paused | Tạm dừng / Đã tạm dừng |
+| Resume | Tiếp tục |
+| Revoke | Thu hồi |
+| Record | Sổ ghi |
+| Connect / connection | Kết nối / kết nối |
+| Pair / Unpair | Ghép đôi / Hủy ghép đôi |
+| Account | Tài khoản |
+| limit / spend limit | giới hạn / hạn mức chi tiêu |
+| credits / credit pack | tín dụng / gói tín dụng |
+| passkey | khóa truy cập |
+| security key | khóa bảo mật |
+| Sign in / Sign out | Đăng nhập / Đăng xuất |
+| Inbox | Hộp thư |
+| Overview | Tổng quan |
+| Calendar | Lịch |
+| Usage | Mức sử dụng |
+| Cancel / Continue | Hủy / Tiếp tục |
+
+### Thai (th)
+
+Polite but neutral: **คุณ** for "you", and no sentence-final particles (ครับ/ค่ะ), so a line reads the same to every reader.
+Buttons are plain verbs ("อนุมัติ", "ปฏิเสธ", "ดำเนินการต่อ"). taf, Card, Coach, KIFF and Setup are names and stay in Latin
+letters. Thai has no plural and doesn't decline, so a number takes a classifier or the bare noun ("5 งาน", "3 ครั้ง"), and a
+possessive is "ของ" ("Card ของ {owner}"). Words run together with no spaces, so a value that sits beside Thai text gets its
+space from the line, and a line that joins a value to a Thai word writes them without one ("{device}เครื่องนี้"). A
+`*_mac` sentence ends with a stop, as the test needs, though Thai ordinarily doesn't write one. A door is "ประตู", a call
+"การเรียก", a request "คำขอ", a held call "การเรียกที่พักไว้", a receipt "ใบเสร็จ", a brief "สรุป", the dial "ปุ่มหมุน".
+Apple's menu paths are the Thai ones ("การตั้งค่า", "การตั้งค่าระบบ", "ความเป็นส่วนตัวและความปลอดภัย"). There is one plural
+form (other).
+
+| English | Thai |
+|---|---|
+| Needs you | รอคุณอยู่ |
+| Approve / Approve once | อนุมัติ / อนุมัติครั้งเดียว |
+| Refuse | ปฏิเสธ |
+| held | พักไว้ |
+| Halt / Halted | ระงับ / ระงับแล้ว |
+| Stopped | หยุดแล้ว |
+| Pause / Paused | หยุดชั่วคราว / หยุดชั่วคราวแล้ว |
+| Resume | ทำต่อ |
+| Revoke | เพิกถอน |
+| Record | บันทึก |
+| Connect / connection | เชื่อมต่อ / การเชื่อมต่อ |
+| Pair / Unpair | จับคู่ / ยกเลิกการจับคู่ |
+| Account | บัญชี |
+| limit / spend limit | ขีดจำกัด / ขีดจำกัดการใช้จ่าย |
+| credits / credit pack | เครดิต / แพ็กเครดิต |
+| passkey | พาสคีย์ |
+| security key | กุญแจความปลอดภัย |
+| Sign in / Sign out | เข้าสู่ระบบ / ออกจากระบบ |
+| Inbox | กล่องข้อความ |
+| Overview | ภาพรวม |
+| Calendar | ปฏิทิน |
+| Usage | การใช้งาน |
+| Cancel / Continue | ยกเลิก / ดำเนินการต่อ |
+
+### Traditional Chinese (zh-Hant)
+
+Traditional characters, in the Taiwan register Apple's own Traditional Chinese uses ("設定", "系統設定", "隱私權與安全性"; on macOS 12
+"系統偏好設定", "安全性與隱私權"). Addressed as **您**, the polite form. Buttons are plain verbs ("核准", "拒絕", "繼續"). taf, Card,
+Coach, KIFF and Setup are names and stay in Latin letters. Chinese has no plural and doesn't decline, so a number takes a
+measure word ("5 個 taf", "3 次呼叫") and a possessive is "的" ("{owner}的 Card"). Punctuation is full-width ("，。：？") except
+inside placeholders and menu paths ("›"). A `*_mac` sentence ends with "。" and names macOS 12's path as the test needs.
+A door is "門", a call "呼叫", a request "請求", a held call "已保留的呼叫", a receipt "收據", a brief "摘要", the dial "旋鈕".
+There is one plural form (other). The code is `zh-Hant`: the plural table keys on `zh`, and the Android resource folder
+for it is `values-b+zh+Hant`, which `android.py`'s `folder()` writes as `values-zh-rHant` until the language ships.
+
+| English | Traditional Chinese |
+|---|---|
+| Needs you | 等您處理 |
+| Approve / Approve once | 核准 / 核准一次 |
+| Refuse | 拒絕 |
+| held | 已保留 |
+| Halt / Halted | 凍結 / 已凍結 |
+| Stopped | 已停止 |
+| Pause / Paused | 暫停 / 已暫停 |
+| Resume | 繼續 |
+| Revoke | 撤銷 |
+| Record | 紀錄 |
+| Connect / connection | 連接 / 連線 |
+| Pair / Unpair | 配對 / 取消配對 |
+| Account | 帳號 |
+| limit / spend limit | 上限 / 支出上限 |
+| credits / credit pack | 點數 / 點數包 |
+| passkey | 密碼金鑰 |
+| security key | 安全金鑰 |
+| Sign in / Sign out | 登入 / 登出 |
+| Inbox | 收件匣 |
+| Overview | 總覽 |
+| Calendar | 行事曆 |
+| Usage | 用量 |
+| Cancel / Continue | 取消 / 繼續 |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
