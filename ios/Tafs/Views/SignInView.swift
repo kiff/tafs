@@ -380,6 +380,7 @@ struct SettingsView: View {
                     Section { AIConsentRow() }
                 }
                 if model.mode == .kiff {
+                    Section(Words.Settings.SignInCode.title) { CodeSignInRow() }
                     Section {
                         NavigationLink { TimeZonePicker() } label: { LabeledContent(Words.Settings.timeZoneTitle, value: model.kiffAccount?.timeZone ?? "UTC") }
                     }
