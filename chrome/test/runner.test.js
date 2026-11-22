@@ -373,3 +373,20 @@ test("a window that can't be set up (the fence refuses) is closed, not left open
   assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/"), "nothing was loaded");
   assert.equal(r.active, false);
 });
+
+test("two runs opening together in a fresh worker: the stale-rule clear finishes before either fence is added, so neither is removed", async () => {
+  const c = fakeChrome();
+  const order = [];
+  c.declarativeNetRequest.getSessionRules = async () => {
+    await new Promise((r) => setTimeout(r, 20));
+    return [{ id: 900 }];
+  };
+  c.declarativeNetRequest.updateSessionRules = async (o) => {
+    c.calls.push(["dnr", o]);
+    if (o.addRules) order.push("add");
+    else if (o.removeRuleIds.includes(900)) order.push("clear");
+  };
+  const r = new Runner({ chrome: c, sleep: (ms) => new Promise((x) => setTimeout(x, ms > 5 ? 5 : ms)), paired: () => paired });
+  await Promise.all([r.handle(step()), r.handle(step({ run: "run_2", id: "op2" }))]);
+  assert.deepEqual(order, ["clear", "add", "add"], "one clear, before both fences");
+});

@@ -108,13 +108,13 @@ export class Runner {
    */
   async ruleIds(tabId) {
     const dnr = this.chrome.declarativeNetRequest;
-    if (!this.cleared) {
-      this.cleared = true;
-      if (dnr.getSessionRules) {
-        const left = await dnr.getSessionRules().catch(() => []);
-        if (left.length) await dnr.updateSessionRules({ removeRuleIds: left.map((r) => r.id) }).catch(() => {});
-      }
-    }
+    // One promise that every fence awaits, so a second run starting beside the first never has its rules removed by the clear.
+    this.clearing ||= (async () => {
+      if (!dnr.getSessionRules) return;
+      const left = await dnr.getSessionRules().catch(() => []);
+      if (left.length) await dnr.updateSessionRules({ removeRuleIds: left.map((r) => r.id) }).catch(() => {});
+    })();
+    await this.clearing;
     if (!this.fenceIds.has(tabId)) {
       this.fenceIds.set(tabId, this.nextFence);
       this.nextFence += 3;
