@@ -428,7 +428,7 @@ browser: {
 ## What's kept
 
 - **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
-  key), and the sealed sign-ins the owner saved, with their key. No page, step or value read is ever written to disk.
+  key, and the connections a re-pairing carried, `carried`, as the phone signed them), and the sealed sign-ins the owner saved, with their key. No page, step or value read is ever written to disk.
 - **A code being typed** waits in `chrome.storage.session`, which Chrome keeps in memory only.
 - **`profile_id`** is 16 random bytes in `chrome.storage.local`, made once: a re-pairing under a new key keeps it, so the
   phone can tell the same Chrome pairing again. Unpairing doesn't wipe it, and it is no secret. It isn't in

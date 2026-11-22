@@ -3,6 +3,7 @@
 // extension proves its key under the secret; the phone checks that proof, then signs, and proves its own key under the same
 // secret. So neither planque nor anyone between can put another key in either place.
 
+import { siteOK } from "./sites.js";
 import { LABEL, b64u, fromB64u, concat, hmac, sha256, sameBytes, verify, verifyBytes, requestsMessage, signingBytes, publicSPKI } from "./crypto.js";
 
 /** Lowercase hex, as `chrome_key_sha256` is written. */
@@ -103,13 +104,44 @@ export async function checkConfirmation(secret, keyPair, answer) {
     return null;
   }
   const body = { pairing, chrome_key_sha256: hex(ours), name, phone_key: phoneKey, phone_proof: phoneProof };
+  // A re-pairing's carried connections (docs/chrome.md "Your Chrome" 1) are inside what the phone signed, so they join the
+  // body as sent once they check out; a malformed list is no pairing.
+  let carried;
+  if (answer.carried !== undefined) {
+    carried = readCarried(answer.carried);
+    if (!carried) return null;
+    body.carried = carried;
+  }
   const together = TOGETHER.filter((k) => answer[k] !== undefined);
   if (together.length === 0) {
     if (!(await verify(phoneKey, LABEL.pair, body, phoneSig))) return null;
   } else if (!(await verifyTogether(phoneKey, body, phoneSig, answer))) {
     return null;
   }
-  return { chromeId, name, phoneKey };
+  return { chromeId, name, phoneKey, ...(carried ? { carried } : {}) };
+}
+
+/** Most connections one re-pairing carries, and most sites each (docs/chrome.md "Your Chrome" 1). */
+export const CARRIED_MAX = 50;
+export const CARRIED_SITES_MAX = 100;
+
+/**
+ * The connections a re-pairing carries, `[{grant, sites}]`, as the phone signed them, or null when the list is malformed:
+ * not a list, over 50 connections or 100 sites each, a connection with another key than `grant` and `sites`, a grant
+ * twice, a site that isn't one (siteOK: never a public suffix) or is named twice, or no site at all. The order is kept,
+ * since the phone's signature is over the list as it wrote it.
+ */
+export function readCarried(list) {
+  if (!Array.isArray(list) || list.length > CARRIED_MAX) return null;
+  const seen = new Set();
+  for (const e of list) {
+    if (!e || typeof e !== "object" || Array.isArray(e) || Object.keys(e).sort().join() !== "grant,sites") return null;
+    if (typeof e.grant !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(e.grant) || seen.has(e.grant)) return null;
+    seen.add(e.grant);
+    if (!Array.isArray(e.sites) || e.sites.length === 0 || e.sites.length > CARRIED_SITES_MAX) return null;
+    if (!e.sites.every((s) => siteOK(s) && s.length <= 253) || new Set(e.sites).size !== e.sites.length) return null;
+  }
+  return list.map((e) => ({ grant: e.grant, sites: [...e.sites] }));
 }
 
 /** The fields an answer carries when the phone signed the pairing and KIFF's view-only device with one fingerprint. */
