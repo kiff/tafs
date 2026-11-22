@@ -341,8 +341,9 @@ extension Date {
 /// unprefixed path, never `/en/`. A link to the English page from another language says so (`label`).
 enum Legal {
     /// The languages kiff.dev serves tafs's Terms and Privacy in, besides English. Traditional Chinese (`zh-Hant`) is served
-    /// under its language, `/zh/`: `Legal.language` is "zh" for it, as it is "pt" for pt-BR.
-    static let translated: Set<String> = ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh"]
+    /// under its language, `/zh/`, and Serbian in Latin script (`sr-Latn`) at `/sr/`: `Legal.language` is "zh" and "sr" for them, as it
+    /// is "pt" for pt-BR.
+    static let translated: Set<String> = ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "ar", "sr", "sq", "ka", "hy", "az", "bn", "he"]
 
     static var terms: URL { page("terms") }
     static var privacy: URL { page("privacy") }

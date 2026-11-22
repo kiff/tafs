@@ -117,6 +117,7 @@
     "Access review.csv": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown"
   },
   "Services/AppLanguage.swift": {
-    "zh-Hant": "a language tag (Traditional Chinese), data"
+    "zh-Hant": "a language tag (Traditional Chinese), data",
+    "sr-Latn": "a language tag (Serbian in Latin script), data"
   }
 }
