@@ -1373,3 +1373,18 @@ on KIFF's page. **Turn off** goes straight from the app (`PUT /v1/me/sign-in {"e
 about the change. **Turn on** opens KIFF's own `/dashboard/sign-in` in the private sheet, because turning it on needs a recent
 sign-in, which a device session never passes; the setting is read again when the sheet closes. When KIFF can't send codes
 (`available` false) the row says so and offers nothing.
+
+## Store status: a read-only look at App Store Connect
+
+`.github/workflows/store-status.yml` (by hand, and twice a day at 06:17 and 17:17 UTC) says where the App Store stands without
+anyone signing in to App Store Connect: for iPhone and iPad and for macOS, the newest two App Store versions with Apple's review
+state (`WAITING_FOR_REVIEW`, `IN_REVIEW`, `READY_FOR_SALE`, `REJECTED`, …), whether Apple has asked for something (a rejected
+version), and the latest TestFlight builds with their processing, internal and external states. It's `ios/scripts/asc-status.rb`,
+tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
+
+- **Read only:** it calls only `GET`; it uploads, marks and submits nothing, and has no way to.
+- **Prints only versions, build numbers and states:** no id, key, token, email or account detail, because the repository and
+  its Actions logs are public. The result is in the run's log and its summary.
+- **The key** is the `apple-release` environment's `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8`, which a run from `main` can read
+  (the scheduled and manual runs both are). It is written to the runner's temporary folder and removed at the end.
+- The macOS app is the same app record as the iPhone's and iPad's (universal purchase), so its versions are the `MAC_OS` ones.

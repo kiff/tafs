@@ -232,6 +232,9 @@ jobs:
       - name: Test the Beta testers script
         run: ruby ios/scripts/test_asc_beta.rb
 
+      - name: Test the store status script
+        run: ruby ios/scripts/test_asc_status.rb
+
       - name: Generate the Xcode project
         run: |
           brew install xcodegen

@@ -1,1 +1,1 @@
-Version de test de tafs sur Wear OS : parler d'un seul toucher, sans coupure quand vous marquez une pause, l'heure dans chaque chat, et elle s'ouvre tout de suite. Elle indique aussi combien de temps la montre attend votre téléphone ; ces durées ne contiennent jamais vos messages.
+tafs sur Wear OS parle désormais toutes les langues du téléphone, dont le japonais et le portugais brésilien. Quand votre téléphone ne répond pas, la montre en dit la raison, et elle s'ouvre aussitôt sur ce qu'elle a gardé.

@@ -269,7 +269,11 @@ console for review and restarted production's. Play's managed publishing is on s
 parameter (400, "Changes are sent for review automatically. The query parameter changesNotSentForReview must not be set.",
 21 Nov): on those words alone, and no others, the script commits the edit plainly (`commit`), and the release waits in
 "Changes ready to publish" until mac-local presses Publish. Any other refusal commits nothing. While a production review is in
-flight, no internal upload runs: mac-local says when (row 44's 0.4.4-timing waited for 128). It never touches production,
+flight, no internal upload runs: mac-local says when (row 44's 0.4.4-timing waited for 128). **Before merging a pull
+request that raises either `versionCode`**, Play Console's Publishing overview must list nothing saved and not yet sent for
+review: with managed publishing on, the plain commit sends every saved change for review with the release (on 22 Nov,
+132's commit sent a saved country expansion along with it). Managed publishing holds only the publishing, and Publish then
+sends every change that is ready, production's too, so whoever presses it checks that list first. It never touches production,
 closed or open testing, or a rollout: the track is fixed in the script, and its tests check
 it. It signs in with Google's workload identity federation (`google-github-actions/auth`,
 `PLAY_WIF_PROVIDER` and `PLAY_SERVICE_ACCOUNT`), a token for the Play Developer API that lasts
@@ -277,9 +281,15 @@ the run: no key file, and no secret holds a key. A bundle Play reads as another 
 than the build's commits nothing.
 - **Release notes** live in the repository, one folder per `versionCode`:
   `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
-  it-IT, pt-PT, nl-NL, pl-PL and, since 130, ko-KR (the listing's languages, `play_internal.py`'s `LOCALES`), each at most 500 characters. A pull request that raises
+  it-IT, pt-PT, nl-NL, pl-PL, since 130 ko-KR, and since 132 es-419 and pt-BR (the listing's languages, `play_internal.py`'s `LOCALES`), each at most 500 characters. A pull request that raises
   `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
   version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
+- **Where tafs stands on Play, read only** (`.github/workflows/play-status.yml`, by hand and at 06:17 and 17:17 UTC, beside
+  the App Store's `store-status.yml`): `android/play/play_status.py` opens an edit, reads every track and deletes the edit
+  unsaved, so nothing is uploaded, changed or sent for review, and managed publishing never sees it. It prints one line per
+  release (track, release name, status, version codes) to the run's summary, and nothing else: no ids, tokens or countries.
+  It can make only those three calls, by their exact shape, and the file never names Play's save call: the job checks that
+  with a grep before any token exists, and `test_play_status.py` checks it too. Same workload identity as the uploads.
 - **The Wear OS watch** has its own release job (`wear-release`), track (`wear:internal`) and variable (`WEAR_UPLOAD`),
   signed with the same upload key (docs/watch-wear.md, Versions). A run by hand builds the phone's bundle unless its
   `form` is `wear`.
