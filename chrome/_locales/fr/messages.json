@@ -75,5 +75,10 @@
   "vault_error": { "message": "Non enregistrée : un site doit être en https, et il faut un mot de passe." },
   "vault_remove": { "message": "Retirer" },
   "vault_with_username": { "message": "avec un nom d'utilisateur" },
-  "vault_one_per_site": { "message": "Une connexion par site : en enregistrer une autre pour le même site remplace la précédente." }
+  "vault_one_per_site": { "message": "Une connexion par site : en enregistrer une autre pour le même site remplace la précédente." },
+  "coach_new": { "message": "Nouvelle conversation" },
+  "coach_previous": { "message": "Conversations précédentes" },
+  "coach_previous_none": { "message": "Aucune conversation précédente." },
+  "coach_previous_error": { "message": "Impossible de charger les conversations précédentes." },
+  "coach_untitled": { "message": "Conversation" }
 }

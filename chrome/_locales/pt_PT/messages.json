@@ -75,5 +75,10 @@
   "vault_error": { "message": "Não foi guardado: um site precisa de https e de uma palavra-passe." },
   "vault_remove": { "message": "Remover" },
   "vault_with_username": { "message": "com nome de utilizador" },
-  "vault_one_per_site": { "message": "Um início de sessão por site: guardar outro para o mesmo site substitui o anterior." }
+  "vault_one_per_site": { "message": "Um início de sessão por site: guardar outro para o mesmo site substitui o anterior." },
+  "coach_new": { "message": "Nova conversa" },
+  "coach_previous": { "message": "Conversas anteriores" },
+  "coach_previous_none": { "message": "Não há conversas anteriores." },
+  "coach_previous_error": { "message": "Não foi possível carregar as conversas anteriores." },
+  "coach_untitled": { "message": "Conversa" }
 }

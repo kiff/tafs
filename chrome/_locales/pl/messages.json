@@ -75,5 +75,10 @@
   "vault_error": { "message": "Nie zapisano: witryna potrzebuje https i hasła." },
   "vault_remove": { "message": "Usuń" },
   "vault_with_username": { "message": "z nazwą użytkownika" },
-  "vault_one_per_site": { "message": "Jedno logowanie na witrynę: zapisanie kolejnego dla tej samej witryny zastępuje poprzednie." }
+  "vault_one_per_site": { "message": "Jedno logowanie na witrynę: zapisanie kolejnego dla tej samej witryny zastępuje poprzednie." },
+  "coach_new": { "message": "Nowa rozmowa" },
+  "coach_previous": { "message": "Poprzednie rozmowy" },
+  "coach_previous_none": { "message": "Brak wcześniejszych rozmów." },
+  "coach_previous_error": { "message": "Nie udało się wczytać wcześniejszych rozmów." },
+  "coach_untitled": { "message": "Rozmowa" }
 }

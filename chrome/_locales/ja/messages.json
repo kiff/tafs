@@ -75,5 +75,10 @@
   "vault_error": { "message": "保存できませんでした。サイトには https とパスワードが必要です。" },
   "vault_remove": { "message": "削除" },
   "vault_with_username": { "message": "ユーザー名あり" },
-  "vault_one_per_site": { "message": "サイトごとにサインインは 1 つ：同じサイトで別のものを保存すると置き換わります。" }
+  "vault_one_per_site": { "message": "サイトごとにサインインは 1 つ：同じサイトで別のものを保存すると置き換わります。" },
+  "coach_new": { "message": "新しい会話" },
+  "coach_previous": { "message": "以前の会話" },
+  "coach_previous_none": { "message": "以前の会話はありません。" },
+  "coach_previous_error": { "message": "以前の会話を読み込めませんでした。" },
+  "coach_untitled": { "message": "会話" }
 }

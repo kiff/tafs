@@ -75,5 +75,10 @@
   "vault_error": { "message": "Nicht gespeichert: Eine Website braucht https, und ein Passwort." },
   "vault_remove": { "message": "Entfernen" },
   "vault_with_username": { "message": "mit Benutzername" },
-  "vault_one_per_site": { "message": "Eine Anmeldung pro Website: Wenn du eine weitere für dieselbe Website speicherst, ersetzt sie die bisherige." }
+  "vault_one_per_site": { "message": "Eine Anmeldung pro Website: Wenn du eine weitere für dieselbe Website speicherst, ersetzt sie die bisherige." },
+  "coach_new": { "message": "Neues Gespräch" },
+  "coach_previous": { "message": "Frühere Gespräche" },
+  "coach_previous_none": { "message": "Keine früheren Unterhaltungen." },
+  "coach_previous_error": { "message": "Die früheren Unterhaltungen konnten nicht geladen werden." },
+  "coach_untitled": { "message": "Gespräch" }
 }
