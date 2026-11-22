@@ -914,6 +914,43 @@ plural noun from 2 ("5 detyra").
 | receipt | dëftesë |
 | Cancel / Continue | Anuloni / Vazhdoni |
 
+### Georgian (ka)
+
+Addressed as **თქვენ** (the polite plural); buttons are polite imperatives ("დაამტკიცეთ", "უარყავით", "გააგრძელეთ"). taf, Card, Coach,
+KIFF and Setup are names and stay as they are in Latin letters; Georgian's case endings join them with a hyphen ("taf-ს", "Card-ის",
+"KIFF-ში"), and a value is a name that takes none, so a line that would need one words around it: "{name}-ს", "ამ მოწყობილობაზე
+({device})". A door is "კარი", a call "ზარი", a request "მოთხოვნა", a held call "დაკავებული ზარი", a receipt "ქვითარი", a brief
+"მიმოხილვა". Apple's menu paths are the Georgian ones ("პარამეტრები", "სისტემის პარამეტრები", "კონფიდენციალურობა და უსაფრთხოება").
+Georgian has one plural form (one and other say the same): a number takes the singular noun ("5 ამოცანა").
+
+| English | Georgian |
+|---|---|
+| Needs you | გელოდებათ |
+| Approve / Approve once | დაამტკიცეთ / დაამტკიცეთ ერთხელ |
+| Refuse | უარყავით |
+| held | დაკავებული |
+| Halt / Halted | გააჩერეთ / გაჩერებულია |
+| Stopped | შეწყვეტილია |
+| Pause / Paused | დააპაუზეთ / დაპაუზებულია |
+| Resume | განაახლეთ |
+| Revoke | გააუქმეთ |
+| Record | ჩანაწერი |
+| Connect / connection | დააკავშირეთ / კავშირი |
+| Pair / Unpair | დააწყვილეთ / გააუქმეთ დაწყვილება |
+| Account | ანგარიში |
+| limit / spend limit | ლიმიტი / ხარჯვის ლიმიტი |
+| credits / credit pack | კრედიტები / კრედიტების პაკეტი |
+| passkey | პასკი |
+| security key | უსაფრთხოების გასაღები |
+| Sign in / Sign out | შესვლა / გასვლა |
+| Inbox | შემოსულები |
+| Overview | მიმოხილვა |
+| Calendar | კალენდარი |
+| Usage | გამოყენება |
+| brief | მიმოხილვა |
+| receipt | ქვითარი |
+| Cancel / Continue | გაუქმება / გააგრძელეთ |
+
 ## Batch 4 on Android: Serbian, Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
 
 Ready before their lines are written, so the strings PR only adds the words:
