@@ -76,6 +76,8 @@ class TafsUITestCase: XCTestCase {
         }
         let options = XCTExpectedFailure.Options()
         options.isStrict = false
+        // Only that failure: a crash, a missing element or any other issue in `typeText` still fails at once.
+        options.issueMatcher = { $0.compactDescription.contains("keyboard focus") }
         XCTExpectFailure("a system alert took the keyboard; the caller reads back what was typed and tries again", options: options) {
             field.typeText(text)
         }
