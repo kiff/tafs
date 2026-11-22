@@ -46,18 +46,20 @@ def glossary():
 
 
 def glossary_being_written():
-    """The tables under "Korean and Japanese", "Batch 1" and "Batch 2" (docs/languages.md): a language that ships before its column joins the
+    """The tables under "Korean and Japanese", "Batch 1", "Batch 2" and "Batch 3" (docs/languages.md): a language that ships before its column joins the
     Terms table is held to its own table, English term to its word ("Approve / Approve once" is two terms)."""
     with open(os.path.join(REPO, "docs", "languages.md"), encoding="utf-8") as f:
         md = f.read()
-    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "pt-BR": "pt-BR"}
+    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "pt-BR": "pt-BR"}
     tables, rows = [], []
     # Korean and Japanese's tables, batch 1's, then each regional variant's (pt-BR, under "Regional variants").
     text = ""
-    for section in ("\n## Korean and Japanese", "\n## Batch 1", "\n## Batch 2", "\n## Regional variants"):
-        start = md.index(section)
-        end = md.find("\n## ", start + 1)
-        text += md[start:end if end > 0 else len(md)] + "\n"
+    for section in ("\n## Korean and Japanese", "\n## Batch 1", "\n## Batch 2", "\n## Batch 3", "\n## Regional variants"):
+        # Every section that opens so ("Batch 3" has more than one piece, Arabic's apart from the others).
+        for found in re.finditer(re.escape(section), md):
+            start = found.start()
+            end = md.find("\n## ", start + 1)
+            text += md[start:end if end > 0 else len(md)] + "\n"
     for line in text.split("\n") + [""]:
         if line.startswith("|"):
             rows.append(line)
@@ -104,7 +106,7 @@ class SharedWords(unittest.TestCase):
         # ships only once every key is there, so no app shows half a language.
         self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "pt-BR"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]) | set(self.langs.get("variants", {})))
 
@@ -378,6 +380,13 @@ class Generator(unittest.TestCase):
         import android
         self.assertEqual(android.folder("pt-BR"), "values-pt-rBR")
         self.assertEqual(android.folder("pt"), "values-pt")
+        # A script is no region: Android takes it only in its BCP 47 form (zh-Hant, when Traditional Chinese ships).
+        self.assertEqual(android.folder("zh-Hant"), "values-b+zh+Hant")
+        self.assertEqual(android.folder("zh-Hant-TW"), "values-b+zh+Hant+TW")
+        # A library's folder Android would take before ours gets the same lines: Indonesian's old code, Chinese by region.
+        self.assertEqual(android.folders("id"), ["values-id", "values-in"])
+        self.assertEqual(android.folders("zh-Hant"), ["values-b+zh+Hant", "values-zh-rTW", "values-zh-rHK", "values-zh-rMO"])
+        self.assertEqual(android.folders("pt-BR"), ["values-pt-rBR"])
         self.assertIn("android/app/src/main/res/values-pt-rBR/strings.xml", files)
         self.assertIn("Precisa de você", files["android/app/src/main/res/values-pt-rBR/strings.xml"])
         self.assertIn('<locale android:name="pt-BR" />', files["android/app/src/main/res/xml/locales_config.xml"])

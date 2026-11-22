@@ -55,6 +55,9 @@ enum AppLanguage {
                 return "\(code)-\(region.uppercased())"
             }
             if shipped.contains(code) { return code }
+            // Chinese is two languages as the app ships it: Traditional ("zh-Hant") when the person's tag says the script, or,
+            // with no script, a region that writes it (Taiwan, Hong Kong, Macau). Simplified isn't shipped, so it is skipped.
+            if code == "zh", shipped.contains("zh-Hant"), KIFFClient.isTraditionalChinese(parts) { return "zh-Hant" }
         }
         return "en"
     }

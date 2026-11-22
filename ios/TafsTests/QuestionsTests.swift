@@ -73,16 +73,22 @@ final class AcceptLanguageTests: XCTestCase {
     /// The servers hear the languages the screens are in: the one they resolved to first, then the
     /// phone's others the app ships, by the app's own code, at most four, English last.
     func testTheServersHearTheScreensLanguages() {
-        let all = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr"]
-        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "de", preferred: ["de-CH", "fr-FR", "tr-TR"], shipped: all), ["de", "fr"])
+        let all = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant"]
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "de", preferred: ["de-CH", "fr-FR", "sw-KE"], shipped: all), ["de", "fr"])
         XCTAssertEqual(KIFFClient.acceptLanguage(KIFFClient.screenLanguages(resolved: "pt", preferred: ["pt-BR", "en-US"], shipped: all)), "pt, en;q=0.9")
         // A phone in a language the app doesn't ship gets the screens' language, then English.
-        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "en", preferred: ["tr-TR"], shipped: all), ["en"])
-        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "nl", preferred: ["tr-TR", "nl-BE", "pl-PL", "it-IT", "es-ES", "fr-FR"], shipped: all), ["nl", "pl", "it", "es"])
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "en", preferred: ["sw-KE"], shipped: all), ["en"])
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "nl", preferred: ["sw-KE", "nl-BE", "pl-PL", "it-IT", "es-ES", "fr-FR"], shipped: all), ["nl", "pl", "it", "es"])
         // A language only Siri's phrases are in never counts.
         XCTAssertEqual(KIFFClient.screenLanguages(resolved: "es", preferred: ["es-ES"], shipped: ["en"]), ["en"])
         // The app ships what languages.json ships: its languages, then each regional variant (pt-BR).
         XCTAssertEqual(Words.languages, all + ["pt-BR"])
+        // Traditional Chinese ships as "zh-Hant" and the servers hear it as "zh" (kiff.dev serves it under /zh/), by script or by
+        // a region that writes it; Simplified Chinese isn't shipped, so it is not mistaken for it.
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "zh-Hant", preferred: ["zh-Hant-TW"], shipped: Words.languages), ["zh"])
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "en", preferred: ["zh-TW", "en-US"], shipped: Words.languages), ["en", "zh"])
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "en", preferred: ["zh-Hans-CN"], shipped: Words.languages), ["en"])
+        XCTAssertEqual(KIFFClient.acceptLanguage(KIFFClient.withVariant("zh-Hant", ["zh"], shipped: Words.languages)), "zh-Hant, zh;q=0.9, en;q=0.8")
         // A variant's screens are its language's to the servers: a phone in Brazil sends pt.
         XCTAssertEqual(KIFFClient.screenLanguages(resolved: "pt-BR", preferred: ["pt-BR"], shipped: Words.languages), ["pt"])
         // Accept-Language names the variant first, then its language, as Android sends it.

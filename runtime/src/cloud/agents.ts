@@ -386,6 +386,9 @@ export interface Session {
 }
 
 /** Who asks for a run: a member of the account, by their KIFF subject, a door's sender, or an agent asking on its own. */
+/** A draft the account's setup submitted, not claimed by a taf yet (`GET /drafts?claimed=false`). */
+export interface UnclaimedDraft { draft_id: string; agent_id: string; name?: string; requester?: Requester }
+
 export interface Requester {
   kind: "member" | "door" | "agent";
   id: string;
@@ -980,6 +983,23 @@ export class Agents {
    */
   claimTafDraft(tenant: string, draftID: string, keyRef: string): Promise<{ agent_id: string }> {
     return this.call("POST", tenant, ["drafts", draftID, "claim"], { key_ref: keyRef });
+  }
+
+  /**
+   * The drafts the account's setup submitted whose key no taf has claimed yet, each with its agent, the name Coach gave
+   * it and who the setup ran for. A Card approved for one of them acts with no taf made, so Home lists it as being set up
+   * even when the chat never showed its result. A kiff/agents without this route answers none (404), as before.
+   */
+  async unclaimedDrafts(tenant: string): Promise<UnclaimedDraft[]> {
+    try {
+      const out = await this.call<{ drafts?: Array<UnclaimedDraft & { claimed?: unknown }> }>("GET", tenant, ["drafts"], undefined, { claimed: "false" });
+      // A draft the answer marks claimed is a taf already made, whatever kiff/agents did with the query: never listed.
+      return (out.drafts ?? []).filter((d) => typeof d?.draft_id === "string" && typeof d?.agent_id === "string" && d.claimed !== true)
+        .map(({ claimed: _claimed, ...d }) => d);
+    } catch (err) {
+      if (err instanceof AgentsError && err.status === 404) return [];
+      throw err;
+    }
   }
 
   /** The agent a draft submitted by the account's setup names, and whether its key is claimed, claiming nothing (404: none). */

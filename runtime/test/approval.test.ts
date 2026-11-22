@@ -114,6 +114,8 @@ async function world(s: Services, card: Record<string, unknown> = {}) {
   agents.ask(bosStored, { type: "approval", id: "a1", grant: "g_1", ...card });
   agents.calls.length = 0;
   const coach = memoryCoach(() => clock);
+  /** Whether a model turn needs the person's AI consent, as in production (lambda.ts sets it on). */
+  let aiConsent = false;
   const call = async (method: string, path: string, body: unknown, headers: Record<string, string> = {}, query?: string, token = "ana") => {
     const event: HTTPEvent = {
       rawPath: path, ...(query ? { rawQueryString: query } : {}), requestContext: { http: { method } },
@@ -125,14 +127,14 @@ async function world(s: Services, card: Record<string, unknown> = {}) {
       removals: memoryRemovals(), archived: memoryArchived(),
       push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
       apns: { send: async () => "sent" as const }, forward: async () => undefined,
-      fetch: net(s), now: () => clock, coach, planqueBase: "https://planque.test", kiffBase: "https://api.test",
+      fetch: net(s), now: () => clock, coach, planqueBase: "https://planque.test", kiffBase: "https://api.test", aiConsent,
     });
     return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown> };
   };
   /** What Coach heard for the card, if anything. */
   const told = () => (stored.requirements ?? []).find((q) => (q.input as { id?: string }).id === "a1")?.result as { answer?: unknown } | undefined;
   const boTold = () => (bosStored.requirements ?? []).find((q) => (q.input as { id?: string }).id === "a1")?.result as { answer?: unknown } | undefined;
-  return { agents, tafs, stored, call, told, boTold, coach, at: (d: Date) => { clock = d; } };
+  return { agents, tafs, stored, call, told, boTold, coach, at: (d: Date) => { clock = d; }, requireConsent: (on: boolean) => { aiConsent = on; } };
 }
 
 const ASK = `/v1/tafs/${COACH}/components/a1/approval`;
@@ -2356,6 +2358,43 @@ describe("a Card draft is checked as the phone reads the chat, before its card i
     expect((await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).status).toBe(409);
   });
 
+  // 22 Nov, the emulator: a Card refused for rules not yet agreed read "Approve · it didn't go through", with no reason,
+  // once Coach's answer was in the chat: kiff/agents records only the answer written for Coach, and the precheck's note
+  // was drawn only while the card waited.
+  it("keeps the owner's reason on every read once Coach's answer is in the chat, never the answer written for Coach", async () => {
+    const { w } = await refused();
+    const first = a1(await w.call("GET", CHAT, undefined))?.answer?.words;
+    expect(first).toMatch(/^Approve · it didn't go through: \S/);
+    // The answer is recorded now: this read draws it from the chat, not from the precheck, and says the same.
+    const again = a1(await w.call("GET", CHAT, undefined))?.answer?.words;
+    expect(again).toBe(first);
+    expect(again).not.toMatch(/Draft it again|Change only what this names/);
+    // A phone with no proof reads the same line: it's the chat's, not the check's.
+    expect(a1(await w.call("GET", CHAT, undefined, { "planque-device-signature": "" }))?.answer?.words).toBe(first);
+    // Another account's card by the same id isn't given this one's reason.
+    expect(await w.coach.get("t_other#approval-note#" + w.stored.session + "#a1")).toBeUndefined();
+  });
+
+  it("fills a kept reason into a failed answer only, never into an approval that went through", async () => {
+    const { w } = await refused();
+    await w.coach.put(`t_acme#approval-note#${w.stored.session}#a1`, { note: "A reason that isn't this card's" }, new Date(NOW.getTime() + 60_000));
+    await w.agents.api.answerCard("t_acme", COACH, w.stored.id, "a1", "approved", ANA.requester);
+    const words = a1(await w.call("GET", CHAT, undefined, { "planque-device-signature": "" }))?.answer?.words;
+    expect(words).toBe(approvalAnswerWords({ type: "approval", answer: "approved" }, "en"));
+    expect(words).not.toContain("A reason");
+  });
+
+  it("keeps Approve's own refusal's reason too, when the card was drawn before the check and the tap refused it", async () => {
+    const { w } = await refused();
+    // Read with no proof: nothing checked, the card is drawn as before, and the tap checks it.
+    expect(a1(await w.call("GET", CHAT, undefined, { "planque-device-signature": "" }))?.answer).toBeUndefined();
+    const tap = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(tap.body).toMatchObject({ outcome: "answered" });
+    expect(String(tap.body.note)).not.toBe("");
+    const line = a1(await w.call("GET", CHAT, undefined))?.answer?.words;
+    expect(line).toBe(`Approve · it didn't go through: ${String(tap.body.note)}`);
+  });
+
   it("a draft that passes is drawn as before, its Card to sign", async () => {
     const { s, w } = await refused();
     s.drafts.drf_1.cards = card(["refund_charge", "list_charges_noyy"]);
@@ -2579,6 +2618,72 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     expect(a1?.answer?.state).toBe("answered");
     expect(a1?.component.signs).toBeUndefined();
     expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed say "Refund a charge" refuses past its limit/);
+  });
+
+  // 22 Nov, the emulator: the Card's approval was drawn with Approve while its rules notice waited for Agree (KIFF's read of
+  // the draft didn't come back in time, so nothing was checked on the read), and the tap was refused, with no reason shown.
+  it("never offers a Card while the chat's rules notice isn't agreed, even when the draft's read doesn't come back", async () => {
+    const { s, w, rules } = await setUp("refuse");
+    rules("rules-1", RULES, false);
+    const drafts = s.drafts.drf_1;
+    delete s.drafts.drf_1;
+    const read = await w.call("GET", CHAT, undefined);
+    const card = (r: { body: Record<string, unknown> }) =>
+      (r.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string; words: string } }>).find((c) => c.component.id === "a1");
+    expect(card(read)?.answer?.state).toBe("answered");
+    expect(card(read)?.component.signs).toBeUndefined();
+    // The person reads why, in their words; Coach hears Approve's own refusal, and shows the rules' confirm now.
+    expect(card(read)?.answer?.words).toBe(`Approve · it didn't go through: ${WORDS.rulesUnagreed}`);
+    expect(String(w.told()?.answer)).toMatch(/^failed: the rules notice "rules-1" isn't agreed yet/);
+    expect(String(w.told()?.answer)).toContain(`${AGREE_FIRST} ${SHOW_NOW}`);
+    // Once, across reads: the next read draws it answered and tells Coach nothing more, with the draft back too.
+    s.drafts.drf_1 = drafts;
+    const told = w.told();
+    const again = await w.call("GET", CHAT, undefined);
+    expect(card(again)?.answer?.words).toBe(`Approve · it didn't go through: ${WORDS.rulesUnagreed}`);
+    expect(w.told()).toEqual(told);
+    expect(s.checks).toEqual([]);
+  });
+
+  it("tells Coach nothing on the read of someone who can't manage Cards, or hasn't agreed to AI use, and frees its claim", async () => {
+    const { s, w, rules } = await setUp("refuse");
+    rules("rules-1", RULES, false);
+    delete s.drafts.drf_1;
+    const a1 = (r: { body: Record<string, unknown> }) =>
+      (r.body.components as Array<{ component: { id?: string }; answer?: unknown }>).find((c) => c.component.id === "a1");
+    // View only: the card is drawn as before, and the tap is what refuses it.
+    const viewOnly = await w.call("GET", CHAT, undefined, {}, undefined, "ana-ro");
+    expect(viewOnly.status).toBe(200);
+    expect(a1(viewOnly)?.answer).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+    // No AI consent: sending Coach a turn on a read would use AI they haven't agreed to. Drawn as before, nothing told.
+    w.requireConsent(true);
+    const noConsent = await w.call("GET", CHAT, undefined);
+    expect(noConsent.status).toBe(200);
+    expect(a1(noConsent)?.answer).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+    // Its claim was freed, so a read once they agree checks it again.
+    expect(await w.coach.once(`t_acme#rules-first#${w.stored.session}#a1`, new Date(NOW.getTime() + 60_000))).toBe(true);
+  });
+
+  it("tells Coach once across phones: a read while another phone holds the card's claim draws it as before", async () => {
+    const { s, w, rules } = await setUp("refuse");
+    rules("rules-1", RULES, false);
+    delete s.drafts.drf_1;
+    await w.coach.once(`t_acme#rules-first#${w.stored.session}#a1`, new Date(NOW.getTime() + 60_000));
+    const read = await w.call("GET", CHAT, undefined);
+    expect((read.body.components as Array<{ component: { id?: string }; answer?: unknown }>).find((c) => c.component.id === "a1")?.answer).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+  });
+
+  it("offers the Card once the rules are agreed", async () => {
+    const { w, rules } = await setUp("refuse");
+    rules("rules-1", RULES);
+    const read = await w.call("GET", CHAT, undefined);
+    const a1 = (read.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: unknown }>).find((c) => c.component.id === "a1");
+    expect(a1?.answer).toBeUndefined();
+    expect(a1?.component.signs).toMatchObject({ card: true });
+    expect(w.told()).toBeUndefined();
   });
 
   it("a write the agreed rules say nothing of isn't signed", async () => {
