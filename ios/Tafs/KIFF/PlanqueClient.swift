@@ -673,7 +673,23 @@ final class PlanqueClient {
         var pairedAt: Date?
         /// The extension's id for its Chrome profile, kept across key changes: how a re-pairing finds the Chrome it replaces.
         var profileID: String?
-        enum CodingKeys: String, CodingKey { case id = "chrome_id", name, browser, os, pairedAt = "paired_at", profileID = "profile_id" }
+        /// The browser connections that run in this Chrome, as planque lists them ("Your Chrome" 3 and 4): live ones only (asked
+        /// for or approved, never ended or failed), named by their taf. nil from a planque that doesn't list them yet.
+        var connections: [Connection]?
+        struct Connection: Decodable, Equatable {
+            let grant: String
+            var name = ""
+            var sites: [String] = []
+            enum CodingKeys: String, CodingKey { case grant, name, sites }
+            init(grant: String, name: String = "", sites: [String] = []) { self.grant = grant; self.name = name; self.sites = sites }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                grant = try c.decode(String.self, forKey: .grant)
+                name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+                sites = try c.decodeIfPresent([String].self, forKey: .sites) ?? []
+            }
+        }
+        enum CodingKeys: String, CodingKey { case id = "chrome_id", name, browser, os, pairedAt = "paired_at", profileID = "profile_id", connections }
     }
 
     /// A pairing this phone opened: its id, and the four characters of the code planque looks it up by.
