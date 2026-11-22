@@ -134,7 +134,8 @@ final class SignInTests: XCTestCase {
         XCTAssertEqual(Legal.page("terms", language: "sw").absoluteString, "https://kiff.dev/tafs/terms", "a language kiff.dev doesn't serve opens English")
         XCTAssertEqual(Legal.terms, Legal.page("terms", language: Legal.language))
         XCTAssertTrue(Words.languages.contains(Legal.language))
-        XCTAssertTrue(Legal.translated.isSubset(of: Set(Words.languages)), "kiff.dev serves pages only in languages the app ships")
+        // A script or regional variant ("zh-Hant", "pt-BR") is served under its language ("zh", "pt").
+        XCTAssertTrue(Legal.translated.isSubset(of: Set(Words.languages.map { String($0.split(separator: "-")[0]) })), "kiff.dev serves pages only in languages the app ships")
         // A regional variant (pt-BR) opens its language's pages (`Legal.language` is "pt"), so it needs none of its own.
         XCTAssertEqual(Set(Words.languages.filter { !$0.contains("-") }).subtracting(["en"]).subtracting(Legal.translated), [], "every shipped language has its page (Korean and Japanese since 21 Nov, Estonian, Lithuanian and Latvian with them)")
     }
