@@ -1858,6 +1858,13 @@ and an activity launched then never gets a window ("No compose hierarchies found
 also closes a system dialog left over from boot, and each test sets its screen with `setShown`,
 which waits until there's a Compose hierarchy to read before reading it.
 
+Robolectric's Android jar (`android-all-instrumented`, SDK 35, the one every test runs on) comes through Gradle, never
+Robolectric's own download at test time, which hit Maven Central's rate limit on CI and failed every Robolectric test at
+once. Gradle fetches it once into its cache (CI's `setup-gradle` keeps that between runs), the root `build.gradle.kts`
+copies it into each app's `build/robolectric-jars`, and the tests run Robolectric offline from there. Its version is
+`robolectric-android-all` in `libs.versions.toml`, next to Robolectric's: a new Robolectric or SDK changes both, and a jar
+that doesn't match fails every Robolectric test at once.
+
 ## The app map
 
 `AppMapWalkTest` (a UI test, run with the others by `connectedDebugAndroidTest` in the
