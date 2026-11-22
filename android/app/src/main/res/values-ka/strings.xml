@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">ვეთანხმები %1$s-ს და %2$s-ს.</string>
     <string name="onboarding_control_lead">როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“ და თქვენს საათზე, თუ გაქვთ. ამტკიცებთ Face ID-ით ან Touch ID-ით, ან უარს ამბობთ.</string>
     <string name="onboarding_control_lead_android">როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“ და თქვენს საათზე, თუ გაქვთ. ამტკიცებთ ეკრანის ჩაკეტვით, ან უარს ამბობთ.</string>
+    <string name="onboarding_control_lead_desktop">როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“. ამტკიცებთ ტელეფონზე, ან უარს ამბობთ.</string>
     <string name="onboarding_control_lead_mac">როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“. ამტკიცებთ Touch ID-ით ან ტელეფონზე, ან უარს ამბობთ.</string>
     <string name="onboarding_control_title">კონტროლი თქვენთანაა</string>
     <string name="onboarding_get_started">დაიწყეთ</string>
