@@ -122,5 +122,5 @@ never starts `release` or `wear-release`.
   opening where it's tapped, and the four legal pages titled as their pages (`onboarding.row_*`, never the tick
   line's link words). Then, as on iPhone and iPad, two short sections (`help.json`): **Chrome** only where planque
   offers Chromes (`AppState.chromes` not null), and **Sign in with an emailed code** only where KIFF can send one
-  (`codeSignIn.available`, read as the sheet opens). The screens are named with the app's own titles, so the app says
+  (`codeSignIn.available`); the sheet reads both as it opens, so opened from Home first it still knows them. The screens are named with the app's own titles, so the app says
   nothing about what the person can't use (`OnboardingCardsTest.howTafsWorksSaysChromeAndTheCodeOnlyWhereTheyApply`).
