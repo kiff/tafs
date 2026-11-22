@@ -22,11 +22,17 @@
   "chrome.refused": "Մեկ այլ Chrome օգտագործեց այս կոդը, ուստի ոչինչ չզուգակցվեց։ Սկսեք նորից։",
   "chrome.remove": "Չեղարկեք զուգակցումը",
   "chrome.remove_named": "Չեղարկեք զուգակցումը՝ {name}",
+  "chrome.replace_moves": "Տեղափոխվում է այս Chrome՝ {sites}",
+  "chrome.replace_none": "Նոր Chrome (ոչ մեկին չի փոխարինում)",
+  "chrome.replace_title": "Փոխարինում է",
+  "chrome.replace_unpairs": "Սա զույգավորվելուն պես {name}-ի զույգավորումը կչեղարկվի։",
   "chrome.shot_failed": "Պատկերը չհաջողվեց բեռնել։",
   "chrome.shot_kept": "Պահվում է 30 օր, ապա ջնջվում է։",
   "chrome.shot_none": "Այս քայլի համար պատկեր չի պահվել։",
   "chrome.shot_open": "Տեսնել էջը այս քայլից առաջ",
   "chrome.shot_title": "Այս քայլից առաջ",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Զույգավորումը չեղարկելը ավարտում է այն օգտագործող կապերը՝ {sites}։ Դրանք կվերադառնան միայն, եթե նորից միացնես։",
+  "chrome.used_for": "Օգտագործվում է՝ {sites}",
   "chrome.waiting": "Սպասում ենք Chrome-ին…"
 }

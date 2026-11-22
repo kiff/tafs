@@ -22,11 +22,17 @@
   "chrome.refused": "Šį kodą panaudojo kita Chrome naršyklė, todėl niekas nesusieta. Pradėkite iš naujo.",
   "chrome.remove": "Atsieti",
   "chrome.remove_named": "Atsieti {name}",
+  "chrome.replace_moves": "Persikelia į šį Chrome: {sites}",
+  "chrome.replace_none": "Naujas Chrome (nieko nepakeičia)",
+  "chrome.replace_title": "Pakeičia",
+  "chrome.replace_unpairs": "{name} atsiejamas, kai šis susiejamas.",
   "chrome.shot_failed": "Nepavyko įkelti paveikslėlio.",
   "chrome.shot_kept": "Saugoma 30 dienų, tada ištrinama.",
   "chrome.shot_none": "Šiam žingsniui paveikslėlis nesaugomas.",
   "chrome.shot_open": "Žiūrėti puslapį prieš šį žingsnį",
   "chrome.shot_title": "Prieš šį žingsnį",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Atsiejus baigiasi jį naudojantys ryšiai: {sites}. Jie sugrįš tik tada, kai prijungsi juos iš naujo.",
+  "chrome.used_for": "Naudojama: {sites}",
   "chrome.waiting": "Laukiama Chrome…"
 }

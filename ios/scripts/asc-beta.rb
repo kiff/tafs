@@ -47,6 +47,10 @@ module AscBeta
     app = api.("get", "/v1/apps?filter[bundleId]=#{BUNDLE_ID}")[1]["data"].first or raise Failure, "no app #{BUNDLE_ID}"
     app_id = app["id"]
 
+    # A build for the Team only (internal testers get every build by themselves) still tells them what to test: this is
+    # the whole run when WHAT_TO_TEST_ONLY is "1". No group, review information or submission is touched.
+    return say_what_to_test(api, app_id, env, out, wait) if env["WHAT_TO_TEST_ONLY"] == "1"
+
     # The external group, made once.
     groups = api.("get", "/v1/apps/#{app_id}/betaGroups")[1]["data"] || []
     group = groups.find { |g| g.dig("attributes", "name") == GROUP && !g.dig("attributes", "isInternalGroup") }
@@ -136,6 +140,15 @@ module AscBeta
       end
       out.puts "tester #{i + 1} is in #{GROUP}"
     end
+  end
+
+  # The build's "What to Test" and nothing else.
+  def say_what_to_test(api, app_id, env, out, wait)
+    number = env.fetch("BUILD_NUMBER")
+    what = env["WHAT_TO_TEST"].to_s.strip
+    raise Failure, "WHAT_TO_TEST is empty" if what.empty?
+    build = processed(api, app_id, number, out, wait)
+    what_to_test(api, build, number, what, out)
   end
 
   # The build numbered `number`, once App Store Connect has processed it; a failure past 30 minutes or when it's refused.

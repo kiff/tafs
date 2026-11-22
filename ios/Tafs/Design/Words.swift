@@ -1125,6 +1125,14 @@ enum Words {
         static var remove: String { Words.line("chrome.remove") }
         /// Unpair {name}
         static func removeNamed(name: String) -> String { Words.line("chrome.remove_named", name) }
+        /// Moves to this Chrome: {sites}
+        static func replaceMoves(sites: String) -> String { Words.line("chrome.replace_moves", sites) }
+        /// A new Chrome (replaces none)
+        static var replaceNone: String { Words.line("chrome.replace_none") }
+        /// Replaces
+        static var replaceTitle: String { Words.line("chrome.replace_title") }
+        /// {name} is unpaired once this one is paired.
+        static func replaceUnpairs(name: String) -> String { Words.line("chrome.replace_unpairs", name) }
         /// The picture couldn't be loaded.
         static var shotFailed: String { Words.line("chrome.shot_failed") }
         /// Kept for 30 days, then deleted.
@@ -1137,6 +1145,10 @@ enum Words {
         static var shotTitle: String { Words.line("chrome.shot_title") }
         /// Chrome
         static var title: String { Words.line("chrome.title") }
+        /// Unpairing ends the connections that use it: {sites}. They come back only when you connect them again.
+        static func unpairEnds(sites: String) -> String { Words.line("chrome.unpair_ends", sites) }
+        /// Used for {sites}
+        static func usedFor(sites: String) -> String { Words.line("chrome.used_for", sites) }
         /// Waiting for Chrome…
         static var waiting: String { Words.line("chrome.waiting") }
     }

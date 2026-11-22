@@ -1195,7 +1195,8 @@ word stays the screen's own shared key. Every drawing is hidden from VoiceOver (
   only when the iPad's layout changes. When a pull request touches the screens,
   it takes a key set of screenshots, uploaded as the `screenshots` artifact. A `v*` tag or a
   manual run also uploads to TestFlight: Team at once, and the external Beta testers after
-  Apple's review unless the run turns that off. A manual run skips each kind of test main
+  Apple's review unless the run turns that off; a run that turns it off still sets the build's "What to Test"
+  (`ios/WhatToTest.txt`) for the Team, with nothing else touched (`WHAT_TO_TEST_ONLY` in `asc-beta.rb`). A manual run skips each kind of test main
   already passed at an earlier commit with nothing changed since that it tests (the app for
   the unit tests, the screens for the UI tests, the iPad's layout for the iPad's), so an
   upload can go straight to the archive; a tag runs everything.
@@ -1392,3 +1393,16 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
 - **The key** is the `apple-release` environment's `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8`, which a run from `main` can read
   (the scheduled and manual runs both are). It is written to the runner's temporary folder and removed at the end.
 - The macOS app is the same app record as the iPhone's and iPad's (universal purchase), so its versions are the `MAC_OS` ones.
+
+## Account › Chrome: what each Chrome is used for
+
+"Your Chrome" ([chrome.md](chrome.md)): under each paired Chrome, Account › Chrome says which sites its connections are used for
+("Used for wikipedia.org"), and Unpair says what it ends before it asks ("Unpairing ends the connections that use it: …. They
+come back only when you connect them again."). The connections are planque's grants for the extension (`request.browser`:
+`driver: "extension"`, `chrome`, and `chrome_name` as planque set it), read again when the screen opens; one that has ended or
+failed is not listed (`ChromeConnections`). The replace pick at pairing, and a connection's Chrome on the taf's page, follow
+planque#365's route and the extension's own pairing bytes.
+
+## Pairing a Chrome that replaces one
+
+"Your Chrome" 1 ([chrome.md](chrome.md)): on the offered Chrome's screen a pick says which paired Chrome this one replaces, or "A new Chrome (replaces none)". It starts on the Chrome with the offer's `profile_id` (an id the extension keeps for its Chrome profile and planque relays as a hint), else on the one paired Chrome of the same browser and system, else on none (`ChromeReplace.preselect`; two alike is never a guess). Choosing one shows what moves ("Moves to this Chrome: wikipedia.org"), the connections that end with the old Chrome, and that the old Chrome is unpaired once this one is paired. The confirm sends `replaces` and `carried` (`[{grant, sites}]`, at most 50), and the same fingerprint signs `carried` inside the pairing the extension checks (`ChromePairing.signedBytes`, tafs#1754), so planque can't change the list; with nothing chosen, nothing moves and the pairing is as before. **A connection moves only if the phone's own key verifies its sites:** planque's grant read gives each extension connection's `chrome_sites_sig` (the phone's signature over `{chrome_id, grant, sites}` made at approval) and `chrome_sites_carried` (planque#369), and `ChromeReplace.carried` carries a connection only when `ChromePairing.sitesSignatureHolds` accepts the signature for the Chrome being replaced (never what planque says of the sites). A connection with no verifying signature, or one carried here from an earlier Chrome (empty signature), ends with the old Chrome, as unpairing does, and the screen says so. The connections are read again just before the confirm.

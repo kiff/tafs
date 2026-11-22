@@ -1,0 +1,1 @@
+- **Account › Chrome says what each Chrome is used for, and what unpairing it ends:** the sites its connections run on, and a line before Unpair about the connections that end with it ([docs/chrome.md](docs/chrome.md)).
