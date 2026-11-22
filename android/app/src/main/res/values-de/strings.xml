@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">Ich stimme %1$s und %2$s zu.</string>
     <string name="onboarding_control_lead">Braucht dich ein taf, wartet er in „Braucht dich“ und, falls du eine hast, auf deiner Uhr. Du genehmigst mit Face ID oder Touch ID oder lehnst ab.</string>
     <string name="onboarding_control_lead_android">Braucht dich ein taf, wartet er in „Braucht dich“ und, falls du eine hast, auf deiner Uhr. Du genehmigst mit deiner Displaysperre oder lehnst ab.</string>
+    <string name="onboarding_control_lead_desktop">Braucht dich ein taf, wartet er in „Braucht dich“. Du genehmigst auf deinem Handy oder lehnst ab.</string>
     <string name="onboarding_control_lead_mac">Braucht dich ein taf, wartet er in „Braucht dich“. Du genehmigst mit Touch ID oder auf deinem Handy oder lehnst ab.</string>
     <string name="onboarding_control_title">Du behältst die Kontrolle</string>
     <string name="onboarding_get_started">Los geht\'s</string>

@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Го прашувам KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "Не стигна до KIFF. Обиди се повторно.",
+  "kiff.kiff_can_not_do_sign": "KIFF сè уште не може ова: најави се повторно од Поставки за да одобруваш од овој {device}.",
+  "kiff.kiff_did_not_answer_expected": "KIFF не одговори како што се очекуваше. Обиди се повторно.",
+  "kiff.kiff_words_do_not_match": "Зборовите на KIFF не се совпаѓаат со својата проверка. Ништо не може да се одобри."
+}

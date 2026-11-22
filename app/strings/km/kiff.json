@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "កំពុងសួរ KIFF៖ {title}…",
+  "kiff.did_not_reach_kiff_try": "វាមិនបានទៅដល់ KIFF ទេ។ សូមព្យាយាមម្តងទៀត។",
+  "kiff.kiff_can_not_do_sign": "KIFF មិនទាន់អាចធ្វើរឿងនេះបានទេ៖ ចូលម្តងទៀតពីការកំណត់ ដើម្បីអនុម័តពី {device} នេះ។",
+  "kiff.kiff_did_not_answer_expected": "KIFF មិនបានឆ្លើយតបតាមការរំពឹងទុកទេ។ សូមព្យាយាមម្តងទៀត។",
+  "kiff.kiff_words_do_not_match": "ពាក្យរបស់ KIFF មិនត្រូវនឹងការត្រួតពិនិត្យរបស់វាទេ។ មិនអាចអនុម័តអ្វីបានទេ។"
+}

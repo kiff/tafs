@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">Accetto %1$s e %2$s.</string>
     <string name="onboarding_control_lead">Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull\'orologio. Approvi con Face ID o Touch ID, oppure rifiuti.</string>
     <string name="onboarding_control_lead_android">Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull\'orologio. Approvi con il blocco schermo, oppure rifiuti.</string>
+    <string name="onboarding_control_lead_desktop">Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi sul telefono, oppure rifiuti.</string>
     <string name="onboarding_control_lead_mac">Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi con Touch ID o sul telefono, oppure rifiuti.</string>
     <string name="onboarding_control_title">Il controllo resta a te</string>
     <string name="onboarding_get_started">Inizia</string>

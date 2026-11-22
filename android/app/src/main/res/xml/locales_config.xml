@@ -34,5 +34,11 @@
     <locale android:name="az" />
     <locale android:name="bn" />
     <locale android:name="he" />
+    <locale android:name="ca" />
+    <locale android:name="mk" />
+    <locale android:name="mn" />
+    <locale android:name="ne" />
+    <locale android:name="km" />
+    <locale android:name="lo" />
     <locale android:name="pt-BR" />
 </locale-config>

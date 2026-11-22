@@ -299,7 +299,7 @@ export const bg: Words = {
   home_discard_no: "Запазване",
   home_needs_you_none: "Нищо не ви чака.",
   labels_all: "Всички",
-  brief_title: "Вашата обобщена справка",
+  brief_title: "Вашето резюме",
   brief_ready: (hm: string) => `Вашата справка за ${hm} е готова.`,
   brief_decisions: "Решения",
   brief_done: "Готово",

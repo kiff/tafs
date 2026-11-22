@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "{kiff_terms} və {tafs_terms} ilə razıyam.",
   "onboarding.control_lead": "Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində və saatınız varsa, onda gözləyir. Face ID və ya Touch ID ilə təsdiq edirsiniz, ya da rədd edirsiniz.",
   "onboarding.control_lead_android": "Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində və saatınız varsa, onda gözləyir. Ekran kilidinizlə təsdiq edirsiniz, ya da rədd edirsiniz.",
+  "onboarding.control_lead_desktop": "Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində gözləyir. Telefonunuzda təsdiq edirsiniz, ya da rədd edirsiniz.",
   "onboarding.control_lead_mac": "Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində gözləyir. Touch ID ilə və ya telefonunuzda təsdiq edirsiniz, ya da rədd edirsiniz.",
   "onboarding.control_title": "İdarə sizdə qalır",
   "onboarding.get_started": "Başlayın",

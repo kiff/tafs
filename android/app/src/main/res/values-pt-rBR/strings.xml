@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">Aceito %1$s e %2$s.</string>
     <string name="onboarding_control_lead">Quando um taf precisa de você, espera em «Precisa de você» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa.</string>
     <string name="onboarding_control_lead_android">Quando um taf precisa de você, espera em «Precisa de você» e, se tiver um, no relógio. Aprova com o bloqueio de tela, ou recusa.</string>
+    <string name="onboarding_control_lead_desktop">Quando um taf precisa de você, espera em «Precisa de você». Aprova no celular, ou recusa.</string>
     <string name="onboarding_control_lead_mac">Quando um taf precisa de você, espera em «Precisa de você». Aprova com Touch ID ou no celular, ou recusa.</string>
     <string name="onboarding_control_title">O controle é seu</string>
     <string name="onboarding_get_started">Começar</string>
