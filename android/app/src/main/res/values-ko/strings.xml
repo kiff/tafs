@@ -1787,6 +1787,12 @@
     <string name="record_refused_next_step_detail">거절했고, taf의 다음 단계: %1$s</string>
     <string name="record_removed_detail">일정, 기억, 키 삭제됨; 이름 사용 가능</string>
     <string name="record_removed_title">%1$s을(를) 삭제했습니다</string>
+    <string name="record_report_button">이 결제 신고</string>
+    <string name="record_report_done">신고했습니다. %1$s이(가) 차단되었으며 영수증은 보관됩니다. 계좌에서 돈이 빠져나갔다면 카드 발급사에도 문의하세요.</string>
+    <string name="record_report_failed">신고를 보내지 못했습니다. 변경된 내용은 없습니다. 다시 시도해 주세요.</string>
+    <string name="record_report_intro">예상하지 못한 결제를 신고하세요: %1$s이(가) %3$s에 %2$s을(를) 결제했습니다. 확인하실 때까지 %1$s을(를) 차단합니다.</string>
+    <string name="record_report_submit">신고하고 %1$s 차단</string>
+    <string name="record_report_title">이 결제 신고</string>
     <string name="record_result_done">완료</string>
     <string name="record_result_no_answer_yet">보냄, 아직 응답 없음</string>
     <string name="record_result_not_done">완료 안 됨</string>

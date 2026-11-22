@@ -1787,6 +1787,12 @@
     <string name="record_refused_next_step_detail">拒否、tafへの次の手順：%1$s</string>
     <string name="record_removed_detail">スケジュール、メモ、キーを削除、名前は解放</string>
     <string name="record_removed_title">%1$sを削除しました</string>
+    <string name="record_report_button">この支払いを報告</string>
+    <string name="record_report_done">報告しました。%1$sは遮断済みで、領収書は保管されます。口座からお金が出ている場合は、カード発行会社にも連絡してください。</string>
+    <string name="record_report_failed">報告を送信できませんでした。何も変更されていません。もう一度お試しください。</string>
+    <string name="record_report_intro">予期しない支払いを報告：%1$sが%3$sに%2$sを支払いました。確認いただくまで%1$sを遮断します。</string>
+    <string name="record_report_submit">報告して%1$sを遮断</string>
+    <string name="record_report_title">この支払いを報告</string>
     <string name="record_result_done">完了</string>
     <string name="record_result_no_answer_yet">送信済み、応答待ち</string>
     <string name="record_result_not_done">未完了</string>

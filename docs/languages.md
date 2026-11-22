@@ -576,6 +576,69 @@ menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i 
 | receipt | potvrda |
 | Cancel / Continue | Odustanite / Nastavite |
 
+## Batch 3: Arabic (being written)
+
+Arabic is the first right-to-left language the apps ship (the owner said yes, 21 Nov). Its catalog is in `all`, not `shipped`,
+until its review and the right-to-left PR that carries it ships.
+
+### Arabic (ar)
+
+Modern Standard Arabic. Addressed to one reader, masculine as Arabic software writes it ("يمكنك", "اختر"); buttons are
+verbal nouns ("الموافقة", "الرفض", "المتابعة"), as Apple's Arabic does. taf, Card, Coach, KIFF and Setup are names and stay in
+Latin letters ("الـ taf", "الـ Card"), as Bulgarian and Greek write them. Numbers stay in Western digits (1, 2, 3); the
+choice of Arabic-Indic digits is a product decision still to make. Quotes are « » for a line's own, and a name a taf
+carries is isolated (`Words.isolated`). A door is "باب" (plural "أبواب"), a call "استدعاء", a request "طلب", a held call
+"استدعاء معلّق", a knock "طرق".
+
+**Plurals have six forms:** zero (0), one (1), two (2), few (3–10), many (11–99) and other (100 and up, and decimals).
+Every count line in `ar/` writes all six. A line may leave the number out in `zero`, `one` and `two` ("يوم واحد",
+"يومان"), as the words say it.
+
+**Direction:**
+- A menu path in a line that English writes with "→" writes "←" in Arabic. "‹" and "›" are mirrored by the text
+  direction itself, so they are written as English writes them. `test_strings` fails an Arabic line with "→".
+- The two dials (the Card knob and the door dial) turn the same way in Arabic. They are physical objects drawn with screen
+  angles, not a leading or trailing edge, so a swipe or drag clockwise is clockwise in either direction. Nothing in their
+  code mirrors.
+- **A reference number** ("#5098") written in a line is wrapped in U+2066 … U+2069 (a left-to-right isolate). After an
+  Arabic letter the digits become Arabic-script digits (the bidi rule W2), which leaves the "#" outside their run and shows
+  "5098#". `test_strings` checks it.
+- **Figures are Western digits (0–9), and dates are Gregorian** (legal-i18n, 22 Nov): the legal pages write "30 days" and
+  "16" so, and their tests require every figure to match the English page. The iOS app formats with the locale
+  `ar-u-ca-gregory-nu-latn` for Arabic (`IOS_LOCALE` in `generate.py`, `Words.locale(for:)`), so a time, a count and a date
+  don't turn into Arabic-script digits or the Hijri calendar.
+- **Captions** that the app sets in a monospaced face with letter-spacing (the Needs you "time left", the section eyebrows)
+  are set in the plain face with no spacing in Arabic, as in Korean, Japanese and Chinese: spacing cuts Arabic's joined
+  letters apart (`Eyebrow.ideographic`, `ScaledFont.design`).
+
+| English | Arabic |
+|---|---|
+| Needs you | بانتظارك |
+| Approve / Approve once | الموافقة / الموافقة مرة واحدة |
+| Refuse | الرفض |
+| held | معلّق |
+| Halt / Halted | تجميد / مجمّد |
+| Stopped | متوقف |
+| Pause / Paused | إيقاف مؤقت / متوقف مؤقتًا |
+| Resume | استئناف |
+| Revoke | إلغاء |
+| Record | السجل |
+| Connect / connection | ربط / اتصال |
+| Pair / Unpair | إقران / إلغاء الإقران |
+| Account | الحساب |
+| limit / spend limit | الحد / حد الإنفاق |
+| credits / credit pack | الأرصدة / حزمة أرصدة |
+| passkey | مفتاح المرور |
+| security key | مفتاح الأمان |
+| Sign in / Sign out | تسجيل الدخول / تسجيل الخروج |
+| Inbox | الوارد |
+| Overview | نظرة عامة |
+| Calendar | التقويم |
+| Usage | الاستخدام |
+| brief | الملخص |
+| receipt | الإيصال |
+| Cancel / Continue | إلغاء / متابعة |
+
 ## Batch 3: Turkish, Indonesian, Vietnamese, Thai and Traditional Chinese
 
 For the countries whose language the apps didn't have (TR, ID, VN, TH, TW). All five ship, and kiff.dev serves their legal
@@ -842,7 +905,7 @@ screen is **"Conta"**.
 ## How it's built
 
 - **tafs cloud:** a catalog per language in `runtime/src/cloud/words/`, English the source (`en.ts`),
-  each language typed against it, and a test that fails on a key missing from any language, an empty
+  each full language typed against it, and a test that fails on a key missing from any of them, an empty
   line, or a line left in English. It holds every line tafs cloud writes for people: a taf's work lines,
   the home list's line, the balance and credits words, refusal words, push titles and bodies, door
   alerts and a door's page, where a result went, a request's steps, a taf's Activity, the dial, the
@@ -851,6 +914,23 @@ screen is **"Conta"**.
   worded from the catalog; one it doesn't know passes kiff/agents' words through. `error` fields stay
   English, for developers; the `words` beside them are the person's. A vendor's or provider's own words
   (why a reply wasn't sent, KIFF's tool titles) pass as they came.
+- **A language tafs cloud adds before every line is written may be partial** (PM, 22 Nov): it goes in `PARTIAL_LANGUAGES`,
+  each line written replaces English's, every other reads English, key by key, and at 100% it moves to `FULL_LANGUAGES`,
+  where the type requires every key. Batch 2's ten and batch 3's five went that way: partial in tafs#1702, every line by
+  tafs#1706, full since (a draft no native speaker has read yet). None is partial today; batch 4's languages would be next.
+  Three guards while one is:
+  - **The most-seen lines first** (`PRIORITY_PREFIXES`): Home's (`home_`), push titles (`push_`), Activity's details
+    (`act_`) and the approval card's (`approval_`). A language with any other line has all of those (a test checks it).
+  - **The target is 100%.** `words.test.ts` prints each language's coverage (`npx vitest run test/words.test.ts --silent=false`;
+    vitest hides a passing test's output otherwise); the gap closes batch by batch, and no
+    language stays partial for good.
+  - **The tracker** marks a country's app screens as translated for the apps' own words only, with tafs cloud's lines
+    noted apart until they reach 100% (for the "b or c" countries: EE, LV, LT, SK, SI).
+
+  Before a line is written, a partial language is still the person's language for everything else tafs cloud does:
+  Coach and the tafs are told it ("reads Turkish (tr)"), dates follow it, and the legal links open its pages (`pagePath`:
+  Traditional Chinese's are under `/zh`). `languageFrom` reads Traditional Chinese by its script or region (`zh-Hant`,
+  `zh-TW`, `zh-HK`, `zh-MO`, never Simplified) and Indonesian's old code `in` as `id`.
 - **Brazilian Portuguese in tafs cloud:** `pt-BR.ts` is `pt`'s catalog with the lines that read differently in
   Brazil on top, and only those: "você" throughout ("Precisa de você", "Seu resumo"), "conexão" and "Conectar",
   "Entrar" and "login" for signing in, "celular", "tela", "registro", and the gerund for "está a fazer"

@@ -590,6 +590,11 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     /// Its title is this phone's own line for the owner's answer ("Refused by you · 08:56 ·
     /// …"), so the chat shows it as it is. KIFF's lines, titled by the action, leave it unset.
     var byYou: Bool? = nil
+    /// "Report this payment": its receipt's id and when the payment was made, only where tafs cloud offers it (a payment this
+    /// reader may report); and when it was reported, which takes the button away.
+    var reportTraceID: String? = nil
+    var reportMadeAt: Date? = nil
+    var reportedAt: Date? = nil
 }
 
 struct AvatarRim: Codable, Hashable { let visible: Bool; let tint: String; let length: Double }

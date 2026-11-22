@@ -96,6 +96,10 @@ data class Halt(
 @Serializable
 internal data class HaltResponse(val halt: Halt)
 
+/** tafs cloud's answer to a payment's report: when KIFF first kept it, and the taf's halt as `GET /v1/tafs/{id}/halt` reads it. */
+@kotlinx.serialization.Serializable
+data class PaymentReport(@kotlinx.serialization.SerialName("reported_at") val reportedAt: String, val taf: String? = null, val halt: Halt)
+
 /** What deleting the account in tafs cloud did (kiff/tafs#185): done, or the step that failed, which asking again goes on from. */
 @Serializable
 data class AccountDeletion(val done: Boolean = false, val failed: String? = null)

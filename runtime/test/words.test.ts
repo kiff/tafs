@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { baseLanguage, LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, withZone, wordsIn } from "../src/cloud/words/index.js";
+import { baseLanguage, coverage, FULL_LANGUAGES, LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, PARTIAL_LANGUAGES, plural, PRIORITY_PREFIXES, withLanguage, withZone, wordsIn, writtenIn } from "../src/cloud/words/index.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { legalLinks } from "../src/cloud/sheet.js";
 import { jobById, systemPrompt } from "../src/jobs.js";
@@ -64,6 +64,45 @@ function sample(v: unknown, key = ""): string[] {
   return [f("X", "Y"), f(1, 3), f(2, "few"), f(5, "many"), f(1, "one")];
 }
 
+describe("tafs cloud's words in the languages added since, partial until written (docs/languages.md)", () => {
+  const priority = (k: string) => PRIORITY_PREFIXES.some((p) => k.startsWith(p));
+
+  it("prints each language's coverage, and keeps every full language at 100%", () => {
+    const rows = LANGUAGES.map((l) => `${l.padEnd(8)} ${(coverage(l) * 100).toFixed(1).padStart(5)}%`);
+    console.log(`tafs cloud's words, written per language (target 100%):\n${rows.join("\n")}`);
+    for (const l of FULL_LANGUAGES) expect(coverage(l), l).toBe(1);
+    for (const l of PARTIAL_LANGUAGES) expect(coverage(l), l).toBeGreaterThanOrEqual(0);
+  });
+
+  it("writes only English's keys, each as English's kind of line, non-empty", () => {
+    for (const lang of PARTIAL_LANGUAGES) {
+      for (const [key, v] of Object.entries(writtenIn(lang))) {
+        expect(key in en, `${lang}.${key} isn't one of English's`).toBe(true);
+        expect(typeof v, `${lang}.${key}`).toBe(typeof (en as Record<string, unknown>)[key]);
+        for (const line of sample(v, key)) expect(line.trim().length, `${lang}.${key}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("writes the most-seen lines first: a language with any other line has every one of them", () => {
+    const first = Object.keys(en).filter(priority);
+    expect(first.length).toBeGreaterThan(100);
+    for (const lang of PARTIAL_LANGUAGES) {
+      const own = Object.keys(writtenIn(lang));
+      if (!own.some((k) => !priority(k))) continue;
+      expect(first.filter((k) => !own.includes(k)), `${lang}: Home's, push titles, Activity's and the approval card's come first`).toEqual([]);
+    }
+  });
+
+  it("reads English where a line isn't written, and the line where it is", () => {
+    for (const lang of PARTIAL_LANGUAGES) {
+      const own = writtenIn(lang) as Record<string, unknown>;
+      const words = wordsIn(lang) as Record<string, unknown>;
+      for (const key of Object.keys(en)) expect(words[key], `${lang}.${key}`).toBe(key in own ? own[key] : (en as Record<string, unknown>)[key]);
+    }
+  });
+});
+
 describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   it("has every key English has in every language, each a non-empty line, and no other key", () => {
     for (const lang of LANGUAGES) {
@@ -86,16 +125,18 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     es: ["dial_app"], // "App" is used as is
     it: ["cr_pct", "dial_place_email", "dial_app"], pt: ["cr_pct", "dial_place_email", "dial_app"], pl: ["cr_pct"], // "80%" is written alike; "Email" and "App" are used as is
     ko: ["cr_pct"], // "80%" is written alike
+    hu: ["cr_pct"], ro: ["cr_pct"], bg: ["cr_pct"], id: ["cr_pct"], vi: ["cr_pct"], th: ["cr_pct"], "zh-Hant": ["cr_pct"], // "80%" is written alike
     ja: ["cr_pct"],
     nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title", "dial_open", "dial_app", "sheet_details", "brief_later"], // "credit", "run" are the Dutch terms in the glossary; "Open", "App", "Details" and "Later" are Dutch too
   };
 
   it("isn't English in another language: a line copied over untranslated would read the same", () => {
+    // A partial language's lines not written yet read English on purpose; what it has written is checked as any other.
     for (const lang of LANGUAGES.filter((l) => l !== "en")) {
-      const words = wordsIn(lang) as Record<string, unknown>;
+      const words = writtenIn(lang) as Record<string, unknown>;
       // A regional variant writes alike what its base does ("80%", "Email" and "App" in pt-BR as in pt).
       const allowed = new Set([...SAME_AS_ENGLISH.all!, ...(SAME_AS_ENGLISH[lang] ?? SAME_AS_ENGLISH[baseLanguage(lang)] ?? [])]);
-      const same = Object.keys(en).filter((k) => !allowed.has(k) && JSON.stringify(sample(words[k], k)) === JSON.stringify(sample((en as Record<string, unknown>)[k], k)));
+      const same = Object.keys(en).filter((k) => k in words && !allowed.has(k) && JSON.stringify(sample(words[k], k)) === JSON.stringify(sample((en as Record<string, unknown>)[k], k)));
       expect(same, lang).toEqual([]);
     }
   });
@@ -117,10 +158,17 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     expect(languageFrom("pt-PT")).toBe("pt");
     expect(languageFrom("pt")).toBe("pt");
     expect(languageFrom("es-MX")).toBe("es");
-    expect(languageFrom("tr,fr;q=0.8,en;q=0.5")).toBe("fr");
+    expect(languageFrom("sw,fr;q=0.8,en;q=0.5")).toBe("fr");
     expect(languageFrom("en;q=0.5,nl;q=0.9")).toBe("nl");
     expect(languageFrom("pl;q=0,es;q=0.1")).toBe("es");
-    expect(languageFrom("tr,zh")).toBe("en");
+    expect(languageFrom("sw,zh")).toBe("en");
+    // The languages added since: Turkish is one of them now; Traditional Chinese by its script or its region, never
+    // Simplified; Indonesian by its old code too, as an Android 11 to 13 phone may send it.
+    expect(languageFrom("tr-TR,tr;q=0.9")).toBe("tr");
+    for (const tag of ["zh-Hant", "zh-Hant-TW", "zh-TW", "zh_HK", "zh-MO"]) expect(languageFrom(tag), tag).toBe("zh-Hant");
+    for (const tag of ["zh", "zh-CN", "zh-Hans", "zh-Hans-TW", "zh-SG"]) expect(languageFrom(tag), tag).toBe("en");
+    expect(languageFrom("in-ID")).toBe("id");
+    expect(languageFrom("cs-CZ,en;q=0.5")).toBe("cs");
     expect(languageFrom("it;q=abc,de;q=2")).toBe("en");
     expect(languageFrom("PL-pl")).toBe("pl");
   });
@@ -247,7 +295,9 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
    */
   /** The languages with a column in the Terms table: every one but a regional variant, which has its own glossary. */
   // Korean's terms are their own section ("Korean and Japanese"), not a column of this table.
-  const BASES = LANGUAGES.filter((l) => baseLanguage(l) === l && l !== "ko" && l !== "ja");
+  // The Terms table's columns: the eight languages the glossary was written in. The languages added since follow its terms in
+  // their own glossary sections (docs/languages.md), which this table doesn't carry.
+  const BASES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const;
 
   function glossary(): Array<{ en: string; label: boolean; words: Record<string, string> }> {
     const md = readFileSync(new URL("../../docs/languages.md", import.meta.url), "utf8");

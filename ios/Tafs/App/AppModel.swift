@@ -4172,6 +4172,23 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Reports a payment the person didn't expect ("Report this payment"): KIFF marks its receipt and its taf is halted, in
+    /// kiff/agents, KIFF and planque, as the halt button does; one tap, no Face ID, since it only takes authority away. True
+    /// when tafs cloud answered, with the taf's halt read from its answer so the taf shows halting at once.
+    func reportPayment(_ entry: RecordEntry) async -> Bool {
+        guard mode == .kiff, let trace = entry.reportTraceID else { return false }
+        let gen = accountGeneration
+        do {
+            let answer = try await cloud.reportPayment(traceID: trace)
+            guard gen == accountGeneration else { return false }
+            if let key = haltKey(entry.tafID) { halts[key] = answer.halt }
+            await refresh()
+            return true
+        } catch {
+            return false
+        }
+    }
+
     // MARK: Plan & usage (pricing phase 2, docs/accounts.md › Credits and plans)
 
     /// Reads Plan & usage: the balance and this period's credits from tafs cloud, KIFF's usage

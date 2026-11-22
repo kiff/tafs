@@ -3579,6 +3579,20 @@ enum Words {
             /// You removed {taf}
             static func title(taf: String) -> String { Words.line("record.removed.title", taf) }
         }
+        enum Report {
+            /// Report this payment
+            static var button: String { Words.line("record.report.button") }
+            /// Reported. {taf} is halted and the receipt is kept. If money left your account, contact your card issuer too.
+            static func done(taf: String) -> String { Words.line("record.report.done", taf) }
+            /// Couldn't send the report. Nothing changed. Try again.
+            static var failed: String { Words.line("record.report.failed") }
+            /// Report a payment you didn't expect: {taf} paid {amount} on {date}. We halt {taf} until you've looked.
+            static func intro(taf: String, amount: String, date: String) -> String { Words.line("record.report.intro", taf, amount, date) }
+            /// Report and halt {taf}
+            static func submit(taf: String) -> String { Words.line("record.report.submit", taf) }
+            /// Report this payment
+            static var title: String { Words.line("record.report.title") }
+        }
         enum Result {
             /// done
             static var done: String { Words.line("record.result.done") }
@@ -5613,7 +5627,14 @@ enum Words {
     nonisolated(unsafe) static var bundle = Bundle.main
 
     /// The language the app's lines are in, as the catalog names it, never the device's region.
-    static var locale: Locale { Locale(identifier: bundle.localizedString(forKey: "_language", value: "en", table: nil)) }
+    static var locale: Locale { locale(for: bundle.localizedString(forKey: "_language", value: "en", table: nil)) }
+
+    /// The locales the app formats with where a language's own writes figures or dates the lines don't (Arabic: Western
+    /// digits, the Gregorian calendar). Any other language is its own code.
+    static let localeIdentifiers: [String: String] = ["ar": "ar-u-ca-gregory-nu-latn"]
+
+    /// The locale a language code is formatted with.
+    static func locale(for code: String) -> Locale { Locale(identifier: localeIdentifiers[code] ?? code) }
 
     /// A count's number as the app's language writes it: 1,000, 1.000, 1 000.
     static func number(_ n: Int) -> String {
@@ -5678,7 +5699,7 @@ enum Words {
     /// around it. Left to right, values are as they are. Inside the isolate a value carries no direction character of
     /// its own (qa-kiff, #1557), so none can close it early, whoever calls.
     static func isolated(_ values: [String], in locale: Locale) -> [String] {
-        guard Locale.characterDirection(forLanguage: locale.identifier) == .rightToLeft else { return values }
+        guard Locale.characterDirection(forLanguage: locale.language.languageCode?.identifier ?? locale.identifier) == .rightToLeft else { return values }
         return values.map { "\u{2068}\(withoutDirection($0))\u{2069}" }
     }
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Fired, Run } from "../src/cloud/agents.js";
 import { healthLine, healthOf, healthView, vendorKind } from "../src/cloud/health.js";
-import { type Lang, LANGUAGES } from "../src/cloud/words/index.js";
+import { FULL_LANGUAGES, type Lang, LANGUAGES } from "../src/cloud/words/index.js";
 
 const NOW = new Date("2026-10-29T10:00:00Z");
 const ago = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
@@ -312,13 +312,14 @@ describe("a taf's health", () => {
       healthOf([], firings("skipped_credits", "run"), NOW),
     ];
     expect(new Set(every.flatMap((h) => h.reasons.map((r) => r.code))).size).toBe(13);
-    for (const lang of LANGUAGES) {
+    for (const lang of FULL_LANGUAGES) {
       for (const h of every) {
         const view = healthView(h, lang, { billing: true });
         const fixes = [...(view.fixes ?? []), ...(healthView(h, lang).fixes ?? [])].flatMap((f) => [f.words, f.say ?? "the button's words"]);
         for (const line of [...view.lines, ...h.reasons.map((r) => healthLine(r, lang)), ...fixes]) {
-          // Korean and Japanese say in fewer characters what English says in 11 ("크레딧 추가", "クレジットを追加", "Add credits").
-          expect(line.length, `${lang}: ${line}`).toBeGreaterThan(lang === "ko" || lang === "ja" ? 4 : 10);
+          // Korean, Japanese, Chinese and Thai say in fewer characters what English says in 11 ("크레딧 추가", "クレジットを追加",
+          // "Add credits"), and Turkish in 10 ("Kredi ekle"): a line this short is a word, never a code or a placeholder.
+          expect(line.length, `${lang}: ${line}`).toBeGreaterThan(["ko", "ja", "zh-Hant", "th"].includes(lang) ? 3 : 9);
           expect(line, lang).not.toMatch(/cursor|firing|failed_|skipped_|undefined/i);
           expect(line, lang).not.toMatch(/NaN/);
         }

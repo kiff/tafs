@@ -271,6 +271,20 @@ export async function haltedInKIFF(token: string, agent: string | undefined, doF
   return halt(await ask<Partial<KIFFHalt>>(token, "GET", haltPath(agent), undefined, doFetch, base));
 }
 
+/** KIFF's answer to a payment's report: when it was first reported, the taf's agent, and the halt it set. */
+export interface KIFFReport { trace_id: string; agent: string; reported_at: string; halt: KIFFHalt }
+
+/**
+ * Reports a payment the person didn't expect (`POST /v1/receipts/{trace_id}/report`): KIFF marks its receipt reported, keeps
+ * it, and halts the call's taf. Again, the same answer and the first `reported_at`. `409` when it isn't a payment, or KIFF
+ * can't tell which taf made it.
+ */
+export async function reportInKIFF(token: string, trace: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<KIFFReport> {
+  const r = await ask<Partial<Omit<KIFFReport, "halt">> & { halt?: Partial<KIFFHalt> }>(token, "POST", `/v1/receipts/${encodeURIComponent(trace)}/report`, undefined, doFetch, base);
+  if (typeof r.reported_at !== "string" || typeof r.agent !== "string") throw new KIFFError(502, "KIFF's answer to the report isn't readable");
+  return { trace_id: trace, agent: r.agent, reported_at: r.reported_at, halt: halt(r.halt ?? {}) };
+}
+
 /** A halt as read, its acknowledgements false unless KIFF said true. */
 function halt(h: Partial<KIFFHalt>): KIFFHalt {
   const state = h.state === "halted" || h.state === "halting" ? h.state : "running";

@@ -19,7 +19,14 @@ extension TafsCloud {
         let amount_text: String?; let call: KIFFClient.ActivityCall
         /// What the owner can do about a call that wasn't done, as tafs cloud says it (kiff/tafs#476, gap 10).
         var next: NextStep? = nil
+        /// "Report this payment" (docs/record.md): only on a payment this reader may report and that isn't reported yet. tafs
+        /// cloud decides who sees the button (an owner or admin, a payment with a receipt); with no `report` there is none.
+        var report: ReportOffer? = nil
+        /// When it was reported, as KIFF keeps it on the receipt: the button is gone.
+        var reported_at: String? = nil
     }
+    /// A payment's receipt id, for `POST /v1/record/{trace_id}/report`, and when it was made (the sheet's date).
+    struct ReportOffer: Decodable, Equatable { let trace_id: String; let at: String }
     /// The owner's next step for a call that wasn't done: `kind` is `reconnect` (the connection
     /// whose tools include `tool`), `ask_coach` (Coach on the taf, `message` written in) or
     /// `try_later`; `words` are its button's, or its line's for a kind the app doesn't know.
