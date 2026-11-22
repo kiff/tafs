@@ -4182,6 +4182,24 @@ class AppModel(
     }
   }
 
+  /**
+   * The picture kept just before a Chrome step acted, for [bot.tafs.app.views.ChromeShotSheet]: planque's checked picture, or
+   * null when none is kept. Throws when planque can't be asked yet (signed out, no key, planque not ready), so the sheet says
+   * the picture couldn't be loaded, never that none is kept.
+   */
+  suspend fun chromeScreenshot(step: String): bot.tafs.app.kiff.ChromeScreenshot? {
+    var asked = false
+    val shot = chromeCall { asked = true; planque.chromeScreenshot(step) }
+    if (!asked) throw PlanqueError.NotSigning
+    return shot
+  }
+
+  /**
+   * The pictures kept for one operation's Chrome steps (a Record line's `proposalId`), for the receipt's "See the page before
+   * this step" links. Empty when planque can't be asked yet: with no list, the receipt simply shows no link.
+   */
+  suspend fun chromeShots(op: String): List<bot.tafs.app.kiff.ChromeShotRef> = chromeCall { planque.chromeShots(op) }.orEmpty()
+
   /** Reads the person's code sign-in setting (Account › Sign-in). A KIFF without the route (404) leaves the section out. */
   suspend fun loadCodeSignIn() {
     if (_state.value.mode != Mode.kiff) return
