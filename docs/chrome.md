@@ -144,8 +144,13 @@ or switching never leaves a connection pointing at a Chrome that's gone. Nothing
 4. **Every browser connection names its Chrome**, its name and browser ("Work Mac · Chrome 131"), wherever a
    connection is listed: the taf's page, Coach, Account › Chrome (each Chrome with the connections on it). Coach can
    propose removing a connection whose Chrome is gone; removing is a safe route (the device key, no fingerprint).
-5. **One fingerprint per act.** Pairing is one prompt on every phone: the confirm here and KIFF's view-only device for the
-   extension are signed together (`kiff.requests.v1`), and the replace is inside that confirm.
+5. **One fingerprint per act.** Pairing is one prompt on every phone. The two approval-key signatures it needs today, the
+   extension's `phone_sig` over the pairing (`tafs-chrome/pair`) and KIFF's view-only device for the extension
+   (`POST /v1/me/pairings`), become one `kiff.requests.v1` signature: `kiff.requests.v1`, the tenant, `signed_at`, then the
+   SHA-256 (hex, sorted) of the pairing message the extension checks and of KIFF's `kiff.request.v1` message. The phone
+   hands the extension `{signed_at, kiff_request_sha256}` beside `phone_sig`; the extension rebuilds its own pairing
+   message, hashes it, and checks the one signature over both, as KIFF checks its half. planque's confirm stays on the
+   device key, and the replace (1) is in it.
 6. **Isolation is unchanged.** Each Chrome keeps its own key; each connection keeps its own signed sites and its own tab
    group; a step still goes only to the Chrome its connection names. A replace or a switch changes the Chrome a
    connection uses, never its sites or Card.
