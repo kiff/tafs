@@ -64,7 +64,7 @@ import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { type Ask, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, askDay, askOfSession, type AskState, checkedLine, CLIENT_ID, dayTurns, fullAnswer, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, ROUTING_MS, shownAsk, SINCE_DEFAULT_MS, tafLine, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
+import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, unagreedRefusal, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
@@ -228,7 +228,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
-  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "getRun" | "runByKey" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "unclaimedDrafts" | "getRun" | "runByKey" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "checkTool" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" | "listFiles" | "readDeliveredFile" | "downloadDeliveredFile" | "deleteDeliveredFile" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
@@ -1106,9 +1106,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // What the person wrote that waits for the taf to be done goes now, in each chat where it's done (docs/chat.md).
     await settleChats(event, me, taf, deps).catch(() => undefined);
     const [doors, titles, posted] = await Promise.all([managing, titlesOf(event, me, taf, deps), weekOne]);
-    const { messages, components, held, drives, sessions, usage } = await conversation(me, posted ? { ...taf, weekOne: posted } : taf, deps, undefined, doors, titles, langOf(event));
+    const { messages, components, held, drives, sessions, usage, agreements } = await conversation(me, posted ? { ...taf, weekOne: posted } : taf, deps, undefined, doors, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
-    await markSigns(event, me, taf, components, deps);
+    await markSigns(event, me, taf, components, deps, agreements);
+    await fillApprovalNotes(event, me, components, deps);
     const latest = await latestRun(me, taf, sessions, deps, langOf(event));
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(latest.failed ? { failed: latest.failed } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
@@ -1116,9 +1117,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // What waits in this chat goes now, if the taf is done in it: only this chat's.
     await settleChat(event, me, taf, parts[4] ?? "", deps).catch(() => undefined);
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles, langOf(event));
+    const { messages, components, held, drives, sessions, usage, agreements } = await conversation(me, taf, deps, only, false, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
-    await markSigns(event, me, taf, components, deps);
+    await markSigns(event, me, taf, components, deps, agreements);
+    await fillApprovalNotes(event, me, components, deps);
     const latest = await latestRun(me, taf, sessions, deps, langOf(event));
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(latest.failed ? { failed: latest.failed } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
@@ -2878,7 +2880,7 @@ export interface ThreadUsage {
   cost_micro_usd: number;
 }
 
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map(), lang: Lang = "en"): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; drives: ThreadDrive[]; sessions: Session[]; usage?: ThreadUsage }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map(), lang: Lang = "en"): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; drives: ThreadDrive[]; sessions: Session[]; usage?: ThreadUsage; agreements: Map<string, ReturnType<typeof rulesAgreement>> }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
   // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
@@ -2905,8 +2907,11 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   const doorRuns = new Map<string, string>();
   const sent = new Map((deps.doors ? await sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : []).map((x) => [x.run, x]));
   const usage: ThreadUsage | undefined = taf.job === SETUP_JOB ? { turns: 0, tokens_in: 0, cache_read_tokens: 0, cost_micro_usd: 0 } : undefined;
+  /** Each chat's rules agreement, from the events read here: an approval over a Card waits on it (rulesFirst). */
+  const agreements = new Map<string, ReturnType<typeof rulesAgreement>>();
   for (const r of read) {
     if (!r) continue;
+    agreements.set(r.session.id, rulesAgreement(r.events));
     if (usage) {
       for (const e of r.events) {
         if (e.kind !== "usage") continue;
@@ -3113,7 +3118,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   const shown = components.slice(-CHAT.maxThread);
   await markConnected(me.tenantID, shown, deps, lang);
   await markPlanNeeded(me.tenantID, shown, deps, lang);
-  return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
+  return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, agreements, ...(usage ? { usage } : {}) };
 }
 
 /** The owner's message already in the thread with these words, in this chat, at this time: one send, recorded twice. */
@@ -3365,14 +3370,14 @@ const SIGNS_READ_MS = 1500;
  * Planque-Device-Signature and what it can sign (`?can=tools_and_cards,key_and_cards`); without the proof, or when
  * the connections can't be read in time, the cards are left as they were.
  */
-async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
-  await markSteps(event, me, taf, components, deps);
+async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps, agreements?: Map<string, ReturnType<typeof rulesAgreement>>): Promise<void> {
+  await markSteps(event, me, taf, components, deps, agreements);
   // After the marks: a precheck on this read may have kept a waiting app's note (other_app_first), and that app's card,
   // shown without the draft, is answered on this same read rather than the next (two cards drawn in one second).
   await refuseSplitApprovals(event, me, taf, components, deps).catch((err) => console.error(`split approval: ${(err as Error).message}`));
 }
 
-async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
+async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps, agreements?: Map<string, ReturnType<typeof rulesAgreement>>): Promise<void> {
   const proof = event.headers?.["planque-device-signature"] ?? "";
   if (!proof || !deps.planqueBase) return;
   const naming = (type: string) => components.filter((c) => !c.answer && (c.component as { type?: unknown; grant?: unknown } | undefined)?.type === type &&
@@ -3392,6 +3397,16 @@ async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
     const asked = grant && stepFor(grant, { draft, can }, flags);
     if (!asked) continue;
+    // A Card while its chat's newest rules notice isn't agreed is never offered: Approve would refuse it (rules_unagreed),
+    // and that needs nothing of the draft, so it doesn't wait on the draft's read in time.
+    const agreement = agreements?.get(c.session);
+    if (grant && draft && agreement?.state === "unagreed" && checkedOnReadFor(grant, draft, can)) {
+      const first = await rulesFirst(event, me, taf, c, agreement.notice, grant, deps);
+      if (first) {
+        c.answer = first;
+        continue;
+      }
+    }
     // A step that signs the Card (alone, or with the tools or key it covers) reads its draft, in the same time: a Card
     // alone takes the key KIFF names for it, or nothing is said of the key.
     const signsCard = checkedOnReadFor(grant, draft, can);
@@ -3526,6 +3541,42 @@ const precheckKeys = {
 /** A refusal Coach was told on a chat's read: its answer, so every phone draws the card as answered. */
 interface PrecheckTold { answer: string; at: string; note?: string }
 
+/** How long the owner's reason for an approval tafs cloud answered in their place is kept, to show beside its card. */
+const APPROVAL_NOTE_KEPT_MS = 30 * 24 * 3600_000;
+const approvalNoteKey = (tenant: string, session: string, component: string) => `${tenant}#approval-note#${session}#${component}`;
+
+/**
+ * The owner's own words for why an approval didn't count, kept when tafs cloud answers the card in their place (the
+ * precheck, Approve's refusal, a settled approval that failed). kiff/agents records only the answer written for Coach, so
+ * every later read of the chat said "it didn't go through" with no reason (22 Nov, the emulator: a Card refused for rules
+ * not yet agreed). Only a failed answer's: any other answer has its own words. Best effort: a store that can't keep it
+ * leaves the line as it was.
+ */
+async function keepApprovalNote(deps: Deps, tenant: string, session: string, component: string, answer: string, note: string | undefined): Promise<void> {
+  if (!deps.coach || !note || !session || !component || !answer.startsWith("failed: ")) return;
+  await deps.coach.put(approvalNoteKey(tenant, session, component), { note }, new Date(nowOf(deps).getTime() + APPROVAL_NOTE_KEPT_MS)).catch(() => undefined);
+}
+
+/**
+ * An approval card answered "failed: …" says why in the owner's words, on every read of the chat: its kept note
+ * (keepApprovalNote) goes into its line as approvalAnswerWords words it, the same line the precheck draws. A card with no
+ * kept note, or any other answer, is left as it is: "it didn't go through" stays only where no reason was kept.
+ */
+async function fillApprovalNotes(event: HTTPEvent, me: KIFFIdentity, components: ThreadComponent[], deps: Deps): Promise<void> {
+  if (!deps.coach) return;
+  const lang = langOf(event);
+  await Promise.all(components.map(async (c) => {
+    const card = c.component as { type?: unknown; id?: unknown } | undefined;
+    const settled = c.answer?.answer;
+    if (!c.answer || c.answer.state !== "answered" || card?.type !== "approval" || typeof settled !== "string" || !settled.startsWith("failed: ")) return;
+    const id = String(card.id ?? "");
+    if (!id) return;
+    const kept = (await deps.coach!.get(approvalNoteKey(me.tenantID, c.session, id)).catch(() => undefined)) as { note?: unknown } | undefined;
+    if (typeof kept?.note !== "string" || !kept.note) return;
+    c.answer = { ...c.answer, words: approvalAnswerWords({ type: "approval", answer: settled, note: kept.note }, lang) ?? c.answer.words };
+  }));
+}
+
 /**
  * A Card draft checked as the phone reads the chat, before its card is drawn (Eval 43690861487's Refunds: the owner
  * approved a Card that Approve then refused, and approved the redraft, two Card approvals for one app). The check is
@@ -3577,6 +3628,56 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
   }
   const told: PrecheckTold = { answer: out.answer, at: now.toISOString(), ...(out.note ? { note: out.note } : {}) };
   await deps.coach.put(toldKey, told, kept).catch(() => undefined);
+  await keepApprovalNote(deps, me.tenantID, c.session, component, out.answer, out.note);
+  return shown(told);
+}
+
+const rulesFirstKeys = {
+  claim: (tenant: string, session: string, component: string) => `${tenant}#rules-first#${session}#${component}`,
+  told: (tenant: string, session: string, component: string) => `${tenant}#rules-first-told#${session}#${component}`,
+};
+
+/**
+ * An approval over a Card draft in a chat whose newest rules notice isn't agreed, answered as the chat is read, before the
+ * card is drawn: Coach hears Approve's own refusal (rules_unagreed, unagreedRefusal), shows the rules' confirm, and drafts
+ * once the owner agrees; the card is drawn answered with the owner's reason, never with Approve. It reads nothing more than
+ * the chat already read, so a slow read of the draft can't let the card through (22 Nov: no precheck line, the card drawn
+ * with Approve, the tap refused). Once per card, across phones and reads (a claim, then the answer kept), as the precheck
+ * is; a person whose role can't manage Cards or who hasn't agreed to AI use sees the card as before, and the tap refuses it.
+ */
+async function rulesFirst(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadComponent, notice: string, grant: ApprovalGrant, deps: Deps): Promise<CardAnswer | undefined> {
+  if (!deps.coach || !me.capabilities.includes("cards.manage")) return undefined;
+  const component = String((c.component as { id?: unknown })?.id ?? "");
+  if (!component) return undefined;
+  const now = nowOf(deps);
+  const lang = langOf(event);
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer, note: t.note }, lang) ?? "", at: t.at,
+    ...(settledApprovalAnswer(t.answer) ? { answer: settledApprovalAnswer(t.answer) } : {}) });
+  const claim = rulesFirstKeys.claim(me.tenantID, c.session, component);
+  const toldKey = rulesFirstKeys.told(me.tenantID, c.session, component);
+  const kept = new Date(now.getTime() + PRECHECK_KEPT_MS);
+  if (!(await deps.coach.once(claim, kept).catch(() => false))) {
+    const told = (await deps.coach.get(toldKey).catch(() => undefined)) as PrecheckTold | undefined;
+    return told && typeof told.answer === "string" && typeof told.at === "string" ? shown(told) : undefined;
+  }
+  const release = () => deps.coach!.remove(claim).catch(() => undefined);
+  try {
+    await requireAIConsent(event, me, deps);
+  } catch {
+    await release();
+    return undefined;
+  }
+  const out = unagreedRefusal(notice, grant, lang);
+  try {
+    await tellCoach(me, taf, { session: c.session, run: c.run }, component, out.answer, deps);
+  } catch (err) {
+    if (!(err instanceof HTTPError && err.status === 409)) await release();
+    return undefined;
+  }
+  console.log("approval precheck: rules_unagreed (rules first)");
+  const told: PrecheckTold = { answer: out.answer, at: now.toISOString(), note: out.note };
+  await deps.coach.put(toldKey, told, kept).catch(() => undefined);
+  await keepApprovalNote(deps, me.tenantID, c.session, component, out.answer, out.note);
   return shown(told);
 }
 
@@ -4234,6 +4335,7 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
     // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
     const answer = signIn && decision.answer.startsWith("already approved") ? "signed in" : decision.answer;
     const told = await tellCoach(me, taf, card, component, answer, deps);
+    await keepApprovalNote(deps, me.tenantID, card.session, component, answer, decision.note);
     return { outcome: "answered", answer, note: decision.note, ...told };
   }
   // The person is now approving on the phone (a fingerprint, a sign-in): a message they send meanwhile waits in
@@ -4308,6 +4410,7 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
   let told: Awaited<ReturnType<typeof tellCoach>> | { session: string };
   try {
     told = await tellCoach(me, taf, card, component, outcome.answer, deps);
+    await keepApprovalNote(deps, me.tenantID, card.session, component, outcome.answer, outcome.note);
   } catch (err) {
     // The card stopped waiting while the person approved (a message started a new run before this came in): the
     // approval still happened, so Coach reads its outcome with the next message in the card's chat, and the card shows
@@ -7674,6 +7777,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     // on its agent, listed here as Home lists a live taf's `card.ids`, then asks tafs cloud.
     return [{ name: half.name, kiff_agent: agent, color, ...(half.coach && half.session ? {
       finish: { taf: half.coach, session: half.session, words: w.home_finish_setup },
+    } : {}), ...(half.own ? {
       discard: { cards: (cards.get(agent) ?? []).map((c) => c.id), words: { button: w.home_discard, title: w.home_discard_title, text: w.home_discard_text, yes: w.home_discard_yes, no: w.home_discard_no } },
     } : {}) }];
   });
@@ -7732,7 +7836,8 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
  * A taf Coach drafted whose setup stopped partway: the name Coach gave it, and the chat where it stopped while that
  * chat's result still waits (none once it expired: the name stays, from what tafs cloud kept).
  */
-interface HalfMade { name: string; coach?: string; session?: string }
+/** `own`: its starter is the person reading, so Home offers Discard (and Finish, with the chat). */
+interface HalfMade { name: string; coach?: string; session?: string; own?: boolean }
 
 /**
  * POST /v1/home/setting-up/{kiff_agent}/discard: a taf being set up, dropped by the person who started it (a Discard
@@ -7759,7 +7864,10 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
       if (held && held.agent_id === agent && !held.claimed) found = r;
     }
   }
-  if (!found || !coach) {
+  // No chat shows its result any more: the setup's own unclaimed draft for that agent, started by this person, proves it.
+  const drafted = !found && coach ? (await (deps.agents.unclaimedDrafts?.(me.tenantID) ?? Promise.resolve([])).catch(() => []))
+    .some((d) => d.agent_id === agent && d.requester?.kind === "member" && d.requester.id === me.subject) : false;
+  if ((!found && !drafted) || !coach) {
     // A discard of a draft this person already discarded (a phone's HTTP stack resends a POST on a dropped connection, and the
     // app sees only the resend's answer) answers done again, marked already: 404 stays for a draft that never was, or isn't theirs.
     const done = (await deps.coach?.get(discardedKey(me.tenantID, agent)).catch(() => undefined)) as { by?: string } | undefined;
@@ -7787,10 +7895,10 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
   }
   // A run that already moved on is a chat that no longer waits: that's done too. One kiff/agents can't cancel (paused on its
   // result card) is kept as ended here (endCoachRun).
-  await endCoachRun(deps, me.tenantID, coach.id, found, deps.now?.() ?? new Date(), member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
+  if (found) await endCoachRun(deps, me.tenantID, coach.id, found, deps.now?.() ?? new Date(), member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
   await deps.coach?.remove(halfMadeKey(me.tenantID, agent)).catch(() => undefined);
   await deps.coach?.put(discardedKey(me.tenantID, agent), { by: me.subject }, new Date((deps.now?.() ?? new Date()).getTime() + DISCARDED_KEPT_MS)).catch(() => undefined);
-  console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, run: found.id }));
+  console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, ...(found ? { run: found.id } : { by: "draft" }) }));
   await tellChange(me.tenantID, "taf", agent, deps);
   return { discarded: true, kiff_agent: agent };
 }
@@ -8195,8 +8303,24 @@ async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string
       // The chat opens only for the person who started it (ownChat): anyone else sees the name, with no way in that
       // would answer "no such chat" (#873).
       const own = r.requester?.kind === "member" && r.requester.id === me.subject;
-      out.set(agent, { name: name.trim(), ...(own ? { coach: coach.id, session: r.session } : {}) });
+      out.set(agent, { name: name.trim(), ...(own ? { coach: coach.id, session: r.session, own } : {}) });
     }
+  }
+  // A Card approved for the setup's draft whose chat never showed its result (it ended first, or its result was answered
+  // "never approved" before the Card was): no result names it, but kiff/agents still holds the setup's unclaimed draft for
+  // that agent. That's proof too, so the agent is listed as being set up, with Discard for its starter, never left acting
+  // where no screen shows it. A read that fails, or a kiff/agents without the route, adds none.
+  const drafts = coach ? await (deps.agents.unclaimedDrafts?.(tenant) ?? Promise.resolve([])).catch(() => []) : [];
+  for (const d of drafts) {
+    if (!agents.has(d.agent_id) || out.has(d.agent_id) || named.has(d.agent_id)) continue;
+    const own = d.requester?.kind === "member" && d.requester.id === me.subject;
+    const name = typeof d.name === "string" ? d.name.trim() : "";
+    const kept = name ? undefined : await deps.coach?.get(halfMadeKey(tenant, d.agent_id)).catch(() => undefined) as { name?: unknown } | undefined;
+    const shown = name || (typeof kept?.name === "string" ? kept.name : "");
+    // Listed by the name Coach gave it, never by its agent's id: without one it stays as before.
+    if (!shown) continue;
+    named.add(d.agent_id);
+    out.set(d.agent_id, { name: shown, ...(own ? { own } : {}) });
   }
   if (!deps.coach) return out;
   const store = deps.coach;
