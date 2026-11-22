@@ -1478,7 +1478,7 @@ request, the window, each refusal) and `PairComputerTest` (the sheet).
 Account › **Chrome** (`ChromesSheet`, `ChromesView.kt`) lists the Chromes paired to the account, with Unpair, and **Pair a
 Chrome**, as iOS's `ChromesView`. The extension's side, and the contract all three sides build to, is [chrome.md](chrome.md).
 The row shows only once planque offers Chromes: its `GET …/chromes` answering 404 leaves `AppState.chromes` null, so planque's
-switch decides, never the app. Account reads it when it opens (`AppModel.refreshChromes`).
+switch decides, never the app. Account reads it when it opens (`AppModel.refreshChromes`). Account reads them when it opens; one opened before planque is ready (the first seconds after launch) reads nothing, so the first grants read that makes planque ready reads them too (`refreshConnections`, `ChromesTest.theRowShowsOnceReadyEvenWhenAccountOpenedBeforePlanqueWas`).
 
 - **The phone shows the code.** `POST …/chromes/pairings` gives the lookup. The phone makes the 17-character secret itself (about 83 bits, so the proof planque keeps under it can't be tried offline), shown in groups of four (`K7QF-29XM-DPQR-STVW-XYZ2-3`)
   (`ChromePairing.newSecret`, `SecureRandom`) and never sends it. It shows `lookup-secret` with "Pair only a Chrome on a computer

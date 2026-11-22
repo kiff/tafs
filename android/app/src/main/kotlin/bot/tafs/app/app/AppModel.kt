@@ -3961,7 +3961,12 @@ class AppModel(
       if (generation == accountGeneration) _state.update { it.copy(connectionsError = ErrorWords.of(e)) }
       return
     }
-    if (generation == accountGeneration) _state.update { it.copy(grants = list, planqueReady = true, connectionsError = null) }
+    if (generation != accountGeneration) return
+    val wasReady = _state.value.planqueReady
+    _state.update { it.copy(grants = list, planqueReady = true, connectionsError = null) }
+    // Account reads the Chromes when it opens, and a read before planque is ready gets nothing: opened in the first seconds after
+    // launch, its Chrome row stayed hidden (the owner's pairing run, 22 Nov). So the first time planque is ready, they're read.
+    if (!wasReady && _state.value.chromes == null) refreshChromes()
   }
 
   /** What an approval needs to be shown: planque's grant and KIFF's draft, read when Coach's thread is. */
