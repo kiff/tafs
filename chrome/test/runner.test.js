@@ -24,6 +24,7 @@ function fakeChrome({ permitted = true, page = null } = {}) {
     listeners,
     tabsMap: tabs,
     setAct: (a) => (actAnswer = a),
+    setNextTab: (n) => (nextTab = n),
     webNavigation: { onBeforeNavigate: on("before"), onCommitted: on("committed"), onCreatedNavigationTarget: on("created") },
     tabs: {
       onRemoved: on("removed"),
@@ -189,7 +190,7 @@ test("a run's tab is fenced by Chrome's own rules before it loads: only its site
   const loaded = c.calls.findIndex((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/");
   assert.ok(fenced < loaded, "fenced before the run's page loads");
   await r.stop("run_1");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, [tab * 4 + 1, tab * 4 + 2, tab * 4 + 3]);
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, rules.addRules.map((x) => x.id));
 });
 
 test("a run's sites are the phone's signed list for the grant, never planque's word, and never grow", async () => {
@@ -333,4 +334,42 @@ test("a run nobody sends a step to for five minutes is closed, as Stop does; a p
   clock += 60 * 60_000;
   await r2.sweep();
   assert.equal(r2.runs.get("run_1").stopped, false);
+});
+
+test("a fenced tab's rule ids are small whatever the tab id is, a rule's id never repeats across tabs, and a run's rules go when it ends", async () => {
+  const c = fakeChrome();
+  const added = [];
+  c.declarativeNetRequest.updateSessionRules = async (o) => {
+    c.calls.push(["dnr", o]);
+    added.push(...(o.addRules || []).map((x) => x.id));
+  };
+  let stale = [{ id: 77 }, { id: 78 }];
+  c.declarativeNetRequest.getSessionRules = async () => stale;
+  const r = runner(c);
+  // Chrome's tab ids can run into the billions: a rule id has to fit an int32.
+  c.setNextTab(2_000_000_000);
+  await r.handle(step());
+  c.setNextTab(1_900_000_000);
+  await r.handle(step({ run: "run_2", id: "op2" }));
+  assert.equal(added.length, 6);
+  assert.ok(added.every((id) => Number.isInteger(id) && id >= 1 && id <= 2 ** 31 - 1), "every rule id is a valid int32");
+  assert.equal(new Set(added).size, 6, "no id repeated across two tabs");
+  const removals = c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules);
+  assert.deepEqual(removals[0][1].removeRuleIds, [77, 78], "rules an earlier service worker left are cleared first");
+  await r.stop("run_1");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, added.slice(0, 3), "its own rules, not the other run's");
+});
+
+test("a window that can't be set up (the fence refuses) is closed, not left open and blank, and the step says why", async () => {
+  const c = fakeChrome();
+  c.declarativeNetRequest.updateSessionRules = async () => {
+    throw new Error("Rule with id 8000000001 does not specify a valid id");
+  };
+  const r = runner(c);
+  const out = await r.handle(step());
+  assert.equal(out.error.code, "browser_unavailable");
+  assert.match(out.error.detail, /valid id/);
+  assert.ok(c.calls.some((x) => x[0] === "windows.remove"), "the window is closed");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/"), "nothing was loaded");
+  assert.equal(r.active, false);
 });
