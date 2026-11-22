@@ -24,7 +24,16 @@ import java.net.URLEncoder
 @Serializable data class TafActivityEntry(val id: String, val at: String, val kind: String, val title: String, val detail: String,
   val time: String, @SerialName("amount_text") val amountText: String? = null, val call: ActivityCall,
   /** What the owner can do about a call that wasn't done, as tafs cloud says it (kiff/tafs#476, gap 10). */
-  val next: NextStep? = null)
+  val next: NextStep? = null,
+  /** "Report this payment": only on a payment tafs cloud says this person may report (docs/record.md). */
+  val report: ReportOffer? = null,
+  /** When this payment was reported, as KIFF keeps it. */
+  @SerialName("reported_at") val reportedAt: String? = null)
+/**
+ * A payment the person may report as one they didn't expect: tafs cloud decides who sees it (an owner or admin, a payment KIFF
+ * signed, not reported yet); [traceId] is its receipt's, and [at] when it was made, the sheet's date.
+ */
+@Serializable data class ReportOffer(@SerialName("trace_id") val traceId: String, val at: String)
 /**
  * The owner's next step for a call that wasn't done: [kind] is `reconnect` (the connection whose tools include [tool]), `ask_coach`
  * (Coach on the taf, [message] written in) or `try_later`; [words] are its button's, or its line's for a kind the app doesn't know.

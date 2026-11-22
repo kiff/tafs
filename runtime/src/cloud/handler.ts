@@ -5,7 +5,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -180,6 +180,7 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/record                     ?q=&from=&to=&limit=&cursor=: the Record across the person's tafs, searched by order, invoice, amount or action (record.ts)
  *   GET  /v1/record/cases/{about}       one case: every call about the same thing, oldest first, and the step that didn't go through
  *   GET  /v1/record/receipts            ?from=&to=: the receipts of those days for an accountant (at most 92 days), for those who see every taf's Record
+ *   POST /v1/record/{trace_id}/report   "Report this payment": KIFF marks the receipt reported and halts its taf, and so does kiff/agents (owner or admin)
  *   GET  /v1/tafs/{id}/setup            its Setup, ready to draw: connections, workflow, memory and versions (Planque-Device-Signature forwarded for the grants read)
  *   GET  /v1/tafs/{id}/calls            what its calls through KIFF acted on (kiff/tafs#167)
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
@@ -728,6 +729,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "calendar" && parts.length === 2 && method === "GET") return calendar(event, await person(event, deps), deps);
   if (parts[1] === "files") return filesRoute(event, method, parts, await person(event, deps), deps);
   if (parts[1] === "record" && method === "GET") return recordRoute(event, parts, await person(event, deps), deps);
+  if (parts[1] === "record" && parts.length === 4 && parts[3] === "report" && method === "POST") return paymentReportRoute(event, parts[2]!, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
   if (parts[1] === "coach" && parts[2] === "drive") return driveRoute(event, method, parts, await person(event, deps), deps);
   // A request from the watch, through the paired phone (docs/watch-ask.md).
@@ -891,7 +893,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       catch { unitExceptionsNotice = cardUnitNotice(langOf(event)); }
       return conditionalPage(event, await activityPage({ token: bearer(event), tenant: me.tenantID, subject: me.subject,
         taf: taf.id, tafName: taf.name, agent: taf.kiffAgent, zone: me.timeZone ?? "UTC", now: deps.now?.() ?? new Date(), query: new URLSearchParams(event.rawQueryString ?? ""),
-        unitExceptions, unitExceptionsNotice, lang: langOf(event), manages: access.get(taf.kiffAgent)?.manage === true }, deps.fetch, deps.kiffBase));
+        unitExceptions, unitExceptionsNotice, lang: langOf(event), manages: access.get(taf.kiffAgent)?.manage === true,
+        reports: me.capabilities.includes("cards.manage") }, deps.fetch, deps.kiffBase));
     }
     if (action === "work") return runsPage(event, me, taf, deps, access.get(taf.kiffAgent)?.manage === true);
     return setupPage(event, me, taf, deps);
@@ -1455,6 +1458,41 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     return { halt: haltView({ status: "fulfilled", value: kiff }, runtime) };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * "Report this payment" (docs/record.md): KIFF marks the receipt reported, keeps it and halts the call's taf; kiff/agents halts
+ * it too, so no run of it starts, and the phones hear the halt as from the halt button. No signature, since it only takes
+ * authority away: resuming stays behind the phone. Again, the same answer: KIFF keeps the first `reported_at`, and a taf
+ * resumed in between is halted again.
+ */
+async function paymentReportRoute(event: HTTPEvent, trace: string, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  need(me, "cards.manage");
+  if (!/^[A-Za-z0-9_.:-]{1,128}$/.test(trace)) throw new HTTPError(400, "that receipt's id isn't readable");
+  let report: KIFFReport;
+  try { report = await reportInKIFF(bearer(event), trace, deps.fetch, deps.kiffBase); } catch (err) {
+    if (err instanceof KIFFError && err.status === 404) throw new HTTPError(404, "no such receipt in this account");
+    if (err instanceof KIFFError && err.status === 409) {
+      throw new HTTPError(409, err.message === "agent_unknown" ? "KIFF can't tell which taf made this payment, so nothing was reported" : "that call isn't a payment, so there is nothing to report");
+    }
+    throw err;
+  }
+  const taf = (await deps.tafs.list(me.tenantID).catch(() => [] as Taf[])).find((t) => t.kiffAgent === report.agent && !t.removing);
+  // KIFF has reported it and halted the taf: from here nothing fails the report, or the entry reads reported, with no button
+  // to try again, while kiff/agents may still start a run. kiff/agents not halting leaves the halt `halting`, and the taf's
+  // Halt button asks again. A taf tafs cloud no longer lists (removed): KIFF's halt is the whole of it.
+  const notHalted: AgentsHalt = { halted: false, own: false, tenant: false };
+  const runtime: AgentsHalt = taf ? await deps.agents.halt(me.tenantID, taf.id).catch((err: unknown) => {
+    console.log(JSON.stringify({ event: "report_halt_failed", tenant: me.tenantID, taf: taf.id, status: err instanceof AgentsError ? err.status : 0 }));
+    return notHalted;
+  }) : notHalted;
+  const view = haltView({ status: "fulfilled", value: report.halt }, runtime);
+  if (taf) {
+    await tellPhones(deps, me.tenantID, (lang) => haltNotification(taf, view.state === "halted", lang));
+    await logEvent(deps.events, me.tenantID, { kind: "halted", taf: taf.id, name: taf.name }, deps.now?.());
+    await tellChange(me.tenantID, "halted", taf.id, deps);
+  }
+  return { reported_at: report.reported_at, ...(taf ? { taf: taf.id } : {}), halt: view };
 }
 
 /**
@@ -7590,7 +7628,8 @@ async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, 
   // be read back. An unreadable list leaves them out.
   const removed = me.capabilities.includes("cards.manage") && deps.coach
     ? removedRecordTafs(await deps.coach.get(removedTafsKey(me.tenantID)).catch(() => undefined), new Set(all.map((t) => t.kiffAgent)), lang) : [];
-  const tafs: RecordTaf[] = [...all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, manages: access.get(t.kiffAgent)?.manage === true })), ...removed];
+  const tafs: RecordTaf[] = [...all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, manages: access.get(t.kiffAgent)?.manage === true,
+    reports: me.capabilities.includes("cards.manage") })), ...removed];
   const q = new URLSearchParams(event.rawQueryString ?? "");
   if (parts.length === 2) {
     return conditionalPage(event, await recordPage({ token: bearer(event), scope: `${me.tenantID}#${me.subject}`, tafs, zone, now, query: q, lang }, deps.fetch, deps.kiffBase));

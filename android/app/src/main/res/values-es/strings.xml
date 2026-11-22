@@ -1851,6 +1851,12 @@
     <string name="record_refused_next_step_detail">Rechazada, con un siguiente paso para el taf: %1$s</string>
     <string name="record_removed_detail">Programación, memoria y clave eliminadas; nombre libre</string>
     <string name="record_removed_title">Eliminaste %1$s</string>
+    <string name="record_report_button">Informar de este pago</string>
+    <string name="record_report_done">Informado. %1$s está bloqueado y se conserva el recibo. Si salió dinero de tu cuenta, contacta también con el emisor de tu tarjeta.</string>
+    <string name="record_report_failed">No se pudo enviar el informe. No ha cambiado nada. Inténtalo de nuevo.</string>
+    <string name="record_report_intro">Informa de un pago que no esperabas: %1$s pagó %2$s el %3$s. Bloquearemos %1$s hasta que lo hayas revisado.</string>
+    <string name="record_report_submit">Informar y bloquear %1$s</string>
+    <string name="record_report_title">Informar de este pago</string>
     <string name="record_result_done">hecho</string>
     <string name="record_result_no_answer_yet">enviado, aún sin respuesta</string>
     <string name="record_result_not_done">no hecho</string>

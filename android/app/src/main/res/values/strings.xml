@@ -1851,6 +1851,12 @@
     <string name="record_refused_next_step_detail">Refused, with a next step for the taf: %1$s</string>
     <string name="record_removed_detail">Schedule, memory and key deleted; name free</string>
     <string name="record_removed_title">You removed %1$s</string>
+    <string name="record_report_button">Report this payment</string>
+    <string name="record_report_done">Reported. %1$s is halted and the receipt is kept. If money left your account, contact your card issuer too.</string>
+    <string name="record_report_failed">Couldn\'t send the report. Nothing changed. Try again.</string>
+    <string name="record_report_intro">Report a payment you didn\'t expect: %1$s paid %2$s on %3$s. We halt %1$s until you\'ve looked.</string>
+    <string name="record_report_submit">Report and halt %1$s</string>
+    <string name="record_report_title">Report this payment</string>
     <string name="record_result_done">done</string>
     <string name="record_result_no_answer_yet">sent, no answer yet</string>
     <string name="record_result_not_done">not done</string>

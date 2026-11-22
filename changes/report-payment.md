@@ -1,0 +1,1 @@
+- **Report this payment (tafs cloud, Android, iOS):** on a payment's receipt, an owner or admin reports a payment they didn't expect; KIFF keeps the receipt and the taf is halted until they've looked ([report-payment.md](docs/report-payment.md)).

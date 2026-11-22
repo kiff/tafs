@@ -1851,6 +1851,12 @@
     <string name="record_refused_next_step_detail">Abgelehnt, mit einem nächsten Schritt für den taf: %1$s</string>
     <string name="record_removed_detail">Zeitplan, Gedächtnis und Schlüssel gelöscht; Name frei</string>
     <string name="record_removed_title">Du hast %1$s entfernt</string>
+    <string name="record_report_button">Diese Zahlung melden</string>
+    <string name="record_report_done">Gemeldet. %1$s ist angehalten, und der Beleg bleibt gespeichert. Wenn Geld von deinem Konto abgegangen ist, wende dich auch an deinen Kartenaussteller.</string>
+    <string name="record_report_failed">Die Meldung konnte nicht gesendet werden. Nichts wurde geändert. Versuche es noch einmal.</string>
+    <string name="record_report_intro">Melde eine Zahlung, die du nicht erwartet hast: %1$s hat am %3$s %2$s gezahlt. Wir halten %1$s an, bis du nachgesehen hast.</string>
+    <string name="record_report_submit">Melden und %1$s anhalten</string>
+    <string name="record_report_title">Diese Zahlung melden</string>
     <string name="record_result_done">erledigt</string>
     <string name="record_result_no_answer_yet">gesendet, noch keine Antwort</string>
     <string name="record_result_not_done">nicht erledigt</string>
