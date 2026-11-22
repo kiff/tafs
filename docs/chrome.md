@@ -242,12 +242,12 @@ error = {code, detail?}      // detail never carries page text
 | `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
 | `needs_site_permission` | Chrome hasn't let the extension into that site yet: the side panel offers "Allow shop.example in Chrome" |
 | `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since |
-| `ref_unknown` | the read has no such ref, or its element is gone |
+| `ref_unknown` | the read has no such ref, or its element is gone, or it has become something else since the read: the element's tag, type, name, label, words and link target, and the words of the row it sits in, must be what the read saw |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
 | `secret_field` | a fill of a password or one-time-code field with a plain value, or a sealed value into a field its part doesn't fit |
 | `payment_step` | a fill of a card field, a click whose words or semantics pay or place an order, or any click on a checkout or payment page |
 | `dialog_open` | the page raised a dialog since the read |
-| `paused_by_owner`, `paused_failures`, `stopped` | the run is paused or stopped |
+| `paused_by_owner`, `paused_failures`, `paused_no_progress`, `stopped` | the run is paused or stopped |
 | `page_unresponsive`, `browser_unavailable` | the page didn't answer in 20 s, or Chrome failed |
 | `page_too_large` | the answer is over 120 KB, the relay's limit with room to spare |
 
@@ -270,6 +270,14 @@ was done.
 - **The owner's own keystroke, click or scroll in a run's tab pauses the run** (`isTrusted`). The side panel says
   "Paused: you're using this tab", with Resume.
 - **Three failed acts in a row pause the run,** with what it read so far.
+- **The same act on the same page that answers with the same page twice in a row pauses the run** (`paused_no_progress`), with
+  what it read: a click that did nothing, done again, would do nothing a third time. A different act, a different page or
+  a different answer starts the count again, and so does Resume. The read's own id and the sealed handles don't count as a
+  change.
+- **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
+  read never lands in the middle of an act. Pause and Stop don't wait.
+- **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
+  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is.
 - **A run's tabs get two scripts:**
   - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
     reported, a confirm answers no, and a "leave this page?" handler is dropped.
@@ -389,8 +397,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   extension; the relay taking nothing before both proofs; the extension speaking first; planque's `close` message and
   `4410` wiping the extension once; `page_too_large`; and a run's dropped connection opened again.
 - **`runner.test.js`:** against a fake Chrome API. A run's window is never focused. The owner's tabs are never listed.
-  Off-site opens, navigations and pop-ups are stopped. The guard runs before the page is touched. There are the pauses,
-  Stop, and the site permission.
+  Off-site opens, navigations, pop-ups and restored pages are stopped. The guard runs before the page is touched. There
+  are the pauses (failures, no progress, the owner), Stop, steps that never overlap, windows of a page's text, and the
+  site permission.
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
   `ios/Tafs/KIFF/ChromePairing.swift`.
@@ -403,7 +412,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   checks which part fits which field.
 - **`page.test.js`:** the content script in a real Chromium page. A read's refs and masking (no password, code, hidden
   input, card number or key), a long page's windows, page text that imitates a fence or an instruction (it goes up as
-  written), fill, select and check, a fill that never submits, a stale read after a navigation, a covered button that isn't
+  written), an act that refuses an element that has become something else (its words, its target, its row), fill, select and check, a fill that never submits, a stale read after a navigation, a covered button that isn't
   clicked, and dialogs.
 
 ## Known limits

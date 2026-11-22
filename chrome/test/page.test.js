@@ -214,6 +214,46 @@ test("page text that looks like a fence marker or an instruction reaches planque
   await page.close();
 });
 
+test("an act refuses a ref whose element has become something else since the read", { skip: !playwright }, async () => {
+  const page = await open();
+  let read = await page.evaluate(() => TafsPage.read());
+  const save = read.controls.find((c) => c.label === "Save").ref;
+  // The page re-renders: the same node now says something else (a button that was Save is Delete everything now).
+  await page.evaluate(() => (document.getElementById("save").textContent = "Delete everything"));
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [save, read.read_id]), { ok: false, code: "ref_unknown" });
+  // A field keeps its identity when its value changes: a fill then a new read still works, and an unchanged element acts.
+  read = await page.evaluate(() => TafsPage.read());
+  const email = read.fields.find((f) => f.label === "Email").ref;
+  await page.evaluate(() => (document.getElementById("email").value = "typed@shop.example"));
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "fill", ref: r, value: "bo@shop.example" }, id), [email, read.read_id]), { ok: true }, "a changed value is not a changed element");
+  // A link whose target changed under the same words is another link.
+  read = await page.evaluate(() => TafsPage.read());
+  const reset = read.links.find((l) => l.label === "Reset").ref;
+  await page.evaluate(() => (document.querySelector('a[href*="reset"]').href = "https://shop.example/elsewhere"));
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [reset, read.read_id]), { ok: false, code: "ref_unknown" });
+  await page.close();
+});
+
+test("an act on a ref in a re-rendered list refuses instead of acting on another row", { skip: !playwright }, async () => {
+  const page = await open();
+  await page.evaluate(() => {
+    document.body.insertAdjacentHTML("beforeend", '<ul id="list"><li id="a">Blue shirt <button>Add</button></li><li id="b">Red shirt <button>Add</button></li></ul>');
+    for (const b of document.querySelectorAll("#list button")) b.addEventListener("click", (e) => (window.__added = b.parentElement.id));
+  });
+  const read = await page.evaluate(() => TafsPage.read());
+  const adds = read.controls.filter((c) => c.label === "Add");
+  assert.equal(adds.length, 2);
+  // The list is re-rendered with the same nodes reused (as a framework does): the first "Add" now sits in the red shirt's row.
+  await page.evaluate(() => {
+    const [a, b] = [document.getElementById("a"), document.getElementById("b")];
+    a.firstChild.textContent = "Red shirt ";
+    b.firstChild.textContent = "Blue shirt ";
+  });
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [adds[0].ref, read.read_id]), { ok: false, code: "ref_unknown" });
+  assert.equal(await page.evaluate(() => window.__added), undefined, "nothing was clicked");
+  await page.close();
+});
+
 test("a long page's text comes in windows: each says where the next starts, the last says no more, and secrets never split", { skip: !playwright }, async () => {
   const page = await open();
   await page.evaluate(() => {

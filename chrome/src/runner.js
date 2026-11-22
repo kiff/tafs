@@ -13,6 +13,14 @@ const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
 const STEP_TIMEOUT_MS = 20_000;
 const FAILURES_TO_PAUSE = 3;
+const PAUSE_CODES = { failures: "paused_failures", no_progress: "paused_no_progress", owner: "paused_by_owner" };
+
+/** A page as the repeat check compares it: everything the taf sees, without the read's own id. */
+function pageKey(page) {
+  if (!page) return null;
+  const { read_id, sealed, ...rest } = page; // eslint-disable-line no-unused-vars
+  return rest;
+}
 
 export class Runner {
   /**
@@ -29,6 +37,7 @@ export class Runner {
     this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
+    this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
     this.listen();
   }
 
@@ -44,11 +53,19 @@ export class Runner {
         this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
       }
     });
-    // The dialog guard goes in as each document of a run's tab starts.
+    // The dialog guard goes in as each document of a run's tab starts. A page Chrome restores from its back-forward cache
+    // commits with no request, so neither the network fence nor onBeforeNavigate saw it: a committed page off the run's
+    // sites is sent to a blank page, and recorded.
     c.webNavigation.onCommitted.addListener((d) => {
       if (d.frameId !== 0) return;
       const run = this.runOfTab(d.tabId);
-      if (run) this.guardDialogs(d.tabId, run).catch(() => {});
+      if (!run) return;
+      if (refuseURL(d.url, run.sites, run.allowed)) {
+        c.tabs.update(d.tabId, { url: "about:blank" });
+        this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+        return;
+      }
+      this.guardDialogs(d.tabId, run).catch(() => {});
     });
     // A tab or window a run's page opens joins the run only on its sites; anything else is closed.
     c.webNavigation.onCreatedNavigationTarget.addListener((d) => {
@@ -155,6 +172,7 @@ export class Runner {
     if (run && !run.stopped) {
       run.paused = null;
       run.failures = 0;
+      run.last = null;
       this.record(run, { op: "resume" });
     }
   }
@@ -185,7 +203,20 @@ export class Runner {
    * Runs one checked step and answers `{page}` (the tab read back) or `{error: {code, detail?}}`. The step was already
    * verified as planque's (protocol.checkStep); this holds the site and the act rules again.
    */
-  async handle(step) {
+  handle(step) {
+    // One step at a time in a run, as a person works one tab: two acts never overlap (a double click, or a read in the
+    // middle of an act). The next waits for the one running; Stop and Pause don't wait.
+    const prior = this.tails.get(step.run) || Promise.resolve();
+    const mine = prior.then(() => this.handleOne(step));
+    const tail = mine.catch(() => {});
+    this.tails.set(step.run, tail);
+    tail.then(() => {
+      if (this.tails.get(step.run) === tail) this.tails.delete(step.run);
+    });
+    return mine;
+  }
+
+  async handleOne(step) {
     let run = this.runs.get(step.run);
     if (run && !(Array.isArray(step.sites) && step.sites.every((s) => run.sites.includes(s)))) {
       return { error: { code: "bad_step", detail: "a run's sites never grow" } };
@@ -208,6 +239,7 @@ export class Runner {
         paused: null,
         stopped: false,
         failures: 0,
+        last: null, // the last act, the read it was planned from and the page it answered with
         steps: [],
         site: "",
         asks: [], // sites waiting on the owner's yes in Chrome
@@ -215,7 +247,7 @@ export class Runner {
       this.runs.set(run.id, run);
     }
     if (run.stopped) return { error: { code: "stopped" } };
-    if (run.paused) return { error: { code: run.paused === "failures" ? "paused_failures" : "paused_by_owner" } };
+    if (run.paused) return { error: { code: PAUSE_CODES[run.paused] || "paused_by_owner" } };
     const out = await this.dispatch(run, step).catch((e) => ({ error: { code: "browser_unavailable", detail: String(e && e.message || e).slice(0, 200) } }));
     this.record(run, { op: step.op, kind: step.act && step.act.kind, url: out.page ? out.page.url : step.url ? bareURL(step.url) : undefined, error: out.error && out.error.code });
     if (out.error && step.op === "act") {
@@ -227,7 +259,23 @@ export class Runner {
     } else if (!out.error) {
       run.failures = 0;
     }
+    if (step.op === "act" && !out.error && out.page) this.noProgress(run, step, out.page);
     return out;
+  }
+
+  /**
+   * The same act, on the same page, that answers with the same page twice in a row has done nothing, and a third would
+   * too: the run pauses with what it read, and the owner decides. A different act, a different page or a different
+   * answer starts the count again. The ids a read makes up and the sealed handles don't count as a change.
+   */
+  noProgress(run, step, after) {
+    const before = run.pages.get(step.read_id);
+    const key = JSON.stringify({ act: { kind: step.act.kind, ref: step.act.ref, value: step.act.value, sealed: step.act.sealed }, before: pageKey(before), after: pageKey(after) });
+    if (run.last === key) {
+      run.paused = "no_progress";
+      this.record(run, { op: "pause", by: "no_progress" });
+    }
+    run.last = key;
   }
 
   async dispatch(run, step) {

@@ -18,8 +18,37 @@
 
   // What the last read named: each ref's element, held only here.
   let refs = new Map();
+  // What each ref's element was when it was read (its tag, kind, words and target): an act on a ref whose element has since
+  // changed into something else is refused, not done.
+  let prints = new Map();
   let current = null; // {read_id, href}
   let dialog = null; // the last dialog the page raised since the last read
+
+  /** What identifies an element in a read: its tag, type, name, label, words and link target. A fill or a tick changes a
+   * field's value, never these, so they hold from the read to the act. */
+  function printOf(el) {
+    const words = el.matches("input, textarea, select") ? "" : clean(el.innerText || el.getAttribute("aria-label") || el.title || "", 120);
+    // The row it sits in (a list item, a table row, a card): a re-sorted list of identical "Add" buttons must not send an act
+    // meant for one row to another. The row's words, short and hashed, so the print stays small.
+    const row = el.closest("li, tr, article, [role=row], [role=listitem]");
+    return [el.tagName, el.getAttribute("type") || "", el.getAttribute("name") || el.id || "", labelOf(el), words, el.getAttribute("href") || "", row ? digest(clean(row.innerText, 400)) : ""].join("\u0001");
+  }
+
+  /** A short fingerprint of a text (FNV-1a, 32 bits): a change detector, never a secret. */
+  function digest(text) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++) {
+      h ^= text.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h.toString(16);
+  }
+
+  /** Names `el` in this read. */
+  function bind(ref, el) {
+    refs.set(ref, el);
+    prints.set(ref, printOf(el));
+  }
 
   function newId() {
     const b = crypto.getRandomValues(new Uint8Array(12));
@@ -97,7 +126,7 @@
       if (!visible(el)) continue;
       const kind = kindOf(el);
       const ref = "f" + (out.length + 1);
-      refs.set(ref, el);
+      bind(ref, el);
       const field = { ref, label: labelOf(el), kind: wireKind(kind) };
       if (kind === "password" || kind === "card" || kind === "code" || sealedFilled.has(el)) {
         field.masked = true;
@@ -139,7 +168,7 @@
       if (out.length >= MAX_CONTROLS) break;
       if (!visible(el)) continue;
       const ref = "c" + (out.length + 1);
-      refs.set(ref, el);
+      bind(ref, el);
       const label = clean(el.getAttribute("aria-label") || el.innerText || el.value || el.title || "");
       const submits = (el.tagName === "BUTTON" && (el.type || "submit") === "submit" && !!el.form) || (el.tagName === "INPUT" && el.type === "submit");
       const control = { ref, label: M.maskText(label), submits };
@@ -173,7 +202,7 @@
       if (actsAsControl(el)) {
         if (controls.length >= MAX_CONTROLS) continue;
         const ref = "c" + (controls.length + 1);
-        refs.set(ref, el);
+        bind(ref, el);
         const control = { ref, label: M.maskText(clean(el.innerText || el.getAttribute("aria-label") || el.title || "")), submits: false };
         if (placesOrder(el, false)) control.places_order = true;
         controls.push(control);
@@ -182,7 +211,7 @@
       const url = M.maskURL(el.href);
       if (!url) continue;
       const ref = "l" + (out.length + 1);
-      refs.set(ref, el);
+      bind(ref, el);
       out.push({ ref, label: M.maskText(clean(el.innerText || el.getAttribute("aria-label") || el.title || "")), url });
     }
     return out;
@@ -210,6 +239,7 @@
    */
   function read(offset) {
     refs = new Map();
+    prints = new Map();
     const text = M.maskText((document.body ? document.body.innerText : "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim());
     const start = Number.isSafeInteger(offset) && offset > 0 ? Math.min(offset, text.length) : 0;
     const page = {
@@ -271,7 +301,7 @@
     if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
     if (dialog) return { ok: false, code: "dialog_open" };
     const el = refs.get(a.ref);
-    if (!el || !el.isConnected) return { ok: false, code: "ref_unknown" };
+    if (!el || !el.isConnected || prints.get(a.ref) !== printOf(el)) return { ok: false, code: "ref_unknown" };
     if (!visible(el) || !onTop(el)) return { ok: false, code: "not_visible" };
     if (el.disabled) return { ok: false, code: "disabled" };
     const kind = el.matches("input, textarea, select") ? kindOf(el) : null;
@@ -312,7 +342,7 @@
     if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
     if (location.origin !== origin || window.top !== window) return { ok: false, code: "secret_field" };
     const el = refs.get(ref);
-    if (!el || !el.isConnected || el.tagName !== "INPUT") return { ok: false, code: "ref_unknown" };
+    if (!el || !el.isConnected || el.tagName !== "INPUT" || prints.get(ref) !== printOf(el)) return { ok: false, code: "ref_unknown" };
     const kind = kindOf(el);
     const fits = part === "password" ? kind === "password" : part === "username" ? ["username", "text", "email"].includes(kind) : false;
     if (!fits) return { ok: false, code: "secret_field" };
