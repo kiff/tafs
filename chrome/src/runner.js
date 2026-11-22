@@ -7,7 +7,7 @@ import { refuseURL, bareURL } from "./sites.js";
 import { refuse } from "./guard.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
-import { checkAllowances, checkSites } from "./protocol.js";
+import { checkRelease, checkAllowances, checkSites, Nonces } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
@@ -19,11 +19,14 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), paired = () => null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
+    this.vault = vault; // sealed sign-ins (vault.js); none, and a sealed fill is refused
+    this.now = now;
+    this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
     this.listen();
@@ -321,18 +324,48 @@ export class Runner {
     await this.inject(run.tab, run);
     const page = await this.inTab(run.tab, () => globalThis.TafsPage.read(), []);
     if (!page) return { error: { code: "page_unresponsive" } };
+    // The handles of sign-ins saved for this exact origin, never their values: a taf names one to ask for a sealed fill.
+    if (this.vault) {
+      const handles = await this.vault.handlesFor(new URL(tab.url).origin);
+      if (handles.length) page.sealed = handles;
+    }
     run.pages.set(page.read_id, page);
     if (run.pages.size > 20) run.pages.delete(run.pages.keys().next().value);
     return { page };
+  }
+
+  /**
+   * A sealed fill (docs/chrome.md, "Sealed values"): only with the paired phone's own release of this handle, for this
+   * step, field and exact origin, unexpired and never used before. The value goes from the vault into the field and nowhere
+   * else, then the page is read back with the field masked.
+   */
+  async fillSealed(run, step, page) {
+    const pairing = this.paired();
+    if (!this.vault || !pairing || !pairing.phoneKey) return { error: { code: "secret_field" } };
+    const [, part] = String(step.act.sealed).split(":");
+    const field = (page.fields || []).find((f) => f.ref === step.act.ref);
+    if (!field || (part === "password" ? field.kind !== "password" : part === "username" ? !["text", "email"].includes(field.kind) : true)) {
+      return { error: { code: "secret_field" } };
+    }
+    const tab = await this.chrome.tabs.get(run.tab);
+    const origin = new URL(tab.url).origin;
+    const released = await checkRelease(step.release, { phoneKey: pairing.phoneKey, chromeId: pairing.chromeId, step, origin, now: this.now() });
+    if (!released || !(await this.releases.take(step.release.nonce))) return { error: { code: "release_missing" } };
+    const value = await this.vault.open(step.act.sealed, origin);
+    if (value == null) return { error: { code: "sealed_unknown" } };
+    const done = await this.inTab(run.tab, (ref, id, o, v, p) => globalThis.TafsPage.fillSealed(ref, id, o, v, p), [step.act.ref, step.read_id, origin, value, part]);
+    if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
+    await this.loaded(run.tab);
+    return this.read(run);
   }
 
   async act(run, step) {
     if (run.tab == null) return { error: { code: "no_page" } };
     const page = run.pages.get(step.read_id);
     if (!page) return { error: { code: "page_changed" } };
-    if (step.act && step.act.sealed) return { error: { code: "secret_field", detail: "sealed values aren't in this build" } };
     const refused = refuse(page, step.act);
     if (refused) return { error: { code: refused.code } };
+    if (step.act.sealed) return this.fillSealed(run, step, page);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);
     if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
     // A click is never proof of its effect: the page is read back.
