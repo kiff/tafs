@@ -289,8 +289,11 @@ extension Date.FormatStyle {
     /// Gregorian, not the device's Hijri), as `Date.shown(_:)` does in the account's zone.
     var inAppLanguage: Date.FormatStyle {
         var style = self
-        style.locale = Words.locale
-        if Words.namesCalendar { style.calendar = Words.locale.calendar }
+        // Only where the language has a locale of its own (Arabic): any other language keeps the device's region.
+        if Words.namesCalendar {
+            style.locale = Words.locale
+            style.calendar = Words.locale.calendar
+        }
         return style
     }
 }
@@ -300,7 +303,7 @@ extension Date {
     var shortTime: String {
         let f = DateFormatter()
         f.dateFormat = "HH:mm"
-        f.locale = Words.locale
+        if Words.namesCalendar { f.locale = Words.locale }
         f.timeZone = AccountTime.zone
         return f.string(from: self)
     }
