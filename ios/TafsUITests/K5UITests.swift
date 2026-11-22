@@ -1,13 +1,12 @@
 import XCTest
 
 /// K5, the end-to-end pass of row 39: the welcome's one tick, the age line per country, and Continue
-/// opening KIFF's sign-in in the system's sheet. It runs only in the K5 build (`TAFS_K5`, `.github/workflows/ios-k5.yml`,
-/// which sets `K5=1` for the test runner): every other build ships the welcome without the tick, so there's nothing
-/// to walk. Each step keeps a screenshot in the result. It stops on KIFF's page: the sign-up's email code and GitHub
+/// opening KIFF's sign-in in the system's sheet. It runs only from `.github/workflows/ios-k5.yml`, which sets `K5=1` for
+/// the test runner, so an ordinary UI test run skips it. Each step keeps a screenshot in the result. It stops on KIFF's page: the sign-up's email code and GitHub
 /// sign-in are the device pass's.
 final class K5UITests: TafsUITestCase {
     override func setUpWithError() throws {
-        try XCTSkipUnless(ProcessInfo.processInfo.environment["K5"] == "1", "only in the K5 build (TAFS_K5)")
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["K5"] == "1", "only from the K5 workflow (K5=1)")
     }
 
     /// The age line, by the device's region: 18 in India, Brazil and Colombia (app/strings/ages.json), the line every

@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac:** the new welcome with its one tick, KIFF's sign-in inside the app and the three first-run cards are on in every build, after the end-to-end pass with the owner ([onboarding.md](docs/onboarding.md)).

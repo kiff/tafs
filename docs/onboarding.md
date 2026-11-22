@@ -1,11 +1,10 @@
 # Onboarding
 
 The first run after one sign-in, on iPhone, iPad and Mac (Android follows the same steps). It's built behind
-`Onboarding.on` (`ios/Tafs/Model/Onboarding.swift`), **off**: while it's off, the welcome and the sign-in are as they
-ship. It goes on only after an end-to-end test on real devices with the owner present.
+`Onboarding.on` (`ios/Tafs/Model/Onboarding.swift`), **on in every build**, after the end-to-end test on real devices with
+the owner (K5).
 
-**K5, the end-to-end pass:** a build compiled with `TAFS_K5` has it on, and
-no other does. Two builds have it:
+**K5, the end-to-end pass, is a simulator walk and a device pass:**
 - **A simulator run:** `.github/workflows/ios-k5.yml`, manual. `K5UITests` walks the age line in India, Brazil and
   Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue
   and KIFF's sign-in page, with a screenshot kept at each step and at 5, 20 and 40 s after Continue (the `k5` artifact).
@@ -13,13 +12,9 @@ no other does. Two builds have it:
   taken. **The page passes only when it draws the four ways the owner keeps on** within 30 s: Apple, Google, GitHub, and
   email with a password. It fails on any way to sign in with a code sent by email (email-code sign-in stays off). A page
   with its title and nothing to sign in with fails, as KIFF's did on 21 Nov.
-- **A TestFlight build for the device pass:** `ios.yml`'s `k5` input. It goes to Team only and never to the Beta
-  testers, whatever `external` says. Its What to Test reads "K5 TEST BUILD: never submit for App Store review"
-  (`asc-beta.rb`, `K5=true`), so it's never the build picked for review.
-  When the device pass ends, that build is **expired** in App Store Connect (TestFlight, the build, Expire Build), so it
-  can't be installed or picked any more. The lane that ran the pass posts it on the thread.
+- **A device pass** on a TestFlight build, with the owner in person at the sign-in step.
 
-App Store builds never have `TAFS_K5`. While KIFF has in-app sign-in off (`unsupported_client` on `/v1/auth/app/…`), Continue says so in KIFF's words, or
+While KIFF has in-app sign-in off (`unsupported_client` on `/v1/auth/app/…`), Continue says so in KIFF's words, or
 the app's "Signing in inside the app isn't on yet." (`KIFFError.signInNotOn`), as when KIFF's authorize page sends it
 back (`AppSignIn.Failure.refused("unsupported_client")`). The sign-up's email code and GitHub sign-in are left to the device pass.
 
