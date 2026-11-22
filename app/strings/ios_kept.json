@@ -56,7 +56,7 @@
   },
   "Views/RecordView.swift": {
     "signer \\($0.prefix(6))…\\($0.suffix(4))": "a receipt's technical line",
-    "\\(step.words) · \\(step.at.map { $0.zonedShown(date: .omitted, time: .standard) } ?? \"\")\\nhash \\(step.hash)": "a receipt's technical line",
+    "\\(step.message) · \\(step.at.map { $0.zonedShown(date: .omitted, time: .standard) } ?? \"\")\\nhash \\(step.hash)": "a receipt's technical line",
     "trace \\(entry.receipt?.traceID ?? \"\") · secp256k1 + keccak256\\nsig 0x\\(sig.prefix(4))…\\(sig.suffix(4))": "a receipt's technical line",
     "receipt \\(entry.receipt?.traceID ?? \"\")": "a receipt's technical line"
   },

@@ -74,6 +74,7 @@
     <string name="approval_first_taf">การตั้งค่า taf ต้องมีการอนุมัติ: Coach จะขอให้คุณอนุมัติเครื่องมือของมันและ Card ของ taf</string>
     <string name="approval_has_no_face_id_touch">%1$sเครื่องนี้ไม่มี Face ID หรือ Touch ID จึงอนุมัติไม่ได้ ให้อนุมัติบน iPhone, iPad หรือโทรศัพท์ Android เครื่องอื่นที่เข้าสู่ระบบบัญชีของคุณ</string>
     <string name="approval_has_no_passcode_needs_one">%1$sเครื่องนี้ไม่มีรหัสผ่าน และ %2$s ต้องมี ตั้งรหัสผ่านใน %3$s แล้วเพิ่ม %4$s จากนั้นกลับมา</string>
+    <string name="approval_hello_before">กำลังอนุมัติ: %1$s Windows Hello จะขอ PIN ใบหน้า หรือลายนิ้วมือของคุณ</string>
     <string name="approval_kept">ยังอยู่ในรอคุณอยู่</string>
     <string name="approval_key_could_not_sign">กุญแจลงนามไม่ได้</string>
     <string name="approval_key_gone_approve_again">ลายนิ้วมือของคุณเปลี่ยนไป หรือไม่มีลายนิ้วมือใดถูกจดจำ โทรศัพท์เครื่องนี้จึงอนุมัติไม่ได้จนกว่าคุณจะอนุมัติอีกครั้งในเบราว์เซอร์</string>
@@ -98,14 +99,17 @@
     <string name="approval_security_key_add">เพิ่มกุญแจ</string>
     <string name="approval_security_key_add_enter_pin">ใส่ PIN ของกุญแจความปลอดภัยเพื่อเพิ่ม tafs จะถามทุกครั้งและไม่เก็บไว้</string>
     <string name="approval_security_key_add_title">เพิ่มกุญแจความปลอดภัยของคุณในคอมพิวเตอร์เครื่องนี้</string>
+    <string name="approval_security_key_before">ต้องใช้กุญแจความปลอดภัยของคุณ: %1$s เสียบกุญแจ แตะ แล้วใส่ PIN ของกุญแจ</string>
     <string name="approval_security_key_enter_pin">ใส่ PIN ของกุญแจความปลอดภัย tafs จะถามทุกครั้งและไม่เก็บไว้</string>
     <string name="approval_security_key_failed">กุญแจความปลอดภัยลงนามไม่ได้ จึงไม่มีอะไรถูกอนุมัติ คำขอยังอยู่: อนุมัติอีกครั้งเมื่อคุณพร้อม</string>
     <string name="approval_security_key_locked">กุญแจความปลอดภัยนี้ถูกล็อกเพราะใส่ PIN ผิดหลายครั้ง จึงอนุมัติไม่ได้ ให้อนุมัติบนโทรศัพท์ของคุณ การรีเซ็ตกุญแจจะลบข้อมูลในกุญแจ ดังนั้นหากต้องการอนุมัติด้วยกุญแจอีกครั้ง ให้จับคู่คอมพิวเตอร์เครื่องนี้ใหม่</string>
     <string name="approval_security_key_no_key">เสียบกุญแจความปลอดภัยของคุณ แล้วลองอีกครั้ง</string>
     <string name="approval_security_key_no_pin_set">กุญแจความปลอดภัยนี้ไม่มี PIN จึงอนุมัติไม่ได้ เสียบกุญแจที่ใช้คู่กับคอมพิวเตอร์เครื่องนี้ หากถูกรีเซ็ต ให้อนุมัติบนโทรศัพท์ของคุณ และจับคู่คอมพิวเตอร์เครื่องนี้ใหม่เพื่ออนุมัติด้วยกุญแจ</string>
+    <string name="approval_security_key_none_paired">คอมพิวเตอร์เครื่องนี้ยังไม่มีกุญแจความปลอดภัย กุญแจความปลอดภัยคือกุญแจ USB ขนาดเล็กที่คุณแตะเพื่ออนุมัติ แฟลชไดรฟ์ USB ทั่วไปใช้ไม่ได้</string>
     <string name="approval_security_key_not_allowed">กุญแจความปลอดภัยไม่อนุญาต จึงไม่มีอะไรถูกอนุมัติ คำขอยังอยู่: อนุมัติอีกครั้งเมื่อคุณพร้อม</string>
     <string name="approval_security_key_not_fido2">กุญแจความปลอดภัยนี้ตรวจ PIN ไม่ได้ จึงอนุมัติไม่ได้ เสียบกุญแจที่ใช้คู่กับคอมพิวเตอร์เครื่องนี้</string>
     <string name="approval_security_key_not_this_key">นี่ไม่ใช่กุญแจความปลอดภัยที่ใช้คู่กับคอมพิวเตอร์เครื่องนี้ เสียบกุญแจนั้นแล้วลองอีกครั้ง หรืออนุมัติบนโทรศัพท์ของคุณ</string>
+    <string name="approval_security_key_on_phone">อนุมัติบนโทรศัพท์ของคุณแทน</string>
     <string name="approval_security_key_pair_without">จับคู่โดยไม่ใช้กุญแจ</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">ใส่ PIN ผิดติดต่อกันสามครั้งแล้ว ถอดกุญแจออก เสียบใหม่ แล้วลองอีกครั้ง</string>

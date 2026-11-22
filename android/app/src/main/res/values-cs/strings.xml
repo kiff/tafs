@@ -76,6 +76,7 @@
     <string name="approval_first_taf">Nastavení tafu potřebuje schvalování: Coach vás požádá o schválení svých nástrojů a Card tafu.</string>
     <string name="approval_has_no_face_id_touch">Tento %1$s nemá Face ID ani Touch ID, takže nemůže schvalovat. Schvalte na jiném iPhonu, iPadu nebo telefonu s Androidem přihlášeném k vašemu účtu.</string>
     <string name="approval_has_no_passcode_needs_one">Tento %1$s nemá kód a %2$s ho potřebuje. Nastavte kód v %3$s, pak přidejte %4$s a vraťte se.</string>
+    <string name="approval_hello_before">Schvalování: %1$s. Windows Hello se zeptá na váš PIN, obličej nebo otisk prstu.</string>
     <string name="approval_kept">Zůstává v Čeká na vás.</string>
     <string name="approval_key_could_not_sign">Klíč nemohl podepsat</string>
     <string name="approval_key_gone_approve_again">Vaše otisky prstů se změnily nebo žádný nebyl rozpoznán, takže tento telefon nemůže schvalovat, dokud ho znovu neschválíte v prohlížeči.</string>
@@ -100,14 +101,17 @@
     <string name="approval_security_key_add">Přidat klíč</string>
     <string name="approval_security_key_add_enter_pin">Pro přidání zadejte PIN bezpečnostního klíče. tafs se na něj zeptá pokaždé a nikdy ho neukládá.</string>
     <string name="approval_security_key_add_title">Přidejte svůj bezpečnostní klíč k tomuto počítači</string>
+    <string name="approval_security_key_before">K tomu je potřeba váš bezpečnostní klíč: %1$s. Připojte ho, dotkněte se ho a zadejte jeho PIN.</string>
     <string name="approval_security_key_enter_pin">Zadejte PIN bezpečnostního klíče. tafs se na něj zeptá pokaždé a nikdy ho neukládá.</string>
     <string name="approval_security_key_failed">Bezpečnostní klíč nemohl podepsat, takže se nic neschválilo. Žádost zůstává: schvalte znovu, až budete připraveni.</string>
     <string name="approval_security_key_locked">Tento bezpečnostní klíč je po příliš mnoha špatných PINech zamčený, takže nemůže schvalovat. Schvalte v telefonu. Resetování klíč vymaže, takže pro schvalování klíčem tento počítač znovu spárujte.</string>
     <string name="approval_security_key_no_key">Připojte bezpečnostní klíč a zkuste to znovu.</string>
     <string name="approval_security_key_no_pin_set">Tento bezpečnostní klíč nemá PIN, takže nemůže schvalovat. Připojte ten, který patří k tomuto počítači. Pokud byl resetován, schvalte v telefonu a pro schvalování klíčem tento počítač znovu spárujte.</string>
+    <string name="approval_security_key_none_paired">Tento počítač zatím nemá žádný bezpečnostní klíč. Bezpečnostní klíč je malý USB klíč, kterého se dotknete ke schválení; obyčejný USB flash disk nefunguje.</string>
     <string name="approval_security_key_not_allowed">Bezpečnostní klíč to nedovolil, takže se nic neschválilo. Žádost zůstává: schvalte znovu, až budete připraveni.</string>
     <string name="approval_security_key_not_fido2">Tento bezpečnostní klíč neumí ověřit PIN, takže nemůže schvalovat. Připojte ten, který patří k tomuto počítači.</string>
     <string name="approval_security_key_not_this_key">Toto není bezpečnostní klíč, který patří k tomuto počítači. Připojte ten správný a zkuste to znovu, nebo schvalte v telefonu.</string>
+    <string name="approval_security_key_on_phone">Místo toho schválit v telefonu</string>
     <string name="approval_security_key_pair_without">Spárovat bez klíče</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Třikrát po sobě špatný PIN. Odpojte klíč, znovu ho připojte a zkuste to znovu.</string>

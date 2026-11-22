@@ -79,6 +79,7 @@
     <string name="approval_first_taf">يحتاج إعداد taf إلى موافقات: يطلب منك Coach الموافقة على أدواته وعلى Card الخاصة بالـ taf.</string>
     <string name="approval_has_no_face_id_touch">لا يحتوي هذا الجهاز (%1$s) على Face ID أو Touch ID فلا يستطيع الموافقة. وافق من iPhone أو iPad أو هاتف Android آخر مسجّل الدخول إلى حسابك.</string>
     <string name="approval_has_no_passcode_needs_one">لا يوجد رمز مرور على هذا الجهاز (%1$s)، و%2$s يحتاج إلى واحد. اضبط رمز مرور من %3$s، ثم أضف %4$s، ثم عُد.</string>
+    <string name="approval_hello_before">الموافقة على: %1$s. سيطلب Windows Hello رمز PIN أو وجهك أو بصمتك.</string>
     <string name="approval_kept">محفوظ في «بانتظارك».</string>
     <string name="approval_key_could_not_sign">تعذّر على المفتاح التوقيع</string>
     <string name="approval_key_gone_approve_again">تغيّرت بصماتك أو لم يتم التعرف على أي منها، لذا لا يستطيع هذا الهاتف الموافقة حتى توافق عليه مرة أخرى في متصفحك.</string>
@@ -103,14 +104,17 @@
     <string name="approval_security_key_add">إضافة المفتاح</string>
     <string name="approval_security_key_add_enter_pin">أدخل رمز PIN الخاص بمفتاح الأمان لإضافته. يطلبه tafs في كل مرة ولا يخزنه أبدًا.</string>
     <string name="approval_security_key_add_title">أضف مفتاح الأمان إلى هذا الكمبيوتر</string>
+    <string name="approval_security_key_before">يتطلب هذا مفتاح الأمان الخاص بك: %1$s. وصّله ثم المسه وأدخل رمز PIN الخاص به.</string>
     <string name="approval_security_key_enter_pin">أدخل رمز PIN الخاص بمفتاح الأمان. يطلبه tafs في كل مرة ولا يخزنه أبدًا.</string>
     <string name="approval_security_key_failed">تعذّر على مفتاح الأمان التوقيع، فلم تتم الموافقة على شيء. الطلب محفوظ: وافق مرة أخرى عندما تكون مستعدًا.</string>
     <string name="approval_security_key_locked">تم قفل مفتاح الأمان هذا بعد إدخال رموز PIN خاطئة كثيرة، فلا يستطيع الموافقة. وافق على هاتفك. إعادة ضبط المفتاح تمسحه، ولتوافق بمفتاح مرة أخرى أعد إقران هذا الكمبيوتر.</string>
     <string name="approval_security_key_no_key">وصّل مفتاح الأمان ثم حاول مرة أخرى.</string>
     <string name="approval_security_key_no_pin_set">ليس لمفتاح الأمان هذا رمز PIN فلا يستطيع الموافقة. وصّل المفتاح الذي يخص هذا الكمبيوتر. وإذا أُعيد ضبطه فوافق على هاتفك وأعد إقران هذا الكمبيوتر لتوافق بمفتاح.</string>
+    <string name="approval_security_key_none_paired">ليس لدى هذا الكمبيوتر مفتاح أمان بعد. مفتاح الأمان مفتاح USB صغير تلمسه للموافقة؛ ذاكرة USB العادية لا تعمل.</string>
     <string name="approval_security_key_not_allowed">لم يسمح مفتاح الأمان بذلك، فلم تتم الموافقة على شيء. الطلب محفوظ: وافق مرة أخرى عندما تكون مستعدًا.</string>
     <string name="approval_security_key_not_fido2">لا يستطيع مفتاح الأمان هذا التحقق من رمز PIN فلا يستطيع الموافقة. وصّل المفتاح الذي يخص هذا الكمبيوتر.</string>
     <string name="approval_security_key_not_this_key">هذا ليس مفتاح الأمان الذي يخص هذا الكمبيوتر. وصّل المفتاح الصحيح وحاول مرة أخرى، أو وافق على هاتفك.</string>
+    <string name="approval_security_key_on_phone">وافق على هاتفك بدلًا من ذلك</string>
     <string name="approval_security_key_pair_without">الإقران بدون مفتاح</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">هذه ثلاثة رموز PIN خاطئة متتالية. افصل المفتاح ثم وصّله مرة أخرى، وحاول من جديد.</string>

@@ -76,6 +76,7 @@
     <string name="approval_first_taf">Nustatant taf reikia patvirtinimų: Coach paprašys patvirtinti jo įrankius ir taf Card.</string>
     <string name="approval_has_no_face_id_touch">Šis įrenginys (%1$s) neturi Face ID ar Touch ID, todėl negali tvirtinti. Tvirtinkite kitame iPhone, iPad ar Android telefone, prisijungusiame prie jūsų paskyros.</string>
     <string name="approval_has_no_passcode_needs_one">Šis įrenginys (%1$s) neturi prieigos kodo, o jo reikia (%2$s). Nustatykite prieigos kodą (%3$s), tada pridėkite: %4$s, ir grįžkite.</string>
+    <string name="approval_hello_before">Tvirtinama: %1$s. Windows Hello paprašys jūsų PIN, veido arba piršto antspaudo.</string>
     <string name="approval_kept">Ji lieka skiltyje „Laukia jūsų“.</string>
     <string name="approval_key_could_not_sign">Raktas negalėjo pasirašyti</string>
     <string name="approval_key_gone_approve_again">Jūsų piršto atspaudai pasikeitė arba nė vienas neatpažintas, todėl šis telefonas negali tvirtinti, kol jo dar kartą nepatvirtinsite naršyklėje.</string>
@@ -100,14 +101,17 @@
     <string name="approval_security_key_add">Pridėti raktą</string>
     <string name="approval_security_key_add_enter_pin">Įveskite saugos rakto PIN, kad jį pridėtumėte. tafs jo prašo kaskart ir niekada jo nesaugo.</string>
     <string name="approval_security_key_add_title">Pridėkite saugos raktą prie šio kompiuterio</string>
+    <string name="approval_security_key_before">Tam reikia jūsų saugos rakto: %1$s. Prijunkite jį, palieskite ir įveskite jo PIN.</string>
     <string name="approval_security_key_enter_pin">Įveskite saugos rakto PIN. tafs jo prašo kaskart ir niekada jo nesaugo.</string>
     <string name="approval_security_key_failed">Saugos raktas negalėjo pasirašyti, todėl niekas nepatvirtinta. Užklausa išsaugota: patvirtinkite dar kartą, kai būsite pasirengę.</string>
     <string name="approval_security_key_locked">Šis saugos raktas užrakintas po per daug neteisingų PIN, todėl negali tvirtinti. Tvirtinkite telefone. Atkūrus rakto nustatymus jis išvalomas, todėl norėdami vėl tvirtinti raktu, iš naujo susiekite šį kompiuterį.</string>
     <string name="approval_security_key_no_key">Prijunkite saugos raktą ir bandykite dar kartą.</string>
     <string name="approval_security_key_no_pin_set">Šis saugos raktas neturi PIN, todėl negali tvirtinti. Prijunkite raktą, susietą su šiuo kompiuteriu. Jei jo nustatymai atkurti, tvirtinkite telefone ir iš naujo susiekite šį kompiuterį, kad galėtumėte tvirtinti raktu.</string>
+    <string name="approval_security_key_none_paired">Šis kompiuteris dar neturi saugos rakto. Saugos raktas yra mažas USB raktas, kurį paliečiate tvirtindami; paprasta USB atmintinė netinka.</string>
     <string name="approval_security_key_not_allowed">Saugos raktas to neleido, todėl niekas nepatvirtinta. Užklausa išsaugota: patvirtinkite dar kartą, kai būsite pasirengę.</string>
     <string name="approval_security_key_not_fido2">Šis saugos raktas negali patikrinti PIN, todėl negali tvirtinti. Prijunkite raktą, susietą su šiuo kompiuteriu.</string>
     <string name="approval_security_key_not_this_key">Tai ne tas saugos raktas, kuris susietas su šiuo kompiuteriu. Prijunkite tinkamą ir bandykite dar kartą arba tvirtinkite telefone.</string>
+    <string name="approval_security_key_on_phone">Vietoj to patvirtinkite telefone</string>
     <string name="approval_security_key_pair_without">Susieti be rakto</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Tris kartus iš eilės įvestas neteisingas PIN. Atjunkite raktą, vėl jį prijunkite ir bandykite dar kartą.</string>

@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Taf тохируулахад зөвшөөрөл шаардлагатай: Coach таныг түүний хэрэгслүүд болон taf-ын Card-ыг зөвшөөрөхийг хүснэ.</string>
     <string name="approval_has_no_face_id_touch">Энэ %1$s-д Face ID эсвэл Touch ID байхгүй тул зөвшөөрч чадахгүй. Таны бүртгэлд нэвтэрсэн өөр iPhone, iPad эсвэл Android утсан дээр зөвшөөрнө үү.</string>
     <string name="approval_has_no_passcode_needs_one">Энэ %1$s-д нууц код байхгүй бөгөөд %2$s түүнийг шаарддаг. %3$s хэсэгт нууц код тохируулж, дараа нь %4$s-ийг нэмээд буцаж ирнэ үү.</string>
+    <string name="approval_hello_before">Батлах: %1$s. Windows Hello таны PIN, царай эсвэл хурууны хээг асууна.</string>
     <string name="approval_kept">Таныг хүлээж байна хэсэгт хадгалагдсан.</string>
     <string name="approval_key_could_not_sign">Түлхүүр гарын үсэг зурж чадсангүй</string>
     <string name="approval_key_gone_approve_again">Таны хурууны хээ өөрчлөгдсөн, эсвэл ямар нь ч танигдаагүй тул та хөтөч дээрээ дахин зөвшөөрөх хүртэл энэ утас зөвшөөрч чадахгүй.</string>
@@ -99,14 +100,17 @@
     <string name="approval_security_key_add">Түлхүүр нэмэх</string>
     <string name="approval_security_key_add_enter_pin">Нэмэхийн тулд аюулгүй байдлын түлхүүрийнхээ PIN-г оруулна уу. tafs үүнийг тухай бүрт асууж, хэзээ ч хадгалдаггүй.</string>
     <string name="approval_security_key_add_title">Аюулгүй байдлын түлхүүрээ энэ компьютерт нэмэх</string>
+    <string name="approval_security_key_before">Үүнд аюулгүй байдлын түлхүүр хэрэгтэй: %1$s. Залгаад, хүрч, PIN-ийг нь оруулна уу.</string>
     <string name="approval_security_key_enter_pin">Аюулгүй байдлын түлхүүрийнхээ PIN-г оруулна уу. tafs үүнийг тухай бүрт асууж, хэзээ ч хадгалдаггүй.</string>
     <string name="approval_security_key_failed">Аюулгүй байдлын түлхүүр гарын үсэг зурж чадсангүй тул юу ч зөвшөөрөгдөөгүй. Хүсэлт хадгалагдсан: бэлэн болмогцоо дахин зөвшөөрнө үү.</string>
     <string name="approval_security_key_locked">Энэ аюулгүй байдлын түлхүүр буруу PIN хэт олон оруулснаас түгжигдсэн тул зөвшөөрч чадахгүй. Утсан дээрээ зөвшөөрнө үү. Түлхүүрийг шинэчлэх нь түүнийг арилгадаг тул түлхүүрээр дахин зөвшөөрөхийн тулд энэ компьютерийг дахин хослуулна уу.</string>
     <string name="approval_security_key_no_key">Аюулгүй байдлын түлхүүрээ залгаад дахин оролдоно уу.</string>
     <string name="approval_security_key_no_pin_set">Энэ аюулгүй байдлын түлхүүрт PIN байхгүй тул зөвшөөрч чадахгүй. Энэ компьютертэй хамт ирдэг түлхүүрийг залгана уу. Хэрэв шинэчлэгдсэн бол утсан дээрээ зөвшөөрч, түлхүүрээр зөвшөөрөхийн тулд энэ компьютерийг дахин хослуулна уу.</string>
+    <string name="approval_security_key_none_paired">Энэ компьютерт аюулгүй байдлын түлхүүр хараахан алга. Аюулгүй байдлын түлхүүр гэдэг нь батлахдаа хүрдэг жижиг USB түлхүүр юм; энгийн USB санах ой хэрэггүй.</string>
     <string name="approval_security_key_not_allowed">Аюулгүй байдлын түлхүүр зөвшөөрсөнгүй тул юу ч зөвшөөрөгдөөгүй. Хүсэлт хадгалагдсан: бэлэн болмогцоо дахин зөвшөөрнө үү.</string>
     <string name="approval_security_key_not_fido2">Энэ аюулгүй байдлын түлхүүр PIN шалгаж чадахгүй тул зөвшөөрч чадахгүй. Энэ компьютертэй хамт ирдэг түлхүүрийг залгана уу.</string>
     <string name="approval_security_key_not_this_key">Энэ нь энэ компьютертэй хамт ирдэг аюулгүй байдлын түлхүүр биш байна. Тэрийг нь залгаад дахин оролдох, эсвэл утсан дээрээ зөвшөөрнө үү.</string>
+    <string name="approval_security_key_on_phone">Утсан дээрээ батлах</string>
     <string name="approval_security_key_pair_without">Түлхүүргүйгээр хослуулах</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Энэ нь дараалан гурван буруу PIN боллоо. Түлхүүрийг салгаад дахин залгаж, дараа нь дахин оролдоно уу.</string>

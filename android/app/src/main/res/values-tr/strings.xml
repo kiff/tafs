@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Bir taf kurmak onay gerektirir: Coach, araçlarını ve taf\'ın Card\'ını onaylamanızı ister.</string>
     <string name="approval_has_no_face_id_touch">Bu %1$s cihazında Face ID veya Touch ID yok, bu yüzden onay veremez. Hesabınızda oturum açık olan başka bir iPhone, iPad veya Android telefondan onaylayın.</string>
     <string name="approval_has_no_passcode_needs_one">Bu %1$s cihazında parola yok, ve şunun için gerekir: %2$s. Şuradan bir parola belirleyin: %3$s, sonra ekleyin: %4$s, sonra geri dönün.</string>
+    <string name="approval_hello_before">Onaylanıyor: %1$s. Windows Hello PIN\'inizi, yüzünüzü veya parmak izinizi ister.</string>
     <string name="approval_kept">Sizi bekliyor\'da tutuluyor.</string>
     <string name="approval_key_could_not_sign">Anahtar imzalayamadı</string>
     <string name="approval_key_gone_approve_again">Parmak izleriniz değişti veya hiçbiri tanınmadı, bu yüzden bu telefon, tarayıcınızda tekrar onaylayana kadar onay veremez.</string>
@@ -99,14 +100,17 @@
     <string name="approval_security_key_add">Anahtarı ekle</string>
     <string name="approval_security_key_add_enter_pin">Eklemek için güvenlik anahtarınızın PIN\'ini girin. tafs her seferinde ister ve asla saklamaz.</string>
     <string name="approval_security_key_add_title">Güvenlik anahtarınızı bu bilgisayara ekleyin</string>
+    <string name="approval_security_key_before">Bunun için güvenlik anahtarınız gerekir: %1$s. Takın, dokunun ve PIN\'ini girin.</string>
     <string name="approval_security_key_enter_pin">Güvenlik anahtarınızın PIN\'ini girin. tafs her seferinde ister ve asla saklamaz.</string>
     <string name="approval_security_key_failed">Güvenlik anahtarı imzalayamadı, bu yüzden hiçbir şey onaylanmadı. İstek korunuyor: hazır olduğunuzda tekrar onaylayın.</string>
     <string name="approval_security_key_locked">Bu güvenlik anahtarı çok fazla yanlış PIN\'den sonra kilitlendi, bu yüzden onay veremez. Telefonunuzdan onaylayın. Anahtarı sıfırlamak onu siler; bu yüzden bir anahtarla tekrar onaylamak için bu bilgisayarı yeniden eşleştirin.</string>
     <string name="approval_security_key_no_key">Güvenlik anahtarınızı takın, sonra tekrar deneyin.</string>
     <string name="approval_security_key_no_pin_set">Bu güvenlik anahtarının PIN\'i yok, bu yüzden onay veremez. Bu bilgisayara ait olanı takın. Sıfırlandıysa telefonunuzdan onaylayın ve anahtarla onaylamak için bu bilgisayarı yeniden eşleştirin.</string>
+    <string name="approval_security_key_none_paired">Bu bilgisayarda henüz güvenlik anahtarı yok. Güvenlik anahtarı, onaylamak için dokunduğunuz küçük bir USB anahtarıdır; sıradan bir USB bellek çalışmaz.</string>
     <string name="approval_security_key_not_allowed">Güvenlik anahtarı buna izin vermedi, bu yüzden hiçbir şey onaylanmadı. İstek korunuyor: hazır olduğunuzda tekrar onaylayın.</string>
     <string name="approval_security_key_not_fido2">Bu güvenlik anahtarı PIN denetleyemez, bu yüzden onay veremez. Bu bilgisayara ait olanı takın.</string>
     <string name="approval_security_key_not_this_key">Bu, bu bilgisayara ait güvenlik anahtarı değil. Doğru olanı takıp tekrar deneyin veya telefonunuzdan onaylayın.</string>
+    <string name="approval_security_key_on_phone">Bunun yerine telefonunuzda onaylayın</string>
     <string name="approval_security_key_pair_without">Anahtarsız eşleştir</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Üst üste üç yanlış PIN oldu. Anahtarı çıkarın, tekrar takın, sonra tekrar deneyin.</string>

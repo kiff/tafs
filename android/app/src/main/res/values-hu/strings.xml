@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Egy taf beállításához jóváhagyások kellenek: a Coach megkér, hogy hagyd jóvá az eszközeit és a taf Cardját.</string>
     <string name="approval_has_no_face_id_touch">Ezen az eszközön (%1$s) nincs Face ID vagy Touch ID, ezért nem tud jóváhagyni. Hagyd jóvá egy másik, a fiókodba bejelentkezett iPhone-on, iPaden vagy Android-telefonon.</string>
     <string name="approval_has_no_passcode_needs_one">Ezen az eszközön (%1$s) nincs jelkód, pedig ehhez kell egy: %2$s. Állíts be jelkódot itt: %3$s, add hozzá ezt: %4$s, majd gyere vissza.</string>
+    <string name="approval_hello_before">Jóváhagyás: %1$s. A Windows Hello a PIN-kódodat, az arcodat vagy az ujjlenyomatodat kéri.</string>
     <string name="approval_kept">A Rád vár részben megmarad.</string>
     <string name="approval_key_could_not_sign">A kulcs nem tudott aláírni</string>
     <string name="approval_key_gone_approve_again">Az ujjlenyomataid megváltoztak, vagy egyiket sem ismerte fel, ezért ez a telefon nem tud jóváhagyni, amíg újra jóvá nem hagyod a böngésződben.</string>
@@ -99,14 +100,17 @@
     <string name="approval_security_key_add">Kulcs hozzáadása</string>
     <string name="approval_security_key_add_enter_pin">A hozzáadáshoz add meg a biztonsági kulcsod PIN-kódját. A tafs minden alkalommal kéri, és soha nem tárolja.</string>
     <string name="approval_security_key_add_title">A biztonsági kulcsod hozzáadása ehhez a számítógéphez</string>
+    <string name="approval_security_key_before">Ehhez a biztonsági kulcsodra van szükség: %1$s. Csatlakoztasd, érintsd meg, és add meg a PIN-kódját.</string>
     <string name="approval_security_key_enter_pin">Add meg a biztonsági kulcsod PIN-kódját. A tafs minden alkalommal kéri, és soha nem tárolja.</string>
     <string name="approval_security_key_failed">A biztonsági kulcs nem tudott aláírni, így semmi sem lett jóváhagyva. A kérés megmarad: hagyd jóvá újra, ha készen állsz.</string>
     <string name="approval_security_key_locked">Ez a biztonsági kulcs túl sok hibás PIN-kód után zárolva van, ezért nem tud jóváhagyni. Hagyd jóvá a telefonodon. A kulcs alaphelyzetbe állítása törli, ezért ha újra kulccsal akarsz jóváhagyni, párosítsd újra ezt a számítógépet.</string>
     <string name="approval_security_key_no_key">Csatlakoztasd a biztonsági kulcsodat, majd próbáld újra.</string>
     <string name="approval_security_key_no_pin_set">Ennek a biztonsági kulcsnak nincs PIN-kódja, ezért nem tud jóváhagyni. Csatlakoztasd azt, amelyik ehhez a számítógéphez tartozik. Ha alaphelyzetbe lett állítva, hagyd jóvá a telefonodon, és párosítsd újra ezt a számítógépet, hogy kulccsal hagyhass jóvá.</string>
+    <string name="approval_security_key_none_paired">Ennek a számítógépnek még nincs biztonsági kulcsa. A biztonsági kulcs egy kis USB-kulcs, amelyet jóváhagyáskor megérintesz; a sima USB-pendrive nem működik.</string>
     <string name="approval_security_key_not_allowed">A biztonsági kulcs nem engedélyezte, így semmi sem lett jóváhagyva. A kérés megmarad: hagyd jóvá újra, ha készen állsz.</string>
     <string name="approval_security_key_not_fido2">Ez a biztonsági kulcs nem tud PIN-kódot ellenőrizni, ezért nem tud jóváhagyni. Csatlakoztasd azt, amelyik ehhez a számítógéphez tartozik.</string>
     <string name="approval_security_key_not_this_key">Ez nem az a biztonsági kulcs, amely ehhez a számítógéphez tartozik. Csatlakoztasd azt, és próbáld újra, vagy hagyd jóvá a telefonodon.</string>
+    <string name="approval_security_key_on_phone">Inkább jóváhagyás a telefonodon</string>
     <string name="approval_security_key_pair_without">Párosítás kulcs nélkül</string>
     <string name="approval_security_key_pin">PIN-kód</string>
     <string name="approval_security_key_pin_paused">Ez egymás után három hibás PIN-kód. Húzd ki a kulcsot, csatlakoztasd újra, majd próbáld újra.</string>

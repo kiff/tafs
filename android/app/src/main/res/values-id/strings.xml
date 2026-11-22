@@ -74,6 +74,7 @@
     <string name="approval_first_taf">Menyiapkan taf memerlukan persetujuan: Coach meminta Anda menyetujui alatnya dan Card taf tersebut.</string>
     <string name="approval_has_no_face_id_touch">%1$s ini tidak memiliki Face ID atau Touch ID, jadi tidak dapat menyetujui. Setujui di iPhone, iPad, atau ponsel Android lain yang masuk ke akun Anda.</string>
     <string name="approval_has_no_passcode_needs_one">%1$s ini tidak memiliki kode sandi, dan %2$s memerlukannya. Atur kode sandi di %3$s, lalu tambahkan %4$s, lalu kembali.</string>
+    <string name="approval_hello_before">Menyetujui: %1$s. Windows Hello meminta PIN, wajah, atau sidik jari Anda.</string>
     <string name="approval_kept">Disimpan di Menunggu Anda.</string>
     <string name="approval_key_could_not_sign">Kunci tidak dapat menandatangani</string>
     <string name="approval_key_gone_approve_again">Sidik jari Anda berubah, atau tidak ada yang dikenali, jadi ponsel ini tidak dapat menyetujui sampai Anda menyetujuinya lagi di browser.</string>
@@ -98,14 +99,17 @@
     <string name="approval_security_key_add">Tambahkan kunci</string>
     <string name="approval_security_key_add_enter_pin">Masukkan PIN kunci keamanan Anda untuk menambahkannya. tafs memintanya setiap kali dan tidak pernah menyimpannya.</string>
     <string name="approval_security_key_add_title">Tambahkan kunci keamanan Anda ke komputer ini</string>
+    <string name="approval_security_key_before">Ini memerlukan kunci keamanan Anda: %1$s. Colokkan, sentuh, lalu masukkan PIN-nya.</string>
     <string name="approval_security_key_enter_pin">Masukkan PIN kunci keamanan Anda. tafs memintanya setiap kali dan tidak pernah menyimpannya.</string>
     <string name="approval_security_key_failed">Kunci keamanan tidak dapat menandatangani, jadi tidak ada yang disetujui. Permintaan tetap disimpan: setujui lagi saat Anda siap.</string>
     <string name="approval_security_key_locked">Kunci keamanan ini terkunci setelah terlalu banyak PIN yang salah, jadi tidak dapat menyetujui. Setujui di ponsel Anda. Mengatur ulang kunci akan menghapusnya, jadi untuk menyetujui dengan kunci lagi, pasangkan komputer ini lagi.</string>
     <string name="approval_security_key_no_key">Colokkan kunci keamanan Anda, lalu coba lagi.</string>
     <string name="approval_security_key_no_pin_set">Kunci keamanan ini tidak memiliki PIN, jadi tidak dapat menyetujui. Colokkan yang cocok dengan komputer ini. Jika sudah diatur ulang, setujui di ponsel Anda dan pasangkan komputer ini lagi untuk menyetujui dengan kunci.</string>
+    <string name="approval_security_key_none_paired">Komputer ini belum punya kunci keamanan. Kunci keamanan adalah kunci USB kecil yang Anda sentuh untuk menyetujui; flashdisk USB biasa tidak bisa dipakai.</string>
     <string name="approval_security_key_not_allowed">Kunci keamanan tidak mengizinkannya, jadi tidak ada yang disetujui. Permintaan tetap disimpan: setujui lagi saat Anda siap.</string>
     <string name="approval_security_key_not_fido2">Kunci keamanan ini tidak dapat memeriksa PIN, jadi tidak dapat menyetujui. Colokkan yang cocok dengan komputer ini.</string>
     <string name="approval_security_key_not_this_key">Ini bukan kunci keamanan yang cocok dengan komputer ini. Colokkan yang benar lalu coba lagi, atau setujui di ponsel Anda.</string>
+    <string name="approval_security_key_on_phone">Setujui di ponsel Anda saja</string>
     <string name="approval_security_key_pair_without">Pasangkan tanpa kunci</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Itu tiga PIN salah berturut-turut. Cabut kunci, colokkan lagi, lalu coba lagi.</string>

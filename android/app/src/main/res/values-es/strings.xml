@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Configurar un taf requiere aprobaciones: Coach te pide que apruebes sus apps y la Card del taf.</string>
     <string name="approval_has_no_face_id_touch">Este %1$s no tiene Face ID ni Touch ID, así que no puede aprobar. Aprueba en otro iPhone, iPad o teléfono Android con la sesión iniciada en tu cuenta.</string>
     <string name="approval_has_no_passcode_needs_one">Este %1$s no tiene código, y %2$s lo necesita. Establece un código en %3$s, añade %4$s y vuelve.</string>
+    <string name="approval_hello_before">Aprobando: %1$s. Windows Hello te pide tu PIN, tu rostro o tu huella.</string>
     <string name="approval_kept">Se conserva en Te necesita.</string>
     <string name="approval_key_could_not_sign">La clave no pudo firmar</string>
     <string name="approval_key_gone_approve_again">Tus huellas cambiaron o no se reconoció ninguna, así que este teléfono no puede aprobar hasta que lo vuelvas a aprobar en tu navegador.</string>
@@ -99,14 +100,17 @@
     <string name="approval_security_key_add">Añadir llave</string>
     <string name="approval_security_key_add_enter_pin">Introduce el PIN de tu llave de seguridad para añadirla. tafs lo pide cada vez y nunca lo guarda.</string>
     <string name="approval_security_key_add_title">Añadir tu llave de seguridad a este ordenador</string>
+    <string name="approval_security_key_before">Esto necesita tu llave de seguridad: %1$s. Conéctala, tócala e introduce su PIN.</string>
     <string name="approval_security_key_enter_pin">Introduce el PIN de tu llave de seguridad. tafs lo pide cada vez y nunca lo guarda.</string>
     <string name="approval_security_key_failed">La llave de seguridad no pudo firmar, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.</string>
     <string name="approval_security_key_locked">Esta llave de seguridad está bloqueada tras demasiados PIN incorrectos, así que no puede aprobar. Aprueba en tu teléfono. Restablecer la llave la borra, así que para volver a aprobar con una llave, vuelve a vincular este ordenador.</string>
     <string name="approval_security_key_no_key">Conecta tu llave de seguridad y vuelve a intentarlo.</string>
     <string name="approval_security_key_no_pin_set">Esta llave de seguridad no tiene PIN, así que no puede aprobar. Conecta la que va con este ordenador. Si se restableció, aprueba en tu teléfono y vuelve a vincular este ordenador para aprobar con una llave.</string>
+    <string name="approval_security_key_none_paired">Este ordenador aún no tiene ninguna llave de seguridad. Una llave de seguridad es una pequeña llave USB que tocas para aprobar; una memoria USB normal no sirve.</string>
     <string name="approval_security_key_not_allowed">La llave de seguridad no lo permitió, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.</string>
     <string name="approval_security_key_not_fido2">Esta llave de seguridad no puede comprobar un PIN, así que no puede aprobar. Conecta la que va con este ordenador.</string>
     <string name="approval_security_key_not_this_key">Esta no es la llave de seguridad que va con este ordenador. Conecta esa y vuelve a intentarlo, o aprueba en tu teléfono.</string>
+    <string name="approval_security_key_on_phone">Aprobar en tu teléfono en su lugar</string>
     <string name="approval_security_key_pair_without">Vincular sin llave</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Son tres PIN incorrectos seguidos. Desconecta la llave, vuelve a conectarla y vuelve a intentarlo.</string>

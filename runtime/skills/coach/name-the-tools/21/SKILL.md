@@ -55,7 +55,9 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   schema: {type: "array", items: {type: "string"}}`) or object, naming the fields the taf writes, by the job's or owner's names (ask one
   you don't know), never none (`type: "object", schema: {type: "object",
   properties: {"Status": {type: "string"}}}`). A field is plain or an array; a
-  nested one's fields are arguments at their paths.
+  nested one's fields are arguments at their paths. Refused an argument's
+  schema, fix it as planque says and resend the same request with every tool:
+  a tool dropped and added later is a second approval.
   Leave every other argument to the taf (arguments): its Card limits what
   changes things; never narrow an argument to stand in for a limit. Name the argument that moves money, its unit the currency code the operation uses (EUR, USD…; never "cents": cents are scale 2),
   and make it required: only an argument the vendor's operation takes for the

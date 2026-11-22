@@ -232,3 +232,21 @@ enum RawJSON {
         }
     }
 }
+
+/// KIFF's own words for a receipt's steps, sent beside the receipt and outside its signature (`step_words`:
+/// `[{sequence, code, words}]`, in the reader's language). Only an entry with a whole-number `sequence` and words that
+/// aren't blank counts; the signed message is what a step reads as without one.
+enum ReceiptStepWords {
+    static func read(from raw: Data) -> [Int: String] {
+        guard let value = RawJSON.value(of: "step_words", in: raw),
+              let list = try? JSONSerialization.jsonObject(with: value) as? [Any] else { return [:] }
+        var words: [Int: String] = [:]
+        for case let entry as [String: Any] in list {
+            guard let number = entry["sequence"] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+                  number.doubleValue == Double(number.intValue),
+                  let text = (entry["words"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else { continue }
+            words[number.intValue] = text
+        }
+        return words
+    }
+}

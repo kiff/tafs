@@ -74,6 +74,7 @@
     <string name="approval_first_taf">tafの設定には承認が必要です。Coachが、ツールとtafのCardの承認を求めます。</string>
     <string name="approval_has_no_face_id_touch">この%1$sにはFace IDもTouch IDもないため、承認できません。アカウントにサインインしている別のiPhone、iPad、またはAndroidスマートフォンで承認してください。</string>
     <string name="approval_has_no_passcode_needs_one">この%1$sにはパスコードがなく、%2$sにはパスコードが必要です。%3$sでパスコードを設定し、%4$sを追加してから戻ってください。</string>
+    <string name="approval_hello_before">承認中：%1$s。Windows Hello が PIN、顔、または指紋を求めます。</string>
     <string name="approval_kept">要確認に保持されています。</string>
     <string name="approval_key_could_not_sign">キーで署名できませんでした</string>
     <string name="approval_key_gone_approve_again">指紋が変更されたか認識されなかったため、ブラウザでもう一度承認するまで、このスマートフォンでは承認できません。</string>
@@ -98,14 +99,17 @@
     <string name="approval_security_key_add">キーを追加</string>
     <string name="approval_security_key_add_enter_pin">追加するにはセキュリティキーのPINを入力してください。tafsは毎回PINを求め、保存することはありません。</string>
     <string name="approval_security_key_add_title">このコンピュータにセキュリティキーを追加</string>
+    <string name="approval_security_key_before">この操作にはセキュリティキーが必要です：%1$s。キーを差し込み、タッチして、PIN を入力してください。</string>
     <string name="approval_security_key_enter_pin">セキュリティキーのPINを入力してください。tafsは毎回PINを求め、保存することはありません。</string>
     <string name="approval_security_key_failed">セキュリティキーで署名できなかったため、何も承認されていません。リクエストは保持されています。準備ができたらもう一度承認してください。</string>
     <string name="approval_security_key_locked">PINの誤入力が多すぎるため、このセキュリティキーはロックされ、承認できません。スマートフォンで承認してください。キーをリセットすると内容が消去されるため、再びキーで承認するには、このコンピュータをもう一度ペアリングしてください。</string>
     <string name="approval_security_key_no_key">セキュリティキーを差し込んでから、もう一度お試しください。</string>
     <string name="approval_security_key_no_pin_set">このセキュリティキーにはPINがないため、承認できません。このコンピュータ用のキーを差し込んでください。リセットした場合は、スマートフォンで承認し、キーで承認するにはこのコンピュータをもう一度ペアリングしてください。</string>
+    <string name="approval_security_key_none_paired">このコンピュータにはまだセキュリティキーがありません。セキュリティキーは、承認するときにタッチする小さな USB キーで、ふつうの USB メモリは使えません。</string>
     <string name="approval_security_key_not_allowed">セキュリティキーが許可しなかったため、何も承認されていません。リクエストは保持されています。準備ができたらもう一度承認してください。</string>
     <string name="approval_security_key_not_fido2">このセキュリティキーはPINを確認できないため、承認できません。このコンピュータ用のキーを差し込んでください。</string>
     <string name="approval_security_key_not_this_key">これはこのコンピュータ用のセキュリティキーではありません。そのキーを差し込んでもう一度試すか、スマートフォンで承認してください。</string>
+    <string name="approval_security_key_on_phone">代わりにスマートフォンで承認してください</string>
     <string name="approval_security_key_pair_without">キーなしでペアリング</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">PINを3回続けて間違えました。キーを抜いて差し直してから、もう一度お試しください。</string>

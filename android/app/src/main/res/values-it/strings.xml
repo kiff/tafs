@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Configurare un taf richiede approvazioni: Coach ti chiede di approvare i suoi strumenti e la Card del taf.</string>
     <string name="approval_has_no_face_id_touch">Questo %1$s non ha Face ID né Touch ID, quindi non può approvare. Approva su un altro iPhone, iPad o telefono Android connesso al tuo account.</string>
     <string name="approval_has_no_passcode_needs_one">Questo %1$s non ha un codice, e %2$s ne richiede uno. Imposta un codice in %3$s, poi aggiungi %4$s, poi torna qui.</string>
+    <string name="approval_hello_before">Approvazione: %1$s. Windows Hello chiede il tuo PIN, il viso o l\'impronta.</string>
     <string name="approval_kept">Resta in Ti aspetta.</string>
     <string name="approval_key_could_not_sign">La chiave non è riuscita a firmare</string>
     <string name="approval_key_gone_approve_again">Le tue impronte sono cambiate, o nessuna è stata riconosciuta, quindi questo telefono non può approvare finché non lo approvi di nuovo nel browser.</string>
@@ -99,14 +100,17 @@
     <string name="approval_security_key_add">Aggiungi chiave</string>
     <string name="approval_security_key_add_enter_pin">Inserisci il PIN della tua chiave di sicurezza per aggiungerla. tafs lo chiede ogni volta e non lo salva mai.</string>
     <string name="approval_security_key_add_title">Aggiungi la tua chiave di sicurezza a questo computer</string>
+    <string name="approval_security_key_before">Serve la tua chiave di sicurezza: %1$s. Collegala, toccala e inserisci il suo PIN.</string>
     <string name="approval_security_key_enter_pin">Inserisci il PIN della tua chiave di sicurezza. tafs lo chiede ogni volta e non lo salva mai.</string>
     <string name="approval_security_key_failed">La chiave di sicurezza non è riuscita a firmare, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>
     <string name="approval_security_key_locked">Questa chiave di sicurezza è bloccata dopo troppi PIN errati, quindi non può approvare. Approva sul telefono. Ripristinare la chiave la cancella, quindi per approvare di nuovo con una chiave, associa di nuovo questo computer.</string>
     <string name="approval_security_key_no_key">Collega la tua chiave di sicurezza, poi riprova.</string>
     <string name="approval_security_key_no_pin_set">Questa chiave di sicurezza non ha un PIN, quindi non può approvare. Collega quella che va con questo computer. Se è stata ripristinata, approva sul telefono e associa di nuovo questo computer per approvare con una chiave.</string>
+    <string name="approval_security_key_none_paired">Questo computer non ha ancora una chiave di sicurezza. Una chiave di sicurezza è una piccola chiave USB che tocchi per approvare; una normale chiavetta USB non funziona.</string>
     <string name="approval_security_key_not_allowed">La chiave di sicurezza non l\'ha consentito, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>
     <string name="approval_security_key_not_fido2">Questa chiave di sicurezza non può verificare un PIN, quindi non può approvare. Collega quella che va con questo computer.</string>
     <string name="approval_security_key_not_this_key">Questa non è la chiave di sicurezza che va con questo computer. Collega quella e riprova, oppure approva sul telefono.</string>
+    <string name="approval_security_key_on_phone">Approva invece sul telefono</string>
     <string name="approval_security_key_pair_without">Associa senza chiave</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Sono tre PIN errati di fila. Scollega la chiave, ricollegala, poi riprova.</string>

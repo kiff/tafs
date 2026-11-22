@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Einen taf einzurichten braucht Genehmigungen: Coach bittet dich, seine Tools und die Card des tafs zu genehmigen.</string>
     <string name="approval_has_no_face_id_touch">Dieses %1$s hat weder Face ID noch Touch ID und kann daher nicht genehmigen. Genehmige auf einem anderen iPhone, iPad oder Android-Telefon, das bei deinem Konto angemeldet ist.</string>
     <string name="approval_has_no_passcode_needs_one">Dieses %1$s hat keinen Code, und %2$s braucht einen. Lege unter %3$s einen Code fest, füge dann %4$s hinzu und komm zurück.</string>
+    <string name="approval_hello_before">Genehmigen: %1$s. Windows Hello fragt nach deiner PIN, deinem Gesicht oder deinem Fingerabdruck.</string>
     <string name="approval_kept">Sie bleibt unter „Braucht dich“.</string>
     <string name="approval_key_could_not_sign">Der Schlüssel konnte nicht signieren</string>
     <string name="approval_key_gone_approve_again">Deine Fingerabdrücke haben sich geändert oder keiner wurde erkannt, daher kann dieses Telefon erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst.</string>
@@ -99,14 +100,17 @@
     <string name="approval_security_key_add">Schlüssel hinzufügen</string>
     <string name="approval_security_key_add_enter_pin">Gib die PIN deines Sicherheitsschlüssels ein, um ihn hinzuzufügen. tafs fragt jedes Mal danach und speichert sie nie.</string>
     <string name="approval_security_key_add_title">Deinen Sicherheitsschlüssel zu diesem Computer hinzufügen</string>
+    <string name="approval_security_key_before">Dafür brauchst du deinen Sicherheitsschlüssel: %1$s. Steck ihn ein, berühre ihn und gib seine PIN ein.</string>
     <string name="approval_security_key_enter_pin">Gib die PIN deines Sicherheitsschlüssels ein. tafs fragt jedes Mal danach und speichert sie nie.</string>
     <string name="approval_security_key_failed">Der Sicherheitsschlüssel konnte nicht signieren, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
     <string name="approval_security_key_locked">Dieser Sicherheitsschlüssel ist nach zu vielen falschen PINs gesperrt und kann nicht genehmigen. Genehmige auf deinem Telefon. Beim Zurücksetzen wird der Schlüssel gelöscht. Um wieder mit einem Schlüssel zu genehmigen, kopple diesen Computer erneut.</string>
     <string name="approval_security_key_no_key">Steck deinen Sicherheitsschlüssel ein und versuch es dann erneut.</string>
     <string name="approval_security_key_no_pin_set">Dieser Sicherheitsschlüssel hat keine PIN und kann nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört. Wurde er zurückgesetzt, genehmige auf deinem Telefon und kopple diesen Computer erneut, um mit einem Schlüssel zu genehmigen.</string>
+    <string name="approval_security_key_none_paired">Auf diesem Computer ist noch kein Sicherheitsschlüssel eingerichtet. Ein Sicherheitsschlüssel ist ein kleiner USB-Schlüssel, den du zum Genehmigen berührst; ein normaler USB-Stick funktioniert nicht.</string>
     <string name="approval_security_key_not_allowed">Der Sicherheitsschlüssel hat es nicht zugelassen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
     <string name="approval_security_key_not_fido2">Dieser Sicherheitsschlüssel kann keine PIN prüfen und daher nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört.</string>
     <string name="approval_security_key_not_this_key">Das ist nicht der Sicherheitsschlüssel, der zu diesem Computer gehört. Steck diesen ein und versuch es erneut, oder genehmige auf deinem Telefon.</string>
+    <string name="approval_security_key_on_phone">Stattdessen auf deinem Handy genehmigen</string>
     <string name="approval_security_key_pair_without">Ohne Schlüssel koppeln</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Das sind drei falsche PINs hintereinander. Zieh den Schlüssel ab, steck ihn wieder ein und versuch es dann erneut.</string>

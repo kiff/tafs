@@ -76,6 +76,7 @@
     <string name="approval_first_taf">הגדרת taf דורשת אישורים: Coach מבקש ממך לאשר את הכלים שלו ואת ה-Card של ה-taf.</string>
     <string name="approval_has_no_face_id_touch">בהתקן הזה (%1$s) אין Face ID או Touch ID, ולכן הוא לא יכול לאשר. יש לאשר ב-iPhone, ב-iPad או בטלפון Android אחר שמחובר לחשבון שלך.</string>
     <string name="approval_has_no_passcode_needs_one">בהתקן הזה (%1$s) אין קוד גישה, ו-%2$s דורש קוד כזה. יש להגדיר קוד גישה ב%3$s, אחר כך להוסיף %4$s ולחזור.</string>
+    <string name="approval_hello_before">מאשרים: %1$s. Windows Hello יבקש את ה-PIN, את הפנים או את טביעת האצבע שלך.</string>
     <string name="approval_kept">היא נשמרת ב«זקוק לך».</string>
     <string name="approval_key_could_not_sign">המפתח לא הצליח לחתום</string>
     <string name="approval_key_gone_approve_again">טביעות האצבע שלך השתנו או שאף אחת לא זוהתה, ולכן הטלפון הזה לא יכול לאשר עד שתאשר אותו שוב בדפדפן.</string>
@@ -100,14 +101,17 @@
     <string name="approval_security_key_add">הוספת מפתח</string>
     <string name="approval_security_key_add_enter_pin">יש להזין את ה-PIN של מפתח האבטחה כדי להוסיף אותו. tafs מבקש אותו בכל פעם ולעולם לא שומר אותו.</string>
     <string name="approval_security_key_add_title">הוספת מפתח האבטחה שלך למחשב הזה</string>
+    <string name="approval_security_key_before">פעולה זו דורשת את מפתח האבטחה: %1$s. יש לחבר אותו, לגעת בו ולהזין את ה-PIN שלו.</string>
     <string name="approval_security_key_enter_pin">יש להזין את ה-PIN של מפתח האבטחה. tafs מבקש אותו בכל פעם ולעולם לא שומר אותו.</string>
     <string name="approval_security_key_failed">מפתח האבטחה לא הצליח לחתום, ולכן שום דבר לא אושר. הבקשה נשמרה: אפשר לאשר שוב כשתהיה מוכן.</string>
     <string name="approval_security_key_locked">מפתח האבטחה הזה ננעל אחרי יותר מדי PIN שגויים, ולכן הוא לא יכול לאשר. יש לאשר בטלפון. איפוס המפתח מוחק אותו, ולכן כדי לאשר שוב עם מפתח יש לצמד את המחשב הזה מחדש.</string>
     <string name="approval_security_key_no_key">יש לחבר את מפתח האבטחה ולנסות שוב.</string>
     <string name="approval_security_key_no_pin_set">למפתח האבטחה הזה אין PIN, ולכן הוא לא יכול לאשר. יש לחבר את המפתח שמתאים למחשב הזה. אם הוא אופס, יש לאשר בטלפון ולצמד את המחשב הזה מחדש כדי לאשר עם מפתח.</string>
+    <string name="approval_security_key_none_paired">במחשב הזה עדיין אין מפתח אבטחה. מפתח אבטחה הוא מפתח USB קטן שנוגעים בו כדי לאשר; כונן USB רגיל לא יעבוד.</string>
     <string name="approval_security_key_not_allowed">מפתח האבטחה לא אישר זאת, ולכן שום דבר לא אושר. הבקשה נשמרה: אפשר לאשר שוב כשתהיה מוכן.</string>
     <string name="approval_security_key_not_fido2">מפתח האבטחה הזה לא יכול לבדוק PIN, ולכן הוא לא יכול לאשר. יש לחבר את המפתח שמתאים למחשב הזה.</string>
     <string name="approval_security_key_not_this_key">זה לא מפתח האבטחה שמתאים למחשב הזה. יש לחבר את המתאים ולנסות שוב, או לאשר בטלפון.</string>
+    <string name="approval_security_key_on_phone">לאשר בטלפון במקום</string>
     <string name="approval_security_key_pair_without">צימוד בלי מפתח</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">זה שלושה PIN שגויים ברצף. יש לנתק את המפתח, לחבר אותו שוב ולנסות שוב.</string>
