@@ -1,0 +1,1 @@
+- **Files on iPhone and iPad says plainly when it can't reach the server:** "Files couldn't be read: …" for the list and a preview, and the connection line when a delete or a download didn't go through, instead of the held-call alert's line about refusing.
