@@ -767,6 +767,20 @@ the app builds with ships `zh-rTW` and `zh-rHK`, and Android took those over our
 | Usage | 用量 |
 | Cancel / Continue | 取消 / 繼續 |
 
+## Batch 4 on Android: Serbian, Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
+
+Ready before their lines are written, so the strings PR only adds the words:
+
+- **Codes.** Serbian ships as `sr-Latn`: plain `sr` means Cyrillic on Android, and the libraries ship `values-sr` in
+  Cyrillic. A phone set to Serbian in Latin script reads it; one set to Serbian alone, which Android writes in Cyrillic,
+  falls back to English until Cyrillic is written. Azerbaijani ships as plain `az`, since Latin is its default script and the
+  libraries' `values-az` is Latin; shipped as `az-Latn`, its lines would go in `values-az` too (`ALSO`).
+- **Hebrew's folder.** The libraries ship `values-iw`, Hebrew's old code, and no `values-he`, as with Indonesian, so its lines
+  are written to both (`android.py`'s `ALSO`). `AppLocale` reads "iw" as "he". It's right to left: both apps already lay
+  out from the end and set values apart in a line (#1696).
+- **Plural forms** (`generate.py`'s `PLURALS`): Serbian one, few; Hebrew one, two (an older phone asking for "many" reads
+  "other"); Albanian, Georgian, Armenian, Azerbaijani and Bengali one. Armenian and Bengali's "one" covers 0 and 1.
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

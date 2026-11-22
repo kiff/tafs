@@ -62,6 +62,18 @@ class AppLocaleTest {
   }
 
   // Android 11 to 13 name Indonesian "in", its old code, even when the phone's tag is "id"; a kept tag may be either.
+  // Batch 4, read as each would ship. Serbian in Latin script ("sr-Latn"): a phone set to it reads it; one set to Serbian alone,
+  // which Android writes in Cyrillic, doesn't. Azerbaijani ("az", Latin by default) whether the phone names the script or not.
+  // Hebrew by either code.
+  @Test fun batchFourIsReadByScriptAndOldCode() {
+    val shipped = AppLocale.TAGS + listOf("sr-Latn", "he", "az", "sq", "ka", "hy", "bn")
+    for (tag in listOf("sr-Latn", "sr-Latn-RS", "sr-Latn-ME", "sr_Latn_RS")) assertEquals(tag, "sr-Latn", AppLocale.known(tag, shipped))
+    for (tag in listOf("sr", "sr-RS", "sr-Cyrl-RS")) assertNull(tag, AppLocale.known(tag, shipped))
+    for (tag in listOf("az", "az-AZ", "az-Latn-AZ")) assertEquals(tag, "az", AppLocale.known(tag, shipped))
+    for (tag in listOf("he", "he-IL", "iw", "iw-IL")) assertEquals(tag, "he", AppLocale.known(tag, shipped))
+    for (tag in listOf("sq-AL", "ka-GE", "hy-AM", "bn-BD")) assertEquals(tag, tag.substringBefore('-'), AppLocale.known(tag, shipped))
+  }
+
   @Test fun anOldLanguageCodeIsReadAsTheNewOne() {
     for (tag in listOf("id", "in", "in-ID", "in_ID", "id-ID")) assertEquals(tag, "id", AppLocale.known(tag))
     assertEquals("id", AppLocale.fromLocales("in-ID,en-US"))

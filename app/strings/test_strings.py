@@ -363,6 +363,14 @@ class Generator(unittest.TestCase):
         # A script is no region: Android takes it only in its BCP 47 form (zh-Hant, when Traditional Chinese ships).
         self.assertEqual(android.folder("zh-Hant"), "values-b+zh+Hant")
         self.assertEqual(android.folder("zh-Hant-TW"), "values-b+zh+Hant+TW")
+        # Batch 4: Hebrew also under its old code, as the libraries ship it; Serbian in Latin script in its BCP 47 folder, never
+        # plain values-sr (Cyrillic); Azerbaijani in Latin script also in plain values-az, the libraries' Latin.
+        self.assertEqual(android.folders("he"), ["values-he", "values-iw"])
+        self.assertEqual(android.folders("sr-Latn"), ["values-b+sr+Latn"])
+        self.assertEqual(android.folders("az-Latn"), ["values-b+az+Latn", "values-az"])
+        self.assertEqual(android.folders("az"), ["values-az"])
+        for lang in ("sr", "he", "sq", "ka", "hy", "az", "bn"):
+            self.assertIn(lang, generate.PLURALS, f"{lang} has its plural forms")
         # A library's folder Android would take before ours gets the same lines: Indonesian's old code, Chinese by region.
         self.assertEqual(android.folders("id"), ["values-id", "values-in"])
         self.assertEqual(android.folders("zh-Hant"), ["values-b+zh+Hant", "values-zh-rTW", "values-zh-rHK", "values-zh-rMO"])
