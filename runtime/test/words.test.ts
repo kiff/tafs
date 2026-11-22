@@ -125,6 +125,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     es: ["dial_app"], // "App" is used as is
     it: ["cr_pct", "dial_place_email", "dial_app"], pt: ["cr_pct", "dial_place_email", "dial_app"], pl: ["cr_pct"], // "80%" is written alike; "Email" and "App" are used as is
     ko: ["cr_pct"], // "80%" is written alike
+    hu: ["cr_pct"], ro: ["cr_pct"], bg: ["cr_pct"], id: ["cr_pct"], vi: ["cr_pct"], th: ["cr_pct"], "zh-Hant": ["cr_pct"], // "80%" is written alike
     ja: ["cr_pct"],
     nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title", "dial_open", "dial_app", "sheet_details", "brief_later"], // "credit", "run" are the Dutch terms in the glossary; "Open", "App", "Details" and "Later" are Dutch too
   };
@@ -294,7 +295,9 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
    */
   /** The languages with a column in the Terms table: every one but a regional variant, which has its own glossary. */
   // Korean's terms are their own section ("Korean and Japanese"), not a column of this table.
-  const BASES = FULL_LANGUAGES.filter((l) => baseLanguage(l) === l && l !== "ko" && l !== "ja");
+  // The Terms table's columns: the eight languages the glossary was written in. The languages added since follow its terms in
+  // their own glossary sections (docs/languages.md), which this table doesn't carry.
+  const BASES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const;
 
   function glossary(): Array<{ en: string; label: boolean; words: Record<string, string> }> {
     const md = readFileSync(new URL("../../docs/languages.md", import.meta.url), "utf8");

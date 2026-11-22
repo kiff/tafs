@@ -900,9 +900,11 @@ screen is **"Conta"**.
   worded from the catalog; one it doesn't know passes kiff/agents' words through. `error` fields stay
   English, for developers; the `words` beside them are the person's. A vendor's or provider's own words
   (why a reply wasn't sent, KIFF's tool titles) pass as they came.
-- **The languages added since in tafs cloud, partial until written** (PM, 22 Nov): the full languages (`FULL_LANGUAGES`:
-  the eight, pt-BR, ko, ja) have every key. Batch 2's ten and batch 3's five (`PARTIAL_LANGUAGES`) may be partial: each line
-  written replaces English's, every other reads English, key by key. Three guards:
+- **A language tafs cloud adds before every line is written may be partial** (PM, 22 Nov): it goes in `PARTIAL_LANGUAGES`,
+  each line written replaces English's, every other reads English, key by key, and at 100% it moves to `FULL_LANGUAGES`,
+  where the type requires every key. Batch 2's ten and batch 3's five went that way: partial in tafs#1702, every line by
+  tafs#1706, full since (a draft no native speaker has read yet). None is partial today; batch 4's languages would be next.
+  Three guards while one is:
   - **The most-seen lines first** (`PRIORITY_PREFIXES`): Home's (`home_`), push titles (`push_`), Activity's details
     (`act_`) and the approval card's (`approval_`). A language with any other line has all of those (a test checks it).
   - **The target is 100%.** `words.test.ts` prints each language's coverage (`npx vitest run test/words.test.ts --silent=false`;

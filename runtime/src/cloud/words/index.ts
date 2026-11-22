@@ -36,10 +36,17 @@ import { zhHant } from "./zh-Hant.js";
 
 export type { ConnectRoute, When, Words };
 
-/** The languages whose every line is written. */
-export const FULL_LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "pt-BR", "ko", "ja"] as const;
-/** The languages the apps ship whose lines are being written: what isn't yet reads English (PM, 22 Nov). */
-export const PARTIAL_LANGUAGES = ["et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant"] as const;
+/**
+ * The languages whose every line is written: the eight, pt-BR, ko, ja, and since 22 Nov batch 2's ten and batch 3's five,
+ * which were partial (tafs#1702) until every line was written (tafs#1706).
+ */
+export const FULL_LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "pt-BR", "ko", "ja",
+  "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant"] as const;
+/**
+ * The languages the apps ship whose lines are being written: what isn't yet reads English (PM, 22 Nov). None today; a
+ * language tafs cloud adds before every line is written (batch 4's) comes here first, and moves to FULL_LANGUAGES at 100%.
+ */
+export const PARTIAL_LANGUAGES = [] as const;
 export const LANGUAGES = [...FULL_LANGUAGES, ...PARTIAL_LANGUAGES] as const;
 export type Lang = (typeof LANGUAGES)[number];
 type PartialLang = (typeof PARTIAL_LANGUAGES)[number];
@@ -47,8 +54,9 @@ type PartialLang = (typeof PARTIAL_LANGUAGES)[number];
 /** The lines a partial language writes first, by key prefix: Home's, push titles, Activity's details, the approval card's. */
 export const PRIORITY_PREFIXES = ["home_", "push_", "act_", "approval_"] as const;
 
-const CATALOGS: Record<(typeof FULL_LANGUAGES)[number], Words> = { en, de, fr, es, it, pt, nl, pl, "pt-BR": ptBR, ko, ja };
-const PARTIAL: Record<PartialLang, Partial<Words>> = { et, lt, lv, cs, sk, sl, hu, ro, bg, hr, tr, id, vi, th, "zh-Hant": zhHant };
+const CATALOGS: Record<(typeof FULL_LANGUAGES)[number], Words> = { en, de, fr, es, it, pt, nl, pl, "pt-BR": ptBR, ko, ja,
+  et, lt, lv, cs, sk, sl, hu, ro, bg, hr, tr, id, vi, th, "zh-Hant": zhHant };
+const PARTIAL: Record<PartialLang, Partial<Words>> = {};
 const filled = new Map<PartialLang, Words>();
 
 function isPartial(lang: Lang): lang is PartialLang {

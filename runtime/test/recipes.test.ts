@@ -145,7 +145,8 @@ Bezahle meine Rechnungen unter 100 EUR.
   it("has every recipe in every language the apps speak, each word translated", () => {
     // A recipe is written per base language; a regional variant (pt-BR) reads its base's (recipesFor).
     // Korean, Japanese and the languages added since read the recipes in English until they're written in them (recipesFor falls back).
-    expect(["en", ...LANGS].sort()).toEqual(FULL_LANGUAGES.filter((l) => baseLanguage(l) === l && l !== "ko" && l !== "ja").sort());
+    const english = new Set(["ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant"]);
+    expect(["en", ...LANGS].sort()).toEqual(FULL_LANGUAGES.filter((l) => baseLanguage(l) === l && !english.has(l)).sort());
     for (const r of RECIPES) {
       for (const lang of LANGS) {
         const w = r.languages[lang as keyof typeof r.languages];
