@@ -98,7 +98,35 @@ class ChromeScreenshotTest {
     transport.answer(route, 200, String(answer(sha = hex(webp + 1))))
     assertEquals("a picture that doesn't check out fails", ChromeShotPhase.Failed, chromeShotPhase { m.chromeScreenshot("run_1.3") })
 
+    transport.answer(route, 200, String(answer()).replace("run_1.3", "run_9.1"))
+    assertEquals("another step's picture fails", ChromeShotPhase.Failed, chromeShotPhase { m.chromeScreenshot("run_1.3") })
+
     transport.answer(route, 503, """{"error":"down"}""")
     assertEquals(ChromeShotPhase.Failed, chromeShotPhase { m.chromeScreenshot("run_1.3") })
+  }
+
+  @Test fun anOperationsPicturesAreListedByItsProposalWithoutBytes() = runTest {
+    val m = model()
+    val list = "GET /v1/accounts/t_01/chromes/screenshots"
+    transport.answer(list, 200, """{"shots":[{"step":"prop_1.2","taken_at":"2026-11-22T17:40:00Z","sha256":"ab"},{"step":"prop_1.4","taken_at":"2026-11-22T17:41:00Z","sha256":"cd"}]}""")
+    assertEquals(listOf("prop_1.2", "prop_1.4"), m.chromeShots("prop_1").map { it.step })
+    val sent = transport.requestsTo(list).last()
+    assertTrue("by its operation", sent.url.endsWith("/chromes/screenshots?op=prop_1"))
+    assertTrue("signed by this device", sent.headers["Planque-Device-Signature"]?.contains("d=dev_1") == true)
+
+    transport.answer(list, 200, """{"shots":[]}""")
+    assertTrue("none kept: no link", m.chromeShots("prop_1").isEmpty())
+    transport.answer(list, 404, """{"error":"not found"}""")
+    assertTrue("a planque without the route: no link", m.chromeShots("prop_1").isEmpty())
+    transport.answer(list, 200, """{"shots":[{"step":"  "}]}""")
+    assertTrue("a blank step is no picture to open", m.chromeShots("prop_1").isEmpty())
+  }
+
+  @Test fun aRecordLineKeepsItsOperationForItsPictures() {
+    val call = KiffClient.json.decodeFromString<bot.tafs.app.kiff.ActivityCall>(
+      """{"proposal_id":"prop_1","action_name":"browser_act_k3f9","actor_id":"agt_1","outcome":"allowed","created_at":"2026-11-22T17:40:00Z"}""",
+    )
+    val entry = bot.tafs.app.kiff.KiffMapping.record(listOf(call), holders = setOf("agt_1")).single()
+    assertEquals("prop_1", entry.proposalId)
   }
 }

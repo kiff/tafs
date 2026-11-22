@@ -1550,10 +1550,16 @@ shown. Tests: `BrowserStepCardTest`.
 The page as the Chrome showed it just before a taf's step acted, read from planque's owner route (`GET
 /v1/accounts/{tenant}/chromes/screenshots/{step}`, signed by this device as the Chromes list is; `AppModel.chromeScreenshot`).
 The bytes are shown only when they're WebP, at most 120 KB, and hash to the `sha256` planque sent
-(`ChromeScreenshot.read`). Under the picture: when it was taken, and "Kept for 30 days, then deleted." A 404 reads "No
+(`ChromeScreenshot.read`), and only when it is the step asked for. Under the picture: when it was taken, and "Kept for 30 days, then deleted." A 404 reads "No
 picture is kept for this step" (none taken, past its 30 days, or planque's switch off). Anything else, including a picture
-that doesn't check out or planque not ready to be asked, reads "The picture couldn't be loaded", never as a picture. Nothing
-opens it yet: a taf's Activity row opens it once tafs cloud names the row's Chrome step. Tests: `ChromeScreenshotTest`.
+that doesn't check out or planque not ready to be asked, reads "The picture couldn't be loaded", never as a picture.
+
+A Record line's receipt (`ReceiptSheet`) opens it: the receipt asks planque for the pictures kept for the line's operation,
+KIFF's `proposal_id` (`GET /v1/accounts/{tenant}/chromes/screenshots?op=…`, device-signed with the query covered;
+`AppModel.chromeShots`), which answers step ids and times, oldest first, at most 20, without bytes. One **See the page before
+this step** per picture, each opening the sheet for its step. None listed, a planque without the route (404), a read that
+fails, or signed out and the sample: no link, and the receipt is as it was. planque lists none while its switch is off, so
+no receipt shows a link today. Tests: `ChromeScreenshotTest`.
 
 ## Signing in with your other phone
 

@@ -394,6 +394,10 @@ fun RootView(model: AppModel) {
         // KIFF's receipt for a Record line, signed in: the sample has none.
         LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
         LocalReportPayment provides (if (state.mode == Mode.kiff) model::reportPayment else null),
+        // The pictures kept before a Record line's Chrome steps, signed in: the sample has none.
+        bot.tafs.app.views.LocalChromeShots provides remember(model, state.mode) {
+          if (state.mode == Mode.kiff) bot.tafs.app.views.ChromeShots(list = model::chromeShots, load = model::chromeScreenshot) else null
+        },
         bot.tafs.app.views.LocalCardUnitActions provides remember(model) {
           bot.tafs.app.views.CardUnitActions(discuss = model::discussCardUnit, dismiss = model::dismissCardUnit)
         },

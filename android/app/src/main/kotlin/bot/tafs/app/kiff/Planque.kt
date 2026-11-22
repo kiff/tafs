@@ -600,7 +600,7 @@ class PlanqueClient(
   /**
    * The picture kept for a Chrome step, signed by this device as the Chromes list is, as iOS's `chromeScreenshot(step:)`. null
    * when none is kept: planque answers 404 for a step with none, one past its 30 days, and while it keeps none. A picture that
-   * doesn't check out ([ChromeScreenshot.read]) is an error, never shown.
+   * doesn't check out ([ChromeScreenshot.read]), or is another step's, is an error, never shown.
    */
   suspend fun chromeScreenshot(step: String): ChromeScreenshot? {
     val bytes = try {
@@ -609,7 +609,19 @@ class PlanqueClient(
       if (e.status == 404) return null
       throw e
     }
-    return ChromeScreenshot.read(bytes) ?: throw PlanqueError.Server(0, "bad_picture")
+    // The picture is the step asked for, or none: another step's picture is never shown under this one.
+    return ChromeScreenshot.read(bytes)?.takeIf { it.step == step } ?: throw PlanqueError.Server(0, "bad_picture")
+  }
+
+  /**
+   * The pictures kept for one operation's Chrome steps (`?op=`, KIFF's `proposal_id` on an Activity row), without their bytes:
+   * oldest first, at most 20, within their 30 days; each is read with [chromeScreenshot]. Empty when there are none or planque
+   * keeps none; a planque without the route (404) is none too.
+   */
+  suspend fun chromeShots(op: String): List<ChromeShotRef> = try {
+    decode<ChromeShotList>(raw("GET", "chromes/screenshots?op=${escaped(op)}", null)).shots.filter { it.step.isNotBlank() }
+  } catch (e: PlanqueError.Server) {
+    if (e.status == 404) emptyList() else throw e
   }
 
   /** Unpairs a Chrome: planque deletes its key at once. */
@@ -760,6 +772,13 @@ data class Chrome(
 
 @Serializable
 private data class ChromeList(val chromes: List<Chrome> = emptyList())
+
+/** One picture kept for an operation's Chrome step, as planque lists it: the step, when it was taken, its hash. No bytes. */
+@Serializable
+data class ChromeShotRef(val step: String, @SerialName("taken_at") val takenAt: String? = null, val sha256: String? = null)
+
+@Serializable
+private data class ChromeShotList(val shots: List<ChromeShotRef> = emptyList())
 
 /**
  * The picture a Chrome kept just before a taf's step acted (docs/chrome.md, "Screenshots of a run's acts"), as iOS's

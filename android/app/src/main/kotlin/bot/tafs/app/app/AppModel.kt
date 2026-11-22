@@ -4181,6 +4181,12 @@ class AppModel(
     return shot
   }
 
+  /**
+   * The pictures kept for one operation's Chrome steps (a Record line's `proposalId`), for the receipt's "See the page before
+   * this step" links. Empty when planque can't be asked yet: with no list, the receipt simply shows no link.
+   */
+  suspend fun chromeShots(op: String): List<bot.tafs.app.kiff.ChromeShotRef> = chromeCall { planque.chromeShots(op) }.orEmpty()
+
   suspend fun refreshChromes() {
     val generation = accountGeneration
     try {

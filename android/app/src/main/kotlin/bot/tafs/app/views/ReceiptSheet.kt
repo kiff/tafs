@@ -1,6 +1,7 @@
 package bot.tafs.app.views
 
 import bot.tafs.app.design.tapping
+import androidx.compose.ui.platform.testTag
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.model.ErrorWords
@@ -66,6 +67,16 @@ import kotlinx.coroutines.launch
 /** Reads KIFF's receipt for a Record line, by its trace id, as KIFF wrote it; null signed out and in the sample. */
 val LocalReceipt = staticCompositionLocalOf<(suspend (String) -> ByteArray)?> { null }
 
+/**
+ * The pictures kept before a Record line's Chrome steps (docs/android-app.md, "The picture before a step"): [list] reads an
+ * operation's (its `proposalId`), [load] one step's picture. null signed out and in the sample.
+ */
+class ChromeShots(val list: suspend (String) -> List<bot.tafs.app.kiff.ChromeShotRef>, val load: suspend (String) -> bot.tafs.app.kiff.ChromeScreenshot?)
+
+val LocalChromeShots = staticCompositionLocalOf<ChromeShots?> { null }
+
+const val RECEIPT_SHOT_OPEN = "receipt-shot-open"
+
 /** Reports a payment (taf id, receipt's trace id): true when tafs cloud took it; null signed out and in the sample. */
 val LocalReportPayment = staticCompositionLocalOf<(suspend (String, String) -> Boolean)?> { null }
 
@@ -101,6 +112,23 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
   }
   LaunchedEffect(trace) { if (state.mode == Mode.kiff) loadReceipt() }
   val steps = raw?.let(ReceiptSteps::of).orEmpty()
+  // The pictures kept before this operation's Chrome steps: a link for each, none while planque keeps none or can't be read.
+  val chromeShots = LocalChromeShots.current
+  var shots by remember { mutableStateOf<List<bot.tafs.app.kiff.ChromeShotRef>>(emptyList()) }
+  var openShot by remember { mutableStateOf<String?>(null) }
+  LaunchedEffect(entry.proposalId) {
+    val op = entry.proposalId
+    if (op != null && chromeShots != null && state.mode == Mode.kiff) {
+      shots = try {
+        chromeShots.list(op)
+      } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        emptyList()
+      }
+    }
+  }
+  openShot?.let { step -> chromeShots?.let { c -> ChromeShotSheet(load = { c.load(step) }, onClose = { openShot = null }) } }
 
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(
@@ -136,6 +164,12 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
             }
           }
         }
+      }
+      shots.forEach { shot ->
+        Text(
+          Words.Chrome.shotOpen, style = scaled(15, FontWeight.SemiBold, Theme.amber),
+          modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = { openShot = shot.step }).testTag(RECEIPT_SHOT_OPEN),
+        )
       }
       entry.signature?.let { signature ->
         Panel(stroke = Theme.ok.copy(alpha = 0.4f)) {
