@@ -739,7 +739,7 @@ final class PlanqueClient {
     func chromeScreenshot(step: String) async throws -> ChromeScreenshot? {
         do {
             let data = try await raw("GET", "chromes/screenshots/\(escaped(step))", body: nil)
-            guard let shot = ChromeScreenshot.read(data) else { throw PlanqueError.server(status: 0, message: "bad picture") }
+            guard let shot = ChromeScreenshot.read(data) else { throw PlanqueError.server(status: 0, message: "bad_picture") }
             return shot
         } catch PlanqueError.server(let status, _, _) where status == 404 {
             return nil
