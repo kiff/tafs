@@ -13,6 +13,8 @@ import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
 
 /**
@@ -39,10 +41,16 @@ class ConnectWindowTest {
   private val confirm = "POST /v1/accounts/t_01/grants/g1/confirm"
   private val open = "POST /v1/me/window"
   private val setup = "GET /v1/tafs/taf_1/setup"
-  private val request = """{"server":"https://gmail.mcp.example","agent":"mail-1","tools":[{"tool":"read_message","read_only":true}]}"""
+  private var request = """{"server":"https://gmail.mcp.example","agent":"mail-1","tools":[{"tool":"read_message","read_only":true}]}"""
 
   private fun grant(status: String) =
     """{"id":"g1","status":"$status","vendor":"Gmail","text":"Connect Gmail.","digest":"${digestOf(request)}","request":$request}"""
+
+  /** A grant that uses the owner's own paired Chrome, limited to [sites]. */
+  private fun ownChrome(sites: String = """["shop.example","paypal.com"]""") {
+    request = """{"server":"https://gmail.mcp.example","agent":"mail-1","tools":[{"tool":"read_message","read_only":true}],""" +
+      """"browser":{"driver":"extension","chrome":"chr_01HZX5","sites":$sites}}"""
+  }
 
   private val connectAgain =
     """{"connect_again":{"grant":"g1","app":"Gmail","title":"Connect again","words":"Gmail's sign-in has expired.","done_words":"Gmail is connected again."}}"""
@@ -85,6 +93,43 @@ class ConnectWindowTest {
   private fun connectedAfter() {
     transport.answer(grants, 200, """{"grants":[${grant("connected")}]}""")
     transport.answer(setup, 200, "{}")
+  }
+
+  /**
+   * A grant for the owner's own Chrome is never a window's tap: its one fingerprint signs the grant's sites with the approval key,
+   * and the approve body carries that signature as `chrome_sites_sig`, raw r‖s over `tafs-chrome/sites/v1` of `{chrome_id, grant, sites}`.
+   */
+  @Test fun aGrantForTheOwnersChromeSignsItsSitesUnderTheOneFingerprintAndOpensNoWindow() = runTest {
+    ownChrome()
+    transport.answer(open, 201, windowOpened())
+    transport.answer(confirm, 200, grant("connected"))
+    val m = model()
+    connectedAfter()
+    m.connectAgain("mail-1")
+    assertEquals("no window", 0, transport.requestsTo(open).size)
+    assertEquals("one fingerprint", 1, auth.fingerprints.size)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(approve).single().body!!)).jsonObject
+    assertEquals(digestOf(request), body["digest"]!!.jsonPrimitive.content)
+    val raw = bot.tafs.app.kiff.ChromePairing.base64UrlDecoded(body["chrome_sites_sig"]!!.jsonPrimitive.content)!!
+    val signed = bot.tafs.app.kiff.ChromePairing.sitesBytes("chr_01HZX5", "g1", listOf("shop.example", "paypal.com"))
+    val approvalKey = java.security.KeyFactory.getInstance("EC").generatePublic(java.security.spec.X509EncodedKeySpec(signer.approvalPublicKeyDER))
+    assertTrue(
+      "the approval key's signature over the grant's sites",
+      java.security.Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(approvalKey); update(signed); verify(raw) },
+    )
+    // Signed by the device key as an approval outside a window (`v1`), never as a tap.
+    assertTrue(signatureOf(approve), signatureOf(approve).contains(",v1=") && !signatureOf(approve).contains(",w="))
+  }
+
+  /** The refused case: a grant for the owner's Chrome with no sites is never signed, and nothing is approved. */
+  @Test fun aGrantForTheOwnersChromeWithNoSitesIsRefusedAndNothingIsSigned() = runTest {
+    ownChrome(sites = "[]")
+    transport.answer(open, 201, windowOpened())
+    val m = model()
+    m.connectAgain("mail-1")
+    assertEquals(0, auth.fingerprints.size)
+    assertEquals(0, transport.requestsTo(open).size)
+    assertEquals(0, transport.requestsTo(approve).size)
   }
 
   @Test fun approveAndConfirmAreTapsInsideTheWindowTheFingerprintOpened() = runTest {

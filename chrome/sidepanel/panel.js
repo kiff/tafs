@@ -18,7 +18,7 @@ const STEP_WORDS = {
   act: (s) => t("step_act_" + (s.kind || "click")),
   navigate: (s) => t("step_navigate", s.url ? new URL(s.url).hostname : ""),
   ask: (s) => t("step_ask", s.site || ""),
-  pause: (s) => t(s.by === "failures" ? "step_paused_failures" : "step_paused"),
+  pause: (s) => t(s.by === "failures" ? "step_paused_failures" : s.by === "no_progress" ? "step_paused_no_progress" : "step_paused"),
   resume: () => t("step_resumed"),
   stop: () => t("step_stopped"),
   close: () => t("step_closed"),
@@ -46,7 +46,7 @@ function draw(state) {
     const paused = node.querySelector(".paused");
     if (run.paused) {
       paused.hidden = false;
-      paused.textContent = t(run.paused === "failures" ? "paused_failures" : "paused_owner");
+      paused.textContent = t(run.paused === "failures" ? "paused_failures" : run.paused === "no_progress" ? "paused_no_progress" : "paused_owner");
     }
     // A site the grant lists that Chrome hasn't let the extension into yet: the owner allows it here, once.
     const asks = node.querySelector(".asks");
