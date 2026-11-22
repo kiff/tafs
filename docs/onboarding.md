@@ -36,7 +36,7 @@ back (`AppSignIn.Failure.refused("unsupported_client")`). The sign-up's email co
 3. **Three cards:** Your tafs, A Card is your permission, You stay in control. Each draws the app's own components
    with the sample's words, so they read in the person's language. The last card names each device's approval:
    Face ID or Touch ID on iPhone and iPad, Touch ID or the phone on the Mac (`onboarding.control_lead_mac`).
-4. **The first Home:** with no taf, for anyone who may use Coach: board 2, tafs cloud's own empty line when it sends
+4. **The first Home** (the iPhone's Home, and the iPad's and Mac's wide Overview, which is where a wide layout opens: `FirstHome`, one block for both): with no taf, for anyone who may use Coach: board 2, tafs cloud's own empty line when it sends
    one (else the app's "No tafs yet" and what Coach does), Ask Coach, and How tafs works, which reopens the cards with
    the privacy and terms links (also in Account). Where tafs cloud lists recipes instead, Home is as it ships.
 
