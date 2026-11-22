@@ -659,6 +659,8 @@
     <string name="chrome_shot_open">Pogledaj stranicu pre ovog koraka</string>
     <string name="chrome_shot_title">Pre ovog koraka</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Prekid uparivanja završava veze koje ga koriste: %1$s. Vraćaju se tek kad ih ponovo povežeš.</string>
+    <string name="chrome_used_for">Koristi se za %1$s</string>
     <string name="chrome_waiting">Čeka se Chrome…</string>
     <string name="coach_activity_card">Priprema Carda…</string>
     <string name="coach_activity_connection">Rad na vezi…</string>

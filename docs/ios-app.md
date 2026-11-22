@@ -1393,6 +1393,15 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
   (the scheduled and manual runs both are). It is written to the runner's temporary folder and removed at the end.
 - The macOS app is the same app record as the iPhone's and iPad's (universal purchase), so its versions are the `MAC_OS` ones.
 
+## Account › Chrome: what each Chrome is used for
+
+"Your Chrome" ([chrome.md](chrome.md)): under each paired Chrome, Account › Chrome says which sites its connections are used for
+("Used for wikipedia.org"), and Unpair says what it ends before it asks ("Unpairing ends the connections that use it: …. They
+come back only when you connect them again."). The connections are planque's grants for the extension (`request.browser`:
+`driver: "extension"`, `chrome`, and `chrome_name` as planque set it), read again when the screen opens; one that has ended or
+failed is not listed (`ChromeConnections`). The replace pick at pairing, and a connection's Chrome on the taf's page, follow
+planque#365's route and the extension's own pairing bytes.
+
 ## Pairing a Chrome that replaces one
 
 "Your Chrome" 1 ([chrome.md](chrome.md)): on the offered Chrome's screen a pick says which paired Chrome this one replaces, or "A new Chrome (replaces none)". It starts on the Chrome with the offer's `profile_id` (an id the extension keeps for its Chrome profile and planque relays as a hint), else on the one paired Chrome of the same browser and system, else on none (`ChromeReplace.preselect`; two alike is never a guess). Choosing one shows what moves ("Moves to this Chrome: wikipedia.org") and that the old Chrome is unpaired once this one is paired. The confirm sends `replaces` and `carried` (`[{grant, sites}]`: each connection that is live on the Chrome replaced and has sites, in planque's order, at most 50; `ChromeReplace.carried`), and the same fingerprint signs them inside the pairing the extension checks (`ChromePairing.signedBytes`, tafs#1754), so planque can't change the list. The connections are read again just before. With nothing chosen, nothing moves and the pairing is as before. The sites come from planque's grant read; **the phone does not yet verify the old Chrome's signature on them** (planque's `grantView` doesn't carry it): the owner reads them on the screen they sign.

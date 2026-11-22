@@ -1145,6 +1145,10 @@ enum Words {
         static var shotTitle: String { Words.line("chrome.shot_title") }
         /// Chrome
         static var title: String { Words.line("chrome.title") }
+        /// Unpairing ends the connections that use it: {sites}. They come back only when you connect them again.
+        static func unpairEnds(sites: String) -> String { Words.line("chrome.unpair_ends", sites) }
+        /// Used for {sites}
+        static func usedFor(sites: String) -> String { Words.line("chrome.used_for", sites) }
         /// Waiting for Chrome…
         static var waiting: String { Words.line("chrome.waiting") }
     }

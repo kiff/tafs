@@ -659,6 +659,8 @@
     <string name="chrome_shot_open">Skatīt lapu pirms šī soļa</string>
     <string name="chrome_shot_title">Pirms šī soļa</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Atvienojot beidzas savienojumi, kas to izmanto: %1$s. Tie atgriežas tikai tad, ja savieno tos no jauna.</string>
+    <string name="chrome_used_for">Izmanto: %1$s</string>
     <string name="chrome_waiting">Gaida Chrome…</string>
     <string name="coach_activity_card">Sagatavo Card…</string>
     <string name="coach_activity_connection">Strādā pie savienojuma…</string>

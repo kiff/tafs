@@ -32,5 +32,7 @@
   "chrome.shot_open": "Bu addımdan əvvəlki səhifəyə bax",
   "chrome.shot_title": "Bu addımdan əvvəl",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Cütləşməni ləğv etmək onu istifadə edən bağlantıları bitirir: {sites}. Onlar yalnız yenidən qoşduqda qayıdır.",
+  "chrome.used_for": "Bunun üçün istifadə olunur: {sites}",
   "chrome.waiting": "Chrome gözlənilir…"
 }

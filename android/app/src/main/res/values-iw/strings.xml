@@ -659,6 +659,8 @@
     <string name="chrome_shot_open">הצגת הדף לפני השלב הזה</string>
     <string name="chrome_shot_title">לפני השלב הזה</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">ביטול ההתאמה מסיים את החיבורים שמשתמשים בו: %1$s. הם חוזרים רק אם תחבר אותם מחדש.</string>
+    <string name="chrome_used_for">בשימוש עבור %1$s</string>
     <string name="chrome_waiting">ממתין ל-Chrome…</string>
     <string name="coach_activity_card">מכין את ה-Card…</string>
     <string name="coach_activity_connection">עובד על החיבור…</string>

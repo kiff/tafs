@@ -659,6 +659,8 @@
     <string name="chrome_shot_open">Vezi pagina de dinainte de acest pas</string>
     <string name="chrome_shot_title">Înainte de acest pas</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Dezasocierea încheie conexiunile care îl folosesc: %1$s. Revin doar dacă le conectezi din nou.</string>
+    <string name="chrome_used_for">Folosit pentru %1$s</string>
     <string name="chrome_waiting">Se așteaptă Chrome…</string>
     <string name="coach_activity_card">Se pregătește Cardul…</string>
     <string name="coach_activity_connection">Se lucrează la conexiune…</string>

@@ -32,5 +32,7 @@
   "chrome.shot_open": "Zobacz stronę przed tym krokiem",
   "chrome.shot_title": "Przed tym krokiem",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Rozparowanie kończy połączenia, które z niego korzystają: {sites}. Wrócą dopiero, gdy połączysz je ponownie.",
+  "chrome.used_for": "Używana do: {sites}",
   "chrome.waiting": "Czekam na Chrome…"
 }

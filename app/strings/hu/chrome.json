@@ -32,5 +32,7 @@
   "chrome.shot_open": "A lap megtekintése e lépés előtt",
   "chrome.shot_title": "E lépés előtt",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "A párosítás megszüntetése véget vet az őt használó kapcsolatoknak: {sites}. Csak akkor térnek vissza, ha újra összekapcsolod őket.",
+  "chrome.used_for": "Ehhez használja: {sites}",
   "chrome.waiting": "Várakozás a Chrome-ra…"
 }

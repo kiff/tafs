@@ -626,6 +626,8 @@
     <string name="chrome_shot_open">Ver a página antes deste passo</string>
     <string name="chrome_shot_title">Antes deste passo</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Desemparelhar encerra as conexões que o usam: %1$s. Elas só voltam se você conectá-las de novo.</string>
+    <string name="chrome_used_for">Usado para %1$s</string>
     <string name="chrome_waiting">Aguardando o Chrome…</string>
     <string name="coach_activity_card">Preparando o Card…</string>
     <string name="coach_activity_connection">Cuidando da conexão…</string>

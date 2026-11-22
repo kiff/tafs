@@ -32,5 +32,7 @@
   "chrome.shot_open": "იხილე გვერდი ამ ნაბიჯამდე",
   "chrome.shot_title": "ამ ნაბიჯამდე",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "დაწყვილების გაუქმება წყვეტს მის გამოყენებით დაკავშირებებს: {sites}. ისინი დაბრუნდება მხოლოდ მაშინ, თუ ხელახლა დააკავშირებ.",
+  "chrome.used_for": "გამოიყენება: {sites}",
   "chrome.waiting": "Chrome-ს ველოდებით…"
 }

@@ -626,6 +626,8 @@
     <string name="chrome_shot_open">Vaata lehte enne seda sammu</string>
     <string name="chrome_shot_title">Enne seda sammu</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Sidumise lõpetamine lõpetab seda kasutavad ühendused: %1$s. Need tulevad tagasi alles siis, kui ühendad need uuesti.</string>
+    <string name="chrome_used_for">Kasutusel: %1$s</string>
     <string name="chrome_waiting">Chrome\'i ootamine…</string>
     <string name="coach_activity_card">Cardi ettevalmistamine…</string>
     <string name="coach_activity_connection">Tegelen ühendusega…</string>

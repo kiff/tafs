@@ -32,5 +32,7 @@
   "chrome.shot_open": "Poglej stran pred tem korakom",
   "chrome.shot_title": "Pred tem korakom",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Z odstranitvijo seznanitve se končajo povezave, ki ga uporabljajo: {sites}. Vrnejo se šele, ko jih znova povežeš.",
+  "chrome.used_for": "Uporablja se za {sites}",
   "chrome.waiting": "Čakam na Chrome…"
 }

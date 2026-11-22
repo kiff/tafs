@@ -626,6 +626,8 @@
     <string name="chrome_shot_open">Bekijk de pagina vóór deze stap</string>
     <string name="chrome_shot_title">Vóór deze stap</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Ontkoppelen beëindigt de verbindingen die het gebruiken: %1$s. Ze komen pas terug als je ze opnieuw verbindt.</string>
+    <string name="chrome_used_for">Gebruikt voor %1$s</string>
     <string name="chrome_waiting">Wachten op Chrome…</string>
     <string name="coach_activity_card">De Card voorbereiden…</string>
     <string name="coach_activity_connection">Bezig met de koppeling…</string>

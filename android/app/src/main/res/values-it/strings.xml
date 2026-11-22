@@ -626,6 +626,8 @@
     <string name="chrome_shot_open">Vedi la pagina prima di questo passaggio</string>
     <string name="chrome_shot_title">Prima di questo passaggio</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Scollegarlo termina le connessioni che lo usano: %1$s. Tornano solo se le colleghi di nuovo.</string>
+    <string name="chrome_used_for">Usato per %1$s</string>
     <string name="chrome_waiting">In attesa di Chrome…</string>
     <string name="coach_activity_card">Preparazione della Card…</string>
     <string name="coach_activity_connection">Lavoro sul collegamento…</string>

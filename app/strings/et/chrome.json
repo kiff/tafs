@@ -32,5 +32,7 @@
   "chrome.shot_open": "Vaata lehte enne seda sammu",
   "chrome.shot_title": "Enne seda sammu",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Sidumise lõpetamine lõpetab seda kasutavad ühendused: {sites}. Need tulevad tagasi alles siis, kui ühendad need uuesti.",
+  "chrome.used_for": "Kasutusel: {sites}",
   "chrome.waiting": "Chrome'i ootamine…"
 }

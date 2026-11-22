@@ -626,6 +626,8 @@
     <string name="chrome_shot_open">Bu addımdan əvvəlki səhifəyə bax</string>
     <string name="chrome_shot_title">Bu addımdan əvvəl</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Cütləşməni ləğv etmək onu istifadə edən bağlantıları bitirir: %1$s. Onlar yalnız yenidən qoşduqda qayıdır.</string>
+    <string name="chrome_used_for">Bunun üçün istifadə olunur: %1$s</string>
     <string name="chrome_waiting">Chrome gözlənilir…</string>
     <string name="coach_activity_card">Card hazırlanır…</string>
     <string name="coach_activity_connection">Qoşulma üzərində işlənir…</string>

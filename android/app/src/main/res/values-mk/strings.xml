@@ -626,6 +626,8 @@
     <string name="chrome_shot_open">Види ја страницата пред овој чекор</string>
     <string name="chrome_shot_title">Пред овој чекор</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Прекинувањето на спарувањето ги завршува врските што го користат: %1$s. Се враќаат само ако повторно ги поврзеш.</string>
+    <string name="chrome_used_for">Се користи за %1$s</string>
     <string name="chrome_waiting">Се чека Chrome…</string>
     <string name="coach_activity_card">Го подготвувам Card…</string>
     <string name="coach_activity_connection">Работам на врската…</string>

@@ -32,5 +32,7 @@
   "chrome.shot_open": "Lihat halaman sebelum langkah ini",
   "chrome.shot_title": "Sebelum langkah ini",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Melepas pasangan mengakhiri koneksi yang memakainya: {sites}. Koneksi itu baru kembali jika kamu menghubungkannya lagi.",
+  "chrome.used_for": "Dipakai untuk {sites}",
   "chrome.waiting": "Menunggu Chrome…"
 }

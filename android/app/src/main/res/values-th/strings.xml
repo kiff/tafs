@@ -593,6 +593,8 @@
     <string name="chrome_shot_open">ดูหน้าก่อนขั้นตอนนี้</string>
     <string name="chrome_shot_title">ก่อนขั้นตอนนี้</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">การเลิกจับคู่จะสิ้นสุดการเชื่อมต่อที่ใช้ Chrome นี้: %1$s และจะกลับมาก็ต่อเมื่อคุณเชื่อมต่อใหม่</string>
+    <string name="chrome_used_for">ใช้สำหรับ %1$s</string>
     <string name="chrome_waiting">กำลังรอ Chrome…</string>
     <string name="coach_activity_card">กำลังเตรียม Card…</string>
     <string name="coach_activity_connection">กำลังจัดการการเชื่อมต่อ…</string>

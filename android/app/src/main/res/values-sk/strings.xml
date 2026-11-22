@@ -659,6 +659,8 @@
     <string name="chrome_shot_open">Zobraziť stránku pred týmto krokom</string>
     <string name="chrome_shot_title">Pred týmto krokom</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Zrušením spárovania skončia pripojenia, ktoré ho používajú: %1$s. Vrátia sa, až keď ich znova pripojíš.</string>
+    <string name="chrome_used_for">Používa sa na %1$s</string>
     <string name="chrome_waiting">Čakám na Chrome…</string>
     <string name="coach_activity_card">Pripravujem Card…</string>
     <string name="coach_activity_connection">Pracujem na pripojení…</string>

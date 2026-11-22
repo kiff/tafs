@@ -32,5 +32,7 @@
   "chrome.shot_open": "Энэ алхмын өмнөх хуудсыг харах",
   "chrome.shot_title": "Энэ алхмын өмнө",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Хослолыг салгавал үүнийг ашигладаг холболтууд дуусна: {sites}. Тэдгээр дахин холбосон тохиолдолд л буцна.",
+  "chrome.used_for": "{sites}-д ашиглагдана",
   "chrome.waiting": "Chrome-ыг хүлээж байна…"
 }

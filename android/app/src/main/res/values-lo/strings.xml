@@ -593,6 +593,8 @@
     <string name="chrome_shot_open">ເບິ່ງໜ້າກ່ອນຂັ້ນຕອນນີ້</string>
     <string name="chrome_shot_title">ກ່ອນຂັ້ນຕອນນີ້</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">ການຍົກເລີກການຈັບຄູ່ຈະສິ້ນສຸດການເຊື່ອມຕໍ່ທີ່ໃຊ້ມັນ: %1$s. ມັນຈະກັບມາເມື່ອເຈົ້າເຊື່ອມຕໍ່ໃໝ່ເທົ່ານັ້ນ.</string>
+    <string name="chrome_used_for">ໃຊ້ສຳລັບ %1$s</string>
     <string name="chrome_waiting">ກຳລັງລໍຖ້າ Chrome…</string>
     <string name="coach_activity_card">ກຳລັງກຽມ Card…</string>
     <string name="coach_activity_connection">ກຳລັງເຮັດວຽກກັບການເຊື່ອມຕໍ່…</string>

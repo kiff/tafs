@@ -32,5 +32,7 @@
   "chrome.shot_open": "Žiūrėti puslapį prieš šį žingsnį",
   "chrome.shot_title": "Prieš šį žingsnį",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Atsiejus baigiasi jį naudojantys ryšiai: {sites}. Jie sugrįš tik tada, kai prijungsi juos iš naujo.",
+  "chrome.used_for": "Naudojama: {sites}",
   "chrome.waiting": "Laukiama Chrome…"
 }

@@ -32,5 +32,7 @@
   "chrome.shot_open": "查看此步驟之前的頁面",
   "chrome.shot_title": "此步驟之前",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "解除配對會結束使用它的連線：{sites}。重新連線後才會恢復。",
+  "chrome.used_for": "用於 {sites}",
   "chrome.waiting": "正在等待 Chrome…"
 }

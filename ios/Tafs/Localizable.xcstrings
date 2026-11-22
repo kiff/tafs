@@ -139973,6 +139973,496 @@
         }
       }
     },
+    "chrome.unpair_ends": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء الإقران ينهي الاتصالات التي تستخدمه: %1$@. لا تعود إلا إذا وصلتها من جديد."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cütləşməni ləğv etmək onu istifadə edən bağlantıları bitirir: %1$@. Onlar yalnız yenidən qoşduqda qayıdır."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прекратяването на връзката със Chrome слага край на свързванията, които го ползват: %1$@. Връщат се само ако ги свържеш отново."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "জোড়া ভাঙলে এটি ব্যবহার করা সংযোগগুলো শেষ হয়: %1$@। আবার সংযুক্ত করলেই সেগুলো ফিরে আসে।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desvincular-lo acaba les connexions que l'usen: %1$@. Només tornen si les connectes de nou."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zrušením spárování skončí připojení, která ho používají: %1$@. Vrátí se, až je znovu připojíš."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Entkoppeln enden die Verbindungen, die es nutzen: %1$@. Sie kommen nur zurück, wenn du sie neu verbindest."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpairing ends the connections that use it: %1$@. They come back only when you connect them again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al desvincularlo terminan las conexiones que lo usan: %1$@. Solo vuelven si las conectas de nuevo."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sidumise lõpetamine lõpetab seda kasutavad ühendused: %1$@. Need tulevad tagasi alles siis, kui ühendad need uuesti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dissocier met fin aux connexions qui l'utilisent : %1$@. Elles ne reviennent que si vous les reconnectez."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ביטול ההתאמה מסיים את החיבורים שמשתמשים בו: %1$@. הם חוזרים רק אם תחבר אותם מחדש."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prekid uparivanja završava veze koje ga koriste: %1$@. Vraćaju se tek kad ih ponovno povežeš."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A párosítás megszüntetése véget vet az őt használó kapcsolatoknak: %1$@. Csak akkor térnek vissza, ha újra összekapcsolod őket."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Զույգավորումը չեղարկելը ավարտում է այն օգտագործող կապերը՝ %1$@։ Դրանք կվերադառնան միայն, եթե նորից միացնես։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melepas pasangan mengakhiri koneksi yang memakainya: %1$@. Koneksi itu baru kembali jika kamu menghubungkannya lagi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scollegarlo termina le connessioni che lo usano: %1$@. Tornano solo se le colleghi di nuovo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ペアリングを解除すると、このChromeを使う接続が終了します：%1$@。接続し直すまで戻りません。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "დაწყვილების გაუქმება წყვეტს მის გამოყენებით დაკავშირებებს: %1$@. ისინი დაბრუნდება მხოლოდ მაშინ, თუ ხელახლა დააკავშირებ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ការលុបការផ្គូផ្គងនឹងបញ្ចប់ការតភ្ជាប់ដែលប្រើវា៖ %1$@។ វានឹងត្រឡប់មកវិញ លុះត្រាតែអ្នកតភ្ជាប់ម្តងទៀត។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "페어링을 해제하면 이 Chrome을 쓰는 연결이 끝납니다: %1$@. 다시 연결해야 돌아옵니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ການຍົກເລີກການຈັບຄູ່ຈະສິ້ນສຸດການເຊື່ອມຕໍ່ທີ່ໃຊ້ມັນ: %1$@. ມັນຈະກັບມາເມື່ອເຈົ້າເຊື່ອມຕໍ່ໃໝ່ເທົ່ານັ້ນ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atsiejus baigiasi jį naudojantys ryšiai: %1$@. Jie sugrįš tik tada, kai prijungsi juos iš naujo."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atvienojot beidzas savienojumi, kas to izmanto: %1$@. Tie atgriežas tikai tad, ja savieno tos no jauna."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прекинувањето на спарувањето ги завршува врските што го користат: %1$@. Се враќаат само ако повторно ги поврзеш."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хослолыг салгавал үүнийг ашигладаг холболтууд дуусна: %1$@. Тэдгээр дахин холбосон тохиолдолд л буцна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जोडी हटाउँदा यसलाई प्रयोग गर्ने जडानहरू समाप्त हुन्छन्: %1$@। तिनीहरू फेरि जोड्दा मात्र फर्कन्छन्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ontkoppelen beëindigt de verbindingen die het gebruiken: %1$@. Ze komen pas terug als je ze opnieuw verbindt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozparowanie kończy połączenia, które z niego korzystają: %1$@. Wrócą dopiero, gdy połączysz je ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desemparelhar termina as ligações que o usam: %1$@. Só voltam se as ligar de novo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desemparelhar encerra as conexões que o usam: %1$@. Elas só voltam se você conectá-las de novo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezasocierea încheie conexiunile care îl folosesc: %1$@. Revin doar dacă le conectezi din nou."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zrušením spárovania skončia pripojenia, ktoré ho používajú: %1$@. Vrátia sa, až keď ich znova pripojíš."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Z odstranitvijo seznanitve se končajo povezave, ki ga uporabljajo: %1$@. Vrnejo se šele, ko jih znova povežeš."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heqja e çiftimit i përfundon lidhjet që e përdorin: %1$@. Kthehen vetëm kur t'i lidhësh përsëri."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prekid uparivanja završava veze koje ga koriste: %1$@. Vraćaju se tek kad ih ponovo povežeš."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเลิกจับคู่จะสิ้นสุดการเชื่อมต่อที่ใช้ Chrome นี้: %1$@ และจะกลับมาก็ต่อเมื่อคุณเชื่อมต่อใหม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleşmeyi kaldırmak, onu kullanan bağlantıları sonlandırır: %1$@. Ancak yeniden bağlarsan geri gelirler."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hủy ghép đôi sẽ kết thúc các kết nối dùng nó: %1$@. Chúng chỉ trở lại khi bạn kết nối lại."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解除配對會結束使用它的連線：%1$@。重新連線後才會恢復。"
+          }
+        }
+      }
+    },
+    "chrome.used_for": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُستخدم لـ %1$@"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunun üçün istifadə olunur: %1$@"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Използва се за %1$@"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@-এর জন্য ব্যবহৃত"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S'usa per a %1$@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Používá se pro %1$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genutzt für %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used for %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se usa para %1$@"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kasutusel: %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisé pour %1$@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "בשימוש עבור %1$@"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koristi se za %1$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ehhez használja: %1$@"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Օգտագործվում է՝ %1$@"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dipakai untuk %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usato per %1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@に使用"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "გამოიყენება: %1$@"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ប្រើសម្រាប់ %1$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@에 사용"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ໃຊ້ສຳລັບ %1$@"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naudojama: %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Izmanto: %1$@"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Се користи за %1$@"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@-д ашиглагдана"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ का लागि प्रयोग गरिएको"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruikt voor %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Używana do: %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usado para %1$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usado para %1$@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folosit pentru %1$@"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Používa sa na %1$@"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uporablja se za %1$@"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Përdoret për %1$@"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koristi se za %1$@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ใช้สำหรับ %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şunun için kullanılıyor: %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dùng cho %1$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用於 %1$@"
+          }
+        }
+      }
+    },
     "chrome.waiting": {
       "extractionState": "manual",
       "localizations": {
