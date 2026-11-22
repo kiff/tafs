@@ -3,7 +3,7 @@
 // extension proves its key under the secret; the phone checks that proof, then signs, and proves its own key under the same
 // secret. So neither planque nor anyone between can put another key in either place.
 
-import { LABEL, b64u, fromB64u, concat, hmac, sha256, sameBytes, verify, publicSPKI } from "./crypto.js";
+import { LABEL, b64u, fromB64u, concat, hmac, sha256, sameBytes, verify, verifyBytes, requestsMessage, signingBytes, publicSPKI } from "./crypto.js";
 
 /** Lowercase hex, as `chrome_key_sha256` is written. */
 export function hex(data) {
@@ -35,8 +35,13 @@ export async function extensionProof(secret, spki, kiffOffer = "") {
   return b64u(await hmac(secret, LABEL.extProof, concat(spki, new TextEncoder().encode(kiffOffer))));
 }
 
-/** What the extension sends planque for the pairing `lookup` names, with its KIFF device's offer (`kiff_offer`). */
-export async function offer(secret, keyPair, { version, manifestHash, browser, os, kiffOffer = "" }) {
+/**
+ * What the extension sends planque for the pairing `lookup` names, with its KIFF device's offer (`kiff_offer`), and the id
+ * it keeps for this Chrome profile (`profile_id`, docs/chrome.md "Your Chrome"). The id is a hint the phone uses to
+ * pre-select which Chrome a re-pairing replaces; it isn't covered by the proof and authenticates nothing, and the owner's
+ * approval is what replaces.
+ */
+export async function offer(secret, keyPair, { version, manifestHash, browser, os, kiffOffer = "", profileId = "" }) {
   const spki = await publicSPKI(keyPair.publicKey);
   return {
     key: b64u(spki),
@@ -44,6 +49,7 @@ export async function offer(secret, keyPair, { version, manifestHash, browser, o
     manifest_hash: manifestHash,
     browser,
     os,
+    ...(profileId ? { profile_id: profileId } : {}),
     ...(kiffOffer ? { kiff_offer: kiffOffer } : {}),
     proof: await extensionProof(secret, spki, kiffOffer),
   };
@@ -67,6 +73,30 @@ export async function checkConfirmation(secret, keyPair, answer) {
     return null;
   }
   const body = { pairing, chrome_key_sha256: hex(ours), name, phone_key: phoneKey, phone_proof: phoneProof };
-  if (!(await verify(phoneKey, LABEL.pair, body, phoneSig))) return null;
+  const together = TOGETHER.filter((k) => answer[k] !== undefined);
+  if (together.length === 0) {
+    if (!(await verify(phoneKey, LABEL.pair, body, phoneSig))) return null;
+  } else if (!(await verifyTogether(phoneKey, body, phoneSig, answer))) {
+    return null;
+  }
   return { chromeId, name, phoneKey };
+}
+
+/** The fields an answer carries when the phone signed the pairing and KIFF's view-only device with one fingerprint. */
+const TOGETHER = ["tenant", "signed_at", "kiff_request_sha256"];
+
+/**
+ * One fingerprint, two requests (`kiff.requests.v1`, docs/chrome.md "Your Chrome"): `phone_sig` is the phone's approval-key
+ * signature over the tenant, `signed_at` and the sorted SHA-256 of this pairing's message (the label, a zero byte and the
+ * body as we rebuilt it, the bytes the one-signature form has always been over) and of KIFF's request. We rebuild ours
+ * and take KIFF's hash as given, as KIFF and planque each do for theirs. All three fields or none: a part of them is
+ * refused, as is a request paired with itself, and a field that could shift a line of the message.
+ */
+async function verifyTogether(phoneKey, body, phoneSig, answer) {
+  const { tenant, signed_at: signedAt, kiff_request_sha256: other } = answer;
+  const line = (v) => typeof v === "string" && v !== "" && !/[\r\n]/.test(v);
+  if (!line(tenant) || !line(signedAt) || typeof other !== "string" || !/^[0-9a-f]{64}$/.test(other)) return false;
+  const own = hex(await sha256(signingBytes(LABEL.pair, body)));
+  if (own === other) return false;
+  return verifyBytes(phoneKey, requestsMessage(tenant, signedAt, own, other), phoneSig);
 }
