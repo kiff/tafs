@@ -75,7 +75,7 @@ final class K5UITests: TafsUITestCase {
         }
         XCTAssertTrue(page.exists, "KIFF's sign-in page in the sheet, within 60 s of Continue")
         // A page is not a way in: on 21 Nov KIFF's page drew its title and one line, and no way to sign in. So the test
-        // waits for the four ways the owner keeps on: Apple, Google, GitHub, and email with a password. Email-code sign-in
+        // waits for the four ways the owner keeps on: Apple, Google, GitHub, and email (its password follows on the next step). Email-code sign-in
         // stays off, so a way to sign in with a code sent by email is a finding, never a pass. (A new sign-up's one-time
         // check of the address isn't a sign-in, and isn't on this page.)
         func control(_ words: String) -> XCUIElement {
@@ -90,7 +90,9 @@ final class K5UITests: TafsUITestCase {
             XCTAssertTrue(control(words).exists, "KIFF's sign-in page offers \(name)")
         }
         XCTAssertTrue(page.textFields.firstMatch.exists, "KIFF's sign-in page has an email field")
-        XCTAssertTrue(page.secureTextFields.firstMatch.exists, "KIFF's sign-in page offers email with a password")
+        // The provider's form asks for the email first and draws the password on its next step, so the page offers email with a
+        // password when its email step has a way on (a Continue button). The password step itself is the device pass's.
+        XCTAssertTrue(control("continue").exists, "KIFF's sign-in page offers email with a password: its email step has Continue")
         XCTAssertFalse(control(Self.emailCodeWords).exists, "no sign-in with a code sent by email: email-code sign-in stays off")
     }
 
