@@ -18,7 +18,7 @@
   "work.not_sent_again": "ມັນບໍ່ໄດ້ຖືກສົ່ງອີກ. {why}",
   "work.request.try_reply_now": "ລອງຕອບດຽວນີ້",
   "work.requests_need_you": {
-    "other": "{count} ຄຳຂອງຕ້ອງການທ່ານ"
+    "other": "{count} ຄຳຂໍຕ້ອງການທ່ານ"
   },
   "work.send_again": "ສົ່ງອີກ",
   "work.sending_again": "ກຳລັງສົ່ງອີກ…",
