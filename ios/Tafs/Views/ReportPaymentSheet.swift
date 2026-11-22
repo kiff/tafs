@@ -52,6 +52,7 @@ struct ReportPaymentSheet: View {
     }
 
     private func send() async {
+        guard phase != .sending else { return }
         phase = .sending
         if await model.reportPayment(entry) {
             phase = .done
