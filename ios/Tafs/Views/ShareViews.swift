@@ -233,6 +233,18 @@ struct OverviewView: View {
     let open: (HomeSelection) -> Void
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var shares: [String: [KIFFClient.Share]] = [:]
+    @State private var showingHowItWorks = false
+
+    /// With no taf, for someone who may use Coach, the Overview is the first Home (docs/onboarding.md), as the phone's Home is:
+    /// the iPad's wide layout opens here, so the table's "No tafs yet" line would be the first thing it said.
+    private var showsFirstHome: Bool {
+        Self.showsFirstHome(kiff: model.mode == .kiff, loaded: model.listLoaded, unread: model.listUnread,
+                            noTafs: model.tafs.isEmpty, mayUseCoach: model.mayUseCoach)
+    }
+
+    static func showsFirstHome(kiff: Bool, loaded: Bool, unread: Bool, noTafs: Bool, mayUseCoach: Bool) -> Bool {
+        kiff && loaded && !unread && noTafs && Onboarding.showsFirstHome(mayUseCoach: mayUseCoach)
+    }
 
     var body: some View {
         ScrollView {
@@ -261,9 +273,14 @@ struct OverviewView: View {
                 // still waits (the owner's iPad: "Needs you · 3" beside "No tafs yet").
                 if model.needsYouCount > 0 { needsYou }
                 // The labels' chips (Missions draft), filtering the table below.
-                if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.labelsAllWords) { model.filterList($0) } }
-                tafsTable
-                Text(Words.Home.Overview.eachLineOpens).scaledFont(12).foregroundColor(Theme.dim)
+                if showsFirstHome {
+                    VStack(alignment: .leading, spacing: 16) { FirstHome(showingHowItWorks: $showingHowItWorks) }
+                        .frame(maxWidth: 520, alignment: .leading)
+                } else {
+                    if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.labelsAllWords) { model.filterList($0) } }
+                    tafsTable
+                    Text(Words.Home.Overview.eachLineOpens).scaledFont(12).foregroundColor(Theme.dim)
+                }
             }
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
@@ -272,6 +289,7 @@ struct OverviewView: View {
             .frame(maxWidth: .infinity)
         }
         .screenBackground()
+        .navigationDestination(isPresented: $showingHowItWorks) { HowTafsWorksView() }
         .task {
             await model.refreshPeople()
             for taf in model.listedTafs {

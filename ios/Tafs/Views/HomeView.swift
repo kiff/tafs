@@ -135,21 +135,7 @@ struct HomeView: View {
                         // Board 2, no tafs yet (docs/ios-app.md › Illustrations), above the empty line.
                         Illustration.noTafs.frame(maxWidth: .infinity)
                         if Onboarding.showsFirstHome(mayUseCoach: model.mayUseCoach) {
-                            // The first Home (docs/onboarding.md): tafs cloud's line, else the app's; Ask Coach; the cards again.
-                            let lines = Onboarding.firstHomeLines(cloud: model.recipes?.homeWords)
-                            Panel {
-                                Text(lines.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                                if let lead = lines.lead {
-                                    Text(lead).scaledFont(14).foregroundColor(Theme.soft)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                            }
-                            Button(Words.Coach.ask) { model.startNewTaf() }
-                                .buttonStyle(PrimaryButtonStyle())
-                                .accessibilityIdentifier("home.askCoach")
-                            Button(Words.Onboarding.howItWorks) { showingHowItWorks = true }
-                                .buttonStyle(OutlineButtonStyle())
-                                .accessibilityIdentifier("home.howItWorks")
+                            FirstHome(showingHowItWorks: $showingHowItWorks)
                         } else {
                             Panel {
                                 if let words = model.recipes?.homeWords {
@@ -463,5 +449,30 @@ struct TafRow: View {
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("taf-row")
+    }
+}
+
+
+/// The first Home (docs/onboarding.md): tafs cloud's line, else the app's; Ask Coach; the cards again. One block for the
+/// phone's Home and the iPad's wide Overview, so both say the same thing with no taf.
+struct FirstHome: View {
+    @EnvironmentObject private var model: AppModel
+    @Binding var showingHowItWorks: Bool
+
+    var body: some View {
+        let lines = Onboarding.firstHomeLines(cloud: model.recipes?.homeWords)
+        Panel {
+            Text(lines.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+            if let lead = lines.lead {
+                Text(lead).scaledFont(14).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        Button(Words.Coach.ask) { model.startNewTaf() }
+            .buttonStyle(PrimaryButtonStyle())
+            .accessibilityIdentifier("home.askCoach")
+        Button(Words.Onboarding.howItWorks) { showingHowItWorks = true }
+            .buttonStyle(OutlineButtonStyle())
+            .accessibilityIdentifier("home.howItWorks")
     }
 }
