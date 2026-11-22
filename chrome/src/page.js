@@ -462,13 +462,24 @@
   }
   // The boxes put over secret fields while a screenshot is taken (docs/chrome.md, "Screenshots of a run's acts").
   let shotBoxes = [];
+  // Set when a cap stopped the search for secrets: the covers can't be said to be complete, so nothing is pictured.
+  let shotIncomplete = false;
 
   /** The document and every open shadow root in it: a field or a text inside one is on the page, and a plain query on the
    * document does not reach it. A closed shadow root can't be seen from the page; the picture's covers can't reach it. */
+  const MAX_ROOTS = 200;
   function roots() {
     const out = [document];
-    for (let i = 0; i < out.length && out.length < 200; i++) {
-      for (const el of out[i].querySelectorAll("*")) if (el.shadowRoot) out.push(el.shadowRoot);
+    for (let i = 0; i < out.length; i++) {
+      for (const el of out[i].querySelectorAll("*")) {
+        if (!el.shadowRoot) continue;
+        // Past the cap the rest aren't looked at, and then the picture can't say every secret is covered.
+        if (out.length >= MAX_ROOTS) {
+          shotIncomplete = true;
+          return out;
+        }
+        out.push(el.shadowRoot);
+      }
     }
     return out;
   }
@@ -514,7 +525,11 @@
     let seen = 0;
     for (const root of roots()) {
       const walker = document.createTreeWalker(root === document ? document.body || document.documentElement : root, NodeFilter.SHOW_TEXT);
-      for (let node = walker.nextNode(); node && seen < MAX_TEXT_NODES; node = walker.nextNode()) {
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        if (seen >= MAX_TEXT_NODES) {
+          shotIncomplete = true;
+          return rects;
+        }
         seen++;
         const text = node.nodeValue || "";
         if (text.length < 13) continue;
@@ -546,10 +561,14 @@
    */
   function maskForShot() {
     unmaskShot();
+    shotIncomplete = false;
     const fields = secretFields();
+    // A page with a one-time-code field to fill may be an authenticator's setup, whose QR code and seed are the second
+    // factor and look like nothing the covers know: no picture of it.
+    if (fields.some((el) => kindOf(el) === "code")) return { ok: false, masked: 0, why: "code" };
     const rects = [...fields.map((el) => el.getBoundingClientRect()), ...secretTextRects(), ...frameRects()];
     for (const r of rects) addShotBox(r);
-    let ok = true;
+    let ok = !shotIncomplete;
     for (const r of rects) {
       const x = r.left + r.width / 2;
       const y = r.top + r.height / 2;

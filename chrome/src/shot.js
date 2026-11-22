@@ -91,7 +91,13 @@ export class Shots {
         let timer;
         const late = new Promise((resolve) => (timer = setTimeout(() => resolve(null), this.timeout)));
         const shot = await Promise.race([this.chrome.tabs.captureVisibleTab(windowId, { format: "png" }), late]).finally(() => clearTimeout(timer));
-        return shot ? { png: shot } : { why: "hidden" };
+        if (!shot) return { why: "hidden" };
+        // The tab was checked before the covers went on and the capture ran; captureVisibleTab takes whatever is in front of
+        // the window when it fires. Keep the picture only if the tab is still the front one, in this window, on the page
+        // that was allowed: otherwise it may show a tab or a page that was never covered.
+        const after = await this.chrome.tabs.get(tabId);
+        if (!after || !after.active || after.windowId !== windowId || after.url !== tab.url) return { why: "hidden" };
+        return { png: shot };
       } finally {
         // The boxes come off whatever happened, before the act.
         await this.inTab(tabId, () => globalThis.TafsPage.unmaskShot(), []).catch(() => {});

@@ -366,11 +366,18 @@ test("a checkout's lines are masked like the page's text, and a total in two cur
   await mixed.close();
 });
 
-test("the picture's covers sit over the password, code and saved-fill fields, and come off again", { skip: !playwright }, async () => {
+test("the picture's covers sit over the password, card and saved-fill fields, and come off again", { skip: !playwright }, async () => {
   const page = await openHTML(SHOP);
+  // A page with a one-time-code field to fill may be an authenticator's setup: no picture of it at all.
+  const withCode = await page.evaluate(() => globalThis.TafsPage.maskForShot());
+  assert.equal(withCode.ok, false, "a page with a code field is not pictured");
+  await page.evaluate(() => {
+    globalThis.TafsPage.unmaskShot();
+    for (const el of document.querySelectorAll("input")) if (el.getAttribute("autocomplete") === "one-time-code" || /code|otp/i.test(el.name + el.id + el.getAttribute("aria-label"))) el.remove();
+  });
   const got = await page.evaluate(() => globalThis.TafsPage.maskForShot());
   assert.equal(got.ok, true, "every secret field is covered");
-  assert.ok(got.masked >= 3, "password, one-time code and the card field at least");
+  assert.ok(got.masked >= 2, "the password and the card field at least");
   const email = await page.evaluate(() => {
     const r = document.getElementById("email").getBoundingClientRect();
     return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2).id;
@@ -447,4 +454,25 @@ test("a frame is covered whole in the picture (its inside is another page's to h
   await page.evaluate(() => globalThis.TafsPage.unmaskShot());
   assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-shot-mask]").length), 0);
   await page.close();
+});
+
+test("a page too long or too deep for the covers to be sure of gives no picture, however it ends", { skip: !playwright }, async () => {
+  // A card number past the text-node cap would never be looked at: the picture says so and is not taken.
+  const long = await openHTML(`<body>${"<p>word</p>".repeat(6100)}<p>Paid with 4242 4242 4242 4242 today</p></body>`);
+  const a = await long.evaluate(() => globalThis.TafsPage.maskForShot());
+  assert.equal(a.ok, false, "more text nodes than the cap: not sure, no picture");
+  await long.evaluate(() => globalThis.TafsPage.unmaskShot());
+  await long.close();
+  // More open shadow roots than the cap: the rest are not looked at.
+  const deep = await openHTML(`<body><script>for (let i = 0; i < 230; i++) { const h = document.createElement("div"); document.body.append(h); h.attachShadow({ mode: "open" }).innerHTML = "<p>x</p>"; }</script></body>`);
+  const b = await deep.evaluate(() => globalThis.TafsPage.maskForShot());
+  assert.equal(b.ok, false, "more shadow roots than the cap: not sure, no picture");
+  await deep.evaluate(() => globalThis.TafsPage.unmaskShot());
+  await deep.close();
+  // An ordinary page under both caps is pictured.
+  const fine = await openHTML(`<body><p>${"short ".repeat(5)}</p><div id=h></div><script>document.getElementById("h").attachShadow({ mode: "open" }).innerHTML = "<p>x</p>"</script></body>`);
+  const c = await fine.evaluate(() => globalThis.TafsPage.maskForShot());
+  assert.equal(c.ok, true, "under the caps it is covered and pictured");
+  await fine.evaluate(() => globalThis.TafsPage.unmaskShot());
+  await fine.close();
 });

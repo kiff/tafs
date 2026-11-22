@@ -68,11 +68,11 @@ test("anything that isn't WebP is dropped", async () => {
 });
 
 /** A paired Chrome with a front tab at `url`, and the page's mask answering `maskOk`. */
-async function rig({ url = "https://shop.example/orders", active = true, windowOf = 9, maskOk = true, capture = async () => "data:image/png;base64,AAAA", deps, fetchOk = true } = {}) {
+async function rig({ url = "https://shop.example/orders", active = true, windowOf = 9, after = null, maskOk = true, capture = async () => "data:image/png;base64,AAAA", deps, fetchOk = true } = {}) {
   const key = await newKeyPair();
   const calls = [];
   const chrome = {
-    tabs: { get: async () => ({ id: 7, url, active, windowId: windowOf }), captureVisibleTab: async (...a) => (calls.push(["capture", ...a]), capture()) },
+    tabs: { get: async () => (calls.some((x) => x[0] === "capture") && after ? { id: 7, url, active, windowId: windowOf, ...after } : { id: 7, url, active, windowId: windowOf }), captureVisibleTab: async (...a) => (calls.push(["capture", ...a]), capture()) },
   };
   const inTab = async (tab, func) => {
     const src = String(func);
@@ -116,6 +116,15 @@ test("no picture when a secret field can't be confirmed covered, on a sensitive 
   const bank = await rig({ url: "https://paypal.com/x" });
   assert.equal((await bank.shots.capture({ tabId: 7, windowId: 9, page: {} })).why, "site");
   assert.equal(bank.calls.length, 0, "nothing was even covered");
+  // The front tab, the window and the page are checked again once the picture is back: a tab switched to, a tab
+  // moved, or a redirect during the mask or the capture means the picture may show what was never covered.
+  for (const [what, change] of [["a tab switched to", { active: false }], ["a tab moved to another window", { windowId: 12 }], ["a redirect", { url: "https://shop.example/checkout/pay" }]]) {
+    const changed = await rig({ after: change });
+    const out = await changed.shots.capture({ tabId: 7, windowId: 9, page: {} });
+    assert.equal(out.why, "hidden", what + " during the capture: no picture is kept");
+    assert.equal(out.png, undefined);
+    assert.ok(changed.calls.some((x) => x[0] === "unmask"), "the covers still come off");
+  }
   // A tab the person moved to another window is not pictured: captureVisibleTab would take the run's old window.
   const moved = await rig({ windowOf: 12 });
   assert.equal((await moved.shots.capture({ tabId: 7, windowId: 9, page: {} })).why, "hidden");
