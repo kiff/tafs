@@ -961,7 +961,7 @@ struct VersionsPanel: View {
         case "idle": how = Words.Version.Tried.endedUnused
         default: how = Words.Version.Tried.ended
         }
-        return [Words.Version.Tried.on(date: t.started.formatted(date: .abbreviated, time: .omitted)), counts, how].joined(separator: " · ")
+        return [Words.Version.Tried.on(date: t.started.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(Words.locale))), counts, how].joined(separator: " · ")
     }
 
     /// A switch that didn't finish: the taf doesn't run until it's finished or cancelled.
@@ -1259,7 +1259,7 @@ struct TafCardFace: View {
         parts += card.facts
         if card.rules.isEmpty { parts.append(Words.Card.noActions) }
         parts.append(Words.Card.issuedByNamed(who: "\(issuedBy)"))
-        let end = card.expires?.formatted(date: .abbreviated, time: .omitted)
+        let end = card.expires?.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(Words.locale))
         parts.append(revoked ? Words.Card.revoked : !card.active ? end.map { Words.Card.endedOn(date: $0) } ?? Words.Card.ended : end.map { Words.Card.untilDate(date: "\($0)") } ?? Words.Card.noEndDate)
         return parts.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: ". ") + "."
     }

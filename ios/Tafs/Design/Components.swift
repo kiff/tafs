@@ -281,6 +281,7 @@ extension Date {
     var shortTime: String {
         let f = DateFormatter()
         f.dateFormat = "HH:mm"
+        f.locale = Words.locale
         f.timeZone = AccountTime.zone
         return f.string(from: self)
     }
@@ -308,6 +309,7 @@ extension Date {
     func shown(_ style: Date.FormatStyle) -> String {
         var style = style
         style.timeZone = AccountTime.zone
+        style.locale = Words.locale
         return formatted(style)
     }
 }

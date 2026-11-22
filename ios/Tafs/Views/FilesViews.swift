@@ -269,11 +269,11 @@ struct FileDetailView: View {
             }
             Section {
                 if !file.tafName.isEmpty { LabeledContent(Words.Files.madeBy, value: file.tafName) }
-                LabeledContent(Words.Files.inRun, value: file.runAt.formatted(date: .abbreviated, time: .shortened))
+                LabeledContent(Words.Files.inRun, value: file.runAt.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(Words.locale)))
                 LabeledContent(Words.Files.type, value: file.type)
                 LabeledContent(Words.Files.size, value: FileSize.words(file.bytes))
                 LabeledContent(Words.Files.whoSees, value: Words.Files.everyone)
-                LabeledContent(Words.Files.goesAway, value: Words.Files.goesOn(date: file.goesAt.formatted(date: .abbreviated, time: .omitted)))
+                LabeledContent(Words.Files.goesAway, value: Words.Files.goesOn(date: file.goesAt.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(Words.locale))))
             }
             Section {
                 Button(Words.Files.deleteNow, role: .destructive) { confirming = true }
@@ -398,7 +398,7 @@ struct ChatFileChips: View {
                 .buttonStyle(.plain)
             }
             if let goes = files.map(\.goesAt).min() {
-                Text(Words.Files.keptUntil(date: goes.formatted(date: .abbreviated, time: .omitted)))
+                Text(Words.Files.keptUntil(date: goes.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(Words.locale))))
                     .scaledFont(12).foregroundColor(Theme.amberText)
             }
         }
