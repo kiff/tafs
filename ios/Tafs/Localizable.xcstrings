@@ -443484,10 +443484,22 @@
             "value": "عند التشغيل، يمكنك تسجيل الدخول برمز يُرسل إلى بريدك الإلكتروني بدل Apple أو Google أو GitHub. هو متوقف ما لم تشغّله، ويتطلب تشغيله تسجيل دخول حديثًا."
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiv olduqda, Apple, Google və ya GitHub əvəzinə e-poçtunuza göndərilən kodla daxil ola bilərsiniz. Siz aktiv etməyincə söndürülüb, aktiv etmək üçün isə yaxınlarda daxil olmuş olmalısınız."
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Когато е включено, можете да влизате с код, изпратен на имейла ви, вместо с Apple, Google или GitHub. Изключено е, докато не го включите, а за включването е нужен скорошен вход."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "চালু থাকলে Apple, Google বা GitHub-এর বদলে আপনার ইমেইলে পাঠানো কোড দিয়ে সাইন ইন করতে পারবেন। আপনি চালু না করা পর্যন্ত এটি বন্ধ থাকে, আর চালু করতে সাম্প্রতিক সাইন-ইন লাগে।"
           }
         },
         "cs": {
@@ -443526,6 +443538,12 @@
             "value": "Quand il est activé, vous pouvez vous connecter avec un code envoyé par e-mail, au lieu d'Apple, de Google ou de GitHub. Il est désactivé tant que vous ne l'activez pas, et l'activer demande une connexion récente."
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כשההגדרה פעילה, אפשר להיכנס עם קוד שנשלח לאימייל שלך במקום Apple, Google או GitHub. היא כבויה אלא אם תפעיל אותה, והפעלתה דורשת כניסה עדכנית."
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -443536,6 +443554,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bekapcsolva a Apple, Google vagy GitHub helyett az e-mailedre küldött kóddal is bejelentkezhetsz. Alapból ki van kapcsolva, és a bekapcsolásához friss bejelentkezés kell."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Երբ միացված է, կարող եք մուտք գործել ձեր էլ. փոստին ուղարկված կոդով՝ Apple-ի, Google-ի կամ GitHub-ի փոխարեն։ Այն անջատված է, քանի դեռ չեք միացրել, իսկ միացնելու համար պետք է վերջերս կատարված մուտք։"
           }
         },
         "id": {
@@ -443554,6 +443578,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "オンにすると、Apple、Google、GitHubの代わりに、メールで届くコードでサインインできます。オンにしない限りオフで、オンにするには最近のサインインが必要です。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "როცა ჩართულია, შეგიძლიათ შეხვიდეთ თქვენს ელფოსტაზე გამოგზავნილი კოდით Apple-ის, Google-ის ან GitHub-ის ნაცვლად. ის გამორთულია, სანამ არ ჩართავთ, ხოლო ჩასართავად საჭიროა ახალი შესვლა."
           }
         },
         "ko": {
@@ -443616,6 +443646,18 @@
             "value": "Ko je vklopljeno, se lahko prijavite s kodo, poslano na vaš e-naslov, namesto z Apple, Google ali GitHub. Dokler ga ne vklopite, je izklopljeno, za vklop pa je potrebna nedavna prijava."
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kur është aktiv, mund të hyni me një kod të dërguar në email-in tuaj, në vend të Apple, Google ose GitHub. Është joaktiv derisa ta aktivizoni, dhe aktivizimi kërkon një hyrje të fundit."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kad je uključeno, možete se prijaviti kodom poslanim na vašu e-poštu umesto preko Apple, Google ili GitHub. Isključeno je dok ga ne uključite, a za uključivanje je potrebna nedavna prijava."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -443651,10 +443693,22 @@
             "value": "تسجيل الدخول برمز يُرسل بالبريد الإلكتروني"
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-poçtla göndərilən kodla giriş"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Вход с код, изпратен по имейл"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইমেইলে পাঠানো কোড দিয়ে সাইন ইন"
           }
         },
         "cs": {
@@ -443693,6 +443747,12 @@
             "value": "Se connecter avec un code envoyé par e-mail"
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כניסה עם קוד שנשלח באימייל"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -443703,6 +443763,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bejelentkezés e-mailben küldött kóddal"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Մուտք էլ. փոստով ուղարկված կոդով"
           }
         },
         "id": {
@@ -443721,6 +443787,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "メールで届くコードでサインイン"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "შესვლა ელფოსტით გამოგზავნილი კოდით"
           }
         },
         "ko": {
@@ -443783,6 +443855,18 @@
             "value": "Prijava s kodo, poslano po e-pošti"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyni me një kod të dërguar me email"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava kodom poslanim e-poštom"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -443818,10 +443902,22 @@
             "value": "تسجيل الدخول برمز غير متاح بعد."
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kodla giriş hələ əlçatan deyil."
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Входът с код още не е наличен."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "কোড দিয়ে সাইন ইন এখনো পাওয়া যায় না।"
           }
         },
         "cs": {
@@ -443860,6 +443956,12 @@
             "value": "La connexion avec un code n'est pas encore disponible."
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כניסה עם קוד עדיין לא זמינה."
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -443870,6 +443972,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A kóddal való bejelentkezés még nem érhető el."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Կոդով մուտքը դեռ հասանելի չէ։"
           }
         },
         "id": {
@@ -443888,6 +443996,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "コードでのサインインはまだ利用できません。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "კოდით შესვლა ჯერ მიუწვდომელია."
           }
         },
         "ko": {
@@ -443950,6 +444064,18 @@
             "value": "Prijava s kodo še ni na voljo."
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyrja me kod nuk është ende e disponueshme."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava kodom još nije dostupna."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -443985,10 +444111,22 @@
             "value": "لم يتغير شيء. %1$@"
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dəyişmədi. %1$@"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Нищо не се промени. %1$@"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "কিছু বদলায়নি। %1$@"
           }
         },
         "cs": {
@@ -444027,6 +444165,12 @@
             "value": "Rien n'a changé. %1$@"
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "דבר לא השתנה. %1$@"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -444037,6 +444181,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nem változott. %1$@"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ոչինչ չփոխվեց։ %1$@"
           }
         },
         "id": {
@@ -444055,6 +444205,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "変更されませんでした。%1$@"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "არაფერი შეცვლილა. %1$@"
           }
         },
         "ko": {
@@ -444117,6 +444273,18 @@
             "value": "Ni se spremenilo. %1$@"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuk ndryshoi. %1$@"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ništa se nije promenilo. %1$@"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -444152,10 +444320,22 @@
             "value": "تعذّر تحميل هذا الإعداد. %1$@"
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ayar yüklənə bilmədi. %1$@"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Настройката не можа да се зареди. %1$@"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই সেটিং লোড করা যায়নি। %1$@"
           }
         },
         "cs": {
@@ -444194,6 +444374,12 @@
             "value": "Impossible de charger ce réglage. %1$@"
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן היה לטעון את ההגדרה הזאת. %1$@"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -444204,6 +444390,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nem sikerült betölteni ezt a beállítást. %1$@"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Այս կարգավորումը չհաջողվեց բեռնել։ %1$@"
           }
         },
         "id": {
@@ -444222,6 +444414,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "この設定を読み込めませんでした。%1$@"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ამ პარამეტრის ჩატვირთვა ვერ მოხერხდა. %1$@"
           }
         },
         "ko": {
@@ -444284,6 +444482,18 @@
             "value": "Te nastavitve ni bilo mogoče naložiti. %1$@"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ky cilësim nuk u ngarkua dot. %1$@"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovo podešavanje nije bilo moguće učitati. %1$@"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -444319,10 +444529,22 @@
             "value": "متوقف"
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Söndürülüb"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Изключено"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বন্ধ"
           }
         },
         "cs": {
@@ -444361,6 +444583,12 @@
             "value": "Désactivé"
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כבוי"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -444371,6 +444599,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ki"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Անջատված է"
           }
         },
         "id": {
@@ -444389,6 +444623,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "オフ"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "გამორთულია"
           }
         },
         "ko": {
@@ -444451,6 +444691,18 @@
             "value": "Izklopljeno"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Joaktiv"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isključeno"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -444486,10 +444738,22 @@
             "value": "قيد التشغيل"
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivdir"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Включено"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "চালু"
           }
         },
         "cs": {
@@ -444528,6 +444792,12 @@
             "value": "Activé"
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פעיל"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -444538,6 +444808,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Be"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Միացված է"
           }
         },
         "id": {
@@ -444556,6 +444832,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "オン"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ჩართულია"
           }
         },
         "ko": {
@@ -444618,6 +444900,18 @@
             "value": "Vklopljeno"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiv"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključeno"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -444653,10 +444947,22 @@
             "value": "تم الحفظ. أرسلنا إليك بريدًا إلكترونيًا عن التغيير."
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yadda saxlanıldı. Dəyişiklik barədə sizə e-poçt göndərdik."
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Запазено. Изпратихме ви имейл за промяната."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সংরক্ষিত হয়েছে। পরিবর্তনটি নিয়ে আমরা আপনাকে ইমেইল করেছি।"
           }
         },
         "cs": {
@@ -444695,6 +445001,12 @@
             "value": "Enregistré. Nous vous avons écrit au sujet du changement."
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נשמר. שלחנו לך אימייל על השינוי."
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -444705,6 +445017,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mentve. A változásról e-mailt küldtünk neked."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Պահպանվեց։ Փոփոխության մասին էլ. նամակ ենք ուղարկել ձեզ։"
           }
         },
         "id": {
@@ -444723,6 +445041,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "保存しました。変更についてメールをお送りしました。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "შენახულია. ცვლილების შესახებ ელფოსტაზე გაგიგზავნეთ წერილი."
           }
         },
         "ko": {
@@ -444785,6 +445109,18 @@
             "value": "Shranjeno. O spremembi smo vam poslali e-pošto."
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "U ruajt. Ju dërguam një email për ndryshimin."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sačuvano. Poslali smo vam e-poštu o promeni."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -444820,10 +445156,22 @@
             "value": "تسجيل الدخول"
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Вход"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সাইন-ইন"
           }
         },
         "cs": {
@@ -444862,6 +445210,12 @@
             "value": "Connexion"
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כניסה"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -444872,6 +445226,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bejelentkezés"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Մուտք"
           }
         },
         "id": {
@@ -444890,6 +445250,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "サインイン"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "შესვლა"
           }
         },
         "ko": {
@@ -444952,6 +445318,18 @@
             "value": "Prijava"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyrja"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -444987,10 +445365,22 @@
             "value": "إيقاف"
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Söndürün"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Изключване"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বন্ধ করুন"
           }
         },
         "cs": {
@@ -445029,6 +445419,12 @@
             "value": "Désactiver"
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כיבוי"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -445039,6 +445435,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kikapcsolás"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Անջատել"
           }
         },
         "id": {
@@ -445057,6 +445459,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "オフにする"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "გამორთვა"
           }
         },
         "ko": {
@@ -445119,6 +445527,18 @@
             "value": "Izklopi"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çaktivizoni"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isključite"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -445154,10 +445574,22 @@
             "value": "تشغيل"
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiv edin"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Включване"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "চালু করুন"
           }
         },
         "cs": {
@@ -445196,6 +445628,12 @@
             "value": "Activer"
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הפעלה"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -445206,6 +445644,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bekapcsolás"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Միացնել"
           }
         },
         "id": {
@@ -445224,6 +445668,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "オンにする"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ჩართვა"
           }
         },
         "ko": {
@@ -445286,6 +445736,18 @@
             "value": "Vklopi"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivizoni"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključite"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -445321,10 +445783,22 @@
             "value": "يفتح التشغيل صفحة تسجيل الدخول في KIFF، حيث تؤكد أنك أنت."
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiv etmək KIFF-in giriş səhifəsini açır, orada sizin olduğunuzu təsdiqləyirsiniz."
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Включването отваря страницата за вход на KIFF, където потвърждавате, че сте вие."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "চালু করলে KIFF-এর সাইন-ইন পেজ খোলে, যেখানে আপনি নিশ্চিত করেন যে এটি আপনি।"
           }
         },
         "cs": {
@@ -445363,6 +445837,12 @@
             "value": "L'activer ouvre la page de connexion de KIFF, où vous confirmez que c'est bien vous."
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ההפעלה פותחת את דף הכניסה של KIFF, שבו תאשר שזה אתה."
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -445373,6 +445853,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A bekapcsolás megnyitja a KIFF bejelentkezési oldalát, ahol megerősíted, hogy te vagy az."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Միացնելիս բացվում է KIFF-ի մուտքի էջը, որտեղ հաստատում եք, որ դա դուք եք։"
           }
         },
         "id": {
@@ -445391,6 +445877,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "オンにするとKIFFのサインインページが開き、ご本人であることを確認します。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ჩართვისას იხსნება KIFF-ის შესვლის გვერდი, სადაც ადასტურებთ, რომ ეს თქვენ ხართ."
           }
         },
         "ko": {
@@ -445451,6 +445943,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Z vklopom se odpre prijavna stran KIFF, kjer potrdite, da ste to vi."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivizimi hap faqen e hyrjes së KIFF-it, ku konfirmoni se jeni ju."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključivanje otvara KIFF-ovu stranicu za prijavu, na kojoj potvrđujete da ste to vi."
           }
         },
         "th": {
