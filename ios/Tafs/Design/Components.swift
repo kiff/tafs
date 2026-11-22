@@ -342,7 +342,7 @@ extension Date {
 enum Legal {
     /// The languages kiff.dev serves tafs's Terms and Privacy in, besides English. Traditional Chinese (`zh-Hant`) is served
     /// under its language, `/zh/`: `Legal.language` is "zh" for it, as it is "pt" for pt-BR.
-    static let translated: Set<String> = ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh"]
+    static let translated: Set<String> = ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "ca", "mk", "mn", "ne", "km", "lo"]
 
     static var terms: URL { page("terms") }
     static var privacy: URL { page("privacy") }
