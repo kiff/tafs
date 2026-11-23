@@ -499,7 +499,7 @@ class ChatStreamTest {
     // Jitter only shortens, by a fifth at most: phones don't read in step, and a reply is never later than the step.
     assertEquals((AppModel.CHAT_POLL_MS * 0.8).toLong(), AppModel.chatFollowDelay(0, -1.0))
     assertEquals(AppModel.CHAT_POLL_MS, AppModel.chatFollowDelay(0, 1.0))
-    // At 10,000 users: a run followed by reads for its whole half hour takes about 150 reads where it took 250.
+    // At 10,000 users: a run followed by reads for its whole half hour takes about 167 reads where it took 250.
     var waited = 0L
     var reads = 0
     while (waited < AppModel.CHAT_FOLLOW_MS) { waited += AppModel.chatFollowDelay(waited, 0.0); reads++ }
@@ -519,10 +519,14 @@ class ChatStreamTest {
     testScheduler.advanceTimeBy(AppModel.CHAT_SLOW_POLL_MS * 20)
     testScheduler.runCurrent()
     assertEquals("nothing read in the background", before, transport.requestsTo(conversation).size)
+    // Back on screen: read once, at once, with no wait first, so a run that ended meanwhile shows as ended.
     m.cameToForeground()
+    testScheduler.runCurrent()
+    assertEquals("read once, at once, on return", before + 1, transport.requestsTo(conversation).size)
+    // Then the back-off goes on.
     testScheduler.advanceTimeBy(AppModel.CHAT_SLOW_POLL_MS + 1)
     testScheduler.runCurrent()
-    assertTrue("read again once back", transport.requestsTo(conversation).size > before)
+    assertTrue("read again after its wait", transport.requestsTo(conversation).size > before + 1)
   }
 
   @Test fun aRunThatStartsWhileTheChatIsReadIsFollowedByItsStream() = runTest {

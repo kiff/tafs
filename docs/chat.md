@@ -517,15 +517,17 @@ held call was answered, then `end`.
   answers its result), the thread is read less and less while tafs cloud says a run is at work
   (`followChat`, `chatFollowDelay`): every 2.5 s for the first minute, 5 s to the third, 10 s to the
   sixth, then 15 s, for about 31 minutes in all.
-  - Each wait is up to a fifth shorter at random, so phones don't read in step. It's never longer, so
-    a reply is never later than before.
-  - Nothing is read while the app is in the background; the next read goes when it comes back.
-  - At 10,000 users each with a run followed this way, that's about 150 reads per run where it was 250,
-    and none from phones in the background (docs/scale.md).
+  - Each wait is up to a fifth shorter at random, so phones don't read in step, and never longer than
+    its step.
+  - Nothing is read while the app is in the background. Coming back reads once, at once, so a run that
+    ended meanwhile shows as ended; then the back-off goes on.
+  - At 10,000 users each with a run followed this way, that's about 167 reads per run where it was 250,
+    and none from phones in the background (docs/scale.md). The first minute is as before, so this
+    trims a long run's tail, not the peak; the stream and the push are what lower the peak.
 - A run those reads find at work that this phone hasn't followed yet is picked back up by its stream,
   which takes over from the reads.
-- While a stream is open, the thread is still read every 30 s (`STREAM_CHECK_MS`), and not while the
-  app is in the background. A stream can stay
+- While a stream is open, the thread is still read every 30 s (`STREAM_CHECK_MS`), not while the app
+  is in the background, and once at once when it comes back. A stream can stay
   quiet for many minutes after its run ended without saying so. Once tafs cloud says nothing is at
   work there, and the live answer has stood for more than 15 s, any read (that check, or coming back
   to the chat) drops the live answer, so "…" and Stop go and the thread shows what the run wrote.

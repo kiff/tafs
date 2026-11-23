@@ -2847,14 +2847,18 @@ class AppModel(
       var waited = 0L
       var reads = 0
       // Often at first, then less and less (`chatFollowDelay`), each wait a little shorter at random so phones don't read in step;
-      // nothing while the app is in the background (a read waits for it to come back, then goes at once). A long run (a setup's
-      // hand-over, a slow turn) is followed to its end, so its last words show and "…" goes, never left as when the reads ran out.
+      // nothing while the app is in the background, and one read at once when it comes back, so a run that ended while the phone
+      // was away shows as ended. A long run (a setup's hand-over, a slow turn) is followed to its end, so its last words show and
+      // "…" goes, never left as when the reads ran out.
       while (waited < CHAT_FOLLOW_MS && (busy(tafId) || (handOver != null && handingOver(handOver)))) {
-        foreground.first { it }
-        val wait = chatFollowDelay(waited, chatJitter())
-        delay(wait)
-        waited += wait
-        if (!foreground.value) continue
+        if (!foreground.value) {
+          foreground.first { it }
+        } else {
+          val wait = chatFollowDelay(waited, chatJitter())
+          delay(wait)
+          waited += wait
+          if (!foreground.value) continue
+        }
         reads += 1
         readThread(tafId)
         // A run at work that this phone hasn't followed yet (one that went on with no stream open, as Coach's does once tafs cloud
@@ -7138,8 +7142,8 @@ class AppModel(
       // quiet for many minutes) shows as ended, never as "…" (readThread closes the stream then).
       val check = launch {
         while (true) {
-          foreground.first { it }
-          delay(STREAM_CHECK_MS)
+          // Back from the background: read once at once (the stream may have gone quiet meanwhile), then every STREAM_CHECK_MS.
+          if (!foreground.value) foreground.first { it } else delay(STREAM_CHECK_MS)
           if (current() && foreground.value) readThread(tafId)
         }
       }
