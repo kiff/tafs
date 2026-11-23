@@ -341283,6 +341283,12 @@
             "value": "צמדו את התוסף של tafs לטלפון שלכם וה-taf יוכל לעבוד ב-Chrome שלכם, רק באתרים שתתירו. הוא עובד בלשוניות משלו, וכל דבר שדורש את אישורכם ממתין לכם ב-%1$@."
           }
         },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs एक्सटेंशन को अपने फ़ोन से जोड़ें, और कोई taf आपके Chrome में काम कर सकता है, सिर्फ़ उन साइटों पर जिनकी आप अनुमति दें। वह अपने ही टैब में काम करता है, और जिस भी चीज़ के लिए आपकी हाँ चाहिए वह %1$@ में आपका इंतज़ार करती है।"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -341433,10 +341439,22 @@
             "value": "จับคู่ส่วนขยาย tafs กับโทรศัพท์ของคุณ แล้ว taf จะทำงานใน Chrome ของคุณได้ เฉพาะบนเว็บไซต์ที่คุณอนุญาต มันทำงานในแท็บของตัวเอง และทุกอย่างที่ต้องได้รับความยินยอมจากคุณจะรออยู่ใน %1$@"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs giňeltmesini telefonyňyz bilen goşalaň, şonda taf Chrome-yňyzda diňe siziň rugsat beren saýtlaryňyzda işläp biler. Ol öz goýmalarynda işleýär we siziň razylygyňyz gerek bolan ähli zat %1$@ bölüminde size garaşýar."
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "tafs uzantısını telefonunla eşleştir; bir taf Chrome'unda, yalnızca izin verdiğin sitelerde çalışabilir. Kendi sekmelerinde çalışır ve onayına ihtiyaç duyan her şey seni %1$@ bölümünde bekler."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ایکسٹینشن کو اپنے فون سے جوڑیں، اور کوئی taf آپ کے Chrome میں کام کر سکتا ہے، صرف ان سائٹس پر جن کی آپ اجازت دیں۔ وہ اپنے ہی ٹیبز میں کام کرتا ہے، اور جس چیز کے لیے آپ کی ہاں چاہیے وہ %1$@ میں آپ کا انتظار کرتی ہے۔"
           }
         },
         "vi": {
@@ -341526,6 +341544,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ › %2$@ מציג את ה-Chrome שלכם ולמה כל אחד משמש. ביטול צימוד של Chrome מסיים את החיבורים שלו."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ में आपके Chrome दिखते हैं और हर एक किस काम आता है। किसी Chrome की जोड़ी हटाने से उसके कनेक्शन खत्म हो जाते हैं।"
           }
         },
         "hr": {
@@ -341678,10 +341702,22 @@
             "value": "%1$@ › %2$@ แสดงรายการ Chrome ของคุณและสิ่งที่แต่ละตัวใช้ทำ การยกเลิกการจับคู่ Chrome จะสิ้นสุดการเชื่อมต่อของมัน"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ Chrome-laryňyzy we olaryň her biriniň näme üçin ulanylýandygyny görkezýär. Chrome-yň goşalamasyny aýyrmak onuň birikmelerini gutarýar."
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ › %2$@, Chrome'larını ve her birinin ne için kullanıldığını listeler. Bir Chrome'un eşleştirmesini kaldırmak bağlantılarını sonlandırır."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ آپ کے Chrome اور ہر ایک کا استعمال دکھاتا ہے۔ کسی Chrome کا جوڑ ختم کرنے سے اس کے کنکشن ختم ہو جاتے ہیں۔"
           }
         },
         "vi": {
@@ -341771,6 +341807,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "tafs יכול לעבוד ב-Chrome שלך"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs आपके Chrome में काम कर सकता है"
           }
         },
         "hr": {
@@ -341923,10 +341965,22 @@
             "value": "tafs ทำงานใน Chrome ของคุณได้"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs siziň Chrome-yňyzda işläp biler"
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "tafs Chrome'unda çalışabilir"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs آپ کے Chrome میں کام کر سکتا ہے"
           }
         },
         "vi": {
@@ -342016,6 +342070,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "הפעילו זאת ב-%1$@ › %2$@. אחר כך, כשתבקשו, KIFF שולח במייל קוד שפועל פעם אחת, 10 דקות, בדפדפן שביקש אותו."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इसे %1$@ › %2$@ में चालू करें। फिर, जब आप मांगें, KIFF ईमेल से एक कोड भेजता है जो एक बार, 10 मिनट तक, उसी ब्राउज़र में काम करता है जिसने मांगा।"
           }
         },
         "hr": {
@@ -342168,10 +342228,22 @@
             "value": "เปิดใช้ที่ %1$@ › %2$@ จากนั้นเมื่อคุณขอ KIFF จะส่งรหัสทางอีเมลที่ใช้ได้ครั้งเดียว ภายใน 10 นาที ในเบราว์เซอร์ที่ขอ"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ony %1$@ › %2$@ bölüminde açyň. Soňra siz soranyňyzda, KIFF bir gezek, 10 minutlap, ony soran brauzerde işleýän kody email bilen iberýär."
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Bunu %1$@ › %2$@ bölümünden aç. Sonra istediğinde KIFF, bir kez geçerli olan, 10 dakika boyunca, isteyen tarayıcıda çalışan bir kodu e-postayla gönderir."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسے %1$@ › %2$@ میں چالو کریں۔ پھر، جب آپ مانگیں، KIFF ای میل سے ایک کوڈ بھیجتا ہے جو ایک بار، 10 منٹ تک، اسی براؤزر میں کام کرتا ہے جس نے مانگا۔"
           }
         },
         "vi": {
@@ -342261,6 +342333,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "לעולם אל תיתן את הקוד הזה לאף אחד. KIFF לעולם לא יבקש אותו ממך."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह कोड कभी किसी को न दें। KIFF आपसे इसे कभी नहीं मांगेगा।"
           }
         },
         "hr": {
@@ -342413,10 +342491,22 @@
             "value": "อย่าให้รหัสนี้แก่ใคร KIFF จะไม่ขอรหัสนี้จากคุณเลย"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kody hiç kime bermäň. KIFF ony sizden hiç haçan soramaz."
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Bu kodu kimseye vermeyin. KIFF sizden bunu asla istemez."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ کوڈ کبھی کسی کو نہ دیں۔ KIFF آپ سے یہ کبھی نہیں مانگے گا۔"
           }
         },
         "vi": {
@@ -342506,6 +342596,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "כניסה עם קוד שמגיע במייל"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ईमेल से भेजे कोड से साइन इन करें"
           }
         },
         "hr": {
@@ -342658,10 +342754,22 @@
             "value": "ลงชื่อเข้าใช้ด้วยรหัสที่ส่งทางอีเมล"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email bilen iberilen kod bilen giriň"
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "E-postayla gelen kodla giriş yap"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ای میل پر بھیجے گئے کوڈ سے سائن اِن کریں"
           }
         },
         "vi": {
