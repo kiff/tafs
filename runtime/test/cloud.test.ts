@@ -3467,6 +3467,24 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(stopped).toMatchObject({ status: 200, body: { switching: { n: 2, draft: "drf_v2" } } });
     expect(w.agents.calls).toContain(`cancelRun ${RAE} run_p`);
     expect(w.agents.runs.find((r) => r.id === "run_p")?.status).toBe("CANCELLED");
+    // The task that waited on the owner's answer was stopped, and the answer says so (the owner's panel test, 23 Nov).
+    expect(stopped.body.stopped).toEqual([{ run: "run_p", session: "sess_p" }]);
+    expect(stopped.body.words).toBe("Installing this version stopped the task that was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again.");
+  });
+
+  it("says nothing was stopped when the switch finds nothing in the way, or only a task at work", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "draft" };
+    const quiet = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { stop_blocking: true } });
+    expect(quiet.status).toBe(200);
+    expect(quiet.body).not.toHaveProperty("stopped");
+    expect(quiet.body).not.toHaveProperty("words");
+    const w2 = twoVersions();
+    w2.account.drafts = { drf_v2: "draft" };
+    w2.agents.runs.unshift({ tenant: "t_acme", id: "run_w", agent: RAE, session: "sess_w", trigger: "owner", status: "RUNNING", cost_micro_usd: 0, turns: 1, created: "2026-10-20T09:00:00Z", updated: "2026-10-20T09:00:00Z" } as never);
+    const working = await call(w2, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { stop_blocking: true } });
+    expect(working.status).toBe(200);
+    expect(working.body).not.toHaveProperty("stopped");
   });
 
   it("with stop_blocking, still names a run that doesn't stop in time", async () => {
