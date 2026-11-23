@@ -13,6 +13,8 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const fr: Words = {
   work_working: "En cours",
   work_waiting_approval: "En attente de votre approbation",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "Cette exécution était déjà terminée, donc rien n'a été fait.",
   your_step_title: "Votre étape",
   your_step_done: "Terminé",
   your_step_skip: "Passer",

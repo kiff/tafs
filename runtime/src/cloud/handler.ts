@@ -1154,7 +1154,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (!me.capabilities.includes("holds.answer")) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
     // The run goes on to its next model turn: the person who lets it go on has allowed AI use (docs/accounts.md).
     await requireAIConsent(event, me, deps);
-    return goOn(me, taf, parts[4] ?? "", deps);
+    return goOn(me, taf, parts[4] ?? "", deps, langOf(event));
   }
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "allow") {
     need(me, "cards.manage");
@@ -6263,7 +6263,7 @@ async function allowRoute(event: HTTPEvent, taf: Taf, exception: string, deps: D
   });
 }
 
-async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): Promise<unknown> {
+async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps, lang: Lang): Promise<unknown> {
   if (!exception) throw new HTTPError(404, "not found");
   try {
     const out = await deps.agents.continueHeld(me.tenantID, taf.id, exception);
@@ -6271,7 +6271,12 @@ async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): 
   } catch (err) {
     if (refused(err, "waiting_for_kiff", "run_changed")) return { status: "waiting" };
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
-    if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no run of this taf waits on that held call");
+    // The owner's yes landed after the run that paused on the call had ended: nothing ran, and the apps say so, in the
+    // owner's language, with Run again (the same line in every app).
+    if (err instanceof AgentsError && err.status === 404) {
+      const words = wordsIn(lang).hold_run_ended;
+      throw new HTTPError(404, "no run of this taf waits on that held call", { code: "run_ended", words });
+    }
     throw agentsFailure(err);
   }
 }

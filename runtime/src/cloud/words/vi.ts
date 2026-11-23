@@ -16,6 +16,8 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const vi: Words = {
   work_working: "Đang xử lý",
   work_waiting_approval: "Đang chờ bạn phê duyệt",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "Lượt chạy đó đã kết thúc, nên không có gì được thực hiện.",
   your_step_title: "Bước của bạn",
   your_step_done: "Xong",
   your_step_skip: "Bỏ qua",

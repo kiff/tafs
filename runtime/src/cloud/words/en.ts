@@ -14,6 +14,8 @@ export const en = {
   // A taf's work (work.ts): a request's line, the list's summary, and the firings it skipped.
   work_working: "Working on it",
   work_waiting_approval: "Waiting for your approval",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "That run had ended, so nothing ran.",
   // "Your step": a step a taf may never take, handed to its owner to finish (docs/api.md, "Your step").
   your_step_title: "Your step",
   your_step_done: "Done",
