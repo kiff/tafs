@@ -82,5 +82,11 @@
   "taf_error": { "message": "Bu, $TAF$-a çatmadı. Yenidən cəhd edin.", "placeholders": { "taf": { "content": "$1" } } },
   "tafs_not_read": { "message": "taf-larınız oxuna bilmədi. Yenidən cəhd edin." },
   "no_taf_here": { "message": "Bu Chrome-da hələ heç bir taf işləmir." },
-  "setup_taf": { "message": "Bu sayt üçün yeni taf qurun" }
+  "setup_taf": { "message": "Bu sayt üçün yeni taf qurun" },
+  "hand_title": { "message": "Növbə sizdədir", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "Taf deyir", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Mənə göstərin", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Hazırdır", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Indi yox", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Yalnız bu səhifəyə etibar etdiyiniz yerdə yazın.", "description": "Fixed line on that card under the taf's words" }
 }

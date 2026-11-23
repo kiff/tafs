@@ -82,5 +82,11 @@
   "taf_error": { "message": "यो $TAF$ सम्म पुगेन। फेरि प्रयास गर्नुहोस्।", "placeholders": { "taf": { "content": "$1" } } },
   "tafs_not_read": { "message": "तपाईंका tafs पढ्न सकिएन। फेरि प्रयास गर्नुहोस्।" },
   "no_taf_here": { "message": "यो Chrome मा अझै कुनै taf काम गर्दैन।" },
-  "setup_taf": { "message": "यो साइटका लागि नयाँ taf सेट अप गर्नुहोस्" }
+  "setup_taf": { "message": "यो साइटका लागि नयाँ taf सेट अप गर्नुहोस्" },
+  "hand_title": { "message": "तपाईंको पालो", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "taf भन्छ", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "मलाई देखाउनुहोस्", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "भयो", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "अहिले होइन", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "यो पृष्ठमा विश्वास गर्ने ठाउँमा मात्र लेख्नुहोस्।", "description": "Fixed line on that card under the taf's words" }
 }
