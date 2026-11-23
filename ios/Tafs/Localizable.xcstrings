@@ -300320,7 +300320,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exportar os meus chats"
+            "value": "Exportar meus chats"
           }
         },
         "ro": {
@@ -498946,7 +498946,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirma com %1$@. A sessão também é terminada noutros dispositivos."
+            "value": "Você confirma com %1$@. A sessão também é encerrada nos outros dispositivos."
           }
         },
         "ro": {

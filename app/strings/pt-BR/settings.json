@@ -1,6 +1,7 @@
 {
   "settings.alerts_off.text": "Foram desativados quando a sessão deste telefone foi encerrada. Ative-os para receber um alerta quando um taf precisar de você.",
   "settings.chargebacks_needs_you": "Encomendas atrasadas precisa de você",
+  "settings.delete_account.confirm_with": "Você confirma com {biometry}. A sessão também é encerrada nos outros dispositivos.",
   "settings.delete_account.connections_left": "Os seus tafs foram apagados, mas as suas conexões ainda não. {why}",
   "settings.delete_account.deleting": "Excluindo…",
   "settings.delete_account.goes_records": "Registros do KIFF, após 30 dias",

@@ -1309,7 +1309,7 @@
     <string name="export_own_chats_each_taf_coach">Os seus chats com cada taf, incluindo os do Coach, os nomes dos arquivos que anexou e as suas notas, em um arquivo legível e em JSON. Só você os pode exportar.</string>
     <string name="export_preparing">Preparando os seus chats…</string>
     <string name="export_ready_share_again">Pronto: %1$s. Compartilhar novamente</string>
-    <string name="export_row">Exportar os meus chats</string>
+    <string name="export_row">Exportar meus chats</string>
     <string name="export_sign_in_first">Entre com o KIFF para exportar os seus chats.</string>
     <plurals name="files_account_row">
         <item quantity="one">%1$s arquivo · guardado 30 dias</item>
@@ -2149,7 +2149,7 @@
     <string name="settings_chargebacks_needs_you">Encomendas atrasadas precisa de você</string>
     <string name="settings_choose_time_zone">Escolher fuso horário…</string>
     <string name="settings_clear_sample">Limpar o exemplo</string>
-    <string name="settings_delete_account_confirm_with">Confirma com %1$s. A sessão também é terminada noutros dispositivos.</string>
+    <string name="settings_delete_account_confirm_with">Você confirma com %1$s. A sessão também é encerrada nos outros dispositivos.</string>
     <string name="settings_delete_account_connections_left">Os seus tafs foram apagados, mas as suas conexões ainda não. %1$s</string>
     <string name="settings_delete_account_deleting">Excluindo…</string>
     <string name="settings_delete_account_goes_cards">Cards e chaves</string>
