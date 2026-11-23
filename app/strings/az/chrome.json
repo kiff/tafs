@@ -22,6 +22,7 @@
   "chrome.refused": "Başqa bir Chrome bu kodu istifadə etdi, ona görə heç nə cütləşmədi. Yenidən başlayın.",
   "chrome.remove": "Cütləşməni ləğv edin",
   "chrome.remove_named": "Cütləşməni ləğv edin: {name}",
+  "chrome.replace_changed": "Bu Chrome-a keçənlər dəyişdi, ona görə heç nə cütləşdirilmədi. Yoxlayın və yenidən cütləşdirin.",
   "chrome.replace_moves": "Bu Chrome-a keçir: {sites}",
   "chrome.replace_none": "Yeni Chrome (heç birini əvəz etmir)",
   "chrome.replace_title": "Əvəz edir",

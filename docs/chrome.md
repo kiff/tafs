@@ -16,7 +16,7 @@ it changes all three.
 
 | File | What it does |
 |---|---|
-| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`, `declarativeNetRequest` (to fence a run's tabs; it widens no access), `notifications` (Chrome asks it of an extension that receives Web Push; the extension shows none, see "Waking the extension"). **Every https site at install** (`host_permissions: ["https://*/*"]`), as Claude in Chrome asks: one Chrome prompt when the extension is installed, never one per site (the owner's choice, 23 Nov; `chrome/store/test_manifest.py` pins it). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
+| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`, `declarativeNetRequest` (to fence a run's tabs; it widens no access), `notifications` (Chrome asks it of an extension that receives Web Push; the extension shows none, see "Waking the extension"). **Every https site at install** (`host_permissions: ["https://*/*"]`): one Chrome prompt when the extension is installed, never one per site (the owner's choice, 23 Nov; `chrome/store/test_manifest.py` pins it). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
 | `chrome/src/sw.js` | The service worker: keeps the pairing, connects to planque when paired, runs what planque sends, answers the side panel. |
 | `chrome/src/relay.js` | The one connection to planque, always opened by the extension. Nothing connects in. |
 | `chrome/src/protocol.js` | Checks each step as planque's and signs each answer. |
@@ -331,7 +331,10 @@ error = {code, detail?}      // detail never carries page text
   guard does the same.
 - **Every act answers with the page read back:** a click is never proof of its effect (content-script events aren't
   trusted input, and a site can tell).
-- **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run's tabs close (and its window, when it has its own).
+  The read comes **after the navigation the act started**: the tab is looked at every 100 ms for up to 1 s, until it is loading or at another
+  address, then until it is `complete`, then 600 ms more. A click that navigates nothing costs that second and no more. (Without the look, `complete`
+  was still the old page's status and the taf read the page it had just left.)
+- **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run ends and **its tabs stay open** (see the next section); that taf's next run, or unpairing, closes them.
 
 ### What the extension refuses, whatever planque sent
 
@@ -358,11 +361,15 @@ was done.
 ## Runs
 
 - **A run opens in the window the owner is using,** as one background tab in a tab group, "tafs · Rae", in orange,
-  beside their tabs. Their active tab stays in front and the run never takes focus. When the run ends, only the tabs the
-  run opened close, wherever they are by then (a tab the owner dragged elsewhere included); the window and the owner's
-  tabs stay. When the window last used is private or a pop-up, or there is no normal window (the run never opens in a
-  private window), the run gets a window of its own, opened without focus, and that window closes with its tabs. A Stop
-  that lands while the tab is still being opened closes it too.
+  beside their tabs. Their active tab stays in front and the run never takes focus. **When the run ends, its tabs stay open** (the
+  taf's close step, planque's `stop`, the person's Stop, the idle sweep): the person sees the page where the taf stopped and
+  nothing opens and closes under them. **Each taf keeps only its latest finished run's tabs:** when that taf's next run opens, it closes the
+  previous "· done" tabs (and a window of its own) first, so a taf's calls never pile up. **Only a tab still where the run left it, and not in front of the window the person is using, closes then;** one they moved on or are using stays, is dropped from the list, and keeps a window of its own open with it. Unpairing closes them all. Which tabs are kept is held in `chrome.storage.session`
+  (`doneTabs`), so a stopped worker still finds them; a taf is told apart by the name its steps carry. The group is renamed "tafs · Rae · done" and turns grey, its fence goes, and the tabs are no longer the
+  run's: a touch in one pauses nothing and a step can't reach it. **Unpairing closes them all** (the tabs the run opened, wherever they are
+  by then, and a window of its own); so does a run that never loaded a page (a Stop while the tab is still being opened, or a window that
+  couldn't be set up), since a blank tab is nothing to keep. When the window last used is private or a pop-up, or there is no normal window (the run
+  never opens in a private window), the run gets a window of its own, opened without focus, and it stays with its tabs.
 - **The runner touches only tabs it opened.** It never lists the owner's tabs, and it ignores navigation events from
   any other tab. A tab a run's page opens joins the run only on the run's sites; anything else is closed.
 - **A request off the run's sites never leaves.** As a run's tab opens, before it loads anything, the runner gives
@@ -381,9 +388,9 @@ was done.
   what it read: a click that did nothing, done again, would do nothing a third time. A different act, a different page or
   a different answer starts the count again, and so does Resume. The read's own id and the sealed handles don't count as a
   change. A run paused this way is not swept, like one the owner paused: its tabs stay open until the owner acts.
-- **A run nobody sends a step to for five minutes ends** as Stop does (its tabs close, and its window when it has its own), recorded as `stop` by `idle`: planque's
-  `close` is only sent after a call, and takes power away, so a call that timed out or a lost `close` must not leave a window
-  open. The service worker's minute alarm does the sweeping. A run the owner paused isn't idle, and neither is one with a step
+- **A run nobody sends a step to for five minutes ends** as Stop does (its tabs stay, as at any end), recorded as `stop` by `idle`: planque's
+  `close` is only sent after a call, and takes power away, so a call that timed out or a lost `close` must not leave a run
+  fenced and counting as active. The service worker's minute alarm does the sweeping. A run the owner paused isn't idle, and neither is one with a step
   running.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
   read never lands in the middle of an act. Pause and Stop don't wait.
@@ -492,7 +499,7 @@ one exact origin (`chrome/src/vault.js`).
 | `release_missing` | no release, one not signed by the paired phone, for another step, field or origin, expired, or already used |
 | `sealed_unknown` | no sign-in is saved under that handle for this origin |
 
-### The phone's release card (design, not built)
+### The phone's release card (design; Android's checks built, off)
 
 The extension already refuses a sealed fill without the phone's `tafs-chrome/release/v1` (`protocol.checkRelease`). This is the
 card on the phone that makes one. It is a hold like any other (see "The approval card"), so a release is **never** made by a
@@ -572,14 +579,20 @@ releases, is a later change, once one card is built and used.
   A compromised planque could therefore choose which fitting field on that origin gets the value (a username into another
   text field, say). It can never send a value anywhere else, make a release, or fill a field of the wrong kind.
 
-**Open for planque** (its docs, not this one): the held call's kind for a sealed fill, how the answer's `release` reaches
-the step, and the vector for `tafs-chrome/release/v1` (`vectors/chrome-release.json`, made from `checkRelease` and checked by
-the extension's and each app's tests) that both apps need before they sign.
+**The vector** is `vectors/chrome-release.json`: the eight fields, the bytes the phone signs, and the handles a phone takes
+with the part each names, made from the extension's own `signingBytes` and `parseHandle`. The extension's test checks it
+against `checkRelease` (a release over those fields holds; another origin, Chrome, part, field, read or nonce, or a late
+one, doesn't), and Android's builds the same bytes.
+
+**Open for planque** (its docs, not this one): the held call's kind for a sealed fill, and how the answer's `release`
+reaches the step. They must match the vector.
 
 **For the apps,** the card is built once on iPhone and iPad (`BrowserStepBlock`'s sibling in `NeedsYouView`) and once on
-Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every language and each tested against the vector: a
-release made from it is accepted by `checkRelease`, and one with any field changed, another Chrome's, an expired one, or
-a reused nonce is refused.
+Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every language and each tested against the vector.
+**Android's checks and signing are built, off** (`SealedRelease`, `ENABLED = false`): the handle's part, the refusals above
+(a paired Chrome, the hold's time, an `https` origin within the sites this phone signed for the grant, a sensitive site only
+with this phone's own allowance, the op, read and field present), and a release with a new 16-byte nonce and `exp` 60 s on,
+signed over the vector's bytes. The card itself, its words and its fingerprint follow when planque holds a sealed fill.
 
 ## A step handed to the person
 
@@ -609,9 +622,9 @@ step over: `op: "hand"`, `hand: {words, ref?}`, `read_id`, signed like every ste
   **Not now** gives no page.
 - **The answer is its own message,** `{type: "hand_result", hand, outcome: "done" | "declined", page?, sig}`, `sig` this Chrome's key over
   `tafs-chrome/hand/v1` and `{hand, outcome, page?}` (a new label, so a step's result can never stand for it). planque takes the first and
-  answers `{type: "hand_kept", hand}`, or `{type: "hand_refused", hand, code}` with `unknown_hand`, `expired`, `unsigned` or `too_large`.
+  answers `{type: "hand_kept", hand}`, or `{type: "hand_refused", hand, code}` with `unknown_hand`, `expired`, `unsigned`, `too_large` or `not_kept`.
   The extension keeps the answer (in `chrome.storage.session`, which survives the worker stopping) and **sends it again on each welcome until
-  `hand_kept`**, stops on `unknown_hand`, `expired` or `unsigned`, and on `too_large` sends Done once more with no page. A page over the
+  `hand_kept`**, stops on `unknown_hand`, `expired` or `unsigned`, keeps it and sends it again **on the next welcome only** after `not_kept` (planque's store failed just then; never at once, so a failing store is not answered by a loop), and on `too_large` sends Done once more with no page. A page over the
   relay's 120 KB cap goes as Done with no page, and the taf reads again. A run that ends with a hand-over open answers it declined.
 
 ## The taf in the side panel
@@ -721,5 +734,5 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 ## Not done yet
 
-- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it; the card that signs it is designed ("The phone's release card") and still to build.
+- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it, and the vector and Android's checks are built, off. planque's hold for a sealed fill and the cards on both phones are still to build ("The phone's release card").
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.

@@ -921,12 +921,12 @@ class TafsCloud(
    * waits for: the version's own, drafted again ([redraft], or once it expired), a restore of the Cards it ran
    * under when going back, or none.
    */
-  suspend fun beginSwitch(id: String, version: Int, redraft: Boolean = false, stopBlocking: Boolean = false): Switching {
+  suspend fun beginSwitch(id: String, version: Int, redraft: Boolean = false, stopBlocking: Boolean = false): SwitchResponse {
     val body = kotlinx.serialization.json.buildJsonObject {
       put("redraft", redraft)
       put("stop_blocking", stopBlocking)
     }
-    return KiffClient.json.decodeFromString<SwitchResponse>(String(sendJson("POST", "/v1/tafs/${escaped(id)}/versions/$version/switch", body))).switching
+    return KiffClient.json.decodeFromString<SwitchResponse>(String(sendJson("POST", "/v1/tafs/${escaped(id)}/versions/$version/switch", body)))
   }
 
   /** Drops the switch under way while its Card isn't confirmed; once it is, tafs cloud ends it instead. True when one was dropped. */

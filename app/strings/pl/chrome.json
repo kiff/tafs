@@ -22,6 +22,7 @@
   "chrome.refused": "Inny Chrome użył tego kodu, więc nic nie zostało powiązane. Zacznij od nowa.",
   "chrome.remove": "Usuń powiązanie",
   "chrome.remove_named": "Usuń powiązanie z {name}",
+  "chrome.replace_changed": "To, co przechodzi do tego Chrome, się zmieniło, więc nic nie zostało powiązane. Sprawdź i powiąż ponownie.",
   "chrome.replace_moves": "Przechodzi do tego Chrome: {sites}",
   "chrome.replace_none": "Nowa przeglądarka Chrome (nic nie zastępuje)",
   "chrome.replace_title": "Zastępuje",

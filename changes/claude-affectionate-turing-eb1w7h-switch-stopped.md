@@ -1,0 +1,1 @@
+- **Installing a version that stops a waiting task says so:** when a new version goes in and a task was waiting on your answer, tafs says that it stopped, that its message didn't run, and that you can send it again ([docs/api.md](docs/api.md)).

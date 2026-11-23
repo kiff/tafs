@@ -22,6 +22,7 @@
   "chrome.refused": "Tento kód použil iný Chrome, takže sa nič nespárovalo. Začnite znova.",
   "chrome.remove": "Zrušiť spárovanie",
   "chrome.remove_named": "Zrušiť spárovanie {name}",
+  "chrome.replace_changed": "Čo prejde do tohto Chrome, sa zmenilo, takže sa nič nespárovalo. Skontroluj to a spáruj znova.",
   "chrome.replace_moves": "Prejde do tohto Chrome: {sites}",
   "chrome.replace_none": "Nový Chrome (nič nenahrádza)",
   "chrome.replace_title": "Nahrádza",

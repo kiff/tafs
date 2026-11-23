@@ -1,0 +1,29 @@
+{
+  "about": "The phone's release of one sealed sign-in value for one fill (docs/chrome.md, \"The phone's release card\"): the bytes the phone's approval key signs, label tafs-chrome/release/v1 ‖ 0x00 ‖ JCS of {chrome_id, op, sealed, origin, field_ref, read_id, nonce, exp}, which the extension checks (protocol.checkRelease); and the handles a phone takes, with the part each names (null: no release, the card is drawn as unreadable). Made from the extension's own signingBytes and parseHandle. planque's half (the held call for a sealed fill, and relaying the release onto its step) must match it.",
+  "chrome_id": "chr_01HZX5",
+  "op": "op_9K3T",
+  "sealed": "sec_Ab3dE-f_9q:password",
+  "origin": "https://shop.example",
+  "field_ref": "f2",
+  "read_id": "rd_7c1",
+  "nonce": "AAECAwQFBgcICQoLDA0ODw",
+  "exp": 1795430460000,
+  "signed_bytes": "dGFmcy1jaHJvbWUvcmVsZWFzZS92MQB7ImNocm9tZV9pZCI6ImNocl8wMUhaWDUiLCJleHAiOjE3OTU0MzA0NjAwMDAsImZpZWxkX3JlZiI6ImYyIiwibm9uY2UiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R3Iiwib3AiOiJvcF85SzNUIiwib3JpZ2luIjoiaHR0cHM6Ly9zaG9wLmV4YW1wbGUiLCJyZWFkX2lkIjoicmRfN2MxIiwic2VhbGVkIjoic2VjX0FiM2RFLWZfOXE6cGFzc3dvcmQifQ",
+  "handles": {
+    "sec_Ab3dE-f_9q:password": "password",
+    "sec_Ab3dE-f_9q:username": "username",
+    "sec_x:password:username": null,
+    "sec_x:username:password": null,
+    "sec_x:password:": null,
+    "sec_x:token": null,
+    "sec_:password": null,
+    "x:password": null,
+    "sec_x": null,
+    "": null,
+    ":password": null,
+    " sec_x:password": null,
+    "sec_x:password\n": null,
+    "sec_x::password": null,
+    "sec_x:Password": null
+  }
+}
