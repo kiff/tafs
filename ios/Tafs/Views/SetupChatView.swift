@@ -1540,6 +1540,17 @@ struct SetupApproval: View {
                 }
                 .buttonStyle(.drivablePlain)
                 .accessibilityHint(Words.Coach.showsApproval)
+            } else if state == .done, !replaced, let signed = signedCard {
+                // Opened again, an approval that signed a Card shows that Card in full, KIFF's draft at the version
+                // signed, with nothing to answer; a tap on its line folds it. planque's grant isn't shown here: it reads
+                // as it is now, and a later approval can widen it past what this one approved. As Android.
+                VStack(alignment: .leading, spacing: 8) {
+                    Button { withMotion(.easeOut(duration: 0.2)) { open = false } } label: {
+                        OutcomeLine(text: outcome(state, grant), tone: Theme.ok, mark: "checkmark.circle.fill")
+                    }
+                    .buttonStyle(.drivablePlain)
+                    signedCardView(signed)
+                }
             } else {
                 card(state, grant)
             }
@@ -1583,6 +1594,22 @@ struct SetupApproval: View {
     /// the folded line says was approved, never the connection's words for its key. None for a
     /// card with no Card, or one whose draft isn't read.
     private var signedCardLines: [String] { signedCard?.lines ?? [] }
+
+    /// The Card an approval signed, as KIFF's draft at the version signed: its title and its lines, as the card drew them
+    /// before the fingerprint. Nothing to answer.
+    private func signedCardView(_ draft: KIFFClient.AgentDraft) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Eyebrow(text: draft.cardTitle)
+            ForEach(Array(draft.lines.enumerated()), id: \.offset) { _, line in
+                Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.ink)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.raised)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityIdentifier("approval.signed-card")
+    }
 
     /// The draft whose Card this card's approval signed: KIFF says it took the signature
     /// (`AgentDraft.signed`), which is stricter than the card reading as answered, and it holds
