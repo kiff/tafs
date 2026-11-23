@@ -151043,6 +151043,12 @@
             "value": "Bu Chrome'a geçenler değişti, bu yüzden hiçbir şey eşleştirilmedi. Kontrol et ve yeniden eşleştir."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس Chrome پر منتقل ہونے والی چیزیں بدل گئیں، اس لیے کچھ نہیں جوڑا گیا۔ اسے دیکھیں اور دوبارہ جوڑیں۔"
+          }
+        },
         "vi": {
           "stringUnit": {
             "state": "translated",
