@@ -359,16 +359,25 @@ aws iam put-role-policy --role-name "$RELEASE_ROLE" --policy-name read-upload-ke
   ]
 }"
 
-# The deletion sweep: every 5 minutes, EventBridge invokes tafs-cloud directly
-# with {"sweep":"deletions"}, so an accepted account deletion cut short (the
-# phone gone, planque or KIFF down) is finished without the phone. A URL
-# request can't take that shape, as for the upgrade.
+# The tick: every 5 minutes, EventBridge invokes tafs-cloud directly, once per
+# group of sweeps ({"sweep":"tick-1"} to "tick-5", runtime/src/cloud/tick.ts
+# GROUPS), so each group has its own timeout and an accepted account deletion
+# cut short (the phone gone, planque or KIFF down) is finished without the
+# phone. A URL request can't take that shape, as for the upgrade. The one
+# target that ran every sweep ({"sweep":"deletions"}) is removed, or a rerun
+# would run each sweep twice.
 aws events put-rule --name tafs-cloud-deletions --schedule-expression "rate(5 minutes)" --state ENABLED >/dev/null
 RULE_ARN=$(aws events describe-rule --name tafs-cloud-deletions --query Arn --output text)
 aws lambda add-permission --function-name "$FN" --statement-id deletions-sweep --action lambda:InvokeFunction \
   --principal events.amazonaws.com --source-arn "$RULE_ARN" >/dev/null 2>&1 || true
-aws events put-targets --rule tafs-cloud-deletions \
-  --targets "[{\"Id\":\"tafs-cloud\",\"Arn\":\"$FN_ARN\",\"Input\":\"{\\\"sweep\\\":\\\"deletions\\\"}\"}]" >/dev/null
+TICK_TARGETS=""
+for g in tick-1 tick-2 tick-3 tick-4 tick-5; do
+  TICK_TARGETS="$TICK_TARGETS${TICK_TARGETS:+,}{\"Id\":\"tafs-cloud-$g\",\"Arn\":\"$FN_ARN\",\"Input\":\"{\\\"sweep\\\":\\\"$g\\\"}\"}"
+done
+aws events put-targets --rule tafs-cloud-deletions --targets "[$TICK_TARGETS]" >/dev/null
+if [ -n "$(aws events list-targets-by-rule --rule tafs-cloud-deletions --query "Targets[?Id=='tafs-cloud'].Id" --output text)" ]; then
+  aws events remove-targets --rule tafs-cloud-deletions --ids tafs-cloud >/dev/null
+fi
 
 # The consent sweep, once, now: a taf whose runs have no one's consent to AI use has its schedules switched off
 # before any fires, rather than at the 5-minute sweep (runtime/src/cloud/consent.ts). Cheap to repeat.
