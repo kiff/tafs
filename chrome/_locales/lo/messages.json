@@ -82,5 +82,11 @@
   "taf_error": { "message": "ມັນບໍ່ໄປຮອດ $TAF$. ລອງໃໝ່ອີກຄັ້ງ.", "placeholders": { "taf": { "content": "$1" } } },
   "tafs_not_read": { "message": "ບໍ່ສາມາດອ່ານ tafs ຂອງທ່ານໄດ້. ລອງໃໝ່ອີກຄັ້ງ." },
   "no_taf_here": { "message": "ຍັງບໍ່ມີ taf ເຮັດວຽກໃນ Chrome ນີ້." },
-  "setup_taf": { "message": "ຕັ້ງ taf ໃໝ່ສຳລັບເວັບໄຊນີ້" }
+  "setup_taf": { "message": "ຕັ້ງ taf ໃໝ່ສຳລັບເວັບໄຊນີ້" },
+  "hand_title": { "message": "ເຖິງຕາຂອງທ່ານ", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "taf ເວົ້າວ່າ", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "ສະແດງໃຫ້ເບິ່ງ", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "ສຳເລັດ", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "ບໍ່ແມ່ນດຽວນີ້", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "ພິມສະເພາະບ່ອນທີ່ທ່ານເຊື່ອໃຈໜ້ານີ້ເທົ່ານັ້ນ.", "description": "Fixed line on that card under the taf's words" }
 }
