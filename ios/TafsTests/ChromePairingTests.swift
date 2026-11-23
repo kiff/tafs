@@ -311,3 +311,101 @@ final class ChromeConnectionsTests: XCTestCase {
         XCTAssertEqual(ChromeReplace.carried(from: manyChrome, in: many, phoneKey: phone).count, 50, "the extension keeps at most 50 connections")
     }
 }
+
+/// A connection a re-pairing carried keeps no signature of its own; the Chrome's `paired_with` (the pairing as this phone signed it) vouches
+/// for it, and a later re-pairing carries it again only when this phone verifies that, with its own key, for exactly its sites.
+final class ChromePairedWithTests: XCTestCase {
+    private let phone = P256.Signing.PrivateKey()
+    private var phoneDER: Data { phone.publicKey.derRepresentation }
+    private let keyHash = String(repeating: "a", count: 64)
+
+    private func confirmation(phoneKey: Data? = nil, hash: String? = nil, name: String = "Mac",
+                              carried: [(String, [String])] = [("g1", ["wikipedia.org"])]) -> ChromePairing.Confirmation {
+        var c = ChromePairing.Confirmation(chromeKeySHA256: hash ?? keyHash, name: name, phoneKey: ChromePairing.base64URL(phoneKey ?? phoneDER), phoneProof: "pp")
+        c.carried = carried.map { ChromePairing.Carried(grant: $0.0, sites: $0.1) }
+        return c
+    }
+
+    /// planque's `paired_with` for a pairing this phone signed: alone, or beside KIFF's request.
+    private func pairedWith(_ c: ChromePairing.Confirmation, signer: P256.Signing.PrivateKey? = nil, together: (String, String, String)? = nil,
+                            tamper: Bool = false) throws -> PlanqueClient.Chrome.PairedWith {
+        let bytes = try ChromePairing.signedBytes(pairing: "pr_1", c)
+        let key = signer ?? phone
+        let signature: P256.Signing.ECDSASignature
+        if let (tenant, signedAt, kiff) = together {
+            signature = try key.signature(for: RequestsTogether.message(tenant: tenant, signedAt: signedAt, RequestsTogether.hash(bytes), kiff))
+        } else {
+            signature = try key.signature(for: bytes)
+        }
+        let carried = (c.carried ?? []).map { "{\"grant\":\"\($0.grant)\",\"sites\":[" + $0.sites.map { "\"\($0)\"" }.joined(separator: ",") + "]}" }.joined(separator: ",")
+        var json = "{\"body\":{\"pairing\":\"pr_1\",\"chrome_key_sha256\":\"\(c.chromeKeySHA256)\",\"name\":\"\(tamper ? "Other" : c.name)\",\"phone_key\":\"\(c.phoneKey)\",\"phone_proof\":\"pp\",\"carried\":[\(carried)]},\"phone_sig\":\"\(ChromePairing.base64URL(signature.rawRepresentation))\""
+        if let (tenant, signedAt, kiff) = together { json += ",\"tenant\":\"\(tenant)\",\"signed_at\":\"\(signedAt)\",\"kiff_request_sha256\":\"\(kiff)\"" }
+        json += "}"
+        return try JSONDecoder().decode(PlanqueClient.Chrome.PairedWith.self, from: Data(json.utf8))
+    }
+
+    private func vouches(_ p: PlanqueClient.Chrome.PairedWith, key: Data? = nil, chromeKey: String? = nil, grant: String = "g1", sites: [String] = ["wikipedia.org"]) -> Bool {
+        ChromePairing.pairingVouches(p, phoneKey: key ?? phoneDER, chromeKeySHA256: chromeKey, grant: grant, sites: sites)
+    }
+
+    func testAPairingThisPhoneSignedVouchesForTheConnectionItCarriedWithExactlyItsSites() throws {
+        let alone = try pairedWith(confirmation())
+        XCTAssertTrue(vouches(alone))
+        XCTAssertTrue(vouches(alone, chromeKey: keyHash), "planque lists the Chrome's key, and the body was made for it")
+        let kiff = String(repeating: "b", count: 64)
+        XCTAssertTrue(vouches(try pairedWith(confirmation(), together: ("t_1", "2026-11-23T01:00:00Z", kiff))), "the one-fingerprint form")
+    }
+
+    func testAnythingElseVouchesForNothing() throws {
+        let good = try pairedWith(confirmation())
+        XCTAssertFalse(vouches(good, grant: "g2"), "a connection it didn't carry")
+        XCTAssertFalse(vouches(good, sites: ["wikipedia.org", "evil.example"]), "more sites than it carried")
+        XCTAssertFalse(vouches(good, sites: ["other.example"]), "other sites")
+        XCTAssertFalse(vouches(good, sites: []), "no sites")
+        XCTAssertFalse(vouches(good, chromeKey: String(repeating: "c", count: 64)), "made for another Chrome's key")
+        XCTAssertFalse(vouches(good, key: P256.Signing.PrivateKey().publicKey.derRepresentation), "another phone's key")
+        XCTAssertFalse(vouches(try pairedWith(confirmation(), tamper: true)), "a body changed after it was signed")
+        let other = P256.Signing.PrivateKey()
+        XCTAssertFalse(vouches(try pairedWith(confirmation(), signer: other)), "a signature by another key")
+        XCTAssertFalse(vouches(try pairedWith(confirmation(phoneKey: other.publicKey.derRepresentation), signer: other)), "signed by another phone, named for it")
+        XCTAssertFalse(vouches(try pairedWith(confirmation(carried: [("g1", ["wikipedia.org", "evil.example"])]))), "sites that differ from the connection's")
+        // The one-fingerprint form: its three fields travel together, KIFF's hash is its own and 64 lower-case hex digits, never this body's own.
+        let own = RequestsTogether.hash(try ChromePairing.signedBytes(pairing: "pr_1", confirmation()))
+        XCTAssertFalse(vouches(try pairedWith(confirmation(), together: ("t_1", "2026-11-23T01:00:00Z", own))), "paired with itself")
+        XCTAssertFalse(vouches(try pairedWith(confirmation(), together: ("t_1", "2026-11-23T01:00:00Z", "ABC"))), "not a hash")
+        XCTAssertFalse(vouches(try pairedWith(confirmation(), together: ("", "2026-11-23T01:00:00Z", String(repeating: "b", count: 64)))), "no tenant")
+    }
+
+    /// A malformed `paired_with` is none, and the Chromes list still reads.
+    func testAMalformedPairedWithIsNoneAndTheListStillReads() throws {
+        let json = #"[{"chrome_id":"chr_1","name":"Mac","paired_with":{"body":"nope"}},{"chrome_id":"chr_2","name":"Win","key_sha256":"abc"}]"#
+        let chromes = try JSONDecoder().decode([PlanqueClient.Chrome].self, from: Data(json.utf8))
+        XCTAssertEqual(chromes.map(\.id), ["chr_1", "chr_2"])
+        XCTAssertNil(chromes[0].pairedWith)
+        XCTAssertEqual(chromes[1].keySHA256, "abc")
+    }
+
+    /// A connection carried before moves again only when the Chrome that holds it has a `paired_with` that vouches for it.
+    func testACarriedConnectionMovesAgainOnlyWhenThePairingVouchesForIt() throws {
+        func grant(_ id: String, carriedBy: String?, sites: [String] = ["wikipedia.org"], status: String = "connected") throws -> PlanqueClient.Grant {
+            let list = "[" + sites.map { "\"\($0)\"" }.joined(separator: ",") + "]"
+            let by = carriedBy.map { ",\"chrome_sites_carried\":\"\($0)\"" } ?? ""
+            let json = "{\"id\":\"\(id)\",\"status\":\"\(status)\",\"text\":\"\",\"digest\":\"d\",\"events\":[],\"request\":{\"server\":\"s\",\"agent\":\"a\",\"tools\":[],\"browser\":{\"driver\":\"extension\",\"chrome\":\"chr_1\",\"sites\":\(list)}}\(by)}"
+            return try JSONDecoder().decode(PlanqueClient.Grant.self, from: Data(json.utf8))
+        }
+        func chrome(_ pairedWith: PlanqueClient.Chrome.PairedWith?, sites: [String] = ["wikipedia.org"]) throws -> PlanqueClient.Chrome {
+            var c = try JSONDecoder().decode(PlanqueClient.Chrome.self, from: Data(#"{"chrome_id":"chr_1","name":"Mac"}"#.utf8))
+            c.connections = [.init(grant: "g1", name: "Wiki", sites: sites)]
+            c.pairedWith = pairedWith
+            return c
+        }
+        let vouching = try pairedWith(confirmation())
+        XCTAssertEqual(ChromeReplace.carried(from: try chrome(vouching), in: [try grant("g1", carriedBy: "chr_1")], phoneKey: phoneDER),
+                       [ChromePairing.Carried(grant: "g1", sites: ["wikipedia.org"])])
+        XCTAssertEqual(ChromeReplace.carried(from: try chrome(nil), in: [try grant("g1", carriedBy: "chr_1")], phoneKey: phoneDER), [], "no pairing kept")
+        XCTAssertEqual(ChromeReplace.carried(from: try chrome(vouching), in: [try grant("g1", carriedBy: "chr_other")], phoneKey: phoneDER), [], "carried by another Chrome")
+        XCTAssertEqual(ChromeReplace.carried(from: try chrome(vouching), in: [try grant("g1", carriedBy: nil)], phoneKey: phoneDER), [], "no signature at all")
+        XCTAssertEqual(ChromeReplace.carried(from: try chrome(vouching, sites: ["wikipedia.org", "evil.example"]), in: [try grant("g1", carriedBy: "chr_1", sites: ["wikipedia.org", "evil.example"])], phoneKey: phoneDER), [], "sites it didn't carry")
+        XCTAssertEqual(ChromeReplace.carried(from: try chrome(vouching), in: [try grant("g1", carriedBy: "chr_1", status: "pending")], phoneKey: phoneDER), [], "not a live connection")
+    }
+}

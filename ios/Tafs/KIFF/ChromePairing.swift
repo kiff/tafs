@@ -68,7 +68,7 @@ enum ChromePairing {
 
     /// A connection a re-pairing moves to the new Chrome, with the sites the owner approved for it ("Your Chrome" 1). It is
     /// inside what the phone signs for the extension, so planque can't add, drop or change one.
-    struct Carried: Encodable, Equatable {
+    struct Carried: Codable, Equatable {
         let grant: String
         let sites: [String]
     }
@@ -138,6 +138,44 @@ enum ChromePairing {
             throw PlanqueClient.PlanqueError.digestMismatch
         }
         return try rawSignature(fromDER: try sign(try sitesBytes(chromeID: chrome, grant: grant, sites: sites)))
+    }
+
+    /// Whether a Chrome's `paired_with` (the re-pairing that carried connections to it, as this phone signed it) **vouches for** one
+    /// connection: it was signed by this phone's own approval key (`phoneKey`, SPKI DER; the body names the same key), its body names
+    /// the connection with **exactly** these sites, its signature holds (alone, `tafs-chrome/pair/v1`; or beside KIFF's request under
+    /// one fingerprint, `kiff.requests.v1`, never paired with itself), and, when planque lists the Chrome's key (`chromeKeySHA256`),
+    /// the body was made for that key. Anything else vouches for nothing, and the connection ends with the old Chrome as before.
+    /// The same rule planque applies (`ChromePairedWith.vouches`), checked here with the phone's own key.
+    static func pairingVouches(_ pairedWith: PlanqueClient.Chrome.PairedWith, phoneKey: Data, chromeKeySHA256: String?,
+                               grant: String, sites: [String]) -> Bool {
+        let body = pairedWith.body
+        guard !phoneKey.isEmpty, body.phoneKey == base64URL(phoneKey), !sites.isEmpty,
+              body.carried.contains(where: { $0.grant == grant && $0.sites == sites }) else { return false }
+        if let chromeKeySHA256, !chromeKeySHA256.isEmpty, body.chromeKeySHA256 != chromeKeySHA256 { return false }
+        guard let key = try? P256.Signing.PublicKey(derRepresentation: phoneKey),
+              let raw = base64URLDecoded(pairedWith.phoneSig),
+              let signature = try? P256.Signing.ECDSASignature(rawRepresentation: raw),
+              let own = try? signedBytes(pairing: body.pairing, body) else { return false }
+        let together = [pairedWith.tenant, pairedWith.signedAt, pairedWith.kiffRequestSHA256].compactMap { $0 }.filter { !$0.isEmpty }
+        if together.isEmpty { return key.isValidSignature(signature, for: own) }
+        guard together.count == 3, let tenant = pairedWith.tenant, let signedAt = pairedWith.signedAt, let kiff = pairedWith.kiffRequestSHA256,
+              kiff.count == 64, kiff.allSatisfy({ $0.isHexDigit && !$0.isUppercase }) else { return false }
+        let ownHash = RequestsTogether.hash(own)
+        guard ownHash != kiff else { return false }
+        return key.isValidSignature(signature, for: RequestsTogether.message(tenant: tenant, signedAt: signedAt, ownHash, kiff))
+    }
+
+    /// The bytes of a pairing body as `paired_with` carries it: the same label ‖ 0x00 ‖ JCS as the pairing the phone signed.
+    private static func signedBytes(pairing: String, _ body: PlanqueClient.Chrome.PairedWith.Body) throws -> Data {
+        let carried: JCS.Value = .array(body.carried.map { .object(["grant": .string($0.grant), "sites": .array($0.sites.map { .string($0) })]) })
+        let value: JCS.Value = .object([
+            "pairing": .string(pairing), "chrome_key_sha256": .string(body.chromeKeySHA256), "name": .string(body.name),
+            "phone_key": .string(body.phoneKey), "phone_proof": .string(body.phoneProof), "carried": carried,
+        ])
+        var out = Data(pairLabel.utf8)
+        out.append(0)
+        out.append(try JCS.canonical(value))
+        return out
     }
 
     /// Whether `signature` (raw r‖s, base64url) is this phone's own signature, by `publicKeyDER` (its approval key), over `sites` for
