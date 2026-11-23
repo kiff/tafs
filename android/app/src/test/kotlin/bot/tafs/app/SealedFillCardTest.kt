@@ -191,9 +191,53 @@ class SealedFillCardTest {
     val call = m.state.value.held.single()
     // Even over a limit "Allow this from now on" could change: a sealed fill is always held, and allowed only with its release.
     val overALimit = call.copy(breachOutcomes = listOf(bot.tafs.app.model.HoldAllow.ALLOWABLE.first()))
-    assertTrue(bot.tafs.app.model.HoldAllow.allowable(overALimit.copy(browser = overALimit.browser!!.copy(fill = null))))
+    assertTrue(overALimit.needsRelease)
+    assertTrue(bot.tafs.app.model.HoldAllow.allowable(overALimit.copy(needsRelease = false, browser = overALimit.browser!!.copy(fill = null))))
     assertFalse(bot.tafs.app.model.HoldAllow.allowable(overALimit))
     assertFalse(m.openAllowNow(overALimit))
+  }
+
+  /** A held call as KIFF sends it, with [browser] as its block's raw JSON. */
+  private fun heldWith(id: String, browser: String) =
+    """{"id":"$id","subject":"a-1","action":"browser_act","title":"A step","entity_id":"op_$id","proposal_id":"prop_$id","accounting_version":1,
+       "next_steps":[],"breaches":[],"arguments":{"op":"op_$id"},"created_at":"$t0","expires_at":"2099-01-01T00:00:00Z","browser":$browser}"""
+
+  @Test fun aFillThatCantBeDrawnStillCantBeAllowed() = runTest {
+    // A sealed fill with no site: the step's block can't be drawn, yet it's a fill, so it needs its release all the same.
+    val noSite = held(fill(sitesSig(listOf("shop.example")))).replace(""""site":"shop.example",""", """"site":"",""")
+    val m = model(noSite)
+    auth.asked.clear()
+    val call = m.state.value.held.single()
+    assertNull(call.browser)
+    assertTrue(call.needsRelease)
+    assertFalse(m.answer(call, Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+  }
+
+  @Test fun aBlockThatDoesntReadIsAFillAndHidesNoOtherHeldCall() = runTest {
+    val blocks = listOf(
+      "\"sealed\"" to true,
+      "[1]" to true,
+      """{"site":"shop.example","action_words":"Fill","sealed_fill":"sec_x:password"}""" to true,
+      """{"site":"shop.example","action_words":"Fill","fill":{"field_ref":"f1"}}""" to true,
+      """{"site":"shop.example","action_words":"Click","sealed_fill":null}""" to false,
+      "null" to false,
+    )
+    val all = blocks.mapIndexed { i, (b, _) -> heldWith("ce_$i", b) }.joinToString(",")
+    // An ordinary held call beside them stays shown, with its Refuse.
+    val m = model(all + "," + heldWith("ce_ok", "null"))
+    val held = m.state.value.held
+    assertEquals(blocks.size + 1, held.size)
+    blocks.forEachIndexed { i, (b, fill) ->
+      val call = held.single { it.kiffId == "ce_$i" }
+      assertEquals(b, fill, call.needsRelease)
+    }
+    // An unreadable one can't be allowed: nothing asked, nothing sent.
+    auth.asked.clear()
+    assertFalse(m.answer(held.single { it.kiffId == "ce_0" }, Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/me/card-exceptions/ce_0/approve-once").isEmpty())
   }
 
   @Test fun aSealedFillWithNoEndIsExpiredNotTenMinutes() = runTest {

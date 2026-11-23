@@ -7531,8 +7531,8 @@ class AppModel(
     // A sealed fill is allowed only with its release, made here behind its own fingerprint: never with the switch off, from a
     // notification's action or an approval window's tap (presigned), or by any other way round. Refusing it is always open.
     // Extra room would let it go on with no release at all, so it's never offered for one.
-    if (call.browser?.fill != null && (answer is Answer.ExtraRoom ||
-        answer is Answer.ApproveOnce && (!sealedReleaseOn || kiffId == null || presigned != null || confirmed || installed || approvedWithCard))
+    if (call.needsRelease && (answer is Answer.ExtraRoom ||
+        answer is Answer.ApproveOnce && (call.browser?.fill == null || !sealedReleaseOn || kiffId == null || presigned != null || confirmed || installed || approvedWithCard))
     ) {
       fail(Words.Chrome.releaseUnreadable)
       return false

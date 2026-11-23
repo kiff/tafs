@@ -609,7 +609,9 @@ signed over the vector's bytes. **Android's card is built, off too:**
   must take it and hand it to planque.**
 - **Never allowed without its release:** with the card off, a sealed fill is drawn as any step with Refuse only, and no other way
   of approving (a notification's action, an approval window's tap, an answer signed elsewhere, Extra room) allows it, and "Allow this from now on" is never offered for one (`HoldAllow.allowable`). A sealed fill with no
-  `expires_at` reads as expired. Tests: `SealedFillCardTest`.
+  `expires_at` reads as expired. **Whether a hold is a fill** (`HeldCall.needsRelease`) is read from its `browser` block as sent
+  (`TolerantBrowser`): a `sealed_fill` or `fill` that isn't null, or a block that isn't an object. So a fill whose block can't be
+  drawn (no site, say) still can't be allowed, and one bad block never hides the other held calls. Tests: `SealedFillCardTest`.
 
 ## A step handed to the person
 
