@@ -22,6 +22,7 @@
   "chrome.refused": "अर्को Chrome ले यो कोड प्रयोग गर्‍यो, त्यसैले केही जोडिएन। फेरि सुरु गर्नुहोस्।",
   "chrome.remove": "जोडी हटाउनुहोस्",
   "chrome.remove_named": "{name} को जोडी हटाउनुहोस्",
+  "chrome.replace_changed": "यो Chrome मा सर्ने कुरा बदलियो, त्यसैले केही पनि जोडिएन। जाँच गरेर फेरि जोड्नुहोस्।",
   "chrome.replace_moves": "यो Chrome मा सर्छ: {sites}",
   "chrome.replace_none": "नयाँ Chrome (कुनै प्रतिस्थापन गर्दैन)",
   "chrome.replace_title": "प्रतिस्थापन गर्छ",

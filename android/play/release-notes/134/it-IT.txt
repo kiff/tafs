@@ -1,0 +1,4 @@
+• Approvare una chiamata trattenuta quando la sua attività era già finita ora dice che non è stato eseguito nulla, con «Riprova» sul tuo messaggio.
+• Installare una versione che ferma un'attività in attesa della tua risposta lo dice, con «Riprova» sul suo messaggio.
+• Accedi di nuovo mostra prima l'approvazione della connessione, e riassociare un Chrome ricontrolla subito prima dell'impronta.
+• La chat di un taf viene letta meno spesso mentre aspetta, e per niente mentre l'app è in background.

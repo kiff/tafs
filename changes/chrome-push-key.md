@@ -1,0 +1,1 @@
+- **Chrome extension:** planque's push key is pinned in the build, so an idle extension is woken by a silent push instead of staying connected ([docs/chrome.md](../docs/chrome.md), "Waking the extension").

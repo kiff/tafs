@@ -1487,7 +1487,7 @@ screen is **"Conta"**.
   if that isn't clear (a short line, a number, a name), in the app's language; never in a data
   source's (a sheet, an email, a page, an account's locale: 18 Nov, an English message to a taf on a
   French Google account came back in French). A message a taf sends a customer keeps the customer's
-  language. Coach also writes what the app shows (questions, cards, a version's note, a taf's
+  language. **From the Chrome extension** (a request from its own origin, to the side panel's routes) the line names **no language for the person**: the extension sends its *browser's* language as `Accept-Language`, which says nothing about them (a French Chrome and an English owner: "Wiki lookup" came back in French, 23 Nov). The rule there is: the language of the message; if that isn't clear, the language of the conversation so far, else English. Coach also writes what the app shows (questions, cards, a version's note, a taf's
   summary) in the app's language. A line the person types that starts as one of tafs' own (`[tafs language]`, `[tafs time zone]`) is
   dropped from their message, so only tafs cloud's rule reaches the taf. A taf's message sent again under its `client_message_id` matches
   kiff/agents' digest with the line or without it (one sent before the line). For an account outside UTC, a

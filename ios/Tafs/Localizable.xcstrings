@@ -140835,6 +140835,251 @@
         }
       }
     },
+    "chrome.replace_changed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيّر ما ينتقل إلى هذا المتصفح، فلم يُقرَن شيء. راجعه وأقرِن من جديد."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Chrome-a keçənlər dəyişdi, ona görə heç nə cütləşdirilmədi. Yoxlayın və yenidən cütləşdirin."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Това, което преминава към този Chrome, се промени, затова нищо не беше сдвоено. Провери и сдвои отново."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই Chrome-এ যা সরে যায় তা বদলে গেছে, তাই কিছুই জোড়া লাগেনি। দেখে নিয়ে আবার জোড়া লাগান।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El que passa a aquest Chrome ha canviat, així que no s'ha aparellat res. Revisa-ho i torna a aparellar."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Co přejde do tohoto Chrome, se změnilo, takže se nic nespárovalo. Zkontroluj to a spáruj znovu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was zu diesem Chrome wechselt, hat sich geändert, deshalb wurde nichts gekoppelt. Prüf es und kopple erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What moves to this Chrome changed, so nothing was paired. Check it and pair again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que pasa a este Chrome cambió, así que no se vinculó nada. Revísalo y vuelve a vincular."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See, mis sellesse Chrome'i läheb, muutus, seega midagi ei seotud. Kontrolli ja seo uuesti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce qui passe à ce Chrome a changé : rien n'a été associé. Vérifiez et associez à nouveau."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מה שעובר ל-Chrome הזה השתנה, ולכן שום דבר לא צומד. בדוק וצמד שוב."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ono što prelazi na ovaj Chrome promijenilo se, pa ništa nije upareno. Provjeri i upari ponovno."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megváltozott, mi kerül át ebbe a Chrome-ba, ezért semmi sem lett párosítva. Nézd át, és párosítsd újra."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Այս Chrome տեղափոխվողը փոխվել է, ուստի ոչինչ չզուգակցվեց։ Ստուգեք և նորից զուգակցեք։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yang dipindahkan ke Chrome ini berubah, jadi tidak ada yang dipasangkan. Periksa lalu pasangkan lagi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciò che passa a questo Chrome è cambiato, quindi non è stato associato nulla. Controlla e associa di nuovo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このChromeに移るものが変わったため、ペアリングしませんでした。確認して、もう一度ペアリングしてください。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ამ Chrome-ზე გადასატანი შეიცვალა, ამიტომ არაფერი დაწყვილდა. გადაამოწმეთ და ხელახლა დააწყვილეთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "អ្វីដែលផ្លាស់ទៅ Chrome នេះបានផ្លាស់ប្តូរ ដូច្នេះគ្មានអ្វីត្រូវបានផ្គូផ្គងទេ។ សូមពិនិត្យ ហើយផ្គូផ្គងម្តងទៀត។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 Chrome으로 이동하는 항목이 바뀌어서 페어링하지 않았습니다. 확인하고 다시 페어링하세요."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ສິ່ງທີ່ຍ້າຍໄປ Chrome ນີ້ປ່ຽນໄປ, ຈຶ່ງບໍ່ໄດ້ຈັບຄູ່ຫຍັງ. ກວດເບິ່ງແລ້ວຈັບຄູ່ໃໝ່."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasikeitė, kas persikelia į šį Chrome, todėl niekas nesusieta. Patikrink ir susiek iš naujo."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mainījās tas, kas pāriet uz šo Chrome, tāpēc nekas netika savienots pārī. Pārbaudi un savieno pārī vēlreiz."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Она што преминува на овој Chrome се смени, па ништо не е спарено. Провери и спари повторно."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ Chrome руу шилжих зүйл өөрчлөгдсөн тул юу ч хослуулаагүй. Шалгаад дахин хослуулна уу."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो Chrome मा सर्ने कुरा बदलियो, त्यसैले केही पनि जोडिएन। जाँच गरेर फेरि जोड्नुहोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat naar deze Chrome gaat, is veranderd, dus er is niets gekoppeld. Controleer het en koppel opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To, co przechodzi do tego Chrome, się zmieniło, więc nic nie zostało powiązane. Sprawdź i powiąż ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O que passa para este Chrome mudou, por isso nada foi associado. Verifique e associe de novo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O que passa para este Chrome mudou, então nada foi emparelhado. Confira e emparelhe de novo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S-a schimbat ce trece la acest Chrome, așa că nu s-a asociat nimic. Verifică și asociază din nou."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Čo prejde do tohto Chrome, sa zmenilo, takže sa nič nespárovalo. Skontroluj to a spáruj znova."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kar preide v ta Chrome, se je spremenilo, zato ni bilo nič seznanjeno. Preveri in seznani znova."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajo që kalon te ky Chrome ndryshoi, prandaj nuk u çiftua asgjë. Kontrolloje dhe çifto përsëri."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ono što prelazi na ovaj Chrome promenilo se, pa ništa nije upareno. Proveri i upari ponovo."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สิ่งที่ย้ายมายัง Chrome นี้เปลี่ยนไป จึงยังไม่ได้จับคู่ ตรวจสอบแล้วจับคู่อีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Chrome'a geçenler değişti, bu yüzden hiçbir şey eşleştirilmedi. Kontrol et ve yeniden eşleştir."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Những gì chuyển sang Chrome này đã thay đổi nên chưa ghép đôi gì cả. Hãy kiểm tra rồi ghép đôi lại."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要轉移到這個 Chrome 的內容已變更，所以沒有配對。請確認後再配對一次。"
+          }
+        }
+      }
+    },
     "chrome.replace_moves": {
       "extractionState": "manual",
       "localizations": {

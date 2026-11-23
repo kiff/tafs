@@ -37,12 +37,12 @@ class ContinueHeldTest {
        "parameters":{"amount":15000},"parameter_units":{"amount":{"unit":"EUR","scale":2}},"arguments":{"payment_intent":"pi_1"},
        "created_at":"2026-10-28T09:00:00Z","expires_at":"2099-01-01T00:00:00Z"}"""
 
-  private fun reads(home: String = """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"waiting","card":{"ids":["c1"],"active":true}}],"others":[{"name":"Billing bot","kiff_agent":"billing-x","color":2,"state":"waiting","card":{"ids":["c9"],"active":true}}],"removing":[]}""", exceptions: String = held) {
+  private fun reads(home: String = """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"waiting","card":{"ids":["c1"],"active":true}}],"others":[{"name":"Billing bot","kiff_agent":"billing-x","color":2,"state":"waiting","card":{"ids":["c9"],"active":true}}],"removing":[]}""", exceptions: String = held, thread: String = """{"messages":[]}""") {
     transport.answer("GET /v1/me", 200, me)
     transport.answer("GET /v1/home", 200, home)
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[$exceptions]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
-    transport.answer(conversation, 200, """{"messages":[]}""")
+    transport.answer(conversation, 200, thread)
     transport.answer("POST /v1/me/card-exceptions/ce_1/approve-once", 200, "{}")
     transport.answer("POST /v1/me/card-exceptions/ce_1/reject", 200, "{}")
   }
@@ -104,6 +104,29 @@ class ContinueHeldTest {
     runCurrent()
     assertEquals("KIFF has it", 1, transport.requestsTo("POST /v1/me/card-exceptions/ce_1/approve-once").size)
     assertEquals(null, m.state.value.lastError)
+  }
+
+  /**
+   * The yes landed after the run that waited on the call had ended (tafs cloud's 404 `run_ended`): nothing ran, and the owner is
+   * told so in tafs cloud's words, with Retry on their last message and nothing working, never silence (the owner's panel test).
+   */
+  @Test fun anApprovalAfterItsRunEndedSaysNothingRanAndOffersRetry() = runTest {
+    reads(thread = """{"messages":[{"at":"2026-10-28T08:59:00Z","from":"owner","text":"Refund pi_1","session":"s1"}]}""")
+    transport.answer(goOn, 404, """{"error":"no run of this taf waits on that held call","code":"run_ended","words":"That run had ended, so nothing ran."}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    runCurrent()
+    assertTrue(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
+    runCurrent()
+    assertEquals("KIFF has the answer", 1, transport.requestsTo("POST /v1/me/card-exceptions/ce_1/approve-once").size)
+    assertEquals("That run had ended, so nothing ran.", m.state.value.lastError)
+    assertEquals(bot.tafs.app.model.ChatEnd.Failed("Refund pi_1", emptyList(), "That run had ended, so nothing ran."), m.state.value.chatEnded["refunds-1"])
+    assertFalse("nothing is working", m.state.value.thinking("refunds-1"))
+    // Nothing is followed after it: no run waits.
+    val reads = transport.requestsTo(conversation).size
+    advanceTimeBy(60_000)
+    runCurrent()
+    assertEquals(reads, transport.requestsTo(conversation).size)
   }
 
   @Test fun theAnswerStandsWhenTheNetworkDropsOnTheAsk() = runTest {

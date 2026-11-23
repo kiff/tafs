@@ -22,6 +22,7 @@
   "chrome.refused": "Ein anderes Chrome hat diesen Code benutzt, also wurde nichts gekoppelt. Fang noch einmal an.",
   "chrome.remove": "Entkoppeln",
   "chrome.remove_named": "{name} entkoppeln",
+  "chrome.replace_changed": "Was zu diesem Chrome wechselt, hat sich geändert, deshalb wurde nichts gekoppelt. Prüf es und kopple erneut.",
   "chrome.replace_moves": "Wechselt zu diesem Chrome: {sites}",
   "chrome.replace_none": "Ein neues Chrome (ersetzt keins)",
   "chrome.replace_title": "Ersetzt",

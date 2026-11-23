@@ -22,6 +22,7 @@
   "chrome.refused": "Šo kodu izmantoja cits Chrome, tāpēc nekas netika savienots pārī. Sāc no jauna.",
   "chrome.remove": "Atvienot",
   "chrome.remove_named": "Atvienot {name}",
+  "chrome.replace_changed": "Mainījās tas, kas pāriet uz šo Chrome, tāpēc nekas netika savienots pārī. Pārbaudi un savieno pārī vēlreiz.",
   "chrome.replace_moves": "Pāriet uz šo Chrome: {sites}",
   "chrome.replace_none": "Jauns Chrome (neko neaizstāj)",
   "chrome.replace_title": "Aizstāj",

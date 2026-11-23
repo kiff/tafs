@@ -16,6 +16,10 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const hu: Words = {
   work_working: "Dolgozik rajta",
   work_waiting_approval: "A jóváhagyásodra vár",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "Az a futás már véget ért, ezért semmi sem történt.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "A verzió telepítése leállította azt, ami a válaszodra várt: a visszatartott hívást visszavontuk, az üzenet pedig nem futott le. Újra elküldheted.",
   your_step_title: "A te lépésed",
   your_step_done: "Kész",
   your_step_skip: "Kihagyás",

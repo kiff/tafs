@@ -1,0 +1,4 @@
+• Genehmigst du einen zurückgehaltenen Aufruf erst nach dem Ende seiner Aufgabe, steht jetzt da, dass nichts lief, mit „Erneut versuchen“.
+• Stoppt eine installierte Version eine Aufgabe, die auf deine Antwort wartet, wird das gesagt, mit „Erneut versuchen“.
+• Erneut anmelden zeigt zuerst die Genehmigung der Verbindung; erneutes Koppeln eines Chrome prüft kurz vor dem Fingerabdruck noch einmal.
+• Der Chat eines taf wird seltener gelesen, solange er wartet, und gar nicht im Hintergrund.

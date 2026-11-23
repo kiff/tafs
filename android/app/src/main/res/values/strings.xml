@@ -616,6 +616,7 @@
     <string name="chrome_refused">Another Chrome used this code, so nothing was paired. Start again.</string>
     <string name="chrome_remove">Unpair</string>
     <string name="chrome_remove_named">Unpair %1$s</string>
+    <string name="chrome_replace_changed">What moves to this Chrome changed, so nothing was paired. Check it and pair again.</string>
     <string name="chrome_replace_moves">Moves to this Chrome: %1$s</string>
     <string name="chrome_replace_none">A new Chrome (replaces none)</string>
     <string name="chrome_replace_title">Replaces</string>

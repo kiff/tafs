@@ -16,6 +16,10 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const th: Words = {
   work_working: "กำลังทำอยู่",
   work_waiting_approval: "รอให้คุณอนุมัติ",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "การทำงานรอบนั้นสิ้นสุดไปแล้ว จึงไม่มีอะไรถูกดำเนินการ",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "การติดตั้งเวอร์ชันนี้หยุดสิ่งที่รอคำตอบของคุณไว้: การเรียกที่ถูกพักไว้ถูกถอนแล้ว และข้อความไม่ได้ถูกดำเนินการ คุณสามารถส่งอีกครั้งได้",
   your_step_title: "ขั้นตอนของคุณ",
   your_step_done: "เสร็จแล้ว",
   your_step_skip: "ข้าม",

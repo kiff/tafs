@@ -1,0 +1,1 @@
+- **Android:** re-pairing a Chrome a second time keeps the connections the first re-pairing carried, when the pairing this phone signed vouches for them, checked with its own key ([docs/android-app.md](../docs/android-app.md), "Pairing a Chrome").
