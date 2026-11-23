@@ -36,9 +36,10 @@ const handAnswers = new HandAnswers({
   set: (hands) => chrome.storage.session.set({ hands }),
 });
 
-async function sendHands() {
+async function sendHands(only) {
   if (!relay || !relay.connected || !kept.keys) return;
   for (const a of await handAnswers.all()) {
+    if (typeof only === "string" && a.hand !== only) continue; // one answer sent again at once, not every one that waits
     // A page over the relay's cap goes as Done with no page: the taf reads again.
     const answer = a.page && JSON.stringify(a.page).length > MAX_RESULT_BYTES ? { ...a, page: null } : a;
     relay.send(await handMessage(kept.keys.privateKey, answer));
@@ -49,7 +50,7 @@ const doneStore = {
   get: async () => (await chrome.storage.session.get("doneTabs")).doneTabs || {},
   set: (done) => chrome.storage.session.set({ doneTabs: done }),
 };
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(sendHands).catch(() => {}) });
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}) });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
@@ -110,7 +111,7 @@ async function connect() {
       get: async () => (await chrome.storage.session.get("nonces")).nonces || [],
       set: (entries) => chrome.storage.session.set({ nonces: entries }),
     };
-    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: async () => { await announcePush(); await sendHands(); }, onHandMessage: (m) => handAnswers.heard(m).then(sendHands), nonceStore });
+    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: async () => { await announcePush(); await sendHands(); }, onHandMessage: (m) => handAnswers.heard(m).then((again) => again && sendHands(again)), nonceStore });
   }
   relay.connect();
 }

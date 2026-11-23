@@ -57,7 +57,7 @@ test("an answer is kept until planque has it, resent as long as it hasn't, and s
   await answers.heard({ type: "hand_kept", hand: "h1" });
   assert.deepEqual((await answers.all()).map((a) => a.hand), ["h2"], "kept by planque: done with");
   await answers.add({ hand: "h3", outcome: "done", page: { read_id: "r" } });
-  await answers.heard({ type: "hand_refused", hand: "h3", code: "too_large" });
+  assert.equal(await answers.heard({ type: "hand_refused", hand: "h3", code: "too_large" }), "h3", "too large: that one answer goes again at once");
   assert.deepEqual((await answers.all()).find((a) => a.hand === "h3"), { hand: "h3", outcome: "done", page: null }, "too large: Done again, with no page");
   await answers.heard({ type: "hand_refused", hand: "h3", code: "too_large" });
   assert.equal((await answers.all()).some((a) => a.hand === "h3"), false, "and not a third time");
@@ -66,6 +66,12 @@ test("an answer is kept until planque has it, resent as long as it hasn't, and s
     await answers.heard({ type: "hand_refused", hand: "x_" + code, code });
     assert.equal((await answers.all()).some((a) => a.hand === "x_" + code), false, code);
   }
+  // planque couldn't store it just now: it stays to go again, and only a kept answer or a final refusal ends it.
+  await answers.add({ hand: "h4", outcome: "done", page: { read_id: "r" } });
+  assert.equal(await answers.heard({ type: "hand_refused", hand: "h4", code: "not_kept" }), null, "not_kept: nothing to send at once, so a failing store is no loop");
+  assert.deepEqual((await answers.all()).find((a) => a.hand === "h4"), { hand: "h4", outcome: "done", page: { read_id: "r" } }, "not_kept: it stays, page and all");
+  await answers.heard({ type: "hand_kept", hand: "h4" });
+  assert.equal((await answers.all()).some((a) => a.hand === "h4"), false, "then kept: done with");
   await answers.heard({ type: "hand_kept" });
   await answers.heard(null);
   assert.deepEqual((await answers.all()).map((a) => a.hand), ["h2"], "nothing else changes it");
