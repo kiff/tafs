@@ -5770,11 +5770,43 @@ enum Words {
     }
 
     /// A number's ordinal as the lines' language writes it: 21st, 21., 21e.
-    static func ordinal(_ n: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .ordinal
-        formatter.locale = locale
-        return formatter.string(from: NSNumber(value: n)) ?? String(n)
+    static func ordinal(_ n: Int) -> String { ordinal(n, locale: locale) }
+
+    /// `ordinal` in `locale`. Turkmen, Urdu, Hindi, Bengali and Mongolian are written here, from CLDR's ordinal classes, since
+    /// the system's ICU has no ordinal for some of them (English "6th" instead) and Hindi's is masculine, while the Card's
+    /// line is about a call (feminine). Every other language is the system's. The digits are the language's own, as numbers are.
+    static func ordinal(_ n: Int, locale: Locale) -> String {
+        let digits = NumberFormatter()
+        digits.numberStyle = .none
+        digits.locale = locale
+        let d = digits.string(from: NSNumber(value: n)) ?? String(n)
+        switch locale.language.languageCode?.identifier ?? "en" {
+        case "tk": return d + ([6, 9].contains(abs(n) % 10) || n == 10 ? "-njy" : "-nji")
+        case "ur": return d + "ویں"
+        case "hi":
+            switch n {
+            case 0: return d
+            case 1: return d + "ली"
+            case 2, 3: return d + "री"
+            case 4: return d + "थी"
+            case 6: return d + "ठी"
+            default: return d + "वीं"
+            }
+        case "bn":
+            switch n {
+            case 1, 5, 7, 8, 9, 10: return d + "ম"
+            case 2, 3: return d + "য়"
+            case 4: return d + "র্থ"
+            case 6: return d + "ষ্ঠ"
+            default: return d + "তম"
+            }
+        case "mn": return d + "-р"
+        default:
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .ordinal
+            formatter.locale = locale
+            return formatter.string(from: NSNumber(value: n)) ?? String(n)
+        }
     }
 
     /// A name's possessive in the lines' language (app/strings/generate.py, POSSESSIVE): "Refunds'",
