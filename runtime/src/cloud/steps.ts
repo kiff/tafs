@@ -468,9 +468,10 @@ export function coachGuard(text: unknown): boolean {
     // A call on something that waits for the person (rules to agree, a key to give): the person is already being asked, so the
     // step is not made, never "Coach couldn't connect" in red over a card that is waiting for them (Android 120, 19 Nov, Pipedrive).
     || /\bwaits[_ ]for[_ ]the[_ ]owner'?s?[_ ]approval\b|\bwaits_for_approval\b/i.test(line)
-    // Tools set on a grant that is still pending, with no sign-in of its own ("only a listed or connected grant takes tools;
-    // this one is pending"): the request already named its tools and its card waits for the owner, so Coach's extra tools call
-    // is its own to drop, never "Coach couldn't connect" in red over that card (23 Nov, a browser taf in the owner's Chrome).
+    // Tools set on a grant that is still pending ("only a listed or connected grant takes tools; this one is pending"): a
+    // browser grant whose card waits for the owner, or an app grant still waiting for its sign-in. Either way the request
+    // already named its tools and the person is already being asked, so Coach's extra tools call is its own to drop, never
+    // "Coach couldn't connect" in red over that card (23 Nov, a browser taf in the owner's Chrome).
     // Any other state (failed, revoked, ended) stays a real refusal.
     || /\bonly a listed or connected grant takes tools; this one is pending\b/i.test(line);
 }
