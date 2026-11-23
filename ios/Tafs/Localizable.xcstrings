@@ -150049,6 +150049,12 @@
             "value": "להשתמש ב-Chrome אחר"
           }
         },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दूसरा Chrome उपयोग करें"
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -150298,6 +150304,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "להעביר את החיבור הזה אל %1$@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस कनेक्शन को %1$@ पर ले जाएँ"
           }
         },
         "hr": {
