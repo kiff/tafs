@@ -19,7 +19,7 @@ class PublicText(unittest.TestCase):
 
     def test_ordinary_words_are_left(self):
         for line in ["2:05 PM", "AM/PM", "var lane: UInt64 = 0", "the owner's rule: approve on your phone",
-                     "dashlane.com", "a PM2.5 reading", "@team on line 3"]:
+                     "dashlane.com", "a PM2.5 reading"]:
             self.assertIsNone(public_text.named(line), line)
 
     def test_a_name_is_matched_by_its_hash_as_a_whole_word(self):
@@ -28,7 +28,7 @@ class PublicText(unittest.TestCase):
         try:
             self.assertEqual(public_text.named(f"(exampleteam-lane's read)"), name)
             self.assertIsNone(public_text.named("an exampleteam-lane-two note"))
-            self.assertIsNone(public_text.named("@exampleteam-lane"), "a GitHub mention is a login, where KEEP allows it")
+            self.assertEqual(public_text.named("@exampleteam-lane"), name, "an @mention is caught too, outside KEEP")
         finally:
             public_text.NAMES.discard(hashlib.sha256(name.encode()).hexdigest()[:16])
 

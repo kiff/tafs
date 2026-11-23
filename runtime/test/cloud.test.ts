@@ -2189,7 +2189,7 @@ describe("removing a taf", () => {
     expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
   });
 
-  // The apps no longer end a removed taf's connections themselves (build-qa on #833): a server without the route
+  // The apps no longer end a removed taf's connections themselves: a server without the route
   // can't be left out of the answer, or the removal reads as clean with its connections still live.
   it("stops, naming the connections, at a connection server that doesn't end them, and calls it for no other agent", async () => {
     const w = world();
