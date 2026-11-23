@@ -262,13 +262,13 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | 7 | The approval window (one Face ID or fingerprint, then taps) | done (`KIFFClient.window`) | done | approvals.md:182-190 |
 | 8 | A taf's loop card ("Still reading": Read on, Stop here) | not started: no `tafs-loop`, no `answerTafCard` | done | chat.md:579 |
 | 9 | Following a run to its end (long follow, a stale stream dropped) | done (tafs#1860) | done (1.22) | chat.md:515-525 |
-| 10 | Coach's answered card pinned | done | not started | chat.md:254 |
+| 10 | Coach's answered card pinned | done | done (tafs#1832) | chat.md:254 |
 | 11 | How tafs works: Chrome and the emailed code | done (tafs#1758) | done (tafs#1758, which carried #1759) | onboarding.md |
 | 12 | Coach's Start screen: its tools and Cards signed in one go | done (`start.words`, `/v1/connections/batch`) | done (1.20) | coach.md:140-159 |
 | 13 | An API door's address only ever on tafs cloud's own host (as Windows and Linux) | done (tafs#1768) | done (tafs#1770) | doors.md |
 | 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | done (tafs#1859) | done (tafs#1761) | android-app.md, "Pairing a Chrome" |
 | 15 | A re-pairing after a reinstall starts on the one Chrome alike | done (tafs#1780) | done (tafs#1781) | chrome.md, "Your Chrome" 1 |
-| 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | not started (designed: tafs#1786) | not started (designed: tafs#1786) | chrome.md, "The phone's release card" |
+| 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | not started (designed: tafs#1786) | built, off (tafs#1830, #1837): waits on planque handing a sealed fill and its release to the Chrome (KIFF checks the release on an allow since kiff/cloud#124) | chrome.md, "The phone's release card" |
 
 ## Your Chrome
 
