@@ -120291,7 +120291,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'appareil photo est désactivé pour tafs. Activez-le dans Réglages Système › Confidentialité et sécurité › Caméra (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Caméra)."
+            "value": "La caméra est désactivée pour tafs. Activez-la dans Réglages Système › Confidentialité et sécurité › Caméra (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Caméra)."
           }
         },
         "he": {
