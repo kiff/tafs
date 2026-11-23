@@ -1454,8 +1454,12 @@ signed for it. The Chromes and the connection are read again after it goes throu
 
 ## Repeated reads slow down and spread
 
-Where a screen repeats a server read (`PollPace`; docs/scale.md): a **taf's chat** while an answer is owed reads at 4 s for ten reads, 8 s for ten, 12 s for ten
-(`chatPollBudget`, 30 reads, about four minutes; skipped while a stream is live); **Setup's chat** reads at 1 s (3 s idle) for ten reads, then 2, 4 and at most 8 times
+Where a screen repeats a server read (`PollPace`; docs/scale.md): a **taf's chat follows a run to its end** as Android does
+(docs/chat.md, "A run Android follows to its end"; `followChat`): with no stream, while the taf is at work or owes an answer, every
+2.5 s for the first minute, 5 s to the third, 10 s to the sixth, then 15 s, for about 31 minutes (`PollPace.followDelay`, `chatFollowLimit`),
+then not again until the owner writes; a run at work that nothing here follows is picked back up by its stream (`resumeChat`); with a
+stream open, the thread is still read every 30 s (`chatStreamCheck`), and once tafs cloud says nothing is at work and the live answer has
+stood more than 15 s, it goes and the quiet stream is closed (`dropStaleLive`); **Setup's chat** reads at 1 s (3 s idle) for ten reads, then 2, 4 and at most 8 times
 that, and a card still waiting on its grant keeps the read going at the base pace (`PollPace.setupWait`); **People** reads on open and on pull-to-refresh, then every minute while it
 changes and slower (up to five minutes) while the answers are the same, and **not while the app isn't in front**. Every wait is up to a fifth shorter, never
 longer, so phones that started together don't read together. **Coming back to the app reads a chat's or Setup's thread once, at once** (not after the next slowed-down wait). A stream or a push, where there is one, is what tells a screen of a change; this is only the fallback.
