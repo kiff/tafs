@@ -164,7 +164,7 @@ class PairingTest {
     assertEquals(bot.tafs.app.model.Words.Settings.Devices.pairOnlyNow, lines[4])
   }
 
-  // A phone always signs in with KIFF itself, so only a tablet offers being added from the person's phone (the owner, 16 Nov).
+  // A phone always signs in with KIFF itself, so only a tablet offers being added from the person's phone.
   @Test fun onlyATabletOffersBeingAddedFromThePersonsPhone() {
     assertFalse(bot.tafs.app.views.offersPairSignIn(tablet = false))
     assertTrue(bot.tafs.app.views.offersPairSignIn(tablet = true))
