@@ -128,8 +128,10 @@ function's CloudWatch logs.
 The scheduled tick (every 5 minutes) logs one line per sweep (`tick.ts`): `{event: "sweep", name,
 accounts, ms}`, and `failed: true` when the sweep threw, which ends that tick. `name` is the
 sweep's (`deletions`, `late`, `briefs`, …) and `accounts` how many accounts with tafs that sweep
-was given: the tick reads them once, and an account the deletions sweep erased is not given to
-the sweeps after it. A tick that grows toward the function's timeout shows which sweep grew; one that stops
+was given: the tick reads them once, leaves out an account whose deletion is accepted, and an
+account the deletions sweep erased is not given to the sweeps after it. The 5-minute rule sends one
+event per group (`tick-1` … `tick-5`, `GROUPS` in `tick.ts`), each its own invocation, so each
+group has the whole timeout; `{"sweep":"deletions"}` runs every sweep in one, as before. A tick that grows toward the function's timeout shows which sweep grew; one that stops
 partway shows where. It never logs an account, a taf or an error's words.
 
 Each of Coach's tool calls adds one line (`called` in `coach.ts`): `{event: "coach_tool", tool,
