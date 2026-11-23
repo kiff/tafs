@@ -4940,6 +4940,7 @@ final class AppModel: ObservableObject {
             let sw = try await cloud.beginSwitch(c.id, version: version.n, redraft: redraft, stopBlocking: stopBlocking)
             guard gen == accountGeneration else { return nil }
             switches[tafID] = sw
+            switchStopped(tafID, sw)
             staleVersionCards[tafID] = nil
             return sw
         } catch let error as TafsCloud.CloudError where error.status == 409 && !error.blocking.isEmpty {
@@ -5025,6 +5026,7 @@ final class AppModel: ObservableObject {
         }
         guard gen == accountGeneration else { return false }
         switches[tafID] = sw
+        switchStopped(tafID, sw)
         if let id = sw.draft {
             // Nothing shown, nothing signed.
             guard shownDraft != nil else { return false }
@@ -6087,6 +6089,23 @@ final class AppModel: ObservableObject {
         guard let words, !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         lastError = words
         guard let text = chats[tafID]?.last(where: { $0.from == .owner })?.text, !text.isEmpty else { return }
+        chatStates[tafID, default: ChatState()].awaiting = nil
+        chatStates[tafID]?.ended = .failed(retry: text)
+        chatStates[tafID]?.endedRun = nil
+        chatStates[tafID]?.wentThrough = []
+        chatStates[tafID]?.failedWhy = words
+    }
+
+    /// A switch stopped tasks that waited on the owner's answer (tafs cloud's `stopped`): the chat says so, in tafs cloud's words, with Retry
+    /// on the owner's last message of a stopped session (one tap, never by itself). A switch that stopped nothing waiting says nothing.
+    func switchStopped(_ tafID: UUID, _ sw: TafsCloud.Switching) {
+        guard !sw.stopped.isEmpty, let words = sw.stoppedWords, !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        lastError = words
+        let sessions = Set(sw.stopped.map(\.session))
+        let owner = (chats[tafID] ?? []).filter { $0.from == .owner }
+        // Only a message of a stopped session: with none loaded, the words alone, never another session's message (a message that
+        // already ran must not be sent twice).
+        guard let text = owner.last(where: { sessions.contains($0.session) })?.text, !text.isEmpty else { return }
         chatStates[tafID, default: ChatState()].awaiting = nil
         chatStates[tafID]?.ended = .failed(retry: text)
         chatStates[tafID]?.endedRun = nil

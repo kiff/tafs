@@ -397,6 +397,9 @@ taf wrote before it, never by clock alone (`chatItems`, `placed`, `heldAfterItsW
   ended, so the call never ran), the app says so in its `words`, never silence: the chat shows the
   line a run that failed part-way shows, with Retry on the owner's last message, and the screen they
   answered on shows the same words. Any other refusal is left to the alert and the hold's expiry, as before.
+- **A version that goes in can stop a task that waits on the owner's answer** (`POST …/versions/{n}/switch` with `stop_blocking`, from the owner's approval
+  of a version's Card): tafs cloud's answer then names it (`stopped: [{run, session}]`, with `words`), and the app says so in the same
+  line, with Retry on the owner's last message of that session, never silence. A switch that stopped nothing waiting says nothing.
 
 ## Cards that wait for an answer
 
