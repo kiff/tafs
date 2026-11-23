@@ -177,6 +177,15 @@ class SealedFillCardTest {
     assertTrue(transport.requestsTo(approve).isEmpty())
   }
 
+  @Test fun extraRoomNeverLetsASealedFillGoOn() = runTest {
+    val m = model(held(fill(sitesSig(listOf("shop.example")))))
+    auth.asked.clear()
+    assertFalse(m.answer(m.state.value.held.single(), Answer.ExtraRoom))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/me/card-exceptions/ce_1/change-card").isEmpty())
+    assertEquals(Words.Chrome.releaseUnreadable, m.state.value.lastError)
+  }
+
   @Test fun aSealedFillWithNoEndIsExpiredNotTenMinutes() = runTest {
     val m = model(held(fill(sitesSig(listOf("shop.example")))).replace(""","expires_at":"2099-01-01T00:00:00Z"""", ""))
     val call = m.state.value.held.single()

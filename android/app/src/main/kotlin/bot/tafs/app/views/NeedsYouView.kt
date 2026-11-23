@@ -333,7 +333,8 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
     val fill = call.browser?.takeIf { bot.tafs.app.kiff.SealedRelease.ENABLED && it.fill != null }
     val fillRefused = fill?.let { LocalFillRefusal.current?.invoke(call) }
     // A sealed fill while the card is off: drawn as any step, and only Refuse, since it can't be allowed without its release.
-    val fillOff = fill == null && call.browser?.fill != null
+    // Over a total, Extra room would let a sealed fill go on with no release: Refuse only there too.
+    val fillOff = call.browser?.fill != null && (fill == null || !call.approvableOnce)
     if (fill != null) SealedFillBlock(fill, fillRefused) else call.browser?.let { BrowserStepBlock(it) }
     if (fillOff) Text(Words.Chrome.releaseUnreadable, style = scaled(13, color = Theme.soft))
     // The taf's line on why, under its own heading: the taf's words, from text a customer wrote, drawn as plain text and never in
