@@ -1183,6 +1183,27 @@ final class TafsCloud {
         /// The taf's `ask_coach` cards, the settings it hands to Coach (kiff/tafs#476, gap 15):
         /// the only cards of a taf's own thread the app draws.
         var askCoach: [AskCoachCard] = []
+        /// The latest run ended without an answer (`ai_unavailable`, or an uncoded `ERROR`): tafs
+        /// cloud's words for it, drawn as the chat's last line. As Android's `Thread.failed`.
+        var failed: RunFailed? = nil
+    }
+
+    /// A run that ended without an answer, in tafs cloud's words (never the agent's).
+    struct RunFailed: Equatable {
+        let run: String
+        let words: String
+
+        /// `failed` as the thread sends it: `{run, code, words}`. One with no words, or of another
+        /// shape, is no line, never the thread with it.
+        struct Lenient: Decodable {
+            let failed: RunFailed?
+            init(from decoder: Decoder) throws {
+                struct Wire: Decodable { let run: String?; let words: String? }
+                let w = try? Wire(from: decoder)
+                let words = w?.words?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                failed = words.isEmpty ? nil : RunFailed(run: w?.run ?? "", words: words)
+            }
+        }
     }
 
     /// A taf's card handing a setting to Coach (kiff/tafs#476, gap 15): the owner's request in
@@ -1285,10 +1306,12 @@ final class TafsCloud {
             /// `cost_cap`, `max_token`, `refused`); `capped` carries the two caps alone, for older apps.
             var stopped: LenientCap? = nil
             var components: [AskCoachCard.Lenient]? = nil
+            var failed: RunFailed.Lenient? = nil
         }
         let r: Response = try await send("GET", path)
         return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run, steering: r.steering?.steering,
-                      capped: r.stopped?.capped ?? r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.card))
+                      capped: r.stopped?.capped ?? r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.card),
+                      failed: r.failed?.failed)
     }
 
     /// What tafs cloud did with a message written to the run at work.

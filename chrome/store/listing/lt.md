@@ -12,12 +12,12 @@ Leiskite savo tafs dirbti jūsų Chrome, tik leidžiamose svetainėse. Rizikingi
 
 • Susiekite šį „Chrome“ su telefonu: „tafs“ programėlėje atidarykite Paskyra › Chrome › Susieti Chrome ir įveskite rodomą kodą.
 • Taf dirba savo skirtukuose, jūsų matomoje skirtukų grupėje. Galite jį bet kada pristabdyti ar sustabdyti, o jis pristabdomas, kai paliečiate vieną jo skirtukų.
-• „tafs“ negali naudoti svetainės, kol jos neleidžiate „Chrome“, po vieną svetainę, kai užduočiai jos reikia.
+• „Chrome“ diegimo metu vieną kartą paprašo prieigos prie visų svetainių. „tafs“ dirba tik svetainėse, kurias nurodo kiekviena užduotis ir kurias jūs patvirtinate telefone.
 • Mokėjimas, užsakymo pateikimas ir išsaugoto prisijungimo pildymas visada laukia jūsų patvirtinimo telefone.
 • Jis skaito puslapį kaip tekstą ir formos laukus, be slaptažodžio, kortelės ir kodo laukų. Niekada neskaito kitų jūsų skirtukų ar istorijos.
 • Bankų, piniginių, slaptažodžių tvarkyklių, mokėjimų, sveikatos ir valdžios svetainės niekada nenaudojamos, nebent leidžiate vieną jų vienai užduočiai telefone.
 • Išsaugoti prisijungimai yra neprivalomi ir užantspauduoti šiame kompiuteryje. „tafs“ ir KIFF jų niekada nemato.
-• Kalbėkitės su Coach šoniniame skydelyje. Coach mato puslapį tik tada, kai spustelite Bendrinti šį puslapį, ir tada tik tą puslapį, pašalinus tuos pačius laukus.
+• Šoninė juosta rodo taf, kuris dirba šiame „Chrome“, ir jūs su juo kalbatės čia, kaip „tafs“ programėlėje. „Nustatyti naują taf šiai svetainei“ atidaro „Coach“, kuris mato puslapį tik tada, kai spustelite „Bendrinti šį puslapį“, ir tada tik tą puslapį, su tais pačiais pašalintais laukais.
 
 Tai, ką taf perskaito, keliauja dirbtiniam intelektui, vykdančiam jūsų užduotį, ir saugoma kartu su ta užduotimi. KIFF saugo puslapį prieš pakeitimą ir po jo ne ilgiau kaip 30 dienų. Įjungus ekrano kopijas, kiekvienas veiksmą atliekantis žingsnis taip pat saugo vieną puslapio ekrano kopiją, padarytą prieš pat veiksmą, paslėpus slaptažodžio, kortelės ir kodo laukus, ne ilgiau kaip 30 dienų. Matote ją tik tafs programėlėje, ir ji niekada nekeliauja dirbtiniam intelektui. Atsiejus ar pašalinus ištrinama tai, ką plėtinys saugo jūsų kompiuteryje.
 

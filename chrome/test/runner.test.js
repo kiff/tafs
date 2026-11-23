@@ -11,7 +11,7 @@ const SHOP = await signedSites(["shop.example"]);
 const PAYPAL = await signedSites(["paypal.com"]);
 
 /** A fake of the parts of Chrome's extension API the runner uses, recording every call. */
-function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFails = false, createFails = false } = {}) {
+function fakeChrome({ page = null, ownerWindow = null, groupFails = false, createFails = false } = {}) {
   const calls = [];
   const listeners = {};
   const on = (name) => ({ addListener: (f) => (listeners[name] = f) });
@@ -67,7 +67,6 @@ function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFa
         return ownerWindow;
       },
     },
-    permissions: { contains: async () => permitted },
     declarativeNetRequest: { updateSessionRules: async (o) => calls.push(["dnr", o]) },
     scripting: {
       executeScript: async (o) => {
@@ -319,15 +318,6 @@ test("when the tab can't be grouped in the owner's window, only the run's tab cl
   const tab = [...c.tabsMap.keys()][0];
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[tab]]);
   assert.ok(!c.calls.some((x) => x[0] === "windows.remove"), "the owner's window stays");
-});
-
-test("a site Chrome hasn't let the extension into waits for the owner's yes in the side panel", async () => {
-  const c = fakeChrome({ permitted: false });
-  const r = runner(c);
-  const out = await r.handle(step());
-  assert.equal(out.error.code, "needs_site_permission");
-  assert.deepEqual(r.state()[0].asks, ["shop.example"]);
-  assert.ok(!c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js"), "nothing read without it");
 });
 
 test("a run's tab is fenced by Chrome's own rules before it loads: only its sites, never plain http", async () => {
@@ -598,4 +588,111 @@ test("an act takes its picture first, a read never does, and a picture that fail
     assert.equal(done.error, undefined);
     assert.ok(c2.calls.some((x) => x[0] === "page" && x[1] === "act end"));
   }
+});
+
+// A step handed to the person (docs/chrome-panel.md): the taf says what it needs done in the page, the person does it, and Done or
+// Not now goes back to planque as its own answer. The extension acts for no one here.
+const FILLED = { read_id: "rd_h", url: "https://shop.example/pay", title: "Pay", text: "Pay now", fields: [{ ref: "f1", label: "Card number", kind: "card", masked: true }, { ref: "f2", label: "Name", kind: "text", value: "Ana Pérez" }, { ref: "f3", label: "Gift", kind: "checkbox", value: "checked" }], controls: [{ ref: "c1", label: "Pay now" }], links: [] };
+
+async function handing() {
+  const c = fakeChrome({ page: FILLED });
+  const answers = [];
+  let clock = 1_000_000;
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock, onHandAnswer: (a) => answers.push(a) });
+  await r.handle(step());
+  const hand = (extra = {}, words = "Fill in the card number, then tap Done") => ({ id: "h1", op: "hand", read_id: "rd_h", hand: { words, ref: "f1" }, ...extra });
+  return { c, r, answers, hand, tick: (ms) => (clock += ms), tab: () => [...c.tabsMap.keys()][0] };
+}
+
+test("a step handed to the person is answered at once as handed, and waits for them", async () => {
+  const { r, answers, hand } = await handing();
+  const out = await r.handle(step(hand()));
+  assert.deepEqual(out, { handed: true });
+  assert.deepEqual(r.state()[0].hand, { id: "h1", words: "Fill in the card number, then tap Done", ref: true });
+  assert.deepEqual(answers, [], "nothing is answered for the person");
+});
+
+test("the extension checks a hand-over itself: its words, the field it names, the read, and the page's site", async () => {
+  const { r, hand } = await handing();
+  const bad = { "no words": hand({}, ""), "only spaces": hand({}, "   "), "a newline": hand({}, "Fill\nin"), "a direction mark": hand({}, "Fill in ‮elif"), "281 characters": hand({}, "a".repeat(281)), "words that aren't text": hand({ hand: { words: 7 } }), "a ref that isn't text": hand({ hand: { words: "ok", ref: 3 } }), "no hand": { id: "h2", op: "hand", read_id: "rd_h" } };
+  for (const [why, s] of Object.entries(bad)) assert.equal((await r.handle(step(s))).error.code, "bad_step", why);
+  assert.equal((await r.handle(step(hand({ hand: { words: "ok", ref: "f9" } })))).error.code, "bad_step", "a ref that is not in the read");
+  assert.equal((await r.handle(step(hand({ read_id: "rd_other" })))).error.code, "page_changed", "a read the extension doesn't have");
+  assert.equal((await r.handle(step(hand({ hand: { words: "a".repeat(280) } })))).handed, true, "280 characters are fine");
+  assert.equal((await r.handle(step(hand({ id: "h3", hand: { words: "ok" } })))).handed, true, "no ref is fine");
+  assert.equal(r.state()[0].hand.ref, false);
+});
+
+test("a hand-over on a page off the run's sites is refused, as any step is", async () => {
+  const { c, r, hand, tab } = await handing();
+  c.tabsMap.set(tab(), "https://evil.example/pay");
+  assert.equal((await r.handle(step(hand()))).error.code, "site_not_listed");
+  assert.equal(r.state()[0].hand, null);
+});
+
+test("the person typing in the page doesn't pause the run while a step is handed to them, and does after", async () => {
+  const { r, hand, tab } = await handing();
+  await r.handle(step(hand()));
+  r.ownerInput(tab());
+  assert.ok((await r.handle(step({ id: "r1", op: "read" }))).page, "typing was what was asked");
+  await r.answerHand("run_1", "done");
+  r.ownerInput(tab());
+  assert.equal((await r.handle(step({ id: "r2", op: "read" }))).error.code, "paused_by_owner", "a touch after the answer pauses as before");
+});
+
+test("a run with a step handed to the person isn't swept as idle, until the hand-over's 30 minutes are up", async () => {
+  const { r, hand, tick } = await handing();
+  await r.handle(step(hand()));
+  tick(10 * 60_000);
+  await r.sweep();
+  assert.equal(r.state()[0].stopped, false, "ten minutes: the person is still at it");
+  assert.notEqual(r.state()[0].hand, null);
+  tick(21 * 60_000);
+  await r.sweep();
+  assert.equal(r.state()[0].hand, null, "past 30 minutes it is over");
+  assert.equal(r.state()[0].stopped, true, "and the run is idle like any other");
+});
+
+test("Done reads the page back without what is in its fields; Not now says no; either answers once", async () => {
+  const { r, answers, hand } = await handing();
+  await r.handle(step(hand()));
+  assert.deepEqual(await r.answerHand("run_1", "done"), { ok: true });
+  assert.equal(answers.length, 1);
+  assert.equal(answers[0].hand, "h1");
+  assert.equal(answers[0].outcome, "done");
+  const page = answers[0].page;
+  assert.ok(page.fields.length === 3 && page.fields.every((f) => !("value" in f)), JSON.stringify(page.fields));
+  assert.deepEqual(page.fields.map((f) => f.label), ["Card number", "Name", "Gift"], "the taf learns the fields are there");
+  assert.equal(page.title, "Pay");
+  assert.equal(r.state()[0].hand, null);
+  assert.equal((await r.answerHand("run_1", "done")).error.code, "no_hand", "answered once");
+  await r.handle(step(hand({ id: "h2" })));
+  assert.deepEqual(await r.answerHand("run_1", "declined"), { ok: true });
+  assert.deepEqual(answers[1], { hand: "h2", outcome: "declined", page: null });
+  assert.equal((await r.answerHand("run_1", "maybe")).error.code, "no_hand");
+  assert.equal((await r.answerHand("run_x", "done")).error.code, "no_hand");
+});
+
+test("a new hand-over ends the one still open as declined, and Stop ends it too", async () => {
+  const { r, answers, hand } = await handing();
+  await r.handle(step(hand()));
+  await r.handle(step(hand({ id: "h2" })));
+  assert.deepEqual(answers, [{ hand: "h1", outcome: "declined", page: null }], "one open per run");
+  assert.equal(r.state()[0].hand.id, "h2");
+  await r.stop("run_1");
+  assert.deepEqual(answers.at(-1), { hand: "h2", outcome: "declined", page: null }, "planque is told, not left to its 30 minutes");
+});
+
+test("Show me brings the run's tab to the front and outlines the field the taf named, and clicks nothing", async () => {
+  const { c, r, hand, tab } = await handing();
+  const outlined = [];
+  const run = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => (String(o.func).includes("TafsPage.outline") ? (outlined.push(o.args), [{ result: { ok: true } }]) : run(o));
+  c.windows.update = async (id, props) => c.calls.push(["windows.update", id, props]);
+  await r.handle(step(hand()));
+  assert.deepEqual(await r.showHand("run_1"), { ok: true });
+  assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab() && x[2].active === true), "the tab comes to the front");
+  assert.deepEqual(outlined, [["f1", "rd_h"]], "only the field named, from the read the hand-over was planned from");
+  assert.ok(!c.calls.some((x) => x[0] === "page" && x[1].startsWith("act")), "nothing was clicked or typed");
+  assert.equal((await r.showHand("run_x")).error.code, "no_hand");
 });

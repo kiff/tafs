@@ -1,7 +1,7 @@
 // The side panel: pairing by the phone's code, and while a taf works, what it's doing, with Pause, Resume and Stop. It
 // shows only what the service worker reports; it decides nothing.
 
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay } from "../src/coachchat.js";
 
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
@@ -28,10 +28,10 @@ const STEP_WORDS = {
   read: () => t("step_read"),
   act: (s) => t("step_act_" + (s.kind || "click")),
   navigate: (s) => t("step_navigate", hostOf(s.url)),
-  ask: (s) => t("step_ask", s.site || ""),
   pause: (s) => t(s.by === "failures" ? "step_paused_failures" : s.by === "no_progress" ? "step_paused_no_progress" : "step_paused"),
   resume: () => t("step_resumed"),
   stop: () => t("step_stopped"),
+  hand: (s) => t("hand_title") + (s.kind === "declined" ? " · " + t("hand_declined") : ""),
   close: () => t("step_closed"),
 };
 
@@ -40,8 +40,19 @@ function stepLine(s) {
   return s.error ? words + " · " + t("step_refused", s.error) : words;
 }
 
+let lastConnections = null;
+let lastRuns = null;
+
 function draw(state) {
   $("conn").textContent = state.paired ? t(state.connected ? "connected" : "waiting") : "";
+  const connections = JSON.stringify(state.connections || []);
+  if (state.paired && connections !== lastConnections) {
+    lastConnections = connections;
+    loadTafs();
+  }
+  const runsSeen = JSON.stringify((state.runs || []).map((r) => [r.id, (r.steps || []).length, r.stopped]));
+  if (state.paired && lastRuns !== null && runsSeen !== lastRuns && document.visibilityState === "visible") readTaf();
+  lastRuns = runsSeen;
   $("pair").hidden = !!state.paired;
   $("paired").hidden = !state.paired;
   if (!state.paired) return;
@@ -52,6 +63,8 @@ function draw(state) {
   box.textContent = "";
   for (const run of runs) {
     const node = $("runTemplate").content.cloneNode(true);
+    // The template's words: a template's content isn't part of the document, so the page-wide pass above doesn't reach them.
+    for (const el of node.querySelectorAll("[data-m]")) el.textContent = t(el.dataset.m);
     node.querySelector(".taf").textContent = t("working", run.taf || "taf");
     node.querySelector(".where").textContent = run.site || "";
     const paused = node.querySelector(".paused");
@@ -59,13 +72,14 @@ function draw(state) {
       paused.hidden = false;
       paused.textContent = t(run.paused === "failures" ? "paused_failures" : run.paused === "no_progress" ? "paused_no_progress" : "paused_owner");
     }
-    // A site the grant lists that Chrome hasn't let the extension into yet: the owner allows it here, once.
-    const asks = node.querySelector(".asks");
-    for (const site of run.asks || []) {
-      const b = document.createElement("button");
-      b.textContent = t("allow_site", site);
-      b.onclick = () => chrome.permissions.request({ origins: ["https://" + site + "/*", "https://*." + site + "/*"] }).then(() => send({ type: "state" }));
-      asks.append(b);
+    // A step the taf handed to the person: its words as the taf's (plain text, never KIFF's or the extension's line), and three buttons.
+    const hand = node.querySelector(".hand");
+    if (run.hand) {
+      hand.hidden = false;
+      node.querySelector(".handWords").textContent = run.hand.words;
+      node.querySelector(".handShow").onclick = () => send({ type: "hand_show", run: run.id });
+      node.querySelector(".handDone").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "done" });
+      node.querySelector(".handNo").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "declined" });
     }
     const list = node.querySelector(".steps");
     for (const s of run.steps.slice(-12)) {
@@ -165,13 +179,19 @@ let pollTimer = null;
 function schedule() {
   clearTimeout(pollTimer);
   const delay = pollDelay({ view, working, sentAt, now: Date.now() });
-  if (delay == null || document.visibilityState !== "visible") return;
+  // Coach is behind its button now ("Set up a new taf for this site"): read only while it's shown.
+  if (delay == null || document.visibilityState !== "visible" || $("coach").hidden) return;
   pollTimer = setTimeout(drawCoach, delay);
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") drawCoach();
-  else clearTimeout(pollTimer);
+  if (document.visibilityState === "visible") {
+    if (!$("coach").hidden) drawCoach();
+    readTaf();
+  } else {
+    clearTimeout(pollTimer);
+    clearTimeout(tafTimer);
+  }
 });
 
 async function drawCoach() {
@@ -272,12 +292,6 @@ $("share").onclick = async () => {
     $("coachNote").textContent = chrome.i18n.getMessage("share_error_" + target.error) || t("share_unavailable");
     return;
   }
-  // Chrome asks the owner once for this site: the extension reads nothing it wasn't let into.
-  const ok = await chrome.permissions.request({ origins: [target.origin + "/*"] });
-  if (!ok) {
-    $("coachNote").textContent = t("share_declined");
-    return;
-  }
   const read = await send({ type: "share_read", tabId: target.tabId });
   if (read.error) {
     $("coachNote").textContent = t("share_unavailable");
@@ -287,8 +301,6 @@ $("share").onclick = async () => {
   $("shareWhat").textContent = shared.title + " · " + new URL(shared.url).hostname + " · " + t("share_chars", String(shared.text.length));
   $("sharePreview").hidden = false;
 };
-
-$("share").title = t("share_permission");
 
 $("shareRemove").onclick = () => {
   shared = null;
@@ -312,4 +324,102 @@ $("coachForm").onsubmit = async (e) => {
   drawCoach();
 };
 
-drawCoach();
+// The taf in this Chrome (docs/chrome-panel.md): the panel is for watching it work and talking to it. Which tafs come from
+// planque's list of this Chrome's connections (display only); the chat is the taf's own, as on the phone. It's read at once on
+// each event (shown again, a taf picked, a send, a step seen), then every 4 s while it works or a minute after a send, and
+// otherwise less and less (60 s to 5 minutes), never while the panel is hidden.
+let tafs = [];
+let tafId = null;
+let tafWorking = false;
+let tafSentAt = 0;
+let tafIdle = 0;
+let tafTimer = null;
+
+const tafName = () => (tafs.find((x) => x.id === tafId) || {}).name || "";
+
+async function loadTafs() {
+  const r = await send({ type: "taf_list" });
+  tafs = r.error ? [] : r.tafs || [];
+  const pick = $("tafPick");
+  pick.textContent = "";
+  for (const x of tafs) {
+    const o = document.createElement("option");
+    o.value = x.id;
+    o.textContent = x.name;
+    pick.append(o);
+  }
+  if (!tafs.some((x) => x.id === tafId)) tafId = tafs.length ? tafs[0].id : null;
+  pick.value = tafId || "";
+  $("tafPickRow").hidden = tafs.length < 2;
+  $("noTaf").hidden = tafs.length > 0 || !!r.error;
+  $("tafForm").hidden = !tafId;
+  $("tafName").textContent = tafName();
+  $("tafWords").placeholder = tafId ? t("taf_placeholder", tafName()) : "";
+  $("tafNote").textContent = r.error ? t(r.error === "no_session" ? "unpaired" : "tafs_not_read") : "";
+  if (!tafId) $("tafThread").textContent = "";
+  tafIdle = 0;
+  readTaf();
+}
+
+async function readTaf() {
+  clearTimeout(tafTimer);
+  if (!tafId) return;
+  const id = tafId;
+  const r = await send({ type: "taf_thread", taf: id });
+  if (id !== tafId) return; // another taf was picked meanwhile
+  const note = $("tafNote");
+  note.textContent = "";
+  if (r.error) {
+    note.textContent = t(r.error === "no_session" ? "unpaired" : "taf_error", tafName());
+  } else {
+    const list = $("tafThread");
+    list.textContent = "";
+    for (const m of r.thread.messages.slice(-20)) {
+      const li = document.createElement("li");
+      li.className = m.from;
+      li.textContent = m.text;
+      list.append(li);
+    }
+    $("tafPhone").hidden = !r.thread.waitsOnPhone;
+    tafWorking = !!r.thread.working;
+    if (tafWorking) note.textContent = t("working", tafName());
+  }
+  scheduleTaf();
+}
+
+function scheduleTaf() {
+  clearTimeout(tafTimer);
+  if (!tafId || document.visibilityState !== "visible") return;
+  const busy = tafWorking || Date.now() - tafSentAt < 60_000;
+  if (busy) tafIdle = 0;
+  tafTimer = setTimeout(readTaf, busy ? 4000 : idleDelay(tafIdle++));
+}
+
+$("tafPick").onchange = () => {
+  tafId = $("tafPick").value || null;
+  $("tafName").textContent = tafName();
+  $("tafWords").placeholder = tafId ? t("taf_placeholder", tafName()) : "";
+  tafIdle = 0;
+  readTaf();
+};
+
+$("tafForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const words = $("tafWords").value.trim();
+  if (!words || !tafId) return;
+  const r = await send({ type: "taf_send", taf: tafId, words, clientID: crypto.randomUUID() });
+  if (r.error) {
+    $("tafNote").textContent = t("taf_error", tafName());
+    return;
+  }
+  tafSentAt = Date.now();
+  $("tafWords").value = "";
+  readTaf();
+};
+
+// Coach sets up a new taf; it's a button now, not the panel's chat.
+$("setupTaf").onclick = () => {
+  $("coach").hidden = !$("coach").hidden;
+  if (!$("coach").hidden) drawCoach();
+  else clearTimeout(pollTimer);
+};

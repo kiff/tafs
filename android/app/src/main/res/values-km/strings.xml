@@ -592,6 +592,8 @@
     <string name="chrome_shot_none">មិនមានរូបភាពដែលបានរក្សាទុកសម្រាប់ជំហាននេះទេ។</string>
     <string name="chrome_shot_open">មើលទំព័រមុនជំហាននេះ</string>
     <string name="chrome_shot_title">មុនជំហាននេះ</string>
+    <string name="chrome_switch">ប្រើ Chrome ផ្សេង</string>
+    <string name="chrome_switch_prompt">ផ្លាស់ទីការតភ្ជាប់នេះទៅ %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">ការលុបការផ្គូផ្គងនឹងបញ្ចប់ការតភ្ជាប់ដែលប្រើវា៖ %1$s។ វានឹងត្រឡប់មកវិញ លុះត្រាតែអ្នកតភ្ជាប់ម្តងទៀត។</string>
     <string name="chrome_used_for">ប្រើសម្រាប់ %1$s</string>

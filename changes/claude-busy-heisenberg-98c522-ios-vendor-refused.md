@@ -1,0 +1,1 @@
+- **iPhone and iPad:** a vendor that refuses planque's client is said in planque's words, which name whose it is ("… doesn't allow tafs to sign in yet"), as on Android, never as "not working on our side" ([docs/ios-app.md](../docs/ios-app.md)).

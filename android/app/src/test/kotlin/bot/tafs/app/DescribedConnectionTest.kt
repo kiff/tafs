@@ -64,4 +64,13 @@ class DescribedConnectionTest {
     assertNull("no name sent", bot.tafs.app.views.connectionChromeLine(g(""","browser":{"driver":"extension","chrome":"chr_1","chrome_name":"  "}""")))
     assertNull("not a browser connection", bot.tafs.app.views.connectionChromeLine(g("")))
   }
+
+  /** Use another Chrome lists every paired Chrome but the one the connection runs in, in planque's order. */
+  @Test fun anotherChromeIsAnyPairedChromeButItsOwn() {
+    val g = bot.tafs.app.kiff.KiffClient.json.decodeFromString(bot.tafs.app.kiff.Grant.serializer(),
+      """{"id":"g1","status":"connected","text":"","digest":"d","request":{"server":"s","agent":"a","tools":[],"browser":{"driver":"extension","chrome":"chr_b","sites":["wikipedia.org"]}}}""")
+    val chromes = listOf(bot.tafs.app.kiff.Chrome("chr_a", "A"), bot.tafs.app.kiff.Chrome("chr_b", "B"), bot.tafs.app.kiff.Chrome("chr_c", "C"))
+    assertEquals(listOf("chr_a", "chr_c"), bot.tafs.app.views.chromesToMoveTo(g, chromes).map { it.id })
+    assertEquals(emptyList<bot.tafs.app.kiff.Chrome>(), bot.tafs.app.views.chromesToMoveTo(g, null))
+  }
 }
