@@ -17,7 +17,7 @@ tafs pour Chrome permet à vos tafs de travailler dans votre propre Chrome, uniq
 • Il lit une page comme du texte et des champs de formulaire, sans les champs de mot de passe, de carte et de code. Il ne lit jamais vos autres onglets ni votre historique.
 • Les sites de banques, de portefeuilles, de gestionnaires de mots de passe, de paiement, de santé et d'administration ne sont jamais traités, sauf si vous en autorisez un, pour une tâche, sur votre téléphone.
 • Les connexions enregistrées sont facultatives et scellées sur cet ordinateur. tafs et KIFF ne les voient jamais.
-• Parlez à Coach dans le panneau latéral. Coach ne voit une page que si vous cliquez sur Partager cette page, et alors seulement cette page, avec les mêmes champs retirés.
+• Le panneau latéral montre le taf qui travaille dans ce Chrome, et vous lui parlez là, comme dans l'app tafs. « Configurer un nouveau taf pour ce site » ouvre Coach, qui ne voit une page que lorsque vous cliquez sur « Partager cette page », et alors seulement cette page, avec les mêmes champs retirés.
 
 Ce qu'un taf lit va à l'IA qui exécute votre tâche et est conservé avec cette tâche. KIFF conserve la page avant et après une modification 30 jours au plus. Une fois les captures d'écran activées, chaque étape qui agit conserve aussi une capture de la page, prise juste avant l'action avec les champs de mot de passe, de carte et de code masqués, 30 jours au plus. Vous ne la voyez que dans l'app tafs et elle ne va jamais à l'IA. Dissocier ou désinstaller supprime ce que l'extension garde sur votre ordinateur.
 
