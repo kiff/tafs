@@ -1,5 +1,4 @@
 • Chrome: powiąż go jednym odciskiem palca, tam gdzie sprawdza go rozszerzenie.
 • Ponowne powiązanie Chrome pyta, który zastępuje, i przenosi tylko połączenia podpisane przez ten telefon.
 • Konto › Chrome pokazuje, do czego służy każdy Chrome i co kończy usunięcie powiązania; „Użyj innej przeglądarki Chrome” przenosi połączenie.
-• Krok w Chrome zachowuje obraz strony sprzed działania, na swoim potwierdzeniu.
 • Logowanie kodem wysłanym e-mailem: włącz je w Konto › Logowanie.

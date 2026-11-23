@@ -1,5 +1,4 @@
 • Chrome : associez-le d'une seule empreinte, là où l'extension la vérifie.
 • Associer de nouveau un Chrome demande lequel il remplace et ne déplace que les connexions signées par ce téléphone.
 • Compte › Chrome indique à quoi sert chaque Chrome et ce que la dissociation arrête ; « Utiliser un autre Chrome » déplace une connexion.
-• Une étape dans Chrome garde une image de la page avant d'agir, sur son reçu.
 • Connectez-vous avec un code envoyé par e-mail : activez-le dans Compte › Connexion.

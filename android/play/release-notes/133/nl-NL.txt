@@ -1,5 +1,4 @@
 • Chrome: koppel het met één vingerafdruk, waar de extensie die controleert.
 • Opnieuw koppelen vraagt welk Chrome het vervangt en verplaatst alleen verbindingen die deze telefoon ondertekende.
 • Account › Chrome toont waarvoor elk Chrome dient en wat ontkoppelen beëindigt; „Een andere Chrome gebruiken” verplaatst een verbinding.
-• Een stap in Chrome bewaart een afbeelding van de pagina vóór de handeling, bij het bewijs.
 • Inloggen met een code per e-mail: zet het aan in Account › Inloggen.
