@@ -1,5 +1,5 @@
 • Chrome: pair it with one fingerprint, where the extension checks it.
 • Pairing a Chrome again asks which one it replaces, and moves only the connections this phone signed.
-• Account › Chrome says what each Chrome is used for, and what unpairing ends.
+• Account › Chrome says what each Chrome is used for and what unpairing ends; Use another Chrome moves a connection.
 • A step in Chrome keeps a picture of the page before it acts, on its receipt.
 • Sign in with a code sent by email: turn it on in Account › Sign-in.
