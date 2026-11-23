@@ -258,7 +258,7 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | # | Feature | iPhone/iPad | Android | Where it's said |
 | -: | :- | :- | :- | :- |
 | 1 | KIFF's words for a connection, v2 (`POST /v1/profiles/words?v=2`) | done (tafs#1762) | done (1.27.7) | coach.md, "KIFF's words for a connection" |
-| 2 | A failed run's refused line, with Retry | in review: this PR (Coach's chat; a taf's chat: tafs#1766) | done (`chatFailed`, `ChatEnd.Failed`) | android-app.md:24-30, ios-app.md |
+| 2 | A failed run's refused line, with Retry | in review: tafs#1867 (Coach's chat; a taf's chat: tafs#1766) | done (`chatFailed`, `ChatEnd.Failed`) | android-app.md:24-30, ios-app.md |
 | 3 | An answered connect card: its Card line opens that Card as signed | in review: tafs#1771 | done | coach.md:55-60 |
 | 4 | View-only read from `approval_mode` in `GET /v1/me` | done (tafs#1772) | done | approvals.md:158-162 |
 | 5 | A removed taf's connections ended by tafs cloud, not the phone | done (`AppModel.removeTaf`) | done (1.17.1) | connect-apps.md:128-133 |
