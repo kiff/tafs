@@ -40,7 +40,7 @@ internal class Listener(
 
   /**
    * The probe, for the internal build's line on the review: what the watch's recognizer did with the app's own audio. Evidence
-   * for the owner's choice if it won't take it (PM 19 Nov 01:19); never sent anywhere.
+   * for the owner's choice if it won't take it; never sent anywhere.
    */
   val probe = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
 

@@ -66,7 +66,7 @@ class ApiDoorActions(
   val endpoint: (Door) -> String = { it.address },
 )
 
-/** The most keys an `api` door holds at once, so one can be replaced without stopping the other (kiff/work#16 §3.1). */
+/** The most keys an `api` door holds at once, so one can be replaced without stopping the other. */
 internal const val API_KEYS_MAX = 2
 
 internal const val API_DOOR_PANEL = "api.door.panel"
@@ -85,7 +85,7 @@ internal fun apiKeyLine(key: DoorKey): String {
 }
 
 /**
- * A door "From another application" (`api`, kiff/work#16 §2.5), behind [bot.tafs.app.kiff.ApiDoorFeature]: today against its cap,
+ * A door "From another application" (`api`), behind [bot.tafs.app.kiff.ApiDoorFeature]: today against its cap,
  * its last request in tafs cloud's words, its keys by name and last four, New key (named, signed, shown once), Revoke (asked
  * once more, signed), the boundary line, and Pause or Open (open is signed). Remove is the door's own, signed too.
  */
@@ -278,7 +278,7 @@ internal const val CHROME_CODE_CLIP = "tafs.chrome.code"
 /**
  * Copies [key], marked sensitive (Android 13+: the system's copy preview never shows it), and clears it from the clipboard a
  * minute later if it's still tafs's clip, while tafs is running: Android has no clipboard expiry of its own, and the app can't
- * stop a phone maker's clipboard sync for one clip (kiff/work#16 §3.1).
+ * stop a phone maker's clipboard sync for one clip.
  */
 @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
 internal fun copyKeyForAMinute(context: android.content.Context, key: String, after: Long = 60_000, label: String = API_KEY_CLIP) {

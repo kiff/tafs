@@ -863,7 +863,7 @@ class TafsCloud(
 
   private fun door(r: DoorResponse): Door = r.door
 
-  // MARK: A door "From another application" (`api`, docs/doors.md, kiff/work#16 §2.5): its keys change only signed
+  // MARK: A door "From another application" (`api`, docs/doors.md): its keys change only signed
 
   fun doorsPath(id: String) = "/v1/tafs/${escaped(id)}/doors"
   fun doorPath(id: String, door: String) = "/v1/tafs/${escaped(id)}/doors/${escaped(door)}"
