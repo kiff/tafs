@@ -16,7 +16,9 @@ final class PollPaceTests: XCTestCase {
     }
 
     func testAChatReadsSlowerAsTheReadsForOneMessageGoOn() {
-        XCTAssertEqual((0..<30).map { PollPace.chatFactor(afterReads: $0) }.reduce(0, +), 10 * 1 + 10 * 2 + 10 * 3)
+        let factors: [UInt64] = (0..<30).map { PollPace.chatFactor(afterReads: $0) }
+        let total: UInt64 = factors.reduce(0, +)
+        XCTAssertEqual(total, 60, "ten reads at 1×, ten at 2×, ten at 3×")
         XCTAssertEqual(PollPace.chatFactor(afterReads: 0), 1)
         XCTAssertEqual(PollPace.chatFactor(afterReads: 9), 1)
         XCTAssertEqual(PollPace.chatFactor(afterReads: 10), 2)
@@ -24,7 +26,7 @@ final class PollPaceTests: XCTestCase {
         XCTAssertEqual(PollPace.chatFactor(afterReads: 500), 3, "a cap, not a growth")
     }
 
-    /// A card waiting on its grant keeps Setup's base pace past the budget (desktop-windows' note): it isn't slowed to 8×.
+    /// A card waiting on its grant keeps Setup's base pace past the budget: it isn't slowed to 8×.
     func testACardWaitingOnItsGrantKeepsTheBasePace() {
         XCTAssertEqual(PollPace.setupWait(base: 3, afterReads: 70, cardWaits: true), 3)
         XCTAssertEqual(PollPace.setupWait(base: 3, afterReads: 70, cardWaits: false), 24)
@@ -32,7 +34,10 @@ final class PollPaceTests: XCTestCase {
     }
 
     func testSetupNeverReadsEverySecondForLong() {
-        XCTAssertEqual([0, 9, 10, 29, 30, 59, 60, 1_000].map { PollPace.setupFactor(afterReads: $0) }, [1, 1, 2, 2, 4, 4, 8, 8])
+        let reads: [Int] = [0, 9, 10, 29, 30, 59, 60, 1_000]
+        let factors: [UInt64] = reads.map { PollPace.setupFactor(afterReads: $0) }
+        let expected: [UInt64] = [1, 1, 2, 2, 4, 4, 8, 8]
+        XCTAssertEqual(factors, expected)
     }
 
     func testAListReadWhileOpenWaitsLongerWhileNothingChangesAndStartsOverOnAChange() {
