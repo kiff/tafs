@@ -498,6 +498,30 @@ class VersionsTest {
     assertTrue(bot.tafs.app.views.draftCardsShown(revision).single() is bot.tafs.app.views.DraftCardShown.One)
   }
 
+  // A Card's total names no tool ("20 calls a day"): two new Cards with the same total each show it after their own tool, so the
+  // second tool never reads as unlimited before the fingerprint. A Card exactly like an earlier one shows once.
+  @Test fun aNewCardsTotalIsShownForEachCardThatHasIt() {
+    val d = KiffClient.json.decodeFromString<AgentDraft>(
+      """{"id":"d","status":"draft","version":"v1","cards":[
+          {"lines":["Refund a payment","20 calls a day"]},
+          {"lines":["Send an email","20 calls a day"]},
+          {"lines":["Refund a payment","20 calls a day"]}]}""",
+    )
+    assertEquals(
+      listOf(bot.tafs.app.views.DraftCardShown.New(listOf("Refund a payment", "20 calls a day", "Send an email", "20 calls a day"))),
+      bot.tafs.app.views.draftCardsShown(d),
+    )
+    // Built from the grants too (no KIFF lines): the total follows each tool.
+    val built = KiffClient.json.decodeFromString<AgentDraft>(
+      """{"id":"d","status":"draft","version":"v1","cards":[
+          {"grants":[{"action":"refund","title":"Refund a payment"}],"aggregates":[{"quantity":"count","limit":20,"window":"day"}]},
+          {"grants":[{"action":"send_email","title":"Send an email"}],"aggregates":[{"quantity":"count","limit":20,"window":"day"}]}]}""",
+    )
+    val lines = (bot.tafs.app.views.draftCardsShown(built).single() as bot.tafs.app.views.DraftCardShown.New).lines
+    assertEquals("each tool and its own total: $lines", 4, lines.size)
+    assertEquals("the same total, once for each Card", lines[1], lines[3])
+  }
+
   @Test fun twoGrantsThatReadAlikeEachAddTheirActionInWords() {
     val d = KiffClient.json.decodeFromString<AgentDraft>(
       """{"id":"d","status":"draft","version":"v1","cards":[
