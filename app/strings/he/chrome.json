@@ -31,6 +31,8 @@
   "chrome.shot_none": "לא נשמרה תמונה עבור השלב הזה.",
   "chrome.shot_open": "הצגת הדף לפני השלב הזה",
   "chrome.shot_title": "לפני השלב הזה",
+  "chrome.switch": "להשתמש ב-Chrome אחר",
+  "chrome.switch_prompt": "להעביר את החיבור הזה אל {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "ביטול ההתאמה מסיים את החיבורים שמשתמשים בו: {sites}. הם חוזרים רק אם תחבר אותם מחדש.",
   "chrome.used_for": "בשימוש עבור {sites}",

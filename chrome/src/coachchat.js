@@ -44,3 +44,27 @@ export function pollDelay({ view, working = false, sentAt = 0, now = Date.now() 
   if (view.fresh) return null;
   return working || now - sentAt < BUSY_AFTER_SEND_MS ? POLL_BUSY_MS : POLL_IDLE_MS;
 }
+
+/**
+ * The tafs the panel offers: each of this Chrome's live connections (planque's list, for display only) whose agent is one of
+ * the person's tafs, once each, the one at work first. A connection whose taf the person can't see isn't offered.
+ */
+export function tafsHere(connections, tafs, workingName = null) {
+  const byAgent = new Map((tafs || []).map((t) => [t.agent, t]));
+  const out = [];
+  for (const c of connections || []) {
+    const t = byAgent.get(c.agent);
+    if (!t || out.some((o) => o.id === t.id)) continue;
+    out.push({ id: t.id, name: t.name || c.name, sites: c.sites });
+  }
+  if (workingName) out.sort((a, b) => (b.name === workingName) - (a.name === workingName));
+  return out;
+}
+
+/** An idle chat's next read, backing off from 60 s to 5 minutes, each wait up to a fifth shorter at random. */
+export const IDLE_FIRST_MS = 60_000;
+export const IDLE_MOST_MS = 300_000;
+export function idleDelay(idleReads, jitter = Math.random()) {
+  const step = Math.min(IDLE_MOST_MS, IDLE_FIRST_MS * 2 ** Math.max(0, idleReads));
+  return Math.round(step * (1 - 0.2 * Math.min(1, Math.max(0, jitter))));
+}

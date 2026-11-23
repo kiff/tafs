@@ -31,6 +31,8 @@
   "chrome.shot_none": "Šiam žingsniui paveikslėlis nesaugomas.",
   "chrome.shot_open": "Žiūrėti puslapį prieš šį žingsnį",
   "chrome.shot_title": "Prieš šį žingsnį",
+  "chrome.switch": "Naudoti kitą „Chrome“",
+  "chrome.switch_prompt": "Perkelti šį ryšį į {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Atsiejus baigiasi jį naudojantys ryšiai: {sites}. Jie sugrįš tik tada, kai prijungsi juos iš naujo.",
   "chrome.used_for": "Naudojama: {sites}",

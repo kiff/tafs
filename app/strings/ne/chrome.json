@@ -31,6 +31,8 @@
   "chrome.shot_none": "यो चरणको कुनै तस्बिर राखिएको छैन।",
   "chrome.shot_open": "यो चरणअघिको पृष्ठ हेर्नुहोस्",
   "chrome.shot_title": "यो चरणअघि",
+  "chrome.switch": "अर्को Chrome प्रयोग गर्नुहोस्",
+  "chrome.switch_prompt": "यो जडानलाई {name} मा सार्नुहोस्",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "जोडी हटाउँदा यसलाई प्रयोग गर्ने जडानहरू समाप्त हुन्छन्: {sites}। तिनीहरू फेरि जोड्दा मात्र फर्कन्छन्।",
   "chrome.used_for": "{sites} का लागि प्रयोग गरिएको",

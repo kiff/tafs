@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Represa" },
   "step_stopped": { "message": "Aturat" },
   "step_closed": { "message": "Acabat" },
-  "allow_site": { "message": "Permet $SITE$ a Chrome", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "Necessita el teu sí a Chrome per a $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "no fet ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "Escriu a Coach" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "Parla amb Coach" },
   "coach_empty_body": { "message": "És el mateix xat que a l'app tafs. Coach només veu aquesta pàgina si la comparteixes." },
   "share_note": { "message": "Envia a Coach aquesta única pàgina, sense els camps de contrasenya, targeta i codi." },
-  "share_declined": { "message": "No compartit: tafs no té permís en aquest lloc a Chrome." },
-  "share_permission": { "message": "La primera vegada en un lloc, Chrome et pregunta si deixes entrar tafs." },
   "vault_title": { "message": "Inicis de sessió desats" },
   "vault_body": { "message": "Desat aquí, segellat en aquest ordinador. Un taf només pot demanar fer-ne servir un en aquell lloc exacte, i només s'escriu després que aprovis aquell únic emplenament al telèfon. tafs i KIFF mai no el veuen." },
   "vault_site": { "message": "Lloc" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Converses anteriors" },
   "coach_previous_none": { "message": "No hi ha converses anteriors." },
   "coach_previous_error": { "message": "No s'han pogut carregar les converses anteriors." },
-  "coach_untitled": { "message": "Conversa" }
+  "coach_untitled": { "message": "Conversa" },
+  "taf_choose": { "message": "Parla amb" },
+  "taf_placeholder": { "message": "Missatge a $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "No ha arribat a $TAF$. Torna-ho a provar.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "No s'han pogut llegir els teus tafs. Torna-ho a provar." },
+  "no_taf_here": { "message": "Encara no hi ha cap taf que treballi en aquest Chrome." },
+  "setup_taf": { "message": "Configura un taf nou per a aquest lloc" }
 }

@@ -11,6 +11,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | Page | What it covers |
 |---|---|
 | [How tafs fits together](#how-tafs-fits-together) | The app, tafs cloud, kiff/agents, KIFF and planque, and who decides what |
+| [scale.md](scale.md) | What breaks at 1,000 and 10,000 users, ranked by what breaks first, each with its owner and a fix, and the target for every device |
 | [runtime.md](runtime.md) | What a taf runs on (kiff/agents), its definition and KIFF's skill, and tafs cloud |
 | [tafs.md](tafs.md) | A taf: its job, definition, schedule, runs, reports, memory, Record, pausing and removing it |
 | [taf-screen.md](taf-screen.md) | The app's screens: the bar, Record by taf, a taf's four tabs, Setup › Starts when and Results go to, Account › Alerts, dark |
@@ -28,6 +29,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [drive.md](drive.md) | The drive's contract between tafs cloud and the apps: routes, the stream, requests and results, never confirming, never captured, and how a drive ends |
 | [secure-connection.md](secure-connection.md) | The secure sheet for an app's key (its words from tafs cloud, Paste the key, Details, the receipt) and one signature for the key and its Card (the contract) |
 | [connect-apps.md](connect-apps.md) | Connect apps, for the person running tafs: connecting, what you approve, what a taf can do, app events, the Slack door vs an action, disconnecting |
+| [chrome-panel.md](chrome-panel.md) | The Chrome panel (design, not built): watching a taf work, a step handed to the person, approving in the panel with the computer's passkey, never a password alone |
 | [chrome.md](chrome.md) | tafs in your Chrome (behind a switch): the extension, pairing from the phone, the signed steps between it and planque, what it refuses, and its tests (the contract) |
 | [doors.md](doors.md) | Doors: email, Slack and WhatsApp addresses a taf takes work from |
 | [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |
