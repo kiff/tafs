@@ -626,6 +626,8 @@
     <string name="chrome_shot_none">Für diesen Schritt ist kein Bild gespeichert.</string>
     <string name="chrome_shot_open">Die Seite vor diesem Schritt ansehen</string>
     <string name="chrome_shot_title">Vor diesem Schritt</string>
+    <string name="chrome_switch">Anderes Chrome verwenden</string>
+    <string name="chrome_switch_prompt">Diese Verbindung zu %1$s verschieben</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Beim Entkoppeln enden die Verbindungen, die es nutzen: %1$s. Sie kommen nur zurück, wenn du sie neu verbindest.</string>
     <string name="chrome_used_for">Genutzt für %1$s</string>

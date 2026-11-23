@@ -758,6 +758,8 @@
     <string name="chrome_shot_none">لا توجد صورة محفوظة لهذه الخطوة.</string>
     <string name="chrome_shot_open">عرض الصفحة قبل هذه الخطوة</string>
     <string name="chrome_shot_title">قبل هذه الخطوة</string>
+    <string name="chrome_switch">استخدم Chrome آخر</string>
+    <string name="chrome_switch_prompt">انقل هذا الاتصال إلى %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">إلغاء الإقران ينهي الاتصالات التي تستخدمه: %1$s. لا تعود إلا إذا وصلتها من جديد.</string>
     <string name="chrome_used_for">يُستخدم لـ %1$s</string>

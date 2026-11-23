@@ -659,6 +659,8 @@
     <string name="chrome_shot_none">K tomuto kroku není uložen žádný obrázek.</string>
     <string name="chrome_shot_open">Zobrazit stránku před tímto krokem</string>
     <string name="chrome_shot_title">Před tímto krokem</string>
+    <string name="chrome_switch">Použít jiný Chrome</string>
+    <string name="chrome_switch_prompt">Přesunout toto připojení do %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Zrušením spárování skončí připojení, která ho používají: %1$s. Vrátí se, až je znovu připojíš.</string>
     <string name="chrome_used_for">Používá se pro %1$s</string>

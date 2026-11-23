@@ -220,6 +220,46 @@ class ChromesTest {
     assertEquals("g1", body["carried"]!!.jsonArray.single().jsonObject["grant"]!!.jsonPrimitive.content)
   }
 
+  /**
+   * "Your Chrome" 2: a connection moves to another paired Chrome only with the sites this phone signed for it, now signed for
+   * the new Chrome behind one fingerprint naming it, and planque's PUT carries that signature. A list planque widened, or a
+   * connection with no signature of its own, moves nothing and signs nothing.
+   */
+  @Test fun aConnectionMovesToAnotherChromeWithOnlyTheSitesThisPhoneSigned() = runTest {
+    val m = model()
+    val wiki = listOf("wikipedia.org")
+    val der = signer.signApproval(ChromePairing.sitesBytes("chr_work", "g1", wiki), "approve")
+    val sig = ChromePairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der))!!
+    auth.fingerprints.clear()
+    fun grant(sites: List<String>, s: String?) = KiffClient.json.decodeFromString(bot.tafs.app.kiff.Grant.serializer(),
+      """{"id":"g1","status":"connected","text":"","digest":"d","request":{"server":"s","agent":"a","tools":[],"browser":{"driver":"extension","chrome":"chr_work","chrome_name":"Work Mac","sites":${sites.joinToString(",", "[", "]") { "\"$it\"" }}}}${s?.let { ",\"chrome_sites_sig\":\"$it\"" }.orEmpty()}}""")
+    val home = bot.tafs.app.kiff.Chrome("chr_home", "Home laptop")
+    val put = "PUT /v1/accounts/t_01/grants/g1/chrome"
+    // planque widened the list, or there's no signature of its own: nothing signed, nothing sent.
+    assertFalse(m.switchChrome(grant(wiki + "evil.example", sig), home))
+    assertFalse(m.switchChrome(grant(wiki, null), home))
+    // A signature this phone made, but for another Chrome or another grant, doesn't vouch for this one.
+    suspend fun signed(chrome: String, grantId: String) = ChromePairing.rawSignature(java.util.Base64.getMimeDecoder().decode(
+      signer.signApproval(ChromePairing.sitesBytes(chrome, grantId, wiki), "approve")))!!
+    val forOtherChrome = signed("chr_home", "g1")
+    val forOtherGrant = signed("chr_work", "g2")
+    auth.fingerprints.clear()
+    assertFalse("signed for another Chrome", m.switchChrome(grant(wiki, forOtherChrome), home))
+    assertFalse("signed for another grant", m.switchChrome(grant(wiki, forOtherGrant), home))
+    assertTrue(auth.fingerprints.isEmpty() && transport.requestsTo(put).isEmpty())
+    // The sites it signed: signed again for the new Chrome, behind one fingerprint naming it, and sent.
+    transport.answer(put, 200, """{"id":"g1","status":"connected"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.answer(chromes, 200, """{"chromes":[]}""")
+    assertTrue(m.switchChrome(grant(wiki, sig), home))
+    assertEquals(listOf(Words.Chrome.switchPrompt(name = "Home laptop")), auth.fingerprints)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(put).single().body!!)).jsonObject
+    assertEquals("chr_home", body["chrome_id"]!!.jsonPrimitive.content)
+    val moved = ChromePairing.base64UrlDecoded(body["chrome_sites_sig"]!!.jsonPrimitive.content)!!
+    val key = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(signer.approvalPublicKeyDER))
+    assertTrue("over the same sites, for the new Chrome", Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(key); update(ChromePairing.sitesBytes("chr_home", "g1", wiki)); verify(moved) })
+  }
+
   /** The extension's own KIFF device, as `chrome/src/kiff.js` offers it. */
   private val kiffKey = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
   private fun kiffOffer(kind: String = "extension", keyStore: String = "software") =

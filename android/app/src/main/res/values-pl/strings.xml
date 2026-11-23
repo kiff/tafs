@@ -692,6 +692,8 @@
     <string name="chrome_shot_none">Dla tego kroku nie zapisano żadnego obrazu.</string>
     <string name="chrome_shot_open">Zobacz stronę przed tym krokiem</string>
     <string name="chrome_shot_title">Przed tym krokiem</string>
+    <string name="chrome_switch">Użyj innej przeglądarki Chrome</string>
+    <string name="chrome_switch_prompt">Przenieś to połączenie do %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Rozparowanie kończy połączenia, które z niego korzystają: %1$s. Wrócą dopiero, gdy połączysz je ponownie.</string>
     <string name="chrome_used_for">Używana do: %1$s</string>

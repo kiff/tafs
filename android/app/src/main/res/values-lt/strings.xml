@@ -659,6 +659,8 @@
     <string name="chrome_shot_none">Šiam žingsniui paveikslėlis nesaugomas.</string>
     <string name="chrome_shot_open">Žiūrėti puslapį prieš šį žingsnį</string>
     <string name="chrome_shot_title">Prieš šį žingsnį</string>
+    <string name="chrome_switch">Naudoti kitą „Chrome“</string>
+    <string name="chrome_switch_prompt">Perkelti šį ryšį į %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Atsiejus baigiasi jį naudojantys ryšiai: %1$s. Jie sugrįš tik tada, kai prijungsi juos iš naujo.</string>
     <string name="chrome_used_for">Naudojama: %1$s</string>

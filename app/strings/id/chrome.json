@@ -32,6 +32,8 @@
   "chrome.shot_none": "Tidak ada gambar yang disimpan untuk langkah ini.",
   "chrome.shot_open": "Lihat halaman sebelum langkah ini",
   "chrome.shot_title": "Sebelum langkah ini",
+  "chrome.switch": "Gunakan Chrome lain",
+  "chrome.switch_prompt": "Pindahkan koneksi ini ke {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Melepas pasangan mengakhiri koneksi yang memakainya: {sites}. Koneksi itu baru kembali jika kamu menghubungkannya lagi.",
   "chrome.used_for": "Dipakai untuk {sites}",

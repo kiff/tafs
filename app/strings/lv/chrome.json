@@ -32,6 +32,8 @@
   "chrome.shot_none": "Šim solim attēls netiek glabāts.",
   "chrome.shot_open": "Skatīt lapu pirms šī soļa",
   "chrome.shot_title": "Pirms šī soļa",
+  "chrome.switch": "Izmantot citu Chrome",
+  "chrome.switch_prompt": "Pārvietot šo savienojumu uz {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Atvienojot beidzas savienojumi, kas to izmanto: {sites}. Tie atgriežas tikai tad, ja savieno tos no jauna.",
   "chrome.used_for": "Izmanto: {sites}",

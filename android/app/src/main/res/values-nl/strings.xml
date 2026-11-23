@@ -626,6 +626,8 @@
     <string name="chrome_shot_none">Voor deze stap is geen afbeelding bewaard.</string>
     <string name="chrome_shot_open">Bekijk de pagina vóór deze stap</string>
     <string name="chrome_shot_title">Vóór deze stap</string>
+    <string name="chrome_switch">Een andere Chrome gebruiken</string>
+    <string name="chrome_switch_prompt">Deze verbinding verplaatsen naar %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Ontkoppelen beëindigt de verbindingen die het gebruiken: %1$s. Ze komen pas terug als je ze opnieuw verbindt.</string>
     <string name="chrome_used_for">Gebruikt voor %1$s</string>

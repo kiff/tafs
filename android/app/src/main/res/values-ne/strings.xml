@@ -626,6 +626,8 @@
     <string name="chrome_shot_none">यो चरणको कुनै तस्बिर राखिएको छैन।</string>
     <string name="chrome_shot_open">यो चरणअघिको पृष्ठ हेर्नुहोस्</string>
     <string name="chrome_shot_title">यो चरणअघि</string>
+    <string name="chrome_switch">अर्को Chrome प्रयोग गर्नुहोस्</string>
+    <string name="chrome_switch_prompt">यो जडानलाई %1$s मा सार्नुहोस्</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">जोडी हटाउँदा यसलाई प्रयोग गर्ने जडानहरू समाप्त हुन्छन्: %1$s। तिनीहरू फेरि जोड्दा मात्र फर्कन्छन्।</string>
     <string name="chrome_used_for">%1$s का लागि प्रयोग गरिएको</string>

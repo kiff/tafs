@@ -32,6 +32,8 @@
   "chrome.shot_none": "ამ ნაბიჯისთვის სურათი არ არის შენახული.",
   "chrome.shot_open": "იხილე გვერდი ამ ნაბიჯამდე",
   "chrome.shot_title": "ამ ნაბიჯამდე",
+  "chrome.switch": "გამოიყენე სხვა Chrome",
+  "chrome.switch_prompt": "ამ კავშირის გადატანა {name}-ზე",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "დაწყვილების გაუქმება წყვეტს მის გამოყენებით დაკავშირებებს: {sites}. ისინი დაბრუნდება მხოლოდ მაშინ, თუ ხელახლა დააკავშირებ.",
   "chrome.used_for": "გამოიყენება: {sites}",

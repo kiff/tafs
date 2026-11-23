@@ -593,6 +593,8 @@
     <string name="chrome_shot_none">이 단계의 이미지는 보관되어 있지 않습니다.</string>
     <string name="chrome_shot_open">이 단계 전의 페이지 보기</string>
     <string name="chrome_shot_title">이 단계 전</string>
+    <string name="chrome_switch">다른 Chrome 사용</string>
+    <string name="chrome_switch_prompt">이 연결을 %1$s(으)로 옮기기</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">페어링을 해제하면 이 Chrome을 쓰는 연결이 끝납니다: %1$s. 다시 연결해야 돌아옵니다.</string>
     <string name="chrome_used_for">%1$s에 사용</string>

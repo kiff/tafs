@@ -32,6 +32,8 @@
   "chrome.shot_none": "No hi ha cap imatge guardada d'aquest pas.",
   "chrome.shot_open": "Mostra la pàgina abans d'aquest pas",
   "chrome.shot_title": "Abans d'aquest pas",
+  "chrome.switch": "Fes servir un altre Chrome",
+  "chrome.switch_prompt": "Mou aquesta connexió a {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Desvincular-lo acaba les connexions que l'usen: {sites}. Només tornen si les connectes de nou.",
   "chrome.used_for": "S'usa per a {sites}",

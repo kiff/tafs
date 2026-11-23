@@ -626,6 +626,8 @@
     <string name="chrome_shot_none">ამ ნაბიჯისთვის სურათი არ არის შენახული.</string>
     <string name="chrome_shot_open">იხილე გვერდი ამ ნაბიჯამდე</string>
     <string name="chrome_shot_title">ამ ნაბიჯამდე</string>
+    <string name="chrome_switch">გამოიყენე სხვა Chrome</string>
+    <string name="chrome_switch_prompt">ამ კავშირის გადატანა %1$s-ზე</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">დაწყვილების გაუქმება წყვეტს მის გამოყენებით დაკავშირებებს: %1$s. ისინი დაბრუნდება მხოლოდ მაშინ, თუ ხელახლა დააკავშირებ.</string>
     <string name="chrome_used_for">გამოიყენება: %1$s</string>

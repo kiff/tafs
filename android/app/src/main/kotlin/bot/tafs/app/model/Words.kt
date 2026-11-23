@@ -623,6 +623,8 @@ object Words {
     val shotNone: String get() = Res.s(R.string.chrome_shot_none)
     val shotOpen: String get() = Res.s(R.string.chrome_shot_open)
     val shotTitle: String get() = Res.s(R.string.chrome_shot_title)
+    val switch: String get() = Res.s(R.string.chrome_switch)
+    fun switchPrompt(name: String): String = Res.s(R.string.chrome_switch_prompt, name)
     val title: String get() = Res.s(R.string.chrome_title)
     fun unpairEnds(sites: String): String = Res.s(R.string.chrome_unpair_ends, sites)
     fun usedFor(sites: String): String = Res.s(R.string.chrome_used_for, sites)

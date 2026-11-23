@@ -659,6 +659,8 @@
     <string name="chrome_shot_none">Šim solim attēls netiek glabāts.</string>
     <string name="chrome_shot_open">Skatīt lapu pirms šī soļa</string>
     <string name="chrome_shot_title">Pirms šī soļa</string>
+    <string name="chrome_switch">Izmantot citu Chrome</string>
+    <string name="chrome_switch_prompt">Pārvietot šo savienojumu uz %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Atvienojot beidzas savienojumi, kas to izmanto: %1$s. Tie atgriežas tikai tad, ja savieno tos no jauna.</string>
     <string name="chrome_used_for">Izmanto: %1$s</string>

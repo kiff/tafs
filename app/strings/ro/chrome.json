@@ -32,6 +32,8 @@
   "chrome.shot_none": "Pentru acest pas nu este păstrată nicio imagine.",
   "chrome.shot_open": "Vezi pagina de dinainte de acest pas",
   "chrome.shot_title": "Înainte de acest pas",
+  "chrome.switch": "Folosește alt Chrome",
+  "chrome.switch_prompt": "Mută această conexiune la {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Dezasocierea încheie conexiunile care îl folosesc: {sites}. Revin doar dacă le conectezi din nou.",
   "chrome.used_for": "Folosit pentru {sites}",

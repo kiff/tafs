@@ -626,6 +626,8 @@
     <string name="chrome_shot_none">Энэ алхамд зориулж хадгалсан зураг алга.</string>
     <string name="chrome_shot_open">Энэ алхмын өмнөх хуудсыг харах</string>
     <string name="chrome_shot_title">Энэ алхмын өмнө</string>
+    <string name="chrome_switch">Өөр Chrome ашиглах</string>
+    <string name="chrome_switch_prompt">Энэ холболтыг %1$s руу зөөх</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Хослолыг салгавал үүнийг ашигладаг холболтууд дуусна: %1$s. Тэдгээр дахин холбосон тохиолдолд л буцна.</string>
     <string name="chrome_used_for">%1$s-д ашиглагдана</string>

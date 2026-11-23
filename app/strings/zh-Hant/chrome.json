@@ -32,6 +32,8 @@
   "chrome.shot_none": "此步驟沒有保存圖片。",
   "chrome.shot_open": "查看此步驟之前的頁面",
   "chrome.shot_title": "此步驟之前",
+  "chrome.switch": "使用另一個 Chrome",
+  "chrome.switch_prompt": "將此連線移到 {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "解除配對會結束使用它的連線：{sites}。重新連線後才會恢復。",
   "chrome.used_for": "用於 {sites}",

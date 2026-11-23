@@ -32,6 +32,8 @@
   "chrome.shot_none": "このステップの画像は保存されていません。",
   "chrome.shot_open": "このステップの前のページを見る",
   "chrome.shot_title": "このステップの前",
+  "chrome.switch": "別のChromeを使う",
+  "chrome.switch_prompt": "この接続を{name}に移す",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "ペアリングを解除すると、このChromeを使う接続が終了します：{sites}。接続し直すまで戻りません。",
   "chrome.used_for": "{sites}に使用",

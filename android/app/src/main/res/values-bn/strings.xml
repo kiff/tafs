@@ -626,6 +626,8 @@
     <string name="chrome_shot_none">এই ধাপের কোনো ছবি রাখা নেই।</string>
     <string name="chrome_shot_open">এই ধাপের আগের পৃষ্ঠাটি দেখুন</string>
     <string name="chrome_shot_title">এই ধাপের আগে</string>
+    <string name="chrome_switch">অন্য একটি Chrome ব্যবহার করুন</string>
+    <string name="chrome_switch_prompt">এই সংযোগটি %1$s-এ সরান</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">জোড়া ভাঙলে এটি ব্যবহার করা সংযোগগুলো শেষ হয়: %1$s। আবার সংযুক্ত করলেই সেগুলো ফিরে আসে।</string>
     <string name="chrome_used_for">%1$s-এর জন্য ব্যবহৃত</string>

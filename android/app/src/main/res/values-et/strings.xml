@@ -626,6 +626,8 @@
     <string name="chrome_shot_none">Selle sammu kohta pole pilti salvestatud.</string>
     <string name="chrome_shot_open">Vaata lehte enne seda sammu</string>
     <string name="chrome_shot_title">Enne seda sammu</string>
+    <string name="chrome_switch">Kasuta teist Chrome\'i</string>
+    <string name="chrome_switch_prompt">Teisalda see ühendus: %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Sidumise lõpetamine lõpetab seda kasutavad ühendused: %1$s. Need tulevad tagasi alles siis, kui ühendad need uuesti.</string>
     <string name="chrome_used_for">Kasutusel: %1$s</string>

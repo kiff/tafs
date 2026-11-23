@@ -32,6 +32,8 @@
   "chrome.shot_none": "Voor deze stap is geen afbeelding bewaard.",
   "chrome.shot_open": "Bekijk de pagina vóór deze stap",
   "chrome.shot_title": "Vóór deze stap",
+  "chrome.switch": "Een andere Chrome gebruiken",
+  "chrome.switch_prompt": "Deze verbinding verplaatsen naar {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Ontkoppelen beëindigt de verbindingen die het gebruiken: {sites}. Ze komen pas terug als je ze opnieuw verbindt.",
   "chrome.used_for": "Gebruikt voor {sites}",

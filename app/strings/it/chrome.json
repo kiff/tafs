@@ -32,6 +32,8 @@
   "chrome.shot_none": "Per questo passaggio non è conservata nessuna immagine.",
   "chrome.shot_open": "Vedi la pagina prima di questo passaggio",
   "chrome.shot_title": "Prima di questo passaggio",
+  "chrome.switch": "Usa un altro Chrome",
+  "chrome.switch_prompt": "Sposta questa connessione su {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Scollegarlo termina le connessioni che lo usano: {sites}. Tornano solo se le colleghi di nuovo.",
   "chrome.used_for": "Usato per {sites}",

@@ -32,6 +32,8 @@
   "chrome.shot_none": "Selle sammu kohta pole pilti salvestatud.",
   "chrome.shot_open": "Vaata lehte enne seda sammu",
   "chrome.shot_title": "Enne seda sammu",
+  "chrome.switch": "Kasuta teist Chrome'i",
+  "chrome.switch_prompt": "Teisalda see ühendus: {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Sidumise lõpetamine lõpetab seda kasutavad ühendused: {sites}. Need tulevad tagasi alles siis, kui ühendad need uuesti.",
   "chrome.used_for": "Kasutusel: {sites}",

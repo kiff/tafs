@@ -32,6 +32,8 @@
   "chrome.shot_none": "No picture is kept for this step.",
   "chrome.shot_open": "See the page before this step",
   "chrome.shot_title": "Before this step",
+  "chrome.switch": "Use another Chrome",
+  "chrome.switch_prompt": "Move this connection to {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Unpairing ends the connections that use it: {sites}. They come back only when you connect them again.",
   "chrome.used_for": "Used for {sites}",

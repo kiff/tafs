@@ -32,6 +32,8 @@
   "chrome.shot_none": "K tomuto kroku nie je uložený žiadny obrázok.",
   "chrome.shot_open": "Zobraziť stránku pred týmto krokom",
   "chrome.shot_title": "Pred týmto krokom",
+  "chrome.switch": "Použiť iný Chrome",
+  "chrome.switch_prompt": "Presunúť toto pripojenie do {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Zrušením spárovania skončia pripojenia, ktoré ho používajú: {sites}. Vrátia sa, až keď ich znova pripojíš.",
   "chrome.used_for": "Používa sa na {sites}",

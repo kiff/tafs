@@ -626,6 +626,8 @@
     <string name="chrome_shot_none">Aucune image n\'est conservée pour cette étape.</string>
     <string name="chrome_shot_open">Voir la page avant cette étape</string>
     <string name="chrome_shot_title">Avant cette étape</string>
+    <string name="chrome_switch">Utiliser un autre Chrome</string>
+    <string name="chrome_switch_prompt">Déplacer cette connexion vers %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Dissocier met fin aux connexions qui l\'utilisent : %1$s. Elles ne reviennent que si vous les reconnectez.</string>
     <string name="chrome_used_for">Utilisé pour %1$s</string>
