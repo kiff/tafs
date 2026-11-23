@@ -401,7 +401,7 @@ final class HeldReasonWordsTests: XCTestCase {
         let zero = NumberFormatter()
         zero.numberStyle = .none
         zero.locale = Words.locale(for: "hi")
-        XCTAssertEqual(Words.ordinal(0, locale: Words.locale(for: "hi")), zero.string(from: 0) ?? "0")
+        XCTAssertEqual(Words.ordinal(0, locale: Words.locale(for: "hi")), zero.string(from: NSNumber(value: 0)) ?? "0")
         // Every other language is the system's, as before.
         XCTAssertEqual(Words.ordinal(21, locale: Locale(identifier: "en")), "21st")
     }
