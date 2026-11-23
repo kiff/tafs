@@ -39,6 +39,14 @@ final class CoachModel: ObservableObject {
         var ticket: WatchCoachTicket? = nil
     }
 
+    /// v2's Keep for later (docs/watch-app.md, "Keep for later"; Wear OS's `WatchModel.Draft`): one message to Coach kept on
+    /// the watch to send when the phone is back. Its words, its message id and the chat it continues; text only.
+    struct Kept: Codable, Equatable {
+        let text: String
+        let message: String
+        let ticket: WatchCoachTicket?
+    }
+
     /// Read more (a taf's chat): the whole answer, fetched only on the tap and held only while the chat is open.
     enum Whole: Equatable {
         case reading
@@ -46,6 +54,11 @@ final class CoachModel: ObservableObject {
         /// Not read: the rest is on the phone.
         case onPhone
     }
+
+    /// Keep for later (row 8), built and off: it keeps the person's words on the watch, and the privacy page's Apple Watch
+    /// paragraph says the watch keeps nothing apart from the Inbox. On with that sentence there and the owner's yes; off, no
+    /// store is given and it's never offered.
+    nonisolated static let keepForLaterOn = false
 
     /// v2's Quick reply (docs/watch-app.md, "Step (iii)"): four ready-made lines, each to Check before sending, in Wear OS's
     /// order.
@@ -57,6 +70,11 @@ final class CoachModel: ObservableObject {
     /// v2: the words wait in Check before sending, and nothing leaves the watch before Send.
     @Published private(set) var reviewing = false
     @Published private(set) var state: State = .writing
+    /// v2: the last Send got no reply from the phone, which may have it: Keep for later is offered beside Send.
+    @Published private(set) var unsure = false
+    /// v2's Keep for later: the message kept on this watch, or none. On disk (`DraftStore`) until it's sent, deleted, or the
+    /// phone says it's signed out; putting the app away keeps it.
+    @Published private(set) var kept: Kept?
     /// v2 (W2): the words that left, shown above "Sent" and Coach's answer.
     @Published private(set) var asked: String?
     /// v2 (W4): Ask Coach as one conversation, oldest first: what was said from this watch since the app was opened, each with
@@ -99,6 +117,10 @@ final class CoachModel: ObservableObject {
     private let pause: () async -> Void
     /// Counts each leave, so a read loop started before it stops.
     private var visit = 0
+    /// Where Keep for later keeps its message: v2's file, or none (v1, and tests that don't use it), and then it's never offered.
+    private let drafts: DraftStore?
+    /// A kept message on its way: the next read doesn't send it again meanwhile.
+    private var sendingKept = false
 
     /// v2 (W2): how many times the watch reads Coach's answer before the rest is on the phone: the first `quickReads`
     /// 1.5 s apart, then 3 s apart (two pauses), so 4 × 1.5 s + 8 × 3 s = 30 s. Coach's turns take seconds, so the slower
@@ -107,14 +129,16 @@ final class CoachModel: ObservableObject {
     static let quickReads = 4
 
     init(phone: PhoneAsking, taf: String? = nil, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock(),
-         newID: @escaping () -> UUID = UUID.init,
+         newID: @escaping () -> UUID = UUID.init, drafts: DraftStore? = nil,
          pause: @escaping () async -> Void = { try? await Task.sleep(nanoseconds: 1_500_000_000) }) {
         self.phone = phone
         self.taf = taf
         self.clock = clock
         self.lock = lock
         self.newID = newID
+        self.drafts = drafts
         self.pause = pause
+        kept = taf == nil ? drafts?.read() : nil
     }
 
     /// The words are on their way, or Coach is at them: nothing else is sent, re-recorded or deleted.
@@ -169,6 +193,7 @@ final class CoachModel: ObservableObject {
         guard !text.isEmpty else { return }
         draft = text
         reviewing = true
+        unsure = false
         state = .writing
     }
 
@@ -182,12 +207,18 @@ final class CoachModel: ObservableObject {
         let text = words
         let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
         sending = (text, id)
+        unsure = false
         state = .sending
         let reply: WatchReply
         switch await phone.reach(WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
                                               ticket: lastTicket)) {
         case .reply(let answered): reply = answered
-        case .failed(let why): state = .failed(why.line); return
+        case .failed(let why):
+            // No reply: the phone may have the words, or may be out of reach. Coach's may be kept for later (as Wear OS's
+            // "Not sure it arrived"); a taf's never are, since nothing of a taf's chat is kept on the watch.
+            state = .failed(why.line)
+            unsure = taf == nil && drafts != nil
+            return
         }
         switch reply.outcome {
         case .ok:
@@ -223,7 +254,7 @@ final class CoachModel: ObservableObject {
 
     /// Coach's answer, read until its chat no longer says it's working and it has written, for `answerReads` at most. A
     /// read the phone can't answer is read again: the words were sent, so the watch never says they weren't.
-    private func read(_ ticket: WatchCoachTicket, message: String) async {
+    private func read(_ ticket: WatchCoachTicket, message: String, shown: Bool = true) async {
         let visit = self.visit
         var last: WatchCoachAnswer?
         for index in 0..<Self.answerReads {
@@ -235,20 +266,21 @@ final class CoachModel: ObservableObject {
             guard let reply, reply.outcome == .ok else { continue }
             if let coach = reply.coach { last = coach }
             if reply.answering == true {
-                state = .answering
+                if shown { state = .answering }
                 setTurn(message, .answering)
             } else if let coach = reply.coach {
-                finish(coach, message: message)
+                finish(coach, message: message, shown: shown)
                 return
             }
         }
         last?.more = true
-        finish(last, message: message)
+        finish(last, message: message, shown: shown)
     }
 
-    private func finish(_ answer: WatchCoachAnswer?, message: String) {
+    /// `shown` is false for a kept message sent at a read: it's a turn of the conversation, and never the ask on screen.
+    private func finish(_ answer: WatchCoachAnswer?, message: String, shown: Bool = true) {
         // The ask may have been closed meanwhile: the conversation still gets its answer.
-        if inFlight { state = .answered(answer) }
+        if shown, inFlight { state = .answered(answer) }
         setTurn(message, .answered(answer))
         // The Inbox keeps Coach's answers only: nothing of a taf's chat is kept on the watch.
         if taf == nil { onAnswer?(answer, message) }
@@ -298,6 +330,7 @@ final class CoachModel: ObservableObject {
         draft = ""
         sending = nil
         reviewing = false
+        unsure = false
         guard !inFlight else { return }
         asked = nil
         state = .writing
@@ -310,7 +343,64 @@ final class CoachModel: ObservableObject {
         draft = ""
         sending = nil
         reviewing = false
+        unsure = false
         state = .deleted
+    }
+
+    // MARK: Keep for later (v2, docs/watch-app.md; Wear OS's `keepForLater`)
+
+    /// Whether Keep for later is offered: a Send to Coach the phone didn't answer, with its words still in the review.
+    var offersKeep: Bool { unsure && reviewing && taf == nil && drafts != nil && state != .sending }
+
+    /// Keep for later: the words are kept on the watch with their id and the chat they continue, and sent at the next read
+    /// that reaches the phone, under the same id, so tafs cloud starts them at most once if the first Send did arrive. One at
+    /// a time: a newer one replaces it. The review closes.
+    func keepForLater() {
+        guard offersKeep, let sending, sending.words == words else { return }
+        let message = Kept(text: sending.words, message: sending.id.uuidString.lowercased(), ticket: lastTicket)
+        drafts?.write(message)
+        kept = message
+        draft = ""
+        self.sending = nil
+        reviewing = false
+        unsure = false
+        state = .writing
+    }
+
+    /// Delete on what was kept: nothing is sent. Also on Sign out here, and when the phone says it's signed out.
+    func deleteKept() {
+        drafts?.clear()
+        kept = nil
+    }
+
+    /// After a read of the phone (Needs you, when the app opens or Coach's home shows): a phone that answered takes what was
+    /// kept; a phone that says it's signed out deletes it; no answer leaves it for the next read.
+    func afterRead(_ read: NeedsYouModel.State) async {
+        guard taf == nil, drafts != nil else { return }
+        switch read {
+        case .signedOut: deleteKept()
+        case .loaded, .failed: await sendKept()
+        case .loading, .unreachable: return
+        }
+    }
+
+    /// Sends what was kept, from a watch with a passcode only, as Coach's Send. Taken, it's gone from the watch and is a turn
+    /// of the conversation at work; anything else leaves it for the next read, never sent twice under two ids.
+    func sendKept() async {
+        // A file the watch couldn't read when the app opened (it was locked) is read again now.
+        if kept == nil { kept = drafts?.read() }
+        guard let message = kept, !sendingKept, lock.isSecure else { return }
+        sendingKept = true
+        defer { sendingKept = false }
+        let reached = await phone.reach(WatchRequest(.coachSend, made: clock(), text: message.text, message: message.message,
+                                                     ticket: message.ticket))
+        guard kept == message, let reply = reached.reply else { return }
+        if reply.outcome == .signedOut { return deleteKept() }
+        guard reply.outcome == .ok, let ticket = reply.ticket else { return }
+        deleteKept()
+        lastTicket = ticket
+        turns.append(Turn(id: message.message, said: message.text, at: clock(), answer: .sent, ticket: ticket))
+        await read(ticket, message: message.message, shown: false)
     }
 
     /// The app left the screen: the words and the answer go.
@@ -324,6 +414,48 @@ final class CoachModel: ObservableObject {
         draft = ""
         sending = nil
         reviewing = false
+        unsure = false
         state = .writing
+    }
+}
+
+/// Where Keep for later keeps its one message: a file on the watch, or memory in a test. Text only, never audio.
+@MainActor
+protocol DraftStore: AnyObject {
+    func read() -> CoachModel.Kept?
+    func write(_ kept: CoachModel.Kept)
+    func clear()
+}
+
+/// `DraftStore` in Application Support, which isn't a cache the system clears, with complete file protection, as the Inbox's
+/// file: the words, their message id and the chat they continue, nothing else.
+@MainActor
+final class FileDraftStore: DraftStore {
+    /// The name it's kept under, as Wear OS's preferences file.
+    static let storeKey = "tafs.draft"
+    private let url: URL
+
+    init(url: URL = FileDraftStore.place) {
+        self.url = url
+    }
+
+    static var place: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(storeKey + ".json")
+    }
+
+    /// None when there's no file, or it can't be read now (the watch is locked).
+    func read() -> CoachModel.Kept? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(CoachModel.Kept.self, from: data)
+    }
+
+    func write(_ kept: CoachModel.Kept) {
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? JSONEncoder().encode(kept).write(to: url, options: [.atomic, .completeFileProtection])
+    }
+
+    func clear() {
+        try? FileManager.default.removeItem(at: url)
     }
 }

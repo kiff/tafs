@@ -60,6 +60,16 @@ struct CoachAsk: View {
                 // Not sent, or not sure it arrived: what waits for you, in amber (W7).
                 Text(why).font(.footnote).foregroundStyle(WatchLook.held)
             }
+            // The phone didn't answer: Coach's words may be kept on the watch and sent when it's back (row 8), under the
+            // same id. Send stays, to try now.
+            if model.offersKeep {
+                Button {
+                    model.keepForLater()
+                    dismiss()
+                } label: {
+                    Label(Words.Watch.keepForLater, systemImage: "tray.and.arrow.down")
+                }
+            }
         }
         .navigationTitle(model.taf == nil ? Words.Watch.review : title)
         .toolbar {
