@@ -3657,7 +3657,8 @@ final class AppModel: ObservableObject {
     /// change can lift, from KIFF, once the service says the feature is live. Decided from
     /// the held call and the account's capabilities, with no request.
     func offersAllow(_ call: HeldCall) -> Bool {
-        mode == .kiff && Self.allowIsLive(kiffAccount?.capabilities) && canManageCards && cloudTaf(for: call.tafID) != nil && HoldAllow.allowable(call)
+        // Never for a sign-in fill (it needs a release).
+        mode == .kiff && Self.allowIsLive(kiffAccount?.capabilities) && canManageCards && cloudTaf(for: call.tafID) != nil && call.needsRelease != true && HoldAllow.allowable(call)
     }
 
     /// Whether "Allow this from now on" is live: the account's capabilities name `holds.allow`.

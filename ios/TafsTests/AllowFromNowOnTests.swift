@@ -72,6 +72,7 @@ final class AllowFromNowOnTests: XCTestCase {
         let offers = try XCTUnwrap(file.range(of: "func offersAllow(_ call: HeldCall) -> Bool {"))
         let body = file[offers.upperBound...].prefix(300)
         XCTAssertTrue(body.contains("Self.allowIsLive(kiffAccount?.capabilities)"), "the button's rule asks it")
+        XCTAssertTrue(body.contains("call.needsRelease != true"), "never for a sign-in fill, which needs a release this app can't make")
     }
 
     /// The held call KIFF sends carries what the rule reads: its agent and each breach's outcome.

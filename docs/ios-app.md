@@ -1381,6 +1381,18 @@ KIFF opens. `{taf}` is the sample's first taf.
 
 `ChromeShotView` shows the picture a paired Chrome kept just before a taf's step acted (kept 30 days by planque, which keeps none while its switch is off). It reads `GET /v1/accounts/{tenant}/chromes/screenshots/{step}` through `PlanqueClient.chromeScreenshot(step:)`, signed by the device as the Chromes list is, and shows the bytes only if they are WebP, at most 120 KB, and hash to the `sha256` planque sent (`ChromeScreenshot.read`). A 404 reads "No picture is kept for this step"; anything else that goes wrong reads "The picture couldn't be loaded". A call's receipt (`ReceiptView`, from the Record) lists the pictures kept for it: `PlanqueClient.chromeShots(op:)` asks `GET /v1/accounts/{tenant}/chromes/screenshots?op=<proposal_id>` (device-signed, the query covered), which answers the step ids and times (oldest first, the newest 20, none past 30 days, no bytes). Each picture is a "See the page before this step" button that opens the viewer, which then reads that step's bytes. A call that was not a Chrome step, a failed list, or planque keeping none shows nothing: `AppModel.chromeShots` answers `[]` on any failure.
 
+## A held sign-in fill: Refuse only, until the release card
+
+A held Chrome step whose `browser` block carries `sealed_fill` (or a plain `fill`) is a sign-in fill. Allowing it takes a
+release signed by the phone's approval key (docs/chrome.md, "never an allowing answer without its release"), and iPhone
+and iPad don't draw the release card yet. So such a hold offers **no Approve once, no Extra room and no "Allow this from
+now on"**, only Refuse, with `chrome.release_unreadable` ("This fill can't be read, so it can't be allowed. You can still
+refuse it."). `CardException.BrowserBlock` reads the fill apart from the step card, so a fill is known even when its card
+can't be drawn, and a block of the wrong shape never fails the hold. KIFF's `can_approve_once` doesn't override it
+(`KIFFMapping.held`, `AppModel.offersAllow`). The server refuses an allow without a release too, from any client, before
+the sealed fill is turned on (kiff/work#21). Tests: `BrowserStepCardTests.testASignInFillOffersNoApproveOnceUntilTheReleaseCardExists`,
+`AllowFromNowOnTests.testTheButtonWaitsForTheServiceToSayItIsLive`.
+
 ## Account › Sign-in: the email-code setting
 
 Account › Sign-in shows `GET /v1/me/sign-in`: whether the person signs in with a code sent by email, and whether KIFF can send

@@ -714,8 +714,33 @@ final class KIFFClient {
         /// the masked page's context, the basket's lines when it's a checkout, and which paired Chrome. KIFF keeps it
         /// on the hold only for a browser step; one that can't be read is left out, never the hold. The taf's reason
         /// and the total are KIFF's own `taf_reason` and amount, as for any hold.
-        var browserBlock: LenientItem<BrowserStep>? = nil
-        var browser: BrowserStep? { browserBlock?.value }
+        var browserBlock: BrowserBlock? = nil
+        var browser: BrowserStep? { browserBlock?.step }
+        /// The held step is a sign-in fill (`browser.sealed_fill`, or a plain `browser.fill`): allowing it takes a
+        /// release from this phone's approval key (docs/chrome.md, "never an allowing answer without its release"),
+        /// which iPhone and iPad can't make yet. Read apart from the step card, so a fill is known even when its card
+        /// can't be drawn.
+        var needsRelease: Bool { browserBlock?.needsRelease ?? false }
+
+        /// The hold's `browser` block, read without ever failing the hold: the step card when it can be drawn, and
+        /// whether the step is a fill that needs a release.
+        struct BrowserBlock: Decodable, Equatable {
+            var step: BrowserStep? = nil
+            var needsRelease = false
+            private struct Key: CodingKey {
+                var stringValue: String; var intValue: Int? { nil }
+                init(stringValue: String) { self.stringValue = stringValue }
+                init?(intValue: Int) { nil }
+            }
+            init(step: BrowserStep? = nil, needsRelease: Bool = false) { self.step = step; self.needsRelease = needsRelease }
+            init(from decoder: Decoder) throws {
+                step = try? BrowserStep(from: decoder)
+                guard let c = try? decoder.container(keyedBy: Key.self) else { return }
+                needsRelease = ["sealed_fill", "fill"].contains { k in
+                    c.contains(Key(stringValue: k)) && !((try? c.decodeNil(forKey: Key(stringValue: k))) ?? true)
+                }
+            }
+        }
 
         /// What a held browser step shows, as planque words it: the apps only draw it.
         struct BrowserStep: Decodable, Equatable {
