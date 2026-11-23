@@ -280,7 +280,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | 2 | Use another Chrome for a connection (planque's `use_another_chrome`, signed for the new Chrome) | done (tafs#1776) | done (tafs#1783) | not for it: planque tells it |
 | 3 | Unpairing ends its connections, and says which | done (tafs#1751) | done (tafs#1756) | not for it |
 | 4 | Each Chrome says what it's used for; a connection names its Chrome | done (tafs#1776) | done (tafs#1756, #1777) | not for it |
-| 5 | One fingerprint for pairing and the extension's KIFF device | in review: tafs#1865 (`pairChromeOneTouch`) | done (`confirmChromeOneTouch`) | done |
+| 5 | One fingerprint for pairing and the extension's KIFF device | done (tafs#1865, `pairChromeOneTouch`) | done (`confirmChromeOneTouch`) | done |
 | 6 | Isolation: each connection's sites signed per Chrome | done | done | done (`checkSites`, `checkAllowances`) |
 
 ## Chrome extension
