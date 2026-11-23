@@ -1523,7 +1523,7 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   extension gets a second fingerprint for the device. KIFF's refusal, in its own words, confirms nothing.
 - **Re-pairing replaces, never adds** (docs/chrome.md "Your Chrome" 1). When Chromes are already paired, the offer shows
   **Replaces** (`chrome.replace_title`): each paired Chrome, and "A new Chrome (replaces none)". The pick starts on the Chrome
-  with the offer's `profile_id`; else, when one side has no id, the one paired Chrome on the same browser and system; else
+  with the offer's `profile_id`; else (a reinstalled extension has a new id) the one paired Chrome on the same browser and system; else
   none, never a guess between two (`ChromePairing.replacedBy`, as iOS's `ChromeReplace.preselect`). With a Chrome picked:
   - "Moves to this Chrome: {sites}" lists what moves. That is only each connection planque lists live on the old Chrome whose
     `chrome_sites_sig` (this phone's own signature at approval) verifies with this phone's approval key for that Chrome

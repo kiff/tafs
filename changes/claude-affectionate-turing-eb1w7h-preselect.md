@@ -1,0 +1,1 @@
+- **Re-pairing a Chrome starts on the Chrome it most likely replaces (iPhone and iPad):** after a reinstall of the extension, the one paired Chrome of the same browser and system is the starting pick, as the contract says; two alike are never guessed ([docs/ios-app.md](docs/ios-app.md)).

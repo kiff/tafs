@@ -1,7 +1,7 @@
 // The side panel: pairing by the phone's code, and while a taf works, what it's doing, with Pause, Resume and Stop. It
 // shows only what the service worker reports; it decides nothing.
 
-import { FRESH, chosen, sendOptions, afterSend, chatTitle } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay } from "../src/coachchat.js";
 
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
@@ -156,7 +156,34 @@ $("vault").addEventListener("toggle", () => $("vault").open && drawVault());
 let shared = null;
 let view = FRESH;
 
+// The chat is read while the panel is seen: often while Coach is at work or the owner just wrote, seldom otherwise, never on a
+// fresh conversation (docs/chrome.md, "Coach in the side panel"). Each read sets the next.
+let working = false;
+let sentAt = 0;
+let pollTimer = null;
+
+function schedule() {
+  clearTimeout(pollTimer);
+  const delay = pollDelay({ view, working, sentAt, now: Date.now() });
+  if (delay == null || document.visibilityState !== "visible") return;
+  pollTimer = setTimeout(drawCoach, delay);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") drawCoach();
+  else clearTimeout(pollTimer);
+});
+
 async function drawCoach() {
+  working = false;
+  try {
+    await renderCoach();
+  } finally {
+    schedule();
+  }
+}
+
+async function renderCoach() {
   const note = $("coachNote");
   note.textContent = "";
   const list = $("coachThread");
@@ -191,7 +218,8 @@ async function drawCoach() {
     list.append(li);
   }
   $("coachPhone").hidden = !r.thread.waitsOnPhone;
-  if (r.thread.working) note.textContent = t("coach_working");
+  working = !!r.thread.working;
+  if (working) note.textContent = t("coach_working");
 }
 
 /** The earlier chats, newest first; a tap shows one. */
@@ -277,6 +305,7 @@ $("coachForm").onsubmit = async (e) => {
     return;
   }
   view = afterSend(view, r.sent);
+  sentAt = Date.now();
   $("coachWords").value = "";
   shared = null;
   $("sharePreview").hidden = true;
@@ -284,4 +313,3 @@ $("coachForm").onsubmit = async (e) => {
 };
 
 drawCoach();
-setInterval(() => document.visibilityState === "visible" && drawCoach(), 4000);

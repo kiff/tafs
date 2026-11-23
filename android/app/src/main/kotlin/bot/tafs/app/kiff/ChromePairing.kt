@@ -284,14 +284,13 @@ object ChromePairing {
   }
 
   /**
-   * What the pick starts on, as iOS's `ChromeReplace.preselect`: the paired Chrome whose profile id is the offer's; else, when one
-   * side has no id (an extension from before ids, or one reinstalled), the one paired Chrome on the same browser and system. None
-   * otherwise ("a new Chrome"), never a guess between two.
+   * What the pick starts on, as iOS's `ChromeReplace.preselect`: the paired Chrome whose profile id is the offer's; else the one
+   * paired Chrome on the same browser and system, whatever its id: a reinstalled extension has a new one (docs/chrome.md, "Your
+   * Chrome" 1), and one from before ids has none. None otherwise ("a new Chrome"), never a guess between two.
    */
   fun replacedBy(offer: ChromeOffer, chromes: List<Chrome>): Chrome? {
     if (offer.profileId.isNotEmpty()) chromes.firstOrNull { it.profileId == offer.profileId }?.let { return it }
-    val alike = chromes.filter { it.profileId.isNullOrEmpty() || offer.profileId.isEmpty() }
-      .filter { offer.browser.isNotEmpty() && it.browser == offer.browser && offer.os.isNotEmpty() && it.os == offer.os }
+    val alike = chromes.filter { offer.browser.isNotEmpty() && it.browser == offer.browser && offer.os.isNotEmpty() && it.os == offer.os }
     return alike.singleOrNull()
   }
 
