@@ -50,7 +50,7 @@ function draw(state) {
     loadTafs();
   }
   const runsSeen = JSON.stringify((state.runs || []).map((r) => [r.id, (r.steps || []).length, r.stopped]));
-  if (state.paired && lastRuns !== null && runsSeen !== lastRuns) readTaf();
+  if (state.paired && lastRuns !== null && runsSeen !== lastRuns && document.visibilityState === "visible") readTaf();
   lastRuns = runsSeen;
   $("pair").hidden = !!state.paired;
   $("paired").hidden = !state.paired;

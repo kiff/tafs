@@ -78,6 +78,23 @@ export class Coach {
       .map((t) => ({ id: t.id, name: typeof t.name === "string" ? t.name : "", agent: t.kiff_agent }));
   }
 
+  /**
+   * The account's tafs, read once for `key` (this Chrome's connections as the relay last said them) and kept: a chat's
+   * reads and sends ask tafs cloud for none. A change of the connections reads them again, and `fresh` does too (the
+   * panel shown). A read that fails isn't kept.
+   */
+  keptTafs(key, fresh = false) {
+    if (fresh || !this.tafsKept || this.tafsKey !== key) {
+      const read = this.tafs();
+      this.tafsKey = key;
+      this.tafsKept = read;
+      read.catch(() => {
+        if (this.tafsKept === read) this.tafsKept = null;
+      });
+    }
+    return this.tafsKept;
+  }
+
   /** A taf's own chat, as the phone reads it: the same shape as Coach's `thread`. */
   async tafThread(id) {
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation");

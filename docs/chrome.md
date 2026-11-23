@@ -589,7 +589,10 @@ The side panel is for watching a taf work and talking to it ([chrome-panel.md](c
   at work first. With one taf it opens on it, and with several there's a picker.
 - **The list is for display only, never authority.** What a step may do still comes only from the signed step and the
   connection's phone-signed sites. The extension never takes a site from this list as allowed. The panel reads the chat of
-  a taf on it, and no other (`taf_thread`, `taf_send`).
+  a taf on it, and no other (`taf_thread`, `taf_send`). That limit is only as strong as the list, which planque sends and
+  nobody signs. tafs cloud's own routes still decide whose chat the session may read.
+- **The person's tafs are read once per change** of this Chrome's connections, and again when the panel is shown
+  (`keptTafs`). A chat's reads and sends reuse them, so they make no extra request.
 - **Its chat** is the taf's own, as on the phone (`GET /v1/tafs/{id}/conversation`, `POST …/messages`, tafs cloud's
   extension routes). It's read on each event: the panel shown, a taf picked, a send, a step seen in a run. Then every 4 s
   while the taf works or for a minute after a send, otherwise backing off from 60 s to 5 minutes, jittered (`idleDelay`),

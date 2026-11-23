@@ -52,7 +52,7 @@ describe("the Chrome extension's side panel routes (extension-cors.ts)", () => {
   });
 
   it("only on those routes: any other route gets no preflight answer and no CORS header", () => {
-    for (const path of ["/v1/tafs/taf-1/chats/s-1/archive", "/v1/tafs/taf-1/chats/archived", "/v1/tafs/taf-1/conversation/s-1/x", "/v1/tafs", "/v1/tafs/taf-1", "/v1/tafs/taf-1/messages/stream", "/v1/connect/grants/g/check", "/v1/setup/x", "/v1/home"]) {
+    for (const path of ["/v1/tafs/taf-1/chats/s-1/archive", "/v1/tafs/taf-1/chats/archived", "/v1/tafs/taf-1/conversation/s-1/x", "/v1/tafs/", "/v1/tafs/taf-1", "/v1/tafs/taf-1/messages/stream", "/v1/connect/grants/g/check", "/v1/setup/x", "/v1/home"]) {
       expect(extensionPreflight(ev("OPTIONS", path, EXT)), path).toBeUndefined();
       expect(withExtensionCORS(ev("GET", path, EXT), answer()).headers, path).toEqual(answer().headers);
     }
