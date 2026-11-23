@@ -3470,7 +3470,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.runs.find((r) => r.id === "run_p")?.status).toBe("CANCELLED");
     // The task that waited on the owner's answer was stopped, and the answer says so (the owner's panel test, 23 Nov).
     expect(stopped.body.stopped).toEqual([{ run: "run_p", session: "sess_p" }]);
-    expect(stopped.body.words).toBe("Installing this version stopped what was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again.");
+    expect(stopped.body.words).toBe("Installing this version stopped what was waiting on your answer: its held call was withdrawn and its message wasn't carried out. You can send it again.");
   });
 
   it("says the stop in the owner's language, and names only a run that was really stopped (a cancel that answers 409 had ended meanwhile)", async () => {
