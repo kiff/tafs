@@ -343,8 +343,11 @@ was done.
 
 ## Runs
 
-- **A run gets a window of its own,** opened without focus, with one tab group, "tafs · Rae", in orange. It never comes
-  to the front, never takes focus from the owner, and closes when the run ends.
+- **A run opens in the window the owner is using,** as one background tab in a tab group, "tafs · Rae", in orange,
+  beside their tabs. Their active tab stays in front and the run never takes focus. When the run ends, only the tabs the
+  run opened close; the window and the owner's tabs stay. With no normal window open, or only a private or pop-up one
+  (the run never opens in a private window), the run gets a window of its own, opened without focus, and that window
+  closes when the run ends.
 - **The runner touches only tabs it opened.** It never lists the owner's tabs, and it ignores navigation events from
   any other tab. A tab a run's page opens joins the run only on the run's sites; anything else is closed.
 - **A request off the run's sites never leaves.** As a run's tab opens, before it loads anything, the runner gives
@@ -503,7 +506,7 @@ A taf's Chrome steps are kept as pictures for the record: one WebP (quality 0.6,
 
 - **Covered first.** `TafsPage.maskForShot()` puts an opaque box over every password, one-time code and card field, every field filled from Saved sign-ins, and every field whose value the masking would change. It also covers **text in the page** that looks like a card number (13 to 19 digits that pass the Luhn check, with spaces or dashes) or a secret: keys by shape (`sk_`/`pk_`/`rk_`, `AKIA…`, `ghp_`/`github_pat_`, JWTs and the like), labelled values (`api_key=…`, `Bearer …`), and runs of 32 or more hex characters or base64 characters with a digit in them (`TafsMask.secretSpans`). It covers **every visible frame whole** (`iframe`, `frame`, `embed`, `object`): what a frame from another site holds, a login widget or a bank's form, can't be read by the page's script, so none of it is trusted to be hidden. Fields and text inside **open shadow roots** are found and covered like any other (a closed shadow root can't be seen from the page, so a secret in one is not covered: a limit). It checks with `elementFromPoint` that each box is on top; if one is not, no picture is taken. The boxes come off straight after the capture, also when it fails or times out.
 - **No picture when it can't be sure.** The tab, its window and its address are read again once the picture is back: a tab switched to, moved to another window, or sent to another page during the covers or the capture means the picture may show what was never covered or never allowed, and it is dropped. The search for secrets is capped (200 shadow roots, 6000 text nodes); a page past a cap gets no picture, never a partial cover. A page with a one-time-code field to fill gets none either: it may be an authenticator's setup, whose QR code and seed are the second factor and look like nothing the covers know.
-- **Never taken** on a sensitive site, on a checkout or a payment frame, over plain http, or when the run's tab isn't in front of its own window: the browser takes the picture of a window, not of a tab, so a tab the person dragged into another window is not pictured (it would be the old window's front tab, which was never covered). A picture that can't be taken never holds the act.
+- **Never taken** on a sensitive site, on a checkout or a payment frame, over plain http, or when the run's tab isn't in front of its window (a run in the owner's window is a background tab, so it has no pictures there; one in a window of its own does): the browser takes the picture of a window, not of a tab, so a tab the person dragged into another window is not pictured (it would be the old window's front tab, which was never covered). A picture that can't be taken never holds the act.
 - **Sent over HTTPS, not the relay** (the relay's message limits are too small for a picture): `POST /v1/extension/steps/<step>/screenshot` with the JSON `{chrome_id, image, sig}`, `image` being the WebP bytes in unpadded base64url. `sig` is the extension's key over `tafs-chrome/screenshot/v1` and `{chrome_id, step, sha256}` (`sha256` the lower-case hex of the image bytes), so planque can tell the picture is this extension's, for this step, unaltered.
 - **Off until planque keeps them.** The build ships with `screenshots: false` (`src/config.js`); it is switched on in a release only once planque stores the pictures behind its own flag and the privacy wording is live.
 
@@ -541,8 +544,8 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 ## Known limits
 
 - **A window a page's script opens** (from a blank frame, say) is fenced only *after* its first request: Chrome gives the
-  extension its tab only once it navigates, so that first request goes out before the fence holds it. The run's own window never
-  opens one (`window.open` is off in its tabs, and `target` is forced to `_self`).
+  extension its tab only once it navigates, so that first request goes out before the fence holds it. A run's tabs never
+  open one (`window.open` is off in its tabs, and `target` is forced to `_self`).
 
 ## Not done yet
 

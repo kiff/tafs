@@ -1,0 +1,1 @@
+- **Chrome extension:** a run opens as a background tab in the window the owner is using, and Stop closes only the tabs it opened; with no normal window (or only a private one) it keeps a window of its own ([docs/chrome.md](../docs/chrome.md), "Runs").

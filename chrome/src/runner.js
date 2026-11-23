@@ -1,5 +1,5 @@
-// Runs checked steps in a run's own tabs (docs/chrome.md, "Runs"). Each run gets a background window with one tab group,
-// "tafs · <taf>", that never comes to the front. The runner touches only tabs it opened: it never lists the owner's tabs,
+// Runs checked steps in a run's own tabs (docs/chrome.md, "Runs"). Each run opens a background tab in the owner's window (a window of
+// its own, unfocused, when there is none) in one tab group, "tafs · <taf>", that never comes to the front. The runner touches only tabs it opened: it never lists the owner's tabs,
 // and nothing outside the run's group is ever read or sent. A navigation off the run's sites is stopped in the tab itself,
 // whatever started it. The owner's own input in a run's tab pauses the run.
 
