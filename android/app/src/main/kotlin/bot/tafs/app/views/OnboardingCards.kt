@@ -124,11 +124,13 @@ internal fun onboardingSampleCard(): TafCard =
 
 /**
  * How tafs works, any time (docs/onboarding.md): the three cards again, each opening where it's tapped, and the four legal pages
- * titled as their pages are (`onboarding.row_*`, never the tick line's link words, which sit inside its sentence).
+ * titled as their pages are (`onboarding.row_*`, never the tick line's link words, which sit inside its sentence). Then two
+ * short sections, as iOS's: Chrome only where planque offers it ([chrome]), the emailed code only where KIFF can send it
+ * ([code]), so the app says nothing about what the person can't use.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun HowTafsWorksSheet(onClose: () -> Unit) {
+fun HowTafsWorksSheet(chrome: Boolean = false, code: Boolean = false, onClose: () -> Unit) {
   val uri = androidx.compose.ui.platform.LocalUriHandler.current
   var opened by rememberSaveable { mutableStateOf<OnboardingPage?>(null) }
   bot.tafs.app.drive.DriveSheet(
@@ -153,6 +155,18 @@ fun HowTafsWorksSheet(onClose: () -> Unit) {
             modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { uri.openUri(url) }.padding(vertical = 10.dp))
         }
       }
+      if (chrome) HelpSection(
+        Words.Help.chromeTitle,
+        Words.Help.chromeLead(needsYou = Words.NeedsYou.title),
+        Words.Help.chromeManage(account = Words.Settings.title, chrome = Words.Chrome.title),
+        HOW_IT_WORKS_CHROME,
+      )
+      if (code) HelpSection(
+        Words.Help.codeTitle,
+        Words.Help.codeLead(account = Words.Settings.title, signIn = Words.Settings.SignInCode.title),
+        Words.Help.codeSafe,
+        HOW_IT_WORKS_CODE,
+      )
     }
   }
   opened?.let { start ->
@@ -162,6 +176,23 @@ fun HowTafsWorksSheet(onClose: () -> Unit) {
     ) { OnboardingCards(start) { opened = null } }
   }
 }
+
+/** One of How tafs works' short sections: its title as a heading, what it does, and a second, quieter line. */
+@Composable
+private fun HelpSection(title: String, lead: String, more: String, tag: String) {
+  Column(Modifier.fillMaxWidth().testTag(tag), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Text(title, style = scaled(17, FontWeight.SemiBold, Theme.ink), modifier = Modifier.semantics { heading() })
+    Panel {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(lead, style = scaled(15, color = Theme.soft))
+        Text(more, style = scaled(14, color = Theme.dim))
+      }
+    }
+  }
+}
+
+internal const val HOW_IT_WORKS_CHROME = "how_it_works.chrome"
+internal const val HOW_IT_WORKS_CODE = "how_it_works.code"
 
 /** The four legal pages as How tafs works lists them: each row's own standalone title, and its page in the app's language. */
 internal fun howItWorksLegalRows(): List<Pair<String, String>> = listOf(

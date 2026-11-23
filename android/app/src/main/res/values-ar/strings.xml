@@ -1611,6 +1611,12 @@
     <string name="halt_all_running">تعذّر على tafs تجميد tafs لديك. افتح tafs لتجميدها.</string>
     <string name="halt_all_signed_out">لقد سجّلت الخروج من tafs. سجّل الدخول لتجميد tafs لديك.</string>
     <string name="halt_all_title">تجميد جميع tafs</string>
+    <string name="help_chrome_lead">أقرن إضافة tafs بهاتفك، فيستطيع taf العمل في Chrome الخاص بك، على المواقع التي تسمح بها فقط. يعمل في علامات تبويب خاصة به، وكل ما يحتاج إلى موافقتك ينتظرك في %1$s.</string>
+    <string name="help_chrome_manage">يعرض %1$s › %2$s متصفحات Chrome الخاصة بك وما يُستخدم له كل منها. إلغاء إقران Chrome ينهي اتصالاته.</string>
+    <string name="help_chrome_title">يمكن لـ tafs العمل في Chrome الخاص بك</string>
+    <string name="help_code_lead">فعّله في %1$s › %2$s. بعد ذلك، عندما تطلب، يرسل KIFF بالبريد الإلكتروني رمزًا يعمل مرة واحدة، لمدة 10 دقائق، في المتصفح الذي طلبه.</string>
+    <string name="help_code_safe">لا تعطِ هذا الرمز لأحد أبدًا. لن يطلبه منك KIFF أبدًا.</string>
+    <string name="help_code_title">تسجيل الدخول برمز يصل بالبريد الإلكتروني</string>
     <string name="home_calendar_not_read">تعذّرت قراءة التقويم. %1$s</string>
     <string name="home_cant_reach_kiff">تعذّر الوصول إلى KIFF</string>
     <string name="home_choose_taf">اختر taf.</string>

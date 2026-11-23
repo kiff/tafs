@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Uparite proširenje tafs s telefonom i taf može raditi u vašem Chromeu, samo na stranicama koje dopustite. Radi u vlastitim karticama, a sve što treba vaše odobrenje čeka vas u {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} prikazuje vaše Chromeove i za što se koristi svaki. Prekidom uparivanja Chromea prestaju njegove veze.",
+  "help.chrome_title": "tafs može raditi u vašem Chromeu",
+  "help.code_lead": "Uključite to u {account} › {sign_in}. Zatim vam KIFF na zahtjev e-poštom šalje kod koji vrijedi jednom, 10 minuta, u pregledniku koji ga je zatražio.",
+  "help.code_safe": "Nikome nikad ne dajte ovaj kod. KIFF ga od vas nikad neće tražiti.",
+  "help.code_title": "Prijava kodom iz e-pošte"
+}

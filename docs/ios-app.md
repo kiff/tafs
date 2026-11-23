@@ -1409,6 +1409,10 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
   (the scheduled and manual runs both are). It is written to the runner's temporary folder and removed at the end.
 - The macOS app is the same app record as the iPhone's and iPad's (universal purchase), so its versions are the `MAC_OS` ones.
 
+## Help: Chrome and the emailed code, in How tafs works
+
+Two short sections in How tafs works (the screen Account and Home open, `HowTafsWorksView`), words in `help.json` in every language (legal-i18n's drafts, pinned by key): **Chrome** ("tafs can work in your Chrome": what it does, only on the sites you allow, in its own tabs; where Account › Chrome lists each Chrome and what it is used for; unpairing ends its connections), shown only where planque offers Chrome (`model.chromes != nil`); and **Sign in with an emailed code** (turn it on in Account › Sign-in; KIFF emails a code that works once for 10 minutes; never give it to anyone), shown only where KIFF can send codes (`codeSignIn.available`). The screens are named with the app's own titles (`{account}`, `{chrome}`, `{sign_in}`, `{needs_you}`), so each language writes them as the app does. The app says nothing about what the person can't use.
+
 ## Account › Chrome: what each Chrome is used for
 
 "Your Chrome" ([chrome.md](chrome.md)): under each paired Chrome, Account › Chrome says which sites its connections are used for

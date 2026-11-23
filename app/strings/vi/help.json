@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Ghép đôi tiện ích tafs với điện thoại của bạn và một taf có thể làm việc trong Chrome của bạn, chỉ trên các trang bạn cho phép. Nó làm việc trong các tab riêng, và mọi việc cần bạn đồng ý đều chờ bạn ở {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} liệt kê các Chrome của bạn và mỗi Chrome dùng để làm gì. Hủy ghép đôi một Chrome sẽ chấm dứt các kết nối của nó.",
+  "help.chrome_title": "tafs có thể làm việc trong Chrome của bạn",
+  "help.code_lead": "Bật tính năng này ở {account} › {sign_in}. Sau đó, khi bạn yêu cầu, KIFF gửi qua email một mã dùng được một lần, trong 10 phút, trên trình duyệt đã yêu cầu.",
+  "help.code_safe": "Đừng đưa mã này cho bất kỳ ai. KIFF sẽ không bao giờ hỏi bạn mã này.",
+  "help.code_title": "Đăng nhập bằng mã gửi qua email"
+}

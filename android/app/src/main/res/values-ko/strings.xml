@@ -1336,6 +1336,12 @@
     <string name="halt_all_running">tafs가 tafs를 차단하지 못했습니다. tafs를 열어 차단하세요.</string>
     <string name="halt_all_signed_out">tafs에서 로그아웃되었습니다. 로그인해 tafs를 차단하세요.</string>
     <string name="halt_all_title">모든 tafs 차단</string>
+    <string name="help_chrome_lead">tafs 확장 프로그램을 휴대전화와 페어링하면, taf가 내 Chrome에서 일할 수 있습니다. 허용한 사이트에서만 일하고, 자체 탭에서 작업하며, 내 승인이 필요한 일은 %1$s에서 기다립니다.</string>
+    <string name="help_chrome_manage">%1$s › %2$s에서 내 Chrome 목록과 각각의 용도를 볼 수 있습니다. Chrome의 페어링을 해제하면 그 연결도 끝납니다.</string>
+    <string name="help_chrome_title">tafs는 내 Chrome에서 일할 수 있습니다</string>
+    <string name="help_code_lead">%1$s › %2$s에서 켜세요. 그다음 요청하면 KIFF가 한 번만, 10분 동안, 요청한 브라우저에서 쓸 수 있는 코드를 이메일로 보냅니다.</string>
+    <string name="help_code_safe">이 코드를 누구에게도 알려 주지 마세요. KIFF는 절대 묻지 않습니다.</string>
+    <string name="help_code_title">이메일로 받은 코드로 로그인</string>
     <string name="home_calendar_not_read">캘린더를 읽지 못했습니다. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF에 연결할 수 없음</string>
     <string name="home_choose_taf">taf를 선택하세요.</string>
