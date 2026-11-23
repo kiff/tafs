@@ -558,9 +558,11 @@ drew, and the release is the only signature over the handle, origin and field. T
 **Where the phone refuses to sign,** whatever planque says (it shows the hold as unreadable, and says why). Which sites a
 fill may go to comes **only from the phone's own signed grants**, never from fields the hold relays:
 - the origin isn't `https`, or it isn't within the sites this phone signed (`tafs-chrome/sites/v1`, checked with its own key)
-  for one of the account's connections on that same Chrome, as planque lists them: a list planque widened, another key's
-  signature, or a connection on another Chrome counts for nothing. The phone never signs a release for a site its owner
-  didn't connect;
+  for one of the account's **live** connections on that same Chrome, as planque lists them (`status` connected): a list
+  planque widened, another key's signature, a connection on another Chrome, or one the owner ended (it keeps its signature)
+  counts for nothing. The phone never signs a release for a site its owner didn't connect;
+- the block KIFF serves isn't the one its `browser_sha256` names (the lower-case hex SHA-256 of the RFC 8785 JCS of the
+  served `browser` object): then what the card would draw isn't what the answer covers, so it's refused before any prompt;
 - the origin is a sensitive site, unless this phone holds its own `tafs-chrome/sensitive/v1` allowance for it on that
   connection. **Android keeps none yet, so it refuses every sensitive site;**
 - the Chrome isn't one it is paired with, or the hold has no `read_id`, `field_ref` or a handle of the shape above;
@@ -605,8 +607,10 @@ on that Chrome, never a sensitive site, the op, read and field present), and a r
 - **What it reads:** planque's block as it sends it (planque's `sealedBlock`, which KIFF serves unchanged):
   `browser.release_fields`, `{chrome_id, op, sealed, origin, field_ref, read_id}`, copied byte for byte into the release
   (`KiffMapping.sealedFill`), and for what's drawn `site`, `origin`, `chrome.name`, `action_words` and `context.title`. The
-  hold's `expires_at` is the fill's end. The sites it checks are the account's grants as planque lists them, with this phone's
-  own `chrome_sites_sig` (`ChromePairing.signedSites`), never anything in the block.
+  hold's `expires_at` is the fill's end. The sites it checks are the account's live grants as planque lists them, with this
+  phone's own `chrome_sites_sig` (`ChromePairing.signedSites`), never anything in the block. **The hold's `browser_sha256`**
+  must equal the served block's own hash (`TolerantBrowser.servedSha256`), and **every answer to the hold, Refuse included,
+  signs it** as `kiff.answer.v1`'s ninth line (`KiffClient.answerMessage`), as KIFF checks it.
 - **What it draws** (`SealedFillBlock`): the design's order above, in `chrome.release_*` words in every shipped language; the
   block's own words (the site, the Chrome's name, the page's title) as plain text only; a fill the phone's checks refuse says
   why (`SealedRelease.refusalWords`) and offers Refuse only.

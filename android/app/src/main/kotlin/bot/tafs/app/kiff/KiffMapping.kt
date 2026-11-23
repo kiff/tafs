@@ -378,8 +378,9 @@ object KiffMapping {
       kind = e.kind,
       breachOutcomes = e.breaches.map { it.outcome },
       // A sealed fill's hold lives 3 minutes by the design: with no `expires_at` it reads as expired, never as 10 minutes.
-      browser = e.browser?.let { browserStep(it, e.expiresAt?.toEpochMilli() ?: 0L) },
+      browser = e.browser?.let { browserStep(it, e.expiresAt?.toEpochMilli() ?: 0L, e.browserSha256) },
       needsRelease = e.browser?.needsRelease == true,
+      browserSha256 = e.browserSha256?.takeIf { it.isNotEmpty() },
     )
   }
 
@@ -393,7 +394,7 @@ object KiffMapping {
    * A held browser step's block as plain text (docs/chrome.md): every piece through [tafSays], so no line can reorder or hide
    * words; a block with no site or no action draws nothing, never half a page.
    */
-  fun browserStep(b: HeldBrowser, expiresAt: Long = 0): BrowserStep? {
+  fun browserStep(b: HeldBrowser, expiresAt: Long = 0, browserSha256: String? = null): BrowserStep? {
     val site = tafSays(b.site, 120)?.takeIf { it.isNotBlank() } ?: return null
     val action = tafSays(b.actionWords, 200)?.takeIf { it.isNotBlank() } ?: return null
     fun text(e: kotlinx.serialization.json.JsonElement?): String? = (e as? kotlinx.serialization.json.JsonPrimitive)?.content?.let { tafSays(it, 40) }?.takeIf { it.isNotBlank() }
@@ -409,7 +410,8 @@ object KiffMapping {
       excerpt = tafSays(b.context?.text, BROWSER_EXCERPT_MAX)?.takeIf { it.isNotBlank() },
       lines = lines,
       chrome = tafSays(b.chrome?.name, 40)?.takeIf { it.isNotBlank() },
-      fill = b.releaseFields?.let { f -> sealedFill(f, expiresAt) },
+      // Bound to KIFF's hash only when it's this block's own: what the owner reads is then what the answer signs.
+      fill = b.releaseFields?.let { f -> sealedFill(f, expiresAt, browserSha256?.takeIf { it.isNotEmpty() && it == b.servedSha256 }) },
     )
   }
 
@@ -418,9 +420,9 @@ object KiffMapping {
    * extension checks the same bytes. Whether it may be signed is the phone's own checks ([SealedRelease.refusal], against its own
    * signed grants), and its part is read from the handle ([SealedRelease.part]).
    */
-  fun sealedFill(f: bot.tafs.app.kiff.HeldReleaseFields, expiresAt: Long): SealedRelease.Fill = SealedRelease.Fill(
+  fun sealedFill(f: bot.tafs.app.kiff.HeldReleaseFields, expiresAt: Long, blockSha256: String? = null): SealedRelease.Fill = SealedRelease.Fill(
     chromeId = f.chromeId, op = f.op, sealed = f.sealed, origin = f.origin, fieldRef = f.fieldRef, readId = f.readId,
-    expiresAt = expiresAt,
+    expiresAt = expiresAt, blockSha256 = blockSha256,
   )
 
   /**

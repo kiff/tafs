@@ -553,6 +553,11 @@ data class HeldCall(
    * by Approve once, Extra room or a standing rule. Read from the hold as sent, so a block that can't be drawn still counts.
    */
   val needsRelease: Boolean = false,
+  /**
+   * KIFF's `browser_sha256` for a held sealed fill, as sent: every answer to the hold signs it as `kiff.answer.v1`'s ninth line,
+   * Refuse included (KIFF checks the answer over it). Null for any other hold.
+   */
+  val browserSha256: String? = null,
 )
 
 /** The taf and version a held version_install names, as Coach sent them: the taf's id in tafs cloud, or its name. */

@@ -583,6 +583,12 @@ data class CardException(
    * built on, masked, kept by KIFF on the hold. Absent for any other hold, and until KIFF carries it: the card is then as any hold.
    */
   @Serializable(with = TolerantBrowser::class) val browser: HeldBrowser? = null,
+  /**
+   * For a held sealed fill: KIFF's lower-case hex SHA-256 of the RFC 8785 JCS of [browser] as it serves it. Every answer to
+   * such a hold signs it as `kiff.answer.v1`'s ninth line, and the card is drawn for Allow only when it's the served block's
+   * own hash ([HeldBrowser.servedSha256]).
+   */
+  @SerialName("browser_sha256") val browserSha256: String? = null,
 )
 
 /**
@@ -599,8 +605,14 @@ object TolerantBrowser : kotlinx.serialization.KSerializer<HeldBrowser?> {
     val o = e as? kotlinx.serialization.json.JsonObject ?: return HeldBrowser(needsRelease = true)
     val fill = listOf("release_fields", "sealed_fill", "fill").any { k -> o[k].let { it != null && it !is kotlinx.serialization.json.JsonNull } }
     val read = runCatching { decoder.json.decodeFromJsonElement(HeldBrowser.serializer(), o) }.getOrNull()
-    return (read ?: HeldBrowser()).copy(needsRelease = fill)
+    return (read ?: HeldBrowser()).copy(needsRelease = fill, servedSha256 = servedSha256(o))
   }
+
+  /** The block's own hash as KIFF computes it: hex SHA-256 of its RFC 8785 JCS. Null when it can't be put in that form. */
+  fun servedSha256(o: kotlinx.serialization.json.JsonObject): String? = runCatching {
+    java.security.MessageDigest.getInstance("SHA-256").digest(Jcs.canonical(o).toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+  }.getOrNull()
+
 
   override fun serialize(encoder: kotlinx.serialization.encoding.Encoder, value: HeldBrowser?) {
     val json = (encoder as kotlinx.serialization.json.JsonEncoder).json
@@ -628,6 +640,8 @@ data class HeldBrowser(
   @SerialName("release_fields") val releaseFields: HeldReleaseFields? = null,
   /** It asks for a fill in the person's Chrome, read from the block as sent ([TolerantBrowser]): allowed only with its release. */
   @kotlinx.serialization.Transient val needsRelease: Boolean = false,
+  /** The block's own hash, as it was served ([TolerantBrowser.servedSha256]): what KIFF's `browser_sha256` must equal. */
+  @kotlinx.serialization.Transient val servedSha256: String? = null,
 )
 
 /**

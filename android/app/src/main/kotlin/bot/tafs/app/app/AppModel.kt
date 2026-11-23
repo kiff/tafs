@@ -7685,7 +7685,7 @@ class AppModel(
     var signedAt = ""
     val message = {
       signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
-      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt)
+      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt, call.browserSha256)
     }
     // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
     // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no

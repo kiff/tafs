@@ -57,8 +57,10 @@ class SealedReleaseTest {
     chrome: String = s("chrome_id"),
     readId: String = s("read_id"),
     expiresAt: Long = now + 180_000,
+    blockSha256: String? = "ab".repeat(32),
   ) = SealedRelease.Fill(
     chromeId = chrome, op = s("op"), sealed = sealed, origin = origin, fieldRef = s("field_ref"), readId = readId, expiresAt = expiresAt,
+    blockSha256 = blockSha256,
   )
 
   /**
@@ -71,8 +73,10 @@ class SealedReleaseTest {
     listed: List<String> = sites,
     signed: List<String> = listed,
     sig: String? = raw(phone, ChromePairing.sitesBytes(chrome, id, signed)),
+    status: String = "connected",
   ) = Grant(
     id = id,
+    status = status,
     request = GrantRequest(browser = GrantBrowser(driver = GrantBrowser.EXTENSION, chrome = chrome, sites = listed)),
     chromeSitesSig = sig,
   )
@@ -134,6 +138,13 @@ class SealedReleaseTest {
     assertEquals(Refusal.NOT_SIGNED, refused(fill(), with = emptyList()))
     // This phone's own signature, but for a connection on another Chrome: it says nothing about this one.
     assertEquals(Refusal.NOT_SIGNED, refused(fill(), with = listOf(grant(chrome = "chr_other"))))
+    // A connection the owner ended keeps its signature, but no longer stands for its sites.
+    for (ended in listOf("disconnected", "failed", "needs_reconnect", "pending")) {
+      assertEquals(ended, Refusal.NOT_SIGNED, refused(fill(), with = listOf(grant(status = ended))))
+    }
+    // The block drawn must be the one KIFF's answer covers: without its hash, nothing is signed.
+    assertEquals(Refusal.BLOCK, refused(fill(blockSha256 = null)))
+    assertEquals(Refusal.BLOCK, refused(fill(blockSha256 = "")))
     // Any one of the account's connections on that Chrome will do.
     assertNull(refused(fill(), with = listOf(grant(id = "g_other", listed = listOf("elsewhere.example")), grant())))
     // A sensitive site is never released: this phone keeps no allowance of its own to check one against.

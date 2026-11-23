@@ -372,6 +372,16 @@ class KiffClientTest {
       "kiff.answer.v1\nt1\nce_1\napprove-once\n\n\n2\n2026-10-14T10:45:00Z",
       String(KiffClient.answerMessage("t1", "ce_1", "approve-once", null, accountingVersion = 2, signedAt = "2026-10-14T10:45:00Z")),
     )
+    // A held sealed fill's answer covers the block the card drew: its browser_sha256 is a ninth line, as KIFF checks it.
+    assertEquals(
+      "kiff.answer.v1\nt1\ne1\napprove-once\n\n\n2\n2026-11-23T19:00:00Z\nabc123",
+      String(KiffClient.answerMessage("t1", "e1", "approve-once", null, accountingVersion = 2, signedAt = "2026-11-23T19:00:00Z", browserSha256 = "abc123")),
+    )
+    assertEquals(
+      "no line for any other hold",
+      "kiff.answer.v1\nt1\ne1\nreject\n\n\n2\nx",
+      String(KiffClient.answerMessage("t1", "e1", "reject", null, accountingVersion = 2, signedAt = "x", browserSha256 = "")),
+    )
   }
 
   @Test fun theAnswerMessageHashesTheNote() {

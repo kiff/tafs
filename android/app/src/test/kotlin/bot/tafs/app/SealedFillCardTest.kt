@@ -52,11 +52,19 @@ class SealedFillCardTest {
       "browser":{"driver":"extension","chrome":"$chromeId","sites":$list}},"chrome_sites_sig":"$s"}]}"""
   }
 
-  private fun held(fill: String) =
+  /** The block KIFF serves for [fill], and its hash as KIFF computes it: hex SHA-256 of its RFC 8785 JCS. */
+  private fun block(fill: String) =
+    """{"site":"shop.example","origin":"https://shop.example","action_words":"Fill “Password”","context":{"title":"Sign in · Shop"},
+         "chrome":{"id":"$chromeId","name":"Work Mac"},"release_fields":$fill}"""
+
+  private fun hashOf(json: String): String = java.security.MessageDigest.getInstance("SHA-256")
+    .digest(bot.tafs.app.kiff.Jcs.canonical(json).toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+
+  /** A held sealed fill as KIFF serves it, with its `browser_sha256` (the served block's own, unless [sha] says otherwise). */
+  private fun held(fill: String, sha: String = hashOf(block(fill))) =
     """{"id":"ce_1","subject":"a-1","action":"browser_act","title":"Fill a field","entity_id":"op_9K3T","proposal_id":"prop_1","accounting_version":1,
        "next_steps":[],"breaches":[],"arguments":{"op":"op_9K3T"},"created_at":"$t0","expires_at":"2099-01-01T00:00:00Z",
-       "browser":{"site":"shop.example","origin":"https://shop.example","action_words":"Fill “Password”","context":{"title":"Sign in · Shop"},
-         "chrome":{"id":"$chromeId","name":"Work Mac"},"release_fields":$fill}}"""
+       "browser":${block(fill)},"browser_sha256":"$sha"}"""
 
   /** planque's block's `release_fields`: what the release signs, and nothing else. */
   private fun fill(sealed: String = handle, chrome: String = chromeId) =
@@ -136,6 +144,51 @@ class SealedFillCardTest {
     // What the extension checks: the approval key over the eight fields, raw r‖s.
     val signed = SealedRelease.bytes(chromeId, "op_9K3T", handle, "https://shop.example", "f2", "rd_7c1", nonce, exp)
     assertTrue(ChromePairing.verifiesRaw(signer.approvalPublicKeyDER, signed, r.getValue("sig").jsonPrimitive.content))
+    // What KIFF checks: the answer's ninth line is the served block's hash, so it covers what the card drew.
+    val sig = body.getValue("signature").jsonObject
+    val message = KiffClient.answerMessage("t_01", "ce_1", "approve-once", null, null, 1, sig.getValue("signed_at").jsonPrimitive.content,
+      browserSha256 = hashOf(block(fill())))
+    assertTrue(verifies(signer.approvalPublicKeyDER, message, sig.getValue("value").jsonPrimitive.content))
+  }
+
+  private fun verifies(publicDER: ByteArray, message: ByteArray, signatureBase64: String): Boolean {
+    val key = java.security.KeyFactory.getInstance("EC").generatePublic(java.security.spec.X509EncodedKeySpec(publicDER))
+    return java.security.Signature.getInstance("SHA256withECDSA").run { initVerify(key); update(message); verify(Base64.getDecoder().decode(signatureBase64)) }
+  }
+
+  @Test fun aBlockWhoseHashIsntKiffsIsRefusedBeforeAnyPrompt() = runTest {
+    // KIFF's browser_sha256 names another block: what the card would draw isn't what the answer would cover.
+    val m = model(held(fill(), sha = "0".repeat(64)))
+    auth.asked.clear()
+    val call = m.state.value.held.single()
+    assertEquals(SealedRelease.Refusal.BLOCK, m.fillRefusal(call))
+    assertFalse(m.answer(call, Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertEquals(Words.Chrome.releaseUnreadable, SealedRelease.refusalWords(SealedRelease.Refusal.BLOCK))
+  }
+
+  @Test fun refusingASealedFillAlsoSignsTheHoldsHash() = runTest {
+    // KIFF checks every answer to a held sealed fill over its ninth line, so Refuse carries it too, as KIFF sent it.
+    val sha = "0".repeat(64)
+    val m = model(held(fill(), sha = sha))
+    val reject = "POST /v1/me/card-exceptions/ce_1/reject"
+    transport.answer(reject, 200, "{}")
+    assertTrue(m.answer(m.state.value.held.single(), Answer.Refuse))
+    val sig = KiffClient.json.parseToJsonElement(String(transport.requestsTo(reject).single().body!!)).jsonObject.getValue("signature").jsonObject
+    val message = KiffClient.answerMessage("t_01", "ce_1", "reject", null, null, 1, sig.getValue("signed_at").jsonPrimitive.content, browserSha256 = sha)
+    assertTrue(verifies(signer.publicKeyDER, message, sig.getValue("value").jsonPrimitive.content))
+  }
+
+  @Test fun aConnectionTheOwnerEndedDoesntCount() = runTest {
+    // Disconnected, with this phone's own valid signature over the fill's site: it no longer stands for its sites.
+    val ended = grants().replace(""""status":"connected"""", """"status":"disconnected"""")
+    val m = model(held(fill()), grantsJson = ended)
+    auth.asked.clear()
+    val call = m.state.value.held.single()
+    assertEquals(SealedRelease.Refusal.NOT_SIGNED, m.fillRefusal(call))
+    assertFalse(m.answer(call, Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
   }
 
   @Test fun closingTheSecondPromptSendsNothingNotEvenTheRelease() = runTest {
