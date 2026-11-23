@@ -1,0 +1,1 @@
+- **Android 134 (1.45.0)** for Play's internal track: an approval after its task ended says so, with Retry; installing a version that stops a waiting task says so; Sign in again shows the connection first; a re-pairing checks again before it signs; a taf's chat is read less often.
