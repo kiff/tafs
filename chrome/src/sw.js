@@ -90,8 +90,7 @@ async function announcePush() {
   const sub = subscriptionOf(await ensureSubscription(self.registration.pushManager, config().pushKey));
   if (!sub || !relay || !kept.keys || !kept.pairing) return;
   relay.send(await pushMessage(kept.keys.privateKey, sub));
-  // From here planque can wake this worker, so it needn't be kept awake by pings while idle (relay.js).
-  relay.pushed = true;
+  // planque answers `push_kept` once it has it, and only then does the idle worker stop being kept awake by pings (relay.js).
 }
 
 // planque's silent push (no data): a taf needs this Chrome. The worker is awake now; connect.
