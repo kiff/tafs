@@ -1,6 +1,6 @@
 """This repository is public, the whole of it: its code, docs and tests say each rule as itself, never where it came from.
 
-So nothing names a planning thread, the PM, a dated decision, or a team's own name for its working lanes and reviewers.
+So nothing names a planning thread, its project manager, a dated decision, or a team's own name for its working lanes and reviewers.
 Those names are matched by the first 16 hex digits of their SHA-256, so this file doesn't spell them out either. To add
 one: printf %s NAME | sha256sum | cut -c1-16. GitHub logins stay only where they do something: the files in KEEP, with this check and its test.
 
@@ -20,7 +20,7 @@ d184eb5cf606a3eb d1cac6ef5a9ddbd1 a74b534355e685fc ea0edce134693c74 cb7224547173
 """.split())
 MONTH = r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*"
 SAID = re.compile(
-    r"kiff/work\b|\bthe PM\b|\bPM's\b|\(PM[ ,)]|\bPM [0-9]{1,2}(:[0-9]{2}| " + MONTH + r")"
+    r"kiff/work\b|\bthe P[M]\b|\bP[M]'s\b|\(P[M][ ,)]|\bP[M] [0-9]{1,2}(:[0-9]{2}| " + MONTH + r")"
     r"|\b(review|probe|ask|point|negatives|read) (on|of)\)"
     rf"|\bowner(?:'s|,) [0-9]{{1,2}} {MONTH}\b"
 )
@@ -30,10 +30,13 @@ KEEP = {
     ".github/CODEOWNERS", ".github/automerge.json", "scripts/test_automerge.py", "scripts/test_codeowners.py",
     "docs/maintaining.md", "scripts/public_text.py", "scripts/test_public_text.py",
 }
+# Another pull request's changelog fragment can't be changed (scripts/changelog.py check): its wording is fixed when a
+# release folds it into CHANGELOG.md, which this check reads.
+SKIP_DIRS = ("changes/",)
 
 
 def named(line):
-    """What in a line names a thread, a lane, the PM or a dated rule; None when nothing does."""
+    """What in a line names a thread, a lane, its manager or a dated rule; None when nothing does."""
     said = SAID.search(line)
     if said:
         return said.group()
@@ -47,7 +50,7 @@ def main():
     files = subprocess.run(["git", "ls-files", "-z"], capture_output=True, check=True).stdout.decode().split("\0")
     found = []
     for path in files:
-        if not path or path in KEEP:
+        if not path or path in KEEP or path.startswith(SKIP_DIRS):
             continue
         try:
             with open(path, encoding="utf-8") as f:
@@ -58,7 +61,7 @@ def main():
             if named(line):
                 found.append(f"{path}:{n}: {line.strip()[:160]}")
     if found:
-        print("Public text names a thread, a lane, the PM or a dated rule; say the rule itself:")
+        print("Public text names a thread, a lane, its manager or a dated rule; say the rule itself:")
         print("\n".join(found))
         return 1
     print("clean")

@@ -1,1 +1,1 @@
-- **Urdu in the apps.** Every screen, message and sample on iPhone, iPad, Mac and Android reads in Urdu, right to left, with the legal pages in Urdu (kiff.dev/ur/…). A first draft: wording is fixed forward, and a native read follows.
+- **Urdu in the apps.** Every screen, message and sample on iPhone, iPad, Mac and Android reads in Urdu, right to left, with the legal pages in Urdu (kiff.dev/ur/…). A first draft by legal-i18n: wording is fixed forward, and a native read follows.

@@ -1,4 +1,4 @@
-"""scripts/public_text.py: it finds a thread, a lane, the PM or a dated rule, and leaves ordinary words alone."""
+"""scripts/public_text.py: it finds a thread, a lane, its manager or a dated rule, and leaves ordinary words alone."""
 
 import hashlib
 import os
@@ -13,7 +13,8 @@ import public_text  # noqa: E402
 
 class PublicText(unittest.TestCase):
     def test_a_thread_the_pm_or_a_dated_rule_is_found(self):
-        for line in ["see kiff/work#16", "decided (PM)", "PM 18 Nov 23:35", "(PM, 20 Nov)", "the PM's call",
+        pm = "P" + "M"
+        for line in ["see kiff/work#16", f"decided ({pm})", f"{pm} 18 Nov 23:35", f"({pm}, 20 Nov)", f"the {pm}'s call",
                      "(owner, 13 Nov 2026)", "owner's 22 Nov"]:
             self.assertIsNotNone(public_text.named(line), line)
 

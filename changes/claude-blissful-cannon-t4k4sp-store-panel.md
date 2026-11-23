@@ -1,1 +1,1 @@
-- **Chrome Web Store text:** the listing's last bullet now describes the side panel as the taf working in this Chrome, with Coach behind "Set up a new taf for this site", in all 40 languages. A first draft: wording is fixed forward, and a native read follows.
+- **Chrome Web Store text:** the listing's last bullet now describes the side panel as the taf working in this Chrome, with Coach behind "Set up a new taf for this site", in all 40 languages. A first draft by legal-i18n: wording is fixed forward, and a native read follows.
