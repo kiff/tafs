@@ -267,7 +267,7 @@ new `check` replaces the taf's check. A check moved to another app moves the run
 version from `improve-a-taf` whose instructions read there and name none of the old tools. A wake never
 takes input: the words a schedule's run opens with can't be changed from Coach, so what runs do changes
 in the taf's instructions. A version's note says only what its instructions or draft carry: a new
-summary alone changes no run (skills `the-dial@8`, `improve-a-taf@3`).
+summary alone changes no run (skills `the-dial@8`, `improve-a-taf@4`).
 
 **What it will likely use, before the owner approves.** Before the result of a new taf with
 `cron`, and before `version_install` of a dial version of a scheduled taf, Coach calls

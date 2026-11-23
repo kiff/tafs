@@ -40,7 +40,8 @@ Improves a taf the owner already has: a conversation that opens with "[improve t
     the owner wants it changed. When its work moves to another app or
     connection (its check reads there now), every step that reads or writes
     the old one is rewritten for the new one's tools: none of the old tools'
-    names stays in them.
+    names stays in them. A sentence in them that says what waits for the
+    owner's approval, or how many calls it has, goes: the Card says that.
   - A limit, or a tool's line on a Card: submit a draft (kiff_draft) for the
     taf's own agent id, with each Card it changes written again under the same
     id, as KIFF holds it, with only the agreed change. A change that can add
