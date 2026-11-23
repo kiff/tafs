@@ -94,6 +94,11 @@ struct RootView: View {
     /// After the celebration, the three cards (docs/onboarding.md), once on this device.
     @AppStorage(Onboarding.cardsSeenKey) private var cardsSeen = false
     @State private var showingCards = false
+
+    /// "You're connected" and the cards after it are showing: the AI consent and the time-zone question wait until they're
+    /// gone, so neither opens under the celebration (as Android's `celebrating`, tafs#1675 and #1661). The order is the
+    /// celebration, then the consent, then the zone.
+    private var celebrating: Bool { (model.justConnected && model.mode == .kiff && !Screenshots.enabled) || showingCards }
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
     /// The tabs opened so far: each is built the first time it's opened, then kept.
     @State private var opened: Set<Tab> = []
@@ -191,7 +196,7 @@ struct RootView: View {
         }
         // Signed in just now, by KIFF or by pairing: the celebration, once, over the home screen.
         // With the new onboarding on, the three cards follow it in the same cover, then Home.
-        .fullScreenCover(isPresented: Binding(get: { (model.justConnected && model.mode == .kiff && !Screenshots.enabled) || showingCards },
+        .fullScreenCover(isPresented: Binding(get: { celebrating },
                                               set: { if !$0 { model.justConnected = false; showingCards = false } })) {
             if showingCards {
                 OnboardingCards {
@@ -269,12 +274,14 @@ struct RootView: View {
         .onAppear { showRequestedTab(model.requestedTab) }
         // The AI-data consent, full screen, before anything the person writes reaches the model:
         // after sign-in while it isn't given, and whenever tafs cloud refuses a turn for want of it.
-        .fullScreenCover(item: Binding(get: { model.aiConsentAsked }, set: { if $0 == nil { model.aiConsentAsked = nil } })) { consent in
+        // Never under the celebration: it waits until "You're connected" and its cards are gone, and stays asked meanwhile.
+        .fullScreenCover(item: Binding(get: { celebrating ? nil : model.aiConsentAsked },
+                                       set: { if $0 == nil, !celebrating { model.aiConsentAsked = nil } })) { consent in
             AIConsentView(consent: consent).environmentObject(model)
         }
         // The device's time zone, asked once (kiff/tafs#206 6.11).
         .alert(Words.Settings.TimeZoneOffer.title(zone: model.timeZoneOffer ?? ""), isPresented: Binding(
-            get: { model.timeZoneOffer != nil && model.lastError == nil },
+            get: { model.timeZoneOffer != nil && model.lastError == nil && !celebrating && model.aiConsentAsked == nil },
             set: { _ in }
         )) {
             Button(Words.Settings.TimeZoneOffer.use(zone: model.timeZoneOffer ?? "")) { Task { await model.answerTimeZoneOffer(use: true) } }

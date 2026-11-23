@@ -1145,7 +1145,13 @@ keeps the session and says it couldn't load, as before.
 - **Either way ends on the celebration** (`AppModel.justConnected`, shown over the home screen by the root view):
   the computer and the phone joined by a check, "You're connected. Let's build great things together.", and
   **Let's go** (`sign_in.connected`, `sign_in.connected_line`, `sign_in.lets_go`). Never in sample mode or the
-  screenshots.
+  screenshots. **Nothing opens under it** (`RootView.celebrating`, as Android's): the AI-data consent waits until the
+  celebration and its cards are gone, and the time-zone question until the consent is answered too. So the order is
+  the celebration, the consent, then the zone. The zone is asked only when the phone's and the account's keep different
+  times: GMT, UTC, Etc/UTC and Z are one (`AppModel.sameTime`), and Europe/London isn't GMT.
+- **A phone with no Face ID or fingerprint** holds no approval key, so KIFF signs it in view-only. Its line says to add
+  one (`approval.add_face_id_first`, `AppModel.noApprovalKeyHere`), not only to sign in again, which changes nothing until
+  one is added. A view-only phone that holds a key keeps KIFF's line, and a Mac its own.
 
 ### Signing in with your phone
 

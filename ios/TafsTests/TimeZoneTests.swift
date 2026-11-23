@@ -13,6 +13,21 @@ final class TimeZoneTests: XCTestCase {
         super.tearDown()
     }
 
+    /// Two names for one fixed offset are the same time, so the phone never asks "Use GMT for times in tafs?" on an account on
+    /// UTC (as Android's `sameTime`, tafs#1675). A zone with a summer time isn't GMT, and an unknown id is never the same.
+    func testZonesThatKeepTheSameTimeAreNeverOffered() {
+        XCTAssertTrue(AppModel.sameTime("UTC", "GMT"))
+        XCTAssertTrue(AppModel.sameTime("UTC", "Etc/UTC"))
+        XCTAssertTrue(AppModel.sameTime("Z", "UTC"))
+        XCTAssertTrue(AppModel.sameTime("Etc/GMT", "GMT"))
+        XCTAssertTrue(AppModel.sameTime("Europe/Paris", "Europe/Paris"))
+        XCTAssertFalse(AppModel.sameTime("GMT", "Europe/London"), "London has a summer time")
+        XCTAssertFalse(AppModel.sameTime("UTC", "Asia/Tokyo"))
+        XCTAssertFalse(AppModel.sameTime("UTC", "Not/AZone"), "an unknown id")
+        XCTAssertFalse(AppModel.sameTime("Etc/GMT-1", "UTC"), "another fixed offset")
+        XCTAssertTrue(AppModel.sameTime("Etc/GMT-1", "Etc/GMT-1"))
+    }
+
     func testTheAccountSaysItsTimeZone() throws {
         let json = #"{"tenant_id":"t1","tenant_slug":"acme","email":"o@acme.test","time_zone":"Europe/Paris"}"#
         let account = try JSONDecoder().decode(KIFFClient.Account.self, from: Data(json.utf8))

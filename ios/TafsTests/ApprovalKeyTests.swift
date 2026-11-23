@@ -177,6 +177,32 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertFalse(model.approvalViewOnly)
     }
 
+    /// A phone with no Face ID or fingerprint holds no approval key, so KIFF signs it in view-only. Signing in again changes
+    /// nothing until one is added, so the line says to add one, never only to sign in again (as Android's `viewOnlyLine`,
+    /// tafs#1661). A view-only phone that holds a key keeps KIFF's line (above).
+    func testAPhoneWithNoApprovalKeySaysToAddFaceIDNotToSignInAgain() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let signer = TwoKeySigner()
+        signer.approvalKey = Data()
+        let model = AppModel(signer: signer,
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        await model.useSession("kiff_dev_x", tenant: "t_01", viewOnly: true)
+        XCTAssertTrue(model.approvalViewOnly)
+        XCTAssertTrue(model.noApprovalKeyHere)
+        XCTAssertEqual(model.approvalKeyLostWords,
+                       ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.addFaceIdFirst(device: "\(ThisDevice.kind)"))
+        XCTAssertNotEqual(model.approvalKeyLostWords, Words.Approval.viewOnly)
+    }
+
     /// KIFF also says it in the account (`approval_mode: "view"` in `GET /v1/me`): a session whose sign-in didn't say so
     /// is view-only as soon as the account loads, as on Android.
     func testTheAccountSaysASessionIsViewOnly() async throws {
