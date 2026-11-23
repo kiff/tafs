@@ -143319,6 +143319,12 @@
             "value": "ใช้ Chrome อื่น"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başga Chrome ulanyň"
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
@@ -143562,6 +143568,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ย้ายการเชื่อมต่อนี้ไปที่ %1$@"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu birikmäni %1$@-a göçüriň"
           }
         },
         "tr": {
