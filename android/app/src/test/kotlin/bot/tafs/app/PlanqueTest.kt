@@ -1788,7 +1788,7 @@ class PlanqueTest {
     assertNull(m.state.value.disconnecting)
   }
 
-  // MARK: Plain words for ending access ("connection" and "disconnect" assume too much)
+  // MARK: Plain words for ending access (the owner, 12 Nov: "connection" and "disconnect" assume too much)
 
   @Test fun aRequestNotAnsweredIsCancelledAndASignInNeverBackTooElseAccessIsRemoved() {
     fun g(status: String, extra: String = "") = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant("g1", status, extra = ",\"vendor\":\"Stripe\"$extra"))
@@ -1825,7 +1825,7 @@ class PlanqueTest {
     assertTrue(words.disconnectBody(signIn, null).contains("the sign-in is revoked at Stripe"))
   }
 
-  // MARK: A removed taf takes its connections with it (they once stayed connected and Coach offered them again)
+  // MARK: A removed taf takes its connections with it (the owner, 5 Nov: they stayed connected and Coach offered them again)
 
   @Test fun theRemoveQuestionSaysWhatGoesWithItInTafsCloudsWordsBeforeTheFingerprint() = runTest {
     reads()
@@ -2389,7 +2389,7 @@ class PlanqueTest {
     assertEquals(2, transport.requestsTo(approve).count { it.headers.getValue("Planque-Device-Signature").contains(",w=$win,") })
   }
 
-  // What the button says is what happens. A card tafs cloud doesn't mark a tap says "Approve with your
+  // The owner, 21 Nov: what the button says is what happens. A card tafs cloud doesn't mark a tap says "Approve with your
   // fingerprint", so it asks for the fingerprint even while this phone holds a window, and its call doesn't ride on it.
   @Test fun aCardThatSaysFingerprintAsksForItEvenInsideAWindow() = runTest {
     reads()

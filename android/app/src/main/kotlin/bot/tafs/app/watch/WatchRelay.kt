@@ -365,7 +365,7 @@ class WatchRelay(
       calls = state.held.map { call ->
         HeldLine(
           holdId = call.id,
-          // On the wrist too, no direction character reorders what's beside the amount.
+          // On the wrist too, no direction character reorders what's beside the amount (qa-kiff, 20 Nov).
           taf = state.taf(call.tafId)?.name?.let(bot.tafs.app.kiff.KiffMapping::visible) ?: Words.NeedsYou.aTaf,
           wants = bot.tafs.app.kiff.KiffMapping.visible(withoutAmount(call.proposed.summary, call.proposed.amount)),
           amount = call.proposed.amount?.formatted,

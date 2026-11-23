@@ -81,7 +81,7 @@ class VoiceTranscribeTest {
     assertTrue(relay(inbox) { _, _ -> error("never") }.answer(path, data) is WatchReply.Refused)
   }
 
-  /** A recording no request ever takes goes after 2 minutes on its own, with nothing else arriving. */
+  /** agentgabo's point: a recording no request ever takes goes after 2 minutes on its own, with nothing else arriving. */
   @Test fun aRecordingNoRequestTakesDeletesItselfAfterTwoMinutes() = runTest {
     val inbox = VoiceInbox(dir, { t }, scope = this)
     inbox.receive(id, wav())

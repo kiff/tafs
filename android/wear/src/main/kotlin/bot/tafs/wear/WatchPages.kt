@@ -175,11 +175,11 @@ internal fun WatchPages(
         Modifier.fillMaxWidth(),
         // Coach's page opens on the microphone, with the conversation's newest turn just above it (W4); others at the top.
         state = rememberScalingLazyListState(initialCenterItemIndex = if (pages[i] == Page.Coach) threadItems(thread) else 0).also { list ->
-          // A new turn (a send) brings the page back to the microphone, with that turn just above it.
+          // A new turn (a send) brings the page back to the microphone, with that turn just above it (mac12's W4 note).
           if (pages[i] == Page.Coach) LaunchedEffect(thread.size) { if (thread.isNotEmpty()) list.scrollToItem(threadItems(thread)) }
         },
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        // Room under the last item, so it scrolls clear of the page dots at the foot.
+        // Room under the last item, so it scrolls clear of the page dots at the foot (qa-kiff's device read, #1409).
         contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 36.dp),
       ) {
         val page = pages[i]

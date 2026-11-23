@@ -29,7 +29,7 @@ sealed interface Goes {
 }
 
 /**
- * A file's name and its preview as the app draws them: plain text only, never a path, and no control or direction
+ * A file's name and its preview as the app draws them (qa-kiff): plain text only, never a path, and no control or direction
  * characters, so a name like "report‮fdp.exe" can't pass for another, and a preview can't turn its lines around.
  */
 object FileNames {

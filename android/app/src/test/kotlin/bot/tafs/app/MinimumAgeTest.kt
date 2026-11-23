@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The welcome's age line says the person's country's age (docs/onboarding.md), from one table (`ages.json`). */
+/** The welcome's age line says the person's country's age (docs/onboarding.md), from legal-i18n's one table (ages.json). */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = android.app.Application::class)
 class MinimumAgeTest {

@@ -682,7 +682,7 @@ class WatchModelTest {
     assertEquals(WatchModel.Voice.Review("Thanks", null), model.voice.value)
   }
 
-  /** Two reads that reach the phone give one ask, since the draft is gone once it's taken. */
+  /** qa-kiff's case: two reads that reach the phone give one ask, since the draft is gone once it's taken. */
   @Test fun aKeptMessageIsAskedOnceAcrossTwoReads() = runTest {
     val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
     val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
@@ -692,7 +692,7 @@ class WatchModelTest {
     assertEquals(listOf(WatchRequest.Ask(t, "w_00000009", "Thanks")), phone.asked.filterIsInstance<WatchRequest.Ask>())
   }
 
-  // MARK: The recording (v2): on the watch only, erased the moment the review is left.
+  // MARK: The recording (v2): on the watch only, erased the moment the review is left (qa-kiff's rules, PM 19 Nov 01:19).
 
   private class Recording : VoiceAudio {
     var deleted = 0
@@ -893,7 +893,7 @@ class WatchModelTest {
     assertTrue(model.inbox.value.isEmpty())
   }
 
-  // Dismiss and Clear read stick while the phone still lists the line.
+  // qa-kiff's #1404 review: Dismiss and Clear read stick while the phone still lists the line.
 
   @Test fun aDismissedHeldCallStaysGoneWhileNeedsYouStillListsIt() = runTest {
     val store = Inbox()

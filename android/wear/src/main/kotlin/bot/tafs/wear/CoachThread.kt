@@ -76,8 +76,8 @@ internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) 
         .then(if (ask.ended) Modifier.clickable(onClick = onOpen) else Modifier)
         .padding(horizontal = 10.dp, vertical = 6.dp)
         .testTag(if (ask.ended) THREAD_ANSWER + ask.id else THREAD_WORKING + ask.id)
-        // TalkBack hears whose words these are, as VoiceOver does on the Apple Watch.
-        // While it works, the state line already names whose turn it is: TalkBack hears it once.
+        // TalkBack hears whose words these are, as VoiceOver does on the Apple Watch (mac12's W4 note).
+        // While it works, the state line already names whose turn it is: TalkBack hears it once (mac12's 0.4.1 note).
         .semantics { contentDescription = if (ask.ended) Words.Coach.title + ": " + answer else answer },
     )
     if (ask.ended) WatchChatTime.instantOf(ask.updated)?.let { MessageTime(WatchChatTime.time(it), inset = 0.dp) }

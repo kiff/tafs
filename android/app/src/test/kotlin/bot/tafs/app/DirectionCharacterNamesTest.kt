@@ -9,7 +9,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Test
 
 /**
- * As on iOS: a vendor's own message quoted into the record, a tool's or vendor's
+ * agentgabo's read of iOS's #1547, on Android (#1552's half): a vendor's own message quoted into the record, a tool's or vendor's
  * name in words, and a taf's name, job and status lines from tafs cloud carry no direction character either, so every line
  * `KiffMapping` builds from a server value is clean.
  */

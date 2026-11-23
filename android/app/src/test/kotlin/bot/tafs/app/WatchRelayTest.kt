@@ -82,7 +82,7 @@ class WatchRelayTest {
       "Refund order 4502: 150 €" to "Refund order 4502",
       "Refund order 4502" to "Refund order 4502",
       "Add 50 rows" to "Add 50 rows",
-      // The apps' languages' own currencies, a currency as a word, and a number before the amount.
+      // qa-kiff's rows (#1427): tafs' languages' own currencies, a currency as a word, and a number before the amount.
       "Zwrot zamówienia 1042, 150 zł" to "Zwrot zamówienia 1042",
       "Zwrot 150 PLN" to "Zwrot",
       "Refund 150 euros to Ana" to "Refund to Ana",
@@ -94,7 +94,7 @@ class WatchRelayTest {
       "Remboursement de 1 250,50 € à Ana" to "Remboursement de à Ana",
       "Ship 3 items to Lyon" to "Ship 3 items to Lyon",
       "Krakow order 77" to "Krakow order 77",
-      // A unit right after the figure, and the words still missing; and two that must stay.
+      // qa-kiff's follow-up (07:36): a unit right after the figure, and the words still missing; and two that must stay.
       "Zwrot 150zł" to "Zwrot",
       "Refund 150EUR" to "Refund",
       "Rückerstattung 80 Franken" to "Rückerstattung",

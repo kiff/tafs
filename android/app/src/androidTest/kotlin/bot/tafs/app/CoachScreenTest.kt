@@ -218,7 +218,7 @@ class CoachScreenTest {
 
   @Test fun anAnsweredApprovalOpensOnATapToWhatWasApprovedAndFoldsBack() {
     show(null)
-    // Folded: the line names the Card that was signed, and KIFF's own lines for it stay under it (the line
+    // Folded: the line names the Card that was signed, and KIFF's own lines for it stay under it (the owner, 12 Nov: the line
     // said the key's words, not what was signed). Never planque's grant as it is now, which a later approval can widen.
     rule.onNodeWithText("Approved · Refunds' Card", substring = true).assertIsDisplayed()
     rule.onNodeWithText("Up to €20 a day").assertIsDisplayed()
