@@ -225,6 +225,8 @@ Linux): it's always rebuilt on tafs cloud's host, with no port, user, query or f
 host. The example is pasted into a shell, so the path is kept only if it's made of unreserved characters
 (`^/[A-Za-z0-9/_.~-]*$`); anything else is tafs cloud's address alone, and the example single-quotes the endpoint
 (`curl -X POST '<endpoint>'`), the shared rule every app follows (vectors/api-door-endpoint.json, `DoorsTests`). Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
+**On Android** (`endpointOn`) the same rule holds: a same-host address is written again on tafs cloud's host as it writes it, and
+`ApiDoorVectorTest` reads the same vector.
 
 **Android's screen for an `api` door** (`ApiDoorPanels`, `views/ApiDoorViews.kt`) replaces its usual panel while the switch is on: the door's
 state and its switch (off pauses it at once; on is signed), today against its cap, the last request in

@@ -154,13 +154,15 @@ private struct ConnectedAppSheet: View {
     @State private var disconnectOther: TafsCloud.ConnectedApp?
     @State private var busy = false
     @State private var replacing: PlanqueClient.Grant?
+    /// Sign in again's sheet, open on this connection (docs/connect-apps.md).
+    @State private var reapproving: TafsCloud.ConnectStart?
     var body: some View {
         NavStack {
             List {
                 Section {
                     Text(app.status_words).foregroundColor(app.reconnect ? Theme.amberText : Theme.soft)
                     if app.reconnect, model.manages(tafID) {
-                        Button(Words.Connect.signInAgain) { Task { await model.reconnectApp(app.id); await model.loadTafSetup(tafID) } }
+                        Button(Words.Connect.signInAgain) { Task { reapproving = await model.reconnectStart(id: app.id) } }
                     }
                     // Gap 13, where an owner whose taf fails looks first: its last failed call, and
                     // how to fix the connection.
@@ -171,7 +173,7 @@ private struct ConnectedAppSheet: View {
                                 Text(ConnectionFixWords.throughProvider(g.vendor)).scaledFont(13).foregroundColor(Theme.soft)
                             } else {
                                 Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain) {
-                                    if g.takesKey { replacing = g } else { Task { await model.reconnect(g); await model.loadTafSetup(tafID) } }
+                                    if g.takesKey { replacing = g } else { reapproving = model.reconnectStart(g) }
                                 }
                                 .disabled(model.connecting != nil)
                                 .accessibilityIdentifier("taf.fix." + g.id)
@@ -225,6 +227,7 @@ private struct ConnectedAppSheet: View {
             .sheet(item: $replacing) { g in
                 ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
             }
+            .reapprovalSheet($reapproving) { await model.loadTafSetup(tafID) }
             .confirmationDialog(Words.Connect.disconnectAppQuestion(app: "\(app.name)"), isPresented: $disconnect, titleVisibility: .visible) {
                 Button(Words.Connect.disconnectButton, role: .destructive) {
                     busy = true
@@ -371,6 +374,8 @@ private struct NextStepRow: View {
     let next: TafsCloud.NextStep
     @State private var connect = false
     @State private var busy = false
+    /// Sign in again's sheet, open on the connection this step names (docs/connect-apps.md).
+    @State private var reapproving: TafsCloud.ConnectStart?
     var body: some View {
         let action = model.nextStep(next, tafID: tafID, fallback: "\(entry.title): \(entry.detail)")
         let may: Bool = {
@@ -382,8 +387,7 @@ private struct NextStepRow: View {
             Button(next.words) {
                 switch action {
                 case .signInAgain(let grant):
-                    busy = true
-                    Task { await model.reconnect(grant); busy = false }
+                    reapproving = model.reconnectStart(grant)
                 case .askCoach(let words): model.askCoachAbout(tafID, words: words)
                 case .connectApps: connect = true
                 case .line: break
@@ -391,6 +395,7 @@ private struct NextStepRow: View {
             }
             .buttonStyle(OutlineButtonStyle()).disabled(busy)
             .sheet(isPresented: $connect) { NavStack { ConnectAppsView().environmentObject(model) } }
+            .reapprovalSheet($reapproving)
         } else {
             Text(next.words).scaledFont(13).foregroundColor(Theme.soft)
         }

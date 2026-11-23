@@ -7255,46 +7255,56 @@ final class AppModel: ObservableObject {
         return grants.first { $0.request.agent == agent && $0.needsReconnect }
     }
 
-    /// Signs in again to a connection its vendor signed out, from the taf's page: the same
-    /// approval as Coach's card, behind one Face ID, then the vendor's own page. Signed in
-    /// only once planque answers connected; otherwise the connection says why.
-    /// Resolve the source id to a freshly read signed grant for the device's approval.
-    func reconnectApp(_ id: String, fresh: Bool = false) async {
-        let gen = accountGeneration
-        await refreshConnections()
-        guard gen == accountGeneration, let grant = grants.first(where: { $0.id == id }) else { return }
-        await reconnect(grant, fresh: fresh)
-    }
-
-    func reconnect(_ grant: PlanqueClient.Grant, fresh: Bool = false) async {
+    /// Sign in again on a connection its vendor signed out (docs/connect-apps.md, as Android's `startReconnect`), its first
+    /// step: the start of the connection's approval sheet (`ConnectApprovalSheet`, the one a new connection uses), which shows
+    /// planque's words for it as it is now and KIFF's for its profile, then Approve. Nothing is signed or sent here. Nil when
+    /// nothing is asked: a provider's connection is disconnected and connected again instead, said in `reconnectErrors`.
+    func reconnectStart(_ grant: PlanqueClient.Grant, fresh: Bool = false) -> TafsCloud.ConnectStart? {
         lastError = nil
         reconnectErrors[grant.id] = nil
         shownTermsChanged = false
-        // A provider's connection is disconnected and connected again instead: planque would
-        // refuse, so nothing is asked.
         if grant.signsInThroughProvider {
             reconnectErrors[grant.id] = ConnectionFixWords.throughProvider(grant.vendor)
-            return
+            return nil
         }
-        // KIFF's words for its profile, which the approval signs: read now, as the approval
-        // card reads them, wherever Sign in again starts.
-        await loadProfileWords(for: grant)
-        if let why = profileWordsError[grant.id] {
-            reconnectErrors[grant.id] = why
-            return
-        }
-        let done = await connect(grantID: grant.id, shown: grant.digest, again: true, fresh: fresh || grant.reconnectsFresh)
-        if done?.connected != true {
-            reconnectErrors[grant.id] = lastError ?? quietStop ?? Words.Connect.nothingSignedIn
-            lastError = nil
-        }
+        return TafsCloud.ConnectStart(grant: grant.id, again: true, fresh: fresh || grant.reconnectsFresh)
     }
 
-    /// A taf's own Connect again (tafs cloud's `connect_again`): signs that same connection in again, then
-    /// reads the taf's page. Once planque says it's connected, the taf shows tafs cloud's `done_words`.
-    func connectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {
+    /// The same for a connection named by its id (a taf's page, tafs cloud's `connect_again`): the connections are read again
+    /// first, so the sheet opens on the connection as planque has it now.
+    func reconnectStart(id: String, fresh: Bool = false) async -> TafsCloud.ConnectStart? {
+        let gen = accountGeneration
+        await refreshConnections()
+        guard gen == accountGeneration, let grant = grants.first(where: { $0.id == id }) else { return nil }
+        return reconnectStart(grant, fresh: fresh)
+    }
+
+    /// Approve on Sign in again's sheet: the connection is signed in again in place, on **the digest the sheet drew**
+    /// (`shown`), behind one Face ID, then the vendor's own page. A request that changed after it was shown signs nothing, and
+    /// the sheet says it's out of date over the new one (`connect`'s check, as a card's). KIFF's words for its profile are
+    /// signed into the approval: read here if the sheet hadn't yet. True once planque says connected; else the sheet says why
+    /// (`lastError`).
+    func reconnect(_ grantID: String, shown: String, fresh: Bool = false) async -> Bool {
+        lastError = nil
+        reconnectErrors[grantID] = nil
+        if let grant = grants.first(where: { $0.id == grantID }), grant.profile != nil, shownWords(for: grant) == nil {
+            await loadProfileWords(for: grant)
+            if let why = profileWordsError[grantID] {
+                lastError = why
+                return false
+            }
+        }
+        let done = await connect(grantID: grantID, shown: shown, again: true, fresh: fresh)
+        if done?.connected == true { return true }
+        if lastError == nil { lastError = quietStop ?? Words.Connect.nothingSignedIn }
+        return false
+    }
+
+    /// A taf's own Connect again (tafs cloud's `connect_again`), once its sheet signed that same connection in again
+    /// (`reconnect`): the taf's page is read again, and once planque says it's connected, the taf shows tafs cloud's
+    /// `done_words`.
+    func afterConnectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {
         connectedAgain[tafID] = nil
-        await reconnectApp(again.grant, fresh: again.fresh)
         let connected = grants.first { $0.id == again.grant }?.connected == true
         // After a fresh sign-in, the page says which account it went to and which tafs use it now, when planque names it.
         await loadTafSetup(tafID, connectedAgain: connected && again.fresh ? again.grant : nil)
