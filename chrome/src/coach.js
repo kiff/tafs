@@ -98,3 +98,19 @@ export class Coach {
     return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", body);
   }
 }
+
+/**
+ * One Coach per session token, kept: `make(token)` builds it, and a later call with the same token gets the same one, so the
+ * account's Coach id read once (`GET /v1/setup`) lasts as long as the session instead of being read again on every call.
+ */
+export function reusing(make) {
+  let token = null;
+  let kept = null;
+  return (t) => {
+    if (!kept || t !== token) {
+      kept = make(t);
+      token = t;
+    }
+    return kept;
+  };
+}
