@@ -37,8 +37,8 @@ def main():
         if URL not in text:
             problems.append(f"{code}: no privacy link")
         bullets = text.count("\n• ")
-        if bullets != 8:
-            problems.append(f"{code}: {bullets} bullets, want 8")
+        if bullets != 7:
+            problems.append(f"{code}: {bullets} bullets, want 7")
     for p in problems:
         print(p)
     print(f"{len(shipped())} languages, {len(problems)} problems")

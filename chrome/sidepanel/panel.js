@@ -28,7 +28,6 @@ const STEP_WORDS = {
   read: () => t("step_read"),
   act: (s) => t("step_act_" + (s.kind || "click")),
   navigate: (s) => t("step_navigate", hostOf(s.url)),
-  ask: (s) => t("step_ask", s.site || ""),
   pause: (s) => t(s.by === "failures" ? "step_paused_failures" : s.by === "no_progress" ? "step_paused_no_progress" : "step_paused"),
   resume: () => t("step_resumed"),
   stop: () => t("step_stopped"),
@@ -60,13 +59,6 @@ function draw(state) {
       paused.textContent = t(run.paused === "failures" ? "paused_failures" : run.paused === "no_progress" ? "paused_no_progress" : "paused_owner");
     }
     // A site the grant lists that Chrome hasn't let the extension into yet: the owner allows it here, once.
-    const asks = node.querySelector(".asks");
-    for (const site of run.asks || []) {
-      const b = document.createElement("button");
-      b.textContent = t("allow_site", site);
-      b.onclick = () => chrome.permissions.request({ origins: ["https://" + site + "/*", "https://*." + site + "/*"] }).then(() => send({ type: "state" }));
-      asks.append(b);
-    }
     const list = node.querySelector(".steps");
     for (const s of run.steps.slice(-12)) {
       const li = document.createElement("li");
@@ -272,12 +264,6 @@ $("share").onclick = async () => {
     $("coachNote").textContent = chrome.i18n.getMessage("share_error_" + target.error) || t("share_unavailable");
     return;
   }
-  // Chrome asks the owner once for this site: the extension reads nothing it wasn't let into.
-  const ok = await chrome.permissions.request({ origins: [target.origin + "/*"] });
-  if (!ok) {
-    $("coachNote").textContent = t("share_declined");
-    return;
-  }
   const read = await send({ type: "share_read", tabId: target.tabId });
   if (read.error) {
     $("coachNote").textContent = t("share_unavailable");
@@ -287,8 +273,6 @@ $("share").onclick = async () => {
   $("shareWhat").textContent = shared.title + " · " + new URL(shared.url).hostname + " · " + t("share_chars", String(shared.text.length));
   $("sharePreview").hidden = false;
 };
-
-$("share").title = t("share_permission");
 
 $("shareRemove").onclick = () => {
   shared = null;

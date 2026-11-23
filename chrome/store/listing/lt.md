@@ -12,7 +12,6 @@ Leiskite savo tafs dirbti jūsų Chrome, tik leidžiamose svetainėse. Rizikingi
 
 • Susiekite šį „Chrome“ su telefonu: „tafs“ programėlėje atidarykite Paskyra › Chrome › Susieti Chrome ir įveskite rodomą kodą.
 • Taf dirba savo skirtukuose, jūsų matomoje skirtukų grupėje. Galite jį bet kada pristabdyti ar sustabdyti, o jis pristabdomas, kai paliečiate vieną jo skirtukų.
-• „tafs“ negali naudoti svetainės, kol jos neleidžiate „Chrome“, po vieną svetainę, kai užduočiai jos reikia.
 • Mokėjimas, užsakymo pateikimas ir išsaugoto prisijungimo pildymas visada laukia jūsų patvirtinimo telefone.
 • Jis skaito puslapį kaip tekstą ir formos laukus, be slaptažodžio, kortelės ir kodo laukų. Niekada neskaito kitų jūsų skirtukų ar istorijos.
 • Bankų, piniginių, slaptažodžių tvarkyklių, mokėjimų, sveikatos ir valdžios svetainės niekada nenaudojamos, nebent leidžiate vieną jų vienai užduočiai telefone.

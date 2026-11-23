@@ -16,7 +16,7 @@ it changes all three.
 
 | File | What it does |
 |---|---|
-| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`, `declarativeNetRequest` (to fence a run's tabs; it widens no access). **No host permissions at install**: each site is asked for, once, when a run needs it (`optional_host_permissions`). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
+| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`, `declarativeNetRequest` (to fence a run's tabs; it widens no access). **Every https site at install** (`host_permissions: ["https://*/*"]`), as Claude in Chrome asks: one Chrome prompt when the extension is installed, never one per site (the owner's choice, 23 Nov; `chrome/store/test_manifest.py` pins it). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
 | `chrome/src/sw.js` | The service worker: keeps the pairing, connects to planque when paired, runs what planque sends, answers the side panel. |
 | `chrome/src/relay.js` | The one connection to planque, always opened by the extension. Nothing connects in. |
 | `chrome/src/protocol.js` | Checks each step as planque's and signs each answer. |
@@ -28,7 +28,7 @@ it changes all three.
 | `chrome/src/page.js`, `mask.js` | The content script: reads a page as the taf sees it, masks, does one act. |
 | `chrome/src/dialogs.js` | In a run's tabs only: the page's dialogs stop blocking, and a confirm is never accepted. |
 | `chrome/src/store.js` | What's kept: the key pair and the pairing, nothing else. |
-| `chrome/sidepanel/` | Pairing, and while a taf works: what it's doing, Pause, Resume, Stop, and the sites to allow. |
+| `chrome/sidepanel/` | Pairing, and while a taf works: what it's doing, Pause, Resume and Stop. |
 | `chrome/_locales/` | The words: English, and de, es, fr, it, nl, pl, pt_PT, pt_BR, ko and ja, in the app's own terms. `core.test.js` checks every locale has English's keys and placeholders, and a description of at most 132 characters, Chrome's limit. |
 
 ## Crypto
@@ -259,7 +259,7 @@ refused.
 - **A run's sites are the phone's, never planque's word alone.** When the owner approves a grant, the phone signs its
   sites (`tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`). A run's first step carries that as `sites_signed`, and
   its `sites` must lie within the signed list (`protocol.checkSites`, with the paired `phone_key`). Later steps can never
-  widen them. Chrome's per-site permission stays the second gate.
+  widen them. **Chrome's permission is not a gate here:** the extension holds every https site at install, so the phone's signed list, the per-tab network fence and the extension's own checks below are what keep a taf off a site its connection doesn't list.
 - **A grant's `sites` never name a public suffix** (`com`, `co.uk`, `github.io`, …: `sites.siteOK`). Such an entry
   reaches nothing.
 - **A sensitive site opens only on the paired phone's own allowance** (`sensitive_allowed[].sig`, the phone's
@@ -330,7 +330,6 @@ error = {code, detail?}      // detail never carries page text
 | `address_private` | an IP address (in any form a browser reads), or a local name (`.local`, `.internal`, …) |
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
 | `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
-| `needs_site_permission` | Chrome hasn't let the extension into that site yet, and the owner didn't allow it within 12 s: the side panel offers "Allow shop.example in Chrome" (`detail` names the site) |
 | `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since |
 | `ref_unknown` | the read has no such ref, or its element is gone, or it has become something else since the read: the element's tag, type, name, label, words and link target, and the words of the row it sits in, must be what the read saw |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
@@ -385,10 +384,14 @@ was done.
   - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
     reported, a confirm answers no, and a "leave this page?" handler is dropped.
   - In the isolated world: `mask.js` and `page.js`.
-- **A site Chrome hasn't let in is waited for, not failed at once.** An open of it makes no tab until the owner allows it, and a read
-  of a page it navigated to waits on that page, for up to 12 s each (planque waits 20 s for a step's result), checking each half second: the panel shows "Allow shop.example in Chrome", the toolbar badge shows "!", and the run goes on the
-  moment the owner allows it. Only after 12 s does the step answer `needs_site_permission`, naming the site. Stop or Pause ends the wait.
-- **The toolbar badge shows "ON" while a run is on, and "!" while one waits for a site's Allow.** The side panel shows the taf, the site, the last steps, and Pause,
+- **Every https site is granted at install, so nothing in a run asks Chrome for one.** The owner chose it (23 Nov: "closer to Claude in
+  Chrome"), and Chrome asks once, when the extension is installed or updated to a manifest that widens it (an update that does is
+  disabled until accepted, so `host_permissions` is only changed on purpose). **Chrome's permission is therefore no second gate.** What stops a taf
+  reaching a site its connection doesn't list is, in this order: the phone's signed list (`sites_signed`, checked on a run's first step
+  and held for the run), the network fence of each run tab (rules set before the tab loads anything, blocking every other host), `refuseURL` on every
+  open, read, commit and navigation, the sensitive-site rule (a bank, wallet, payment, health or government site never opens without the
+  phone's own allowance for that grant), and `window.open` off in a run's tabs. A run on a site its connection lists just runs.
+- **The toolbar badge shows "ON" while a run is on.** The side panel shows the taf, the site, the last steps, and Pause,
   Resume and Stop.
 
 ## Masking
@@ -570,7 +573,8 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 `GET /v1/tafs/{coach}/conversation`, `POST /v1/tafs/{coach}/messages`), as the extension's view-only KIFF device
 (`chrome/src/coach.js`). A conversation started in Chrome goes on on the phone, and back.
 
-- **Chrome sends those calls as CORS requests,** as the extension has no host permission for tafs cloud. tafs cloud
+- **Chrome treats those calls as the extension's own** (it holds every https site, tafs cloud's included), so they need no CORS
+  answer; tafs cloud still answers the preflight as it did, for a build that doesn't hold the permission. tafs cloud
   answers Chrome's preflight on those routes alone (and on one chat's conversation and the list of chats, for Previous conversations), before anything is read, and lets only an extension's own
   origin (`chrome-extension://` and a 32-letter id) read the answers (`runtime/src/cloud/extension-cors.ts`). It never
   answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
@@ -624,8 +628,7 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
   `4410` wiping the extension once; `page_too_large`; and a run's dropped connection opened again.
 - **`runner.test.js`:** against a fake Chrome API. A run's tab opens in the background of the owner's window and only the run's own tab ids are touched; a window of its own is never focused. The owner's tabs are never listed.
   Off-site opens, navigations, pop-ups and restored pages are stopped. The guard runs before the page is touched. There
-  are the pauses (failures, no progress, the owner), Stop, runs closed when idle, steps that never overlap, windows of a page's text, the site
-  permission, a checkout page that refuses every click, and a dialog's answer.
+  are the pauses (failures, no progress, the owner), Stop, runs closed when idle, steps that never overlap, windows of a page's text, a checkout page that refuses every click, and a dialog's answer.
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
   `ios/Tafs/KIFF/ChromePairing.swift`.

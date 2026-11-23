@@ -12,7 +12,6 @@ tafs pour Chrome permet à vos tafs de travailler dans votre propre Chrome, uniq
 
 • Associez ce Chrome à votre téléphone : dans l'app tafs, ouvrez Compte › Chrome › Associer un Chrome et saisissez le code affiché.
 • Un taf travaille dans ses propres onglets, dans un groupe d'onglets que vous voyez. Vous pouvez le mettre en pause ou l'arrêter à tout moment, et il se met en pause quand vous touchez l'un de ses onglets.
-• tafs ne peut utiliser un site qu'après votre autorisation dans Chrome, site par site, quand une tâche en a besoin.
 • Payer, passer une commande et remplir une connexion enregistrée attendent toujours votre approbation sur votre téléphone.
 • Il lit une page comme du texte et des champs de formulaire, sans les champs de mot de passe, de carte et de code. Il ne lit jamais vos autres onglets ni votre historique.
 • Les sites de banques, de portefeuilles, de gestionnaires de mots de passe, de paiement, de santé et d'administration ne sont jamais traités, sauf si vous en autorisez un, pour une tâche, sur votre téléphone.

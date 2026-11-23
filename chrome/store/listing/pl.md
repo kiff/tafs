@@ -12,7 +12,6 @@ tafs dla Chrome pozwala Twoim tafom pracować w Twoim własnym Chrome, tylko na 
 
 • Sparuj ten Chrome z telefonem: w aplikacji tafs otwórz Konto › Chrome › Powiąż Chrome i wpisz pokazany kod.
 • Taf pracuje we własnych kartach, w grupie kart, którą widzisz. Możesz go wstrzymać lub zatrzymać w każdej chwili, a wstrzymuje się, gdy dotkniesz jednej z jego kart.
-• tafs nie może używać strony, dopóki nie pozwolisz na to w Chrome, strona po stronie, gdy zadanie jej potrzebuje.
 • Płacenie, składanie zamówienia i wypełnianie zapisanego logowania zawsze czekają na Twoje zatwierdzenie w telefonie.
 • Czyta stronę jako tekst i pola formularza, bez pól hasła, karty i kodu. Nigdy nie czyta Twoich innych kart ani historii.
 • Strony banków, portfeli, menedżerów haseł, płatności, zdrowia i urzędów nigdy nie są używane, chyba że pozwolisz na jedną, na jedno zadanie, w telefonie.

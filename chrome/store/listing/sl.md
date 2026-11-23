@@ -12,7 +12,6 @@ tafs za Chrome pusti vašim tafom delati v vašem lastnem Chromu, samo na strane
 
 • Povežite ta Chrome s telefonom: v aplikaciji tafs odprite Račun › Chrome › Seznani Chrome in vnesite prikazano kodo.
 • Taf dela v svojih zavihkih, v skupini zavihkov, ki jo vidite. Kadar koli ga lahko začasno ustavite ali ustavite, začasno pa se ustavi, ko se dotaknete enega njegovih zavihkov.
-• tafs ne more uporabiti strani, dokler je ne dovolite v Chromu, po eno stran naenkrat, ko jo naloga potrebuje.
 • Plačilo, oddaja naročila in izpolnitev shranjene prijave vedno čakajo na vašo odobritev v telefonu.
 • Stran bere kot besedilo in polja obrazca, brez polj za geslo, kartico in kodo. Nikoli ne bere vaših drugih zavihkov ali zgodovine.
 • Strani bank, denarnic, upraviteljev gesel, plačil, zdravja in oblasti se nikoli ne obdelujejo, razen če eno dovolite za eno nalogo v telefonu.

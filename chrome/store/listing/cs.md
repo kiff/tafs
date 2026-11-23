@@ -12,7 +12,6 @@ tafs pro Chrome nechá vaše tafy pracovat ve vašem vlastním Chromu, jen na st
 
 • Spárujte tento Chrome s telefonem: v aplikaci tafs otevřete Účet › Chrome › Spárovat Chrome a zadejte zobrazený kód.
 • Taf pracuje ve vlastních kartách, ve skupině karet, kterou vidíte. Můžete ho kdykoli pozastavit nebo zastavit a on se pozastaví, když se dotknete jedné z jeho karet.
-• tafs nemůže použít stránku, dokud ji v Chromu nepovolíte, stránku po stránce, když ji úkol potřebuje.
 • Platba, odeslání objednávky a vyplnění uloženého přihlášení vždy čekají na vaše schválení v telefonu.
 • Čte stránku jako text a pole formuláře, bez polí pro heslo, kartu a kód. Nikdy nečte vaše další karty ani historii.
 • Stránky bank, peněženek, správců hesel, plateb, zdraví a úřadů se nikdy nezpracovávají, pokud jednu z nich nepovolíte pro jeden úkol v telefonu.

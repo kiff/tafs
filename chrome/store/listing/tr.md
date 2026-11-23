@@ -12,7 +12,6 @@ Chrome için tafs, tafs'larınızın kendi Chrome'unuzda, yalnızca izin verdiğ
 
 • Bu Chrome'u telefonunuzla eşleştirin: tafs uygulamasında Hesap › Chrome › Chrome eşleştir bölümünü açın ve gösterilen kodu yazın.
 • Bir taf kendi sekmelerinde, görebildiğiniz bir sekme grubunda çalışır. İstediğiniz an duraklatabilir veya durdurabilirsiniz; sekmelerinden birine dokunduğunuzda duraklar.
-• tafs, siz Chrome'da izin vermeden bir siteyi kullanamaz; bir görev gerektirdiğinde site site izin verirsiniz.
 • Ödeme yapmak, sipariş vermek ve kayıtlı bir girişi doldurmak her zaman telefonunuzdaki onayınızı bekler.
 • Bir sayfayı metin ve form alanları olarak okur; parola, kart ve kod alanları çıkarılır. Diğer sekmelerinizi veya geçmişinizi asla okumaz.
 • Bankalar, cüzdanlar, parola yöneticileri, ödemeler, sağlık ve devlet siteleri, telefonunuzda bir görev için birine izin vermediğiniz sürece asla işlenmez.

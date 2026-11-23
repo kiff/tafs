@@ -12,7 +12,6 @@ tafs für Chrome lässt deine tafs in deinem eigenen Chrome arbeiten, nur auf de
 
 • Verbinde dieses Chrome mit deinem Handy: Öffne in der tafs-App Konto › Chrome › Chrome koppeln und gib den angezeigten Code ein.
 • Ein taf arbeitet in eigenen Tabs, in einer Tab-Gruppe, die du sehen kannst. Du kannst es jederzeit pausieren oder stoppen, und es pausiert, wenn du einen seiner Tabs berührst.
-• tafs kann eine Seite erst nutzen, wenn du sie in Chrome erlaubst, Seite für Seite, wenn eine Aufgabe sie braucht.
 • Bezahlen, eine Bestellung aufgeben und eine gespeicherte Anmeldung ausfüllen warten immer auf deine Genehmigung auf deinem Handy.
 • Es liest eine Seite als Text und Formularfelder, ohne Passwort-, Karten- und Code-Felder. Es liest nie deine anderen Tabs oder deinen Verlauf.
 • Banken, Wallets, Passwortmanager, Zahlungen, Gesundheits- und Behördenseiten werden nie bearbeitet, es sei denn, du erlaubst eine für eine Aufgabe auf deinem Handy.

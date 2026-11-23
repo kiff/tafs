@@ -12,7 +12,6 @@ tafs pentru Chrome lasă tafs-urile dvs. să lucreze în propriul Chrome, doar p
 
 • Asociați acest Chrome cu telefonul: în aplicația tafs deschideți Cont › Chrome › Asociați un Chrome și introduceți codul afișat.
 • Un taf lucrează în filele sale, într-un grup de file pe care îl vedeți. Îl puteți pune oricând în pauză sau opri, și se oprește singur când atingeți una dintre filele lui.
-• tafs nu poate folosi un site până nu îl permiteți în Chrome, câte unul, când o sarcină are nevoie de el.
 • Plata, plasarea unei comenzi și completarea unei autentificări salvate așteaptă întotdeauna aprobarea dvs. pe telefon.
 • Citește o pagină ca text și câmpuri de formular, fără câmpurile de parolă, card și cod. Nu citește niciodată celelalte file sau istoricul dvs..
 • Site-urile băncilor, portofelelor, managerilor de parole, plăților, sănătății și autorităților nu sunt folosite niciodată, decât dacă permiteți unul, pentru o sarcină, pe telefon.

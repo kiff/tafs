@@ -12,7 +12,6 @@ Chrome üçün tafs sizin tafs-larınızın öz Chrome-unuzda, yalnız icazə ve
 
 • Bu Chrome-u telefonunuzla cütləşdirin: tafs tətbiqində Hesab › Chrome › Chrome cütləşdirin bölməsini açın və göstərilən kodu yazın.
 • Taf öz sekmelərində, sizin görə biləcəyiniz sekme qrupunda işləyir. İstənilən vaxt dayandıra və ya saxlaya bilərsiniz, sekmələrindən birinə toxunduqda isə dayanır.
-• tafs siz Chrome-da icazə verməyincə saytdan istifadə edə bilməz; tapşırıq lazım olduqda bir-bir icazə verirsiniz.
 • Ödəniş, sifariş vermək və yadda saxlanmış girişi doldurmaq həmişə telefonunuzda təsdiqinizi gözləyir.
 • Səhifəni mətn və forma sahələri kimi oxuyur, parol, kart və kod sahələri çıxarılır. Digər sekmələrinizi və ya tarixçənizi heç vaxt oxumur.
 • Bank, pul kisəsi, parol meneceri, ödəniş, səhiyyə və dövlət saytları heç vaxt işlənmir, yalnız telefonunuzda bir tapşırıq üçün birinə icazə verdiyiniz halda.

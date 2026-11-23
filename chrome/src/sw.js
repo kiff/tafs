@@ -34,8 +34,7 @@ function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(), ...extra };
   chrome.storage.session.set({ state }).catch(() => {});
   chrome.runtime.sendMessage({ type: "state", state }).catch(() => {});
-  const asking = runner.state().some((r) => !r.stopped && r.asks.length);
-  chrome.action.setBadgeText({ text: asking ? "!" : runner.active ? "ON" : "" }).catch(() => {});
+  chrome.action.setBadgeText({ text: runner.active ? "ON" : "" }).catch(() => {});
   chrome.action.setBadgeBackgroundColor({ color: "#F29A2E" }).catch(() => {});
 }
 
@@ -212,14 +211,12 @@ async function shareTarget() {
   return { tabId: tab.id, origin: new URL(tab.url).origin };
 }
 
-/** Reads the page in front, masked as a run's read is: only once Chrome let the extension into it for this share. */
+/** Reads the page in front, masked as a run's read is, for this share only (the owner's tap). */
 async function shareRead(tabId) {
   const tab = await chrome.tabs.get(tabId);
-  const origin = new URL(tab.url).origin;
   // The tab may have moved since the owner's tap: the site rules are read again for where it is now.
   const refused = refuseURL(tab.url, [hostOf(tab.url)], []);
   if (refused) return { error: refused.code };
-  if (!(await chrome.permissions.contains({ origins: [origin + "/*"] }))) return { error: "needs_site_permission" };
   await chrome.scripting.executeScript({ target: { tabId }, files: ["src/mask.js", "src/page.js"] });
   const [res] = await chrome.scripting.executeScript({ target: { tabId }, func: () => globalThis.TafsPage.read() });
   const page = res && res.result;
