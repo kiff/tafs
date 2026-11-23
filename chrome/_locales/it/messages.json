@@ -82,5 +82,11 @@
   "taf_error": { "message": "Non è arrivato a $TAF$. Riprova.", "placeholders": { "taf": { "content": "$1" } } },
   "tafs_not_read": { "message": "Non è stato possibile leggere i tuoi taf. Riprova." },
   "no_taf_here": { "message": "Nessun taf lavora ancora in questo Chrome." },
-  "setup_taf": { "message": "Configura un nuovo taf per questo sito" }
+  "setup_taf": { "message": "Configura un nuovo taf per questo sito" },
+  "hand_title": { "message": "Tocca a te", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "Il taf dice", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Mostrami", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Fatto", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Non ora", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Scrivi solo dove ti fidi di questa pagina.", "description": "Fixed line on that card under the taf's words" }
 }

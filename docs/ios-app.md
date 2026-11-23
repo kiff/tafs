@@ -369,8 +369,9 @@ the app in sample mode.
   screens, Account and Alerts, dark on iPhone and iPad, and the iPad in landscape (the iPhone
   is portrait only).
 - **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
-  `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
-  (`POST /v1/profiles/words`) and checked against the profile's digest and their own before
+  `kiff.profile.v1` shows KIFF's words for it, read with the person's session
+  (`POST /v1/profiles/words?v=2`: `kiff.words.v2`, v1's lines less KIFF's bookkeeping; v1 or v2 is taken and
+  signed as KIFF sent it, as on Android) and checked against the profile's digest and their own before
   they're shown, verbatim and in order. Approving signs both digests into planque's approve
   body (`kiff_profile`). The tests use KIFF's vectors in `TafsTests/ProfileVectors/`.
 - **The Slack door** (`SlackDoorSheet`, from Add a door… in Setup › Starts when): the taf's Slack bot

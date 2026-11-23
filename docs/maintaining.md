@@ -128,8 +128,34 @@ function's CloudWatch logs.
 The scheduled tick (every 5 minutes) logs one line per sweep (`tick.ts`): `{event: "sweep", name,
 accounts, ms}`, and `failed: true` when the sweep threw, which ends that tick. `name` is the
 sweep's (`deletions`, `late`, `briefs`, …) and `accounts` how many accounts with tafs that sweep
-was given: the tick reads them once, and an account the deletions sweep erased is not given to
-the sweeps after it. A tick that grows toward the function's timeout shows which sweep grew; one that stops
+was given: the tick reads them once, leaves out an account whose deletion is accepted, and an
+account the deletions sweep erased is not given to the sweeps after it. The 5-minute rule sends one
+event per group (`tick-1` … `tick-5`, `GROUPS` in `tick.ts`), each its own invocation, so each
+group has the whole timeout; `{"sweep":"deletions"}` runs every sweep in one, as before.
+
+The groups run side by side, so **no two groups write the same items**. What each sweep writes, read from its code and its
+helpers' (a new sweep goes in the group of any sweep that writes what it does):
+
+| Group | Sweep | What it writes |
+| :- | :- | :- |
+| `tick-1` | deletions | the account's deletion record; its items, erased; its index id; halts it at kiff/agents |
+| `tick-1` | handovers | Coach's hand-over items; a taf's entry, when a hand-over makes its new version |
+| `tick-1` | replies | a door's reply items |
+| `tick-1` | deliveries | a run's delivery records |
+| `tick-2` | failing | its own notice keys (once per schedule); phones' alerts |
+| `tick-2` | health | its own health keys per schedule; phones' alerts |
+| `tick-3` | late | its own notice keys; phones' alerts |
+| `tick-3` | your_steps | its own notice keys; phones' alerts |
+| `tick-4` | held | a door's held messages (`replayHeld`) |
+| `tick-4` | consent | a taf's consent pause, its schedules at kiff/agents, its events; a door's held messages (`replayHeld`), after a resume |
+| `tick-4` | first_runs | the account's owed first runs; starts runs at kiff/agents |
+| `tick-5` | stale_coach | Coach's kept run ends; ends Coach's runs at kiff/agents |
+| `tick-5` | mission_log | the mission log's delivered marks |
+| `tick-5` | briefs | its own notice keys (once per brief); phones' alerts |
+
+`held` and `consent` both replay held door messages, so they share `tick-4`. Only `handovers` writes a taf's entry. The hourly
+check of the account index is claimed before its scan, so of the groups starting together one scans and the others read
+the index alone. A tick that grows toward the function's timeout shows which sweep grew; one that stops
 partway shows where. It never logs an account, a taf or an error's words.
 
 Each of Coach's tool calls adds one line (`called` in `coach.ts`): `{event: "coach_tool", tool,

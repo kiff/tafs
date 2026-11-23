@@ -311,10 +311,33 @@
    * windows of MAX_TEXT characters of its masked text: `offset` asks for a later one, and a page that goes on says so
    * (`more`, and the `next_offset` to ask for). Fields, controls and links are the page's whole, in every window.
    */
-  function read(offset) {
+  /**
+   * The page's text. With `withoutEditable` (the read after a hand-over), what is inside an editable region (`contenteditable`, a
+   * `role=textbox`) is left out: a person's typing there is part of the text and no pattern mask is enough for it. Those regions are
+   * hidden for the moment the text is read, in one step with no paint between, and put back as they were.
+   */
+  function bodyText(withoutEditable) {
+    if (!document.body) return "";
+    if (!withoutEditable) return document.body.innerText;
+    const hidden = [];
+    for (const el of document.querySelectorAll('[contenteditable]:not([contenteditable="false"]), [role="textbox"]')) {
+      hidden.push([el, el.style.getPropertyValue("display"), el.style.getPropertyPriority("display")]);
+      el.style.setProperty("display", "none", "important"); // a page's own !important can't keep it showing
+    }
+    try {
+      return document.body.innerText;
+    } finally {
+      for (const [el, display, priority] of hidden) {
+        if (display) el.style.setProperty("display", display, priority);
+        else el.style.removeProperty("display");
+      }
+    }
+  }
+
+  function read(offset, opts) {
     refs = new Map();
     prints = new Map();
-    const text = M.maskText((document.body ? document.body.innerText : "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim());
+    const text = M.maskText(bodyText(!!(opts && opts.withoutEditable)).replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim());
     const start = Number.isSafeInteger(offset) && offset > 0 ? Math.min(offset, text.length) : 0;
     // A window never ends inside a surrogate pair (an emoji): it stops one short, and the next starts with the whole character.
     let end = Math.min(start + MAX_TEXT, text.length);
@@ -588,5 +611,36 @@
     return true;
   }
 
-  root.TafsPage = { read, act, fillSealed, kindOf, listen, maskForShot, unmaskShot };
+  let outlineBox = null;
+  let outlineTimer = null;
+
+  /**
+   * "Show me" for a hand-over: draws an outline round the field or button `ref` names in read `readId`, and nothing else. It
+   * never scrolls, focuses or clicks (the box lets every pointer through), and goes after a few seconds or when asked.
+   */
+  function outline(ref, readId) {
+    unoutline();
+    if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
+    const el = refs.get(ref);
+    if (!el || !el.isConnected || prints.get(ref) !== printOf(el) || !visible(el)) return { ok: false, code: "ref_unknown" };
+    const r = el.getBoundingClientRect();
+    const box = document.createElement("div");
+    box.setAttribute("data-tafs-outline", "");
+    box.style.cssText = `position:fixed;left:${r.left - 4}px;top:${r.top - 4}px;width:${r.width + 8}px;height:${r.height + 8}px;` +
+      "outline:3px solid #F29A2E;border-radius:6px;pointer-events:none;z-index:2147483647;box-shadow:0 0 0 4px rgba(242,154,46,.25)";
+    document.documentElement.appendChild(box);
+    outlineBox = box;
+    outlineTimer = setTimeout(unoutline, 8000);
+    return { ok: true };
+  }
+
+  function unoutline() {
+    clearTimeout(outlineTimer);
+    if (outlineBox) outlineBox.remove();
+    outlineBox = null;
+    for (const stray of document.querySelectorAll("[data-tafs-outline]")) stray.remove();
+    return true;
+  }
+
+  root.TafsPage = { read, act, fillSealed, kindOf, listen, maskForShot, unmaskShot, outline, unoutline };
 })(globalThis);

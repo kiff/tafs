@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac:** a session KIFF keeps view-only shows as view-only as soon as the account loads, from KIFF's `approval_mode`, as on Android ([docs/approvals.md](../docs/approvals.md)).

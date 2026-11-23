@@ -1,4 +1,4 @@
-import type { AttributeValue } from "@aws-sdk/client-dynamodb";
+import { type AttributeValue, ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { describe, expect, it } from "vitest";
 import { ACCOUNT_SHARDS, CHECK_EVERY_MS, accountIndex, shardOf } from "../src/cloud/accountindex.js";
 
@@ -15,9 +15,16 @@ function table(opts: { scanMisses?: string[] } = {}) {
     switch (name) {
       case "GetItemCommand":
         return { Item: items.get(input.Key.id.S) };
-      case "PutItemCommand":
+      case "PutItemCommand": {
+        const had = items.get(input.Item.id.S);
+        const cond = input.ConditionExpression as string | undefined;
+        if ((cond === "attribute_not_exists(id)" && had) ||
+          (cond === "checked_at = :read" && had?.checked_at?.N !== input.ExpressionAttributeValues[":read"].N)) {
+          throw new ConditionalCheckFailedException({ message: "the condition", $metadata: {} });
+        }
         items.set(input.Item.id.S, input.Item);
         return {};
+      }
       case "UpdateItemCommand": {
         const id = input.Key.id.S as string;
         const [op] = (input.UpdateExpression as string).split(" ");
@@ -102,5 +109,22 @@ describe("the sweeps' account index", () => {
     await ix.add("t_gone"); // its erasure raced a scan: in the index, no tafs item
     expect(await ix.list(hour)).toEqual(["t_live"]);
     expect(t.items.get(shardOf("t_gone"))?.ids?.SS ?? []).not.toContain("t_gone");
+  });
+
+  it("scans once an hour however many of the tick's groups read it at the same moment", async () => {
+    const t = table();
+    for (const id of ["t_a", "t_b"]) t.items.set(`tafs#${id}`, { id: { S: `tafs#${id}` } });
+    const groups = Array.from({ length: 5 }, () => accountIndex(t.send, "names"));
+    const lists = await Promise.all(groups.map((g) => g.list(0)));
+    expect(t.sent.filter((s) => s === "ScanCommand")).toHaveLength(1);
+    // The one that scanned has both; the others read the index as it was, and the next tick has both everywhere.
+    expect(lists.some((l) => l.length === 2)).toBe(true);
+    t.sent.length = 0;
+    const again = await Promise.all(groups.map((g) => g.list(hour - 1)));
+    expect(again.every((l) => l.length === 2)).toBe(true);
+    expect(t.sent).not.toContain("ScanCommand");
+    // An hour on, again one scan.
+    await Promise.all(groups.map((g) => g.list(hour * 2)));
+    expect(t.sent.filter((s) => s === "ScanCommand")).toHaveLength(1);
   });
 });

@@ -2550,6 +2550,13 @@ final class AppModel: ObservableObject {
                 kiffAccount = account
                 offerTimeZone(account)
             }
+            // KIFF says how this session approves (`approval_mode` in `GET /v1/me`): a view-only one is shown as such as
+            // soon as the account loads, not only once registering the approval key is refused. Only KIFF's word sets
+            // it; a new sign-in that approves clears it (`useSession`). As Android's `showAccount`.
+            if account?.viewOnly == true {
+                approvalKeyLost = true
+                approvalViewOnly = true
+            }
             show(list, exceptions)
             // Your brief, read with the list: tafs cloud answering `/v1/brief` is what turns it on
             // (a 404, an error or a brief with nothing in it keeps Needs you as today).

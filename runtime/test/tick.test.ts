@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Deps } from "../src/cloud/handler.js";
-import { erasedBy, tick } from "../src/cloud/tick.js";
+import { erasedBy, GROUPS, SWEEPS, sweepsFor, tick } from "../src/cloud/tick.js";
 import { memoryTafs } from "./fakes.js";
 
-function depsWith(accounts: string[]) {
+function depsWith(accounts: string[], deleting: Array<{ tenant: string; accepting?: boolean }> = []) {
   const tafs = memoryTafs();
   for (const t of accounts) tafs.held.set(`${t}#taf-1`, { id: "taf-1" } as never);
   let reads = 0;
   const counted = Object.assign(Object.create(tafs) as typeof tafs, { tenants: async () => { reads++; return tafs.tenants(); } });
-  return { d: { tafs: counted } as unknown as Deps, reads: () => reads };
+  return { d: { tafs: counted, deletions: { pending: async () => deleting } } as unknown as Deps, reads: () => reads };
 }
 
 describe("the scheduled tick", () => {
@@ -71,5 +71,30 @@ describe("the scheduled tick", () => {
     expect(erasedBy("late", [{ tenant: "t_a", done: ["tafs"] }])).toEqual([]);
     expect(erasedBy("deletions", undefined)).toEqual([]);
     expect(erasedBy("deletions", [null, { tenant: 7, done: ["tafs"] }])).toEqual([]);
+  });
+
+  it("gives no sweep an account whose deletion is accepted, but still one whose accept KIFF hasn't confirmed", async () => {
+    const { d } = depsWith(["t_a", "t_erasing", "t_asking"], [{ tenant: "t_erasing" }, { tenant: "t_asking", accepting: true }]);
+    const seen: string[][] = [];
+    await tick(d, [["late", async (x) => seen.push(await x.tafs.tenants())], ["briefs", async (x) => seen.push(await x.tafs.tenants())]], () => {});
+    expect(seen).toEqual([["t_a", "t_asking"], ["t_a", "t_asking"]]);
+  });
+
+  it("splits the tick into groups that run every sweep once, deletions first; \"deletions\" still runs them all", () => {
+    const names = SWEEPS.map(([n]) => n);
+    expect(names).toHaveLength(14);
+    const grouped = Object.keys(GROUPS).flatMap((g) => sweepsFor(g, SWEEPS).map(([n]) => n));
+    expect([...grouped].sort()).toEqual([...names].sort());
+    expect(new Set(grouped).size).toBe(names.length);
+    expect(Object.keys(GROUPS)).toHaveLength(5); // EventBridge's most targets on one rule
+    expect(sweepsFor("tick-1", SWEEPS)[0][0]).toBe("deletions");
+    // A group keeps the sweeps' own order.
+    for (const g of Object.keys(GROUPS)) {
+      const own = sweepsFor(g, SWEEPS).map(([n]) => names.indexOf(n));
+      expect(own).toEqual([...own].sort((a, b) => a - b));
+    }
+    expect(sweepsFor("deletions", SWEEPS)).toBe(SWEEPS);
+    expect(sweepsFor("consent", SWEEPS)).toEqual([]);
+    expect(sweepsFor("tick-9", SWEEPS)).toEqual([]);
   });
 });

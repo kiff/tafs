@@ -43,10 +43,30 @@ final class ProfileWordsTests: XCTestCase {
         XCTAssertThrowsError(try ProfileWords.checked(changed, profile: stripe)) {
             XCTAssertEqual($0 as? ProfileWords.Failure, .wordsChanged)
         }
-        let otherVersion = Data(String(decoding: stripeWords, as: UTF8.self).replacingOccurrences(of: "kiff.words.v1", with: "kiff.words.v2").utf8)
+        let otherVersion = Data(String(decoding: stripeWords, as: UTF8.self).replacingOccurrences(of: "kiff.words.v1", with: "kiff.words.v3").utf8)
         XCTAssertThrowsError(try ProfileWords.checked(otherVersion, profile: stripe)) {
             XCTAssertEqual($0 as? ProfileWords.Failure, .notWords)
         }
+    }
+
+    /// KIFF's words v2 (asked for with `?v=2`) are taken as v1 are: the same digests checked, the lines
+    /// shown as KIFF sent them. A v2 whose digest doesn't name it is refused like any other change.
+    func testWordsV2AreTakenAndChecked() throws {
+        let bundle = Bundle(for: Self.self)
+        let profile = try JCS.parse(Data(contentsOf: XCTUnwrap(bundle.url(forResource: "stripe-refunds", withExtension: "json"))))
+        var answer = try JCS.parse(Data(contentsOf: XCTUnwrap(bundle.url(forResource: "stripe-refunds.expected", withExtension: "json"))))
+        guard case .object(var top) = answer, case .object(var words)? = top["words"] else { return XCTFail("the vector's shape") }
+        words["v"] = .string("kiff.words.v2")
+        top["words"] = .object(words)
+        let unsigned = try JCS.canonical(.object(top))
+        XCTAssertThrowsError(try ProfileWords.checked(unsigned, profile: profile)) {
+            XCTAssertEqual($0 as? ProfileWords.Failure, .wordsChanged, "the old digest doesn't name the v2 words")
+        }
+        top["words_sha256"] = .string(try ProfileWords.digest(.object(words)))
+        answer = .object(top)
+        let read = try ProfileWords.checked(try JCS.canonical(answer), profile: profile)
+        XCTAssertEqual(read.wordsSHA256, try ProfileWords.digest(.object(words)))
+        XCTAssertFalse(read.lines.isEmpty)
     }
 
     /// The whole flow: the grant's profile as planque sent it, KIFF's words read with the
@@ -70,7 +90,7 @@ final class ProfileWordsTests: XCTestCase {
         planque.signer = { _ in "sig" }
         planque.deviceID = "dev_phone01"
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[{"id":"g_09","status":"pending","text":"t","digest":"\#(digest)","request":\#(request),"events":[]}]}"#)
-        StubProtocol.responses["POST /v1/profiles/words"] = (200, String(decoding: expected, as: UTF8.self))
+        StubProtocol.responses["POST /v1/profiles/words?v=2"] = (200, String(decoding: expected, as: UTF8.self))
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_09/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/a"}"#)
 
         let grants = try await planque.grants()
