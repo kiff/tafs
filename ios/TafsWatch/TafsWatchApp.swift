@@ -7,7 +7,9 @@ import SwiftUI
 struct TafsWatchApp: App {
     @StateObject private var needsYou = NeedsYouModel(phone: PhoneLink.shared)
     @StateObject private var tafs = TafsModel(phone: PhoneLink.shared)
-    @StateObject private var coach = CoachModel(phone: PhoneLink.shared)
+    /// v2 keeps one message for later on the watch (row 8), behind its switch; v1 keeps nothing.
+    @StateObject private var coach = CoachModel(phone: PhoneLink.shared,
+                                                drafts: WatchV2.on && CoachModel.keepForLaterOn ? FileDraftStore() : nil)
     /// v2's Inbox, kept on the watch while it has a passcode (step iv).
     @StateObject private var inbox = InboxModel()
     /// v2: signed out on this watch alone (Account's Sign out), kept across restarts.
@@ -59,6 +61,8 @@ struct TafsWatchApp: App {
             if phase == .active {
                 Task {
                     await needsYou.load()
+                    // A message kept for later goes once the phone answers (v2 only).
+                    await coach.afterRead(needsYou.state)
                     await tafs.load()
                 }
             }
@@ -68,6 +72,7 @@ struct TafsWatchApp: App {
             guard !signedOut else { return }
             Task {
                 await needsYou.load()
+                await coach.afterRead(needsYou.state)
                 await tafs.load()
             }
         }
@@ -77,6 +82,8 @@ struct TafsWatchApp: App {
     private func signOut() {
         signIn.signOut(inbox: inbox)
         tafs.cache.clear()
+        // Nothing of the account stays on the watch, a message kept for later included.
+        coach.deleteKept()
         needsYou.leave()
         tafs.leave()
         coach.leave()

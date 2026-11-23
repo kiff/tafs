@@ -197,8 +197,26 @@ Nothing leaves the watch before Send:
   checked at Send. Since W2 it's two steps (`coach_send`, then `coach_read`, below); a phone from before them refuses
   `coach_send`, and the same words then go v1's way (`coach`) under the same id. While it's in flight, Re-record and Delete do nothing (in the model as on the screen): the words
   shown are the words on their way, so the watch never says "Nothing was sent." about words that may have reached Coach. A Send that fails keeps the words in the review, with the reason under them; an answer shows as v1's.
-- **Not in this step:** Keep for later (it stores the words on the watch, which v2 doesn't yet), and Ask tafs
-  (`ask` instead of `coach`, below), which waits on the Wear OS slice and tafs cloud's iPhone push.
+- **Not in this step:** Ask tafs (`ask` instead of `coach`, below), which waits on the Wear OS slice and tafs cloud's
+  iPhone push. Keep for later came later, behind its own switch (below).
+- **Keep for later** (row 8, as Wear OS's `keepForLater`; `CoachModel.keepForLater`, `FileDraftStore`; tested in
+  `CoachModelTests`), **built and off** (`CoachModel.keepForLaterOn`): it keeps the person's words on the watch, so it's
+  switched on only with its sentence in the privacy page's Apple Watch paragraph and the owner's yes. Off, no store is
+  given, and nothing is offered or kept.
+  - **Offered** in the review, beside Send, when a Send to Coach got no reply from the phone (no answer, the link failed, or
+    not in reach, as Wear OS's "Not sure it arrived"), with the words still the ones sent. Never for a taf's message: nothing
+    of a taf's chat is kept on the watch, so that's Send again or close.
+  - **Kept:** one message, text only: its words, its message id and the chat it continues (the ticket it replies to), in
+    `tafs.draft.json` in Application Support, written with complete file protection. A newer one replaces it. The review
+    closes, and Coach's home shows the words with "Kept on this watch. It's sent when your phone is in reach again." and
+    **Delete**.
+  - **Sent** after the next Needs you read that reaches the phone (the app opened, Coach's home shown, signed in again
+    here), from a watch with a passcode only, **under its own id**, so tafs cloud starts it at most once if the first Send
+    did arrive. Taken, it's gone from the watch and is a turn of the conversation, with Coach's answer in the Inbox as any;
+    it never takes over the ask on screen. Anything else (no answer, an older phone, a failure) leaves it for the next read.
+  - **Deleted** on Delete, on Sign out on this watch, and when the phone says it's signed out. Putting the app away keeps
+    it, since the person asked for it to be sent.
+  - **Words:** `watch.keep_for_later` and `watch.kept_to_send`, already in every language; Delete is the phone's.
 - **v1 is unchanged:** with the switch off, Coach is v1's screen, its words shown before Send.
 - **Words:** all already shared (`watch.type`, `watch.type_hint`, `watch.quick_reply`, `watch.qr.*`, `watch.review`,
   `watch.rerecord`, `watch.deleted_nothing_sent`, `watch.voice_text_only`; Send and Delete are the phone's).
@@ -523,6 +541,10 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
   protection, and cleared on sign-out.
 - **v2, behind its switch:** after Sign out on this watch, one empty file, `tafs.signed_out_here`, until Sign in with your
   phone.
+- **Keep for later, behind `CoachModel.keepForLaterOn` (off; row 8, as Wear OS's):** `tafs.draft.json`, one message to
+  Coach the phone didn't answer: its words, its message id and the chat it continues. Complete file protection; gone once
+  the phone takes it, on Delete, and on either sign-out. **Switched on only with its sentence on the privacy page** and the
+  owner's yes.
 - **So it opens at once, behind `WatchCache.on` (off; row 44, D, as Wear OS's tafs#1594):** `tafs.watch_cache`, Your
   tafs as last read: each taf's id, name, and whether it's halted or paused. Never a taf's state line (it can name what a
   held call wants), a held call's details, an amount, or a chat. Needs you isn't kept: with a passcode the Inbox already

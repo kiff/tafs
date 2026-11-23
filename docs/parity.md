@@ -20,13 +20,13 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Linux | done 52, not started 1, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | done 24, partial 3, not started 1, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | done 17, partial 6, not started 4, not for it 5 | the [Watches](#watches) table |
+| Apple Watch | done 17, partial 7, not started 3, not for it 5 | the [Watches](#watches) table |
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
 1. **macOS 12** is furthest behind: 24 screens partial and 7 not for it. About 13 of those lack only a step a service takes from the phone alone; a recount moves each to done with that service named, as Windows and Linux count them. The rest are real work, landing PR by PR.
 2. **Linux:** nothing partial, and 1 not started: its "Allow this from now on" waits on its security-key approvals, as macOS 12 has them (counted as not started: see "Counting checks").
-3. **Apple Watch behind Wear OS** ([Watches](#watches)): Keep for later, a complication, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level but for the loop card, in review.)
+3. **Apple Watch behind Wear OS** ([Watches](#watches)): a complication, and four switches built but off until the owner's yes or the privacy page (Keep for later is one). (iPhone/iPad and Android are level but for the loop card, in review.)
 
 ## The iPad's screens
 
@@ -254,7 +254,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | 5 | Resume a halted taf | not for it | not for it | it gives power back: phone only |
 | 6 | Ask by voice or text | done | done | |
 | 7 | Check before sending (Re-record, Delete, Type, Quick reply) | done | done | |
-| 8 | Keep for later | not started | done | Apple Watch keeps no draft yet |
+| 8 | Keep for later | partial | done | Apple Watch: built, off (`CoachModel.keepForLaterOn`) until the privacy page says so and the owner says yes |
 | 9 | Send, then "Coach is answering" | done | done | |
 | 10 | The answer: Hear it, and Reply | partial | done | Apple Watch: Reply done; Hear (text to speech) not built |
 | 11 | An answer you can't miss, with the app put away | partial | done | Apple Watch: iOS doesn't promise the background time, and there's no push for watch asks yet |
