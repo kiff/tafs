@@ -377,7 +377,8 @@ object KiffMapping {
       install = installs,
       kind = e.kind,
       breachOutcomes = e.breaches.map { it.outcome },
-      browser = e.browser?.let { browserStep(it, (e.expiresAt ?: e.createdAt.plus(Duration.ofMinutes(10))).toEpochMilli()) },
+      // A sealed fill's hold lives 3 minutes by the design: with no `expires_at` it reads as expired, never as 10 minutes.
+      browser = e.browser?.let { browserStep(it, e.expiresAt?.toEpochMilli() ?: 0L) },
     )
   }
 

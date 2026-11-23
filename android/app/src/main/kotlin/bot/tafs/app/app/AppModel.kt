@@ -7527,6 +7527,14 @@ class AppModel(
       return false
     }
     val kiffId = call.kiffId
+    // A sealed fill is allowed only with its release, made here behind its own fingerprint: never with the switch off, from a
+    // notification's action or an approval window's tap (presigned), or by any other way round. Refusing it is always open.
+    if (answer is Answer.ApproveOnce && call.browser?.fill != null &&
+      (!sealedReleaseOn || kiffId == null || presigned != null || confirmed || installed || approvedWithCard)
+    ) {
+      fail(Words.Chrome.releaseUnreadable)
+      return false
+    }
     if (approvedWithCard && kiffId != null) {
       // KIFF holds the answer already: the Record says so, and the paused run goes on.
       applyAnswer(call, answer, null)
@@ -7556,7 +7564,7 @@ class AppModel(
     }
     // A sealed fill (docs/chrome.md, "The phone's release card"): the release first, behind its own fingerprint, then the hold's
     // answer behind another (Android's approval key unlocks for one signature each). Nothing is sent unless both are signed.
-    val fill = call.browser?.fill?.takeIf { sealedReleaseOn && answer is Answer.ApproveOnce && kiffId != null && presigned == null }
+    val fill = call.browser?.fill?.takeIf { answer is Answer.ApproveOnce }
     val release = if (fill == null) null else when (val made = release(call, fill)) {
       null -> return false
       else -> made

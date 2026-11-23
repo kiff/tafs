@@ -151,12 +151,36 @@ class SealedFillCardTest {
     assertEquals(Words.Chrome.releaseUnreadable, SealedRelease.refusalWords(SealedRelease.Refusal.HANDLE))
   }
 
-  @Test fun withTheSwitchOffTheHoldIsAnsweredAsAnyAndNoReleaseIsMade() = runTest {
+  @Test fun withTheSwitchOffASealedFillCanOnlyBeRefused() = runTest {
     assertFalse(SealedRelease.ENABLED)
     val m = model(held(fill(sitesSig(listOf("shop.example")))), on = false)
     auth.asked.clear()
-    assertTrue(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
-    assertEquals(1, auth.asked.size)
-    assertFalse(sent().containsKey("release"))
+    val call = m.state.value.held.single()
+    // Never an allowing answer without its release: nothing is asked, nothing is sent, and the card says why.
+    assertFalse(m.answer(call, Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertEquals(Words.Chrome.releaseUnreadable, m.state.value.lastError)
+    // Refusing takes power away: it's always open.
+    transport.answer("POST /v1/me/card-exceptions/ce_1/reject", 200, "{}")
+    assertTrue(m.answer(call, Answer.Refuse))
+    assertEquals(1, transport.requestsTo("POST /v1/me/card-exceptions/ce_1/reject").size)
+  }
+
+  @Test fun aPresignedAnswerNeverAllowsASealedFill() = runTest {
+    val m = model(held(fill(sitesSig(listOf("shop.example")))))
+    auth.asked.clear()
+    // An answer signed elsewhere (a notification's action, an approval window's tap) carries no release.
+    val presigned = AppModel.SignedAnswer("sig", KiffClient.AnswerSignature("2026-10-28T09:00:00Z", "sig"))
+    assertFalse(m.answer(m.state.value.held.single(), Answer.ApproveOnce, presigned = presigned))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+  }
+
+  @Test fun aSealedFillWithNoEndIsExpiredNotTenMinutes() = runTest {
+    val m = model(held(fill(sitesSig(listOf("shop.example")))).replace(""","expires_at":"2099-01-01T00:00:00Z"""", ""))
+    val call = m.state.value.held.single()
+    assertEquals(0L, call.browser!!.fill!!.expiresAt)
+    assertEquals(SealedRelease.Refusal.EXPIRED, m.fillRefusal(call))
   }
 }
