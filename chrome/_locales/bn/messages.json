@@ -76,5 +76,11 @@
   "coach_previous": { "message": "আগের কথোপকথন" },
   "coach_previous_none": { "message": "আগের কোনো কথোপকথন নেই।" },
   "coach_previous_error": { "message": "আগের কথোপকথন লোড করা যায়নি।" },
-  "coach_untitled": { "message": "কথোপকথন" }
+  "coach_untitled": { "message": "কথোপকথন" },
+  "taf_choose": { "message": "কথা বলুন" },
+  "taf_placeholder": { "message": "$TAF$-কে বার্তা", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "এটি $TAF$-এর কাছে পৌঁছায়নি। আবার চেষ্টা করুন।", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "আপনার tafs পড়া যায়নি। আবার চেষ্টা করুন।" },
+  "no_taf_here": { "message": "এই Chrome-এ এখনও কোনো taf কাজ করে না।" },
+  "setup_taf": { "message": "এই সাইটের জন্য নতুন taf সেট আপ করুন" }
 }

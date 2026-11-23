@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Korábbi beszélgetések" },
   "coach_previous_none": { "message": "Nincsenek korábbi beszélgetések." },
   "coach_previous_error": { "message": "A korábbi beszélgetéseket nem sikerült betölteni." },
-  "coach_untitled": { "message": "Beszélgetés" }
+  "coach_untitled": { "message": "Beszélgetés" },
+  "taf_choose": { "message": "Beszélj vele:" },
+  "taf_placeholder": { "message": "Üzenet neki: $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nem jutott el hozzá: $TAF$. Próbáld újra.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "A tafsaidat nem sikerült beolvasni. Próbáld újra." },
+  "no_taf_here": { "message": "Ebben a Chrome-ban még nem dolgozik taf." },
+  "setup_taf": { "message": "Új taf beállítása ehhez az oldalhoz" }
 }

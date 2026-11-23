@@ -76,5 +76,11 @@
   "coach_previous": { "message": "以前の会話" },
   "coach_previous_none": { "message": "以前の会話はありません。" },
   "coach_previous_error": { "message": "以前の会話を読み込めませんでした。" },
-  "coach_untitled": { "message": "会話" }
+  "coach_untitled": { "message": "会話" },
+  "taf_choose": { "message": "話す相手" },
+  "taf_placeholder": { "message": "$TAF$へのメッセージ", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "$TAF$に届きませんでした。もう一度お試しください。", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "tafsを読み込めませんでした。もう一度お試しください。" },
+  "no_taf_here": { "message": "このChromeで作業しているtafはまだありません。" },
+  "setup_taf": { "message": "このサイト用の新しいtafを設定" }
 }

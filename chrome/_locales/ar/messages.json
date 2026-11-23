@@ -76,5 +76,11 @@
   "coach_previous": { "message": "المحادثات السابقة" },
   "coach_previous_none": { "message": "لا توجد محادثات سابقة." },
   "coach_previous_error": { "message": "تعذّر تحميل المحادثات السابقة." },
-  "coach_untitled": { "message": "محادثة" }
+  "coach_untitled": { "message": "محادثة" },
+  "taf_choose": { "message": "تحدّث إلى" },
+  "taf_placeholder": { "message": "رسالة إلى $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "لم تصل الرسالة إلى $TAF$. حاول مجددًا.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "تعذّرت قراءة tafs الخاصة بك. حاول مجددًا." },
+  "no_taf_here": { "message": "لا يعمل أي taf في هذا المتصفح بعد." },
+  "setup_taf": { "message": "إعداد taf جديد لهذا الموقع" }
 }

@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Ankstesni pokalbiai" },
   "coach_previous_none": { "message": "Ankstesnių pokalbių nėra." },
   "coach_previous_error": { "message": "Ankstesnių pokalbių nepavyko įkelti." },
-  "coach_untitled": { "message": "Pokalbis" }
+  "coach_untitled": { "message": "Pokalbis" },
+  "taf_choose": { "message": "Kalbėti su" },
+  "taf_placeholder": { "message": "Žinutė: $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Tai nepasiekė $TAF$. Bandykite dar kartą.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Jūsų tafs nepavyko perskaityti. Bandykite dar kartą." },
+  "no_taf_here": { "message": "Šiame „Chrome“ dar nedirba joks taf." },
+  "setup_taf": { "message": "Nustatyti naują taf šiai svetainei" }
 }

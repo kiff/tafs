@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Предишни разговори" },
   "coach_previous_none": { "message": "Няма предишни разговори." },
   "coach_previous_error": { "message": "Предишните разговори не можаха да бъдат заредени." },
-  "coach_untitled": { "message": "Разговор" }
+  "coach_untitled": { "message": "Разговор" },
+  "taf_choose": { "message": "Говорете с" },
+  "taf_placeholder": { "message": "Съобщение до $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Не стигна до $TAF$. Опитайте пак.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Вашите tafs не можаха да се прочетат. Опитайте пак." },
+  "no_taf_here": { "message": "В този Chrome още не работи taf." },
+  "setup_taf": { "message": "Създайте нов taf за този сайт" }
 }

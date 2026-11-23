@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Các cuộc trò chuyện trước" },
   "coach_previous_none": { "message": "Chưa có cuộc trò chuyện nào trước đó." },
   "coach_previous_error": { "message": "Không tải được các cuộc trò chuyện trước đó." },
-  "coach_untitled": { "message": "Cuộc trò chuyện" }
+  "coach_untitled": { "message": "Cuộc trò chuyện" },
+  "taf_choose": { "message": "Trò chuyện với" },
+  "taf_placeholder": { "message": "Tin nhắn cho $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Chưa đến được $TAF$. Hãy thử lại.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Không đọc được các taf của bạn. Hãy thử lại." },
+  "no_taf_here": { "message": "Chưa có taf nào làm việc trong Chrome này." },
+  "setup_taf": { "message": "Thiết lập taf mới cho trang này" }
 }

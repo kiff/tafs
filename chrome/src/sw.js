@@ -8,6 +8,7 @@ import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
 import { Vault } from "./vault.js";
+import { tafsHere } from "./coachchat.js";
 import { Coach, reusing } from "./coach.js";
 import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { Shots } from "./shot.js";
@@ -30,7 +31,8 @@ const shots = config().screenshots
 const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, shots });
 
 function publish(extra = {}) {
-  const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(), ...extra };
+  const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
+    connections: (relay && relay.connections) || [], ...extra };
   chrome.storage.session.set({ state }).catch(() => {});
   chrome.runtime.sendMessage({ type: "state", state }).catch(() => {});
   chrome.action.setBadgeText({ text: runner.active ? "ON" : "" }).catch(() => {});
@@ -256,6 +258,25 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
     },
     coach_chats: async () => ({ chats: await (await coach()).chats() }),
+    // The tafs that work in this Chrome (planque's list, display only), as the person's own tafs; read when the panel asks.
+    taf_list: async () => {
+      const c = await coach();
+      const working = runner.state().find((r) => !r.stopped);
+      return { tafs: tafsHere((relay && relay.connections) || [], await c.tafs(), working ? working.taf : null) };
+    },
+    // A taf's own chat: only one this Chrome offers, so the panel reads nothing else.
+    taf_thread: async () => {
+      const c = await coach();
+      const here = tafsHere((relay && relay.connections) || [], await c.tafs());
+      if (!here.some((t) => t.id === m.taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
+      return { thread: await c.tafThread(m.taf) };
+    },
+    taf_send: async () => {
+      const c = await coach();
+      const here = tafsHere((relay && relay.connections) || [], await c.tafs());
+      if (!here.some((t) => t.id === m.taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
+      return { sent: await c.sendToTaf(m.taf, m.words, m.clientID) };
+    },
     coach_send: async () => ({
       sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true }),
     }),

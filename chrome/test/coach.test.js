@@ -101,3 +101,25 @@ test("one Coach is kept for a session, so the account's Coach id is read once ac
   await other.thread();
   assert.equal(calls.filter((u) => u.endsWith("/v1/setup")).length, 2, "a new session reads it again");
 });
+
+test("the panel reads the person's tafs and a taf's own chat, and writes to it, through tafs cloud's routes", async () => {
+  const calls = [];
+  const fetch = async (url, o) => {
+    calls.push([o.method, url.replace("https://cloud.test", ""), o.body ? JSON.parse(o.body) : null]);
+    const body = url.endsWith("/v1/tafs")
+      ? { tafs: [{ id: "taf-a", name: "Wiki lookup", kiff_agent: "agt_wiki" }, { id: "taf-x", name: "No agent" }] }
+      : url.endsWith("/conversation")
+        ? { messages: [{ from: "owner", text: "Search lighthouse", at: "t1" }, { from: "taf", text: "Done.", at: "t2" }, { from: "system", text: "x" }], working: { session: "s1" }, components: [{ type: "approval" }] }
+        : { ok: true };
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const c = new Coach({ token: "tok", fetch, base: "https://cloud.test" });
+  assert.deepEqual(await c.tafs(), [{ id: "taf-a", name: "Wiki lookup", agent: "agt_wiki" }], "only a taf with its KIFF agent");
+  const t = await c.tafThread("taf-a");
+  assert.deepEqual(t.messages.map((m) => m.text), ["Search lighthouse", "Done."]);
+  assert.equal(t.working, "s1");
+  assert.equal(t.waitsOnPhone, true);
+  await c.sendToTaf("taf-a", "  Again  ", "cm1");
+  assert.deepEqual(calls.at(-1), ["POST", "/v1/tafs/taf-a/messages", { text: "Again", client_message_id: "cm1" }]);
+  await assert.rejects(c.sendToTaf("taf-a", "   ", "cm2"), /nothing to send/);
+});

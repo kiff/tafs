@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Previous conversations" },
   "coach_previous_none": { "message": "No earlier conversations." },
   "coach_previous_error": { "message": "The earlier conversations couldn't be loaded." },
-  "coach_untitled": { "message": "Conversation" }
+  "coach_untitled": { "message": "Conversation" },
+  "taf_choose": { "message": "Talk to" },
+  "taf_placeholder": { "message": "Message $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "That didn't reach $TAF$. Try again.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Your tafs couldn't be read. Try again." },
+  "no_taf_here": { "message": "No taf works in this Chrome yet." },
+  "setup_taf": { "message": "Set up a new taf for this site" }
 }

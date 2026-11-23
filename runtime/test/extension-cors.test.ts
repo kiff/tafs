@@ -12,7 +12,7 @@ const ev = (method: string, path: string, origin?: string): HTTPEvent => ({
   headers: origin === undefined ? {} : { origin, "access-control-request-method": "POST", "access-control-request-headers": "authorization,content-type" },
 });
 const answer = (): HTTPResult => ({ statusCode: 401, headers: { "content-type": "application/json" }, body: `{"error":"sign in"}` });
-const ROUTES = ["/v1/setup", "/v1/tafs/taf-1/conversation", "/v1/tafs/taf-1/conversation/s-1", "/v1/tafs/taf-1/chats", "/v1/tafs/taf-1/messages"];
+const ROUTES = ["/v1/setup", "/v1/tafs", "/v1/tafs/taf-1/conversation", "/v1/tafs/taf-1/conversation/s-1", "/v1/tafs/taf-1/chats", "/v1/tafs/taf-1/messages"];
 
 describe("the Chrome extension's side panel routes (extension-cors.ts)", () => {
   it("answer Chrome's preflight from an extension's origin: 204, GET and POST, its bearer and a JSON body, no credentials", () => {

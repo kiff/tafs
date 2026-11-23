@@ -76,5 +76,11 @@
   "coach_previous": { "message": "การสนทนาก่อนหน้า" },
   "coach_previous_none": { "message": "ยังไม่มีการสนทนาก่อนหน้า" },
   "coach_previous_error": { "message": "โหลดการสนทนาก่อนหน้าไม่ได้" },
-  "coach_untitled": { "message": "การสนทนา" }
+  "coach_untitled": { "message": "การสนทนา" },
+  "taf_choose": { "message": "คุยกับ" },
+  "taf_placeholder": { "message": "ข้อความถึง $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "ข้อความไม่ถึง $TAF$ ลองอีกครั้ง", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "อ่าน tafs ของคุณไม่ได้ ลองอีกครั้ง" },
+  "no_taf_here": { "message": "ยังไม่มี taf ทำงานใน Chrome นี้" },
+  "setup_taf": { "message": "ตั้งค่า taf ใหม่สำหรับเว็บไซต์นี้" }
 }
