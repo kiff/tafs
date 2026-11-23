@@ -1,0 +1,17 @@
+{
+  "report.already": "आप इस उत्तर की पहले ही रिपोर्ट कर चुके हैं।",
+  "report.cant_from_here": "इस उत्तर की रिपोर्ट यहाँ से नहीं की जा सकती।",
+  "report.menu": "इस उत्तर की रिपोर्ट करें",
+  "report.not_sent": "आपकी रिपोर्ट नहीं भेजी गई। {why}",
+  "report.not_sent_why": "नहीं भेजा गया: {failed}",
+  "report.note_hint": "एक नोट जोड़ें (वैकल्पिक)",
+  "report.note_most_characters": "नोट अधिकतम 1,000 अक्षरों का हो सकता है।",
+  "report.person_kiff_reads_your_report": "KIFF का एक व्यक्ति आपकी रिपोर्ट को उत्तर जैसा लिखा गया था वैसा पढ़ता है।",
+  "report.reason.harmful": "हानिकारक",
+  "report.reason.offensive": "आपत्तिजनक",
+  "report.reason.other": "अन्य",
+  "report.reason.wrong": "गलत",
+  "report.runs_not_loaded": "इसकी रन लोड नहीं हो सकीं। {why}",
+  "report.thanks": "धन्यवाद। KIFF में कोई आपकी रिपोर्ट पढ़ेगा।",
+  "report.what_wrong": "इसमें क्या गलत है?"
+}
