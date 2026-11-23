@@ -498,6 +498,7 @@
         <item quantity="one">Allega: un messaggio porta al massimo %1$s file</item>
         <item quantity="other">Allega: un messaggio porta al massimo %1$s file</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">La fotocamera è disattivata per tafs. Attivala in Impostazioni di Sistema › Privacy e sicurezza › Fotocamera (su macOS 12: Preferenze di Sistema › Sicurezza e privacy › Privacy › Fotocamera).</string>
     <string name="chat_file_cant_attach">Quel file non può essere allegato.</string>
     <string name="chat_file_choose_file">Scegli file</string>
     <string name="chat_file_choose_photos">Scegli foto</string>

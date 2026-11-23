@@ -471,6 +471,7 @@
     <plurals name="chat_file_attach_full">
         <item quantity="other">Lampirkan: %1$s file adalah batas maksimal satu pesan</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Kamera nonaktif untuk tafs. Aktifkan di Pengaturan Sistem › Privasi &amp; Keamanan › Kamera (di macOS 12: Preferensi Sistem › Keamanan &amp; Privasi › Privasi › Kamera).</string>
     <string name="chat_file_cant_attach">File itu tidak dapat dilampirkan.</string>
     <string name="chat_file_choose_file">Pilih file</string>
     <string name="chat_file_choose_photos">Pilih foto</string>

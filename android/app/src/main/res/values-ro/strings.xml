@@ -525,6 +525,7 @@
         <item quantity="few">Atașare: un mesaj poartă cel mult %1$s fișiere</item>
         <item quantity="other">Atașare: un mesaj poartă cel mult %1$s de fișiere</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Camera este dezactivată pentru tafs. Activați-o în Configurări sistem › Confidențialitate și securitate › Cameră (pe macOS 12: Preferințe sistem › Securitate și confidențialitate › Confidențialitate › Cameră).</string>
     <string name="chat_file_cant_attach">Fișierul nu poate fi atașat.</string>
     <string name="chat_file_choose_file">Alegeți fișierul</string>
     <string name="chat_file_choose_photos">Alegeți fotografii</string>

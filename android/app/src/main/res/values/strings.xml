@@ -498,6 +498,7 @@
         <item quantity="one">Attach: %1$s file is the most a message carries</item>
         <item quantity="other">Attach: %1$s files is the most a message carries</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">The camera is off for tafs. Turn it on in System Settings › Privacy &amp; Security › Camera (on macOS 12: System Preferences › Security &amp; Privacy › Privacy › Camera).</string>
     <string name="chat_file_cant_attach">That file can\'t be attached.</string>
     <string name="chat_file_choose_file">Choose file</string>
     <string name="chat_file_choose_photos">Choose photos</string>

@@ -498,6 +498,7 @@
         <item quantity="one">সংযুক্ত করুন: একটি বার্তায় সর্বোচ্চ %1$sটি ফাইল যায়</item>
         <item quantity="other">সংযুক্ত করুন: একটি বার্তায় সর্বোচ্চ %1$sটি ফাইল যায়</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">ক্যামেরা tafs-এর জন্য বন্ধ। সিস্টেম সেটিংস › গোপনীয়তা ও নিরাপত্তা › ক্যামেরায় এটি চালু করুন (macOS 12-এ: সিস্টেম পছন্দসমূহ › নিরাপত্তা ও গোপনীয়তা › গোপনীয়তা › ক্যামেরা)।</string>
     <string name="chat_file_cant_attach">সেই ফাইল সংযুক্ত করা যায় না।</string>
     <string name="chat_file_choose_file">ফাইল বেছে নিন</string>
     <string name="chat_file_choose_photos">ছবি বেছে নিন</string>

@@ -26,6 +26,7 @@
   "chat.file.attach_full": {
     "other": "添付：1つのメッセージに添付できるのは最大{count}ファイルです"
   },
+  "chat.file.camera_off_mac": "Macでtafsのカメラがオフになっています。システム設定 › プライバシーとセキュリティ › カメラでオンにしてください（macOS 12：システム環境設定 › セキュリティとプライバシー › プライバシー › カメラ）。",
   "chat.file.cant_attach": "そのファイルは添付できません。",
   "chat.file.choose_file": "ファイルを選択",
   "chat.file.choose_photos": "写真を選択",

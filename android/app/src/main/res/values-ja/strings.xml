@@ -471,6 +471,7 @@
     <plurals name="chat_file_attach_full">
         <item quantity="other">添付：1つのメッセージに添付できるのは最大%1$sファイルです</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Macでtafsのカメラがオフになっています。システム設定 › プライバシーとセキュリティ › カメラでオンにしてください（macOS 12：システム環境設定 › セキュリティとプライバシー › プライバシー › カメラ）。</string>
     <string name="chat_file_cant_attach">そのファイルは添付できません。</string>
     <string name="chat_file_choose_file">ファイルを選択</string>
     <string name="chat_file_choose_photos">写真を選択</string>

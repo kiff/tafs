@@ -498,6 +498,7 @@
         <item quantity="one">Joindre : un message contient au plus %1$s fichier</item>
         <item quantity="other">Joindre : un message contient au plus %1$s fichiers</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">L\'appareil photo est désactivé pour tafs. Activez-le dans Réglages Système › Confidentialité et sécurité › Caméra (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Caméra).</string>
     <string name="chat_file_cant_attach">Ce fichier ne peut pas être joint.</string>
     <string name="chat_file_choose_file">Choisir un fichier</string>
     <string name="chat_file_choose_photos">Choisir des photos</string>

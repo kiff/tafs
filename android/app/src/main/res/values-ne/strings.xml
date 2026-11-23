@@ -498,6 +498,7 @@
         <item quantity="one">संलग्न गर्नुहोस्: एउटा सन्देशले बढीमा %1$s फाइल बोक्छ</item>
         <item quantity="other">संलग्न गर्नुहोस्: एउटा सन्देशले बढीमा %1$s फाइल बोक्छ</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">क्यामेरा tafs का लागि बन्द छ। सिस्टम सेटिङ › गोपनीयता र सुरक्षा › क्यामेरामा खोल्नुहोस् (macOS 12 मा: सिस्टम प्राथमिकताहरू › सुरक्षा र गोपनीयता › गोपनीयता › क्यामेरा)।</string>
     <string name="chat_file_cant_attach">त्यो फाइल संलग्न गर्न सकिँदैन।</string>
     <string name="chat_file_choose_file">फाइल छान्नुहोस्</string>
     <string name="chat_file_choose_photos">फोटो छान्नुहोस्</string>

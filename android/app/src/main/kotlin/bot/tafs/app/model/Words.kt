@@ -500,6 +500,7 @@ object Words {
     object File {
       val attach: String get() = Res.s(R.string.chat_file_attach)
       fun attachFull(count: Int): String = Res.p(R.plurals.chat_file_attach_full, count, Res.number(count))
+      val cameraOffMac: String get() = Res.s(R.string.chat_file_camera_off_mac)
       val cantAttach: String get() = Res.s(R.string.chat_file_cant_attach)
       val chooseFile: String get() = Res.s(R.string.chat_file_choose_file)
       val choosePhotos: String get() = Res.s(R.string.chat_file_choose_photos)

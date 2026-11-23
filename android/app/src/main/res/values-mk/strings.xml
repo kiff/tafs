@@ -498,6 +498,7 @@
         <item quantity="one">Прикачи: %1$s датотека е најмногу што носи една порака</item>
         <item quantity="other">Прикачи: %1$s датотеки е најмногу што носи една порака</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Камерата е исклучена за tafs. Вклучи ја во Системски поставки › Приватност и безбедност › Камера (на macOS 12: Системски преференци › Безбедност и приватност › Приватност › Камера).</string>
     <string name="chat_file_cant_attach">Таа датотека не може да се прикачи.</string>
     <string name="chat_file_choose_file">Избери датотека</string>
     <string name="chat_file_choose_photos">Избери фотографии</string>

@@ -27,6 +27,7 @@
     "one": "Bijvoegen: een bericht bevat maximaal {count} bestand",
     "other": "Bijvoegen: een bericht bevat maximaal {count} bestanden"
   },
+  "chat.file.camera_off_mac": "De camera staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Camera (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Camera).",
   "chat.file.cant_attach": "Dat bestand kan niet worden bijgevoegd.",
   "chat.file.choose_file": "Bestand kiezen",
   "chat.file.choose_photos": "Foto's kiezen",

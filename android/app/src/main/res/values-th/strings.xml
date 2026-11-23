@@ -471,6 +471,7 @@
     <plurals name="chat_file_attach_full">
         <item quantity="other">แนบ: %1$s ไฟล์คือจำนวนสูงสุดที่ข้อความหนึ่งแนบได้</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">กล้องปิดอยู่สำหรับ tafs เปิดได้ที่การตั้งค่าระบบ › ความเป็นส่วนตัวและความปลอดภัย › กล้อง (บน macOS 12: ค่ากำหนดระบบ › ความปลอดภัยและความเป็นส่วนตัว › ความเป็นส่วนตัว › กล้อง).</string>
     <string name="chat_file_cant_attach">แนบไฟล์นั้นไม่ได้</string>
     <string name="chat_file_choose_file">เลือกไฟล์</string>
     <string name="chat_file_choose_photos">เลือกรูปภาพ</string>

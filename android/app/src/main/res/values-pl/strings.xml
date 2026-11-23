@@ -552,6 +552,7 @@
         <item quantity="many">Załącz: wiadomość mieści najwyżej %1$s plików</item>
         <item quantity="other">Załącz: wiadomość mieści najwyżej %1$s pliku</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Kamera jest wyłączona dla tafs. Włącz ją w Ustawienia systemowe › Prywatność i ochrona › Kamera (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Kamera).</string>
     <string name="chat_file_cant_attach">Nie można załączyć tego pliku.</string>
     <string name="chat_file_choose_file">Wybierz plik</string>
     <string name="chat_file_choose_photos">Wybierz zdjęcia</string>

@@ -912,6 +912,8 @@ enum Words {
             static var attach: String { Words.line("chat.file.attach") }
             /// Attach: {count} files is the most a message carries
             static func attachFull(count: Int) -> String { Words.count("chat.file.attach_full", count) }
+            /// The camera is off for tafs. Turn it on in System Settings › Privacy & Security › Camera (on macOS 12: System Preferences › Security & Privacy › Privacy › Camera).
+            static var cameraOffMac: String { Words.line("chat.file.camera_off_mac") }
             /// That file can't be attached.
             static var cantAttach: String { Words.line("chat.file.cant_attach") }
             /// Choose file

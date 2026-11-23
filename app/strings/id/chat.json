@@ -26,6 +26,7 @@
   "chat.file.attach_full": {
     "other": "Lampirkan: {count} file adalah batas maksimal satu pesan"
   },
+  "chat.file.camera_off_mac": "Kamera nonaktif untuk tafs. Aktifkan di Pengaturan Sistem › Privasi & Keamanan › Kamera (di macOS 12: Preferensi Sistem › Keamanan & Privasi › Privasi › Kamera).",
   "chat.file.cant_attach": "File itu tidak dapat dilampirkan.",
   "chat.file.choose_file": "Pilih file",
   "chat.file.choose_photos": "Pilih foto",

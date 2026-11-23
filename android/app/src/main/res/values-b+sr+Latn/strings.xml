@@ -525,6 +525,7 @@
         <item quantity="few">Priložite: poruka nosi najviše %1$s datoteke</item>
         <item quantity="other">Priložite: poruka nosi najviše %1$s datoteka</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Kamera je isključena za tafs. Uključite je u Podešavanja sistema › Privatnost i sigurnost › Kamera (macOS 12: Podešavanja sistema › Sigurnost i privatnost › Privatnost › Kamera).</string>
     <string name="chat_file_cant_attach">Ta se datoteka ne može priložiti.</string>
     <string name="chat_file_choose_file">Odaberite datoteku</string>
     <string name="chat_file_choose_photos">Odaberite fotografije</string>

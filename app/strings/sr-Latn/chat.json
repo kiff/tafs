@@ -28,6 +28,7 @@
     "few": "Priložite: poruka nosi najviše {count} datoteke",
     "other": "Priložite: poruka nosi najviše {count} datoteka"
   },
+  "chat.file.camera_off_mac": "Kamera je isključena za tafs. Uključite je u Podešavanja sistema › Privatnost i sigurnost › Kamera (macOS 12: Podešavanja sistema › Sigurnost i privatnost › Privatnost › Kamera).",
   "chat.file.cant_attach": "Ta se datoteka ne može priložiti.",
   "chat.file.choose_file": "Odaberite datoteku",
   "chat.file.choose_photos": "Odaberite fotografije",

@@ -27,6 +27,7 @@
     "one": "Csatolás: egy üzenet legfeljebb {count} fájlt visz",
     "other": "Csatolás: egy üzenet legfeljebb {count} fájlt visz"
   },
+  "chat.file.camera_off_mac": "A kamera ki van kapcsolva a tafs számára. Kapcsold be itt: Rendszerbeállítások › Adatvédelem és biztonság › Kamera (macOS 12-n: Rendszerbeállítások › Biztonság és adatvédelem › Adatvédelem › Kamera).",
   "chat.file.cant_attach": "Ez a fájl nem csatolható.",
   "chat.file.choose_file": "Fájl kiválasztása",
   "chat.file.choose_photos": "Fotók kiválasztása",

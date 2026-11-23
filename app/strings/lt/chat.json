@@ -28,6 +28,7 @@
     "few": "Pridėti: žinutėje daugiausia {count} failai",
     "other": "Pridėti: žinutėje daugiausia {count} failų"
   },
+  "chat.file.camera_off_mac": "Kamera programėlei tafs išjungta. Įjunkite ją skiltyje Sistemos nustatymai › Privatumas ir sauga › Kamera (macOS 12: Sistemos nuostatos › Sauga ir privatumas › Privatumas › Kamera).",
   "chat.file.cant_attach": "Šio failo pridėti negalima.",
   "chat.file.choose_file": "Pasirinkti failą",
   "chat.file.choose_photos": "Pasirinkti nuotraukas",

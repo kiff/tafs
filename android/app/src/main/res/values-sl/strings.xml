@@ -552,6 +552,7 @@
         <item quantity="few">Priloži: sporočilo nese največ %1$s datoteke</item>
         <item quantity="other">Priloži: sporočilo nese največ %1$s datotek</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Kamera je za tafs izklopljena. Vklopite jo v Sistemske nastavitve › Zasebnost in varnost › Kamera (v macOS 12: Sistemske nastavitve › Varnost in zasebnost › Zasebnost › Kamera).</string>
     <string name="chat_file_cant_attach">Te datoteke ni mogoče priložiti.</string>
     <string name="chat_file_choose_file">Izberi datoteko</string>
     <string name="chat_file_choose_photos">Izberi fotografije</string>

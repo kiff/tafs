@@ -27,6 +27,7 @@
     "one": "Adjunta: {count} fitxer és el màxim que porta un missatge",
     "other": "Adjunta: {count} fitxers és el màxim que porta un missatge"
   },
+  "chat.file.camera_off_mac": "La càmera està desactivada per a tafs. Activa-la a Ajustos del sistema › Privadesa i seguretat › Càmera (a macOS 12: Preferències del Sistema › Seguretat i privadesa › Privadesa › Càmera).",
   "chat.file.cant_attach": "Aquest fitxer no es pot adjuntar.",
   "chat.file.choose_file": "Tria un fitxer",
   "chat.file.choose_photos": "Tria fotos",

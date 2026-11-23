@@ -27,6 +27,7 @@
     "one": "Allega: un messaggio porta al massimo {count} file",
     "other": "Allega: un messaggio porta al massimo {count} file"
   },
+  "chat.file.camera_off_mac": "La fotocamera è disattivata per tafs. Attivala in Impostazioni di Sistema › Privacy e sicurezza › Fotocamera (su macOS 12: Preferenze di Sistema › Sicurezza e privacy › Privacy › Fotocamera).",
   "chat.file.cant_attach": "Quel file non può essere allegato.",
   "chat.file.choose_file": "Scegli file",
   "chat.file.choose_photos": "Scegli foto",

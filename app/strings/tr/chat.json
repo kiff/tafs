@@ -27,6 +27,7 @@
     "one": "Ekle: bir mesaj en fazla {count} dosya taşır",
     "other": "Ekle: bir mesaj en fazla {count} dosya taşır"
   },
+  "chat.file.camera_off_mac": "Kamera, tafs için kapalı. Sistem Ayarları › Gizlilik ve Güvenlik › Kamera'dan açın (macOS 12'de: Sistem Tercihleri › Güvenlik ve Gizlilik › Gizlilik › Kamera).",
   "chat.file.cant_attach": "O dosya eklenemiyor.",
   "chat.file.choose_file": "Dosya seç",
   "chat.file.choose_photos": "Fotoğraf seç",

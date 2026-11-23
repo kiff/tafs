@@ -28,6 +28,7 @@
     "one": "Pievienot: ziņā var būt ne vairāk kā {count} fails",
     "other": "Pievienot: ziņā var būt ne vairāk kā {count} faili"
   },
+  "chat.file.camera_off_mac": "Kamera lietotnei tafs ir izslēgta. Ieslēdz to sadaļā Sistēmas iestatījumi › Privātums un drošība › Kamera (macOS 12: Sistēmas preferences › Drošība un privātums › Privātums › Kamera).",
   "chat.file.cant_attach": "Šo failu nevar pievienot.",
   "chat.file.choose_file": "Izvēlēties failu",
   "chat.file.choose_photos": "Izvēlēties fotoattēlus",

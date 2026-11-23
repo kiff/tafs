@@ -29,6 +29,7 @@
     "many": "Załącz: wiadomość mieści najwyżej {count} plików",
     "other": "Załącz: wiadomość mieści najwyżej {count} pliku"
   },
+  "chat.file.camera_off_mac": "Kamera jest wyłączona dla tafs. Włącz ją w Ustawienia systemowe › Prywatność i ochrona › Kamera (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Kamera).",
   "chat.file.cant_attach": "Nie można załączyć tego pliku.",
   "chat.file.choose_file": "Wybierz plik",
   "chat.file.choose_photos": "Wybierz zdjęcia",

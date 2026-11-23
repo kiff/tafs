@@ -1,0 +1,1 @@
+- **On a Mac where the camera is off for tafs:** a line saying where to turn it on (System Settings › Privacy & Security › Camera, or macOS 12's), in every language.

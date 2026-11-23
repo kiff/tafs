@@ -27,6 +27,7 @@
     "one": "Lisa: sõnum mahutab kuni {count} faili",
     "other": "Lisa: sõnum mahutab kuni {count} faili"
   },
+  "chat.file.camera_off_mac": "Kaamera on tafsi jaoks välja lülitatud. Lülita see sisse menüüs System Settings › Privacy & Security › Camera (macOS 12-s: System Preferences › Security & Privacy › Privacy › Camera).",
   "chat.file.cant_attach": "Seda faili ei saa lisada.",
   "chat.file.choose_file": "Vali fail",
   "chat.file.choose_photos": "Vali fotod",

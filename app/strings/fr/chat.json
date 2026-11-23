@@ -27,6 +27,7 @@
     "one": "Joindre : un message contient au plus {count} fichier",
     "other": "Joindre : un message contient au plus {count} fichiers"
   },
+  "chat.file.camera_off_mac": "L'appareil photo est désactivé pour tafs. Activez-le dans Réglages Système › Confidentialité et sécurité › Caméra (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Caméra).",
   "chat.file.cant_attach": "Ce fichier ne peut pas être joint.",
   "chat.file.choose_file": "Choisir un fichier",
   "chat.file.choose_photos": "Choisir des photos",

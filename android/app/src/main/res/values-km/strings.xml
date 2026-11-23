@@ -471,6 +471,7 @@
     <plurals name="chat_file_attach_full">
         <item quantity="other">ភ្ជាប់៖ ឯកសារ %1$s គឺច្រើនបំផុតដែលសារមួយអាចផ្ទុក</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">កាមេរ៉ាត្រូវបានបិទសម្រាប់ tafs។ បើកវាក្នុងការកំណត់ប្រព័ន្ធ › ឯកជនភាព និងសុវត្ថិភាព › កាមេរ៉ា (នៅលើ macOS 12៖ ចំណូលចិត្តប្រព័ន្ធ › សុវត្ថិភាព និងឯកជនភាព › ឯកជនភាព › កាមេរ៉ា)។</string>
     <string name="chat_file_cant_attach">មិនអាចភ្ជាប់ឯកសារនោះបានទេ។</string>
     <string name="chat_file_choose_file">ជ្រើសរើសឯកសារ</string>
     <string name="chat_file_choose_photos">ជ្រើសរើសរូបថត</string>

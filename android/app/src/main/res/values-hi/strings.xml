@@ -498,6 +498,7 @@
         <item quantity="one">जोड़ें: एक संदेश अधिकतम %1$s फ़ाइलें ले जाता है</item>
         <item quantity="other">जोड़ें: एक संदेश अधिकतम %1$s फ़ाइलें ले जाता है</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">कैमरा tafs के लिए बंद है। इसे System Settings › Privacy &amp; Security › Camera में चालू करें (macOS 12 में: System Preferences › Security &amp; Privacy › Privacy › Camera)।</string>
     <string name="chat_file_cant_attach">वह फ़ाइल जोड़ी नहीं जा सकती।</string>
     <string name="chat_file_choose_file">फ़ाइल चुनें</string>
     <string name="chat_file_choose_photos">फ़ोटो चुनें</string>

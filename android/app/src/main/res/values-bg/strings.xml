@@ -498,6 +498,7 @@
         <item quantity="one">Прикачване: едно съобщение носи най-много %1$s файл</item>
         <item quantity="other">Прикачване: едно съобщение носи най-много %1$s файла</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Камерата е изключена за tafs. Включете я в Системни настройки › Поверителност и сигурност › Камера (на macOS 12: Системни предпочитания › Защита и поверителност › Поверителност › Камера).</string>
     <string name="chat_file_cant_attach">Този файл не може да бъде прикачен.</string>
     <string name="chat_file_choose_file">Избор на файл</string>
     <string name="chat_file_choose_photos">Избор на снимки</string>

@@ -26,6 +26,7 @@
   "chat.file.attach_full": {
     "other": "附加：一則訊息最多可附加 {count} 個檔案"
   },
+  "chat.file.camera_off_mac": "相機已對 tafs 關閉。請在「系統設定」›「隱私權與安全性」›「相機」中開啟（macOS 12：「系統偏好設定」›「安全性與隱私權」›「隱私權」›「相機」）。",
   "chat.file.cant_attach": "無法附加該檔案。",
   "chat.file.choose_file": "選擇檔案",
   "chat.file.choose_photos": "選擇照片",

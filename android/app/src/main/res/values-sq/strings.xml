@@ -498,6 +498,7 @@
         <item quantity="one">Bashkëngjitni: %1$s skedar është maksimumi që mban një mesazh</item>
         <item quantity="other">Bashkëngjitni: %1$s skedarë është maksimumi që mban një mesazh</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Kamera është joaktive për tafs. Aktivizojeni te Cilësimet e Sistemit › Privatësia dhe Siguria › Kamera (në macOS 12: Preferencat e Sistemit › Siguria dhe Privatësia › Privatësia › Kamera).</string>
     <string name="chat_file_cant_attach">Ai skedar nuk mund të bashkëngjitet.</string>
     <string name="chat_file_choose_file">Zgjidhni skedar</string>
     <string name="chat_file_choose_photos">Zgjidhni foto</string>

@@ -525,6 +525,7 @@
         <item quantity="few">Priložiť: správa unesie najviac %1$s súbory</item>
         <item quantity="other">Priložiť: správa unesie najviac %1$s súborov</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Kamera je pre tafs vypnutá. Zapnite ju v Nastaveniach systému › Súkromie a bezpečnosť › Kamera (v macOS 12: Systémové nastavenia › Bezpečnosť a súkromie › Súkromie › Kamera).</string>
     <string name="chat_file_cant_attach">Ten súbor sa nedá priložiť.</string>
     <string name="chat_file_choose_file">Vybrať súbor</string>
     <string name="chat_file_choose_photos">Vybrať fotky</string>

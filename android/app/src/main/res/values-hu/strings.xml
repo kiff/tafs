@@ -498,6 +498,7 @@
         <item quantity="one">Csatolás: egy üzenet legfeljebb %1$s fájlt visz</item>
         <item quantity="other">Csatolás: egy üzenet legfeljebb %1$s fájlt visz</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">A kamera ki van kapcsolva a tafs számára. Kapcsold be itt: Rendszerbeállítások › Adatvédelem és biztonság › Kamera (macOS 12-n: Rendszerbeállítások › Biztonság és adatvédelem › Adatvédelem › Kamera).</string>
     <string name="chat_file_cant_attach">Ez a fájl nem csatolható.</string>
     <string name="chat_file_choose_file">Fájl kiválasztása</string>
     <string name="chat_file_choose_photos">Fotók kiválasztása</string>

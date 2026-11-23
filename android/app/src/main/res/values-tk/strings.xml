@@ -498,6 +498,7 @@
         <item quantity="one">Goşuň: bir habar iň köp %1$s faýl göterýär</item>
         <item quantity="other">Goşuň: bir habar iň köp %1$s faýl göterýär</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Kamera tafs üçin öçük. Ony System Settings › Privacy &amp; Security › Camera bölüminde açyň (macOS 12-de: System Preferences › Security &amp; Privacy › Privacy › Camera).</string>
     <string name="chat_file_cant_attach">Ol faýl goşulyp bilinmeýär.</string>
     <string name="chat_file_choose_file">Faýl saýlaň</string>
     <string name="chat_file_choose_photos">Suratlary saýlaň</string>

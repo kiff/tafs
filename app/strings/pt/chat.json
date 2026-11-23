@@ -27,6 +27,7 @@
     "one": "Anexar: {count} ficheiro é o máximo por mensagem",
     "other": "Anexar: {count} ficheiros é o máximo por mensagem"
   },
+  "chat.file.camera_off_mac": "A câmara está desativada para o tafs. Ative-a em Definições do Sistema › Privacidade e segurança › Câmara (no macOS 12: Preferências do Sistema › Segurança e privacidade › Privacidade › Câmara).",
   "chat.file.cant_attach": "Não é possível anexar esse ficheiro.",
   "chat.file.choose_file": "Escolher ficheiro",
   "chat.file.choose_photos": "Escolher fotografias",

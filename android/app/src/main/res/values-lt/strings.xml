@@ -525,6 +525,7 @@
         <item quantity="few">Pridėti: žinutėje daugiausia %1$s failai</item>
         <item quantity="other">Pridėti: žinutėje daugiausia %1$s failų</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Kamera programėlei tafs išjungta. Įjunkite ją skiltyje Sistemos nustatymai › Privatumas ir sauga › Kamera (macOS 12: Sistemos nuostatos › Sauga ir privatumas › Privatumas › Kamera).</string>
     <string name="chat_file_cant_attach">Šio failo pridėti negalima.</string>
     <string name="chat_file_choose_file">Pasirinkti failą</string>
     <string name="chat_file_choose_photos">Pasirinkti nuotraukas</string>

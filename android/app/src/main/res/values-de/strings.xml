@@ -498,6 +498,7 @@
         <item quantity="one">Anhängen: %1$s Datei ist das Maximum pro Nachricht</item>
         <item quantity="other">Anhängen: %1$s Dateien sind das Maximum pro Nachricht</item>
     </plurals>
+    <string name="chat_file_camera_off_mac">Die Kamera ist für tafs ausgeschaltet. Schalte sie unter Systemeinstellungen › Datenschutz &amp; Sicherheit › Kamera ein (unter macOS 12: Systemeinstellungen › Sicherheit › Datenschutz › Kamera).</string>
     <string name="chat_file_cant_attach">Diese Datei kann nicht angehängt werden.</string>
     <string name="chat_file_choose_file">Datei wählen</string>
     <string name="chat_file_choose_photos">Fotos wählen</string>
