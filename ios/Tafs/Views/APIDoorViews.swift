@@ -254,38 +254,26 @@ enum APIDoorText {
         return field.name + " · " + field.type
     }
 
-    /// A door's address on tafs cloud, whole, as the shared rule writes it (vectors/api-door-endpoint.json, every app alike).
-    /// It's always rebuilt on tafs cloud's own host, over HTTPS, with no port or user: the example sends the developer's key,
-    /// so it never names another host. And it's pasted into a shell, so the path is kept **only** if it's made of unreserved
-    /// characters (`^/[A-Za-z0-9/_.~-]*$`), and a query or fragment never is. Anything else (`$(…)`, `;`, `&`, a quote, a
-    /// backtick, whitespace, a scheme with no host of its own such as `mailto:`) gives tafs cloud's address alone, with its
-    /// slash. The door's own path is `/v1/doors/api/door_…/requests`.
+    /// A door's address on tafs cloud, whole. Only ever on tafs cloud's own host, over HTTPS (as Windows and Linux): a
+    /// whole address elsewhere, or one whose scheme has no host of its own (`foo:x@evil.example/…`), becomes its path on
+    /// tafs cloud, so the example, which sends the developer's key, never names another host.
     static func endpoint(_ door: TafsCloud.Door, base: URL) -> String {
-        guard let host = base.host?.lowercased(), !host.isEmpty else { return base.absoluteString }
-        let alone = "https://\(host)/"
         let address = door.address.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let path = Self.path(of: address) else { return alone }
-        let rooted = path.hasPrefix("/") ? path : "/" + path
-        return rooted.range(of: #"^/[A-Za-z0-9/_.~-]*$"#, options: .regularExpression) != nil ? "https://\(host)" + rooted : alone
-    }
-
-    /// An address's path as written, its query and fragment dropped: after `scheme://host` or `//host`, from the first `/`; a
-    /// bare path as it is. Nil for anything with whitespace or a backslash, and for a scheme with no host of its own.
-    private static func path(of address: String) -> String? {
-        guard !address.contains(where: { $0.isWhitespace || $0 == "\\" }) else { return nil }
-        var s = Substring(address)
-        if let cut = s.firstIndex(where: { $0 == "?" || $0 == "#" }) { s = s[..<cut] }
-        if let scheme = s.range(of: "://") {
-            let rest = s[scheme.upperBound...]
-            return rest.firstIndex(of: "/").map { String(rest[$0...]) } ?? ""
+        let parts = URLComponents(string: address)
+        if let parts, parts.scheme?.lowercased() == "https", let host = parts.host, !host.isEmpty,
+           host.lowercased() == base.host?.lowercased(), parts.port == nil, parts.user == nil, parts.password == nil {
+            return address
         }
-        if s.hasPrefix("//") {
-            let rest = s.dropFirst(2)
-            return rest.firstIndex(of: "/").map { String(rest[$0...]) } ?? ""
-        }
-        // `mailto:`, `javascript:`, `foo:x@…`: a colon before any slash is a scheme, never a path.
-        if let colon = s.firstIndex(of: ":"), s.firstIndex(of: "/").map({ colon < $0 }) ?? true { return nil }
-        return String(s)
+        // The path alone, set on tafs cloud's own address: whatever it holds stays in the path, never the host.
+        var path = parts?.path ?? address
+        while path.hasPrefix("/") || path.hasPrefix("\\") { path.removeFirst() }
+        guard var on = URLComponents(url: base, resolvingAgainstBaseURL: false) else { return base.absoluteString }
+        on.path = "/" + path
+        on.query = nil
+        on.fragment = nil
+        guard let url = on.url, url.scheme == "https", url.host?.lowercased() == base.host?.lowercased(),
+              url.port == base.port, url.user == nil else { return base.absoluteString }
+        return url.absoluteString
     }
 
     /// The longest key name the field takes (tafs cloud takes 80; 60, as Android).
@@ -325,7 +313,7 @@ enum APIDoorText {
 
     /// An example request. It reads the key from the caller's own secret, `$TAFS_API_KEY`: the key is never written in it.
     static func example(endpoint: String) -> String {
-        "curl -X POST '\(endpoint)' \\\n  -H \"Authorization: Bearer $TAFS_API_KEY\" \\\n  -H \"Idempotency-Key: <your request id>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"input\": {}}'"
+        "curl -X POST \(endpoint) \\\n  -H \"Authorization: Bearer $TAFS_API_KEY\" \\\n  -H \"Idempotency-Key: <your request id>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"input\": {}}'"
     }
 }
 
