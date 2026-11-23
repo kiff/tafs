@@ -7714,11 +7714,6 @@ class AppModel(
   }
 
   /**
-   * Begins the switch to a version: tafs cloud prepares the Card draft it waits for, which the owner then reads, and
-   * from here nothing of the taf runs. With [redraft], its Cards are drafted again. Null, with the reason in
-   * [AppState.versionErrors], when it can't begin; a run in the way is named, with the one step that clears it.
-   */
-  /**
    * A switch that stopped a task waiting on the owner's answer (`stop_blocking`; the owner's panel test, 23 Nov): said in tafs
    * cloud's words, and the chat ends as a run that didn't go through, with Run again on the owner's last message of a stopped
    * session (one tap, never by itself). Nothing when nothing waiting was stopped.
@@ -7737,6 +7732,11 @@ class AppModel(
     }
   }
 
+  /**
+   * Begins the switch to a version: tafs cloud prepares the Card draft it waits for, which the owner then reads, and
+   * from here nothing of the taf runs. With [redraft], its Cards are drafted again. Null, with the reason in
+   * [AppState.versionErrors], when it can't begin; a run in the way is named, with the one step that clears it.
+   */
   suspend fun prepareSwitch(version: Version, tafId: String, redraft: Boolean = false, stopBlocking: Boolean = false): Switching? {
     val cloudId = _state.value.taf(tafId)?.cloudId
     if (_state.value.mode != Mode.kiff || cloudId == null || version.live) return null
