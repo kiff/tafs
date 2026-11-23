@@ -286,7 +286,9 @@ struct PairChromeView: View {
         sending = true
         defer { sending = false }
         let named = ChromePairing.name(name, browser: Words.Chrome.browserOn(browser: offer.browser, system: offer.os))
-        if await model.confirmChrome(pairing, offer: offer, name: name, replacing: replacing) {
+        // What the sheet showed moving: the confirm signs this list and no other.
+        let shown = replacing.map { ChromeReplace.carried(from: $0, in: model.grants, phoneKey: model.approvalPublicKey) } ?? []
+        if await model.confirmChrome(pairing, offer: offer, name: name, replacing: replacing, shown: shown) {
             outcome = Words.Chrome.paired(name: named)
         } else if let error = model.chromesError {
             outcome = error
