@@ -22,6 +22,7 @@
   "chrome.refused": "کسی اور Chrome نے یہ کوڈ استعمال کیا، اس لیے کچھ نہیں جوڑا گیا۔ دوبارہ شروع کریں۔",
   "chrome.remove": "جوڑ ختم کریں",
   "chrome.remove_named": "{name} کا جوڑ ختم کریں",
+  "chrome.replace_changed": "اس Chrome پر منتقل ہونے والی چیزیں بدل گئیں، اس لیے کچھ نہیں جوڑا گیا۔ اسے دیکھیں اور دوبارہ جوڑیں۔",
   "chrome.replace_moves": "اس Chrome پر منتقل ہوتا ہے: {sites}",
   "chrome.replace_none": "ایک نیا Chrome (کسی کی جگہ نہیں لیتا)",
   "chrome.replace_title": "جگہ لیتا ہے",
