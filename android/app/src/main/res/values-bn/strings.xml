@@ -2095,6 +2095,7 @@
     <string name="sample_memory_ask_first">অস্বাভাবিক কিছুর আগে জিজ্ঞেস করুন, Card-এর সঙ্গে মিললেও।</string>
     <string name="sample_memory_explain">আপনি চান আমি একটি সিদ্ধান্ত অনুচ্ছেদে নয়, এক লাইনে ব্যাখ্যা করি।</string>
     <string name="sample_memory_regulars">যে গ্রাহকরা প্রতি সপ্তাহে লেখেন তাঁরা সেই সকালেই উত্তর পান।</string>
+    <string name="sample_not_in_sample">এটি নমুনায় নেই। এটি করতে KIFF দিয়ে সাইন ইন করুন।</string>
     <string name="sample_parcels_change_address">অর্ডার #5141-এর ডেলিভারি ঠিকানা বদলান</string>
     <string name="sample_parcels_change_address_why">নতুন ঠিকানা থেকে একটি ইমেইল এটি চেয়েছে</string>
     <string name="sample_parcels_job">পার্সেল দেরিতে এলে গ্রাহকরা জিজ্ঞেস করার আগেই তাঁদের জানান। পুনরায় পাঠানো আপনার অপেক্ষায় থাকে। ইমেইল দেখে কখনও ডেলিভারি ঠিকানা বদলাবেন না।</string>

@@ -2095,6 +2095,7 @@
     <string name="sample_memory_ask_first">Kérdezz, mielőtt bármi szokatlant tennél, akkor is, ha belefér a Cardba.</string>
     <string name="sample_memory_explain">Inkább egy sorban magyarázzam el a döntéseimet, mint egy bekezdésben.</string>
     <string name="sample_memory_regulars">A hetente író vásárlók még aznap délelőtt választ kapnak.</string>
+    <string name="sample_not_in_sample">Ez nincs benne a mintában. Ehhez jelentkezz be a KIFF-fel.</string>
     <string name="sample_parcels_change_address">A szállítási cím módosítása az 5141-es rendelésen</string>
     <string name="sample_parcels_change_address_why">Egy új címről érkezett e-mail kérte</string>
     <string name="sample_parcels_job">Szólj a vásárlóknak, ha egy csomag késik, mielőtt rákérdeznének. Az újraküldések rád várnak. Soha ne módosíts szállítási címet e-mail alapján.</string>

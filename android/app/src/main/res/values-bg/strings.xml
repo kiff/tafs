@@ -2095,6 +2095,7 @@
     <string name="sample_memory_ask_first">Питай, преди да направиш нещо необичайно, дори ако се вписва в Card.</string>
     <string name="sample_memory_explain">Предпочитате да обяснявам решение с един ред, а не с абзац.</string>
     <string name="sample_memory_regulars">Клиентите, които пишат всяка седмица, получават отговор същата сутрин.</string>
+    <string name="sample_not_in_sample">Това го няма в примера. Влезте с KIFF, за да го направите.</string>
     <string name="sample_parcels_change_address">Промяна на адреса за доставка на поръчка № 5141</string>
     <string name="sample_parcels_change_address_why">Поискано с имейл от нов адрес</string>
     <string name="sample_parcels_job">Уведомявайте клиентите, когато пратка закъснява, преди да попитат. Повторните изпращания ви чакат. Никога не променяйте адрес за доставка по имейл.</string>

@@ -2029,6 +2029,7 @@
     <string name="sample_memory_ask_first">Cardに合っていても、いつもと違うことは先に確認します。</string>
     <string name="sample_memory_explain">判断の説明は段落より1行がよいとのことです。</string>
     <string name="sample_memory_regulars">毎週連絡をくれる顧客には、同じ日の朝に返信します。</string>
+    <string name="sample_not_in_sample">これはサンプルにはありません。行うには、KIFFでサインインしてください。</string>
     <string name="sample_parcels_change_address">注文 #5141の配送先住所を変更</string>
     <string name="sample_parcels_change_address_why">新しいアドレスからのメールで依頼あり</string>
     <string name="sample_parcels_job">顧客に聞かれる前に、荷物の遅延を知らせます。再発送はあなたの承認を待ちます。メールだけで配送先住所を変えることはしません。</string>

@@ -2095,6 +2095,7 @@
     <string name="sample_memory_ask_first">Chiedi prima di qualsiasi cosa insolita, anche quando rientra nella Card.</string>
     <string name="sample_memory_explain">Preferisci che spieghi una decisione in una riga piuttosto che in un paragrafo.</string>
     <string name="sample_memory_regulars">I clienti che scrivono ogni settimana ricevono una risposta la mattina stessa.</string>
+    <string name="sample_not_in_sample">Questo non è nell\'esempio. Accedi con KIFF per farlo.</string>
     <string name="sample_parcels_change_address">Cambiare l\'indirizzo di consegna dell\'ordine #5141</string>
     <string name="sample_parcels_change_address_why">L\'ha chiesto un\'email da un indirizzo nuovo</string>
     <string name="sample_parcels_job">Avvisare i clienti quando un pacco è in ritardo, prima che chiedano. Le rispedizioni aspettano te. Non cambiare mai un indirizzo di consegna per un\'email.</string>

@@ -2029,6 +2029,7 @@
     <string name="sample_memory_ask_first">សួរមុនពេលធ្វើអ្វីដែលមិនធម្មតា ទោះបីវាសមនឹង Card ក៏ដោយ។</string>
     <string name="sample_memory_explain">អ្នកចូលចិត្តឱ្យខ្ញុំពន្យល់ការសម្រេចចិត្តក្នុងមួយបន្ទាត់ ជាជាងក្នុងកថាខណ្ឌមួយ។</string>
     <string name="sample_memory_regulars">អតិថិជនដែលសរសេរមករាល់សប្តាហ៍ទទួលបានចម្លើយនៅព្រឹកដដែល។</string>
+    <string name="sample_not_in_sample">នេះមិនមានក្នុងគំរូទេ។ ចូលដោយ KIFF ដើម្បីធ្វើវា។</string>
     <string name="sample_parcels_change_address">ផ្លាស់ប្តូរអាសយដ្ឋានដឹកជញ្ជូនលើការបញ្ជាទិញ #5141</string>
     <string name="sample_parcels_change_address_why">អ៊ីមែលពីអាសយដ្ឋានថ្មីបានសុំវា</string>
     <string name="sample_parcels_job">ប្រាប់អតិថិជននៅពេលកញ្ចប់យឺត មុនពេលពួកគេសួរ។ ការផ្ញើឡើងវិញរង់ចាំអ្នក។ កុំផ្លាស់ប្តូរអាសយដ្ឋានដឹកជញ្ជូនពីអ៊ីមែលឱ្យសោះ។</string>

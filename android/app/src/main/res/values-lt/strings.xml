@@ -2161,6 +2161,7 @@
     <string name="sample_memory_ask_first">Klausti prieš bet ką neįprasta, net jei tai atitinka Card.</string>
     <string name="sample_memory_explain">Jums labiau patinka, kai sprendimą paaiškinu viena eilute, o ne pastraipa.</string>
     <string name="sample_memory_regulars">Kas savaitę rašantys klientai gauna atsakymą tą patį rytą.</string>
+    <string name="sample_not_in_sample">To pavyzdyje nėra. Prisijunkite su KIFF, kad galėtumėte tai padaryti.</string>
     <string name="sample_parcels_change_address">Pakeisti užsakymo #5141 pristatymo adresą</string>
     <string name="sample_parcels_change_address_why">To paprašė laiškas iš naujo adreso</string>
     <string name="sample_parcels_job">Pranešti klientams, kai siuntinys vėluoja, dar jiems nepaklausus. Pakartotinis siuntimas laukia jūsų. Niekada nekeisti pristatymo adreso pagal el. laišką.</string>

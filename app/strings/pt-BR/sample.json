@@ -22,6 +22,7 @@
   "sample.log.s2_evidence": "contato Studio Kaya",
   "sample.log.s5_line": "«Encomendas atrasadas» não rodou às 07:00: o login na transportadora precisa de você.",
   "sample.memory.explain": "Prefere que explique uma decisão em uma linha em vez de em um parágrafo.",
+  "sample.not_in_sample": "Isso não está no exemplo. Entre com o KIFF para fazer isso.",
   "sample.parcels.change_address": "Mudar o endereço de entrega do pedido #5141",
   "sample.parcels.job": "Avisar os clientes quando uma encomenda se atrasa, antes de perguntarem. Os reenvios esperam por você. Nunca mudar um endereço de entrega a partir de um email.",
   "sample.parcels.rule.address_changes": "Mudanças de endereço",

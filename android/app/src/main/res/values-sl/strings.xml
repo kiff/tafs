@@ -2227,6 +2227,7 @@
     <string name="sample_memory_ask_first">Vprašaj pred čimer koli nenavadnim, tudi ko ustreza Card.</string>
     <string name="sample_memory_explain">Raje razložim odločitev v eni vrstici kot v odstavku.</string>
     <string name="sample_memory_regulars">Stranke, ki pišejo vsak teden, dobijo odgovor še isto jutro.</string>
+    <string name="sample_not_in_sample">Tega v vzorcu ni. Če želite to narediti, se prijavite s KIFF.</string>
     <string name="sample_parcels_change_address">Spremeni naslov dostave za naročilo št. 5141</string>
     <string name="sample_parcels_change_address_why">Zahtevala ga je e-pošta z novega naslova</string>
     <string name="sample_parcels_job">Strankam povej, da pošiljka zamuja, preden vprašajo. Ponovne pošiljke čakajo na vas. Nikoli ne spremeni naslova dostave na podlagi e-pošte.</string>

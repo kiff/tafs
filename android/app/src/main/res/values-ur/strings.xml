@@ -2095,6 +2095,7 @@
     <string name="sample_memory_ask_first">کسی بھی غیر معمولی چیز سے پہلے پوچھیں، چاہے وہ Card میں فٹ ہو۔</string>
     <string name="sample_memory_explain">آپ چاہتے ہیں کہ میں فیصلے کی وضاحت پیراگراف کے بجائے ایک سطر میں کروں۔</string>
     <string name="sample_memory_regulars">جو گاہک ہر ہفتے لکھتے ہیں انہیں اسی صبح جواب ملتا ہے۔</string>
+    <string name="sample_not_in_sample">یہ نمونے میں نہیں ہے۔ اسے کرنے کے لیے KIFF سے سائن اِن کریں۔</string>
     <string name="sample_parcels_change_address">آرڈر #5141 کا ترسیل کا پتہ بدلیں</string>
     <string name="sample_parcels_change_address_why">ایک نئے پتے سے ای میل میں مانگا گیا</string>
     <string name="sample_parcels_job">گاہکوں کو پوچھنے سے پہلے بتائیں کہ پارسل دیر سے آ رہا ہے۔ دوبارہ ترسیل آپ کا انتظار کرتی ہے۔ ای میل کی بنیاد پر ترسیل کا پتہ کبھی نہ بدلیں۔</string>

@@ -2095,6 +2095,7 @@
     <string name="sample_memory_ask_first">Küsi enne kõike ebatavalist, isegi kui see mahub Cardi piiresse.</string>
     <string name="sample_memory_explain">Eelistad, et selgitan otsust ühe rea, mitte lõiguga.</string>
     <string name="sample_memory_regulars">Kliendid, kes kirjutavad iga nädal, saavad vastuse samal hommikul.</string>
+    <string name="sample_not_in_sample">Seda näidises ei ole. Selle tegemiseks logi sisse KIFFiga.</string>
     <string name="sample_parcels_change_address">Muuda tellimuse #5141 tarneaadressi</string>
     <string name="sample_parcels_change_address_why">Seda palus e-kiri uuelt aadressilt</string>
     <string name="sample_parcels_job">Teata klientidele, kui pakk hilineb, enne kui nad küsivad. Uuesti saatmised ootavad sind. Ära kunagi muuda tarneaadressi e-kirja põhjal.</string>

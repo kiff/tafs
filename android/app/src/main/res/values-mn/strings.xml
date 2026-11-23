@@ -2095,6 +2095,7 @@
     <string name="sample_memory_ask_first">Заншаагүй зүйлийн өмнө асуу, Card-д таарч байсан ч гэсэн.</string>
     <string name="sample_memory_explain">Та шийдвэрийг догол мөр биш нэг мөрөөр тайлбарлахыг илүү хүсдэг.</string>
     <string name="sample_memory_regulars">Долоо хоног бүр бичдэг үйлчлүүлэгчид тэр өглөө нь хариу авна.</string>
+    <string name="sample_not_in_sample">Энэ жишээнд байхгүй. Үүнийг хийхийн тулд KIFF-ээр нэвтэрнэ үү.</string>
     <string name="sample_parcels_change_address">#5141 захиалгын хүргэлтийн хаягийг өөрчлөх</string>
     <string name="sample_parcels_change_address_why">Шинэ хаягнаас ирсэн имэйл үүнийг хүссэн</string>
     <string name="sample_parcels_job">Илгээмж хоцрох үед үйлчлүүлэгчид асуухаас өмнө нь хэл. Дахин илгээлт таныг хүлээнэ. Имэйлээр ирсэн хүсэлтээр хүргэлтийн хаягийг хэзээ ч бүү өөрчил.</string>

@@ -2029,6 +2029,7 @@
     <string name="sample_memory_ask_first">Bertanya sebelum hal yang tidak biasa, bahkan saat sesuai Card.</string>
     <string name="sample_memory_explain">Anda lebih suka saya menjelaskan keputusan dalam satu baris, bukan satu paragraf.</string>
     <string name="sample_memory_regulars">Pelanggan yang menulis setiap minggu mendapat balasan di pagi yang sama.</string>
+    <string name="sample_not_in_sample">Ini tidak ada di contoh. Masuk dengan KIFF untuk melakukannya.</string>
     <string name="sample_parcels_change_address">Ubah alamat pengiriman pesanan #5141</string>
     <string name="sample_parcels_change_address_why">Email dari alamat baru memintanya</string>
     <string name="sample_parcels_job">Beri tahu pelanggan saat paket terlambat, sebelum mereka bertanya. Pengiriman ulang menunggu Anda. Jangan pernah mengubah alamat pengiriman dari sebuah email.</string>

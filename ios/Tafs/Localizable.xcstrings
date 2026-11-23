@@ -521322,6 +521322,269 @@
         }
       }
     },
+    "sample.not_in_sample": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا غير متاح في البيانات التجريبية. سجّل الدخول عبر KIFF للقيام به."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu nümunədə yoxdur. Bunu etmək üçün KIFF ilə daxil olun."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Това го няма в примера. Влезте с KIFF, за да го направите."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এটি নমুনায় নেই। এটি করতে KIFF দিয়ে সাইন ইন করুন।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Això no és a l'exemple. Inicia la sessió amb KIFF per fer-ho."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tohle v ukázce není. Pokud to chcete udělat, přihlaste se přes KIFF."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist nicht im Beispiel enthalten. Melde dich mit KIFF an, um es zu tun."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This isn't in the sample. Sign in with KIFF to do it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto no está en el ejemplo. Inicia sesión con KIFF para hacerlo."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seda näidises ei ole. Selle tegemiseks logi sisse KIFFiga."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce n'est pas dans l'exemple. Connectez-vous avec KIFF pour le faire."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "זה לא קיים בדוגמה. יש להיכנס עם KIFF כדי לעשות זאת."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह नमूने में नहीं है। इसे करने के लिए KIFF से साइन इन करें।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovo nije u primjeru. Prijavite se KIFF-om da biste to učinili."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez nincs benne a mintában. Ehhez jelentkezz be a KIFF-fel."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Սա օրինակում չկա։ Մուտք գործեք KIFF-ով՝ դա անելու համար։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ini tidak ada di contoh. Masuk dengan KIFF untuk melakukannya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo non è nell'esempio. Accedi con KIFF per farlo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これはサンプルにはありません。行うには、KIFFでサインインしてください。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ეს ნიმუშში არ არის. შედით KIFF-ით, რომ ეს გააკეთოთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "នេះមិនមានក្នុងគំរូទេ។ ចូលដោយ KIFF ដើម្បីធ្វើវា។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "샘플에는 없는 기능입니다. 하려면 KIFF로 로그인하세요."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ສິ່ງນີ້ບໍ່ມີໃນຂໍ້ມູນຕົວຢ່າງ. ເຂົ້າສູ່ລະບົບດ້ວຍ KIFF ເພື່ອເຮັດມັນ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To pavyzdyje nėra. Prisijunkite su KIFF, kad galėtumėte tai padaryti."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tā paraugā nav. Pieraksties ar KIFF, lai to izdarītu."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ова го нема во примерокот. Најави се со KIFF за да го направиш."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ жишээнд байхгүй. Үүнийг хийхийн тулд KIFF-ээр нэвтэрнэ үү."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो नमुनामा छैन। यो गर्न KIFF बाट साइन इन गर्नुहोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit zit niet in het voorbeeld. Log in met KIFF om het te doen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tego nie ma w przykładzie. Zaloguj się przez KIFF, aby to zrobić."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isto não está no exemplo. Inicie sessão com o KIFF para o fazer."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isso não está no exemplo. Entre com o KIFF para fazer isso."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest lucru nu este în exemplu. Conectați-vă cu KIFF pentru a-l face."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toto v ukážke nie je. Ak to chcete urobiť, prihláste sa cez KIFF."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tega v vzorcu ni. Če želite to narediti, se prijavite s KIFF."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjo nuk është në shembull. Hyni me KIFF për ta bërë."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovo nije u primeru. Prijavite se KIFF-om da biste to uradili."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สิ่งนี้ไม่มีในข้อมูลตัวอย่าง เข้าสู่ระบบด้วย KIFF เพื่อทำรายการนี้"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu nusgada ýok. Muny etmek üçin KIFF bilen giriň."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu örnekte yok. Bunu yapmak için KIFF ile oturum açın."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ نمونے میں نہیں ہے۔ اسے کرنے کے لیے KIFF سے سائن اِن کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Việc này không có trong dữ liệu mẫu. Hãy đăng nhập bằng KIFF để thực hiện."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "範例中沒有這項功能。請以 KIFF 登入後再進行。"
+          }
+        }
+      }
+    },
     "sample.parcels.change_address": {
       "extractionState": "manual",
       "localizations": {

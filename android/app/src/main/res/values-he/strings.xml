@@ -2161,6 +2161,7 @@
     <string name="sample_memory_ask_first">לשאול לפני כל דבר חריג, גם כשהוא מתאים ל-Card.</string>
     <string name="sample_memory_explain">אתה מעדיף שאסביר החלטה בשורה אחת ולא בפסקה.</string>
     <string name="sample_memory_regulars">לקוחות שכותבים כל שבוע מקבלים תשובה באותו בוקר.</string>
+    <string name="sample_not_in_sample">זה לא קיים בדוגמה. יש להיכנס עם KIFF כדי לעשות זאת.</string>
     <string name="sample_parcels_change_address">שינוי כתובת המשלוח בהזמנה ⁦#5141⁩</string>
     <string name="sample_parcels_change_address_why">אימייל מכתובת חדשה ביקש זאת</string>
     <string name="sample_parcels_job">להודיע ללקוחות כשחבילה מאחרת, לפני שהם שואלים. משלוחים חוזרים ממתינים לך. לעולם לא לשנות כתובת משלוח לפי אימייל.</string>

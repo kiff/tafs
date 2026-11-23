@@ -4117,6 +4117,8 @@ enum Words {
             /// Customers who write every week get a reply the same morning.
             static var regulars: String { Words.line("sample.memory.regulars") }
         }
+        /// This isn't in the sample. Sign in with KIFF to do it.
+        static var notInSample: String { Words.line("sample.not_in_sample") }
         enum Parcels {
             /// Change the delivery address on order #5141
             static var changeAddress: String { Words.line("sample.parcels.change_address") }

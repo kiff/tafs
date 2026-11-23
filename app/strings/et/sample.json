@@ -147,6 +147,7 @@
   "sample.memory.ask_first": "Küsi enne kõike ebatavalist, isegi kui see mahub Cardi piiresse.",
   "sample.memory.explain": "Eelistad, et selgitan otsust ühe rea, mitte lõiguga.",
   "sample.memory.regulars": "Kliendid, kes kirjutavad iga nädal, saavad vastuse samal hommikul.",
+  "sample.not_in_sample": "Seda näidises ei ole. Selle tegemiseks logi sisse KIFFiga.",
   "sample.parcels.change_address": "Muuda tellimuse #5141 tarneaadressi",
   "sample.parcels.change_address_why": "Seda palus e-kiri uuelt aadressilt",
   "sample.parcels.job": "Teata klientidele, kui pakk hilineb, enne kui nad küsivad. Uuesti saatmised ootavad sind. Ära kunagi muuda tarneaadressi e-kirja põhjal.",

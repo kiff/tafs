@@ -2095,6 +2095,7 @@
     <string name="sample_memory_ask_first">Pregunta abans de qualsevol cosa inusual, fins i tot quan encaixi amb el Card.</string>
     <string name="sample_memory_explain">Prefereixes que t\'expliqui una decisió en una línia que en un paràgraf.</string>
     <string name="sample_memory_regulars">Els clients que escriuen cada setmana reben resposta el mateix matí.</string>
+    <string name="sample_not_in_sample">Això no és a l\'exemple. Inicia la sessió amb KIFF per fer-ho.</string>
     <string name="sample_parcels_change_address">Canvia l\'adreça de lliurament de la comanda #5141</string>
     <string name="sample_parcels_change_address_why">Un correu d\'una adreça nova ho demanava</string>
     <string name="sample_parcels_job">Avisa els clients quan un paquet va amb retard, abans que ho preguntin. Els reenviaments t\'esperen a tu. Mai no canviïs una adreça de lliurament a partir d\'un correu.</string>

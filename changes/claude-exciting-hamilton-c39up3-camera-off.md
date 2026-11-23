@@ -1,1 +1,2 @@
 - **On a Mac where the camera is off for tafs:** a line saying where to turn it on (System Settings › Privacy & Security › Camera, or macOS 12's), in every language.
+- **In the sample, on a computer:** a line for what the sample can't do ("This isn't in the sample. Sign in with KIFF to do it."), in every language.
