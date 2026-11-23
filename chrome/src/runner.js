@@ -19,6 +19,10 @@ import { checkRelease, checkAllowances, checkSites, Nonces } from "./protocol.js
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
+// After an act, how long the tab gets to start the navigation the act began (a click's page change begins a moment after the click),
+// as 100 ms looks. A click that navigates nothing costs this and no more.
+const NAV_WAIT_MS = 1000;
+const NAV_LOOK_MS = 100;
 const STEP_TIMEOUT_MS = 20_000;
 const FAILURES_TO_PAUSE = 3;
 // A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its tabs close (and its window, when it has its own). One
@@ -520,8 +524,20 @@ export class Runner {
     else await this.chrome.tabs.remove([tabId]).catch(() => {});
   }
 
-  async loaded(tabId) {
+  /**
+   * Waits for the tab to finish loading, then SETTLE_MS. With `from` (the address the tab had before an act), it first waits up to
+   * NAV_WAIT_MS for the tab to start a navigation: a status other than `complete`, or another address. Without it, the read after a click comes
+   * before the page the click starts, because `complete` is still the old page's status.
+   */
+  async loaded(tabId, from) {
     const c = this.chrome;
+    if (from !== undefined) {
+      for (let waited = 0; waited < NAV_WAIT_MS; waited += NAV_LOOK_MS) {
+        const now = await c.tabs.get(tabId).catch(() => null);
+        if (!now || now.status !== "complete" || (now.url || "") !== from) break;
+        await this.sleep(NAV_LOOK_MS);
+      }
+    }
     const started = Date.now();
     for (;;) {
       const tab = await c.tabs.get(tabId);
@@ -619,10 +635,11 @@ export class Runner {
     if (refused) return { error: { code: refused.code } };
     if (step.act.sealed) return this.fillSealed(run, step, page);
     await this.pictureOf(run, step, page);
+    const before = await this.chrome.tabs.get(run.tab).catch(() => null);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);
     if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
-    // A click is never proof of its effect: the page is read back.
-    await this.loaded(run.tab);
+    // A click is never proof of its effect: the page is read back, after the navigation it started has begun and ended.
+    await this.loaded(run.tab, before ? before.url || "" : undefined);
     return this.read(run);
   }
 }
