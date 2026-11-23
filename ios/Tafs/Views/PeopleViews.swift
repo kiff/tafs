@@ -7,7 +7,11 @@ import SwiftUI
 /// person's act behind Face ID.
 struct PeopleGroupsView: View {
     static let title = Words.People.title
+    /// The screen reads again a minute after a change, then slower while nothing changes, up to five minutes.
+    static let baseWait: UInt64 = 60_000_000_000
+    static let capWait: UInt64 = 300_000_000_000
     @EnvironmentObject private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
     @State private var naming: GroupNaming?
     @State private var adding: KIFFClient.Group?
     @State private var deleting: KIFFClient.Group?
@@ -58,10 +62,16 @@ struct PeopleGroupsView: View {
         }
         .refreshable { await model.refreshPeople() }
         // Read again while it's open, so someone who joins shows without leaving the screen.
-        .task {
+        // A minute apart while it changes, then slower while the answers are the same (up to five minutes), with jitter; none while the
+        // app isn't in front (the phone isn't looking at it), and again at once when it comes back.
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            var wait = Self.baseWait
             while !Task.isCancelled {
+                let before = model.peopleSignature
                 await model.refreshPeople(); loaded = true
-                try? await Task.sleep(nanoseconds: 20_000_000_000)
+                wait = PollPace.quietWait(after: wait, changed: model.peopleSignature != before, base: Self.baseWait, cap: Self.capWait)
+                try? await Task.sleep(nanoseconds: PollPace.jittered(wait))
             }
         }
         .sheet(item: $naming) { n in GroupNameSheet(naming: n).environmentObject(model) }

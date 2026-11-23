@@ -1273,6 +1273,15 @@ final class AppModel: ObservableObject {
         self.access = access
     }
 
+    /// What the People screen shows, as one number: it changes when a group, a member or a person does. The screen reads again slower
+    /// while it stays the same (`PollPace.quietWait`).
+    var peopleSignature: Int {
+        var hasher = Hasher()
+        hasher.combine(groups)
+        hasher.combine(people)
+        return hasher.finalize()
+    }
+
     /// Reads the account's groups, its people and this person's access to each taf.
     func refreshPeople() async {
         guard mode == .kiff else { groups = []; people = []; access = [:]; return }
@@ -6466,7 +6475,8 @@ final class AppModel: ObservableObject {
     }
 
     /// How often a thread is reloaded while the taf owes an answer, and how many times for
-    /// one unanswered message (30 × 4 s = two minutes). Tests shorten both.
+    /// one unanswered message (30 reads: 4 s for ten, 8 s for ten, then 12 s, each up to a fifth shorter; about 4 minutes).
+    /// Tests shorten both.
     var chatPollInterval: UInt64 = 4_000_000_000
     var chatPollBudget = 30
 
@@ -6479,7 +6489,8 @@ final class AppModel: ObservableObject {
         var waitingFor: String?
         var polls = 0
         while !Task.isCancelled {
-            try? await Task.sleep(nanoseconds: chatPollInterval)
+            // Slower as the reads for one unanswered message go on, and never the same instant on every phone.
+            try? await Task.sleep(nanoseconds: PollPace.jittered(chatPollInterval * PollPace.chatFactor(afterReads: polls)))
             if Task.isCancelled { return }
             // A stream shows what the taf does, and reloads the thread itself.
             if chatState(tafID).live != nil { continue }
@@ -9329,8 +9340,10 @@ final class AppModel: ObservableObject {
         var lastOwner: String?
         var polls = 0
         while !Task.isCancelled {
-            // Every second while Setup works, so its words show as soon as it writes them.
-            try? await Task.sleep(nanoseconds: setupThinking ? setupWorkingPollInterval : setupPollInterval)
+            // While Setup works, soon after it writes, then slower as the reads go on (never every second for long), with jitter. A card
+            // waiting on its grant keeps the base pace: it's read only while it waits, and says so after a minute.
+            let base = setupThinking ? setupWorkingPollInterval : setupPollInterval
+            try? await Task.sleep(nanoseconds: PollPace.jittered(PollPace.setupWait(base: base, afterReads: polls, cardWaits: cardWaitsOnItsGrant)))
             if Task.isCancelled { return }
             // A stream shows what Setup does, and reloads the thread itself, except a card still waiting on
             // its grant: planque can list it after the stream's last read, and a quiet stream reads nothing
