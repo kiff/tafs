@@ -18,6 +18,10 @@ import { checkRelease, checkAllowances, checkSites, Nonces } from "./protocol.js
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
 const STEP_TIMEOUT_MS = 20_000;
+// A read of a site Chrome hasn't let the extension into waits this long for the owner's Allow in the side panel, checking each
+// half second, before it answers `needs_site_permission`. An open waits before it makes a tab; the panel shows the button.
+const PERMISSION_WAIT_MS = 25_000;
+const PERMISSION_POLL_MS = 500;
 const FAILURES_TO_PAUSE = 3;
 // A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its tabs close (and its window, when it has its own). One
 // the owner paused isn't idle, it's waiting for the owner.
@@ -363,6 +367,11 @@ export class Runner {
     const refused = refuseURL(url, run.sites, run.allowed);
     if (refused) return { error: { code: refused.code } };
     const c = this.chrome;
+    // No tab opens for a site Chrome hasn't let the extension into until the owner allows it (the wait shows the panel's Allow).
+    if (!(await this.permitted(run, url)) && !(await this.waitForPermission(run, url))) {
+      return { error: { code: "needs_site_permission", detail: this.siteOf(run, url) } };
+    }
+    if (run.stopped) return { error: { code: "stopped" } };
     if (run.tab == null) {
       // A tab of its own in the window the owner is using, in the background: their active tab and their other tabs are
       // never touched, and the run's group sits beside them. With no such window, a window of its own, not focused.
@@ -476,12 +485,35 @@ export class Runner {
     return ok;
   }
 
+  siteOf(run, url) {
+    const host = new URL(url).hostname;
+    return run.sites.find((s) => host === s || host.endsWith("." + s)) || host;
+  }
+
+  /**
+   * The owner's Allow for a site, waited for: the run keeps the site in `asks` (the panel shows "Allow …" and the toolbar badge asks)
+   * and the tab stays on the page. True once Chrome lets the extension in; false when the wait ends, or the run is stopped or paused.
+   */
+  async waitForPermission(run, url) {
+    for (let waited = 0; waited < PERMISSION_WAIT_MS; waited += PERMISSION_POLL_MS) {
+      await this.sleep(PERMISSION_POLL_MS);
+      if (run.stopped || run.paused) return false;
+      if (await this.permitted(run, url)) {
+        this.onChange(this.state());
+        return true;
+      }
+    }
+    return false;
+  }
+
   async read(run, offset = 0) {
     if (run.tab == null) return { error: { code: "no_page" } };
     const tab = await this.chrome.tabs.get(run.tab);
     const refused = refuseURL(tab.url || "", run.sites, run.allowed);
     if (refused) return { error: { code: refused.code } };
-    if (!(await this.permitted(run, tab.url))) return { error: { code: "needs_site_permission" } };
+    if (!(await this.permitted(run, tab.url)) && !(await this.waitForPermission(run, tab.url))) {
+      return { error: { code: "needs_site_permission", detail: this.siteOf(run, tab.url) } };
+    }
     await this.inject(run.tab, run);
     const page = await this.inTab(run.tab, (o) => globalThis.TafsPage.read(o), [offset]);
     if (!page) return { error: { code: "page_unresponsive" } };

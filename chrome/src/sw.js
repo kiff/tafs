@@ -34,7 +34,8 @@ function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(), ...extra };
   chrome.storage.session.set({ state }).catch(() => {});
   chrome.runtime.sendMessage({ type: "state", state }).catch(() => {});
-  chrome.action.setBadgeText({ text: runner.active ? "ON" : "" }).catch(() => {});
+  const asking = runner.state().some((r) => !r.stopped && r.asks.length);
+  chrome.action.setBadgeText({ text: asking ? "!" : runner.active ? "ON" : "" }).catch(() => {});
   chrome.action.setBadgeBackgroundColor({ color: "#F29A2E" }).catch(() => {});
 }
 
