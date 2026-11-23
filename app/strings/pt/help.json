@@ -4,5 +4,8 @@
   "help.chrome_title": "O tafs pode trabalhar no seu Chrome",
   "help.code_lead": "Ative-o em {account} › {sign_in}. Depois, quando o pedir, o KIFF envia-lhe por email um código que serve uma só vez, durante 10 minutos, no navegador que o pediu.",
   "help.code_safe": "Nunca dê este código a ninguém. O KIFF nunca lho vai pedir.",
-  "help.code_title": "Iniciar sessão com um código por email"
+  "help.code_title": "Iniciar sessão com um código por email",
+  "help.security_key_lead": "No Linux, ou num Mac com macOS 12, aprovar neste computador requer uma chave de segurança FIDO2: uma pequena chave USB em que toca, com o seu próprio PIN. Uma pen USB comum não serve. Sem ela, este computador só mostra, e aprova no telemóvel.",
+  "help.security_key_title": "Aprovar com uma chave de segurança neste computador",
+  "help.security_key_use": "Adicione-a quando associar este computador. Depois, cada aprovação mostra o que está a aprovar e pede-lhe que ligue a chave, toque nela e introduza o respetivo PIN; o tafs nunca guarda o PIN. Num Mac com macOS 12, o Touch ID não pode aprovar."
 }

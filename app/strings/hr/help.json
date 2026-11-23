@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs može raditi u vašem Chromeu",
   "help.code_lead": "Uključite to u {account} › {sign_in}. Zatim vam KIFF na zahtjev e-poštom šalje kod koji vrijedi jednom, 10 minuta, u pregledniku koji ga je zatražio.",
   "help.code_safe": "Nikome nikad ne dajte ovaj kod. KIFF ga od vas nikad neće tražiti.",
-  "help.code_title": "Prijava kodom iz e-pošte"
+  "help.code_title": "Prijava kodom iz e-pošte",
+  "help.security_key_lead": "Na Linuxu ili na Macu s macOS-om 12 za odobravanje na ovom računalu treba vam sigurnosni ključ FIDO2: mali USB ključ koji dodirnete, s vlastitim PIN-om. Običan USB stick neće raditi. Bez njega ovo računalo samo prikazuje, a odobravate na telefonu.",
+  "help.security_key_title": "Odobravanje sigurnosnim ključem na ovom računalu",
+  "help.security_key_use": "Dodajte ga kad uparujete ovo računalo. Zatim svako odobrenje pokazuje što odobravate i traži da priključite ključ, dodirnete ga i unesete njegov PIN; tafs nikad ne sprema PIN. Na Macu s macOS-om 12 Touch ID ne može odobravati."
 }

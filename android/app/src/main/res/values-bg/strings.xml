@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">Включете го в %1$s › %2$s. След това, когато поискате, KIFF изпраща по имейл код, който важи веднъж, 10 минути, в браузъра, който го е поискал.</string>
     <string name="help_code_safe">Никога не давайте този код на никого. KIFF никога няма да ви го поиска.</string>
     <string name="help_code_title">Вход с код по имейл</string>
+    <string name="help_security_key_lead">В Linux или на Mac с macOS 12 одобряването на този компютър изисква ключ за сигурност FIDO2: малък USB ключ, който докосвате, със собствен ПИН код. Обикновена USB флашка няма да свърши работа. Без такъв ключ този компютър само показва, а одобрявате на телефона си.</string>
+    <string name="help_security_key_title">Одобряване с ключ за сигурност на този компютър</string>
+    <string name="help_security_key_use">Добавете го, когато сдвоявате този компютър. След това всяко одобрение показва какво одобрявате и иска да включите ключа, да го докоснете и да въведете неговия ПИН код; tafs никога не съхранява ПИН кода. На Mac с macOS 12 Touch ID не може да одобрява.</string>
     <string name="home_calendar_not_read">Календарът не можа да бъде прочетен. %1$s</string>
     <string name="home_cant_reach_kiff">Няма връзка с KIFF</string>
     <string name="home_choose_taf">Изберете taf.</string>

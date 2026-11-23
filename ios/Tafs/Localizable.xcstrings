@@ -342786,6 +342786,795 @@
         }
       }
     },
+    "help.security_key_lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على Linux، أو على Mac بنظام macOS 12، تتطلب الموافقة على هذا الكمبيوتر مفتاح أمان FIDO2: مفتاح USB صغير تلمسه، وله رمز PIN خاص به. لا تصلح ذاكرة USB العادية. وبدونه، يكتفي هذا الكمبيوتر بالعرض، وتوافق أنت على هاتفك."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux-da və ya macOS 12 olan Mac-də bu kompüterdə təsdiq etmək üçün FIDO2 təhlükəsizlik açarı lazımdır: toxunduğunuz, öz PIN-i olan kiçik USB açar. Adi USB fləş işləməyəcək. Açar olmadan bu kompüter yalnız göstərir, təsdiqi isə telefonunuzda edirsiniz."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В Linux или на Mac с macOS 12 одобряването на този компютър изисква ключ за сигурност FIDO2: малък USB ключ, който докосвате, със собствен ПИН код. Обикновена USB флашка няма да свърши работа. Без такъв ключ този компютър само показва, а одобрявате на телефона си."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux-এ, বা macOS 12 চলা Mac-এ, এই কম্পিউটারে অনুমোদন করতে একটি FIDO2 সিকিউরিটি কী লাগে: একটি ছোট USB কী, যা আপনি ছুঁয়ে দেন, আর যার নিজস্ব PIN আছে। সাধারণ USB স্টিক কাজ করবে না। কী না থাকলে এই কম্পিউটার শুধু দেখায়, আর অনুমোদন আপনি ফোনে করেন।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Linux, o en un Mac amb macOS 12, per aprovar en aquest ordinador cal una clau de seguretat FIDO2: una petita clau USB que toques i que té el seu propi PIN. Un llapis USB normal no serveix. Sense clau, aquest ordinador només mostra, i aproves al telèfon."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "V Linuxu nebo na Macu se systémem macOS 12 je ke schvalování na tomto počítači potřeba bezpečnostní klíč FIDO2: malý USB klíč, kterého se dotknete a který má vlastní PIN. Obyčejný USB flash disk nestačí. Bez klíče tento počítač jen zobrazuje a schvalujete v telefonu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unter Linux oder auf einem Mac mit macOS 12 brauchst du zum Genehmigen an diesem Computer einen FIDO2-Sicherheitsschlüssel: einen kleinen USB-Schlüssel, den du berührst, mit eigener PIN. Ein gewöhnlicher USB-Stick funktioniert nicht. Ohne ihn zeigt dieser Computer nur an, und du genehmigst auf deinem Handy."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On Linux, or on a Mac with macOS 12, approving on this computer needs a FIDO2 security key: a small USB key you touch, with its own PIN. An ordinary USB stick won't work. Without one, this computer only views, and you approve on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Linux, o en un Mac con macOS 12, para aprobar en este ordenador necesitas una llave de seguridad FIDO2: una pequeña llave USB que tocas, con su propio PIN. Un pendrive normal no sirve. Sin ella, este ordenador solo muestra, y apruebas en tu teléfono."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linuxis või macOS 12-ga Macis on selles arvutis kinnitamiseks vaja FIDO2 turvavõtit: väikest USB-võtit, mida puudutad ja millel on oma PIN. Tavaline USB-mälupulk ei sobi. Ilma selleta see arvuti ainult näitab ja sina kinnitad telefonis."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sous Linux, ou sur un Mac sous macOS 12, approuver sur cet ordinateur demande une clé de sécurité FIDO2 : une petite clé USB que vous touchez, avec son propre code PIN. Une clé USB de stockage ordinaire ne convient pas. Sans elle, cet ordinateur ne fait qu'afficher, et vous approuvez sur votre téléphone."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ב-Linux, או ב-Mac עם macOS 12, כדי לאשר במחשב הזה צריך מפתח אבטחה מסוג FIDO2: מפתח USB קטן שנוגעים בו, עם PIN משלו. דיסק און קי רגיל לא יעבוד. בלי מפתח, המחשב הזה רק מציג, והאישור נעשה בטלפון."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux पर, या macOS 12 वाले Mac पर, इस कंप्यूटर पर मंज़ूर करने के लिए FIDO2 सुरक्षा कुंजी चाहिए: एक छोटी USB कुंजी जिसे आप छूते हैं, और जिसका अपना PIN होता है। साधारण USB स्टिक काम नहीं करेगी। उसके बिना यह कंप्यूटर सिर्फ़ दिखाता है, और आप अपने फ़ोन पर मंज़ूर करते हैं।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na Linuxu ili na Macu s macOS-om 12 za odobravanje na ovom računalu treba vam sigurnosni ključ FIDO2: mali USB ključ koji dodirnete, s vlastitim PIN-om. Običan USB stick neće raditi. Bez njega ovo računalo samo prikazuje, a odobravate na telefonu."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linuxon vagy macOS 12-t futtató Macen a jóváhagyáshoz ezen a számítógépen FIDO2 biztonsági kulcs kell: egy kis USB-kulcs, amelyet megérintesz, saját PIN-kóddal. Egy sima pendrive nem jó. Nélküle ez a számítógép csak megjelenít, a jóváhagyás pedig a telefonodon történik."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux-ում կամ macOS 12-ով Mac-ում այս համակարգչում հաստատելու համար պետք է FIDO2 անվտանգության բանալի՝ փոքր USB բանալի, որին հպվում եք, և որն ունի իր PIN-ը։ Սովորական USB կրիչը չի աշխատի։ Առանց դրա այս համակարգիչը միայն ցուցադրում է, իսկ հաստատում եք ձեր հեռախոսով։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di Linux, atau di Mac dengan macOS 12, menyetujui di komputer ini memerlukan kunci keamanan FIDO2: kunci USB kecil yang Anda sentuh, dengan PIN-nya sendiri. Flashdisk USB biasa tidak bisa. Tanpa kunci itu, komputer ini hanya menampilkan, dan Anda menyetujui di ponsel."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su Linux, o su un Mac con macOS 12, per approvare su questo computer serve una chiave di sicurezza FIDO2: una piccola chiave USB che tocchi, con un suo PIN. Una normale chiavetta USB non va bene. Senza, questo computer si limita a mostrare, e approvi sul telefono."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux、または macOS 12 の Mac では、このコンピュータで承認するには FIDO2 セキュリティキーが必要です。タッチして使う小さな USB キーで、専用の PIN があります。普通の USB メモリでは使えません。キーがない場合、このコンピュータは表示のみで、承認はスマートフォンで行います。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux-ზე ან macOS 12-იან Mac-ზე ამ კომპიუტერზე დასამტკიცებლად საჭიროა FIDO2 უსაფრთხოების გასაღები: პატარა USB გასაღები, რომელსაც ეხებით და რომელსაც საკუთარი PIN აქვს. ჩვეულებრივი USB ფლეშკა არ გამოდგება. მის გარეშე ეს კომპიუტერი მხოლოდ აჩვენებს, დამტკიცებას კი ტელეფონზე აკეთებთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "នៅលើ Linux ឬនៅលើ Mac ដែលមាន macOS 12 ការអនុម័តនៅលើកុំព្យូទ័រនេះត្រូវការសោសុវត្ថិភាព FIDO2៖ សោ USB តូចមួយដែលអ្នកចុចប៉ះ ហើយមាន PIN ផ្ទាល់ខ្លួន។ ឧបករណ៍ផ្ទុក USB ធម្មតាប្រើមិនបានទេ។ បើគ្មានសោ កុំព្យូទ័រនេះគ្រាន់តែបង្ហាញ ហើយអ្នកអនុម័តនៅលើទូរសព្ទ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux 또는 macOS 12를 쓰는 Mac에서는 이 컴퓨터에서 승인하려면 FIDO2 보안 키가 필요합니다. 터치해서 쓰는 작은 USB 키로, 자체 PIN이 있습니다. 일반 USB 메모리는 쓸 수 없습니다. 키가 없으면 이 컴퓨터는 보기만 하고, 승인은 휴대폰에서 합니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ໃນ Linux ຫຼື ໃນ Mac ທີ່ໃຊ້ macOS 12, ການອະນຸມັດໃນຄອມພິວເຕີນີ້ຕ້ອງໃຊ້ກຸນແຈຄວາມປອດໄພ FIDO2: ກຸນແຈ USB ນ້ອຍທີ່ທ່ານແຕະ ແລະ ມີ PIN ຂອງມັນເອງ. USB ເກັບຂໍ້ມູນທົ່ວໄປໃຊ້ບໍ່ໄດ້. ຖ້າບໍ່ມີກຸນແຈ, ຄອມພິວເຕີນີ້ພຽງແຕ່ສະແດງ ແລະ ທ່ານອະນຸມັດໃນໂທລະສັບ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Linux“ arba „Mac“ su „macOS 12“ norint patvirtinti šiame kompiuteryje reikia FIDO2 saugos rakto: mažo USB rakto, kurį paliečiate ir kuris turi savo PIN. Paprasta USB atmintinė netiks. Be jo šis kompiuteris tik rodo, o patvirtinate telefone."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux vai Mac ar macOS 12 apstiprināšanai šajā datorā vajadzīga FIDO2 drošības atslēga: maza USB atslēga, kurai pieskaries, ar savu PIN. Parasta USB zibatmiņa neder. Bez tās šis dators tikai rāda, un tu apstiprini tālrunī."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На Linux или на Mac со macOS 12, за да одобруваш на овој компјутер ти треба безбедносен клуч FIDO2: мал USB клуч што го допираш, со свој PIN. Обичен USB стик нема да работи. Без него, овој компјутер само прикажува, а одобруваш на телефонот."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux эсвэл macOS 12-тэй Mac дээр энэ компьютер дээр зөвшөөрөхөд FIDO2 аюулгүй байдлын түлхүүр хэрэгтэй: хүрч ажиллуулдаг, өөрийн PIN-тэй жижиг USB түлхүүр. Энгийн USB флаш тохирохгүй. Түлхүүргүй бол энэ компьютер зөвхөн харуулна, зөвшөөрлийг утсан дээрээ өгнө."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux मा, वा macOS 12 भएको Mac मा, यो कम्प्युटरमा स्वीकृत गर्न FIDO2 सुरक्षा कुञ्जी चाहिन्छ: तपाईंले छुने, आफ्नै PIN भएको सानो USB कुञ्जी। साधारण USB स्टिकले काम गर्दैन। कुञ्जी नभए यो कम्प्युटरले देखाउने मात्र गर्छ, र तपाईं फोनमा स्वीकृत गर्नुहुन्छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op Linux, of op een Mac met macOS 12, heb je om op deze computer goed te keuren een FIDO2-beveiligingssleutel nodig: een kleine USB-sleutel die je aanraakt, met een eigen pincode. Een gewone USB-stick werkt niet. Zonder sleutel toont deze computer alleen, en keur je goed op je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na Linuksie lub na Macu z macOS 12 do zatwierdzania na tym komputerze potrzebny jest klucz bezpieczeństwa FIDO2: mały klucz USB, którego dotykasz, z własnym PIN-em. Zwykły pendrive nie zadziała. Bez niego ten komputer tylko wyświetla, a zatwierdzasz na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Linux, ou num Mac com macOS 12, aprovar neste computador requer uma chave de segurança FIDO2: uma pequena chave USB em que toca, com o seu próprio PIN. Uma pen USB comum não serve. Sem ela, este computador só mostra, e aprova no telemóvel."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Linux, ou em um Mac com macOS 12, aprovar neste computador exige uma chave de segurança FIDO2: uma pequena chave USB que você toca, com o próprio PIN. Um pen drive comum não funciona. Sem ela, este computador só mostra, e você aprova no celular."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe Linux sau pe un Mac cu macOS 12, pentru a aproba pe acest computer aveți nevoie de o cheie de securitate FIDO2: o cheie USB mică pe care o atingeți, cu propriul PIN. Un stick USB obișnuit nu funcționează. Fără ea, acest computer doar afișează, iar aprobarea o dați pe telefon."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "V Linuxe alebo na Macu so systémom macOS 12 je na schvaľovanie na tomto počítači potrebný bezpečnostný kľúč FIDO2: malý USB kľúč, ktorého sa dotknete a ktorý má vlastný PIN. Obyčajný USB kľúč na dáta nestačí. Bez neho tento počítač len zobrazuje a schvaľujete v telefóne."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "V Linuxu ali na Macu z macOS 12 za odobritev v tem računalniku potrebujete varnostni ključ FIDO2: majhen ključ USB, ki se ga dotaknete, z lastnim PIN-om. Navaden ključek USB ne bo deloval. Brez njega ta računalnik samo prikazuje, odobrite pa v telefonu."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Në Linux, ose në një Mac me macOS 12, për të miratuar në këtë kompjuter nevojitet një çelës sigurie FIDO2: një çelës i vogël USB që e prekni, me PIN-in e vet. Një USB e zakonshme nuk funksionon. Pa të, ky kompjuter vetëm shfaq, dhe ju miratoni në telefon."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na Linuxu ili na Macu sa macOS-om 12 za odobravanje na ovom računaru treba vam sigurnosni ključ FIDO2: mali USB ključ koji dodirnete, sa sopstvenim PIN-om. Običan USB fleš neće raditi. Bez njega ovaj računar samo prikazuje, a odobravate na telefonu."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "บน Linux หรือบน Mac ที่ใช้ macOS 12 การอนุมัติบนคอมพิวเตอร์เครื่องนี้ต้องใช้กุญแจความปลอดภัย FIDO2 ซึ่งเป็นกุญแจ USB ขนาดเล็กที่คุณแตะ และมี PIN ของตัวเอง แฟลชไดรฟ์ USB ทั่วไปใช้ไม่ได้ หากไม่มีกุญแจ คอมพิวเตอร์เครื่องนี้จะแสดงได้อย่างเดียว และคุณอนุมัติบนโทรศัพท์"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux-da ýa-da macOS 12 bolan Mac-da bu kompýuterde tassyklamak üçin FIDO2 howpsuzlyk açary gerek: degip ulanylýan, öz PIN-i bolan kiçi USB açar. Adaty USB fleşka işlemez. Açar bolmasa, bu kompýuter diňe görkezýär, tassyklamany bolsa telefonyňyzda edýärsiňiz."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux'ta veya macOS 12 yüklü bir Mac'te bu bilgisayarda onaylamak için bir FIDO2 güvenlik anahtarı gerekir: dokunduğunuz, kendi PIN'i olan küçük bir USB anahtar. Sıradan bir USB bellek işe yaramaz. Anahtar olmadan bu bilgisayar yalnızca gösterir, onayı telefonunuzda verirsiniz."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linux پر، یا macOS 12 والے Mac پر، اس کمپیوٹر پر منظوری کے لیے FIDO2 سیکیورٹی کلید چاہیے: ایک چھوٹی USB کلید جسے آپ چھوتے ہیں، اور جس کا اپنا PIN ہوتا ہے۔ عام USB اسٹک کام نہیں کرے گی۔ اس کے بغیر یہ کمپیوٹر صرف دکھاتا ہے، اور آپ اپنے فون پر منظور کرتے ہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trên Linux, hoặc trên Mac chạy macOS 12, để phê duyệt trên máy tính này bạn cần một khóa bảo mật FIDO2: một khóa USB nhỏ mà bạn chạm vào, có mã PIN riêng. USB lưu trữ thông thường không dùng được. Không có khóa, máy tính này chỉ hiển thị, và bạn phê duyệt trên điện thoại."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Linux 上，或在搭載 macOS 12 的 Mac 上，要在這部電腦上核准需要 FIDO2 安全金鑰：一種需要觸碰的小型 USB 金鑰，有自己的 PIN。一般的 USB 隨身碟無法使用。沒有金鑰時，這部電腦只能檢視，核准則在您的手機上進行。"
+          }
+        }
+      }
+    },
+    "help.security_key_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموافقة بمفتاح أمان على هذا الكمبيوتر"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kompüterdə təhlükəsizlik açarı ilə təsdiq edin"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одобряване с ключ за сигурност на този компютър"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই কম্পিউটারে সিকিউরিটি কী দিয়ে অনুমোদন করুন"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprova amb una clau de seguretat en aquest ordinador"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schvalování bezpečnostním klíčem na tomto počítači"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit einem Sicherheitsschlüssel an diesem Computer genehmigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve with a security key on this computer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar con una llave de seguridad en este ordenador"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kinnita selles arvutis turvavõtmega"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuver avec une clé de sécurité sur cet ordinateur"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אישור עם מפתח אבטחה במחשב הזה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस कंप्यूटर पर सुरक्षा कुंजी से मंज़ूर करें"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odobravanje sigurnosnim ključem na ovom računalu"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jóváhagyás biztonsági kulccsal ezen a számítógépen"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Հաստատեք այս համակարգչում անվտանգության բանալիով"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setujui dengan kunci keamanan di komputer ini"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva con una chiave di sicurezza su questo computer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このコンピュータでセキュリティキーを使って承認"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "დაამტკიცეთ ამ კომპიუტერზე უსაფრთხოების გასაღებით"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "អនុម័តដោយសោសុវត្ថិភាពនៅលើកុំព្យូទ័រនេះ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 컴퓨터에서 보안 키로 승인"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ອະນຸມັດດ້ວຍກຸນແຈຄວາມປອດໄພໃນຄອມພິວເຕີນີ້"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Patvirtinkite saugos raktu šiame kompiuteryje"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apstiprināt ar drošības atslēgu šajā datorā"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одобри со безбедносен клуч на овој компјутер"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ компьютер дээр аюулгүй байдлын түлхүүрээр зөвшөөрөх"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो कम्प्युटरमा सुरक्षा कुञ्जीले स्वीकृत गर्नुहोस्"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedkeuren met een beveiligingssleutel op deze computer"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatwierdzanie kluczem bezpieczeństwa na tym komputerze"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovar com uma chave de segurança neste computador"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovar com uma chave de segurança neste computador"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobați cu o cheie de securitate pe acest computer"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schvaľovanie bezpečnostným kľúčom na tomto počítači"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odobritev z varnostnim ključem v tem računalniku"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miratoni me një çelës sigurie në këtë kompjuter"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odobravanje sigurnosnim ključem na ovom računaru"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อนุมัติด้วยกุญแจความปลอดภัยบนคอมพิวเตอร์เครื่องนี้"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kompýuterde howpsuzlyk açary bilen tassyklaň"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bilgisayarda güvenlik anahtarıyla onaylayın"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس کمپیوٹر پر سیکیورٹی کلید سے منظور کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phê duyệt bằng khóa bảo mật trên máy tính này"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在這部電腦上用安全金鑰核准"
+          }
+        }
+      }
+    },
+    "help.security_key_use": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضفه عند إقران هذا الكمبيوتر. بعد ذلك تعرض كل موافقة ما توافق عليه، وتطلب منك توصيل المفتاح ولمسه وإدخال رمز PIN الخاص به، ولا يخزن tafs رمز PIN أبدًا. على Mac بنظام macOS 12، لا يمكن الموافقة باستخدام Touch ID."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kompüteri cütləşdirəndə onu əlavə edin. Sonra hər təsdiq nəyi təsdiq etdiyinizi göstərir və açarı qoşmağınızı, ona toxunmağınızı və PIN-ini daxil etməyinizi istəyir; tafs PIN-i heç vaxt saxlamır. macOS 12 olan Mac-də Touch ID ilə təsdiq etmək olmur."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавете го, когато сдвоявате този компютър. След това всяко одобрение показва какво одобрявате и иска да включите ключа, да го докоснете и да въведете неговия ПИН код; tafs никога не съхранява ПИН кода. На Mac с macOS 12 Touch ID не може да одобрява."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই কম্পিউটার জোড়া লাগানোর সময় কী-টি যোগ করুন। এরপর প্রতিটি অনুমোদন দেখায় আপনি কী অনুমোদন করছেন, আর কী লাগাতে, ছুঁয়ে দিতে ও এর PIN দিতে বলে; tafs কখনও PIN সংরক্ষণ করে না। macOS 12 চলা Mac-এ Touch ID দিয়ে অনুমোদন করা যায় না।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afegeix-la quan aparellis aquest ordinador. Després, cada aprovació mostra què aproves i et demana que connectis la clau, la toquis i introdueixis el seu PIN; tafs mai no desa el PIN. En un Mac amb macOS 12, Touch ID no pot aprovar."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přidejte ho při párování tohoto počítače. Každé schválení pak ukáže, co schvalujete, a požádá vás, abyste klíč připojili, dotkli se ho a zadali jeho PIN; tafs PIN nikdy neukládá. Na Macu se systémem macOS 12 nelze schvalovat pomocí Touch ID."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge ihn hinzu, wenn du diesen Computer koppelst. Danach zeigt jede Genehmigung, was du genehmigst, und bittet dich, den Schlüssel einzustecken, ihn zu berühren und seine PIN einzugeben; tafs speichert die PIN nie. Auf einem Mac mit macOS 12 kann Touch ID nicht genehmigen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add it when you pair this computer. Each approval then shows what you're approving and asks you to plug in the key, touch it and enter its PIN; tafs never stores the PIN. On a Mac with macOS 12, Touch ID can't approve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añádela cuando vincules este ordenador. Después, cada aprobación muestra qué apruebas y te pide que conectes la llave, la toques e introduzcas su PIN; tafs nunca guarda el PIN. En un Mac con macOS 12, Touch ID no puede aprobar."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lisa see selle arvuti sidumisel. Seejärel näitab iga kinnitus, mida kinnitad, ja palub sul võtme ühendada, seda puudutada ja selle PIN-i sisestada; tafs ei salvesta PIN-i kunagi. macOS 12-ga Macis ei saa Touch ID-ga kinnitada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez-la quand vous associez cet ordinateur. Ensuite, chaque approbation montre ce que vous approuvez et vous demande de brancher la clé, de la toucher et de saisir son code PIN ; tafs n'enregistre jamais le code PIN. Sur un Mac sous macOS 12, Touch ID ne peut pas approuver."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש להוסיף אותו בזמן הצימוד של המחשב הזה. אחר כך כל אישור מציג מה מאשרים, ומבקש לחבר את המפתח, לגעת בו ולהזין את ה-PIN שלו; tafs לעולם לא שומר את ה-PIN. ב-Mac עם macOS 12, אי אפשר לאשר עם Touch ID."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस कंप्यूटर की जोड़ी बनाते समय इसे जोड़ें। फिर हर मंज़ूरी दिखाती है कि आप क्या मंज़ूर कर रहे हैं, और आपसे कुंजी लगाने, उसे छूने और उसका PIN दर्ज करने को कहती है; tafs PIN कभी नहीं सहेजता। macOS 12 वाले Mac पर Touch ID से मंज़ूर नहीं किया जा सकता।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodajte ga kad uparujete ovo računalo. Zatim svako odobrenje pokazuje što odobravate i traži da priključite ključ, dodirnete ga i unesete njegov PIN; tafs nikad ne sprema PIN. Na Macu s macOS-om 12 Touch ID ne može odobravati."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add hozzá, amikor párosítod ezt a számítógépet. Ezután minden jóváhagyás megmutatja, mit hagysz jóvá, és kéri, hogy csatlakoztasd a kulcsot, érintsd meg, és add meg a PIN-kódját; a tafs soha nem tárolja a PIN-kódot. macOS 12-t futtató Macen a Touch ID nem tud jóváhagyni."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ավելացրեք այն այս համակարգիչը զուգակցելիս։ Հետո յուրաքանչյուր հաստատում ցույց է տալիս, թե ինչ եք հաստատում, և խնդրում է միացնել բանալին, հպվել դրան և մուտքագրել դրա PIN-ը. tafs-ը երբեք չի պահում PIN-ը։ macOS 12-ով Mac-ում Touch ID-ով հնարավոր չէ հաստատել։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tambahkan saat Anda memasangkan komputer ini. Setelah itu, setiap persetujuan menunjukkan apa yang Anda setujui dan meminta Anda mencolokkan kunci, menyentuhnya, lalu memasukkan PIN-nya; tafs tidak pernah menyimpan PIN. Di Mac dengan macOS 12, Touch ID tidak bisa menyetujui."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungila quando associ questo computer. Poi ogni approvazione mostra cosa stai approvando e ti chiede di collegare la chiave, toccarla e inserire il suo PIN; tafs non salva mai il PIN. Su un Mac con macOS 12, Touch ID non può approvare."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このコンピュータをペアリングするときに追加してください。その後、承認のたびに承認する内容が表示され、キーを差し込み、タッチして PIN を入力するよう求められます。tafs は PIN を保存しません。macOS 12 の Mac では、Touch ID で承認することはできません。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "დაამატეთ ის ამ კომპიუტერის დაწყვილებისას. შემდეგ ყოველი დამტკიცება გაჩვენებთ, რას ამტკიცებთ, და გთხოვთ, ჩართოთ გასაღები, შეეხოთ მას და შეიყვანოთ მისი PIN; tafs PIN-ს არასოდეს ინახავს. macOS 12-იან Mac-ზე Touch ID-ით დამტკიცება შეუძლებელია."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បន្ថែមវានៅពេលអ្នកផ្គូផ្គងកុំព្យូទ័រនេះ។ បន្ទាប់មក ការអនុម័តនីមួយៗបង្ហាញអ្វីដែលអ្នកកំពុងអនុម័ត ហើយសុំឱ្យអ្នកដោតសោ ចុចវា និងបញ្ចូល PIN របស់វា; tafs មិនដែលរក្សាទុក PIN ទេ។ នៅលើ Mac ដែលមាន macOS 12 Touch ID មិនអាចអនុម័តបានទេ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 컴퓨터를 페어링할 때 추가하세요. 그다음부터 승인할 때마다 무엇을 승인하는지 보여 주고, 키를 꽂고 터치한 뒤 PIN을 입력하라고 요청합니다. tafs는 PIN을 저장하지 않습니다. macOS 12를 쓰는 Mac에서는 Touch ID로 승인할 수 없습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເພີ່ມມັນເມື່ອທ່ານຈັບຄູ່ຄອມພິວເຕີນີ້. ຈາກນັ້ນ ທຸກການອະນຸມັດຈະສະແດງສິ່ງທີ່ທ່ານກຳລັງອະນຸມັດ ແລະ ຂໍໃຫ້ທ່ານສຽບກຸນແຈ, ແຕະມັນ ແລະ ໃສ່ PIN ຂອງມັນ; tafs ບໍ່ເຄີຍເກັບ PIN. ໃນ Mac ທີ່ໃຊ້ macOS 12, Touch ID ອະນຸມັດບໍ່ໄດ້."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pridėkite jį, kai susiejate šį kompiuterį. Tada kiekvienas patvirtinimas parodo, ką patvirtinate, ir paprašo prijungti raktą, jį paliesti ir įvesti jo PIN; tafs niekada nesaugo PIN. „Mac“ su „macOS 12“ „Touch ID“ negali patvirtinti."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pievieno to, kad savieno pārī šo datoru. Pēc tam katrs apstiprinājums parāda, ko tu apstiprini, un lūdz pievienot atslēgu, tai pieskarties un ievadīt tās PIN; tafs PIN nekad neglabā. Mac ar macOS 12 Touch ID nevar apstiprināt."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додај го кога го спаруваш овој компјутер. Потоа секое одобрување покажува што одобруваш и бара да го приклучиш клучот, да го допреш и да го внесеш неговиот PIN; tafs никогаш не го чува PIN-от. На Mac со macOS 12, Touch ID не може да одобрува."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ компьютерийг хослуулахдаа үүнийг нэмнэ үү. Дараа нь зөвшөөрөл бүр юуг зөвшөөрч буйг харуулж, түлхүүрээ залгаж, хүрч, PIN-ийг нь оруулахыг хүснэ; tafs PIN-ийг хэзээ ч хадгалдаггүй. macOS 12-тэй Mac дээр Touch ID-гаар зөвшөөрөх боломжгүй."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो कम्प्युटर जोड्दा यसलाई थप्नुहोस्। त्यसपछि हरेक स्वीकृतिले तपाईं के स्वीकृत गर्दै हुनुहुन्छ देखाउँछ, र कुञ्जी जोड्न, छुन र यसको PIN हाल्न भन्छ; tafs ले PIN कहिल्यै भण्डारण गर्दैन। macOS 12 भएको Mac मा Touch ID ले स्वीकृत गर्न सक्दैन।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg hem toe wanneer je deze computer koppelt. Daarna laat elke goedkeuring zien wat je goedkeurt en vraagt je de sleutel erin te steken, hem aan te raken en de pincode in te voeren; tafs bewaart de pincode nooit. Op een Mac met macOS 12 kan Touch ID niet goedkeuren."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj go podczas parowania tego komputera. Potem każde zatwierdzenie pokazuje, co zatwierdzasz, i prosi, żebyś podłączył klucz, dotknął go i wpisał jego PIN; tafs nigdy nie zapisuje PIN-u. Na Macu z macOS 12 Touch ID nie może zatwierdzać."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicione-a quando associar este computador. Depois, cada aprovação mostra o que está a aprovar e pede-lhe que ligue a chave, toque nela e introduza o respetivo PIN; o tafs nunca guarda o PIN. Num Mac com macOS 12, o Touch ID não pode aprovar."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicione a chave quando parear este computador. Depois, cada aprovação mostra o que você está aprovando e pede que você conecte a chave, toque nela e digite o PIN dela; o tafs nunca guarda o PIN. Em um Mac com macOS 12, o Touch ID não pode aprovar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adăugați-o când asociați acest computer. Apoi fiecare aprobare arată ce aprobați și vă cere să conectați cheia, să o atingeți și să introduceți PIN-ul ei; tafs nu stochează niciodată PIN-ul. Pe un Mac cu macOS 12, Touch ID nu poate aproba."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pridajte ho pri párovaní tohto počítača. Každé schválenie potom ukáže, čo schvaľujete, a požiada vás, aby ste kľúč pripojili, dotkli sa ho a zadali jeho PIN; tafs PIN nikdy neukladá. Na Macu so systémom macOS 12 nemožno schvaľovať pomocou Touch ID."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodajte ga, ko seznanjate ta računalnik. Nato vsaka odobritev pokaže, kaj odobravate, in vas prosi, da priključite ključ, se ga dotaknete in vnesete njegov PIN; tafs PIN-a nikoli ne shrani. Na Macu z macOS 12 Touch ID ne more odobravati."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shtojeni kur çiftoni këtë kompjuter. Pastaj çdo miratim tregon se çfarë po miratoni dhe ju kërkon të futni çelësin, ta prekni dhe të shkruani PIN-in e tij; tafs nuk e ruan kurrë PIN-in. Në një Mac me macOS 12, Touch ID nuk mund të miratojë."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodajte ga kada uparujete ovaj računar. Zatim svako odobrenje pokazuje šta odobravate i traži da priključite ključ, dodirnete ga i unesete njegov PIN; tafs nikad ne čuva PIN. Na Macu sa macOS-om 12 Touch ID ne može da odobrava."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เพิ่มกุญแจตอนจับคู่คอมพิวเตอร์เครื่องนี้ หลังจากนั้นการอนุมัติแต่ละครั้งจะแสดงสิ่งที่คุณกำลังอนุมัติ และขอให้คุณเสียบกุญแจ แตะ แล้วใส่ PIN ของกุญแจ tafs ไม่เคยเก็บ PIN บน Mac ที่ใช้ macOS 12 จะอนุมัติด้วย Touch ID ไม่ได้"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kompýuteri goşalanyňyzda ony goşuň. Soňra her tassyklama näme tassyklaýandygyňyzy görkezýär we açary dakmagyňyzy, oňa degmegiňizi we PIN-ini girizmegiňizi soraýar; tafs PIN-i hiç haçan saklamaýar. macOS 12 bolan Mac-da Touch ID bilen tassyklap bolmaýar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bilgisayarı eşleştirirken ekleyin. Ardından her onay neyi onayladığınızı gösterir ve anahtarı takmanızı, ona dokunmanızı ve PIN'ini girmenizi ister; tafs PIN'i asla saklamaz. macOS 12 yüklü bir Mac'te Touch ID ile onaylanamaz."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس کمپیوٹر کی جوڑی بناتے وقت اسے شامل کریں۔ پھر ہر منظوری دکھاتی ہے کہ آپ کیا منظور کر رہے ہیں، اور آپ سے کلید لگانے، اسے چھونے اور اس کا PIN درج کرنے کو کہتی ہے؛ tafs کبھی PIN محفوظ نہیں کرتا۔ macOS 12 والے Mac پر Touch ID سے منظوری نہیں ہو سکتی۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy thêm khóa khi ghép đôi máy tính này. Sau đó, mỗi lần phê duyệt sẽ cho thấy bạn đang phê duyệt gì và yêu cầu bạn cắm khóa, chạm vào khóa rồi nhập mã PIN của khóa; tafs không bao giờ lưu mã PIN. Trên Mac chạy macOS 12, Touch ID không thể phê duyệt."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請在配對這部電腦時新增金鑰。之後每次核准都會顯示您要核准的內容，並請您插入金鑰、觸碰它並輸入 PIN；tafs 絕不會儲存 PIN。在搭載 macOS 12 的 Mac 上，無法用 Touch ID 核准。"
+          }
+        }
+      }
+    },
     "home.calendar_not_read": {
       "extractionState": "manual",
       "localizations": {

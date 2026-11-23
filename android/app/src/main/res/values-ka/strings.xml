@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">ჩართეთ %1$s › %2$s-ში. შემდეგ, როცა მოითხოვთ, KIFF ელფოსტით გამოგიგზავნით კოდს, რომელიც მოქმედებს ერთხელ, 10 წუთის განმავლობაში, იმ ბრაუზერში, რომელმაც მოითხოვა.</string>
     <string name="help_code_safe">ეს კოდი არავის მისცეთ. KIFF მას არასოდეს მოგთხოვთ.</string>
     <string name="help_code_title">შესვლა ელფოსტით მიღებული კოდით</string>
+    <string name="help_security_key_lead">Linux-ზე ან macOS 12-იან Mac-ზე ამ კომპიუტერზე დასამტკიცებლად საჭიროა FIDO2 უსაფრთხოების გასაღები: პატარა USB გასაღები, რომელსაც ეხებით და რომელსაც საკუთარი PIN აქვს. ჩვეულებრივი USB ფლეშკა არ გამოდგება. მის გარეშე ეს კომპიუტერი მხოლოდ აჩვენებს, დამტკიცებას კი ტელეფონზე აკეთებთ.</string>
+    <string name="help_security_key_title">დაამტკიცეთ ამ კომპიუტერზე უსაფრთხოების გასაღებით</string>
+    <string name="help_security_key_use">დაამატეთ ის ამ კომპიუტერის დაწყვილებისას. შემდეგ ყოველი დამტკიცება გაჩვენებთ, რას ამტკიცებთ, და გთხოვთ, ჩართოთ გასაღები, შეეხოთ მას და შეიყვანოთ მისი PIN; tafs PIN-ს არასოდეს ინახავს. macOS 12-იან Mac-ზე Touch ID-ით დამტკიცება შეუძლებელია.</string>
     <string name="home_calendar_not_read">კალენდარი ვერ წაიკითხა. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF-თან დაკავშირება ვერ მოხერხდა</string>
     <string name="home_choose_taf">აირჩიეთ taf.</string>

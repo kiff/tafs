@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">Activa-ho a %1$s › %2$s. Després, quan ho demanis, KIFF t\'envia per correu un codi que serveix una sola vegada, durant 10 minuts, al navegador que l\'ha demanat.</string>
     <string name="help_code_safe">No donis mai aquest codi a ningú. KIFF no te\'l demanarà mai.</string>
     <string name="help_code_title">Inicia la sessió amb un codi per correu</string>
+    <string name="help_security_key_lead">A Linux, o en un Mac amb macOS 12, per aprovar en aquest ordinador cal una clau de seguretat FIDO2: una petita clau USB que toques i que té el seu propi PIN. Un llapis USB normal no serveix. Sense clau, aquest ordinador només mostra, i aproves al telèfon.</string>
+    <string name="help_security_key_title">Aprova amb una clau de seguretat en aquest ordinador</string>
+    <string name="help_security_key_use">Afegeix-la quan aparellis aquest ordinador. Després, cada aprovació mostra què aproves i et demana que connectis la clau, la toquis i introdueixis el seu PIN; tafs mai no desa el PIN. En un Mac amb macOS 12, Touch ID no pot aprovar.</string>
     <string name="home_calendar_not_read">No s\'ha pogut llegir el calendari. %1$s</string>
     <string name="home_cant_reach_kiff">No es pot arribar a KIFF</string>
     <string name="home_choose_taf">Tria un taf.</string>

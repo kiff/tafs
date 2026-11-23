@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">Lülita see sisse jaotises %1$s › %2$s. Siis saadab KIFF sinu soovil e-kirjaga koodi, mis kehtib ühe korra, 10 minutit, selles brauseris, mis seda küsis.</string>
     <string name="help_code_safe">Ära anna seda koodi kellelegi. KIFF ei küsi seda sinult kunagi.</string>
     <string name="help_code_title">Sisselogimine e-kirjaga saadetud koodiga</string>
+    <string name="help_security_key_lead">Linuxis või macOS 12-ga Macis on selles arvutis kinnitamiseks vaja FIDO2 turvavõtit: väikest USB-võtit, mida puudutad ja millel on oma PIN. Tavaline USB-mälupulk ei sobi. Ilma selleta see arvuti ainult näitab ja sina kinnitad telefonis.</string>
+    <string name="help_security_key_title">Kinnita selles arvutis turvavõtmega</string>
+    <string name="help_security_key_use">Lisa see selle arvuti sidumisel. Seejärel näitab iga kinnitus, mida kinnitad, ja palub sul võtme ühendada, seda puudutada ja selle PIN-i sisestada; tafs ei salvesta PIN-i kunagi. macOS 12-ga Macis ei saa Touch ID-ga kinnitada.</string>
     <string name="home_calendar_not_read">Kalendrit ei õnnestunud lugeda. %1$s</string>
     <string name="home_cant_reach_kiff">KIFFini ei jõuta</string>
     <string name="home_choose_taf">Vali taf.</string>

@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs poate lucra în Chrome-ul tău",
   "help.code_lead": "Activează-l în {account} › {sign_in}. Apoi, când ceri, KIFF îți trimite pe e-mail un cod care funcționează o singură dată, 10 minute, în browserul care l-a cerut.",
   "help.code_safe": "Nu dați acest cod nimănui. KIFF nu vi-l va cere niciodată.",
-  "help.code_title": "Conectare cu un cod primit pe e-mail"
+  "help.code_title": "Conectare cu un cod primit pe e-mail",
+  "help.security_key_lead": "Pe Linux sau pe un Mac cu macOS 12, pentru a aproba pe acest computer aveți nevoie de o cheie de securitate FIDO2: o cheie USB mică pe care o atingeți, cu propriul PIN. Un stick USB obișnuit nu funcționează. Fără ea, acest computer doar afișează, iar aprobarea o dați pe telefon.",
+  "help.security_key_title": "Aprobați cu o cheie de securitate pe acest computer",
+  "help.security_key_use": "Adăugați-o când asociați acest computer. Apoi fiecare aprobare arată ce aprobați și vă cere să conectați cheia, să o atingeți și să introduceți PIN-ul ei; tafs nu stochează niciodată PIN-ul. Pe un Mac cu macOS 12, Touch ID nu poate aproba."
 }

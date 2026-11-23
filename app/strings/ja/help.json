@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs はあなたの Chrome で作業できます",
   "help.code_lead": "{account} › {sign_in} でオンにします。その後、依頼すると、KIFF が一度だけ、10 分間、依頼したブラウザーで使えるコードをメールで送ります。",
   "help.code_safe": "このコードは誰にも教えないでください。KIFFがあなたに尋ねることは決してありません。",
-  "help.code_title": "メールで届くコードでサインイン"
+  "help.code_title": "メールで届くコードでサインイン",
+  "help.security_key_lead": "Linux、または macOS 12 の Mac では、このコンピュータで承認するには FIDO2 セキュリティキーが必要です。タッチして使う小さな USB キーで、専用の PIN があります。普通の USB メモリでは使えません。キーがない場合、このコンピュータは表示のみで、承認はスマートフォンで行います。",
+  "help.security_key_title": "このコンピュータでセキュリティキーを使って承認",
+  "help.security_key_use": "このコンピュータをペアリングするときに追加してください。その後、承認のたびに承認する内容が表示され、キーを差し込み、タッチして PIN を入力するよう求められます。tafs は PIN を保存しません。macOS 12 の Mac では、Touch ID で承認することはできません。"
 }
