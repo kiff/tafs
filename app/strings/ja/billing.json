@@ -67,7 +67,7 @@
   "billing.solo_subscription_one_charged_your": "Soloは{price}の{period}単位のサブスクリプションで、Apple IDに請求されます。解約するまで{period_2}ごとに更新されます。",
   "billing.starts_free": "{trial}無料で始まります。",
   "billing.tafs_kiff_one_person_every": "1人用のtafs、毎月。",
-  "billing.team_on_web": "kiff.devでTeamを始める",
+  "billing.team_on_web": "kiff.devでCompanyを始める",
   "billing.terms_use": "利用規約",
   "billing.test_purchase_credits": "テスト購入ではこのアカウントにクレジットは追加されません。",
   "billing.try_free": "{trial}無料で試す",

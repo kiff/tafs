@@ -67,7 +67,7 @@
   "billing.solo_subscription_one_charged_your": "Solo 為 {price} / {period} 的訂閱，費用會從您的 Apple 帳號扣款。每期結束時（{period_2}）自動續訂，直到您取消為止。",
   "billing.starts_free": "從免費{trial}開始。",
   "billing.tafs_kiff_one_person_every": "供一個人使用的 tafs，每個月。",
-  "billing.team_on_web": "在 kiff.dev 取得 Team",
+  "billing.team_on_web": "在 kiff.dev 取得 Company",
   "billing.terms_use": "使用條款",
   "billing.test_purchase_credits": "測試購買不會為此帳號增加點數。",
   "billing.try_free": "免費試用{trial}",

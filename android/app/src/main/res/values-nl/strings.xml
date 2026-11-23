@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo is een abonnement van één %1$s voor %2$s, in rekening gebracht bij je Apple-account. Het wordt elke %3$s verlengd tot je opzegt.</string>
     <string name="billing_starts_free">Begint met %1$s gratis.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs voor één persoon, elke maand.</string>
-    <string name="billing_team_on_web">Team nemen op kiff.dev</string>
+    <string name="billing_team_on_web">Company nemen op kiff.dev</string>
     <string name="billing_terms_use">Gebruiksvoorwaarden</string>
     <string name="billing_test_purchase_credits">Testaankopen voegen geen credits toe aan dit account.</string>
     <string name="billing_try_free">Probeer %1$s gratis</string>

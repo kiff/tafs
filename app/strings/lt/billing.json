@@ -75,7 +75,7 @@
   "billing.solo_subscription_one_charged_your": "Solo – {price} per {period} prenumerata, mokama iš jūsų Apple paskyros. Ji atnaujinama kas {period_2}, kol jos neatšauksite.",
   "billing.starts_free": "Pradžioje nemokamai: {trial}.",
   "billing.tafs_kiff_one_person_every": "tafs vienam asmeniui, kas mėnesį.",
-  "billing.team_on_web": "Gauti Team svetainėje kiff.dev",
+  "billing.team_on_web": "Gauti Company svetainėje kiff.dev",
   "billing.terms_use": "Naudojimo sąlygos",
   "billing.test_purchase_credits": "Bandomieji pirkiniai neprideda kreditų prie šios paskyros.",
   "billing.try_free": "Išbandyti nemokamai: {trial}",

@@ -238,7 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo este un abonament pe %1$s la %2$s, debitat din contul Apple. Se reînnoiește în fiecare %3$s până îl anulați.</string>
     <string name="billing_starts_free">Începe cu %1$s gratuit.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs pentru o persoană, în fiecare lună.</string>
-    <string name="billing_team_on_web">Obțineți Team pe kiff.dev</string>
+    <string name="billing_team_on_web">Obțineți Company pe kiff.dev</string>
     <string name="billing_terms_use">Condiții de utilizare</string>
     <string name="billing_test_purchase_credits">Achizițiile de test nu adaugă credite la acest cont.</string>
     <string name="billing_try_free">Încercați gratuit %1$s</string>

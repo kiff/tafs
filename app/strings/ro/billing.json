@@ -75,7 +75,7 @@
   "billing.solo_subscription_one_charged_your": "Solo este un abonament pe {period} la {price}, debitat din contul Apple. Se reînnoiește în fiecare {period_2} până îl anulați.",
   "billing.starts_free": "Începe cu {trial} gratuit.",
   "billing.tafs_kiff_one_person_every": "Tafs pentru o persoană, în fiecare lună.",
-  "billing.team_on_web": "Obțineți Team pe kiff.dev",
+  "billing.team_on_web": "Obțineți Company pe kiff.dev",
   "billing.terms_use": "Condiții de utilizare",
   "billing.test_purchase_credits": "Achizițiile de test nu adaugă credite la acest cont.",
   "billing.try_free": "Încercați gratuit {trial}",

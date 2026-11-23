@@ -67,7 +67,7 @@
   "billing.solo_subscription_one_charged_your": "Solo là gói đăng ký {price} / {period}, tính vào tài khoản Apple của bạn. Tự gia hạn vào cuối mỗi kỳ ({period_2}) cho đến khi bạn hủy.",
   "billing.starts_free": "Bắt đầu với {trial} miễn phí.",
   "billing.tafs_kiff_one_person_every": "tafs cho một người, mỗi tháng.",
-  "billing.team_on_web": "Đăng ký Team trên kiff.dev",
+  "billing.team_on_web": "Đăng ký Company trên kiff.dev",
   "billing.terms_use": "Điều khoản sử dụng",
   "billing.test_purchase_credits": "Giao dịch mua thử không cộng tín dụng vào tài khoản này.",
   "billing.try_free": "Dùng thử miễn phí {trial}",

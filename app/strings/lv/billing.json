@@ -75,7 +75,7 @@
   "billing.solo_subscription_one_charged_your": "Solo ir abonements par {price} reizi {period}, ko iekasē no tava Apple konta. Tas atjaunojas reizi {period_2}, līdz tu to atcel.",
   "billing.starts_free": "Sākumā {trial} bez maksas.",
   "billing.tafs_kiff_one_person_every": "tafs vienai personai, katru mēnesi.",
-  "billing.team_on_web": "Iegūt Team vietnē kiff.dev",
+  "billing.team_on_web": "Iegūt Company vietnē kiff.dev",
   "billing.terms_use": "Lietošanas noteikumi",
   "billing.test_purchase_credits": "Testa pirkumi šim kontam kredītus nepievieno.",
   "billing.try_free": "Izmēģināt bez maksas: {trial}",

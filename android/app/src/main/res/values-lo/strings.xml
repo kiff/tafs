@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo ແມ່ນການສະໝັກໜຶ່ງ%1$s ລາຄາ %2$s ເກັບຈາກບັນຊີ Apple ຂອງທ່ານ. ມັນຕໍ່ອາຍຸທຸກ%3$s ຈົນກວ່າທ່ານຍົກເລີກ.</string>
     <string name="billing_starts_free">ເລີ່ມຟຣີ %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">taf ສຳລັບຄົນໜຶ່ງ, ທຸກເດືອນ.</string>
-    <string name="billing_team_on_web">ຮັບ Team ທີ່ kiff.dev</string>
+    <string name="billing_team_on_web">ຮັບ Company ທີ່ kiff.dev</string>
     <string name="billing_terms_use">ຂໍ້ກຳນົດການໃຊ້ງານ</string>
     <string name="billing_test_purchase_credits">ການຊື້ທົດລອງບໍ່ເພີ່ມເຄຣດິດໃສ່ບັນຊີນີ້.</string>
     <string name="billing_try_free">ລອງຟຣີ %1$s</string>
