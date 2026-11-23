@@ -1,0 +1,1 @@
+- **iPhone and iPad: replacing a Chrome signs only what you were shown.** The Chromes and connections are read again just before Face ID; if what moves changed meanwhile (a connection ended, or the old Chrome went), nothing is signed or sent, and the screen says what moves changed so you can check it and pair again. A read that failed signs nothing either. The same as Android.

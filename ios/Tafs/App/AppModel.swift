@@ -1482,7 +1482,7 @@ final class AppModel: ObservableObject {
     var approvalPublicKey: Data { signer.approvalPublicKeyDER }
 
     func confirmChrome(_ p: ChromePairingInProgress, offer: PlanqueClient.ChromeOffer, name typed: String,
-                       replacing old: PlanqueClient.Chrome? = nil) async -> Bool {
+                       replacing old: PlanqueClient.Chrome? = nil, shown: [ChromePairing.Carried] = []) async -> Bool {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant,
               let chromeKey = ChromePairing.base64URLDecoded(offer.key),
               ChromePairing.extensionProofHolds(secret: p.secret, key: chromeKey, proof: offer.proof, kiffOffer: offer.kiffOffer),
@@ -1496,12 +1496,25 @@ final class AppModel: ObservableObject {
         // and the fingerprint signs them inside the pairing the extension checks. With nothing chosen, nothing moves.
         if let picked = old {
             // The Chrome's own list (planque's `connections`) and the grants (their signatures) are both read again, so what is carried
-            // is what is live now, never what the pick showed a while ago.
+            // is what is live now. It's signed only if it's exactly what the owner was shown (`shown`): if a connection ended or the
+            // Chrome went meanwhile, nothing is signed, and the sheet says so over the new list, to pair again on. A read that failed
+            // signs nothing either, since the list is no longer known to be live (as Android's `confirmChrome`).
             await refreshChromes()
-            await refreshConnections()
-            let old = chromes?.first { $0.id == picked.id } ?? picked
-            confirmation.replaces = old.id
-            let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phoneKey)
+            guard chromesError == nil else { return false }
+            guard await refreshConnections() else {
+                chromesError = Words.Chrome.notLoaded(why: connectionsReadError ?? Words.Chrome.replaceChanged)
+                return false
+            }
+            guard let live = chromes?.first(where: { $0.id == picked.id }) else {
+                chromesError = Words.Chrome.replaceChanged
+                return false
+            }
+            let carried = ChromeReplace.carried(from: live, in: grants, phoneKey: phoneKey)
+            guard carried == shown else {
+                chromesError = Words.Chrome.replaceChanged
+                return false
+            }
+            confirmation.replaces = live.id
             if !carried.isEmpty { confirmation.carried = carried }
         }
         let reason = Words.Chrome.pairPrompt(name: name)
@@ -7261,18 +7274,33 @@ final class AppModel: ObservableObject {
     /// `planque.signer`: it runs whenever the app comes back to the front, which is also
     /// when the owner returns from the vendor's sign-in, mid-way through a Face ID step that
     /// still needs its signer to confirm the sign-in.
-    func refreshConnections() async {
+    /// Reads the account's connections (planque's grants) again. True when the read went through: a caller that signs from them
+    /// (a re-pairing's carried list) needs to know they're live.
+    @discardableResult
+    func refreshConnections() async -> Bool {
         let gen = accountGeneration
-        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return }
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return false }
         await loadDeviceID()
-        guard gen == accountGeneration else { return }
+        guard gen == accountGeneration else { return false }
         let signer = self.signer
         planque.tenant = tenant
         let cards = Set(setupThread.components.map(\.component).filter { $0.type == .approval }.map(\.id))
-        guard let list = try? await planque.grants(signedBy: { try signer.signConfirmed($0) }), gen == accountGeneration else { return }
+        let list: [PlanqueClient.Grant]
+        do {
+            list = try await planque.grants(signedBy: { try signer.signConfirmed($0) })
+        } catch {
+            if gen == accountGeneration { connectionsReadError = error.localizedDescription }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
         grants = list
         grantsReadFor.formUnion(cards)
+        connectionsReadError = nil
+        return true
     }
+
+    /// Why the last read of the connections failed, for a line that says so; nil once one goes through.
+    private(set) var connectionsReadError: String?
 
     /// Sets this phone up with planque, once per account, behind one Face ID: planque gets
     /// the phone's key, and a KIFF key that connects tools and does nothing else, minted
