@@ -134,10 +134,10 @@ class ApiDoorScreensTest {
       "https://me@cloud.example/v1/x" to "https://cloud.example/v1/x",
       "https://cloud.example.evil.example/v1/x" to "https://cloud.example/v1/x",
       "//evil.example/v1/x" to "https://cloud.example/v1/x",
-      "foo:x@evil.example/v1/x" to "https://cloud.example/x@evil.example/v1/x",
-      "mailto:a@evil.example" to "https://cloud.example/a@evil.example",
-      "@evil.example/x" to "https://cloud.example/@evil.example/x",
-      "\\\\evil.example\\x" to "https://cloud.example/evil.example%5Cx",
+      "foo:x@evil.example/v1/x" to "https://cloud.example",
+      "mailto:a@evil.example" to "https://cloud.example",
+      "@evil.example/x" to "https://cloud.example",
+      "\\\\evil.example\\x" to "https://cloud.example",
       "https://evil.example@cloud.example.evil.example/" to "https://cloud.example/",
     )) {
       val e = bot.tafs.app.app.endpointOn("https://cloud.example/", address)
@@ -148,6 +148,27 @@ class ApiDoorScreensTest {
       assertEquals(address, -1, u.port)
       assertEquals(address, null, u.rawUserInfo)
     }
+  }
+
+  /**
+   * The example is pasted into a shell, so the endpoint keeps only a plain path (letters, digits and `/ _ . ~ -`), with no
+   * query or fragment, else it's tafs cloud's own address alone; and the example quotes it, so the shell takes it as it is.
+   */
+  @Test fun anEndpointKeepsOnlyAPlainPathAndTheExampleQuotesIt() {
+    for (address in listOf(
+      "/v1/doors/api/d\$(id)/requests", "/v1/doors/api/d;id", "/v1/doors/api/d&id", "/v1/doors/api/d'id", "/v1/doors/api/d`id`",
+      "/v1/doors/api/d|id", "/v1/doors/api/d%24(id)", "/v1/doors/api/d!x", "/v1/doors/api/d*", "/v1/doors/api/d+x,y=z",
+      "https://cloud.example/v1/doors/api/d\$(id)", "https://cloud.example/v1/doors/api/d;id",
+      "https://cloud.example/v1/doors/api/d?x=\$(id)", "https://cloud.example/v1/doors/api/d#\$(id)",
+      "https://cloud.example/v1/doors/api/d%27",
+    )) assertEquals(address, "https://cloud.example", bot.tafs.app.app.endpointOn("https://cloud.example/", address))
+    // tafs cloud's own door paths are plain, and kept.
+    assertEquals("https://cloud.example/v1/doors/api/door_ord7/requests",
+      bot.tafs.app.app.endpointOn("https://cloud.example/", "/v1/doors/api/door_ord7/requests"))
+    assertEquals("https://cloud.example/v1/doors/api/door-ord.7~x/requests",
+      bot.tafs.app.app.endpointOn("https://cloud.example/", "https://cloud.example/v1/doors/api/door-ord.7~x/requests"))
+    val example = apiExample("https://cloud.example/v1/doors/api/door_ord7/requests")
+    assertTrue(example.startsWith("curl -X POST 'https://cloud.example/v1/doors/api/door_ord7/requests' "))
   }
 
   private val drafted = bot.tafs.app.kiff.DoorDraft.read("""{"draft_id":"draft-1","body":{"kind":"api","draft":{"name":"Order system",

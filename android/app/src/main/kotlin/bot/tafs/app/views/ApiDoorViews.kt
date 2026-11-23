@@ -172,9 +172,12 @@ internal fun ApiDoorPanels(taf: Taf, door: Door, doors: TafDoors, actions: ApiDo
   doors.issued?.let { issued -> ApiKeyShownOnce(door, issued, actions.endpoint(door)) { actions.keyShown(taf.id) } }
 }
 
-/** An example request, as iOS's: the key comes from the caller's own secret, `$TAFS_API_KEY`, and is never written in it. */
+/**
+ * An example request, as iOS's: the key comes from the caller's own secret, `$TAFS_API_KEY`, and is never written in it. The
+ * endpoint is in single quotes, so a shell takes it as it is.
+ */
 internal fun apiExample(endpoint: String): String =
-  "curl -X POST $endpoint \\\n  -H \"Authorization: Bearer \$TAFS_API_KEY\" \\\n  -H \"Idempotency-Key: <your request id>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"input\": {}}'"
+  "curl -X POST '$endpoint' \\\n  -H \"Authorization: Bearer \$TAFS_API_KEY\" \\\n  -H \"Idempotency-Key: <your request id>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"input\": {}}'"
 
 /** Code as written: monospaced, selectable, scrolled sideways rather than wrapped. */
 @Composable
