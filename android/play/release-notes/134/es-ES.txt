@@ -1,0 +1,4 @@
+• Aprobar una llamada retenida cuando su tarea ya había terminado ahora dice que no se ejecutó nada, con «Reintentar» en tu mensaje.
+• Instalar una versión que detiene una tarea que esperaba tu respuesta lo dice, con «Reintentar» en su mensaje.
+• Volver a iniciar sesión muestra antes la aprobación de la conexión, y volver a vincular un Chrome comprueba otra vez justo antes de tu huella.
+• El chat de un taf se lee con menos frecuencia mientras espera, y nada mientras la app está en segundo plano.

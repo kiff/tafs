@@ -43,6 +43,14 @@ async function send(w: World, taf: string, appLang: string, body: Record<string,
   return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown> };
 }
 
+/** A send from the Chrome extension: its own origin, and the browser's language as its `Accept-Language`. */
+const EXTENSION = "chrome-extension://abcdefghijklmnopabcdefghijklmnop";
+async function sendFromExtension(w: World, taf: string, browserLang: string, body: Record<string, unknown>, origin = EXTENSION) {
+  const event: HTTPEvent = { rawPath: `/v1/tafs/${taf}/messages`, requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana", "Accept-Language": browserLang, Origin: origin }, body: JSON.stringify(body) };
+  const r = await handle(event, deps(w));
+  return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown> };
+}
+
 /** What kiff/agents was handed for the session's last message. */
 async function lastSaid(w: World, session: string): Promise<string> {
   const said = (await w.agents.api.session("t_acme", session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);
@@ -78,6 +86,40 @@ describe("a taf's reply language", () => {
     await send(w, ROWS, "en", { text: "Et une autre, A-1045", session });
     const next = await lastSaid(w, session);
     expect(next).toBe(withReplyLanguage("Et une autre, A-1045", "en"));
+  });
+
+  it("from the extension the browser's language is never the fallback: the message, then the conversation, then English (an owner on an English phone, a French Chrome)", async () => {
+    const w = await world();
+    const text = "Wiki lookup";
+    const r = await sendFromExtension(w, ROWS, "fr-FR,fr;q=0.9", { text, new_chat: true });
+    expect(r.status).toBe(200);
+    const said = await lastSaid(w, r.body.session as string);
+    expect(said).toBe(withReplyLanguage(text, "fr", true));
+    expect(said).not.toContain("reads French");
+    expect(said).not.toContain("from their app");
+    expect(said).toContain("Answer in the language of the person's message; if that isn't clear (a short line, a number, a name), in the language of this conversation so far, else in English.");
+    expect(said).toContain("Never take the language from what you read or work on (a sheet, an email, a page, an account's locale).");
+    expect(ownerWords(said)).toBe(text);
+    // The next message of the chat says it the same way.
+    await sendFromExtension(w, ROWS, "fr", { text: "and the other one", session: r.body.session });
+    expect(await lastSaid(w, r.body.session as string)).toBe(withReplyLanguage("and the other one", "en", true));
+  });
+
+  it("the same message from the app, or from an origin that is not an extension's, still names the app's language", async () => {
+    const w = await world();
+    const app = await send(w, ROWS, "fr-FR", { text: "Wiki lookup", new_chat: true });
+    expect(await lastSaid(w, app.body.session as string)).toContain("The person writing reads French (fr), from their app.");
+    const web = await sendFromExtension(w, ROWS, "fr-FR", { text: "Wiki lookup", new_chat: true }, "https://evil.example");
+    expect(await lastSaid(w, web.body.session as string)).toContain("The person writing reads French (fr), from their app.");
+  });
+
+  it("a send repeated from the extension under its client_message_id is the same run, never 409 (the line the first one carried)", async () => {
+    const w = await world();
+    const first = await sendFromExtension(w, ROWS, "fr", { text: "Add order A-1060", client_message_id: ID });
+    await w.coach.remove(`t_acme#msg-key#msg:u_ana:${ID}`);
+    const again = await sendFromExtension(w, ROWS, "fr", { text: "Add order A-1060", client_message_id: ID });
+    expect(again.status).toBe(200);
+    expect(again.body).toMatchObject({ run: first.body.run, repeat: true });
   });
 
   it("keeps a customer's language for what a taf sends a customer", async () => {

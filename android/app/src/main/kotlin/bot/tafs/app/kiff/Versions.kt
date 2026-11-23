@@ -52,8 +52,16 @@ data class Switching(
 @Serializable
 data class VersionState(val versions: List<Version> = emptyList(), val switching: Switching? = null)
 
+/** A run that waited on the owner's answer and was stopped to let a version in (`stop_blocking`): its message didn't run. */
 @Serializable
-internal data class SwitchResponse(val switching: Switching)
+data class StoppedRun(val run: String, val session: String)
+
+/**
+ * A switch begun: the switch, and, when `stop_blocking` stopped a task that waited on the owner's answer, which ones and tafs
+ * cloud's words saying so. Both are left out when nothing waiting was stopped.
+ */
+@Serializable
+data class SwitchResponse(val switching: Switching, val stopped: List<StoppedRun> = emptyList(), val words: String? = null)
 
 @Serializable
 internal data class CancelledResponse(val cancelled: Boolean = false)

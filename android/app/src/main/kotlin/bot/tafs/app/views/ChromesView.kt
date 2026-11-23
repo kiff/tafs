@@ -74,8 +74,8 @@ fun ChromesSheet(
   refresh: suspend () -> Unit,
   open: suspend () -> ChromePairingInProgress?,
   step: suspend (ChromePairingInProgress) -> ChromePairingStep,
-  confirm: suspend (ChromePairingInProgress, ChromeOffer, String, Chrome?) -> Boolean,
-  moves: (Chrome) -> List<String>,
+  confirm: suspend (ChromePairingInProgress, ChromeOffer, String, Chrome?, List<ChromePairing.Carried>) -> Boolean,
+  moves: (Chrome) -> List<ChromePairing.Carried>,
   remove: suspend (Chrome) -> Unit,
   onClose: () -> Unit,
 ) {
@@ -120,8 +120,16 @@ fun ChromesSheet(
         line?.let { Panel { Text(it, style = scaled(14, color = Theme.ink)) } }
         val p = pairing
         val offered = current as? ChromePairingStep.Offered
-        // The pick's start, set once per offer so a list read again doesn't undo the owner's choice.
-        var replacing by remember(offered?.offer) { mutableStateOf(offered?.let { ChromePairing.replacedBy(it.offer, state.chromes.orEmpty()) }) }
+        // The pick: the owner's own choice once they've made one; until then its start, from the Chromes as last read (so a list
+        // that arrives after the offer still starts on the same profile). Each is per offer.
+        var picked by remember(offered?.offer) { mutableStateOf<String?>(null) }
+        var touched by remember(offered?.offer) { mutableStateOf(false) }
+        val paired = state.chromes.orEmpty()
+        val replacingId = if (touched) picked else offered?.let { ChromePairing.replacedBy(it.offer, paired)?.id }
+        // The Chrome as planque lists it now, never a copy kept from when it was picked: its connections are what moves.
+        val replacing = paired.firstOrNull { it.id == replacingId }
+        // Verified once per change of the Chrome or the connections, not on every redraw; the same list is what's signed.
+        val moving = remember(replacing, state.grants) { replacing?.let(moves).orEmpty() }
         when {
           p != null && offered != null -> Panel {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -130,15 +138,14 @@ fun ChromesSheet(
               OutlinedTextField(name, bot.tafs.app.drive.driveTyped({ name = it.take(ChromePairing.NAME_MAX) }), label = { Text(Words.Chrome.nameLabel) }, singleLine = true, modifier = Modifier.fillMaxWidth())
               // Re-pairing replaces, never adds ("Your Chrome" 1, docs/chrome.md): the owner picks which paired Chrome this one
               // replaces, starting on the same profile, else the one alike; with none picked it's a new Chrome, as before.
-              val paired = state.chromes.orEmpty()
               if (paired.isNotEmpty()) {
                 Text(Words.Chrome.replaceTitle, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 4.dp))
-                paired.forEach { c -> ReplaceRow(c.name, selected = replacing?.id == c.id, enabled = !busy, tag = "$CHROME_REPLACE-${c.id}") { replacing = c } }
-                ReplaceRow(Words.Chrome.replaceNone, selected = replacing == null, enabled = !busy, tag = CHROME_REPLACE_NONE) { replacing = null }
+                paired.forEach { c -> ReplaceRow(c.name, selected = replacing?.id == c.id, enabled = !busy, tag = "$CHROME_REPLACE-${c.id}") { picked = c.id; touched = true } }
+                ReplaceRow(Words.Chrome.replaceNone, selected = replacing == null, enabled = !busy, tag = CHROME_REPLACE_NONE) { picked = null; touched = true }
                 replacing?.let { old ->
                   // What moves is what this phone signed for the old Chrome, checked with its own key; the rest ends with it.
-                  val moving = moves(old)
-                  if (moving.isNotEmpty()) Text(Words.Chrome.replaceMoves(sites = moving.joinToString(", ")), style = scaled(14, color = Theme.soft))
+                  val sites = moving.flatMap { it.sites }.distinct()
+                  if (sites.isNotEmpty()) Text(Words.Chrome.replaceMoves(sites = sites.joinToString(", ")), style = scaled(14, color = Theme.soft))
                   Text(Words.Chrome.replaceUnpairs(name = old.name), style = scaled(14, color = Theme.soft))
                 }
               }
@@ -148,7 +155,7 @@ fun ChromesSheet(
                 modifier = Modifier.heightIn(min = 48.dp).testTag(CHROME_CONFIRM).confirms().tapping(enabled = !busy) {
                   busy = true
                   scope.launch {
-                    val done = confirm(p, offered.offer, name, replacing?.takeIf { r -> paired.any { it.id == r.id } })
+                    val done = confirm(p, offered.offer, name, replacing, moving)
                     busy = false
                     if (done) {
                       line = Words.Chrome.paired(name = ChromePairing.name(name, Words.Chrome.browserOn(browser = offered.offer.browser, system = offered.offer.os)))

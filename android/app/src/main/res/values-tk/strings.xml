@@ -616,6 +616,7 @@
     <string name="chrome_refused">Bu kody başga Chrome ulandy, şonuň üçin hiç zat goşalanmady. Täzeden başlaň.</string>
     <string name="chrome_remove">Goşalamany aýyryň</string>
     <string name="chrome_remove_named">%1$s goşalamasyny aýyryň</string>
+    <string name="chrome_replace_changed">Bu Chrome-a geçýän zatlar üýtgedi, şonuň üçin hiç zat goşalanmady. Barlaň we täzeden goşalaň.</string>
     <string name="chrome_replace_moves">Bu Chrome-a geçýär: %1$s</string>
     <string name="chrome_replace_none">Täze Chrome (hiç birini çalşamaýar)</string>
     <string name="chrome_replace_title">Çalşýar</string>

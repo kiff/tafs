@@ -176,6 +176,34 @@ final class DoorsTests: XCTestCase {
         XCTAssertTrue(example.contains("https://cloud.test/v1/doors/api/door_ord7/requests"))
         XCTAssertFalse(example.contains("tafs_api_"), "the example reads the caller's own secret, never a key")
 
+        // Only ever on tafs cloud's own host, over HTTPS, whatever the address says (as Windows and Linux).
+        let base = URL(string: "https://cloud.test")!
+        for (address, shown) in [
+            ("https://cloud.test/v1/x", "https://cloud.test/v1/x"),
+            ("https://CLOUD.test/v1/x", "https://CLOUD.test/v1/x"),
+            ("v1/x", "https://cloud.test/v1/x"),
+            ("https://evil.example/v1/x", "https://cloud.test/v1/x"),
+            ("http://cloud.test/v1/x", "https://cloud.test/v1/x"),
+            ("https://cloud.test:8443/v1/x", "https://cloud.test/v1/x"),
+            ("https://me@cloud.test/v1/x", "https://cloud.test/v1/x"),
+            ("https://cloud.test.evil.example/v1/x", "https://cloud.test/v1/x"),
+            ("//evil.example/v1/x", "https://cloud.test/v1/x"),
+        ] {
+            let d = TafsCloud.Door(id: "d", app: "api", kind: "api", label: "x", open: true, address: address, proof: "proven",
+                                   how: "", keys: [], today: 0, limit: 100, resting: false)
+            XCTAssertEqual(APIDoorText.endpoint(d, base: base), shown, address)
+        }
+        for address in ["foo:x@evil.example/v1/x", "mailto:a@evil.example", "@evil.example/x", "\\\\evil.example\\x", "https://evil.example@cloud.test.evil.example/"] {
+            let d = TafsCloud.Door(id: "d", app: "api", kind: "api", label: "x", open: true, address: address, proof: "proven",
+                                   how: "", keys: [], today: 0, limit: 100, resting: false)
+            let shown = APIDoorText.endpoint(d, base: base)
+            let url = URL(string: shown)
+            XCTAssertEqual(url?.scheme, "https", address)
+            XCTAssertEqual(url?.host, "cloud.test", "\(address) → \(shown)")
+            XCTAssertNil(url?.user, address)
+            XCTAssertNil(url?.port, address)
+        }
+
         XCTAssertEqual(APIDoorText.keyName("  ", door: door), "Order system", "left blank, the door's own name")
         XCTAssertEqual(APIDoorText.keyName(" ERP staging ", door: door), "ERP staging")
         XCTAssertEqual(APIDoorText.name(.init(id: "key_1", last4: "iXrW")), "…iXrW")

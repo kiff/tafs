@@ -22,6 +22,7 @@
   "chrome.refused": "Chrome ອື່ນໃຊ້ລະຫັດນີ້ ສະນັ້ນບໍ່ມີຫຍັງຖືກຈັບຄູ່. ເລີ່ມໃໝ່.",
   "chrome.remove": "ເຊົາຈັບຄູ່",
   "chrome.remove_named": "ເຊົາຈັບຄູ່ {name}",
+  "chrome.replace_changed": "ສິ່ງທີ່ຍ້າຍໄປ Chrome ນີ້ປ່ຽນໄປ, ຈຶ່ງບໍ່ໄດ້ຈັບຄູ່ຫຍັງ. ກວດເບິ່ງແລ້ວຈັບຄູ່ໃໝ່.",
   "chrome.replace_moves": "ຍ້າຍໄປ Chrome ນີ້: {sites}",
   "chrome.replace_none": "Chrome ໃໝ່ (ບໍ່ແທນທີ່ອັນໃດ)",
   "chrome.replace_title": "ແທນທີ່",
