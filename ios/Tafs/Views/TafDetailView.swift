@@ -210,7 +210,7 @@ struct TafDetailView: View {
     @ViewBuilder
     private func headerLine(_ taf: Taf) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            // One line, Files first: "Files · Version 5 · live" (docs/files.md, the owner's 19 Nov test).
+            // One line, Files first: "Files · Version 5 · live" (docs/files.md).
             HStack(spacing: 2) {
                 if let cloud = model.cloudTaf(for: taf.id) {
                     TafFilesEntry(taf: cloud.id, store: CloudFilesStore(cloud: model.cloud))

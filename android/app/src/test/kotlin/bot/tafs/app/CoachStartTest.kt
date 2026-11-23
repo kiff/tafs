@@ -991,7 +991,7 @@ class CoachStartTest {
     assertEquals(read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)
   }
 
-  // The owner, 18 Nov (P0): the card stayed on "Reading what it asks for…" for minutes and filled in only once the screen was left
+  // The card once stayed on "Reading what it asks for…" for minutes and filled in only once the screen was left
   // and opened again. The card can be written before it names its grant, and Coach's run is done by then, so no stream reads the
   // thread again: the phone reads the thread again while a card can't be drawn, and the card fills in on its own.
   @Test fun aCardThatNamesItsGrantLaterFillsInWithoutLeavingTheScreen() = runTest {

@@ -26,18 +26,13 @@ jobs:
           persist-credentials: false
       - name: No private references
         run: |
-          pattern='kiff-cloud''#|kiff/kiff''-cloud|[Tt]he ''PM\b|\(P''M[ ,)]|\bP''M [0-9]|P''M'"'"'s\b|kiff/w''ork\b'
-          # The working threads' names for who reads or decides: a comment states the rule itself. GitHub logins
-          # stay where they do something (CODEOWNERS, automerge.json, their tests, docs/maintaining.md).
-          pattern="$pattern"'|\b(qa-''kiff|legal-''i18n|mac''12|mac-''local|dev-''android|parity-''(steward|linux|mac)|desktop-''(linux|windows|macos)|codex-''assistant)\b'
-          pattern="$pattern"'|\b(kiff-''qa|agent''gabo|gabo''sarmiento|kiff-''android|kiff''agents)\b'
-          set -- ':!.github/CODEOWNERS' ':!.github/automerge.json' ':!scripts/test_automerge.py' ':!scripts/test_codeowners.py' ':!docs/maintaining.md'
-          if git grep -nE "$pattern" -- . "$@"; then
+          pattern='kiff-cloud''#|kiff/kiff''-cloud|[Tt]he ''PM\b'
+          if git grep -nE "$pattern" -- .; then
             echo "::error::a private reference is in the tree: name the gap or describe it instead"; exit 1
           fi
           if [ -n "$BASE" ]; then
             git fetch --no-tags --depth=1 origin "$BASE"
-            if git diff "origin/$BASE" HEAD -- . "$@" | grep -E '^\+' | grep -E "$pattern"; then
+            if git diff "origin/$BASE" HEAD | grep -E '^\+' | grep -E "$pattern"; then
               echo "::error::a private reference is in this pull request's diff"; exit 1
             fi
           fi

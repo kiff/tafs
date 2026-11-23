@@ -1016,7 +1016,7 @@ describe("tafs cloud", () => {
     expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.card_unit_exceptions).toBeUndefined();
   });
 
-  // The owner, 13 Nov: "Connect again" sent them to every connected app, "abstract and bad UX". One job per view: the
+  // "Connect again" once sent them to every connected app, "abstract and bad UX". One job per view: the
   // taf names its own signed-out connection, and the app signs that same grant in again.
   it("carries the taf's own Connect again, naming its signed-out connection, in the reader's language", async () => {
     const w = world();
@@ -1490,7 +1490,7 @@ describe("the home list", () => {
   };
   const demoCard: Mandate = { id: "card_demo", subject: "support-demo", active: true, grants: [{ action: "lookup" }], aggregates: [] };
 
-  // The owner, 14 Nov: one approval of a Gmail taf read "2 Cards", and Follow-up leads "4 Cards".
+  // One approval of a Gmail taf once read "2 Cards", and Follow-up leads "4 Cards".
   it("shows the Cards a draft issued as one Card, its lines together, and keeps every id to revoke", async () => {
     const w = world();
     const read = (id: string, action: string, limit: number): Mandate => ({ id, subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
@@ -5895,7 +5895,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect((await home(deps)).coach_waiting).toBeUndefined();
   });
 
-  // The owner, 14 Nov: five rows that read the same, "why can't I remove them, or clear them all?"
+  // Five rows that read the same, "why can't I remove them, or clear them all?"
   it("names each waiting chat as Coach's history does, with what it waits for and since when", async () => {
     const { w, run, deps } = await paused({ id: "approve-card-2", type: "approval", grant: "g1" });
     w.account.unsure = 0;
