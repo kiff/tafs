@@ -1399,6 +1399,9 @@
     <string name="help_code_lead">اسے %1$s › %2$s میں چالو کریں۔ پھر، جب آپ مانگیں، KIFF ای میل سے ایک کوڈ بھیجتا ہے جو ایک بار، 10 منٹ تک، اسی براؤزر میں کام کرتا ہے جس نے مانگا۔</string>
     <string name="help_code_safe">یہ کوڈ کبھی کسی کو نہ دیں۔ KIFF آپ سے یہ کبھی نہیں مانگے گا۔</string>
     <string name="help_code_title">ای میل پر بھیجے گئے کوڈ سے سائن اِن کریں</string>
+    <string name="help_security_key_lead">Linux پر، یا macOS 12 والے Mac پر، اس کمپیوٹر پر منظوری کے لیے FIDO2 سیکیورٹی کلید چاہیے: ایک چھوٹی USB کلید جسے آپ چھوتے ہیں، اور جس کا اپنا PIN ہوتا ہے۔ عام USB اسٹک کام نہیں کرے گی۔ اس کے بغیر یہ کمپیوٹر صرف دکھاتا ہے، اور آپ اپنے فون پر منظور کرتے ہیں۔</string>
+    <string name="help_security_key_title">اس کمپیوٹر پر سیکیورٹی کلید سے منظور کریں</string>
+    <string name="help_security_key_use">اس کمپیوٹر کی جوڑی بناتے وقت اسے شامل کریں۔ پھر ہر منظوری دکھاتی ہے کہ آپ کیا منظور کر رہے ہیں، اور آپ سے کلید لگانے، اسے چھونے اور اس کا PIN درج کرنے کو کہتی ہے؛ tafs کبھی PIN محفوظ نہیں کرتا۔ macOS 12 والے Mac پر Touch ID سے منظوری نہیں ہو سکتی۔</string>
     <string name="home_calendar_not_read">کیلنڈر پڑھا نہیں جا سکا۔ %1$s</string>
     <string name="home_cant_reach_kiff">KIFF تک رسائی نہیں ہو سکتی</string>
     <string name="home_choose_taf">ایک taf چنیں۔</string>

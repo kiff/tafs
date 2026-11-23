@@ -1509,6 +1509,9 @@
     <string name="help_code_lead">Włącz to w %1$s › %2$s. Potem, gdy o to poprosisz, KIFF wyśle e-mailem kod, który działa raz, przez 10 minut, w przeglądarce, która o niego poprosiła.</string>
     <string name="help_code_safe">Nikomu nie podawaj tego kodu. KIFF nigdy Cię o niego nie poprosi.</string>
     <string name="help_code_title">Logowanie kodem z e-maila</string>
+    <string name="help_security_key_lead">Na Linuksie lub na Macu z macOS 12 do zatwierdzania na tym komputerze potrzebny jest klucz bezpieczeństwa FIDO2: mały klucz USB, którego dotykasz, z własnym PIN-em. Zwykły pendrive nie zadziała. Bez niego ten komputer tylko wyświetla, a zatwierdzasz na telefonie.</string>
+    <string name="help_security_key_title">Zatwierdzanie kluczem bezpieczeństwa na tym komputerze</string>
+    <string name="help_security_key_use">Dodaj go podczas parowania tego komputera. Potem każde zatwierdzenie pokazuje, co zatwierdzasz, i prosi, żebyś podłączył klucz, dotknął go i wpisał jego PIN; tafs nigdy nie zapisuje PIN-u. Na Macu z macOS 12 Touch ID nie może zatwierdzać.</string>
     <string name="home_calendar_not_read">Nie udało się odczytać kalendarza. %1$s</string>
     <string name="home_cant_reach_kiff">Brak połączenia z KIFF</string>
     <string name="home_choose_taf">Wybierz tafa.</string>

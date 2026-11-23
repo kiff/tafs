@@ -1,0 +1,1 @@
+- **How tafs works on Linux and on a Mac with macOS 12:** three lines on approving with a FIDO2 security key there (adding it when pairing, its PIN asked each time and never stored, and that Touch ID can't approve on macOS 12), in every language, for the desktop apps' Help.

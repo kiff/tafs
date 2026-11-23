@@ -1399,6 +1399,9 @@
     <string name="help_code_lead">এটি %1$s › %2$s-এ চালু করুন। এরপর আপনি চাইলে KIFF ইমেইলে এমন একটি কোড পাঠায় যা একবারই, ১০ মিনিট, যে ব্রাউজার চেয়েছে তাতে কাজ করে।</string>
     <string name="help_code_safe">এই কোড কাউকে দেবেন না। KIFF কখনও আপনার কাছে এটি চাইবে না।</string>
     <string name="help_code_title">ইমেইলে পাওয়া কোড দিয়ে সাইন ইন</string>
+    <string name="help_security_key_lead">Linux-এ, বা macOS 12 চলা Mac-এ, এই কম্পিউটারে অনুমোদন করতে একটি FIDO2 সিকিউরিটি কী লাগে: একটি ছোট USB কী, যা আপনি ছুঁয়ে দেন, আর যার নিজস্ব PIN আছে। সাধারণ USB স্টিক কাজ করবে না। কী না থাকলে এই কম্পিউটার শুধু দেখায়, আর অনুমোদন আপনি ফোনে করেন।</string>
+    <string name="help_security_key_title">এই কম্পিউটারে সিকিউরিটি কী দিয়ে অনুমোদন করুন</string>
+    <string name="help_security_key_use">এই কম্পিউটার জোড়া লাগানোর সময় কী-টি যোগ করুন। এরপর প্রতিটি অনুমোদন দেখায় আপনি কী অনুমোদন করছেন, আর কী লাগাতে, ছুঁয়ে দিতে ও এর PIN দিতে বলে; tafs কখনও PIN সংরক্ষণ করে না। macOS 12 চলা Mac-এ Touch ID দিয়ে অনুমোদন করা যায় না।</string>
     <string name="home_calendar_not_read">ক্যালেন্ডার পড়া যায়নি। %1$s</string>
     <string name="home_cant_reach_kiff">KIFF-এ পৌঁছানো যাচ্ছে না</string>
     <string name="home_choose_taf">একটি taf বেছে নিন।</string>

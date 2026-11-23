@@ -1344,6 +1344,9 @@
     <string name="help_code_lead">เปิดใช้ที่ %1$s › %2$s จากนั้นเมื่อคุณขอ KIFF จะส่งรหัสทางอีเมลที่ใช้ได้ครั้งเดียว ภายใน 10 นาที ในเบราว์เซอร์ที่ขอ</string>
     <string name="help_code_safe">อย่าให้รหัสนี้แก่ใคร KIFF จะไม่ขอรหัสนี้จากคุณเลย</string>
     <string name="help_code_title">ลงชื่อเข้าใช้ด้วยรหัสที่ส่งทางอีเมล</string>
+    <string name="help_security_key_lead">บน Linux หรือบน Mac ที่ใช้ macOS 12 การอนุมัติบนคอมพิวเตอร์เครื่องนี้ต้องใช้กุญแจความปลอดภัย FIDO2 ซึ่งเป็นกุญแจ USB ขนาดเล็กที่คุณแตะ และมี PIN ของตัวเอง แฟลชไดรฟ์ USB ทั่วไปใช้ไม่ได้ หากไม่มีกุญแจ คอมพิวเตอร์เครื่องนี้จะแสดงได้อย่างเดียว และคุณอนุมัติบนโทรศัพท์</string>
+    <string name="help_security_key_title">อนุมัติด้วยกุญแจความปลอดภัยบนคอมพิวเตอร์เครื่องนี้</string>
+    <string name="help_security_key_use">เพิ่มกุญแจตอนจับคู่คอมพิวเตอร์เครื่องนี้ หลังจากนั้นการอนุมัติแต่ละครั้งจะแสดงสิ่งที่คุณกำลังอนุมัติ และขอให้คุณเสียบกุญแจ แตะ แล้วใส่ PIN ของกุญแจ tafs ไม่เคยเก็บ PIN บน Mac ที่ใช้ macOS 12 จะอนุมัติด้วย Touch ID ไม่ได้</string>
     <string name="home_calendar_not_read">อ่านปฏิทินไม่ได้ %1$s</string>
     <string name="home_cant_reach_kiff">เชื่อมต่อ KIFF ไม่ได้</string>
     <string name="home_choose_taf">เลือก taf</string>

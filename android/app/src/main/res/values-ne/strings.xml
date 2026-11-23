@@ -1399,6 +1399,9 @@
     <string name="help_code_lead">यसलाई %1$s › %2$s मा खोल्नुहोस्। त्यसपछि तपाईंले अनुरोध गर्दा KIFF ले एक पटक मात्र काम गर्ने, १० मिनेटसम्म, अनुरोध गरेको ब्राउजरमा चल्ने कोड इमेलमा पठाउँछ।</string>
     <string name="help_code_safe">यो कोड कसैलाई नदिनुहोस्। KIFF ले तपाईंसँग यो कहिल्यै माग्दैन।</string>
     <string name="help_code_title">इमेलमा आएको कोडले साइन इन</string>
+    <string name="help_security_key_lead">Linux मा, वा macOS 12 भएको Mac मा, यो कम्प्युटरमा स्वीकृत गर्न FIDO2 सुरक्षा कुञ्जी चाहिन्छ: तपाईंले छुने, आफ्नै PIN भएको सानो USB कुञ्जी। साधारण USB स्टिकले काम गर्दैन। कुञ्जी नभए यो कम्प्युटरले देखाउने मात्र गर्छ, र तपाईं फोनमा स्वीकृत गर्नुहुन्छ।</string>
+    <string name="help_security_key_title">यो कम्प्युटरमा सुरक्षा कुञ्जीले स्वीकृत गर्नुहोस्</string>
+    <string name="help_security_key_use">यो कम्प्युटर जोड्दा यसलाई थप्नुहोस्। त्यसपछि हरेक स्वीकृतिले तपाईं के स्वीकृत गर्दै हुनुहुन्छ देखाउँछ, र कुञ्जी जोड्न, छुन र यसको PIN हाल्न भन्छ; tafs ले PIN कहिल्यै भण्डारण गर्दैन। macOS 12 भएको Mac मा Touch ID ले स्वीकृत गर्न सक्दैन।</string>
     <string name="home_calendar_not_read">पात्रो पढ्न सकिएन। %1$s</string>
     <string name="home_cant_reach_kiff">KIFF सम्म पुग्न सकिएन</string>
     <string name="home_choose_taf">taf छान्नुहोस्।</string>

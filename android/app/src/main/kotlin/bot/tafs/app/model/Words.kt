@@ -1430,6 +1430,9 @@ object Words {
     fun codeLead(account: String, signIn: String): String = Res.s(R.string.help_code_lead, account, signIn)
     val codeSafe: String get() = Res.s(R.string.help_code_safe)
     val codeTitle: String get() = Res.s(R.string.help_code_title)
+    val securityKeyLead: String get() = Res.s(R.string.help_security_key_lead)
+    val securityKeyTitle: String get() = Res.s(R.string.help_security_key_title)
+    val securityKeyUse: String get() = Res.s(R.string.help_security_key_use)
   }
   object Home {
     fun calendarNotRead(why: String): String = Res.s(R.string.home_calendar_not_read, why)

@@ -1454,6 +1454,9 @@
     <string name="help_code_lead">Zapnite to v časti %1$s › %2$s. Potom vám KIFF na požiadanie pošle e-mailom kód, ktorý platí raz, 10 minút, v prehliadači, ktorý oň požiadal.</string>
     <string name="help_code_safe">Nikdy tento kód nikomu nedávajte. KIFF vás oň nikdy nepožiada.</string>
     <string name="help_code_title">Prihlásenie kódom z e-mailu</string>
+    <string name="help_security_key_lead">V Linuxe alebo na Macu so systémom macOS 12 je na schvaľovanie na tomto počítači potrebný bezpečnostný kľúč FIDO2: malý USB kľúč, ktorého sa dotknete a ktorý má vlastný PIN. Obyčajný USB kľúč na dáta nestačí. Bez neho tento počítač len zobrazuje a schvaľujete v telefóne.</string>
+    <string name="help_security_key_title">Schvaľovanie bezpečnostným kľúčom na tomto počítači</string>
+    <string name="help_security_key_use">Pridajte ho pri párovaní tohto počítača. Každé schválenie potom ukáže, čo schvaľujete, a požiada vás, aby ste kľúč pripojili, dotkli sa ho a zadali jeho PIN; tafs PIN nikdy neukladá. Na Macu so systémom macOS 12 nemožno schvaľovať pomocou Touch ID.</string>
     <string name="home_calendar_not_read">Kalendár sa nepodarilo načítať. %1$s</string>
     <string name="home_cant_reach_kiff">Nedá sa spojiť s KIFF</string>
     <string name="home_choose_taf">Vyberte taf.</string>

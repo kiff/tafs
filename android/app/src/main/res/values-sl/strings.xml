@@ -1509,6 +1509,9 @@
     <string name="help_code_lead">Vklopite to v razdelku %1$s › %2$s. Nato vam KIFF na zahtevo pošlje kodo, ki velja enkrat, 10 minut, v brskalniku, ki jo je zahteval.</string>
     <string name="help_code_safe">Te kode nikoli nikomur ne dajte. KIFF je od vas nikoli ne bo zahteval.</string>
     <string name="help_code_title">Prijava s kodo po e-pošti</string>
+    <string name="help_security_key_lead">V Linuxu ali na Macu z macOS 12 za odobritev v tem računalniku potrebujete varnostni ključ FIDO2: majhen ključ USB, ki se ga dotaknete, z lastnim PIN-om. Navaden ključek USB ne bo deloval. Brez njega ta računalnik samo prikazuje, odobrite pa v telefonu.</string>
+    <string name="help_security_key_title">Odobritev z varnostnim ključem v tem računalniku</string>
+    <string name="help_security_key_use">Dodajte ga, ko seznanjate ta računalnik. Nato vsaka odobritev pokaže, kaj odobravate, in vas prosi, da priključite ključ, se ga dotaknete in vnesete njegov PIN; tafs PIN-a nikoli ne shrani. Na Macu z macOS 12 Touch ID ne more odobravati.</string>
     <string name="home_calendar_not_read">Koledarja ni bilo mogoče prebrati. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF ni dosegljiv</string>
     <string name="home_choose_taf">Izberite taf.</string>

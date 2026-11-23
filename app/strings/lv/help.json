@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs var strādāt tavā Chrome",
   "help.code_lead": "Ieslēdz to sadaļā {account} › {sign_in}. Tad, kad pieprasīsi, KIFF nosūtīs e-pastā kodu, kas darbojas vienu reizi, 10 minūtes, pārlūkā, kas to pieprasīja.",
   "help.code_safe": "Nekad nedod šo kodu nevienam. KIFF to no tevis nekad neprasīs.",
-  "help.code_title": "Pieslēgšanās ar e-pastā saņemtu kodu"
+  "help.code_title": "Pieslēgšanās ar e-pastā saņemtu kodu",
+  "help.security_key_lead": "Linux vai Mac ar macOS 12 apstiprināšanai šajā datorā vajadzīga FIDO2 drošības atslēga: maza USB atslēga, kurai pieskaries, ar savu PIN. Parasta USB zibatmiņa neder. Bez tās šis dators tikai rāda, un tu apstiprini tālrunī.",
+  "help.security_key_title": "Apstiprināt ar drošības atslēgu šajā datorā",
+  "help.security_key_use": "Pievieno to, kad savieno pārī šo datoru. Pēc tam katrs apstiprinājums parāda, ko tu apstiprini, un lūdz pievienot atslēgu, tai pieskarties un ievadīt tās PIN; tafs PIN nekad neglabā. Mac ar macOS 12 Touch ID nevar apstiprināt."
 }

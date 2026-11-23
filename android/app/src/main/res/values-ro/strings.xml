@@ -1454,6 +1454,9 @@
     <string name="help_code_lead">Activează-l în %1$s › %2$s. Apoi, când ceri, KIFF îți trimite pe e-mail un cod care funcționează o singură dată, 10 minute, în browserul care l-a cerut.</string>
     <string name="help_code_safe">Nu dați acest cod nimănui. KIFF nu vi-l va cere niciodată.</string>
     <string name="help_code_title">Conectare cu un cod primit pe e-mail</string>
+    <string name="help_security_key_lead">Pe Linux sau pe un Mac cu macOS 12, pentru a aproba pe acest computer aveți nevoie de o cheie de securitate FIDO2: o cheie USB mică pe care o atingeți, cu propriul PIN. Un stick USB obișnuit nu funcționează. Fără ea, acest computer doar afișează, iar aprobarea o dați pe telefon.</string>
+    <string name="help_security_key_title">Aprobați cu o cheie de securitate pe acest computer</string>
+    <string name="help_security_key_use">Adăugați-o când asociați acest computer. Apoi fiecare aprobare arată ce aprobați și vă cere să conectați cheia, să o atingeți și să introduceți PIN-ul ei; tafs nu stochează niciodată PIN-ul. Pe un Mac cu macOS 12, Touch ID nu poate aproba.</string>
     <string name="home_calendar_not_read">Calendarul nu a putut fi citit. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF nu poate fi contactat</string>
     <string name="home_choose_taf">Alegeți un taf.</string>

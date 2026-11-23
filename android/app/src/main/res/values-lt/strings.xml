@@ -1454,6 +1454,9 @@
     <string name="help_code_lead">Įjunkite tai skiltyje %1$s › %2$s. Tada, kai paprašysite, KIFF el. paštu atsiųs kodą, kuris veikia vieną kartą, 10 minučių, naršyklėje, kuri jo paprašė.</string>
     <string name="help_code_safe">Niekada neduokite šio kodo niekam. KIFF jo niekada neprašys.</string>
     <string name="help_code_title">Prisijungimas el. paštu gautu kodu</string>
+    <string name="help_security_key_lead">„Linux“ arba „Mac“ su „macOS 12“ norint patvirtinti šiame kompiuteryje reikia FIDO2 saugos rakto: mažo USB rakto, kurį paliečiate ir kuris turi savo PIN. Paprasta USB atmintinė netiks. Be jo šis kompiuteris tik rodo, o patvirtinate telefone.</string>
+    <string name="help_security_key_title">Patvirtinkite saugos raktu šiame kompiuteryje</string>
+    <string name="help_security_key_use">Pridėkite jį, kai susiejate šį kompiuterį. Tada kiekvienas patvirtinimas parodo, ką patvirtinate, ir paprašo prijungti raktą, jį paliesti ir įvesti jo PIN; tafs niekada nesaugo PIN. „Mac“ su „macOS 12“ „Touch ID“ negali patvirtinti.</string>
     <string name="home_calendar_not_read">Nepavyko nuskaityti kalendoriaus. %1$s</string>
     <string name="home_cant_reach_kiff">Nepavyksta pasiekti KIFF</string>
     <string name="home_choose_taf">Pasirinkite taf.</string>

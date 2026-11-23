@@ -1399,6 +1399,9 @@
     <string name="help_code_lead">Үүнийг %1$s › %2$s-д асаа. Дараа нь чи хүсвэл KIFF нэг удаа, 10 минутын турш, хүссэн хөтөч дээр ажиллах кодыг и-мэйлээр илгээнэ.</string>
     <string name="help_code_safe">Энэ кодыг хэнд ч бүү өг. KIFF үүнийг танаас хэзээ ч асуухгүй.</string>
     <string name="help_code_title">И-мэйлээр ирсэн кодоор нэвтрэх</string>
+    <string name="help_security_key_lead">Linux эсвэл macOS 12-тэй Mac дээр энэ компьютер дээр зөвшөөрөхөд FIDO2 аюулгүй байдлын түлхүүр хэрэгтэй: хүрч ажиллуулдаг, өөрийн PIN-тэй жижиг USB түлхүүр. Энгийн USB флаш тохирохгүй. Түлхүүргүй бол энэ компьютер зөвхөн харуулна, зөвшөөрлийг утсан дээрээ өгнө.</string>
+    <string name="help_security_key_title">Энэ компьютер дээр аюулгүй байдлын түлхүүрээр зөвшөөрөх</string>
+    <string name="help_security_key_use">Энэ компьютерийг хослуулахдаа үүнийг нэмнэ үү. Дараа нь зөвшөөрөл бүр юуг зөвшөөрч буйг харуулж, түлхүүрээ залгаж, хүрч, PIN-ийг нь оруулахыг хүснэ; tafs PIN-ийг хэзээ ч хадгалдаггүй. macOS 12-тэй Mac дээр Touch ID-гаар зөвшөөрөх боломжгүй.</string>
     <string name="home_calendar_not_read">Хуанлийг уншиж чадсангүй. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF-д хүрэх боломжгүй</string>
     <string name="home_choose_taf">Taf сонгоно уу.</string>

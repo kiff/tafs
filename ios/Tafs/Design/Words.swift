@@ -2659,6 +2659,12 @@ enum Words {
         static var codeSafe: String { Words.line("help.code_safe") }
         /// Sign in with a code sent by email
         static var codeTitle: String { Words.line("help.code_title") }
+        /// On Linux, or on a Mac with macOS 12, approving on this computer needs a FIDO2 security key: a small USB key you touch, with its own PIN. An ordinary USB stick won't work. Without one, this computer only views, and you approve on your phone.
+        static var securityKeyLead: String { Words.line("help.security_key_lead") }
+        /// Approve with a security key on this computer
+        static var securityKeyTitle: String { Words.line("help.security_key_title") }
+        /// Add it when you pair this computer. Each approval then shows what you're approving and asks you to plug in the key, touch it and enter its PIN; tafs never stores the PIN. On a Mac with macOS 12, Touch ID can't approve.
+        static var securityKeyUse: String { Words.line("help.security_key_use") }
     }
     enum Home {
         /// The calendar couldn't be read. {why}
