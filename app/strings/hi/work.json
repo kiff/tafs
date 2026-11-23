@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "इतने में उत्तर दें",
+  "work.answer_within_days": {
+    "one": "{count} दिन",
+    "other": "{count} दिन"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} घंटे",
+    "other": "{count} घंटे"
+  },
+  "work.answer_within_line": "जब कोई मामला इससे ज़्यादा इंतज़ार करता है तो आपको बताया जाता है।",
+  "work.answer_within_none": "तय नहीं",
+  "work.answer_within_not_set": "यह तय नहीं हो सका। {why}",
+  "work.asking_kiff_run": "KIFF से {tool} चलाने को कहा जा रहा है…",
+  "work.did_not_stop": "यह रुका नहीं: {why}",
+  "work.duration.minutes": "{minutes} मिनट {seconds} सेकंड",
+  "work.duration.seconds": "{seconds} सेकंड",
+  "work.its_runs": "इसकी रन",
+  "work.not_read": "इसका काम पढ़ा नहीं जा सका। {why}",
+  "work.not_sent_again": "यह दोबारा नहीं भेजा गया। {why}",
+  "work.request.try_reply_now": "उत्तर अभी आज़माएँ",
+  "work.requests_need_you": {
+    "one": "{count} अनुरोध को आपकी ज़रूरत है",
+    "other": "{count} अनुरोध को आपकी ज़रूरत है"
+  },
+  "work.send_again": "फिर भेजें",
+  "work.sending_again": "फिर भेजा जा रहा है…",
+  "work.stop_run": "रन रोकें",
+  "work.stopped_part_way_before_finished": "{taf} पूरा होने से पहले बीच में रुक गया।"
+}

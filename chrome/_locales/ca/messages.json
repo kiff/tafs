@@ -76,5 +76,17 @@
   "coach_previous": { "message": "Converses anteriors" },
   "coach_previous_none": { "message": "No hi ha converses anteriors." },
   "coach_previous_error": { "message": "No s'han pogut carregar les converses anteriors." },
-  "coach_untitled": { "message": "Conversa" }
+  "coach_untitled": { "message": "Conversa" },
+  "taf_choose": { "message": "Parla amb" },
+  "taf_placeholder": { "message": "Missatge a $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "No ha arribat a $TAF$. Torna-ho a provar.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "No s'han pogut llegir els teus tafs. Torna-ho a provar." },
+  "no_taf_here": { "message": "Encara no hi ha cap taf que treballi en aquest Chrome." },
+  "setup_taf": { "message": "Configura un taf nou per a aquest lloc" },
+  "hand_title": { "message": "Et toca", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "El taf diu", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Mostra-m'ho", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Fet", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Ara no", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Escriu només on confiïs en aquesta pàgina.", "description": "Fixed line on that card under the taf's words" }
 }

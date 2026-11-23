@@ -55,9 +55,10 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   following the run all go on.
 - **An answered approval** folds to one line saying what was approved. When a Card was signed, the
   line names that Card, and its lines, KIFF's own from the draft the phone read, stay under it
-  (iOS and Android), never the key's words. On Android, a tap opens it again to that Card in full,
-  KIFF's draft at the version signed, with nothing to answer; another tap folds it. planque's grant isn't shown there: it reads as it is now, and a
-  later tools approval can widen it past what this one approved. iOS follows.
+  (iOS and Android), never the key's words. A tap opens it again to that Card in full,
+  KIFF's draft at the version signed, with nothing to answer; another tap folds it (Android's `ApprovalCard`, iOS's
+  `signedCardView`). planque's grant isn't shown there: it reads as it is now, and a
+  later tools approval can widen it past what this one approved.
 - **Coach's tools in one tap:** when tafs cloud sends the connect batch before Coach's Card (the
   Card is drafted over tools KIFF holds), the app reads the tools again after the batch and gives
   the Card in the same flow: one tap, still two fingerprints (the batch, then the Card). A
@@ -556,9 +557,9 @@ A connection can carry a **profile**: KIFF's facts about how each of its tools i
 what its outcomes mean. planque puts it in the grant's `request.profile`, so the grant's digest
 the phone already checks covers it. Before the owner approves:
 - the phone asks KIFF for its words with its own session (`POST /v1/profiles/words`, never
-  through tafs cloud or planque). Android asks for `kiff.words.v2` (`?v=2`, Android 1.27.7): v1's lines without KIFF's
-  bookkeeping (no "isn't pinned to a version", and the lost-answer line only where money moves). It takes v1 or v2 and
-  signs whichever KIFF sent; iOS follows;
+  through tafs cloud or planque). Both apps ask for `kiff.words.v2` (`?v=2`; Android 1.27.7, then iOS): v1's lines
+  without KIFF's bookkeeping (no "isn't pinned to a version", and the lost-answer line only where money moves). Each takes
+  v1 or v2 and signs whichever KIFF sent;
 - it checks that the profile's SHA-256 (JCS) is KIFF's `profile_sha256` and the words' is
   `words_sha256`;
 - the approval card shows each line verbatim, in KIFF's order. What KIFF can't check,

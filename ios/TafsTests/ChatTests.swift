@@ -675,6 +675,36 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/holds/ce_1/continue"), 1, "the run is asked to go on")
     }
 
+    /// The owner's yes lands after the run that waited on the held call had ended (tafs cloud answers 404 `run_ended`): nothing ran, and
+    /// the chat says so in tafs cloud's words, with Retry on the owner's last message, never silence.
+    func testAnApprovalAfterItsRunEndedSaysNothingRanAndOffersRetry() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"message","text":"Refund pi_1","session":"s1"}]}"#)
+        await model.loadChat(id)
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, """
+        {"exceptions":[{"id":"ce_1","proposal_id":"p1","subject":"rae-k3f9","action":"refund","entity_id":"pi_1",
+          "status":"held","breaches":[{"mandate_id":"m1","outcome":"per_action_exceeded","quantity":"sum(amount)","limit":5000}],
+          "parameters":{"amount":8000},"created_at":"2026-10-14T10:41:00Z","expires_at":"2099-10-14T10:51:00Z","accounting_version":2}]}
+        """)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/holds/ce_1/continue"] = (404, #"{"error":"no run of this taf waits on that held call","code":"run_ended","words":"That run had ended, so nothing ran."}"#)
+        await model.refresh()
+        model.kiffTenant = "t1"
+        model.sessionHasKey = true
+        let call = try XCTUnwrap(model.held.first)
+        await model.answer(call, with: .approveOnce)
+        for _ in 0..<50 where model.chatState(id).failedWhy == nil {
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
+        XCTAssertEqual(model.chatState(id).ended, .failed(retry: "Refund pi_1"))
+        XCTAssertEqual(model.chatState(id).failedWhy, "That run had ended, so nothing ran.")
+        XCTAssertNil(model.chatState(id).awaiting, "nothing is working")
+        XCTAssertEqual(model.lastError, "That run had ended, so nothing ran.")
+        // Blank words, and no message to send again, say nothing more than they have.
+        model.runEndedAfterApproval(id, words: "  ")
+        XCTAssertEqual(model.chatState(id).failedWhy, "That run had ended, so nothing ran.", "blank words change nothing")
+    }
+
     /// While the taf works, a message goes to its run once, with `hold` (docs/chat.md), and
     /// reads at its next step (kiff/agents#102). It shows as kiff/agents says: until the run
     /// has read it. What the run doesn't take, tafs cloud holds (202): it shows as waiting,
@@ -820,6 +850,59 @@ final class ChatTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
         await model.retryChat(try XCTUnwrap(model.chatState(id).unsent.first), to: id)
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
+    }
+
+    /// A run that ended without an answer (`failed`, tafs cloud's own answer in contracts/conversation-failed.json):
+    /// its words are the taf's last line, after everything else. No words, a new chat with nothing in it, or a later
+    /// read with none: no line. As Android's `RunFailedTest`.
+    func testAFailedRunIsTheChatsLastLineInTafsCloudsWords() async throws {
+        let (model, id) = await kiffModel()
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("contracts/conversation-failed.json")
+        let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let answer = try JSONSerialization.data(withJSONObject: try XCTUnwrap(root["answer"]))
+        let failed = try XCTUnwrap((root["answer"] as? [String: Any])?["failed"] as? [String: Any])
+        let words = try XCTUnwrap(failed["words"] as? String)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, String(decoding: answer, as: UTF8.self))
+        await model.loadChat(id)
+        XCTAssertNil(model.chatErrors[id])
+        XCTAssertEqual(model.chatState(id).runFailed, TafsCloud.RunFailed(run: "run2", words: words))
+        guard case .message(let last)? = model.chatItems(id).last else { return XCTFail("a line last") }
+        XCTAssertEqual(last.from, .taf)
+        XCTAssertEqual(last.text, words, "tafs cloud's words, as they are")
+        XCTAssertEqual(model.chatItems(id).filter { $0.id == model.chatItems(id).last?.id }.count, 1, "once")
+
+        // Words with nothing in them are no line.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-16T12:00:00.000Z","from":"owner","kind":"message","text":"Hi","session":"s1"}],"failed":{"run":"r2","code":"ai_unavailable","words":"  "}}
+        """)
+        await model.loadChat(id)
+        XCTAssertNil(model.chatState(id).runFailed)
+        XCTAssertFalse(model.chatItems(id).contains { if case .message(let m) = $0 { return m.session.hasPrefix("failed|") }; return false })
+
+        // A failed of another shape leaves the thread read, with no line.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"failed":{"run":7,"words":["x"]}}
+        """)
+        await model.loadChat(id)
+        XCTAssertNil(model.chatErrors[id])
+        XCTAssertNil(model.chatState(id).runFailed)
+
+        // A new chat, with nothing in it yet, shows none.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"failed":{"run":"r2","words":"Our AI provider isn't serving us right now."}}
+        """)
+        await model.loadChat(id)
+        XCTAssertNotNil(model.chatState(id).runFailed)
+        XCTAssertTrue(model.chatItems(id).isEmpty)
+
+        // A later read with none clears it.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, String(decoding: answer, as: UTF8.self))
+        await model.loadChat(id)
+        XCTAssertNotNil(model.chatState(id).runFailed)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        await model.loadChat(id)
+        XCTAssertNil(model.chatState(id).runFailed)
     }
 
     /// A run that stopped at its own cap writes nothing for it: the chat says why, never

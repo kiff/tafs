@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Içinde jogap beriň",
+  "work.answer_within_days": {
+    "one": "{count} gün",
+    "other": "{count} gün"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} sagat",
+    "other": "{count} sagat"
+  },
+  "work.answer_within_line": "Bir iş şondan uzak garaşanda size habar berilýär.",
+  "work.answer_within_none": "Bellenmedi",
+  "work.answer_within_not_set": "Ol bellenip bilinmedi. {why}",
+  "work.asking_kiff_run": "KIFF-den {tool} işletmek soralýar…",
+  "work.did_not_stop": "Ol durmady: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Onuň işlemeleri",
+  "work.not_read": "Onuň işi okalyp bilinmedi. {why}",
+  "work.not_sent_again": "Ol täzeden iberilmedi. {why}",
+  "work.request.try_reply_now": "Jogaby indi synanyşyň",
+  "work.requests_need_you": {
+    "one": "{count} haýyş size zerur",
+    "other": "{count} haýyş size zerur"
+  },
+  "work.send_again": "Täzeden iberiň",
+  "work.sending_again": "Täzeden iberilýär…",
+  "work.stop_run": "Işlemäni duruzyň",
+  "work.stopped_part_way_before_finished": "{taf} gutarmanka ýarym ýolda durdy."
+}

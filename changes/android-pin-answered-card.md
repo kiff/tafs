@@ -1,0 +1,1 @@
+- **Android:** a card you answer in Coach's chat goes to the top and stays there while Coach answers under it, as on iPhone and iPad ([docs/chat.md](../docs/chat.md)).

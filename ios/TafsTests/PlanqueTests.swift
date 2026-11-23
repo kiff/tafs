@@ -334,6 +334,19 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(StubProtocol.sent.filter { $0.value(forHTTPHeaderField: "Planque-Device-Signature") == nil }.count, 0)
     }
 
+    /// Moving a connection to another Chrome is one signed PUT with the new Chrome and the phone's signature over its sites for it.
+    func testSwitchingAChromeIsOneSignedPutWithTheSitesSignature() async throws {
+        let (_, planque, _) = clients()
+        planque.tenant = "t_01"
+        planque.signer = { _ in "sig" }
+        planque.deviceID = "dev_phone01"
+        StubProtocol.responses["PUT /v1/accounts/t_01/grants/g_01/chrome"] = (200, grantJSON(status: "connected"))
+        try await planque.switchChrome(grant: "g_01", to: "chr_b", sitesSignature: "c2ln")
+        XCTAssertEqual(body(StubProtocol.sent.last) as? [String: String], ["chrome_id": "chr_b", "chrome_sites_sig": "c2ln"])
+        XCTAssertEqual(StubProtocol.sent.last?.httpMethod, "PUT")
+        XCTAssertNotNil(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
+    }
+
     /// A device KIFF knows names itself in each signature (kiff/planque#10), and still sends
     /// its key at enrolment for a planque from before that.
     func testADeviceKIFFKnowsSignsWithItsID() async throws {
@@ -931,7 +944,7 @@ final class PlanqueTests: XCTestCase {
         model.planqueSetUp(for: "t_01")
         let (grant, digest, words) = try profiledGrant()
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grant)]}"#)
-        StubProtocol.responses["POST /v1/profiles/words"] = (200, words)
+        StubProtocol.responses["POST /v1/profiles/words?v=2"] = (200, words)
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"connected","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00Z"}"#)
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, grant)
         vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
@@ -957,7 +970,7 @@ final class PlanqueTests: XCTestCase {
         model.planqueSetUp(for: "t_01")
         let (grant, _, _) = try profiledGrant()
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grant)]}"#)
-        StubProtocol.responses["POST /v1/profiles/words"] = (503, #"{"error":"unavailable"}"#)
+        StubProtocol.responses["POST /v1/profiles/words?v=2"] = (503, #"{"error":"unavailable"}"#)
         await model.refreshConnections()
         let g = try XCTUnwrap(model.grants.first { $0.id == "g_01" })
         StubProtocol.sent = []

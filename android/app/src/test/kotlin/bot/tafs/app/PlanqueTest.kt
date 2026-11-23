@@ -476,6 +476,41 @@ class PlanqueTest {
     assertNull(m.state.value.coachNotes["g1"])
   }
 
+  /**
+   * Sign in again on a connection's row opens the approval sheet first: planque's words for the connection as it is now, then
+   * Approve. Nothing is signed or sent until Approve, and Approve signs only the digest the sheet drew: a request that grew
+   * after it was shown (more tools) signs nothing, and the sheet shows it again.
+   */
+  @Test fun signInAgainOnARowShowsTheSheetFirstAndSignsOnlyTheDigestItDrew() = runTest {
+    reads()
+    val connected = """{"id":"g1","status":"connected","text":"Connect Stripe: refund a payment.","digest":"${digestOf(profiledRequest)}","request":$profiledRequest}"""
+    transport.answer(grants, 200, """{"grants":[$connected]}""")
+    transport.answer(words, 200, resource("stripe-refunds.expected"))
+    transport.answer(approve, 200, """{"status":"connected","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.refreshConnections()
+    m.startReconnect(m.state.value.grants.single())
+    testScheduler.advanceUntilIdle()
+    assertEquals("the sheet is open on it", "g1", m.state.value.listApproval)
+    assertTrue(m.state.value.listApprovalAgain)
+    assertTrue("nothing approved before Approve", transport.requestsTo(approve).isEmpty())
+    // Drawn on a digest that's no longer the request's (planque added tools meanwhile): nothing is signed or sent.
+    // The sheet's read of KIFF's words, waited for: `readProfileWords` reads them in the model's own scope, and Approve on words
+    // not read yet signs nothing ("aren't read yet"), so a read still running on another thread made the approve below flaky.
+    m.loadProfileWords("g1")
+    assertNotNull(m.state.value.profileWordsFor(m.state.value.grants.single()))
+    m.approveFromList("g1", "an-older-digest", again = true)
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertEquals(bot.tafs.app.model.VersionWords.OUT_OF_DATE_CARD, m.state.value.coachNotes[bot.tafs.app.model.ConnectWords.cardKey("g1")])
+    // The digest the sheet drew: signed in again in place, once, and the sheet closes with no "connected now".
+    m.approveFromList("g1", digestOf(profiledRequest), again = true)
+    assertEquals(1, transport.requestsTo(approve).size)
+    assertEquals(digestOf(profiledRequest), KiffClient.json.parseToJsonElement(String(transport.requestsTo(approve).single().body!!)).jsonObject["digest"]!!.jsonPrimitive.content)
+    assertNull(m.state.value.listApproval)
+    assertNull(m.state.value.connectedNow)
+  }
+
   /** KIFF's words can't be read: Sign in again says why, and nothing is approved. */
   @Test fun signInAgainWhoseWordsCantBeReadApprovesNothing() = runTest {
     reads()

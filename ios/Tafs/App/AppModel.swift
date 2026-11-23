@@ -1494,8 +1494,12 @@ final class AppModel: ObservableObject {
         var confirmation = ChromePairing.confirmation(secret: p.secret, chromeKey: chromeKey, name: name, phoneKey: phoneKey)
         // Replacing a Chrome ("Your Chrome" 1): the connections on it move, read again just now so the owner signs what is live,
         // and the fingerprint signs them inside the pairing the extension checks. With nothing chosen, nothing moves.
-        if let old {
+        if let picked = old {
+            // The Chrome's own list (planque's `connections`) and the grants (their signatures) are both read again, so what is carried
+            // is what is live now, never what the pick showed a while ago.
+            await refreshChromes()
             await refreshConnections()
+            let old = chromes?.first { $0.id == picked.id } ?? picked
             confirmation.replaces = old.id
             let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phoneKey)
             if !carried.isEmpty { confirmation.carried = carried }
@@ -1563,6 +1567,46 @@ final class AppModel: ObservableObject {
             return
         }
         await refreshChromes()
+    }
+
+    /// Moves a browser connection to another paired Chrome ("Your Chrome" 2): where planque offers the move, and its sites verify under
+    /// this phone's own signature, the phone signs those sites for that Chrome under one Face ID (`ChromePairing.switchBytes`), then planque's `PUT …/grants/{grant}/chrome` moves it. Its sites
+    /// and Card stay. Says why when it didn't go through (`chromesError`); true when planque moved it.
+    func switchChrome(_ grant: PlanqueClient.Grant, to chrome: PlanqueClient.Chrome) async -> Bool {
+        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant, ChromeSwitch.action(of: grant) != nil else { return false }
+        if approvalViewOnly { chromesError = approvalKeyLostWords; return false }
+        chromesError = nil
+        let signer = self.signer
+        // The sites signed again are the ones this phone's own signature verifies for the Chrome it uses now, never what planque says.
+        guard let sites = ChromeSwitch.signedSites(of: grant, phoneKey: signer.approvalPublicKeyDER) else {
+            chromesError = Words.Common.didntGoThrough(what: "\(Words.Chrome.switchPrompt(name: chrome.name))",
+                                                       why: "\(PlanqueClient.PlanqueError.digestMismatch.localizedDescription)")
+            return false
+        }
+        let gen = accountGeneration
+        let reason = Words.Chrome.switchPrompt(name: chrome.name)
+        let signature: String
+        do {
+            let der = try await signer.signApproval(try ChromePairing.switchBytes(to: chrome.id, grant: grant.id, sites: sites), reason: reason)
+            signature = try ChromePairing.rawSignature(fromDER: der)
+        } catch {
+            if gen == accountGeneration { chromesError = ApprovalReadiness.notDone(error, what: reason, unconfirmedWords: Words.Approval.cancelled) }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        do {
+            try await planque.switchChrome(grant: grant.id, to: chrome.id, sitesSignature: signature)
+        } catch {
+            chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            return false
+        }
+        chromesError = nil
+        await refreshChromes()
+        await refreshConnections()
+        return true
     }
 
     // MARK: Passkeys
@@ -2558,6 +2602,13 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return }
                 kiffAccount = account
                 offerTimeZone(account)
+            }
+            // KIFF says how this session approves (`approval_mode` in `GET /v1/me`): a view-only one is shown as such as
+            // soon as the account loads, not only once registering the approval key is refused. Only KIFF's word sets
+            // it; a new sign-in that approves clears it (`useSession`). As Android's `showAccount`.
+            if account?.viewOnly == true {
+                approvalKeyLost = true
+                approvalViewOnly = true
             }
             show(list, exceptions)
             // Your brief, read with the list: tafs cloud answering `/v1/brief` is what turns it on
@@ -3930,7 +3981,16 @@ final class AppModel: ObservableObject {
             // effort: the alert and the hold's expiry still continue it.
             let taf = cloudTaf(for: call.tafID)
             Task {
-                if let taf { _ = try? await cloud.continueHeld(taf.id, exception: kiffID) }
+                if let taf {
+                    do { _ = try await cloud.continueHeld(taf.id, exception: kiffID) }
+                    catch let refusal as TafsCloud.CloudError where refusal.status == 404 && refusal.code == "run_ended" {
+                        // The yes landed after the run that waited on the call had ended: nothing ran, and the owner is told so
+                        // (tafs cloud's words), with Retry on the message that run was for, never silence.
+                        runEndedAfterApproval(call.tafID, words: refusal.words)
+                    } catch {
+                        // Best effort, as before: the alert and the hold's expiry still continue it.
+                    }
+                }
                 await refresh()
             }
         }
@@ -4929,6 +4989,7 @@ final class AppModel: ObservableObject {
             let sw = try await cloud.beginSwitch(c.id, version: version.n, redraft: redraft, stopBlocking: stopBlocking)
             guard gen == accountGeneration else { return nil }
             switches[tafID] = sw
+            switchStopped(tafID, sw)
             staleVersionCards[tafID] = nil
             return sw
         } catch let error as TafsCloud.CloudError where error.status == 409 && !error.blocking.isEmpty {
@@ -5014,6 +5075,7 @@ final class AppModel: ObservableObject {
         }
         guard gen == accountGeneration else { return false }
         switches[tafID] = sw
+        switchStopped(tafID, sw)
         if let id = sw.draft {
             // Nothing shown, nothing signed.
             guard shownDraft != nil else { return false }
@@ -5366,6 +5428,7 @@ final class AppModel: ObservableObject {
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
             chatStates[tafID]?.askCoach = thread.askCoach
+            chatStates[tafID]?.runFailed = thread.failed
             // The thread is the source: tafs cloud says when the latest run stopped at a cap, and a
             // run at work, or one that answered since, is past it.
             chatStates[tafID]?.capped = thread.working == nil ? thread.capped?.stop : nil
@@ -5466,6 +5529,7 @@ final class AppModel: ObservableObject {
             return .notTried
         }
         chatStates[tafID, default: ChatState()].ended = nil
+        chatStates[tafID]?.endedRun = nil
         chatStates[tafID]?.wentThrough = []
         chatStates[tafID]?.failedWhy = nil
         chatStates[tafID]?.capped = nil
@@ -5685,6 +5749,12 @@ final class AppModel: ObservableObject {
         var unsent: [UnsentMessage] = []
         /// The taf's ask_coach cards, as its thread has them (kiff/tafs#476, gap 15).
         var askCoach: [TafsCloud.AskCoachCard] = []
+        /// The latest run ended without an answer, as the thread says (`failed`): tafs cloud's words,
+        /// the chat's last line. A later read with none clears it.
+        var runFailed: TafsCloud.RunFailed?
+        /// The run whose stream ended `failed` here (`ended`), as the stream named it; nil when it named none. The
+        /// thread's `failed` for that run isn't said again; another run's still is (Android's `ChatEnd.Failed.run`).
+        var endedRun: String?
         /// What waits in this chat to go once the taf is done: tafs cloud holds it
         /// (docs/chat.md, `hold`), and sends it as the person's next message. The app keeps no
         /// queue of its own.
@@ -5844,6 +5914,7 @@ final class AppModel: ObservableObject {
         if ended != nil { chatStates[tafID]?.awaiting = nil }
         if ended == "ERROR" {
             chatStates[tafID]?.ended = .failed(retry: text)
+            chatStates[tafID]?.endedRun = chatStates[tafID]?.live?.run
             chatStates[tafID]?.wentThrough = didBefore
             chatStates[tafID]?.failedWhy = whyFailed
         }
@@ -6060,10 +6131,42 @@ final class AppModel: ObservableObject {
         return calls.count == 1 ? Words.Chat.Failed.after(taf: "\(taf)", calls: list) : Words.Chat.Failed.afterSeveral(taf: "\(taf)", calls: list)
     }
 
+    /// The owner approved a held call after its run had ended (tafs cloud answered `run_ended`): nothing ran. The chat says so, in tafs
+    /// cloud's words, with Retry on the owner's last message (the same line as a run that failed part-way), and so does the screen
+    /// they answered on. Without a message to send again, only the words.
+    func runEndedAfterApproval(_ tafID: UUID, words: String?) {
+        guard let words, !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        lastError = words
+        guard let text = chats[tafID]?.last(where: { $0.from == .owner })?.text, !text.isEmpty else { return }
+        chatStates[tafID, default: ChatState()].awaiting = nil
+        chatStates[tafID]?.ended = .failed(retry: text)
+        chatStates[tafID]?.endedRun = nil
+        chatStates[tafID]?.wentThrough = []
+        chatStates[tafID]?.failedWhy = words
+    }
+
+    /// A switch stopped tasks that waited on the owner's answer (tafs cloud's `stopped`): the chat says so, in tafs cloud's words, with Retry
+    /// on the owner's last message of a stopped session (one tap, never by itself). A switch that stopped nothing waiting says nothing.
+    func switchStopped(_ tafID: UUID, _ sw: TafsCloud.Switching) {
+        guard !sw.stopped.isEmpty, let words = sw.stoppedWords, !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        lastError = words
+        let sessions = Set(sw.stopped.map(\.session))
+        let owner = (chats[tafID] ?? []).filter { $0.from == .owner }
+        // Only a message of a stopped session: with none loaded, the words alone, never another session's message (a message that
+        // already ran must not be sent twice).
+        guard let text = owner.last(where: { sessions.contains($0.session) })?.text, !text.isEmpty else { return }
+        chatStates[tafID, default: ChatState()].awaiting = nil
+        chatStates[tafID]?.ended = .failed(retry: text)
+        chatStates[tafID]?.endedRun = nil
+        chatStates[tafID]?.wentThrough = []
+        chatStates[tafID]?.failedWhy = words
+    }
+
     /// Retry on a run that failed part-way: its message is sent again.
     func retryChatRun(_ tafID: UUID) async {
         guard case .failed(let text) = chatStates[tafID]?.ended else { return }
         chatStates[tafID]?.ended = nil
+        chatStates[tafID]?.endedRun = nil
         await submitChat(text, to: tafID)
     }
 
@@ -6172,7 +6275,24 @@ final class AppModel: ObservableObject {
         // Each once, by id: the same message twice in a thread shows once.
         var seen = Set<String>()
         timeline = timeline.filter { seen.insert($0.id).inserted }
-        return Self.withheldUntilWords(Self.heldAfterItsWords(timeline), now: clock())
+        var shown = Self.withheldUntilWords(Self.heldAfterItsWords(timeline), now: clock())
+        if let failed = runFailedLine(state, tafID: tafID, after: shown) { shown.append(failed) }
+        return shown
+    }
+
+    /// A run that ended without an answer: tafs cloud's words (the thread's `failed`), as the taf's last line, after
+    /// everything else, held cards and their places included (docs/chat.md). As Android's `chatItems`:
+    /// - one refused line per run: a run followed live here already ended with its own, with Retry (`ended`), so the
+    ///   thread's line for that run isn't added; another run's still is. A stream that named no run is taken as this one;
+    /// - none while an answer streams, or while a new message is being sent (the old failure isn't its answer);
+    /// - a chat with nothing in it (a new chat) had no run here to fail.
+    /// Its `at` is the run's own place, a moment after the thread's last message, so its id stays the same as items come.
+    private func runFailedLine(_ state: ChatState, tafID: UUID, after shown: [ChatItem]) -> ChatItem? {
+        guard let failed = state.runFailed, state.live == nil, !chatSending.contains(tafID),
+              let last = (chats[tafID] ?? []).map(\.at).max() ?? shown.map(\.at).max() else { return nil }
+        if case .failed? = state.ended, state.endedRun == nil || state.endedRun == failed.run { return nil }
+        return .message(TafsCloud.ChatMessage(at: last.addingTimeInterval(0.001), from: .taf, text: failed.words,
+                                              session: "failed|" + failed.run))
     }
 
     /// How long a held call's card waits in the chat for the taf's words that explain it (the

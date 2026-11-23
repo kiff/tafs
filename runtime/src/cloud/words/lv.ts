@@ -16,6 +16,10 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const lv: Words = {
   work_working: "Darbojas",
   work_waiting_approval: "Gaida tavu apstiprinājumu",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "Šī palaišana jau bija beigusies, tāpēc nekas netika izdarīts.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Šīs versijas instalēšana apturēja to, kas gaidīja tavu atbildi: aizturētais zvans tika atsaukts, un ziņa netika izpildīta. Vari to nosūtīt vēlreiz.",
   your_step_title: "Tavs solis",
   your_step_done: "Gatavs",
   your_step_skip: "Izlaist",

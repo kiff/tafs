@@ -36,7 +36,11 @@ export async function ensureSubscription(pushManager, pushKey) {
   }
 }
 
-/** What the extension tells planque after its welcome: `{type: "push", subscription, sig}`, the sig over `{chrome_id, subscription}`. */
-export async function pushMessage(privateKey, chromeId, subscription) {
-  return { type: "push", subscription, sig: await sign(privateKey, LABEL.push, { chrome_id: chromeId, subscription }) };
+/**
+ * What the extension tells planque after its welcome: `{type: "push", subscription, sig}`, the sig this Chrome's key over
+ * `tafs-chrome/push/v1` and the subscription alone, exactly as sent (planque checks it over that JSON; the key is the Chrome's, so
+ * the signature is already this Chrome's).
+ */
+export async function pushMessage(privateKey, subscription) {
+  return { type: "push", subscription, sig: await sign(privateKey, LABEL.push, subscription) };
 }

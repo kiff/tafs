@@ -451,6 +451,11 @@ data class AppState(
   val drafts: Map<String, String> = emptyMap(),
   /** Cards whose answer tafs cloud took, before the thread has it: shown answered, never as open again. */
   val cardsTaken: Set<String> = emptySet(),
+  /**
+   * The Coach card answered last on this phone (its `ref`), as iOS's `setupAnsweredCard`: its answer starts Coach's next answer,
+   * so Coach's chat pins the card to the top, with the work and the answer under it, as a sent message is (docs/chat.md).
+   */
+  val coachAnsweredCard: String? = null,
   val cardErrors: Map<String, String> = emptyMap(),
   /** Coach's cards in its thread, folded. */
   val coachComponents: List<ShownComponent> = emptyList(),
@@ -523,6 +528,8 @@ data class AppState(
   val listApproval: String? = null,
   /** Whether that connection takes an API key, given on the sheet instead of a vendor's sign-in. */
   val listApprovalNeedsKey: Boolean = false,
+  /** The sheet is a Sign in again on a connection already made ([AppModel.startReconnect]): its Approve signs in again in place. */
+  val listApprovalAgain: Boolean = false,
   /**
    * The sheet's connection still isn't in planque's list a minute after it opened ([AppModel.followListApproval]): the sheet says
    * it couldn't be read, with Try again, never "Reading what it asks for…" for ever.
@@ -2140,7 +2147,7 @@ class AppModel(
         coachChat = null, coachFresh = true, coachImproving = null, coachContext = null, coachComponents = emptyList(), coachDrives = emptyList(), coachLines = emptyList(),
         chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatUnsent = s.chatUnsent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
         chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT, chatSteering = s.chatSteering - COACH_CHAT,
-        chatErrors = s.chatErrors - COACH_CHAT,
+        chatErrors = s.chatErrors - COACH_CHAT, coachAnsweredCard = null,
       )
     }
   }
@@ -2844,12 +2851,22 @@ class AppModel(
     if (followers[tafId]?.isActive == true) return
     followers[tafId] = scope.launch {
       val me = coroutineContext[kotlinx.coroutines.Job]
-      var polls = 0
-      // Every few seconds at first, then every quarter minute: a long run (a setup's hand-over, a slow turn) is followed to its end,
-      // so its last words show and "…" goes, never left as it was when the reads ran out.
-      while (polls < CHAT_POLL_BUDGET + CHAT_SLOW_POLL_BUDGET && (busy(tafId) || (handOver != null && handingOver(handOver)))) {
-        delay(if (polls < CHAT_POLL_BUDGET) CHAT_POLL_MS else CHAT_SLOW_POLL_MS)
-        polls += 1
+      var waited = 0L
+      var reads = 0
+      // Often at first, then less and less (`chatFollowDelay`), each wait a little shorter at random so phones don't read in step;
+      // nothing while the app is in the background, and one read at once when it comes back, so a run that ended while the phone
+      // was away shows as ended. A long run (a setup's hand-over, a slow turn) is followed to its end, so its last words show and
+      // "…" goes, never left as when the reads ran out.
+      while (waited < CHAT_FOLLOW_MS && (busy(tafId) || (handOver != null && handingOver(handOver)))) {
+        if (!foreground.value) {
+          foreground.first { it }
+        } else {
+          val wait = chatFollowDelay(waited, chatJitter())
+          delay(wait)
+          waited += wait
+          if (!foreground.value) continue
+        }
+        reads += 1
         readThread(tafId)
         // A run at work that this phone hasn't followed yet (one that went on with no stream open, as Coach's does once tafs cloud
         // answers its result): its stream, from the start, as when the chat opens. The stream takes over from these reads.
@@ -2862,9 +2879,15 @@ class AppModel(
       }
       // The run stopped: done, or waiting on a call KIFF held. KIFF is read again, so a hold's card shows in the chat and in
       // Needs you, and the Card's amounts are today's. (Until the chat follows its run's stream, as iOS's does.)
-      if (polls > 0) refresh()
+      if (reads > 0) refresh()
     }
   }
+
+  /** Whether the app is on screen: a chat's reads wait while it isn't ([wentToBackground], [cameToForeground]). */
+  private val foreground = kotlinx.coroutines.flow.MutableStateFlow(true)
+
+  /** A chat read's jitter, in [-1, 0]: each wait a little shorter at random, never longer. A test sets it. */
+  var chatJitter: () -> Double = { -kotlin.random.Random.nextDouble() }
 
   private fun busy(tafId: String): Boolean = _state.value.let { tafId in it.chatWorking || tafId in it.chatAwaiting }
 
@@ -3047,8 +3070,8 @@ class AppModel(
   }
 
   /**
-   * Signs in again to a connection its vendor signed out, from the taf's page: the same approval as Coach's card, behind one
-   * fingerprint, then the vendor's own page. Signed in only once planque answers connected.
+   * Signs in again to a connection, at once: the same approval as Coach's card, behind one fingerprint, then the vendor's own
+   * page. Signed in only once planque answers connected. The screens open the approval sheet first ([startReconnect]).
    */
   suspend fun reconnect(grant: Grant) { signInAgain(grant) }
 
@@ -4336,13 +4359,16 @@ class AppModel(
    * gets both under one `kiff.requests.v1` signature ([confirmChromeOneTouch]); an older one gets the two prompts. False when it didn't go through.
    */
   /**
-   * The sites that move when [old] is replaced, as the owner reads them before the fingerprint: each connection this phone signed
-   * for [old], checked with its own key ([bot.tafs.app.kiff.ChromePairing.carriedFrom]), the same list [confirmChrome] signs.
+   * The connections that move when [old] is replaced, as the owner reads them before the fingerprint: each this phone signed for
+   * [old], checked with its own key ([bot.tafs.app.kiff.ChromePairing.carriedFrom]). [confirmChrome] signs this list and no other.
    */
-  fun chromeMoves(old: bot.tafs.app.kiff.Chrome): List<String> =
-    bot.tafs.app.kiff.ChromePairing.carriedFrom(old, _state.value.grants, signer.approvalPublicKeyDER).flatMap { it.sites }.distinct()
+  fun chromeMoves(old: bot.tafs.app.kiff.Chrome): List<bot.tafs.app.kiff.ChromePairing.Carried> =
+    bot.tafs.app.kiff.ChromePairing.carriedFrom(old, _state.value.grants, signer.approvalPublicKeyDER)
 
-  suspend fun confirmChrome(p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String, replaces: bot.tafs.app.kiff.Chrome? = null): Boolean {
+  suspend fun confirmChrome(
+    p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String,
+    replaces: bot.tafs.app.kiff.Chrome? = null, shown: List<bot.tafs.app.kiff.ChromePairing.Carried> = emptyList(),
+  ): Boolean {
     val pairing = bot.tafs.app.kiff.ChromePairing
     val chromeKey = pairing.base64UrlDecoded(offer.key) ?: return false
     if (!pairing.extensionProofHolds(p.secret, chromeKey, offer.proof, offer.kiffOffer)) return false
@@ -4356,8 +4382,20 @@ class AppModel(
     val generation = accountGeneration
     val name = pairing.name(typed, Words.Chrome.browserOn(browser = offer.browser, system = offer.os))
     // A re-pairing (docs/chrome.md "Your Chrome" 1): the connections that move are those this phone signed for the replaced
-    // Chrome, checked with its own key; they go inside the pairing the extension checks, so planque can't change them.
-    val carried = replaces?.let { pairing.carriedFrom(it, _state.value.grants, phoneKey) }.orEmpty()
+    // Chrome, checked with its own key; they go inside the pairing the extension checks, so planque can't change them. Read
+    // again just now, as iOS does, so what's signed is live; and signed only if it's what the owner was shown. If it changed
+    // (a connection ended, the Chrome went), nothing is signed, and the sheet says so over the new list, to pair again on. A
+    // read that failed signs nothing either, with its own line: the list it would sign is no longer known to be live.
+    val changed = { false.also { _state.update { it.copy(chromesError = Words.Chrome.replaceChanged) } } }
+    val old = replaces?.let { r ->
+      refreshChromes()
+      if (_state.value.chromesError != null) return false
+      refreshConnections()
+      _state.value.connectionsError?.let { why -> return false.also { _state.update { it.copy(chromesError = Words.Chrome.notLoaded(why = why)) } } }
+      _state.value.chromes?.firstOrNull { it.id == r.id } ?: return changed()
+    }
+    val carried = old?.let { pairing.carriedFrom(it, _state.value.grants, phoneKey) }.orEmpty()
+    if (old != null && carried != shown) return changed()
     val confirmation = pairing.confirmation(p.secret, chromeKey, name, phoneKey).copy(carried = carried)
     val reason = Words.Chrome.pairPrompt(name = name)
     // One fingerprint for both acts where the extension checks it (docs/chrome.md "Your Chrome" 5): the pairing it verifies and
@@ -4473,6 +4511,48 @@ class AppModel(
       approvalReason = Words.Approval.Prompt.approveOnKiff
     }
     return generation == accountGeneration
+  }
+
+  /**
+   * Moves [grant] to [to] ("Your Chrome" 2), where planque offers `use_another_chrome`: the sites this phone signed for it
+   * ([bot.tafs.app.kiff.ChromePairing.signedSites], never planque's list as given) are signed for [to] with the approval key
+   * behind one fingerprint naming that Chrome, then planque moves it, and the connections and Chromes are read again. False when
+   * it didn't go through, with the line saying why.
+   */
+  suspend fun switchChrome(grant: bot.tafs.app.kiff.Grant, to: bot.tafs.app.kiff.Chrome): Boolean {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) return false
+    val pairing = bot.tafs.app.kiff.ChromePairing
+    val prompt = Words.Chrome.switchPrompt(name = to.name)
+    val sites = pairing.signedSites(grant, signer.approvalPublicKeyDER)
+      ?: return false.also { fail(Words.Common.didntGoThrough(what = prompt, why = ErrorWords.of(bot.tafs.app.kiff.PlanqueError.DigestMismatch))) }
+    val generation = accountGeneration
+    val sig = try {
+      val der = signer.signCritical(prompt) { pairing.sitesBytes(to.id, grant.id, sites) }
+      pairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: SignerException) {
+      return false
+    }
+    if (generation != accountGeneration) return false
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    planque.signer = { signer.signConfirmed(it) }
+    try {
+      planque.switchChrome(grant.id, to.id, sig)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      fail(Words.Common.didntGoThrough(what = prompt, why = ErrorWords.of(e)))
+      return false
+    } finally {
+      planque.signer = null
+    }
+    refreshConnections()
+    refreshChromes()
+    return true
   }
 
   /** Unpairs a Chrome: planque deletes its key at once. It takes power away, so this phone's own signature is enough. */
@@ -4939,7 +5019,7 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || _state.value.startingApp != null) return
     if (app.needsReconnect && app.grant != null) {
       refreshConnections()
-      _state.update { it.copy(listApproval = app.grant, listApprovalNeedsKey = false) }
+      _state.update { it.copy(listApproval = app.grant, listApprovalNeedsKey = false, listApprovalAgain = false) }
       followListApproval()
       return
     }
@@ -4953,7 +5033,7 @@ class AppModel(
       if (generation != accountGeneration) return
       refreshConnections()
       if (generation == accountGeneration) {
-        _state.update { it.copy(listApproval = started.grant, listApprovalNeedsKey = started.needsKey) }
+        _state.update { it.copy(listApproval = started.grant, listApprovalNeedsKey = started.needsKey, listApprovalAgain = false) }
         followListApproval()
       }
     } catch (e: CancellationException) {
@@ -4970,7 +5050,8 @@ class AppModel(
   /** Approve on the sheet over Connect apps: the same as Coach's card (KIFF's words, the signature, the vendor's sign-in), then the list again. */
   fun startListApproval(grantId: String, shownDigest: String) {
     listApprovalJob?.cancel()
-    listApprovalJob = scope.launch { restartable({ startListApproval(grantId, shownDigest) }) { approveFromList(grantId, shownDigest) } }
+    val again = _state.value.listApprovalAgain && _state.value.listApproval == grantId
+    listApprovalJob = scope.launch { restartable({ startListApproval(grantId, shownDigest) }) { approveFromList(grantId, shownDigest, again) } }
   }
 
   /** The approval the sheet over Connect apps started, while it runs: "Not now" ends it, and with it the vendor's wait. */
@@ -5036,23 +5117,24 @@ class AppModel(
   }
 
   /** The approval from Connect apps, run to its end: then what came of it is said at once, and the list read again. */
-  suspend fun approveFromList(grantId: String, shownDigest: String) {
+  suspend fun approveFromList(grantId: String, shownDigest: String, again: Boolean = false) {
     val watch = scope.launch { watchListSignIn(grantId) }
     try {
-      approveFromListOnce(grantId, shownDigest)
+      approveFromListOnce(grantId, shownDigest, again)
     } finally {
       watch.cancel()
     }
   }
 
-  private suspend fun approveFromListOnce(grantId: String, shownDigest: String) {
+  private suspend fun approveFromListOnce(grantId: String, shownDigest: String, again: Boolean) {
     run {
-      when (val result = connect(ConnectWords.cardKey(grantId), grantId, shownDigest)) {
+      when (val result = connect(ConnectWords.cardKey(grantId), grantId, shownDigest, again = again)) {
         is Connected.Done, is Connected.AlreadyApproved -> {
           note(ConnectWords.cardKey(grantId), null)
           // Said at once: signed in, and what comes next, as planque says the grant is now.
           val done = (result as? Connected.Done)?.grant
-          _state.update { it.copy(listApproval = null, connectedNow = done?.takeIf { g -> g.listed || g.connected }) }
+          // A sign-in again keeps the connection it had: no "connected now" to choose its actions again.
+          _state.update { it.copy(listApproval = null, listApprovalAgain = false, connectedNow = done?.takeIf { g -> !again && (g.listed || g.connected) }) }
           loadConnectApps()
         }
         is Connected.Failed -> note(ConnectWords.cardKey(grantId), result.why)
@@ -5073,7 +5155,7 @@ class AppModel(
     listApprovalJob = null
     listFollow?.cancel()
     listFollow = null
-    _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, listApprovalNotRead = false, keyForCard = null, keyReceipt = null) }
+    _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, listApprovalAgain = false, listApprovalNotRead = false, keyForCard = null, keyReceipt = null) }
   }
 
   /** The secure sheet's words for [grantId], read from tafs cloud when the key sheet opens, once per grant. */
@@ -5109,6 +5191,7 @@ class AppModel(
 
   /** The sheet open on [call], and tafs cloud's offer read: true when it's what was offered and can be signed. */
   suspend fun openAllowNow(call: HeldCall): Boolean {
+    if (!bot.tafs.app.model.HoldAllow.allowable(call)) return false
     _state.update { it.copy(allow = AllowSheetState(call, busy = true)) }
     return loadAllow(round = false)
   }
@@ -5222,7 +5305,7 @@ class AppModel(
    */
   fun openCardKeySheet(c: SetupComponent, shownDraft: String?) {
     val grant = c.grant ?: return
-    _state.update { it.copy(listApproval = grant, listApprovalNeedsKey = true, keyForCard = KeyForCard(c, shownDraft)) }
+    _state.update { it.copy(listApproval = grant, listApprovalNeedsKey = true, listApprovalAgain = false, keyForCard = KeyForCard(c, shownDraft)) }
     followListApproval()
   }
 
@@ -5231,7 +5314,7 @@ class AppModel(
    * key as for a first one; a grant it won't take a key for now says why there.
    */
   fun openReplaceKey(grant: bot.tafs.app.kiff.Grant) {
-    if (grant.takesKey) _state.update { it.copy(listApproval = grant.id, listApprovalNeedsKey = true) }
+    if (grant.takesKey) _state.update { it.copy(listApproval = grant.id, listApprovalNeedsKey = true, listApprovalAgain = false) }
   }
 
   /** Give the key on the sheet over Connect apps, run by the model as an approval is; then the list again. */
@@ -5655,8 +5738,16 @@ class AppModel(
     }
   }
 
+  /**
+   * Sign in again on a connection (a row's, a taf's): the approval sheet first, as Coach's card and a new connection have it.
+   * planque's words for the connection as it is now, KIFF's words, then Approve. Only Approve's fingerprint signs, and it signs
+   * the digest the sheet drew: a request that changed after it was shown (more tools) signs nothing and is shown again.
+   */
   fun startReconnect(grant: Grant) {
-    scope.launch { reconnect(grant) }
+    // A provider's connection is disconnected and connected again instead: planque would refuse, so nothing is asked.
+    if (grant.signsInThroughProvider) { note(grant.id, bot.tafs.app.model.ConnectionWords.throughProvider(grant)); return }
+    listApprovalJob?.cancel()
+    _state.update { it.copy(listApproval = grant.id, listApprovalNeedsKey = false, listApprovalAgain = true, listApprovalNotRead = false) }
   }
 
   fun startConnectAgain(tafId: String) {
@@ -6020,6 +6111,7 @@ class AppModel(
    * Back sooner, it stays.
    */
   fun wentToBackground() {
+    foreground.value = false
     if (kiff.window == null) return
     windowClosing?.cancel()
     windowClosing = scope.launch {
@@ -6030,6 +6122,7 @@ class AppModel(
 
   /** Back on screen: a close waiting on the background is called off, and KIFF's words read again. */
   fun cameToForeground() {
+    foreground.value = true
     windowClosing?.cancel()
     windowClosing = null
     if (kiff.window != null) scope.launch { readWindowWords() }
@@ -6652,8 +6745,9 @@ class AppModel(
       _state.update { it.copy(cardsAnswering = it.cardsAnswering - key) }
     }
     if (generation != accountGeneration) return false
-    // Taken: the card shows it's answered at once, until the thread's words for it come.
-    _state.update { it.copy(cardsTaken = it.cardsTaken + key) }
+    // Taken: the card shows it's answered at once, until the thread's words for it come. In Coach's chat it takes the pin, since its
+    // answer starts Coach's next answer.
+    _state.update { it.copy(cardsTaken = it.cardsTaken + key, coachAnsweredCard = if (coach) key else it.coachAnsweredCard) }
     if (coach) answered.session?.let { if (_state.value.coachChat == null) settleCoachChat(it) }
     // Coach or the taf is at work again: it reads as thinking until its run is followed, and the run's end reads the thread again.
     _state.update { it.copy(chatAwaiting = it.chatAwaiting + (chat to clock()), chatEnded = it.chatEnded - chat) }
@@ -6822,7 +6916,13 @@ class AppModel(
     fun current() = generation == accountGeneration && (tafId != COACH_CHAT || coachToken == coachGeneration)
     val pending = ChatMessage(nextStamp(tafId), ChatMessage.From.owner, words, "pending", attachments = refs)
     append(tafId, pending)
-    _state.update { it.copy(chatSent = it.chatSent + (tafId to (it.chatSent[tafId].orEmpty() + pending)), chatEnded = it.chatEnded - tafId) }
+    // A message sent to Coach takes the pin itself: the card answered before no longer does, as iOS sets it again on each send.
+    _state.update {
+      it.copy(
+        chatSent = it.chatSent + (tafId to (it.chatSent[tafId].orEmpty() + pending)), chatEnded = it.chatEnded - tafId,
+        coachAnsweredCard = if (tafId == COACH_CHAT) null else it.coachAnsweredCard,
+      )
+    }
     var streamed: kotlinx.coroutines.flow.Flow<StreamEvent>? = null
     try {
       if (isTrialChat(tafId)) {
@@ -7082,8 +7182,9 @@ class AppModel(
       // quiet for many minutes) shows as ended, never as "…" (readThread closes the stream then).
       val check = launch {
         while (true) {
-          delay(STREAM_CHECK_MS)
-          if (current()) readThread(tafId)
+          // Back from the background: read once at once (the stream may have gone quiet meanwhile), then every STREAM_CHECK_MS.
+          if (!foreground.value) foreground.first { it } else delay(STREAM_CHECK_MS)
+          if (current() && foreground.value) readThread(tafId)
         }
       }
       var ended: StreamEvent.End? = null
@@ -7427,6 +7528,15 @@ class AppModel(
       return false
     }
     val kiffId = call.kiffId
+    // A sealed fill is allowed only with its release, made here behind its own fingerprint: never with the switch off, from a
+    // notification's action or an approval window's tap (presigned), or by any other way round. Refusing it is always open.
+    // Extra room would let it go on with no release at all, so it's never offered for one.
+    if (call.needsRelease && (answer is Answer.ExtraRoom ||
+        answer is Answer.ApproveOnce && (call.browser?.fill == null || !sealedReleaseOn || kiffId == null || presigned != null || confirmed || installed || approvedWithCard))
+    ) {
+      fail(Words.Chrome.releaseUnreadable)
+      return false
+    }
     if (approvedWithCard && kiffId != null) {
       // KIFF holds the answer already: the Record says so, and the paused run goes on.
       applyAnswer(call, answer, null)
@@ -7454,9 +7564,20 @@ class AppModel(
       fail(KiffClient.APPROVAL_KEY_LOST)
       return false
     }
+    // A sealed fill (docs/chrome.md, "The phone's release card"): the release first, behind its own fingerprint, then the hold's
+    // answer behind another (Android's approval key unlocks for one signature each). Nothing is sent unless both are signed.
+    val fill = call.browser?.fill?.takeIf { answer is Answer.ApproveOnce }
+    val release = if (fill == null) null else when (val made = release(call, fill)) {
+      null -> return false
+      else -> made
+    }
     val generation = accountGeneration
     val answered = try {
-      presigned ?: signAnswer(call, answer, Words.NeedsYou.Prompt.answer(summary = call.proposed.summary), confirmed)
+      presigned ?: signAnswer(
+        call, answer,
+        if (release != null) Words.Chrome.releasePromptAllow(site = call.browser?.site.orEmpty()) else Words.NeedsYou.Prompt.answer(summary = call.proposed.summary),
+        confirmed,
+      )
     } catch (e: SignerException) {
       // Nothing was sent, so the hold stays where it was; say so after why (requirement: a clear outcome, the request kept). A
       // closed prompt's line already says the request is kept.
@@ -7474,7 +7595,7 @@ class AppModel(
     if (kiffId != null) {
       try {
         when (answer) {
-          Answer.ApproveOnce -> kiff.approveOnce(kiffId, signed)
+          Answer.ApproveOnce -> kiff.approveOnce(kiffId, signed, release)
           Answer.Refuse -> kiff.reject(kiffId, null, signed)
           is Answer.NextStep -> kiff.reject(kiffId, answer.step, signed)
           Answer.ExtraRoom -> kiff.changeCard(kiffId, signed)
@@ -7500,6 +7621,44 @@ class AppModel(
       refresh()
     }
     return true
+  }
+
+  /**
+   * The release card's switch ([SealedRelease.ENABLED]): off until planque holds a sealed fill. Tests turn it on to check the
+   * card's two signatures; nothing else does.
+   */
+  internal var sealedReleaseOn: Boolean = bot.tafs.app.kiff.SealedRelease.ENABLED
+
+  /** Why the phone won't sign [call]'s release, by its own checks; null where it may, or where the call isn't a sealed fill. */
+  fun fillRefusal(call: HeldCall): bot.tafs.app.kiff.SealedRelease.Refusal? {
+    val fill = call.browser?.fill ?: return null
+    return bot.tafs.app.kiff.SealedRelease.refusal(fill, pairedChromes(), signer.approvalPublicKeyDER, clock().toEpochMilli())
+  }
+
+  private fun pairedChromes(): Set<String> = _state.value.chromes.orEmpty().map { it.id }.toSet()
+
+  /**
+   * The release for a sealed fill, behind the approval key's own fingerprint, whose prompt says which part goes to which site.
+   * Null when the phone's checks refuse it or the owner didn't confirm: the card then says why, and nothing is sent.
+   */
+  private suspend fun release(call: HeldCall, fill: bot.tafs.app.kiff.SealedRelease.Fill): bot.tafs.app.kiff.SealedRelease.Release? {
+    val r = bot.tafs.app.kiff.SealedRelease
+    fillRefusal(call)?.let { refused ->
+      fail(r.refusalWords(refused) ?: Words.NeedsYou.expiredLine)
+      return null
+    }
+    val part = r.part(fill.sealed) ?: return null
+    return try {
+      r.release(fill, pairedChromes(), signer.approvalPublicKeyDER, clock().toEpochMilli(), clock = { clock().toEpochMilli() }) { built ->
+        signer.signCritical(r.prompt(part, call.browser?.site.orEmpty()), built)
+      } ?: run { fail(Words.Chrome.releaseUnreadable); null }
+    } catch (e: SignerException) {
+      fail(
+        if (e is bot.tafs.app.signing.PromptClosed) Words.Approval.cancelledNothingApprovedRequestKept
+        else "${notSigned(e, Words.Common.notSentUnconfirmed)} ${bot.tafs.app.model.ApprovalWords.KEPT}",
+      )
+      null
+    }
   }
 
   /** An answer to a held call, signed: [value] for the Record, and [kiff] what KIFF checks, for a call KIFF holds. */
@@ -7556,15 +7715,41 @@ class AppModel(
     val generation = accountGeneration
     _state.update { it.copy(chatAwaiting = it.chatAwaiting + (tafId to clock())) }
     scope.launch {
+      var runEnded: String? = null
       try {
         cloud.continueHeld(cloudId, kiffId)
       } catch (e: CancellationException) {
         throw e
+      } catch (e: bot.tafs.app.kiff.CloudError) {
+        // The yes landed after the run that waited on the call had ended: nothing ran, and the owner is told so in tafs cloud's
+        // words, never silence. Any other refusal stays best effort: the alert and the hold's expiry still continue it.
+        if (e.status == 404 && e.code == "run_ended") runEnded = e.words?.takeIf { it.isNotBlank() }
       } catch (_: Exception) {
       }
       if (generation != accountGeneration) return@launch
+      if (runEnded != null) {
+        runEndedAfterApproval(tafId, runEnded)
+        readThread(tafId)
+        return@launch
+      }
       readThread(tafId)
       followChat(tafId)
+    }
+  }
+
+  /**
+   * The owner approved a held call after its run had ended (tafs cloud answered `run_ended`): nothing ran. The chat ends as a run
+   * that failed part-way does, in tafs cloud's [words], with Retry on the owner's last message, and nothing shows as working; the
+   * screen they answered on says it too. Without a message to send again, only the words.
+   */
+  internal fun runEndedAfterApproval(tafId: String, words: String) {
+    val retry = _state.value.chats[tafId]?.lastOrNull { it.from == ChatMessage.From.owner }?.text?.takeIf { it.isNotBlank() }
+    _state.update { s ->
+      s.copy(
+        lastError = words,
+        chatAwaiting = s.chatAwaiting - tafId,
+        chatEnded = if (retry != null) s.chatEnded + (tafId to ChatEnd.Failed(retry, emptyList(), words)) else s.chatEnded,
+      )
     }
   }
 
@@ -7653,6 +7838,25 @@ class AppModel(
   }
 
   /**
+   * A switch that stopped a task waiting on the owner's answer (`stop_blocking`; the owner's panel test, 23 Nov): said in tafs
+   * cloud's words, and the chat ends as a run that didn't go through, with Run again on the owner's last message of a stopped
+   * session (one tap, never by itself). Nothing when nothing waiting was stopped.
+   */
+  internal fun switchStopped(tafId: String, begun: bot.tafs.app.kiff.SwitchResponse) {
+    val words = begun.words?.takeIf { it.isNotBlank() } ?: return
+    if (begun.stopped.isEmpty()) return
+    val sessions = begun.stopped.map { it.session }.toSet()
+    val retry = _state.value.chats[tafId]?.lastOrNull { it.from == ChatMessage.From.owner && it.session in sessions }?.text?.takeIf { it.isNotBlank() }
+    _state.update { s ->
+      s.copy(
+        lastError = words,
+        chatAwaiting = s.chatAwaiting - tafId,
+        chatEnded = if (retry != null) s.chatEnded + (tafId to ChatEnd.Failed(retry, emptyList(), words)) else s.chatEnded,
+      )
+    }
+  }
+
+  /**
    * Begins the switch to a version: tafs cloud prepares the Card draft it waits for, which the owner then reads, and
    * from here nothing of the taf runs. With [redraft], its Cards are drafted again. Null, with the reason in
    * [AppState.versionErrors], when it can't begin; a run in the way is named, with the one step that clears it.
@@ -7664,9 +7868,13 @@ class AppModel(
     versionError(tafId, null)
     _state.update { it.copy(blockedInstalls = it.blockedInstalls - tafId) }
     return try {
-      cloud.beginSwitch(cloudId, version.n, redraft, stopBlocking).also { sw ->
-        if (generation == accountGeneration) _state.update { it.copy(switches = it.switches + (tafId to sw), staleVersionCards = it.staleVersionCards - tafId) }
-      }.takeIf { generation == accountGeneration }
+      cloud.beginSwitch(cloudId, version.n, redraft, stopBlocking).let { begun ->
+        if (generation != accountGeneration) return null
+        val sw = begun.switching
+        _state.update { it.copy(switches = it.switches + (tafId to sw), staleVersionCards = it.staleVersionCards - tafId) }
+        switchStopped(tafId, begun)
+        sw
+      }
     } catch (e: CancellationException) {
       throw e
     } catch (e: CloudError) {
@@ -7774,7 +7982,7 @@ class AppModel(
 
     // Begun before any Card changes, with the draft tafs cloud prepared: from here nothing of the taf runs. Again for
     // a switch under way is the same switch.
-    val sw = try {
+    val begun = try {
       cloud.beginSwitch(cloudId, version.n, stopBlocking = stopBlocking)
     } catch (e: CancellationException) {
       throw e
@@ -7783,7 +7991,9 @@ class AppModel(
       return false
     }
     if (generation != accountGeneration) return false
+    val sw = begun.switching
     _state.update { it.copy(switches = it.switches + (tafId to sw)) }
+    switchStopped(tafId, begun)
 
     var draft: AgentDraft? = null
     if (sw.draft != null) {
@@ -9635,6 +9845,25 @@ class AppModel(
     /** After the fast reads, one every [CHAT_SLOW_POLL_MS] while the run still works: about 25 minutes more. */
     const val CHAT_SLOW_POLL_MS = 15_000L
     const val CHAT_SLOW_POLL_BUDGET = 100
+
+    /** How long a run is followed by reads in all, waits counted: as long as before (about 31 minutes). */
+    const val CHAT_FOLLOW_MS = CHAT_POLL_MS * CHAT_POLL_BUDGET + CHAT_SLOW_POLL_MS * CHAT_SLOW_POLL_BUDGET
+
+    /**
+     * The wait before a chat's next read, [waited] ms into following it, as docs/scale.md asks of every client (back off, with
+     * jitter): every [CHAT_POLL_MS] for the first minute, when a reply most often comes; then 5 s to the third minute, 10 s to the
+     * sixth, and [CHAT_SLOW_POLL_MS] after. [jitter] in [-1, 0] takes up to a fifth off, so phones don't read in step; never more
+     * than the step, so a reply is never later than before.
+     */
+    fun chatFollowDelay(waited: Long, jitter: Double): Long {
+      val step = when {
+        waited < 60_000L -> CHAT_POLL_MS
+        waited < 180_000L -> 5_000L
+        waited < 360_000L -> 10_000L
+        else -> CHAT_SLOW_POLL_MS
+      }
+      return (step * (1.0 + 0.2 * jitter.coerceIn(-1.0, 0.0))).toLong()
+    }
 
     /**
      * Whether the run still waits on its person after this live line: `waiting_for_you` (a card that waits on them, or a held

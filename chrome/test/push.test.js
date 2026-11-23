@@ -37,14 +37,15 @@ test("the subscription is the one the extension has, else a new silent one, and 
   assert.equal(await ensureSubscription({ getSubscription: async () => null, subscribe: async () => { throw new Error("push service unreachable"); } }, VAPID), null, "Chrome refusing is not an error");
 });
 
-test("the message to planque is signed by this Chrome's key over its id and the subscription", async () => {
+test("the message to planque is signed by this Chrome's key over the subscription", async () => {
   const ext = await newKeyPair();
-  const m = await pushMessage(ext.privateKey, "chr_1", SUB);
+  const m = await pushMessage(ext.privateKey, SUB);
   assert.equal(m.type, "push");
   assert.deepEqual(m.subscription, SUB);
   const key = b64u(await publicSPKI(ext.publicKey));
-  assert.equal(await verify(key, LABEL.push, { chrome_id: "chr_1", subscription: SUB }, m.sig), true);
-  assert.equal(await verify(key, LABEL.push, { chrome_id: "chr_2", subscription: SUB }, m.sig), false, "another Chrome's");
-  assert.equal(await verify(key, LABEL.push, { chrome_id: "chr_1", subscription: { ...SUB, endpoint: "https://evil.example/p" } }, m.sig), false, "another endpoint");
-  assert.equal(await verify(key, LABEL.step, { chrome_id: "chr_1", subscription: SUB }, m.sig), false, "another purpose");
+  assert.equal(await verify(key, LABEL.push, SUB, m.sig), true, "over the subscription alone, as planque checks it");
+  const other = await newKeyPair();
+  assert.equal(await verify(b64u(await publicSPKI(other.publicKey)), LABEL.push, SUB, m.sig), false, "another Chrome's key");
+  assert.equal(await verify(key, LABEL.push, { ...SUB, endpoint: "https://evil.example/p" }, m.sig), false, "another endpoint");
+  assert.equal(await verify(key, LABEL.step, SUB, m.sig), false, "another purpose");
 });

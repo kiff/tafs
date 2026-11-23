@@ -403,6 +403,7 @@ fun RootView(model: AppModel) {
         },
         bot.tafs.app.views.LocalYourStepActions provides remember(model) { bot.tafs.app.views.YourStepActions(answer = model::answerYourStep) },
         bot.tafs.app.views.LocalAllowHold provides (if (state.mode == Mode.kiff && state.canManageCards) model::openAllow else null),
+        bot.tafs.app.views.LocalFillRefusal provides model::fillRefusal,
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,
@@ -1094,6 +1095,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         // Gap 13: a new key on the key sheet over the list, or a sign-in again, each behind the fingerprint.
         onReplaceKey = if (state.canManageCards) model::openReplaceKey else null,
         onSignInAgain = if (state.canManageCards) model::startReconnect else null,
+        // "Your Chrome" 2: planque's action moves a connection to another paired Chrome, behind the fingerprint.
+        onUseAnotherChrome = if (state.canManageCards) ({ g, c -> model.switchChrome(g, c) }) else null,
         onConnectedNow = { grant -> model.dismissConnectedNow(); showingConnectApps = false; model.improveInCoach(grant.request.agent) },
         dismissConnectedNow = model::dismissConnectedNow,
       )

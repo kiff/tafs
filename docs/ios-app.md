@@ -105,6 +105,14 @@ counted from the record ("From the record: 5 done · 1 refused"). Each is drawn 
 `delivered` above the taf's words and `counted` under them. A blank one is none, and with none sent
 nothing is drawn: the phone counts nothing itself. Only a taf's message draws them.
 
+**A run that ended without an answer** (`TafsCloud.RunFailed`, the thread's `failed: {run, code?, words}`: the
+model unreachable or out of funds, `ai_unavailable`, or an uncoded `ERROR`) is a taf's chat's last line, in tafs cloud's
+words, as Android's ([android-app.md](android-app.md)). A later read with none clears it; one with no words, or of another
+shape, is no line, and a new chat with nothing in it shows none. It comes after everything else, held cards included,
+and not while an answer streams or a new message is being sent. A run followed live here already ended with its own line
+and Retry (`ChatState.ended`, `endedRun`), so the thread's line for that run isn't added too; another run's still is. `ChatTests` reads tafs cloud's own answer,
+`contracts/conversation-failed.json`. Coach's chat doesn't draw it yet.
+
 **A connection that was refused** (`TafsCloud.ChatMessage.refusedLines`, `RefusedLines`): a taf's message
 may carry tafs cloud's `refused` ([chat.md](chat.md)), the failed step's words, the server's reason ("Why:
 …") and what to do next. They're drawn under the taf's words and under `counted`, never folded into its
@@ -361,8 +369,9 @@ the app in sample mode.
   screens, Account and Alerts, dark on iPhone and iPad, and the iPad in landscape (the iPhone
   is portrait only).
 - **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
-  `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
-  (`POST /v1/profiles/words`) and checked against the profile's digest and their own before
+  `kiff.profile.v1` shows KIFF's words for it, read with the person's session
+  (`POST /v1/profiles/words?v=2`: `kiff.words.v2`, v1's lines less KIFF's bookkeeping; v1 or v2 is taken and
+  signed as KIFF sent it, as on Android) and checked against the profile's digest and their own before
   they're shown, verbatim and in order. Approving signs both digests into planque's approve
   body (`kiff_profile`). The tests use KIFF's vectors in `TafsTests/ProfileVectors/`.
 - **The Slack door** (`SlackDoorSheet`, from Add a door… in Setup › Starts when): the taf's Slack bot
@@ -588,10 +597,14 @@ A connected app (“Connected ✓”) opens its connections (`AppConnectionsView
 KIFF's draft has one Card per tool, so a new taf's approval drew "A new Card" three or five times for
 what the owner approves as one. As on Android, `DraftCardsView` (in `Views/TafDetailView.swift`, used
 by a version's sheet and a trial) draws the draft's new Cards (no `current`) as one panel, "A new
-Card", with every new Card's lines under it, each once, in the draft's order, where the first new Card
-is (`DraftCardsView.shown`). A Card the draft changes, or keeps unchanged, keeps its own panel and
-place, and the Cards it removes follow, as before. Test:
-`VersionsTests.testADraftsNewCardsShowAsOneAndAChangedCardAlone`.
+Card", with every new Card's lines under it, in the draft's order, where the first new Card
+is (`DraftCardsView.shown`). **Each Card's lines stay together, and only a whole Card exactly like an
+earlier one is shown once.** A single line is never dropped for being on an earlier Card: a Card's
+total names no tool ("20 calls a day"), so two Cards with the same total each show it after their own
+tool, and the owner never reads less than they sign (qa-kiff, 23 Nov). A Card the draft changes, or
+keeps unchanged, keeps its own panel and place, and the Cards it removes follow, as before. Tests:
+`VersionsTests.testADraftsNewCardsShowAsOneAndAChangedCardAlone`,
+`VersionsTests.testANewCardsTotalIsShownForEachCardThatHasIt`.
 
 ## Home's line
 
@@ -1229,7 +1242,9 @@ other". planque's own `words` on a refusal (`PlanqueClient.refusal`), its line f
 first and are shown as they are: a sign-in to another account says so, never "changed meanwhile", which read as "try
 again". A connect planque ended failed (409 `code: connect_failed`, planque#329) with no `words` reads as not working
 on our side, never as its 409's "changed meanwhile": its `error` is the reason for Coach (`PlanqueClient.connectFailed`,
-as Android's `ErrorWords.CONNECT_FAILED`). KIFF's refusal of a new sign-in from where it isn't offered (403, `code: region_unsupported`) is
+as Android's `ErrorWords.CONNECT_FAILED`). A vendor refusing planque's client (502 `code: vendor_refused_client`) is said in
+planque's `error`, since it says whose it is ("… doesn't allow tafs to sign in yet"), when no `words` come
+(`PlanqueClient.wordedCodes`, as Android's `ErrorWords.PLANQUE_WORDED`). KIFF's refusal of a new sign-in from where it isn't offered (403, `code: region_unsupported`) is
 shown in KIFF's words too (`KIFFError.regionUnsupported`): its `message`, in the app's language, as the welcome and the
 sign-in sheet's line, with nothing that says to try again. The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
 drive's diagnostics.
@@ -1398,10 +1413,23 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
 
 "Your Chrome" ([chrome.md](chrome.md)): under each paired Chrome, Account › Chrome says which sites its connections are used for
 ("Used for wikipedia.org"), and Unpair says what it ends before it asks ("Unpairing ends the connections that use it: …. They
-come back only when you connect them again."). The connections are planque's grants for the extension (`request.browser`:
-`driver: "extension"`, `chrome`, and `chrome_name` as planque set it), read again when the screen opens; one that has ended or
-failed is not listed (`ChromeConnections`). The replace pick at pairing, and a connection's Chrome on the taf's page, follow
+come back only when you connect them again."). The connections are the ones planque lists on each Chrome
+(`GET …/chromes`, `connections: [{grant, name, sites}]`: not ended, not failed, only those that Chrome drives), drawn as sent
+(`ChromeConnections`); the app keeps no rule of its own. A planque that doesn't list them yet leaves the line out. The replace pick at pairing, and a connection's Chrome on the taf's page, follow
 planque#365's route and the extension's own pairing bytes.
+
+## A connection's Chrome, and moving it
+
+"Your Chrome" 2 and 4 ([chrome.md](chrome.md)): a browser connection's page (`ConnectionDetailView`, the connection that runs in the owner's own
+Chrome) says which Chrome it runs in ("In Work Mac · Chrome 131", as planque names it, `request.browser.chrome_name`) and, where the
+owner manages the connection, planque offers the move (its row's `use_another_chrome` action, `how: "chrome"`: planque asks the same rule its
+`PUT …/chrome` applies, so the app keeps no status list) and another Chrome is paired, offers **Use another Chrome** in planque's words.
+Choosing one signs the connection's sites for that Chrome with the approval key under one Face ID (`ChromePairing.switchBytes`:
+`tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`), **only if this phone's own signature already verifies those sites for the Chrome
+it uses now** (`ChromeSwitch.signedSites`, as a re-pairing checks before it carries): a planque that widened the list gets no signature,
+and a connection carried here from an earlier Chrome has none of its own to move. Then `PUT …/grants/{grant}/chrome {chrome_id,
+chrome_sites_sig}` (`PlanqueClient.switchChrome`) moves it; its sites and Card stay, and the extension runs nothing whose sites aren't
+signed for it. The Chromes and the connection are read again after it goes through.
 
 ## Repeated reads slow down and spread
 

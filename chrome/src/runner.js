@@ -4,6 +4,7 @@
 // whatever started it. The owner's own input in a run's tab pauses the run.
 
 import { refuseURL, bareURL } from "./sites.js";
+import { HAND_MAX_MS, validWords, withoutValues } from "./hand.js";
 
 /**
  * The run's own blank page: where its tab opens and where a refused move is sent. It loads nothing, so the guard lets
@@ -11,12 +12,17 @@ import { refuseURL, bareURL } from "./sites.js";
  */
 const isBlank = (url) => String(url || "").trim().toLowerCase() === "about:blank";
 import { refuse } from "./guard.js";
+import { parseHandle } from "./vault.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
 import { checkRelease, checkAllowances, checkSites, Nonces } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
+// After an act, how long the tab gets to start the navigation the act began (a click's page change begins a moment after the click),
+// as 100 ms looks. A click that navigates nothing costs this and no more.
+const NAV_WAIT_MS = 1000;
+const NAV_LOOK_MS = 100;
 const STEP_TIMEOUT_MS = 20_000;
 const FAILURES_TO_PAUSE = 3;
 // A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its tabs close (and its window, when it has its own). One
@@ -36,17 +42,20 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null, onHandAnswer = () => {}, doneStore = null }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
     this.shots = shots; // the picture kept of each act (shot.js); null: none is taken
+    this.onHandAnswer = onHandAnswer; // the person's answer to a hand-over, to give planque ({hand, outcome, page}); the service worker signs and keeps it
     this.vault = vault; // sealed sign-ins (vault.js); none, and a sealed fill is refused
     this.now = now;
     this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, ownWindow, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
+    this.doneStore = doneStore; // {get(), set(obj)}: the tabs each taf's last finished run left, kept where a stopped worker finds them again
+    this.done = null; // taf → {tabs: [id], window: id | null}, loaded on first use
     this.fenceIds = new Map(); // tab id → the first of its three fence rule ids
     this.nextFence = 1;
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
@@ -172,6 +181,7 @@ export class Runner {
       site: r.site,
       paused: r.paused,
       stopped: r.stopped,
+      hand: this.handOpen(r) ? { id: r.hand.id, words: r.hand.words, ref: r.hand.ref !== undefined } : null,
       steps: r.steps.slice(-50),
     }));
   }
@@ -192,6 +202,9 @@ export class Runner {
   ownerInput(tabId) {
     const run = this.runOfTab(tabId);
     if (!run || run.paused || run.stopped) return;
+    // While a step is handed to the person, their typing in the page is what was asked: it pauses nothing, and a touch after
+    // Done or Not now pauses as before.
+    if (this.handOpen(run)) return;
     run.paused = "owner";
     this.record(run, { op: "pause", by: "owner" });
   }
@@ -214,22 +227,94 @@ export class Runner {
     }
   }
 
-  async stop(runId) {
+  /**
+   * Ends a run. Its tabs stay open (the group renamed "· done"): the person sees the pages the taf worked on, and nothing opens and
+   * closes under them. Only the latest finished run of each taf keeps its tabs: that taf's next run closes them when it opens.
+   * `close` closes them at once instead: unpairing, and a run that failed to set up.
+   */
+  async stop(runId, close = false) {
     const run = this.runs.get(runId);
     if (!run || run.stopped) return;
     run.stopped = true;
     this.record(run, { op: "stop" });
-    await this.closeRun(run);
+    // A run that never loaded a page has nothing of the person's to keep: its blank tab goes, as before.
+    await this.closeRun(run, close || !run.opened);
   }
 
   async stopAll() {
-    for (const id of [...this.runs.keys()]) await this.stop(id);
+    for (const id of [...this.runs.keys()]) await this.stop(id, true);
+    await this.closeAllDone();
   }
 
-  async closeRun(run) {
+  async doneTabs() {
+    if (!this.done) this.done = (this.doneStore && (await this.doneStore.get())) || {};
+    return this.done;
+  }
+
+  /**
+   * What a taf's last finished run left: its tabs close (and a window of its own), once, and the record goes. `gently` (a taf's next run):
+   * a kept tab is the person's now, so it closes only while it is still at the address the run left it and isn't the tab in front
+   * of the window they are using; one they moved or are using stays, and so does a window of its own that still holds one. Unpairing
+   * closes them all.
+   */
+  async closeDone(taf, gently = false) {
+    const done = await this.doneTabs();
+    const left = done[taf];
+    if (!left) return;
+    delete done[taf];
+    if (this.doneStore) await this.doneStore.set(done);
+    const c = this.chrome;
+    const close = [];
+    let kept = false;
+    for (const t of left.tabs) {
+      const id = typeof t === "number" ? t : t.id;
+      if (!gently) {
+        close.push(id);
+        continue;
+      }
+      const tab = await c.tabs.get(id).catch(() => null);
+      if (!tab) continue; // already gone
+      const win = tab.active ? await c.windows.get(tab.windowId).catch(() => null) : null;
+      const inUse = tab.active && win && win.focused;
+      const moved = typeof t !== "number" && t.url != null && (tab.url || "") !== t.url;
+      if (inUse || moved) kept = true;
+      else close.push(id);
+    }
+    if (close.length) await c.tabs.remove(close).catch(() => {});
+    if (left.window != null && !kept) await c.windows.remove(left.window).catch(() => {});
+  }
+
+  async closeAllDone() {
+    for (const taf of Object.keys(await this.doneTabs())) await this.closeDone(taf);
+  }
+
+  /** A run that ended leaves its tabs as the taf's last: an earlier run's of the same taf close now. */
+  async leaveDone(run) {
+    const taf = run.taf || "taf";
+    await this.closeDone(taf, true);
+    const done = await this.doneTabs();
+    const tabs = [];
+    for (const id of run.tabs) tabs.push({ id, url: ((await this.chrome.tabs.get(id).catch(() => null)) || {}).url || null });
+    done[taf] = { tabs, window: run.ownWindow && run.windowId != null ? run.windowId : null };
+    if (this.doneStore) await this.doneStore.set(done);
+  }
+
+  async closeRun(run, close = true) {
+    // A step still handed to the person ends with the run: planque is told "not now", not left to its 30 minutes.
+    if (run.hand) this.endHand(run, "declined");
     for (const t of run.tabs) {
       this.tabRun.delete(t);
       await this.unfence(t);
+    }
+    if (!close) {
+      // The run's tabs are the person's now: no longer the run's, in a group that says it is done. Nothing of the run's closes.
+      if (run.groupId != null) {
+        await this.chrome.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf") + " · done", color: "grey" }).catch(() => {});
+      }
+      await this.leaveDone(run);
+      run.tabs.clear();
+      run.tab = null;
+      return;
     }
     // A window of the run's own goes with it; in the owner's window, only the run's own tabs close, never theirs.
     // The run's tabs always close, wherever they are now (the owner may have dragged one out of the run's window); a window of
@@ -267,11 +352,11 @@ export class Runner {
   /** Closes the windows of runs nobody sent a step to for RUN_IDLE_MS, as Stop does. Called by the service worker's alarm. */
   async sweep() {
     for (const run of [...this.runs.values()]) {
-      if (run.stopped || run.paused || this.tails.has(run.id)) continue;
+      if (run.stopped || run.paused || this.tails.has(run.id) || this.handOpen(run)) continue; // a person takes longer than the idle limit
       if (this.now() - run.at > RUN_IDLE_MS) {
         run.stopped = true;
         this.record(run, { op: "stop", by: "idle" });
-        await this.closeRun(run);
+        await this.closeRun(run, false);
       }
     }
   }
@@ -343,6 +428,8 @@ export class Runner {
     switch (step.op) {
       case "open":
         return this.open(run, step.url);
+      case "hand":
+        return this.hand(run, step);
       case "read":
         if (step.offset != null && !(Number.isSafeInteger(step.offset) && step.offset >= 0)) return { error: { code: "bad_step", detail: "offset" } };
         return this.read(run, step.offset);
@@ -350,11 +437,92 @@ export class Runner {
         return this.act(run, step);
       case "close":
         run.stopped = true;
-        await this.closeRun(run);
+        await this.closeRun(run, false);
         return { page: null };
       default:
         return { error: { code: "bad_step" } };
     }
+  }
+
+  /** Whether a step is handed to the person in this run and still open: not answered, not past its 30 minutes. */
+  handOpen(run) {
+    if (!run.hand) return false;
+    if (this.now() >= run.hand.until) {
+      run.hand = null; // planque's own 30 minutes end it too
+      return false;
+    }
+    return true;
+  }
+
+  /** Closes the run's open hand-over with `outcome` and gives the answer to planque, with `page` when there is one. */
+  endHand(run, outcome, page = null) {
+    const hand = run.hand;
+    run.hand = null;
+    if (hand) this.onHandAnswer({ hand: hand.id, outcome, page });
+  }
+
+  /**
+   * A step handed to the person ("fill in the card number, then tap Done"): the panel shows "Your turn" with the taf's words and the
+   * person does it in the page. It is answered at once as handed; the person's Done or Not now comes later (`answerHand`). Checked
+   * here as any step is, trusting nothing of planque's checks: the words, the field or button named, the read it was planned from, and
+   * the page's site.
+   */
+  async hand(run, step) {
+    if (run.tab == null) return { error: { code: "no_page" } };
+    const h = step.hand;
+    if (!h || typeof h !== "object" || !validWords(h.words) || (h.ref !== undefined && typeof h.ref !== "string")) {
+      return { error: { code: "bad_step", detail: "the words of a hand-over are 1 to 280 characters of plain text" } };
+    }
+    const page = run.pages.get(step.read_id);
+    if (!page) return { error: { code: "page_changed" } };
+    if (h.ref !== undefined && ![...(page.fields || []), ...(page.controls || [])].some((x) => x.ref === h.ref)) {
+      return { error: { code: "bad_step", detail: "the field or button isn't in the read" } };
+    }
+    const tab = await this.chrome.tabs.get(run.tab);
+    const refused = refuseURL(tab.url || "", run.sites, run.allowed);
+    if (refused) return { error: { code: refused.code } };
+    // One at a time: a new one ends the one still open as declined.
+    if (run.hand) this.endHand(run, "declined");
+    run.hand = { id: step.id, words: h.words, ref: h.ref, readId: step.read_id, until: this.now() + HAND_MAX_MS };
+    this.onChange(this.state());
+    return { handed: true };
+  }
+
+  /**
+   * The person's answer to the hand-over: Done reads the page back for the taf **without what is in its fields**, Not now says no.
+   * `{error}` when none is open.
+   */
+  async answerHand(runId, outcome) {
+    const run = this.runs.get(runId);
+    if (!run || !this.handOpen(run) || (outcome !== "done" && outcome !== "declined")) return { error: { code: "no_hand" } };
+    if (outcome === "declined") {
+      this.endHand(run, "declined");
+      this.record(run, { op: "hand", kind: "declined" });
+      this.onChange(this.state());
+      return { ok: true };
+    }
+    let page = null;
+    try {
+      // Without what is in the fields, and without the text of an editable region: what the person typed is not the taf's.
+      const read = await this.read(run, 0, { withoutEditable: true });
+      if (read.page) page = withoutValues(read.page);
+    } catch {
+      // The page couldn't be read back: Done still goes to the taf, with no page, and it reads again.
+    }
+    this.endHand(run, "done", page);
+    this.record(run, { op: "hand" });
+    this.onChange(this.state());
+    return { ok: true };
+  }
+
+  /** "Show me": the run's tab to the front, and the field or button the taf named outlined (nothing else, nothing scrolled or clicked). */
+  async showHand(runId) {
+    const run = this.runs.get(runId);
+    if (!run || !this.handOpen(run) || run.tab == null) return { error: { code: "no_hand" } };
+    await this.chrome.tabs.update(run.tab, { active: true });
+    if (run.windowId != null && this.chrome.windows.update) await this.chrome.windows.update(run.windowId, { focused: true }).catch(() => {});
+    if (run.hand.ref !== undefined) await this.inTab(run.tab, (ref, id) => globalThis.TafsPage.outline(ref, id), [run.hand.ref, run.hand.readId]).catch(() => {});
+    return { ok: true };
   }
 
   async open(run, url) {
@@ -364,6 +532,8 @@ export class Runner {
     if (run.tab == null) {
       // A tab of its own in the window the owner is using, in the background: their active tab and their other tabs are
       // never touched, and the run's group sits beside them. With no such window, a window of its own, not focused.
+      // The taf's last finished run's tabs close now, so the calls of one taf never pile up; the person saw the page where it stopped.
+      await this.closeDone(run.taf || "taf", true);
       const made = await this.runTab();
       // Stop or close landed while the tab was being made: nothing of the run's is left open, least of all among the owner's tabs.
       if (run.stopped) {
@@ -388,11 +558,12 @@ export class Runner {
         }
       } catch (e) {
         // A window that could not be set up is not left open, blank and unfenced, on the owner's screen.
-        await this.stop(run.id).catch(() => {});
+        await this.stop(run.id, true).catch(() => {});
         throw e;
       }
     }
     // In a window of its own the run's tab is the one in front; in the owner's window it stays in the background.
+    run.opened = true;
     await c.tabs.update(run.tab, run.ownWindow ? { url, active: true } : { url });
     await this.loaded(run.tab);
     return this.read(run);
@@ -428,8 +599,20 @@ export class Runner {
     else await this.chrome.tabs.remove([tabId]).catch(() => {});
   }
 
-  async loaded(tabId) {
+  /**
+   * Waits for the tab to finish loading, then SETTLE_MS. With `from` (the address the tab had before an act), it first waits up to
+   * NAV_WAIT_MS for the tab to start a navigation: a status other than `complete`, or another address. Without it, the read after a click comes
+   * before the page the click starts, because `complete` is still the old page's status.
+   */
+  async loaded(tabId, from) {
     const c = this.chrome;
+    if (from !== undefined) {
+      for (let waited = 0; waited < NAV_WAIT_MS; waited += NAV_LOOK_MS) {
+        const now = await c.tabs.get(tabId).catch(() => null);
+        if (!now || now.status !== "complete" || (now.url || "") !== from) break;
+        await this.sleep(NAV_LOOK_MS);
+      }
+    }
     const started = Date.now();
     for (;;) {
       const tab = await c.tabs.get(tabId);
@@ -461,13 +644,13 @@ export class Runner {
     return res && res.result;
   }
 
-  async read(run, offset = 0) {
+  async read(run, offset = 0, opts = {}) {
     if (run.tab == null) return { error: { code: "no_page" } };
     const tab = await this.chrome.tabs.get(run.tab);
     const refused = refuseURL(tab.url || "", run.sites, run.allowed);
     if (refused) return { error: { code: refused.code } };
     await this.inject(run.tab, run);
-    const page = await this.inTab(run.tab, (o) => globalThis.TafsPage.read(o), [offset]);
+    const page = await this.inTab(run.tab, (o, p) => globalThis.TafsPage.read(o, p), [offset, opts]);
     if (!page) return { error: { code: "page_unresponsive" } };
     // The handles of sign-ins saved for this exact origin, never their values: a taf names one to ask for a sealed fill.
     if (this.vault) {
@@ -487,9 +670,10 @@ export class Runner {
   async fillSealed(run, step, page) {
     const pairing = this.paired();
     if (!this.vault || !pairing || !pairing.phoneKey) return { error: { code: "secret_field" } };
-    const [, part] = String(step.act.sealed).split(":");
+    const named = parseHandle(step.act.sealed);
+    const part = named && named.part;
     const field = (page.fields || []).find((f) => f.ref === step.act.ref);
-    if (!field || (part === "password" ? field.kind !== "password" : part === "username" ? !["text", "email"].includes(field.kind) : true)) {
+    if (!named || !field || (part === "password" ? field.kind !== "password" : !["text", "email"].includes(field.kind))) {
       return { error: { code: "secret_field" } };
     }
     const tab = await this.chrome.tabs.get(run.tab);
@@ -526,10 +710,11 @@ export class Runner {
     if (refused) return { error: { code: refused.code } };
     if (step.act.sealed) return this.fillSealed(run, step, page);
     await this.pictureOf(run, step, page);
+    const before = await this.chrome.tabs.get(run.tab).catch(() => null);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);
     if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
-    // A click is never proof of its effect: the page is read back.
-    await this.loaded(run.tab);
+    // A click is never proof of its effect: the page is read back, after the navigation it started has begun and ended.
+    await this.loaded(run.tab, before ? before.url || "" : undefined);
     return this.read(run);
   }
 }

@@ -783,10 +783,14 @@ final class KIFFClient {
         /// What this person may do on the account, as KIFF says ("cards.manage", …); nil
         /// from a KIFF that doesn't say.
         var capabilities: [String]? = nil
+        /// How this session approves, as KIFF says (`approval_mode`): `view` approves nothing, since the person
+        /// approves on another device. Nil from a KIFF that doesn't say.
+        var approvalMode: String? = nil
+        var viewOnly: Bool { approvalMode == "view" }
 
         enum CodingKeys: String, CodingKey {
             case tenantID = "tenant_id", slug = "tenant_slug", displayName = "tenant_display_name", email
-            case timeZone = "time_zone", capabilities
+            case timeZone = "time_zone", capabilities, approvalMode = "approval_mode"
         }
 
         /// The account as the owner knows it: its name, else its slug.
@@ -1919,11 +1923,11 @@ final class KIFFClient {
         func encode(to encoder: Encoder) throws {}
     }
 
-    /// KIFF's words for `profile`, the `kiff.profile.v1` in a grant's request, read with the
+    /// KIFF's words for `profile`, the `kiff.profile.v1` in a grant's request (v2 asked for, v1 or v2 taken), read with the
     /// person's own session: it reads nothing of the account and changes
     /// nothing. Checked against the profile before they're returned (`ProfileWords.checked`).
     func profileWords(for profile: JCS.Value) async throws -> ProfileWords {
-        let answer: RawBody = try await send("POST", "/v1/profiles/words", body: RawJSON(data: try JCS.canonical(profile)))
+        let answer: RawBody = try await send("POST", "/v1/profiles/words?v=2", body: RawJSON(data: try JCS.canonical(profile)))
         return try ProfileWords.checked(answer.data, profile: profile)
     }
 

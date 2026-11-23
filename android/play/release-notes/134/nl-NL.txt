@@ -1,0 +1,4 @@
+• Keur je een vastgehouden aanroep goed nadat de taak al was afgelopen, dan staat er nu dat er niets is uitgevoerd, met 'Opnieuw proberen'.
+• Stopt een nieuwe versie een taak die op je antwoord wachtte, dan wordt dat gezegd, met 'Opnieuw proberen'.
+• Opnieuw inloggen toont eerst de goedkeuring van de verbinding; een Chrome opnieuw koppelen controleert vlak voor je vingerafdruk nog eens.
+• De chat van een taf wordt minder vaak gelezen terwijl die wacht, en niet op de achtergrond.

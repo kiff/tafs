@@ -254,9 +254,11 @@ final class PlanqueClient {
 
         /// One thing the owner can do with a connection that works for it now, as planque offers it:
         /// `sign_in_again` (`approve`: a new sign-in on this same connection; `key`: a new key),
-        /// `remove` (`delete`, with `stops`: what stops, for one more ask), `remove_unfinished` (`delete`).
+        /// `remove` (`delete`, with `stops`: what stops, for one more ask), `remove_unfinished` (`delete`), `use_another_chrome` (`chrome`).
         struct Action: Decodable, Equatable, Identifiable {
             static let signInAgain = "sign_in_again", remove = "remove", removeUnfinished = "remove_unfinished"
+            /// `chrome`: move to another paired Chrome (`PUT …/grants/{grant}/chrome`, signed with the sites for the Chrome chosen).
+            static let useAnotherChrome = "use_another_chrome"
             var id = ""
             var words = ""
             var how = ""
@@ -277,6 +279,7 @@ final class PlanqueClient {
                 switch id {
                 case Self.signInAgain: return how == "approve" || how == "key"
                 case Self.remove, Self.removeUnfinished: return how == "delete"
+                case Self.useAnotherChrome: return how == "chrome"
                 default: return false
                 }
             }
@@ -656,6 +659,11 @@ final class PlanqueClient {
     /// planque's code for a connect that ended failed (planque#329).
     nonisolated static let connectFailed = "connect_failed"
 
+    /// planque's codes whose `error` is shown as planque says it, from before planque sent `words`: a vendor refusing
+    /// planque's client (`502 vendor_refused_client`) says whose it is ("… doesn't allow tafs to sign in yet"), which no
+    /// line of the app's own can. As Android's `ErrorWords.PLANQUE_WORDED`.
+    nonisolated static let wordedCodes: Set<String> = ["vendor_refused_client"]
+
     /// planque's machine-readable `code` on a refusal, when it sends one as text.
     nonisolated static func refusalCode(_ data: Data) -> String? {
         ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["code"] as? String
@@ -673,7 +681,23 @@ final class PlanqueClient {
         var pairedAt: Date?
         /// The extension's id for its Chrome profile, kept across key changes: how a re-pairing finds the Chrome it replaces.
         var profileID: String?
-        enum CodingKeys: String, CodingKey { case id = "chrome_id", name, browser, os, pairedAt = "paired_at", profileID = "profile_id" }
+        /// The browser connections that run in this Chrome, as planque lists them ("Your Chrome" 3 and 4): live ones only (asked
+        /// for or approved, never ended or failed), named by their taf. nil from a planque that doesn't list them yet.
+        var connections: [Connection]?
+        struct Connection: Decodable, Equatable {
+            let grant: String
+            var name = ""
+            var sites: [String] = []
+            enum CodingKeys: String, CodingKey { case grant, name, sites }
+            init(grant: String, name: String = "", sites: [String] = []) { self.grant = grant; self.name = name; self.sites = sites }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                grant = try c.decode(String.self, forKey: .grant)
+                name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+                sites = try c.decodeIfPresent([String].self, forKey: .sites) ?? []
+            }
+        }
+        enum CodingKeys: String, CodingKey { case id = "chrome_id", name, browser, os, pairedAt = "paired_at", profileID = "profile_id", connections }
     }
 
     /// A pairing this phone opened: its id, and the four characters of the code planque looks it up by.
@@ -805,6 +829,17 @@ final class PlanqueClient {
         _ = try await raw("DELETE", "chromes/\(escaped(id))", body: nil)
     }
 
+    /// Moves one browser connection to another paired Chrome (`PUT …/grants/{grant}/chrome`, "Your Chrome" 2): its sites and Card stay,
+    /// and `sitesSignature` is this phone's signature over those sites for the new Chrome (`ChromePairing.switchBytes`).
+    func switchChrome(grant: String, to chromeID: String, sitesSignature: String) async throws {
+        struct Body: Encodable {
+            let chromeID: String
+            let sitesSignature: String
+            enum CodingKeys: String, CodingKey { case chromeID = "chrome_id", sitesSignature = "chrome_sites_sig" }
+        }
+        _ = try await raw("PUT", "grants/\(escaped(grant))/chrome", body: try JSONEncoder().encode(Body(chromeID: chromeID, sitesSignature: sitesSignature)))
+    }
+
     private func escaped(_ s: String) -> String {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
@@ -874,7 +909,8 @@ final class PlanqueClient {
             // Coach (a tool the vendor no longer lists, an argument's type), so the person reads that it isn't working on our
             // side, never its 409's "It changed in the meantime". planque's own words for the person, when sent, come first.
             // The status stays 409: sent again unchanged, it would fail the same way. As Android's `ErrorWords.CONNECT_FAILED`.
-            let words = said.words ?? (status == 409 && lastRefusalCode == Self.connectFailed ? Words.Error.down : nil)
+            let worded = lastRefusalCode.map(Self.wordedCodes.contains) == true ? said.error : nil
+            let words = said.words ?? worded ?? (status == 409 && lastRefusalCode == Self.connectFailed ? Words.Error.down : nil)
             throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: words)
         }
         return data

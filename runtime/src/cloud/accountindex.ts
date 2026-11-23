@@ -8,7 +8,8 @@
  * names, drafts and alerts.
  *
  * An account goes in when its tafs item is made (`tafs.put`), and out when the
- * account is erased. Once an hour, `accounts#checked` being older than that,
+ * account is erased. Once an hour, `accounts#checked` being older than that (and
+ * claimed first, so of the tick's groups starting together only one scans),
  * one scan adds what the index missed (accounts made before it existed, or by
  * an older function during a deploy), so a missed account waits an hour at most,
  * and takes out an id whose tafs item is gone (an erasure that raced the scan),
@@ -17,6 +18,7 @@
 import { createHash } from "node:crypto";
 import {
   type AttributeValue,
+  ConditionalCheckFailedException,
   GetItemCommand,
   PutItemCommand,
   ScanCommand,
@@ -62,6 +64,25 @@ export function accountIndex(send: Send, table: string): AccountIndex {
     return { ids, checkedAt: Number.isFinite(checkedAt) ? checkedAt : undefined };
   }
 
+  /**
+   * The hour's check, claimed before its scan: `checked_at` moves to now only if it is still what this invocation read,
+   * so of the tick's groups starting together one scans and the others read the index alone.
+   */
+  async function claim(now: number, read: number | undefined): Promise<boolean> {
+    try {
+      await send(new PutItemCommand({
+        TableName: table, Item: { id: { S: CHECKED }, checked_at: { N: String(now) } },
+        ...(read === undefined
+          ? { ConditionExpression: "attribute_not_exists(id)" }
+          : { ConditionExpression: "checked_at = :read", ExpressionAttributeValues: { ":read": { N: String(read) } } }),
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  }
+
   /** The accounts with a tafs item, as a scan of the table finds them, keys only. */
   async function scan(): Promise<string[]> {
     const out: string[] = [];
@@ -92,7 +113,7 @@ export function accountIndex(send: Send, table: string): AccountIndex {
   return {
     async list(now) {
       const { ids, checkedAt } = await read();
-      if (checkedAt === undefined || now - checkedAt >= CHECK_EVERY_MS) {
+      if ((checkedAt === undefined || now - checkedAt >= CHECK_EVERY_MS) && await claim(now, checkedAt)) {
         const scanned = new Set(await scan());
         const missed = [...scanned].filter((t) => !ids.has(t));
         if (missed.length > 0) await change("ADD", missed);
@@ -108,7 +129,6 @@ export function accountIndex(send: Send, table: string): AccountIndex {
         }
         if (gone.length > 0) await change("DELETE", gone);
         for (const t of gone) ids.delete(t);
-        await send(new PutItemCommand({ TableName: table, Item: { id: { S: CHECKED }, checked_at: { N: String(now) } } }));
       }
       return [...ids].sort();
     },

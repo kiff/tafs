@@ -76,5 +76,17 @@
   "coach_previous": { "message": "المحادثات السابقة" },
   "coach_previous_none": { "message": "لا توجد محادثات سابقة." },
   "coach_previous_error": { "message": "تعذّر تحميل المحادثات السابقة." },
-  "coach_untitled": { "message": "محادثة" }
+  "coach_untitled": { "message": "محادثة" },
+  "taf_choose": { "message": "تحدّث إلى" },
+  "taf_placeholder": { "message": "رسالة إلى $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "لم تصل الرسالة إلى $TAF$. حاول مجددًا.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "تعذّرت قراءة tafs الخاصة بك. حاول مجددًا." },
+  "no_taf_here": { "message": "لا يعمل أي taf في هذا المتصفح بعد." },
+  "setup_taf": { "message": "إعداد taf جديد لهذا الموقع" },
+  "hand_title": { "message": "دورك", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "يقول الـ taf", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "أرني", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "تم", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "ليس الآن", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "اكتب فقط حيث تثق بهذه الصفحة.", "description": "Fixed line on that card under the taf's words" }
 }

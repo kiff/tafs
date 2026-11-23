@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "ब्रीफ़",
+  "push.channel.briefs_description": "आपकी ब्रीफ़ उसके तय समयों पर।",
+  "push.channel.holds_description": "कोई कॉल आपके उत्तर के लिए रोकी गई है। आपके मंज़ूर करने तक कुछ नहीं भेजा जाता।",
+  "push.channel.other": "अन्य अलर्ट",
+  "push.channel.other_description": "कामों के अनुरोध और उनके उत्तर, बिना आवाज़ के।",
+  "push.channel.urgent_description": "जो आपकी अगली ब्रीफ़ तक नहीं रुक सकता, आवाज़ के साथ।",
+  "push.open_needs_you": "उत्तर देने के लिए आपका इंतज़ार खोलें।",
+  "push.open_taf": "देखने के लिए taf खोलें।",
+  "push.open_usage": "देखने के लिए प्लान और उपयोग खोलें।"
+}

@@ -76,5 +76,17 @@
   "coach_previous": { "message": "Conversations précédentes" },
   "coach_previous_none": { "message": "Aucune conversation précédente." },
   "coach_previous_error": { "message": "Impossible de charger les conversations précédentes." },
-  "coach_untitled": { "message": "Conversation" }
+  "coach_untitled": { "message": "Conversation" },
+  "taf_choose": { "message": "Parler à" },
+  "taf_placeholder": { "message": "Message à $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Ce message n'est pas parvenu à $TAF$. Réessayez.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Vos tafs n'ont pas pu être lus. Réessayez." },
+  "no_taf_here": { "message": "Aucun taf ne travaille encore dans ce Chrome." },
+  "setup_taf": { "message": "Configurer un nouveau taf pour ce site" },
+  "hand_title": { "message": "À vous", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "Le taf dit", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Montrez-moi", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Terminé", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Pas maintenant", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Ne tapez que là où vous faites confiance à cette page.", "description": "Fixed line on that card under the taf's words" }
 }

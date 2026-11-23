@@ -1,0 +1,2 @@
+• Quando rispondi a una scheda di Coach, resta in cima alla chat e la risposta di Coach cresce sotto.
+• «Una nuova Card» mostra i limiti di ogni Card dopo il suo strumento, così un secondo strumento non sembra mai illimitato prima della tua impronta.

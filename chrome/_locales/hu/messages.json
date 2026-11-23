@@ -76,5 +76,17 @@
   "coach_previous": { "message": "Korábbi beszélgetések" },
   "coach_previous_none": { "message": "Nincsenek korábbi beszélgetések." },
   "coach_previous_error": { "message": "A korábbi beszélgetéseket nem sikerült betölteni." },
-  "coach_untitled": { "message": "Beszélgetés" }
+  "coach_untitled": { "message": "Beszélgetés" },
+  "taf_choose": { "message": "Beszélj vele:" },
+  "taf_placeholder": { "message": "Üzenet neki: $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nem jutott el hozzá: $TAF$. Próbáld újra.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "A tafsaidat nem sikerült beolvasni. Próbáld újra." },
+  "no_taf_here": { "message": "Ebben a Chrome-ban még nem dolgozik taf." },
+  "setup_taf": { "message": "Új taf beállítása ehhez az oldalhoz" },
+  "hand_title": { "message": "Te jössz", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "A taf azt mondja", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Mutasd meg", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Kész", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Most nem", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Csak ott írj be valamit, ahol megbízol ebben az oldalban.", "description": "Fixed line on that card under the taf's words" }
 }

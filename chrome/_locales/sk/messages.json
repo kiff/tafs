@@ -76,5 +76,17 @@
   "coach_previous": { "message": "Predchádzajúce rozhovory" },
   "coach_previous_none": { "message": "Žiadne skoršie rozhovory." },
   "coach_previous_error": { "message": "Skoršie rozhovory sa nepodarilo načítať." },
-  "coach_untitled": { "message": "Rozhovor" }
+  "coach_untitled": { "message": "Rozhovor" },
+  "taf_choose": { "message": "Hovoriť s" },
+  "taf_placeholder": { "message": "Správa pre $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nedostalo sa to k $TAF$. Skúste to znova.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Vaše tafs sa nepodarilo načítať. Skúste to znova." },
+  "no_taf_here": { "message": "V tomto Chrome zatiaľ nepracuje žiadny taf." },
+  "setup_taf": { "message": "Nastaviť nový taf pre tento web" },
+  "hand_title": { "message": "Ste na rade", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "Taf hovorí", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Ukážte mi to", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Hotovo", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Teraz nie", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Píšte len tam, kde tejto stránke dôverujete.", "description": "Fixed line on that card under the taf's words" }
 }

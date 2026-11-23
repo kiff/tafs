@@ -76,5 +76,17 @@
   "coach_previous": { "message": "Prethodni razgovori" },
   "coach_previous_none": { "message": "Nema ranijih razgovora." },
   "coach_previous_error": { "message": "Ranije razgovore nije bilo moguće učitati." },
-  "coach_untitled": { "message": "Razgovor" }
+  "coach_untitled": { "message": "Razgovor" },
+  "taf_choose": { "message": "Razgovarajte s" },
+  "taf_placeholder": { "message": "Poruka za $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nije stiglo do $TAF$. Pokušajte ponovno.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Vaši tafsi nisu mogli biti pročitani. Pokušajte ponovno." },
+  "no_taf_here": { "message": "U ovom Chromeu još ne radi nijedan taf." },
+  "setup_taf": { "message": "Postavite novi taf za ovu stranicu" },
+  "hand_title": { "message": "Vi ste na redu", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "Taf kaže", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Pokažite mi", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Gotovo", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Ne sada", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Upisujte samo ondje gdje vjerujete ovoj stranici.", "description": "Fixed line on that card under the taf's words" }
 }

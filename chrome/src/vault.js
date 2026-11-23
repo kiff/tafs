@@ -81,9 +81,11 @@ export class Vault {
    * swapped between an entry's username and password can't be opened.
    */
   async open(handle, origin) {
-    const [id, part] = String(handle).split(":");
+    const named = parseHandle(handle);
+    if (!named) return null;
+    const { id, part } = named;
     const e = (await this.entries()).find((x) => x.id === id);
-    if (!e || e.origin !== origin || (part !== "password" && part !== "username")) return null;
+    if (!e || e.origin !== origin) return null;
     const sealed = e[part];
     if (!sealed) return null;
     const key = await this.key();
@@ -94,6 +96,17 @@ export class Vault {
       return null;
     }
   }
+}
+
+/**
+ * A handle as the extension makes them, `sec_<id>:password` or `sec_<id>:username`, and nothing else: exactly two segments. The
+ * phone's card names the part from the handle's suffix, so a handle with a third segment (`sec_x:password:username`) would show
+ * one part on the card and fill the other here. A handle that isn't one is null, never half-read.
+ */
+const HANDLE = /^(sec_[A-Za-z0-9_-]+):(password|username)$/;
+export function parseHandle(handle) {
+  const m = typeof handle === "string" ? HANDLE.exec(handle) : null;
+  return m ? { id: m[1], part: m[2] } : null;
 }
 
 /** What a sealed value is bound to: its exact origin, its entry and which part it is. */

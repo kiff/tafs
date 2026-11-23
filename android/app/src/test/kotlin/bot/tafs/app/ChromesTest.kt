@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.kiff.ChromePairing
 import bot.tafs.app.kiff.InMemorySecretStore
@@ -11,6 +12,7 @@ import java.security.spec.ECGenParameterSpec
 import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
@@ -155,6 +157,107 @@ class ChromesTest {
     assertFalse("never the key that signs with no prompt", Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(device); update(signed); verify(raw) })
     assertFalse(String(transport.requestsTo(confirm).single().body!!).contains(p.secret))
     assertEquals(listOf("Work Mac"), m.state.value.chromes?.map { it.name })
+  }
+
+  /**
+   * A re-pairing reads the Chromes and connections again just before it signs, as iOS does, and signs only what the owner was
+   * shown: if what moves changed meanwhile, or the Chrome replaced is gone, nothing is signed or sent, and the screen shows the
+   * new list to pair again on. When it's the same, `replaces` goes to planque.
+   */
+  @Test fun aRePairingSignsOnlyWhatTheOwnerWasShownReadAgainJustBefore() = runTest {
+    val m = model()
+    transport.answer(open, 201, """{"pairing":"pr_1","lookup":"K7QF"}""")
+    val p = m.openChromePairing()!!
+    transport.answer(read, 200, offer(p.secret))
+    val offered = (m.chromePairingStep(p) as AppModel.ChromePairingStep.Offered).offer
+    // One live connection on the old Chrome, its sites signed by this phone's own approval key at approval.
+    val wiki = listOf("wikipedia.org")
+    val der = signer.signApproval(ChromePairing.sitesBytes("chr_old", "g1", wiki), "approve")
+    val sig = ChromePairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der))!!
+    auth.fingerprints.clear()
+    val live = """{"chromes":[{"chrome_id":"chr_old","name":"Laptop","connections":[{"grant":"g1","name":"Rae","sites":["wikipedia.org"]}]}]}"""
+    val grant = """{"grants":[{"id":"g1","status":"connected","text":"","digest":"d","request":{"server":"s","agent":"a","tools":[],"browser":{"driver":"extension","chrome":"chr_old","sites":["wikipedia.org"]}},"chrome_sites_sig":"$sig"}]}"""
+    val old = bot.tafs.app.kiff.Chrome("chr_old", "Laptop", connections = listOf(bot.tafs.app.kiff.ChromeConnection("g1", "Rae", wiki)))
+    val shown = listOf(ChromePairing.Carried("g1", wiki))
+    // The screen showed g1 moving: that's what the model computes from the same read.
+    transport.answer(chromes, 200, live)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, grant)
+    m.refreshChromes(); m.refreshConnections()
+    assertEquals(shown, m.chromeMoves(m.state.value.chromes!!.single()))
+    // Read again before signing: g1 ended meanwhile (planque no longer lists it), so what moves changed. Nothing signed or
+    // sent, and the sheet says why.
+    transport.reset()
+    transport.answer(chromes, 200, """{"chromes":[{"chrome_id":"chr_old","name":"Laptop","connections":[]}]}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    assertFalse("what moves changed: nothing signed", m.confirmChrome(p, offered, "Work Mac", old, shown))
+    assertTrue(auth.fingerprints.isEmpty() && transport.requestsTo(confirm).isEmpty())
+    assertEquals(Words.Chrome.replaceChanged, m.state.value.chromesError)
+    // The Chrome replaced is gone: the same.
+    transport.reset()
+    transport.answer(chromes, 200, """{"chromes":[]}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    assertFalse(m.confirmChrome(p, offered, "Work Mac", old, shown))
+    assertTrue(auth.fingerprints.isEmpty() && transport.requestsTo(confirm).isEmpty())
+    assertEquals(Words.Chrome.replaceChanged, m.state.value.chromesError)
+    // A read that fails signs nothing: what it would sign is no longer known to be live.
+    transport.reset()
+    transport.answer(chromes, 503, """{"error":"unavailable"}""")
+    assertFalse(m.confirmChrome(p, offered, "Work Mac", old, shown))
+    transport.reset()
+    transport.answer(chromes, 200, live)
+    transport.answer("GET /v1/accounts/t_01/grants", 503, """{"error":"unavailable"}""")
+    assertFalse(m.confirmChrome(p, offered, "Work Mac", old, shown))
+    assertTrue(auth.fingerprints.isEmpty() && transport.requestsTo(confirm).isEmpty())
+    // Still as shown: signed once, g1 carried inside the signed body, and planque hears which Chrome it replaces.
+    transport.reset()
+    transport.answer(chromes, 200, live)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, grant)
+    transport.answer(confirm, 200, """{"chrome_id":"chr_1","name":"Work Mac"}""")
+    assertTrue(m.confirmChrome(p, offered, "Work Mac", old, shown))
+    assertEquals(listOf("Pair Work Mac with your tafs"), auth.fingerprints)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(confirm).single().body!!)).jsonObject
+    assertEquals("chr_old", body["replaces"]!!.jsonPrimitive.content)
+    assertEquals("g1", body["carried"]!!.jsonArray.single().jsonObject["grant"]!!.jsonPrimitive.content)
+  }
+
+  /**
+   * "Your Chrome" 2: a connection moves to another paired Chrome only with the sites this phone signed for it, now signed for
+   * the new Chrome behind one fingerprint naming it, and planque's PUT carries that signature. A list planque widened, or a
+   * connection with no signature of its own, moves nothing and signs nothing.
+   */
+  @Test fun aConnectionMovesToAnotherChromeWithOnlyTheSitesThisPhoneSigned() = runTest {
+    val m = model()
+    val wiki = listOf("wikipedia.org")
+    val der = signer.signApproval(ChromePairing.sitesBytes("chr_work", "g1", wiki), "approve")
+    val sig = ChromePairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der))!!
+    auth.fingerprints.clear()
+    fun grant(sites: List<String>, s: String?) = KiffClient.json.decodeFromString(bot.tafs.app.kiff.Grant.serializer(),
+      """{"id":"g1","status":"connected","text":"","digest":"d","request":{"server":"s","agent":"a","tools":[],"browser":{"driver":"extension","chrome":"chr_work","chrome_name":"Work Mac","sites":${sites.joinToString(",", "[", "]") { "\"$it\"" }}}}${s?.let { ",\"chrome_sites_sig\":\"$it\"" }.orEmpty()}}""")
+    val home = bot.tafs.app.kiff.Chrome("chr_home", "Home laptop")
+    val put = "PUT /v1/accounts/t_01/grants/g1/chrome"
+    // planque widened the list, or there's no signature of its own: nothing signed, nothing sent.
+    assertFalse(m.switchChrome(grant(wiki + "evil.example", sig), home))
+    assertFalse(m.switchChrome(grant(wiki, null), home))
+    // A signature this phone made, but for another Chrome or another grant, doesn't vouch for this one.
+    suspend fun signed(chrome: String, grantId: String) = ChromePairing.rawSignature(java.util.Base64.getMimeDecoder().decode(
+      signer.signApproval(ChromePairing.sitesBytes(chrome, grantId, wiki), "approve")))!!
+    val forOtherChrome = signed("chr_home", "g1")
+    val forOtherGrant = signed("chr_work", "g2")
+    auth.fingerprints.clear()
+    assertFalse("signed for another Chrome", m.switchChrome(grant(wiki, forOtherChrome), home))
+    assertFalse("signed for another grant", m.switchChrome(grant(wiki, forOtherGrant), home))
+    assertTrue(auth.fingerprints.isEmpty() && transport.requestsTo(put).isEmpty())
+    // The sites it signed: signed again for the new Chrome, behind one fingerprint naming it, and sent.
+    transport.answer(put, 200, """{"id":"g1","status":"connected"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.answer(chromes, 200, """{"chromes":[]}""")
+    assertTrue(m.switchChrome(grant(wiki, sig), home))
+    assertEquals(listOf(Words.Chrome.switchPrompt(name = "Home laptop")), auth.fingerprints)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(put).single().body!!)).jsonObject
+    assertEquals("chr_home", body["chrome_id"]!!.jsonPrimitive.content)
+    val moved = ChromePairing.base64UrlDecoded(body["chrome_sites_sig"]!!.jsonPrimitive.content)!!
+    val key = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(signer.approvalPublicKeyDER))
+    assertTrue("over the same sites, for the new Chrome", Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(key); update(ChromePairing.sitesBytes("chr_home", "g1", wiki)); verify(moved) })
   }
 
   /** The extension's own KIFF device, as `chrome/src/kiff.js` offers it. */

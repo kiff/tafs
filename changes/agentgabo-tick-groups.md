@@ -1,0 +1,1 @@
+- **tafs cloud:** the 5-minute sweeps run in five groups side by side, each with its own time limit, and none of them works for an account whose deletion is under way ([maintaining.md](../docs/maintaining.md#request-logs)).

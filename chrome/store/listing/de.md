@@ -17,7 +17,7 @@ tafs für Chrome lässt deine tafs in deinem eigenen Chrome arbeiten, nur auf de
 • Es liest eine Seite als Text und Formularfelder, ohne Passwort-, Karten- und Code-Felder. Es liest nie deine anderen Tabs oder deinen Verlauf.
 • Banken, Wallets, Passwortmanager, Zahlungen, Gesundheits- und Behördenseiten werden nie bearbeitet, es sei denn, du erlaubst eine für eine Aufgabe auf deinem Handy.
 • Gespeicherte Anmeldungen sind optional und auf diesem Computer versiegelt. tafs und KIFF sehen sie nie.
-• Sprich in der Seitenleiste mit Coach. Coach sieht eine Seite nur, wenn du auf Diese Seite teilen klickst, und dann nur diese Seite, mit denselben entfernten Feldern.
+• Die Seitenleiste zeigt den taf, der in diesem Chrome arbeitet, und du sprichst dort mit ihm, wie in der tafs-App. „Neuen taf für diese Website einrichten“ öffnet Coach, der eine Seite nur sieht, wenn du auf „Diese Seite teilen“ klickst, und dann nur diese Seite, mit denselben entfernten Feldern.
 
 Was ein taf liest, geht an die KI, die deine Aufgabe ausführt, und wird mit dieser Aufgabe aufbewahrt. KIFF bewahrt die Seite vor und nach einer Änderung höchstens 30 Tage auf. Sobald Screenshots eingeschaltet sind, bewahrt jeder Schritt, der etwas ausführt, auch einen Screenshot der Seite auf, kurz vor der Aktion aufgenommen, mit ausgeblendeten Passwort-, Karten- und Code-Feldern, höchstens 30 Tage. Du siehst ihn nur in der tafs-App, und er geht nie an die KI. Beim Trennen oder Deinstallieren wird gelöscht, was die Erweiterung auf deinem Computer aufbewahrt.
 

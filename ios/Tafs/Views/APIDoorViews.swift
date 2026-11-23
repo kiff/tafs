@@ -254,9 +254,26 @@ enum APIDoorText {
         return field.name + " · " + field.type
     }
 
-    /// A door's address on tafs cloud, whole.
+    /// A door's address on tafs cloud, whole. Only ever on tafs cloud's own host, over HTTPS (as Windows and Linux): a
+    /// whole address elsewhere, or one whose scheme has no host of its own (`foo:x@evil.example/…`), becomes its path on
+    /// tafs cloud, so the example, which sends the developer's key, never names another host.
     static func endpoint(_ door: TafsCloud.Door, base: URL) -> String {
-        URL(string: door.address, relativeTo: base)?.absoluteString ?? door.address
+        let address = door.address.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parts = URLComponents(string: address)
+        if let parts, parts.scheme?.lowercased() == "https", let host = parts.host, !host.isEmpty,
+           host.lowercased() == base.host?.lowercased(), parts.port == nil, parts.user == nil, parts.password == nil {
+            return address
+        }
+        // The path alone, set on tafs cloud's own address: whatever it holds stays in the path, never the host.
+        var path = parts?.path ?? address
+        while path.hasPrefix("/") || path.hasPrefix("\\") { path.removeFirst() }
+        guard var on = URLComponents(url: base, resolvingAgainstBaseURL: false) else { return base.absoluteString }
+        on.path = "/" + path
+        on.query = nil
+        on.fragment = nil
+        guard let url = on.url, url.scheme == "https", url.host?.lowercased() == base.host?.lowercased(),
+              url.port == base.port, url.user == nil else { return base.absoluteString }
+        return url.absoluteString
     }
 
     /// The longest key name the field takes (tafs cloud takes 80; 60, as Android).

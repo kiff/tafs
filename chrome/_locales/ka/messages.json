@@ -76,5 +76,17 @@
   "coach_previous": { "message": "წინა საუბრები" },
   "coach_previous_none": { "message": "ადრინდელი საუბრები არ არის." },
   "coach_previous_error": { "message": "ადრინდელი საუბრების ჩატვირთვა ვერ მოხერხდა." },
-  "coach_untitled": { "message": "საუბარი" }
+  "coach_untitled": { "message": "საუბარი" },
+  "taf_choose": { "message": "ესაუბრეთ" },
+  "taf_placeholder": { "message": "შეტყობინება $TAF$-ს", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "ეს $TAF$-მდე ვერ მივიდა. სცადეთ თავიდან.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "თქვენი tafs ვერ წაიკითხა. სცადეთ თავიდან." },
+  "no_taf_here": { "message": "ამ Chrome-ში ჯერ არცერთი taf არ მუშაობს." },
+  "setup_taf": { "message": "ამ საიტისთვის ახალი taf-ის დაყენება" },
+  "hand_title": { "message": "თქვენი ჯერია", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "taf ამბობს", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "მაჩვენე", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "მზადაა", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Ახლა არა", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "აკრიფეთ მხოლოდ იქ, სადაც ამ გვერდს ენდობით.", "description": "Fixed line on that card under the taf's words" }
 }
