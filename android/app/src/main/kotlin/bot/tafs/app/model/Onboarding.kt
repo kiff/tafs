@@ -66,7 +66,7 @@ data class OnboardingSteps(val page: OnboardingPage = OnboardingPage.Tafs, val f
 
 /**
  * The welcome's age line for the person's country (docs/onboarding.md): its own age where the law asks for more than
- * [MinimumAge.STANDARD] (legal-i18n's table: India, Indonesia, Brazil…), else the line every country reads. The country is the
+ * [MinimumAge.STANDARD] (the age table: India, Indonesia, Brazil…), else the line every country reads. The country is the
  * device's own region (the system's, not the app's language, which may be set apart): the person's statement, as on iOS.
  */
 fun ageLine(region: String? = deviceRegion()): String {

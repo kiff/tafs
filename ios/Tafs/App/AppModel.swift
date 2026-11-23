@@ -1518,6 +1518,72 @@ final class AppModel: ObservableObject {
             if !carried.isEmpty { confirmation.carried = carried }
         }
         let reason = Words.Chrome.pairPrompt(name: name)
+        // One signature for both acts where the extension checks it ("Your Chrome" 5): the pairing it verifies and its KIFF
+        // device, under one `kiff.requests.v1`. Only on its proof under the code's secret, so planque can't turn it on. Else
+        // the two signatures an older extension expects, under the same Face ID.
+        if let kiffDevice, offer.oneTouch,
+           ChromePairing.oneTouchProofHolds(secret: p.secret, key: chromeKey, proof: offer.oneTouchProof, kiffOffer: offer.kiffOffer) {
+            guard await pairChromeOneTouch(p, &confirmation, device: kiffDevice, reason: reason, tenant: tenant, gen: gen) else { return false }
+        } else {
+            guard await pairChromeTwice(p, &confirmation, device: kiffDevice, reason: reason, tenant: tenant, gen: gen) else { return false }
+        }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        do {
+            _ = try await planque.confirmChromePairing(p.pairing, confirmation)
+        } catch {
+            chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            return false
+        }
+        await refreshChromes()
+        return true
+    }
+
+    /// The pairing under one signature ("Your Chrome" 5): the approval key signs `kiff.requests.v1` once, behind one Face ID,
+    /// over the SHA-256 of the pairing bytes the extension checks and of KIFF's `kiff.request.v1` for the extension's
+    /// view-only device, with one `signed_at`. KIFF gets its request with that signature and the pairing's hash (`v3`,
+    /// `with=`); planque's confirm carries the same signature as `phone_sig` (raw r‖s), with the account, `signed_at` and KIFF's
+    /// hash, which the extension rebuilds it from. KIFF's device goes first, as with two signatures: a Chrome is never
+    /// confirmed without the device it reads and chats as. As Android's `confirmChromeOneTouch`.
+    private func pairChromeOneTouch(_ p: ChromePairingInProgress, _ confirmation: inout ChromePairing.Confirmation, device: PairingRequest,
+                                    reason: String, tenant: String, gen: Int) async -> Bool {
+        kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let pairHash: String
+        let signature: String
+        do {
+            prepared = try kiff.preparePairing(device, signedAt: signedAt)
+            pairHash = RequestsTogether.hash(try ChromePairing.signedBytes(pairing: p.pairing, confirmation))
+            let kiffHash = RequestsTogether.hash(prepared.message)
+            signature = try await signer.signApproval(RequestsTogether.message(tenant: tenant, signedAt: signedAt, pairHash, kiffHash), reason: reason)
+            confirmation.phoneSig = try ChromePairing.rawSignature(fromDER: signature)
+            confirmation.tenant = tenant
+            confirmation.signedAt = signedAt
+            confirmation.kiffRequestSHA256 = kiffHash
+        } catch {
+            if gen == accountGeneration { chromesError = ApprovalReadiness.notDone(error, what: reason, unconfirmedWords: Words.Approval.cancelled) }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        do {
+            _ = try await kiff.approvePairing(prepared, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: pairHash))
+        } catch KIFFClient.KIFFError.server(_, let message, let why) {
+            chromesError = Self.pairingRefusal(message: message, reason: why)
+            return false
+        } catch {
+            chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            return false
+        }
+        return gen == accountGeneration
+    }
+
+    /// The pairing as an extension that predates one signature expects it: the approval key signs the pairing behind Face ID,
+    /// then, under that same Face ID, KIFF's request for the extension's view-only device, when it offered one.
+    private func pairChromeTwice(_ p: ChromePairingInProgress, _ confirmation: inout ChromePairing.Confirmation, device kiffDevice: PairingRequest?,
+                                 reason: String, tenant: String, gen: Int) async -> Bool {
         do {
             let bytes = try ChromePairing.signedBytes(pairing: p.pairing, confirmation)
             let der = try await signer.signApproval(bytes, reason: reason)
@@ -1544,18 +1610,7 @@ final class AppModel: ObservableObject {
                 return false
             }
         }
-        let signer = self.signer
-        planque.tenant = tenant
-        planque.signer = { try signer.signConfirmed($0) }
-        defer { planque.signer = nil }
-        do {
-            _ = try await planque.confirmChromePairing(p.pairing, confirmation)
-        } catch {
-            chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
-            return false
-        }
-        await refreshChromes()
-        return true
+        return gen == accountGeneration
     }
 
     /// The KIFF device an extension's offer carries, when it carries one: only a view-only browser extension, as KIFF reads
@@ -7200,46 +7255,56 @@ final class AppModel: ObservableObject {
         return grants.first { $0.request.agent == agent && $0.needsReconnect }
     }
 
-    /// Signs in again to a connection its vendor signed out, from the taf's page: the same
-    /// approval as Coach's card, behind one Face ID, then the vendor's own page. Signed in
-    /// only once planque answers connected; otherwise the connection says why.
-    /// Resolve the source id to a freshly read signed grant for the device's approval.
-    func reconnectApp(_ id: String, fresh: Bool = false) async {
-        let gen = accountGeneration
-        await refreshConnections()
-        guard gen == accountGeneration, let grant = grants.first(where: { $0.id == id }) else { return }
-        await reconnect(grant, fresh: fresh)
-    }
-
-    func reconnect(_ grant: PlanqueClient.Grant, fresh: Bool = false) async {
+    /// Sign in again on a connection its vendor signed out (docs/connect-apps.md, as Android's `startReconnect`), its first
+    /// step: the start of the connection's approval sheet (`ConnectApprovalSheet`, the one a new connection uses), which shows
+    /// planque's words for it as it is now and KIFF's for its profile, then Approve. Nothing is signed or sent here. Nil when
+    /// nothing is asked: a provider's connection is disconnected and connected again instead, said in `reconnectErrors`.
+    func reconnectStart(_ grant: PlanqueClient.Grant, fresh: Bool = false) -> TafsCloud.ConnectStart? {
         lastError = nil
         reconnectErrors[grant.id] = nil
         shownTermsChanged = false
-        // A provider's connection is disconnected and connected again instead: planque would
-        // refuse, so nothing is asked.
         if grant.signsInThroughProvider {
             reconnectErrors[grant.id] = ConnectionFixWords.throughProvider(grant.vendor)
-            return
+            return nil
         }
-        // KIFF's words for its profile, which the approval signs: read now, as the approval
-        // card reads them, wherever Sign in again starts.
-        await loadProfileWords(for: grant)
-        if let why = profileWordsError[grant.id] {
-            reconnectErrors[grant.id] = why
-            return
-        }
-        let done = await connect(grantID: grant.id, shown: grant.digest, again: true, fresh: fresh || grant.reconnectsFresh)
-        if done?.connected != true {
-            reconnectErrors[grant.id] = lastError ?? quietStop ?? Words.Connect.nothingSignedIn
-            lastError = nil
-        }
+        return TafsCloud.ConnectStart(grant: grant.id, again: true, fresh: fresh || grant.reconnectsFresh)
     }
 
-    /// A taf's own Connect again (tafs cloud's `connect_again`): signs that same connection in again, then
-    /// reads the taf's page. Once planque says it's connected, the taf shows tafs cloud's `done_words`.
-    func connectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {
+    /// The same for a connection named by its id (a taf's page, tafs cloud's `connect_again`): the connections are read again
+    /// first, so the sheet opens on the connection as planque has it now.
+    func reconnectStart(id: String, fresh: Bool = false) async -> TafsCloud.ConnectStart? {
+        let gen = accountGeneration
+        await refreshConnections()
+        guard gen == accountGeneration, let grant = grants.first(where: { $0.id == id }) else { return nil }
+        return reconnectStart(grant, fresh: fresh)
+    }
+
+    /// Approve on Sign in again's sheet: the connection is signed in again in place, on **the digest the sheet drew**
+    /// (`shown`), behind one Face ID, then the vendor's own page. A request that changed after it was shown signs nothing, and
+    /// the sheet says it's out of date over the new one (`connect`'s check, as a card's). KIFF's words for its profile are
+    /// signed into the approval: read here if the sheet hadn't yet. True once planque says connected; else the sheet says why
+    /// (`lastError`).
+    func reconnect(_ grantID: String, shown: String, fresh: Bool = false) async -> Bool {
+        lastError = nil
+        reconnectErrors[grantID] = nil
+        if let grant = grants.first(where: { $0.id == grantID }), grant.profile != nil, shownWords(for: grant) == nil {
+            await loadProfileWords(for: grant)
+            if let why = profileWordsError[grantID] {
+                lastError = why
+                return false
+            }
+        }
+        let done = await connect(grantID: grantID, shown: shown, again: true, fresh: fresh)
+        if done?.connected == true { return true }
+        if lastError == nil { lastError = quietStop ?? Words.Connect.nothingSignedIn }
+        return false
+    }
+
+    /// A taf's own Connect again (tafs cloud's `connect_again`), once its sheet signed that same connection in again
+    /// (`reconnect`): the taf's page is read again, and once planque says it's connected, the taf shows tafs cloud's
+    /// `done_words`.
+    func afterConnectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {
         connectedAgain[tafID] = nil
-        await reconnectApp(again.grant, fresh: again.fresh)
         let connected = grants.first { $0.id == again.grant }?.connected == true
         // After a fresh sign-in, the page says which account it went to and which tafs use it now, when planque names it.
         await loadTafSetup(tafID, connectedAgain: connected && again.fresh ? again.grant : nil)

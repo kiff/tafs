@@ -1,0 +1,1 @@
+• Das Beispiel in der „API-Anleitung“ einer Tür nennt jetzt immer die eigene Adresse von tafs cloud, in Anführungszeichen, damit du es sicher in ein Terminal einfügen kannst.

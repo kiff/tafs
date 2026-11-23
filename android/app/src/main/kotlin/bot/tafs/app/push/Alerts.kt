@@ -149,7 +149,7 @@ object AlertPayload {
         val expires = data["expires_at"]?.let { runCatching { Instant.parse(it) }.getOrNull() }
         // A held call that has expired is not shown: there is nothing to answer.
         if (expires != null && !expires.isAfter(now)) return null
-        // tafs cloud's words can name a payee or a merchant: no direction character reorders them beside an amount (qa-kiff).
+        // tafs cloud's words can name a payee or a merchant: no direction character reorders them beside an amount.
         val title = data["title"]?.let(bot.tafs.app.kiff.KiffMapping::visible)?.takeIf { it.isNotBlank() } ?: if (open == NEEDS_YOU) Words.Alert.needsYou else Words.App.name
         val body = data["body"]?.let(bot.tafs.app.kiff.KiffMapping::visible)?.takeIf { it.isNotBlank() } ?: when {
           open == USAGE -> Words.Push.openUsage
