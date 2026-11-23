@@ -126,7 +126,7 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **iPhone/iPad** (partial): "Your Chrome" 2 (switch a connection) and 5 (one signature for both acts); a connection's Chrome on the taf's page (see Your Chrome)
   - **Mac 13+** (partial): "Your Chrome" 2 (switch a connection) and 5 (one signature for both acts); a connection's Chrome on the taf's page (see Your Chrome)
   - **macOS 12** (not started): AppModel.chromes
-  - **Android** (partial): "Your Chrome" 2 (switch a connection): in review, tafs#1783; which Chrome a connection runs in, on its page: in review, tafs#1777
+  - **Android** (partial): "Your Chrome" 2 (switch a connection): in review, tafs#1783; which Chrome a connection runs in is on its page (tafs#1777)
 - **CoachMode**
   - **macOS 12** (partial): The dimmed ground and its tap outside, and closing by a drag past the narrowest or a swipe: on the Mac the screen beside Coach stays usable, and Back or Esc close it. `PhoneCoachPanel` is the phone's
   - **Linux** (partial): The swipe of the conversation that closes it (touch); the slide in and out; `PhoneCoachPanel` (a phone's)
