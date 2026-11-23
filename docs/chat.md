@@ -393,7 +393,10 @@ taf wrote before it, never by clock alone (`chatItems`, `placed`, `heldAfterItsW
   the card was.
 - The run paused on the call goes on once it's answered. The app asks tafs cloud to
   continue it at once (`POST /v1/tafs/{id}/holds/{exception}/continue`), and shows the
-  taf working again.
+  taf working again. When tafs cloud answers **404 `run_ended`** (no run waits on that call: the run had
+  ended, so the call never ran), the app says so in its `words`, never silence: the chat shows the
+  line a run that failed part-way shows, with Retry on the owner's last message, and the screen they
+  answered on shows the same words. Any other refusal is left to the alert and the hold's expiry, as before.
 
 ## Cards that wait for an answer
 
