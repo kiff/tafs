@@ -8,16 +8,16 @@ import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
 import { Vault } from "./vault.js";
+import { tafsHere } from "./coachchat.js";
 import { Coach, reusing } from "./coach.js";
+import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
 import { refuseURL, hostOf } from "./sites.js";
 
 const WAKE = "tafs-wake";
-const IDLE_CLOSE_MS = 60_000;
 
 let relay = null;
-let lastActive = 0;
 
 const vault = new Vault(indexedStore);
 const releaseStore = {
@@ -31,7 +31,8 @@ const shots = config().screenshots
 const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, shots });
 
 function publish(extra = {}) {
-  const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(), ...extra };
+  const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
+    connections: (relay && relay.connections) || [], ...extra };
   chrome.storage.session.set({ state }).catch(() => {});
   chrome.runtime.sendMessage({ type: "state", state }).catch(() => {});
   chrome.action.setBadgeText({ text: runner.active ? "ON" : "" }).catch(() => {});
@@ -61,8 +62,22 @@ async function wipe() {
   await chrome.storage.session.clear();
   kept.keys = null;
   kept.pairing = null;
+  // The wake-up goes with the pairing.
+  self.registration.pushManager.getSubscription().then((s) => s && s.unsubscribe()).catch(() => {});
   publish();
 }
+
+/** Gives planque this Chrome's push subscription, so it can wake this worker (push.js). Each connect, it is a few hundred bytes. */
+async function announcePush() {
+  const sub = subscriptionOf(await ensureSubscription(self.registration.pushManager, config().pushKey));
+  if (!sub || !relay || !kept.keys || !kept.pairing) return;
+  relay.send(await pushMessage(kept.keys.privateKey, sub));
+  // From here planque can wake this worker, so it needn't be kept awake by pings while idle (relay.js).
+  relay.pushed = true;
+}
+
+// planque's silent push (no data): a taf needs this Chrome. The worker is awake now; connect.
+self.addEventListener("push", (event) => event.waitUntil(connect()));
 
 async function connect() {
   await load();
@@ -74,10 +89,9 @@ async function connect() {
       get: async () => (await chrome.storage.session.get("nonces")).nonces || [],
       set: (entries) => chrome.storage.session.set({ nonces: entries }),
     };
-    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), nonceStore });
+    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: announcePush, nonceStore });
   }
   relay.connect();
-  lastActive = Date.now();
 }
 
 chrome.alarms.create(WAKE, { periodInMinutes: 1 });
@@ -85,11 +99,7 @@ chrome.alarms.onAlarm.addListener(async (a) => {
   if (a.name !== WAKE) return;
   // A sweep that throws (a window Chrome already closed) mustn't skip the idle close below.
   await runner.sweep().catch(() => {});
-  if (runner.active) lastActive = Date.now();
-  if (relay && relay.connected && !runner.active && Date.now() - lastActive > IDLE_CLOSE_MS) {
-    relay.close();
-    return;
-  }
+  // Never closed for being idle: planque can only reach a connected extension (docs/chrome.md, "Waking the extension").
   await connect();
 });
 chrome.runtime.onStartup.addListener(connect);
@@ -200,6 +210,17 @@ async function coach() {
   return coachFor(session.token);
 }
 
+/** This Chrome's connections that are the person's tafs (`tafsHere`), the tafs read once per change of the connections. */
+async function tafsOfThisChrome(fresh = false, working = null) {
+  const connections = (relay && relay.connections) || [];
+  const tafs = await (await coach()).keptTafs(JSON.stringify(connections), fresh);
+  return tafsHere(connections, tafs, working);
+}
+
+async function onlyHere(taf) {
+  if (!(await tafsOfThisChrome()).some((t) => t.id === taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
+}
+
 /** The tab the owner is looking at, for "Share this page" only: one tab, on the owner's tap, never listed otherwise. */
 async function shareTarget() {
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
@@ -211,14 +232,12 @@ async function shareTarget() {
   return { tabId: tab.id, origin: new URL(tab.url).origin };
 }
 
-/** Reads the page in front, masked as a run's read is: only once Chrome let the extension into it for this share. */
+/** Reads the page in front, masked as a run's read is, for this share only (the owner's tap). */
 async function shareRead(tabId) {
   const tab = await chrome.tabs.get(tabId);
-  const origin = new URL(tab.url).origin;
   // The tab may have moved since the owner's tap: the site rules are read again for where it is now.
   const refused = refuseURL(tab.url, [hostOf(tab.url)], []);
   if (refused) return { error: refused.code };
-  if (!(await chrome.permissions.contains({ origins: [origin + "/*"] }))) return { error: "needs_site_permission" };
   await chrome.scripting.executeScript({ target: { tabId }, files: ["src/mask.js", "src/page.js"] });
   const [res] = await chrome.scripting.executeScript({ target: { tabId }, func: () => globalThis.TafsPage.read() });
   const page = res && res.result;
@@ -250,6 +269,21 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
     },
     coach_chats: async () => ({ chats: await (await coach()).chats() }),
+    // The tafs that work in this Chrome (planque's list, display only), as the person's own tafs. The panel asks when it's
+    // shown and when the connections change, and that's when the person's tafs are read; a chat's reads and sends reuse them.
+    taf_list: async () => {
+      const working = runner.state().find((r) => !r.stopped);
+      return { tafs: await tafsOfThisChrome(true, working ? working.taf : null) };
+    },
+    // A taf's own chat: only one this Chrome offers, so the panel reads nothing else.
+    taf_thread: async () => {
+      await onlyHere(m.taf);
+      return { thread: await (await coach()).tafThread(m.taf) };
+    },
+    taf_send: async () => {
+      await onlyHere(m.taf);
+      return { sent: await (await coach()).sendToTaf(m.taf, m.words, m.clientID) };
+    },
     coach_send: async () => ({
       sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true }),
     }),

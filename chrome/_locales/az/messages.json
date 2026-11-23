@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Davam etdirildi" },
   "step_stopped": { "message": "Dayandırıldı" },
   "step_closed": { "message": "Bitdi" },
-  "allow_site": { "message": "$SITE$ saytına Chrome-da icazə verin", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "$SITE$ üçün Chrome-da təsdiqiniz lazımdır", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "edilmədi ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "Coach-a mesaj yazın" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "Coach ilə danışın" },
   "coach_empty_body": { "message": "tafs tətbiqindəki ilə eyni söhbətdir. Coach bu səhifəni yalnız siz paylaşsanız görür." },
   "share_note": { "message": "Bu tək səhifəni parol, kart və kod sahələri çıxarılmış halda Coach-a göndərir." },
-  "share_declined": { "message": "Paylaşılmadı: tafs-ın Chrome-da bu saytda icazəsi yoxdur." },
-  "share_permission": { "message": "Saytda ilk dəfə Chrome tafs-ın içəri girməsinə icazə verib-verməyəcəyinizi soruşur." },
   "vault_title": { "message": "Yadda saxlanmış girişlər" },
   "vault_body": { "message": "Burada saxlanıb, bu kompüterdə möhürlənib. Taf yalnız dəqiq həmin saytda istifadə etməyi xahiş edə bilər və yalnız həmin bir doldurmanı telefonunuzda təsdiq etdikdən sonra yazılır. tafs və KIFF onu heç vaxt görmür." },
   "vault_site": { "message": "Sayt" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Əvvəlki söhbətlər" },
   "coach_previous_none": { "message": "Əvvəlki söhbət yoxdur." },
   "coach_previous_error": { "message": "Əvvəlki söhbətlər yüklənə bilmədi." },
-  "coach_untitled": { "message": "Söhbət" }
+  "coach_untitled": { "message": "Söhbət" },
+  "taf_choose": { "message": "Danış:" },
+  "taf_placeholder": { "message": "$TAF$ üçün mesaj", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Bu, $TAF$-a çatmadı. Yenidən cəhd edin.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "taf-larınız oxuna bilmədi. Yenidən cəhd edin." },
+  "no_taf_here": { "message": "Bu Chrome-da hələ heç bir taf işləmir." },
+  "setup_taf": { "message": "Bu sayt üçün yeni taf qurun" }
 }

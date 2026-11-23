@@ -169,6 +169,21 @@ object ChromePairing {
     return rawSignature(Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
   }
 
+  /**
+   * The sites [grant] may move to another Chrome with ("Your Chrome" 2), as iOS's `ChromeSwitch.signedSites`: the ones this
+   * phone signed for it on the Chrome it uses now, checked with [approvalKeyDER] (its approval key), never planque's list as
+   * given. Null when its signature doesn't hold: a list planque widened, another Chrome's or another grant's signature, or a
+   * connection carried here from an earlier Chrome, which has none of its own. The phone never signs sites it didn't sign.
+   */
+  fun signedSites(grant: Grant, approvalKeyDER: ByteArray): List<String>? {
+    val b = grant.request.browser ?: return null
+    if (b.driver != GrantBrowser.EXTENSION) return null
+    val chrome = b.chrome?.takeIf { it.isNotEmpty() } ?: return null
+    val sites = b.sites?.takeIf { it.isNotEmpty() && it.size <= 100 } ?: return null
+    val sig = grant.chromeSitesSig?.takeIf { it.isNotEmpty() } ?: return null
+    return sites.takeIf { verifiesRaw(approvalKeyDER, sitesBytes(chrome, grant.id, sites), sig) }
+  }
+
   private fun labelled(label: String, body: JsonObject): ByteArray =
     label.toByteArray(Charsets.UTF_8) + byteArrayOf(0) + Jcs.canonical(body).toByteArray(Charsets.UTF_8)
 

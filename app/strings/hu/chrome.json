@@ -31,6 +31,8 @@
   "chrome.shot_none": "Ehhez a lépéshez nincs elmentett kép.",
   "chrome.shot_open": "A lap megtekintése e lépés előtt",
   "chrome.shot_title": "E lépés előtt",
+  "chrome.switch": "Másik Chrome használata",
+  "chrome.switch_prompt": "A kapcsolat áthelyezése ide: {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "A párosítás megszüntetése véget vet az őt használó kapcsolatoknak: {sites}. Csak akkor térnek vissza, ha újra összekapcsolod őket.",
   "chrome.used_for": "Ehhez használja: {sites}",

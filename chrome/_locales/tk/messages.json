@@ -1,0 +1,306 @@
+{
+  "name": {
+    "message": "tafs"
+  },
+  "description": {
+    "message": "tafs-laryňyz öz Chrome-ňyzda diňe rugsat beren sahypalaryňyzda işlesin, her howply ädim telefonyňyzda tassyklansyn."
+  },
+  "pair_title": {
+    "message": "Bu Chrome-y telefonyňyza goşalaň"
+  },
+  "pair_body": {
+    "message": "Telefonyňyzda tafs-y açyň, soňra Hasap › Chrome › Chrome goşalaň. Görkezilen kody şu ýere ýazyň."
+  },
+  "pair_profile": {
+    "message": "tafs öz Chrome profilinde işleýär. Diňe tafs-laryňyzyň ulanmagyny isleýän sahypalaryňyza şol ýerde giriň."
+  },
+  "pair_code_label": {
+    "message": "Telefonyňyzdaky kod"
+  },
+  "pair_button": {
+    "message": "Goşalaň"
+  },
+  "pair_sending": {
+    "message": "Iberilýär…"
+  },
+  "pair_waiting": {
+    "message": "Indi telefonyňyzda tassyklaň."
+  },
+  "pair_error_code": {
+    "message": "Bu kod nädogry ýa-da möhleti geçdi. Telefonyňyzda täzeden başlaň."
+  },
+  "pair_error_expired": {
+    "message": "Kodyň möhleti geçdi. Telefonyňyzda täzeden başlaň."
+  },
+  "pair_error_proof": {
+    "message": "Bu goşalamany tassyklap bolmady, şonuň üçin hiç zat goşalanmady. Telefonyňyzda täzeden başlaň."
+  },
+  "pair_error_planque": {
+    "message": "tafs-a ýetip bolmady. Birazdan gaýtadan synanyşyň."
+  },
+  "pair_error_not_released": {
+    "message": "Giňeltmäniň bu gurluşy goşalanyp bilmeýär. tafs-y Chrome Web Store-dan guruň."
+  },
+  "pair_error_none": {
+    "message": "Telefonyňyzda täzeden başlaň."
+  },
+  "pair_error_failed": {
+    "message": "Bir zat nädogry gitdi. Gaýtadan synanyşyň."
+  },
+  "paired_title": {
+    "message": "$NAME$ hökmünde goşalandy",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "paired_body": {
+    "message": "tafs-laryňyz bu Chrome-y diňe birikmäniň sanawlaýan sahypalarynda ulanyp biler. Howply ädimleri telefonyňyzda tassyklaýarsyňyz."
+  },
+  "idle": {
+    "message": "Häzir bu ýerde hiç bir taf işlemeýär."
+  },
+  "unpair": {
+    "message": "Bu Chrome-yň goşalamasyny aýyryň"
+  },
+  "unpair_confirm": {
+    "message": "Bu Chrome-yň goşalamasy aýyrylsynmy? Ony täzeden goşalaýançaňyz tafs-laryňyz ony ulanyp bilmez."
+  },
+  "connected": {
+    "message": "Birikdi"
+  },
+  "waiting": {
+    "message": "tafs-a garaşylýar"
+  },
+  "working": {
+    "message": "$TAF$ işleýär",
+    "placeholders": {
+      "taf": {
+        "content": "$1"
+      }
+    }
+  },
+  "paused_owner": {
+    "message": "Bes edildi: bu goýmany ulanýarsyňyz."
+  },
+  "paused_failures": {
+    "message": "Yzly-yzyna üç ädim işlemänsoň bes edildi."
+  },
+  "paused_no_progress": {
+    "message": "Bes edildi: şol bir ädim yzly-yzyna iki gezek hiç zady üýtgetmedi."
+  },
+  "pause": {
+    "message": "Bes ediň"
+  },
+  "resume": {
+    "message": "Dowam ediň"
+  },
+  "stop": {
+    "message": "Duruzyň"
+  },
+  "step_open": {
+    "message": "$SITE$ açyldy",
+    "placeholders": {
+      "site": {
+        "content": "$1"
+      }
+    }
+  },
+  "step_read": {
+    "message": "Sahypa okaldy"
+  },
+  "step_act_click": {
+    "message": "Basyldy"
+  },
+  "step_act_fill": {
+    "message": "Meýdan dolduryldy"
+  },
+  "step_act_select": {
+    "message": "Saýlama saýlandy"
+  },
+  "step_act_check": {
+    "message": "Gutujyk bellendi"
+  },
+  "step_navigate": {
+    "message": "$SITE$ sahypasyna geçmek saklandy",
+    "placeholders": {
+      "site": {
+        "content": "$1"
+      }
+    }
+  },
+  "step_paused": {
+    "message": "Bes edildi"
+  },
+  "step_paused_failures": {
+    "message": "Gaýtalanan şowsuzlykdan soň bes edildi"
+  },
+  "step_paused_no_progress": {
+    "message": "Bes edildi: hiç zat üýtgemedi"
+  },
+  "step_resumed": {
+    "message": "Dowam etdirildi"
+  },
+  "step_stopped": {
+    "message": "Duruzyldy"
+  },
+  "step_closed": {
+    "message": "Tamamlandy"
+  },
+  "step_refused": {
+    "message": "edilmedi ($CODE$)",
+    "placeholders": {
+      "code": {
+        "content": "$1"
+      }
+    }
+  },
+  "coach_title": {
+    "message": "Coach",
+    "description": "Side panel title"
+  },
+  "coach_placeholder": {
+    "message": "Coach-a ýazyň",
+    "description": "Composer placeholder"
+  },
+  "coach_send": {
+    "message": "Iberiň",
+    "description": "Send button"
+  },
+  "coach_working": {
+    "message": "Coach işleýär…"
+  },
+  "coach_error": {
+    "message": "Bu Coach-a ýetmedi. Gaýtadan synanyşyň."
+  },
+  "coach_not_started": {
+    "message": "Ilki telefonyňyzda Coach-y başlaň."
+  },
+  "unpaired": {
+    "message": "Bu Chrome indi goşalanan däl. Ony telefonyňyzdaky tafs programmasyndan täzeden goşalaň.",
+    "description": "A request refused because the Chrome is unpaired"
+  },
+  "approve_on_phone": {
+    "message": "Telefonyňyzda tassyklaň",
+    "description": "Where an approval waits"
+  },
+  "share_button": {
+    "message": "Bu sahypany paýlaşyň",
+    "description": "Share toggle"
+  },
+  "share_preview": {
+    "message": "Habaryňyz bilen gidýär:",
+    "description": "Label above the page preview (URL and title) before sending"
+  },
+  "share_remove": {
+    "message": "Aýyryň",
+    "description": "Remove the shared page from the message"
+  },
+  "share_chars": {
+    "message": "$N$ belgi",
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      }
+    }
+  },
+  "share_unavailable": {
+    "message": "Bu sahypa paýlaşylyp bilinmeýär.",
+    "description": "chrome:// pages, the Web Store, PDFs and other pages that can't be read"
+  },
+  "share_error_site_blocked": {
+    "message": "Muňa meňzeş sahypalar hiç haçan paýlaşylmaýar: banklar, gapjyklar, parollar, tölegler, saglyk we döwlet."
+  },
+  "share_error_bad_url": {
+    "message": "Diňe https sahypalary paýlaşylyp bilner."
+  },
+  "coach_empty_title": {
+    "message": "Coach bilen gürleşiň",
+    "description": "Empty chat: heading"
+  },
+  "coach_empty_body": {
+    "message": "Bu tafs programmasyndaky bilen deň gürrüň. Coach bu sahypany diňe siz paýlaşsaňyz görýär.",
+    "description": "Empty chat: body"
+  },
+  "share_note": {
+    "message": "Bu bir sahypany Coach-a iberýär, parol, kart we kod meýdanlary aýrylan görnüşde.",
+    "description": "Note under Share this page"
+  },
+  "vault_title": {
+    "message": "Ýatda saklanan girişler"
+  },
+  "vault_body": {
+    "message": "Şu ýerde saklanýar, bu kompýuterde möhürlenýär. Taf diňe şol anyk sahypada birini ulanmagy sorap biler, ol diňe şol bir dolduryşy telefonyňyzda tassyklanyňyzdan soň ýazylýar. tafs we KIFF muny hiç haçan görmeýär."
+  },
+  "vault_site": {
+    "message": "Sahypa"
+  },
+  "vault_username": {
+    "message": "Ulanyjy ady ýa-da e-poçta (islege görä)"
+  },
+  "vault_password": {
+    "message": "Parol"
+  },
+  "vault_save": {
+    "message": "Möhürläp saklaň"
+  },
+  "vault_saved": {
+    "message": "Saklandy. Bu kompýuterde möhürlendi."
+  },
+  "vault_error": {
+    "message": "Saklanmady: sahypa https talap edýär, we parol hem gerek."
+  },
+  "vault_remove": {
+    "message": "Aýyryň"
+  },
+  "vault_with_username": {
+    "message": "ulanyjy ady bilen"
+  },
+  "vault_one_per_site": {
+    "message": "Her sahypa üçin bir giriş: şol sahypa üçin başga birini saklasaňyz, ol çalşylýar."
+  },
+  "coach_new": {
+    "message": "Täze gürrüň"
+  },
+  "coach_previous": {
+    "message": "Öňki gürrüňler"
+  },
+  "coach_previous_none": {
+    "message": "Öňki gürrüň ýok."
+  },
+  "coach_previous_error": {
+    "message": "Öňki gürrüňler ýüklenmedi."
+  },
+  "coach_untitled": {
+    "message": "Gürrüň"
+  },
+  "taf_choose": {
+    "message": "Gürleşiň:"
+  },
+  "taf_placeholder": {
+    "message": "$TAF$-a ýazyň",
+    "placeholders": {
+      "taf": {
+        "content": "$1"
+      }
+    }
+  },
+  "taf_error": {
+    "message": "Bu $TAF$-a ýetmedi. Gaýtadan synanyşyň.",
+    "placeholders": {
+      "taf": {
+        "content": "$1"
+      }
+    }
+  },
+  "tafs_not_read": {
+    "message": "tafs-laryňyz okalmady. Gaýtadan synanyşyň."
+  },
+  "no_taf_here": {
+    "message": "Bu Chrome-da heniz hiç bir taf işlemeýär."
+  },
+  "setup_taf": {
+    "message": "Bu sahypa üçin täze taf guruň"
+  }
+}

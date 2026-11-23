@@ -42,8 +42,6 @@
   "step_resumed": { "message": "ສືບຕໍ່ແລ້ວ" },
   "step_stopped": { "message": "ຖືກຢຸດ" },
   "step_closed": { "message": "ສຳເລັດ" },
-  "allow_site": { "message": "ອະນຸຍາດ $SITE$ ໃນ Chrome", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "ຕ້ອງການການຢືນຢັນຂອງທ່ານໃນ Chrome ສຳລັບ $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "ຍັງບໍ່ໄດ້ເຮັດ ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "ສົ່ງຂໍ້ຄວາມຫາ Coach" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "ລົມກັບ Coach" },
   "coach_empty_body": { "message": "ເປັນການສົນທະນາດຽວກັນກັບໃນແອັບ tafs. Coach ເຫັນໜ້ານີ້ກໍຕໍ່ເມື່ອທ່ານແບ່ງປັນ." },
   "share_note": { "message": "ສົ່ງໜ້າດຽວນີ້ໃຫ້ Coach ໂດຍຕັດຊ່ອງລະຫັດຜ່ານ ບັດ ແລະ ລະຫັດອອກ." },
-  "share_declined": { "message": "ບໍ່ໄດ້ແບ່ງປັນ: tafs ບໍ່ໄດ້ຮັບອະນຸຍາດໃນເວັບໄຊນີ້ໃນ Chrome." },
-  "share_permission": { "message": "ຄັ້ງທຳອິດໃນເວັບໄຊ Chrome ຖາມວ່າທ່ານຈະໃຫ້ tafs ເຂົ້າບໍ." },
   "vault_title": { "message": "ການເຂົ້າສູ່ລະບົບທີ່ບັນທຶກໄວ້" },
   "vault_body": { "message": "ບັນທຶກໄວ້ທີ່ນີ້ ປະທັບຕາໄວ້ໃນຄອມພິວເຕີເຄື່ອງນີ້. taf ຂໍໃຊ້ໄດ້ສະເພາະໃນເວັບໄຊນັ້ນພໍດີ ແລະ ຈະຖືກພິມກໍຕໍ່ເມື່ອທ່ານອະນຸມັດການຕື່ມຄັ້ງດຽວນັ້ນໃນໂທລະສັບ. tafs ແລະ KIFF ບໍ່ເຄີຍເຫັນ." },
   "vault_site": { "message": "ເວັບໄຊ" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "ການສົນທະນາກ່ອນໜ້າ" },
   "coach_previous_none": { "message": "ບໍ່ມີການສົນທະນາກ່ອນໜ້າ." },
   "coach_previous_error": { "message": "ໂຫຼດການສົນທະນາກ່ອນໜ້ານີ້ບໍ່ໄດ້." },
-  "coach_untitled": { "message": "ການສົນທະນາ" }
+  "coach_untitled": { "message": "ການສົນທະນາ" },
+  "taf_choose": { "message": "ລົມກັບ" },
+  "taf_placeholder": { "message": "ຂໍ້ຄວາມເຖິງ $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "ມັນບໍ່ໄປຮອດ $TAF$. ລອງໃໝ່ອີກຄັ້ງ.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "ບໍ່ສາມາດອ່ານ tafs ຂອງທ່ານໄດ້. ລອງໃໝ່ອີກຄັ້ງ." },
+  "no_taf_here": { "message": "ຍັງບໍ່ມີ taf ເຮັດວຽກໃນ Chrome ນີ້." },
+  "setup_taf": { "message": "ຕັ້ງ taf ໃໝ່ສຳລັບເວັບໄຊນີ້" }
 }

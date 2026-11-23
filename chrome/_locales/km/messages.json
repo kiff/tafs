@@ -42,8 +42,6 @@
   "step_resumed": { "message": "បានបន្ត" },
   "step_stopped": { "message": "បានឈប់" },
   "step_closed": { "message": "បានបញ្ចប់" },
-  "allow_site": { "message": "អនុញ្ញាត $SITE$ ក្នុង Chrome", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "ត្រូវការការយល់ព្រមរបស់អ្នកក្នុង Chrome សម្រាប់ $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "មិនបានធ្វើ ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "ផ្ញើសារទៅ Coach" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "និយាយជាមួយ Coach" },
   "coach_empty_body": { "message": "វាជាការសន្ទនាតែមួយដូចក្នុងកម្មវិធី tafs។ Coach ឃើញទំព័រនេះតែនៅពេលអ្នកចែករំលែកប៉ុណ្ណោះ។" },
   "share_note": { "message": "ផ្ញើទំព័រតែមួយនេះទៅ Coach ដោយដកប្រអប់ពាក្យសម្ងាត់ កាត និងលេខកូដចេញ។" },
-  "share_declined": { "message": "មិនបានចែករំលែក៖ tafs មិនត្រូវបានអនុញ្ញាតលើគេហទំព័រនេះក្នុង Chrome ទេ។" },
-  "share_permission": { "message": "លើកដំបូងនៅលើគេហទំព័រ Chrome សួរថាតើអ្នកអនុញ្ញាតឱ្យ tafs ចូលឬអត់។" },
   "vault_title": { "message": "ព័ត៌មានចូលដែលបានរក្សាទុក" },
   "vault_body": { "message": "បានរក្សាទុកនៅទីនេះ បិទជិតលើកុំព្យូទ័រនេះ។ taf អាចស្នើប្រើវាបានតែលើគេហទំព័រពិតប្រាកដនោះប៉ុណ្ណោះ ហើយវាត្រូវបានវាយបញ្ចូលតែបន្ទាប់ពីអ្នកយល់ព្រមការបំពេញតែមួយនោះនៅលើទូរសព្ទ។ tafs និង KIFF មិនដែលឃើញវាទេ។" },
   "vault_site": { "message": "គេហទំព័រ" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "ការសន្ទនាមុនៗ" },
   "coach_previous_none": { "message": "គ្មានការសន្ទនាមុនៗទេ។" },
   "coach_previous_error": { "message": "មិនអាចផ្ទុកការសន្ទនាមុនៗបានទេ។" },
-  "coach_untitled": { "message": "ការសន្ទនា" }
+  "coach_untitled": { "message": "ការសន្ទនា" },
+  "taf_choose": { "message": "និយាយជាមួយ" },
+  "taf_placeholder": { "message": "សារទៅ $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "វាមិនបានទៅដល់ $TAF$ ទេ។ សូមព្យាយាមម្ដងទៀត។", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "មិនអាចអាន tafs របស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។" },
+  "no_taf_here": { "message": "មិនទាន់មាន taf ធ្វើការក្នុង Chrome នេះនៅឡើយទេ។" },
+  "setup_taf": { "message": "រៀបចំ taf ថ្មីសម្រាប់គេហទំព័រនេះ" }
 }
