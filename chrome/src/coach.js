@@ -70,6 +70,48 @@ export class Coach {
     };
   }
 
+  /** The account's tafs as the person sees them (`GET /v1/tafs`): `{id, name, agent}`, an agent being KIFF's id for it. */
+  async tafs() {
+    const r = await this.call("GET", "/v1/tafs");
+    return (r.tafs || [])
+      .filter((t) => t && typeof t.id === "string" && t.id && typeof t.kiff_agent === "string" && t.kiff_agent)
+      .map((t) => ({ id: t.id, name: typeof t.name === "string" ? t.name : "", agent: t.kiff_agent }));
+  }
+
+  /**
+   * The account's tafs, read once for `key` (this Chrome's connections as the relay last said them) and kept: a chat's
+   * reads and sends ask tafs cloud for none. A change of the connections reads them again, and `fresh` does too (the
+   * panel shown). A read that fails isn't kept.
+   */
+  keptTafs(key, fresh = false) {
+    if (fresh || !this.tafsKept || this.tafsKey !== key) {
+      const read = this.tafs();
+      this.tafsKey = key;
+      this.tafsKept = read;
+      read.catch(() => {
+        if (this.tafsKept === read) this.tafsKept = null;
+      });
+    }
+    return this.tafsKept;
+  }
+
+  /** A taf's own chat, as the phone reads it: the same shape as Coach's `thread`. */
+  async tafThread(id) {
+    const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation");
+    return {
+      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at })),
+      working: t.working ? t.working.session : null,
+      waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
+    };
+  }
+
+  /** Sends the owner's words to a taf's own chat. */
+  async sendToTaf(id, words, clientID) {
+    const text = String(words || "").trim().slice(0, MAX_TEXT);
+    if (!text) throw Object.assign(new Error("nothing to send"), { code: "empty" });
+    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", { text, client_message_id: clientID });
+  }
+
   /**
    * The person's chats with Coach, newest first, as the phone's Previous conversations lists them: `{session, title,
    * updated}`. A chat they set aside carries `set_aside` and isn't offered.

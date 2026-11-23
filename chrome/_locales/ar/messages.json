@@ -42,8 +42,6 @@
   "step_resumed": { "message": "تم الاستئناف" },
   "step_stopped": { "message": "متوقف" },
   "step_closed": { "message": "انتهى" },
-  "allow_site": { "message": "السماح بـ $SITE$ في Chrome", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "يحتاج موافقتك في Chrome على $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "لم يتم ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "راسل Coach" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "تحدّث مع Coach" },
   "coach_empty_body": { "message": "إنها المحادثة نفسها كما في تطبيق tafs. لا يرى Coach هذه الصفحة إلا إذا شاركتها." },
   "share_note": { "message": "يرسل إلى Coach هذه الصفحة الواحدة، مع إزالة حقول كلمة المرور والبطاقة والرمز." },
-  "share_declined": { "message": "لم تتم المشاركة: لا يُسمح لـ tafs بهذا الموقع في Chrome." },
-  "share_permission": { "message": "في المرة الأولى على موقع، يسألك Chrome هل تسمح لـ tafs بالدخول إليه." },
   "vault_title": { "message": "تسجيلات الدخول المحفوظة" },
   "vault_body": { "message": "محفوظ هنا، ومختوم على هذا الكمبيوتر. يمكن لـ taf أن يطلب استخدامه على ذلك الموقع بالضبط فقط، ولا يُكتب إلا بعد أن توافق على تلك التعبئة الواحدة على هاتفك. لا يراه tafs ولا KIFF أبدًا." },
   "vault_site": { "message": "الموقع" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "المحادثات السابقة" },
   "coach_previous_none": { "message": "لا توجد محادثات سابقة." },
   "coach_previous_error": { "message": "تعذّر تحميل المحادثات السابقة." },
-  "coach_untitled": { "message": "محادثة" }
+  "coach_untitled": { "message": "محادثة" },
+  "taf_choose": { "message": "تحدّث إلى" },
+  "taf_placeholder": { "message": "رسالة إلى $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "لم تصل الرسالة إلى $TAF$. حاول مجددًا.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "تعذّرت قراءة tafs الخاصة بك. حاول مجددًا." },
+  "no_taf_here": { "message": "لا يعمل أي taf في هذا المتصفح بعد." },
+  "setup_taf": { "message": "إعداد taf جديد لهذا الموقع" }
 }

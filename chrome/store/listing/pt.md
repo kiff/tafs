@@ -12,12 +12,12 @@ O tafs para Chrome deixa os seus tafs trabalharem no seu próprio Chrome, só no
 
 • Associe este Chrome ao seu telemóvel: na app tafs, abra Conta › Chrome › Associar um Chrome e escreva o código que aparece.
 • Um taf trabalha nos seus próprios separadores, num grupo de separadores que pode ver. Pode pô-lo em pausa ou pará-lo a qualquer momento, e ele para quando toca num dos seus separadores.
-• O tafs só pode usar um site depois de o permitir no Chrome, um site de cada vez, quando uma tarefa precisa dele.
+• O Chrome pede uma única vez, na instalação, acesso a todos os sites. O tafs só trabalha nos sites que cada tarefa indica, e que aprova no telemóvel.
 • Pagar, fazer uma encomenda e preencher um início de sessão guardado esperam sempre pela sua aprovação no telemóvel.
 • Lê uma página como texto e campos de formulário, sem os campos de palavra-passe, cartão e código. Nunca lê os seus outros separadores nem o seu histórico.
 • Sites de bancos, carteiras, gestores de palavras-passe, pagamentos, saúde e administração pública nunca são usados, a não ser que permita um, para uma tarefa, no telemóvel.
 • Os inícios de sessão guardados são opcionais e ficam selados neste computador. O tafs e o KIFF nunca os veem.
-• Fale com o Coach no painel lateral. O Coach só vê uma página quando clica em Partilhar esta página, e então só essa página, com os mesmos campos removidos.
+• O painel lateral mostra o taf que trabalha neste Chrome, e fala com ele aí, como na app tafs. «Configurar um novo taf para este site» abre o Coach, que só vê uma página quando clica em «Partilhar esta página», e então só essa página, com os mesmos campos removidos.
 
 O que um taf lê vai para a IA que executa a sua tarefa e fica guardado com essa tarefa. O KIFF guarda a página antes e depois de uma alteração no máximo 30 dias. Quando as capturas de ecrã forem ativadas, cada passo que age guarda também uma captura da página, feita mesmo antes da ação com os campos de palavra-passe, cartão e código ocultos, no máximo 30 dias. Só a vê na app tafs e nunca vai para a IA. Desassociar ou desinstalar apaga o que a extensão guarda no seu computador.
 

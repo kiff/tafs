@@ -31,6 +31,8 @@
   "chrome.shot_none": "За тази стъпка не е запазена картина.",
   "chrome.shot_open": "Виж страницата преди тази стъпка",
   "chrome.shot_title": "Преди тази стъпка",
+  "chrome.switch": "Използвай друг Chrome",
+  "chrome.switch_prompt": "Премести тази връзка към {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Прекратяването на връзката със Chrome слага край на свързванията, които го ползват: {sites}. Връщат се само ако ги свържеш отново.",
   "chrome.used_for": "Използва се за {sites}",

@@ -1,0 +1,1 @@
+- **Android:** a connection that runs in your own Chrome can move to another of your paired Chromes, from its page in Connect apps, behind one fingerprint naming it, as on iPhone and iPad ([docs/android-app.md](../docs/android-app.md), Connect apps).

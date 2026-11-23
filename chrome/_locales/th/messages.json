@@ -42,8 +42,6 @@
   "step_resumed": { "message": "ทำต่อแล้ว" },
   "step_stopped": { "message": "หยุดแล้ว" },
   "step_closed": { "message": "เสร็จแล้ว" },
-  "allow_site": { "message": "อนุญาต $SITE$ ใน Chrome", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "ต้องการคำยืนยันของคุณใน Chrome สำหรับ $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "ยังไม่ได้ทำ ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "ส่งข้อความถึง Coach" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "คุยกับ Coach" },
   "coach_empty_body": { "message": "เป็นแชตเดียวกับในแอป tafs Coach จะเห็นหน้านี้ก็ต่อเมื่อคุณแชร์" },
   "share_note": { "message": "ส่งหน้านี้หน้าเดียวให้ Coach โดยตัดช่องรหัสผ่าน บัตร และรหัสออก" },
-  "share_declined": { "message": "ไม่ได้แชร์: tafs ไม่ได้รับอนุญาตบนเว็บไซต์นี้ใน Chrome" },
-  "share_permission": { "message": "ครั้งแรกบนเว็บไซต์ Chrome จะถามว่าคุณจะให้ tafs เข้าหรือไม่" },
   "vault_title": { "message": "การเข้าสู่ระบบที่บันทึกไว้" },
   "vault_body": { "message": "บันทึกไว้ที่นี่ ผนึกไว้บนคอมพิวเตอร์เครื่องนี้ taf ขอใช้ได้เฉพาะบนเว็บไซต์นั้นพอดี และจะถูกพิมพ์ก็ต่อเมื่อคุณอนุมัติการกรอกครั้งนั้นบนโทรศัพท์ tafs และ KIFF ไม่เคยเห็น" },
   "vault_site": { "message": "เว็บไซต์" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "การสนทนาก่อนหน้า" },
   "coach_previous_none": { "message": "ยังไม่มีการสนทนาก่อนหน้า" },
   "coach_previous_error": { "message": "โหลดการสนทนาก่อนหน้าไม่ได้" },
-  "coach_untitled": { "message": "การสนทนา" }
+  "coach_untitled": { "message": "การสนทนา" },
+  "taf_choose": { "message": "คุยกับ" },
+  "taf_placeholder": { "message": "ข้อความถึง $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "ข้อความไม่ถึง $TAF$ ลองอีกครั้ง", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "อ่าน tafs ของคุณไม่ได้ ลองอีกครั้ง" },
+  "no_taf_here": { "message": "ยังไม่มี taf ทำงานใน Chrome นี้" },
+  "setup_taf": { "message": "ตั้งค่า taf ใหม่สำหรับเว็บไซต์นี้" }
 }
