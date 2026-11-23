@@ -8,6 +8,7 @@
   "chrome.replace_moves": "Passa para este Chrome: {sites}",
   "chrome.replace_none": "Um novo Chrome (não substitui nenhum)",
   "chrome.replace_unpairs": "{name} é desemparelhado assim que este for emparelhado.",
+  "chrome.switch_prompt": "Mover esta conexão para {name}",
   "chrome.unpair_ends": "Desemparelhar encerra as conexões que o usam: {sites}. Elas só voltam se você conectá-las de novo.",
   "chrome.used_for": "Usado para {sites}",
   "chrome.waiting": "Aguardando o Chrome…"
