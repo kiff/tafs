@@ -43,3 +43,30 @@ test("the sensitive list is the vectors' list, and reads each sample host the sa
   assert.equal(SENSITIVE.labels.source, s.labels);
   for (const [host, want] of Object.entries(s.hosts)) assert.equal(sensitive(host), want, host);
 });
+
+// vectors/chrome-release.json: the phone's release of one sealed value for one fill (docs/chrome.md, "The phone's release card").
+// The phones' tests build the same bytes and read the same handles; planque's half must match it.
+const r = JSON.parse(readFileSync(new URL("../../vectors/chrome-release.json", import.meta.url), "utf8"));
+
+test("a release signs the vector's bytes, takes only the vector's handles, and holds only as the extension checks it", async () => {
+  const { checkRelease } = await import("../src/protocol.js");
+  const { parseHandle } = await import("../src/vault.js");
+  const { sign, newKeyPair, publicSPKI } = await import("../src/crypto.js");
+  const body = { chrome_id: r.chrome_id, op: r.op, sealed: r.sealed, origin: r.origin, field_ref: r.field_ref, read_id: r.read_id, nonce: r.nonce, exp: r.exp };
+  assert.equal(b64u(signingBytes(LABEL.release, body)), r.signed_bytes);
+  for (const [h, part] of Object.entries(r.handles)) assert.equal(parseHandle(h)?.part ?? null, part, JSON.stringify(h));
+  // A release made over these fields by the paired phone holds; any field changed, another Chrome's, or a late one, doesn't.
+  const phone = await newKeyPair();
+  const phoneKey = b64u(await publicSPKI(phone.publicKey));
+  const release = { chrome_id: r.chrome_id, op: r.op, origin: r.origin, nonce: r.nonce, exp: r.exp, sig: await sign(phone.privateKey, LABEL.release, body) };
+  const step = { id: r.op, read_id: r.read_id, act: { kind: "fill", ref: r.field_ref, sealed: r.sealed } };
+  const at = { phoneKey, chromeId: r.chrome_id, step, origin: r.origin, now: r.exp - 30_000 };
+  assert.equal(await checkRelease(release, at), true);
+  assert.equal(await checkRelease(release, { ...at, origin: "https://other.example" }), false, "another origin");
+  assert.equal(await checkRelease(release, { ...at, chromeId: "chr_other" }), false, "another Chrome");
+  assert.equal(await checkRelease(release, { ...at, step: { ...step, act: { ...step.act, sealed: "sec_Ab3dE-f_9q:username" } } }), false, "the other part");
+  assert.equal(await checkRelease(release, { ...at, step: { ...step, act: { ...step.act, ref: "f3" } } }), false, "another field");
+  assert.equal(await checkRelease(release, { ...at, step: { ...step, read_id: "rd_8" } }), false, "another read");
+  assert.equal(await checkRelease({ ...release, nonce: "AAECAwQFBgcICQoLDA0OEA" }, at), false, "another nonce");
+  assert.equal(await checkRelease(release, { ...at, now: r.exp + 1 }), false, "late");
+});
