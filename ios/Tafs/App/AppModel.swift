@@ -347,10 +347,10 @@ final class AppModel: ObservableObject {
     /// the same as another. As Android's `sameTime` (tafs#1675).
     nonisolated static func sameTime(_ a: String, _ b: String) -> Bool {
         if a == b { return true }
+        // A zone that never changes its offset (no summer time, none coming), as its offset; nil for any other or an unknown id.
         func fixed(_ id: String) -> Int? {
-            if ["Z", "UTC", "GMT", "Etc/UTC", "Etc/GMT", "Etc/Zulu", "Etc/Universal", "Universal", "Zulu", "UCT", "Etc/UCT"].contains(id) { return 0 }
-            guard let zone = TimeZone(identifier: id), zone.nextDaylightSavingTimeTransition == nil,
-                  !zone.isDaylightSavingTime(), id.hasPrefix("Etc/") || id.hasPrefix("GMT") || id.hasPrefix("UTC") else { return nil }
+            guard let zone = id == "Z" ? TimeZone(secondsFromGMT: 0) : TimeZone(identifier: id),
+                  zone.nextDaylightSavingTimeTransition == nil, !zone.isDaylightSavingTime() else { return nil }
             return zone.secondsFromGMT()
         }
         guard let x = fixed(a), let y = fixed(b) else { return false }
