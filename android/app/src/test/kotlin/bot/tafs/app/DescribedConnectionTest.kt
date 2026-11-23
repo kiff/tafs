@@ -52,4 +52,16 @@ class DescribedConnectionTest {
     assertFalse(grant(""","health":{"state":"ok","ok":true,"words":""},"actions":[]""").rowFromPlanque)
     assertFalse(grant(health).rowFromPlanque)
   }
+
+  /** A connection in the owner's Chrome says which one, by planque's name for it; nothing for any other connection. */
+  @Test fun aConnectionInTheOwnersChromeSaysWhichOne() {
+    fun g(browser: String) = bot.tafs.app.kiff.KiffClient.json.decodeFromString(bot.tafs.app.kiff.Grant.serializer(),
+      """{"id":"g1","status":"connected","text":"","digest":"d","request":{"server":"s","agent":"a","tools":[]$browser}}""")
+    val inChrome = g(""","browser":{"driver":"extension","chrome":"chr_1","chrome_name":"Work Mac","sites":["wikipedia.org"]}""")
+    assertEquals("Work Mac", inChrome.request.browser?.chromeName)
+    assertEquals(bot.tafs.app.model.Words.Chrome.heldIn(name = "Work Mac"), bot.tafs.app.views.connectionChromeLine(inChrome))
+    assertNull("planque's hosted browser", bot.tafs.app.views.connectionChromeLine(g(""","browser":{"sites":["wikipedia.org"]}""")))
+    assertNull("no name sent", bot.tafs.app.views.connectionChromeLine(g(""","browser":{"driver":"extension","chrome":"chr_1","chrome_name":"  "}""")))
+    assertNull("not a browser connection", bot.tafs.app.views.connectionChromeLine(g("")))
+  }
 }
