@@ -18,9 +18,11 @@ import { checkRelease, checkAllowances, checkSites, Nonces } from "./protocol.js
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
 const STEP_TIMEOUT_MS = 20_000;
-// A read of a site Chrome hasn't let the extension into waits this long for the owner's Allow in the side panel, checking each
+// An open or a read of a site Chrome hasn't let the extension into waits this long for the owner's Allow in the side panel, checking each
 // half second, before it answers `needs_site_permission`. An open waits before it makes a tab; the panel shows the button.
-const PERMISSION_WAIT_MS = 25_000;
+// planque waits 20 s for a step's result, so the wait ends well inside it (12 s), and the owner sees "allow the site" from the
+// phone, not a timeout of the step.
+const PERMISSION_WAIT_MS = 12_000;
 const PERMISSION_POLL_MS = 500;
 const FAILURES_TO_PAUSE = 3;
 // A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its tabs close (and its window, when it has its own). One

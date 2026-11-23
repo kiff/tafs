@@ -353,6 +353,15 @@ test("a site nobody allows answers needs_site_permission naming it, and keeps as
   assert.ok(!c.calls.some((x) => x[0] === "windows.create" || x[0] === "tabs.create" || x[0] === "tabs.update"), "no tab was opened for it");
 });
 
+test("the wait for a site's Allow ends inside planque's 20 s for a step's result", async () => {
+  const c = fakeChrome({ permitted: false });
+  let slept = 0;
+  const r = new Runner({ chrome: c, sleep: async (ms) => { slept += ms; }, paired: () => paired });
+  const out = await r.handle(step());
+  assert.equal(out.error.code, "needs_site_permission");
+  assert.ok(slept > 0 && slept <= 12_000, `waited ${slept} ms`);
+});
+
 test("a Stop during the wait for a site's Allow ends the wait", async () => {
   const c = fakeChrome({ permitted: false });
   let r;
@@ -360,7 +369,7 @@ test("a Stop during the wait for a site's Allow ends the wait", async () => {
   r = new Runner({ chrome: c, sleep: async () => { if (++n === 3) await r.stop("run_1"); }, paired: () => paired });
   const out = await r.handle(step());
   assert.equal(out.error.code, "needs_site_permission");
-  assert.ok(n < 10, "it didn't wait out the 25 s");
+  assert.ok(n < 10, "it didn't wait out the 12 s");
 });
 
 test("a site Chrome hasn't let the extension into waits for the owner's yes in the side panel", async () => {
