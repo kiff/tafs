@@ -7718,6 +7718,25 @@ class AppModel(
    * from here nothing of the taf runs. With [redraft], its Cards are drafted again. Null, with the reason in
    * [AppState.versionErrors], when it can't begin; a run in the way is named, with the one step that clears it.
    */
+  /**
+   * A switch that stopped a task waiting on the owner's answer (`stop_blocking`; the owner's panel test, 23 Nov): said in tafs
+   * cloud's words, and the chat ends as a run that didn't go through, with Run again on the owner's last message of a stopped
+   * session (one tap, never by itself). Nothing when nothing waiting was stopped.
+   */
+  internal fun switchStopped(tafId: String, begun: bot.tafs.app.kiff.SwitchResponse) {
+    val words = begun.words?.takeIf { it.isNotBlank() } ?: return
+    if (begun.stopped.isEmpty()) return
+    val sessions = begun.stopped.map { it.session }.toSet()
+    val retry = _state.value.chats[tafId]?.lastOrNull { it.from == ChatMessage.From.owner && it.session in sessions }?.text?.takeIf { it.isNotBlank() }
+    _state.update { s ->
+      s.copy(
+        lastError = words,
+        chatAwaiting = s.chatAwaiting - tafId,
+        chatEnded = if (retry != null) s.chatEnded + (tafId to ChatEnd.Failed(retry, emptyList(), words)) else s.chatEnded,
+      )
+    }
+  }
+
   suspend fun prepareSwitch(version: Version, tafId: String, redraft: Boolean = false, stopBlocking: Boolean = false): Switching? {
     val cloudId = _state.value.taf(tafId)?.cloudId
     if (_state.value.mode != Mode.kiff || cloudId == null || version.live) return null
@@ -7725,9 +7744,13 @@ class AppModel(
     versionError(tafId, null)
     _state.update { it.copy(blockedInstalls = it.blockedInstalls - tafId) }
     return try {
-      cloud.beginSwitch(cloudId, version.n, redraft, stopBlocking).also { sw ->
-        if (generation == accountGeneration) _state.update { it.copy(switches = it.switches + (tafId to sw), staleVersionCards = it.staleVersionCards - tafId) }
-      }.takeIf { generation == accountGeneration }
+      cloud.beginSwitch(cloudId, version.n, redraft, stopBlocking).let { begun ->
+        if (generation != accountGeneration) return null
+        val sw = begun.switching
+        _state.update { it.copy(switches = it.switches + (tafId to sw), staleVersionCards = it.staleVersionCards - tafId) }
+        switchStopped(tafId, begun)
+        sw
+      }
     } catch (e: CancellationException) {
       throw e
     } catch (e: CloudError) {
@@ -7835,7 +7858,7 @@ class AppModel(
 
     // Begun before any Card changes, with the draft tafs cloud prepared: from here nothing of the taf runs. Again for
     // a switch under way is the same switch.
-    val sw = try {
+    val begun = try {
       cloud.beginSwitch(cloudId, version.n, stopBlocking = stopBlocking)
     } catch (e: CancellationException) {
       throw e
@@ -7844,7 +7867,9 @@ class AppModel(
       return false
     }
     if (generation != accountGeneration) return false
+    val sw = begun.switching
     _state.update { it.copy(switches = it.switches + (tafId to sw)) }
+    switchStopped(tafId, begun)
 
     var draft: AgentDraft? = null
     if (sw.draft != null) {
