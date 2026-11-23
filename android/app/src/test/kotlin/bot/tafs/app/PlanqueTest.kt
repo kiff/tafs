@@ -496,7 +496,10 @@ class PlanqueTest {
     assertTrue(m.state.value.listApprovalAgain)
     assertTrue("nothing approved before Approve", transport.requestsTo(approve).isEmpty())
     // Drawn on a digest that's no longer the request's (planque added tools meanwhile): nothing is signed or sent.
-    m.readProfileWords("g1")
+    // The sheet's read of KIFF's words, waited for: `readProfileWords` reads them in the model's own scope, and Approve on words
+    // not read yet signs nothing ("aren't read yet"), so a read still running on another thread made the approve below flaky.
+    m.loadProfileWords("g1")
+    assertNotNull(m.state.value.profileWordsFor(m.state.value.grants.single()))
     m.approveFromList("g1", "an-older-digest", again = true)
     assertTrue(transport.requestsTo(approve).isEmpty())
     assertEquals(bot.tafs.app.model.VersionWords.OUT_OF_DATE_CARD, m.state.value.coachNotes[bot.tafs.app.model.ConnectWords.cardKey("g1")])

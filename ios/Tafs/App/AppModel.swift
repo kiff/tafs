@@ -1485,8 +1485,12 @@ final class AppModel: ObservableObject {
         var confirmation = ChromePairing.confirmation(secret: p.secret, chromeKey: chromeKey, name: name, phoneKey: phoneKey)
         // Replacing a Chrome ("Your Chrome" 1): the connections on it move, read again just now so the owner signs what is live,
         // and the fingerprint signs them inside the pairing the extension checks. With nothing chosen, nothing moves.
-        if let old {
+        if let picked = old {
+            // The Chrome's own list (planque's `connections`) and the grants (their signatures) are both read again, so what is carried
+            // is what is live now, never what the pick showed a while ago.
+            await refreshChromes()
             await refreshConnections()
+            let old = chromes?.first { $0.id == picked.id } ?? picked
             confirmation.replaces = old.id
             let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phoneKey)
             if !carried.isEmpty { confirmation.carried = carried }
@@ -3928,7 +3932,16 @@ final class AppModel: ObservableObject {
             // effort: the alert and the hold's expiry still continue it.
             let taf = cloudTaf(for: call.tafID)
             Task {
-                if let taf { _ = try? await cloud.continueHeld(taf.id, exception: kiffID) }
+                if let taf {
+                    do { _ = try await cloud.continueHeld(taf.id, exception: kiffID) }
+                    catch let refusal as TafsCloud.CloudError where refusal.status == 404 && refusal.code == "run_ended" {
+                        // The yes landed after the run that waited on the call had ended: nothing ran, and the owner is told so
+                        // (tafs cloud's words), with Retry on the message that run was for, never silence.
+                        runEndedAfterApproval(call.tafID, words: refusal.words)
+                    } catch {
+                        // Best effort, as before: the alert and the hold's expiry still continue it.
+                    }
+                }
                 await refresh()
             }
         }
@@ -6065,6 +6078,20 @@ final class AppModel: ObservableObject {
         guard !done.isEmpty else { return Words.Work.stoppedPartWayBeforeFinished(taf: "\(taf)") }
         let list = calls.joined(separator: "; ")
         return calls.count == 1 ? Words.Chat.Failed.after(taf: "\(taf)", calls: list) : Words.Chat.Failed.afterSeveral(taf: "\(taf)", calls: list)
+    }
+
+    /// The owner approved a held call after its run had ended (tafs cloud answered `run_ended`): nothing ran. The chat says so, in tafs
+    /// cloud's words, with Retry on the owner's last message (the same line as a run that failed part-way), and so does the screen
+    /// they answered on. Without a message to send again, only the words.
+    func runEndedAfterApproval(_ tafID: UUID, words: String?) {
+        guard let words, !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        lastError = words
+        guard let text = chats[tafID]?.last(where: { $0.from == .owner })?.text, !text.isEmpty else { return }
+        chatStates[tafID, default: ChatState()].awaiting = nil
+        chatStates[tafID]?.ended = .failed(retry: text)
+        chatStates[tafID]?.endedRun = nil
+        chatStates[tafID]?.wentThrough = []
+        chatStates[tafID]?.failedWhy = words
     }
 
     /// Retry on a run that failed part-way: its message is sent again.

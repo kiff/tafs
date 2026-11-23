@@ -499,7 +499,7 @@ one exact origin (`chrome/src/vault.js`).
 | `release_missing` | no release, one not signed by the paired phone, for another step, field or origin, expired, or already used |
 | `sealed_unknown` | no sign-in is saved under that handle for this origin |
 
-### The phone's release card (design, not built)
+### The phone's release card (design; Android's checks built, off)
 
 The extension already refuses a sealed fill without the phone's `tafs-chrome/release/v1` (`protocol.checkRelease`). This is the
 card on the phone that makes one. It is a hold like any other (see "The approval card"), so a release is **never** made by a
@@ -579,14 +579,20 @@ releases, is a later change, once one card is built and used.
   A compromised planque could therefore choose which fitting field on that origin gets the value (a username into another
   text field, say). It can never send a value anywhere else, make a release, or fill a field of the wrong kind.
 
-**Open for planque** (its docs, not this one): the held call's kind for a sealed fill, how the answer's `release` reaches
-the step, and the vector for `tafs-chrome/release/v1` (`vectors/chrome-release.json`, made from `checkRelease` and checked by
-the extension's and each app's tests) that both apps need before they sign.
+**The vector** is `vectors/chrome-release.json`: the eight fields, the bytes the phone signs, and the handles a phone takes
+with the part each names, made from the extension's own `signingBytes` and `parseHandle`. The extension's test checks it
+against `checkRelease` (a release over those fields holds; another origin, Chrome, part, field, read or nonce, or a late
+one, doesn't), and Android's builds the same bytes.
+
+**Open for planque** (its docs, not this one): the held call's kind for a sealed fill, and how the answer's `release`
+reaches the step. They must match the vector.
 
 **For the apps,** the card is built once on iPhone and iPad (`BrowserStepBlock`'s sibling in `NeedsYouView`) and once on
-Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every language and each tested against the vector: a
-release made from it is accepted by `checkRelease`, and one with any field changed, another Chrome's, an expired one, or
-a reused nonce is refused.
+Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every language and each tested against the vector.
+**Android's checks and signing are built, off** (`SealedRelease`, `ENABLED = false`): the handle's part, the refusals above
+(a paired Chrome, the hold's time, an `https` origin within the sites this phone signed for the grant, a sensitive site only
+with this phone's own allowance, the op, read and field present), and a release with a new 16-byte nonce and `exp` 60 s on,
+signed over the vector's bytes. The card itself, its words and its fingerprint follow when planque holds a sealed fill.
 
 ## A step handed to the person
 
@@ -728,5 +734,5 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 ## Not done yet
 
-- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it; the card that signs it is designed ("The phone's release card") and still to build.
+- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it, and the vector and Android's checks are built, off. planque's hold for a sealed fill and the cards on both phones are still to build ("The phone's release card").
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.
