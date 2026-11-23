@@ -34,7 +34,9 @@ export function clockOffset(welcome, now = Date.now()) {
 }
 export const NONCE_MEMORY_MS = 10 * 60_000;
 
-const OPS = new Set(["open", "read", "act", "close"]);
+// Every op the runner takes (runner.js dispatch); a test keeps the two the same. "hand" was missing until 0.2.2, so
+// every hand-over came back bad_step before the runner could check it.
+const OPS = new Set(["open", "read", "act", "hand", "close"]);
 
 /** Nonces of steps already taken, each kept until well past its step's expiry. */
 export class Nonces {
