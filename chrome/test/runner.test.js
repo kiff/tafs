@@ -275,9 +275,10 @@ test("a Stop that lands while the tab is being made leaves nothing open, in the 
     let release;
     const gate = new Promise((resolve) => (release = resolve));
     const made = ownerWindow ? c.tabs.create : c.windows.create;
-    (ownerWindow ? c.tabs : c.windows)[ownerWindow ? "create" : "create"] = async (o) => (await gate, made(o));
+    let reached = false; // the open is at the tab being made, not before it: a timer would only guess
+    (ownerWindow ? c.tabs : c.windows)[ownerWindow ? "create" : "create"] = async (o) => ((reached = true), await gate, made(o));
     const opening = r.handle(step());
-    await new Promise((resolve) => setTimeout(resolve, 5));
+    while (!reached) await new Promise((resolve) => setTimeout(resolve, 1));
     await r.stop("run_1"); // nothing of the run's exists yet to close
     release();
     const out = await opening;
@@ -296,9 +297,10 @@ test("a Stop that lands while the tab is being fenced and grouped closes it, and
   let release;
   const gate = new Promise((resolve) => (release = resolve));
   const update = c.tabGroups.update;
-  c.tabGroups.update = async (...args) => (await gate, update(...args));
+  let reached = false;
+  c.tabGroups.update = async (...args) => ((reached = true), await gate, update(...args));
   const opening = r.handle(step());
-  await new Promise((resolve) => setTimeout(resolve, 5));
+  while (!reached) await new Promise((resolve) => setTimeout(resolve, 1));
   await r.stop("run_1"); // the tab is the run's by now: this closes it
   release();
   assert.equal((await opening).error.code, "stopped");
