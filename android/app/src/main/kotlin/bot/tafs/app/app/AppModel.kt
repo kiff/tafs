@@ -10055,21 +10055,33 @@ data class AllowSheetState(
  * A door's address on tafs cloud ([base]), whole. Only ever on tafs cloud's own host, over HTTPS (as iOS, Windows and Linux): a
  * whole address is kept only when it's https on that host with no port or user; anything else, another host or a scheme with
  * no host of its own, is its path on tafs cloud, checked again, so the example that sends the developer's key never names
- * another host.
+ * another host. A query or fragment never travels, and its path is kept only when it's plain ([PLAIN_PATH]: letters, digits
+ * and `/ _ . ~ -`, as tafs cloud's `/v1/doors/api/api-…/requests`); anything else gives tafs cloud's own address alone, so the
+ * example a developer copies into a shell holds nothing the shell would read.
  */
 internal fun endpointOn(base: String, address: String): String {
   val cloud = runCatching { java.net.URI(base.trim()) }.getOrNull()?.takeIf { it.scheme.equals("https", true) && !it.host.isNullOrEmpty() }
     ?: return base
+  val alone = "https://${cloud.host}/"
   val a = address.trim()
   val u = runCatching { java.net.URI(a) }.getOrNull()
-  if (u != null && u.scheme.equals("https", true) && u.host.equals(cloud.host, true) && u.port == -1 && u.rawUserInfo == null) return a
+  if (u != null && u.scheme.equals("https", true) && u.host.equals(cloud.host, true) && u.port == -1 && u.rawUserInfo == null) {
+    val path = u.rawPath.orEmpty().ifEmpty { "/" }
+    if (!PLAIN_PATH.matches(path)) return alone
+    // Rebuilt on tafs cloud's own host as it writes it, so every app shows the same address.
+    return runCatching { java.net.URI("https", cloud.host, path, null) }.getOrNull()?.toASCIIString() ?: alone
+  }
   // The path alone, set on tafs cloud's own address: whatever it holds stays in the path, never the host.
   val path = when {
     u == null -> a
     u.isOpaque -> u.schemeSpecificPart.orEmpty()
     else -> u.path.orEmpty()
   }.trimStart('/', '\\')
+  if (!PLAIN_PATH.matches("/$path")) return alone
   return runCatching { java.net.URI("https", cloud.host, "/$path", null) }.getOrNull()
     ?.takeIf { it.host.equals(cloud.host, true) && it.port == -1 && it.rawUserInfo == null }?.toASCIIString()
-    ?: base.trimEnd('/')
+    ?: alone
 }
+
+/** A path an endpoint may keep: unreserved characters only, so nothing in it means anything to a shell. */
+private val PLAIN_PATH = Regex("^/[A-Za-z0-9/_.~-]*$")
