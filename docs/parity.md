@@ -21,7 +21,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Android | done 54, partial 1, not for it 3 | the 58 iPad view files |
 | Wear OS | done 24, partial 3, not started 1, not for it 4 | the [Watches](#watches) table |
 | Apple Watch | done 17, partial 6, not started 4, not for it 5 | the [Watches](#watches) table |
-| Chrome extension | done 7, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
+| Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
 1. **macOS 12** is furthest behind: 8 screens not started and 31 partial. Most partials wait on approving on this Mac with a security key, landing PR by PR (trials: tafs-macos#182).
