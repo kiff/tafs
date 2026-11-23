@@ -45,7 +45,7 @@ export class Runner {
     this.vault = vault; // sealed sign-ins (vault.js); none, and a sealed fill is refused
     this.now = now;
     this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
-    this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
+    this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, ownWindow, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
     this.fenceIds = new Map(); // tab id → the first of its three fence rule ids
     this.nextFence = 1;
@@ -231,7 +231,9 @@ export class Runner {
       this.tabRun.delete(t);
       await this.unfence(t);
     }
-    if (run.windowId != null) await this.chrome.windows.remove(run.windowId).catch(() => {});
+    // A window of the run's own goes with it; in the owner's window, only the run's own tabs close, never theirs.
+    if (run.ownWindow && run.windowId != null) await this.chrome.windows.remove(run.windowId).catch(() => {});
+    else if (run.tabs.size) await this.chrome.tabs.remove([...run.tabs]).catch(() => {});
     run.tabs.clear();
     run.tab = null;
   }
@@ -287,6 +289,7 @@ export class Runner {
         // A sensitive site opens only on the paired phone's own signed allowance for this grant, never planque's word.
         allowed: await checkAllowances(step.sensitive_allowed, { ...(this.paired() || {}), grant: step.grant }),
         windowId: null,
+        ownWindow: false,
         groupId: null,
         tabs: new Set(),
         tab: null,
@@ -358,17 +361,18 @@ export class Runner {
     if (refused) return { error: { code: refused.code } };
     const c = this.chrome;
     if (run.tab == null) {
-      // A window of its own, not focused: the owner's window stays in front.
-      const win = await c.windows.create({ url: "about:blank", focused: false, type: "normal" });
-      run.windowId = win.id;
-      const tabId = win.tabs[0].id;
+      // A tab of its own in the window the owner is using, in the background: their active tab and their other tabs are
+      // never touched, and the run's group sits beside them. With no such window, a window of its own, not focused.
+      const { windowId, tabId, own } = await this.runTab();
+      run.windowId = windowId;
+      run.ownWindow = own;
       run.tab = tabId;
       run.tabs.add(tabId);
       this.tabRun.set(tabId, run.id);
       try {
         // Fenced before it loads anything of the run's.
         await this.fence(run, tabId);
-        run.groupId = await c.tabs.group({ tabIds: [tabId], createProperties: { windowId: win.id } });
+        run.groupId = await c.tabs.group({ tabIds: [tabId], createProperties: { windowId } });
         await c.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf"), color: "orange", collapsed: false });
       } catch (e) {
         // A window that could not be set up is not left open, blank and unfenced, on the owner's screen.
@@ -376,9 +380,30 @@ export class Runner {
         throw e;
       }
     }
-    await c.tabs.update(run.tab, { url, active: true });
+    // In a window of its own the run's tab is the one in front; in the owner's window it stays in the background.
+    await c.tabs.update(run.tab, run.ownWindow ? { url, active: true } : { url });
     await this.loaded(run.tab);
     return this.read(run);
+  }
+
+  /**
+   * Where a run's first tab goes: a new background tab in the normal window the owner last used, or, when there is none (or
+   * it's a private window), a window of the run's own, not focused. Only the tab made here is the run's.
+   */
+  async runTab() {
+    const c = this.chrome;
+    let win = null;
+    try {
+      win = await c.windows.getLastFocused({ windowTypes: ["normal"] });
+    } catch {
+      win = null;
+    }
+    if (win && win.id != null && !win.incognito && win.type !== "popup") {
+      const tab = await c.tabs.create({ windowId: win.id, url: "about:blank", active: false });
+      return { windowId: win.id, tabId: tab.id, own: false };
+    }
+    const own = await c.windows.create({ url: "about:blank", focused: false, type: "normal" });
+    return { windowId: own.id, tabId: own.tabs[0].id, own: true };
   }
 
   async loaded(tabId) {
