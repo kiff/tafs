@@ -1,0 +1,1 @@
+- **Android:** Sign in again on a connection shows its approval sheet first (planque's words for it, KIFF's words, then Approve), and signs only what the sheet showed ([docs/connect-apps.md](../docs/connect-apps.md)).
