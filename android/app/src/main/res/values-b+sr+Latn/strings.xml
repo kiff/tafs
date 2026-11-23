@@ -649,6 +649,7 @@
     <string name="chrome_refused">Drugi Chrome je upotrebio ovaj kôd, pa ništa nije upareno. Počnite ponovo.</string>
     <string name="chrome_remove">Prekinite uparivanje</string>
     <string name="chrome_remove_named">Prekinite uparivanje: %1$s</string>
+    <string name="chrome_replace_changed">Ono što prelazi na ovaj Chrome promenilo se, pa ništa nije upareno. Proveri i upari ponovo.</string>
     <string name="chrome_replace_moves">Prelazi na ovaj Chrome: %1$s</string>
     <string name="chrome_replace_none">Novi Chrome (ne zamenjuje nijedan)</string>
     <string name="chrome_replace_title">Zamenjuje</string>

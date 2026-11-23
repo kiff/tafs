@@ -375,6 +375,29 @@ class VersionsTest {
     assertTrue(m.state.value.blockedInstalls.isEmpty())
   }
 
+  /**
+   * Stopping what's in the way stopped a task that waited on the owner's answer (the owner's panel test, 23 Nov): tafs cloud's
+   * words say so, and the chat ends with Run again on the stopped session's last message, never sent by itself.
+   */
+  @Test fun aSwitchThatStoppedAWaitingTaskSaysSoAndOffersRunAgain() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/taf_1/conversation", 200, """{"messages":[{"at":"2026-10-28T08:50:00Z","from":"owner","text":"Search for lighthouse","session":"sess_p"},{"at":"2026-10-28T08:40:00Z","from":"owner","text":"An older one","session":"sess_old"}]}""")
+    val words = "Installing this version stopped the task that was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again."
+    transport.answer(switch2, 200, """{"switching":{"n":2,"draft":null,"at":"2026-10-28T09:00:00Z"},"stopped":[{"run":"run_p","session":"sess_p"}],"words":"$words"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    m.prepareSwitch(Version(2, "n", null, t0, false), "refunds-1", stopBlocking = true)
+    assertEquals(words, m.state.value.lastError)
+    assertEquals(bot.tafs.app.model.ChatEnd.Failed("Search for lighthouse", emptyList(), words), m.state.value.chatEnded["refunds-1"])
+    assertTrue("nothing is sent again by itself", sent("POST /v1/tafs/taf_1/messages").isEmpty() && sent("POST /v1/tafs/taf_1/messages/stream").isEmpty())
+    // Nothing waiting stopped: nothing said, as before.
+    transport.answer(switch2, 200, switching(null))
+    val quiet = model()
+    quiet.prepareSwitch(Version(2, "n", null, t0, false), "refunds-1", stopBlocking = true)
+    assertNull(quiet.state.value.lastError)
+    assertNull(quiet.state.value.chatEnded["refunds-1"])
+  }
+
   @Test fun cancellingASwitchDropsItAndReadsTheVersionsAgain() = runTest {
     reads()
     transport.answer(cancel, 200, """{"cancelled":true}""")

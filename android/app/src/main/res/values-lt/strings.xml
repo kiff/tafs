@@ -649,6 +649,7 @@
     <string name="chrome_refused">Šį kodą panaudojo kita Chrome naršyklė, todėl niekas nesusieta. Pradėkite iš naujo.</string>
     <string name="chrome_remove">Atsieti</string>
     <string name="chrome_remove_named">Atsieti %1$s</string>
+    <string name="chrome_replace_changed">Pasikeitė, kas persikelia į šį Chrome, todėl niekas nesusieta. Patikrink ir susiek iš naujo.</string>
     <string name="chrome_replace_moves">Persikelia į šį Chrome: %1$s</string>
     <string name="chrome_replace_none">Naujas Chrome (nieko nepakeičia)</string>
     <string name="chrome_replace_title">Pakeičia</string>

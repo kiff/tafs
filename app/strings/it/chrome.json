@@ -22,6 +22,7 @@
   "chrome.refused": "Un altro Chrome ha usato questo codice, quindi non è stato associato nulla. Ricomincia.",
   "chrome.remove": "Dissocia",
   "chrome.remove_named": "Dissocia {name}",
+  "chrome.replace_changed": "Ciò che passa a questo Chrome è cambiato, quindi non è stato associato nulla. Controlla e associa di nuovo.",
   "chrome.replace_moves": "Passa a questo Chrome: {sites}",
   "chrome.replace_none": "Un nuovo Chrome (non ne sostituisce nessuno)",
   "chrome.replace_title": "Sostituisce",
