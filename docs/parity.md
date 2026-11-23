@@ -264,7 +264,7 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | 5 | A removed taf's connections ended by tafs cloud, not the phone | done (`AppModel.removeTaf`) | done (1.17.1) | connect-apps.md:128-133 |
 | 6 | planque's `vendor_refused_client` in planque's own words | done (tafs#1765) | done (`ErrorWords.PLANQUE_WORDED`) | android-app.md:708, ios-app.md |
 | 7 | The approval window (one Face ID or fingerprint, then taps) | done (`KIFFClient.window`) | done | approvals.md:182-190 |
-| 8 | A taf's loop card ("Still reading": Read on, Stop here) | in review (this PR) | done | chat.md:579 |
+| 8 | A taf's loop card ("Still reading": Read on, Stop here) | in review: tafs#1861 | done | chat.md:579 |
 | 9 | Following a run to its end (long follow, a stale stream dropped) | partial: 30 reads 4 s apart per message | done (1.22) | chat.md:515-525 |
 | 10 | Coach's answered card pinned | done | not started | chat.md:254 |
 | 11 | How tafs works: Chrome and the emailed code | in review: tafs#1758 | in review: carried by tafs#1758 (#1759 merged into its branch) | onboarding.md |
