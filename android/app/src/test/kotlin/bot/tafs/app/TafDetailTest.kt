@@ -70,7 +70,7 @@ class TafDetailTest {
     assertEquals("1 call left today of 10", one.heroLine)
     val money = TafCard.merged("c", "Refunds", refunds.rules, null, used = mapOf("refund" to Money.eur(40.0)))
     assertEquals("${Money.eur(1_960.0).formatted} left today of ${Money.eur(2_000.0).formatted}", money.heroLine)
-    // The limit is written as the language writes numbers, as the count is (agentgabo's #1571 note): never "of 10000".
+    // The limit is written as the language writes numbers, as the count is (#1571): never "of 10000".
     val big = TafCard("c", "Reads", rules = emptyList(), calls = bot.tafs.app.model.CardTotal(10_000, 1, Window.day))
     assertEquals("9,999 calls left today of 10,000", big.heroLine)
     assertEquals("calls left today of 10,000", big.hero!!.words)

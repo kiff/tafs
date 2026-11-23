@@ -13,8 +13,8 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 
 | Device | Totals | Counted over |
 | :- | :- | :- |
-| iPhone/iPad | done 55, partial 3 | the 58 iPad view files |
-| Mac 13+ | done 53, partial 5 | the 58 iPad view files |
+| iPhone/iPad | done 57, partial 1 | the 58 iPad view files |
+| Mac 13+ | done 55, partial 3 | the 58 iPad view files |
 | macOS 12 | done 12, partial 31, not started 8, not for it 7 | the 58 iPad view files |
 | Windows | done 40, partial 9, not started 1, not for it 8 | the 58 iPad view files |
 | Linux | done 30, partial 21, not started 1, not for it 6 | the 58 iPad view files |
@@ -25,7 +25,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 
 **The three biggest gaps**
 1. **macOS 12** is furthest behind: 8 screens not started and 31 partial. Most partials wait on approving on this Mac with a security key, landing PR by PR (trials: tafs-macos#182).
-2. **iPhone still behind Android on three phone features** ([Phones](#phones-iphone-and-android-feature-by-feature) 8, 9, 14): the loop card, following a run to its end, and the re-pair re-check. Four more are in review (3, 13, Your Chrome 2 and 4).
+2. **iPhone behind Android on two phone features, both in review** ([Phones](#phones-iphone-and-android-feature-by-feature) 8, [Your Chrome](#your-chrome) 5): the loop card and one signature to pair a Chrome. The release card (Phones 16) waits on planque and KIFF on both phones.
 3. **Apple Watch behind Wear OS** ([Watches](#watches)): Keep for later, a complication, Hear the answer, and three switches built but off until the owner's yes or the privacy page.
 
 ## The iPad's screens
@@ -44,7 +44,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | BriefView | "Your brief": decisions first with Coach's recommendation, the next move, what got done | done | done | partial | done | done | done |
 | CalendarView | Calendar: Day, Week, Month | done | done | partial | done | done | done |
 | ChromeShotView | Screenshots of a run's acts in the owner's Chrome | done | done | not started | not started | not started | done |
-| ChromeViews | Account › Chrome: paired Chromes, Pair a Chrome, Unpair, once planque offers it | partial | partial | partial | done | done | done |
+| ChromeViews | Account › Chrome: paired Chromes, Pair a Chrome, Unpair, once planque offers it | done | done | partial | done | done | done |
 | CoachMode | Coach mode over the app: the panel, its toolbar, the phone's sheet | done | done | partial | done | partial | done |
 | CoachToolsStep | Coach's tools still to give, and what's given as Start's screen draws it | done | done | not started | done | partial | done |
 | ConnectAppsView | Connect apps, a connected app's detail, connecting's approval | done | done | partial | partial | partial | done |
@@ -75,7 +75,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | RecordView | The Record, its rows, filters and receipts | done | done | partial | done | done | done |
 | ReportAnswerSheet | Report an answer | done | done | done | done | done | done |
 | ReportPaymentSheet | "Report this payment" from a receipt: KIFF marks it and the taf is halted | done | done | not started | done | done | done |
-| SetupChatView | Coach's conversation | partial | partial | partial | done | partial | done |
+| SetupChatView | Coach's conversation | done | done | partial | done | partial | done |
 | SetupShapePanel | What Coach has made so far | done | done | not started | done | partial | done |
 | ShareViews | Sharing a taf (`ShareLine`, `ShareTafSheet`), and the Overview (`OverviewView`) | done | done | partial | done | done | done |
 | SignInView | `SignInView`: Sign in with KIFF. Also `SettingsView`, `PlanRow`, `AccountView`, `AccountLines` (Account) | done | done | partial | partial | done | done |
@@ -121,8 +121,6 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **Windows** (not started): planque's picture of a step (docs/chrome.md, "Screenshots of a run's acts"); new at pin 3d0a961
   - **Linux** (not started): new on the iPad since the checklist's pin; no row yet
 - **ChromeViews**
-  - **iPhone/iPad** (partial): "Your Chrome" 2 (use another Chrome): in review, tafs#1776; 5 (one signature for both acts): not started
-  - **Mac 13+** (partial): "Your Chrome" 2 (use another Chrome): in review, tafs#1776; 5 (one signature for both acts): not started
   - **macOS 12** (partial): Each Chrome's own connections, and Unpair naming them (waiting on tafs' words)
 - **CoachMode**
   - **macOS 12** (partial): The dimmed ground and its tap outside, and closing by a drag past the narrowest or a swipe: on the Mac the screen beside Coach stays usable, and Back or Esc close it. `PhoneCoachPanel` is the phone's
@@ -194,8 +192,6 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 - **ReportPaymentSheet**
   - **macOS 12** (not started)
 - **SetupChatView**
-  - **iPhone/iPad** (partial): the answered connect card reopening the signed Card: in review, tafs#1771 (see Phones 3)
-  - **Mac 13+** (partial): the answered connect card reopening the signed Card: in review, tafs#1771 (see Phones 3)
   - **macOS 12** (partial): Approving a connection or a Card; attachments; `SetupShapePanel`, `CoachToolsStep`, `DriveCard`; an approval a newer one for the same connection replaced, folded as history (`replaced`)…
   - **Linux** (partial): Approve, Decline, the sign-in's button and Not now (`ApprovalGate`'s line instead); planque's grant on an approval (the card's own title and words stand for it…
 - **SetupShapePanel**
@@ -207,8 +203,8 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **macOS 12** (partial): Delete account itself: signed by the device key and erasing tafs cloud's, planque's and KIFF's sides (`deleteAccount`); its click says this Mac can't approve, and sends nothing
   - **Windows** (partial): `SignInView`'s Copy. The KIFF account's rows from `GET /v1/me` (KIFF account, Signed in as, `AccountLines`); People & groups under People & apps (#73, merged); the Plan section (`PlanRow`)…
 - **TafChatView**
-  - **iPhone/iPad** (partial): the loop card (Read on, Stop here); following a run to its end; a failed run's line in Coach's chat (a taf's chat has it, #1766) (see Phones 2, 8, 9)
-  - **Mac 13+** (partial): the loop card (Read on, Stop here); following a run to its end; a failed run's line in Coach's chat (a taf's chat has it, #1766) (see Phones 2, 8, 9)
+  - **iPhone/iPad** (partial): the loop card (Read on, Stop here): in review, tafs#1861 (see Phones 8)
+  - **Mac 13+** (partial): the loop card (Read on, Stop here): in review, tafs#1861 (see Phones 8)
   - **macOS 12** (partial): What Coach's conversation also misses (attachments, questions); `SteadyMarkdown`
   - **Linux** (partial): attachments and the mic; the sample's chat
 - **TafDetailView**
@@ -258,19 +254,19 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | # | Feature | iPhone/iPad | Android | Where it's said |
 | -: | :- | :- | :- | :- |
 | 1 | KIFF's words for a connection, v2 (`POST /v1/profiles/words?v=2`) | done (tafs#1762) | done (1.27.7) | coach.md, "KIFF's words for a connection" |
-| 2 | A failed run's refused line, with Retry | in review: tafs#1867 (Coach's chat; a taf's chat: tafs#1766) | done (`chatFailed`, `ChatEnd.Failed`) | android-app.md:24-30, ios-app.md |
-| 3 | An answered connect card: its Card line opens that Card as signed | in review: tafs#1771 | done | coach.md:55-60 |
+| 2 | A failed run's refused line, with Retry | done (tafs#1867: Coach's chat; a taf's chat: tafs#1766) | done (`chatFailed`, `ChatEnd.Failed`) | android-app.md:24-30, ios-app.md |
+| 3 | An answered connect card: its Card line opens that Card as signed | done (tafs#1771) | done | coach.md:55-60 |
 | 4 | View-only read from `approval_mode` in `GET /v1/me` | done (tafs#1772) | done | approvals.md:158-162 |
 | 5 | A removed taf's connections ended by tafs cloud, not the phone | done (`AppModel.removeTaf`) | done (1.17.1) | connect-apps.md:128-133 |
 | 6 | planque's `vendor_refused_client` in planque's own words | done (tafs#1765) | done (`ErrorWords.PLANQUE_WORDED`) | android-app.md:708, ios-app.md |
 | 7 | The approval window (one Face ID or fingerprint, then taps) | done (`KIFFClient.window`) | done | approvals.md:182-190 |
 | 8 | A taf's loop card ("Still reading": Read on, Stop here) | not started: no `tafs-loop`, no `answerTafCard` | done | chat.md:579 |
-| 9 | Following a run to its end (long follow, a stale stream dropped) | in review: tafs#1860 | done (1.22) | chat.md:515-525 |
+| 9 | Following a run to its end (long follow, a stale stream dropped) | done (tafs#1860) | done (1.22) | chat.md:515-525 |
 | 10 | Coach's answered card pinned | done | done (tafs#1832) | chat.md:254 |
-| 11 | How tafs works: Chrome and the emailed code | in review: tafs#1758 | in review: carried by tafs#1758 (#1759 merged into its branch) | onboarding.md |
+| 11 | How tafs works: Chrome and the emailed code | done (tafs#1758) | done (tafs#1758, which carried #1759) | onboarding.md |
 | 12 | Coach's Start screen: its tools and Cards signed in one go | done (`start.words`, `/v1/connections/batch`) | done (1.20) | coach.md:140-159 |
-| 13 | An API door's address only ever on tafs cloud's own host (as Windows and Linux) | in review: tafs#1768 | done (tafs#1770) | doors.md |
-| 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | in review: tafs#1859 | done (tafs#1761) | android-app.md, "Pairing a Chrome" |
+| 13 | An API door's address only ever on tafs cloud's own host (as Windows and Linux) | done (tafs#1768) | done (tafs#1770) | doors.md |
+| 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | done (tafs#1859) | done (tafs#1761) | android-app.md, "Pairing a Chrome" |
 | 15 | A re-pairing after a reinstall starts on the one Chrome alike | done (tafs#1780) | done (tafs#1781) | chrome.md, "Your Chrome" 1 |
 | 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | not started (designed: tafs#1786) | built, off (tafs#1830, #1837): waits on planque handing a sealed fill and its release to the Chrome (KIFF checks the release on an allow since kiff/cloud#124) | chrome.md, "The phone's release card" |
 
@@ -281,10 +277,10 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | # | Item | iPhone/iPad | Android | Chrome extension |
 | -: | :- | :- | :- | :- |
 | 1 | Re-pairing replaces, never adds; only what this phone signed moves | done (tafs#1755) | done (tafs#1756) | done |
-| 2 | Use another Chrome for a connection (planque's `use_another_chrome`, signed for the new Chrome) | in review: tafs#1776 | done (tafs#1783) | not for it: planque tells it |
+| 2 | Use another Chrome for a connection (planque's `use_another_chrome`, signed for the new Chrome) | done (tafs#1776) | done (tafs#1783) | not for it: planque tells it |
 | 3 | Unpairing ends its connections, and says which | done (tafs#1751) | done (tafs#1756) | not for it |
-| 4 | Each Chrome says what it's used for; a connection names its Chrome | partial: Account › Chrome and the held card; a connection's page in tafs#1776 | done (tafs#1756, #1777) | not for it |
-| 5 | One fingerprint for pairing and the extension's KIFF device | not started: one Face ID, two signatures; no `one_touch` | done (`confirmChromeOneTouch`) | done |
+| 4 | Each Chrome says what it's used for; a connection names its Chrome | done (tafs#1776) | done (tafs#1756, #1777) | not for it |
+| 5 | One fingerprint for pairing and the extension's KIFF device | in review: tafs#1865 (`pairChromeOneTouch`) | done (`confirmChromeOneTouch`) | done |
 | 6 | Isolation: each connection's sites signed per Chrome | done | done | done (`checkSites`, `checkAllowances`) |
 
 ## Chrome extension
@@ -352,7 +348,7 @@ What landed or is in review on 23 Nov, device by device. "—" means the feature
 | Trials of a new version on the security key | done | done | in review: tafs-macos#182 | done | in review: tafs-linux#96 | — |
 | Sign in again and Replace the key on a connection | done | done | not for it: made on the phone (planque takes no security key) | done (tafs-windows#268) | partial: on the phone (connecting is the phone's here) | — |
 | A connection's own page from planque's row, with its actions | done | done | partial | in review: tafs-windows#269 | partial | — |
-| An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812 in review) | in review: tafs#1814 (the chat's line, with Retry) | built, not yet a PR (the chat's line, with Retry) | not started | in review: tafs-windows#271 (said on Needs you, not in the chat) | built, not yet a PR | — |
+| An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | not started | in review: tafs-windows#271 (said on Needs you, not in the chat) | built, not yet a PR | — |
 | The side panel is the taf in this Chrome (tafs#1799), no client named (tafs#1810), the read after an act waits for its navigation (tafs#1811) | — | — | — | — | — | done |
 
 ## Docs that say otherwise

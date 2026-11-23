@@ -8,7 +8,7 @@ import XCTest
 final class ChromePairingTests: XCTestCase {
     private struct Vectors: Decodable {
         let secret, chromeKey, phoneKey, pairing, name, extensionProof, chromeKeySha256, phoneProof, signedBytes: String
-        let kiffOffer, extensionProofWithKiffOffer: String
+        let kiffOffer, extensionProofWithKiffOffer, oneTouchProofWithKiffOffer: String
         /// The connections a re-pairing carries, and the bytes the phone signs with them in the body.
         struct Entry: Decodable { let grant: String; let sites: [String] }
         let carried: [Entry]
@@ -55,6 +55,59 @@ final class ChromePairingTests: XCTestCase {
         XCTAssertEqual(c.phoneProof, v.phoneProof)
         XCTAssertEqual(c.phoneKey, v.phoneKey)
         XCTAssertEqual(ChromePairing.base64URL(try ChromePairing.signedBytes(pairing: v.pairing, c)), v.signedBytes)
+    }
+
+    /// "Your Chrome" 5: the extension's `one_touch` flag is its own only under the code's secret, by its own label, over its key and
+    /// its KIFF offer, the extension's bytes (vectors/chrome-pairing.json). The key's own proof never passes for it.
+    func testTheOneTouchProofIsTheExtensionsAndOnlyItsOwn() throws {
+        let v = try vectors()
+        let chromeKey = try XCTUnwrap(ChromePairing.base64URLDecoded(v.chromeKey))
+        XCTAssertTrue(ChromePairing.oneTouchProofHolds(secret: v.secret, key: chromeKey, proof: v.oneTouchProofWithKiffOffer, kiffOffer: v.kiffOffer))
+        XCTAssertFalse(ChromePairing.oneTouchProofHolds(secret: v.secret, key: chromeKey, proof: v.extensionProofWithKiffOffer, kiffOffer: v.kiffOffer),
+                       "the key's proof isn't the flag's")
+        XCTAssertFalse(ChromePairing.extensionProofHolds(secret: v.secret, key: chromeKey, proof: v.oneTouchProofWithKiffOffer, kiffOffer: v.kiffOffer),
+                       "nor the flag's the key's")
+        XCTAssertFalse(ChromePairing.oneTouchProofHolds(secret: "AAAAAAAAAAAAAAAAA", key: chromeKey, proof: v.oneTouchProofWithKiffOffer, kiffOffer: v.kiffOffer),
+                       "another secret")
+        XCTAssertFalse(ChromePairing.oneTouchProofHolds(secret: v.secret, key: chromeKey, proof: v.oneTouchProofWithKiffOffer,
+                                                        kiffOffer: v.kiffOffer.replacingOccurrences(of: "extension", with: "hello")), "a changed KIFF offer")
+        XCTAssertFalse(ChromePairing.oneTouchProofHolds(secret: v.secret, key: chromeKey, proof: "", kiffOffer: v.kiffOffer), "none")
+    }
+
+    /// The one-touch fields are read from planque's pairing only as sent: `one_touch` a JSON true, its proof a string.
+    func testAnOfferReadsOneTouchOnlyAsAJSONTrue() throws {
+        func read(_ extra: String) throws -> PlanqueClient.ChromeOffer? {
+            try JSONDecoder().decode(PlanqueClient.ChromePairingState.self,
+                                     from: Data(#"{"status":"waiting_for_phone","key":"k","proof":"p"\#(extra)}"#.utf8)).offer
+        }
+        let on = try XCTUnwrap(try read(#","one_touch":true,"one_touch_proof":"q""#))
+        XCTAssertTrue(on.oneTouch)
+        XCTAssertEqual(on.oneTouchProof, "q")
+        XCTAssertEqual(try read(#","one_touch":"true","one_touch_proof":"q""#)?.oneTouch, false, "a string is no flag")
+        XCTAssertEqual(try read(#","one_touch":false"#)?.oneTouch, false)
+        let none = try XCTUnwrap(try read(""))
+        XCTAssertFalse(none.oneTouch)
+        XCTAssertEqual(none.oneTouchProof, "", "an older extension's offer")
+    }
+
+    /// The confirm's one-touch fields go out only when set, and never into the bytes the extension checks the pairing by.
+    func testTheOneTouchFieldsAreSentOnlyWhenSetAndNeverSigned() throws {
+        let v = try vectors()
+        let chromeKey = try XCTUnwrap(ChromePairing.base64URLDecoded(v.chromeKey))
+        let phoneKey = try XCTUnwrap(ChromePairing.base64URLDecoded(v.phoneKey))
+        var c = ChromePairing.confirmation(secret: v.secret, chromeKey: chromeKey, name: v.name, phoneKey: phoneKey)
+        let plain = try XCTUnwrap(try JSONSerialization.jsonObject(with: try JSONEncoder().encode(c)) as? [String: Any])
+        XCTAssertNil(plain["tenant"])
+        XCTAssertNil(plain["signed_at"])
+        XCTAssertNil(plain["kiff_request_sha256"])
+        c.tenant = "t_01"
+        c.signedAt = "2026-11-23T16:00:00Z"
+        c.kiffRequestSHA256 = String(repeating: "a", count: 64)
+        let together = try XCTUnwrap(try JSONSerialization.jsonObject(with: try JSONEncoder().encode(c)) as? [String: Any])
+        XCTAssertEqual(together["tenant"] as? String, "t_01")
+        XCTAssertEqual(together["signed_at"] as? String, "2026-11-23T16:00:00Z")
+        XCTAssertEqual(together["kiff_request_sha256"] as? String, String(repeating: "a", count: 64))
+        XCTAssertEqual(ChromePairing.base64URL(try ChromePairing.signedBytes(pairing: v.pairing, c)), v.signedBytes, "the pairing's bytes are today's")
     }
 
     /// Another extension that used the code's lookup can't prove its key: it doesn't have the secret.

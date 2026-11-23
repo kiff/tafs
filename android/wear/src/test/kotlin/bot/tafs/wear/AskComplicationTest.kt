@@ -19,7 +19,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
- * Ask tafs on the watch face (docs/watch-wear.md, kiff/work#14): a microphone, one tap into listening, as the tile's Ask tafs.
+ * Ask tafs on the watch face (docs/watch-wear.md): a microphone, one tap into listening, as the tile's Ask tafs.
  * It shows nothing a held call says, so a locked or dimmed face shows only the microphone.
  */
 @RunWith(RobolectricTestRunner::class)
