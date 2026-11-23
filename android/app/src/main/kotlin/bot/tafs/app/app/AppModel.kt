@@ -10055,8 +10055,8 @@ data class AllowSheetState(
  * A door's address on tafs cloud ([base]), whole. Only ever on tafs cloud's own host, over HTTPS (as iOS, Windows and Linux): a
  * whole address is kept only when it's https on that host with no port or user; anything else, another host or a scheme with
  * no host of its own, is its path on tafs cloud, checked again, so the example that sends the developer's key never names
- * another host. Its path is kept only when it's plain ([PLAIN_PATH]: letters, digits and `/ _ . ~ -`, as tafs cloud's
- * `/v1/doors/api/api-…/requests`), with no query or fragment; anything else gives tafs cloud's own address alone, so the
+ * another host. A query or fragment never travels, and its path is kept only when it's plain ([PLAIN_PATH]: letters, digits
+ * and `/ _ . ~ -`, as tafs cloud's `/v1/doors/api/api-…/requests`); anything else gives tafs cloud's own address alone, so the
  * example a developer copies into a shell holds nothing the shell would read.
  */
 internal fun endpointOn(base: String, address: String): String {
@@ -10067,7 +10067,7 @@ internal fun endpointOn(base: String, address: String): String {
   val u = runCatching { java.net.URI(a) }.getOrNull()
   if (u != null && u.scheme.equals("https", true) && u.host.equals(cloud.host, true) && u.port == -1 && u.rawUserInfo == null) {
     val path = u.rawPath.orEmpty().ifEmpty { "/" }
-    if (u.rawQuery != null || u.rawFragment != null || !PLAIN_PATH.matches(path)) return alone
+    if (!PLAIN_PATH.matches(path)) return alone
     // Rebuilt on tafs cloud's own host as it writes it, so every app shows the same address.
     return runCatching { java.net.URI("https", cloud.host, path, null) }.getOrNull()?.toASCIIString() ?: alone
   }

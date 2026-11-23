@@ -152,16 +152,18 @@ class ApiDoorScreensTest {
 
   /**
    * The example is pasted into a shell, so the endpoint keeps only a plain path (letters, digits and `/ _ . ~ -`), with no
-   * query or fragment, else it's tafs cloud's own address alone, with its slash; and the example quotes it, so the shell takes it as it is.
+   * query or fragment (which never travel), else it's tafs cloud's own address alone, with its slash; and the example quotes it, so the shell takes it as it is.
    */
   @Test fun anEndpointKeepsOnlyAPlainPathAndTheExampleQuotesIt() {
     for (address in listOf(
       "/v1/doors/api/d\$(id)/requests", "/v1/doors/api/d;id", "/v1/doors/api/d&id", "/v1/doors/api/d'id", "/v1/doors/api/d`id`",
       "/v1/doors/api/d|id", "/v1/doors/api/d%24(id)", "/v1/doors/api/d!x", "/v1/doors/api/d*", "/v1/doors/api/d+x,y=z",
       "https://cloud.example/v1/doors/api/d\$(id)", "https://cloud.example/v1/doors/api/d;id",
-      "https://cloud.example/v1/doors/api/d?x=\$(id)", "https://cloud.example/v1/doors/api/d#\$(id)",
       "https://cloud.example/v1/doors/api/d%27",
     )) assertEquals(address, "https://cloud.example/", bot.tafs.app.app.endpointOn("https://cloud.example/", address))
+    // A query or fragment never travels: the plain path before it is kept.
+    for (address in listOf("https://cloud.example/v1/doors/api/d?x=\$(id)", "https://cloud.example/v1/doors/api/d#\$(id)", "/v1/doors/api/d?a=1&b=2"))
+      assertEquals(address, "https://cloud.example/v1/doors/api/d", bot.tafs.app.app.endpointOn("https://cloud.example/", address))
     // tafs cloud's own door paths are plain, and kept.
     assertEquals("https://cloud.example/v1/doors/api/door_ord7/requests",
       bot.tafs.app.app.endpointOn("https://cloud.example/", "/v1/doors/api/door_ord7/requests"))
