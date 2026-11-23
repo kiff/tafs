@@ -27,7 +27,7 @@ line. Before it, a turn refused after an approval read as "Waiting for you", the
 shows none. One refused line per run: a run
 followed live already ends with its own line, with Retry (`ChatEnd.Failed`, which keeps the stream's run), so the thread's line
 for that same run isn't added; another run's still is. `contracts/conversation-failed.json`, tafs cloud's own answer, is read in
-the same test. iOS draws it in a taf's chat by the same rules (`TafsCloud.RunFailed`, `AppModel.chatItems`); in Coach's, iOS follows.
+the same test. iOS draws it by the same rules in a taf's chat (`TafsCloud.RunFailed`, `AppModel.chatItems`) and in Coach's (`AppModel.setupRunFailedLine`).
 
 <p>
   <img src="screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">

@@ -246,7 +246,9 @@ struct SetupChatView: View {
     /// The thread as shown, in the order already drawn: a card never moves under the person's eyes when
     /// tafs cloud's copy of their message lands, or Coach's words come at the end of its turn.
     private var shown: [SetupThread.Item] {
+        // A run that ended without an answer: tafs cloud's words, last, after everything else (`setupRunFailedLine`).
         SteadyOrder.order(textBeforeCards(model.setupThread.items), drawn: drawn, id: \.id, at: \.at, ownerText: Self.ownerText)
+            + (model.setupRunFailedLine.map { [SetupThread.Item.message($0)] } ?? [])
     }
 
     static func ownerText(_ item: SetupThread.Item) -> String? {

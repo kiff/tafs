@@ -8003,6 +8003,23 @@ final class AppModel: ObservableObject {
     /// failed part-way, with the message that started it to send again.
     enum RunEnd: Equatable { case stopped, failed(retry: String) }
     @Published private(set) var setupEnded: RunEnd?
+    /// The run whose stream ended `failed` here (`setupEnded`), as the stream named it; nil when it named none. The thread's
+    /// `failed` for that run isn't said again; another run's still is (`setupRunFailedLine`).
+    private var setupEndedRun: String?
+
+    /// A run of Coach's that ended without an answer: tafs cloud's words (the thread's `failed`), as Coach's chat's last line,
+    /// by a taf's chat's rules (`runFailedLine`, Android's `chatItems`):
+    /// - one refused line per run: a run followed live here already ended with its own, with Retry (`setupEnded`), so the
+    ///   thread's line for that run isn't added; another run's still is. A stream that named no run is taken as this one;
+    /// - none while an answer streams, or while a new message is being sent (the old failure isn't its answer);
+    /// - a chat with nothing in it (a new conversation) had no run here to fail.
+    /// Its `at` is a moment after the thread's last message, so its id stays the same as items come.
+    var setupRunFailedLine: TafsCloud.ChatMessage? {
+        guard let failed = setupThread.failed, setupLive == nil, !setupSending, !setupFresh,
+              let last = setupThread.items.map(\.at).max() else { return nil }
+        if case .failed? = setupEnded, setupEndedRun == nil || setupEndedRun == failed.run { return nil }
+        return TafsCloud.ChatMessage(at: last.addingTimeInterval(0.001), from: .taf, text: failed.words, session: "failed|" + failed.run)
+    }
 
     /// The Setup chat shown (kiff/tafs#73): one the owner reopened or started here, the
     /// newest at launch (kiff/tafs#389), or nil for the latest ones together when there's
@@ -9333,7 +9350,10 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         // The run is over: Setup is no longer at work, whatever it wrote.
         if ended != nil { setupAwaiting = nil }
-        if ended == "ERROR" { setupEnded = .failed(retry: text) }
+        if ended == "ERROR" {
+            setupEnded = .failed(retry: text)
+            setupEndedRun = setupLive?.run
+        }
         if ended == "CANCELLED" { setupEnded = .stopped }
         // The recorded answer first, then the live one goes: no gap between them.
         await loadSetupThread()

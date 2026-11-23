@@ -111,7 +111,10 @@ words, as Android's ([android-app.md](android-app.md)). A later read with none c
 shape, is no line, and a new chat with nothing in it shows none. It comes after everything else, held cards included,
 and not while an answer streams or a new message is being sent. A run followed live here already ended with its own line
 and Retry (`ChatState.ended`, `endedRun`), so the thread's line for that run isn't added too; another run's still is. `ChatTests` reads tafs cloud's own answer,
-`contracts/conversation-failed.json`. Coach's chat doesn't draw it yet.
+`contracts/conversation-failed.json`. Coach's chat draws it by the same rules (`SetupThread.failed`,
+`AppModel.setupRunFailedLine`): last, after everything else; none while Coach's answer streams or a message is being sent,
+and none in a new conversation; a run this chat followed live and saw fail (`setupEnded`, with Retry, and `setupEndedRun`)
+isn't said twice. `SetupTests` reads the same contract.
 
 **A connection that was refused** (`TafsCloud.ChatMessage.refusedLines`, `RefusedLines`): a taf's message
 may carry tafs cloud's `refused` ([chat.md](chat.md)), the failed step's words, the server's reason ("Why:
