@@ -252,9 +252,13 @@ jobs:
           cd ios
           xcodebuild -version
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
+          import json, re, sys
           devices = json.load(sys.stdin)["devices"]
-          ios = sorted(k for k in devices if "iOS" in k)
+          def version(key):
+              return [int(n) for n in re.findall(r"\d+", key.rsplit("iOS", 1)[-1])]
+          # The newest iOS runtime this Mac has with an iPhone, by version: whatever its Xcode, never a version one image has.
+          ios = sorted((k for k in devices if "iOS" in k and any(d["name"].startswith("iPhone") for d in devices[k])), key=version)
+          if not ios: sys.exit("no iOS runtime with an iPhone simulator on this Mac")
           # The App Store iPhone size (kiff/tafs#185): a Pro Max, 6.9-inch, when there is one.
           iphones = [d for d in devices[ios[-1]] if d["name"].startswith("iPhone")]
           print(next((d for d in iphones if "Pro Max" in d["name"]), iphones[0])["udid"])
@@ -389,9 +393,13 @@ jobs:
           set -o pipefail
           cd ios
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
+          import json, re, sys
           devices = json.load(sys.stdin)["devices"]
-          ios = sorted(k for k in devices if "iOS" in k)
+          def version(key):
+              return [int(n) for n in re.findall(r"\d+", key.rsplit("iOS", 1)[-1])]
+          # The newest iOS runtime this Mac has with an iPad, by version: whatever its Xcode, never a version one image has.
+          ios = sorted((k for k in devices if "iOS" in k and any(d["name"].startswith("iPad") for d in devices[k])), key=version)
+          if not ios: sys.exit("no iOS runtime with an iPad simulator on this Mac")
           ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
           print(next((d for d in ipads if "13-inch" in d["name"]), ipads[0])["udid"])
           ')
@@ -459,9 +467,13 @@ jobs:
         run: |
           cd ios
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
+          import json, re, sys
           devices = json.load(sys.stdin)["devices"]
-          ios = sorted(k for k in devices if "iOS" in k)
+          def version(key):
+              return [int(n) for n in re.findall(r"\d+", key.rsplit("iOS", 1)[-1])]
+          # The newest iOS runtime this Mac has with an iPhone, by version: whatever its Xcode, never a version one image has.
+          ios = sorted((k for k in devices if "iOS" in k and any(d["name"].startswith("iPhone") for d in devices[k])), key=version)
+          if not ios: sys.exit("no iOS runtime with an iPhone simulator on this Mac")
           # The App Store iPhone size (kiff/tafs#185): a Pro Max, 6.9-inch, when there is one.
           iphones = [d for d in devices[ios[-1]] if d["name"].startswith("iPhone")]
           print(next((d for d in iphones if "Pro Max" in d["name"]), iphones[0])["udid"])
@@ -568,9 +580,13 @@ jobs:
           reference_pass() {
             xcrun simctl shutdown "$DEVICE_ID" || true
             DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
+          import json, re, sys
           devices = json.load(sys.stdin)["devices"]
-          ios = sorted(k for k in devices if "iOS" in k)
+          def version(key):
+              return [int(n) for n in re.findall(r"\d+", key.rsplit("iOS", 1)[-1])]
+          # The newest iOS runtime this Mac has with an iPad, by version: whatever its Xcode, never a version one image has.
+          ios = sorted((k for k in devices if "iOS" in k and any(d["name"].startswith("iPad") for d in devices[k])), key=version)
+          if not ios: sys.exit("no iOS runtime with an iPad simulator on this Mac")
           ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
           print(next((d for d in ipads if "13-inch" in d["name"]), ipads[0])["udid"])
           ')
@@ -642,9 +658,13 @@ jobs:
             # as its item. The iPhone's build runs on it, as the full set's iPad shots do.
             xcrun simctl shutdown "$DEVICE_ID" || true
             DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
+          import json, re, sys
           devices = json.load(sys.stdin)["devices"]
-          ios = sorted(k for k in devices if "iOS" in k)
+          def version(key):
+              return [int(n) for n in re.findall(r"\d+", key.rsplit("iOS", 1)[-1])]
+          # The newest iOS runtime this Mac has with an iPad, by version: whatever its Xcode, never a version one image has.
+          ios = sorted((k for k in devices if "iOS" in k and any(d["name"].startswith("iPad") for d in devices[k])), key=version)
+          if not ios: sys.exit("no iOS runtime with an iPad simulator on this Mac")
           ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
           print(next(d for d in ipads if "13-inch" in d["name"])["udid"])
           ')
@@ -687,9 +707,13 @@ jobs:
             xcrun simctl ui "$DEVICE_ID" appearance light
             xcrun simctl shutdown "$DEVICE_ID" || true
             DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
+          import json, re, sys
           devices = json.load(sys.stdin)["devices"]
-          ios = sorted(k for k in devices if "iOS" in k)
+          def version(key):
+              return [int(n) for n in re.findall(r"\d+", key.rsplit("iOS", 1)[-1])]
+          # The newest iOS runtime this Mac has with an iPad, by version: whatever its Xcode, never a version one image has.
+          ios = sorted((k for k in devices if "iOS" in k and any(d["name"].startswith("iPad") for d in devices[k])), key=version)
+          if not ios: sys.exit("no iOS runtime with an iPad simulator on this Mac")
           ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
           print(next(d for d in ipads if "13-inch" in d["name"])["udid"])
           ')
@@ -721,9 +745,13 @@ jobs:
             shoot "$PREVIEW-iap-pack" -screenshots YES -screen buy-credits -pack vonk "${loc[@]}"
             xcrun simctl shutdown "$DEVICE_ID" || true
             DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
+          import json, re, sys
           devices = json.load(sys.stdin)["devices"]
-          ios = sorted(k for k in devices if "iOS" in k)
+          def version(key):
+              return [int(n) for n in re.findall(r"\d+", key.rsplit("iOS", 1)[-1])]
+          # The newest iOS runtime this Mac has with an iPad, by version: whatever its Xcode, never a version one image has.
+          ios = sorted((k for k in devices if "iOS" in k and any(d["name"].startswith("iPad") for d in devices[k])), key=version)
+          if not ios: sys.exit("no iOS runtime with an iPad simulator on this Mac")
           ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
           print(next(d for d in ipads if "13-inch" in d["name"])["udid"])
           ')
@@ -807,9 +835,13 @@ jobs:
           # whose portrait width still fits the taf's second column.
           xcrun simctl shutdown "$DEVICE_ID" || true
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
+          import json, re, sys
           devices = json.load(sys.stdin)["devices"]
-          ios = sorted(k for k in devices if "iOS" in k)
+          def version(key):
+              return [int(n) for n in re.findall(r"\d+", key.rsplit("iOS", 1)[-1])]
+          # The newest iOS runtime this Mac has with an iPad, by version: whatever its Xcode, never a version one image has.
+          ios = sorted((k for k in devices if "iOS" in k and any(d["name"].startswith("iPad") for d in devices[k])), key=version)
+          if not ios: sys.exit("no iOS runtime with an iPad simulator on this Mac")
           ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
           print(next((d for d in ipads if "13-inch" in d["name"]), ipads[0])["udid"])
           ')
