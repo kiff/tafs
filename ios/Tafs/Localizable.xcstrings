@@ -147176,6 +147176,12 @@
             "value": "Bu doldurmaya izin ver"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسے بھرنے کی اجازت دیں"
+          }
+        },
         "vi": {
           "stringUnit": {
             "state": "translated",
@@ -147431,6 +147437,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chrome'unuzdan hiç çıkmaz. tafs onu görmez."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ کبھی آپ کے Chrome سے باہر نہیں جاتا۔ tafs اسے نہیں دیکھتا۔"
           }
         },
         "vi": {
@@ -147690,6 +147702,12 @@
             "value": "Bu Chrome'u bu siteye bağlamadınız, bu yüzden izin verilemez."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آپ نے اس Chrome کو اس سائٹ سے نہیں جوڑا، اس لیے اس کی اجازت نہیں دی جا سکتی۔"
+          }
+        },
         "vi": {
           "stringUnit": {
             "state": "translated",
@@ -147945,6 +147963,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sayfa güvenli bir https sayfası değil, bu yüzden izin verilemez."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ صفحہ محفوظ https صفحہ نہیں ہے، اس لیے اس کی اجازت نہیں دی جا سکتی۔"
           }
         },
         "vi": {
@@ -148204,6 +148228,12 @@
             "value": "Bu telefonla eşlenmemiş bir Chrome için, bu yüzden izin verilemez."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ ایسے Chrome کے لیے ہے جو اس فون سے جوڑا نہیں گیا، اس لیے اس کی اجازت نہیں دی جا سکتی۔"
+          }
+        },
         "vi": {
           "stringUnit": {
             "state": "translated",
@@ -148459,6 +148489,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Parola"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پاس ورڈ"
           }
         },
         "vi": {
@@ -148718,6 +148754,12 @@
             "value": "%1$@ üzerinde doldurmaya izin ver"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ پر بھرنے کی اجازت دیں"
+          }
+        },
         "vi": {
           "stringUnit": {
             "state": "translated",
@@ -148973,6 +149015,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ için parolayı ver"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ کے لیے پاس ورڈ دیں"
           }
         },
         "vi": {
@@ -149232,6 +149280,12 @@
             "value": "%1$@ için kullanıcı adını ver"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ کے لیے صارف نام دیں"
+          }
+        },
         "vi": {
           "stringUnit": {
             "state": "translated",
@@ -149487,6 +149541,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu, bu Chrome için izin vermediğiniz hassas bir site, bu yüzden izin verilemez."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ ایک حساس سائٹ ہے جس کی آپ نے اس Chrome کے لیے اجازت نہیں دی، اس لیے اس کی اجازت نہیں دی جا سکتی۔"
           }
         },
         "vi": {
@@ -149746,6 +149806,12 @@
             "value": "Kayıtlı bir giriş doldurulsun mu?"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محفوظ کردہ سائن اِن بھریں؟"
+          }
+        },
         "vi": {
           "stringUnit": {
             "state": "translated",
@@ -150003,6 +150069,12 @@
             "value": "Bu doldurma okunamıyor, bu yüzden izin verilemez. Yine de reddedebilirsiniz."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بھرنے کی یہ درخواست پڑھی نہیں جا سکتی، اس لیے اس کی اجازت نہیں دی جا سکتی۔ آپ اب بھی اسے مسترد کر سکتے ہیں۔"
+          }
+        },
         "vi": {
           "stringUnit": {
             "state": "translated",
@@ -150258,6 +150330,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kullanıcı adı veya e-posta"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صارف نام یا ای میل"
           }
         },
         "vi": {
