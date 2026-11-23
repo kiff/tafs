@@ -1485,8 +1485,12 @@ final class AppModel: ObservableObject {
         var confirmation = ChromePairing.confirmation(secret: p.secret, chromeKey: chromeKey, name: name, phoneKey: phoneKey)
         // Replacing a Chrome ("Your Chrome" 1): the connections on it move, read again just now so the owner signs what is live,
         // and the fingerprint signs them inside the pairing the extension checks. With nothing chosen, nothing moves.
-        if let old {
+        if let picked = old {
+            // The Chrome's own list (planque's `connections`) and the grants (their signatures) are both read again, so what is carried
+            // is what is live now, never what the pick showed a while ago.
+            await refreshChromes()
             await refreshConnections()
+            let old = chromes?.first { $0.id == picked.id } ?? picked
             confirmation.replaces = old.id
             let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phoneKey)
             if !carried.isEmpty { confirmation.carried = carried }
