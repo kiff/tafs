@@ -696,3 +696,46 @@ test("Show me brings the run's tab to the front and outlines the field the taf n
   assert.ok(!c.calls.some((x) => x[0] === "page" && x[1].startsWith("act")), "nothing was clicked or typed");
   assert.equal((await r.showHand("run_x")).error.code, "no_hand");
 });
+
+// The read after an act waits for the navigation the act starts (the owner's run 2: "The page still showed the start page afterwards").
+async function actOn(c, extra = {}) {
+  const waits = [];
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : (waits.push(ms), Promise.resolve())), paired: () => paired });
+  await r.handle(step());
+  const out = await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" }, ...extra }));
+  return { out, waits, runner: r };
+}
+
+test("a click that navigates is read after the new page loads, not from the old page still marked complete", async () => {
+  const c = fakeChrome({ page: PLAIN });
+  const base = c.tabs.get;
+  let state = "before";
+  let loadingPolls = 0;
+  c.tabs.get = async (id) => {
+    const t = await base(id);
+    if (state === "before") return t;
+    // The click has happened: a moment later the tab starts loading the results page, then finishes.
+    if (loadingPolls < 3) {
+      loadingPolls++;
+      return loadingPolls === 1 ? t : { ...t, status: "loading", url: "https://shop.example/results" };
+    }
+    return { ...t, status: "complete", url: "https://shop.example/results" };
+  };
+  const inject = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    if (o.func && String(o.func).includes("TafsPage.act")) state = "after";
+    return inject(o);
+  };
+  const { out } = await actOn(c);
+  assert.ok(out.page, "the act answers a page");
+  // The tab was asked again after the click until it had started loading and finished.
+  assert.ok(loadingPolls >= 3, "the runner kept looking until the navigation had begun and ended; polls: " + loadingPolls);
+});
+
+test("a click that navigates nothing waits one second at most for a navigation and then reads", async () => {
+  const c = fakeChrome({ page: PLAIN });
+  const { out, waits } = await actOn(c);
+  assert.ok(out.page, JSON.stringify(out));
+  const looked = waits.filter((ms) => ms === 100).length;
+  assert.equal(looked, 10, "ten looks of 100 ms, then it reads");
+});
