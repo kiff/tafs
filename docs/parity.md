@@ -319,7 +319,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | 7 | Check before sending (Re-record, Delete, Type, Quick reply) | done | done | |
 | 8 | Keep for later | not started | done | Apple Watch keeps no draft yet |
 | 9 | Send, then "Coach is answering" | done | done | |
-| 10 | The answer: Hear it, and Reply | in review: this PR (Hear) | done | Apple Watch: Reply done; Hear in review (`WatchHear`) |
+| 10 | The answer: Hear it, and Reply | in review: tafs#1868 (Hear) | done | Apple Watch: Reply done; Hear in review (`WatchHear`) |
 | 11 | An answer you can't miss, with the app put away | partial | done | Apple Watch: iOS doesn't promise the background time, and there's no push for watch asks yet |
 | 12 | Coach as one conversation | done | done | |
 | 13 | Chat with one taf | done | done | tafs cloud's switch still decides per account |
