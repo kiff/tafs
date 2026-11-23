@@ -31,6 +31,8 @@
   "chrome.shot_none": "Bu adım için saklanmış bir görüntü yok.",
   "chrome.shot_open": "Bu adımdan önceki sayfayı gör",
   "chrome.shot_title": "Bu adımdan önce",
+  "chrome.switch": "Başka bir Chrome kullan",
+  "chrome.switch_prompt": "Bu bağlantıyı {name} tarayıcısına taşı",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Eşleşmeyi kaldırmak, onu kullanan bağlantıları sonlandırır: {sites}. Ancak yeniden bağlarsan geri gelirler.",
   "chrome.used_for": "Şunun için kullanılıyor: {sites}",

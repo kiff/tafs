@@ -625,6 +625,8 @@
     <string name="chrome_shot_none">За тази стъпка не е запазена картина.</string>
     <string name="chrome_shot_open">Виж страницата преди тази стъпка</string>
     <string name="chrome_shot_title">Преди тази стъпка</string>
+    <string name="chrome_switch">Използвай друг Chrome</string>
+    <string name="chrome_switch_prompt">Премести тази връзка към %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Прекратяването на връзката със Chrome слага край на свързванията, които го ползват: %1$s. Връщат се само ако ги свържеш отново.</string>
     <string name="chrome_used_for">Използва се за %1$s</string>

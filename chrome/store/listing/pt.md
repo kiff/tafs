@@ -12,7 +12,7 @@ O tafs para Chrome deixa os seus tafs trabalharem no seu próprio Chrome, só no
 
 • Associe este Chrome ao seu telemóvel: na app tafs, abra Conta › Chrome › Associar um Chrome e escreva o código que aparece.
 • Um taf trabalha nos seus próprios separadores, num grupo de separadores que pode ver. Pode pô-lo em pausa ou pará-lo a qualquer momento, e ele para quando toca num dos seus separadores.
-• O tafs só pode usar um site depois de o permitir no Chrome, um site de cada vez, quando uma tarefa precisa dele.
+• O Chrome pede uma única vez, na instalação, acesso a todos os sites. O tafs só trabalha nos sites que cada tarefa indica, e que aprova no telemóvel.
 • Pagar, fazer uma encomenda e preencher um início de sessão guardado esperam sempre pela sua aprovação no telemóvel.
 • Lê uma página como texto e campos de formulário, sem os campos de palavra-passe, cartão e código. Nunca lê os seus outros separadores nem o seu histórico.
 • Sites de bancos, carteiras, gestores de palavras-passe, pagamentos, saúde e administração pública nunca são usados, a não ser que permita um, para uma tarefa, no telemóvel.
