@@ -175,6 +175,11 @@ struct HeldCallCard: View {
             } else if model.showsApprovalKeyLost, call.kiffID != nil {
                 // Approving or extra room would fail: the way out instead. Refuse stays below.
                 ApprovalKeyLostLine()
+            } else if call.needsRelease == true {
+                // A sign-in fill takes a release this app can't make yet: never an allowing answer without it.
+                Text(Words.Chrome.releaseUnreadable)
+                    .scaledFont(13).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
             } else if call.approvableOnce {
                 ApprovalGate {
                     Button {

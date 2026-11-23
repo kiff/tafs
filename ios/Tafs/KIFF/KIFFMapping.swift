@@ -311,7 +311,9 @@ enum KIFFMapping {
         )
         call.kiffID = e.id
         call.proposalID = e.proposalID
-        call.approvableOnce = e.canApproveOnce ?? true
+        // A sign-in fill is never allowed without its release, which this app can't make yet: Refuse only.
+        call.needsRelease = e.needsRelease ? true : nil
+        call.approvableOnce = (e.canApproveOnce ?? true) && !e.needsRelease
         call.accountingVersion = e.accountingVersion
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)
