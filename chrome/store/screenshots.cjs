@@ -114,6 +114,21 @@ const PAGE = (kind) => `<!doctype html><meta charset="utf-8"><style>
     await page.screenshot({ path: path.join(OUT, `chrome-store-${name}.png`) });
     await page.close();
   }
+  // The small promo tile, 440x280: the extension's icon and the listing's own words, on tafs' dark ground with its one amber accent.
+  const tile = await browser.newPage({ viewport: { width: 440, height: 280 }, deviceScaleFactor: 1 });
+  await tile.route("**/__tile.html", (r) => r.fulfill({ contentType: "text/html", body: `<!doctype html><meta charset="utf-8"><style>
+    html,body{margin:0;width:440px;height:280px;overflow:hidden;background:#15130f;color:#f4efe8;font:15px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif}
+    .tile{display:flex;align-items:center;gap:22px;height:100%;padding:0 30px;box-sizing:border-box}
+    img{width:112px;height:112px;flex:none}.name{font-size:40px;font-weight:800;letter-spacing:-0.5px;margin:0 0 6px}
+    .line{font-size:17px;margin:0 0 10px;color:#f4efe8}.amber{font-size:15px;font-weight:600;color:#f29a2e;margin:0}
+  </style><div class="tile"><img src="/icons/icon-128.png" alt=""><div>
+    <p class="name">tafs</p><p class="line">Your tafs, in your own Chrome, only on the sites you allow.</p>
+    <p class="amber">Every risky step waits for your phone.</p></div></div>` }));
+  tile.on("pageerror", (e) => { console.error("tile: " + e.message); process.exitCode = 1; });
+  await tile.goto(`http://127.0.0.1:${port}/__tile.html`);
+  await tile.waitForLoadState("networkidle");
+  await tile.screenshot({ path: path.join(OUT, "chrome-store-promo-440x280.png") });
+  await tile.close();
   await browser.close();
   server.close();
 })().catch((e) => { console.error(e); process.exit(1); });
