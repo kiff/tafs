@@ -1,1 +1,1 @@
-- **Chrome: done groups no longer pile up while you watch.** When a taf runs again, the tab of its last run that you're using (or moved to another page) still stays open, but now leaves that run's grey "tafs · … · done" group, so the group of a finished run goes and only the latest run's remains ([docs/chrome.md](../docs/chrome.md), "Runs").
+- **Chrome extension 0.2.1:** the version for the next Web Store package. It carries the fix to done groups piling up while you watch ([docs/chrome.md](../docs/chrome.md), "Runs"), with nothing else changed in the extension.
