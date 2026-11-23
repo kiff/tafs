@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Předchozí rozhovory" },
   "coach_previous_none": { "message": "Žádné dřívější rozhovory." },
   "coach_previous_error": { "message": "Dřívější rozhovory se nepodařilo načíst." },
-  "coach_untitled": { "message": "Rozhovor" }
+  "coach_untitled": { "message": "Rozhovor" },
+  "taf_choose": { "message": "Mluvit s" },
+  "taf_placeholder": { "message": "Zpráva pro $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nedošlo to k $TAF$. Zkuste to znovu.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Vaše tafs se nepodařilo načíst. Zkuste to znovu." },
+  "no_taf_here": { "message": "V tomto Chromu zatím žádný taf nepracuje." },
+  "setup_taf": { "message": "Nastavit nový taf pro tento web" }
 }

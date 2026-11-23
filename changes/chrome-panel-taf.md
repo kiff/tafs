@@ -1,0 +1,1 @@
+- **Chrome extension:** the side panel is for the taf that works in this Chrome: pick it, watch it work, and talk to it in its own chat, as on your phone. Coach moves behind "Set up a new taf for this site" ([docs/chrome.md](../docs/chrome.md), "The taf in the side panel").

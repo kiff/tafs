@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Bisedat e mëparshme" },
   "coach_previous_none": { "message": "Nuk ka biseda më të hershme." },
   "coach_previous_error": { "message": "Bisedat më të hershme nuk u ngarkuan dot." },
-  "coach_untitled": { "message": "Biseda" }
+  "coach_untitled": { "message": "Biseda" },
+  "taf_choose": { "message": "Fol me" },
+  "taf_placeholder": { "message": "Mesazh për $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nuk arriti te $TAF$. Provoni përsëri.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Tafs-at tuaj nuk mund të lexoheshin. Provoni përsëri." },
+  "no_taf_here": { "message": "Ende nuk punon asnjë taf në këtë Chrome." },
+  "setup_taf": { "message": "Konfiguro një taf të ri për këtë sajt" }
 }

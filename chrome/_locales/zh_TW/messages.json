@@ -76,5 +76,11 @@
   "coach_previous": { "message": "先前的對話" },
   "coach_previous_none": { "message": "沒有更早的對話。" },
   "coach_previous_error": { "message": "無法載入更早的對話。" },
-  "coach_untitled": { "message": "對話" }
+  "coach_untitled": { "message": "對話" },
+  "taf_choose": { "message": "對話對象" },
+  "taf_placeholder": { "message": "傳訊息給 $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "訊息沒有送達 $TAF$。請再試一次。", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "無法讀取你的 tafs。請再試一次。" },
+  "no_taf_here": { "message": "這個 Chrome 中還沒有 taf 在工作。" },
+  "setup_taf": { "message": "為這個網站設定新的 taf" }
 }

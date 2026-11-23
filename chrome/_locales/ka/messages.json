@@ -76,5 +76,11 @@
   "coach_previous": { "message": "წინა საუბრები" },
   "coach_previous_none": { "message": "ადრინდელი საუბრები არ არის." },
   "coach_previous_error": { "message": "ადრინდელი საუბრების ჩატვირთვა ვერ მოხერხდა." },
-  "coach_untitled": { "message": "საუბარი" }
+  "coach_untitled": { "message": "საუბარი" },
+  "taf_choose": { "message": "ესაუბრეთ" },
+  "taf_placeholder": { "message": "შეტყობინება $TAF$-ს", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "ეს $TAF$-მდე ვერ მივიდა. სცადეთ თავიდან.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "თქვენი tafs ვერ წაიკითხა. სცადეთ თავიდან." },
+  "no_taf_here": { "message": "ამ Chrome-ში ჯერ არცერთი taf არ მუშაობს." },
+  "setup_taf": { "message": "ამ საიტისთვის ახალი taf-ის დაყენება" }
 }

@@ -76,5 +76,11 @@
   "coach_previous": { "message": "ការសន្ទនាមុនៗ" },
   "coach_previous_none": { "message": "គ្មានការសន្ទនាមុនៗទេ។" },
   "coach_previous_error": { "message": "មិនអាចផ្ទុកការសន្ទនាមុនៗបានទេ។" },
-  "coach_untitled": { "message": "ការសន្ទនា" }
+  "coach_untitled": { "message": "ការសន្ទនា" },
+  "taf_choose": { "message": "និយាយជាមួយ" },
+  "taf_placeholder": { "message": "សារទៅ $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "វាមិនបានទៅដល់ $TAF$ ទេ។ សូមព្យាយាមម្ដងទៀត។", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "មិនអាចអាន tafs របស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។" },
+  "no_taf_here": { "message": "មិនទាន់មាន taf ធ្វើការក្នុង Chrome នេះនៅឡើយទេ។" },
+  "setup_taf": { "message": "រៀបចំ taf ថ្មីសម្រាប់គេហទំព័រនេះ" }
 }

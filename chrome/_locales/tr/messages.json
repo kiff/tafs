@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Önceki sohbetler" },
   "coach_previous_none": { "message": "Daha önceki sohbet yok." },
   "coach_previous_error": { "message": "Daha önceki sohbetler yüklenemedi." },
-  "coach_untitled": { "message": "Sohbet" }
+  "coach_untitled": { "message": "Sohbet" },
+  "taf_choose": { "message": "Şununla konuş:" },
+  "taf_placeholder": { "message": "$TAF$ için mesaj", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Bu, $TAF$ hedefine ulaşmadı. Tekrar deneyin.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "tafs'leriniz okunamadı. Tekrar deneyin." },
+  "no_taf_here": { "message": "Bu Chrome'da henüz çalışan bir taf yok." },
+  "setup_taf": { "message": "Bu site için yeni bir taf kur" }
 }

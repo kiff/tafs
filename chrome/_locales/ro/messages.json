@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Conversații anterioare" },
   "coach_previous_none": { "message": "Nicio conversație anterioară." },
   "coach_previous_error": { "message": "Conversațiile anterioare nu au putut fi încărcate." },
-  "coach_untitled": { "message": "Conversație" }
+  "coach_untitled": { "message": "Conversație" },
+  "taf_choose": { "message": "Vorbiți cu" },
+  "taf_placeholder": { "message": "Mesaj pentru $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nu a ajuns la $TAF$. Încercați din nou.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Nu s-au putut citi tafs-urile dvs. Încercați din nou." },
+  "no_taf_here": { "message": "Încă nu lucrează niciun taf în acest Chrome." },
+  "setup_taf": { "message": "Configurați un taf nou pentru acest site" }
 }

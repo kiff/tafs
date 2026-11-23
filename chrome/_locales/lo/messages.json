@@ -76,5 +76,11 @@
   "coach_previous": { "message": "ການສົນທະນາກ່ອນໜ້າ" },
   "coach_previous_none": { "message": "ບໍ່ມີການສົນທະນາກ່ອນໜ້າ." },
   "coach_previous_error": { "message": "ໂຫຼດການສົນທະນາກ່ອນໜ້ານີ້ບໍ່ໄດ້." },
-  "coach_untitled": { "message": "ການສົນທະນາ" }
+  "coach_untitled": { "message": "ການສົນທະນາ" },
+  "taf_choose": { "message": "ລົມກັບ" },
+  "taf_placeholder": { "message": "ຂໍ້ຄວາມເຖິງ $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "ມັນບໍ່ໄປຮອດ $TAF$. ລອງໃໝ່ອີກຄັ້ງ.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "ບໍ່ສາມາດອ່ານ tafs ຂອງທ່ານໄດ້. ລອງໃໝ່ອີກຄັ້ງ." },
+  "no_taf_here": { "message": "ຍັງບໍ່ມີ taf ເຮັດວຽກໃນ Chrome ນີ້." },
+  "setup_taf": { "message": "ຕັ້ງ taf ໃໝ່ສຳລັບເວັບໄຊນີ້" }
 }

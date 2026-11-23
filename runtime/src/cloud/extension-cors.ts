@@ -18,6 +18,8 @@ const EXTENSION_ORIGIN = /^chrome-extension:\/\/[a-p]{32}$/;
  */
 const EXTENSION_ROUTES = [
   /^\/v1\/setup$/,
+  // The account's tafs, for the panel to name the tafs that work in this Chrome (docs/chrome-panel.md).
+  /^\/v1\/tafs$/,
   /^\/v1\/tafs\/[^/]+\/conversation$/,
   /^\/v1\/tafs\/[^/]+\/conversation\/[^/]+$/,
   /^\/v1\/tafs\/[^/]+\/chats$/,

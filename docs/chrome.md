@@ -578,6 +578,28 @@ Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every lang
 release made from it is accepted by `checkRelease`, and one with any field changed, another Chrome's, an expired one, or
 a reused nonce is refused.
 
+## The taf in the side panel
+
+The side panel is for watching a taf work and talking to it ([chrome-panel.md](chrome-panel.md)). Coach sits behind
+**Set up a new taf for this site**.
+
+- **Which tafs:** planque's list of this Chrome's live connections, `connections: [{grant, agent, name, sites}]`, comes in
+  the relay's `welcome` and again on each change (`{type: "connections"}`, `readConnections`, at most 50). The panel offers
+  each one that is one of the person's tafs (`GET /v1/tafs`, matched by `kiff_agent`, `tafsHere`), once each, with the one
+  at work first. With one taf it opens on it, and with several there's a picker.
+- **The list is for display only, never authority.** What a step may do still comes only from the signed step and the
+  connection's phone-signed sites. The extension never takes a site from this list as allowed. The panel reads the chat of
+  a taf on it, and no other (`taf_thread`, `taf_send`). That limit is only as strong as the list, which planque sends and
+  nobody signs. tafs cloud's own routes still decide whose chat the session may read.
+- **The person's tafs are read once per change** of this Chrome's connections, and again when the panel is shown
+  (`keptTafs`). A chat's reads and sends reuse them, so they make no extra request.
+- **Its chat** is the taf's own, as on the phone (`GET /v1/tafs/{id}/conversation`, `POST …/messages`, tafs cloud's
+  extension routes). It's read on each event: the panel shown, a taf picked, a send, a step seen in a run. Then every 4 s
+  while the taf works or for a minute after a send, otherwise backing off from 60 s to 5 minutes, jittered (`idleDelay`),
+  and never while the panel is hidden. Coach is read only while it's shown.
+- Cards still say to approve on the phone ([chrome-panel.md](chrome-panel.md) has the route that approves in the panel,
+  off until its gates are answered).
+
 ## Coach in the side panel
 
 The side panel talks to Coach: the same chat the apps use, through tafs cloud's own routes (`GET /v1/setup`,

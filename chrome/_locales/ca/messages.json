@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Converses anteriors" },
   "coach_previous_none": { "message": "No hi ha converses anteriors." },
   "coach_previous_error": { "message": "No s'han pogut carregar les converses anteriors." },
-  "coach_untitled": { "message": "Conversa" }
+  "coach_untitled": { "message": "Conversa" },
+  "taf_choose": { "message": "Parla amb" },
+  "taf_placeholder": { "message": "Missatge a $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "No ha arribat a $TAF$. Torna-ho a provar.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "No s'han pogut llegir els teus tafs. Torna-ho a provar." },
+  "no_taf_here": { "message": "Encara no hi ha cap taf que treballi en aquest Chrome." },
+  "setup_taf": { "message": "Configura un taf nou per a aquest lloc" }
 }

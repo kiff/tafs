@@ -8,6 +8,7 @@ import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
 import { Vault } from "./vault.js";
+import { tafsHere } from "./coachchat.js";
 import { Coach, reusing } from "./coach.js";
 import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { Shots } from "./shot.js";
@@ -30,7 +31,8 @@ const shots = config().screenshots
 const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, shots });
 
 function publish(extra = {}) {
-  const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(), ...extra };
+  const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
+    connections: (relay && relay.connections) || [], ...extra };
   chrome.storage.session.set({ state }).catch(() => {});
   chrome.runtime.sendMessage({ type: "state", state }).catch(() => {});
   chrome.action.setBadgeText({ text: runner.active ? "ON" : "" }).catch(() => {});
@@ -208,6 +210,17 @@ async function coach() {
   return coachFor(session.token);
 }
 
+/** This Chrome's connections that are the person's tafs (`tafsHere`), the tafs read once per change of the connections. */
+async function tafsOfThisChrome(fresh = false, working = null) {
+  const connections = (relay && relay.connections) || [];
+  const tafs = await (await coach()).keptTafs(JSON.stringify(connections), fresh);
+  return tafsHere(connections, tafs, working);
+}
+
+async function onlyHere(taf) {
+  if (!(await tafsOfThisChrome()).some((t) => t.id === taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
+}
+
 /** The tab the owner is looking at, for "Share this page" only: one tab, on the owner's tap, never listed otherwise. */
 async function shareTarget() {
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
@@ -256,6 +269,21 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
     },
     coach_chats: async () => ({ chats: await (await coach()).chats() }),
+    // The tafs that work in this Chrome (planque's list, display only), as the person's own tafs. The panel asks when it's
+    // shown and when the connections change, and that's when the person's tafs are read; a chat's reads and sends reuse them.
+    taf_list: async () => {
+      const working = runner.state().find((r) => !r.stopped);
+      return { tafs: await tafsOfThisChrome(true, working ? working.taf : null) };
+    },
+    // A taf's own chat: only one this Chrome offers, so the panel reads nothing else.
+    taf_thread: async () => {
+      await onlyHere(m.taf);
+      return { thread: await (await coach()).tafThread(m.taf) };
+    },
+    taf_send: async () => {
+      await onlyHere(m.taf);
+      return { sent: await (await coach()).sendToTaf(m.taf, m.words, m.clientID) };
+    },
     coach_send: async () => ({
       sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true }),
     }),

@@ -1,7 +1,7 @@
 // The side panel: pairing by the phone's code, and while a taf works, what it's doing, with Pause, Resume and Stop. It
 // shows only what the service worker reports; it decides nothing.
 
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay } from "../src/coachchat.js";
 
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
@@ -39,8 +39,19 @@ function stepLine(s) {
   return s.error ? words + " · " + t("step_refused", s.error) : words;
 }
 
+let lastConnections = null;
+let lastRuns = null;
+
 function draw(state) {
   $("conn").textContent = state.paired ? t(state.connected ? "connected" : "waiting") : "";
+  const connections = JSON.stringify(state.connections || []);
+  if (state.paired && connections !== lastConnections) {
+    lastConnections = connections;
+    loadTafs();
+  }
+  const runsSeen = JSON.stringify((state.runs || []).map((r) => [r.id, (r.steps || []).length, r.stopped]));
+  if (state.paired && lastRuns !== null && runsSeen !== lastRuns && document.visibilityState === "visible") readTaf();
+  lastRuns = runsSeen;
   $("pair").hidden = !!state.paired;
   $("paired").hidden = !state.paired;
   if (!state.paired) return;
@@ -157,13 +168,19 @@ let pollTimer = null;
 function schedule() {
   clearTimeout(pollTimer);
   const delay = pollDelay({ view, working, sentAt, now: Date.now() });
-  if (delay == null || document.visibilityState !== "visible") return;
+  // Coach is behind its button now ("Set up a new taf for this site"): read only while it's shown.
+  if (delay == null || document.visibilityState !== "visible" || $("coach").hidden) return;
   pollTimer = setTimeout(drawCoach, delay);
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") drawCoach();
-  else clearTimeout(pollTimer);
+  if (document.visibilityState === "visible") {
+    if (!$("coach").hidden) drawCoach();
+    readTaf();
+  } else {
+    clearTimeout(pollTimer);
+    clearTimeout(tafTimer);
+  }
 });
 
 async function drawCoach() {
@@ -296,4 +313,102 @@ $("coachForm").onsubmit = async (e) => {
   drawCoach();
 };
 
-drawCoach();
+// The taf in this Chrome (docs/chrome-panel.md): the panel is for watching it work and talking to it. Which tafs come from
+// planque's list of this Chrome's connections (display only); the chat is the taf's own, as on the phone. It's read at once on
+// each event (shown again, a taf picked, a send, a step seen), then every 4 s while it works or a minute after a send, and
+// otherwise less and less (60 s to 5 minutes), never while the panel is hidden.
+let tafs = [];
+let tafId = null;
+let tafWorking = false;
+let tafSentAt = 0;
+let tafIdle = 0;
+let tafTimer = null;
+
+const tafName = () => (tafs.find((x) => x.id === tafId) || {}).name || "";
+
+async function loadTafs() {
+  const r = await send({ type: "taf_list" });
+  tafs = r.error ? [] : r.tafs || [];
+  const pick = $("tafPick");
+  pick.textContent = "";
+  for (const x of tafs) {
+    const o = document.createElement("option");
+    o.value = x.id;
+    o.textContent = x.name;
+    pick.append(o);
+  }
+  if (!tafs.some((x) => x.id === tafId)) tafId = tafs.length ? tafs[0].id : null;
+  pick.value = tafId || "";
+  $("tafPickRow").hidden = tafs.length < 2;
+  $("noTaf").hidden = tafs.length > 0 || !!r.error;
+  $("tafForm").hidden = !tafId;
+  $("tafName").textContent = tafName();
+  $("tafWords").placeholder = tafId ? t("taf_placeholder", tafName()) : "";
+  $("tafNote").textContent = r.error ? t(r.error === "no_session" ? "unpaired" : "tafs_not_read") : "";
+  if (!tafId) $("tafThread").textContent = "";
+  tafIdle = 0;
+  readTaf();
+}
+
+async function readTaf() {
+  clearTimeout(tafTimer);
+  if (!tafId) return;
+  const id = tafId;
+  const r = await send({ type: "taf_thread", taf: id });
+  if (id !== tafId) return; // another taf was picked meanwhile
+  const note = $("tafNote");
+  note.textContent = "";
+  if (r.error) {
+    note.textContent = t(r.error === "no_session" ? "unpaired" : "taf_error", tafName());
+  } else {
+    const list = $("tafThread");
+    list.textContent = "";
+    for (const m of r.thread.messages.slice(-20)) {
+      const li = document.createElement("li");
+      li.className = m.from;
+      li.textContent = m.text;
+      list.append(li);
+    }
+    $("tafPhone").hidden = !r.thread.waitsOnPhone;
+    tafWorking = !!r.thread.working;
+    if (tafWorking) note.textContent = t("working", tafName());
+  }
+  scheduleTaf();
+}
+
+function scheduleTaf() {
+  clearTimeout(tafTimer);
+  if (!tafId || document.visibilityState !== "visible") return;
+  const busy = tafWorking || Date.now() - tafSentAt < 60_000;
+  if (busy) tafIdle = 0;
+  tafTimer = setTimeout(readTaf, busy ? 4000 : idleDelay(tafIdle++));
+}
+
+$("tafPick").onchange = () => {
+  tafId = $("tafPick").value || null;
+  $("tafName").textContent = tafName();
+  $("tafWords").placeholder = tafId ? t("taf_placeholder", tafName()) : "";
+  tafIdle = 0;
+  readTaf();
+};
+
+$("tafForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const words = $("tafWords").value.trim();
+  if (!words || !tafId) return;
+  const r = await send({ type: "taf_send", taf: tafId, words, clientID: crypto.randomUUID() });
+  if (r.error) {
+    $("tafNote").textContent = t("taf_error", tafName());
+    return;
+  }
+  tafSentAt = Date.now();
+  $("tafWords").value = "";
+  readTaf();
+};
+
+// Coach sets up a new taf; it's a button now, not the panel's chat.
+$("setupTaf").onclick = () => {
+  $("coach").hidden = !$("coach").hidden;
+  if (!$("coach").hidden) drawCoach();
+  else clearTimeout(pollTimer);
+};

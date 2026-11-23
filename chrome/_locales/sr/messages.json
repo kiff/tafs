@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Prethodni razgovori" },
   "coach_previous_none": { "message": "Nema ranijih razgovora." },
   "coach_previous_error": { "message": "Ranije razgovore nije bilo moguće učitati." },
-  "coach_untitled": { "message": "Razgovor" }
+  "coach_untitled": { "message": "Razgovor" },
+  "taf_choose": { "message": "Razgovarajte sa" },
+  "taf_placeholder": { "message": "Poruka za $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nije stiglo do $TAF$. Pokušajte ponovo.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Vaši tafs nisu mogli da se pročitaju. Pokušajte ponovo." },
+  "no_taf_here": { "message": "U ovom Chrome-u još ne radi nijedan taf." },
+  "setup_taf": { "message": "Podesite novi taf za ovaj sajt" }
 }

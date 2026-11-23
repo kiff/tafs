@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Նախորդ զրույցները" },
   "coach_previous_none": { "message": "Նախորդ զրույցներ չկան։" },
   "coach_previous_error": { "message": "Նախորդ զրույցները հնարավոր չեղավ բեռնել։" },
-  "coach_untitled": { "message": "Զրույց" }
+  "coach_untitled": { "message": "Զրույց" },
+  "taf_choose": { "message": "Խոսել" },
+  "taf_placeholder": { "message": "Հաղորդագրություն $TAF$-ին", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Այն չհասավ $TAF$-ին։ Կրկին փորձեք։", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Ձեր tafs-երը չհաջողվեց կարդալ։ Կրկին փորձեք։" },
+  "no_taf_here": { "message": "Այս Chrome-ում դեռ ոչ մի taf չի աշխատում։" },
+  "setup_taf": { "message": "Կարգավորել նոր taf այս կայքի համար" }
 }

@@ -76,5 +76,11 @@
   "coach_previous": { "message": "Percakapan sebelumnya" },
   "coach_previous_none": { "message": "Belum ada percakapan sebelumnya." },
   "coach_previous_error": { "message": "Percakapan sebelumnya tidak dapat dimuat." },
-  "coach_untitled": { "message": "Percakapan" }
+  "coach_untitled": { "message": "Percakapan" },
+  "taf_choose": { "message": "Bicara dengan" },
+  "taf_placeholder": { "message": "Pesan untuk $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Itu tidak sampai ke $TAF$. Coba lagi.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Tafs Anda tidak dapat dibaca. Coba lagi." },
+  "no_taf_here": { "message": "Belum ada taf yang bekerja di Chrome ini." },
+  "setup_taf": { "message": "Siapkan taf baru untuk situs ini" }
 }

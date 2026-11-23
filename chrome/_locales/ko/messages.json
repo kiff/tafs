@@ -76,5 +76,11 @@
   "coach_previous": { "message": "이전 대화" },
   "coach_previous_none": { "message": "이전 대화가 없습니다." },
   "coach_previous_error": { "message": "이전 대화를 불러오지 못했습니다." },
-  "coach_untitled": { "message": "대화" }
+  "coach_untitled": { "message": "대화" },
+  "taf_choose": { "message": "대화 상대" },
+  "taf_placeholder": { "message": "$TAF$에게 메시지", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "$TAF$에게 전달되지 않았습니다. 다시 시도하세요.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "tafs를 읽을 수 없습니다. 다시 시도하세요." },
+  "no_taf_here": { "message": "이 Chrome에서 작업하는 taf가 아직 없습니다." },
+  "setup_taf": { "message": "이 사이트용 새 taf 설정" }
 }
