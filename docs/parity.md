@@ -316,7 +316,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | 8 | Keep for later | not started | done | Apple Watch keeps no draft yet |
 | 9 | Send, then "Coach is answering" | done | done | |
 | 10 | The answer: Hear it, and Reply | partial | done | Apple Watch: Reply done; Hear (text to speech) not built |
-| 11 | An answer you can't miss, with the app put away | partial | done | Apple Watch: iOS doesn't promise the background time, and there's no push for watch asks yet |
+| 11 | An answer you can't miss, with the app put away | partial | done | Apple Watch: iOS doesn't promise the background time; tafs cloud now pushes watch asks to the iPhone, which doesn't read them yet |
 | 12 | Coach as one conversation | done | done | |
 | 13 | Chat with one taf | done | done | tafs cloud's switch still decides per account |
 | 14 | A taf's page and its settings | done | done | |
@@ -326,7 +326,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | 18 | Sign out on this watch alone | done | done | |
 | 19 | Sign in, pair a device, add a passkey, change a Card | not for it | not for it | no sign-in of its own; the keys stay on the phone |
 | 20 | The inbox kept on the watch | done | done | |
-| 21 | The inbox's read and dismissed, in step with the phone | not started | not started | waits on tafs cloud's piece |
+| 21 | The inbox's read and dismissed, in step with the phone | not started | not started | tafs cloud's piece is in (`/v1/watch/inbox`); each watch's side and its phone's relay are next |
 | 22 | Your brief | partial | partial | built; off (`briefOnWatch`, `BRIEF_ON_WATCH`) until the owner's yes |
 | 23 | "From your watch" on the phone | done | done | |
 | 24 | A complication or tile (count, Ask tafs) | not started | done | Apple Watch: planned only |
