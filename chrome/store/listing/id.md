@@ -15,6 +15,7 @@ tafs untuk Chrome membiarkan taf Anda bekerja di Chrome Anda sendiri, hanya di s
 • Chrome meminta sekali saat pemasangan untuk akses ke semua situs. tafs hanya bekerja di situs yang disebutkan setiap tugas, yang Anda setujui di ponsel.
 • Membayar, membuat pesanan, dan mengisi masuk yang tersimpan selalu menunggu persetujuan Anda di ponsel.
 • Ia membaca halaman sebagai teks dan kolom formulir, tanpa kolom kata sandi, kartu, dan kode. Ia tidak pernah membaca tab lain atau riwayat Anda.
+• Sebuah taf bisa menyerahkan satu langkah di halaman kepada Anda, seperti mengetik pencarian atau nomor kartu. Anda melakukannya sendiri, dan saat ia membaca halaman lagi, apa yang Anda ketik di kolom tidak disertakan.
 • Situs bank, dompet, pengelola kata sandi, pembayaran, kesehatan, dan pemerintah tidak pernah diproses, kecuali Anda mengizinkan satu untuk satu tugas di ponsel.
 • Masuk yang tersimpan bersifat opsional dan disegel di komputer ini. tafs dan KIFF tidak pernah melihatnya.
 • Panel samping menampilkan taf yang bekerja di Chrome ini, dan Anda berbicara dengannya di sana, seperti di aplikasi tafs. “Siapkan taf baru untuk situs ini” membuka Coach, yang hanya melihat halaman saat Anda mengeklik “Bagikan halaman ini”, dan saat itu hanya halaman itu, dengan kolom yang sama dihapus.

@@ -15,6 +15,7 @@ tafs pour Chrome permet à vos tafs de travailler dans votre propre Chrome, uniq
 • Chrome demande une seule fois, à l'installation, l'accès à tous les sites. tafs ne travaille que sur les sites que chaque tâche indique, et que vous approuvez sur votre téléphone.
 • Payer, passer une commande et remplir une connexion enregistrée attendent toujours votre approbation sur votre téléphone.
 • Il lit une page comme du texte et des champs de formulaire, sans les champs de mot de passe, de carte et de code. Il ne lit jamais vos autres onglets ni votre historique.
+• Un taf peut vous confier une étape sur une page, comme saisir une recherche ou un numéro de carte. Vous la faites vous-même, et quand il relit la page, ce que vous avez saisi dans les champs est laissé de côté.
 • Les sites de banques, de portefeuilles, de gestionnaires de mots de passe, de paiement, de santé et d'administration ne sont jamais traités, sauf si vous en autorisez un, pour une tâche, sur votre téléphone.
 • Les connexions enregistrées sont facultatives et scellées sur cet ordinateur. tafs et KIFF ne les voient jamais.
 • Le panneau latéral montre le taf qui travaille dans ce Chrome, et vous lui parlez là, comme dans l'app tafs. « Configurer un nouveau taf pour ce site » ouvre Coach, qui ne voit une page que lorsque vous cliquez sur « Partager cette page », et alors seulement cette page, avec les mêmes champs retirés.

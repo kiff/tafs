@@ -15,6 +15,7 @@ tafs za Chrome pusti vašim tafom delati v vašem lastnem Chromu, samo na strane
 • Chrome ob namestitvi enkrat zahteva dostop do vseh spletnih mest. tafs dela samo na mestih, ki jih navede vsaka naloga in ki jih odobrite v telefonu.
 • Plačilo, oddaja naročila in izpolnitev shranjene prijave vedno čakajo na vašo odobritev v telefonu.
 • Stran bere kot besedilo in polja obrazca, brez polj za geslo, kartico in kodo. Nikoli ne bere vaših drugih zavihkov ali zgodovine.
+• Taf vam lahko prepusti en korak na strani, na primer vnos iskanja ali številke kartice. Naredite ga sami, in ko stran znova prebere, je tisto, kar ste vnesli v polja, izpuščeno.
 • Strani bank, denarnic, upraviteljev gesel, plačil, zdravja in oblasti se nikoli ne obdelujejo, razen če eno dovolite za eno nalogo v telefonu.
 • Shranjene prijave so neobvezne in zapečatene v tem računalniku. tafs in KIFF jih nikoli ne vidita.
 • Stranska vrstica prikazuje taf, ki dela v tem Chrome, in se tam pogovarjate z njim, kot v aplikaciji tafs. „Nastavi nov taf za to spletno mesto“ odpre Coacha, ki vidi stran le, ko kliknete „Deli to stran“, in takrat le to stran, z enakimi odstranjenimi polji.
