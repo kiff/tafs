@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} منسلک نہیں کی جا سکتی۔",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs یہ فائل منسلک نہیں کر سکتا: یہ اس کی قبول کردہ قسم یا سائز کی نہیں ہے۔ کوئی اور چنیں۔",
+  "attachment.photo": "تصویر",
+  "attachment.photo_could_not_read": "وہ تصویر پڑھی نہیں جا سکی۔",
+  "attachment.photo_numbered": "تصویر {n}",
+  "attachment.too_large": "{name} {size} کی ہے؛ زیادہ سے زیادہ {limit} ہے۔",
+  "attachment.wrong_kind": "{name} منسلک نہیں کی جا سکتی۔ تصاویر، PDF، ٹیکسٹ، CSV، Markdown، Word اور Excel فائلیں منسلک کی جا سکتی ہیں۔"
+}

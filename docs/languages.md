@@ -1409,6 +1409,38 @@ from legal-i18n; a native read fixes it forward.
 | Usage | उपयोग |
 | Cancel / Continue | छोड़ें / जारी रखें |
 
+### Urdu (ur)
+
+Urdu in Nastaliq-style Arabic script, written right to left, addressed as **آپ**, the polite form, with buttons in the polite imperative
+("منظور کریں", "مسترد کریں", "جاری رکھیں"). taf, Card, Coach, KIFF, Setup, Halt and planque are names and stay in Latin letters; a plural
+"s" is never added to taf in a count ("3 taf"), while "tafs" stays the product's name. Plural forms are written out where Urdu marks them
+("1 کال", "2 کالیں"). The English possessive "{owner}'s Card" is
+"{owner} کا Card". A door is "دروازہ", a knock "دستک", a call "کال", a receipt "رسید", the Record "ریکارڈ", a run "رن". Numbers are Western
+digits; quotes are « »; sentences end with the Urdu full stop "۔". Menu paths of the phone's own settings are written as the phone shows them in Urdu; macOS and iOS names stay in English. Plural forms: one, other. First draft, from legal-i18n; a native read fixes it forward.
+
+| English | Urdu |
+|---|---|
+| Needs you | آپ کی ضرورت |
+| Approve / Approve once | منظور کریں / ایک بار منظور کریں |
+| Refuse | مسترد کریں |
+| Held | روکا گیا |
+| Halt / Halted | Halt / روکا گیا |
+| Stopped | رک گیا |
+| Pause / Paused | روکیں / رکا ہوا |
+| Resume | دوبارہ چلائیں |
+| Revoke | منسوخ کریں |
+| Record | ریکارڈ |
+| Connect | جوڑیں |
+| Pair / Unpair | جوڑیں / جوڑ ختم کریں |
+| Account | اکاؤنٹ |
+| Credits | کریڈٹس |
+| Sign in / Sign out | سائن اِن کریں / سائن آؤٹ |
+| Inbox | ان باکس |
+| Overview | جائزہ |
+| Calendar | کیلنڈر |
+| Usage | استعمال |
+| Cancel / Continue | چھوڑیں / جاری رکھیں |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
