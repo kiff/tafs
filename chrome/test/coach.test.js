@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Coach, withSharedPage, MAX_TEXT } from "../src/coach.js";
+import { Coach, withSharedPage, MAX_TEXT, reusing } from "../src/coach.js";
 
 const page = { url: "https://shop.example/orders", title: "Your orders", text: "Order 5098 · late. password: [masked]" };
 
@@ -84,3 +84,20 @@ test("Coach reads a chosen chat, lists the earlier ones, and sends into a chosen
   assert.deepEqual(calls.at(-1)[2], { text: "live", client_message_id: "m3" }, "no choice: the live chat");
 });
 
+
+test("one Coach is kept for a session, so the account's Coach id is read once across every read of the chat", async () => {
+  const calls = [];
+  const fetch = async (url) => {
+    calls.push(url);
+    const body = url.endsWith("/v1/setup") ? { setup: { id: "taf-coach" } } : { messages: [], chats: [] };
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const make = reusing((token) => new Coach({ token, fetch, base: "https://cloud.test" }));
+  for (let i = 0; i < 5; i++) await make("tok_a").thread();
+  await make("tok_a").chats();
+  assert.equal(calls.filter((u) => u.endsWith("/v1/setup")).length, 1, "setup read once for six reads");
+  assert.equal(make("tok_a"), make("tok_a"), "the same Coach for the same session");
+  const other = make("tok_b");
+  await other.thread();
+  assert.equal(calls.filter((u) => u.endsWith("/v1/setup")).length, 2, "a new session reads it again");
+});
