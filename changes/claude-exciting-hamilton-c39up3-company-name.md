@@ -1,0 +1,1 @@
+- **Where to buy on a computer:** the web plan's link names it Company, as kiff.dev's pricing and the legal pages do, in every language.

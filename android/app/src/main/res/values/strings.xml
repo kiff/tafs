@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo is a subscription of one %1$s at %2$s, charged to your Apple account. It renews every %3$s until you cancel.</string>
     <string name="billing_starts_free">Starts with %1$s free.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs for one person, every month.</string>
-    <string name="billing_team_on_web">Get Team on kiff.dev</string>
+    <string name="billing_team_on_web">Get Company on kiff.dev</string>
     <string name="billing_terms_use">Terms of Use</string>
     <string name="billing_test_purchase_credits">Test purchases don\'t add credits to this account.</string>
     <string name="billing_try_free">Try %1$s free</string>

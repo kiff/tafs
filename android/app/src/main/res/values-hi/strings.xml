@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo %2$s पर एक %1$s की सदस्यता है, जो आपके Apple खाते से ली जाती है। यह आपके रद्द करने तक हर %3$s नवीनीकृत होती है।</string>
     <string name="billing_starts_free">%1$s मुफ़्त से शुरू होती है।</string>
     <string name="billing_tafs_kiff_one_person_every">एक व्यक्ति के लिए tafs, हर महीने।</string>
-    <string name="billing_team_on_web">kiff.dev पर Team लें</string>
+    <string name="billing_team_on_web">kiff.dev पर Company लें</string>
     <string name="billing_terms_use">उपयोग की शर्तें</string>
     <string name="billing_test_purchase_credits">टेस्ट खरीद इस खाते में क्रेडिट नहीं जोड़ती।</string>
     <string name="billing_try_free">%1$s मुफ़्त आज़माएँ</string>

@@ -71,7 +71,7 @@
   "billing.solo_subscription_one_charged_your": "O Solo é uma subscrição por {period}, a {price}, cobrada na sua conta Apple. Renova-se a cada {period_2} até a cancelar.",
   "billing.starts_free": "Começa com {trial} grátis.",
   "billing.tafs_kiff_one_person_every": "tafs para uma pessoa, todos os meses.",
-  "billing.team_on_web": "Obter o Team em kiff.dev",
+  "billing.team_on_web": "Obter o Company em kiff.dev",
   "billing.terms_use": "Termos de Utilização",
   "billing.test_purchase_credits": "As compras de teste não adicionam créditos a esta conta.",
   "billing.try_free": "Experimente {trial} grátis",
