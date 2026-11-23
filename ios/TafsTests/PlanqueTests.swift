@@ -953,12 +953,54 @@ final class PlanqueTests: XCTestCase {
         XCTAssertNil(model.shownWords(for: g), "nothing has read KIFF's words yet")
         StubProtocol.sent = []
 
-        await model.reconnect(g)
-        XCTAssertNil(model.reconnectErrors["g_01"])
+        let signedIn = await model.reconnect(g.id, shown: g.digest)
+        XCTAssertTrue(signedIn, model.lastError ?? "")
         XCTAssertEqual(StubProtocol.sent.filter { $0.url?.path == "/v1/profiles/words" }.count, 1)
         XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(digest)"])
         let approve = body(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").first)
         XCTAssertNotNil(approve["kiff_profile"], "the words read are signed into the approval")
+        XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").count, 1)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Sign in again opens the connection's approval sheet first (docs/connect-apps.md, as Android's tafs#1826): nothing is
+    /// signed or sent before Approve. Approve signs only the digest the sheet drew: one older than the request signs nothing
+    /// and says it's out of date; the one drawn signs it once, behind one Face ID.
+    func testSignInAgainOpensTheSheetFirstAndSignsOnlyWhatItShowed() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        let (grant, digest, words) = try profiledGrant()
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grant)]}"#)
+        StubProtocol.responses["POST /v1/profiles/words?v=2"] = (200, words)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"connected","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00Z"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, grant)
+        vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
+        await model.refreshConnections()
+        let g = try XCTUnwrap(model.grants.first { $0.id == "g_01" })
+        StubProtocol.sent = []
+
+        // Sign in again: the sheet's start, and nothing else.
+        let start = try XCTUnwrap(model.reconnectStart(g))
+        XCTAssertEqual(start.grant, "g_01")
+        XCTAssertTrue(start.again)
+        XCTAssertFalse(start.needsKey)
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID before Approve")
+        XCTAssertTrue(StubProtocol.sent.isEmpty, "nothing read, signed or sent before the sheet")
+
+        // Approve on what an older sheet drew: nothing signed, and the sheet says it's out of date.
+        let stale = await model.reconnect("g_01", shown: String(repeating: "0", count: 64), fresh: start.fresh)
+        XCTAssertFalse(stale)
+        XCTAssertEqual(model.lastError, Words.Version.outOfDateCard)
+        XCTAssertTrue(signer.prompts.isEmpty)
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty)
+
+        // Approve on the digest the sheet drew: signed once, then planque confirms the sign-in.
+        let signedIn = await model.reconnect("g_01", shown: digest, fresh: start.fresh)
+        XCTAssertTrue(signedIn, model.lastError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(digest)"])
+        XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").count, 1)
         XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").count, 1)
         Keychain.delete(AppModel.planqueAccount)
     }
@@ -975,9 +1017,10 @@ final class PlanqueTests: XCTestCase {
         let g = try XCTUnwrap(model.grants.first { $0.id == "g_01" })
         StubProtocol.sent = []
 
-        await model.reconnect(g)
-        XCTAssertNotNil(model.reconnectErrors["g_01"])
-        XCTAssertEqual(model.reconnectErrors["g_01"], model.profileWordsError["g_01"])
+        let signedIn = await model.reconnect(g.id, shown: g.digest)
+        XCTAssertFalse(signedIn)
+        XCTAssertNotNil(model.lastError)
+        XCTAssertEqual(model.lastError, model.profileWordsError["g_01"])
         XCTAssertTrue(signer.prompts.isEmpty)
         XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty)
         Keychain.delete(AppModel.planqueAccount)
@@ -1173,6 +1216,89 @@ extension PlanqueTests {
         XCTAssertEqual(carried.count, 1)
         XCTAssertEqual(carried.first?["grant"] as? String, "g1")
         XCTAssertEqual(carried.first?["sites"] as? [String], ["wikipedia.org"])
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// "Your Chrome" 5: an extension that proves `one_touch` under the code's secret is paired with one Face ID and one signature,
+    /// `kiff.requests.v1` over the pairing it checks and KIFF's request for its view-only device. KIFF gets that signature as `v3`
+    /// with the pairing's hash; planque's confirm carries it as `phone_sig`, with the account, `signed_at` and KIFF's hash. A flag
+    /// whose proof doesn't hold (planque's own, say) gets the two signatures of today, as an older extension.
+    func testAChromeThatChecksOneTouchIsPairedWithOneSignatureOverBoth() async throws {
+        let signer = P256Signer()
+        let model = await planqueModel(signer: signer)
+        StubProtocol.responses["POST /v1/accounts/t_01/chromes/pairings"] = (201, #"{"pairing":"pr_1","lookup":"K7QF"}"#)
+        let maybeOpened = await model.openChromePairing()
+        let opened = try XCTUnwrap(maybeOpened)
+        let chromeKey = P256.Signing.PrivateKey().publicKey.derRepresentation
+        let exp = ISO8601DateFormatter().string(from: Date().addingTimeInterval(120))
+        let kiffOffer = String(decoding: try JSONSerialization.data(withJSONObject: [
+            "v": "kiff.pair.v1", "pub": PairingTests.pub, "name": "tafs for Chrome", "platform": "chrome", "kind": "extension",
+            "nonce": PairingTests.nonce, "exp": exp, "key_store": "software"], options: [.sortedKeys]), as: UTF8.self)
+        let tail = chromeKey + Data(kiffOffer.utf8)
+        let proof = ChromePairing.base64URL(ChromePairing.hmac(opened.secret, ChromePairing.extensionProofLabel, tail))
+        let oneTouch = ChromePairing.base64URL(ChromePairing.hmac(opened.secret, ChromePairing.oneTouchProofLabel, tail))
+        func offer(oneTouchProof: String) throws -> PlanqueClient.ChromeOffer {
+            let fields: [String: Any] = ["pairing": "pr_1", "status": "waiting_for_phone", "key": ChromePairing.base64URL(chromeKey), "proof": proof,
+                                         "version": "0.2.2", "browser": "Chrome 131", "os": "macOS", "kiff_offer": kiffOffer,
+                                         "one_touch": true, "one_touch_proof": oneTouchProof]
+            let json = try JSONSerialization.data(withJSONObject: fields)
+            StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, String(decoding: json, as: UTF8.self))
+            return try XCTUnwrap(try JSONDecoder().decode(PlanqueClient.ChromePairingState.self, from: json).offer)
+        }
+        StubProtocol.responses["POST /v1/me/pairings"] = (201, #"{"pairing":{"id":"pair_1","code":"XFI4MD","expires":"2026-11-23T21:00:00Z"}}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/chromes/pairings/pr_1/confirm"] = (200, #"{"chrome_id":"chr_1","name":"Work Mac"}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}"#)
+
+        let proven = try offer(oneTouchProof: oneTouch)
+        guard case .offered(let shown) = await model.chromePairingStep(opened) else { return XCTFail("a proven offer is shown") }
+        XCTAssertEqual(shown, proven)
+        StubProtocol.sent = []
+        signer.prompts = []
+        let paired = await model.confirmChrome(opened, offer: proven, name: "Work Mac")
+        XCTAssertTrue(paired, model.chromesError ?? "")
+        XCTAssertEqual(signer.prompts, [Words.Chrome.pairPrompt(name: "Work Mac")], "one Face ID, naming the Chrome")
+
+        let kiffSent = try XCTUnwrap(StubProtocol.sent.first { $0.httpMethod == "POST" && $0.url?.path == "/v1/me/pairings" })
+        let confirmSent = try XCTUnwrap(sent("POST", "planque.test", "/v1/accounts/t_01/chromes/pairings/pr_1/confirm").first)
+        XCTAssertLessThan(try XCTUnwrap(StubProtocol.sent.firstIndex(of: kiffSent)), try XCTUnwrap(StubProtocol.sent.firstIndex(of: confirmSent)),
+                          "KIFF's device first: a Chrome is never confirmed without it")
+        let confirmBody = body(confirmSent)
+        let signedAt = try XCTUnwrap(confirmBody["signed_at"] as? String)
+        XCTAssertEqual(confirmBody["tenant"] as? String, "t_01")
+        let kiffMessage = KIFFClient.requestMessage(tenant: "t_01", method: "POST", uri: "/v1/me/pairings", body: try XCTUnwrap(kiffSent.httpBody), signedAt: signedAt)
+        let kiffHash = RequestsTogether.hash(kiffMessage)
+        XCTAssertEqual(confirmBody["kiff_request_sha256"] as? String, kiffHash, "the hash of the request KIFF got")
+        let confirmation = ChromePairing.confirmation(secret: opened.secret, chromeKey: chromeKey, name: "Work Mac", phoneKey: signer.approvalPublicKeyDER)
+        let pairHash = RequestsTogether.hash(try ChromePairing.signedBytes(pairing: "pr_1", confirmation))
+        let together = RequestsTogether.message(tenant: "t_01", signedAt: signedAt, pairHash, kiffHash)
+        let raw = try XCTUnwrap(ChromePairing.base64URLDecoded(try XCTUnwrap(confirmBody["phone_sig"] as? String)))
+        XCTAssertTrue(signer.approvalKey.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: raw), for: together),
+                      "phone_sig is the one signature over both, as the extension rebuilds it")
+        XCTAssertFalse(signer.approvalKey.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: raw),
+                                                                     for: try ChromePairing.signedBytes(pairing: "pr_1", confirmation)), "not the pairing's alone")
+        let header = try XCTUnwrap(kiffSent.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertTrue(header.hasPrefix("t=\(signedAt),v3="), header)
+        XCTAssertTrue(header.hasSuffix(",with=sha256:\(pairHash)"), "KIFF takes the pairing's hash as given")
+        let der = try XCTUnwrap(Data(base64Encoded: String(try XCTUnwrap(header.split(separator: ",").first { $0.hasPrefix("v3=") }).dropFirst(3))))
+        XCTAssertEqual(try P256.Signing.ECDSASignature(derRepresentation: der).rawRepresentation, raw, "the same signature both ways")
+
+        // A flag whose proof doesn't hold under the code's secret: today's two signatures, and no one-touch fields.
+        let unproven = try offer(oneTouchProof: proof)
+        StubProtocol.sent = []
+        signer.prompts = []
+        let pairedTwice = await model.confirmChrome(opened, offer: unproven, name: "Work Mac")
+        XCTAssertTrue(pairedTwice, model.chromesError ?? "")
+        XCTAssertEqual(signer.prompts, [Words.Chrome.pairPrompt(name: "Work Mac")], "still one Face ID")
+        let twice = body(sent("POST", "planque.test", "/v1/accounts/t_01/chromes/pairings/pr_1/confirm").first)
+        XCTAssertNil(twice["tenant"])
+        XCTAssertNil(twice["signed_at"])
+        XCTAssertNil(twice["kiff_request_sha256"])
+        let rawTwice = try XCTUnwrap(ChromePairing.base64URLDecoded(try XCTUnwrap(twice["phone_sig"] as? String)))
+        XCTAssertTrue(signer.approvalKey.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: rawTwice),
+                                                                    for: try ChromePairing.signedBytes(pairing: "pr_1", confirmation)), "the pairing's own")
+        let kiffTwice = try XCTUnwrap(StubProtocol.sent.first { $0.httpMethod == "POST" && $0.url?.path == "/v1/me/pairings" }?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertTrue(kiffTwice.contains(",v1="), kiffTwice)
+        XCTAssertFalse(kiffTwice.contains("with="))
         Keychain.delete(AppModel.planqueAccount)
     }
 

@@ -1,0 +1,1 @@
+- **Android: an API door's example names a plain path on tafs cloud, in quotes.** Where to send work keeps only letters, digits and `/ _ . ~ -` in its path, else it shows tafs cloud's own address alone.

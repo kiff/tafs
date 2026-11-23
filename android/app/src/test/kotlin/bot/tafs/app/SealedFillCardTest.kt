@@ -38,30 +38,46 @@ class SealedFillCardTest {
   private val handle = "sec_Ab3dE-f_9q:password"
   private val approve = "POST /v1/me/card-exceptions/ce_1/approve-once"
 
-  /** The grant's sites as this phone signed them, with its approval key (`tafs-chrome/sites/v1`), as planque relays them. */
+  /** The grant's sites as this phone signed them, with its approval key (`tafs-chrome/sites/v1`), as planque lists the grant. */
   private suspend fun sitesSig(sites: List<String>): String {
     val der = signer.signApproval(ChromePairing.sitesBytes(chromeId, grant, sites), "sites")
     return ChromePairing.rawSignature(Base64.getDecoder().decode(der))!!
   }
 
-  private fun held(fill: String) =
+  /** planque's grants for the account: one connection on the paired Chrome, with this phone's signature over its sites. */
+  private suspend fun grants(sites: List<String> = listOf("shop.example"), sig: String? = null): String {
+    val s = sig ?: sitesSig(sites)
+    val list = sites.joinToString(",", "[", "]") { "\"$it\"" }
+    return """{"grants":[{"id":"$grant","status":"connected","text":"","digest":"d","request":{"server":"s","agent":"a","tools":[],
+      "browser":{"driver":"extension","chrome":"$chromeId","sites":$list}},"chrome_sites_sig":"$s"}]}"""
+  }
+
+  /** The block KIFF serves for [fill], and its hash as KIFF computes it: hex SHA-256 of its RFC 8785 JCS. */
+  private fun block(fill: String) =
+    """{"site":"shop.example","origin":"https://shop.example","action_words":"Fill “Password”","context":{"title":"Sign in · Shop"},
+         "chrome":{"id":"$chromeId","name":"Work Mac"},"release_fields":$fill}"""
+
+  private fun hashOf(json: String): String = java.security.MessageDigest.getInstance("SHA-256")
+    .digest(bot.tafs.app.kiff.Jcs.canonical(json).toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+
+  /** A held sealed fill as KIFF serves it, with its `browser_sha256` (the served block's own, unless [sha] says otherwise). */
+  private fun held(fill: String, sha: String = hashOf(block(fill))) =
     """{"id":"ce_1","subject":"a-1","action":"browser_act","title":"Fill a field","entity_id":"op_9K3T","proposal_id":"prop_1","accounting_version":1,
        "next_steps":[],"breaches":[],"arguments":{"op":"op_9K3T"},"created_at":"$t0","expires_at":"2099-01-01T00:00:00Z",
-       "browser":{"site":"shop.example","origin":"https://shop.example","action_words":"Fill “Password”","context":{"title":"Sign in · Shop"},
-         "chrome":{"id":"$chromeId","name":"Work Mac"},"sealed_fill":$fill}}"""
+       "browser":${block(fill)},"browser_sha256":"$sha"}"""
 
-  private fun fill(sitesSig: String, sealed: String = handle, chrome: String = chromeId) =
-    """{"chrome_id":"$chrome","op":"op_9K3T","sealed":"$sealed","origin":"https://shop.example","field_ref":"f2","read_id":"rd_7c1",
-       "grant":"$grant","field_label":"Password","sites_signed":{"sites":["shop.example"],"sig":"$sitesSig"},"sensitive_allowed":[]}"""
+  /** planque's block's `release_fields`: what the release signs, and nothing else. */
+  private fun fill(sealed: String = handle, chrome: String = chromeId) =
+    """{"chrome_id":"$chrome","op":"op_9K3T","sealed":"$sealed","origin":"https://shop.example","field_ref":"f2","read_id":"rd_7c1"}"""
 
-  private suspend fun kotlinx.coroutines.test.TestScope.model(held: String, on: Boolean = true): AppModel {
+  private suspend fun kotlinx.coroutines.test.TestScope.model(held: String, on: Boolean = true, grantsJson: String? = null): AppModel {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","tenant_display_name":"Acme"}""")
     transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"id_a-1","name":"A","kiff_agent":"a-1","color":1,"state":"waiting","card":{"ids":["c_a-1"],"active":true,"tools":[],"rules":[]}}],"others":[],"removing":[]}""")
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[$held]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     transport.answer("GET /v1/me/access", 200, """{"agents":{}}""")
     transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
-    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, grantsJson ?: grants())
     transport.answer("GET /v1/accounts/t_01/chromes", 200, """{"chromes":[{"chrome_id":"$chromeId","name":"Work Mac"}]}""")
     transport.answer(approve, 200, "{}")
     secrets.save("at_1", AppModel.TOKEN)
@@ -79,7 +95,7 @@ class SealedFillCardTest {
   private fun sent(): JsonObject = KiffClient.json.parseToJsonElement(String(transport.requestsTo(approve).single().body!!)).jsonObject
 
   @Test fun aHeldSealedFillIsReadByteForByteAndItsPartFromTheHandle() = runTest {
-    val m = model(held(fill(sitesSig = "sig")))
+    val m = model(held(fill()))
     val step = m.state.value.held.single().browser!!
     val f = step.fill!!
     assertEquals(chromeId, f.chromeId)
@@ -88,15 +104,28 @@ class SealedFillCardTest {
     assertEquals("https://shop.example", f.origin)
     assertEquals("f2", f.fieldRef)
     assertEquals("rd_7c1", f.readId)
-    assertEquals(grant, f.grant)
-    assertEquals(SealedRelease.SitesSigned(listOf("shop.example"), "sig"), f.sitesSigned)
     assertEquals(java.time.Instant.parse("2099-01-01T00:00:00Z").toEpochMilli(), f.expiresAt)
-    assertEquals("Password", step.fieldLabel)
+    // What's drawn is the block's own words, as plain text: the site, the Chrome's name and the page's title.
+    assertEquals("shop.example", step.site)
+    assertEquals("Work Mac", step.chrome)
+    assertEquals("Sign in · Shop", step.pageTitle)
     assertEquals(SealedRelease.Part.PASSWORD, SealedRelease.part(f.sealed))
   }
 
+  @Test fun theSitesComeFromThisPhonesOwnGrantsNotTheBlock() = runTest {
+    // planque lists the connection with a site this phone never signed: the signature no longer holds, so nothing is signed.
+    val widened = grants(sites = listOf("other.example", "shop.example"), sig = sitesSig(listOf("other.example")))
+    val m = model(held(fill()), grantsJson = widened)
+    auth.asked.clear()
+    val call = m.state.value.held.single()
+    assertEquals(SealedRelease.Refusal.NOT_SIGNED, m.fillRefusal(call))
+    assertFalse(m.answer(call, Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+  }
+
   @Test fun allowAsksTheReleaseThenTheAnswerAndSendsBothTogether() = runTest {
-    val m = model(held(fill(sitesSig(listOf("shop.example")))))
+    val m = model(held(fill()))
     auth.asked.clear(); auth.fingerprints.clear()
     val call = m.state.value.held.single()
     assertNull("the phone's checks hold", m.fillRefusal(call))
@@ -115,10 +144,55 @@ class SealedFillCardTest {
     // What the extension checks: the approval key over the eight fields, raw r‖s.
     val signed = SealedRelease.bytes(chromeId, "op_9K3T", handle, "https://shop.example", "f2", "rd_7c1", nonce, exp)
     assertTrue(ChromePairing.verifiesRaw(signer.approvalPublicKeyDER, signed, r.getValue("sig").jsonPrimitive.content))
+    // What KIFF checks: the answer's ninth line is the served block's hash, so it covers what the card drew.
+    val sig = body.getValue("signature").jsonObject
+    val message = KiffClient.answerMessage("t_01", "ce_1", "approve-once", null, null, 1, sig.getValue("signed_at").jsonPrimitive.content,
+      browserSha256 = hashOf(block(fill())))
+    assertTrue(verifies(signer.approvalPublicKeyDER, message, sig.getValue("value").jsonPrimitive.content))
+  }
+
+  private fun verifies(publicDER: ByteArray, message: ByteArray, signatureBase64: String): Boolean {
+    val key = java.security.KeyFactory.getInstance("EC").generatePublic(java.security.spec.X509EncodedKeySpec(publicDER))
+    return java.security.Signature.getInstance("SHA256withECDSA").run { initVerify(key); update(message); verify(Base64.getDecoder().decode(signatureBase64)) }
+  }
+
+  @Test fun aBlockWhoseHashIsntKiffsIsRefusedBeforeAnyPrompt() = runTest {
+    // KIFF's browser_sha256 names another block: what the card would draw isn't what the answer would cover.
+    val m = model(held(fill(), sha = "0".repeat(64)))
+    auth.asked.clear()
+    val call = m.state.value.held.single()
+    assertEquals(SealedRelease.Refusal.BLOCK, m.fillRefusal(call))
+    assertFalse(m.answer(call, Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertEquals(Words.Chrome.releaseUnreadable, SealedRelease.refusalWords(SealedRelease.Refusal.BLOCK))
+  }
+
+  @Test fun refusingASealedFillAlsoSignsTheHoldsHash() = runTest {
+    // KIFF checks every answer to a held sealed fill over its ninth line, so Refuse carries it too, as KIFF sent it.
+    val sha = "0".repeat(64)
+    val m = model(held(fill(), sha = sha))
+    val reject = "POST /v1/me/card-exceptions/ce_1/reject"
+    transport.answer(reject, 200, "{}")
+    assertTrue(m.answer(m.state.value.held.single(), Answer.Refuse))
+    val sig = KiffClient.json.parseToJsonElement(String(transport.requestsTo(reject).single().body!!)).jsonObject.getValue("signature").jsonObject
+    val message = KiffClient.answerMessage("t_01", "ce_1", "reject", null, null, 1, sig.getValue("signed_at").jsonPrimitive.content, browserSha256 = sha)
+    assertTrue(verifies(signer.publicKeyDER, message, sig.getValue("value").jsonPrimitive.content))
+  }
+
+  @Test fun aConnectionTheOwnerEndedDoesntCount() = runTest {
+    // Disconnected, with this phone's own valid signature over the fill's site: it no longer stands for its sites.
+    val ended = grants().replace(""""status":"connected"""", """"status":"disconnected"""")
+    val m = model(held(fill()), grantsJson = ended)
+    auth.asked.clear()
+    val call = m.state.value.held.single()
+    assertEquals(SealedRelease.Refusal.NOT_SIGNED, m.fillRefusal(call))
+    assertFalse(m.answer(call, Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
   }
 
   @Test fun closingTheSecondPromptSendsNothingNotEvenTheRelease() = runTest {
-    val m = model(held(fill(sitesSig(listOf("shop.example")))))
+    val m = model(held(fill()))
     auth.asked.clear()
     // The release's fingerprint is given; the answer's is closed.
     var prompts = 0
@@ -131,7 +205,7 @@ class SealedFillCardTest {
 
   @Test fun aFillThePhonesChecksRefuseAsksNoFingerprintAndSendsNothing() = runTest {
     // Another Chrome than the one paired here.
-    val m = model(held(fill(sitesSig(listOf("shop.example")), chrome = "chr_other")))
+    val m = model(held(fill(chrome = "chr_other")))
     auth.asked.clear()
     val call = m.state.value.held.single()
     assertEquals(SealedRelease.Refusal.CHROME, m.fillRefusal(call))
@@ -145,7 +219,7 @@ class SealedFillCardTest {
   }
 
   @Test fun aHandleOfAnyOtherShapeIsRefusedAsUnreadable() = runTest {
-    val m = model(held(fill(sitesSig(listOf("shop.example")), sealed = "sec_Ab3dE-f_9q:password:username")))
+    val m = model(held(fill(sealed = "sec_Ab3dE-f_9q:password:username")))
     val call = m.state.value.held.single()
     assertEquals(SealedRelease.Refusal.HANDLE, m.fillRefusal(call))
     assertEquals(Words.Chrome.releaseUnreadable, SealedRelease.refusalWords(SealedRelease.Refusal.HANDLE))
@@ -153,7 +227,7 @@ class SealedFillCardTest {
 
   @Test fun withTheSwitchOffASealedFillCanOnlyBeRefused() = runTest {
     assertFalse(SealedRelease.ENABLED)
-    val m = model(held(fill(sitesSig(listOf("shop.example")))), on = false)
+    val m = model(held(fill()), on = false)
     auth.asked.clear()
     val call = m.state.value.held.single()
     // Never an allowing answer without its release: nothing is asked, nothing is sent, and the card says why.
@@ -168,7 +242,7 @@ class SealedFillCardTest {
   }
 
   @Test fun aPresignedAnswerNeverAllowsASealedFill() = runTest {
-    val m = model(held(fill(sitesSig(listOf("shop.example")))))
+    val m = model(held(fill()))
     auth.asked.clear()
     // An answer signed elsewhere (a notification's action, an approval window's tap) carries no release.
     val presigned = AppModel.SignedAnswer("sig", KiffClient.AnswerSignature("2026-10-28T09:00:00Z", "sig"))
@@ -178,7 +252,7 @@ class SealedFillCardTest {
   }
 
   @Test fun extraRoomNeverLetsASealedFillGoOn() = runTest {
-    val m = model(held(fill(sitesSig(listOf("shop.example")))))
+    val m = model(held(fill()))
     auth.asked.clear()
     assertFalse(m.answer(m.state.value.held.single(), Answer.ExtraRoom))
     assertTrue(auth.asked.isEmpty())
@@ -187,7 +261,7 @@ class SealedFillCardTest {
   }
 
   @Test fun noStandingRuleIsOfferedForASealedFill() = runTest {
-    val m = model(held(fill(sitesSig(listOf("shop.example")))))
+    val m = model(held(fill()))
     val call = m.state.value.held.single()
     // Even over a limit "Allow this from now on" could change: a sealed fill is always held, and allowed only with its release.
     val overALimit = call.copy(breachOutcomes = listOf(bot.tafs.app.model.HoldAllow.ALLOWABLE.first()))
@@ -204,7 +278,7 @@ class SealedFillCardTest {
 
   @Test fun aFillThatCantBeDrawnStillCantBeAllowed() = runTest {
     // A sealed fill with no site: the step's block can't be drawn, yet it's a fill, so it needs its release all the same.
-    val noSite = held(fill(sitesSig(listOf("shop.example")))).replace(""""site":"shop.example",""", """"site":"",""")
+    val noSite = held(fill()).replace(""""site":"shop.example",""", """"site":"",""")
     val m = model(noSite)
     auth.asked.clear()
     val call = m.state.value.held.single()
@@ -219,9 +293,12 @@ class SealedFillCardTest {
     val blocks = listOf(
       "\"sealed\"" to true,
       "[1]" to true,
+      """{"site":"shop.example","action_words":"Fill","release_fields":"sec_x:password"}""" to true,
+      """{"site":"shop.example","action_words":"Fill","release_fields":{"chrome_id":1}}""" to true,
       """{"site":"shop.example","action_words":"Fill","sealed_fill":"sec_x:password"}""" to true,
       """{"site":"shop.example","action_words":"Fill","fill":{"field_ref":"f1"}}""" to true,
       """{"site":"shop.example","action_words":"Click","sealed_fill":null}""" to false,
+      """{"site":"shop.example","action_words":"Click","release_fields":null}""" to false,
       "null" to false,
     )
     val all = blocks.mapIndexed { i, (b, _) -> heldWith("ce_$i", b) }.joinToString(",")
@@ -241,7 +318,7 @@ class SealedFillCardTest {
   }
 
   @Test fun aSealedFillWithNoEndIsExpiredNotTenMinutes() = runTest {
-    val m = model(held(fill(sitesSig(listOf("shop.example")))).replace(""","expires_at":"2099-01-01T00:00:00Z"""", ""))
+    val m = model(held(fill()).replace(""","expires_at":"2099-01-01T00:00:00Z"""", ""))
     val call = m.state.value.held.single()
     assertEquals(0L, call.browser!!.fill!!.expiresAt)
     assertEquals(SealedRelease.Refusal.EXPIRED, m.fillRefusal(call))

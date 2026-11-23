@@ -1,0 +1,1 @@
+• L’esempio nelle “Istruzioni API” di una porta ora indica sempre l’indirizzo di tafs cloud, tra virgolette, così puoi incollarlo in sicurezza in un terminale.

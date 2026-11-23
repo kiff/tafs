@@ -545,8 +545,9 @@ internal fun BrowserStepBlock(step: bot.tafs.app.model.BrowserStep) {
 
 /**
  * A sealed fill's card (docs/chrome.md, "The phone's release card"), in the design's order: what it asks, the site large and the
- * origin small, which Chrome, which part (read from the handle, never planque's words), the field's label and the page's title as
- * page words, and the fixed line that the value never leaves Chrome. [refused]: the phone's own checks won't sign it, said here.
+ * origin small, which Chrome, which part (read from the handle, never planque's words), the page's title as page words (plain
+ * text, never a link or anything to tap), and the fixed line that the value never leaves Chrome. [refused]: the phone's own
+ * checks won't sign it, said here.
  */
 @Composable
 internal fun SealedFillBlock(step: bot.tafs.app.model.BrowserStep, refused: bot.tafs.app.kiff.SealedRelease.Refusal?) {
@@ -566,10 +567,11 @@ internal fun SealedFillBlock(step: bot.tafs.app.model.BrowserStep, refused: bot.
         style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.testTag(SEALED_FILL_PART),
       )
     }
-    if (step.fieldLabel != null || step.pageTitle != null) Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-      Text(Words.Chrome.heldPage, style = scaled(12, FontWeight.SemiBold, Theme.soft))
-      step.fieldLabel?.let { Text(it, style = scaled(14, color = Theme.ink)) }
-      step.pageTitle?.let { Text(it, style = scaled(14, color = Theme.ink)) }
+    step.pageTitle?.let { title ->
+      Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(Words.Chrome.heldPage, style = scaled(12, FontWeight.SemiBold, Theme.soft))
+        Text(title, style = scaled(14, color = Theme.ink))
+      }
     }
     Text(Words.Chrome.releaseNeverLeaves, style = scaled(13, color = Theme.soft))
     refused?.let(bot.tafs.app.kiff.SealedRelease::refusalWords)?.let {

@@ -111,7 +111,9 @@ app's side. If the app signs you out on its side (a
 changed password, an expired session), the taf says so and waits for you: **Sign in again**
 shows the connection's approval first, planque's words for it as it is now, then asks for one approval, then the app's own
 page. The approval signs only what that sheet showed: if the connection asks for more meanwhile, nothing is signed and the
-sheet shows it again. (Android; on iOS, Sign in again still asks for the approval at once, and follows.)
+sheet shows it again. (Android `startReconnect`; iPhone and iPad `AppModel.reconnectStart`, with the sheet wherever Sign in
+again is: Connect apps, a connection's page, a taf's page and its connected app, an Activity row's next step, and a taf's own
+Connect again.)
 
 ### An app's connections, taf by taf
 

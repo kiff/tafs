@@ -1,0 +1,1 @@
+• Przykład w „Instrukcjach API” drzwi zawsze podaje teraz własny adres tafs cloud, w cudzysłowie, więc możesz bezpiecznie wkleić go do terminala.

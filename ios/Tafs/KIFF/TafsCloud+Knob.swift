@@ -526,8 +526,15 @@ extension TafsCloud {
     struct ConnectStart: Decodable, Equatable {
         let grant: String
         var needsKey = false
+        /// Sign in again on a connection its vendor signed out (docs/connect-apps.md): the sheet shows the connection as planque
+        /// has it now, and Approve signs it in again in place. Never from tafs cloud's answer: the phone's own.
+        var again = false
+        /// That sign-in again starts at the vendor from scratch (planque's `connect-fresh`, tafs cloud's `connect_again.fresh`).
+        var fresh = false
         enum CodingKeys: String, CodingKey { case grant, needsKey = "needs_key" }
-        init(grant: String, needsKey: Bool = false) { self.grant = grant; self.needsKey = needsKey }
+        init(grant: String, needsKey: Bool = false, again: Bool = false, fresh: Bool = false) {
+            self.grant = grant; self.needsKey = needsKey; self.again = again; self.fresh = fresh
+        }
         private struct GrantRef: Decodable { let id: String }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)

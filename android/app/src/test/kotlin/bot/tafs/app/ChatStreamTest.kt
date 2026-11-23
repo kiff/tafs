@@ -412,7 +412,7 @@ class ChatStreamTest {
   }
 
   /**
-   * The owner, 18 Nov (P0): on a phone the stream's lines come through `flowOn`, so the stream's own reads run in a child of its
+   * On a phone the stream's lines come through `flowOn`, so the stream's own reads run in a child of its
    * job. A read the stream made once the run looked quiet (nothing at work, the live answer over 15 s old) cancelled the stream
    * and that read with it: the run's end never showed, and a card stayed on "Reading what it asks for…". Here the lines go
    * through a buffer, as on a phone, and the run's end still shows.

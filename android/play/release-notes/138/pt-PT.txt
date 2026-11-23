@@ -1,0 +1,1 @@
+• O exemplo das «Instruções da API» de uma porta indica agora sempre o endereço do próprio tafs cloud, entre aspas, para que possa colá-lo em segurança num terminal.
