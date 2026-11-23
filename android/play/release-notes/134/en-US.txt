@@ -1,0 +1,4 @@
+• Approving a held call after its task had already ended now says that nothing ran, with Retry on your message.
+• Installing a version that stops a task waiting on your answer says so, with Retry on that task's message.
+• Sign in again shows the connection's approval before your fingerprint, and pairing a Chrome again checks once more just before it.
+• A taf's chat is read less often while it waits, and not at all while the app is in the background.
