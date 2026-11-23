@@ -14,6 +14,8 @@ enum ChromePairing {
 
     static let pairLabel = "tafs-chrome/pair/v1"
     static let extensionProofLabel = "tafs-chrome/ext/v1"
+    /// The extension's proof that it checks one Face ID's signature over the pairing and its KIFF device together (`one_touch`).
+    static let oneTouchProofLabel = "tafs-chrome/ext-one-touch/v1"
     static let phoneProofLabel = "tafs-chrome/phone/v1"
     /// What the phone signs when the owner approves a browser grant: its sites, and each sensitive site allowed by name.
     static let sitesLabel = "tafs-chrome/sites/v1"
@@ -54,6 +56,15 @@ enum ChromePairing {
         return given.count == expected.count && zip(given, expected).reduce(UInt8(0)) { $0 | ($1.0 ^ $1.1) } == 0
     }
 
+    /// Whether the extension's `one_touch` flag is its own ("Your Chrome" 5): the same HMAC as `extensionProofHolds`, under its
+    /// own label, so only someone with the code's secret could add it. Only then does the phone sign the pairing and the
+    /// extension's KIFF device as one; planque, which relays the flag, can't turn it on.
+    static func oneTouchProofHolds(secret: String, key: Data, proof: String, kiffOffer: String = "") -> Bool {
+        guard let given = base64URLDecoded(proof) else { return false }
+        let expected = hmac(secret, oneTouchProofLabel, key + Data(kiffOffer.utf8))
+        return given.count == expected.count && zip(given, expected).reduce(UInt8(0)) { $0 | ($1.0 ^ $1.1) } == 0
+    }
+
     /// The SHA-256 of the extension's SPKI DER, in lowercase hex, as the signed body names it.
     static func chromeKeyHash(_ key: Data) -> String {
         SHA256.hash(data: key).map { String(format: "%02x", $0) }.joined()
@@ -84,9 +95,17 @@ enum ChromePairing {
         /// it. Both absent for a Chrome that replaces nothing: the pairing is then exactly today's.
         var replaces: String? = nil
         var carried: [Carried]? = nil
+        /// One Face ID for both acts ("Your Chrome" 5): `phone_sig` is then the approval key's `kiff.requests.v1` signature, and
+        /// these are what the extension rebuilds it from, beside its own pairing message: the account, the one `signed_at`, and
+        /// the hash of KIFF's request for its view-only device. All three or none; none for the two signatures of an older
+        /// extension. Not inside the pairing's signed bytes, which stay exactly today's.
+        var tenant: String? = nil
+        var signedAt: String? = nil
+        var kiffRequestSHA256: String? = nil
 
         enum CodingKeys: String, CodingKey {
             case chromeKeySHA256 = "chrome_key_sha256", name, phoneKey = "phone_key", phoneProof = "phone_proof", phoneSig = "phone_sig", replaces, carried
+            case tenant, signedAt = "signed_at", kiffRequestSHA256 = "kiff_request_sha256"
         }
     }
 

@@ -1101,6 +1101,15 @@ Account › **Chrome** (`ChromesView`) lists the Chromes paired to the account, 
   later opens a sealed sign-in only on that key's release. A phone without one doesn't open a pairing, as on Android. It
   signs `tafs-chrome/pair/v1` over the pairing, the Chrome key's SHA-256, the name, this phone's key and its proof under
   the secret. The signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
+- **One signature for both acts** ("Your Chrome" 5, as Android's `confirmChromeOneTouch`). Where the extension's offer
+  carries `one_touch` (a JSON true) and its `one_touch_proof` holds under the secret (`ChromePairing.oneTouchProofHolds`,
+  `tafs-chrome/ext-one-touch/v1` over its key and KIFF offer, so planque can't turn it on), that one Face ID signs
+  `kiff.requests.v1` once (`RequestsTogether`), over the SHA-256 of the pairing's bytes and of KIFF's `kiff.request.v1` for
+  the extension's view-only device, with one `signed_at` (`AppModel.pairChromeOneTouch`). KIFF's `POST /v1/me/pairings` goes
+  first, with `v3` and the pairing's hash as `with=`; then planque's confirm, with the same signature as `phone_sig` (raw
+  `r‖s`) and `tenant`, `signed_at` and `kiff_request_sha256`, from which the extension rebuilds it. Otherwise (an older
+  extension, or a flag whose proof doesn't hold) the same Face ID makes today's two signatures (`pairChromeTwice`), and the
+  confirm carries none of the three.
 - **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its
   next connect.
 - **Approving a grant for the owner's own Chrome** (`browser.driver` = `extension` in the grant's request, read in
@@ -1113,7 +1122,8 @@ Account › **Chrome** (`ChromesView`) lists the Chromes paired to the account, 
 - Its lines are `chrome.*`, shared with Android, which follows.
 - **Tests:** `ChromePairingTests` (the shared vectors, a refused proof, raw `r‖s`, the sites signature over the vector's
   bytes, the refused cases, the approve body's field), and `PlanqueTests`' Chrome tests (the row only once planque offers
-  it, an offer shown only on its proof, the confirmation's proof and signature verified).
+  it, an offer shown only on its proof, the confirmation's proof and signature verified; one-touch: one signature over both
+  that KIFF and the extension both check, and today's two when the flag's proof doesn't hold).
 
 ### The sign-in screen
 

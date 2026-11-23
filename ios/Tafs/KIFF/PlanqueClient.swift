@@ -754,6 +754,11 @@ final class PlanqueClient {
         /// The id the extension keeps for its Chrome profile, as planque relays it: a hint for which Chrome this one replaces
         /// ("Your Chrome" 1), never trusted for more.
         var profileID = ""
+        /// The extension checks one Face ID's signature over the pairing and its KIFF device together (`one_touch`, "Your
+        /// Chrome" 5), with its proof of that under the code's secret. The phone uses it only when the proof holds
+        /// (`ChromePairing.oneTouchProofHolds`); without it, it signs twice, as an older extension expects.
+        var oneTouch = false
+        var oneTouchProof = ""
     }
 
     /// A pairing as planque has it: `waiting_for_chrome`, then `waiting_for_phone` once an extension sent its key (the
@@ -761,7 +766,10 @@ final class PlanqueClient {
     struct ChromePairingState: Decodable, Equatable {
         let status: String
         var offer: ChromeOffer?
-        enum CodingKeys: String, CodingKey { case status, key, proof, version, browser, os, kiffOffer = "kiff_offer", profileID = "profile_id" }
+        enum CodingKeys: String, CodingKey {
+            case status, key, proof, version, browser, os, kiffOffer = "kiff_offer", profileID = "profile_id"
+            case oneTouch = "one_touch", oneTouchProof = "one_touch_proof"
+        }
         init(status: String, offer: ChromeOffer? = nil) { self.status = status; self.offer = offer }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -771,7 +779,10 @@ final class PlanqueClient {
                                     browser: (try? c.decodeIfPresent(String.self, forKey: .browser)) ?? "",
                                     os: (try? c.decodeIfPresent(String.self, forKey: .os)) ?? "", proof: proof,
                                     kiffOffer: (try? c.decodeIfPresent(String.self, forKey: .kiffOffer)) ?? "",
-                                    profileID: (try? c.decodeIfPresent(String.self, forKey: .profileID)) ?? "")
+                                    profileID: (try? c.decodeIfPresent(String.self, forKey: .profileID)) ?? "",
+                                    // Only a JSON true: a string or anything else is no flag.
+                                    oneTouch: (try? c.decodeIfPresent(Bool.self, forKey: .oneTouch)) == true,
+                                    oneTouchProof: (try? c.decodeIfPresent(String.self, forKey: .oneTouchProof)) ?? "")
             }
         }
     }

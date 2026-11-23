@@ -1108,6 +1108,89 @@ extension PlanqueTests {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// "Your Chrome" 5: an extension that proves `one_touch` under the code's secret is paired with one Face ID and one signature,
+    /// `kiff.requests.v1` over the pairing it checks and KIFF's request for its view-only device. KIFF gets that signature as `v3`
+    /// with the pairing's hash; planque's confirm carries it as `phone_sig`, with the account, `signed_at` and KIFF's hash. A flag
+    /// whose proof doesn't hold (planque's own, say) gets the two signatures of today, as an older extension.
+    func testAChromeThatChecksOneTouchIsPairedWithOneSignatureOverBoth() async throws {
+        let signer = P256Signer()
+        let model = await planqueModel(signer: signer)
+        StubProtocol.responses["POST /v1/accounts/t_01/chromes/pairings"] = (201, #"{"pairing":"pr_1","lookup":"K7QF"}"#)
+        let maybeOpened = await model.openChromePairing()
+        let opened = try XCTUnwrap(maybeOpened)
+        let chromeKey = P256.Signing.PrivateKey().publicKey.derRepresentation
+        let exp = ISO8601DateFormatter().string(from: Date().addingTimeInterval(120))
+        let kiffOffer = String(decoding: try JSONSerialization.data(withJSONObject: [
+            "v": "kiff.pair.v1", "pub": PairingTests.pub, "name": "tafs for Chrome", "platform": "chrome", "kind": "extension",
+            "nonce": PairingTests.nonce, "exp": exp, "key_store": "software"], options: [.sortedKeys]), as: UTF8.self)
+        let tail = chromeKey + Data(kiffOffer.utf8)
+        let proof = ChromePairing.base64URL(ChromePairing.hmac(opened.secret, ChromePairing.extensionProofLabel, tail))
+        let oneTouch = ChromePairing.base64URL(ChromePairing.hmac(opened.secret, ChromePairing.oneTouchProofLabel, tail))
+        func offer(oneTouchProof: String) throws -> PlanqueClient.ChromeOffer {
+            let fields: [String: Any] = ["pairing": "pr_1", "status": "waiting_for_phone", "key": ChromePairing.base64URL(chromeKey), "proof": proof,
+                                         "version": "0.2.2", "browser": "Chrome 131", "os": "macOS", "kiff_offer": kiffOffer,
+                                         "one_touch": true, "one_touch_proof": oneTouchProof]
+            let json = try JSONSerialization.data(withJSONObject: fields)
+            StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, String(decoding: json, as: UTF8.self))
+            return try XCTUnwrap(try JSONDecoder().decode(PlanqueClient.ChromePairingState.self, from: json).offer)
+        }
+        StubProtocol.responses["POST /v1/me/pairings"] = (201, #"{"pairing":{"id":"pair_1","code":"XFI4MD","expires":"2026-11-23T21:00:00Z"}}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/chromes/pairings/pr_1/confirm"] = (200, #"{"chrome_id":"chr_1","name":"Work Mac"}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}"#)
+
+        let proven = try offer(oneTouchProof: oneTouch)
+        guard case .offered(let shown) = await model.chromePairingStep(opened) else { return XCTFail("a proven offer is shown") }
+        XCTAssertEqual(shown, proven)
+        StubProtocol.sent = []
+        signer.prompts = []
+        let paired = await model.confirmChrome(opened, offer: proven, name: "Work Mac")
+        XCTAssertTrue(paired, model.chromesError ?? "")
+        XCTAssertEqual(signer.prompts, [Words.Chrome.pairPrompt(name: "Work Mac")], "one Face ID, naming the Chrome")
+
+        let kiffSent = try XCTUnwrap(StubProtocol.sent.first { $0.httpMethod == "POST" && $0.url?.path == "/v1/me/pairings" })
+        let confirmSent = try XCTUnwrap(sent("POST", "planque.test", "/v1/accounts/t_01/chromes/pairings/pr_1/confirm").first)
+        XCTAssertLessThan(try XCTUnwrap(StubProtocol.sent.firstIndex(of: kiffSent)), try XCTUnwrap(StubProtocol.sent.firstIndex(of: confirmSent)),
+                          "KIFF's device first: a Chrome is never confirmed without it")
+        let confirmBody = body(confirmSent)
+        let signedAt = try XCTUnwrap(confirmBody["signed_at"] as? String)
+        XCTAssertEqual(confirmBody["tenant"] as? String, "t_01")
+        let kiffMessage = KIFFClient.requestMessage(tenant: "t_01", method: "POST", uri: "/v1/me/pairings", body: try XCTUnwrap(kiffSent.httpBody), signedAt: signedAt)
+        let kiffHash = RequestsTogether.hash(kiffMessage)
+        XCTAssertEqual(confirmBody["kiff_request_sha256"] as? String, kiffHash, "the hash of the request KIFF got")
+        let confirmation = ChromePairing.confirmation(secret: opened.secret, chromeKey: chromeKey, name: "Work Mac", phoneKey: signer.approvalPublicKeyDER)
+        let pairHash = RequestsTogether.hash(try ChromePairing.signedBytes(pairing: "pr_1", confirmation))
+        let together = RequestsTogether.message(tenant: "t_01", signedAt: signedAt, pairHash, kiffHash)
+        let raw = try XCTUnwrap(ChromePairing.base64URLDecoded(try XCTUnwrap(confirmBody["phone_sig"] as? String)))
+        XCTAssertTrue(signer.approvalKey.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: raw), for: together),
+                      "phone_sig is the one signature over both, as the extension rebuilds it")
+        XCTAssertFalse(signer.approvalKey.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: raw),
+                                                                     for: try ChromePairing.signedBytes(pairing: "pr_1", confirmation)), "not the pairing's alone")
+        let header = try XCTUnwrap(kiffSent.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertTrue(header.hasPrefix("t=\(signedAt),v3="), header)
+        XCTAssertTrue(header.hasSuffix(",with=sha256:\(pairHash)"), "KIFF takes the pairing's hash as given")
+        let der = try XCTUnwrap(Data(base64Encoded: String(try XCTUnwrap(header.split(separator: ",").first { $0.hasPrefix("v3=") }).dropFirst(3))))
+        XCTAssertEqual(try P256.Signing.ECDSASignature(derRepresentation: der).rawRepresentation, raw, "the same signature both ways")
+
+        // A flag whose proof doesn't hold under the code's secret: today's two signatures, and no one-touch fields.
+        let unproven = try offer(oneTouchProof: proof)
+        StubProtocol.sent = []
+        signer.prompts = []
+        let pairedTwice = await model.confirmChrome(opened, offer: unproven, name: "Work Mac")
+        XCTAssertTrue(pairedTwice, model.chromesError ?? "")
+        XCTAssertEqual(signer.prompts, [Words.Chrome.pairPrompt(name: "Work Mac")], "still one Face ID")
+        let twice = body(sent("POST", "planque.test", "/v1/accounts/t_01/chromes/pairings/pr_1/confirm").first)
+        XCTAssertNil(twice["tenant"])
+        XCTAssertNil(twice["signed_at"])
+        XCTAssertNil(twice["kiff_request_sha256"])
+        let rawTwice = try XCTUnwrap(ChromePairing.base64URLDecoded(try XCTUnwrap(twice["phone_sig"] as? String)))
+        XCTAssertTrue(signer.approvalKey.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: rawTwice),
+                                                                    for: try ChromePairing.signedBytes(pairing: "pr_1", confirmation)), "the pairing's own")
+        let kiffTwice = try XCTUnwrap(StubProtocol.sent.first { $0.httpMethod == "POST" && $0.url?.path == "/v1/me/pairings" }?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertTrue(kiffTwice.contains(",v1="), kiffTwice)
+        XCTAssertFalse(kiffTwice.contains("with="))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Only the approval key pairs a Chrome: a phone without one doesn't open a pairing, and says why.
     func testAPhoneWithoutAnApprovalKeyDoesntPairAChrome() async {
         let signer = P256Signer()
