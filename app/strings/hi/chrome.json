@@ -31,6 +31,8 @@
   "chrome.shot_none": "इस कदम के लिए कोई चित्र नहीं रखा गया।",
   "chrome.shot_open": "इस कदम से पहले का पृष्ठ देखें",
   "chrome.shot_title": "इस कदम से पहले",
+  "chrome.switch": "दूसरा Chrome उपयोग करें",
+  "chrome.switch_prompt": "इस कनेक्शन को {name} पर ले जाएँ",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "जोड़ी हटाने से इसका उपयोग करने वाले कनेक्शन खत्म हो जाते हैं: {sites}। वे केवल तब लौटते हैं जब आप उन्हें फिर जोड़ते हैं।",
   "chrome.used_for": "{sites} के लिए उपयोग",
