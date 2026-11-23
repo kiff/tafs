@@ -16,7 +16,7 @@ it changes all three.
 
 | File | What it does |
 |---|---|
-| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`, `declarativeNetRequest` (to fence a run's tabs; it widens no access), `notifications` (Chrome asks it of an extension that receives Web Push; the extension shows none, see "Waking the extension"). **Every https site at install** (`host_permissions: ["https://*/*"]`), as Claude in Chrome asks: one Chrome prompt when the extension is installed, never one per site (the owner's choice, 23 Nov; `chrome/store/test_manifest.py` pins it). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
+| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`, `declarativeNetRequest` (to fence a run's tabs; it widens no access), `notifications` (Chrome asks it of an extension that receives Web Push; the extension shows none, see "Waking the extension"). **Every https site at install** (`host_permissions: ["https://*/*"]`): one Chrome prompt when the extension is installed, never one per site (the owner's choice, 23 Nov; `chrome/store/test_manifest.py` pins it). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
 | `chrome/src/sw.js` | The service worker: keeps the pairing, connects to planque when paired, runs what planque sends, answers the side panel. |
 | `chrome/src/relay.js` | The one connection to planque, always opened by the extension. Nothing connects in. |
 | `chrome/src/protocol.js` | Checks each step as planque's and signs each answer. |
@@ -334,7 +334,7 @@ error = {code, detail?}      // detail never carries page text
   The read comes **after the navigation the act started**: the tab is looked at every 100 ms for up to 1 s, until it is loading or at another
   address, then until it is `complete`, then 600 ms more. A click that navigates nothing costs that second and no more. (Without the look, `complete`
   was still the old page's status and the taf read the page it had just left.)
-- **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run ends and **its tabs stay open**, as in Claude in Chrome (see the next section); only unpairing closes them.
+- **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run ends and **its tabs stay open** (see the next section); that taf's next run, or unpairing, closes them.
 
 ### What the extension refuses, whatever planque sent
 
@@ -362,9 +362,11 @@ was done.
 
 - **A run opens in the window the owner is using,** as one background tab in a tab group, "tafs · Rae", in orange,
   beside their tabs. Their active tab stays in front and the run never takes focus. **When the run ends, its tabs stay open** (the
-  taf's close step, planque's `stop`, the person's Stop, the idle sweep): the person sees the pages the taf worked on and
-  nothing opens and closes under them. The group is renamed "tafs · Rae · done" and turns grey, its fence goes, and the tabs are no longer the
-  run's: a touch in one pauses nothing and a step can't reach it. **Only unpairing closes them** (the tabs the run opened, wherever they are
+  taf's close step, planque's `stop`, the person's Stop, the idle sweep): the person sees the page where the taf stopped and
+  nothing opens and closes under them. **Each taf keeps only its latest finished run's tabs:** when that taf's next run opens, it closes the
+  previous "· done" tabs (and a window of its own) first, so a taf's calls never pile up. Which tabs are kept is held in `chrome.storage.session`
+  (`doneTabs`), so a stopped worker still finds them; a taf is told apart by the name its steps carry. The group is renamed "tafs · Rae · done" and turns grey, its fence goes, and the tabs are no longer the
+  run's: a touch in one pauses nothing and a step can't reach it. **Unpairing closes them all** (the tabs the run opened, wherever they are
   by then, and a window of its own); so does a run that never loaded a page (a Stop while the tab is still being opened, or a window that
   couldn't be set up), since a blank tab is nothing to keep. When the window last used is private or a pop-up, or there is no normal window (the run
   never opens in a private window), the run gets a window of its own, opened without focus, and it stays with its tabs.

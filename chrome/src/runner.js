@@ -42,7 +42,7 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null, onHandAnswer = () => {} }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null, onHandAnswer = () => {}, doneStore = null }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
@@ -54,6 +54,8 @@ export class Runner {
     this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, ownWindow, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
+    this.doneStore = doneStore; // {get(), set(obj)}: the tabs each taf's last finished run left, kept where a stopped worker finds them again
+    this.done = null; // taf → {tabs: [id], window: id | null}, loaded on first use
     this.fenceIds = new Map(); // tab id → the first of its three fence rule ids
     this.nextFence = 1;
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
@@ -226,8 +228,9 @@ export class Runner {
   }
 
   /**
-   * Ends a run. Its tabs stay open (the group renamed "· done"), as in Claude in Chrome: the person sees the pages the taf worked
-   * on, and nothing opens and closes under them. `close` closes them instead: unpairing, and a run that failed to set up.
+   * Ends a run. Its tabs stay open (the group renamed "· done"): the person sees the pages the taf worked on, and nothing opens and
+   * closes under them. Only the latest finished run of each taf keeps its tabs: that taf's next run closes them when it opens.
+   * `close` closes them at once instead: unpairing, and a run that failed to set up.
    */
   async stop(runId, close = false) {
     const run = this.runs.get(runId);
@@ -240,6 +243,36 @@ export class Runner {
 
   async stopAll() {
     for (const id of [...this.runs.keys()]) await this.stop(id, true);
+    await this.closeAllDone();
+  }
+
+  async doneTabs() {
+    if (!this.done) this.done = (this.doneStore && (await this.doneStore.get())) || {};
+    return this.done;
+  }
+
+  /** What a taf's last finished run left: its tabs close (and a window of its own), once, and the record goes. */
+  async closeDone(taf) {
+    const done = await this.doneTabs();
+    const left = done[taf];
+    if (!left) return;
+    delete done[taf];
+    if (this.doneStore) await this.doneStore.set(done);
+    if (left.tabs.length) await this.chrome.tabs.remove(left.tabs).catch(() => {});
+    if (left.window != null) await this.chrome.windows.remove(left.window).catch(() => {});
+  }
+
+  async closeAllDone() {
+    for (const taf of Object.keys(await this.doneTabs())) await this.closeDone(taf);
+  }
+
+  /** A run that ended leaves its tabs as the taf's last: an earlier run's of the same taf close now. */
+  async leaveDone(run) {
+    const taf = run.taf || "taf";
+    await this.closeDone(taf);
+    const done = await this.doneTabs();
+    done[taf] = { tabs: [...run.tabs], window: run.ownWindow && run.windowId != null ? run.windowId : null };
+    if (this.doneStore) await this.doneStore.set(done);
   }
 
   async closeRun(run, close = true) {
@@ -254,6 +287,7 @@ export class Runner {
       if (run.groupId != null) {
         await this.chrome.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf") + " · done", color: "grey" }).catch(() => {});
       }
+      await this.leaveDone(run);
       run.tabs.clear();
       run.tab = null;
       return;
@@ -474,6 +508,8 @@ export class Runner {
     if (run.tab == null) {
       // A tab of its own in the window the owner is using, in the background: their active tab and their other tabs are
       // never touched, and the run's group sits beside them. With no such window, a window of its own, not focused.
+      // The taf's last finished run's tabs close now, so the calls of one taf never pile up; the person saw the page where it stopped.
+      await this.closeDone(run.taf || "taf");
       const made = await this.runTab();
       // Stop or close landed while the tab was being made: nothing of the run's is left open, least of all among the owner's tabs.
       if (run.stopped) {

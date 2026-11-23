@@ -773,3 +773,32 @@ test("a run that ends by planque's close step or stop keeps its tabs; one that n
   r.ownerInput(tab);
   assert.equal(r.runs.get("run_1").paused, null);
 });
+
+test("a taf keeps only its latest finished run's tabs: its next run closes the earlier ones, another taf's stay, unpairing closes all", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const stored = {};
+  const doneStore = { get: async () => JSON.parse(JSON.stringify(stored.done || {})), set: async (d) => (stored.done = JSON.parse(JSON.stringify(d))) };
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, doneStore });
+  const removed = () => c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]);
+  await r.handle(step());
+  const first = [...c.tabsMap.keys()].at(-1);
+  await r.stop("run_1");
+  assert.deepEqual(removed(), [], "the finished run's tabs stay");
+  // Another taf's run: the first taf's tabs are not its to close.
+  await r.handle(step({ run: "run_b", id: "opb", taf: "Sam" }));
+  assert.deepEqual(removed(), [], "another taf's tabs stay");
+  await r.stop("run_b");
+  // The first taf runs again: its earlier tabs close as the new one opens, and nothing of Sam's.
+  await r.handle(step({ run: "run_3", id: "op3" }));
+  assert.deepEqual(removed(), [[first]].flat(), "only its own earlier run's tabs close");
+  assert.equal(Object.keys(stored.done).length, 1, "only Sam's is kept now");
+  // A new worker finds what was kept.
+  const d = new Runner({ chrome: c, sleep, paired: () => paired, doneStore });
+  await d.closeDone("Sam");
+  assert.equal(removed().length, 2, "a restarted worker closes what the last one kept");
+  r.done = null; // this runner read the store before the other one closed Sam's
+  await r.stop("run_3");
+  await r.stopAll();
+  assert.equal(removed().length, 3, "unpairing closes the last taf's too");
+  assert.deepEqual(stored.done, {});
+});
