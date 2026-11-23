@@ -1,0 +1,5 @@
+• Chrome: associalo con una sola impronta, dove l'estensione la verifica.
+• Associare di nuovo un Chrome chiede quale sostituisce e sposta solo le connessioni firmate da questo telefono.
+• Account › Chrome dice a cosa serve ogni Chrome e cosa termina dissociandolo.
+• Un passaggio in Chrome conserva un'immagine della pagina prima di agire, nella sua ricevuta.
+• Accedi con un codice inviato per email: attivalo in Account › Accesso.
