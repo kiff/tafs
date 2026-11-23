@@ -71,7 +71,8 @@ jobs:
 
       - name: Generate the Xcode project
         run: |
-          brew install xcodegen
+          # Our own Mac test runner has XcodeGen already, with no Homebrew: GitHub's Mac installs it here.
+          command -v xcodegen >/dev/null || brew install xcodegen
           cd ios && xcodegen generate
 
       # The Mac's entitlements are their own files (docs/mac-app.md): each holds every key

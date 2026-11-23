@@ -243,7 +243,8 @@ jobs:
 
       - name: Generate the Xcode project
         run: |
-          brew install xcodegen
+          # Our own Mac test runner has XcodeGen already, with no Homebrew: GitHub's Mac installs it here.
+          command -v xcodegen >/dev/null || brew install xcodegen
           cd ios && xcodegen generate
 
       - name: Build for testing
@@ -319,7 +320,8 @@ jobs:
 
       - name: Generate the Xcode project
         run: |
-          brew install xcodegen
+          # Our own Mac test runner has XcodeGen already, with no Homebrew: GitHub's Mac installs it here.
+          command -v xcodegen >/dev/null || brew install xcodegen
           cd ios && xcodegen generate
 
       - name: Build and test on a watch simulator
@@ -378,7 +380,8 @@ jobs:
 
       - name: Generate the Xcode project
         run: |
-          brew install xcodegen
+          # Our own Mac test runner has XcodeGen already, with no Homebrew: GitHub's Mac installs it here.
+          command -v xcodegen >/dev/null || brew install xcodegen
           cd ios && xcodegen generate
 
       - name: Test the tafs list on an iPad
@@ -437,7 +440,8 @@ jobs:
 
       - name: Generate the Xcode project
         run: |
-          brew install xcodegen
+          # Our own Mac test runner has XcodeGen already, with no Homebrew: GitHub's Mac installs it here.
+          command -v xcodegen >/dev/null || brew install xcodegen
           cd ios && xcodegen generate
 
       # The preview set: the catalog for this run only, with a language that isn't shipped yet in it, so its lines are
