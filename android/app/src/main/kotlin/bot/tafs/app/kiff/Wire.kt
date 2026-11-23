@@ -582,8 +582,31 @@ data class CardException(
    * A held step in the owner's own Chrome (docs/chrome.md, "The phone approval card"): what planque read of the page the step was
    * built on, masked, kept by KIFF on the hold. Absent for any other hold, and until KIFF carries it: the card is then as any hold.
    */
-  val browser: HeldBrowser? = null,
+  @Serializable(with = TolerantBrowser::class) val browser: HeldBrowser? = null,
 )
+
+/**
+ * A held call's `browser` block, read so one bad block never hides the account's other held calls. Whether it asks for a fill
+ * ([HeldBrowser.needsRelease]) is read from the block as sent, before anything is drawn: a `sealed_fill` or `fill` that isn't
+ * null, or a block that isn't an object, so a fill is never allowed here on a guess (docs/chrome.md).
+ */
+object TolerantBrowser : kotlinx.serialization.KSerializer<HeldBrowser?> {
+  override val descriptor = JsonElement.serializer().descriptor
+
+  override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): HeldBrowser? {
+    val e = (decoder as kotlinx.serialization.json.JsonDecoder).decodeJsonElement()
+    if (e is kotlinx.serialization.json.JsonNull) return null
+    val o = e as? kotlinx.serialization.json.JsonObject ?: return HeldBrowser(needsRelease = true)
+    val fill = listOf("sealed_fill", "fill").any { k -> o[k].let { it != null && it !is kotlinx.serialization.json.JsonNull } }
+    val read = runCatching { decoder.json.decodeFromJsonElement(HeldBrowser.serializer(), o) }.getOrNull()
+    return (read ?: HeldBrowser()).copy(needsRelease = fill)
+  }
+
+  override fun serialize(encoder: kotlinx.serialization.encoding.Encoder, value: HeldBrowser?) {
+    val json = (encoder as kotlinx.serialization.json.JsonEncoder).json
+    encoder.encodeJsonElement(value?.let { json.encodeToJsonElement(HeldBrowser.serializer(), it) } ?: kotlinx.serialization.json.JsonNull)
+  }
+}
 
 /** The page a held browser step acts on, in planque's words: the site, the action, an excerpt, a checkout's lines, which Chrome. */
 @Serializable
@@ -597,7 +620,39 @@ data class HeldBrowser(
   val context: HeldBrowserContext? = null,
   val checkout: HeldCheckout? = null,
   val chrome: HeldChrome? = null,
+  /**
+   * A sealed fill (docs/chrome.md, "The phone's release card"): the held step's own fields, which the release signs byte for
+   * byte, and what the phone checks before it signs. Absent for any other step, and until planque holds a sealed fill.
+   */
+  @SerialName("sealed_fill") val sealedFill: HeldSealedFill? = null,
+  /** It asks for a fill in the person's Chrome, read from the block as sent ([TolerantBrowser]): allowed only with its release. */
+  @kotlinx.serialization.Transient val needsRelease: Boolean = false,
 )
+
+/** A held sealed fill as planque relays it: never the value, only which saved sign-in, where, and for which field. */
+@Serializable
+data class HeldSealedFill(
+  @SerialName("chrome_id") val chromeId: String = "",
+  val op: String = "",
+  /** The handle, `sec_<id>:password` or `sec_<id>:username`: the card reads the part from it, never from planque's words. */
+  val sealed: String = "",
+  val origin: String = "",
+  @SerialName("field_ref") val fieldRef: String = "",
+  @SerialName("read_id") val readId: String = "",
+  val grant: String = "",
+  /** The field's own label as the extension read it: page words, drawn verbatim and never signed. */
+  @SerialName("field_label") val fieldLabel: String? = null,
+  @SerialName("sites_signed") val sitesSigned: HeldSitesSigned? = null,
+  @SerialName("sensitive_allowed") val sensitiveAllowed: List<HeldAllowance> = emptyList(),
+)
+
+/** The grant's sites as this phone signed them (`tafs-chrome/sites/v1`), relayed by planque. */
+@Serializable
+data class HeldSitesSigned(val sites: List<String> = emptyList(), val sig: String = "")
+
+/** A sensitive site this phone allowed for the grant (`tafs-chrome/sensitive/v1`), relayed by planque. */
+@Serializable
+data class HeldAllowance(val site: String = "", val sig: String = "")
 
 @Serializable
 data class HeldBrowserContext(val title: String? = null, val text: String? = null)

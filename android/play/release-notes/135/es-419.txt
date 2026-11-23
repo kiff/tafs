@@ -1,0 +1,2 @@
+• Al responder una tarjeta de Coach, esa tarjeta queda arriba en el chat y la respuesta de Coach crece debajo.
+• “Una Card nueva” muestra los límites de cada Card después de su propia herramienta, así una segunda herramienta nunca parece ilimitada antes de tu huella.

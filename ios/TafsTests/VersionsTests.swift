@@ -339,6 +339,35 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(order[live...].contains("/v1/home"), "the list read again after the install")
     }
 
+    /// A switch that stopped a task waiting on the owner's answer (tafs cloud names it in `stopped`, with its words): the chat says so, with
+    /// Retry on the owner's last message of that session, never silence. A switch that stopped nothing says nothing.
+    func testASwitchThatStoppedAWaitingTaskSaysSoAndOffersRetry() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"message","text":"Refund pi_1","session":"sess_p"},{"at":"2026-10-14T09:05:00Z","from":"owner","kind":"message","text":"Another thing","session":"sess_other"}]}"#)
+        await model.loadVersions(id)
+        await model.loadChat(id)
+        let v2 = try XCTUnwrap(model.versions[id]?.last)
+        // Nothing was stopped: no line.
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        _ = await model.prepareSwitch(v2, of: id, stopBlocking: true)
+        XCTAssertNil(model.chatState(id).failedWhy)
+        // A stopped session none of whose messages is loaded: the words alone, never another session's message to send again (a message
+        // that already ran must not be sent twice).
+        let words = "Installing this version stopped what was waiting on your answer: its held call was withdrawn and its message wasn't carried out. You can send it again."
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, #"{"switching":{"n":2,"draft":"d_02","at":"2026-10-20T08:00:00Z"},"stopped":[{"run":"run_x","session":"sess_unknown"}],"words":"\#(words)"}"#)
+        _ = await model.prepareSwitch(v2, of: id, stopBlocking: true)
+        XCTAssertNil(model.chatState(id).ended, "no Retry without that session's message")
+        XCTAssertEqual(model.lastError, words, "the words are still said")
+        // A task waiting on the owner's answer was stopped: the chat says it, and offers Retry on that session's message.
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, #"{"switching":{"n":2,"draft":"d_02","at":"2026-10-20T08:00:00Z"},"stopped":[{"run":"run_p","session":"sess_p"}],"words":"Installing this version stopped what was waiting on your answer: its held call was withdrawn and its message wasn't carried out. You can send it again."}"#)
+        let sw = await model.prepareSwitch(v2, of: id, stopBlocking: true)
+        XCTAssertEqual(sw?.stopped, [TafsCloud.StoppedRun(run: "run_p", session: "sess_p")])
+        XCTAssertEqual(model.chatState(id).ended, .failed(retry: "Refund pi_1"), "that session's message, not the last one")
+        XCTAssertEqual(model.chatState(id).failedWhy, words)
+        XCTAssertNil(model.chatState(id).awaiting)
+    }
+
     /// Installing a version with its Card while Coach's tools are still to give: the install's
     /// one Face ID gives nothing of Coach's tools, and their own step is asked after it
     /// (docs/coach.md › Coach's tools step), as on Android 1.3.
@@ -547,8 +576,8 @@ final class VersionsTests: XCTestCase {
     }
 
     /// KIFF's draft has one Card per tool: three "A new Card" panels read as three Cards to
-    /// approve (the owner's run). They show as one, every line once, where the first new Card
-    /// is; a Card the draft changes keeps its own panel and place (Android 94).
+    /// approve (the owner's run). They show as one, each Card's lines together, where the first
+    /// new Card is; a Card the draft changes keeps its own panel and place (Android 94).
     func testADraftsNewCardsShowAsOneAndAChangedCardAlone() throws {
         let d = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
         {"id":"d","agent_id":"a1","status":"draft","version":"v2","cards":[
@@ -559,7 +588,8 @@ final class VersionsTests: XCTestCase {
         """#.utf8))
         let shown = DraftCardsView.shown(d)
         XCTAssertEqual(shown.count, 2, "one header for the three new Cards, and the changed one")
-        XCTAssertEqual(shown[0], .new(lines: ["Read your emails", "Draft replies", "Label emails"]))
+        XCTAssertEqual(shown[0], .new(lines: ["Read your emails", "Draft replies", "Read your emails", "Label emails"]),
+                       "each Card's lines together; a line is never dropped for being on an earlier Card")
         guard case .one(let changed, let lines) = shown[1] else { return XCTFail("the changed Card alone") }
         XCTAssertEqual(changed.revises, "c1")
         XCTAssertEqual(lines, ["Read and refund Stripe payments"])
@@ -577,6 +607,28 @@ final class VersionsTests: XCTestCase {
         let one = DraftCardsView.shown(revision)
         XCTAssertEqual(one.count, 1)
         guard case .one = try XCTUnwrap(one.first) else { return XCTFail("a changed Card alone") }
+    }
+
+    /// A Card's total names no tool ("20 calls a day"): two new Cards with the same total each
+    /// show it after their own tool, so the second tool never reads as unlimited before Face ID
+    /// (qa-kiff, 23 Nov). A Card exactly like an earlier one shows once.
+    func testANewCardsTotalIsShownForEachCardThatHasIt() throws {
+        let d = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
+        {"id":"d","agent_id":"a1","status":"draft","version":"v1","cards":[
+          {"lines":["Refund a payment","20 calls a day"]},
+          {"lines":["Send an email","20 calls a day"]},
+          {"lines":["Refund a payment","20 calls a day"]}]}
+        """#.utf8))
+        XCTAssertEqual(DraftCardsView.shown(d), [.new(lines: ["Refund a payment", "20 calls a day", "Send an email", "20 calls a day"])])
+        // Built from the grants too (no KIFF lines): the total follows each tool.
+        let built = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
+        {"id":"d","agent_id":"a1","status":"draft","version":"v1","cards":[
+          {"grants":[{"action":"refund","title":"Refund a payment"}],"aggregates":[{"quantity":"count","limit":20,"window":"day"}]},
+          {"grants":[{"action":"send_email","title":"Send an email"}],"aggregates":[{"quantity":"count","limit":20,"window":"day"}]}]}
+        """#.utf8))
+        guard case .new(let lines) = try XCTUnwrap(DraftCardsView.shown(built).first) else { return XCTFail("one new Card panel") }
+        XCTAssertEqual(lines.count, 4, "each tool and its own total: \(lines)")
+        XCTAssertEqual(lines[1], lines[3], "the same total, once for each Card")
     }
 
     /// A connection none of whose tools is on the taf's Card any more is left over

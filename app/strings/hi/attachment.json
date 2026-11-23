@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} जोड़ा नहीं जा सकता।",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs यह फ़ाइल नहीं जोड़ सकता: यह उसके स्वीकार करने वाले प्रकार या आकार की नहीं है। कोई और चुनें।",
+  "attachment.photo": "फ़ोटो",
+  "attachment.photo_could_not_read": "वह फ़ोटो पढ़ी नहीं जा सकी।",
+  "attachment.photo_numbered": "फ़ोटो {n}",
+  "attachment.too_large": "{name} {size} की है; अधिकतम {limit} है।",
+  "attachment.wrong_kind": "{name} जोड़ा नहीं जा सकता। फ़ोटो, PDF, टेक्स्ट, CSV, Markdown, Word और Excel फ़ाइलें जोड़ी जा सकती हैं।"
+}

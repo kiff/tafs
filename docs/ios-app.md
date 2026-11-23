@@ -597,10 +597,14 @@ A connected app (“Connected ✓”) opens its connections (`AppConnectionsView
 KIFF's draft has one Card per tool, so a new taf's approval drew "A new Card" three or five times for
 what the owner approves as one. As on Android, `DraftCardsView` (in `Views/TafDetailView.swift`, used
 by a version's sheet and a trial) draws the draft's new Cards (no `current`) as one panel, "A new
-Card", with every new Card's lines under it, each once, in the draft's order, where the first new Card
-is (`DraftCardsView.shown`). A Card the draft changes, or keeps unchanged, keeps its own panel and
-place, and the Cards it removes follow, as before. Test:
-`VersionsTests.testADraftsNewCardsShowAsOneAndAChangedCardAlone`.
+Card", with every new Card's lines under it, in the draft's order, where the first new Card
+is (`DraftCardsView.shown`). **Each Card's lines stay together, and only a whole Card exactly like an
+earlier one is shown once.** A single line is never dropped for being on an earlier Card: a Card's
+total names no tool ("20 calls a day"), so two Cards with the same total each show it after their own
+tool, and the owner never reads less than they sign (qa-kiff, 23 Nov). A Card the draft changes, or
+keeps unchanged, keeps its own panel and place, and the Cards it removes follow, as before. Tests:
+`VersionsTests.testADraftsNewCardsShowAsOneAndAChangedCardAlone`,
+`VersionsTests.testANewCardsTotalIsShownForEachCardThatHasIt`.
 
 ## Home's line
 
@@ -1425,6 +1429,19 @@ come back only when you connect them again."). The connections are the ones plan
 (`GET …/chromes`, `connections: [{grant, name, sites}]`: not ended, not failed, only those that Chrome drives), drawn as sent
 (`ChromeConnections`); the app keeps no rule of its own. A planque that doesn't list them yet leaves the line out. The replace pick at pairing, and a connection's Chrome on the taf's page, follow
 planque#365's route and the extension's own pairing bytes.
+
+## A connection's Chrome, and moving it
+
+"Your Chrome" 2 and 4 ([chrome.md](chrome.md)): a browser connection's page (`ConnectionDetailView`, the connection that runs in the owner's own
+Chrome) says which Chrome it runs in ("In Work Mac · Chrome 131", as planque names it, `request.browser.chrome_name`) and, where the
+owner manages the connection, planque offers the move (its row's `use_another_chrome` action, `how: "chrome"`: planque asks the same rule its
+`PUT …/chrome` applies, so the app keeps no status list) and another Chrome is paired, offers **Use another Chrome** in planque's words.
+Choosing one signs the connection's sites for that Chrome with the approval key under one Face ID (`ChromePairing.switchBytes`:
+`tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`), **only if this phone's own signature already verifies those sites for the Chrome
+it uses now** (`ChromeSwitch.signedSites`, as a re-pairing checks before it carries): a planque that widened the list gets no signature,
+and a connection carried here from an earlier Chrome has none of its own to move. Then `PUT …/grants/{grant}/chrome {chrome_id,
+chrome_sites_sig}` (`PlanqueClient.switchChrome`) moves it; its sites and Card stay, and the extension runs nothing whose sites aren't
+signed for it. The Chromes and the connection are read again after it goes through.
 
 ## Pairing a Chrome that replaces one
 

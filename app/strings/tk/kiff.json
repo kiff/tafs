@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "KIFF-den soralýar: {title}…",
+  "kiff.did_not_reach_kiff_try": "Ol KIFF-e ýetmedi. Täzeden synanyşyň.",
+  "kiff.kiff_can_not_do_sign": "KIFF muny heniz edip bilmeýär: bu {device}-den tassyklamak üçin Sazlamalardan täzeden giriň.",
+  "kiff.kiff_did_not_answer_expected": "KIFF garaşylyşy ýaly jogap bermedi. Täzeden synanyşyň.",
+  "kiff.kiff_words_do_not_match": "KIFF-iň sözleri barlagyna gabat gelmeýär. Hiç zat tassyklanyp bilinmeýär."
+}

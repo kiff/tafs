@@ -1334,6 +1334,81 @@ Lao with macOS 12's names in brackets. Plural forms: other only.
 | Usage | ການໃຊ້ງານ |
 | Cancel / Continue | ຍົກເລີກ / ສືບຕໍ່ |
 
+## Batch 6: Turkmen
+
+### Turkmen (tk)
+
+Turkmen in the Latin alphabet of 1993 as revised in 2021 (A B Ç D E Ä F G H I J Ž K L M N Ň O Ö P R S Ş T U Ü W Y Ý Z), addressed as **siz**,
+the polite form, with buttons in the polite imperative ("Tassyklaň", "Ret ediň", "Dowam ediň"). taf, Card, Coach, KIFF, Setup and
+planque are names and stay in Latin letters; they take Turkmen endings after a hyphen ("taf-yň", "Card-yny", "tafs-lar"). Turkmen has no
+plural after a number ("3 taf", "2 çagyryş"), so a count uses the bare noun in both forms. Turkmen has no English-style possessive:
+"{owner}'s Card" is "{owner} üçin Card", since a name can't take a vowel-harmony ending safely. A door is "gapy", a knock "kakyş", a call
+"çagyryş", a receipt "kwitansiýa", the Record "Ýazgy", a run "işleme". Numbers are Western digits; quotes are “ ”. The weekdays are
+Duş, Siş, Çar, Pen, Anna, Şen, Ýek and the months Ýanwar, Fewral, Mart, Aprel, Maý, Iýun, Iýul, Awgust, Sentýabr, Oktýabr, Noýabr,
+Dekabr. Menu paths of the phone's own settings stay in English, as iOS, macOS and Android have no Turkmen. Plural forms: one, other.
+First draft, from legal-i18n; a native read fixes it forward.
+
+| English | Turkmen |
+|---|---|
+| Needs you | Size garaşýar |
+| Approve / Approve once | Tassyklaň / Bir gezek tassyklaň |
+| Refuse | Ret ediň |
+| held | saklanan |
+| Halt / Halted | Togtatmak / Togtadyldy |
+| Stopped | Durdy |
+| Pause / Paused | Bes ediň / Bes edildi |
+| Resume | Dowam ediň |
+| Revoke | Ýatyryň |
+| Record | Ýazgy |
+| Connect / connection | Birikdiriň / birikme |
+| Pair / Unpair | Goşalaň / Goşalamany aýyryň |
+| Account | Hasap |
+| credits | kreditler |
+| security key | howpsuzlyk açary |
+| Sign in / Sign out | Giriň / Çykyň |
+| Inbox | Inbox |
+| Overview | Syn |
+| Calendar | Senenama |
+| Usage | Ulanyş |
+| Cancel / Continue | Goýbolsun / Dowam ediň |
+
+## Batch 7: Hindi and Urdu
+
+### Hindi (hi)
+
+Hindi in Devanagari, addressed as **आप**, the polite form, with buttons in the polite imperative ("मंज़ूर करें", "अस्वीकार करें",
+"जारी रखें"). taf, Card, Coach, KIFF, Setup and planque are names and stay in Latin letters; a plural "s" is never added ("दो taf") and
+Card is used as a masculine noun. A count takes the singular noun after the number ("3 taf", "2 कॉल"), so both plural forms are the same.
+The English possessive "{owner}'s Card" is "{owner} का Card". A door is "द्वार", a knock "दस्तक", a call "कॉल", a receipt "रसीद", the
+Record "रिकॉर्ड", a run "रन". Numbers are Western digits; quotes are “ ”; sentences end with the danda "।". The weekdays are
+सोम, मंगल, बुध, गुरु, शुक्र, शनि, रवि and the months जनवरी, फ़रवरी, मार्च, अप्रैल, मई, जून, जुलाई, अगस्त, सितंबर, अक्टूबर, नवंबर,
+दिसंबर. Menu paths of the phone's own settings that the phone shows in English stay in English. Plural forms: one, other. First draft,
+from legal-i18n; a native read fixes it forward.
+
+| English | Hindi |
+|---|---|
+| Needs you | आपका इंतज़ार |
+| Approve / Approve once | मंज़ूर करें / एक बार मंज़ूर करें |
+| Refuse | अस्वीकार करें |
+| held | रोकी गई |
+| Halt / Halted | रोकें / रोका गया |
+| Stopped | रुका |
+| Pause / Paused | थामें / थमा हुआ |
+| Resume | फिर शुरू करें |
+| Revoke | रद्द करें |
+| Record | रिकॉर्ड |
+| Connect / connection | जोड़ें / कनेक्शन |
+| Pair / Unpair | जोड़ी बनाएँ / जोड़ी हटाएँ |
+| Account | खाता |
+| credits | क्रेडिट |
+| security key | सुरक्षा कुंजी |
+| Sign in / Sign out | साइन इन करें / साइन आउट करें |
+| Inbox | Inbox |
+| Overview | अवलोकन |
+| Calendar | कैलेंडर |
+| Usage | उपयोग |
+| Cancel / Continue | छोड़ें / जारी रखें |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
@@ -1361,7 +1436,9 @@ behind. A count takes its base's plural forms.
 iOS's catalog gets a `pt-BR` localization and `Words.languages` lists it; Android gets `values-pt-rBR` and a `pt-BR` entry
 in `locales_config.xml` (tested in `test_strings.py`). **Before shipping one, each app is checked where it maps a
 language** to kiff.dev's pages and KIFF's (`KIFFClient`'s app language, `AppSignIn.pageLanguages`, the translated-pages
-set in `Components.swift`, and Android's twins): a variant reads its base's pages, as `pt-BR` reads `/pt/`.
+set in `Components.swift`, and Android's twins): a variant reads its base's pages, as `pt-BR` reads `/pt/`, except the
+pages kiff.dev has in the variant itself. **pt-BR's four legal pages** (KIFF's and tafs's terms and privacy) are its own,
+at the lowercase `/pt-br/` (`/pt-BR/` isn't served); Android opens them there (`Legal.VARIANTS`).
 
 **pt-BR** (Wave 1, Brazil) ships: Brazilian forms over `pt`'s, "você" throughout, "celular", "tela", "arquivo", "senha",
 "Entrar" for signing in, "conexão" for a connection, and the system's own names on each platform (iOS "Ajustes", macOS
