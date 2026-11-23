@@ -45,7 +45,11 @@ async function sendHands() {
   }
 }
 
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(sendHands).catch(() => {}) });
+const doneStore = {
+  get: async () => (await chrome.storage.session.get("doneTabs")).doneTabs || {},
+  set: (done) => chrome.storage.session.set({ doneTabs: done }),
+};
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(sendHands).catch(() => {}) });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
