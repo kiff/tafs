@@ -587,8 +587,8 @@ data class CardException(
 
 /**
  * A held call's `browser` block, read so one bad block never hides the account's other held calls. Whether it asks for a fill
- * ([HeldBrowser.needsRelease]) is read from the block as sent, before anything is drawn: a `sealed_fill` or `fill` that isn't
- * null, or a block that isn't an object, so a fill is never allowed here on a guess (docs/chrome.md).
+ * ([HeldBrowser.needsRelease]) is read from the block as sent, before anything is drawn: a `release_fields`, `sealed_fill` or
+ * `fill` that isn't null, or a block that isn't an object, so a fill is never allowed here on a guess (docs/chrome.md).
  */
 object TolerantBrowser : kotlinx.serialization.KSerializer<HeldBrowser?> {
   override val descriptor = JsonElement.serializer().descriptor
@@ -597,7 +597,7 @@ object TolerantBrowser : kotlinx.serialization.KSerializer<HeldBrowser?> {
     val e = (decoder as kotlinx.serialization.json.JsonDecoder).decodeJsonElement()
     if (e is kotlinx.serialization.json.JsonNull) return null
     val o = e as? kotlinx.serialization.json.JsonObject ?: return HeldBrowser(needsRelease = true)
-    val fill = listOf("sealed_fill", "fill").any { k -> o[k].let { it != null && it !is kotlinx.serialization.json.JsonNull } }
+    val fill = listOf("release_fields", "sealed_fill", "fill").any { k -> o[k].let { it != null && it !is kotlinx.serialization.json.JsonNull } }
     val read = runCatching { decoder.json.decodeFromJsonElement(HeldBrowser.serializer(), o) }.getOrNull()
     return (read ?: HeldBrowser()).copy(needsRelease = fill)
   }
@@ -622,16 +622,20 @@ data class HeldBrowser(
   val chrome: HeldChrome? = null,
   /**
    * A sealed fill (docs/chrome.md, "The phone's release card"): the held step's own fields, which the release signs byte for
-   * byte, and what the phone checks before it signs. Absent for any other step, and until planque holds a sealed fill.
+   * byte. Nothing else in it is trusted: which sites the fill may go to is read from this phone's own signed grants, never from
+   * the block. Absent for any other step, and until planque holds a sealed fill.
    */
-  @SerialName("sealed_fill") val sealedFill: HeldSealedFill? = null,
+  @SerialName("release_fields") val releaseFields: HeldReleaseFields? = null,
   /** It asks for a fill in the person's Chrome, read from the block as sent ([TolerantBrowser]): allowed only with its release. */
   @kotlinx.serialization.Transient val needsRelease: Boolean = false,
 )
 
-/** A held sealed fill as planque relays it: never the value, only which saved sign-in, where, and for which field. */
+/**
+ * A held sealed fill's fields as planque's block carries them (`release_fields`): never the value, only which saved sign-in,
+ * where, and for which field. The release signs exactly these.
+ */
 @Serializable
-data class HeldSealedFill(
+data class HeldReleaseFields(
   @SerialName("chrome_id") val chromeId: String = "",
   val op: String = "",
   /** The handle, `sec_<id>:password` or `sec_<id>:username`: the card reads the part from it, never from planque's words. */
@@ -639,20 +643,7 @@ data class HeldSealedFill(
   val origin: String = "",
   @SerialName("field_ref") val fieldRef: String = "",
   @SerialName("read_id") val readId: String = "",
-  val grant: String = "",
-  /** The field's own label as the extension read it: page words, drawn verbatim and never signed. */
-  @SerialName("field_label") val fieldLabel: String? = null,
-  @SerialName("sites_signed") val sitesSigned: HeldSitesSigned? = null,
-  @SerialName("sensitive_allowed") val sensitiveAllowed: List<HeldAllowance> = emptyList(),
 )
-
-/** The grant's sites as this phone signed them (`tafs-chrome/sites/v1`), relayed by planque. */
-@Serializable
-data class HeldSitesSigned(val sites: List<String> = emptyList(), val sig: String = "")
-
-/** A sensitive site this phone allowed for the grant (`tafs-chrome/sensitive/v1`), relayed by planque. */
-@Serializable
-data class HeldAllowance(val site: String = "", val sig: String = "")
 
 @Serializable
 data class HeldBrowserContext(val title: String? = null, val text: String? = null)

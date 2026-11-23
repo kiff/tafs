@@ -1,6 +1,9 @@
 package bot.tafs.app
 
 import bot.tafs.app.kiff.ChromePairing
+import bot.tafs.app.kiff.Grant
+import bot.tafs.app.kiff.GrantBrowser
+import bot.tafs.app.kiff.GrantRequest
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.SealedRelease
 import bot.tafs.app.kiff.SealedRelease.Refusal
@@ -26,7 +29,8 @@ import org.junit.Test
 /**
  * The phone's release of one sealed sign-in value for one fill (docs/chrome.md, "The phone's release card"): the bytes are the
  * extension's (vectors/chrome-release.json, made from `checkRelease`'s own `signingBytes`), the handles are its `parseHandle`'s,
- * and the phone signs only where its own checks hold. A software key stands in for the approval key; nothing is sent.
+ * and the phone signs only where its own checks hold: the sites come from its own signed grants, never from the held block. A
+ * software key stands in for the approval key; nothing is sent.
  */
 class SealedReleaseTest {
   private fun repoJson(path: String): JsonObject = KiffClient.json.parseToJsonElement(File("../../$path").readText()).jsonObject
@@ -51,17 +55,30 @@ class SealedReleaseTest {
     origin: String = s("origin"),
     sealed: String = s("sealed"),
     chrome: String = s("chrome_id"),
-    signedSites: List<String> = sites,
-    sitesSig: String? = raw(phone, ChromePairing.sitesBytes(s("chrome_id"), grant, sites)),
-    allowances: List<SealedRelease.Allowance> = emptyList(),
     readId: String = s("read_id"),
     expiresAt: Long = now + 180_000,
   ) = SealedRelease.Fill(
-    chromeId = chrome, op = s("op"), sealed = sealed, origin = origin, fieldRef = s("field_ref"), readId = readId, grant = grant,
-    sitesSigned = sitesSig?.let { SealedRelease.SitesSigned(signedSites, it) }, sensitiveAllowed = allowances, expiresAt = expiresAt,
+    chromeId = chrome, op = s("op"), sealed = sealed, origin = origin, fieldRef = s("field_ref"), readId = readId, expiresAt = expiresAt,
+  )
+
+  /**
+   * One of the account's connections as planque lists it: on [chrome], with [listed] as its sites, and [sig] as the phone's
+   * signature given at approval (by default this phone's, over [signed]).
+   */
+  private fun grant(
+    id: String = grant,
+    chrome: String = s("chrome_id"),
+    listed: List<String> = sites,
+    signed: List<String> = listed,
+    sig: String? = raw(phone, ChromePairing.sitesBytes(chrome, id, signed)),
+  ) = Grant(
+    id = id,
+    request = GrantRequest(browser = GrantBrowser(driver = GrantBrowser.EXTENSION, chrome = chrome, sites = listed)),
+    chromeSitesSig = sig,
   )
 
   private val paired = setOf(s("chrome_id"))
+  private val grants = listOf(grant())
 
   @Test fun aReleaseSignsTheVectorsBytesAndTakesOnlyTheVectorsHandles() {
     val bytes = SealedRelease.bytes(s("chrome_id"), s("op"), s("sealed"), s("origin"), s("field_ref"), s("read_id"), s("nonce"), v["exp"]!!.jsonPrimitive.long)
@@ -75,7 +92,7 @@ class SealedReleaseTest {
 
   @Test fun theOwnersYesSignsOneReleaseForThatFillGoodForSixtySeconds() = runTest {
     var asked = 0
-    val r = SealedRelease.release(fill(), paired, key, now, nonce = s("nonce")) { built -> asked++; der(phone, built()) }!!
+    val r = SealedRelease.release(fill(), paired, grants, key, now, nonce = s("nonce")) { built -> asked++; der(phone, built()) }!!
     assertEquals(1, asked)
     assertEquals(now + 60_000, r.exp)
     assertEquals(s("chrome_id"), r.chromeId)
@@ -92,7 +109,7 @@ class SealedReleaseTest {
   }
 
   @Test fun thePhoneRefusesToSignWhereItsOwnChecksDontHoldWhateverPlanqueSays() = runTest {
-    fun refused(f: SealedRelease.Fill, at: Long = now) = SealedRelease.refusal(f, paired, key, at)
+    fun refused(f: SealedRelease.Fill, at: Long = now, with: List<Grant> = grants) = SealedRelease.refusal(f, paired, with, key, at)
     assertNull(refused(fill()))
     // The handle: anything but exactly sec_<id>:password or :username, a third segment included.
     assertEquals(Refusal.HANDLE, refused(fill(sealed = "sec_Ab3dE-f_9q:password:username")))
@@ -106,25 +123,27 @@ class SealedReleaseTest {
       assertEquals(o, Refusal.ORIGIN, refused(fill(origin = o)))
     }
     assertNull("a port and a subdomain are fine", refused(fill(origin = "https://login.shop.example:8443")))
-    // Within the sites this phone signed, and that signature holds: planque can't widen the list or sign it.
+    // Within the sites this phone signed for one of the account's connections on that Chrome, checked with its own key.
     assertEquals(Refusal.NOT_SIGNED, refused(fill(origin = "https://evil.example")))
     assertEquals(Refusal.NOT_SIGNED, refused(fill(origin = "https://shop.example.evil")))
-    assertEquals(Refusal.NOT_SIGNED, refused(fill(signedSites = sites + "evil.example", origin = "https://evil.example")))
-    assertEquals(Refusal.NOT_SIGNED, refused(fill(sitesSig = raw(other, ChromePairing.sitesBytes(s("chrome_id"), grant, sites)))))
-    assertEquals(Refusal.NOT_SIGNED, refused(fill(sitesSig = null)))
-    // A sensitive site needs this phone's own allowance for that grant and site.
+    // planque can't widen a connection's sites: its list then no longer matches what this phone signed.
+    assertEquals(Refusal.NOT_SIGNED, refused(fill(origin = "https://evil.example"), with = listOf(grant(listed = sites + "evil.example", signed = sites))))
+    // Another key's signature, none at all, or no connection: nothing to go by.
+    assertEquals(Refusal.NOT_SIGNED, refused(fill(), with = listOf(grant(sig = raw(other, ChromePairing.sitesBytes(s("chrome_id"), grant, sites))))))
+    assertEquals(Refusal.NOT_SIGNED, refused(fill(), with = listOf(grant(sig = null))))
+    assertEquals(Refusal.NOT_SIGNED, refused(fill(), with = emptyList()))
+    // This phone's own signature, but for a connection on another Chrome: it says nothing about this one.
+    assertEquals(Refusal.NOT_SIGNED, refused(fill(), with = listOf(grant(chrome = "chr_other"))))
+    // Any one of the account's connections on that Chrome will do.
+    assertNull(refused(fill(), with = listOf(grant(id = "g_other", listed = listOf("elsewhere.example")), grant())))
+    // A sensitive site is never released: this phone keeps no allowance of its own to check one against.
     val pay = listOf("paypal.com")
-    val paySig = raw(phone, ChromePairing.sitesBytes(s("chrome_id"), grant, pay))
-    val allowed = SealedRelease.Allowance("paypal.com", raw(phone, ChromePairing.sensitiveBytes(s("chrome_id"), grant, "paypal.com")))
-    assertEquals(Refusal.SENSITIVE, refused(fill(origin = "https://www.paypal.com", signedSites = pay, sitesSig = paySig)))
-    assertNull(refused(fill(origin = "https://www.paypal.com", signedSites = pay, sitesSig = paySig, allowances = listOf(allowed))))
-    val forged = SealedRelease.Allowance("paypal.com", raw(other, ChromePairing.sensitiveBytes(s("chrome_id"), grant, "paypal.com")))
-    assertEquals(Refusal.SENSITIVE, refused(fill(origin = "https://www.paypal.com", signedSites = pay, sitesSig = paySig, allowances = listOf(forged))))
+    assertEquals(Refusal.SENSITIVE, refused(fill(origin = "https://www.paypal.com"), with = listOf(grant(listed = pay))))
     // A hold with nothing to name.
     assertEquals(Refusal.INCOMPLETE, refused(fill(readId = "")))
     // A refused fill makes no release, and nothing is signed.
     var asked = 0
-    assertNull(SealedRelease.release(fill(chrome = "chr_other"), paired, key, now) { asked++; "" })
+    assertNull(SealedRelease.release(fill(chrome = "chr_other"), paired, grants, key, now) { asked++; "" })
     assertEquals(0, asked)
   }
 

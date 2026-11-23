@@ -409,19 +409,17 @@ object KiffMapping {
       excerpt = tafSays(b.context?.text, BROWSER_EXCERPT_MAX)?.takeIf { it.isNotBlank() },
       lines = lines,
       chrome = tafSays(b.chrome?.name, 40)?.takeIf { it.isNotBlank() },
-      fill = b.sealedFill?.let { f -> sealedFill(f, expiresAt) },
-      fieldLabel = b.sealedFill?.fieldLabel?.let { tafSays(it, 200) }?.takeIf { it.isNotBlank() },
+      fill = b.releaseFields?.let { f -> sealedFill(f, expiresAt) },
     )
   }
 
   /**
-   * A sealed fill's fields as the release signs them: copied as planque sent them, never cleaned, since the extension checks the
-   * same bytes. What's drawn of them is read through the phone's own checks ([SealedRelease.refusal], [SealedRelease.part]).
+   * A sealed fill's fields as the release signs them (`release_fields`): copied as planque sent them, never cleaned, since the
+   * extension checks the same bytes. Whether it may be signed is the phone's own checks ([SealedRelease.refusal], against its own
+   * signed grants), and its part is read from the handle ([SealedRelease.part]).
    */
-  fun sealedFill(f: bot.tafs.app.kiff.HeldSealedFill, expiresAt: Long): SealedRelease.Fill = SealedRelease.Fill(
-    chromeId = f.chromeId, op = f.op, sealed = f.sealed, origin = f.origin, fieldRef = f.fieldRef, readId = f.readId, grant = f.grant,
-    sitesSigned = f.sitesSigned?.let { SealedRelease.SitesSigned(it.sites, it.sig) },
-    sensitiveAllowed = f.sensitiveAllowed.map { SealedRelease.Allowance(it.site, it.sig) },
+  fun sealedFill(f: bot.tafs.app.kiff.HeldReleaseFields, expiresAt: Long): SealedRelease.Fill = SealedRelease.Fill(
+    chromeId = f.chromeId, op = f.op, sealed = f.sealed, origin = f.origin, fieldRef = f.fieldRef, readId = f.readId,
     expiresAt = expiresAt,
   )
 

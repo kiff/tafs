@@ -802,6 +802,4 @@ data class BrowserStep(
    * signs and the phone checks. Null for any other step.
    */
   val fill: bot.tafs.app.kiff.SealedRelease.Fill? = null,
-  /** The field's label as the extension read it, plain text: page words, never what the card asks. */
-  val fieldLabel: String? = null,
 )
