@@ -22,6 +22,7 @@ export class Relay {
     this.nonces = new Nonces(now, nonceStore);
     this.ws = null;
     this.ready = false;
+    this.pushed = false;
     this.retries = 0;
     this.retry = null;
   }
@@ -116,7 +117,10 @@ export class Relay {
         this.ready = true;
         this.offset = clockOffset(m, this.now());
         this.retries = 0;
-        this.pinger = setInterval(() => this.runner.active && this.send({ type: "ping" }), PING_MS);
+        // Pinged while a run is on, and, until planque can wake this worker by push (`pushed`, set once the subscription went), all the
+        // time: traffic under 30 s keeps an MV3 worker, and so the socket, alive; an idle one is otherwise down half of each minute.
+        this.pushed = false;
+        this.pinger = setInterval(() => (this.runner.active || !this.pushed) && this.send({ type: "ping" }), PING_MS);
         this.onChange();
         // Connected and proved: the moment to give planque this Chrome's push subscription (push.js).
         Promise.resolve(this.onReady()).catch(() => {});

@@ -223,14 +223,14 @@ a dead connection), and the apps (the replace choice at pairing, the Chrome on e
     once, then after 2, 4, 8, 16 and 30 seconds. Idle, the next alarm opens it.
   - A message carries at most 128 KB. A result over 120 KB is answered `page_too_large` instead, signed as any result.
 - **Keepalive:** `{type: "ping"}` / `{type: "pong"}` every 20 s while a run is on. MV3 keeps the service worker alive
-  while messages flow. An idle connection has none (a keepalive for every idle Chrome would cost a message each 20 s per install).
+  while messages flow. **Until planque can wake the worker by push** (no `pushKey` in the build, or no subscription sent yet), an idle connection pings too, every 20 s, because traffic under 30 s is what keeps an MV3 worker, and so the socket, alive (an idle one is otherwise down about half of each minute). **Once the subscription is with planque, an idle one doesn't ping** (a ping each 20 s for every idle Chrome would cost a message each, about $2 to 3 thousand a month at 10,000 installs): the push wakes it.
 - **The allowlist of released builds** is planque's `deploy/chrome-builds.txt`, one released build per line
   (`<manifest sha256> <version>`). The release workflow opens the planque PR that adds a line, and two people merge it.
   Removing a line revokes that build at the next deploy.
 - **While no run is on,** the extension wakes on an alarm every minute and connects, so planque can hand it a step, and it
   **never closes the connection for being idle** (it did, after a minute, and a step that came while it was closed was refused at once: the
   owner's runs reached their Chrome about half the time). Chrome still stops an idle service worker after about 30 s, which
-  drops the socket, so the alarm is the stopgap and the push below is the cure.
+  drops the socket unless there is traffic (the ping above), so the alarm with the ping is the stopgap and the push below is the cure.
 - **Waking the extension** (`chrome/src/push.js`): a service worker Chrome has stopped can't be reached, so the extension gives planque a
   **Web Push subscription**, and planque sends **one silent push** (no data) when a taf needs this Chrome and it isn't connected; the worker
   wakes on the `push` event and connects. After each welcome the extension sends `{type: "push", subscription: {endpoint, keys: {p256dh, auth}},

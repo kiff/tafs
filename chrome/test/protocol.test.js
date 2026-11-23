@@ -427,6 +427,30 @@ test("the relay says it is ready only once the welcome proved planque, so a push
   forged.relay.close();
 });
 
+test("an idle relay pings every 20 s to keep the worker up, until planque can wake it by push; a run pings either way", async () => {
+  mock.timers.enable({ apis: ["setInterval"] });
+  try {
+    const p = await planque();
+    const runner = { active: false, handle: async () => ({}), stop: async () => {} };
+    const { relay, ws } = await relayWith(p, { runner });
+    await handshake(p, ws);
+    const pings = () => ws.sent.filter((m) => m.type === "ping").length;
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 1, "idle, no push: kept awake");
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 2);
+    relay.pushed = true; // the subscription went: the push wakes it, so the worker may sleep
+    mock.timers.tick(40_000);
+    assert.equal(pings(), 2, "idle with a push subscription: no ping");
+    runner.active = true;
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 3, "a run pings whatever the push");
+    relay.close();
+  } finally {
+    mock.timers.reset();
+  }
+});
+
 test("a step before the welcome, or a forged welcome, ends the connection", async () => {
   const p = await planque();
   const early = await relayWith(p);
