@@ -1,0 +1,2 @@
+• Wenn du eine Karte von Coach beantwortest, bleibt sie oben im Chat, und Coachs Antwort wächst darunter.
+• „Eine neue Card“ zeigt die Grenzen jeder Card hinter ihrem eigenen Werkzeug, damit ein zweites Werkzeug vor deinem Fingerabdruck nie unbegrenzt wirkt.

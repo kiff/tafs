@@ -1,0 +1,2 @@
+• Gdy odpowiesz na kartę Coacha, zostaje ona na górze czatu, a odpowiedź Coacha pojawia się pod nią.
+• „Nowa Card” pokazuje limity każdej Card po jej własnym narzędziu, więc drugie narzędzie nigdy nie wygląda na nieograniczone przed odciskiem palca.

@@ -1,0 +1,2 @@
+• Als je een kaart van Coach beantwoordt, blijft die bovenaan in de chat staan en groeit het antwoord van Coach eronder.
+• ‘Een nieuwe Card’ toont de limieten van elke Card na het eigen hulpmiddel, zodat een tweede hulpmiddel vóór je vingerafdruk nooit onbeperkt lijkt.
