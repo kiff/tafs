@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { type Deps, handle, type HTTPEvent } from "../src/cloud/handler.js";
-import { foldMarks, INBOX_FOLD_AT, INBOX_IDS_MAX, INBOX_KEPT_MS, inboxKey, inboxMarks, markInbox } from "../src/cloud/watch-inbox.js";
+import { foldMarks, INBOX_FOLD_AT, INBOX_IDS_MAX, INBOX_KEPT_MS, INBOX_MARK_MAX, inboxKey, inboxMarks, markInbox } from "../src/cloud/watch-inbox.js";
 import { memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs, fakeAgents } from "./fakes.js";
 
 /**
@@ -144,6 +144,25 @@ describe("the marks kept", () => {
     const state = foldMarks(kept);
     expect(state.read).toHaveLength(INBOX_FOLD_AT);
     expect(state.dismissed).toEqual(["hold_7"]);
+  });
+
+  it("stay under DynamoDB's 400 KB item with every write at its largest, and every write lands", async () => {
+    const coach = memoryCoach(() => NOW);
+    // The store refuses an item past 400 KB, as DynamoDB does.
+    const held = (key: string) => JSON.stringify(coach.held.get(key)?.value ?? []);
+    const append = coach.append.bind(coach);
+    coach.append = async (key, item, until) => {
+      if (Buffer.byteLength(held(key)) + Buffer.byteLength(JSON.stringify(item)) > 400_000) throw new Error("Item size has exceeded the maximum allowed size");
+      return append(key, item, until);
+    };
+    const id = (w: number, i: number) => `hold_${String(w).padStart(3, "0")}_${String(i).padStart(3, "0")}`.padEnd(100, "x");
+    let state;
+    for (let w = 0; w < 60; w++) {
+      state = await markInbox(coach, T, ANA, { read: Array.from({ length: INBOX_MARK_MAX }, (_, i) => id(w, i)), dismissed: [] }, NOW);
+    }
+    expect(Buffer.byteLength(held(inboxKey(T, ANA)))).toBeLessThan(200_000);
+    expect(state!.read).toHaveLength(INBOX_IDS_MAX);
+    expect(state!.read.at(-1)).toBe(id(59, 99));
   });
 
   it("read only what a write may hold", () => {

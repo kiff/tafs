@@ -18,6 +18,11 @@ export const INBOX_MARK_MAX = 100;
 export const INBOX_KEPT_MS = 30 * 24 * 3600_000;
 /** Past this many writes kept, a write folds them into one. */
 export const INBOX_FOLD_AT = 200;
+/**
+ * Past this many bytes of writes kept, a write folds them into one too. The writes are one DynamoDB item, which holds
+ * at most 400 KB: a full write is about 10 KB and a fold about 52 KB, so it never comes near that limit.
+ */
+export const INBOX_FOLD_BYTES = 150_000;
 
 const ID = /^[A-Za-z0-9_-]{1,100}$/;
 
@@ -84,8 +89,8 @@ export async function inboxState(store: CoachStore, tenant: string, person: stri
 }
 
 /**
- * Adds a write, and answers the marks with it. Past INBOX_FOLD_AT writes they're folded into one, so the list stays
- * small; a write landing during that fold may be lost, which only shows a line unread again.
+ * Adds a write, and answers the marks with it. Past INBOX_FOLD_AT writes or INBOX_FOLD_BYTES they're folded into one,
+ * so the item stays small; a write landing during that fold may be lost, which only shows a line unread again.
  */
 export async function markInbox(store: CoachStore, tenant: string, person: string, marks: InboxMarks, now: Date): Promise<InboxState> {
   const key = inboxKey(tenant, person);
@@ -94,7 +99,7 @@ export async function markInbox(store: CoachStore, tenant: string, person: strin
   const writes = await store.get(key);
   const list = Array.isArray(writes) ? writes : [];
   const state = foldMarks(list);
-  if (list.length > INBOX_FOLD_AT) {
+  if (list.length > INBOX_FOLD_AT || Buffer.byteLength(JSON.stringify(list)) > INBOX_FOLD_BYTES) {
     await store.remove(key);
     await store.append(key, state, until);
   }
