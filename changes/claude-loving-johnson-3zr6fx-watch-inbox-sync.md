@@ -1,0 +1,1 @@
+- **Apple Watch: the Inbox's read and dismissed lines stay in step across your watches.** A line you dismiss or read on one watch is gone or read on the others the next time they open, through tafs cloud, by the line's id alone, never its words. It needs a passcode on the watch, as the Inbox does ([watch-app.md](docs/watch-app.md)).

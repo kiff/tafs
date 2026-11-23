@@ -72,7 +72,11 @@ struct WatchPagesView: View {
         }
         .tabViewStyle(.verticalPage)
         // What Needs you reads, and each answer Coach gives this watch, are lines of the Inbox (step iv).
-        .onChange(of: needsYou.state, initial: true) { _, state in inbox.heard(state) }
+        .onChange(of: needsYou.state, initial: true) { _, state in
+            inbox.heard(state)
+            // Once the phone has answered, the lines read and dismissed on the person's other watches (row 21).
+            if case .loaded = state { Task { await inbox.sync() } }
+        }
         .onAppear { coach.onAnswer = { answer, message in inbox.answered(answer, message: message) } }
         .sheet(isPresented: $menu) {
             WatchMenu(pages: WatchPage.pages(), tafs: tafs) { chosen in

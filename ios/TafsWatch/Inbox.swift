@@ -2,7 +2,7 @@ import Foundation
 
 /// One line of v2's Inbox (docs/watch-app.md, "Step (iv)"), as Wear OS's: Coach's answer to the person's words, or a held call
 /// that needs them. Kept on the watch until dismissed, with whether it was read; cleared on sign-out and whenever this watch has
-/// no passcode. Read and dismissed stay on this watch until tafs cloud keeps them in step with the phone (server piece c).
+/// no passcode. Read and dismissed are kept in step across the person's watches by tafs cloud, by id alone (row 21).
 struct InboxLine: Codable, Equatable, Identifiable, Sendable {
     enum Kind: String, Codable, Sendable {
         /// Coach's answer to words sent from this watch.
@@ -122,11 +122,17 @@ final class InboxModel: ObservableObject {
     private let lock: WristLock
     private let clock: () -> Date
     private var dismissed: Set<String>
+    /// Row 21: the phone, which reads and sends the marks tafs cloud keeps; none in a test that doesn't use it.
+    private let phone: PhoneAsking?
+    /// The last mark sent, so a test can wait for it.
+    private(set) var marking: Task<Void, Never>?
 
-    init(store: InboxStore = FileInboxStore(), lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init) {
+    init(store: InboxStore = FileInboxStore(), lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init,
+         phone: PhoneAsking? = nil) {
         self.store = store
         self.lock = lock
         self.clock = clock
+        self.phone = phone
         kept = lock.isSecure
         dismissed = store.dismissed()
         if kept {
@@ -189,27 +195,86 @@ final class InboxModel: ObservableObject {
 
     /// Opened: read.
     func markRead(_ id: String) {
-        guard lines.contains(where: { $0.id == id && !$0.read }) else { return }
+        guard let line = lines.first(where: { $0.id == id && !$0.read }) else { return }
         save(lines.map { line in
             var line = line
             if line.id == id { line.read = true }
             return line
         })
+        // Coach's answer comes in read: only a held call's line is news to the person's other watches.
+        if line.kind == .held { mark(WatchInboxMarks(read: [line.ref])) }
     }
 
     /// Dismiss: gone from the Inbox, and it stays gone while the phone still lists it.
     func dismiss(_ id: String) {
-        guard lines.contains(where: { $0.id == id }) else { return }
+        guard let line = lines.first(where: { $0.id == id }) else { return }
         takeAway([id])
         save(lines.filter { $0.id != id })
+        mark(WatchInboxMarks(dismissed: [line.ref]))
     }
 
     /// Clear read: every read line goes, and stays gone while the phone still lists it.
     func clearRead() {
-        let read = lines.filter(\.read).map(\.id)
+        let read = lines.filter(\.read)
         guard !read.isEmpty else { return }
-        takeAway(read)
+        takeAway(read.map(\.id))
         save(lines.filter { !$0.read })
+        mark(WatchInboxMarks(dismissed: read.map(\.ref)))
+    }
+
+    // MARK: In step across the person's watches (row 21, docs/watch-app.md)
+
+    /// Reads the marks tafs cloud keeps, through the phone, and takes them in: when the app opens (after Needs you) and when
+    /// the Inbox shows. With no passcode nothing is kept, so nothing is read. A phone from before the marks, or no answer,
+    /// leaves the lines as this watch has them.
+    func sync() async {
+        guard kept, let phone else { return }
+        let reply = await phone.ask(WatchRequest(.inboxMarks, made: clock()))
+        guard kept, let reply, reply.outcome == .ok, let marks = reply.marks else { return }
+        take(marks)
+    }
+
+    /// The marks from tafs cloud: a line dismissed on any watch goes, and a held call's stays away while the phone lists it;
+    /// a line read on any watch is read here too. Nothing is ever brought back.
+    func take(_ marks: WatchInboxMarks) {
+        guard kept else { return }
+        let gone = Set(marks.dismissed)
+        let read = Set(marks.read)
+        // Each dismissed id as a held call's, so a call the phone lists later doesn't come in; one the phone doesn't list
+        // goes at the next read (`prune`), so the list never grows.
+        let away = dismissed.union(gone.map(InboxLine.heldID))
+        if away != dismissed {
+            dismissed = away
+            store.writeDismissed(dismissed)
+        }
+        let next = lines.compactMap { line -> InboxLine? in
+            guard !gone.contains(line.ref) else { return nil }
+            var line = line
+            if read.contains(line.ref) { line.read = true }
+            return line
+        }
+        if next != lines { save(next) }
+    }
+
+    /// Sends a mark through the phone, in chunks tafs cloud takes. One that doesn't arrive changes nothing on this watch, which
+    /// keeps its own marks as before.
+    private func mark(_ marks: WatchInboxMarks) {
+        guard kept, let phone else { return }
+        let checked = marks.checked
+        let chunks = stride(from: 0, to: checked.read.count, by: WatchInboxMarks.limit).map {
+            WatchInboxMarks(read: Array(checked.read[$0..<min($0 + WatchInboxMarks.limit, checked.read.count)]))
+        } + stride(from: 0, to: checked.dismissed.count, by: WatchInboxMarks.limit).map {
+            WatchInboxMarks(dismissed: Array(checked.dismissed[$0..<min($0 + WatchInboxMarks.limit, checked.dismissed.count)]))
+        }
+        guard !chunks.isEmpty else { return }
+        let clock = self.clock
+        let before = marking
+        marking = Task {
+            await before?.value
+            for chunk in chunks {
+                _ = await phone.ask(WatchRequest(.inboxMark, made: clock(), marks: chunk))
+            }
+        }
     }
 
     /// Signed out: nothing of the Inbox stays on the watch, the ids taken away included.

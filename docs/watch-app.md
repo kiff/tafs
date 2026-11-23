@@ -46,6 +46,10 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   - `calendar`, `day` as `YYYY-MM-DD`, or today in the account's zone (the phone's when it can't be read): tafs cloud's `GET /v1/calendar` for that day
     alone, its line and that day's events in time order with each taf's name.
   - `account`: who is signed in, the account's name (else its slug) and the plan's line, as Account shows it.
+- **The Inbox's marks** (row 21): `inbox_marks` reads the ids the person read and dismissed (`GET /v1/watch/inbox`), and
+  `inbox_mark` sends 1 to 100 ids to mark (`POST /v1/watch/inbox`), each checked on both ends as tafs cloud takes it
+  (1 to 100 of `A-Za-z0-9_-`); anything else is refused before tafs cloud is asked. Ids only, with the phone's session and
+  nothing signed: a mark changes no one's power. A phone from before them answers `not_yet`.
 - **Live only:** each request goes with WatchConnectivity's message data and a reply, never
   queued. It carries the time it was made, and the phone drops one more than 30 seconds old,
   either way.
@@ -228,10 +232,19 @@ Nothing leaves the watch before Send:
   is Needs you as the phone answered now, with the home counting those calls: a call that needs the person is never hidden
   behind "Nothing new". A locked Apple Watch doesn't show the app, so the passcode is what's checked.
 - **Signed out** on the phone: nothing of the Inbox stays, the ids taken away included.
-- **Read and dismissed stay on this watch** until its side of tafs cloud's marks is built (server piece c). tafs cloud's
-  side is in: `GET`/`POST /v1/watch/inbox` (docs/api.md) keeps the lines' ids read and dismissed per person, and a
-  mark sends the person's phones `change: watch_inbox`. Still to build: the relay's read and mark, and the watch merging
-  the marks with its own ids taken away.
+- **Read and dismissed, in step across the person's watches** (row 21; `InboxModel.sync`, `take`; tested in
+  `InboxModelTests` and `WatchInboxMarksTests`): tafs cloud keeps the lines' ids read and dismissed per person
+  (`GET`/`POST /v1/watch/inbox`, docs/api.md), by id alone: a held call's KIFF id, or the id of the message whose answer
+  the line is. Never a line's words, its taf or an amount.
+  - **Read** after each Needs you read that reaches the phone (the app opened, Coach's home or the Inbox shown), only while
+    the Inbox is kept (a passcode). A line dismissed on any watch goes, and a held call's id is kept with the ids taken
+    away, so the call stays away while the phone lists it (an id the phone doesn't list goes at the next read, so the
+    list never grows); a line read on any watch is read here. Nothing is ever brought back.
+  - **Sent:** opening a held call's line (Coach's answer comes in read, so it marks nothing), Dismiss, and Clear read (in
+    chunks of 100), one after another. A mark that doesn't arrive changes nothing on this watch, which keeps its own.
+  - **A phone from before the marks**, or no answer, leaves the lines as this watch has them.
+  - **Not here:** the push `change: watch_inbox`. The watch reads the marks when it opens, and iOS throttles background
+    pushes anyway.
 - **Words:** all already shared (`watch.dismiss`, `watch.clear_read`, `watch.already_answered`, `watch.inbox_empty`,
   `watch.inbox_unread`).
 

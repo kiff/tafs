@@ -9,7 +9,7 @@ struct TafsWatchApp: App {
     @StateObject private var tafs = TafsModel(phone: PhoneLink.shared)
     @StateObject private var coach = CoachModel(phone: PhoneLink.shared)
     /// v2's Inbox, kept on the watch while it has a passcode (step iv).
-    @StateObject private var inbox = InboxModel()
+    @StateObject private var inbox = InboxModel(phone: PhoneLink.shared)
     /// v2: signed out on this watch alone (Account's Sign out), kept across restarts.
     @StateObject private var signIn = WatchSignIn()
     @Environment(\.scenePhase) private var scenePhase

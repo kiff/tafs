@@ -4,8 +4,8 @@ import Foundation
 // Both apps compile this file. A request goes live with WatchConnectivity's message data and a
 // reply, never queued: one made more than `WatchRequest.maxAge` ago is dropped on the phone.
 
-/// A request from the watch. Only the twelve kinds below decode, so anything else, an approval
-/// among them, never reaches the phone's code.
+/// A request from the watch. Only the kinds below decode, so anything else, an approval among
+/// them, never reaches the phone's code.
 struct WatchRequest: Codable, Equatable, Sendable {
     enum Kind: String, Codable, Sendable {
         case needsYou = "needs_you"
@@ -37,14 +37,19 @@ struct WatchRequest: Codable, Equatable, Sendable {
         /// The watch's own recording, sent ahead as a file (`WatchVoice`), turned into text on the phone with its on-device
         /// recognizer only, by the recording's id in `message`; only the text comes back (`WatchReply.text`). Never sent twice.
         case transcribe
+        /// The Inbox's lines the person read and dismissed on any of their watches (row 21), by id alone, as tafs cloud keeps
+        /// them (`GET /v1/watch/inbox`). Read only.
+        case inboxMarks = "inbox_marks"
+        /// Marks Inbox lines read or dismissed (`marks`), by id alone (`POST /v1/watch/inbox`). It changes no one's power.
+        case inboxMark = "inbox_mark"
 
         /// A read changes nothing, so one whose send failed may go once more (`PhoneRoute`). A write (Refuse, Halt, Halt
         /// all, a Coach message) is never sent twice: a send that failed may still have arrived. Nor is a recording's
         /// `transcribe`: the phone erases the file once it's read, so a second ask would find nothing.
         var isRead: Bool {
             switch self {
-            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat: return true
-            case .refuse, .halt, .haltAll, .coach, .coachSend, .transcribe: return false
+            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks: return true
+            case .refuse, .halt, .haltAll, .coach, .coachSend, .transcribe, .inboxMark: return false
             }
         }
     }
@@ -74,9 +79,11 @@ struct WatchRequest: Codable, Equatable, Sendable {
     var day: String?
     /// Coach's answer so far (`coachRead`): where it will be, as the phone said when it sent the words.
     var ticket: WatchCoachTicket?
+    /// `inboxMark`: the ids to mark read or dismissed.
+    var marks: WatchInboxMarks?
 
     init(_ kind: Kind, made: Date, hold: String? = nil, taf: String? = nil, text: String? = nil, message: String? = nil,
-         day: String? = nil, ticket: WatchCoachTicket? = nil) {
+         day: String? = nil, ticket: WatchCoachTicket? = nil, marks: WatchInboxMarks? = nil) {
         self.kind = kind
         self.made = made
         self.hold = hold
@@ -85,6 +92,7 @@ struct WatchRequest: Codable, Equatable, Sendable {
         self.message = message
         self.day = day
         self.ticket = ticket
+        self.marks = marks
     }
 
     /// A calendar day as the watch names it: `YYYY-MM-DD`, and nothing else.
@@ -109,6 +117,8 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .askFull: return (ticket?.isComplete ?? false) && ticket?.askID != nil
         case .tafChat: return given(taf) && (taf ?? "").count <= Self.tafIDLimit
         case .transcribe: return WatchVoice.isID(message)
+        case .inboxMarks: return true
+        case .inboxMark: return marks?.isComplete ?? false
         }
     }
 }
@@ -159,11 +169,13 @@ struct WatchReply: Codable, Equatable, Sendable {
     var zone: String?
     /// `transcribe`: the recording's words, as the phone's on-device recognizer heard them.
     var text: String?
+    /// `inboxMarks` and `inboxMark`: the lines read and dismissed, as tafs cloud keeps them now.
+    var marks: WatchInboxMarks?
 
     init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
          brief: WatchBrief? = nil, tafPage: WatchTafPage? = nil, calendar: WatchCalendarDay? = nil, account: WatchAccount? = nil,
          line: String? = nil, ticket: WatchCoachTicket? = nil, answering: Bool? = nil, chat: [WatchChatLine]? = nil,
-         zone: String? = nil, text: String? = nil) {
+         zone: String? = nil, text: String? = nil, marks: WatchInboxMarks? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
         self.tafs = tafs
@@ -178,6 +190,38 @@ struct WatchReply: Codable, Equatable, Sendable {
         self.chat = chat
         self.zone = zone
         self.text = text
+        self.marks = marks
+    }
+}
+
+/// The watch Inbox's lines read and dismissed (row 21), by id alone: a held call's KIFF id, or the id of the message whose
+/// answer the line is. Never a line's words, its taf or an amount. tafs cloud keeps them per person (`/v1/watch/inbox`), so
+/// each of the person's watches shows the same lines read and gone.
+struct WatchInboxMarks: Codable, Equatable, Sendable {
+    var read: [String] = []
+    var dismissed: [String] = []
+
+    /// The most ids one mark takes, as tafs cloud does.
+    static let limit = 100
+
+    /// An id tafs cloud takes: 1 to 100 letters, digits, `_` or `-`.
+    static func isID(_ value: String) -> Bool {
+        value.range(of: #"^[A-Za-z0-9_-]{1,100}$"#, options: .regularExpression) != nil
+    }
+
+    /// A mark to send: 1 to `limit` ids in all, each one tafs cloud takes.
+    var isComplete: Bool {
+        let all = read + dismissed
+        return !all.isEmpty && all.count <= Self.limit && all.allSatisfy(Self.isID)
+    }
+
+    /// Only the ids tafs cloud takes, each once, so a read never trips on one it can't use.
+    var checked: WatchInboxMarks {
+        func each(_ ids: [String]) -> [String] {
+            var seen = Set<String>()
+            return ids.filter { Self.isID($0) && seen.insert($0).inserted }
+        }
+        return WatchInboxMarks(read: each(read), dismissed: each(dismissed))
     }
 }
 
