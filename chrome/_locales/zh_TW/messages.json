@@ -88,5 +88,12 @@
   "hand_show": { "message": "顯示給我看", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "完成", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "暫時不要", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "僅在您信任此頁面的地方輸入。", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "僅在您信任此頁面的地方輸入。", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "自 taf 讀取後頁面已變更，因此沒有可指出的項目。請依 taf 所說尋找。", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "該欄位或按鈕目前不在畫面上。加寬視窗可能會顯示，或請依 taf 所說尋找。", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "頁面沒有回應。請依 taf 所說尋找。", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "這就是該頁面。taf 未指定要指出的欄位或按鈕。", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "已交給您", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "您已完成", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "您選了「暫時不要」", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

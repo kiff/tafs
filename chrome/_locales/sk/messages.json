@@ -88,5 +88,12 @@
   "hand_show": { "message": "Ukážte mi to", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Hotovo", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Teraz nie", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Píšte len tam, kde tejto stránke dôverujete.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Píšte len tam, kde tejto stránke dôverujete.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Stránka sa zmenila, odkedy ju taf prečítal, takže nie je na čo ukázať. Hľadajte to podľa toho, čo hovorí taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "To pole alebo tlačidlo teraz nie je na obrazovke. Širšie okno ho možno ukáže, alebo ho hľadajte podľa toho, čo hovorí taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Stránka neodpovedala. Hľadajte to podľa toho, čo hovorí taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Toto je tá stránka. Taf neuviedol žiadne pole ani tlačidlo, na ktoré by sa dalo ukázať.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Odovzdané vám", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Urobili ste to", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Povedali ste „Teraz nie“", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

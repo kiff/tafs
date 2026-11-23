@@ -88,5 +88,12 @@
   "hand_show": { "message": "मलाई देखाउनुहोस्", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "भयो", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "अहिले होइन", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "यो पृष्ठमा विश्वास गर्ने ठाउँमा मात्र लेख्नुहोस्।", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "यो पृष्ठमा विश्वास गर्ने ठाउँमा मात्र लेख्नुहोस्।", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "taf ले पढेपछि पृष्ठ बदलिएको छ, त्यसैले देखाउन केही छैन। taf ले भनेजस्तै खोज्नुहोस्।", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "त्यो फिल्ड वा बटन अहिले स्क्रिनमा छैन। फराकिलो विन्डोमा देखिन सक्छ, वा taf ले भनेजस्तै खोज्नुहोस्।", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "पृष्ठले जवाफ दिएन। taf ले भनेजस्तै खोज्नुहोस्।", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "यही त्यो पृष्ठ हो। taf ले देखाउनका लागि कुनै फिल्ड वा बटन तोकेन।", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "तपाईंलाई सुम्पियो", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "तपाईंले गर्नुभयो", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "तपाईंले “अहिले होइन” भन्नुभयो", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

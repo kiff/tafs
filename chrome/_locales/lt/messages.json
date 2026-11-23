@@ -88,5 +88,12 @@
   "hand_show": { "message": "Parodykite man", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Atlikta", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Ne dabar", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Rašykite tik ten, kur pasitikite šiuo puslapiu.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Rašykite tik ten, kur pasitikite šiuo puslapiu.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Puslapis pasikeitė nuo tada, kai taf jį perskaitė, todėl nėra ką parodyti. Ieškokite taip, kaip sako taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Šio laukelio ar mygtuko dabar ekrane nėra. Platesniame lange jis gali matytis, arba ieškokite taip, kaip sako taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Puslapis neatsakė. Ieškokite taip, kaip sako taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Tai tas puslapis. Taf nenurodė laukelio ar mygtuko, į kurį parodyti.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Perduota jums", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Jūs tai padarėte", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Pasakėte „Ne dabar“", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

@@ -88,5 +88,12 @@
   "hand_show": { "message": "Mostrami", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Fatto", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Non ora", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Scrivi solo dove ti fidi di questa pagina.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Scrivi solo dove ti fidi di questa pagina.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "La pagina è cambiata da quando il taf l'ha letta, quindi non c'è niente da indicare. Cercalo come dice il taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Quel campo o pulsante non è sullo schermo adesso. Una finestra più larga potrebbe mostrarlo, oppure cercalo come dice il taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "La pagina non ha risposto. Cercalo come dice il taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Questa è la pagina. Il taf non ha indicato un campo o un pulsante da mostrare.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Passato a te", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "L'hai fatto", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Hai detto «Non ora»", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

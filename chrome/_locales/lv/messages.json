@@ -88,5 +88,12 @@
   "hand_show": { "message": "Parādi man", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Gatavs", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Ne tagad", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Raksti tikai tur, kur uzticies šai lapai.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Raksti tikai tur, kur uzticies šai lapai.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Lapa ir mainījusies, kopš taf to izlasīja, tāpēc nav uz ko norādīt. Meklē to tā, kā saka taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Šis lauks vai poga pašlaik nav redzama ekrānā. Platāks logs to var parādīt, vai meklē to tā, kā saka taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Lapa neatbildēja. Meklē to tā, kā saka taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Šī ir tā lapa. Taf nenosauca lauku vai pogu, uz ko norādīt.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Nodots tev", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Tu to izdarīji", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Tu teici “Ne tagad”", "description": "Step list: the person pressed Not now on the Your turn card."}
 }
