@@ -1,0 +1,3 @@
+• ‘Zo werkt tafs’ legt nu je Chrome uit en het inloggen met een code per e-mail.
+• ‘Coach zijn tools geven’ zegt het nu als er niets verbonden kon worden, in plaats van stil te blijven.
+• De ‘6e oproep’ van een Card staat nu goed in het Turkmeens, Urdu, Hindi, Bengaals en Mongools.

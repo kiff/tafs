@@ -1,0 +1,1 @@
+- **iPhone and iPad: a Card's "this would be the 6th call" reads right in Turkmen, Urdu, Hindi, Bengali and Mongolian.** The system wrote English ordinals for some of them ("6th") and Hindi's in the masculine; the app now writes these five from their own rules (6-njy, 6ویں, 6ठी, 6ষ্ঠ, 6-р). Every other language is unchanged.

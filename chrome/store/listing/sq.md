@@ -15,6 +15,7 @@ tafs për Chrome i lë tafs tuaj të punojnë në Chrome-in tuaj, vetëm në faq
 • Chrome kërkon një herë, gjatë instalimit, qasje në të gjitha faqet. tafs punon vetëm në faqet që rendit çdo detyrë dhe që ju i miratoni në telefon.
 • Pagesa, bërja e një porosie dhe plotësimi i një hyrjeje të ruajtur presin gjithmonë miratimin tuaj në telefon.
 • Ai e lexon një faqe si tekst dhe fusha formulari, pa fushat e fjalëkalimit, kartës dhe kodit. Nuk i lexon kurrë skedat e tjera ose historikun tuaj.
+• Një taf mund t'ju kalojë një hap në një faqe, si shkrimi i një kërkimi ose i një numri karte. E bëni vetë, dhe kur e lexon sërish faqen, ajo që shkruat në fusha lihet jashtë.
 • Faqet e bankave, portofolave, menaxherëve të fjalëkalimeve, pagesave, shëndetit dhe qeverisë nuk përdoren kurrë, përveç nëse lejoni një për një detyrë në telefon.
 • Hyrjet e ruajtura janë opsionale dhe të vulosura në këtë kompjuter. tafs dhe KIFF nuk i shohin kurrë.
 • Paneli anësor shfaq taf-in që punon në këtë Chrome dhe ju flisni me të aty, si në aplikacionin tafs. “Konfiguro një taf të ri për këtë sajt” hap Coach-in, i cili e sheh një faqe vetëm kur klikoni “Ndaje këtë faqe”, dhe atëherë vetëm atë faqe, me të njëjtat fusha të hequra.

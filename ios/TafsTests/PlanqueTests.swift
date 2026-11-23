@@ -1108,6 +1108,74 @@ extension PlanqueTests {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A re-pairing reads the Chromes and the connections again just before it signs, and signs only what the owner was shown
+    /// (parity "Phones" 14, as Android's `confirmChrome`): a list that changed meanwhile, a Chrome that went, or a read that failed
+    /// signs nothing, sends nothing, and says so. The same list as shown is signed once and carried.
+    func testARePairingSignsOnlyWhatTheOwnerWasShownReadAgainJustBefore() async throws {
+        let signer = P256Signer()
+        let model = await planqueModel(signer: signer)
+        StubProtocol.responses["POST /v1/accounts/t_01/chromes/pairings"] = (201, #"{"pairing":"pr_1","lookup":"K7QF"}"#)
+        let maybeOpened = await model.openChromePairing()
+        let opened = try XCTUnwrap(maybeOpened)
+        let chromeKey = P256.Signing.PrivateKey().publicKey.derRepresentation
+        let key = ChromePairing.base64URL(chromeKey)
+        let proof = ChromePairing.base64URL(ChromePairing.hmac(opened.secret, ChromePairing.extensionProofLabel, chromeKey))
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, #"{"pairing":"pr_1","status":"waiting_for_phone","key":"\#(key)","key_sha256":"x","proof":"\#(proof)","version":"0.1.0","browser":"Chrome 131","os":"macOS"}"#)
+        guard case .offered(let offer) = await model.chromePairingStep(opened) else { return XCTFail("a proven offer") }
+
+        // The old Chrome holds one connection whose sites this phone signed for it.
+        let sitesSig = try ChromePairing.rawSignature(fromDER: signer.approvalKey.signature(
+            for: try ChromePairing.sitesBytes(chromeID: "chr_old", grant: "g1", sites: ["wikipedia.org"])).derRepresentation.base64EncodedString())
+        let oldChrome = #"{"chrome_id":"chr_old","name":"Old Mac","connections":[{"grant":"g1","name":"Wiki","sites":["wikipedia.org"]}]}"#
+        let grants = #"{"grants":[{"id":"g1","status":"connected","text":"","digest":"d","events":[],"chrome_sites_sig":"\#(sitesSig)","request":{"server":"s","agent":"a","tools":[],"browser":{"driver":"extension","chrome":"chr_old","chrome_name":"Old Mac","sites":["wikipedia.org"]}}}]}"#
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":["# + oldChrome + "]}")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, grants)
+        await model.refreshChromes()
+        await model.refreshConnections()
+        let old = try XCTUnwrap(model.chromes?.first)
+        let shown = ChromeReplace.carried(from: old, in: model.grants, phoneKey: model.approvalPublicKey)
+        XCTAssertEqual(shown, [ChromePairing.Carried(grant: "g1", sites: ["wikipedia.org"])])
+        StubProtocol.responses["POST /v1/accounts/t_01/chromes/pairings/pr_1/confirm"] = (200, #"{"chrome_id":"chr_new","name":"New Mac"}"#)
+        let confirms = { self.sent("POST", "planque.test", "/v1/accounts/t_01/chromes/pairings/pr_1/confirm") }
+
+        // Shown something else (nothing moving): what's live differs, so nothing is signed or sent.
+        signer.prompts = []
+        var paired = await model.confirmChrome(opened, offer: offer, name: "New Mac", replacing: old, shown: [])
+        XCTAssertFalse(paired)
+        XCTAssertEqual(model.chromesError, Words.Chrome.replaceChanged)
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID for a list the owner didn't see")
+        XCTAssertTrue(confirms().isEmpty)
+
+        // The old Chrome went meanwhile: nothing is signed against a stale copy.
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[]}"#)
+        paired = await model.confirmChrome(opened, offer: offer, name: "New Mac", replacing: old, shown: shown)
+        XCTAssertFalse(paired)
+        XCTAssertEqual(model.chromesError, Words.Chrome.replaceChanged)
+        XCTAssertTrue(confirms().isEmpty)
+
+        // The connections couldn't be read: the list isn't known to be live, so nothing is signed.
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":["# + oldChrome + "]}")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (500, #"{"error":"down"}"#)
+        paired = await model.confirmChrome(opened, offer: offer, name: "New Mac", replacing: old, shown: shown)
+        XCTAssertFalse(paired)
+        XCTAssertTrue(model.chromesError?.hasPrefix(Words.Chrome.notLoaded(why: "").trimmingCharacters(in: .whitespaces)) ?? false, model.chromesError ?? "")
+        XCTAssertTrue(signer.prompts.isEmpty)
+        XCTAssertTrue(confirms().isEmpty)
+
+        // The same as shown: one Face ID, and the pairing carries exactly that.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, grants)
+        paired = await model.confirmChrome(opened, offer: offer, name: "New Mac", replacing: old, shown: shown)
+        XCTAssertTrue(paired, model.chromesError ?? "")
+        XCTAssertEqual(signer.prompts.filter { $0 == Words.Chrome.pairPrompt(name: "New Mac") }.count, 1)
+        let sentBody = body(confirms().first)
+        XCTAssertEqual(sentBody["replaces"] as? String, "chr_old")
+        let carried = try XCTUnwrap(sentBody["carried"] as? [[String: Any]])
+        XCTAssertEqual(carried.count, 1)
+        XCTAssertEqual(carried.first?["grant"] as? String, "g1")
+        XCTAssertEqual(carried.first?["sites"] as? [String], ["wikipedia.org"])
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Only the approval key pairs a Chrome: a phone without one doesn't open a pairing, and says why.
     func testAPhoneWithoutAnApprovalKeyDoesntPairAChrome() async {
         let signer = P256Signer()

@@ -2516,12 +2516,16 @@ final class TafsCloud {
             var give = ""
             var notNow = ""
             var row = ""
-            enum CodingKeys: String, CodingKey { case title, intro, groups, details, ask, give, notNow = "not_now", row }
+            /// What to say when Give went but nothing was connected (tafs cloud still asks for the same batch); empty from a
+            /// tafs cloud that doesn't send it, when the app's own `coach.tools_not_given` is said.
+            var notConnected = ""
+            enum CodingKeys: String, CodingKey { case title, intro, groups, details, ask, give, notNow = "not_now", row, notConnected = "not_connected" }
 
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 title = Self.text(c, .title); intro = Self.text(c, .intro); details = Self.text(c, .details)
                 ask = Self.text(c, .ask); give = Self.text(c, .give); notNow = Self.text(c, .notNow); row = Self.text(c, .row)
+                notConnected = Self.text(c, .notConnected)
                 groups = ((try? c.decodeIfPresent([LenientItem<Group>].self, forKey: .groups)) ?? nil)?.compactMap(\.value) ?? []
             }
 
@@ -2638,12 +2642,15 @@ final class TafsCloud {
         struct Response: Decodable {
             let messages: [ChatMessage]; let components: [LenientShown]?; let working: Working?; let coachLines: [LenientLine]?
             let items: [LenientDrive]?; let steering: LenientSteering?
-            enum CodingKeys: String, CodingKey { case messages, components, working, items, steering, coachLines = "coach_lines" }
+            /// One with no words, or of another shape, is no line, never the thread with it.
+            let failed: RunFailed.Lenient?
+            enum CodingKeys: String, CodingKey { case messages, components, working, items, steering, failed, coachLines = "coach_lines" }
         }
         let r = try KIFFClient.decoder.decode(Response.self, from: data)
         return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)),
                            working: r.working?.session, coachLines: (r.coachLines ?? []).compactMap(\.line),
-                           drives: (r.items ?? []).compactMap(\.drive), workingRun: r.working?.run, steering: r.steering?.steering)
+                           drives: (r.items ?? []).compactMap(\.drive), workingRun: r.working?.run, steering: r.steering?.steering,
+                           failed: r.failed?.failed)
     }
 
     /// How a task Coach handed a taf went (kiff/tafs#206), shown in Coach's chat until

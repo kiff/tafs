@@ -1,0 +1,1 @@
+- **The app asks the server less while waiting (iPhone and iPad):** a taf's chat and Setup's chat read slower the longer they wait for an answer, and People reads once a minute, slower while nothing changes and not at all while the app is in the background ([docs/ios-app.md](docs/ios-app.md)).

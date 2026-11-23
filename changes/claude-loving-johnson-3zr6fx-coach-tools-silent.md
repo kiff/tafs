@@ -1,0 +1,1 @@
+- **iPhone and iPad: "Give Coach its tools" no longer ends silently when nothing was connected.** If the tools went but tafs cloud still asks for the same ones, the step now says Coach's tools weren't given (in tafs cloud's words when it sends them), instead of showing "Giving" and then the same step again. As on Android.

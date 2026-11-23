@@ -111,7 +111,10 @@ words, as Android's ([android-app.md](android-app.md)). A later read with none c
 shape, is no line, and a new chat with nothing in it shows none. It comes after everything else, held cards included,
 and not while an answer streams or a new message is being sent. A run followed live here already ended with its own line
 and Retry (`ChatState.ended`, `endedRun`), so the thread's line for that run isn't added too; another run's still is. `ChatTests` reads tafs cloud's own answer,
-`contracts/conversation-failed.json`. Coach's chat doesn't draw it yet.
+`contracts/conversation-failed.json`. Coach's chat draws it by the same rules (`SetupThread.failed`,
+`AppModel.setupRunFailedLine`): last, after everything else; none while Coach's answer streams or a message is being sent,
+and none in a new conversation; a run this chat followed live and saw fail (`setupEnded`, with Retry, and `setupEndedRun`)
+isn't said twice. `SetupTests` reads the same contract.
 
 **A connection that was refused** (`TafsCloud.ChatMessage.refusedLines`, `RefusedLines`): a taf's message
 may carry tafs cloud's `refused` ([chat.md](chat.md)), the failed step's words, the server's reason ("Why:
@@ -797,6 +800,11 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   approve changed since it was shown" (`version.out_of_date_card`), and the next Give signs exactly it. Cards that
   come only once the batch is in were never on the step, so they aren't given with it either: the step is drawn
   again with them, and the next Give gives them behind its own Face ID.
+- **A batch that connected nothing is said, never redrawn silently.** If KIFF took the batch but tafs cloud's next read still
+  asks for the very same batch (KIFF counted every tool as already there), Give says so: tafs cloud's
+  `coach_tools_step.not_connected` when it sends it, else "Coach's tools weren't given." (`coach.tools_not_given`). A Card
+  drafted once the batch is in is the normal next step, above. As on Android (tafs#1853). Test:
+  `CoachToolsTests.testABatchThatConnectsNothingSaysSoInsteadOfRedrawingSilently`.
 - **After Not now** (`CoachToolsRow`): one line above the conversation, tafs cloud's `row`, which
   opens the same step. It's never a panel there, so the message box keeps its room.
 - **A phone that can't approve yet** reads why in the button's place (`ApprovalGate`), and
@@ -1447,9 +1455,21 @@ and a connection carried here from an earlier Chrome has none of its own to move
 chrome_sites_sig}` (`PlanqueClient.switchChrome`) moves it; its sites and Card stay, and the extension runs nothing whose sites aren't
 signed for it. The Chromes and the connection are read again after it goes through.
 
+## Repeated reads slow down and spread
+
+Where a screen repeats a server read (`PollPace`; docs/scale.md): a **taf's chat follows a run to its end** as Android does
+(docs/chat.md, "A run Android follows to its end"; `followChat`): with no stream, while the taf is at work or owes an answer, every
+2.5 s for the first minute, 5 s to the third, 10 s to the sixth, then 15 s, for about 31 minutes (`PollPace.followDelay`, `chatFollowLimit`),
+then not again until the owner writes; a run at work that nothing here follows is picked back up by its stream (`resumeChat`); with a
+stream open, the thread is still read every 30 s (`chatStreamCheck`), and once tafs cloud says nothing is at work and the live answer has
+stood more than 15 s, it goes and the quiet stream is closed (`dropStaleLive`); **Setup's chat** reads at 1 s (3 s idle) for ten reads, then 2, 4 and at most 8 times
+that, and a card still waiting on its grant keeps the read going at the base pace (`PollPace.setupWait`); **People** reads on open and on pull-to-refresh, then every minute while it
+changes and slower (up to five minutes) while the answers are the same, and **not while the app isn't in front**. Every wait is up to a fifth shorter, never
+longer, so phones that started together don't read together. **Coming back to the app reads a chat's or Setup's thread once, at once** (not after the next slowed-down wait). A stream or a push, where there is one, is what tells a screen of a change; this is only the fallback.
+
 ## Pairing a Chrome that replaces one
 
-"Your Chrome" 1 ([chrome.md](chrome.md)): on the offered Chrome's screen a pick says which paired Chrome this one replaces, or "A new Chrome (replaces none)". It starts on the Chrome with the offer's `profile_id` (an id the extension keeps for its Chrome profile and planque relays as a hint), else on the one paired Chrome of the same browser and system, else on none (`ChromeReplace.preselect`; two alike is never a guess). Choosing one shows what moves ("Moves to this Chrome: wikipedia.org"), the connections that end with the old Chrome, and that the old Chrome is unpaired once this one is paired. The confirm sends `replaces` and `carried` (`[{grant, sites}]`, at most 50), and the same fingerprint signs `carried` inside the pairing the extension checks (`ChromePairing.signedBytes`, tafs#1754), so planque can't change the list; with nothing chosen, nothing moves and the pairing is as before. **A connection moves only if the phone's own key verifies its sites:** planque's grant read gives each extension connection's `chrome_sites_sig` (the phone's signature over `{chrome_id, grant, sites}` made at approval) and `chrome_sites_carried` (planque#369), and `ChromeReplace.carried` carries a connection only when `ChromePairing.sitesSignatureHolds` accepts the signature for the Chrome being replaced (never what planque says of the sites). A connection with no verifying signature, or one carried here from an earlier Chrome (empty signature), ends with the old Chrome, as unpairing does, and the screen says so. The connections are read again just before the confirm.
+"Your Chrome" 1 ([chrome.md](chrome.md)): on the offered Chrome's screen a pick says which paired Chrome this one replaces, or "A new Chrome (replaces none)". It starts on the Chrome with the offer's `profile_id` (an id the extension keeps for its Chrome profile and planque relays as a hint), else on the one paired Chrome of the same browser and system, else on none (`ChromeReplace.preselect`; two alike is never a guess). Choosing one shows what moves ("Moves to this Chrome: wikipedia.org"), the connections that end with the old Chrome, and that the old Chrome is unpaired once this one is paired. The confirm sends `replaces` and `carried` (`[{grant, sites}]`, at most 50), and the same fingerprint signs `carried` inside the pairing the extension checks (`ChromePairing.signedBytes`, tafs#1754), so planque can't change the list; with nothing chosen, nothing moves and the pairing is as before. **A connection moves only if the phone's own key verifies its sites:** planque's grant read gives each extension connection's `chrome_sites_sig` (the phone's signature over `{chrome_id, grant, sites}` made at approval) and `chrome_sites_carried` (planque#369), and `ChromeReplace.carried` carries a connection only when `ChromePairing.sitesSignatureHolds` accepts the signature for the Chrome being replaced (never what planque says of the sites). A connection with no verifying signature, or one carried here from an earlier Chrome (empty signature), ends with the old Chrome, as unpairing does, and the screen says so. The Chromes and the connections are read again just before the confirm, and **it signs only what the owner was shown** (`confirmChrome(…, shown:)`, the list the sheet drew): if a connection ended or the old Chrome went meanwhile, nothing is signed or sent and the sheet says "What moves to this Chrome changed, so nothing was paired. Check it and pair again." (`chrome.replace_changed`) over the new list; a read that failed signs nothing either, with its own line (`chrome.not_loaded`). The same as Android's `confirmChrome`. Test: `PlanqueTests.testARePairingSignsOnlyWhatTheOwnerWasShownReadAgainJustBefore`.
 
 **A connection carried before moves again** ("Your Chrome" 1, planque's `paired_with`): a connection a re-pairing carried keeps no `chrome_sites_sig` of its own (the grant says
 which Chrome holds it, `chrome_sites_carried`). The Chrome's `paired_with` (the pairing body and `phone_sig`, as this phone signed them) vouches for it, and a later re-pairing carries

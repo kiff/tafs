@@ -15,6 +15,7 @@ Leiskite savo tafs dirbti jūsų Chrome, tik leidžiamose svetainėse. Rizikingi
 • „Chrome“ diegimo metu vieną kartą paprašo prieigos prie visų svetainių. „tafs“ dirba tik svetainėse, kurias nurodo kiekviena užduotis ir kurias jūs patvirtinate telefone.
 • Mokėjimas, užsakymo pateikimas ir išsaugoto prisijungimo pildymas visada laukia jūsų patvirtinimo telefone.
 • Jis skaito puslapį kaip tekstą ir formos laukus, be slaptažodžio, kortelės ir kodo laukų. Niekada neskaito kitų jūsų skirtukų ar istorijos.
+• Taf gali perduoti jums vieną žingsnį puslapyje, pavyzdžiui, įvesti paiešką ar kortelės numerį. Jį atliekate patys, o kai jis vėl skaito puslapį, tai, ką įvedėte į laukus, praleidžiama.
 • Bankų, piniginių, slaptažodžių tvarkyklių, mokėjimų, sveikatos ir valdžios svetainės niekada nenaudojamos, nebent leidžiate vieną jų vienai užduočiai telefone.
 • Išsaugoti prisijungimai yra neprivalomi ir užantspauduoti šiame kompiuteryje. „tafs“ ir KIFF jų niekada nemato.
 • Šoninė juosta rodo taf, kuris dirba šiame „Chrome“, ir jūs su juo kalbatės čia, kaip „tafs“ programėlėje. „Nustatyti naują taf šiai svetainei“ atidaro „Coach“, kuris mato puslapį tik tada, kai spustelite „Bendrinti šį puslapį“, ir tada tik tą puslapį, su tais pačiais pašalintais laukais.

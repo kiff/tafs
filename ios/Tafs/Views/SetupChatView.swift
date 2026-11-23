@@ -7,6 +7,7 @@ import UIKit
 /// signs there.
 struct SetupChatView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
     /// The taf to improve (kiff/tafs#107): the chat opens a new conversation on it.
     var improving: UUID? = nil
     /// Whether this screen has opened its improvement: once, not each time it appears.
@@ -134,6 +135,10 @@ struct SetupChatView: View {
             }
             await model.followSetup()
         }
+        // Back in front: Setup's thread is read once, at once, not after the next wait of the slowed-down poll.
+        .onChange(of: scenePhase) { phase in
+            if phase == .active { Task { await model.loadSetupThread() } }
+        }
     }
 
     private func newConversation() {
@@ -241,7 +246,9 @@ struct SetupChatView: View {
     /// The thread as shown, in the order already drawn: a card never moves under the person's eyes when
     /// tafs cloud's copy of their message lands, or Coach's words come at the end of its turn.
     private var shown: [SetupThread.Item] {
+        // A run that ended without an answer: tafs cloud's words, last, after everything else (`setupRunFailedLine`).
         SteadyOrder.order(textBeforeCards(model.setupThread.items), drawn: drawn, id: \.id, at: \.at, ownerText: Self.ownerText)
+            + (model.setupRunFailedLine.map { [SetupThread.Item.message($0)] } ?? [])
     }
 
     static func ownerText(_ item: SetupThread.Item) -> String? {

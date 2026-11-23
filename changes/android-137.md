@@ -1,0 +1,1 @@
+- **Android 137 (1.48.0)** for Play's internal track: How tafs works explains Chrome and the emailed code; "Give Coach its tools" says so when nothing was connected; a Card's ordinal reads right in Turkmen, Urdu, Hindi, Bengali and Mongolian.

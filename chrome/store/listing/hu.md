@@ -15,6 +15,7 @@ A tafs Chrome-hoz azt teszi lehetővé, hogy a tafjaid a saját Chrome-odban dol
 • A Chrome telepítéskor egyszer kér hozzáférést az összes webhelyhez. A tafs csak azokon a webhelyeken dolgozik, amelyeket az egyes feladatok megneveznek, és amelyeket te jóváhagysz a telefonodon.
 • A fizetés, a rendelés leadása és a mentett bejelentkezés kitöltése mindig a telefonodon várja a jóváhagyásodat.
 • Az oldalt szövegként és űrlapmezőkként olvassa, a jelszó-, kártya- és kódmezők nélkül. Soha nem olvassa a többi lapodat vagy az előzményeidet.
+• A taf átadhat neked egy lépést az oldalon, például egy keresés vagy egy kártyaszám beírását. Te magad csinálod meg, és amikor újra elolvassa az oldalt, a mezőkbe írtakat kihagyja.
 • Bankok, pénztárcák, jelszókezelők, fizetések, egészségügyi és hatósági oldalak soha nincsenek feldolgozva, kivéve ha egyet engedélyezel egy feladatra a telefonodon.
 • A mentett bejelentkezések opcionálisak, és le vannak pecsételve ezen a számítógépen. A tafs és a KIFF soha nem látja őket.
 • Az oldalsó panel az ebben a Chrome-ban dolgozó tafot mutatja, és ott beszélgetsz vele, mint a tafs alkalmazásban. A „Új taf beállítása ehhez az oldalhoz” gomb megnyitja a Coachot, amely csak akkor lát egy oldalt, ha a „Oldal megosztása” gombra kattintasz, és akkor is csak azt az oldalt, ugyanazokkal az eltávolított mezőkkel.

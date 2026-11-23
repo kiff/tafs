@@ -15,6 +15,7 @@ tafs Chrome'ile laseb sinu tafidel töötada sinu enda Chromes, ainult sinu luba
 • Chrome küsib paigaldamisel ühe korra juurdepääsu kõikidele saitidele. tafs töötab ainult nendel saitidel, mille iga ülesanne loetleb ja mille sa telefonis heaks kiidad.
 • Maksmine, tellimuse tegemine ja salvestatud sisselogimise täitmine ootavad alati sinu heakskiitu telefonis.
 • See loeb lehte tekstina ja vormiväljadena, ilma parooli-, kaardi- ja koodiväljadeta. See ei loe kunagi sinu teisi lehti ega ajalugu.
+• Taf saab anda sulle lehel ühe sammu, näiteks otsingu või kaardinumbri sisestamise. Teed selle ise ja kui see lehte uuesti loeb, jäetakse väljadesse kirjutatu välja.
 • Pankade, rahakottide, paroolihaldurite, maksete, tervise ja riigiasutuste saite ei töödelda kunagi, kui sa ei luba ühte neist ühe ülesande jaoks telefonis.
 • Salvestatud sisselogimised on valikulised ja pitseeritud selles arvutis. tafs ja KIFF ei näe neid kunagi.
 • Külgriba näitab selles Chrome'is töötavat tafi ja sa räägid temaga seal, nagu tafsi rakenduses. „Seadista selle saidi jaoks uus taf“ avab Coachi, mis näeb lehte ainult siis, kui klõpsad nupul „Jaga seda lehte“, ja siis ainult seda lehte, samade eemaldatud väljadega.

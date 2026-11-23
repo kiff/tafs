@@ -1273,6 +1273,15 @@ final class AppModel: ObservableObject {
         self.access = access
     }
 
+    /// What the People screen shows, as one number: it changes when a group, a member or a person does. The screen reads again slower
+    /// while it stays the same (`PollPace.quietWait`).
+    var peopleSignature: Int {
+        var hasher = Hasher()
+        hasher.combine(groups)
+        hasher.combine(people)
+        return hasher.finalize()
+    }
+
     /// Reads the account's groups, its people and this person's access to each taf.
     func refreshPeople() async {
         guard mode == .kiff else { groups = []; people = []; access = [:]; return }
@@ -1473,7 +1482,7 @@ final class AppModel: ObservableObject {
     var approvalPublicKey: Data { signer.approvalPublicKeyDER }
 
     func confirmChrome(_ p: ChromePairingInProgress, offer: PlanqueClient.ChromeOffer, name typed: String,
-                       replacing old: PlanqueClient.Chrome? = nil) async -> Bool {
+                       replacing old: PlanqueClient.Chrome? = nil, shown: [ChromePairing.Carried] = []) async -> Bool {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant,
               let chromeKey = ChromePairing.base64URLDecoded(offer.key),
               ChromePairing.extensionProofHolds(secret: p.secret, key: chromeKey, proof: offer.proof, kiffOffer: offer.kiffOffer),
@@ -1487,12 +1496,25 @@ final class AppModel: ObservableObject {
         // and the fingerprint signs them inside the pairing the extension checks. With nothing chosen, nothing moves.
         if let picked = old {
             // The Chrome's own list (planque's `connections`) and the grants (their signatures) are both read again, so what is carried
-            // is what is live now, never what the pick showed a while ago.
+            // is what is live now. It's signed only if it's exactly what the owner was shown (`shown`): if a connection ended or the
+            // Chrome went meanwhile, nothing is signed, and the sheet says so over the new list, to pair again on. A read that failed
+            // signs nothing either, since the list is no longer known to be live (as Android's `confirmChrome`).
             await refreshChromes()
-            await refreshConnections()
-            let old = chromes?.first { $0.id == picked.id } ?? picked
-            confirmation.replaces = old.id
-            let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phoneKey)
+            guard chromesError == nil else { return false }
+            guard await refreshConnections() else {
+                chromesError = Words.Chrome.notLoaded(why: connectionsReadError ?? Words.Chrome.replaceChanged)
+                return false
+            }
+            guard let live = chromes?.first(where: { $0.id == picked.id }) else {
+                chromesError = Words.Chrome.replaceChanged
+                return false
+            }
+            let carried = ChromeReplace.carried(from: live, in: grants, phoneKey: phoneKey)
+            guard carried == shown else {
+                chromesError = Words.Chrome.replaceChanged
+                return false
+            }
+            confirmation.replaces = live.id
             if !carried.isEmpty { confirmation.carried = carried }
         }
         let reason = Words.Chrome.pairPrompt(name: name)
@@ -2306,6 +2328,13 @@ final class AppModel: ObservableObject {
         }
         guard gen == accountGeneration else { return false }
         await loadCoachTools()
+        // The batch went and KIFF took it, yet tafs cloud still asks for the very same batch: nothing was connected (KIFF counted
+        // every tool as already there). Said, in tafs cloud's words when it sends them, never a silent redraw (as Android).
+        if let sent = tools.connect, let after = coachTools, after.toGive, after.connect?.body == sent.body {
+            let said = after.step?.notConnected.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            coachToolsError = said.isEmpty ? Words.Coach.toolsNotGiven(why: "").trimmingCharacters(in: .whitespaces) : said
+            return false
+        }
         return coachTools?.given == true
     }
 
@@ -6465,33 +6494,70 @@ final class AppModel: ObservableObject {
         heldCalls(for: tafID).max { $0.heldAt < $1.heldAt }
     }
 
-    /// How often a thread is reloaded while the taf owes an answer, and how many times for
-    /// one unanswered message (30 × 4 s = two minutes). Tests shorten both.
-    var chatPollInterval: UInt64 = 4_000_000_000
-    var chatPollBudget = 30
+    /// Following a run to its end (docs/chat.md, "A run Android follows to its end"; Android 1.22). With no stream open,
+    /// the thread is read while the taf is at work or owes an answer: every 2.5 s for the first minute, 5 s to the third,
+    /// 10 s to the sixth, then 15 s, for about 31 minutes (`chatFollowLimit`), each wait up to a fifth shorter. With a stream
+    /// open, the thread is still read every 30 s (`chatStreamCheck`), since a stream can stay quiet long after its run ended.
+    /// Tests shorten them all (`chatFollowScale`, `chatFollowLimit`, `chatStreamCheck`, `chatIdleTick`).
+    var chatFollowScale: Double = 1
+    var chatFollowLimit: TimeInterval = 31 * 60
+    var chatStreamCheck: UInt64 = 30_000_000_000
+    /// How often the loop looks again while nothing is followed: no read, only whether a run is now at work.
+    var chatIdleTick: UInt64 = 4_000_000_000
 
-    /// Loads a taf's thread, then reloads it while the taf owes an answer: at most
-    /// `chatPollBudget` times for each unanswered message, starting again only when the
-    /// owner sends another. Ends when the task is cancelled (the view goes away).
+    /// Loads a taf's thread, then follows its runs to their end: reads that slow down over time while the taf is at work
+    /// with no stream, a check every 30 s while a stream is open (dropping a live answer that outlived its run), and a
+    /// stream picked back up for a run at work that nothing here follows. Starts again when the owner sends another
+    /// message. Ends when the task is cancelled (the view goes away). On iOS nothing runs while the app is in the
+    /// background (it's suspended), and coming back reads the thread at once (`TafChatView`).
     func followChat(_ tafID: UUID) async {
         await loadChat(tafID)
         await resumeChat(tafID)
-        var waitingFor: String?
-        var polls = 0
+        var since: Date?
+        var lastOwner: String?
         while !Task.isCancelled {
-            try? await Task.sleep(nanoseconds: chatPollInterval)
-            if Task.isCancelled { return }
-            // A stream shows what the taf does, and reloads the thread itself.
-            if chatState(tafID).live != nil { continue }
+            if chatState(tafID).live != nil {
+                since = nil
+                try? await Task.sleep(nanoseconds: PollPace.jittered(chatStreamCheck))
+                if Task.isCancelled { return }
+                guard mode == .kiff, chatState(tafID).live != nil else { continue }
+                await loadChat(tafID)
+                dropStaleLive(tafID)
+                continue
+            }
             await resumeChat(tafID)
             if chatState(tafID).live != nil { continue }
-            guard mode == .kiff, awaitingReply(tafID) || chatThinking(tafID),
-                  let last = chats[tafID]?.last(where: { $0.from == .owner })?.id else { continue }
-            if last != waitingFor { waitingFor = last; polls = 0 }
-            guard polls < chatPollBudget else { continue }
-            polls += 1
+            let mine = chats[tafID]?.last(where: { $0.from == .owner })?.id
+            if mine != lastOwner { lastOwner = mine; since = nil }
+            guard mode == .kiff, awaitingReply(tafID) || chatThinking(tafID) else {
+                since = nil
+                try? await Task.sleep(nanoseconds: chatIdleTick)
+                continue
+            }
+            let start = since ?? clock()
+            since = start
+            let elapsed = clock().timeIntervalSince(start)
+            guard elapsed < chatFollowLimit else {
+                try? await Task.sleep(nanoseconds: chatIdleTick)
+                continue
+            }
+            try? await Task.sleep(nanoseconds: PollPace.jittered(PollPace.followDelay(after: elapsed, scale: chatFollowScale)))
+            if Task.isCancelled { return }
             await loadChat(tafID)
         }
+    }
+
+    /// A live answer whose run tafs cloud no longer says is at work, standing for more than 15 s: its stream went quiet
+    /// without an end. It goes, so "…" and Stop go and the thread shows what the run wrote, and the quiet stream is closed
+    /// so the next run is followed again (Android's `STREAM_CHECK_MS`).
+    func dropStaleLive(_ tafID: UUID) {
+        let s = chatState(tafID)
+        guard let live = s.live else { return }
+        let working = s.working.flatMap { $0 == s.stopped ? nil : $0 }
+        guard working == nil, clock().timeIntervalSince(live.started) > 15 else { return }
+        chatStreams[tafID]?.cancel()
+        chatStreams[tafID] = nil
+        chatStates[tafID]?.live = nil
     }
 
     /// Picks back up a run of the person's that tafs cloud says is at work while nothing here
@@ -7208,18 +7274,33 @@ final class AppModel: ObservableObject {
     /// `planque.signer`: it runs whenever the app comes back to the front, which is also
     /// when the owner returns from the vendor's sign-in, mid-way through a Face ID step that
     /// still needs its signer to confirm the sign-in.
-    func refreshConnections() async {
+    /// Reads the account's connections (planque's grants) again. True when the read went through: a caller that signs from them
+    /// (a re-pairing's carried list) needs to know they're live.
+    @discardableResult
+    func refreshConnections() async -> Bool {
         let gen = accountGeneration
-        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return }
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return false }
         await loadDeviceID()
-        guard gen == accountGeneration else { return }
+        guard gen == accountGeneration else { return false }
         let signer = self.signer
         planque.tenant = tenant
         let cards = Set(setupThread.components.map(\.component).filter { $0.type == .approval }.map(\.id))
-        guard let list = try? await planque.grants(signedBy: { try signer.signConfirmed($0) }), gen == accountGeneration else { return }
+        let list: [PlanqueClient.Grant]
+        do {
+            list = try await planque.grants(signedBy: { try signer.signConfirmed($0) })
+        } catch {
+            if gen == accountGeneration { connectionsReadError = error.localizedDescription }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
         grants = list
         grantsReadFor.formUnion(cards)
+        connectionsReadError = nil
+        return true
     }
+
+    /// Why the last read of the connections failed, for a line that says so; nil once one goes through.
+    private(set) var connectionsReadError: String?
 
     /// Sets this phone up with planque, once per account, behind one Face ID: planque gets
     /// the phone's key, and a KIFF key that connects tools and does nothing else, minted
@@ -7922,6 +8003,23 @@ final class AppModel: ObservableObject {
     /// failed part-way, with the message that started it to send again.
     enum RunEnd: Equatable { case stopped, failed(retry: String) }
     @Published private(set) var setupEnded: RunEnd?
+    /// The run whose stream ended `failed` here (`setupEnded`), as the stream named it; nil when it named none. The thread's
+    /// `failed` for that run isn't said again; another run's still is (`setupRunFailedLine`).
+    private var setupEndedRun: String?
+
+    /// A run of Coach's that ended without an answer: tafs cloud's words (the thread's `failed`), as Coach's chat's last line,
+    /// by a taf's chat's rules (`runFailedLine`, Android's `chatItems`):
+    /// - one refused line per run: a run followed live here already ended with its own, with Retry (`setupEnded`), so the
+    ///   thread's line for that run isn't added; another run's still is. A stream that named no run is taken as this one;
+    /// - none while an answer streams, or while a new message is being sent (the old failure isn't its answer);
+    /// - a chat with nothing in it (a new conversation) had no run here to fail.
+    /// Its `at` is a moment after the thread's last message, so its id stays the same as items come.
+    var setupRunFailedLine: TafsCloud.ChatMessage? {
+        guard let failed = setupThread.failed, setupLive == nil, !setupSending, !setupFresh,
+              let last = setupThread.items.map(\.at).max() else { return nil }
+        if case .failed? = setupEnded, setupEndedRun == nil || setupEndedRun == failed.run { return nil }
+        return TafsCloud.ChatMessage(at: last.addingTimeInterval(0.001), from: .taf, text: failed.words, session: "failed|" + failed.run)
+    }
 
     /// The Setup chat shown (kiff/tafs#73): one the owner reopened or started here, the
     /// newest at launch (kiff/tafs#389), or nil for the latest ones together when there's
@@ -9252,7 +9350,10 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         // The run is over: Setup is no longer at work, whatever it wrote.
         if ended != nil { setupAwaiting = nil }
-        if ended == "ERROR" { setupEnded = .failed(retry: text) }
+        if ended == "ERROR" {
+            setupEnded = .failed(retry: text)
+            setupEndedRun = setupLive?.run
+        }
         if ended == "CANCELLED" { setupEnded = .stopped }
         // The recorded answer first, then the live one goes: no gap between them.
         await loadSetupThread()
@@ -9329,8 +9430,10 @@ final class AppModel: ObservableObject {
         var lastOwner: String?
         var polls = 0
         while !Task.isCancelled {
-            // Every second while Setup works, so its words show as soon as it writes them.
-            try? await Task.sleep(nanoseconds: setupThinking ? setupWorkingPollInterval : setupPollInterval)
+            // While Setup works, soon after it writes, then slower as the reads go on (never every second for long), with jitter. A card
+            // waiting on its grant keeps the base pace: it's read only while it waits, and says so after a minute.
+            let base = setupThinking ? setupWorkingPollInterval : setupPollInterval
+            try? await Task.sleep(nanoseconds: PollPace.jittered(PollPace.setupWait(base: base, afterReads: polls, cardWaits: cardWaitsOnItsGrant)))
             if Task.isCancelled { return }
             // A stream shows what Setup does, and reloads the thread itself, except a card still waiting on
             // its grant: planque can list it after the stream's last read, and a quiet stream reads nothing

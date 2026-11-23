@@ -196,6 +196,35 @@ final class CoachToolsTests: XCTestCase {
         XCTAssertEqual(sent("POST", "mcp.test", "/v1/connections/batch").count, 1, "the batch isn't sent again")
     }
 
+    /// The batch went, yet tafs cloud still asks for the very same batch: nothing was connected (KIFF counted every tool as already
+    /// there). Give says so, in tafs cloud's words when it sends them, else the app's own, never a silent redraw.
+    func testABatchThatConnectsNothingSaysSoInsteadOfRedrawingSilently() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(Self.read(state: "to_give", card: false), signer: signer)
+        // tafs cloud's read after the batch is the same step: still to give, the very same batch.
+        let given = await model.giveCoachTools()
+        XCTAssertFalse(given)
+        XCTAssertEqual(sent("POST", "mcp.test", "/v1/connections/batch").count, 1, "the batch went")
+        XCTAssertEqual(model.coachToolsError, Words.Coach.toolsNotGiven(why: "").trimmingCharacters(in: .whitespaces))
+
+        // With tafs cloud's own words for it, those are said.
+        let worded = Self.read(state: "to_give", card: false)
+            .replacingOccurrences(of: #""row":"#, with: #""not_connected":"Nichts wurde verbunden.","row":"#)
+        XCTAssertNotEqual(worded, Self.read(state: "to_give", card: false))
+        StubProtocol.responses["GET /v1/setup"] = (200, worded)
+        await model.loadCoachTools()
+        let again = await model.giveCoachTools()
+        XCTAssertFalse(again)
+        XCTAssertEqual(model.coachToolsError, "Nichts wurde verbunden.")
+
+        // A Card drafted once the batch is in is the normal next step: drawn again, not this error.
+        StubProtocol.thenRespond["POST /v1/connections/batch"] = ["GET /v1/setup": (200, Self.read(state: "to_give", connect: false))]
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.read(state: "to_give", card: false))
+        await model.loadCoachTools()
+        _ = await model.giveCoachTools()
+        XCTAssertEqual(model.coachToolsError, Words.Version.outOfDateCard)
+    }
+
     /// Only the step that was shown is signed: tafs cloud's read at the tap differs from the step's
     /// (here, one more tool), so nothing is signed or sent. The step is drawn again from that read,
     /// and the next Give signs exactly it.
