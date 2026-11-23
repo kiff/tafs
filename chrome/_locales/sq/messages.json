@@ -82,5 +82,11 @@
   "taf_error": { "message": "Nuk arriti te $TAF$. Provoni përsëri.", "placeholders": { "taf": { "content": "$1" } } },
   "tafs_not_read": { "message": "Tafs-at tuaj nuk mund të lexoheshin. Provoni përsëri." },
   "no_taf_here": { "message": "Ende nuk punon asnjë taf në këtë Chrome." },
-  "setup_taf": { "message": "Konfiguro një taf të ri për këtë sajt" }
+  "setup_taf": { "message": "Konfiguro një taf të ri për këtë sajt" },
+  "hand_title": { "message": "Radha juaj", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "Taf thotë", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Më trego", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "U krye", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Jo tani", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Shkruani vetëm aty ku i besoni kësaj faqeje.", "description": "Fixed line on that card under the taf's words" }
 }
