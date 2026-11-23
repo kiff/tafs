@@ -491,6 +491,40 @@ class ChatStreamTest {
     assertTrue(m.state.value.chats["refunds-1"].orEmpty().any { it.text == "Set up." })
   }
 
+  @Test fun aChatIsReadLessAndLessWithJitterNeverLaterThanBefore() {
+    assertEquals(AppModel.CHAT_POLL_MS, AppModel.chatFollowDelay(0, 0.0))
+    assertEquals(5_000L, AppModel.chatFollowDelay(60_000, 0.0))
+    assertEquals(10_000L, AppModel.chatFollowDelay(180_000, 0.0))
+    assertEquals(AppModel.CHAT_SLOW_POLL_MS, AppModel.chatFollowDelay(360_000, 0.0))
+    // Jitter only shortens, by a fifth at most: phones don't read in step, and a reply is never later than the step.
+    assertEquals((AppModel.CHAT_POLL_MS * 0.8).toLong(), AppModel.chatFollowDelay(0, -1.0))
+    assertEquals(AppModel.CHAT_POLL_MS, AppModel.chatFollowDelay(0, 1.0))
+    // At 10,000 users: a run followed by reads for its whole half hour takes about 150 reads where it took 250.
+    var waited = 0L
+    var reads = 0
+    while (waited < AppModel.CHAT_FOLLOW_MS) { waited += AppModel.chatFollowDelay(waited, 0.0); reads++ }
+    assertTrue("fewer reads for the same follow: $reads", reads < AppModel.CHAT_POLL_BUDGET + AppModel.CHAT_SLOW_POLL_BUDGET)
+  }
+
+  @Test fun aChatIsNotReadWhileTheAppIsInTheBackgroundAndIsReadOnItsReturn() = runTest {
+    reads(thread = """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
+    transport.answer("GET /v1/tafs/taf_1/runs/run_1/stream", 404, """{"error":"not_found"}""")
+    val m = model()
+    m.chatJitter = { 0.0 }
+    m.loadChat("refunds-1")
+    testScheduler.advanceTimeBy(AppModel.CHAT_POLL_MS + 1)
+    testScheduler.runCurrent()
+    m.wentToBackground()
+    val before = transport.requestsTo(conversation).size
+    testScheduler.advanceTimeBy(AppModel.CHAT_SLOW_POLL_MS * 20)
+    testScheduler.runCurrent()
+    assertEquals("nothing read in the background", before, transport.requestsTo(conversation).size)
+    m.cameToForeground()
+    testScheduler.advanceTimeBy(AppModel.CHAT_SLOW_POLL_MS + 1)
+    testScheduler.runCurrent()
+    assertTrue("read again once back", transport.requestsTo(conversation).size > before)
+  }
+
   @Test fun aRunThatStartsWhileTheChatIsReadIsFollowedByItsStream() = runTest {
     // Followed by reads (run_1's stream can't open); then a new run, run_2, goes on with no stream open: its stream is picked up.
     reads(thread = """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
