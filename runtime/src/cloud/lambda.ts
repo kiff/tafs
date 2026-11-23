@@ -3,7 +3,7 @@ import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { appSecret } from "./appsecret.js";
 import { accountIndex } from "./accountindex.js";
-import { tick } from "./tick.js";
+import { GROUPS, SWEEPS, sweepsFor, tick } from "./tick.js";
 import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
 import { type AccountStore, agentAlertSecrets, keepAccount } from "./accounts.js";
 import { agentKeys } from "./agentkeys.js";
@@ -14,7 +14,7 @@ import { fcmSender } from "./fcm.js";
 import { KIFF_API } from "./kiff.js";
 import { PLANQUE } from "./setupdef.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
-import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepDeletions, sweepDeliveries, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepHeld, sweepLate, sweepReplies, sweepYourSteps, sweepConsent, sweepFirstRuns, sweepStaleCoach, sweepMissionLog, sweepBriefs, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
+import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepConsent, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import { parseKinds } from "./alert-preferences.js";
 import { routing, silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
@@ -707,12 +707,17 @@ interface UpgradeEvent {
 
 /** The deletion sweep, invoked by its schedule: every deletion not finished, and every hand-over a server error left undone, tried again. */
 interface SweepEvent {
-  /** "deletions": the 5-minute sweep, everything below. "consent": the consent sweep alone, which a deploy runs once (infra/aws.sh). */
-  sweep: "deletions" | "consent";
+  /**
+   * "tick-1" … "tick-5": one group of the 5-minute sweep (tick.ts GROUPS), each its own target of the rule. "deletions":
+   * every sweep in one invocation, as before the groups. "consent": the consent sweep alone, which a deploy runs once
+   * (infra/aws.sh).
+   */
+  sweep: string;
 }
 
+
 function isSweep(event: unknown): event is SweepEvent {
-  return typeof event === "object" && event !== null && !("requestContext" in event) && ["deletions", "consent"].includes((event as { sweep?: unknown }).sweep as string);
+  return typeof event === "object" && event !== null && !("requestContext" in event) && ["deletions", "consent", ...Object.keys(GROUPS)].includes((event as { sweep?: unknown }).sweep as string);
 }
 
 function isUpgrade(event: unknown): event is UpgradeEvent {
@@ -725,12 +730,8 @@ export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Pro
   if (isSweep(event)) {
     // The same schedule retries Coach's hand-overs a server error left undone, and door replies a provider didn't take,
     // and says once a taf whose scheduled runs keep failing to start.
-    const { deletions, ...rest } = await tick(deps(), [
-      ["deletions", sweepDeletions], ["handovers", sweepHandOvers], ["replies", sweepReplies], ["deliveries", sweepDeliveries],
-      ["failing", sweepFailingSchedules], ["health", sweepHealth], ["held", sweepHeld], ["late", sweepLate], ["your_steps", sweepYourSteps],
-      ["consent", sweepConsent], ["first_runs", sweepFirstRuns], ["stale_coach", sweepStaleCoach], ["mission_log", sweepMissionLog], ["briefs", sweepBriefs],
-    ]);
-    return { swept: deletions as unknown[], ...rest };
+    const { deletions, ...rest } = await tick(deps(), sweepsFor(event.sweep, SWEEPS));
+    return { swept: (deletions ?? []) as unknown[], ...rest };
   }
   if (isUpgrade(event)) {
     try {
