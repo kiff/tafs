@@ -7,8 +7,8 @@ transparent master. This makes one from it by difference matting, not by keying 
   1. The exterior is the near-cream pixels (within 7 of the cream) connected to the image's border. Only those: a
      near-cream pixel the border can't reach (the character's white face) is the character.
   2. A pixel within 3 px of the exterior is partly cream: its alpha is how far it is from the cream, over how far the
-     solid colour next to it is, and its colour is unmixed from the cream (F = (C - (1 - a) * cream) / a), so no cream
-     is left in the edge.
+     solid colour next to it is, and its colour is the solid colour next to it spread outwards, so no cream is left in
+     the edge (unmixing the cream out instead leaves a dark line where the white face ends).
   3. The character, cropped to its pixels, is centred on a square 1024 canvas with a 12 px margin all round.
 
 The icons are the master resized with premultiplied alpha, so a resized edge carries no fringe. Run from the repo's
@@ -60,9 +60,24 @@ def matte(source: Image.Image) -> Image.Image:
     alpha = np.ones((h, w))
     alpha[exterior] = 0
     alpha[band] = np.clip(d[band] / np.maximum(reference[band], 8.0), 0, 1)
+    # The edge takes its colour from the solid colour next to it, spread outwards a pixel at a time: unmixing the cream
+    # out of a pixel that is mostly cream divides by almost nothing and leaves a dark line where the white face ends.
     colour = a.copy()
-    colour[band] = np.clip((a[band] - (1 - alpha[band])[:, None] * CREAM) / np.maximum(alpha[band], 0.05)[:, None], 0, 255)
+    known = ~grown
+    for _ in range(BAND + 1):
+        weight = box(known.astype(np.float64))
+        total = box(colour * known[..., None])
+        fill = (~known) & (weight > 0)
+        colour[fill] = total[fill] / weight[fill][:, None]
+        known = known | fill
     return Image.fromarray(np.dstack([colour, alpha * 255]).round().astype(np.uint8), "RGBA")
+
+
+def box(plane: np.ndarray) -> np.ndarray:
+    """The sum of a plane (or a stack of planes) over each pixel's 3x3 neighbourhood."""
+    padded = np.pad(plane, ((1, 1), (1, 1)) + ((0, 0),) * (plane.ndim - 2))
+    h, w = plane.shape[:2]
+    return sum(padded[dy : dy + h, dx : dx + w] for dy in range(3) for dx in range(3))
 
 
 def master(matted: Image.Image) -> Image.Image:

@@ -10,7 +10,7 @@
   master of the character** (`tafs-icon-source.png` is the artwork on a flat cream, and the app icon is full bleed on
   purpose), so this one is made from the source by `scripts/brand_transparent.py`: the cream the border reaches is the
   background, its edge is unmixed from the cream (difference matting, so no cream fringe), and the white face, which the
-  border can't reach, is kept. The same source gives the same file byte for byte; the Chrome icons and the 512 px copy
+  border can't reach, is kept; the edge takes the colour of the solid next to it. The face is white, so on a white page its edge is the artwork's own soft rim and nothing more (on a dark one it reads clearly); look at both when you change it. The same source gives the same file byte for byte; the Chrome icons and the 512 px copy
   are this file resized with premultiplied alpha. If a designer sends a real transparent master, it replaces this file
   and the script goes.
 - `tafs-icon.svg`, `tafs-logo-light.svg` and `tafs-logo-dark.svg` are the earlier mark (a "t" that is also a worker, amber
