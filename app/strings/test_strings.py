@@ -51,7 +51,7 @@ def glossary_being_written():
     Terms table is held to its own table, English term to its word ("Approve / Approve once" is two terms)."""
     with open(os.path.join(REPO, "docs", "languages.md"), encoding="utf-8") as f:
         md = f.read()
-    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "Serbian": "sr-Latn", "Albanian": "sq", "Georgian": "ka", "Armenian": "hy", "Azerbaijani": "az", "Bengali": "bn", "Hebrew": "he", "Arabic": "ar", "Catalan": "ca", "Macedonian": "mk", "Mongolian": "mn", "Nepali": "ne", "Khmer": "km", "Lao": "lo", "Turkmen": "tk", "Hindi": "hi", "pt-BR": "pt-BR"}
+    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "Serbian": "sr-Latn", "Albanian": "sq", "Georgian": "ka", "Armenian": "hy", "Azerbaijani": "az", "Bengali": "bn", "Hebrew": "he", "Arabic": "ar", "Catalan": "ca", "Macedonian": "mk", "Mongolian": "mn", "Nepali": "ne", "Khmer": "km", "Lao": "lo", "Turkmen": "tk", "Hindi": "hi", "Urdu": "ur", "pt-BR": "pt-BR"}
     tables, rows = [], []
     # Korean and Japanese's tables, batch 1's, then each regional variant's (pt-BR, under "Regional variants").
     text = ""
@@ -105,9 +105,9 @@ class SharedWords(unittest.TestCase):
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
         # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
         # ships only once every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi"])
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "ur"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "pt-BR"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "ur", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]) | set(self.langs.get("variants", {})))
 
@@ -249,7 +249,7 @@ class SharedWords(unittest.TestCase):
                     self.assertTrue(first.isupper() or first.lower() == first.upper() or "GEORGIAN" in unicodedata.name(first, ""),
                                     f"{lang} {key} doesn't open a sentence: {text!r}")
                     # Armenian ends a sentence with its own full stop, "։" (U+0589); Bengali with the danda, "।" (U+0964); Khmer with the khan, "។" (U+17D4).
-                    self.assertTrue(bare.endswith((".", "!", "?", "。", "։", "।", "។")), f"{lang} {key} doesn't end a sentence: {text!r}")
+                    self.assertTrue(bare.endswith((".", "!", "?", "。", "։", "।", "។", "۔")), f"{lang} {key} doesn't end a sentence: {text!r}")
                     phone = self.lines[lang][key[:-len("_mac")]]
                     if "›" in (phone if isinstance(phone, str) else "") and key.startswith("voice."):
                         self.assertIn("macOS 12", text, f"{lang} {key}: macOS 12's path too")
@@ -268,7 +268,7 @@ class SharedWords(unittest.TestCase):
                 for text in generate.forms_of(line):
                     bare = generate.PLACEHOLDER.sub("", text).lstrip()
                     self.assertFalse(bare[:1].isupper(), f"{lang} {key} opens with a capital: {text!r}")
-                    self.assertFalse(text.rstrip().endswith((".", "!", "?", "。", "।", "។")), f"{lang} {key} ends a sentence: {text!r}")
+                    self.assertFalse(text.rstrip().endswith((".", "!", "?", "。", "।", "។", "۔")), f"{lang} {key} ends a sentence: {text!r}")
 
     def test_a_shipped_language_isnt_left_in_english(self):
         for lang in self.langs["shipped"]:
@@ -395,9 +395,9 @@ class Generator(unittest.TestCase):
         self.assertEqual(android.folders("az-Latn"), ["values-b+az+Latn", "values-az"])
         self.assertEqual(android.folders("az"), ["values-az"])
         # Batch 5: plain folders, as the libraries ship them (Uzbek is Latin by default on Android).
-        for lang in ("ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "ru", "ms", "uz"):
+        for lang in ("ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "ur", "ru", "ms", "uz"):
             self.assertEqual(android.folders(lang), [f"values-{lang}"])
-        for lang in ("sr", "he", "sq", "ka", "hy", "az", "bn", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "ru", "ms", "uz"):
+        for lang in ("sr", "he", "sq", "ka", "hy", "az", "bn", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "ur", "ru", "ms", "uz"):
             self.assertIn(lang, generate.PLURALS, f"{lang} has its plural forms")
         # A library's folder Android would take before ours gets the same lines: Indonesian's old code, Chinese by region.
         self.assertEqual(android.folders("id"), ["values-id", "values-in"])
