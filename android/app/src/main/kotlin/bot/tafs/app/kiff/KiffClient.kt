@@ -530,9 +530,13 @@ class KiffClient(
     })
   }
 
-  /** Approves a held call once. KIFF counts it only once it verifies [signature] against this phone's key. */
-  suspend fun approveOnce(id: String, signature: AnswerSignature? = null) {
-    sendJson("POST", "/v1/me/card-exceptions/${escaped(id)}/approve-once", answerBody(null, signature))
+  /**
+   * Approves a held call once. KIFF counts it only once it verifies [signature] against this phone's key. A sealed fill's answer
+   * carries its [release] (docs/chrome.md, "The phone's release card"), for planque to put on the step.
+   */
+  suspend fun approveOnce(id: String, signature: AnswerSignature? = null, release: SealedRelease.Release? = null) {
+    val body = answerBody(null, signature)
+    sendJson("POST", "/v1/me/card-exceptions/${escaped(id)}/approve-once", if (release == null) body else JsonObject(body + ("release" to release.json())))
   }
 
   /** Refuses a held call; [nextStep] is one of the Card's next steps ("return first"). */

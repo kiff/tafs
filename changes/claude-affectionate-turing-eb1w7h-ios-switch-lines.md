@@ -1,0 +1,1 @@
+- **Installing a version that stops a waiting task says so (iPhone and iPad):** the chat says the task that was waiting on your answer was stopped and its message didn't run, with Retry on that message ([docs/chat.md](docs/chat.md)).

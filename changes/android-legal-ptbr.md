@@ -1,0 +1,1 @@
+- **Android, Brazilian Portuguese:** the terms and privacy links open kiff.dev's Brazilian pages (`/pt-br/`), not Portugal's (docs/languages.md, "Regional variants").

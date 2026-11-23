@@ -1,0 +1,13 @@
+{
+  "halt.again": "Täzeden togtadyň",
+  "halt.all_now": "Hemmesini indi togtadyň",
+  "halt.explain.halted": "Togtadyldy. Dowam etmek diňe täze işi başlaýar.",
+  "halt.explain.halted_since": "{time} bäri. Dowam etmek diňe täze işi başlaýar.",
+  "halt.explain.halting": "Hiç zat täze başlamaýar. Togtadyldy KIFF we birikme ikisi hem tassyklanda görünýär.",
+  "halt.explain.running_all": "Togtatmak siz dowam edýänçäňiz tafs-laryňyzy durzýar. Eýýäm iberilen çagyryş entek gelip biler.",
+  "halt.explain.running_one": "Togtatmak ony siz dowam edýänçäňiz durzýar. Eýýäm iberilen çagyryş entek gelip biler.",
+  "halt.halting_stops_no_run_starts": "Togtatmak {who} siz dowam edýänçäňiz durzýar. Eýýäm iberilen çagyryş entek gelip biler.",
+  "halt.now": "Indi togtadyň",
+  "halt.row_running": "Dowam edýänçäňiz ony duruzyň",
+  "halt.your_tafs_lower": "tafs-laryňyz"
+}

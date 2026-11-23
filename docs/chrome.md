@@ -499,7 +499,7 @@ one exact origin (`chrome/src/vault.js`).
 | `release_missing` | no release, one not signed by the paired phone, for another step, field or origin, expired, or already used |
 | `sealed_unknown` | no sign-in is saved under that handle for this origin |
 
-### The phone's release card (design, not built)
+### The phone's release card (design; Android's card built, off)
 
 The extension already refuses a sealed fill without the phone's `tafs-chrome/release/v1` (`protocol.checkRelease`). This is the
 card on the phone that makes one. It is a hold like any other (see "The approval card"), so a release is **never** made by a
@@ -530,7 +530,13 @@ origin, the element's label, which Chrome) and the release's own fields below.
    showing a stand-in; the line is the same for either part), and how long the card is good for.
 6. **Allow this fill** and **Refuse.** Allow asks for Face ID or the fingerprint.
 
-**What is signed.** One touch, two signatures (as the pairing's): the hold's answer, and the release. **Precondition:** the
+**What is signed.** Two signatures per Allow, each the approval key's behind that Allow's own biometric: **one prompt on iPhone
+and iPad** (the step's own `LAContext`, the Secure Enclave key still checking the biometric for each), **two on Android** (its
+approval key unlocks for one signature per prompt, a per-operation `CryptoObject`). On Android the release's prompt comes first
+("Release the password for shop.example"), then the answer's ("Allow the fill on shop.example"). **Nothing is sent until both
+are signed:** a closed second prompt sends nothing, the release included; never a release without its answer, and never an
+allowing answer without its release. One touch everywhere waits for the hold's answer to cover the `browser` block, below, which
+can then cover the release's bytes too. **Precondition:** the
 hold's answer covers the `browser` block's JCS SHA-256, so the phone signs over what it drew; that is the approval card's
 own "until that's in the answer" step and isn't built, so until it is, the card can't be shipped as an approval of what it
 drew, and the release is the only signature over the handle, origin and field. The release is the phone's approval key over
@@ -579,14 +585,33 @@ releases, is a later change, once one card is built and used.
   A compromised planque could therefore choose which fitting field on that origin gets the value (a username into another
   text field, say). It can never send a value anywhere else, make a release, or fill a field of the wrong kind.
 
-**Open for planque** (its docs, not this one): the held call's kind for a sealed fill, how the answer's `release` reaches
-the step, and the vector for `tafs-chrome/release/v1` (`vectors/chrome-release.json`, made from `checkRelease` and checked by
-the extension's and each app's tests) that both apps need before they sign.
+**The vector** is `vectors/chrome-release.json`: the eight fields, the bytes the phone signs, and the handles a phone takes
+with the part each names, made from the extension's own `signingBytes` and `parseHandle`. The extension's test checks it
+against `checkRelease` (a release over those fields holds; another origin, Chrome, part, field, read or nonce, or a late
+one, doesn't), and Android's builds the same bytes.
+
+**Open for planque** (its docs, not this one): the held call's kind for a sealed fill, and how the answer's `release`
+reaches the step. They must match the vector.
 
 **For the apps,** the card is built once on iPhone and iPad (`BrowserStepBlock`'s sibling in `NeedsYouView`) and once on
-Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every language and each tested against the vector: a
-release made from it is accepted by `checkRelease`, and one with any field changed, another Chrome's, an expired one, or
-a reused nonce is refused.
+Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every language and each tested against the vector.
+**Android's checks and signing are built, off** (`SealedRelease`, `ENABLED = false`): the handle's part, the refusals above
+(a paired Chrome, the hold's time, an `https` origin within the sites this phone signed for the grant, a sensitive site only
+with this phone's own allowance, the op, read and field present), and a release with a new 16-byte nonce and `exp` 60 s on,
+signed over the vector's bytes. **Android's card is built, off too:**
+- **What it reads:** the hold's `browser.sealed_fill`, `{chrome_id, op, sealed, origin, field_ref, read_id, grant, field_label,
+  sites_signed: {sites, sig}, sensitive_allowed: [{site, sig}]}`, its signed fields copied byte for byte (`KiffMapping.sealedFill`);
+  the hold's `expires_at` is the fill's end. **planque's half must send this shape.**
+- **What it draws** (`SealedFillBlock`): the design's order above, in `chrome.release_*` words in every shipped language; a fill
+  the phone's checks refuse says why (`SealedRelease.refusalWords`) and offers Refuse only.
+- **Allow this fill** carries the confirm mark and asks the two prompts above (`AppModel.release`, then the answer); the answer
+  goes to KIFF's `approve-once` with `release: {chrome_id, op, origin, nonce, exp, sig}` beside its `signature`. **KIFF's half
+  must take it and hand it to planque.**
+- **Never allowed without its release:** with the card off, a sealed fill is drawn as any step with Refuse only, and no other way
+  of approving (a notification's action, an approval window's tap, an answer signed elsewhere, Extra room) allows it, and "Allow this from now on" is never offered for one (`HoldAllow.allowable`). A sealed fill with no
+  `expires_at` reads as expired. **Whether a hold is a fill** (`HeldCall.needsRelease`) is read from its `browser` block as sent
+  (`TolerantBrowser`): a `sealed_fill` or `fill` that isn't null, or a block that isn't an object. So a fill whose block can't be
+  drawn (no site, say) still can't be allowed, and one bad block never hides the other held calls. Tests: `SealedFillCardTest`.
 
 ## A step handed to the person
 
@@ -728,5 +753,5 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 ## Not done yet
 
-- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it; the card that signs it is designed ("The phone's release card") and still to build.
+- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it, and the vector and Android's card are built, off. planque's hold for a sealed fill, KIFF's taking the release with the answer, and iPhone and iPad's card are still to build ("The phone's release card").
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.

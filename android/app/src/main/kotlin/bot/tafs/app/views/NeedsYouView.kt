@@ -172,6 +172,12 @@ val LocalCoachInstalls = staticCompositionLocalOf<CoachInstalls?> { null }
 /** "Allow this from now on" on a held call (docs/allow-from-now-on.md): opens its sheet; null where it isn't offered. */
 val LocalAllowHold = staticCompositionLocalOf<((HeldCall) -> Unit)?> { null }
 
+/**
+ * The phone's own checks on a sealed fill's release (docs/chrome.md, "The phone's release card"): why it won't sign, or null. Only
+ * read while [bot.tafs.app.kiff.SealedRelease.ENABLED]; the card says why and offers Refuse only.
+ */
+val LocalFillRefusal = staticCompositionLocalOf<((HeldCall) -> bot.tafs.app.kiff.SealedRelease.Refusal?)?> { null }
+
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun NeedsYouView(
@@ -324,7 +330,13 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
     }
     // A step in the owner's Chrome: the site large, the origin small, planque's action words, what the page showed, a checkout's
     // lines, and which Chrome. Under KIFF's amount and reason, never in their place (docs/chrome.md, "The phone approval card").
-    call.browser?.let { BrowserStepBlock(it) }
+    val fill = call.browser?.takeIf { bot.tafs.app.kiff.SealedRelease.ENABLED && it.fill != null }
+    val fillRefused = fill?.let { LocalFillRefusal.current?.invoke(call) }
+    // A sealed fill while the card is off: drawn as any step, and only Refuse, since it can't be allowed without its release.
+    // Over a total, Extra room would let a sealed fill go on with no release: Refuse only there too.
+    val fillOff = call.needsRelease && (fill == null || !call.approvableOnce)
+    if (fill != null) SealedFillBlock(fill, fillRefused) else call.browser?.let { BrowserStepBlock(it) }
+    if (fillOff) Text(Words.Chrome.releaseUnreadable, style = scaled(13, color = Theme.soft))
     // The taf's line on why, under its own heading: the taf's words, from text a customer wrote, drawn as plain text and never in
     // place of KIFF's amount, rule or action above.
     if (call.tafAbout != null || call.tafSays != null) {
@@ -353,7 +365,10 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
         // No approval key KIFF holds: it says so before a tap, and only Refuse is offered.
         val keyLost = state.mode == Mode.kiff && state.approvalKeyLost
         if (keyLost) ApprovalKeyLine()
-        Answers(call, state, refuseOnly = lasting != null || keyLost, sending = sending, send = ::send, install = if (installs != null) ::install else null)
+        Answers(
+          call, state, refuseOnly = lasting != null || keyLost || fillRefused != null || fillOff, sending = sending, send = ::send,
+          install = if (installs != null) ::install else null, fill = fill != null,
+        )
         // A third answer: change the Card so calls like this go on their own. Shown by the app's own rule, from the call as KIFF
         // sent it; the offer is made on the tap, never to draw the button.
         LocalAllowHold.current?.takeIf { lasting == null && !keyLost && state.offersAllow(call) }?.let { allow ->
@@ -392,7 +407,7 @@ private fun installTaf(call: HeldCall, state: AppState): String? {
 
 /** What the owner can answer a held call with, while it can still be answered. [install]: approving Coach's held install installs it. */
 @Composable
-private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sending: Boolean, send: (Answer) -> Unit, install: (() -> Unit)?) {
+private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sending: Boolean, send: (Answer) -> Unit, install: (() -> Unit)?, fill: Boolean = false) {
   val biometry = LocalBiometry.current
   // Changing a limit is changing the taf's Card: offered only to whoever may use Coach and manages the taf, as on the iPad.
   val improveInCoach = LocalImproveInCoach.current?.takeIf { state.mayAskCoachAbout(call.tafId) }
@@ -415,7 +430,13 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         if (call.kiffId != null && call.kiffId in state.roomGiven) {
           Text(SecondStep.words(call.reason), style = scaled(13, color = Theme.amberText))
         }
-        ApprovalGate { PrimaryButton(Words.NeedsYou.approveOnceWith(biometry), { send(Answer.ApproveOnce) }, enabled = !sending) }
+        // A sealed fill's Allow: the release's fingerprint, then the answer's, each prompt naming what it signs.
+        ApprovalGate {
+          PrimaryButton(
+            if (fill) Words.Chrome.releaseAllow else Words.NeedsYou.approveOnceWith(biometry), { send(Answer.ApproveOnce) },
+            if (fill) Modifier.confirms() else Modifier, enabled = !sending,
+          )
+        }
       } else {
         // Over a total the Card keeps across calls: approving once can't pass it (kiff/tafs#138, item 49). Extra room
         // can, for this call, until that total resets (kiff/tafs#211, 6.13); a lasting change is Coach's.
@@ -522,5 +543,43 @@ internal fun BrowserStepBlock(step: bot.tafs.app.model.BrowserStep) {
   }
 }
 
+/**
+ * A sealed fill's card (docs/chrome.md, "The phone's release card"), in the design's order: what it asks, the site large and the
+ * origin small, which Chrome, which part (read from the handle, never planque's words), the field's label and the page's title as
+ * page words, and the fixed line that the value never leaves Chrome. [refused]: the phone's own checks won't sign it, said here.
+ */
+@Composable
+internal fun SealedFillBlock(step: bot.tafs.app.model.BrowserStep, refused: bot.tafs.app.kiff.SealedRelease.Refusal?) {
+  val fill = step.fill ?: return
+  val part = bot.tafs.app.kiff.SealedRelease.part(fill.sealed)
+  Column(Modifier.fillMaxWidth().testTag(SEALED_FILL), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Text(Words.Chrome.releaseTitle, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      Text(step.site, style = scaled(20, FontWeight.Bold, Theme.ink))
+      if (step.origin.isNotEmpty()) Text(step.origin, style = scaled(12, color = Theme.soft, mono = true))
+      step.chrome?.let { Text(Words.Chrome.heldIn(name = it), style = scaled(13, color = Theme.soft)) }
+    }
+    // An unreadable handle names no part: nothing is said about one, and the line below says why it can't be allowed.
+    part?.let {
+      Text(
+        if (it == bot.tafs.app.kiff.SealedRelease.Part.PASSWORD) Words.Chrome.releasePassword else Words.Chrome.releaseUsername,
+        style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.testTag(SEALED_FILL_PART),
+      )
+    }
+    if (step.fieldLabel != null || step.pageTitle != null) Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      Text(Words.Chrome.heldPage, style = scaled(12, FontWeight.SemiBold, Theme.soft))
+      step.fieldLabel?.let { Text(it, style = scaled(14, color = Theme.ink)) }
+      step.pageTitle?.let { Text(it, style = scaled(14, color = Theme.ink)) }
+    }
+    Text(Words.Chrome.releaseNeverLeaves, style = scaled(13, color = Theme.soft))
+    refused?.let(bot.tafs.app.kiff.SealedRelease::refusalWords)?.let {
+      Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.testTag(SEALED_FILL_REFUSED))
+    }
+  }
+}
+
+const val SEALED_FILL = "needs-you.sealed-fill"
+const val SEALED_FILL_PART = "needs-you.sealed-fill.part"
+const val SEALED_FILL_REFUSED = "needs-you.sealed-fill.refused"
 const val BROWSER_STEP_ACTION = "needs-you.browser-step.action"
 const val BROWSER_STEP = "needs-you.browser-step"

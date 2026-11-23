@@ -1,0 +1,43 @@
+{
+  "files.account_row": {
+    "one": "{count} فائل · 30 دن رکھی جاتی ہے",
+    "other": "{count} فائلیں · 30 دن رکھی جاتی ہیں"
+  },
+  "files.all": "سب",
+  "files.all_tafs": "تمام tafs",
+  "files.by_run": "رن کے لحاظ سے",
+  "files.by_taf": "taf کے لحاظ سے",
+  "files.delete_body": "یہ اس اکاؤنٹ کے ہر فرد کے لیے فائلز سے فوراً ہٹ جاتی ہے۔ اسے واپس نہیں کیا جا سکتا۔",
+  "files.delete_now": "ابھی حذف کریں",
+  "files.delete_question": "«{name}» ابھی حذف کریں؟",
+  "files.deleted": "سب کے لیے حذف ہو گئی",
+  "files.download": "ڈاؤن لوڈ کریں",
+  "files.empty": "ابھی کچھ نہیں۔ جب کوئی taf کسی رن میں رپورٹ، شیٹ یا دستاویز بناتا ہے تو وہ یہاں 30 دن رکھی جاتی ہے، تاکہ اس اکاؤنٹ کا ہر فرد اسے کھولے، محفوظ کرے یا شیئر کرے۔",
+  "files.everyone": "اس اکاؤنٹ کا ہر فرد",
+  "files.goes_away": "ہٹ جاتی ہے",
+  "files.goes_in_days": {
+    "one": "{count} دن میں ہٹ جاتی ہے",
+    "other": "{count} دن میں ہٹ جاتی ہے"
+  },
+  "files.goes_on": "{date} (رن کے 30 دن بعد)",
+  "files.goes_today": "آج ہٹ جاتی ہے",
+  "files.goes_tomorrow": "کل ہٹ جاتی ہے",
+  "files.in_run": "رن میں",
+  "files.kept_line": "ہر فائل اپنے رن سے 30 دن رکھی جاتی ہے، پھر خود ہٹ جاتی ہے۔ اس اکاؤنٹ کا ہر فرد یہ فائلیں دیکھتا ہے۔ آپ کی اپنی چیٹ کے منسلکات اپنے پیغامات کے ساتھ رہتے ہیں۔",
+  "files.kept_until": "اس کی فائلیں {date} تک رکھی جاتی ہیں",
+  "files.made_by": "بنانے والا",
+  "files.none_yet": "ابھی کوئی نہیں · 30 دن رکھی جاتی ہیں",
+  "files.pick_one": "یہاں دیکھنے کے لیے فائل چنیں۔",
+  "files.preview_start": "صرف شروع کا حصہ دکھایا گیا ہے۔ پوری پڑھنے کے لیے فائل ڈاؤن لوڈ کریں۔",
+  "files.saved": "اس ڈیوائس پر محفوظ ہو گئی",
+  "files.see_in_chat": "اسے چیٹ میں دیکھیں",
+  "files.share": "شیئر کریں",
+  "files.size": "سائز",
+  "files.taf_row": {
+    "one": "اس کے رنز سے {count} فائل",
+    "other": "اس کے رنز سے {count} فائلیں"
+  },
+  "files.title": "فائلز",
+  "files.type": "قسم",
+  "files.who_sees": "کون دیکھتا ہے"
+}

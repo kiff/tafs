@@ -1,0 +1,1 @@
+- **Android:** the release card's checks and signing for a saved sign-in's fill, against the extension's own vector (`vectors/chrome-release.json`); off until planque holds a sealed fill ([docs/chrome.md](../docs/chrome.md), "The phone's release card").

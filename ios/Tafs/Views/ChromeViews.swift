@@ -1,19 +1,13 @@
 import SwiftUI
 
-/// The browser connections that run in a Chrome ("Your Chrome", docs/chrome.md): those planque holds for it that haven't ended.
-/// Unpairing the Chrome ends them, so they are read to the owner before it goes, and listed under the Chrome.
+/// The browser connections that run in a Chrome ("Your Chrome", docs/chrome.md), as planque lists them on the Chrome: live ones only,
+/// decided there once, never by the app. Unpairing the Chrome ends them, so they are read to the owner before it goes, and listed
+/// under the Chrome.
 enum ChromeConnections {
-    static func on(_ chrome: PlanqueClient.Chrome, in grants: [PlanqueClient.Grant]) -> [PlanqueClient.Grant] {
-        grants.filter { g in
-            g.request.browser?.driver == "extension" && g.request.browser?.chrome == chrome.id
-                && g.status != "disconnected" && g.status != "failed"
-        }
-    }
-
     /// The sites of those connections, as the owner reads them: "wikipedia.org, shop.example". Empty when none.
-    static func sites(of connections: [PlanqueClient.Grant]) -> String {
+    static func sites(of connections: [PlanqueClient.Chrome.Connection]) -> String {
         var seen: [String] = []
-        for site in connections.flatMap({ $0.request.browser?.sites ?? [] }) where !seen.contains(site) { seen.append(site) }
+        for site in connections.flatMap(\.sites) where !seen.contains(site) { seen.append(site) }
         return seen.joined(separator: ", ")
     }
 }
@@ -21,6 +15,32 @@ enum ChromeConnections {
 /// Re-pairing replaces, never adds ("Your Chrome" 1, docs/chrome.md): which paired Chrome a new one replaces, and the connections
 /// that move to it. The pick is the owner's; only a connection that is live on the Chrome replaced moves, with the sites planque
 /// holds for it, which the phone's fingerprint then signs for the new Chrome (`ChromePairing.Carried`).
+/// Which Chrome a browser connection runs in, and where it may move ("Your Chrome" 2 and 4).
+enum ChromeSwitch {
+    /// The action planque offers on this connection's row, only where its own `PUT …/chrome` would accept the move (one rule, in the
+    /// service): the app keeps no status list of its own, and a planque that doesn't send it offers no move.
+    static func action(of grant: PlanqueClient.Grant) -> PlanqueClient.Grant.Action? {
+        guard grant.request.browser?.driver == "extension" else { return nil }
+        return (grant.actions ?? []).first { $0.id == PlanqueClient.Grant.Action.useAnotherChrome && $0.known }
+    }
+
+    /// The sites to sign again for the new Chrome: the connection's own, **only if this phone's own signature verifies** them for the
+    /// Chrome it uses now (`chrome_sites_sig` over `{chrome_id, grant, sites}`, by `phoneKey`, its approval key). Never from what planque
+    /// says: a planque that widened the list would otherwise get the owner's signature over the wider one. Nil for anything else
+    /// (no signature, another key, other sites, a connection carried here from an earlier Chrome).
+    static func signedSites(of grant: PlanqueClient.Grant, phoneKey: Data) -> [String]? {
+        guard let browser = grant.request.browser, browser.driver == "extension", let chrome = browser.chrome, !chrome.isEmpty,
+              let sites = browser.sites, !sites.isEmpty, sites.count <= 100, let sig = grant.chromeSitesSig, !sig.isEmpty,
+              ChromePairing.sitesSignatureHolds(sig, publicKeyDER: phoneKey, chromeID: chrome, grant: grant.id, sites: sites) else { return nil }
+        return sites
+    }
+
+    /// The paired Chromes it could move to: every one but the one it uses.
+    static func others(for grant: PlanqueClient.Grant, in chromes: [PlanqueClient.Chrome]) -> [PlanqueClient.Chrome] {
+        chromes.filter { $0.id != grant.request.browser?.chrome }
+    }
+}
+
 enum ChromeReplace {
     /// What the pick starts on: the Chrome with the offer's profile id; else, when the extension was reinstalled and its id is new,
     /// the one paired Chrome on the same browser and system. Nothing otherwise ("a new Chrome").
@@ -32,22 +52,29 @@ enum ChromeReplace {
         return alike.count == 1 ? alike[0] : nil
     }
 
-    /// The connections that move when `old` is replaced: each live one whose sites **this phone's own signature verifies** for the
-    /// Chrome replaced (`chrome_sites_sig` over `{chrome_id, grant, sites}`, by `phoneKey`, its approval key), with those sites, in
-    /// planque's order. Never from what planque says: a connection without a verifying signature, one carried here from an earlier
-    /// Chrome, or one with no sites moves nothing and ends with the old Chrome, as unpairing does. At most the extension's limits
-    /// (50 connections, 100 sites each).
+    /// The connections that move when `old` is replaced: each of its live connections (planque's list on the Chrome) whose sites **this
+    /// phone's own signature verifies** for the Chrome replaced (`chrome_sites_sig` over `{chrome_id, grant, sites}`, by `phoneKey`, its
+    /// approval key, from planque's grant read), with those sites, in planque's order. Never from what planque says: a connection
+    /// without a verifying signature, one carried here from an earlier Chrome, or one with no sites moves nothing and ends with the
+    /// old Chrome, as unpairing does. A connection planque refuses to carry (pending, failed, ended) is left out. At most the
+    /// extension's limits (50 connections, 100 sites each).
     static func carried(from old: PlanqueClient.Chrome, in grants: [PlanqueClient.Grant], phoneKey: Data) -> [ChromePairing.Carried] {
-        ChromeConnections.on(old, in: grants).compactMap { g in
-            guard g.connected, let sites = g.request.browser?.sites, !sites.isEmpty, sites.count <= 100, let sig = g.chromeSitesSig, !sig.isEmpty,
-                  ChromePairing.sitesSignatureHolds(sig, publicKeyDER: phoneKey, chromeID: old.id, grant: g.id, sites: sites) else { return nil }
-            return ChromePairing.Carried(grant: g.id, sites: sites)
+        (old.connections ?? []).compactMap { c in
+            guard let g = grants.first(where: { $0.id == c.grant }), !["pending", "failed", "disconnected"].contains(g.status),
+                  !c.sites.isEmpty, c.sites.count <= 100, let sig = g.chromeSitesSig, !sig.isEmpty,
+                  ChromePairing.sitesSignatureHolds(sig, publicKeyDER: phoneKey, chromeID: old.id, grant: c.grant, sites: c.sites) else { return nil }
+            return ChromePairing.Carried(grant: c.grant, sites: c.sites)
         }.prefix(50).map { $0 }
     }
 
-    /// The live connections on `old` that do not move: they end with it.
-    static func ending(on old: PlanqueClient.Chrome, in grants: [PlanqueClient.Grant], carried: [ChromePairing.Carried]) -> [PlanqueClient.Grant] {
-        ChromeConnections.on(old, in: grants).filter { g in !carried.contains { $0.grant == g.id } }
+    /// The connections on `old` that do not move: they end with it.
+    static func ending(on old: PlanqueClient.Chrome, carried: [ChromePairing.Carried]) -> [PlanqueClient.Chrome.Connection] {
+        (old.connections ?? []).filter { c in !carried.contains { $0.grant == c.grant } }
+    }
+
+    /// The connections that do move.
+    static func moving(from old: PlanqueClient.Chrome, carried: [ChromePairing.Carried]) -> [PlanqueClient.Chrome.Connection] {
+        (old.connections ?? []).filter { c in carried.contains { $0.grant == c.grant } }
     }
 }
 
@@ -75,7 +102,7 @@ struct ChromesView: View {
                             if let browser = chrome.browser, let os = chrome.os {
                                 Text(Words.Chrome.browserOn(browser: browser, system: os)).scaledFont(13).foregroundColor(Theme.dim)
                             }
-                            let used = ChromeConnections.sites(of: ChromeConnections.on(chrome, in: model.grants))
+                            let used = ChromeConnections.sites(of: chrome.connections ?? [])
                             if !used.isEmpty {
                                 Text(Words.Chrome.usedFor(sites: used)).scaledFont(13).foregroundColor(Theme.soft)
                                     .fixedSize(horizontal: false, vertical: true)
@@ -103,8 +130,8 @@ struct ChromesView: View {
         .scrollContentBackground(.hidden)
         .screenBackground()
         .navigationTitle(Self.title)
-        .task { await model.refreshChromes(); await model.refreshConnections() }
-        .refreshable { await model.refreshChromes(); await model.refreshConnections() }
+        .task { await model.refreshChromes() }
+        .refreshable { await model.refreshChromes() }
         .sheet(isPresented: $pairing, onDismiss: { Task { await model.refreshChromes() } }) { PairChromeView() }
         .confirmationDialog(removing.map { Words.Chrome.removeNamed(name: $0.name) } ?? "",
                             isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
@@ -116,7 +143,7 @@ struct ChromesView: View {
         } message: {
             // What unpairing ends (Your Chrome 3): the connections run in this Chrome, and come back only by connecting again.
             if let chrome = removing {
-                let ends = ChromeConnections.sites(of: ChromeConnections.on(chrome, in: model.grants))
+                let ends = ChromeConnections.sites(of: chrome.connections ?? [])
                 if !ends.isEmpty { Text(Words.Chrome.unpairEnds(sites: ends)) }
             }
         }
@@ -181,8 +208,8 @@ struct PairChromeView: View {
                     .accessibilityIdentifier("chrome.replace")
                     if let old = replacing {
                         let carried = ChromeReplace.carried(from: old, in: model.grants, phoneKey: model.approvalPublicKey)
-                        let moves = ChromeConnections.sites(of: ChromeConnections.on(old, in: model.grants).filter { g in carried.contains { $0.grant == g.id } })
-                        let ends = ChromeConnections.sites(of: ChromeReplace.ending(on: old, in: model.grants, carried: carried))
+                        let moves = ChromeConnections.sites(of: ChromeReplace.moving(from: old, carried: carried))
+                        let ends = ChromeConnections.sites(of: ChromeReplace.ending(on: old, carried: carried))
                         if !moves.isEmpty { Text(Words.Chrome.replaceMoves(sites: moves)).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                         Text(Words.Chrome.replaceUnpairs(name: old.name)).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         if !ends.isEmpty { Text(Words.Chrome.unpairEnds(sites: ends)).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
@@ -240,7 +267,6 @@ struct PairChromeView: View {
             case .offered(let offer):
                 // The Chrome it most likely replaces, and what is live on it, read now so the pick shows what would move.
                 await model.refreshChromes()
-                await model.refreshConnections()
                 replacingID = ChromeReplace.preselect(offer: offer, chromes: model.chromes ?? [])?.id
                 step = next
                 return

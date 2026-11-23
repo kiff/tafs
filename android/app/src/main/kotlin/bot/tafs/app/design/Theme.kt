@@ -116,7 +116,7 @@ fun scaled(
   fontWeight = weight,
   color = color,
   fontFamily = when {
-    // The monospaced face pulls Arabic's joined letters apart, so in Arabic it's the plain face (iOS's `ScaledFont.design`).
+    // The monospaced face pulls Arabic and Urdu's joined letters apart, so in those it's the plain face (iOS's `ScaledFont.design`).
     mono && Res.language.substringBefore('-') in JOINED_SCRIPTS -> null
     mono -> Fonts.mono
     display -> Fonts.display
@@ -134,8 +134,8 @@ fun scaled(
  */
 const val BASE_TYPE = 0.9f
 
-/** Languages whose letters join, which a monospaced face pulls apart: Arabic (iOS's `ScaledFont.design`). */
-val JOINED_SCRIPTS = setOf("ar")
+/** Languages whose letters join, which a monospaced face pulls apart: Arabic and Urdu (iOS's `ScaledFont.design`). */
+val JOINED_SCRIPTS = setOf("ar", "ur")
 
 /**
  * Material's type, at the base sizes and with no added letter spacing: a Text without a style of its own (a button's label,

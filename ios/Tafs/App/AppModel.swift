@@ -1485,8 +1485,12 @@ final class AppModel: ObservableObject {
         var confirmation = ChromePairing.confirmation(secret: p.secret, chromeKey: chromeKey, name: name, phoneKey: phoneKey)
         // Replacing a Chrome ("Your Chrome" 1): the connections on it move, read again just now so the owner signs what is live,
         // and the fingerprint signs them inside the pairing the extension checks. With nothing chosen, nothing moves.
-        if let old {
+        if let picked = old {
+            // The Chrome's own list (planque's `connections`) and the grants (their signatures) are both read again, so what is carried
+            // is what is live now, never what the pick showed a while ago.
+            await refreshChromes()
             await refreshConnections()
+            let old = chromes?.first { $0.id == picked.id } ?? picked
             confirmation.replaces = old.id
             let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phoneKey)
             if !carried.isEmpty { confirmation.carried = carried }
@@ -1554,6 +1558,46 @@ final class AppModel: ObservableObject {
             return
         }
         await refreshChromes()
+    }
+
+    /// Moves a browser connection to another paired Chrome ("Your Chrome" 2): where planque offers the move, and its sites verify under
+    /// this phone's own signature, the phone signs those sites for that Chrome under one Face ID (`ChromePairing.switchBytes`), then planque's `PUT …/grants/{grant}/chrome` moves it. Its sites
+    /// and Card stay. Says why when it didn't go through (`chromesError`); true when planque moved it.
+    func switchChrome(_ grant: PlanqueClient.Grant, to chrome: PlanqueClient.Chrome) async -> Bool {
+        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant, ChromeSwitch.action(of: grant) != nil else { return false }
+        if approvalViewOnly { chromesError = approvalKeyLostWords; return false }
+        chromesError = nil
+        let signer = self.signer
+        // The sites signed again are the ones this phone's own signature verifies for the Chrome it uses now, never what planque says.
+        guard let sites = ChromeSwitch.signedSites(of: grant, phoneKey: signer.approvalPublicKeyDER) else {
+            chromesError = Words.Common.didntGoThrough(what: "\(Words.Chrome.switchPrompt(name: chrome.name))",
+                                                       why: "\(PlanqueClient.PlanqueError.digestMismatch.localizedDescription)")
+            return false
+        }
+        let gen = accountGeneration
+        let reason = Words.Chrome.switchPrompt(name: chrome.name)
+        let signature: String
+        do {
+            let der = try await signer.signApproval(try ChromePairing.switchBytes(to: chrome.id, grant: grant.id, sites: sites), reason: reason)
+            signature = try ChromePairing.rawSignature(fromDER: der)
+        } catch {
+            if gen == accountGeneration { chromesError = ApprovalReadiness.notDone(error, what: reason, unconfirmedWords: Words.Approval.cancelled) }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        do {
+            try await planque.switchChrome(grant: grant.id, to: chrome.id, sitesSignature: signature)
+        } catch {
+            chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            return false
+        }
+        chromesError = nil
+        await refreshChromes()
+        await refreshConnections()
+        return true
     }
 
     // MARK: Passkeys
@@ -4936,6 +4980,7 @@ final class AppModel: ObservableObject {
             let sw = try await cloud.beginSwitch(c.id, version: version.n, redraft: redraft, stopBlocking: stopBlocking)
             guard gen == accountGeneration else { return nil }
             switches[tafID] = sw
+            switchStopped(tafID, sw)
             staleVersionCards[tafID] = nil
             return sw
         } catch let error as TafsCloud.CloudError where error.status == 409 && !error.blocking.isEmpty {
@@ -5021,6 +5066,7 @@ final class AppModel: ObservableObject {
         }
         guard gen == accountGeneration else { return false }
         switches[tafID] = sw
+        switchStopped(tafID, sw)
         if let id = sw.draft {
             // Nothing shown, nothing signed.
             guard shownDraft != nil else { return false }
@@ -6083,6 +6129,23 @@ final class AppModel: ObservableObject {
         guard let words, !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         lastError = words
         guard let text = chats[tafID]?.last(where: { $0.from == .owner })?.text, !text.isEmpty else { return }
+        chatStates[tafID, default: ChatState()].awaiting = nil
+        chatStates[tafID]?.ended = .failed(retry: text)
+        chatStates[tafID]?.endedRun = nil
+        chatStates[tafID]?.wentThrough = []
+        chatStates[tafID]?.failedWhy = words
+    }
+
+    /// A switch stopped tasks that waited on the owner's answer (tafs cloud's `stopped`): the chat says so, in tafs cloud's words, with Retry
+    /// on the owner's last message of a stopped session (one tap, never by itself). A switch that stopped nothing waiting says nothing.
+    func switchStopped(_ tafID: UUID, _ sw: TafsCloud.Switching) {
+        guard !sw.stopped.isEmpty, let words = sw.stoppedWords, !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        lastError = words
+        let sessions = Set(sw.stopped.map(\.session))
+        let owner = (chats[tafID] ?? []).filter { $0.from == .owner }
+        // Only a message of a stopped session: with none loaded, the words alone, never another session's message (a message that
+        // already ran must not be sent twice).
+        guard let text = owner.last(where: { sessions.contains($0.session) })?.text, !text.isEmpty else { return }
         chatStates[tafID, default: ChatState()].awaiting = nil
         chatStates[tafID]?.ended = .failed(retry: text)
         chatStates[tafID]?.endedRun = nil

@@ -548,6 +548,11 @@ data class HeldCall(
   val breachOutcomes: List<String> = emptyList(),
   /** A held step in the owner's Chrome, as plain text: drawn on the card under KIFF's own amount and action, never in their place. */
   val browser: BrowserStep? = null,
+  /**
+   * It asks for a fill in the person's Chrome (docs/chrome.md): allowed only through the release card, with its release, never
+   * by Approve once, Extra room or a standing rule. Read from the hold as sent, so a block that can't be drawn still counts.
+   */
+  val needsRelease: Boolean = false,
 )
 
 /** The taf and version a held version_install names, as Coach sent them: the taf's id in tafs cloud, or its name. */
@@ -792,4 +797,11 @@ data class BrowserStep(
   val excerpt: String? = null,
   val lines: List<String> = emptyList(),
   val chrome: String? = null,
+  /**
+   * A sealed fill's fields, byte for byte as planque relayed them (docs/chrome.md, "The phone's release card"): what the release
+   * signs and the phone checks. Null for any other step.
+   */
+  val fill: bot.tafs.app.kiff.SealedRelease.Fill? = null,
+  /** The field's label as the extension read it, plain text: page words, never what the card asks. */
+  val fieldLabel: String? = null,
 )

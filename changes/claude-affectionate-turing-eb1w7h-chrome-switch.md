@@ -1,0 +1,1 @@
+- **A connection can use another Chrome (iPhone and iPad):** a browser connection's page says which Chrome it runs in and lets you move it to another paired Chrome with one Face ID; its sites and Card stay ([docs/ios-app.md](docs/ios-app.md)).
