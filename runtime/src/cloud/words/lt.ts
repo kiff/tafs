@@ -17,7 +17,7 @@ export const lt: Words = {
   work_working: "Vykdoma",
   work_waiting_approval: "Laukia jūsų patvirtinimo",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
-  hold_run_ended: "Tas vykdymas jau buvo pasibaigęs, todėl nieko nebuvo atlikta.",
+  hold_run_ended: "Tas paleidimas jau buvo pasibaigęs, todėl nieko nebuvo atlikta.",
   your_step_title: "Jūsų žingsnis",
   your_step_done: "Atlikta",
   your_step_skip: "Praleisti",
