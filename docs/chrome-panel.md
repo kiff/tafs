@@ -23,8 +23,9 @@ The panel is mainly for **watching a taf work**, with the person beside it. Coac
   run's tab group ("tafs · {taf}") sits beside the person's tabs, and **Show** brings the run's tab to the front. Pause and
   Stop stay.
 - **Its chat.** The person talks to the taf below its work. It's the same taf chat as the phone's
-  (`GET /v1/tafs/{id}/conversation`, `POST …/messages`), read on events, then on `pollDelay`: 4 s while it works or for a
-  minute after a send, 30 s otherwise, and nothing while the panel is hidden.
+  (`GET /v1/tafs/{id}/conversation`, `POST …/messages`), read on each event: the panel shown, a send, a step seen on the
+  relay. Then it's read every 4 s while it works or for a minute after a send. Idle, it backs off from 60 s to 5 minutes, each
+  wait jittered, and nothing is read while the panel is hidden.
 - **Coach is a button:** "Set up a new taf for this site" opens Coach, with the site in front named.
 
 ## A step handed to the person
@@ -33,10 +34,12 @@ A taf sometimes needs the person to do one thing in the page: fill in a card num
 it over and carries on after.
 
 - **planque sends it as a step,** `op: "hand"`, signed like every step, with the taf's words ("Fill in the card number,
-  then tap Done"). It may also name the field or button, by the `ref` of the page's last read. Its sites are the
-  connection's, so a hand-over can't take the person to a page the taf couldn't open.
-- **The panel shows "Your turn"** with the taf's words. **Show me** brings the run's tab to the front and outlines the
-  field or button, and the toolbar badge says the taf waits.
+  then tap Done"). It may also name the field or button, by a `ref` that must be in the run's last read. Anything else
+  refuses the step. Its sites are the connection's, so a hand-over on a page off them is refused, as any step is.
+- **The taf's words are the taf's,** never KIFF's or the extension's: plain text, at most 280 characters, shown under "The
+  taf says", never as a line the extension or KIFF would write.
+- **The panel shows "Your turn"** with those words. **Show me** brings the run's tab to the front and only outlines the field
+  or button. The toolbar badge says the taf waits.
 - **The extension never acts for the person here.** It types nothing, clicks nothing and fills nothing. A sealed value is
   never offered.
 - **Done reads the page back to the taf,** masked as every read is. **Not now** answers the step as declined. A
@@ -49,14 +52,28 @@ it over and carries on after.
 Cards that wait for the owner (a held step, Coach's), drawn in KIFF's own words, are **approved in the panel with the
 computer's Touch ID, Face ID or Windows Hello. The phone isn't needed.**
 
+**This route is off by default.** It turns on only once the two gates below are answered: the test on real hardware, and the
+product decision. Until then the panel works fully without it. Watching, the hand-over and the chat are all there, and its
+cards say to approve on the phone.
+
 - **The route:** an extension's own origin can't use a kiff.dev passkey. So **Approve** opens **KIFF's own approval
-  page** (kiff.dev, as a sign-in's approval page) in a small window, for that one held call.
+  page** (kiff.dev, as a sign-in's approval page) in a small popup window, for that one held call.
+  - **The window shows only what KIFF built.** Its URL carries only the held call's id. The page draws KIFF's own words for
+    it, and the extension passes no text. It's a popup window with its address bar, so the person sees `kiff.dev`.
   - The page asks for the computer's kiff.dev passkey with user verification required, over that call's exact message
     ([computer-passkeys.md](computer-passkeys.md), "What a passkey approval carries").
   - KIFF checks the assertion and approves. The window closes, and the panel reads the card again.
 - **Refuse stays unsigned,** in the panel, as on the phone: refusing only takes power away.
 - **Which passkey:** the computer's own kiff.dev passkey, never a synced one (backup eligible or backed up is refused, as
   today). A computer without one gets the phone route.
+- **Gate 1, a test on real hardware, before any code turns the route on.** Chrome's passkeys on a Mac are mostly saved to
+  Google Password Manager or iCloud Keychain, which sync, so their backup-eligible flag is set and today's rule would refuse
+  them. Windows Hello's and a Secure Enclave key usually aren't synced. The test:
+  - on a Mac with Touch ID and on Windows with Hello, register a kiff.dev passkey in Chrome;
+  - read its backup-eligible and backup-state flags.
+
+  If the Mac's are synced, the Mac route needs a decision. Either KIFF accepts a synced passkey for this route alone, or the
+  Mac approves with the tafs Mac app's own approval key, or a Mac uses the phone.
 
 ### Never a password alone
 
@@ -79,15 +96,17 @@ computer's password alone.
 
 ## Open questions
 
-1. **A product decision:** a Touch ID Mac whose Chrome falls back to the password after failed tries, and Windows Hello's PIN: allowed,
+1. **Gate 2, a product decision:** a Touch ID Mac whose Chrome falls back to the password after failed tries, and Windows Hello's PIN: allowed,
    or phone route?
 2. **KIFF:** the approval page's route for one held call; how a computer's passkey is registered for a Chrome
    with no tafs desktop app; and where the "biometric" mark lives on the device record.
 3. **The hand-over step:** planque's `op: "hand"` and its result, and the tool the taf asks it with.
+4. **Gate 1's test:** a Mac with Touch ID and a Windows PC with Hello, each registering a kiff.dev passkey in Chrome.
 
 ## At 10,000 users
 
-- **The panel:** reads only on events, with a slow fallback. Its list of tafs is pushed by planque, never polled.
+- **The panel:** reads on events. Idle, it falls back to one read every 60 s, backing off to every 5 minutes, jittered:
+  under 1 read a minute per open idle panel, and none while hidden. Its list of tafs is pushed by planque, never polled.
 - **A hand-over:** one step, like any other.
 - **An approval:** one page load and one assertion, as a sign-in's approval.
 
