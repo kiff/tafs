@@ -1,0 +1,1 @@
+- **Account › Chrome shows planque's own list of what each Chrome is used for:** the sites and the unpair line come from the connections planque lists for each Chrome, not from a rule on the phone ([docs/ios-app.md](docs/ios-app.md)).

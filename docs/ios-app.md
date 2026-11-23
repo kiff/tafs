@@ -1409,9 +1409,9 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
 
 "Your Chrome" ([chrome.md](chrome.md)): under each paired Chrome, Account › Chrome says which sites its connections are used for
 ("Used for wikipedia.org"), and Unpair says what it ends before it asks ("Unpairing ends the connections that use it: …. They
-come back only when you connect them again."). The connections are planque's grants for the extension (`request.browser`:
-`driver: "extension"`, `chrome`, and `chrome_name` as planque set it), read again when the screen opens; one that has ended or
-failed is not listed (`ChromeConnections`). The replace pick at pairing, and a connection's Chrome on the taf's page, follow
+come back only when you connect them again."). The connections are the ones planque lists on each Chrome
+(`GET …/chromes`, `connections: [{grant, name, sites}]`: not ended, not failed, only those that Chrome drives), drawn as sent
+(`ChromeConnections`); the app keeps no rule of its own. A planque that doesn't list them yet leaves the line out. The replace pick at pairing, and a connection's Chrome on the taf's page, follow
 planque#365's route and the extension's own pairing bytes.
 
 ## Pairing a Chrome that replaces one
