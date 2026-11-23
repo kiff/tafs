@@ -2594,6 +2594,13 @@ final class AppModel: ObservableObject {
                 kiffAccount = account
                 offerTimeZone(account)
             }
+            // KIFF says how this session approves (`approval_mode` in `GET /v1/me`): a view-only one is shown as such as
+            // soon as the account loads, not only once registering the approval key is refused. Only KIFF's word sets
+            // it; a new sign-in that approves clears it (`useSession`). As Android's `showAccount`.
+            if account?.viewOnly == true {
+                approvalKeyLost = true
+                approvalViewOnly = true
+            }
             show(list, exceptions)
             // Your brief, read with the list: tafs cloud answering `/v1/brief` is what turns it on
             // (a 404, an error or a brief with nothing in it keeps Needs you as today).
@@ -5401,6 +5408,7 @@ final class AppModel: ObservableObject {
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
             chatStates[tafID]?.askCoach = thread.askCoach
+            chatStates[tafID]?.runFailed = thread.failed
             // The thread is the source: tafs cloud says when the latest run stopped at a cap, and a
             // run at work, or one that answered since, is past it.
             chatStates[tafID]?.capped = thread.working == nil ? thread.capped?.stop : nil
@@ -5501,6 +5509,7 @@ final class AppModel: ObservableObject {
             return .notTried
         }
         chatStates[tafID, default: ChatState()].ended = nil
+        chatStates[tafID]?.endedRun = nil
         chatStates[tafID]?.wentThrough = []
         chatStates[tafID]?.failedWhy = nil
         chatStates[tafID]?.capped = nil
@@ -5720,6 +5729,12 @@ final class AppModel: ObservableObject {
         var unsent: [UnsentMessage] = []
         /// The taf's ask_coach cards, as its thread has them (kiff/tafs#476, gap 15).
         var askCoach: [TafsCloud.AskCoachCard] = []
+        /// The latest run ended without an answer, as the thread says (`failed`): tafs cloud's words,
+        /// the chat's last line. A later read with none clears it.
+        var runFailed: TafsCloud.RunFailed?
+        /// The run whose stream ended `failed` here (`ended`), as the stream named it; nil when it named none. The
+        /// thread's `failed` for that run isn't said again; another run's still is (Android's `ChatEnd.Failed.run`).
+        var endedRun: String?
         /// What waits in this chat to go once the taf is done: tafs cloud holds it
         /// (docs/chat.md, `hold`), and sends it as the person's next message. The app keeps no
         /// queue of its own.
@@ -5879,6 +5894,7 @@ final class AppModel: ObservableObject {
         if ended != nil { chatStates[tafID]?.awaiting = nil }
         if ended == "ERROR" {
             chatStates[tafID]?.ended = .failed(retry: text)
+            chatStates[tafID]?.endedRun = chatStates[tafID]?.live?.run
             chatStates[tafID]?.wentThrough = didBefore
             chatStates[tafID]?.failedWhy = whyFailed
         }
@@ -6099,6 +6115,7 @@ final class AppModel: ObservableObject {
     func retryChatRun(_ tafID: UUID) async {
         guard case .failed(let text) = chatStates[tafID]?.ended else { return }
         chatStates[tafID]?.ended = nil
+        chatStates[tafID]?.endedRun = nil
         await submitChat(text, to: tafID)
     }
 
@@ -6207,7 +6224,24 @@ final class AppModel: ObservableObject {
         // Each once, by id: the same message twice in a thread shows once.
         var seen = Set<String>()
         timeline = timeline.filter { seen.insert($0.id).inserted }
-        return Self.withheldUntilWords(Self.heldAfterItsWords(timeline), now: clock())
+        var shown = Self.withheldUntilWords(Self.heldAfterItsWords(timeline), now: clock())
+        if let failed = runFailedLine(state, tafID: tafID, after: shown) { shown.append(failed) }
+        return shown
+    }
+
+    /// A run that ended without an answer: tafs cloud's words (the thread's `failed`), as the taf's last line, after
+    /// everything else, held cards and their places included (docs/chat.md). As Android's `chatItems`:
+    /// - one refused line per run: a run followed live here already ended with its own, with Retry (`ended`), so the
+    ///   thread's line for that run isn't added; another run's still is. A stream that named no run is taken as this one;
+    /// - none while an answer streams, or while a new message is being sent (the old failure isn't its answer);
+    /// - a chat with nothing in it (a new chat) had no run here to fail.
+    /// Its `at` is the run's own place, a moment after the thread's last message, so its id stays the same as items come.
+    private func runFailedLine(_ state: ChatState, tafID: UUID, after shown: [ChatItem]) -> ChatItem? {
+        guard let failed = state.runFailed, state.live == nil, !chatSending.contains(tafID),
+              let last = (chats[tafID] ?? []).map(\.at).max() ?? shown.map(\.at).max() else { return nil }
+        if case .failed? = state.ended, state.endedRun == nil || state.endedRun == failed.run { return nil }
+        return .message(TafsCloud.ChatMessage(at: last.addingTimeInterval(0.001), from: .taf, text: failed.words,
+                                              session: "failed|" + failed.run))
     }
 
     /// How long a held call's card waits in the chat for the taf's words that explain it (the

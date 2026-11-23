@@ -2,6 +2,8 @@ import { watchAskOn } from "./watch-ask.js";
 import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { appSecret } from "./appsecret.js";
+import { accountIndex } from "./accountindex.js";
+import { GROUPS, SWEEPS, sweepsFor, tick } from "./tick.js";
 import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
 import { type AccountStore, agentAlertSecrets, keepAccount } from "./accounts.js";
 import { agentKeys } from "./agentkeys.js";
@@ -12,7 +14,7 @@ import { fcmSender } from "./fcm.js";
 import { KIFF_API } from "./kiff.js";
 import { PLANQUE } from "./setupdef.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
-import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepDeletions, sweepDeliveries, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepHeld, sweepLate, sweepReplies, sweepYourSteps, sweepConsent, sweepFirstRuns, sweepStaleCoach, sweepMissionLog, sweepBriefs, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
+import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepConsent, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import { parseKinds } from "./alert-preferences.js";
 import { routing, silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
@@ -290,6 +292,8 @@ const apns = silencing(routing({
   android: fcm,
 }));
 
+const withTafs = accountIndex((c) => dynamo.send(c as never), TABLE);
+
 /**
  * Each account's tafs, in one item (tafs#tenant): a map of taf id → the taf
  * as JSON, each entry set or removed on its own.
@@ -306,7 +310,13 @@ const tafs: Tafs = {
   },
   async put(tenant, taf) {
     const Key = { id: { S: `tafs#${tenant}` } };
-    await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key, UpdateExpression: "SET tafs = if_not_exists(tafs, :empty)", ExpressionAttributeValues: { ":empty": { M: {} } } }));
+    // The account's first taf makes its item, and puts the account in the sweeps' index.
+    try {
+      await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key, UpdateExpression: "SET tafs = :empty", ConditionExpression: "attribute_not_exists(tafs)", ExpressionAttributeValues: { ":empty": { M: {} } } }));
+      await withTafs.add(tenant);
+    } catch (err) {
+      if (!(err instanceof ConditionalCheckFailedException)) throw err;
+    }
     await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key, UpdateExpression: "SET tafs.#id = :taf", ExpressionAttributeNames: { "#id": taf.id }, ExpressionAttributeValues: { ":taf": { S: JSON.stringify(taf) } } }));
   },
   async putIf(tenant, taf, read) {
@@ -326,19 +336,9 @@ const tafs: Tafs = {
   async remove(tenant, id) {
     await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key: { id: { S: `tafs#${tenant}` } }, UpdateExpression: "REMOVE tafs.#id", ExpressionAttributeNames: { "#id": id } }));
   },
-  /** A scan of the table's tafs#… items, keys only: an upgrade's, by hand, not a request's. */
+  /** The accounts with tafs, from the index (accountindex.ts), not a scan of the table. */
   async tenants() {
-    const out: string[] = [];
-    let start: Record<string, AttributeValue> | undefined;
-    do {
-      const page = await dynamo.send(new ScanCommand({
-        TableName: TABLE, ProjectionExpression: "id", FilterExpression: "begins_with(id, :p)",
-        ExpressionAttributeValues: { ":p": { S: "tafs#" } }, ExclusiveStartKey: start,
-      }));
-      for (const item of page.Items ?? []) if (item.id?.S) out.push(item.id.S.slice("tafs#".length));
-      start = page.LastEvaluatedKey;
-    } while (start);
-    return out;
+    return withTafs.list(Date.now());
   },
 };
 
@@ -437,6 +437,7 @@ const accountData: AccountData = {
       start = page.LastEvaluatedKey;
     } while (start);
     for (const id of ids) await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: id } } }));
+    await withTafs.drop(tenant);
     try {
       await secrets.send(new DeleteSecretCommand({ SecretId: `${ACCOUNTS_PREFIX}${tenant}`, ForceDeleteWithoutRecovery: true }));
     } catch (err) {
@@ -706,12 +707,17 @@ interface UpgradeEvent {
 
 /** The deletion sweep, invoked by its schedule: every deletion not finished, and every hand-over a server error left undone, tried again. */
 interface SweepEvent {
-  /** "deletions": the 5-minute sweep, everything below. "consent": the consent sweep alone, which a deploy runs once (infra/aws.sh). */
-  sweep: "deletions" | "consent";
+  /**
+   * "tick-1" … "tick-5": one group of the 5-minute sweep (tick.ts GROUPS), each its own target of the rule. "deletions":
+   * every sweep in one invocation, as before the groups. "consent": the consent sweep alone, which a deploy runs once
+   * (infra/aws.sh).
+   */
+  sweep: string;
 }
 
+
 function isSweep(event: unknown): event is SweepEvent {
-  return typeof event === "object" && event !== null && !("requestContext" in event) && ["deletions", "consent"].includes((event as { sweep?: unknown }).sweep as string);
+  return typeof event === "object" && event !== null && !("requestContext" in event) && ["deletions", "consent", ...Object.keys(GROUPS)].includes((event as { sweep?: unknown }).sweep as string);
 }
 
 function isUpgrade(event: unknown): event is UpgradeEvent {
@@ -724,8 +730,8 @@ export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Pro
   if (isSweep(event)) {
     // The same schedule retries Coach's hand-overs a server error left undone, and door replies a provider didn't take,
     // and says once a taf whose scheduled runs keep failing to start.
-    const d = deps();
-    return { swept: await sweepDeletions(d), handovers: await sweepHandOvers(d), replies: await sweepReplies(d), deliveries: await sweepDeliveries(d), failing: await sweepFailingSchedules(d), health: await sweepHealth(d), held: await sweepHeld(d), late: await sweepLate(d), your_steps: await sweepYourSteps(d), consent: await sweepConsent(d), first_runs: await sweepFirstRuns(d), stale_coach: await sweepStaleCoach(d), mission_log: await sweepMissionLog(d), briefs: await sweepBriefs(d) };
+    const { deletions, ...rest } = await tick(deps(), sweepsFor(event.sweep, SWEEPS));
+    return { swept: (deletions ?? []) as unknown[], ...rest };
   }
   if (isUpgrade(event)) {
     try {

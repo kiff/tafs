@@ -1,0 +1,1 @@
+- **tafs cloud:** the scheduled sweeps read the accounts with tafs from a small index instead of scanning the whole table, once per tick rather than once per sweep, and log one line per sweep with how long it took ([maintaining.md](../docs/maintaining.md#request-logs), [data.md](../docs/data.md)).
