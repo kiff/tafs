@@ -597,10 +597,14 @@ A connected app (“Connected ✓”) opens its connections (`AppConnectionsView
 KIFF's draft has one Card per tool, so a new taf's approval drew "A new Card" three or five times for
 what the owner approves as one. As on Android, `DraftCardsView` (in `Views/TafDetailView.swift`, used
 by a version's sheet and a trial) draws the draft's new Cards (no `current`) as one panel, "A new
-Card", with every new Card's lines under it, each once, in the draft's order, where the first new Card
-is (`DraftCardsView.shown`). A Card the draft changes, or keeps unchanged, keeps its own panel and
-place, and the Cards it removes follow, as before. Test:
-`VersionsTests.testADraftsNewCardsShowAsOneAndAChangedCardAlone`.
+Card", with every new Card's lines under it, in the draft's order, where the first new Card
+is (`DraftCardsView.shown`). **Each Card's lines stay together, and only a whole Card exactly like an
+earlier one is shown once.** A single line is never dropped for being on an earlier Card: a Card's
+total names no tool ("20 calls a day"), so two Cards with the same total each show it after their own
+tool, and the owner never reads less than they sign (qa-kiff, 23 Nov). A Card the draft changes, or
+keeps unchanged, keeps its own panel and place, and the Cards it removes follow, as before. Tests:
+`VersionsTests.testADraftsNewCardsShowAsOneAndAChangedCardAlone`,
+`VersionsTests.testANewCardsTotalIsShownForEachCardThatHasIt`.
 
 ## Home's line
 
