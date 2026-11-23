@@ -141060,6 +141060,12 @@
             "value": "สิ่งที่ย้ายมายัง Chrome นี้เปลี่ยนไป จึงยังไม่ได้จับคู่ ตรวจสอบแล้วจับคู่อีกครั้ง"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Chrome-a geçýän zatlar üýtgedi, şonuň üçin hiç zat goşalanmady. Barlaň we täzeden goşalaň."
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",

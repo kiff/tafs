@@ -22,6 +22,7 @@
   "chrome.refused": "Bu kody başga Chrome ulandy, şonuň üçin hiç zat goşalanmady. Täzeden başlaň.",
   "chrome.remove": "Goşalamany aýyryň",
   "chrome.remove_named": "{name} goşalamasyny aýyryň",
+  "chrome.replace_changed": "Bu Chrome-a geçýän zatlar üýtgedi, şonuň üçin hiç zat goşalanmady. Barlaň we täzeden goşalaň.",
   "chrome.replace_moves": "Bu Chrome-a geçýär: {sites}",
   "chrome.replace_none": "Täze Chrome (hiç birini çalşamaýar)",
   "chrome.replace_title": "Çalşýar",
