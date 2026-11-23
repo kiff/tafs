@@ -11,6 +11,7 @@ import { refuseURL, bareURL } from "./sites.js";
  */
 const isBlank = (url) => String(url || "").trim().toLowerCase() === "about:blank";
 import { refuse } from "./guard.js";
+import { parseHandle } from "./vault.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
 import { checkRelease, checkAllowances, checkSites, Nonces } from "./protocol.js";
@@ -487,9 +488,10 @@ export class Runner {
   async fillSealed(run, step, page) {
     const pairing = this.paired();
     if (!this.vault || !pairing || !pairing.phoneKey) return { error: { code: "secret_field" } };
-    const [, part] = String(step.act.sealed).split(":");
+    const named = parseHandle(step.act.sealed);
+    const part = named && named.part;
     const field = (page.fields || []).find((f) => f.ref === step.act.ref);
-    if (!field || (part === "password" ? field.kind !== "password" : part === "username" ? !["text", "email"].includes(field.kind) : true)) {
+    if (!named || !field || (part === "password" ? field.kind !== "password" : !["text", "email"].includes(field.kind))) {
       return { error: { code: "secret_field" } };
     }
     const tab = await this.chrome.tabs.get(run.tab);

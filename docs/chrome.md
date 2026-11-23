@@ -471,7 +471,8 @@ one exact origin (`chrome/src/vault.js`).
   moved to another origin can't be opened, and neither can an entry's username and password swapped in storage. The
   side panel lists only each site and whether a username is saved, never a value. One sign-in is kept per site: saving
   another for the same site replaces it, and the panel says so. Unpairing wipes the vault with everything else.
-- **The taf sees handles only.** A read of a page on that exact origin carries `page.sealed:
+- **The taf sees handles only.** A handle is exactly `sec_<id>:password` or `sec_<id>:username` (`parseHandle`): the extension reads
+  nothing else as one. A read of a page on that exact origin carries `page.sealed:
   ["sec_…:username", "sec_…:password"]`. A taf names one in `act.sealed` to ask for a fill.
 - **Only the paired phone's own release opens one, for one fill.** `step.release` is the phone's `tafs-chrome/release/v1`
   signature, with the `phone_key` the extension learned at pairing, over
@@ -513,7 +514,8 @@ origin, the element's label, which Chrome) and the release's own fields below.
    Anything else (a third segment, another part, an empty id) is no release: the card is drawn as an unreadable hold (the
    hold's summary only) and nothing is signed. The extension reads the part as the segment after the first colon (`runner.js`
    `fillSealed`, `vault.js`), so a three-segment handle would show one part and fill the other; it refuses such a handle too
-   (a follow-up PR of mine, with its test), and the vector's refused cases include one.
+   (`parseHandle` in `vault.js`, used by the runner and the vault: exactly `sec_<id>:password` or `sec_<id>:username`, a
+   third segment or any other part refused whole), and the vector's refused cases include one.
 4. Under "On the page", the field's label and the page's title as planque read them, as every page word is drawn: one plain
    line, verbatim, never as what the card asks.
 5. One fixed line: "It never leaves your Chrome. tafs doesn't see it." (the phone never has the value, and says so rather than
