@@ -55,14 +55,21 @@ enum ChromeReplace {
     /// The connections that move when `old` is replaced: each of its live connections (planque's list on the Chrome) whose sites **this
     /// phone's own signature verifies** for the Chrome replaced (`chrome_sites_sig` over `{chrome_id, grant, sites}`, by `phoneKey`, its
     /// approval key, from planque's grant read), with those sites, in planque's order. Never from what planque says: a connection
-    /// without a verifying signature, one carried here from an earlier Chrome, or one with no sites moves nothing and ends with the
-    /// old Chrome, as unpairing does. A connection planque refuses to carry (pending, failed, ended) is left out. At most the
+    /// without a verifying signature, one carried here from an earlier Chrome whose pairing this phone did not sign (or that names other
+    /// sites), or one with no sites moves nothing and ends with the old Chrome, as unpairing does. A connection planque refuses to carry (pending, failed, ended) is left out. At most the
     /// extension's limits (50 connections, 100 sites each).
     static func carried(from old: PlanqueClient.Chrome, in grants: [PlanqueClient.Grant], phoneKey: Data) -> [ChromePairing.Carried] {
         (old.connections ?? []).compactMap { c in
             guard let g = grants.first(where: { $0.id == c.grant }), !["pending", "failed", "disconnected"].contains(g.status),
-                  !c.sites.isEmpty, c.sites.count <= 100, let sig = g.chromeSitesSig, !sig.isEmpty,
-                  ChromePairing.sitesSignatureHolds(sig, publicKeyDER: phoneKey, chromeID: old.id, grant: c.grant, sites: c.sites) else { return nil }
+                  !c.sites.isEmpty, c.sites.count <= 100 else { return nil }
+            // Signed by this phone for this Chrome, or carried here by a re-pairing that this phone signed (planque's `paired_with`).
+            let signedHere = g.chromeSitesSig.map { sig in
+                !sig.isEmpty && ChromePairing.sitesSignatureHolds(sig, publicKeyDER: phoneKey, chromeID: old.id, grant: c.grant, sites: c.sites)
+            } ?? false
+            let carriedHere = g.chromeSitesCarried == old.id && (old.pairedWith.map {
+                ChromePairing.pairingVouches($0, phoneKey: phoneKey, chromeKeySHA256: old.keySHA256, grant: c.grant, sites: c.sites)
+            } ?? false)
+            guard signedHere || carriedHere else { return nil }
             return ChromePairing.Carried(grant: c.grant, sites: c.sites)
         }.prefix(50).map { $0 }
     }
