@@ -178,6 +178,7 @@
     <string name="billing_ask_someone_pack">Kažkas prašo: %1$s.</string>
     <string name="billing_ask_someone_raise">Kažkas prašo padidinti išlaidų limitą.</string>
     <string name="billing_bought_not_recorded">Nupirkta. KIFF to dar nepridėjo: tafs bandys dar kartą atsidarius.</string>
+    <string name="billing_buy_on_phone">Solo arba kreditų įsigykite tafs programėlėje savo telefone.</string>
     <string name="billing_by_agreement">Valdoma pagal jūsų įmonės sutartį</string>
     <string name="billing_by_apple">Apmokestina Apple</string>
     <string name="billing_by_google_play">Apmokestina Google Play</string>
@@ -237,6 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo – %2$s per %1$s prenumerata, mokama iš jūsų Apple paskyros. Ji atnaujinama kas %3$s, kol jos neatšauksite.</string>
     <string name="billing_starts_free">Pradžioje nemokamai: %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs vienam asmeniui, kas mėnesį.</string>
+    <string name="billing_team_on_web">Gauti Team svetainėje kiff.dev</string>
     <string name="billing_terms_use">Naudojimo sąlygos</string>
     <string name="billing_test_purchase_credits">Bandomieji pirkiniai neprideda kreditų prie šios paskyros.</string>
     <string name="billing_try_free">Išbandyti nemokamai: %1$s</string>

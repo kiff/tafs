@@ -172,6 +172,7 @@
     <string name="billing_ask_someone_pack">ມີຄົນຂໍ %1$s.</string>
     <string name="billing_ask_someone_raise">ມີຄົນຂໍເພີ່ມຂີດຈຳກັດການໃຊ້ຈ່າຍ.</string>
     <string name="billing_bought_not_recorded">ຊື້ແລ້ວ. KIFF ຍັງບໍ່ໄດ້ເພີ່ມມັນ: tafs ລອງໃໝ່ເມື່ອມັນເປີດ.</string>
+    <string name="billing_buy_on_phone">ຊື້ Solo ຫຼື ເຄຣດິດໃນແອັບ tafs ໃນໂທລະສັບຂອງທ່ານ.</string>
     <string name="billing_by_agreement">ຈັດການຕາມສັນຍາຂອງບໍລິສັດທ່ານ</string>
     <string name="billing_by_apple">Apple ເກັບເງິນ</string>
     <string name="billing_by_google_play">Google Play ເກັບເງິນ</string>
@@ -223,6 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo ແມ່ນການສະໝັກໜຶ່ງ%1$s ລາຄາ %2$s ເກັບຈາກບັນຊີ Apple ຂອງທ່ານ. ມັນຕໍ່ອາຍຸທຸກ%3$s ຈົນກວ່າທ່ານຍົກເລີກ.</string>
     <string name="billing_starts_free">ເລີ່ມຟຣີ %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">taf ສຳລັບຄົນໜຶ່ງ, ທຸກເດືອນ.</string>
+    <string name="billing_team_on_web">ຮັບ Team ທີ່ kiff.dev</string>
     <string name="billing_terms_use">ຂໍ້ກຳນົດການໃຊ້ງານ</string>
     <string name="billing_test_purchase_credits">ການຊື້ທົດລອງບໍ່ເພີ່ມເຄຣດິດໃສ່ບັນຊີນີ້.</string>
     <string name="billing_try_free">ລອງຟຣີ %1$s</string>

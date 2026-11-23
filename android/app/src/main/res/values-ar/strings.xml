@@ -187,6 +187,7 @@
     <string name="billing_ask_someone_pack">يطلب أحدهم %1$s.</string>
     <string name="billing_ask_someone_raise">يطلب أحدهم رفع حد الإنفاق.</string>
     <string name="billing_bought_not_recorded">تم الشراء. لم يضفه KIFF بعد: يحاول tafs مرة أخرى عند فتحه.</string>
+    <string name="billing_buy_on_phone">اشترِ Solo أو الأرصدة من تطبيق tafs على هاتفك.</string>
     <string name="billing_by_agreement">تُدار باتفاقية شركتك</string>
     <string name="billing_by_apple">تتم المحاسبة عبر Apple</string>
     <string name="billing_by_google_play">تتم المحاسبة عبر Google Play</string>
@@ -258,6 +259,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo اشتراك بسعر %2$s / %1$s، يُخصم من حساب Apple الخاص بك. يتجدد في نهاية كل فترة (%3$s) حتى تلغيه.</string>
     <string name="billing_starts_free">يبدأ بفترة مجانية: %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs لشخص واحد، كل شهر.</string>
+    <string name="billing_team_on_web">احصل على Team من kiff.dev</string>
     <string name="billing_terms_use">شروط الاستخدام</string>
     <string name="billing_test_purchase_credits">لا تضيف عمليات الشراء التجريبية أرصدة إلى هذا الحساب.</string>
     <string name="billing_try_free">جرّب مجانًا: %1$s</string>

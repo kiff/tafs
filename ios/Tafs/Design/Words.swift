@@ -361,6 +361,8 @@ enum Words {
         }
         /// Bought. KIFF hasn't added it yet: tafs tries again when it opens.
         static var boughtNotRecorded: String { Words.line("billing.bought_not_recorded") }
+        /// Buy Solo or credits in the tafs app on your phone.
+        static var buyOnPhone: String { Words.line("billing.buy_on_phone") }
         /// Managed by your company's agreement
         static var byAgreement: String { Words.line("billing.by_agreement") }
         /// Billed by Apple
@@ -453,6 +455,8 @@ enum Words {
         static func startsFree(trial: String) -> String { Words.line("billing.starts_free", trial) }
         /// Tafs for one person, every month.
         static var tafsKiffOnePersonEvery: String { Words.line("billing.tafs_kiff_one_person_every") }
+        /// Get Team on kiff.dev
+        static var teamOnWeb: String { Words.line("billing.team_on_web") }
         /// Terms of Use
         static var termsUse: String { Words.line("billing.terms_use") }
         /// Test purchases don't add credits to this account.
