@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Savieno tafs paplašinājumu pārī ar savu tālruni, un taf varēs strādāt tavā Chrome, tikai tajās vietnēs, ko atļauj. Tas strādā savās cilnēs, un viss, kam vajadzīgs tavs jā, gaida tevi sadaļā {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} parāda tavus Chrome un to, kam katrs tiek izmantots. Atvienojot Chrome, tā savienojumi beidzas.",
+  "help.chrome_title": "tafs var strādāt tavā Chrome",
+  "help.code_lead": "Ieslēdz to sadaļā {account} › {sign_in}. Tad, kad pieprasīsi, KIFF nosūtīs e-pastā kodu, kas darbojas vienu reizi, 10 minūtes, pārlūkā, kas to pieprasīja.",
+  "help.code_safe": "Nekad nedod šo kodu nevienam. KIFF to no tevis nekad neprasīs.",
+  "help.code_title": "Pieslēgšanās ar e-pastā saņemtu kodu"
+}

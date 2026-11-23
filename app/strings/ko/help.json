@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "tafs 확장 프로그램을 휴대전화와 페어링하면, taf가 내 Chrome에서 일할 수 있습니다. 허용한 사이트에서만 일하고, 자체 탭에서 작업하며, 내 승인이 필요한 일은 {needs_you}에서 기다립니다.",
+  "help.chrome_manage": "{account} › {chrome}에서 내 Chrome 목록과 각각의 용도를 볼 수 있습니다. Chrome의 페어링을 해제하면 그 연결도 끝납니다.",
+  "help.chrome_title": "tafs는 내 Chrome에서 일할 수 있습니다",
+  "help.code_lead": "{account} › {sign_in}에서 켜세요. 그다음 요청하면 KIFF가 한 번만, 10분 동안, 요청한 브라우저에서 쓸 수 있는 코드를 이메일로 보냅니다.",
+  "help.code_safe": "이 코드를 누구에게도 알려 주지 마세요. KIFF는 절대 묻지 않습니다.",
+  "help.code_title": "이메일로 받은 코드로 로그인"
+}

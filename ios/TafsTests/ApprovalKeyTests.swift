@@ -294,6 +294,35 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(signer.approvalPrompted.isEmpty)
     }
 
+    /// A sign-in fill is never allowed without its release, which iPhone and iPad can't make yet: whatever asks (a
+    /// notification's action, any later caller), approving once or extra room asks for no Face ID and sends nothing. Refuse
+    /// still goes.
+    func testASignInFillIsNeverApprovedOrGivenExtraRoomOnlyRefused() async throws {
+        let fill = Self.heldJSON.replacingOccurrences(of: #""accounting_version":2}"#,
+                                                      with: #""accounting_version":2,"browser":{"sealed_fill":{"chrome_id":"chr_a"}}}"#)
+        XCTAssertNotEqual(fill, Self.heldJSON)
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, held: fill)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/change-card"] = (200, #"{"id":"ce_1"}"#)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/reject"] = (200, #"{"id":"ce_1"}"#)
+        var call = try XCTUnwrap(model.held.first)
+        XCTAssertEqual(call.needsRelease, true)
+        for answer in [Answer.approveOnce, .extraRoom] {
+            await model.answer(call, with: answer, fromNotification: true)
+            XCTAssertEqual(model.lastError, Words.Chrome.releaseUnreadable, "\(answer)")
+        }
+        // Even a copy of the call that lost the flag: the held one still has it.
+        call.needsRelease = nil
+        await model.answer(call, with: .approveOnce)
+        XCTAssertTrue(signer.approvalPrompted.isEmpty && signer.currentPrompted.isEmpty, "no Face ID for an allowing answer")
+        XCTAssertTrue(sent("POST", "/v1/me/card-exceptions/ce_1/approve-once").isEmpty)
+        XCTAssertTrue(sent("POST", "/v1/me/card-exceptions/ce_1/change-card").isEmpty)
+        // Refuse goes as any refusal.
+        await model.answer(try XCTUnwrap(model.held.first), with: .refuse)
+        XCTAssertEqual(sent("POST", "/v1/me/card-exceptions/ce_1/reject").count, 1, model.lastError ?? "")
+    }
+
     func testWithoutTheApprovalKeyApprovingStaysOnTheCurrentKey() async throws {
         let signer = TwoKeySigner()
         let model = await signedIn(signer, registration: (404, #"{"error":"not found"}"#), held: Self.heldJSON)

@@ -1446,6 +1446,12 @@
     <string name="halt_all_running">tafs לא הצליח לעצור את ה-taf שלך. יש לפתוח את tafs כדי לעצור אותם.</string>
     <string name="halt_all_signed_out">יצאת מ-tafs. יש להיכנס כדי לעצור את ה-taf שלך.</string>
     <string name="halt_all_title">עצירת כל ה-taf</string>
+    <string name="help_chrome_lead">צמדו את התוסף של tafs לטלפון שלכם וה-taf יוכל לעבוד ב-Chrome שלכם, רק באתרים שתתירו. הוא עובד בלשוניות משלו, וכל דבר שדורש את אישורכם ממתין לכם ב-%1$s.</string>
+    <string name="help_chrome_manage">%1$s › %2$s מציג את ה-Chrome שלכם ולמה כל אחד משמש. ביטול צימוד של Chrome מסיים את החיבורים שלו.</string>
+    <string name="help_chrome_title">tafs יכול לעבוד ב-Chrome שלך</string>
+    <string name="help_code_lead">הפעילו זאת ב-%1$s › %2$s. אחר כך, כשתבקשו, KIFF שולח במייל קוד שפועל פעם אחת, 10 דקות, בדפדפן שביקש אותו.</string>
+    <string name="help_code_safe">לעולם אל תיתן את הקוד הזה לאף אחד. KIFF לעולם לא יבקש אותו ממך.</string>
+    <string name="help_code_title">כניסה עם קוד שמגיע במייל</string>
     <string name="home_calendar_not_read">לא ניתן היה לקרוא את לוח השנה. %1$s</string>
     <string name="home_cant_reach_kiff">אי אפשר להגיע ל-KIFF</string>
     <string name="home_choose_taf">יש לבחור taf.</string>

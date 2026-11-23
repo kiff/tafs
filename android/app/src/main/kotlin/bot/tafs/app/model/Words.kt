@@ -1421,6 +1421,14 @@ object Words {
     val signedOut: String get() = Res.s(R.string.halt_all_signed_out)
     val title: String get() = Res.s(R.string.halt_all_title)
   }
+  object Help {
+    fun chromeLead(needsYou: String): String = Res.s(R.string.help_chrome_lead, needsYou)
+    fun chromeManage(account: String, chrome: String): String = Res.s(R.string.help_chrome_manage, account, chrome)
+    val chromeTitle: String get() = Res.s(R.string.help_chrome_title)
+    fun codeLead(account: String, signIn: String): String = Res.s(R.string.help_code_lead, account, signIn)
+    val codeSafe: String get() = Res.s(R.string.help_code_safe)
+    val codeTitle: String get() = Res.s(R.string.help_code_title)
+  }
   object Home {
     fun calendarNotRead(why: String): String = Res.s(R.string.home_calendar_not_read, why)
     val cantReachKiff: String get() = Res.s(R.string.home_cant_reach_kiff)

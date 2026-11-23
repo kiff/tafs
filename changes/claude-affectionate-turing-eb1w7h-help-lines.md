@@ -1,0 +1,2 @@
+- **How tafs works explains Chrome and the emailed code:** two short sections, shown only where each is available, on iPhone and iPad in every language ([docs/ios-app.md](docs/ios-app.md)).
+- **Android:** How tafs works says what tafs can do in your Chrome, and how to sign in with an emailed code, each only where you can use it, as on iPhone and iPad ([docs/onboarding.md](../docs/onboarding.md)).

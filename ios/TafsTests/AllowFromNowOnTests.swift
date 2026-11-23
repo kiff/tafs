@@ -82,6 +82,10 @@ final class AllowFromNowOnTests: XCTestCase {
         XCTAssertEqual(call.agent, "refunds-1")
         XCTAssertEqual(call.breachOutcomes, ["per_action_exceeded"])
         XCTAssertTrue(HoldAllow.allowable(call))
+        // A sign-in fill is never allowable, whatever its breaches: it needs a release this app can't make.
+        var fill = call
+        fill.needsRelease = true
+        XCTAssertFalse(HoldAllow.allowable(fill))
     }
 
     // MARK: The device signs what the person saw

@@ -1385,6 +1385,18 @@ KIFF opens. `{taf}` is the sample's first taf.
 
 `ChromeShotView` shows the picture a paired Chrome kept just before a taf's step acted (kept 30 days by planque, which keeps none while its switch is off). It reads `GET /v1/accounts/{tenant}/chromes/screenshots/{step}` through `PlanqueClient.chromeScreenshot(step:)`, signed by the device as the Chromes list is, and shows the bytes only if they are WebP, at most 120 KB, and hash to the `sha256` planque sent (`ChromeScreenshot.read`). A 404 reads "No picture is kept for this step"; anything else that goes wrong reads "The picture couldn't be loaded". A call's receipt (`ReceiptView`, from the Record) lists the pictures kept for it: `PlanqueClient.chromeShots(op:)` asks `GET /v1/accounts/{tenant}/chromes/screenshots?op=<proposal_id>` (device-signed, the query covered), which answers the step ids and times (oldest first, the newest 20, none past 30 days, no bytes). Each picture is a "See the page before this step" button that opens the viewer, which then reads that step's bytes. A call that was not a Chrome step, a failed list, or planque keeping none shows nothing: `AppModel.chromeShots` answers `[]` on any failure.
 
+## A held sign-in fill: Refuse only, until the release card
+
+A held Chrome step whose `browser` block carries `sealed_fill` (or a plain `fill`) is a sign-in fill. Allowing it takes a
+release signed by the phone's approval key (docs/chrome.md, "never an allowing answer without its release"), and iPhone
+and iPad don't draw the release card yet. So such a hold offers **no Approve once, no Extra room and no "Allow this from
+now on"**, only Refuse, with `chrome.release_unreadable` ("This fill can't be read, so it can't be allowed. You can still
+refuse it."). `CardException.BrowserBlock` reads the fill apart from the step card, so a fill is known even when its card
+can't be drawn, and a block of the wrong shape never fails the hold. KIFF's `can_approve_once` doesn't override it
+(`KIFFMapping.held`; `HoldAllow.allowable`, the one rule behind Allow, its sheet's open and confirm; `AppModel.answer`, which signs no allowing answer for a fill whoever asks). A `browser` block that isn't an object counts as a fill: never allowed on a guess. Before sign-in fills are turned on, the server refuses an allow without a release too, from any client. Tests: `BrowserStepCardTests.testASignInFillOffersNoApproveOnceUntilTheReleaseCardExists`,
+`AllowFromNowOnTests.testAHeldCallKeepsItsAgentAndItsBreaches`,
+`ApprovalKeyTests.testASignInFillIsNeverApprovedOrGivenExtraRoomOnlyRefused`.
+
 ## Account › Sign-in: the email-code setting
 
 Account › Sign-in shows `GET /v1/me/sign-in`: whether the person signs in with a code sent by email, and whether KIFF can send
@@ -1408,6 +1420,10 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
 - **The key** is the `apple-release` environment's `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8`, which a run from `main` can read
   (the scheduled and manual runs both are). It is written to the runner's temporary folder and removed at the end.
 - The macOS app is the same app record as the iPhone's and iPad's (universal purchase), so its versions are the `MAC_OS` ones.
+
+## Help: Chrome and the emailed code, in How tafs works
+
+Two short sections in How tafs works (the screen Account and Home open, `HowTafsWorksView`), words in `help.json` in every language (legal-i18n's drafts, pinned by key): **Chrome** ("tafs can work in your Chrome": what it does, only on the sites you allow, in its own tabs; where Account › Chrome lists each Chrome and what it is used for; unpairing ends its connections), shown only where planque offers Chrome (`model.chromes != nil`); and **Sign in with an emailed code** (turn it on in Account › Sign-in; KIFF emails a code that works once for 10 minutes; never give it to anyone), shown only where KIFF can send codes (`codeSignIn.available`). The screens are named with the app's own titles (`{account}`, `{chrome}`, `{sign_in}`, `{needs_you}`), so each language writes them as the app does. The app says nothing about what the person can't use.
 
 ## Account › Chrome: what each Chrome is used for
 
