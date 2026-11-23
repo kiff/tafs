@@ -1,0 +1,1 @@
+- **iPhone and iPad show a taf's "Still reading" card.** When a taf has read page after page of one list, its chat asks whether to read on, with Read on and Stop here, and the run goes on with the owner's answer. The same as Android.

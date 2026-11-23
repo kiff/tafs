@@ -1298,6 +1298,59 @@ final class ChatTests: XCTestCase {
         XCTAssertNil(model.chatState(id).live)
     }
 
+    /// The loop card (docs/chat.md): a run that read page after page of one list waits in the taf's own chat on "Still reading",
+    /// with Read on and Stop here in tafs cloud's words. The answer goes to the taf's route with the card's chat, as its option's
+    /// value, and the run that goes on is followed again. A second tap sends nothing, and an answered card offers nothing.
+    func testALoopCardIsDrawnInTheTafsChatAndItsAnswerGoesToTheTafsRoute() async throws {
+        let (model, id) = await kiffModel()
+        let loop = #"{"at":"2026-10-14T09:02:00Z","session":"sesn_9","run":"r1","component":{"type":"confirm","id":"tafs-loop-1","loop":{"tool":"list_invoices","pages":5},"title":"Still reading","text":"It has read 5 pages of the same list.","options":[{"value":"tafs_loop_continue","label":"Read on"},{"value":"tafs_loop_summarise","label":"Stop here"}]}}"#
+        let ask = #"{"at":"2026-10-14T09:03:00Z","session":"sesn_9","component":{"type":"ask_coach","id":"ac_1","text":"Raise the daily limit to 30"}}"#
+        let plain = #"{"at":"2026-10-14T09:04:00Z","session":"sesn_9","component":{"type":"confirm","id":"c_1","title":"Go on?","options":[{"value":"yes","label":"Yes"}]}}"#
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"List my invoices","session":"sesn_9"}],
+         "components":[\(loop),\(ask),\(plain)]}
+        """)
+        await model.loadChat(id)
+        let cards = model.chatState(id).loopCards
+        XCTAssertEqual(cards.count, 1, "only a confirm that carries `loop`")
+        let card = try XCTUnwrap(cards.first)
+        XCTAssertEqual(card.title, "Still reading")
+        XCTAssertEqual(card.options.map(\.label), ["Read on", "Stop here"])
+        XCTAssertNil(card.answered)
+        XCTAssertEqual(model.chatState(id).askCoach.count, 1, "the ask_coach card is read as before")
+        XCTAssertTrue(model.chatItems(id).contains { $0.id == "l|tafs-loop-1" }, "drawn in the taf's chat")
+
+        var opened: [String] = []
+        model.resumeOpener = { _, run in opened.append(run); return AsyncThrowingStream { _ in } }
+        StubProtocol.responses["POST /v1/tafs/depl_1/components/tafs-loop-1/answer"] = (200, #"{"session":"sesn_9","run":"r1","status":"running"}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"List my invoices","session":"sesn_9"}],
+         "components":[\(loop)],"working":{"session":"sesn_9","run":"r1"}}
+        """)
+        await model.answerLoopCard(id, card: card, value: "tafs_loop_summarise")
+        let sent = StubProtocol.sent.filter { $0.httpMethod == "POST" && $0.url?.path == "/v1/tafs/depl_1/components/tafs-loop-1/answer" }
+        XCTAssertEqual(sent.count, 1)
+        let body = try XCTUnwrap(try JSONSerialization.jsonObject(with: try XCTUnwrap(sent.first?.httpBody)) as? [String: Any])
+        XCTAssertEqual(body["answer"] as? String, "tafs_loop_summarise", "the option's value, as tafs cloud gave it")
+        XCTAssertEqual(body["session"] as? String, "sesn_9", "the card's own chat")
+        XCTAssertTrue(model.chatState(id).loopTaken.contains("tafs-loop-1"))
+        XCTAssertEqual(opened, ["r1"], "the run that goes on is followed again")
+
+        // A second tap, and a value the card doesn't offer, send nothing.
+        await model.answerLoopCard(id, card: card, value: "tafs_loop_continue")
+        await model.answerLoopCard(id, card: card, value: "something_else")
+        XCTAssertEqual(StubProtocol.sent.filter { $0.url?.path == "/v1/tafs/depl_1/components/tafs-loop-1/answer" }.count, 1)
+
+        // Answered: tafs cloud's words for it, and nothing to tap.
+        let answered = loop.replacingOccurrences(of: #""run":"r1","#, with: #""run":"r1","answer":{"state":"answered","words":"Stop here"},"#)
+        XCTAssertNotEqual(answered, loop)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"components":[\(answered)]}
+        """)
+        await model.loadChat(id)
+        XCTAssertEqual(model.chatState(id).loopCards.first?.answered, "Stop here")
+    }
+
     /// A run of the person's that tafs cloud says is at work, with nothing here following it
     /// (they left the chat and came back), is picked back up once (kiff/tafs#285): its steps
     /// show as they happen, a message it wrote reloads the thread, and its end ends it.
