@@ -45,8 +45,7 @@ final class TimeZoneTests: XCTestCase {
     func testANewAccountTakesThePhonesZoneWithNoQuestion() async throws {
         // The phone's zone, whatever the runner's is: only a phone on UTC has nothing to send.
         let here = TimeZone.current.identifier
-        // A runner on UTC, or on a zone that is the same time as UTC (GMT, say), is never asked: nothing to test here.
-        try XCTSkipIf(AppModel.sameTime(here, "UTC"), "this runner keeps UTC's time")
+        try XCTSkipIf(here == "UTC", "this runner is on UTC")
         func signedIn(_ setup: String) async -> AppModel {
             StubProtocol.responses = [:]
             StubProtocol.sent = []
@@ -72,7 +71,12 @@ final class TimeZoneTests: XCTestCase {
         XCTAssertFalse(StubProtocol.sent.contains { $0.url?.path == "/v1/me/time-zone" }, "the phone sets nothing itself")
 
         let notTaken = await signedIn(#"{"setup":null,"tools":null}"#)
-        XCTAssertEqual(notTaken.timeZoneOffer, here, "not set by tafs cloud (a member, say): asked as before")
+        if AppModel.sameTime(here, "UTC") {
+            // A phone on GMT (as a CI runner may be) keeps the UTC account's time: nothing to switch, so nothing is asked.
+            XCTAssertNil(notTaken.timeZoneOffer, "the same time as the account's: never asked")
+        } else {
+            XCTAssertEqual(notTaken.timeZoneOffer, here, "not set by tafs cloud (a member, say): asked as before")
+        }
         let odd = await signedIn(#"{"setup":null,"tools":null,"time_zone":"Not/AZone"}"#)
         XCTAssertEqual(odd.kiffAccount?.timeZone, "UTC", "a zone the phone doesn't know isn't taken")
     }
