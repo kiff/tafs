@@ -32,7 +32,7 @@ import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startS
 import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
-import { extensionPreflight, withExtensionCORS } from "./extension-cors.js";
+import { extensionOrigin, extensionPreflight, withExtensionCORS } from "./extension-cors.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TRIGGER_KEYS, TriggerError, type Trigger } from "./triggers.js";
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
@@ -4615,7 +4615,7 @@ async function oldFormAnswer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text:
  */
 async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, deps: Deps): Promise<string> {
   // A taf's chat answer follows the person's message, else their app's language, never a data source's (docs/languages.md).
-  if (taf.job !== SETUP_JOB) return withReplyLanguage(text, langOf(event));
+  if (taf.job !== SETUP_JOB) return withReplyLanguage(text, langOf(event), fromExtension(event));
   // Every Coach message says the person's language when it isn't English, or when the account's was another (docs/languages.md).
   const lang = langOf(event);
   // English is said too when the account's language was another until this chat (read before the start keeps this one).
@@ -6228,7 +6228,7 @@ async function sendNext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, session: s
     // Every message says the reply-language rule, a chat's next one too: the person may switch language mid-chat.
     const said = taf.job === SETUP_JOB
       ? withLanguage(await withChatNotes(me, session, lines.text(text), deps), langOf(event))
-      : withReplyLanguage(lines.text(text), langOf(event));
+      : withReplyLanguage(lines.text(text), langOf(event), fromExtension(event));
     return await deps.agents.startRun(me.tenantID, taf.id, said, at, ai);
   } catch (err) {
     await lines.putBack();
@@ -8793,6 +8793,14 @@ function langOf(event: HTTPEvent): Lang {
   return languageFrom(header(event, "accept-language"));
 }
 
+/**
+ * Whether the request comes from the Chrome extension. Its `Accept-Language` is its browser's own, not the person's app's, so a
+ * reply's language is never taken from it (docs/languages.md): the person's message, then the conversation's, then English.
+ */
+function fromExtension(event: HTTPEvent): boolean {
+  return extensionOrigin(event) !== undefined;
+}
+
 function header(event: HTTPEvent, name: string): string {
   for (const [k, v] of Object.entries(event.headers ?? {})) if (k.toLowerCase() === name) return v ?? "";
   return "";
@@ -10626,7 +10634,7 @@ async function sentBefore(event: HTTPEvent, me: KIFFIdentity, taf: Taf, key: str
     // No digest of tafs cloud's own: kiff/agents' is of what it was sent, the person's words for a taf. Coach's carry
     // the start's lines and waiting lines too, so a Coach message that differs can't be told: it's taken as sent again.
     // A taf's message went with its reply-language line (withCoachSkills); one sent before that line, without it.
-    const sent = withReplyLanguage(owner, langOf(event));
+    const sent = withReplyLanguage(owner, langOf(event), fromExtension(event));
     if (!kept?.said && found.input_sha256 !== textDigest(sent) && found.input_sha256 !== textDigest(owner) && taf.job !== SETUP_JOB) throw keyConflict();
     if (found.steered) return { steered: { run: found.id, session: found.session_id } };
     // A run no invocation took yet (the first send went away before it began) is handed on once more, by
