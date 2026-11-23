@@ -2,7 +2,9 @@
 
 import hashlib
 import os
+import subprocess
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -29,6 +31,27 @@ class PublicText(unittest.TestCase):
             self.assertIsNone(public_text.named("@exampleteam-lane"), "a GitHub mention is a login, where KEEP allows it")
         finally:
             public_text.NAMES.discard(hashlib.sha256(name.encode()).hexdigest()[:16])
+
+    def test_ci_fails_on_a_planted_line_and_passes_once_it_is_gone(self):
+        """The script as CI runs it, in a repository of its own: a planted line fails it, the cleaned file passes."""
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public_text.py")
+        # A lane's name, built here so this file never spells it out.
+        lane = "-".join(["qa", "kiff"])
+        for planted in [f"// ({lane}'s read)", "// see " + "kiff/" + "work#24", "// decided (" + "PM" + ", 20 Nov)"]:
+            with tempfile.TemporaryDirectory() as repo:
+                run = lambda *a: subprocess.run(a, cwd=repo, capture_output=True, text=True)
+                run("git", "init", "-q")
+                path = os.path.join(repo, "a.kt")
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(f"val x = 1\n{planted}\n")
+                run("git", "add", "a.kt")
+                failed = run(sys.executable, script)
+                self.assertEqual(failed.returncode, 1, planted)
+                self.assertIn("a.kt:2:", failed.stdout)
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write("val x = 1\n// The rule itself.\n")
+                passed = run(sys.executable, script)
+                self.assertEqual((passed.returncode, passed.stdout.strip()), (0, "clean"), planted)
 
 
 if __name__ == "__main__":

@@ -39,9 +39,11 @@ jobs:
         env:
           BASE: ${{ github.base_ref }}
       # The whole tree says each rule as itself: no planning thread, no PM, no dated decision, no lane's name
-      # (scripts/public_text.py, which matches the names by hash).
+      # (scripts/public_text.py, which matches the names by hash). Its test first proves it: a planted line fails it.
       - name: Public text says the rule, not who set it
-        run: python3 scripts/public_text.py
+        run: |
+          python3 -W error -m unittest scripts/test_public_text.py
+          python3 scripts/public_text.py
 
   # The changelog entry is one file per pull request (changes/README.md), so
   # pull requests never conflict on CHANGELOG.md's first line.
