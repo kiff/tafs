@@ -377,7 +377,7 @@ object KiffMapping {
       install = installs,
       kind = e.kind,
       breachOutcomes = e.breaches.map { it.outcome },
-      browser = e.browser?.let(::browserStep),
+      browser = e.browser?.let { browserStep(it, (e.expiresAt ?: e.createdAt.plus(Duration.ofMinutes(10))).toEpochMilli()) },
     )
   }
 
@@ -391,7 +391,7 @@ object KiffMapping {
    * A held browser step's block as plain text (docs/chrome.md): every piece through [tafSays], so no line can reorder or hide
    * words; a block with no site or no action draws nothing, never half a page.
    */
-  fun browserStep(b: HeldBrowser): BrowserStep? {
+  fun browserStep(b: HeldBrowser, expiresAt: Long = 0): BrowserStep? {
     val site = tafSays(b.site, 120)?.takeIf { it.isNotBlank() } ?: return null
     val action = tafSays(b.actionWords, 200)?.takeIf { it.isNotBlank() } ?: return null
     fun text(e: kotlinx.serialization.json.JsonElement?): String? = (e as? kotlinx.serialization.json.JsonPrimitive)?.content?.let { tafSays(it, 40) }?.takeIf { it.isNotBlank() }
@@ -407,8 +407,21 @@ object KiffMapping {
       excerpt = tafSays(b.context?.text, BROWSER_EXCERPT_MAX)?.takeIf { it.isNotBlank() },
       lines = lines,
       chrome = tafSays(b.chrome?.name, 40)?.takeIf { it.isNotBlank() },
+      fill = b.sealedFill?.let { f -> sealedFill(f, expiresAt) },
+      fieldLabel = b.sealedFill?.fieldLabel?.let { tafSays(it, 200) }?.takeIf { it.isNotBlank() },
     )
   }
+
+  /**
+   * A sealed fill's fields as the release signs them: copied as planque sent them, never cleaned, since the extension checks the
+   * same bytes. What's drawn of them is read through the phone's own checks ([SealedRelease.refusal], [SealedRelease.part]).
+   */
+  fun sealedFill(f: bot.tafs.app.kiff.HeldSealedFill, expiresAt: Long): SealedRelease.Fill = SealedRelease.Fill(
+    chromeId = f.chromeId, op = f.op, sealed = f.sealed, origin = f.origin, fieldRef = f.fieldRef, readId = f.readId, grant = f.grant,
+    sitesSigned = f.sitesSigned?.let { SealedRelease.SitesSigned(it.sites, it.sig) },
+    sensitiveAllowed = f.sensitiveAllowed.map { SealedRelease.Allowance(it.site, it.sig) },
+    expiresAt = expiresAt,
+  )
 
   /**
    * The taf's line as the card shows it: plain text on one paragraph, with control characters and line breaks made spaces, and no

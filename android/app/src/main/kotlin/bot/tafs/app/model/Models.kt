@@ -792,4 +792,11 @@ data class BrowserStep(
   val excerpt: String? = null,
   val lines: List<String> = emptyList(),
   val chrome: String? = null,
+  /**
+   * A sealed fill's fields, byte for byte as planque relayed them (docs/chrome.md, "The phone's release card"): what the release
+   * signs and the phone checks. Null for any other step.
+   */
+  val fill: bot.tafs.app.kiff.SealedRelease.Fill? = null,
+  /** The field's label as the extension read it, plain text: page words, never what the card asks. */
+  val fieldLabel: String? = null,
 )

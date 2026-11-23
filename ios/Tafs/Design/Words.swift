@@ -1121,6 +1121,32 @@ enum Words {
         static var profileNote: String { Words.line("chrome.profile_note") }
         /// Another Chrome used this code, so nothing was paired. Start again.
         static var refused: String { Words.line("chrome.refused") }
+        /// Allow this fill
+        static var releaseAllow: String { Words.line("chrome.release_allow") }
+        /// It never leaves your Chrome. tafs doesn't see it.
+        static var releaseNeverLeaves: String { Words.line("chrome.release_never_leaves") }
+        /// This site isn't one you connected this Chrome to, so it can't be allowed.
+        static var releaseNotConnected: String { Words.line("chrome.release_not_connected") }
+        /// The page isn't a secure https page, so it can't be allowed.
+        static var releaseNotHttps: String { Words.line("chrome.release_not_https") }
+        /// It's for a Chrome this phone isn't paired with, so it can't be allowed.
+        static var releaseOtherChrome: String { Words.line("chrome.release_other_chrome") }
+        /// Password
+        static var releasePassword: String { Words.line("chrome.release_password") }
+        /// Allow the fill on {site}
+        static func releasePromptAllow(site: String) -> String { Words.line("chrome.release_prompt_allow", site) }
+        /// Release the password for {site}
+        static func releasePromptPassword(site: String) -> String { Words.line("chrome.release_prompt_password", site) }
+        /// Release the username for {site}
+        static func releasePromptUsername(site: String) -> String { Words.line("chrome.release_prompt_username", site) }
+        /// This is a sensitive site you haven't allowed for this Chrome, so it can't be allowed.
+        static var releaseSensitive: String { Words.line("chrome.release_sensitive") }
+        /// Fill a saved sign-in?
+        static var releaseTitle: String { Words.line("chrome.release_title") }
+        /// This fill can't be read, so it can't be allowed. You can still refuse it.
+        static var releaseUnreadable: String { Words.line("chrome.release_unreadable") }
+        /// Username or email
+        static var releaseUsername: String { Words.line("chrome.release_username") }
         /// Unpair
         static var remove: String { Words.line("chrome.remove") }
         /// Unpair {name}

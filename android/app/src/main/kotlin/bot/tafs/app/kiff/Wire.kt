@@ -597,7 +597,37 @@ data class HeldBrowser(
   val context: HeldBrowserContext? = null,
   val checkout: HeldCheckout? = null,
   val chrome: HeldChrome? = null,
+  /**
+   * A sealed fill (docs/chrome.md, "The phone's release card"): the held step's own fields, which the release signs byte for
+   * byte, and what the phone checks before it signs. Absent for any other step, and until planque holds a sealed fill.
+   */
+  @SerialName("sealed_fill") val sealedFill: HeldSealedFill? = null,
 )
+
+/** A held sealed fill as planque relays it: never the value, only which saved sign-in, where, and for which field. */
+@Serializable
+data class HeldSealedFill(
+  @SerialName("chrome_id") val chromeId: String = "",
+  val op: String = "",
+  /** The handle, `sec_<id>:password` or `sec_<id>:username`: the card reads the part from it, never from planque's words. */
+  val sealed: String = "",
+  val origin: String = "",
+  @SerialName("field_ref") val fieldRef: String = "",
+  @SerialName("read_id") val readId: String = "",
+  val grant: String = "",
+  /** The field's own label as the extension read it: page words, drawn verbatim and never signed. */
+  @SerialName("field_label") val fieldLabel: String? = null,
+  @SerialName("sites_signed") val sitesSigned: HeldSitesSigned? = null,
+  @SerialName("sensitive_allowed") val sensitiveAllowed: List<HeldAllowance> = emptyList(),
+)
+
+/** The grant's sites as this phone signed them (`tafs-chrome/sites/v1`), relayed by planque. */
+@Serializable
+data class HeldSitesSigned(val sites: List<String> = emptyList(), val sig: String = "")
+
+/** A sensitive site this phone allowed for the grant (`tafs-chrome/sensitive/v1`), relayed by planque. */
+@Serializable
+data class HeldAllowance(val site: String = "", val sig: String = "")
 
 @Serializable
 data class HeldBrowserContext(val title: String? = null, val text: String? = null)
