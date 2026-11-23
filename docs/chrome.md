@@ -575,6 +575,11 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   earlier chats (`GET /v1/tafs/{coach}/chats`, newest first, a chat they set aside left out); a tap shows one
   (`GET /v1/tafs/{coach}/conversation/{session}`), and the next message goes into it (`session`). A chat with no title is
   called "Conversation".
+- **It reads sparingly** (`coachchat.js` `pollDelay`), so the load doesn't grow with each open panel. A fresh conversation is
+  read once (is Coach reachable) and never polled. A chat is read every 4 s while Coach is at work and for a minute after the
+  owner's message, and every 30 s otherwise, to see an answer from the phone; a panel that isn't seen reads nothing, and one
+  that becomes seen reads once at once. The account's Coach id (`GET /v1/setup`) is read once for the session, not on each read.
+  Tafs cloud has no push for Coach's replies yet (the relay carries steps only), so this is the fallback a push would replace.
 - **It reads and sends, never approves.** A card that waits on the owner (an approval, a sign-in) shows "Something waits
   for your approval on your phone"; KIFF refuses the session every approval anyway.
 - **The page is sent only on the owner's tap,** with "Share this page":
