@@ -259,7 +259,7 @@ enum APIDoorText {
     /// so it never names another host. And it's pasted into a shell, so the path is kept **only** if it's made of unreserved
     /// characters (`^/[A-Za-z0-9/_.~-]*$`), and a query or fragment never is. Anything else (`$(…)`, `;`, `&`, a quote, a
     /// backtick, whitespace, a scheme with no host of its own such as `mailto:`) gives tafs cloud's address alone, with its
-    /// slash. The door's own path is `/v1/doors/api/door_…/requests`.
+    /// slash. The door's own path is `/v1/doors/api/api-…/requests`.
     static func endpoint(_ door: TafsCloud.Door, base: URL) -> String {
         guard let host = base.host?.lowercased(), !host.isEmpty else { return base.absoluteString }
         let alone = "https://\(host)/"
