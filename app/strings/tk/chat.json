@@ -27,11 +27,11 @@
     "one": "Goşuň: bir habar iň köp {count} faýl göterýär",
     "other": "Goşuň: bir habar iň köp {count} faýl göterýär"
   },
-  "chat.file.camera_off_mac": "Kamera tafs üçin öçük. Ony System Settings › Privacy & Security › Camera bölüminde açyň (macOS 12-de: System Preferences › Security & Privacy › Privacy › Camera).",
   "chat.file.cant_attach": "Ol faýl goşulyp bilinmeýär.",
   "chat.file.choose_file": "Faýl saýlaň",
   "chat.file.choose_photos": "Suratlary saýlaň",
   "chat.file.could_not_open": "Faýl açylyp bilinmedi.",
+  "chat.file.mac_camera_off": "Kamera tafs üçin öçük. Ony System Settings › Privacy & Security › Camera bölüminde açyň (macOS 12-de: System Preferences › Security & Privacy › Privacy › Camera).",
   "chat.file.no_app_opens": "Bu telefonda {name} açýan programma ýok.",
   "chat.file.no_camera": "Bu telefonda surat düşürmek üçin kamera programmasy ýok.",
   "chat.file.not_opened": "{file} açylyp bilinmedi. {why}",

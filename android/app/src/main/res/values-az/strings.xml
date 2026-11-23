@@ -498,11 +498,11 @@
         <item quantity="one">Əlavə edin: bir mesaj ən çox %1$s fayl daşıyır</item>
         <item quantity="other">Əlavə edin: bir mesaj ən çox %1$s fayl daşıyır</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">Kamera tafs üçün söndürülüb. Onu Sistem parametrləri › Məxfilik və təhlükəsizlik › Kamera bölməsində aktiv edin (macOS 12-də: Sistem tərcihləri › Təhlükəsizlik və məxfilik › Məxfilik › Kamera).</string>
     <string name="chat_file_cant_attach">Bu fayl əlavə edilə bilmir.</string>
     <string name="chat_file_choose_file">Fayl seçin</string>
     <string name="chat_file_choose_photos">Fotoları seçin</string>
     <string name="chat_file_could_not_open">Fayl açıla bilmədi.</string>
+    <string name="chat_file_mac_camera_off">Kamera tafs üçün söndürülüb. Onu Sistem parametrləri › Məxfilik və təhlükəsizlik › Kamera bölməsində aktiv edin (macOS 12-də: Sistem tərcihləri › Təhlükəsizlik və məxfilik › Məxfilik › Kamera).</string>
     <string name="chat_file_no_app_opens">Bu telefonda %1$s faylını açan tətbiq yoxdur.</string>
     <string name="chat_file_no_camera">Bu telefonda foto çəkmək üçün kamera tətbiqi yoxdur.</string>
     <string name="chat_file_not_opened">%1$s açıla bilmədi. %2$s</string>

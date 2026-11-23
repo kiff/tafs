@@ -28,11 +28,11 @@
     "few": "Přiložit: zpráva unese nejvýš {count} soubory",
     "other": "Přiložit: zpráva unese nejvýš {count} souborů"
   },
-  "chat.file.camera_off_mac": "Kamera je pro tafs vypnutá. Zapněte ji v Nastavení systému › Soukromí a zabezpečení › Kamera (v macOS 12: Předvolby systému › Zabezpečení a soukromí › Soukromí › Kamera).",
   "chat.file.cant_attach": "Ten soubor nelze přiložit.",
   "chat.file.choose_file": "Vybrat soubor",
   "chat.file.choose_photos": "Vybrat fotky",
   "chat.file.could_not_open": "Soubor nešlo otevřít.",
+  "chat.file.mac_camera_off": "Kamera je pro tafs vypnutá. Zapněte ji v Nastavení systému › Soukromí a zabezpečení › Kamera (v macOS 12: Předvolby systému › Zabezpečení a soukromí › Soukromí › Kamera).",
   "chat.file.no_app_opens": "Žádná aplikace v tomto telefonu neotevře {name}.",
   "chat.file.no_camera": "V tomto telefonu není aplikace fotoaparátu, kterou by šlo vyfotit.",
   "chat.file.not_opened": "{file} nešlo otevřít. {why}",

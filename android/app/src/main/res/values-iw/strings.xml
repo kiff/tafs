@@ -525,11 +525,11 @@
         <item quantity="two">צירוף: שני קבצים הם המקסימום להודעה</item>
         <item quantity="other">צירוף: %1$s קבצים הם המקסימום להודעה</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">המצלמה כבויה עבור tafs. יש להפעיל אותה בהגדרות המערכת › פרטיות ואבטחה › מצלמה (ב-macOS 12: העדפות המערכת › אבטחה ופרטיות › פרטיות › מצלמה).</string>
     <string name="chat_file_cant_attach">אי אפשר לצרף את הקובץ הזה.</string>
     <string name="chat_file_choose_file">בחירת קובץ</string>
     <string name="chat_file_choose_photos">בחירת תמונות</string>
     <string name="chat_file_could_not_open">לא ניתן היה לפתוח את הקובץ.</string>
+    <string name="chat_file_mac_camera_off">המצלמה כבויה עבור tafs. יש להפעיל אותה בהגדרות המערכת › פרטיות ואבטחה › מצלמה (ב-macOS 12: העדפות המערכת › אבטחה ופרטיות › פרטיות › מצלמה).</string>
     <string name="chat_file_no_app_opens">אין בטלפון הזה אפליקציה שפותחת את %1$s.</string>
     <string name="chat_file_no_camera">אין בטלפון הזה אפליקציית מצלמה לצילום תמונה.</string>
     <string name="chat_file_not_opened">לא ניתן היה לפתוח את %1$s. %2$s</string>

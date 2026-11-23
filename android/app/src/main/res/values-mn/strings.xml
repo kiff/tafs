@@ -498,11 +498,11 @@
         <item quantity="one">Хавсаргах: нэг мессеж хамгийн ихдээ %1$s файл авч явна</item>
         <item quantity="other">Хавсаргах: нэг мессеж хамгийн ихдээ %1$s файл авч явна</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">Камер tafs-д унтраастай байна. Системийн тохиргоо › Нууцлал ба аюулгүй байдал › Камер хэсгээс асаана уу (macOS 12 дээр: Системийн сонголт › Аюулгүй байдал ба нууцлал › Нууцлал › Камер).</string>
     <string name="chat_file_cant_attach">Тэр файлыг хавсаргах боломжгүй.</string>
     <string name="chat_file_choose_file">Файл сонгох</string>
     <string name="chat_file_choose_photos">Зураг сонгох</string>
     <string name="chat_file_could_not_open">Файлыг нээж чадсангүй.</string>
+    <string name="chat_file_mac_camera_off">Камер tafs-д унтраастай байна. Системийн тохиргоо › Нууцлал ба аюулгүй байдал › Камер хэсгээс асаана уу (macOS 12 дээр: Системийн сонголт › Аюулгүй байдал ба нууцлал › Нууцлал › Камер).</string>
     <string name="chat_file_no_app_opens">Энэ утсан дээр %1$s-ийг нээх апп алга.</string>
     <string name="chat_file_no_camera">Энэ утсан дээр зураг авах камерын апп алга.</string>
     <string name="chat_file_not_opened">%1$s-ийг нээж чадсангүй. %2$s</string>

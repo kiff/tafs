@@ -471,11 +471,11 @@
     <plurals name="chat_file_attach_full">
         <item quantity="other">ແນບ: %1$s ໄຟລ໌ແມ່ນຫຼາຍສຸດທີ່ຂໍ້ຄວາມໜຶ່ງຮັບໄດ້</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">ກ້ອງປິດສຳລັບ tafs. ເປີດມັນໃນການຕັ້ງຄ່າລະບົບ › ຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ › ກ້ອງ (ໃນ macOS 12: ການຕັ້ງຄ່າລະບົບ › ຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ › ຄວາມເປັນສ່ວນຕົວ › ກ້ອງ).</string>
     <string name="chat_file_cant_attach">ແນບໄຟລ໌ນັ້ນບໍ່ໄດ້.</string>
     <string name="chat_file_choose_file">ເລືອກໄຟລ໌</string>
     <string name="chat_file_choose_photos">ເລືອກຮູບ</string>
     <string name="chat_file_could_not_open">ເປີດໄຟລ໌ບໍ່ໄດ້.</string>
+    <string name="chat_file_mac_camera_off">ກ້ອງປິດສຳລັບ tafs. ເປີດມັນໃນການຕັ້ງຄ່າລະບົບ › ຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ › ກ້ອງ (ໃນ macOS 12: ການຕັ້ງຄ່າລະບົບ › ຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ › ຄວາມເປັນສ່ວນຕົວ › ກ້ອງ).</string>
     <string name="chat_file_no_app_opens">ບໍ່ມີແອັບໃນໂທລະສັບນີ້ທີ່ເປີດ %1$s ໄດ້.</string>
     <string name="chat_file_no_camera">ບໍ່ມີແອັບກ້ອງໃນໂທລະສັບນີ້ເພື່ອຖ່າຍຮູບ.</string>
     <string name="chat_file_not_opened">ເປີດ %1$s ບໍ່ໄດ້. %2$s</string>

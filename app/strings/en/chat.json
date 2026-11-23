@@ -27,11 +27,11 @@
     "one": "Attach: {count} file is the most a message carries",
     "other": "Attach: {count} files is the most a message carries"
   },
-  "chat.file.camera_off_mac": "The camera is off for tafs. Turn it on in System Settings › Privacy & Security › Camera (on macOS 12: System Preferences › Security & Privacy › Privacy › Camera).",
   "chat.file.cant_attach": "That file can't be attached.",
   "chat.file.choose_file": "Choose file",
   "chat.file.choose_photos": "Choose photos",
   "chat.file.could_not_open": "The file couldn't be opened.",
+  "chat.file.mac_camera_off": "The camera is off for tafs. Turn it on in System Settings › Privacy & Security › Camera (on macOS 12: System Preferences › Security & Privacy › Privacy › Camera).",
   "chat.file.no_app_opens": "No app on this phone opens {name}.",
   "chat.file.no_camera": "There's no camera app on this phone to take a photo with.",
   "chat.file.not_opened": "{file} couldn't be opened. {why}",

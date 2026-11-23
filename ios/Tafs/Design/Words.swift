@@ -912,8 +912,6 @@ enum Words {
             static var attach: String { Words.line("chat.file.attach") }
             /// Attach: {count} files is the most a message carries
             static func attachFull(count: Int) -> String { Words.count("chat.file.attach_full", count) }
-            /// The camera is off for tafs. Turn it on in System Settings › Privacy & Security › Camera (on macOS 12: System Preferences › Security & Privacy › Privacy › Camera).
-            static var cameraOffMac: String { Words.line("chat.file.camera_off_mac") }
             /// That file can't be attached.
             static var cantAttach: String { Words.line("chat.file.cant_attach") }
             /// Choose file
@@ -922,6 +920,8 @@ enum Words {
             static var choosePhotos: String { Words.line("chat.file.choose_photos") }
             /// The file couldn't be opened.
             static var couldNotOpen: String { Words.line("chat.file.could_not_open") }
+            /// The camera is off for tafs. Turn it on in System Settings › Privacy & Security › Camera (on macOS 12: System Preferences › Security & Privacy › Privacy › Camera).
+            static var macCameraOff: String { Words.line("chat.file.mac_camera_off") }
             /// No app on this phone opens {name}.
             static func noAppOpens(name: String) -> String { Words.line("chat.file.no_app_opens", name) }
             /// There's no camera app on this phone to take a photo with.

@@ -27,11 +27,11 @@
     "one": "Adjuntar: {count} archivo es el máximo por mensaje",
     "other": "Adjuntar: {count} archivos es el máximo por mensaje"
   },
-  "chat.file.camera_off_mac": "La cámara está desactivada para tafs. Actívala en Ajustes del Sistema › Privacidad y seguridad › Cámara (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Cámara).",
   "chat.file.cant_attach": "Ese archivo no se puede adjuntar.",
   "chat.file.choose_file": "Elegir archivo",
   "chat.file.choose_photos": "Elegir fotos",
   "chat.file.could_not_open": "No se pudo abrir el archivo.",
+  "chat.file.mac_camera_off": "La cámara está desactivada para tafs. Actívala en Ajustes del Sistema › Privacidad y seguridad › Cámara (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Cámara).",
   "chat.file.no_app_opens": "Ninguna app de este teléfono abre {name}.",
   "chat.file.no_camera": "No hay ninguna app de cámara en este teléfono para hacer una foto.",
   "chat.file.not_opened": "No se pudo abrir {file}. {why}",

@@ -498,11 +498,11 @@
         <item quantity="one">Bijvoegen: een bericht bevat maximaal %1$s bestand</item>
         <item quantity="other">Bijvoegen: een bericht bevat maximaal %1$s bestanden</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">De camera staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Camera (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Camera).</string>
     <string name="chat_file_cant_attach">Dat bestand kan niet worden bijgevoegd.</string>
     <string name="chat_file_choose_file">Bestand kiezen</string>
     <string name="chat_file_choose_photos">Foto\'s kiezen</string>
     <string name="chat_file_could_not_open">Het bestand kon niet worden geopend.</string>
+    <string name="chat_file_mac_camera_off">De camera staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Camera (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Camera).</string>
     <string name="chat_file_no_app_opens">Geen app op deze telefoon opent %1$s.</string>
     <string name="chat_file_no_camera">Er is geen camera-app op deze telefoon om een foto mee te maken.</string>
     <string name="chat_file_not_opened">%1$s kon niet worden geopend. %2$s</string>

@@ -498,11 +498,11 @@
         <item quantity="one">Կցել․ %1$s ֆայլ՝ առավելագույնը, որ տեղավորում է հաղորդագրությունը</item>
         <item quantity="other">Կցել․ %1$s ֆայլ՝ առավելագույնը, որ տեղավորում է հաղորդագրությունը</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">Տեսախցիկը անջատված է tafs-ի համար։ Միացրեք՝ Համակարգի կարգավորումներ › Գաղտնիություն և անվտանգություն › Տեսախցիկ (macOS 12-ում՝ Համակարգի նախապատվություններ › Անվտանգություն և գաղտնիություն › Գաղտնիություն › Տեսախցիկ)։</string>
     <string name="chat_file_cant_attach">Այդ ֆայլը հնարավոր չէ կցել։</string>
     <string name="chat_file_choose_file">Ընտրեք ֆայլ</string>
     <string name="chat_file_choose_photos">Ընտրեք լուսանկարներ</string>
     <string name="chat_file_could_not_open">Ֆայլը չկարողացավ բացվել։</string>
+    <string name="chat_file_mac_camera_off">Տեսախցիկը անջատված է tafs-ի համար։ Միացրեք՝ Համակարգի կարգավորումներ › Գաղտնիություն և անվտանգություն › Տեսախցիկ (macOS 12-ում՝ Համակարգի նախապատվություններ › Անվտանգություն և գաղտնիություն › Գաղտնիություն › Տեսախցիկ)։</string>
     <string name="chat_file_no_app_opens">Այս հեռախոսում ոչ մի հավելված չի բացում՝ %1$s։</string>
     <string name="chat_file_no_camera">Այս հեռախոսում լուսանկարելու համար տեսախցիկի հավելված չկա։</string>
     <string name="chat_file_not_opened">%1$s-ը չկարողացավ բացվել։ %2$s</string>

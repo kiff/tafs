@@ -498,11 +498,11 @@
         <item quantity="one">Adjunta: %1$s fitxer és el màxim que porta un missatge</item>
         <item quantity="other">Adjunta: %1$s fitxers és el màxim que porta un missatge</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">La càmera està desactivada per a tafs. Activa-la a Ajustos del sistema › Privadesa i seguretat › Càmera (a macOS 12: Preferències del Sistema › Seguretat i privadesa › Privadesa › Càmera).</string>
     <string name="chat_file_cant_attach">Aquest fitxer no es pot adjuntar.</string>
     <string name="chat_file_choose_file">Tria un fitxer</string>
     <string name="chat_file_choose_photos">Tria fotos</string>
     <string name="chat_file_could_not_open">No s\'ha pogut obrir el fitxer.</string>
+    <string name="chat_file_mac_camera_off">La càmera està desactivada per a tafs. Activa-la a Ajustos del sistema › Privadesa i seguretat › Càmera (a macOS 12: Preferències del Sistema › Seguretat i privadesa › Privadesa › Càmera).</string>
     <string name="chat_file_no_app_opens">Cap aplicació d\'aquest telèfon obre %1$s.</string>
     <string name="chat_file_no_camera">Aquest telèfon no té cap aplicació de càmera per fer una foto.</string>
     <string name="chat_file_not_opened">No s\'ha pogut obrir %1$s. %2$s</string>

@@ -498,11 +498,11 @@
         <item quantity="one">Bashkëngjitni: %1$s skedar është maksimumi që mban një mesazh</item>
         <item quantity="other">Bashkëngjitni: %1$s skedarë është maksimumi që mban një mesazh</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">Kamera është joaktive për tafs. Aktivizojeni te Cilësimet e Sistemit › Privatësia dhe Siguria › Kamera (në macOS 12: Preferencat e Sistemit › Siguria dhe Privatësia › Privatësia › Kamera).</string>
     <string name="chat_file_cant_attach">Ai skedar nuk mund të bashkëngjitet.</string>
     <string name="chat_file_choose_file">Zgjidhni skedar</string>
     <string name="chat_file_choose_photos">Zgjidhni foto</string>
     <string name="chat_file_could_not_open">Skedari nuk u hap dot.</string>
+    <string name="chat_file_mac_camera_off">Kamera është joaktive për tafs. Aktivizojeni te Cilësimet e Sistemit › Privatësia dhe Siguria › Kamera (në macOS 12: Preferencat e Sistemit › Siguria dhe Privatësia › Privatësia › Kamera).</string>
     <string name="chat_file_no_app_opens">Asnjë aplikacion në këtë telefon nuk e hap %1$s.</string>
     <string name="chat_file_no_camera">Në këtë telefon nuk ka aplikacion kamere për të bërë një foto.</string>
     <string name="chat_file_not_opened">%1$s nuk u hap dot. %2$s</string>

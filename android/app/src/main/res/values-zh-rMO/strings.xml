@@ -471,11 +471,11 @@
     <plurals name="chat_file_attach_full">
         <item quantity="other">附加：一則訊息最多可附加 %1$s 個檔案</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">相機已對 tafs 關閉。請在「系統設定」›「隱私權與安全性」›「相機」中開啟（macOS 12：「系統偏好設定」›「安全性與隱私權」›「隱私權」›「相機」）。</string>
     <string name="chat_file_cant_attach">無法附加該檔案。</string>
     <string name="chat_file_choose_file">選擇檔案</string>
     <string name="chat_file_choose_photos">選擇照片</string>
     <string name="chat_file_could_not_open">無法開啟該檔案。</string>
+    <string name="chat_file_mac_camera_off">相機已對 tafs 關閉。請在「系統設定」›「隱私權與安全性」›「相機」中開啟（macOS 12：「系統偏好設定」›「安全性與隱私權」›「隱私權」›「相機」）。</string>
     <string name="chat_file_no_app_opens">這部手機上沒有可開啟 %1$s 的 App。</string>
     <string name="chat_file_no_camera">這部手機上沒有可拍照的相機 App。</string>
     <string name="chat_file_not_opened">無法開啟 %1$s。%2$s</string>

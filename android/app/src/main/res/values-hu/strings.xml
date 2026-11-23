@@ -498,11 +498,11 @@
         <item quantity="one">Csatolás: egy üzenet legfeljebb %1$s fájlt visz</item>
         <item quantity="other">Csatolás: egy üzenet legfeljebb %1$s fájlt visz</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">A kamera ki van kapcsolva a tafs számára. Kapcsold be itt: Rendszerbeállítások › Adatvédelem és biztonság › Kamera (macOS 12-n: Rendszerbeállítások › Biztonság és adatvédelem › Adatvédelem › Kamera).</string>
     <string name="chat_file_cant_attach">Ez a fájl nem csatolható.</string>
     <string name="chat_file_choose_file">Fájl kiválasztása</string>
     <string name="chat_file_choose_photos">Fotók kiválasztása</string>
     <string name="chat_file_could_not_open">A fájlt nem sikerült megnyitni.</string>
+    <string name="chat_file_mac_camera_off">A kamera ki van kapcsolva a tafs számára. Kapcsold be itt: Rendszerbeállítások › Adatvédelem és biztonság › Kamera (macOS 12-n: Rendszerbeállítások › Biztonság és adatvédelem › Adatvédelem › Kamera).</string>
     <string name="chat_file_no_app_opens">Ezen a telefonon egyetlen alkalmazás sem nyitja meg ezt: %1$s.</string>
     <string name="chat_file_no_camera">Ezen a telefonon nincs kameraalkalmazás, amellyel fotót készíthetnél.</string>
     <string name="chat_file_not_opened">%1$s nem nyitható meg. %2$s</string>

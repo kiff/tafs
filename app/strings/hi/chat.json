@@ -27,11 +27,11 @@
     "one": "जोड़ें: एक संदेश अधिकतम {count} फ़ाइलें ले जाता है",
     "other": "जोड़ें: एक संदेश अधिकतम {count} फ़ाइलें ले जाता है"
   },
-  "chat.file.camera_off_mac": "कैमरा tafs के लिए बंद है। इसे System Settings › Privacy & Security › Camera में चालू करें (macOS 12 में: System Preferences › Security & Privacy › Privacy › Camera)।",
   "chat.file.cant_attach": "वह फ़ाइल जोड़ी नहीं जा सकती।",
   "chat.file.choose_file": "फ़ाइल चुनें",
   "chat.file.choose_photos": "फ़ोटो चुनें",
   "chat.file.could_not_open": "फ़ाइल खुल नहीं सकी।",
+  "chat.file.mac_camera_off": "कैमरा tafs के लिए बंद है। इसे System Settings › Privacy & Security › Camera में चालू करें (macOS 12 में: System Preferences › Security & Privacy › Privacy › Camera)।",
   "chat.file.no_app_opens": "इस फ़ोन में {name} खोलने वाला कोई ऐप नहीं है।",
   "chat.file.no_camera": "इस फ़ोन में फ़ोटो लेने के लिए कैमरा ऐप नहीं है।",
   "chat.file.not_opened": "{file} खुल नहीं सकी। {why}",

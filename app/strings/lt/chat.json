@@ -28,11 +28,11 @@
     "few": "Pridėti: žinutėje daugiausia {count} failai",
     "other": "Pridėti: žinutėje daugiausia {count} failų"
   },
-  "chat.file.camera_off_mac": "Kamera programėlei tafs išjungta. Įjunkite ją skiltyje Sistemos nustatymai › Privatumas ir sauga › Kamera (macOS 12: Sistemos nuostatos › Sauga ir privatumas › Privatumas › Kamera).",
   "chat.file.cant_attach": "Šio failo pridėti negalima.",
   "chat.file.choose_file": "Pasirinkti failą",
   "chat.file.choose_photos": "Pasirinkti nuotraukas",
   "chat.file.could_not_open": "Nepavyko atidaryti failo.",
+  "chat.file.mac_camera_off": "Kamera programėlei tafs išjungta. Įjunkite ją skiltyje Sistemos nustatymai › Privatumas ir sauga › Kamera (macOS 12: Sistemos nuostatos › Sauga ir privatumas › Privatumas › Kamera).",
   "chat.file.no_app_opens": "Šiame telefone nėra programėlės, kuri atidarytų {name}.",
   "chat.file.no_camera": "Šiame telefone nėra fotoaparato programėlės nuotraukai padaryti.",
   "chat.file.not_opened": "Nepavyko atidaryti {file}. {why}",

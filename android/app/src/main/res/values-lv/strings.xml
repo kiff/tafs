@@ -525,11 +525,11 @@
         <item quantity="one">Pievienot: ziņā var būt ne vairāk kā %1$s fails</item>
         <item quantity="other">Pievienot: ziņā var būt ne vairāk kā %1$s faili</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">Kamera lietotnei tafs ir izslēgta. Ieslēdz to sadaļā Sistēmas iestatījumi › Privātums un drošība › Kamera (macOS 12: Sistēmas preferences › Drošība un privātums › Privātums › Kamera).</string>
     <string name="chat_file_cant_attach">Šo failu nevar pievienot.</string>
     <string name="chat_file_choose_file">Izvēlēties failu</string>
     <string name="chat_file_choose_photos">Izvēlēties fotoattēlus</string>
     <string name="chat_file_could_not_open">Failu nevarēja atvērt.</string>
+    <string name="chat_file_mac_camera_off">Kamera lietotnei tafs ir izslēgta. Ieslēdz to sadaļā Sistēmas iestatījumi › Privātums un drošība › Kamera (macOS 12: Sistēmas preferences › Drošība un privātums › Privātums › Kamera).</string>
     <string name="chat_file_no_app_opens">Šajā tālrunī nav lietotnes, kas atver %1$s.</string>
     <string name="chat_file_no_camera">Šajā tālrunī nav kameras lietotnes, ar ko uzņemt foto.</string>
     <string name="chat_file_not_opened">%1$s nevarēja atvērt. %2$s</string>

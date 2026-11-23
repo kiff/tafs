@@ -471,11 +471,11 @@
     <plurals name="chat_file_attach_full">
         <item quantity="other">Đính kèm: %1$s tệp là tối đa một tin nhắn mang được</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">Camera đang tắt đối với tafs. Hãy bật trong Cài đặt Hệ thống › Quyền riêng tư &amp; Bảo mật › Camera (trên macOS 12: Tùy chọn Hệ thống › Bảo mật &amp; Quyền riêng tư › Quyền riêng tư › Camera).</string>
     <string name="chat_file_cant_attach">Không thể đính kèm tệp đó.</string>
     <string name="chat_file_choose_file">Chọn tệp</string>
     <string name="chat_file_choose_photos">Chọn ảnh</string>
     <string name="chat_file_could_not_open">Không thể mở tệp.</string>
+    <string name="chat_file_mac_camera_off">Camera đang tắt đối với tafs. Hãy bật trong Cài đặt Hệ thống › Quyền riêng tư &amp; Bảo mật › Camera (trên macOS 12: Tùy chọn Hệ thống › Bảo mật &amp; Quyền riêng tư › Quyền riêng tư › Camera).</string>
     <string name="chat_file_no_app_opens">Không có ứng dụng nào trên điện thoại này mở được %1$s.</string>
     <string name="chat_file_no_camera">Điện thoại này không có ứng dụng máy ảnh để chụp ảnh.</string>
     <string name="chat_file_not_opened">Không thể mở %1$s. %2$s</string>

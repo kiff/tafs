@@ -26,11 +26,11 @@
   "chat.file.attach_full": {
     "other": "Đính kèm: {count} tệp là tối đa một tin nhắn mang được"
   },
-  "chat.file.camera_off_mac": "Camera đang tắt đối với tafs. Hãy bật trong Cài đặt Hệ thống › Quyền riêng tư & Bảo mật › Camera (trên macOS 12: Tùy chọn Hệ thống › Bảo mật & Quyền riêng tư › Quyền riêng tư › Camera).",
   "chat.file.cant_attach": "Không thể đính kèm tệp đó.",
   "chat.file.choose_file": "Chọn tệp",
   "chat.file.choose_photos": "Chọn ảnh",
   "chat.file.could_not_open": "Không thể mở tệp.",
+  "chat.file.mac_camera_off": "Camera đang tắt đối với tafs. Hãy bật trong Cài đặt Hệ thống › Quyền riêng tư & Bảo mật › Camera (trên macOS 12: Tùy chọn Hệ thống › Bảo mật & Quyền riêng tư › Quyền riêng tư › Camera).",
   "chat.file.no_app_opens": "Không có ứng dụng nào trên điện thoại này mở được {name}.",
   "chat.file.no_camera": "Điện thoại này không có ứng dụng máy ảnh để chụp ảnh.",
   "chat.file.not_opened": "Không thể mở {file}. {why}",

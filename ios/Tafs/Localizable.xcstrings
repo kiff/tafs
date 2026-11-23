@@ -119173,269 +119173,6 @@
         }
       }
     },
-    "chat.file.camera_off_mac": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الكاميرا متوقفة لـ tafs. شغّلها من إعدادات النظام › الخصوصية والأمن › الكاميرا (في macOS 12: تفضيلات النظام › الأمن والخصوصية › الخصوصية › الكاميرا)."
-          }
-        },
-        "az": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera tafs üçün söndürülüb. Onu Sistem parametrləri › Məxfilik və təhlükəsizlik › Kamera bölməsində aktiv edin (macOS 12-də: Sistem tərcihləri › Təhlükəsizlik və məxfilik › Məxfilik › Kamera)."
-          }
-        },
-        "bg": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Камерата е изключена за tafs. Включете я в Системни настройки › Поверителност и сигурност › Камера (на macOS 12: Системни предпочитания › Защита и поверителност › Поверителност › Камера)."
-          }
-        },
-        "bn": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ক্যামেরা tafs-এর জন্য বন্ধ। সিস্টেম সেটিংস › গোপনীয়তা ও নিরাপত্তা › ক্যামেরায় এটি চালু করুন (macOS 12-এ: সিস্টেম পছন্দসমূহ › নিরাপত্তা ও গোপনীয়তা › গোপনীয়তা › ক্যামেরা)।"
-          }
-        },
-        "ca": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La càmera està desactivada per a tafs. Activa-la a Ajustos del sistema › Privadesa i seguretat › Càmera (a macOS 12: Preferències del Sistema › Seguretat i privadesa › Privadesa › Càmera)."
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera je pro tafs vypnutá. Zapněte ji v Nastavení systému › Soukromí a zabezpečení › Kamera (v macOS 12: Předvolby systému › Zabezpečení a soukromí › Soukromí › Kamera)."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Kamera ist für tafs ausgeschaltet. Schalte sie unter Systemeinstellungen › Datenschutz & Sicherheit › Kamera ein (unter macOS 12: Systemeinstellungen › Sicherheit › Datenschutz › Kamera)."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The camera is off for tafs. Turn it on in System Settings › Privacy & Security › Camera (on macOS 12: System Preferences › Security & Privacy › Privacy › Camera)."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La cámara está desactivada para tafs. Actívala en Ajustes del Sistema › Privacidad y seguridad › Cámara (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Cámara)."
-          }
-        },
-        "et": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kaamera on tafsi jaoks välja lülitatud. Lülita see sisse menüüs System Settings › Privacy & Security › Camera (macOS 12-s: System Preferences › Security & Privacy › Privacy › Camera)."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L'appareil photo est désactivé pour tafs. Activez-le dans Réglages Système › Confidentialité et sécurité › Caméra (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Caméra)."
-          }
-        },
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "המצלמה כבויה עבור tafs. יש להפעיל אותה בהגדרות המערכת › פרטיות ואבטחה › מצלמה (ב-macOS 12: העדפות המערכת › אבטחה ופרטיות › פרטיות › מצלמה)."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "कैमरा tafs के लिए बंद है। इसे System Settings › Privacy & Security › Camera में चालू करें (macOS 12 में: System Preferences › Security & Privacy › Privacy › Camera)।"
-          }
-        },
-        "hr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera je isključena za tafs. Uključite je u Postavke sustava › Privatnost i sigurnost › Kamera (macOS 12: Postavke sustava › Sigurnost i privatnost › Privatnost › Kamera)."
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A kamera ki van kapcsolva a tafs számára. Kapcsold be itt: Rendszerbeállítások › Adatvédelem és biztonság › Kamera (macOS 12-n: Rendszerbeállítások › Biztonság és adatvédelem › Adatvédelem › Kamera)."
-          }
-        },
-        "hy": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Տեսախցիկը անջատված է tafs-ի համար։ Միացրեք՝ Համակարգի կարգավորումներ › Գաղտնիություն և անվտանգություն › Տեսախցիկ (macOS 12-ում՝ Համակարգի նախապատվություններ › Անվտանգություն և գաղտնիություն › Գաղտնիություն › Տեսախցիկ)։"
-          }
-        },
-        "id": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera nonaktif untuk tafs. Aktifkan di Pengaturan Sistem › Privasi & Keamanan › Kamera (di macOS 12: Preferensi Sistem › Keamanan & Privasi › Privasi › Kamera)."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La fotocamera è disattivata per tafs. Attivala in Impostazioni di Sistema › Privacy e sicurezza › Fotocamera (su macOS 12: Preferenze di Sistema › Sicurezza e privacy › Privacy › Fotocamera)."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Macでtafsのカメラがオフになっています。システム設定 › プライバシーとセキュリティ › カメラでオンにしてください（macOS 12：システム環境設定 › セキュリティとプライバシー › プライバシー › カメラ）。"
-          }
-        },
-        "ka": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "კამერა გამორთულია tafs-ისთვის. ჩართეთ სისტემის პარამეტრები › კონფიდენციალურობა და უსაფრთხოება › კამერა (macOS 12-ზე: სისტემის პარამეტრები › უსაფრთხოება და კონფიდენციალურობა › კონფიდენციალურობა › კამერა)."
-          }
-        },
-        "km": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "កាមេរ៉ាត្រូវបានបិទសម្រាប់ tafs។ បើកវាក្នុងការកំណត់ប្រព័ន្ធ › ឯកជនភាព និងសុវត្ថិភាព › កាមេរ៉ា (នៅលើ macOS 12៖ ចំណូលចិត្តប្រព័ន្ធ › សុវត្ថិភាព និងឯកជនភាព › ឯកជនភាព › កាមេរ៉ា)។"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mac에서 tafs의 카메라가 꺼져 있습니다. 시스템 설정 › 개인정보 보호 및 보안 › 카메라에서 켜세요(macOS 12: 시스템 환경설정 › 보안 및 개인 정보 보호 › 개인 정보 보호 › 카메라)."
-          }
-        },
-        "lo": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ກ້ອງປິດສຳລັບ tafs. ເປີດມັນໃນການຕັ້ງຄ່າລະບົບ › ຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ › ກ້ອງ (ໃນ macOS 12: ການຕັ້ງຄ່າລະບົບ › ຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ › ຄວາມເປັນສ່ວນຕົວ › ກ້ອງ)."
-          }
-        },
-        "lt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera programėlei tafs išjungta. Įjunkite ją skiltyje Sistemos nustatymai › Privatumas ir sauga › Kamera (macOS 12: Sistemos nuostatos › Sauga ir privatumas › Privatumas › Kamera)."
-          }
-        },
-        "lv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera lietotnei tafs ir izslēgta. Ieslēdz to sadaļā Sistēmas iestatījumi › Privātums un drošība › Kamera (macOS 12: Sistēmas preferences › Drošība un privātums › Privātums › Kamera)."
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Камерата е исклучена за tafs. Вклучи ја во Системски поставки › Приватност и безбедност › Камера (на macOS 12: Системски преференци › Безбедност и приватност › Приватност › Камера)."
-          }
-        },
-        "mn": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Камер tafs-д унтраастай байна. Системийн тохиргоо › Нууцлал ба аюулгүй байдал › Камер хэсгээс асаана уу (macOS 12 дээр: Системийн сонголт › Аюулгүй байдал ба нууцлал › Нууцлал › Камер)."
-          }
-        },
-        "ne": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "क्यामेरा tafs का लागि बन्द छ। सिस्टम सेटिङ › गोपनीयता र सुरक्षा › क्यामेरामा खोल्नुहोस् (macOS 12 मा: सिस्टम प्राथमिकताहरू › सुरक्षा र गोपनीयता › गोपनीयता › क्यामेरा)।"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "De camera staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Camera (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Camera)."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera jest wyłączona dla tafs. Włącz ją w Ustawienia systemowe › Prywatność i ochrona › Kamera (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Kamera)."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A câmara está desativada para o tafs. Ative-a em Definições do Sistema › Privacidade e segurança › Câmara (no macOS 12: Preferências do Sistema › Segurança e privacidade › Privacidade › Câmara)."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A câmera está desativada para o tafs. Ative-a em Ajustes do Sistema › Privacidade e Segurança › Câmera (no macOS 12: Preferências do Sistema › Segurança e Privacidade › Privacidade › Câmera)."
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Camera este dezactivată pentru tafs. Activați-o în Configurări sistem › Confidențialitate și securitate › Cameră (pe macOS 12: Preferințe sistem › Securitate și confidențialitate › Confidențialitate › Cameră)."
-          }
-        },
-        "sk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera je pre tafs vypnutá. Zapnite ju v Nastaveniach systému › Súkromie a bezpečnosť › Kamera (v macOS 12: Systémové nastavenia › Bezpečnosť a súkromie › Súkromie › Kamera)."
-          }
-        },
-        "sl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera je za tafs izklopljena. Vklopite jo v Sistemske nastavitve › Zasebnost in varnost › Kamera (v macOS 12: Sistemske nastavitve › Varnost in zasebnost › Zasebnost › Kamera)."
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera është joaktive për tafs. Aktivizojeni te Cilësimet e Sistemit › Privatësia dhe Siguria › Kamera (në macOS 12: Preferencat e Sistemit › Siguria dhe Privatësia › Privatësia › Kamera)."
-          }
-        },
-        "sr-Latn": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera je isključena za tafs. Uključite je u Podešavanja sistema › Privatnost i sigurnost › Kamera (macOS 12: Podešavanja sistema › Sigurnost i privatnost › Privatnost › Kamera)."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "กล้องปิดอยู่สำหรับ tafs เปิดได้ที่การตั้งค่าระบบ › ความเป็นส่วนตัวและความปลอดภัย › กล้อง (บน macOS 12: ค่ากำหนดระบบ › ความปลอดภัยและความเป็นส่วนตัว › ความเป็นส่วนตัว › กล้อง)."
-          }
-        },
-        "tk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera tafs üçin öçük. Ony System Settings › Privacy & Security › Camera bölüminde açyň (macOS 12-de: System Preferences › Security & Privacy › Privacy › Camera)."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kamera, tafs için kapalı. Sistem Ayarları › Gizlilik ve Güvenlik › Kamera'dan açın (macOS 12'de: Sistem Tercihleri › Güvenlik ve Gizlilik › Gizlilik › Kamera)."
-          }
-        },
-        "ur": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ایپ tafs کے لیے کیمرا بند ہے۔ اسے سسٹم سیٹنگز › پرائیویسی اور سیکیورٹی › کیمرا میں چالو کریں (macOS 12 پر: سسٹم پریفرنسز › سیکیورٹی اور پرائیویسی › پرائیویسی › کیمرا)۔"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Camera đang tắt đối với tafs. Hãy bật trong Cài đặt Hệ thống › Quyền riêng tư & Bảo mật › Camera (trên macOS 12: Tùy chọn Hệ thống › Bảo mật & Quyền riêng tư › Quyền riêng tư › Camera)."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "相機已對 tafs 關閉。請在「系統設定」›「隱私權與安全性」›「相機」中開啟（macOS 12：「系統偏好設定」›「安全性與隱私權」›「隱私權」›「相機」）。"
-          }
-        }
-      }
-    },
     "chat.file.cant_attach": {
       "extractionState": "manual",
       "localizations": {
@@ -120484,6 +120221,269 @@
           "stringUnit": {
             "state": "translated",
             "value": "無法開啟該檔案。"
+          }
+        }
+      }
+    },
+    "chat.file.mac_camera_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكاميرا متوقفة لـ tafs. شغّلها من إعدادات النظام › الخصوصية والأمن › الكاميرا (في macOS 12: تفضيلات النظام › الأمن والخصوصية › الخصوصية › الكاميرا)."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera tafs üçün söndürülüb. Onu Sistem parametrləri › Məxfilik və təhlükəsizlik › Kamera bölməsində aktiv edin (macOS 12-də: Sistem tərcihləri › Təhlükəsizlik və məxfilik › Məxfilik › Kamera)."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камерата е изключена за tafs. Включете я в Системни настройки › Поверителност и сигурност › Камера (на macOS 12: Системни предпочитания › Защита и поверителност › Поверителност › Камера)."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ক্যামেরা tafs-এর জন্য বন্ধ। সিস্টেম সেটিংস › গোপনীয়তা ও নিরাপত্তা › ক্যামেরায় এটি চালু করুন (macOS 12-এ: সিস্টেম পছন্দসমূহ › নিরাপত্তা ও গোপনীয়তা › গোপনীয়তা › ক্যামেরা)।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La càmera està desactivada per a tafs. Activa-la a Ajustos del sistema › Privadesa i seguretat › Càmera (a macOS 12: Preferències del Sistema › Seguretat i privadesa › Privadesa › Càmera)."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera je pro tafs vypnutá. Zapněte ji v Nastavení systému › Soukromí a zabezpečení › Kamera (v macOS 12: Předvolby systému › Zabezpečení a soukromí › Soukromí › Kamera)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Kamera ist für tafs ausgeschaltet. Schalte sie unter Systemeinstellungen › Datenschutz & Sicherheit › Kamera ein (unter macOS 12: Systemeinstellungen › Sicherheit › Datenschutz › Kamera)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera is off for tafs. Turn it on in System Settings › Privacy & Security › Camera (on macOS 12: System Preferences › Security & Privacy › Privacy › Camera)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara está desactivada para tafs. Actívala en Ajustes del Sistema › Privacidad y seguridad › Cámara (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Cámara)."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaamera on tafsi jaoks välja lülitatud. Lülita see sisse menüüs System Settings › Privacy & Security › Camera (macOS 12-s: System Preferences › Security & Privacy › Privacy › Camera)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'appareil photo est désactivé pour tafs. Activez-le dans Réglages Système › Confidentialité et sécurité › Caméra (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Caméra)."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המצלמה כבויה עבור tafs. יש להפעיל אותה בהגדרות המערכת › פרטיות ואבטחה › מצלמה (ב-macOS 12: העדפות המערכת › אבטחה ופרטיות › פרטיות › מצלמה)."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कैमरा tafs के लिए बंद है। इसे System Settings › Privacy & Security › Camera में चालू करें (macOS 12 में: System Preferences › Security & Privacy › Privacy › Camera)।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera je isključena za tafs. Uključite je u Postavke sustava › Privatnost i sigurnost › Kamera (macOS 12: Postavke sustava › Sigurnost i privatnost › Privatnost › Kamera)."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kamera ki van kapcsolva a tafs számára. Kapcsold be itt: Rendszerbeállítások › Adatvédelem és biztonság › Kamera (macOS 12-n: Rendszerbeállítások › Biztonság és adatvédelem › Adatvédelem › Kamera)."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Տեսախցիկը անջատված է tafs-ի համար։ Միացրեք՝ Համակարգի կարգավորումներ › Գաղտնիություն և անվտանգություն › Տեսախցիկ (macOS 12-ում՝ Համակարգի նախապատվություններ › Անվտանգություն և գաղտնիություն › Գաղտնիություն › Տեսախցիկ)։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera nonaktif untuk tafs. Aktifkan di Pengaturan Sistem › Privasi & Keamanan › Kamera (di macOS 12: Preferensi Sistem › Keamanan & Privasi › Privasi › Kamera)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fotocamera è disattivata per tafs. Attivala in Impostazioni di Sistema › Privacy e sicurezza › Fotocamera (su macOS 12: Preferenze di Sistema › Sicurezza e privacy › Privacy › Fotocamera)."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macでtafsのカメラがオフになっています。システム設定 › プライバシーとセキュリティ › カメラでオンにしてください（macOS 12：システム環境設定 › セキュリティとプライバシー › プライバシー › カメラ）。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "კამერა გამორთულია tafs-ისთვის. ჩართეთ სისტემის პარამეტრები › კონფიდენციალურობა და უსაფრთხოება › კამერა (macOS 12-ზე: სისტემის პარამეტრები › უსაფრთხოება და კონფიდენციალურობა › კონფიდენციალურობა › კამერა)."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "កាមេរ៉ាត្រូវបានបិទសម្រាប់ tafs។ បើកវាក្នុងការកំណត់ប្រព័ន្ធ › ឯកជនភាព និងសុវត្ថិភាព › កាមេរ៉ា (នៅលើ macOS 12៖ ចំណូលចិត្តប្រព័ន្ធ › សុវត្ថិភាព និងឯកជនភាព › ឯកជនភាព › កាមេរ៉ា)។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac에서 tafs의 카메라가 꺼져 있습니다. 시스템 설정 › 개인정보 보호 및 보안 › 카메라에서 켜세요(macOS 12: 시스템 환경설정 › 보안 및 개인 정보 보호 › 개인 정보 보호 › 카메라)."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ກ້ອງປິດສຳລັບ tafs. ເປີດມັນໃນການຕັ້ງຄ່າລະບົບ › ຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ › ກ້ອງ (ໃນ macOS 12: ການຕັ້ງຄ່າລະບົບ › ຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ › ຄວາມເປັນສ່ວນຕົວ › ກ້ອງ)."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera programėlei tafs išjungta. Įjunkite ją skiltyje Sistemos nustatymai › Privatumas ir sauga › Kamera (macOS 12: Sistemos nuostatos › Sauga ir privatumas › Privatumas › Kamera)."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera lietotnei tafs ir izslēgta. Ieslēdz to sadaļā Sistēmas iestatījumi › Privātums un drošība › Kamera (macOS 12: Sistēmas preferences › Drošība un privātums › Privātums › Kamera)."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камерата е исклучена за tafs. Вклучи ја во Системски поставки › Приватност и безбедност › Камера (на macOS 12: Системски преференци › Безбедност и приватност › Приватност › Камера)."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камер tafs-д унтраастай байна. Системийн тохиргоо › Нууцлал ба аюулгүй байдал › Камер хэсгээс асаана уу (macOS 12 дээр: Системийн сонголт › Аюулгүй байдал ба нууцлал › Нууцлал › Камер)."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "क्यामेरा tafs का लागि बन्द छ। सिस्टम सेटिङ › गोपनीयता र सुरक्षा › क्यामेरामा खोल्नुहोस् (macOS 12 मा: सिस्टम प्राथमिकताहरू › सुरक्षा र गोपनीयता › गोपनीयता › क्यामेरा)।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De camera staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Camera (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Camera)."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera jest wyłączona dla tafs. Włącz ją w Ustawienia systemowe › Prywatność i ochrona › Kamera (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Kamera)."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A câmara está desativada para o tafs. Ative-a em Definições do Sistema › Privacidade e segurança › Câmara (no macOS 12: Preferências do Sistema › Segurança e privacidade › Privacidade › Câmara)."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A câmera está desativada para o tafs. Ative-a em Ajustes do Sistema › Privacidade e Segurança › Câmera (no macOS 12: Preferências do Sistema › Segurança e Privacidade › Privacidade › Câmera)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera este dezactivată pentru tafs. Activați-o în Configurări sistem › Confidențialitate și securitate › Cameră (pe macOS 12: Preferințe sistem › Securitate și confidențialitate › Confidențialitate › Cameră)."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera je pre tafs vypnutá. Zapnite ju v Nastaveniach systému › Súkromie a bezpečnosť › Kamera (v macOS 12: Systémové nastavenia › Bezpečnosť a súkromie › Súkromie › Kamera)."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera je za tafs izklopljena. Vklopite jo v Sistemske nastavitve › Zasebnost in varnost › Kamera (v macOS 12: Sistemske nastavitve › Varnost in zasebnost › Zasebnost › Kamera)."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera është joaktive për tafs. Aktivizojeni te Cilësimet e Sistemit › Privatësia dhe Siguria › Kamera (në macOS 12: Preferencat e Sistemit › Siguria dhe Privatësia › Privatësia › Kamera)."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera je isključena za tafs. Uključite je u Podešavanja sistema › Privatnost i sigurnost › Kamera (macOS 12: Podešavanja sistema › Sigurnost i privatnost › Privatnost › Kamera)."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กล้องปิดอยู่สำหรับ tafs เปิดได้ที่การตั้งค่าระบบ › ความเป็นส่วนตัวและความปลอดภัย › กล้อง (บน macOS 12: ค่ากำหนดระบบ › ความปลอดภัยและความเป็นส่วนตัว › ความเป็นส่วนตัว › กล้อง)."
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera tafs üçin öçük. Ony System Settings › Privacy & Security › Camera bölüminde açyň (macOS 12-de: System Preferences › Security & Privacy › Privacy › Camera)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera, tafs için kapalı. Sistem Ayarları › Gizlilik ve Güvenlik › Kamera'dan açın (macOS 12'de: Sistem Tercihleri › Güvenlik ve Gizlilik › Gizlilik › Kamera)."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایپ tafs کے لیے کیمرا بند ہے۔ اسے سسٹم سیٹنگز › پرائیویسی اور سیکیورٹی › کیمرا میں چالو کریں (macOS 12 پر: سسٹم پریفرنسز › سیکیورٹی اور پرائیویسی › پرائیویسی › کیمرا)۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera đang tắt đối với tafs. Hãy bật trong Cài đặt Hệ thống › Quyền riêng tư & Bảo mật › Camera (trên macOS 12: Tùy chọn Hệ thống › Bảo mật & Quyền riêng tư › Quyền riêng tư › Camera)."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相機已對 tafs 關閉。請在「系統設定」›「隱私權與安全性」›「相機」中開啟（macOS 12：「系統偏好設定」›「安全性與隱私權」›「隱私權」›「相機」）。"
           }
         }
       }

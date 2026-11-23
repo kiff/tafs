@@ -498,11 +498,11 @@
         <item quantity="one">მიმაგრება: %1$s ფაილი არის მაქსიმუმი, რასაც შეტყობინება იტევს</item>
         <item quantity="other">მიმაგრება: %1$s ფაილი არის მაქსიმუმი, რასაც შეტყობინება იტევს</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">კამერა გამორთულია tafs-ისთვის. ჩართეთ სისტემის პარამეტრები › კონფიდენციალურობა და უსაფრთხოება › კამერა (macOS 12-ზე: სისტემის პარამეტრები › უსაფრთხოება და კონფიდენციალურობა › კონფიდენციალურობა › კამერა).</string>
     <string name="chat_file_cant_attach">ის ფაილი ვერ მიმაგრდება.</string>
     <string name="chat_file_choose_file">აირჩიეთ ფაილი</string>
     <string name="chat_file_choose_photos">აირჩიეთ ფოტოები</string>
     <string name="chat_file_could_not_open">ფაილი ვერ გაიხსნა.</string>
+    <string name="chat_file_mac_camera_off">კამერა გამორთულია tafs-ისთვის. ჩართეთ სისტემის პარამეტრები › კონფიდენციალურობა და უსაფრთხოება › კამერა (macOS 12-ზე: სისტემის პარამეტრები › უსაფრთხოება და კონფიდენციალურობა › კონფიდენციალურობა › კამერა).</string>
     <string name="chat_file_no_app_opens">ამ ტელეფონზე არც ერთი აპი არ ხსნის: %1$s.</string>
     <string name="chat_file_no_camera">ამ ტელეფონზე ფოტოს გადასაღებად კამერის აპი არ არის.</string>
     <string name="chat_file_not_opened">%1$s ვერ გაიხსნა. %2$s</string>

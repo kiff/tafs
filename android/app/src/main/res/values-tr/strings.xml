@@ -498,11 +498,11 @@
         <item quantity="one">Ekle: bir mesaj en fazla %1$s dosya taşır</item>
         <item quantity="other">Ekle: bir mesaj en fazla %1$s dosya taşır</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">Kamera, tafs için kapalı. Sistem Ayarları › Gizlilik ve Güvenlik › Kamera\'dan açın (macOS 12\'de: Sistem Tercihleri › Güvenlik ve Gizlilik › Gizlilik › Kamera).</string>
     <string name="chat_file_cant_attach">O dosya eklenemiyor.</string>
     <string name="chat_file_choose_file">Dosya seç</string>
     <string name="chat_file_choose_photos">Fotoğraf seç</string>
     <string name="chat_file_could_not_open">Dosya açılamadı.</string>
+    <string name="chat_file_mac_camera_off">Kamera, tafs için kapalı. Sistem Ayarları › Gizlilik ve Güvenlik › Kamera\'dan açın (macOS 12\'de: Sistem Tercihleri › Güvenlik ve Gizlilik › Gizlilik › Kamera).</string>
     <string name="chat_file_no_app_opens">Bu telefonda %1$s dosyasını açan bir uygulama yok.</string>
     <string name="chat_file_no_camera">Bu telefonda fotoğraf çekecek bir kamera uygulaması yok.</string>
     <string name="chat_file_not_opened">%1$s açılamadı. %2$s</string>

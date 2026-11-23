@@ -498,11 +498,11 @@
         <item quantity="one">Lisa: sõnum mahutab kuni %1$s faili</item>
         <item quantity="other">Lisa: sõnum mahutab kuni %1$s faili</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">Kaamera on tafsi jaoks välja lülitatud. Lülita see sisse menüüs System Settings › Privacy &amp; Security › Camera (macOS 12-s: System Preferences › Security &amp; Privacy › Privacy › Camera).</string>
     <string name="chat_file_cant_attach">Seda faili ei saa lisada.</string>
     <string name="chat_file_choose_file">Vali fail</string>
     <string name="chat_file_choose_photos">Vali fotod</string>
     <string name="chat_file_could_not_open">Faili ei õnnestunud avada.</string>
+    <string name="chat_file_mac_camera_off">Kaamera on tafsi jaoks välja lülitatud. Lülita see sisse menüüs System Settings › Privacy &amp; Security › Camera (macOS 12-s: System Preferences › Security &amp; Privacy › Privacy › Camera).</string>
     <string name="chat_file_no_app_opens">Ükski selle telefoni rakendus ei ava faili %1$s.</string>
     <string name="chat_file_no_camera">Selles telefonis pole kaamerarakendust, millega fotot teha.</string>
     <string name="chat_file_not_opened">Faili %1$s ei õnnestunud avada. %2$s</string>

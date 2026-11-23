@@ -27,11 +27,11 @@
     "one": "Əlavə edin: bir mesaj ən çox {count} fayl daşıyır",
     "other": "Əlavə edin: bir mesaj ən çox {count} fayl daşıyır"
   },
-  "chat.file.camera_off_mac": "Kamera tafs üçün söndürülüb. Onu Sistem parametrləri › Məxfilik və təhlükəsizlik › Kamera bölməsində aktiv edin (macOS 12-də: Sistem tərcihləri › Təhlükəsizlik və məxfilik › Məxfilik › Kamera).",
   "chat.file.cant_attach": "Bu fayl əlavə edilə bilmir.",
   "chat.file.choose_file": "Fayl seçin",
   "chat.file.choose_photos": "Fotoları seçin",
   "chat.file.could_not_open": "Fayl açıla bilmədi.",
+  "chat.file.mac_camera_off": "Kamera tafs üçün söndürülüb. Onu Sistem parametrləri › Məxfilik və təhlükəsizlik › Kamera bölməsində aktiv edin (macOS 12-də: Sistem tərcihləri › Təhlükəsizlik və məxfilik › Məxfilik › Kamera).",
   "chat.file.no_app_opens": "Bu telefonda {name} faylını açan tətbiq yoxdur.",
   "chat.file.no_camera": "Bu telefonda foto çəkmək üçün kamera tətbiqi yoxdur.",
   "chat.file.not_opened": "{file} açıla bilmədi. {why}",

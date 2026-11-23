@@ -471,11 +471,11 @@
     <plurals name="chat_file_attach_full">
         <item quantity="other">첨부: 메시지 하나에 파일은 최대 %1$s개입니다</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">Mac에서 tafs의 카메라가 꺼져 있습니다. 시스템 설정 › 개인정보 보호 및 보안 › 카메라에서 켜세요(macOS 12: 시스템 환경설정 › 보안 및 개인 정보 보호 › 개인 정보 보호 › 카메라).</string>
     <string name="chat_file_cant_attach">그 파일은 첨부할 수 없습니다.</string>
     <string name="chat_file_choose_file">파일 선택</string>
     <string name="chat_file_choose_photos">사진 선택</string>
     <string name="chat_file_could_not_open">파일을 열지 못했습니다.</string>
+    <string name="chat_file_mac_camera_off">Mac에서 tafs의 카메라가 꺼져 있습니다. 시스템 설정 › 개인정보 보호 및 보안 › 카메라에서 켜세요(macOS 12: 시스템 환경설정 › 보안 및 개인 정보 보호 › 개인 정보 보호 › 카메라).</string>
     <string name="chat_file_no_app_opens">이 휴대폰에는 %1$s을(를) 여는 앱이 없습니다.</string>
     <string name="chat_file_no_camera">이 휴대폰에는 사진을 찍을 카메라 앱이 없습니다.</string>
     <string name="chat_file_not_opened">%1$s을(를) 열지 못했습니다. %2$s</string>

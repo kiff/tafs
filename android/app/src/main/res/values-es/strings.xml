@@ -498,11 +498,11 @@
         <item quantity="one">Adjuntar: %1$s archivo es el máximo por mensaje</item>
         <item quantity="other">Adjuntar: %1$s archivos es el máximo por mensaje</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">La cámara está desactivada para tafs. Actívala en Ajustes del Sistema › Privacidad y seguridad › Cámara (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Cámara).</string>
     <string name="chat_file_cant_attach">Ese archivo no se puede adjuntar.</string>
     <string name="chat_file_choose_file">Elegir archivo</string>
     <string name="chat_file_choose_photos">Elegir fotos</string>
     <string name="chat_file_could_not_open">No se pudo abrir el archivo.</string>
+    <string name="chat_file_mac_camera_off">La cámara está desactivada para tafs. Actívala en Ajustes del Sistema › Privacidad y seguridad › Cámara (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Cámara).</string>
     <string name="chat_file_no_app_opens">Ninguna app de este teléfono abre %1$s.</string>
     <string name="chat_file_no_camera">No hay ninguna app de cámara en este teléfono para hacer una foto.</string>
     <string name="chat_file_not_opened">No se pudo abrir %1$s. %2$s</string>

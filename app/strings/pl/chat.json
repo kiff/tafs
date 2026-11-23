@@ -29,11 +29,11 @@
     "many": "Załącz: wiadomość mieści najwyżej {count} plików",
     "other": "Załącz: wiadomość mieści najwyżej {count} pliku"
   },
-  "chat.file.camera_off_mac": "Kamera jest wyłączona dla tafs. Włącz ją w Ustawienia systemowe › Prywatność i ochrona › Kamera (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Kamera).",
   "chat.file.cant_attach": "Nie można załączyć tego pliku.",
   "chat.file.choose_file": "Wybierz plik",
   "chat.file.choose_photos": "Wybierz zdjęcia",
   "chat.file.could_not_open": "Nie udało się otworzyć pliku.",
+  "chat.file.mac_camera_off": "Kamera jest wyłączona dla tafs. Włącz ją w Ustawienia systemowe › Prywatność i ochrona › Kamera (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Kamera).",
   "chat.file.no_app_opens": "Żadna aplikacja na tym telefonie nie otwiera pliku {name}.",
   "chat.file.no_camera": "Na tym telefonie nie ma aplikacji aparatu do zrobienia zdjęcia.",
   "chat.file.not_opened": "Nie udało się otworzyć pliku {file}. {why}",

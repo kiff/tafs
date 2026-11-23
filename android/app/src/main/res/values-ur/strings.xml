@@ -498,11 +498,11 @@
         <item quantity="one">منسلک کریں: ایک پیغام زیادہ سے زیادہ %1$s فائلیں لے جاتا ہے</item>
         <item quantity="other">منسلک کریں: ایک پیغام زیادہ سے زیادہ %1$s فائلیں لے جاتا ہے</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">ایپ tafs کے لیے کیمرا بند ہے۔ اسے سسٹم سیٹنگز › پرائیویسی اور سیکیورٹی › کیمرا میں چالو کریں (macOS 12 پر: سسٹم پریفرنسز › سیکیورٹی اور پرائیویسی › پرائیویسی › کیمرا)۔</string>
     <string name="chat_file_cant_attach">وہ فائل منسلک نہیں کی جا سکتی۔</string>
     <string name="chat_file_choose_file">فائل چنیں</string>
     <string name="chat_file_choose_photos">تصاویر چنیں</string>
     <string name="chat_file_could_not_open">فائل کھل نہیں سکی۔</string>
+    <string name="chat_file_mac_camera_off">ایپ tafs کے لیے کیمرا بند ہے۔ اسے سسٹم سیٹنگز › پرائیویسی اور سیکیورٹی › کیمرا میں چالو کریں (macOS 12 پر: سسٹم پریفرنسز › سیکیورٹی اور پرائیویسی › پرائیویسی › کیمرا)۔</string>
     <string name="chat_file_no_app_opens">اس فون میں %1$s کھولنے والی کوئی ایپ نہیں ہے۔</string>
     <string name="chat_file_no_camera">اس فون میں تصویر لینے کے لیے کیمرا ایپ نہیں ہے۔</string>
     <string name="chat_file_not_opened">%1$s کھل نہیں سکی۔ %2$s</string>

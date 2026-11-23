@@ -606,11 +606,11 @@
         <item quantity="many">إرفاق: %1$s ملفًا هو أقصى ما تحمله الرسالة</item>
         <item quantity="other">إرفاق: %1$s ملف هو أقصى ما تحمله الرسالة</item>
     </plurals>
-    <string name="chat_file_camera_off_mac">الكاميرا متوقفة لـ tafs. شغّلها من إعدادات النظام › الخصوصية والأمن › الكاميرا (في macOS 12: تفضيلات النظام › الأمن والخصوصية › الخصوصية › الكاميرا).</string>
     <string name="chat_file_cant_attach">تعذّر إرفاق ذلك الملف.</string>
     <string name="chat_file_choose_file">اختيار ملف</string>
     <string name="chat_file_choose_photos">اختيار صور</string>
     <string name="chat_file_could_not_open">تعذّر فتح الملف.</string>
+    <string name="chat_file_mac_camera_off">الكاميرا متوقفة لـ tafs. شغّلها من إعدادات النظام › الخصوصية والأمن › الكاميرا (في macOS 12: تفضيلات النظام › الأمن والخصوصية › الخصوصية › الكاميرا).</string>
     <string name="chat_file_no_app_opens">لا يوجد تطبيق على هذا الهاتف يفتح %1$s.</string>
     <string name="chat_file_no_camera">لا يوجد تطبيق كاميرا على هذا الهاتف لالتقاط صورة.</string>
     <string name="chat_file_not_opened">تعذّر فتح %1$s. %2$s</string>
