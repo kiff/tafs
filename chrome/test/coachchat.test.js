@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { FRESH, chosen, sendOptions, afterSend, chatTitle } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS } from "../src/coachchat.js";
 
 test("the panel opens on a fresh conversation, whose first message starts a new chat", () => {
   assert.equal(FRESH.fresh, true);
@@ -31,4 +31,15 @@ test("a chat with no title is called by the panel's own word", () => {
   assert.equal(chatTitle({ title: "  " }, "Conversation"), "Conversation");
   assert.equal(chatTitle({}, "Conversation"), "Conversation");
   assert.equal(chatTitle(null, "Conversation"), "Conversation");
+});
+
+test("a fresh conversation is never polled; a chat is read often while Coach works or the owner just wrote, and seldom after", () => {
+  const now = 1_000_000;
+  assert.equal(pollDelay({ view: FRESH, working: true, sentAt: now, now }), null, "nothing to read on a fresh conversation");
+  const chat = chosen("s1");
+  assert.equal(pollDelay({ view: chat, working: true, now }), POLL_BUSY_MS, "Coach is at work");
+  assert.equal(pollDelay({ view: chat, sentAt: now - 1_000, now }), POLL_BUSY_MS, "just sent");
+  assert.equal(pollDelay({ view: chat, sentAt: now - BUSY_AFTER_SEND_MS, now }), POLL_IDLE_MS, "a minute after the send");
+  assert.equal(pollDelay({ view: chat, now }), POLL_IDLE_MS, "idle");
+  assert.ok(POLL_IDLE_MS >= 6 * POLL_BUSY_MS, "idle is much rarer than busy");
 });
