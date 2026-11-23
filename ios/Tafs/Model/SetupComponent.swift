@@ -218,6 +218,9 @@ struct SetupThread: Equatable {
     /// What was written to Coach's latest run, as tafs cloud says (docs/chat.md): what it
     /// hasn't read, what tafs cloud holds for once it's done, and what a stopped run never read.
     var steering: TafsCloud.Steering?
+    /// Coach's latest run ended without an answer (`failed`: the model unreachable or out of funds, `ai_unavailable`, or an
+    /// uncoded `ERROR`): tafs cloud's words, Coach's chat's last line (`AppModel.setupRunFailedLine`). As a taf's thread's.
+    var failed: TafsCloud.RunFailed?
 
     /// The plan, shown pinned above the thread rather than in it.
     var plan: ShownComponent? { components.last { $0.component.type == .steps } }

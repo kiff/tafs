@@ -111,7 +111,10 @@ words, as Android's ([android-app.md](android-app.md)). A later read with none c
 shape, is no line, and a new chat with nothing in it shows none. It comes after everything else, held cards included,
 and not while an answer streams or a new message is being sent. A run followed live here already ended with its own line
 and Retry (`ChatState.ended`, `endedRun`), so the thread's line for that run isn't added too; another run's still is. `ChatTests` reads tafs cloud's own answer,
-`contracts/conversation-failed.json`. Coach's chat doesn't draw it yet.
+`contracts/conversation-failed.json`. Coach's chat draws it by the same rules (`SetupThread.failed`,
+`AppModel.setupRunFailedLine`): last, after everything else; none while Coach's answer streams or a message is being sent,
+and none in a new conversation; a run this chat followed live and saw fail (`setupEnded`, with Retry, and `setupEndedRun`)
+isn't said twice. `SetupTests` reads the same contract.
 
 **A connection that was refused** (`TafsCloud.ChatMessage.refusedLines`, `RefusedLines`): a taf's message
 may carry tafs cloud's `refused` ([chat.md](chat.md)), the failed step's words, the server's reason ("Why:
@@ -1101,6 +1104,15 @@ Account › **Chrome** (`ChromesView`) lists the Chromes paired to the account, 
   later opens a sealed sign-in only on that key's release. A phone without one doesn't open a pairing, as on Android. It
   signs `tafs-chrome/pair/v1` over the pairing, the Chrome key's SHA-256, the name, this phone's key and its proof under
   the secret. The signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
+- **One signature for both acts** ("Your Chrome" 5, as Android's `confirmChromeOneTouch`). Where the extension's offer
+  carries `one_touch` (a JSON true) and its `one_touch_proof` holds under the secret (`ChromePairing.oneTouchProofHolds`,
+  `tafs-chrome/ext-one-touch/v1` over its key and KIFF offer, so planque can't turn it on), that one Face ID signs
+  `kiff.requests.v1` once (`RequestsTogether`), over the SHA-256 of the pairing's bytes and of KIFF's `kiff.request.v1` for
+  the extension's view-only device, with one `signed_at` (`AppModel.pairChromeOneTouch`). KIFF's `POST /v1/me/pairings` goes
+  first, with `v3` and the pairing's hash as `with=`; then planque's confirm, with the same signature as `phone_sig` (raw
+  `r‖s`) and `tenant`, `signed_at` and `kiff_request_sha256`, from which the extension rebuilds it. Otherwise (an older
+  extension, or a flag whose proof doesn't hold) the same Face ID makes today's two signatures (`pairChromeTwice`), and the
+  confirm carries none of the three.
 - **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its
   next connect.
 - **Approving a grant for the owner's own Chrome** (`browser.driver` = `extension` in the grant's request, read in
@@ -1113,7 +1125,8 @@ Account › **Chrome** (`ChromesView`) lists the Chromes paired to the account, 
 - Its lines are `chrome.*`, shared with Android, which follows.
 - **Tests:** `ChromePairingTests` (the shared vectors, a refused proof, raw `r‖s`, the sites signature over the vector's
   bytes, the refused cases, the approve body's field), and `PlanqueTests`' Chrome tests (the row only once planque offers
-  it, an offer shown only on its proof, the confirmation's proof and signature verified).
+  it, an offer shown only on its proof, the confirmation's proof and signature verified; one-touch: one signature over both
+  that KIFF and the extension both check, and today's two when the flag's proof doesn't hold).
 
 ### The sign-in screen
 
@@ -1142,7 +1155,14 @@ keeps the session and says it couldn't load, as before.
 - **Either way ends on the celebration** (`AppModel.justConnected`, shown over the home screen by the root view):
   the computer and the phone joined by a check, "You're connected. Let's build great things together.", and
   **Let's go** (`sign_in.connected`, `sign_in.connected_line`, `sign_in.lets_go`). Never in sample mode or the
-  screenshots.
+  screenshots. **Nothing opens under it** (`RootView.celebrating`, as Android's): the AI-data consent waits until the
+  celebration and its cards are gone, and the time-zone question until the consent is answered too. So the order is
+  the celebration, the consent, then the zone. The zone is asked only when the phone's and the account's keep different
+  times: GMT, UTC, Etc/UTC and Z are one (`AppModel.sameTime`), but only zones fixed by definition are joined, as Android's
+  `ZoneId.normalized()`: Europe/London isn't GMT, and Asia/Tokyo isn't Asia/Seoul, though they share an offset today.
+- **A phone with no Face ID or fingerprint** holds no approval key, so KIFF signs it in view-only. Its line says to add
+  one (`approval.add_face_id_first`, `AppModel.noApprovalKeyHere`), not only to sign in again, which changes nothing until
+  one is added. A view-only phone that holds a key keeps KIFF's line, and a Mac its own.
 
 ### Signing in with your phone
 
@@ -1466,7 +1486,7 @@ longer, so phones that started together don't read together. **Coming back to th
 
 ## Pairing a Chrome that replaces one
 
-"Your Chrome" 1 ([chrome.md](chrome.md)): on the offered Chrome's screen a pick says which paired Chrome this one replaces, or "A new Chrome (replaces none)". It starts on the Chrome with the offer's `profile_id` (an id the extension keeps for its Chrome profile and planque relays as a hint), else on the one paired Chrome of the same browser and system, else on none (`ChromeReplace.preselect`; two alike is never a guess). Choosing one shows what moves ("Moves to this Chrome: wikipedia.org"), the connections that end with the old Chrome, and that the old Chrome is unpaired once this one is paired. The confirm sends `replaces` and `carried` (`[{grant, sites}]`, at most 50), and the same fingerprint signs `carried` inside the pairing the extension checks (`ChromePairing.signedBytes`, tafs#1754), so planque can't change the list; with nothing chosen, nothing moves and the pairing is as before. **A connection moves only if the phone's own key verifies its sites:** planque's grant read gives each extension connection's `chrome_sites_sig` (the phone's signature over `{chrome_id, grant, sites}` made at approval) and `chrome_sites_carried` (planque#369), and `ChromeReplace.carried` carries a connection only when `ChromePairing.sitesSignatureHolds` accepts the signature for the Chrome being replaced (never what planque says of the sites). A connection with no verifying signature, or one carried here from an earlier Chrome (empty signature), ends with the old Chrome, as unpairing does, and the screen says so. The connections are read again just before the confirm.
+"Your Chrome" 1 ([chrome.md](chrome.md)): on the offered Chrome's screen a pick says which paired Chrome this one replaces, or "A new Chrome (replaces none)". It starts on the Chrome with the offer's `profile_id` (an id the extension keeps for its Chrome profile and planque relays as a hint), else on the one paired Chrome of the same browser and system, else on none (`ChromeReplace.preselect`; two alike is never a guess). Choosing one shows what moves ("Moves to this Chrome: wikipedia.org"), the connections that end with the old Chrome, and that the old Chrome is unpaired once this one is paired. The confirm sends `replaces` and `carried` (`[{grant, sites}]`, at most 50), and the same fingerprint signs `carried` inside the pairing the extension checks (`ChromePairing.signedBytes`, tafs#1754), so planque can't change the list; with nothing chosen, nothing moves and the pairing is as before. **A connection moves only if the phone's own key verifies its sites:** planque's grant read gives each extension connection's `chrome_sites_sig` (the phone's signature over `{chrome_id, grant, sites}` made at approval) and `chrome_sites_carried` (planque#369), and `ChromeReplace.carried` carries a connection only when `ChromePairing.sitesSignatureHolds` accepts the signature for the Chrome being replaced (never what planque says of the sites). A connection with no verifying signature, or one carried here from an earlier Chrome (empty signature), ends with the old Chrome, as unpairing does, and the screen says so. The Chromes and the connections are read again just before the confirm, and **it signs only what the owner was shown** (`confirmChrome(…, shown:)`, the list the sheet drew): if a connection ended or the old Chrome went meanwhile, nothing is signed or sent and the sheet says "What moves to this Chrome changed, so nothing was paired. Check it and pair again." (`chrome.replace_changed`) over the new list; a read that failed signs nothing either, with its own line (`chrome.not_loaded`). The same as Android's `confirmChrome`. Test: `PlanqueTests.testARePairingSignsOnlyWhatTheOwnerWasShownReadAgainJustBefore`.
 
 **A connection carried before moves again** ("Your Chrome" 1, planque's `paired_with`): a connection a re-pairing carried keeps no `chrome_sites_sig` of its own (the grant says
 which Chrome holds it, `chrome_sites_carried`). The Chrome's `paired_with` (the pairing body and `phone_sig`, as this phone signed them) vouches for it, and a later re-pairing carries

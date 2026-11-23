@@ -1,0 +1,1 @@
+- **Android 138 (1.48.1)** for Play's internal track: an API door's example names a plain path on tafs cloud's own address, in quotes.

@@ -15,6 +15,7 @@ Chrome üçün tafs sizin tafs-larınızın öz Chrome-unuzda, yalnız icazə ve
 • Chrome quraşdırma zamanı bir dəfə bütün saytlara giriş istəyir. tafs yalnız hər tapşırığın göstərdiyi saytlarda işləyir və bunları telefonunuzda təsdiq edirsiniz.
 • Ödəniş, sifariş vermək və yadda saxlanmış girişi doldurmaq həmişə telefonunuzda təsdiqinizi gözləyir.
 • Səhifəni mətn və forma sahələri kimi oxuyur, parol, kart və kod sahələri çıxarılır. Digər sekmələrinizi və ya tarixçənizi heç vaxt oxumur.
+• Taf səhifədə bir addımı sizə verə bilər, məsələn, axtarış və ya kart nömrəsi yazmaq. Onu özünüz edirsiniz, səhifəni yenidən oxuyanda isə sahələrə yazdıqlarınız çıxarılır.
 • Bank, pul kisəsi, parol meneceri, ödəniş, səhiyyə və dövlət saytları heç vaxt işlənmir, yalnız telefonunuzda bir tapşırıq üçün birinə icazə verdiyiniz halda.
 • Yadda saxlanmış girişlər könüllüdür və bu kompüterdə möhürlənir. tafs və KIFF onları heç vaxt görmür.
 • Yan panel bu Chrome-da işləyən taf-ı göstərir və siz orada onunla tafs tətbiqindəki kimi danışırsınız. “Bu sayt üçün yeni taf qurun” Coach-u açır; Coach səhifəni yalnız “Bu səhifəni paylaş” düyməsini kliklədiyiniz zaman görür və onda yalnız həmin səhifəni, eyni sahələr çıxarılmış şəkildə.

@@ -33,7 +33,7 @@ class PlayInternal(unittest.TestCase):
         self.refusals = {}
 
         p.call = call
-        self.answers = {"/edits/e1/bundles": {"versionCode": 136}, "/edits": {"id": "e1"}}
+        self.answers = {"/edits/e1/bundles": {"versionCode": 138}, "/edits": {"id": "e1"}}
         os.environ["PLAY_ACCESS_TOKEN"] = "t"
         self.bundle = tempfile.NamedTemporaryFile(delete=False, suffix=".aab")
         self.bundle.write(b"aab")
@@ -44,21 +44,21 @@ class PlayInternal(unittest.TestCase):
         os.unlink(self.bundle.name)
 
     def test_one_edit_to_the_internal_track_only_with_a_note_per_language(self):
-        p.version_code = lambda: 136
+        p.version_code = lambda: 138
         p.upload(self.bundle.name)
         self.assertEqual([c[:2] for c in self.calls], [
             ("POST", "/edits"), ("POST", "U/edits/e1/bundles"), ("PUT", "/edits/e1/tracks/internal"), ("POST", "/edits/e1:commit")])
         release = self.calls[2][2]["releases"][0]
         self.assertEqual(self.calls[2][2]["track"], "internal")
-        self.assertEqual(release["versionCodes"], ["136"])
+        self.assertEqual(release["versionCodes"], ["138"])
         self.assertEqual(release["status"], "completed")
         self.assertEqual([n["language"] for n in release["releaseNotes"]], p.LOCALES)
 
     def test_the_commit_sends_nothing_for_review(self):
-        # PM, 20 Nov: a plain commit sent every change pending in Play Console for review (128's review restarted). The
+        # A plain commit once sent every change pending in Play Console for review (128's review restarted). The
         # internal upload commits its own edit only, never a review, for the phone and for the watch.
-        p.version_code = lambda wear=False: 400000010 if wear else 136
-        self.answers["/edits/e1/bundles"] = {"versionCode": 136}
+        p.version_code = lambda wear=False: 400000010 if wear else 138
+        self.answers["/edits/e1/bundles"] = {"versionCode": 138}
         p.upload(self.bundle.name)
         self.answers["/edits/e1/bundles"] = {"versionCode": 400000010}
         p.upload(self.bundle.name, wear=True)
@@ -86,7 +86,7 @@ class PlayInternal(unittest.TestCase):
         self.assertEqual([u.replace(p.API, "") for u in self.urls if ":commit" in u], ["/edits/e1:commit?changesNotSentForReview=true"])
 
     def test_a_bundle_of_another_version_commits_nothing(self):
-        p.version_code = lambda: 136
+        p.version_code = lambda: 138
         self.answers["/edits/e1/bundles"] = {"versionCode": 135}
         with self.assertRaises(SystemExit):
             p.upload(self.bundle.name)
@@ -105,7 +105,7 @@ class PlayInternal(unittest.TestCase):
         with self.assertRaises(SystemExit) as raised:
             p.main(["--check"])
         self.assertIn("no release notes for versionCode 99999", str(raised.exception))
-        p.version_code = lambda: 136
+        p.version_code = lambda: 138
         p.main(["--check"])
 
     def test_no_token_sends_nothing(self):
@@ -122,7 +122,7 @@ class PlayInternal(unittest.TestCase):
             self.assertNotIn(f'"{other}"', code)
 
     def test_the_watch_goes_to_its_own_internal_track_only(self):
-        p.version_code = lambda wear=False: 400000010 if wear else 136
+        p.version_code = lambda wear=False: 400000010 if wear else 138
         self.answers["/edits/e1/bundles"] = {"versionCode": 400000010}
         p.upload(self.bundle.name, wear=True)
         self.assertEqual([c[:2] for c in self.calls], [
@@ -134,8 +134,8 @@ class PlayInternal(unittest.TestCase):
         self.assertEqual(p.WEAR_TRACK, "wear:internal")
 
     def test_a_phone_bundle_sent_as_the_watch_commits_nothing(self):
-        p.version_code = lambda wear=False: 400000010 if wear else 136
-        self.answers["/edits/e1/bundles"] = {"versionCode": 136}
+        p.version_code = lambda wear=False: 400000010 if wear else 138
+        self.answers["/edits/e1/bundles"] = {"versionCode": 138}
         with self.assertRaises(SystemExit):
             p.upload(self.bundle.name, wear=True)
         self.assertNotIn("PUT", [c[0] for c in self.calls])

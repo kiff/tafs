@@ -15,6 +15,7 @@ tafs voor Chrome laat je tafs werken in je eigen Chrome, alleen op de sites die 
 • Chrome vraagt bij de installatie één keer om toegang tot alle sites. tafs werkt alleen op de sites die elke taak noemt, en die jij goedkeurt op je telefoon.
 • Betalen, een bestelling plaatsen en een bewaarde login invullen wachten altijd op je goedkeuring op je telefoon.
 • Het leest een pagina als tekst en formuliervelden, zonder wachtwoord-, kaart- en codevelden. Het leest nooit je andere tabbladen of je geschiedenis.
+• Een taf kan je één stap op een pagina laten doen, zoals een zoekopdracht of een kaartnummer typen. Je doet het zelf, en als hij de pagina opnieuw leest, blijft weg wat je in de velden typte.
 • Sites van banken, wallets, wachtwoordmanagers, betalingen, gezondheid en overheid worden nooit bewerkt, tenzij je er een toestaat, voor één taak, op je telefoon.
 • Bewaarde logins zijn optioneel en op deze computer verzegeld. tafs en KIFF zien ze nooit.
 • Het zijpaneel toont de taf die in deze Chrome werkt, en je praat er daar mee, zoals in de tafs-app. „Een nieuwe taf instellen voor deze site” opent Coach, die een pagina alleen ziet als je op „Deze pagina delen” klikt, en dan alleen die pagina, met dezelfde velden verwijderd.

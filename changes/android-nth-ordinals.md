@@ -1,0 +1,1 @@
+- **Android: a Card's "this would be the 6th call" reads right in Turkmen, Urdu, Hindi, Bengali and Mongolian.** Android's ICU wrote English ordinals for most of them ("6rd", "6th", "৬th") and Hindi's in the masculine; the app now writes these five from their own rules (6-njy, 6ویں, 6ठी, ৬ষ্ঠ, 6-р), as the iPhone does. Every other language is unchanged.

@@ -15,6 +15,7 @@ tafs cho Chrome để các taf của bạn làm việc trong chính Chrome của
 • Chrome chỉ hỏi một lần, lúc cài đặt, để truy cập mọi trang web. tafs chỉ làm việc trên các trang mà mỗi tác vụ nêu, và bạn duyệt chúng trên điện thoại.
 • Thanh toán, đặt hàng và điền thông tin đăng nhập đã lưu luôn chờ bạn duyệt trên điện thoại.
 • Nó đọc một trang dưới dạng văn bản và các trường biểu mẫu, bỏ các trường mật khẩu, thẻ và mã. Nó không bao giờ đọc các tab khác hay lịch sử của bạn.
+• Một taf có thể giao cho bạn một bước trên trang, chẳng hạn gõ nội dung tìm kiếm hoặc số thẻ. Bạn tự làm bước đó, và khi nó đọc lại trang, những gì bạn gõ trong các trường được bỏ ra.
 • Trang của ngân hàng, ví, trình quản lý mật khẩu, thanh toán, y tế và cơ quan nhà nước không bao giờ được xử lý, trừ khi bạn cho phép một trang cho một tác vụ trên điện thoại.
 • Thông tin đăng nhập đã lưu là tùy chọn và được niêm phong trên máy tính này. tafs và KIFF không bao giờ nhìn thấy chúng.
 • Bảng điều khiển bên hiển thị taf đang làm việc trong Chrome này, và bạn trò chuyện với nó tại đó, như trong ứng dụng tafs. “Thiết lập taf mới cho trang này” mở Coach, chỉ thấy một trang khi bạn nhấp “Chia sẻ trang này”, và khi đó chỉ trang đó, cũng bỏ các trường ấy.
