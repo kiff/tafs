@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} goşulyp bilinmeýär.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs bu faýly goşup bilmeýär: ol kabul edýän görnüşi ýa-da ölçegi däl. Başga birini saýlaň.",
+  "attachment.photo": "Surat",
+  "attachment.photo_could_not_read": "Ol surat okalyp bilinmedi.",
+  "attachment.photo_numbered": "Surat {n}",
+  "attachment.too_large": "{name} {size}; iň köp {limit}.",
+  "attachment.wrong_kind": "{name} goşulyp bilinmeýär. Suratlar, PDF-ler, tekst, CSV, Markdown, Word we Excel faýllary goşulyp bilner."
+}

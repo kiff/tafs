@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Gysgaça maglumatlar",
+  "push.channel.briefs_description": "Siziň gysgaça maglumatyňyz bellenen wagtlarynda.",
+  "push.channel.holds_description": "Çagyryş siziň jogabyňyz üçin saklanýar. Siz tassyklamaňyzça hiç zat iberilmeýär.",
+  "push.channel.other": "Beýleki duýduryşlar",
+  "push.channel.other_description": "Işler üçin haýyşlar we olaryň jogaplary, sessiz.",
+  "push.channel.urgent_description": "Indiki gysgaça maglumatyňyza garaşyp bilmeýän zatlar, ses bilen.",
+  "push.open_needs_you": "Jogap bermek üçin Size garaşýar bölümini açyň.",
+  "push.open_taf": "Görmek üçin taf-y açyň.",
+  "push.open_usage": "Görmek üçin Meýilnama we ulanyş bölümini açyň."
+}

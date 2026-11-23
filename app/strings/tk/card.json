@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "Card-yň hemmesi",
+    "other": "Card-yň hemmesi"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, soňra ol sizden soraýar",
+  "card.calls_left": {
+    "one": "{count} çagyryş galdy",
+    "other": "{count} çagyryş galdy"
+  },
+  "card.calls_left_line": {
+    "one": "{limit} çäginden {window} {count} çagyryş galdy",
+    "other": "{limit} çäginden {window} {count} çagyryş galdy"
+  },
+  "card.calls_used_of": {
+    "one": "{window} {count} çagyryşdan {used}",
+    "other": "{window} {count} çagyryşdan {used}"
+  },
+  "card.calls_window": {
+    "one": "{window} {count} çagyryş",
+    "other": "{window} {count} çagyryş"
+  },
+  "card.card_confirmed_kiff": "Card · KIFF tarapyndan tassyklandy",
+  "card.card_draft_kiff": "Card · garalama · KIFF tarapyndan",
+  "card.card_got_room_call_needed": "Onuň Card-y şol jemi täzeden başlanýança bu çagyryşa gerek orny aldy",
+  "card.card_not_issued": "Card berilmedi. ",
+  "card.card_revoked": "Card ýatyryldy",
+  "card.check.always_asks": "{rule}: hemişe sizden soraýar",
+  "card.check.never_allowed": "{rule}: hiç haçan rugsat berilmeýär",
+  "card.check.not_on_card": "Bu taf-yň Card-ynda ýok",
+  "card.check.over_count": {
+    "one": "{window} {count} çagyryşdan artyk",
+    "other": "{window} {count} çagyryşdan artyk"
+  },
+  "card.check.over_each": "Her biri {amount}-dan artyk",
+  "card.check.over_total": "{window} {amount}-dan artyk",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Gutardy",
+  "card.ended_on": "{date} gutardy",
+  "card.ends": "Gutarýar",
+  "card.extra_room": "+{extra} goşmaça ýer {window}",
+  "card.extra_room_prefix": "+{formatted} goşmaça ýer ",
+  "card.extra_room_until": "+{extra} goşmaça ýer {ends} çenli",
+  "card.figure_left": "{figure} galdy",
+  "card.heading": {
+    "one": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{window}{each} {count} çagyryş: bu {item} {nth} bolardy",
+    "other": "{window}{each} {count} çagyryş: bu {item} {nth} bolardy"
+  },
+  "card.held.each_call_asks": "Her çagyryş ilki sizden soraýar",
+  "card.held.for_each": " her {name} üçin",
+  "card.held.for_each_join": " her biri üçin ",
+  "card.held.for_item": " {item} üçin",
+  "card.held.over_count": {
+    "one": "{count} çagyryş çäginden artyk: bu {nth} bolardy",
+    "other": "{count} çagyryş çäginden artyk: bu {nth} bolardy"
+  },
+  "card.held.over_one_call": "{amount} bir çagyryş üçin {cap} çäginden artyk",
+  "card.held.over_total": "{amount} {cap} jemden geçerdi",
+  "card.hero.calls_left_of": {
+    "one": "{limit} çäginden {window} çagyryş galdy",
+    "other": "{limit} çäginden {window} çagyryş galdy"
+  },
+  "card.hero.calls_use_unavailable": "{window} çagyryş · ulanyş elýeterli däl",
+  "card.hero.left_of": "{limit} çäginden {window} galdy",
+  "card.hero.left_of_extra": "{base} + {extra} goşmaça ýerden {window} galdy",
+  "card.hero.left_of_extra_until": "{base} + {extra} goşmaça ýerden {window} galdy, {ends} çenli",
+  "card.hero.left_of_note": "{limit} çäginden {window} galdy{note}",
+  "card.hero.no_currency": "walýuta ýok",
+  "card.hero.no_currency_suffix": " · walýuta ýok",
+  "card.hero.use_unavailable": "{window} · ulanyş elýeterli däl",
+  "card.hero.use_unavailable_note": "{label} · ulanyş elýeterli däl{note}",
+  "card.how_counted": "Bu nähili hasaplanýar",
+  "card.issue_prompt": "{taf} üçin Card beriň",
+  "card.issued_by": "Beren",
+  "card.issued_by_account": "Hasap",
+  "card.issued_by_named": "Beren: {who}",
+  "card.its_card": "Onuň Card-y",
+  "card.kiff_did_not_revoke_cards": "KIFF onuň {cards_left} Card-ny ýatyrmady: olary KIFF-de ýatyryň.",
+  "card.left": "{window} {amount} galdy",
+  "card.left_extra_room": "{own} + {extra} goşmaça ýerden {current} galdy{until}{note}",
+  "card.limit_can_not_raised_right": "Çägi häzir bu ýerden ýokary galdyryp bolmaýar.",
+  "card.limit_raised_read_balance_again": "Çäk ýokary galdyryldy. Ony ýene ýokary galdyrmazdan öň galyndyny täzeden okaň.",
+  "card.line.calls_in_window": {
+    "one": "{window} {count} çagyryş{then}",
+    "other": "{window} {count} çagyryş{then}"
+  },
+  "card.line.more_asks": "; has köp bolsa ilki sizden soraýar",
+  "card.line.then_asks": ", soňra ol sizden soraýar",
+  "card.line.total_in_window": "{window} jemi {amount}{then}",
+  "card.line.up_to_each": "her biri {amount} çenli",
+  "card.more": {
+    "one": "ýene {count}",
+    "other": "ýene {count}"
+  },
+  "card.no_actions": "Heniz hereket ýok",
+  "card.no_actions_short": "heniz hereket ýok",
+  "card.no_currency": "{amount} (walýuta ýok)",
+  "card.no_end_date": "Gutarýan senesi ýok",
+  "card.outcome.not_a_resource": "Card-yň serişdeleriniň biri däl",
+  "card.outcome.outside": "Card-yň daşynda",
+  "card.outcome.over_one_action": "Card-yň bir hereket üçin çäginden artyk",
+  "card.outcome.over_total": "Card-yň jeminden artyk",
+  "card.outside_held": "Daşynda: siziň üçin saklandy",
+  "card.outside_refused": "Daşynda: ret edildi",
+  "card.over_limit_calls_would": "{limit} çagyryş çäginden artyk: bu {nth} bolardy",
+  "card.revoke_failed": "KIFF Card-y ýatyrmady. {why}",
+  "card.revoked": "Ýatyryldy",
+  "card.rule.always_asks": "hemişe sizden soraýar",
+  "card.rule.at_most_each": "≤ her biri {amount}",
+  "card.rule.at_most_each_refused_above": "≤ her biri {amount} · ondan artygy ret edilýär",
+  "card.rule.calls": {
+    "one": "{window} {count} çagyryş",
+    "other": "{window} {count} çagyryş"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{window} {count} çagyryş, soňra ol sizden soraýar",
+    "other": "{window} {count} çagyryş, soňra ol sizden soraýar"
+  },
+  "card.rule.in_total": "{window} jemi {amount}",
+  "card.rule.never": "hiç haçan",
+  "card.rule.total_then_asks": "{window} jemi {amount}, soňra ol sizden soraýar",
+  "card.rule.up_to_each": "her biri {amount} çenli; has köpi ilki sizden soraýar",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "taf-yň Card-y",
+  "card.tools": {
+    "one": "{count} gural",
+    "other": "{count} gural"
+  },
+  "card.until": "Çenli",
+  "card.until_date": "{date} çenli",
+  "card.until_ends": " {ends} çenli",
+  "card.used_of": "{window} {limit}-dan {used}",
+  "card.window.a_day": "günde",
+  "card.window.a_month": "aýda",
+  "card.window.a_week": "hepdede",
+  "card.window.any_day": "islendik 24 sagatda",
+  "card.window.any_hour": "islendik sagatda",
+  "card.window.any_week": "islendik 7 günde",
+  "card.window.in_total": "jemi",
+  "card.window.in_total_window": "jemi {window}",
+  "card.window.last_day": "soňky 24 sagatda",
+  "card.window.last_hour": "soňky sagatda",
+  "card.window.last_week": "soňky 7 günde",
+  "card.window.so_far": "şu wagta çenli",
+  "card.window.this_month": "şu aýda",
+  "card.window.this_week": "şu hepde",
+  "card.window.today": "şu gün",
+  "card.within_card": "Card-yň çäginde"
+}

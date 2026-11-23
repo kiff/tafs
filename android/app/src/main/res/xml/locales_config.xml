@@ -40,5 +40,6 @@
     <locale android:name="ne" />
     <locale android:name="km" />
     <locale android:name="lo" />
+    <locale android:name="tk" />
     <locale android:name="pt-BR" />
 </locale-config>
