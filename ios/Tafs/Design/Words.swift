@@ -1143,6 +1143,10 @@ enum Words {
         static var shotOpen: String { Words.line("chrome.shot_open") }
         /// Before this step
         static var shotTitle: String { Words.line("chrome.shot_title") }
+        /// Use another Chrome
+        static var `switch`: String { Words.line("chrome.switch") }
+        /// Move this connection to {name}
+        static func switchPrompt(name: String) -> String { Words.line("chrome.switch_prompt", name) }
         /// Chrome
         static var title: String { Words.line("chrome.title") }
         /// Unpairing ends the connections that use it: {sites}. They come back only when you connect them again.

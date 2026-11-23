@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Reluat" },
   "step_stopped": { "message": "Încheiat" },
   "step_closed": { "message": "Terminat" },
-  "allow_site": { "message": "Permiteți $SITE$ în Chrome", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "Are nevoie de acordul dvs. în Chrome pentru $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "nefăcut ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "Scrieți-i lui Coach" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "Vorbiți cu Coach" },
   "coach_empty_body": { "message": "Este același chat ca în aplicația tafs. Coach vede această pagină doar dacă o distribuiți." },
   "share_note": { "message": "Trimite lui Coach această singură pagină, fără câmpurile de parolă, card și cod." },
-  "share_declined": { "message": "Nedistribuit: tafs nu este permis pe acest site în Chrome." },
-  "share_permission": { "message": "Prima dată pe un site, Chrome vă întreabă dacă lăsați tafs să intre." },
   "vault_title": { "message": "Autentificări salvate" },
   "vault_body": { "message": "Salvată aici, sigilată pe acest computer. Un taf poate cere să o folosească doar pe acel site exact și este introdusă numai după ce aprobați acea completare pe telefon. tafs și KIFF nu o văd niciodată." },
   "vault_site": { "message": "Site" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Conversații anterioare" },
   "coach_previous_none": { "message": "Nicio conversație anterioară." },
   "coach_previous_error": { "message": "Conversațiile anterioare nu au putut fi încărcate." },
-  "coach_untitled": { "message": "Conversație" }
+  "coach_untitled": { "message": "Conversație" },
+  "taf_choose": { "message": "Vorbiți cu" },
+  "taf_placeholder": { "message": "Mesaj pentru $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nu a ajuns la $TAF$. Încercați din nou.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Nu s-au putut citi tafs-urile dvs. Încercați din nou." },
+  "no_taf_here": { "message": "Încă nu lucrează niciun taf în acest Chrome." },
+  "setup_taf": { "message": "Configurați un taf nou pentru acest site" }
 }

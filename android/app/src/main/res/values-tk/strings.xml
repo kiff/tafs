@@ -625,6 +625,8 @@
     <string name="chrome_shot_none">Bu ädim üçin hiç bir surat saklanmaýar.</string>
     <string name="chrome_shot_open">Bu ädimden öň sahypany görüň</string>
     <string name="chrome_shot_title">Bu ädimden öň</string>
+    <string name="chrome_switch">Başga Chrome ulanyň</string>
+    <string name="chrome_switch_prompt">Bu birikmäni %1$s-a göçüriň</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Goşalamany aýyrmak ony ulanýan birikmeleri gutarýar: %1$s. Olar diňe siz täzeden birikdirseňiz gaýdyp gelýär.</string>
     <string name="chrome_used_for">%1$s üçin ulanylýar</string>

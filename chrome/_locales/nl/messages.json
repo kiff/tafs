@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Hervat" },
   "step_stopped": { "message": "Gestopt" },
   "step_closed": { "message": "Klaar" },
-  "allow_site": { "message": "$SITE$ toestaan in Chrome", "placeholders": { "site": { "content": "$1" } } },
-  "step_ask": { "message": "Wacht op je ja in Chrome voor $SITE$", "placeholders": { "site": { "content": "$1" } } },
   "step_refused": { "message": "niet gedaan ($CODE$)", "placeholders": { "code": { "content": "$1" } } },
   "coach_title": { "message": "Coach", "description": "Side panel title" },
   "coach_placeholder": { "message": "Bericht aan Coach", "description": "Composer placeholder" },
@@ -57,8 +55,6 @@
   "coach_empty_title": { "message": "Praat met Coach", "description": "Empty chat: heading" },
   "coach_empty_body": { "message": "Het is dezelfde chat als in de tafs-app. Coach ziet deze pagina alleen als je hem deelt.", "description": "Empty chat: body" },
   "share_note": { "message": "Stuurt alleen deze ene pagina naar Coach, zonder wachtwoord-, kaart- en codevelden.", "description": "Note under Share this page" },
-  "share_declined": { "message": "Niet gedeeld: tafs heeft in Chrome geen toegang tot deze site.", "description": "Owner said no to Chrome's site prompt" },
-  "share_permission": { "message": "De eerste keer op een site vraagt Chrome of je tafs daar toegang geeft.", "description": "Shown before Chrome's site prompt, first share on a site" },
   "coach_error": { "message": "Dat is niet bij Coach aangekomen. Probeer het opnieuw." },
   "coach_not_started": { "message": "Start Coach eerst op je telefoon." },
   "coach_working": { "message": "Coach is bezig…" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Eerdere gesprekken" },
   "coach_previous_none": { "message": "Geen eerdere gesprekken." },
   "coach_previous_error": { "message": "De eerdere gesprekken konden niet worden geladen." },
-  "coach_untitled": { "message": "Gesprek" }
+  "coach_untitled": { "message": "Gesprek" },
+  "taf_choose": { "message": "Praat met" },
+  "taf_placeholder": { "message": "Bericht aan $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Dit is niet bij $TAF$ aangekomen. Probeer het opnieuw.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Je tafs konden niet worden gelezen. Probeer het opnieuw." },
+  "no_taf_here": { "message": "Er werkt nog geen taf in deze Chrome." },
+  "setup_taf": { "message": "Een nieuwe taf instellen voor deze site" }
 }
