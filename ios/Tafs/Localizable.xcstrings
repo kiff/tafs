@@ -325543,7 +325543,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exportar os meus chats"
+            "value": "Exportar meus chats"
           }
         },
         "ro": {
@@ -538677,7 +538677,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirma com %1$@. A sessão também é terminada noutros dispositivos."
+            "value": "Você confirma com %1$@. A sessão também é encerrada nos outros dispositivos."
           }
         },
         "ro": {
@@ -564714,7 +564714,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando está ativado, pode iniciar sessão com um código enviado para o seu email, em vez de Apple, Google ou GitHub. Está desativado a menos que o ative, e ativá-lo exige um início de sessão recente."
+            "value": "Quando está ativado, você pode entrar com um código enviado para o seu e-mail, em vez de Apple, Google ou GitHub. Ele fica desativado a menos que você o ative, e ativar exige um login recente."
           }
         },
         "ro": {
@@ -564977,7 +564977,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iniciar sessão com um código enviado por email"
+            "value": "Entrar com um código enviado por e-mail"
           }
         },
         "ro": {
@@ -565240,7 +565240,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O início de sessão com um código ainda não está disponível."
+            "value": "Entrar com um código ainda não está disponível."
           }
         },
         "ro": {
@@ -565766,7 +565766,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível carregar esta definição. %1$@"
+            "value": "Não foi possível carregar esta configuração. %1$@"
           }
         },
         "ro": {
@@ -566555,7 +566555,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Guardado. Enviámos-lhe um email sobre a alteração."
+            "value": "Salvo. Enviamos um e-mail para você sobre a alteração."
           }
         },
         "ro": {
@@ -566818,7 +566818,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Início de sessão"
+            "value": "Login"
           }
         },
         "ro": {
@@ -567607,7 +567607,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ativá-lo abre a página de início de sessão do KIFF, onde confirma que é você."
+            "value": "Ativar abre a página de login do KIFF, onde você confirma que é você."
           }
         },
         "ro": {
