@@ -1334,6 +1334,44 @@ Lao with macOS 12's names in brackets. Plural forms: other only.
 | Usage | ການໃຊ້ງານ |
 | Cancel / Continue | ຍົກເລີກ / ສືບຕໍ່ |
 
+## Batch 6: Turkmen
+
+### Turkmen (tk)
+
+Turkmen in the Latin alphabet of 1993 as revised in 2021 (A B Ç D E Ä F G H I J Ž K L M N Ň O Ö P R S Ş T U Ü W Y Ý Z), addressed as **siz**,
+the polite form, with buttons in the polite imperative ("Tassyklaň", "Ret ediň", "Dowam ediň"). taf, Card, Coach, KIFF, Setup and
+planque are names and stay in Latin letters; they take Turkmen endings after a hyphen ("taf-yň", "Card-yny", "tafs-lar"). Turkmen has no
+plural after a number ("3 taf", "2 çagyryş"), so a count uses the bare noun in both forms. Turkmen has no English-style possessive:
+"{owner}'s Card" is "{owner} üçin Card", since a name can't take a vowel-harmony ending safely. A door is "gapy", a knock "kakyş", a call
+"çagyryş", a receipt "kwitansiýa", the Record "Ýazgy", a run "işleme". Numbers are Western digits; quotes are “ ”. The weekdays are
+Duş, Siş, Çar, Pen, Anna, Şen, Ýek and the months Ýanwar, Fewral, Mart, Aprel, Maý, Iýun, Iýul, Awgust, Sentýabr, Oktýabr, Noýabr,
+Dekabr. Menu paths of the phone's own settings stay in English, as iOS, macOS and Android have no Turkmen. Plural forms: one, other.
+First draft, from legal-i18n; a native read fixes it forward.
+
+| English | Turkmen |
+|---|---|
+| Needs you | Size garaşýar |
+| Approve / Approve once | Tassyklaň / Bir gezek tassyklaň |
+| Refuse | Ret ediň |
+| held | saklanan |
+| Halt / Halted | Togtatmak / Togtadyldy |
+| Stopped | Durdy |
+| Pause / Paused | Bes ediň / Bes edildi |
+| Resume | Dowam ediň |
+| Revoke | Ýatyryň |
+| Record | Ýazgy |
+| Connect / connection | Birikdiriň / birikme |
+| Pair / Unpair | Goşalaň / Goşalamany aýyryň |
+| Account | Hasap |
+| credits | kreditler |
+| security key | howpsuzlyk açary |
+| Sign in / Sign out | Giriň / Çykyň |
+| Inbox | Inbox |
+| Overview | Syn |
+| Calendar | Senenama |
+| Usage | Ulanyş |
+| Cancel / Continue | Goýbolsun / Dowam ediň |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

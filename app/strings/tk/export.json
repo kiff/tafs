@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Söhbetdeşlikleriňiz eksport edilmedi. {why}",
+  "export.not_offered": "Faýllar bu telefonda saklanyp bilinmedi. Birneme ýer boşadyň, soňra täzeden synanyşyň.",
+  "export.own_chats_each_taf_coach": "Her taf bilen, Coach bilen hem, öz söhbetdeşlikleriňiz, goşan faýllaryňyzyň atlary we bellikleriňiz, okalýan faýl we JSON görnüşinde. Olary diňe siz eksport edip bilersiňiz.",
+  "export.preparing": "Söhbetdeşlikleriňiz taýýarlanýar…",
+  "export.ready_share_again": "Taýýar: {files}. Täzeden paýlaşyň",
+  "export.row": "Söhbetdeşliklerimi eksport etmek",
+  "export.sign_in_first": "Söhbetdeşlikleriňizi eksport etmek üçin KIFF bilen giriň."
+}
