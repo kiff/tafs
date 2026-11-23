@@ -1130,7 +1130,11 @@ class KiffClient(
     fun handoffMessage(tenant: String, handoff: String, answer: String, version: Int, signedAt: String): ByteArray =
       listOf("kiff.handoff.v1", tenant, handoff, answer, version.toString(), signedAt).joinToString("\n").toByteArray()
 
-    /** What the phone signs to answer a held call: KIFF's signed answer message, `kiff.answer.v1`, one field per line. */
+    /**
+     * What the phone signs to answer a held call: KIFF's signed answer message, `kiff.answer.v1`, one field per line. For a held
+     * sealed fill, [browserSha256] (the hold's `browser_sha256`) is a ninth line, so the answer covers the block the card drew;
+     * no line otherwise.
+     */
     fun answerMessage(
       tenant: String,
       exceptionId: String,
@@ -1139,10 +1143,12 @@ class KiffClient(
       note: String? = null,
       accountingVersion: Int,
       signedAt: String,
+      browserSha256: String? = null,
     ): ByteArray {
       val noteHash = note?.takeIf { it.isNotEmpty() }?.let { sha256Hex(it.toByteArray()) } ?: ""
-      return listOf("kiff.answer.v1", tenant, exceptionId, answer, nextStep ?: "", noteHash, accountingVersion.toString(), signedAt)
-        .joinToString("\n").toByteArray()
+      val lines = listOf("kiff.answer.v1", tenant, exceptionId, answer, nextStep ?: "", noteHash, accountingVersion.toString(), signedAt) +
+        listOfNotNull(browserSha256?.takeIf { it.isNotEmpty() })
+      return lines.joinToString("\n").toByteArray()
     }
 
     /**

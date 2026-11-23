@@ -703,6 +703,8 @@ struct ConnectionsPanel: View {
     @State private var confirming: PlanqueClient.Grant?
     /// A sign-in that never came back, whose Cancel waits for the owner's yes.
     @State private var cancelling: PlanqueClient.Grant?
+    /// Sign in again's sheet, open on a connection (docs/connect-apps.md).
+    @State private var reapproving: TafsCloud.ConnectStart?
 
     var body: some View {
         let connections = model.connections(for: tafID)
@@ -770,10 +772,11 @@ struct ConnectionsPanel: View {
                     }
                     if grant.needsReconnect {
                         Button(model.connecting == grant.id ? model.connectStep ?? Words.Connect.openingSignIn : Words.Connect.signInAgain) {
-                            Task { await model.reconnect(grant) }
+                            reapproving = model.reconnectStart(grant)
                         }
                         .buttonStyle(OutlineButtonStyle(color: Theme.ink))
                         .disabled(model.connecting != nil)
+                        .reapprovalSheet($reapproving)
                         if let why = model.reconnectErrors[grant.id] {
                             Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                         }
@@ -1510,16 +1513,19 @@ struct ConnectAgainPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     let again: TafsCloud.ConnectAgain
+    /// Sign in again's sheet, open on that connection (docs/connect-apps.md).
+    @State private var reapproving: TafsCloud.ConnectStart?
 
     var body: some View {
         Panel(stroke: Theme.amber.opacity(0.5)) {
             Text(again.words).scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
                 .fixedSize(horizontal: false, vertical: true)
             Button(model.connecting == again.grant ? model.connectStep ?? Words.Connect.openingSignIn : again.title) {
-                Task { await model.connectAgain(tafID, again) }
+                Task { reapproving = await model.reconnectStart(id: again.grant, fresh: again.fresh) }
             }
             .buttonStyle(PrimaryButtonStyle())
             .disabled(model.connecting != nil)
+            .reapprovalSheet($reapproving) { await model.afterConnectAgain(tafID, again) }
             .accessibilityIdentifier("setup.connect-again")
             if let why = model.reconnectErrors[again.grant] {
                 Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
