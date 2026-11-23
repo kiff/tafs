@@ -11,7 +11,7 @@ const SHOP = await signedSites(["shop.example"]);
 const PAYPAL = await signedSites(["paypal.com"]);
 
 /** A fake of the parts of Chrome's extension API the runner uses, recording every call. */
-function fakeChrome({ permitted = true, page = null, ownerWindow = null } = {}) {
+function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFails = false, createFails = false } = {}) {
   const calls = [];
   const listeners = {};
   const on = (name) => ({ addListener: (f) => (listeners[name] = f) });
@@ -37,10 +37,15 @@ function fakeChrome({ permitted = true, page = null, ownerWindow = null } = {}) 
         calls.push(["tabs.update", id, props]);
         if (props.url) tabs.set(id, props.url);
       },
-      group: async (o) => (calls.push(["tabs.group", o]), 7),
+      group: async (o) => {
+        calls.push(["tabs.group", o]);
+        if (groupFails) throw new Error("No group");
+        return 7;
+      },
       remove: async (id) => calls.push(["tabs.remove", id]),
       create: async (o) => {
         calls.push(["tabs.create", o]);
+        if (createFails) throw new Error("No window with id");
         const id = nextTab++;
         tabs.set(id, o.url);
         return { id };
@@ -210,6 +215,9 @@ test("a run in the owner's window touches only tab ids it created", async () => 
   await r.handle(step({ op: "read" }));
   await r.stop("run_1");
   const ours = new Set([tab, 556]);
+  for (const x of c.calls.filter((y) => y[0] === "executeScript")) assert.ok(ours.has(x[2]), `a script ran in tab ${x[2]}, which the run didn't open`);
+  const fenced = c.calls.filter((x) => x[0] === "dnr").flatMap((x) => (x[1].addRules || []).flatMap((rule) => rule.condition.tabIds || []));
+  assert.ok(fenced.length && fenced.every((id) => ours.has(id)), "the fence rules name only the run's tabs");
   const touched = c.calls.filter((x) => ["tabs.update", "tabs.remove", "tabs.group"].includes(x[0]));
   for (const [kind, ...args] of touched) {
     const ids = kind === "tabs.group" ? args[0].tabIds : [].concat(args[0]);
@@ -230,8 +238,87 @@ test("with no window to join, or a private one, a run has a window of its own an
     assert.equal(nav[2].active, true, "in its own window the run's tab is the one in front");
     await r.stop("run_1");
     assert.ok(c.calls.some((x) => x[0] === "windows.remove" && x[1] === 9));
-    assert.ok(!c.calls.some((x) => x[0] === "tabs.remove"));
+    // The window goes with its tab: the tab is closed first, then the window.
+    assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1].length), [1]);
   }
+});
+
+test("a run's own window the owner has emptied (its tab dragged out) still has its tab closed at Stop", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  await r.stop("run_1");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[tab]]);
+  assert.ok(c.calls.some((x) => x[0] === "windows.remove"));
+});
+
+test("a Stop that lands while the tab is being made leaves nothing open, in the owner's window or its own", async () => {
+  for (const ownerWindow of [OWNER_WINDOW, null]) {
+    const c = fakeChrome({ ownerWindow });
+    const r = runner(c);
+    let release;
+    const gate = new Promise((resolve) => (release = resolve));
+    const made = ownerWindow ? c.tabs.create : c.windows.create;
+    (ownerWindow ? c.tabs : c.windows)[ownerWindow ? "create" : "create"] = async (o) => (await gate, made(o));
+    const opening = r.handle(step());
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await r.stop("run_1"); // nothing of the run's exists yet to close
+    release();
+    const out = await opening;
+    assert.equal(out.error.code, "stopped", JSON.stringify(ownerWindow));
+    const tab = [...c.tabsMap.keys()][0];
+    if (ownerWindow) assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[tab]], "the tab made is closed");
+    else assert.ok(c.calls.some((x) => x[0] === "windows.remove" && x[1] === 9), "the window made is closed");
+    assert.ok(!c.calls.some((x) => x[0] === "tabs.group" || (x[0] === "tabs.update" && x[2].url)), "nothing was grouped or navigated");
+    assert.equal(r.active, false);
+  }
+});
+
+test("a Stop that lands while the tab is being fenced and grouped closes it, and nothing is navigated", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  let release;
+  const gate = new Promise((resolve) => (release = resolve));
+  const update = c.tabGroups.update;
+  c.tabGroups.update = async (...args) => (await gate, update(...args));
+  const opening = r.handle(step());
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  await r.stop("run_1"); // the tab is the run's by now: this closes it
+  release();
+  assert.equal((await opening).error.code, "stopped");
+  const tab = [...c.tabsMap.keys()][0];
+  assert.ok(c.calls.filter((x) => x[0] === "tabs.remove").every((x) => x[1].length === 1 && x[1][0] === tab));
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url), "no page loaded in a stopped run's tab");
+  assert.equal(r.active, false);
+});
+
+test("a tab group the owner has broken up doesn't lose the run its pop-up, and a window that closed makes a window of its own", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW, groupFails: false });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  c.tabs.group = async () => {
+    throw new Error("No group with id 7");
+  };
+  c.listeners.created({ sourceTabId: tab, tabId: 556, url: "https://shop.example/help" });
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  await r.stop("run_1");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).sort(), [tab, 556].sort(), "the pop-up is still the run's");
+  // The owner's window closed between getLastFocused and tabs.create.
+  const d = fakeChrome({ ownerWindow: OWNER_WINDOW, createFails: true });
+  const s = runner(d);
+  assert.ok((await s.handle(step())).page);
+  assert.ok(d.calls.some((x) => x[0] === "windows.create"), "a window of its own");
+});
+
+test("when the tab can't be grouped in the owner's window, only the run's tab closes", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW, groupFails: true });
+  const r = runner(c);
+  assert.equal((await r.handle(step())).error.code, "browser_unavailable");
+  const tab = [...c.tabsMap.keys()][0];
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[tab]]);
+  assert.ok(!c.calls.some((x) => x[0] === "windows.remove"), "the owner's window stays");
 });
 
 test("a site Chrome hasn't let the extension into waits for the owner's yes in the side panel", async () => {

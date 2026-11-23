@@ -6,7 +6,7 @@
 import { refuseURL, bareURL } from "./sites.js";
 
 /**
- * The run's own blank page: where its window opens and where a refused move is sent. It loads nothing, so the guard lets
+ * The run's own blank page: where its tab opens and where a refused move is sent. It loads nothing, so the guard lets
  * it be; refusing it sent the tab to about:blank again, and again, which also cancelled the page the step was opening.
  */
 const isBlank = (url) => String(url || "").trim().toLowerCase() === "about:blank";
@@ -19,7 +19,7 @@ const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
 const STEP_TIMEOUT_MS = 20_000;
 const FAILURES_TO_PAUSE = 3;
-// A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its window goes. One
+// A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its tabs close (and its window, when it has its own). One
 // the owner paused isn't idle, it's waiting for the owner.
 const RUN_IDLE_MS = 5 * 60_000;
 const PAUSE_CODES = { failures: "paused_failures", no_progress: "paused_no_progress", owner: "paused_by_owner" };
@@ -91,7 +91,8 @@ export class Runner {
       run.tabs.add(d.tabId);
       this.tabRun.set(d.tabId, run.id);
       this.fence(run, d.tabId).catch(() => {});
-      if (run.groupId != null) c.tabs.group({ groupId: run.groupId, tabIds: [d.tabId] });
+      // The owner may have ungrouped or closed the run's group: the pop-up stays the run's, grouped or not.
+      if (run.groupId != null) Promise.resolve(c.tabs.group({ groupId: run.groupId, tabIds: [d.tabId] })).catch(() => {});
     });
     c.tabs.onRemoved.addListener((tabId) => {
       const run = this.runOfTab(tabId);
@@ -232,8 +233,10 @@ export class Runner {
       await this.unfence(t);
     }
     // A window of the run's own goes with it; in the owner's window, only the run's own tabs close, never theirs.
+    // The run's tabs always close, wherever they are now (the owner may have dragged one out of the run's window); a window of
+    // the run's own goes after them, and the owner's window never does.
+    if (run.tabs.size) await this.chrome.tabs.remove([...run.tabs]).catch(() => {});
     if (run.ownWindow && run.windowId != null) await this.chrome.windows.remove(run.windowId).catch(() => {});
-    else if (run.tabs.size) await this.chrome.tabs.remove([...run.tabs]).catch(() => {});
     run.tabs.clear();
     run.tab = null;
   }
@@ -363,7 +366,13 @@ export class Runner {
     if (run.tab == null) {
       // A tab of its own in the window the owner is using, in the background: their active tab and their other tabs are
       // never touched, and the run's group sits beside them. With no such window, a window of its own, not focused.
-      const { windowId, tabId, own } = await this.runTab();
+      const made = await this.runTab();
+      // Stop or close landed while the tab was being made: nothing of the run's is left open, least of all among the owner's tabs.
+      if (run.stopped) {
+        await this.discard(made);
+        return { error: { code: "stopped" } };
+      }
+      const { windowId, tabId, own } = made;
       run.windowId = windowId;
       run.ownWindow = own;
       run.tab = tabId;
@@ -374,6 +383,11 @@ export class Runner {
         await this.fence(run, tabId);
         run.groupId = await c.tabs.group({ tabIds: [tabId], createProperties: { windowId } });
         await c.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf"), color: "orange", collapsed: false });
+        if (run.stopped) {
+          // Stopped while it was fenced and grouped: its close ran before these tabs were the run's.
+          await this.closeRun(run);
+          return { error: { code: "stopped" } };
+        }
       } catch (e) {
         // A window that could not be set up is not left open, blank and unfenced, on the owner's screen.
         await this.stop(run.id).catch(() => {});
@@ -399,11 +413,21 @@ export class Runner {
       win = null;
     }
     if (win && win.id != null && !win.incognito && win.type !== "popup") {
-      const tab = await c.tabs.create({ windowId: win.id, url: "about:blank", active: false });
-      return { windowId: win.id, tabId: tab.id, own: false };
+      try {
+        const tab = await c.tabs.create({ windowId: win.id, url: "about:blank", active: false });
+        return { windowId: win.id, tabId: tab.id, own: false };
+      } catch {
+        // The window closed between the two calls: a window of its own, as when there was none.
+      }
     }
     const own = await c.windows.create({ url: "about:blank", focused: false, type: "normal" });
     return { windowId: own.id, tabId: own.tabs[0].id, own: true };
+  }
+
+  /** Closes what runTab made, for a run that was stopped before it took it: the tab, or the window of the run's own. */
+  async discard({ windowId, tabId, own }) {
+    if (own) await this.chrome.windows.remove(windowId).catch(() => {});
+    else await this.chrome.tabs.remove([tabId]).catch(() => {});
   }
 
   async loaded(tabId) {

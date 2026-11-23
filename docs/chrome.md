@@ -315,8 +315,7 @@ error = {code, detail?}      // detail never carries page text
   guard does the same.
 - **Every act answers with the page read back:** a click is never proof of its effect (content-script events aren't
   trusted input, and a site can tell).
-- **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run's window
-  closes.
+- **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run's tabs close (and its window, when it has its own).
 
 ### What the extension refuses, whatever planque sent
 
@@ -345,9 +344,10 @@ was done.
 
 - **A run opens in the window the owner is using,** as one background tab in a tab group, "tafs · Rae", in orange,
   beside their tabs. Their active tab stays in front and the run never takes focus. When the run ends, only the tabs the
-  run opened close; the window and the owner's tabs stay. With no normal window open, or only a private or pop-up one
-  (the run never opens in a private window), the run gets a window of its own, opened without focus, and that window
-  closes when the run ends.
+  run opened close, wherever they are by then (a tab the owner dragged elsewhere included); the window and the owner's
+  tabs stay. When the window last used is private or a pop-up, or there is no normal window (the run never opens in a
+  private window), the run gets a window of its own, opened without focus, and that window closes with its tabs. A Stop
+  that lands while the tab is still being opened closes it too.
 - **The runner touches only tabs it opened.** It never lists the owner's tabs, and it ignores navigation events from
   any other tab. A tab a run's page opens joins the run only on the run's sites; anything else is closed.
 - **A request off the run's sites never leaves.** As a run's tab opens, before it loads anything, the runner gives
@@ -365,8 +365,8 @@ was done.
 - **The same act on the same page that answers with the same page twice in a row pauses the run** (`paused_no_progress`), with
   what it read: a click that did nothing, done again, would do nothing a third time. A different act, a different page or
   a different answer starts the count again, and so does Resume. The read's own id and the sealed handles don't count as a
-  change. A run paused this way is not swept, like one the owner paused: its window stays open until the owner acts.
-- **A run nobody sends a step to for five minutes ends** as Stop does (its window closes), recorded as `stop` by `idle`: planque's
+  change. A run paused this way is not swept, like one the owner paused: its tabs stay open until the owner acts.
+- **A run nobody sends a step to for five minutes ends** as Stop does (its tabs close, and its window when it has its own), recorded as `stop` by `idle`: planque's
   `close` is only sent after a call, and takes power away, so a call that timed out or a lost `close` must not leave a window
   open. The service worker's minute alarm does the sweeping. A run the owner paused isn't idle, and neither is one with a step
   running.
@@ -374,7 +374,7 @@ was done.
   read never lands in the middle of an act. Pause and Stop don't wait.
 - **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
   committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is. The blank page
-  itself (`about:blank`, where a run's window opens and where a refused move goes) is never refused: refusing it sent the
+  itself (`about:blank`, where a run's tab opens and where a refused move goes) is never refused: refusing it sent the
   tab to `about:blank` again and again, which also cancelled the page the step was opening, so the step timed out. A step
   line whose address can't be read draws with no site, never an error.
 - **A run's tabs get two scripts:**
@@ -436,7 +436,7 @@ browser: {
 - **`profile_id`** is 16 random bytes in `chrome.storage.local`, made once: a re-pairing under a new key keeps it, so the
   phone can tell the same Chrome pairing again. Unpairing doesn't wipe it, and it is no secret. It isn't in
   `chrome.storage.sync`, which would copy it to every computer on the Google account; a reinstall makes a new one.
-- **Unpairing wipes it all** and closes every run's window. It happens from the phone (planque closes with `4410`, or
+- **Unpairing wipes it all** and closes every run's tabs (and its window, when it has its own). It happens from the phone (planque closes with `4410`, or
   answers `4410` at the next connect), from the side panel (`POST /v1/extension/unpair`, signed with
   `tafs-chrome/unpair/v1`), or by uninstalling.
 
@@ -506,7 +506,7 @@ A taf's Chrome steps are kept as pictures for the record: one WebP (quality 0.6,
 
 - **Covered first.** `TafsPage.maskForShot()` puts an opaque box over every password, one-time code and card field, every field filled from Saved sign-ins, and every field whose value the masking would change. It also covers **text in the page** that looks like a card number (13 to 19 digits that pass the Luhn check, with spaces or dashes) or a secret: keys by shape (`sk_`/`pk_`/`rk_`, `AKIA…`, `ghp_`/`github_pat_`, JWTs and the like), labelled values (`api_key=…`, `Bearer …`), and runs of 32 or more hex characters or base64 characters with a digit in them (`TafsMask.secretSpans`). It covers **every visible frame whole** (`iframe`, `frame`, `embed`, `object`): what a frame from another site holds, a login widget or a bank's form, can't be read by the page's script, so none of it is trusted to be hidden. Fields and text inside **open shadow roots** are found and covered like any other (a closed shadow root can't be seen from the page, so a secret in one is not covered: a limit). It checks with `elementFromPoint` that each box is on top; if one is not, no picture is taken. The boxes come off straight after the capture, also when it fails or times out.
 - **No picture when it can't be sure.** The tab, its window and its address are read again once the picture is back: a tab switched to, moved to another window, or sent to another page during the covers or the capture means the picture may show what was never covered or never allowed, and it is dropped. The search for secrets is capped (200 shadow roots, 6000 text nodes); a page past a cap gets no picture, never a partial cover. A page with a one-time-code field to fill gets none either: it may be an authenticator's setup, whose QR code and seed are the second factor and look like nothing the covers know.
-- **Never taken** on a sensitive site, on a checkout or a payment frame, over plain http, or when the run's tab isn't in front of its window (a run in the owner's window is a background tab, so it has no pictures there; one in a window of its own does): the browser takes the picture of a window, not of a tab, so a tab the person dragged into another window is not pictured (it would be the old window's front tab, which was never covered). A picture that can't be taken never holds the act.
+- **Never taken** on a sensitive site, on a checkout or a payment frame, over plain http, or when the run's tab isn't in front of its window (a run in the owner's window is a background tab, so it has no pictures there while it stays in the background; one in a window of its own is in front, so it does): the browser takes the picture of a window, not of a tab, so a tab the person dragged into another window is not pictured (it would be the old window's front tab, which was never covered). A picture that can't be taken never holds the act.
 - **Sent over HTTPS, not the relay** (the relay's message limits are too small for a picture): `POST /v1/extension/steps/<step>/screenshot` with the JSON `{chrome_id, image, sig}`, `image` being the WebP bytes in unpadded base64url. `sig` is the extension's key over `tafs-chrome/screenshot/v1` and `{chrome_id, step, sha256}` (`sha256` the lower-case hex of the image bytes), so planque can tell the picture is this extension's, for this step, unaltered.
 - **Off until planque keeps them.** The build ships with `screenshots: false` (`src/config.js`); it is switched on in a release only once planque stores the pictures behind its own flag and the privacy wording is live.
 
@@ -522,7 +522,7 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
   planque can't forge; the whole pairing, including a substituted key, a renamed pairing, another secret and another
   extension; the relay taking nothing before both proofs; the extension speaking first; planque's `close` message and
   `4410` wiping the extension once; `page_too_large`; and a run's dropped connection opened again.
-- **`runner.test.js`:** against a fake Chrome API. A run's window is never focused. The owner's tabs are never listed.
+- **`runner.test.js`:** against a fake Chrome API. A run's tab opens in the background of the owner's window and only the run's own tab ids are touched; a window of its own is never focused. The owner's tabs are never listed.
   Off-site opens, navigations, pop-ups and restored pages are stopped. The guard runs before the page is touched. There
   are the pauses (failures, no progress, the owner), Stop, runs closed when idle, steps that never overlap, windows of a page's text, the site
   permission, a checkout page that refuses every click, and a dialog's answer.
