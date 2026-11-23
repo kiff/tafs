@@ -1,0 +1,2 @@
+• tafs now speaks Turkmen, Hindi and Urdu (right to left), on every screen.
+• Brazilian Portuguese reads in Brazil's own words, and the terms and privacy links open Brazil's own pages.
