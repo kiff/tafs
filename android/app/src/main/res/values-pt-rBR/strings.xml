@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">Ative em %1$s › %2$s. Depois, quando você pedir, o KIFF envia por e-mail um código que vale uma única vez, por 10 minutos, no navegador que o pediu.</string>
     <string name="help_code_safe">Nunca dê este código a ninguém. O KIFF nunca vai pedir isso a você.</string>
     <string name="help_code_title">Entrar com um código enviado por e-mail</string>
+    <string name="help_security_key_lead">No Linux, ou em um Mac com macOS 12, aprovar neste computador exige uma chave de segurança FIDO2: uma pequena chave USB que você toca, com o próprio PIN. Um pen drive comum não funciona. Sem ela, este computador só mostra, e você aprova no celular.</string>
+    <string name="help_security_key_title">Aprovar com uma chave de segurança neste computador</string>
+    <string name="help_security_key_use">Adicione a chave quando parear este computador. Depois, cada aprovação mostra o que você está aprovando e pede que você conecte a chave, toque nela e digite o PIN dela; o tafs nunca guarda o PIN. Em um Mac com macOS 12, o Touch ID não pode aprovar.</string>
     <string name="home_calendar_not_read">Não foi possível ler o calendário. %1$s</string>
     <string name="home_cant_reach_kiff">Não é possível contatar o KIFF</string>
     <string name="home_choose_taf">Escolha um taf.</string>

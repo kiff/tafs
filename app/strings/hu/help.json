@@ -4,5 +4,8 @@
   "help.chrome_title": "A tafs dolgozhat a Chrome-odban",
   "help.code_lead": "Kapcsold be itt: {account} › {sign_in}. Ezután kérésedre a KIFF e-mailben küld egy kódot, amely egyszer érvényes, 10 percig, abban a böngészőben, amelyik kérte.",
   "help.code_safe": "Ezt a kódot soha ne add át senkinek. A KIFF soha nem fogja kérni.",
-  "help.code_title": "Bejelentkezés e-mailben kapott kóddal"
+  "help.code_title": "Bejelentkezés e-mailben kapott kóddal",
+  "help.security_key_lead": "Linuxon vagy macOS 12-t futtató Macen a jóváhagyáshoz ezen a számítógépen FIDO2 biztonsági kulcs kell: egy kis USB-kulcs, amelyet megérintesz, saját PIN-kóddal. Egy sima pendrive nem jó. Nélküle ez a számítógép csak megjelenít, a jóváhagyás pedig a telefonodon történik.",
+  "help.security_key_title": "Jóváhagyás biztonsági kulccsal ezen a számítógépen",
+  "help.security_key_use": "Add hozzá, amikor párosítod ezt a számítógépet. Ezután minden jóváhagyás megmutatja, mit hagysz jóvá, és kéri, hogy csatlakoztasd a kulcsot, érintsd meg, és add meg a PIN-kódját; a tafs soha nem tárolja a PIN-kódot. macOS 12-t futtató Macen a Touch ID nem tud jóváhagyni."
 }

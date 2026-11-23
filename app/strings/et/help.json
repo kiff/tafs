@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs saab töötada sinu Chrome'is",
   "help.code_lead": "Lülita see sisse jaotises {account} › {sign_in}. Siis saadab KIFF sinu soovil e-kirjaga koodi, mis kehtib ühe korra, 10 minutit, selles brauseris, mis seda küsis.",
   "help.code_safe": "Ära anna seda koodi kellelegi. KIFF ei küsi seda sinult kunagi.",
-  "help.code_title": "Sisselogimine e-kirjaga saadetud koodiga"
+  "help.code_title": "Sisselogimine e-kirjaga saadetud koodiga",
+  "help.security_key_lead": "Linuxis või macOS 12-ga Macis on selles arvutis kinnitamiseks vaja FIDO2 turvavõtit: väikest USB-võtit, mida puudutad ja millel on oma PIN. Tavaline USB-mälupulk ei sobi. Ilma selleta see arvuti ainult näitab ja sina kinnitad telefonis.",
+  "help.security_key_title": "Kinnita selles arvutis turvavõtmega",
+  "help.security_key_use": "Lisa see selle arvuti sidumisel. Seejärel näitab iga kinnitus, mida kinnitad, ja palub sul võtme ühendada, seda puudutada ja selle PIN-i sisestada; tafs ei salvesta PIN-i kunagi. macOS 12-ga Macis ei saa Touch ID-ga kinnitada."
 }

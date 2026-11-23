@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs gali dirbti jūsų Chrome",
   "help.code_lead": "Įjunkite tai skiltyje {account} › {sign_in}. Tada, kai paprašysite, KIFF el. paštu atsiųs kodą, kuris veikia vieną kartą, 10 minučių, naršyklėje, kuri jo paprašė.",
   "help.code_safe": "Niekada neduokite šio kodo niekam. KIFF jo niekada neprašys.",
-  "help.code_title": "Prisijungimas el. paštu gautu kodu"
+  "help.code_title": "Prisijungimas el. paštu gautu kodu",
+  "help.security_key_lead": "„Linux“ arba „Mac“ su „macOS 12“ norint patvirtinti šiame kompiuteryje reikia FIDO2 saugos rakto: mažo USB rakto, kurį paliečiate ir kuris turi savo PIN. Paprasta USB atmintinė netiks. Be jo šis kompiuteris tik rodo, o patvirtinate telefone.",
+  "help.security_key_title": "Patvirtinkite saugos raktu šiame kompiuteryje",
+  "help.security_key_use": "Pridėkite jį, kai susiejate šį kompiuterį. Tada kiekvienas patvirtinimas parodo, ką patvirtinate, ir paprašo prijungti raktą, jį paliesti ir įvesti jo PIN; tafs niekada nesaugo PIN. „Mac“ su „macOS 12“ „Touch ID“ negali patvirtinti."
 }

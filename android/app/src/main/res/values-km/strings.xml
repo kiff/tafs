@@ -1342,6 +1342,9 @@
     <string name="help_code_lead">បើវានៅក្នុង %1$s › %2$s។ បន្ទាប់មក នៅពេលអ្នកស្នើសុំ KIFF នឹងផ្ញើកូដតាមអ៊ីមែលដែលប្រើបានតែម្តង ក្នុងរយៈពេល 10 នាទី នៅក្នុងកម្មវិធីរុករកដែលបានស្នើសុំ។</string>
     <string name="help_code_safe">កុំឱ្យកូដនេះទៅអ្នកណាឡើយ។ KIFF នឹងមិនសុំវាពីអ្នកទេ។</string>
     <string name="help_code_title">ចូលដោយកូដដែលផ្ញើតាមអ៊ីមែល</string>
+    <string name="help_security_key_lead">នៅលើ Linux ឬនៅលើ Mac ដែលមាន macOS 12 ការអនុម័តនៅលើកុំព្យូទ័រនេះត្រូវការសោសុវត្ថិភាព FIDO2៖ សោ USB តូចមួយដែលអ្នកចុចប៉ះ ហើយមាន PIN ផ្ទាល់ខ្លួន។ ឧបករណ៍ផ្ទុក USB ធម្មតាប្រើមិនបានទេ។ បើគ្មានសោ កុំព្យូទ័រនេះគ្រាន់តែបង្ហាញ ហើយអ្នកអនុម័តនៅលើទូរសព្ទ។</string>
+    <string name="help_security_key_title">អនុម័តដោយសោសុវត្ថិភាពនៅលើកុំព្យូទ័រនេះ</string>
+    <string name="help_security_key_use">បន្ថែមវានៅពេលអ្នកផ្គូផ្គងកុំព្យូទ័រនេះ។ បន្ទាប់មក ការអនុម័តនីមួយៗបង្ហាញអ្វីដែលអ្នកកំពុងអនុម័ត ហើយសុំឱ្យអ្នកដោតសោ ចុចវា និងបញ្ចូល PIN របស់វា; tafs មិនដែលរក្សាទុក PIN ទេ។ នៅលើ Mac ដែលមាន macOS 12 Touch ID មិនអាចអនុម័តបានទេ។</string>
     <string name="home_calendar_not_read">មិនអាចអានប្រតិទិនបានទេ។ %1$s</string>
     <string name="home_cant_reach_kiff">មិនអាចទៅដល់ KIFF</string>
     <string name="home_choose_taf">ជ្រើសរើស taf មួយ។</string>

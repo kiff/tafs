@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">Միացրեք այն %1$s › %2$s-ում։ Հետո, երբ խնդրեք, KIFF-ը էլ. փոստով կուղարկի կոդ, որը գործում է մեկ անգամ, 10 րոպե, այն դիտարկիչում, որը խնդրել է։</string>
     <string name="help_code_safe">Երբեք այս կոդը ոչ մեկին մի տվեք։ KIFF-ը երբեք այն ձեզնից չի խնդրի։</string>
     <string name="help_code_title">Մուտք էլ. փոստով ստացված կոդով</string>
+    <string name="help_security_key_lead">Linux-ում կամ macOS 12-ով Mac-ում այս համակարգչում հաստատելու համար պետք է FIDO2 անվտանգության բանալի՝ փոքր USB բանալի, որին հպվում եք, և որն ունի իր PIN-ը։ Սովորական USB կրիչը չի աշխատի։ Առանց դրա այս համակարգիչը միայն ցուցադրում է, իսկ հաստատում եք ձեր հեռախոսով։</string>
+    <string name="help_security_key_title">Հաստատեք այս համակարգչում անվտանգության բանալիով</string>
+    <string name="help_security_key_use">Ավելացրեք այն այս համակարգիչը զուգակցելիս։ Հետո յուրաքանչյուր հաստատում ցույց է տալիս, թե ինչ եք հաստատում, և խնդրում է միացնել բանալին, հպվել դրան և մուտքագրել դրա PIN-ը. tafs-ը երբեք չի պահում PIN-ը։ macOS 12-ով Mac-ում Touch ID-ով հնարավոր չէ հաստատել։</string>
     <string name="home_calendar_not_read">Օրացույցը չկարողացավ կարդացվել։ %1$s</string>
     <string name="home_cant_reach_kiff">Չի հաջողվում կապվել KIFF-ի հետ</string>
     <string name="home_choose_taf">Ընտրեք taf։</string>

@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs 可以在您的 Chrome 中工作",
   "help.code_lead": "在 {account} › {sign_in} 開啟。之後您提出要求時，KIFF 會以電子郵件寄出一組代碼，僅能使用一次、10 分鐘內有效，且只能在提出要求的瀏覽器中使用。",
   "help.code_safe": "請勿將此代碼給任何人。KIFF 絕不會向您索取。",
-  "help.code_title": "使用電子郵件寄來的代碼登入"
+  "help.code_title": "使用電子郵件寄來的代碼登入",
+  "help.security_key_lead": "在 Linux 上，或在搭載 macOS 12 的 Mac 上，要在這部電腦上核准需要 FIDO2 安全金鑰：一種需要觸碰的小型 USB 金鑰，有自己的 PIN。一般的 USB 隨身碟無法使用。沒有金鑰時，這部電腦只能檢視，核准則在您的手機上進行。",
+  "help.security_key_title": "在這部電腦上用安全金鑰核准",
+  "help.security_key_use": "請在配對這部電腦時新增金鑰。之後每次核准都會顯示您要核准的內容，並請您插入金鑰、觸碰它並輸入 PIN；tafs 絕不會儲存 PIN。在搭載 macOS 12 的 Mac 上，無法用 Touch ID 核准。"
 }

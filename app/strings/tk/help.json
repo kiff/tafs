@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs siziň Chrome-yňyzda işläp biler",
   "help.code_lead": "Ony {account} › {sign_in} bölüminde açyň. Soňra siz soranyňyzda, KIFF bir gezek, 10 minutlap, ony soran brauzerde işleýän kody email bilen iberýär.",
   "help.code_safe": "Bu kody hiç kime bermäň. KIFF ony sizden hiç haçan soramaz.",
-  "help.code_title": "Email bilen iberilen kod bilen giriň"
+  "help.code_title": "Email bilen iberilen kod bilen giriň",
+  "help.security_key_lead": "Linux-da ýa-da macOS 12 bolan Mac-da bu kompýuterde tassyklamak üçin FIDO2 howpsuzlyk açary gerek: degip ulanylýan, öz PIN-i bolan kiçi USB açar. Adaty USB fleşka işlemez. Açar bolmasa, bu kompýuter diňe görkezýär, tassyklamany bolsa telefonyňyzda edýärsiňiz.",
+  "help.security_key_title": "Bu kompýuterde howpsuzlyk açary bilen tassyklaň",
+  "help.security_key_use": "Bu kompýuteri goşalanyňyzda ony goşuň. Soňra her tassyklama näme tassyklaýandygyňyzy görkezýär we açary dakmagyňyzy, oňa degmegiňizi we PIN-ini girizmegiňizi soraýar; tafs PIN-i hiç haçan saklamaýar. macOS 12 bolan Mac-da Touch ID bilen tassyklap bolmaýar."
 }

@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs mund të punojë në Chrome-in tuaj",
   "help.code_lead": "Aktivizojeni te {account} › {sign_in}. Pastaj, kur e kërkoni, KIFF ju dërgon me email një kod që vlen një herë, për 10 minuta, në shfletuesin që e kërkoi.",
   "help.code_safe": "Mos ia jepni kurrë këtë kod askujt. KIFF nuk do t'jua kërkojë kurrë.",
-  "help.code_title": "Hyni me një kod me email"
+  "help.code_title": "Hyni me një kod me email",
+  "help.security_key_lead": "Në Linux, ose në një Mac me macOS 12, për të miratuar në këtë kompjuter nevojitet një çelës sigurie FIDO2: një çelës i vogël USB që e prekni, me PIN-in e vet. Një USB e zakonshme nuk funksionon. Pa të, ky kompjuter vetëm shfaq, dhe ju miratoni në telefon.",
+  "help.security_key_title": "Miratoni me një çelës sigurie në këtë kompjuter",
+  "help.security_key_use": "Shtojeni kur çiftoni këtë kompjuter. Pastaj çdo miratim tregon se çfarë po miratoni dhe ju kërkon të futni çelësin, ta prekni dhe të shkruani PIN-in e tij; tafs nuk e ruan kurrë PIN-in. Në një Mac me macOS 12, Touch ID nuk mund të miratojë."
 }

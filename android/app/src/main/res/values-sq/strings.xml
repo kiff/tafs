@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">Aktivizojeni te %1$s › %2$s. Pastaj, kur e kërkoni, KIFF ju dërgon me email një kod që vlen një herë, për 10 minuta, në shfletuesin që e kërkoi.</string>
     <string name="help_code_safe">Mos ia jepni kurrë këtë kod askujt. KIFF nuk do t\'jua kërkojë kurrë.</string>
     <string name="help_code_title">Hyni me një kod me email</string>
+    <string name="help_security_key_lead">Në Linux, ose në një Mac me macOS 12, për të miratuar në këtë kompjuter nevojitet një çelës sigurie FIDO2: një çelës i vogël USB që e prekni, me PIN-in e vet. Një USB e zakonshme nuk funksionon. Pa të, ky kompjuter vetëm shfaq, dhe ju miratoni në telefon.</string>
+    <string name="help_security_key_title">Miratoni me një çelës sigurie në këtë kompjuter</string>
+    <string name="help_security_key_use">Shtojeni kur çiftoni këtë kompjuter. Pastaj çdo miratim tregon se çfarë po miratoni dhe ju kërkon të futni çelësin, ta prekni dhe të shkruani PIN-in e tij; tafs nuk e ruan kurrë PIN-in. Në një Mac me macOS 12, Touch ID nuk mund të miratojë.</string>
     <string name="home_calendar_not_read">Kalendari nuk u lexua dot. %1$s</string>
     <string name="home_cant_reach_kiff">Nuk arrihet te KIFF</string>
     <string name="home_choose_taf">Zgjidhni një taf.</string>

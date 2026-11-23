@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs can work in your Chrome",
   "help.code_lead": "Turn it on in {account} › {sign_in}. Then, when you ask, KIFF emails a code that works once, for 10 minutes, in the browser that asked.",
   "help.code_safe": "Never give this code to anyone. KIFF will never ask you for it.",
-  "help.code_title": "Sign in with a code sent by email"
+  "help.code_title": "Sign in with a code sent by email",
+  "help.security_key_lead": "On Linux, or on a Mac with macOS 12, approving on this computer needs a FIDO2 security key: a small USB key you touch, with its own PIN. An ordinary USB stick won't work. Without one, this computer only views, and you approve on your phone.",
+  "help.security_key_title": "Approve with a security key on this computer",
+  "help.security_key_use": "Add it when you pair this computer. Each approval then shows what you're approving and asks you to plug in the key, touch it and enter its PIN; tafs never stores the PIN. On a Mac with macOS 12, Touch ID can't approve."
 }
