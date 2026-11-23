@@ -22,7 +22,9 @@ class TheManifest(unittest.TestCase):
 
     def test_asks_for_nothing_it_does_not_need(self):
         self.assertFalse(FORBIDDEN & set(MANIFEST["permissions"]), sorted(FORBIDDEN & set(MANIFEST["permissions"])))
-        self.assertEqual(MANIFEST["permissions"], ["storage", "alarms", "scripting", "sidePanel", "tabs", "tabGroups", "webNavigation", "declarativeNetRequest"])
+        # "notifications" is the permission Chrome asks of an extension that receives Web Push, silent here: KIFF's wake-up when a taf needs
+        # this Chrome (userVisibleOnly: false, Chrome 121). The extension shows no notification.
+        self.assertEqual(MANIFEST["permissions"], ["storage", "alarms", "scripting", "sidePanel", "tabs", "tabGroups", "webNavigation", "declarativeNetRequest", "notifications"])
 
     def test_the_version_is_one_chrome_takes(self):
         self.assertRegex(MANIFEST["version"], r"^\d+\.\d+\.\d+$")
