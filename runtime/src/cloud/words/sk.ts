@@ -19,7 +19,7 @@ export const sk: Words = {
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Ten beh už skončil, takže sa nič nevykonalo.",
   // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
-  switch_stopped: "Inštalácia tejto verzie zastavila to, čo čakalo na tvoju odpoveď: zadržané volanie bolo stiahnuté a správa sa nevykonala. Môžeš ju poslať znova.",
+  switch_stopped: "Inštalácia tejto verzie zastavila to, čo čakalo na vašu odpoveď: zadržané volanie bolo stiahnuté a správa sa nevykonala. Môžete ju poslať znova.",
   your_step_title: "Váš krok",
   your_step_done: "Hotovo",
   your_step_skip: "Preskočiť",
