@@ -697,7 +697,42 @@ final class PlanqueClient {
                 sites = try c.decodeIfPresent([String].self, forKey: .sites) ?? []
             }
         }
-        enum CodingKeys: String, CodingKey { case id = "chrome_id", name, browser, os, pairedAt = "paired_at", profileID = "profile_id", connections }
+        /// The re-pairing that carried connections here, as the phone signed it (`paired_with`): what vouches for those connections'
+        /// sites, which keep no signature of their own. Read leniently: one that is malformed is none, never a broken list.
+        var pairedWith: PairedWith?
+        /// The SHA-256 of this Chrome's key in lowercase hex, when planque lists it (`key_sha256`): what a vouching pairing must name.
+        var keySHA256: String?
+        struct PairedWith: Decodable, Equatable {
+            struct Body: Decodable, Equatable {
+                let pairing: String
+                let chromeKeySHA256: String
+                let name: String
+                let phoneKey: String
+                let phoneProof: String
+                let carried: [ChromePairing.Carried]
+                enum CodingKeys: String, CodingKey { case pairing, chromeKeySHA256 = "chrome_key_sha256", name, phoneKey = "phone_key", phoneProof = "phone_proof", carried }
+            }
+            let body: Body
+            let phoneSig: String
+            /// The one-fingerprint form: the three fields travel together, or none.
+            var tenant: String?
+            var signedAt: String?
+            var kiffRequestSHA256: String?
+            enum CodingKeys: String, CodingKey { case body, phoneSig = "phone_sig", tenant, signedAt = "signed_at", kiffRequestSHA256 = "kiff_request_sha256" }
+        }
+        enum CodingKeys: String, CodingKey { case id = "chrome_id", name, browser, os, pairedAt = "paired_at", profileID = "profile_id", connections, pairedWith = "paired_with", keySHA256 = "key_sha256" }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            name = try c.decode(String.self, forKey: .name)
+            browser = try? c.decodeIfPresent(String.self, forKey: .browser)
+            os = try? c.decodeIfPresent(String.self, forKey: .os)
+            pairedAt = try? c.decodeIfPresent(Date.self, forKey: .pairedAt)
+            profileID = try? c.decodeIfPresent(String.self, forKey: .profileID)
+            connections = (try? c.decodeIfPresent([Connection].self, forKey: .connections)) ?? nil
+            pairedWith = (try? c.decodeIfPresent(PairedWith.self, forKey: .pairedWith)) ?? nil
+            keySHA256 = (try? c.decodeIfPresent(String.self, forKey: .keySHA256)) ?? nil
+        }
     }
 
     /// A pairing this phone opened: its id, and the four characters of the code planque looks it up by.
