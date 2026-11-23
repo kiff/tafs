@@ -12,6 +12,7 @@ tafs za Chrome pušta vaše tafove da rade u vašem vlastitom Chromeu, samo na s
 
 • Povežite ovaj Chrome s telefonom: u aplikaciji tafs otvorite Račun › Chrome › Uparite Chrome i unesite prikazani kod.
 • Taf radi u vlastitim karticama, u grupi kartica koju vidite. Možete ga u svakom trenutku pauzirati ili zaustaviti, a pauzira se kad dotaknete jednu od njegovih kartica.
+• Chrome pri instalaciji jednom traži pristup svim web-mjestima. tafs radi samo na web-mjestima koja navodi svaki zadatak i koja odobravate na telefonu.
 • Plaćanje, slanje narudžbe i ispunjavanje spremljene prijave uvijek čekaju vaše odobrenje na telefonu.
 • Stranicu čita kao tekst i polja obrasca, bez polja za zaporku, karticu i kod. Nikad ne čita vaše druge kartice ni povijest.
 • Stranice banaka, novčanika, upravitelja zaporki, plaćanja, zdravlja i državnih tijela nikad se ne obrađuju, osim ako jednu dopustite za jedan zadatak na telefonu.

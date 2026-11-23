@@ -12,6 +12,7 @@ tafs Chrome'ile laseb sinu tafidel töötada sinu enda Chromes, ainult sinu luba
 
 • Seo see Chrome oma telefoniga: ava tafsi rakenduses Konto › Chrome › Seo Chrome ja sisesta kuvatud kood.
 • Taf töötab oma lehtedel, sinu nähtavas lehtede rühmas. Saad selle igal ajal peatada või lõpetada ning see peatub, kui puudutad ühte selle lehte.
+• Chrome küsib paigaldamisel ühe korra juurdepääsu kõikidele saitidele. tafs töötab ainult nendel saitidel, mille iga ülesanne loetleb ja mille sa telefonis heaks kiidad.
 • Maksmine, tellimuse tegemine ja salvestatud sisselogimise täitmine ootavad alati sinu heakskiitu telefonis.
 • See loeb lehte tekstina ja vormiväljadena, ilma parooli-, kaardi- ja koodiväljadeta. See ei loe kunagi sinu teisi lehti ega ajalugu.
 • Pankade, rahakottide, paroolihaldurite, maksete, tervise ja riigiasutuste saite ei töödelda kunagi, kui sa ei luba ühte neist ühe ülesande jaoks telefonis.

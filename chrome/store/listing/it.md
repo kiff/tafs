@@ -12,6 +12,7 @@ tafs per Chrome fa lavorare i tuoi taf nel tuo Chrome, solo sui siti che consent
 
 • Collega questo Chrome al telefono: nell'app tafs apri Account › Chrome › Associa un Chrome e scrivi il codice mostrato.
 • Un taf lavora in schede proprie, in un gruppo di schede che puoi vedere. Puoi metterlo in pausa o fermarlo in qualsiasi momento, e si mette in pausa quando tocchi una delle sue schede.
+• Chrome chiede una sola volta, all'installazione, l'accesso a tutti i siti. tafs lavora solo sui siti indicati da ogni attività, che approvi sul telefono.
 • Pagare, fare un ordine e compilare un accesso salvato aspettano sempre la tua approvazione sul telefono.
 • Legge una pagina come testo e campi di modulo, senza i campi di password, carta e codice. Non legge mai le tue altre schede né la cronologia.
 • I siti di banche, portafogli, gestori di password, pagamenti, salute e pubblica amministrazione non vengono mai usati, a meno che tu ne consenta uno, per un compito, sul telefono.

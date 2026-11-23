@@ -12,6 +12,7 @@ O tafs para Chrome deixa seus tafs trabalharem no seu próprio Chrome, só nos s
 
 • Pareie este Chrome com seu celular: no app tafs, abra Conta › Chrome › Associar um Chrome e digite o código que aparece.
 • Um taf trabalha nas próprias abas, em um grupo de abas que você pode ver. Você pode pausar ou parar a qualquer momento, e ele pausa quando você toca em uma das abas dele.
+• O Chrome pede uma única vez, na instalação, acesso a todos os sites. O tafs só trabalha nos sites que cada tarefa indica, e que você aprova no celular.
 • Pagar, fazer um pedido e preencher um login salvo sempre esperam sua aprovação no celular.
 • Ele lê uma página como texto e campos de formulário, sem os campos de senha, cartão e código. Nunca lê suas outras abas nem seu histórico.
 • Sites de bancos, carteiras, gerenciadores de senhas, pagamentos, saúde e governo nunca são usados, a menos que você permita um, para uma tarefa, no celular.
