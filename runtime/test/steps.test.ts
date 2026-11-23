@@ -63,6 +63,11 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
     expect(long.length).toBeLessThanOrEqual(160);
     expect(long.endsWith("…")).toBe(true);
     expect(long).not.toMatch(/\s…$/);
+    // A long refusal ends with its sentence, whole, and the relay's "Refused by planque:" goes (the hand-over test, 23 Nov:
+    // "Refused by: in the owner's Chrome … it or it or the page …" cut mid-word).
+    const refused = whyOf("Refused by planque: in the owner's Chrome a taf opens only a listed site's start page, or the page or one of the links its latest read gave, exactly as given; this address is neither. Open the site's start page, or the page as the latest read named it. Nothing was sent.")!;
+    expect(refused).toBe("in the owner's Chrome a taf opens only a listed site's start page, or the page or one of the links its latest read gave, exactly as given.");
+    expect(whyOf("Refused by planque: the page isn't the read named: read it again first. Nothing was sent.")).toBe("the page isn't the read named: read it again first. Nothing was sent.");
   });
 
   it("leaves nothing that could be a secret or a person's own in the line (a review's probe): a table", () => {
@@ -285,6 +290,8 @@ describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () =
     s.call("planque", { action: "tools", grant: "grt_abc123" }, "c5");
     expect(s.connectionRefusal("c5", "read the app's tool catalog before selecting this action")).toBeUndefined();
     expect(coachGuard("read the app's tool catalog before selecting this action")).toBe(true);
+    expect(coachGuard("planque answered 409: this grant was asked for with its tools at once, so it takes no more: ask one new request naming every tool the job needs, its writes too, with the taf's Card drafted in the same approval, never a request for one tool alone")).toBe(true);
+    expect(coachGuard("planque answered 409: only a listed or connected grant takes tools; this one is failed")).toBe(false);
     expect(coachGuard("403: missing the organization scope")).toBe(false);
     // Planque's live refusals of how Coach asked (19 Nov), each a request Coach makes again, never the person's app.
     expect(coachGuard("tools names the entry's own tools, each once: PIPEDRIVE_GET_ALL_LEADS isn't one; it has getPersons, getPerson, getDeals")).toBe(true);

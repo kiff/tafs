@@ -159,6 +159,11 @@ wrote it.
 
 iPhone and iPad do the same (`SetupChatView`'s Start screen, `KIFFClient`'s `/v1/connections/batch`).
 
+**A batch that connects nothing is said, never redrawn silently.** If the gateway takes the batch (200, every tool `already`
+there) and tafs cloud's next read still asks for that same batch, nothing was connected: the step says so, in tafs cloud's
+`coach_tools_step.not_connected` when it sends it, else the app's `coach.tools_not_given`. A Card drafted once the batch is in
+isn't that: the step is drawn again with it, as before (Android: `AppModel.giveCoachTools`; iPhone and iPad follow).
+
 ## What Coach shows
 
 Coach writes messages and shows cards (`SetupComponent.Kind`). A card grants nothing by

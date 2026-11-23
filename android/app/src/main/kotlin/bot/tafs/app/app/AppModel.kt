@@ -3921,6 +3921,13 @@ class AppModel(
     }
     if (generation != accountGeneration) return false
     loadCoachTools()
+    // The batch went and the gateway took it, yet tafs cloud still asks for the very same batch: nothing was connected (the
+    // gateway counted every tool as already there). Said, in tafs cloud's words when it sends them, never a silent redraw.
+    val after = _state.value.coachTools
+    if (tools.connect != null && after?.toGive == true && after.connect?.body == tools.connect.body) {
+      _state.update { it.copy(coachToolsError = after.step?.notConnected?.takeIf { w -> w.isNotBlank() } ?: Words.Coach.toolsNotGiven(why = "").trim()) }
+      return false
+    }
     // True once nothing's left to give; a Card drafted after the batch is still to give, on the step drawn again.
     return _state.value.coachTools?.toGive != true
   }

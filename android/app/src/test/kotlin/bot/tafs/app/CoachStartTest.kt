@@ -171,6 +171,33 @@ class CoachStartTest {
     assertEquals(2, transport.requestsTo("POST /v1/me/agent-drafts").size)
   }
 
+  /**
+   * The batch goes and the gateway takes it (200: every tool "already" connected), yet tafs cloud still asks for that same batch:
+   * nothing was connected. Give says so, in tafs cloud's words when it sends them, never a silent redraw of the same step.
+   */
+  @Test fun aBatchThatConnectsNothingSaysSoInsteadOfRedrawingSilently() = runTest {
+    reads()
+    val connectOnly = """{"state":"to_give","connect":{"body":$connectBody,"lines":["Read your tafs"]}}"""
+    val withWords = """{"state":"to_give","connect":{"body":$connectBody,"lines":["Read your tafs"]},"coach_tools_step":{"not_connected":"Nothing new was connected."}}"""
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$connectOnly}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$connectOnly}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$connectOnly}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$connectOnly}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$withWords}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$withWords}""")
+    transport.answer("POST /v1/connections/batch", 200, """{"connected":[],"already":["tafs_list_tafs"],"replaced":[]}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
+    val m = model()
+    m.loadCoach()
+    // No words from tafs cloud yet: the app's own line stands in.
+    assertFalse(m.giveCoachTools())
+    assertEquals(1, transport.requestsTo("POST /v1/connections/batch").size)
+    assertEquals(bot.tafs.app.model.Words.Coach.toolsNotGiven(why = "").trim(), m.state.value.coachToolsError)
+    // tafs cloud's words, once it sends them.
+    assertFalse(m.giveCoachTools())
+    assertEquals("Nothing new was connected.", m.state.value.coachToolsError)
+  }
+
   @Test fun aCardDraftedOnlyAfterTheBatchIsShownFirstThenGivenOnTheNextGive() = runTest {
     reads()
     val connectOnly = """{"state":"to_give","connect":{"body":$connectBody,"lines":["Read your tafs"]}}"""

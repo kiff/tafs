@@ -1,0 +1,1 @@
+- **tafs cloud: a refused step's reason reads whole.** A long refusal ends at its own sentence instead of being cut mid-word, and a connection's "Refused by planque:" no longer shows as "Refused by:". Coach asking for more tools on a browser connection that takes its tools at once is Coach's own step, never a red "couldn't connect" line.
