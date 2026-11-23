@@ -1273,7 +1273,6 @@ final class AppModel: ObservableObject {
         self.access = access
     }
 
-    /// Reads the account's groups, its people and this person's access to each taf.
     /// What the People screen shows, as one number: it changes when a group, a member or a person does. The screen reads again slower
     /// while it stays the same (`PollPace.quietWait`).
     var peopleSignature: Int {
@@ -1283,6 +1282,7 @@ final class AppModel: ObservableObject {
         return hasher.finalize()
     }
 
+    /// Reads the account's groups, its people and this person's access to each taf.
     func refreshPeople() async {
         guard mode == .kiff else { groups = []; people = []; access = [:]; return }
         let gen = accountGeneration
