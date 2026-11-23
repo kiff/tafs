@@ -430,4 +430,39 @@ final class DoorsTests: XCTestCase {
         await model.answer(model.openKnocks[0], "ignore")
         XCTAssertEqual(told, [["k-1", "k-2"], ["k-2"]])
     }
+
+    /// The shared vector (vectors/api-door-endpoint.json, which Android, the desktops and scripts/test_api_door_vector.py
+    /// read too): every `exact` address gives its endpoint, every `hostile` one stays on tafs cloud's host with a plain path,
+    /// and the example is the vector's prefix, the endpoint, then its suffix.
+    func testAnAPIDoorsEndpointIsTheSharedVectors() throws {
+        struct Vector: Decodable {
+            struct Exact: Decodable { let address, endpoint: String }
+            struct Rules: Decodable { let host, pathPattern: String }
+            let base, alone, examplePrefix, exampleSuffix: String
+            let rules: Rules
+            let exact: [Exact]
+            let hostile: [String]
+        }
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("vectors/api-door-endpoint.json")
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let v = try decoder.decode(Vector.self, from: Data(contentsOf: url))
+        let base = try XCTUnwrap(URL(string: v.base))
+        func shown(_ address: String) -> String {
+            APIDoorText.endpoint(TafsCloud.Door(id: "d", app: "api", kind: "api", label: "x", open: true, address: address,
+                                                proof: "proven", how: "", keys: [], today: 0, limit: 100, resting: false), base: base)
+        }
+        for c in v.exact { XCTAssertEqual(shown(c.address), c.endpoint, c.address) }
+        XCTAssertEqual(shown(""), v.alone)
+        for address in v.hostile {
+            let endpoint = shown(address)
+            XCTAssertTrue(endpoint.hasPrefix(v.base + "/"), "\(address) → \(endpoint)")
+            let path = String(endpoint.dropFirst(v.base.count))
+            XCTAssertNotNil(path.range(of: v.rules.pathPattern, options: .regularExpression), "\(address) → \(endpoint)")
+        }
+        for c in v.exact {
+            XCTAssertEqual(APIDoorText.example(endpoint: c.endpoint), v.examplePrefix + c.endpoint + v.exampleSuffix, c.address)
+        }
+    }
 }
