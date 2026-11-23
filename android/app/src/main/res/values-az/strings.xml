@@ -1375,7 +1375,7 @@
     <string name="halt_all_running">tafs taf-larınızı dondura bilmədi. Onları dondurmaq üçün tafs-ı açın.</string>
     <string name="halt_all_signed_out">tafs-dan çıxış etmisiniz. Taf-larınızı dondurmaq üçün daxil olun.</string>
     <string name="halt_all_title">Bütün taf-ları dondurun</string>
-    <string name="help_chrome_lead">tafs genişlənməsini telefonunuzla cütləşdirin və taf sizin Chrome-da yalnız icazə verdiyiniz saytlarda işləyə bilər. O, öz sekmələrində işləyir, riskli hər şey isə sizi %1$s bölməsində gözləyir.</string>
+    <string name="help_chrome_lead">tafs genişlənməsini telefonunuzla cütləşdirin və taf sizin Chrome-da yalnız icazə verdiyiniz saytlarda işləyə bilər. O, öz sekmələrində işləyir, razılığınızı tələb edən hər şey isə sizi %1$s bölməsində gözləyir.</string>
     <string name="help_chrome_manage">%1$s › %2$s Chrome-larınızı və hər birinin nə üçün istifadə olunduğunu göstərir. Chrome-un cütləşməsini ləğv etmək onun bağlantılarını bitirir.</string>
     <string name="help_chrome_title">tafs sizin Chrome-da işləyə bilər</string>
     <string name="help_code_lead">Bunu %1$s › %2$s bölməsində aktiv edin. Sonra istədikdə KIFF bir dəfə, 10 dəqiqə ərzində, onu istəyən brauzerdə işləyən kodu e-poçtla göndərir.</string>

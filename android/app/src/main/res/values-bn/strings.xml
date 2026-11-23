@@ -1375,7 +1375,7 @@
     <string name="halt_all_running">tafs আপনার taf থামাতে পারেনি। থামাতে tafs খুলুন।</string>
     <string name="halt_all_signed_out">আপনি tafs থেকে সাইন আউট করেছেন। আপনার taf থামাতে সাইন ইন করুন।</string>
     <string name="halt_all_title">সব taf থামান</string>
-    <string name="help_chrome_lead">tafs এক্সটেনশন আপনার ফোনের সঙ্গে জোড়া লাগান, তাহলে একটি taf আপনার Chrome-এ কাজ করতে পারবে, শুধু আপনার অনুমতি দেওয়া সাইটে। এটি নিজের ট্যাবে কাজ করে, আর ঝুঁকিপূর্ণ সবকিছু %1$s-এ আপনার জন্য অপেক্ষা করে।</string>
+    <string name="help_chrome_lead">tafs এক্সটেনশন আপনার ফোনের সঙ্গে জোড়া লাগান, তাহলে একটি taf আপনার Chrome-এ কাজ করতে পারবে, শুধু আপনার অনুমতি দেওয়া সাইটে। এটি নিজের ট্যাবে কাজ করে, আর যা কিছুতে আপনার সম্মতি লাগে তা %1$s-এ আপনার জন্য অপেক্ষা করে।</string>
     <string name="help_chrome_manage">%1$s › %2$s আপনার Chrome-গুলো এবং প্রতিটি কীসের জন্য ব্যবহৃত হয় তা দেখায়। কোনো Chrome-এর জোড়া ছাড়ালে তার সংযোগগুলো শেষ হয়ে যায়।</string>
     <string name="help_chrome_title">tafs আপনার Chrome-এ কাজ করতে পারে</string>
     <string name="help_code_lead">এটি %1$s › %2$s-এ চালু করুন। এরপর আপনি চাইলে KIFF ইমেইলে এমন একটি কোড পাঠায় যা একবারই, ১০ মিনিট, যে ব্রাউজার চেয়েছে তাতে কাজ করে।</string>

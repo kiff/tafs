@@ -1430,7 +1430,7 @@
     <string name="halt_all_running">tafs nepavyko sustabdyti jūsų taf. Atidarykite tafs ir sustabdykite juos.</string>
     <string name="halt_all_signed_out">Esate atsijungę nuo tafs. Prisijunkite, kad galėtumėte sustabdyti savo taf.</string>
     <string name="halt_all_title">Sustabdyti visus taf</string>
-    <string name="help_chrome_lead">Susiekite tafs plėtinį su telefonu ir taf galės dirbti jūsų Chrome, tik jūsų leidžiamose svetainėse. Jis dirba savo skirtukuose, o viskas, kas rizikinga, laukia jūsų skiltyje %1$s.</string>
+    <string name="help_chrome_lead">Susiekite tafs plėtinį su telefonu ir taf galės dirbti jūsų Chrome, tik jūsų leidžiamose svetainėse. Jis dirba savo skirtukuose, o viskas, kam reikia jūsų pritarimo, laukia jūsų skiltyje %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s rodo jūsų Chrome ir kam kiekvienas naudojamas. Atsiejus Chrome, jo ryšiai baigiasi.</string>
     <string name="help_chrome_title">tafs gali dirbti jūsų Chrome</string>
     <string name="help_code_lead">Įjunkite tai skiltyje %1$s › %2$s. Tada, kai paprašysite, KIFF el. paštu atsiųs kodą, kuris veikia vieną kartą, 10 minučių, naršyklėje, kuri jo paprašė.</string>

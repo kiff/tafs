@@ -1,5 +1,5 @@
 {
-  "help.chrome_lead": "tafs の拡張機能をスマートフォンとペアリングすると、taf があなたの Chrome で作業できます。許可したサイトだけで、専用のタブで作業し、リスクのあることは {needs_you} で確認を待ちます。",
+  "help.chrome_lead": "tafs の拡張機能をスマートフォンとペアリングすると、taf があなたの Chrome で作業できます。許可したサイトだけで、専用のタブで作業し、あなたの承認が必要なことは {needs_you} で待ちます。",
   "help.chrome_manage": "{account} › {chrome} に、Chrome の一覧とそれぞれの用途が表示されます。Chrome のペアリングを解除すると、その接続も終了します。",
   "help.chrome_title": "tafs はあなたの Chrome で作業できます",
   "help.code_lead": "{account} › {sign_in} でオンにします。その後、依頼すると、KIFF が一度だけ、10 分間、依頼したブラウザーで使えるコードをメールで送ります。",

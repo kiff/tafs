@@ -1,5 +1,5 @@
 {
-  "help.chrome_lead": "tafs uzantısını telefonunla eşleştir; bir taf Chrome'unda, yalnızca izin verdiğin sitelerde çalışabilir. Kendi sekmelerinde çalışır ve riskli olan her şey seni {needs_you} bölümünde bekler.",
+  "help.chrome_lead": "tafs uzantısını telefonunla eşleştir; bir taf Chrome'unda, yalnızca izin verdiğin sitelerde çalışabilir. Kendi sekmelerinde çalışır ve onayına ihtiyaç duyan her şey seni {needs_you} bölümünde bekler.",
   "help.chrome_manage": "{account} › {chrome}, Chrome'larını ve her birinin ne için kullanıldığını listeler. Bir Chrome'un eşleştirmesini kaldırmak bağlantılarını sonlandırır.",
   "help.chrome_title": "tafs Chrome'unda çalışabilir",
   "help.code_lead": "Bunu {account} › {sign_in} bölümünden aç. Sonra istediğinde KIFF, bir kez geçerli olan, 10 dakika boyunca, isteyen tarayıcıda çalışan bir kodu e-postayla gönderir.",

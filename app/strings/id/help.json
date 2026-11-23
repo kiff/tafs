@@ -1,5 +1,5 @@
 {
-  "help.chrome_lead": "Pasangkan ekstensi tafs dengan ponsel Anda dan sebuah taf bisa bekerja di Chrome Anda, hanya di situs yang Anda izinkan. Ia bekerja di tab-nya sendiri, dan semua yang berisiko menunggu Anda di {needs_you}.",
+  "help.chrome_lead": "Pasangkan ekstensi tafs dengan ponsel Anda dan sebuah taf bisa bekerja di Chrome Anda, hanya di situs yang Anda izinkan. Ia bekerja di tab-nya sendiri, dan semua yang membutuhkan persetujuan Anda menunggu Anda di {needs_you}.",
   "help.chrome_manage": "{account} › {chrome} menampilkan Chrome Anda dan untuk apa masing-masing dipakai. Melepas pasangan sebuah Chrome mengakhiri koneksinya.",
   "help.chrome_title": "tafs bisa bekerja di Chrome Anda",
   "help.code_lead": "Aktifkan di {account} › {sign_in}. Setelah itu, saat Anda memintanya, KIFF mengirim kode lewat email yang berlaku sekali, selama 10 menit, di browser yang memintanya.",

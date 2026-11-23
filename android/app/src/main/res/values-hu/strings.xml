@@ -1375,7 +1375,7 @@
     <string name="halt_all_running">A tafs nem tudta leállítani a tafjaidat. Nyisd meg a tafst a leállításukhoz.</string>
     <string name="halt_all_signed_out">Ki vagy jelentkezve a tafsből. Jelentkezz be a tafjaid leállításához.</string>
     <string name="halt_all_title">Összes taf leállítása</string>
-    <string name="help_chrome_lead">Párosítsd a tafs bővítményt a telefonoddal, és egy taf dolgozhat a Chrome-odban, csak az általad engedélyezett webhelyeken. Saját lapokon dolgozik, és minden kockázatos dolog itt vár rád: %1$s.</string>
+    <string name="help_chrome_lead">Párosítsd a tafs bővítményt a telefonoddal, és egy taf dolgozhat a Chrome-odban, csak az általad engedélyezett webhelyeken. Saját lapokon dolgozik, és minden, ami a te jóváhagyásodat kéri, itt vár rád: %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s felsorolja a Chrome-jaidat és azt, hogy melyiket mire használod. A Chrome párosításának megszüntetése lezárja a kapcsolatait.</string>
     <string name="help_chrome_title">A tafs dolgozhat a Chrome-odban</string>
     <string name="help_code_lead">Kapcsold be itt: %1$s › %2$s. Ezután kérésedre a KIFF e-mailben küld egy kódot, amely egyszer érvényes, 10 percig, abban a böngészőben, amelyik kérte.</string>

@@ -1375,7 +1375,7 @@
     <string name="halt_all_running">tafs не можа да спре вашите tafs. Отворете tafs, за да ги спрете.</string>
     <string name="halt_all_signed_out">Излезли сте от tafs. Влезте, за да спрете вашите tafs.</string>
     <string name="halt_all_title">Спиране на всички tafs</string>
-    <string name="help_chrome_lead">Сдвоете разширението на tafs с телефона си и един taf може да работи във вашия Chrome, само в сайтовете, които разрешите. Работи в собствени раздели, а всичко рисково ви чака в %1$s.</string>
+    <string name="help_chrome_lead">Сдвоете разширението на tafs с телефона си и един taf може да работи във вашия Chrome, само в сайтовете, които разрешите. Работи в собствени раздели, а всичко, което се нуждае от вашето съгласие, ви чака в %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s показва вашите Chrome и за какво се използва всеки. Премахването на сдвояването на Chrome прекратява връзките му.</string>
     <string name="help_chrome_title">tafs може да работи във вашия Chrome</string>
     <string name="help_code_lead">Включете го в %1$s › %2$s. След това, когато поискате, KIFF изпраща по имейл код, който важи веднъж, 10 минути, в браузъра, който го е поискал.</string>

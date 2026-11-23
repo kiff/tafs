@@ -1430,7 +1430,7 @@
     <string name="halt_all_running">tafs nemohol zastaviť vaše tafy. Zastavte ich v aplikácii tafs.</string>
     <string name="halt_all_signed_out">Ste odhlásení z tafs. Prihláste sa, aby ste mohli zastaviť svoje tafy.</string>
     <string name="halt_all_title">Zastaviť všetky tafy</string>
-    <string name="help_chrome_lead">Spárujte rozšírenie tafs s telefónom a taf môže pracovať vo vašom Chrome, len na weboch, ktoré povolíte. Pracuje vo vlastných kartách a všetko rizikové na vás čaká v časti %1$s.</string>
+    <string name="help_chrome_lead">Spárujte rozšírenie tafs s telefónom a taf môže pracovať vo vašom Chrome, len na weboch, ktoré povolíte. Pracuje vo vlastných kartách a všetko, čo potrebuje váš súhlas, na vás čaká v časti %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s ukazuje vaše Chrome a na čo ktorý slúži. Zrušením spárovania Chrome sa jeho pripojenia skončia.</string>
     <string name="help_chrome_title">tafs môže pracovať vo vašom Chrome</string>
     <string name="help_code_lead">Zapnite to v časti %1$s › %2$s. Potom vám KIFF na požiadanie pošle e-mailom kód, ktorý platí raz, 10 minút, v prehliadači, ktorý oň požiadal.</string>

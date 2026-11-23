@@ -1320,7 +1320,7 @@
     <string name="halt_all_running">tafs ระงับ taf ของคุณไม่ได้ เปิด tafs เพื่อระงับ</string>
     <string name="halt_all_signed_out">คุณออกจากระบบ tafs แล้ว เข้าสู่ระบบเพื่อระงับ taf ของคุณ</string>
     <string name="halt_all_title">ระงับ taf ทั้งหมด</string>
-    <string name="help_chrome_lead">จับคู่ส่วนขยาย tafs กับโทรศัพท์ของคุณ แล้ว taf จะทำงานใน Chrome ของคุณได้ เฉพาะบนเว็บไซต์ที่คุณอนุญาต มันทำงานในแท็บของตัวเอง และทุกอย่างที่เสี่ยงจะรอคุณอยู่ใน %1$s</string>
+    <string name="help_chrome_lead">จับคู่ส่วนขยาย tafs กับโทรศัพท์ของคุณ แล้ว taf จะทำงานใน Chrome ของคุณได้ เฉพาะบนเว็บไซต์ที่คุณอนุญาต มันทำงานในแท็บของตัวเอง และทุกอย่างที่ต้องได้รับความยินยอมจากคุณจะรออยู่ใน %1$s</string>
     <string name="help_chrome_manage">%1$s › %2$s แสดงรายการ Chrome ของคุณและสิ่งที่แต่ละตัวใช้ทำ การยกเลิกการจับคู่ Chrome จะสิ้นสุดการเชื่อมต่อของมัน</string>
     <string name="help_chrome_title">tafs ทำงานใน Chrome ของคุณได้</string>
     <string name="help_code_lead">เปิดใช้ที่ %1$s › %2$s จากนั้นเมื่อคุณขอ KIFF จะส่งรหัสทางอีเมลที่ใช้ได้ครั้งเดียว ภายใน 10 นาที ในเบราว์เซอร์ที่ขอ</string>

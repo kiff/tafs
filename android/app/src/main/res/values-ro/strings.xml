@@ -1430,7 +1430,7 @@
     <string name="halt_all_running">tafs nu a putut opri tafurile dvs. Deschideți tafs pentru a le opri.</string>
     <string name="halt_all_signed_out">Sunteți deconectat de la tafs. Conectați-vă pentru a opri tafurile.</string>
     <string name="halt_all_title">Opriți toate tafurile</string>
-    <string name="help_chrome_lead">Asociază extensia tafs cu telefonul tău și un taf poate lucra în Chrome-ul tău, doar pe site-urile pe care le permiți. Lucrează în filele lui, iar tot ce e riscant te așteaptă în %1$s.</string>
+    <string name="help_chrome_lead">Asociază extensia tafs cu telefonul tău și un taf poate lucra în Chrome-ul tău, doar pe site-urile pe care le permiți. Lucrează în filele lui, iar tot ce are nevoie de acordul tău te așteaptă în %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s listează Chrome-urile tale și la ce folosește fiecare. Disocierea unui Chrome îi încheie conexiunile.</string>
     <string name="help_chrome_title">tafs poate lucra în Chrome-ul tău</string>
     <string name="help_code_lead">Activează-l în %1$s › %2$s. Apoi, când ceri, KIFF îți trimite pe e-mail un cod care funcționează o singură dată, 10 minute, în browserul care l-a cerut.</string>

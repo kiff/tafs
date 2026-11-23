@@ -1320,7 +1320,7 @@
     <string name="halt_all_running">tafs 無法凍結您的 taf。請開啟 tafs 來凍結。</string>
     <string name="halt_all_signed_out">您已登出 tafs。請登入以凍結您的 taf。</string>
     <string name="halt_all_title">凍結所有 taf</string>
-    <string name="help_chrome_lead">將 tafs 擴充功能與您的手機配對，taf 就能在您的 Chrome 中工作，且僅限於您允許的網站。它在自己的分頁中工作，任何有風險的事都會在 %1$s 等您處理。</string>
+    <string name="help_chrome_lead">將 tafs 擴充功能與您的手機配對，taf 就能在您的 Chrome 中工作，且僅限於您允許的網站。它在自己的分頁中工作，任何需要您同意的事都會在 %1$s 等您處理。</string>
     <string name="help_chrome_manage">%1$s › %2$s 會列出您的 Chrome 以及每個的用途。取消 Chrome 的配對會結束它的連線。</string>
     <string name="help_chrome_title">tafs 可以在您的 Chrome 中工作</string>
     <string name="help_code_lead">在 %1$s › %2$s 開啟。之後您提出要求時，KIFF 會以電子郵件寄出一組代碼，僅能使用一次、10 分鐘內有效，且只能在提出要求的瀏覽器中使用。</string>

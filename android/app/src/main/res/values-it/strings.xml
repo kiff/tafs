@@ -1375,7 +1375,7 @@
     <string name="halt_all_running">tafs non è riuscita a bloccare i tuoi tafs. Apri tafs per bloccarli.</string>
     <string name="halt_all_signed_out">Sei disconnesso da tafs. Accedi per bloccare i tuoi tafs.</string>
     <string name="halt_all_title">Blocca tutti i tafs</string>
-    <string name="help_chrome_lead">Associa l\'estensione di tafs al tuo telefono e un taf potrà lavorare nel tuo Chrome, solo sui siti che consenti. Lavora in schede proprie, e tutto ciò che è rischioso ti aspetta in %1$s.</string>
+    <string name="help_chrome_lead">Associa l\'estensione di tafs al tuo telefono e un taf potrà lavorare nel tuo Chrome, solo sui siti che consenti. Lavora in schede proprie, e tutto ciò che richiede il tuo sì ti aspetta in %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s elenca i tuoi Chrome e a cosa serve ciascuno. Dissociare un Chrome ne termina le connessioni.</string>
     <string name="help_chrome_title">tafs può lavorare nel tuo Chrome</string>
     <string name="help_code_lead">Attivalo in %1$s › %2$s. Poi, quando lo chiedi, KIFF ti manda per email un codice valido una sola volta, per 10 minuti, nel browser che l\'ha richiesto.</string>

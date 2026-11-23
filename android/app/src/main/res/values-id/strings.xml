@@ -1320,7 +1320,7 @@
     <string name="halt_all_running">tafs tidak dapat membekukan tafs Anda. Buka tafs untuk membekukannya.</string>
     <string name="halt_all_signed_out">Anda keluar dari tafs. Masuk untuk membekukan tafs Anda.</string>
     <string name="halt_all_title">Bekukan semua tafs</string>
-    <string name="help_chrome_lead">Pasangkan ekstensi tafs dengan ponsel Anda dan sebuah taf bisa bekerja di Chrome Anda, hanya di situs yang Anda izinkan. Ia bekerja di tab-nya sendiri, dan semua yang berisiko menunggu Anda di %1$s.</string>
+    <string name="help_chrome_lead">Pasangkan ekstensi tafs dengan ponsel Anda dan sebuah taf bisa bekerja di Chrome Anda, hanya di situs yang Anda izinkan. Ia bekerja di tab-nya sendiri, dan semua yang membutuhkan persetujuan Anda menunggu Anda di %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s menampilkan Chrome Anda dan untuk apa masing-masing dipakai. Melepas pasangan sebuah Chrome mengakhiri koneksinya.</string>
     <string name="help_chrome_title">tafs bisa bekerja di Chrome Anda</string>
     <string name="help_code_lead">Aktifkan di %1$s › %2$s. Setelah itu, saat Anda memintanya, KIFF mengirim kode lewat email yang berlaku sekali, selama 10 menit, di browser yang memintanya.</string>

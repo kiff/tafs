@@ -1375,7 +1375,7 @@
     <string name="halt_all_running">tafs no ha pogut bloquejar els teus taf. Obre tafs per bloquejar-los.</string>
     <string name="halt_all_signed_out">Has tancat la sessió de tafs. Inicia-la per bloquejar els teus taf.</string>
     <string name="halt_all_title">Bloqueja tots els taf</string>
-    <string name="help_chrome_lead">Aparella l\'extensió de tafs amb el teu telèfon i un taf podrà treballar al teu Chrome, només als llocs que permetis. Treballa en pestanyes pròpies, i tot el que comporta risc t\'espera a %1$s.</string>
+    <string name="help_chrome_lead">Aparella l\'extensió de tafs amb el teu telèfon i un taf podrà treballar al teu Chrome, només als llocs que permetis. Treballa en pestanyes pròpies, i tot el que necessita el teu sí t\'espera a %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s llista els teus Chrome i per a què serveix cadascun. Desaparellar un Chrome en acaba les connexions.</string>
     <string name="help_chrome_title">tafs pot treballar al teu Chrome</string>
     <string name="help_code_lead">Activa-ho a %1$s › %2$s. Després, quan ho demanis, KIFF t\'envia per correu un codi que serveix una sola vegada, durant 10 minuts, al navegador que l\'ha demanat.</string>
