@@ -1,0 +1,1 @@
+- **Android:** a connection that runs in your own Chrome says which one on its page ("In Work Mac"), as on iPhone and iPad ([docs/android-app.md](../docs/android-app.md), Connect apps).
