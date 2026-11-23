@@ -1,0 +1,4 @@
+• Chrome: vincúlalo con una sola huella, donde la extensión la comprueba.
+• Volver a vincular un Chrome pregunta cuál sustituye y solo traslada las conexiones que firmó este teléfono.
+• Cuenta › Chrome indica para qué se usa cada Chrome y qué termina al desvincularlo; «Usar otro Chrome» traslada una conexión.
+• Inicia sesión con un código enviado por correo: actívalo en Cuenta › Inicio de sesión.

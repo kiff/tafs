@@ -12,6 +12,10 @@ on:
       - .github/workflows/upgrade-gate.yml
 permissions:
   contents: read
+concurrency:
+  group: upgrade-gate-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   rule-b:
     runs-on: ubuntu-latest

@@ -105,6 +105,14 @@ counted from the record ("From the record: 5 done · 1 refused"). Each is drawn 
 `delivered` above the taf's words and `counted` under them. A blank one is none, and with none sent
 nothing is drawn: the phone counts nothing itself. Only a taf's message draws them.
 
+**A run that ended without an answer** (`TafsCloud.RunFailed`, the thread's `failed: {run, code?, words}`: the
+model unreachable or out of funds, `ai_unavailable`, or an uncoded `ERROR`) is a taf's chat's last line, in tafs cloud's
+words, as Android's ([android-app.md](android-app.md)). A later read with none clears it; one with no words, or of another
+shape, is no line, and a new chat with nothing in it shows none. It comes after everything else, held cards included,
+and not while an answer streams or a new message is being sent. A run followed live here already ended with its own line
+and Retry (`ChatState.ended`, `endedRun`), so the thread's line for that run isn't added too; another run's still is. `ChatTests` reads tafs cloud's own answer,
+`contracts/conversation-failed.json`. Coach's chat doesn't draw it yet.
+
 **A connection that was refused** (`TafsCloud.ChatMessage.refusedLines`, `RefusedLines`): a taf's message
 may carry tafs cloud's `refused` ([chat.md](chat.md)), the failed step's words, the server's reason ("Why:
 …") and what to do next. They're drawn under the taf's words and under `counted`, never folded into its
@@ -361,8 +369,9 @@ the app in sample mode.
   screens, Account and Alerts, dark on iPhone and iPad, and the iPad in landscape (the iPhone
   is portrait only).
 - **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
-  `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
-  (`POST /v1/profiles/words`) and checked against the profile's digest and their own before
+  `kiff.profile.v1` shows KIFF's words for it, read with the person's session
+  (`POST /v1/profiles/words?v=2`: `kiff.words.v2`, v1's lines less KIFF's bookkeeping; v1 or v2 is taken and
+  signed as KIFF sent it, as on Android) and checked against the profile's digest and their own before
   they're shown, verbatim and in order. Approving signs both digests into planque's approve
   body (`kiff_profile`). The tests use KIFF's vectors in `TafsTests/ProfileVectors/`.
 - **The Slack door** (`SlackDoorSheet`, from Add a door… in Setup › Starts when): the taf's Slack bot

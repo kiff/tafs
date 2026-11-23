@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS, tafsHere, idleDelay, IDLE_FIRST_MS, IDLE_MOST_MS } from "../src/coachchat.js";
 
 test("the panel opens on a fresh conversation, whose first message starts a new chat", () => {
   assert.equal(FRESH.fresh, true);
@@ -42,4 +42,27 @@ test("a fresh conversation is never polled; a chat is read often while Coach wor
   assert.equal(pollDelay({ view: chat, sentAt: now - BUSY_AFTER_SEND_MS, now }), POLL_IDLE_MS, "a minute after the send");
   assert.equal(pollDelay({ view: chat, now }), POLL_IDLE_MS, "idle");
   assert.ok(POLL_IDLE_MS >= 6 * POLL_BUSY_MS, "idle is much rarer than busy");
+});
+
+test("the panel offers each of this Chrome's connections that is one of the person's tafs, once, the one at work first", () => {
+  const connections = [
+    { grant: "g1", agent: "agt_a", name: "A", sites: ["a.example"] },
+    { grant: "g2", agent: "agt_b", name: "B", sites: ["b.example"] },
+    { grant: "g3", agent: "agt_a", name: "A", sites: ["c.example"] },
+    { grant: "g4", agent: "agt_gone", name: "Gone", sites: ["d.example"] },
+  ];
+  const tafs = [{ id: "taf-a", name: "Alpha", agent: "agt_a" }, { id: "taf-b", name: "Beta", agent: "agt_b" }];
+  assert.deepEqual(tafsHere(connections, tafs).map((t) => t.id), ["taf-a", "taf-b"], "once each; a taf the person can't see isn't offered");
+  assert.deepEqual(tafsHere(connections, tafs, "Beta").map((t) => t.id), ["taf-b", "taf-a"], "the one at work first");
+  assert.deepEqual(tafsHere([], tafs), []);
+});
+
+test("an idle chat is read less and less, from 60 s to 5 minutes, each wait up to a fifth shorter", () => {
+  assert.equal(idleDelay(0, 0), IDLE_FIRST_MS);
+  assert.equal(idleDelay(1, 0), 120_000);
+  assert.equal(idleDelay(2, 0), 240_000);
+  assert.equal(idleDelay(3, 0), IDLE_MOST_MS);
+  assert.equal(idleDelay(30, 0), IDLE_MOST_MS);
+  assert.equal(idleDelay(0, 1), 48_000, "a fifth off at most");
+  assert.ok(idleDelay(0, 0.5) <= IDLE_FIRST_MS);
 });
