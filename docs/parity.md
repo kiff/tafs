@@ -268,7 +268,7 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | 8 | A taf's loop card ("Still reading": Read on, Stop here) | not started: no `tafs-loop`, no `answerTafCard` | done | chat.md:579 |
 | 9 | Following a run to its end (long follow, a stale stream dropped) | partial: 30 reads 4 s apart per message | done (1.22) | chat.md:515-525 |
 | 10 | Coach's answered card pinned | done | not started | chat.md:254 |
-| 11 | How tafs works: Chrome and the emailed code | in review: tafs#1758 | done (tafs#1759) | onboarding.md |
+| 11 | How tafs works: Chrome and the emailed code | in review: tafs#1758 | in review: carried by tafs#1758 (#1759 merged into its branch) | onboarding.md |
 | 12 | Coach's Start screen: its tools and Cards signed in one go | done (`start.words`, `/v1/connections/batch`) | done (1.20) | coach.md:140-159 |
 | 13 | An API door's address only ever on tafs cloud's own host (as Windows and Linux) | in review: tafs#1768 | done (tafs#1770) | doors.md |
 | 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | partial: re-reads the connections, no check against what it showed | in review: tafs#1761 | android-app.md, "Pairing a Chrome" |
