@@ -1391,6 +1391,12 @@
     <string name="halt_all_running">tafs ei saanud sinu tafisid peatada. Peatamiseks ava tafs.</string>
     <string name="halt_all_signed_out">Oled tafsist välja logitud. Tafide peatamiseks logi sisse.</string>
     <string name="halt_all_title">Peata kõik tafid</string>
+    <string name="help_chrome_lead">Seo tafsi laiendus oma telefoniga ja taf saab töötada sinu Chrome\'is, ainult nendel saitidel, mida lubad. See töötab oma kaartidel ja kõik, mis vajab sinu nõusolekut, ootab sind jaotises %1$s.</string>
+    <string name="help_chrome_manage">%1$s › %2$s loetleb sinu Chrome\'id ja selle, milleks igaüht kasutatakse. Chrome\'i sidumise tühistamine lõpetab selle ühendused.</string>
+    <string name="help_chrome_title">tafs saab töötada sinu Chrome\'is</string>
+    <string name="help_code_lead">Lülita see sisse jaotises %1$s › %2$s. Siis saadab KIFF sinu soovil e-kirjaga koodi, mis kehtib ühe korra, 10 minutit, selles brauseris, mis seda küsis.</string>
+    <string name="help_code_safe">Ära anna seda koodi kellelegi. KIFF ei küsi seda sinult kunagi.</string>
+    <string name="help_code_title">Sisselogimine e-kirjaga saadetud koodiga</string>
     <string name="home_calendar_not_read">Kalendrit ei õnnestunud lugeda. %1$s</string>
     <string name="home_cant_reach_kiff">KIFFini ei jõuta</string>
     <string name="home_choose_taf">Vali taf.</string>

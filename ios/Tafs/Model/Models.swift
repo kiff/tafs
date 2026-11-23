@@ -475,6 +475,9 @@ struct HeldCall: Identifiable, Hashable, Codable {
     /// Whether approving it once can pass it (kiff/tafs#138, item 49): not when it's over a
     /// total the Card keeps across calls (a day's), which only a change to the Card can lift.
     var approvableOnce = true
+    /// A sign-in fill in the owner's Chrome: allowing it takes a release this app can't make yet, so it offers
+    /// no Approve once, Extra room or Allow, only Refuse. Optional, so a saved sample from before it still loads.
+    var needsRelease: Bool?
     /// KIFF's accounting version for the hold, signed with the answer.
     var accountingVersion: Int?
     /// Other answers the Card allows besides approve and refuse ("return first").

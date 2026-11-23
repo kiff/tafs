@@ -1391,6 +1391,12 @@
     <string name="halt_all_running">tafs не можеше да ги запре твоите tafови. Отвори tafs за да ги запреш.</string>
     <string name="halt_all_signed_out">Одјавен си од tafs. Најави се за да ги запреш твоите tafови.</string>
     <string name="halt_all_title">Запри ги сите tafови</string>
+    <string name="help_chrome_lead">Спарете го проширувањето на tafs со телефонот и еден taf може да работи во вашиот Chrome, само на страниците што ќе ги дозволите. Работи во свои јазичиња, а сè што бара вашето одобрение ве чека во %1$s.</string>
+    <string name="help_chrome_manage">%1$s › %2$s ги прикажува вашите Chrome и за што се користи секој. Раздвојувањето на Chrome ги завршува неговите врски.</string>
+    <string name="help_chrome_title">tafs може да работи во вашиот Chrome</string>
+    <string name="help_code_lead">Вклучете го во %1$s › %2$s. Потоа, кога ќе побарате, KIFF праќа по е-пошта код што важи еднаш, 10 минути, во прелистувачот што го побарал.</string>
+    <string name="help_code_safe">Никогаш не го давај овој код никому. KIFF никогаш нема да го побара од тебе.</string>
+    <string name="help_code_title">Најава со код по е-пошта</string>
     <string name="home_calendar_not_read">Календарот не можеше да се прочита. %1$s</string>
     <string name="home_cant_reach_kiff">Не може да се стигне до KIFF</string>
     <string name="home_choose_taf">Избери taf.</string>

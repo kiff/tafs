@@ -3709,6 +3709,7 @@ final class AppModel: ObservableObject {
 
     /// "Allow this from now on" tapped: the sheet opens, and tafs cloud makes the offer now.
     func openAllow(_ call: HeldCall) {
+        guard HoldAllow.allowable(call) else { return }
         allow = AllowSheet(call: call, busy: true)
         Task { await loadAllow(round: false) }
     }
@@ -3761,6 +3762,7 @@ final class AppModel: ObservableObject {
     @discardableResult
     func confirmAllow() async -> Bool {
         guard let open = allow, let draft = open.draft, open.matches, !open.busy, !draft.confirmed, let tenant = kiffTenant else { return false }
+        guard HoldAllow.allowable(open.call) else { return false }
         var hold: (id: String, version: Int)?
         if open.sendHeld {
             // The call goes only as the person saw it: without its version, nothing is signed.
@@ -3884,6 +3886,13 @@ final class AppModel: ObservableObject {
         if fromNotification { signer.allowUnlockReuse() }
         defer { if fromNotification { signer.endUnlockReuse() } }
         guard held.contains(where: { same($0, call) }) else { return }
+        // A sign-in fill is never allowed without its release, which this app can't make yet: no caller (a notification's
+        // action, an approval window, anything later) signs an allowing answer for one. Refuse still goes.
+        if call.needsRelease == true || held.first(where: { same($0, call) })?.needsRelease == true,
+           answer == .approveOnce || answer == .extraRoom {
+            lastError = Words.Chrome.releaseUnreadable
+            return
+        }
         // Approving Coach's install is installing it (kiff/tafs#206): the switch and its
         // Card come first, then this answer, so tafs never hears of a half-done install.
         if call.install != nil, answer == .approveOnce, !confirmed, !installed {

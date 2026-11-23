@@ -98,6 +98,37 @@ final class BrowserStepCardTests: XCTestCase {
         XCTAssertNil(try held(browser: nil).browser)
     }
 
+    /// A sign-in fill (`browser.sealed_fill`, or a plain `fill`) is never allowed without a release from this phone's
+    /// approval key, which iPhone and iPad can't make yet: it offers no Approve once and no "Allow from now on", only
+    /// Refuse, whether or not its step card can be drawn. Any other browser step is answered as before.
+    func testASignInFillOffersNoApproveOnceUntilTheReleaseCardExists() throws {
+        let sealed = #"{"site":"shop.example","action_words":"Fill the password","sealed_fill":{"chrome_id":"chr_a","op":"fill","sealed":"h.x","origin":"https://shop.example"}}"#
+        for block in [sealed,
+                      #"{"sealed_fill":{"chrome_id":"chr_a"}}"#,
+                      #"{"site":"shop.example","action_words":"Fill the email","fill":{"field_ref":"e3"}}"#] {
+            let call = try held(browser: block)
+            XCTAssertEqual(call.needsRelease, true, block)
+            XCTAssertFalse(call.approvableOnce, block)
+        }
+        // KIFF saying it can be approved once doesn't change that.
+        let said = try held(browser: sealed, kiff: #","can_approve_once":true"#)
+        XCTAssertFalse(said.approvableOnce)
+        // A step with no fill, or a fill that's null, is any other step.
+        for block in [#"{"site":"shop.example","action_words":"Click “Pay”"}"#, #"{"site":"shop.example","action_words":"Click","sealed_fill":null}"#] {
+            let call = try held(browser: block)
+            XCTAssertNil(call.needsRelease, block)
+            XCTAssertTrue(call.approvableOnce, block)
+        }
+        XCTAssertNil(try held(browser: nil).needsRelease)
+        XCTAssertNil(try held(browser: "null").needsRelease, "JSON null is no block")
+        // A block that isn't an object can't be read, so it's never allowed on a guess.
+        for block in ["42", "[1]", #""shop.example""#] {
+            let call = try held(browser: block)
+            XCTAssertEqual(call.needsRelease, true, block)
+            XCTAssertFalse(call.approvableOnce, block)
+        }
+    }
+
     /// A step's context with the wrong shape loses that part only.
     func testAWrongPartLosesThatPartOnly() throws {
         let call = try held(browser: #"{"site":"shop.example","action_words":"Click “Pay”","context":"x","checkout":{"lines":[{"item":"a"},3,"b",{"quantity":2},{"item":"c","quantity":"x","price":1.5}]},"chrome":[1]}"#)

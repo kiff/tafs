@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Powiąż rozszerzenie tafs z telefonem, a taf będzie mógł pracować w Twoim Chrome, tylko na stronach, które dopuścisz. Pracuje we własnych kartach, a wszystko, co potrzebuje Twojej zgody, czeka na Ciebie w {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} pokazuje Twoje Chrome i do czego służy każdy z nich. Usunięcie powiązania Chrome kończy jego połączenia.",
+  "help.chrome_title": "tafs może pracować w Twoim Chrome",
+  "help.code_lead": "Włącz to w {account} › {sign_in}. Potem, gdy o to poprosisz, KIFF wyśle e-mailem kod, który działa raz, przez 10 minut, w przeglądarce, która o niego poprosiła.",
+  "help.code_safe": "Nikomu nie podawaj tego kodu. KIFF nigdy Cię o niego nie poprosi.",
+  "help.code_title": "Logowanie kodem z e-maila"
+}

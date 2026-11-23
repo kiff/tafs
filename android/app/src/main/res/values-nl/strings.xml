@@ -1391,6 +1391,12 @@
     <string name="halt_all_running">tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten.</string>
     <string name="halt_all_signed_out">Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten.</string>
     <string name="halt_all_title">Alle tafs stilzetten</string>
+    <string name="help_chrome_lead">Koppel de tafs-extensie aan je telefoon en een taf kan in je Chrome werken, alleen op de sites die je toestaat. Hij werkt in eigen tabbladen, en alles wat jouw ja nodig heeft wacht op je in %1$s.</string>
+    <string name="help_chrome_manage">%1$s › %2$s toont je Chromes en waarvoor elk wordt gebruikt. Een Chrome ontkoppelen beëindigt zijn koppelingen.</string>
+    <string name="help_chrome_title">tafs kan in je Chrome werken</string>
+    <string name="help_code_lead">Zet het aan in %1$s › %2$s. Als je erom vraagt, mailt KIFF je daarna een code die één keer werkt, 10 minuten lang, in de browser die erom vroeg.</string>
+    <string name="help_code_safe">Geef deze code aan niemand. KIFF vraagt er nooit om.</string>
+    <string name="help_code_title">Inloggen met een code per e-mail</string>
     <string name="home_calendar_not_read">De agenda kon niet worden gelezen. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF is niet bereikbaar</string>
     <string name="home_choose_taf">Kies een taf.</string>

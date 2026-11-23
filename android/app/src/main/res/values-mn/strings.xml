@@ -1391,6 +1391,12 @@
     <string name="halt_all_running">tafs таны taf-уудыг зогсоож чадсангүй. Зогсоохын тулд tafs-ыг нээнэ үү.</string>
     <string name="halt_all_signed_out">Та tafs-аас гарсан байна. Taf-уудаа зогсоохын тулд нэвтэрнэ үү.</string>
     <string name="halt_all_title">Бүх taf-ыг зогсоох</string>
+    <string name="help_chrome_lead">tafs өргөтгөлийг утастайгаа хослуул, тэгвэл taf таны зөвшөөрсөн сайтууд дээр л таны Chrome-д ажиллаж чадна. Тэр өөрийн табуудад ажилладаг бөгөөд таны зөвшөөрөл шаардсан бүхэн %1$s-д таныг хүлээнэ.</string>
+    <string name="help_chrome_manage">%1$s › %2$s таны Chrome-уудыг болон тус бүрийг юунд ашигладгийг харуулна. Chrome-ийн хослолыг салгавал түүний холболтууд дуусна.</string>
+    <string name="help_chrome_title">tafs таны Chrome-д ажиллаж чадна</string>
+    <string name="help_code_lead">Үүнийг %1$s › %2$s-д асаа. Дараа нь чи хүсвэл KIFF нэг удаа, 10 минутын турш, хүссэн хөтөч дээр ажиллах кодыг и-мэйлээр илгээнэ.</string>
+    <string name="help_code_safe">Энэ кодыг хэнд ч бүү өг. KIFF үүнийг танаас хэзээ ч асуухгүй.</string>
+    <string name="help_code_title">И-мэйлээр ирсэн кодоор нэвтрэх</string>
     <string name="home_calendar_not_read">Хуанлийг уншиж чадсангүй. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF-д хүрэх боломжгүй</string>
     <string name="home_choose_taf">Taf сонгоно уу.</string>

@@ -1391,6 +1391,12 @@
     <string name="halt_all_running">tafs آپ کے tafs کو روک نہیں سکا۔ انہیں روکنے کے لیے tafs کھولیں۔</string>
     <string name="halt_all_signed_out">آپ tafs سے سائن آؤٹ ہیں۔ اپنے tafs روکنے کے لیے سائن اِن کریں۔</string>
     <string name="halt_all_title">تمام tafs روکیں</string>
+    <string name="help_chrome_lead">tafs ایکسٹینشن کو اپنے فون سے جوڑیں، اور کوئی taf آپ کے Chrome میں کام کر سکتا ہے، صرف ان سائٹس پر جن کی آپ اجازت دیں۔ وہ اپنے ہی ٹیبز میں کام کرتا ہے، اور جس چیز کے لیے آپ کی ہاں چاہیے وہ %1$s میں آپ کا انتظار کرتی ہے۔</string>
+    <string name="help_chrome_manage">%1$s › %2$s آپ کے Chrome اور ہر ایک کا استعمال دکھاتا ہے۔ کسی Chrome کا جوڑ ختم کرنے سے اس کے کنکشن ختم ہو جاتے ہیں۔</string>
+    <string name="help_chrome_title">tafs آپ کے Chrome میں کام کر سکتا ہے</string>
+    <string name="help_code_lead">اسے %1$s › %2$s میں چالو کریں۔ پھر، جب آپ مانگیں، KIFF ای میل سے ایک کوڈ بھیجتا ہے جو ایک بار، 10 منٹ تک، اسی براؤزر میں کام کرتا ہے جس نے مانگا۔</string>
+    <string name="help_code_safe">یہ کوڈ کبھی کسی کو نہ دیں۔ KIFF آپ سے یہ کبھی نہیں مانگے گا۔</string>
+    <string name="help_code_title">ای میل پر بھیجے گئے کوڈ سے سائن اِن کریں</string>
     <string name="home_calendar_not_read">کیلنڈر پڑھا نہیں جا سکا۔ %1$s</string>
     <string name="home_cant_reach_kiff">KIFF تک رسائی نہیں ہو سکتی</string>
     <string name="home_choose_taf">ایک taf چنیں۔</string>

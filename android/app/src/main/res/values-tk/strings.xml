@@ -1391,6 +1391,12 @@
     <string name="halt_all_running">tafs tafs-laryňyzy togtadyp bilmedi. Olary togtatmak üçin tafs-y açyň.</string>
     <string name="halt_all_signed_out">Siz tafs-dan çykdyňyz. Tafs-laryňyzy togtatmak üçin giriň.</string>
     <string name="halt_all_title">Ähli tafs-lary togtadyň</string>
+    <string name="help_chrome_lead">tafs giňeltmesini telefonyňyz bilen goşalaň, şonda taf Chrome-yňyzda diňe siziň rugsat beren saýtlaryňyzda işläp biler. Ol öz goýmalarynda işleýär we siziň razylygyňyz gerek bolan ähli zat %1$s bölüminde size garaşýar.</string>
+    <string name="help_chrome_manage">%1$s › %2$s Chrome-laryňyzy we olaryň her biriniň näme üçin ulanylýandygyny görkezýär. Chrome-yň goşalamasyny aýyrmak onuň birikmelerini gutarýar.</string>
+    <string name="help_chrome_title">tafs siziň Chrome-yňyzda işläp biler</string>
+    <string name="help_code_lead">Ony %1$s › %2$s bölüminde açyň. Soňra siz soranyňyzda, KIFF bir gezek, 10 minutlap, ony soran brauzerde işleýän kody email bilen iberýär.</string>
+    <string name="help_code_safe">Bu kody hiç kime bermäň. KIFF ony sizden hiç haçan soramaz.</string>
+    <string name="help_code_title">Email bilen iberilen kod bilen giriň</string>
     <string name="home_calendar_not_read">Senenama okalyp bilinmedi. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF-e ýetip bolmaýar</string>
     <string name="home_choose_taf">Taf saýlaň.</string>

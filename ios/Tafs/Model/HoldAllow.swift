@@ -11,6 +11,8 @@ enum HoldAllow {
     /// A hold (not Coach's install; a currency mismatch is never listed as one) whose every
     /// breach a Card change can lift.
     static func allowable(_ call: HeldCall) -> Bool {
+        // Never a sign-in fill: a Card that let fills go on their own would allow them without a release.
+        guard call.needsRelease != true else { return false }
         guard call.install == nil, call.kiffID != nil, let outcomes = call.breachOutcomes, !outcomes.isEmpty else { return false }
         return outcomes.allSatisfy(liftable.contains)
     }

@@ -1391,6 +1391,12 @@
     <string name="halt_all_running">tafs nuk i bllokoi dot tafs-et tuaj. Hapni tafs për t\'i bllokuar.</string>
     <string name="halt_all_signed_out">Keni dalë nga tafs. Hyni për të bllokuar tafs-et tuaj.</string>
     <string name="halt_all_title">Bllokoni të gjithë tafs-et</string>
+    <string name="help_chrome_lead">Çiftoni zgjerimin e tafs me telefonin tuaj dhe një taf mund të punojë në Chrome-in tuaj, vetëm në faqet që lejoni. Punon në skeda të veta, dhe çdo gjë që kërkon pëlqimin tuaj ju pret te %1$s.</string>
+    <string name="help_chrome_manage">%1$s › %2$s liston Chrome-et tuaj dhe për çfarë përdoret secili. Heqja e çiftimit të një Chrome-i i mbyll lidhjet.</string>
+    <string name="help_chrome_title">tafs mund të punojë në Chrome-in tuaj</string>
+    <string name="help_code_lead">Aktivizojeni te %1$s › %2$s. Pastaj, kur e kërkoni, KIFF ju dërgon me email një kod që vlen një herë, për 10 minuta, në shfletuesin që e kërkoi.</string>
+    <string name="help_code_safe">Mos ia jepni kurrë këtë kod askujt. KIFF nuk do t\'jua kërkojë kurrë.</string>
+    <string name="help_code_title">Hyni me një kod me email</string>
     <string name="home_calendar_not_read">Kalendari nuk u lexua dot. %1$s</string>
     <string name="home_cant_reach_kiff">Nuk arrihet te KIFF</string>
     <string name="home_choose_taf">Zgjidhni një taf.</string>

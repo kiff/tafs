@@ -1336,6 +1336,12 @@
     <string name="halt_all_running">tafs không thể đóng băng các tafs của bạn. Hãy mở tafs để đóng băng chúng.</string>
     <string name="halt_all_signed_out">Bạn đã đăng xuất khỏi tafs. Hãy đăng nhập để đóng băng các tafs của bạn.</string>
     <string name="halt_all_title">Đóng băng tất cả tafs</string>
+    <string name="help_chrome_lead">Ghép đôi tiện ích tafs với điện thoại của bạn và một taf có thể làm việc trong Chrome của bạn, chỉ trên các trang bạn cho phép. Nó làm việc trong các tab riêng, và mọi việc cần bạn đồng ý đều chờ bạn ở %1$s.</string>
+    <string name="help_chrome_manage">%1$s › %2$s liệt kê các Chrome của bạn và mỗi Chrome dùng để làm gì. Hủy ghép đôi một Chrome sẽ chấm dứt các kết nối của nó.</string>
+    <string name="help_chrome_title">tafs có thể làm việc trong Chrome của bạn</string>
+    <string name="help_code_lead">Bật tính năng này ở %1$s › %2$s. Sau đó, khi bạn yêu cầu, KIFF gửi qua email một mã dùng được một lần, trong 10 phút, trên trình duyệt đã yêu cầu.</string>
+    <string name="help_code_safe">Đừng đưa mã này cho bất kỳ ai. KIFF sẽ không bao giờ hỏi bạn mã này.</string>
+    <string name="help_code_title">Đăng nhập bằng mã gửi qua email</string>
     <string name="home_calendar_not_read">Không thể đọc lịch. %1$s</string>
     <string name="home_cant_reach_kiff">Không kết nối được KIFF</string>
     <string name="home_choose_taf">Hãy chọn một taf.</string>
