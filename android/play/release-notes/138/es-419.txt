@@ -1,0 +1,1 @@
+• El ejemplo de las “Instrucciones de la API” de una puerta ahora indica siempre la dirección propia de tafs cloud, entre comillas, para que puedas pegarlo con seguridad en una terminal.

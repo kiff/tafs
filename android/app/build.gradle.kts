@@ -12,8 +12,8 @@ android {
     applicationId = "dev.kiff.tafs"
     minSdk = 30
     targetSdk = 37
-    versionCode = 137
-    versionName = "1.48.0"
+    versionCode = 138
+    versionName = "1.48.1"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -41,7 +41,7 @@ android {
       buildConfigField("boolean", "K5", "true")
     }
     release {
-      // On in every build for Play, as in debug: the onboarding and the sign-in inside tafs (owner, 22 Nov).
+      // On in every build for Play, as in debug: the onboarding and the sign-in inside tafs.
       buildConfigField("boolean", "K5", "true")
       if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
       // R8 keeps only the code the app reaches: most of Bouncy Castle goes. app/proguard-rules.pro keeps what's

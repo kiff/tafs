@@ -92,7 +92,7 @@ class CoachWaitingTest {
     assertEquals(1, transport.requestsTo(route).size)
   }
 
-  // The owner, 14 Nov: "on the main actions it should have reactions". Set aside's outcome is felt: success, or a warning.
+  // The main actions have reactions, so Set aside's outcome is felt: success, or a warning.
   @Test fun settingAsideIsFeltAsItsOutcome() = runTest {
     val felt = mutableListOf<bot.tafs.app.design.Haptics.Kind>()
     bot.tafs.app.design.Haptics.performer = { felt += it }

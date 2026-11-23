@@ -43,7 +43,8 @@ final class ConnectAgainTests: XCTestCase {
         XCTAssertTrue(client.contains(#"try await send("POST", "grants/\(escaped(grant.id))/connect-fresh", body: try Self.approveBody(grant, words: words))"#))
         let app = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
         XCTAssertTrue(app.contains("if fresh || grant.reconnectsFresh { return try await planque.connectFresh(grant, words: words) }"))
-        XCTAssertTrue(app.contains("let done = await connect(grantID: grant.id, shown: grant.digest, again: true, fresh: fresh || grant.reconnectsFresh)"))
+        XCTAssertTrue(app.contains("return TafsCloud.ConnectStart(grant: grant.id, again: true, fresh: fresh || grant.reconnectsFresh)"))
+        XCTAssertTrue(app.contains("let done = await connect(grantID: grantID, shown: shown, again: true, fresh: fresh)"))
     }
 
     /// On the taf's Setup, first, for whoever manages it: that connection signed in again here, and the
@@ -52,14 +53,14 @@ final class ConnectAgainTests: XCTestCase {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
         let view = try String(contentsOf: root.appendingPathComponent("Views/TafDetailView.swift"), encoding: .utf8)
         XCTAssertTrue(view.contains("if let again = model.tafSetups[taf.id]?.connect_again, again.usable, manages {"))
-        XCTAssertTrue(view.contains("Task { await model.connectAgain(tafID, again) }"))
+        // Its sheet first (docs/connect-apps.md), on that same connection; the taf is read again once it's signed in again.
+        XCTAssertTrue(view.contains("Task { reapproving = await model.reconnectStart(id: again.grant, fresh: again.fresh) }"))
+        XCTAssertTrue(view.contains(".reapprovalSheet($reapproving) { await model.afterConnectAgain(tafID, again) }"))
         let panel = String(view[try XCTUnwrap(view.range(of: "struct ConnectAgainPanel: View {")).upperBound...])
         XCTAssertFalse(panel.contains("ConnectAppsView"), "never a trip through every app")
         let app = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
-        let start = try XCTUnwrap(app.range(of: "func connectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {"))
+        let start = try XCTUnwrap(app.range(of: "func afterConnectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {"))
         let body = String(app[start.upperBound...].prefix(1000))
-        func at(_ s: String) throws -> String.Index { try XCTUnwrap(body.range(of: s), s).lowerBound }
-        XCTAssertTrue(try at("await reconnectApp(again.grant, fresh: again.fresh)") < (try at("await loadTafSetup(tafID, connectedAgain:")), "that same connection, then the taf read again")
         XCTAssertTrue(body.contains("if connected, let words = named ?? (again.doneWords.isEmpty ? nil : again.doneWords) { connectedAgain[tafID] = words }"), "done words only once planque says connected")
         // After a fresh sign-in, tafs cloud's words naming the account it went to, when it sent them for that grant.
         XCTAssertTrue(body.contains("await loadTafSetup(tafID, connectedAgain: connected && again.fresh ? again.grant : nil)"))

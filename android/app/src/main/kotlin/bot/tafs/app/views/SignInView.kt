@@ -234,7 +234,7 @@ fun SignInSheet(
         } else if (split) {
           // A tablet: both halves side by side. The person's phone adds it from the right half, with no browser; KIFF's code is
           // made only once they tap Continue on the left, and going back to the phone forgets that code. A phone always signs in
-          // with KIFF itself, so it isn't offered being added from another phone (the owner, 16 Nov), as on the iPhone.
+          // with KIFF itself, so it isn't offered being added from another phone, as on the iPhone.
           Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
               if (pairing) {

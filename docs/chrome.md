@@ -524,8 +524,8 @@ origin, the element's label, which Chrome) and the release's own fields below.
    `fillSealed`, `vault.js`), so a three-segment handle would show one part and fill the other; it refuses such a handle too
    (`parseHandle` in `vault.js`, used by the runner and the vault: exactly `sec_<id>:password` or `sec_<id>:username`, a
    third segment or any other part refused whole), and the vector's refused cases include one.
-4. Under "On the page", the field's label and the page's title as planque read them, as every page word is drawn: one plain
-   line, verbatim, never as what the card asks.
+4. Under "On the page", the page's title as planque read it (`context.title`), as every page word is drawn: one plain line,
+   verbatim, never a link or anything to tap, and never as what the card asks.
 5. One fixed line: "It never leaves your Chrome. tafs doesn't see it." (the phone never has the value, and says so rather than
    showing a stand-in; the line is the same for either part), and how long the card is good for.
 6. **Allow this fill** and **Refuse.** Allow asks for Face ID or the fingerprint.
@@ -555,11 +555,16 @@ drew, and the release is the only signature over the handle, origin and field. T
   `release_missing` answer.
 - The answer carries `release: {chrome_id, op, origin, nonce, exp, sig}`, and planque puts it on the step as `step.release`.
 
-**Where the phone refuses to sign,** whatever planque says (it shows the hold as unreadable, and says why):
-- the origin isn't `https`, or its registrable domain isn't within the sites of the step's `sites_signed`, which the phone
-  verifies against its own key (`tafs-chrome/sites/v1`): the phone never signs a release for a site its owner didn't connect;
-- the origin is a sensitive site and no `sensitive_allowed` entry of the step verifies against its own key
-  (`tafs-chrome/sensitive/v1`) for this grant and site;
+**Where the phone refuses to sign,** whatever planque says (it shows the hold as unreadable, and says why). Which sites a
+fill may go to comes **only from the phone's own signed grants**, never from fields the hold relays:
+- the origin isn't `https`, or it isn't within the sites this phone signed (`tafs-chrome/sites/v1`, checked with its own key)
+  for one of the account's **live** connections on that same Chrome, as planque lists them (`status` connected): a list
+  planque widened, another key's signature, a connection on another Chrome, or one the owner ended (it keeps its signature)
+  counts for nothing. The phone never signs a release for a site its owner didn't connect;
+- the block KIFF serves isn't the one its `browser_sha256` names (the lower-case hex SHA-256 of the RFC 8785 JCS of the
+  served `browser` object): then what the card would draw isn't what the answer covers, so it's refused before any prompt;
+- the origin is a sensitive site, unless this phone holds its own `tafs-chrome/sensitive/v1` allowance for it on that
+  connection. **Android keeps none yet, so it refuses every sensitive site;**
 - the Chrome isn't one it is paired with, or the hold has no `read_id`, `field_ref` or a handle of the shape above;
 - the hold has expired (below): the owner's late yes signs nothing, and planque asks again with a new step.
 
@@ -596,21 +601,26 @@ reaches the step. They must match the vector.
 **For the apps,** the card is built once on iPhone and iPad (`BrowserStepBlock`'s sibling in `NeedsYouView`) and once on
 Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every language and each tested against the vector.
 **Android's checks and signing are built, off** (`SealedRelease`, `ENABLED = false`): the handle's part, the refusals above
-(a paired Chrome, the hold's time, an `https` origin within the sites this phone signed for the grant, a sensitive site only
-with this phone's own allowance, the op, read and field present), and a release with a new 16-byte nonce and `exp` 60 s on,
-signed over the vector's bytes. **Android's card is built, off too:**
-- **What it reads:** the hold's `browser.sealed_fill`, `{chrome_id, op, sealed, origin, field_ref, read_id, grant, field_label,
-  sites_signed: {sites, sig}, sensitive_allowed: [{site, sig}]}`, its signed fields copied byte for byte (`KiffMapping.sealedFill`);
-  the hold's `expires_at` is the fill's end. **planque's half must send this shape.**
-- **What it draws** (`SealedFillBlock`): the design's order above, in `chrome.release_*` words in every shipped language; a fill
-  the phone's checks refuse says why (`SealedRelease.refusalWords`) and offers Refuse only.
+(a paired Chrome, the hold's time, an `https` origin within the sites this phone signed for one of the account's connections
+on that Chrome, never a sensitive site, the op, read and field present), and a release with a new 16-byte nonce and `exp`
+60 s on, signed over the vector's bytes. **Android's card is built, off too:**
+- **What it reads:** planque's block as it sends it (planque's `sealedBlock`, which KIFF serves unchanged):
+  `browser.release_fields`, `{chrome_id, op, sealed, origin, field_ref, read_id}`, copied byte for byte into the release
+  (`KiffMapping.sealedFill`), and for what's drawn `site`, `origin`, `chrome.name`, `action_words` and `context.title`. The
+  hold's `expires_at` is the fill's end. The sites it checks are the account's live grants as planque lists them, with this
+  phone's own `chrome_sites_sig` (`ChromePairing.signedSites`), never anything in the block. **The hold's `browser_sha256`**
+  must equal the served block's own hash (`TolerantBrowser.servedSha256`), and **every answer to the hold, Refuse included,
+  signs it** as `kiff.answer.v1`'s ninth line (`KiffClient.answerMessage`), as KIFF checks it.
+- **What it draws** (`SealedFillBlock`): the design's order above, in `chrome.release_*` words in every shipped language; the
+  block's own words (the site, the Chrome's name, the page's title) as plain text only; a fill the phone's checks refuse says
+  why (`SealedRelease.refusalWords`) and offers Refuse only.
 - **Allow this fill** carries the confirm mark and asks the two prompts above (`AppModel.release`, then the answer); the answer
   goes to KIFF's `approve-once` with `release: {chrome_id, op, origin, nonce, exp, sig}` beside its `signature`. **KIFF's half
   must take it and hand it to planque.**
 - **Never allowed without its release:** with the card off, a sealed fill is drawn as any step with Refuse only, and no other way
   of approving (a notification's action, an approval window's tap, an answer signed elsewhere, Extra room) allows it, and "Allow this from now on" is never offered for one (`HoldAllow.allowable`). A sealed fill with no
   `expires_at` reads as expired. **Whether a hold is a fill** (`HeldCall.needsRelease`) is read from its `browser` block as sent
-  (`TolerantBrowser`): a `sealed_fill` or `fill` that isn't null, or a block that isn't an object. So a fill whose block can't be
+  (`TolerantBrowser`): a `release_fields`, `sealed_fill` or `fill` that isn't null, or a block that isn't an object. So a fill whose block can't be
   drawn (no site, say) still can't be allowed, and one bad block never hides the other held calls. Tests: `SealedFillCardTest`.
 
 ## A step handed to the person
