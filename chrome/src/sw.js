@@ -9,15 +9,14 @@ import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
 import { Vault } from "./vault.js";
 import { Coach, reusing } from "./coach.js";
+import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
 import { refuseURL, hostOf } from "./sites.js";
 
 const WAKE = "tafs-wake";
-const IDLE_CLOSE_MS = 60_000;
 
 let relay = null;
-let lastActive = 0;
 
 const vault = new Vault(indexedStore);
 const releaseStore = {
@@ -61,8 +60,20 @@ async function wipe() {
   await chrome.storage.session.clear();
   kept.keys = null;
   kept.pairing = null;
+  // The wake-up goes with the pairing.
+  self.registration.pushManager.getSubscription().then((s) => s && s.unsubscribe()).catch(() => {});
   publish();
 }
+
+/** Gives planque this Chrome's push subscription, so it can wake this worker (push.js). Each connect, it is a few hundred bytes. */
+async function announcePush() {
+  const sub = subscriptionOf(await ensureSubscription(self.registration.pushManager, config().pushKey));
+  if (!sub || !relay || !kept.keys || !kept.pairing) return;
+  relay.send(await pushMessage(kept.keys.privateKey, kept.pairing.chromeId, sub));
+}
+
+// planque's silent push (no data): a taf needs this Chrome. The worker is awake now; connect.
+self.addEventListener("push", (event) => event.waitUntil(connect()));
 
 async function connect() {
   await load();
@@ -74,10 +85,9 @@ async function connect() {
       get: async () => (await chrome.storage.session.get("nonces")).nonces || [],
       set: (entries) => chrome.storage.session.set({ nonces: entries }),
     };
-    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), nonceStore });
+    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: announcePush, nonceStore });
   }
   relay.connect();
-  lastActive = Date.now();
 }
 
 chrome.alarms.create(WAKE, { periodInMinutes: 1 });
@@ -85,11 +95,7 @@ chrome.alarms.onAlarm.addListener(async (a) => {
   if (a.name !== WAKE) return;
   // A sweep that throws (a window Chrome already closed) mustn't skip the idle close below.
   await runner.sweep().catch(() => {});
-  if (runner.active) lastActive = Date.now();
-  if (relay && relay.connected && !runner.active && Date.now() - lastActive > IDLE_CLOSE_MS) {
-    relay.close();
-    return;
-  }
+  // Never closed for being idle: planque can only reach a connected extension (docs/chrome.md, "Waking the extension").
   await connect();
 });
 chrome.runtime.onStartup.addListener(connect);

@@ -17,8 +17,8 @@ export class Relay {
    * `config` {relayURL, planqueKey, version, manifestHash}; `kept` {keys, pairing}; `runner` handles steps; `onUnpaired()`
    * wipes the extension; `WebSocket` is the browser's (a fake in tests).
    */
-  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
-    Object.assign(this, { config, kept, runner, onUnpaired, onChange, WebSocket, now });
+  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, onReady = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
+    Object.assign(this, { config, kept, runner, onUnpaired, onChange, onReady, WebSocket, now });
     this.nonces = new Nonces(now, nonceStore);
     this.ws = null;
     this.ready = false;
@@ -118,6 +118,8 @@ export class Relay {
         this.retries = 0;
         this.pinger = setInterval(() => this.runner.active && this.send({ type: "ping" }), PING_MS);
         this.onChange();
+        // Connected and proved: the moment to give planque this Chrome's push subscription (push.js).
+        Promise.resolve(this.onReady()).catch(() => {});
         return;
       }
       return this.close(); // anything else before the proofs ends the connection

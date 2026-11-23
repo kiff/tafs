@@ -16,7 +16,7 @@ it changes all three.
 
 | File | What it does |
 |---|---|
-| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`, `declarativeNetRequest` (to fence a run's tabs; it widens no access). **Every https site at install** (`host_permissions: ["https://*/*"]`), as Claude in Chrome asks: one Chrome prompt when the extension is installed, never one per site (the owner's choice, 23 Nov; `chrome/store/test_manifest.py` pins it). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
+| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`, `declarativeNetRequest` (to fence a run's tabs; it widens no access), `notifications` (Chrome asks it of an extension that receives Web Push; the extension shows none, see "Waking the extension"). **Every https site at install** (`host_permissions: ["https://*/*"]`), as Claude in Chrome asks: one Chrome prompt when the extension is installed, never one per site (the owner's choice, 23 Nov; `chrome/store/test_manifest.py` pins it). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
 | `chrome/src/sw.js` | The service worker: keeps the pairing, connects to planque when paired, runs what planque sends, answers the side panel. |
 | `chrome/src/relay.js` | The one connection to planque, always opened by the extension. Nothing connects in. |
 | `chrome/src/protocol.js` | Checks each step as planque's and signs each answer. |
@@ -223,12 +223,23 @@ a dead connection), and the apps (the replace choice at pairing, the Chrome on e
     once, then after 2, 4, 8, 16 and 30 seconds. Idle, the next alarm opens it.
   - A message carries at most 128 KB. A result over 120 KB is answered `page_too_large` instead, signed as any result.
 - **Keepalive:** `{type: "ping"}` / `{type: "pong"}` every 20 s while a run is on. MV3 keeps the service worker alive
-  while messages flow.
+  while messages flow. An idle connection has none (a keepalive for every idle Chrome would cost a message each 20 s per install).
 - **The allowlist of released builds** is planque's `deploy/chrome-builds.txt`, one released build per line
   (`<manifest sha256> <version>`). The release workflow opens the planque PR that adds a line, and two people merge it.
   Removing a line revokes that build at the next deploy.
-- **While no run is on,** the extension wakes on an alarm every minute and connects, so planque can hand it a step. The
-  connection drops after a minute with no run.
+- **While no run is on,** the extension wakes on an alarm every minute and connects, so planque can hand it a step, and it
+  **never closes the connection for being idle** (it did, after a minute, and a step that came while it was closed was refused at once: the
+  owner's runs reached their Chrome about half the time). Chrome still stops an idle service worker after about 30 s, which
+  drops the socket, so the alarm is the stopgap and the push below is the cure.
+- **Waking the extension** (`chrome/src/push.js`): a service worker Chrome has stopped can't be reached, so the extension gives planque a
+  **Web Push subscription**, and planque sends **one silent push** (no data) when a taf needs this Chrome and it isn't connected; the worker
+  wakes on the `push` event and connects. After each welcome the extension sends `{type: "push", subscription: {endpoint, keys: {p256dh, auth}},
+  sig}`, the sig being this Chrome's key over `tafs-chrome/push/v1` and `{chrome_id, subscription}` (an https endpoint and the two keys,
+  nothing else). planque's **VAPID public key is pinned in the build** (`config.js` `pushKey`, public, one per environment, like the step key), so
+  nothing at connect can swap it; a build with none subscribes to nothing and goes on connecting by its alarm. The subscription is silent
+  (`userVisibleOnly: false`, from Chrome 121), which is why the manifest asks `notifications`: Chrome asks it of an extension that receives push, and warns at install.
+  **The extension never shows a notification**, and the push carries no data. On Chrome before 121 the subscribe is refused and the extension
+  falls back to its alarm. Unpairing drops the subscription. At 10,000 users it costs nothing idle: one push per run start.
 - **`manifest_hash`** is the SHA-256 of the installed `manifest.json`, as the Chrome Web Store serves it, written as **64
   lower-case hex characters** in the pairing and in the relay's `hello` alike (not base64url, which every other value in this
   protocol uses). The release workflow writes each released build's hash into planque's allowlist in the same form

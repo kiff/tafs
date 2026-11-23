@@ -358,7 +358,7 @@ class FakeSocket {
   }
 }
 
-async function relayWith(p, { runner } = {}) {
+async function relayWith(p, { runner, onReady } = {}) {
   const ext = await newKeyPair();
   const handled = [];
   let wiped = false;
@@ -367,6 +367,7 @@ async function relayWith(p, { runner } = {}) {
     kept: { keys: ext, pairing: { chromeId: "chr_1" } },
     runner: runner || { active: false, handle: async (s) => (handled.push(s), { page: { read_id: "rd_1", url: "https://shop.example/" } }), stop: async () => {} },
     onUnpaired: () => (wiped = true),
+    ...(onReady ? { onReady } : {}),
     WebSocket: FakeSocket,
     now: () => NOW,
   });
@@ -407,6 +408,23 @@ test("the relay takes steps only after both ends proved themselves", async () =>
   assert.equal(handled.length, 1, "an unsigned step never reaches the runner");
   assert.equal(ws.sent.at(-1).error.code, "bad_step");
   relay.close();
+});
+
+test("the relay says it is ready only once the welcome proved planque, so a push subscription goes only to planque", async () => {
+  const p = await planque();
+  let ready = 0;
+  const { relay, ws } = await relayWith(p, { onReady: () => ready++ });
+  await ws.deliver({ type: "challenge", nonce_p: "np" });
+  assert.equal(ready, 0, "not before the welcome");
+  await ws.deliver({ type: "welcome", sig: await sign(p.keys.privateKey, LABEL.welcome, { chrome_id: "chr_1", nonce_p: "np", nonce_e: ws.sent.at(-1).nonce_e }) });
+  assert.equal(ready, 1);
+  const forged = await relayWith(p, { onReady: () => ready++ });
+  await forged.ws.deliver({ type: "challenge", nonce_p: "np" });
+  const other = await planque();
+  await forged.ws.deliver({ type: "welcome", sig: await sign(other.keys.privateKey, LABEL.welcome, { chrome_id: "chr_1", nonce_p: "np", nonce_e: forged.ws.sent.at(-1).nonce_e }) });
+  assert.equal(ready, 1, "a welcome that isn't planque's gets nothing");
+  relay.close(); // its keepalive timer would hold the test process open
+  forged.relay.close();
 });
 
 test("a step before the welcome, or a forged welcome, ends the connection", async () => {
