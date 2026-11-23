@@ -3954,6 +3954,24 @@ final class AppModel: ObservableObject {
         capabilities.map { $0.contains("cards.manage") } ?? true
     }
 
+    /// The release card's switch (`SealedRelease.enabled`): off until KIFF serves a sealed fill's block. Tests turn it on to
+    /// check the card's signing; nothing else does.
+    var sealedReleaseOn = SealedRelease.enabled
+
+    /// Why the phone won't sign `call`'s release, by its own checks; nil where it may, or where it isn't a sealed fill the card
+    /// can draw. The sites are the ones this phone's own key signed for that Chrome on the account's connections
+    /// (`ChromeSwitch.signedSites`, `tafs-chrome/sites/v1`), never sites planque relays. iPhone and iPad sign no sensitive-site
+    /// allowance, so a sensitive site is always refused here.
+    func fillRefusal(_ call: HeldCall) -> SealedRelease.Refusal? {
+        guard let sealed = call.sealedFill else { return nil }
+        let fill = sealed.fill(expiresAt: call.expiresAt)
+        let key = signer.approvalPublicKeyDER
+        let sites = grants.filter { $0.request.browser?.chrome == fill.chromeID }
+            .compactMap { ChromeSwitch.signedSites(of: $0, phoneKey: key) }.flatMap { $0 }
+        return SealedRelease.refusal(fill, pairedChromes: Set((chromes ?? []).map(\.id)), signedSites: sites,
+                                     allowedSensitive: [], now: clock())
+    }
+
     /// Where a held call from KIFF is answered while the phone cannot answer it.
     func answerPage(for call: HeldCall) -> URL? {
         call.kiffID.map { kiff.answerPage(for: $0) }
@@ -3970,10 +3988,13 @@ final class AppModel: ObservableObject {
         if fromNotification { signer.allowUnlockReuse() }
         defer { if fromNotification { signer.endUnlockReuse() } }
         guard held.contains(where: { same($0, call) }) else { return }
-        // A sign-in fill is never allowed without its release, which this app can't make yet: no caller (a notification's
-        // action, an approval window, anything later) signs an allowing answer for one. Refuse still goes.
+        // A sign-in fill is never allowed without its release (docs/chrome.md, "The phone's release card"): only Approve once
+        // on the release card, with the card on, a block that checks out, and a fresh Face ID of its own. Never Extra room,
+        // a notification's action, an unlock reused, an answer already confirmed, or anything else. Refuse still goes.
+        let sealed: SealedFill? = sealedReleaseOn && answer == .approveOnce && !fromNotification && !confirmed
+            ? (call.sealedFill ?? held.first(where: { same($0, call) })?.sealedFill) : nil
         if call.needsRelease == true || held.first(where: { same($0, call) })?.needsRelease == true,
-           answer == .approveOnce || answer == .extraRoom {
+           answer == .approveOnce || answer == .extraRoom, sealed == nil {
             lastError = Words.Chrome.releaseUnreadable
             return
         }
@@ -4005,8 +4026,43 @@ final class AppModel: ObservableObject {
                                        mac: Words.NeedsYou.Prompt.answerMac(summary: call.proposed.summary))
         let signature: String
         var signed: KIFFClient.AnswerSignature?
+        var release: SealedRelease.Release?
+        if let sealed {
+            // The phone's own checks, whatever planque says, before any Face ID; then the release and the answer under it.
+            guard call.kiffID != nil, kiffTenant != nil, call.accountingVersion != nil, sessionHasApprovalKey else {
+                lastError = approvalKeyLostWords
+                return
+            }
+            if let refused = fillRefusal(call) {
+                lastError = SealedRelease.words(refused) ?? Words.NeedsYou.expiredLine
+                return
+            }
+            guard SealedRelease.part(sealed.sealed) != nil else {
+                lastError = Words.Chrome.releaseUnreadable
+                return
+            }
+        }
         do {
-            if let kiffID = call.kiffID, let tenant = kiffTenant, let version = call.accountingVersion {
+            if let sealed, let kiffID = call.kiffID, let tenant = kiffTenant, let version = call.accountingVersion,
+               let part = SealedRelease.part(sealed.sealed) {
+                // A sealed fill: one Face ID naming what's released, then two signatures of the approval key under it
+                // (the step's own context; the Secure Enclave key still checks it for each). The answer signs the block's
+                // hash as a ninth line, so it signs what the card drew; the release's 60 s start once the owner allowed.
+                // Nothing is sent until both are signed.
+                let signedAt = ISO8601DateFormatter().string(from: clock())
+                let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: kiffID, answer: Self.kiffAnswer(answer),
+                                                       nextStep: nil, accountingVersion: version, signedAt: signedAt,
+                                                       browserSHA256: sealed.browserSHA256)
+                signature = try await signer.signApproval(message, reason: SealedRelease.prompt(part, site: call.browser?.site ?? ""))
+                guard clock() < call.expiresAt else {
+                    lastError = Words.NeedsYou.expiredLine
+                    return
+                }
+                release = try SealedRelease.release(sealed.fill(expiresAt: call.expiresAt), now: clock()) { bytes in
+                    try signer.signApprovalConfirmed(bytes)
+                }
+                signed = KIFFClient.AnswerSignature(signedAt: signedAt, value: signature)
+            } else if let kiffID = call.kiffID, let tenant = kiffTenant, let version = call.accountingVersion {
                 // KIFF's message: this hold, this answer, the hold's version, now.
                 let signedAt = ISO8601DateFormatter().string(from: clock())
                 var nextStep: String?
@@ -4041,7 +4097,7 @@ final class AppModel: ObservableObject {
         if let kiffID = call.kiffID {
             do {
                 switch answer {
-                case .approveOnce: try await kiff.approveOnce(kiffID, signature: signed)
+                case .approveOnce: try await kiff.approveOnce(kiffID, signature: signed, release: release)
                 case .refuse: try await kiff.reject(kiffID, signature: signed)
                 case .nextStep(let step): try await kiff.reject(kiffID, nextStep: step, signature: signed)
                 case .extraRoom: try await kiff.changeCard(kiffID, signature: signed)

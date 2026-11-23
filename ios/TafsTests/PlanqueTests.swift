@@ -1315,3 +1315,178 @@ extension PlanqueTests {
         Keychain.delete(AppModel.planqueAccount)
     }
 }
+
+// MARK: The release card (docs/chrome.md, "The phone's release card")
+
+/// A signer whose approval key is a real P-256 key, signing both the answer and the release under one Face ID: each prompt
+/// and each confirmed signature recorded.
+@MainActor
+final class ReleaseSigner: ApprovalSigning {
+    let key = P256.Signing.PrivateKey()
+    let approvalKey = P256.Signing.PrivateKey()
+    var prompts: [String] = []
+    var confirmed: [Data] = []
+    var publicKeyDER: Data { key.publicKey.derRepresentation }
+    var approvalPublicKeyDER: Data { approvalKey.publicKey.derRepresentation }
+    func sign(_ message: Data, reason: String) async throws -> String {
+        prompts.append(reason)
+        return try key.signature(for: message).derRepresentation.base64EncodedString()
+    }
+    func signConfirmed(_ message: Data) throws -> String { try key.signature(for: message).derRepresentation.base64EncodedString() }
+    func signApproval(_ message: Data, reason: String) async throws -> String {
+        prompts.append(reason)
+        return try approvalKey.signature(for: message).derRepresentation.base64EncodedString()
+    }
+    func signApprovalConfirmed(_ message: Data) throws -> String {
+        confirmed.append(message)
+        return try approvalKey.signature(for: message).derRepresentation.base64EncodedString()
+    }
+}
+
+extension PlanqueTests {
+    /// planque's held block for a sealed fill (`sealedBlock`), as KIFF serves it, and KIFF's hash of it.
+    private static func sealedBlock(origin: String = "https://login.shop.example", chrome: String = "chr_1") throws -> (json: String, sha256: String) {
+        let json = #"{"v":"planque.browser.v1","tenant":"t_01","op":"op_9","site":"shop.example","origin":"\#(origin)","action_words":"Fill the password","context":{"title":"Sign in – Shop","text":""},"chrome":{"id":"\#(chrome)","name":"Work Mac"},"release_fields":{"chrome_id":"chr_1","op":"op_9","sealed":"sec_Ab3:password","origin":"https://login.shop.example","field_ref":"f2","read_id":"rd_1"}}"#
+        return (json, try XCTUnwrap(JCS.sha256(try JCS.parse(Data(json.utf8)))))
+    }
+
+    /// Signed in, with planque set up, this phone's approval key held by KIFF, the Chrome `chr_1` paired and one connection on it
+    /// whose sites this phone's key signed, and `held` as KIFF's held calls.
+    private func releaseModel(_ signer: ReleaseSigner, held: String) async throws -> AppModel {
+        let (kiff, planque, session) = clients()
+        Keychain.delete(AppModel.planqueAccount)
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: session)
+        let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: StubVendor())
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, held)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}]}"#)
+        StubProtocol.responses["GET /v1/me/devices"] = (200, #"{"devices":[{"id":"dev_phone01","this_device":true}]}"#)
+        StubProtocol.responses["POST /v1/me/device/approval-key"] = (200, #"{"fingerprint":""# + KIFFClient.fingerprint(signer.approvalPublicKeyDER) + #""}"#)
+        await model.useSession("kiff_dev_x", tenant: "t_01")
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (200, #"{"tenant":"t_01","device":"ab12","kept":true}"#)
+        let sitesSig = try ChromePairing.rawSignature(fromDER: signer.approvalKey.signature(
+            for: try ChromePairing.sitesBytes(chromeID: "chr_1", grant: "g1", sites: ["shop.example"])).derRepresentation.base64EncodedString())
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[{"id":"g1","status":"connected","text":"","digest":"d","events":[],"chrome_sites_sig":"\#(sitesSig)","request":{"server":"s","agent":"a","tools":[],"browser":{"driver":"extension","chrome":"chr_1","chrome_name":"Work Mac","sites":["shop.example"]}}}]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}"#)
+        _ = await model.setUpPlanque()
+        await model.refreshChromes()
+        await model.refreshConnections()
+        return model
+    }
+
+    private static func heldFill(block: String, sha256: String?) -> String {
+        #"{"exceptions":[{"id":"ce_1","proposal_id":"p1","subject":"rae-k3f9","action":"browse_act","title":"Fill in Chrome","entity_id":"st_1","status":"held","breaches":[{"outcome":"held_always","reason":"A saved sign-in always asks you"}],"created_at":"2026-10-14T10:41:00Z","expires_at":"2099-10-14T10:51:00Z","accounting_version":2,"browser":\#(block)\#(sha256.map { #","browser_sha256":"\#($0)""# } ?? "")}]}"#
+    }
+
+    /// A held sealed fill is drawn as a release card only when its block's own JCS hash is KIFF's, and its drawn origin and
+    /// Chrome are the signed ones. Anything else stays a fill offering Refuse only.
+    func testOnlyABlockWhoseHashIsKIFFsIsARelease() throws {
+        let (block, sha) = try Self.sealedBlock()
+        func call(_ held: String) throws -> HeldCall {
+            struct List: Decodable { let exceptions: [KIFFClient.CardException] }
+            let e = try KIFFClient.decoder.decode(List.self, from: Data(held.utf8)).exceptions[0]
+            return KIFFMapping.held(e, tafID: UUID())
+        }
+        let good = try call(Self.heldFill(block: block, sha256: sha))
+        XCTAssertEqual(good.needsRelease, true)
+        XCTAssertFalse(good.approvableOnce)
+        XCTAssertEqual(good.sealedFill, SealedFill(chromeID: "chr_1", op: "op_9", sealed: "sec_Ab3:password", origin: "https://login.shop.example",
+                                                   fieldRef: "f2", readID: "rd_1", browserSHA256: sha))
+        XCTAssertEqual(try call(Self.heldFill(block: block, sha256: sha.uppercased())).sealedFill?.browserSHA256, sha, "hex in either case, signed lower")
+        for (why, held) in [
+            ("another hash", Self.heldFill(block: block, sha256: String(repeating: "0", count: 64))),
+            ("no hash", Self.heldFill(block: block, sha256: nil)),
+            ("drawn origin isn't the signed one", Self.heldFill(block: try Self.sealedBlock(origin: "https://evil.example").json,
+                                                                sha256: try Self.sealedBlock(origin: "https://evil.example").sha256)),
+            ("drawn Chrome isn't the signed one", Self.heldFill(block: try Self.sealedBlock(chrome: "chr_2").json,
+                                                                sha256: try Self.sealedBlock(chrome: "chr_2").sha256)),
+        ] {
+            let c = try call(held)
+            XCTAssertEqual(c.needsRelease, true, why)
+            XCTAssertNil(c.sealedFill, why)
+        }
+    }
+
+    /// With the card on: one Face ID naming what's released, then the release and the answer, both the approval key's.
+    /// The answer signs the block's hash as its ninth line; the release signs the vector's fields with a new nonce and 60 s;
+    /// both go in one approve-once. With the card off, or from a notification, nothing is signed or sent.
+    func testAllowingASealedFillSignsTheReleaseAndTheBlocksHashUnderOneFaceID() async throws {
+        let (block, sha) = try Self.sealedBlock()
+        let signer = ReleaseSigner()
+        let model = try await releaseModel(signer, held: Self.heldFill(block: block, sha256: sha))
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
+        let call = try XCTUnwrap(model.held.first)
+        XCTAssertNotNil(call.sealedFill)
+        let approves = { self.sent("POST", "api.test", "/v1/me/card-exceptions/ce_1/approve-once") }
+
+        // Off (as shipped): Refuse only, nothing asked.
+        XCTAssertFalse(model.sealedReleaseOn)
+        signer.prompts = []
+        await model.answer(call, with: .approveOnce)
+        XCTAssertEqual(model.lastError, Words.Chrome.releaseUnreadable)
+        XCTAssertTrue(signer.prompts.isEmpty)
+        XCTAssertTrue(approves().isEmpty)
+
+        model.sealedReleaseOn = true
+        XCTAssertNil(model.fillRefusal(call), model.lastError ?? "")
+        // Never from a notification's action.
+        await model.answer(call, with: .approveOnce, fromNotification: true)
+        XCTAssertTrue(signer.prompts.isEmpty)
+        XCTAssertTrue(approves().isEmpty)
+
+        await model.answer(call, with: .approveOnce)
+        XCTAssertEqual(signer.prompts, [Words.Chrome.releasePromptPassword(site: "shop.example")], "one Face ID, naming the part and site")
+        let sent = try XCTUnwrap(approves().first, model.lastError ?? "")
+        let body = try XCTUnwrap(try JSONSerialization.jsonObject(with: try XCTUnwrap(sent.httpBody)) as? [String: Any])
+        let release = try XCTUnwrap(body["release"] as? [String: Any])
+        XCTAssertEqual(release["chrome_id"] as? String, "chr_1")
+        XCTAssertEqual(release["op"] as? String, "op_9")
+        XCTAssertEqual(release["origin"] as? String, "https://login.shop.example")
+        let nonce = try XCTUnwrap(release["nonce"] as? String)
+        let exp = try XCTUnwrap((release["exp"] as? NSNumber)?.int64Value)
+        let releaseBytes = try SealedRelease.bytes(chromeID: "chr_1", op: "op_9", sealed: "sec_Ab3:password", origin: "https://login.shop.example",
+                                                   fieldRef: "f2", readID: "rd_1", nonce: nonce, exp: exp)
+        let releaseSig = try P256.Signing.ECDSASignature(rawRepresentation: try XCTUnwrap(ChromePairing.base64URLDecoded(try XCTUnwrap(release["sig"] as? String))))
+        XCTAssertTrue(signer.approvalKey.publicKey.isValidSignature(releaseSig, for: releaseBytes), "the approval key's, over the vector's fields")
+        // The answer: kiff.answer.v1's eight lines, then the block's hash.
+        let signature = try XCTUnwrap(body["signature"] as? [String: Any])
+        let signedAt = try XCTUnwrap(signature["signed_at"] as? String)
+        let message = KIFFClient.answerMessage(tenant: "t_01", exceptionID: "ce_1", answer: "approve-once", nextStep: nil,
+                                               accountingVersion: 2, signedAt: signedAt, browserSHA256: sha)
+        XCTAssertEqual(String(decoding: message, as: UTF8.self).split(separator: "\n", omittingEmptySubsequences: false).last.map(String.init), sha)
+        let answerSig = try P256.Signing.ECDSASignature(derRepresentation: try XCTUnwrap(Data(base64Encoded: try XCTUnwrap(signature["value"] as? String))))
+        XCTAssertTrue(signer.approvalKey.publicKey.isValidSignature(answerSig, for: message), "the answer signs the block's hash")
+        XCTAssertEqual(signer.confirmed, [releaseBytes], "the release under the same Face ID")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// The phone's own checks, whatever planque says: a Chrome it isn't paired with, or a site no connection of this phone's
+    /// signed for that Chrome, signs nothing.
+    func testAReleaseIsRefusedForAChromeOrSiteThisPhoneDidntSign() async throws {
+        let signer = ReleaseSigner()
+        let (block, sha) = try Self.sealedBlock()
+        let model = try await releaseModel(signer, held: Self.heldFill(block: block, sha256: sha))
+        model.sealedReleaseOn = true
+        let call = try XCTUnwrap(model.held.first)
+        XCTAssertNil(model.fillRefusal(call))
+        // Unpaired: the Chrome is gone from planque's list.
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[]}"#)
+        await model.refreshChromes()
+        XCTAssertEqual(model.fillRefusal(call), .chrome)
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}"#)
+        await model.refreshChromes()
+        // The connection's sites signed by another key: not this phone's, so not a site it connected.
+        let otherSig = try ChromePairing.rawSignature(fromDER: P256.Signing.PrivateKey().signature(
+            for: try ChromePairing.sitesBytes(chromeID: "chr_1", grant: "g1", sites: ["shop.example"])).derRepresentation.base64EncodedString())
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[{"id":"g1","status":"connected","text":"","digest":"d","events":[],"chrome_sites_sig":"\#(otherSig)","request":{"server":"s","agent":"a","tools":[],"browser":{"driver":"extension","chrome":"chr_1","sites":["shop.example"]}}}]}"#)
+        await model.refreshConnections()
+        XCTAssertEqual(model.fillRefusal(call), .notSigned)
+        signer.prompts = []
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
+        await model.answer(call, with: .approveOnce)
+        XCTAssertEqual(model.lastError, Words.Chrome.releaseNotConnected)
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID for a release the phone won't sign")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/card-exceptions/ce_1/approve-once").isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+}

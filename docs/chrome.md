@@ -613,6 +613,24 @@ signed over the vector's bytes. **Android's card is built, off too:**
   (`TolerantBrowser`): a `sealed_fill` or `fill` that isn't null, or a block that isn't an object. So a fill whose block can't be
   drawn (no site, say) still can't be allowed, and one bad block never hides the other held calls. Tests: `SealedFillCardTest`.
 
+**iPhone and iPad's card is built, off too** (`SealedRelease.enabled = false`; `AppModel.sealedReleaseOn` for tests):
+- **What it reads: planque's block as KIFF serves it** (planque's `sealedBlock`): `browser.release_fields`, `{chrome_id, op, sealed,
+  origin, field_ref, read_id}`, copied byte for byte. A block with `release_fields`, `sealed_fill` or `fill` (not null) is a fill and
+  offers Refuse only, whatever else it says. The card is drawn only when the served `browser` block's own JCS SHA-256 (lower-case
+  hex) is KIFF's `browser_sha256`, and the block's drawn `origin` and `chrome.id` are the signed ones (`KIFFMapping.sealedFill`),
+  so what the owner reads is what's signed. The page's words (`site`, `action_words`, `context.title`) are drawn as plain text
+  only (`BrowserStepBlock`, `Text(verbatim:)`), never a link or anything tappable.
+- **Its checks are the phone's own** (`SealedRelease.refusal`, `AppModel.fillRefusal`): the Chrome is paired; the origin is
+  `https` with no path or user, and within a site **this phone's own key signed** for that Chrome on one of the account's
+  connections (`ChromeSwitch.signedSites`, `tafs-chrome/sites/v1`), never sites planque relays. iPhone and iPad sign no
+  sensitive-site allowance, so a sensitive site is always refused there.
+- **Allow this fill** asks **one** Face ID, naming the part and the site (`chrome.release_prompt_password` or
+  `_username`), never from a notification's action, an unlock reused or an answer already confirmed. Under it, the approval key
+  signs the answer, `kiff.answer.v1` with the block's hash as a ninth line, then the release over the vector's bytes, with a new
+  16-byte nonce and `exp` 60 s after the Face ID. A hold that ended meanwhile sends nothing. Both go in one `approve-once`,
+  `release` beside `signature` (`KIFFClient.approveOnce`). Tests: `SealedReleaseTests` (the vector), `PlanqueTests` (the card's
+  block, checks and signing), `BrowserStepCardTests` (planque's block is a fill).
+
 ## A step handed to the person
 
 A taf sometimes needs the person to do one thing in the page (a card number, a check, a click on Send) and carries on after. It hands the

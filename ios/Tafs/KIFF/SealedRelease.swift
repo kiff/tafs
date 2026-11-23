@@ -149,10 +149,10 @@ enum SealedRelease {
     /// The release for `fill`: a new nonce, `exp` 60 s after `now` (the moment the owner allowed), and `sign`'s signature (the
     /// approval key's DER, base64, behind Face ID) as raw r‖s. The caller checks `refusal` first, so a release is never made for a
     /// fill the card couldn't draw.
-    static func release(_ fill: Fill, now: Date, nonce: String = newNonce(), sign: (Data) async throws -> String) async throws -> Release {
+    static func release(_ fill: Fill, now: Date, nonce: String = newNonce(), sign: (Data) throws -> String) throws -> Release {
         let exp = Int64((now.timeIntervalSince1970 * 1000).rounded(.down)) + validMilliseconds
-        let der = try await sign(try bytes(chromeID: fill.chromeID, op: fill.op, sealed: fill.sealed, origin: fill.origin,
-                                           fieldRef: fill.fieldRef, readID: fill.readID, nonce: nonce, exp: exp))
+        let der = try sign(try bytes(chromeID: fill.chromeID, op: fill.op, sealed: fill.sealed, origin: fill.origin,
+                                     fieldRef: fill.fieldRef, readID: fill.readID, nonce: nonce, exp: exp))
         return Release(chromeID: fill.chromeID, op: fill.op, origin: fill.origin, nonce: nonce, exp: exp,
                        sig: try ChromePairing.rawSignature(fromDER: der))
     }

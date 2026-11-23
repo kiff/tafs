@@ -77,11 +77,11 @@ final class SealedReleaseTests: XCTestCase {
 
     /// A release: a new 16-byte nonce, `exp` 60 s after the yes, and the approval key's signature, raw r‖s, over the vector's
     /// shape of bytes, which a P-256 key verifies.
-    func testAReleaseIsSignedOverItsOwnBytesWithANewNonceAndSixtySeconds() async throws {
+    func testAReleaseIsSignedOverItsOwnBytesWithANewNonceAndSixtySeconds() throws {
         let key = P256.Signing.PrivateKey()
         let now = Date(timeIntervalSince1970: 1_795_430_400)
         let f = fill()
-        let release = try await SealedRelease.release(f, now: now) { bytes in
+        let release = try SealedRelease.release(f, now: now) { bytes in
             try key.signature(for: bytes).derRepresentation.base64EncodedString()
         }
         XCTAssertEqual(release.exp, 1_795_430_400_000 + 60_000)

@@ -268,7 +268,7 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | 13 | An API door's address only ever on tafs cloud's own host (as Windows and Linux) | done (tafs#1768) | done (tafs#1770) | doors.md |
 | 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | done (tafs#1859) | done (tafs#1761) | android-app.md, "Pairing a Chrome" |
 | 15 | A re-pairing after a reinstall starts on the one Chrome alike | done (tafs#1780) | done (tafs#1781) | chrome.md, "Your Chrome" 1 |
-| 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | not started (designed: tafs#1786) | built, off (tafs#1830, #1837): waits on planque handing a sealed fill and its release to the Chrome (KIFF checks the release on an allow since kiff/cloud#124) | chrome.md, "The phone's release card" |
+| 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | built, off (this PR): reads planque's block (`release_fields`), checks sites against this phone's own signed grants | built, off (tafs#1830, #1837): waits on planque handing a sealed fill and its release to the Chrome (KIFF checks the release on an allow since kiff/cloud#124) | chrome.md, "The phone's release card" |
 
 ## Your Chrome
 
@@ -296,7 +296,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | A step handed to the person ("Your turn": the taf asks, the person does it) | done (tafs#1806) | the extension types, clicks and fills nothing; planque's `browse_hand` tools are still to land |
 | A run in the owner's window, its tabs kept as "· done" until that taf's next run | done (tafs#1782, #1813, #1815) | a tab the person moved or is using is never closed |
 | Re-pairing replaces (Your Chrome 1), one fingerprint (5), isolation (6) | done | |
-| Sealed values (Saved sign-ins) | partial | the extension checks the release; the phone's card that signs `tafs-chrome/release/v1` is designed ([chrome.md](chrome.md), "The phone's release card") and isn't built |
+| Sealed values (Saved sign-ins) | partial | the extension checks the release; the phones' cards that sign `tafs-chrome/release/v1` are built and off ([chrome.md](chrome.md), "The phone's release card"), waiting on KIFF's served block and planque's switch |
 | Screenshots of a run's acts | partial | built; off (`config.js`) until planque keeps them and the privacy words are live |
 | In the Chrome Web Store | partial | CI builds the package (`chrome-package.yml`); the upload waits on the owner's yes |
 | Approving a held step in Chrome | not for it | the extension is view-only; the card is the phone's (iOS `BrowserStepBlock`, Android `NeedsYouView`) |

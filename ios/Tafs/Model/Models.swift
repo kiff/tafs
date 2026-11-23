@@ -501,6 +501,27 @@ struct HeldCall: Identifiable, Hashable, Codable {
     /// A step a taf wants to take in a paired Chrome (docs/chrome.md, "The approval card"): which site, what
     /// it does there in planque's words, and what the page showed. Nil for any other call.
     var browser: BrowserStep?
+    /// A sealed fill the release card can draw and sign (docs/chrome.md, "The phone's release card"); nil for any other call,
+    /// and for a fill whose block doesn't check out, which then offers Refuse only.
+    var sealedFill: SealedFill?
+}
+
+/// A held sealed fill, as the release card signs it: planque's `release_fields`, copied byte for byte, and KIFF's hash of the
+/// block the card draws (`browser_sha256`), which the answer signs. Made only when the block's own JCS hash is KIFF's, and its
+/// drawn origin and Chrome are the signed ones, so what the owner reads is what's signed.
+struct SealedFill: Codable, Hashable {
+    let chromeID: String
+    let op: String
+    let sealed: String
+    let origin: String
+    let fieldRef: String
+    let readID: String
+    let browserSHA256: String
+
+    /// The release's fill, ending with the hold.
+    func fill(expiresAt: Date) -> SealedRelease.Fill {
+        SealedRelease.Fill(chromeID: chromeID, op: op, sealed: sealed, origin: origin, fieldRef: fieldRef, readID: readID, expiresAt: expiresAt)
+    }
 }
 
 /// A held browser step, as the card draws it: each line made safe to draw, and never read for anything.

@@ -716,6 +716,10 @@ final class KIFFClient {
         /// and the total are KIFF's own `taf_reason` and amount, as for any hold.
         var browserBlock: BrowserBlock? = nil
         var browser: BrowserStep? { browserBlock?.step }
+        /// KIFF's hash of the block it kept (lower-case hex SHA-256 of its JCS): a sealed fill's answer signs it. One that
+        /// isn't text is none, never the hold.
+        var browserSHA256Text: LenientItem<String>? = nil
+        var browserSHA256: String? { browserSHA256Text?.value }
         /// The held step is a sign-in fill (planque's `browser.release_fields`, or `sealed_fill` or a plain `fill`): allowing it takes a
         /// release from this phone's approval key (docs/chrome.md, "never an allowing answer without its release"),
         /// which iPhone and iPad can't make yet. Read apart from the step card, so a fill is known even when its card
@@ -727,6 +731,24 @@ final class KIFFClient {
         struct BrowserBlock: Decodable, Equatable {
             var step: BrowserStep? = nil
             var needsRelease = false
+            /// The block as served, kept whole: a sealed fill's answer signs its JCS SHA-256 (`browser_sha256`), so the card
+            /// draws only a block whose own hash is KIFF's.
+            var raw: JCS.Value? = nil
+            /// A sealed fill's signed fields (planque's `release_fields`), each a string as sent; nil when any isn't.
+            var releaseFields: ReleaseFields? = nil
+
+            /// planque's `release_fields`: what the release signs, copied byte for byte.
+            struct ReleaseFields: Decodable, Equatable {
+                let chromeID: String
+                let op: String
+                let sealed: String
+                let origin: String
+                let fieldRef: String
+                let readID: String
+                enum CodingKeys: String, CodingKey {
+                    case chromeID = "chrome_id", op, sealed, origin, fieldRef = "field_ref", readID = "read_id"
+                }
+            }
             private struct Key: CodingKey {
                 var stringValue: String; var intValue: Int? { nil }
                 init(stringValue: String) { self.stringValue = stringValue }
@@ -735,6 +757,7 @@ final class KIFFClient {
             init(step: BrowserStep? = nil, needsRelease: Bool = false) { self.step = step; self.needsRelease = needsRelease }
             init(from decoder: Decoder) throws {
                 step = try? BrowserStep(from: decoder)
+                raw = (try? JCS.Decoded(from: decoder))?.value
                 // A block that isn't an object can't be read: it's never allowed on a guess, so it counts as a fill
                 // (as on every other app). JSON null is no block at all (the hold's own field is nil then).
                 guard let c = try? decoder.container(keyedBy: Key.self) else { needsRelease = true; return }
@@ -743,6 +766,7 @@ final class KIFFClient {
                 needsRelease = ["release_fields", "sealed_fill", "fill"].contains { k in
                     c.contains(Key(stringValue: k)) && !((try? c.decodeNil(forKey: Key(stringValue: k))) ?? true)
                 }
+                releaseFields = try? c.decodeIfPresent(ReleaseFields.self, forKey: Key(stringValue: "release_fields"))
             }
         }
 
@@ -791,7 +815,7 @@ final class KIFFClient {
         enum CodingKeys: String, CodingKey {
             case proposalID = "proposal_id", canApproveOnce = "can_approve_once", reasonText = "reason_text"
             case tafAboutText = "taf_about", tafReasonText = "taf_reason"
-            case browserBlock = "browser"
+            case browserBlock = "browser", browserSHA256Text = "browser_sha256"
             case id, subject, action, title, arguments, status, breaches, parameters, reason, kind, count
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"
@@ -1141,18 +1165,23 @@ final class KIFFClient {
     private struct AnswerBody: Encodable {
         var nextStep: String?
         var signature: AnswerSignature?
+        /// A sealed fill's release (docs/chrome.md, "The phone's release card"), beside the signature: KIFF keeps it and hands
+        /// it to planque with the call. Absent for any other answer.
+        var release: SealedRelease.Release? = nil
 
-        enum CodingKeys: String, CodingKey { case nextStep = "next_step", signature }
+        enum CodingKeys: String, CodingKey { case nextStep = "next_step", signature, release }
     }
 
     /// What the phone signs to answer a held call: KIFF's signed answer message,
     /// `kiff.answer.v1`, one field per line.
+    /// `browserSHA256`: only for a held sealed fill, the block's hash (KIFF's `browser_sha256`) as a ninth line, so the answer
+    /// signs what the card drew. With none, there's no ninth line.
     static func answerMessage(tenant: String, exceptionID: String, answer: String, nextStep: String?,
-                              note: String? = nil, accountingVersion: Int, signedAt: String) -> Data {
+                              note: String? = nil, accountingVersion: Int, signedAt: String, browserSHA256: String? = nil) -> Data {
         let noteHash = note.flatMap { $0.isEmpty ? nil : $0 }
             .map { SHA256.hash(data: Data($0.utf8)).map { String(format: "%02x", $0) }.joined() } ?? ""
         let lines = ["kiff.answer.v1", tenant, exceptionID, answer, nextStep ?? "", noteHash,
-                     String(accountingVersion), signedAt]
+                     String(accountingVersion), signedAt] + (browserSHA256.map { [$0] } ?? [])
         return Data(lines.joined(separator: "\n").utf8)
     }
 
@@ -1202,9 +1231,9 @@ final class KIFFClient {
         return Data(["kiff.request.v1", tenant, method, uri, bodyHash, signedAt].joined(separator: "\n").utf8)
     }
 
-    func approveOnce(_ id: String, signature: AnswerSignature? = nil) async throws {
+    func approveOnce(_ id: String, signature: AnswerSignature? = nil, release: SealedRelease.Release? = nil) async throws {
         let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/approve-once",
-                                      body: AnswerBody(signature: signature))
+                                      body: AnswerBody(signature: signature, release: release))
     }
 
     /// Refuses a held call; `nextStep` is one of the Card's next steps ("return first").

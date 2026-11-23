@@ -325,7 +325,19 @@ enum KIFFMapping {
         // The summary stays KIFF's: planque's words for the act carry the element's own label, which the page wrote,
         // so they're drawn only in the block's page part, never as what the card asks.
         call.browser = browserStep(e.browser)
+        call.sealedFill = sealedFill(e)
         return call
+    }
+
+    /// A held sealed fill the card can draw and sign, or nil: only a fill whose served block hashes (JCS SHA-256, lower-case
+    /// hex) to KIFF's own `browser_sha256`, whose `release_fields` are all text, and whose drawn origin and Chrome are the
+    /// signed ones. Anything else stays a fill with Refuse only.
+    static func sealedFill(_ e: KIFFClient.CardException) -> SealedFill? {
+        guard e.needsRelease, let block = e.browserBlock, let fields = block.releaseFields, let raw = block.raw,
+              let served = e.browserSHA256?.lowercased(), JCS.sha256(raw) == served,
+              let step = block.step, step.origin == fields.origin, step.chrome?.value?.id == fields.chromeID else { return nil }
+        return SealedFill(chromeID: fields.chromeID, op: fields.op, sealed: fields.sealed, origin: fields.origin,
+                          fieldRef: fields.fieldRef, readID: fields.readID, browserSHA256: served)
     }
 
     /// A held browser step as the card draws it (docs/chrome.md, "The approval card"). Every line is one plain line,

@@ -176,10 +176,16 @@ struct HeldCallCard: View {
                 // Approving or extra room would fail: the way out instead. Refuse stays below.
                 ApprovalKeyLostLine()
             } else if call.needsRelease == true {
-                // A sign-in fill takes a release this app can't make yet: never an allowing answer without it.
-                Text(Words.Chrome.releaseUnreadable)
-                    .scaledFont(13).foregroundColor(Theme.soft)
-                    .fixedSize(horizontal: false, vertical: true)
+                if model.sealedReleaseOn, let sealed = call.sealedFill {
+                    // The release card: what's released and why it may or may not be, then Allow behind its own Face ID.
+                    SealedFillBlock(call: call, sealed: sealed, sending: sending) { send(.approveOnce) }
+                } else {
+                    // A sign-in fill takes a release: with the card off, or a block that doesn't check out, never an
+                    // allowing answer.
+                    Text(Words.Chrome.releaseUnreadable)
+                        .scaledFont(13).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             } else if call.approvableOnce {
                 ApprovalGate {
                     Button {
@@ -616,6 +622,45 @@ struct SetAllAsideButton: View {
 /// title and what it showed around the element, and the basket's lines when it's a checkout (its total is KIFF's
 /// amount, at the top of the card). Every line is planque's or the page's, drawn verbatim: never markup, never a link,
 /// and never the card's summary, which stays KIFF's.
+/// A held sealed fill's release card (docs/chrome.md, "The phone's release card"), under the step's own block, which draws the
+/// site large, its origin, the Chrome and the page's words, each as plain text. This adds which part is released, read from the
+/// handle and never from planque's words; why the phone won't sign, by its own checks; or the fixed line and Allow, behind a
+/// Face ID of its own. Refuse is the card's own, below.
+struct SealedFillBlock: View {
+    @EnvironmentObject private var model: AppModel
+    let call: HeldCall
+    let sealed: SealedFill
+    let sending: Bool
+    let allow: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(Words.Chrome.releaseTitle).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            if let part = SealedRelease.part(sealed.sealed) {
+                Text(part == .password ? Words.Chrome.releasePassword : Words.Chrome.releaseUsername)
+                    .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    .accessibilityIdentifier("held.release.part")
+            }
+            if let refused = model.fillRefusal(call) {
+                Text(SealedRelease.words(refused) ?? Words.NeedsYou.expiredLine)
+                    .scaledFont(13).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("held.release.refused")
+            } else {
+                Text(Words.Chrome.releaseNeverLeaves).scaledFont(13).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+                ApprovalGate {
+                    Button { allow() } label: { Label(Words.Chrome.releaseAllow, systemImage: Biometry.symbol) }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(sending)
+                        .accessibilityIdentifier("held.release.allow")
+                }
+            }
+        }
+    }
+}
+
 struct BrowserStepBlock: View {
     let step: BrowserStep
 

@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// RFC 8785 (JSON Canonicalization Scheme), as planque computes a grant's digest: the
@@ -298,5 +299,29 @@ enum JCS {
             }
             throw Failure.notJSON
         }
+    }
+}
+
+extension JCS {
+    /// Any JSON a decoder reads, as a JCS value: what was served, kept to hash exactly (a held sealed fill's `browser` block,
+    /// whose JCS SHA-256 the answer signs). A number keeps its value; JCS writes it in its one canonical form.
+    struct Decoded: Decodable, Equatable {
+        let value: Value
+        init(from decoder: Decoder) throws {
+            let c = try decoder.singleValueContainer()
+            if c.decodeNil() { value = .null }
+            else if let s = try? c.decode(String.self) { value = .string(s) }
+            else if let b = try? c.decode(Bool.self) { value = .bool(b) }
+            else if let i = try? c.decode(Int64.self) { value = .number(String(i)) }
+            else if let d = try? c.decode(Double.self) { value = .number(String(d)) }
+            else if let a = try? c.decode([Decoded].self) { value = .array(a.map(\.value)) }
+            else { value = .object(try c.decode([String: Decoded].self).mapValues(\.value)) }
+        }
+    }
+
+    /// The lower-case hex SHA-256 of `value`'s canonical form; nil when it can't be written (an unsafe number).
+    static func sha256(_ value: Value) -> String? {
+        guard let bytes = try? canonical(value) else { return nil }
+        return SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
     }
 }
