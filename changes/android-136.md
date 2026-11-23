@@ -1,0 +1,1 @@
+- **Android 136 (1.47.0)** for Play's internal track: Turkmen, Hindi and Urdu; Brazilian Portuguese in Brazil's own words, with Brazil's own legal pages.
