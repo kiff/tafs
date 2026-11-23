@@ -4335,7 +4335,14 @@ class AppModel(
    * the device it reads and chats as. The approval key unlocks for one signature, so an extension that checks one-touch
    * gets both under one `kiff.requests.v1` signature ([confirmChromeOneTouch]); an older one gets the two prompts. False when it didn't go through.
    */
-  suspend fun confirmChrome(p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String): Boolean {
+  /**
+   * The sites that move when [old] is replaced, as the owner reads them before the fingerprint: each connection this phone signed
+   * for [old], checked with its own key ([bot.tafs.app.kiff.ChromePairing.carriedFrom]), the same list [confirmChrome] signs.
+   */
+  fun chromeMoves(old: bot.tafs.app.kiff.Chrome): List<String> =
+    bot.tafs.app.kiff.ChromePairing.carriedFrom(old, _state.value.grants, signer.approvalPublicKeyDER).flatMap { it.sites }.distinct()
+
+  suspend fun confirmChrome(p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String, replaces: bot.tafs.app.kiff.Chrome? = null): Boolean {
     val pairing = bot.tafs.app.kiff.ChromePairing
     val chromeKey = pairing.base64UrlDecoded(offer.key) ?: return false
     if (!pairing.extensionProofHolds(p.secret, chromeKey, offer.proof, offer.kiffOffer)) return false
@@ -4348,12 +4355,15 @@ class AppModel(
     }
     val generation = accountGeneration
     val name = pairing.name(typed, Words.Chrome.browserOn(browser = offer.browser, system = offer.os))
-    val confirmation = pairing.confirmation(p.secret, chromeKey, name, phoneKey)
+    // A re-pairing (docs/chrome.md "Your Chrome" 1): the connections that move are those this phone signed for the replaced
+    // Chrome, checked with its own key; they go inside the pairing the extension checks, so planque can't change them.
+    val carried = replaces?.let { pairing.carriedFrom(it, _state.value.grants, phoneKey) }.orEmpty()
+    val confirmation = pairing.confirmation(p.secret, chromeKey, name, phoneKey).copy(carried = carried)
     val reason = Words.Chrome.pairPrompt(name = name)
     // One fingerprint for both acts where the extension checks it (docs/chrome.md "Your Chrome" 5): the pairing it verifies and
     // its KIFF device, under one `kiff.requests.v1` signature. Else the two prompts an older extension expects.
     val oneTouch = offer.oneTouch && pairing.oneTouchProofHolds(p.secret, chromeKey, offer.oneTouchProof, offer.kiffOffer)
-    if (oneTouch && kiffDevice is ChromeKiffDevice.Offered) return confirmChromeOneTouch(p, confirmation, kiffDevice.device, reason, generation)
+    if (oneTouch && kiffDevice is ChromeKiffDevice.Offered) return confirmChromeOneTouch(p, confirmation, kiffDevice.device, reason, generation, replaces?.id)
     val sig = try {
       val der = signer.signCritical(reason) { pairing.signedBytes(p.pairing, confirmation) }
       pairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
@@ -4366,7 +4376,7 @@ class AppModel(
     if (generation != accountGeneration) return false
     if (kiffDevice is ChromeKiffDevice.Offered && !pairChromeDevice(kiffDevice.device, reason, generation)) return false
     try {
-      chromeCall { planque.confirmChromePairing(p.pairing, confirmation, sig) } ?: return false
+      chromeCall { planque.confirmChromePairing(p.pairing, confirmation, sig, replaces = replaces?.id) } ?: return false
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -4386,6 +4396,7 @@ class AppModel(
    */
   private suspend fun confirmChromeOneTouch(
     p: ChromePairingInProgress, confirmation: bot.tafs.app.kiff.ChromePairing.Confirmation, device: PairQr, reason: String, generation: Int,
+    replaces: String? = null,
   ): Boolean {
     val pairing = bot.tafs.app.kiff.ChromePairing
     val tenant = kiffTenant ?: return false
@@ -4425,7 +4436,7 @@ class AppModel(
     if (generation != accountGeneration) return false
     try {
       chromeCall {
-        planque.confirmChromePairing(p.pairing, confirmation, phoneSig, together = bot.tafs.app.kiff.ChromeTogether(tenant, signedAt, kiffRequest.hash))
+        planque.confirmChromePairing(p.pairing, confirmation, phoneSig, together = bot.tafs.app.kiff.ChromeTogether(tenant, signedAt, kiffRequest.hash), replaces = replaces)
       } ?: return false
     } catch (e: CancellationException) {
       throw e
@@ -9804,6 +9815,25 @@ data class AllowSheetState(
   val rounded: Boolean = false,
 )
 
-/** An address on [base] when it's a path, as given when it's already a whole https URL. */
-internal fun endpointOn(base: String, address: String): String =
-  if (address.startsWith("https://")) address else base.trimEnd('/') + "/" + address.trimStart('/')
+/**
+ * A door's address on tafs cloud ([base]), whole. Only ever on tafs cloud's own host, over HTTPS (as iOS, Windows and Linux): a
+ * whole address is kept only when it's https on that host with no port or user; anything else, another host or a scheme with
+ * no host of its own, is its path on tafs cloud, checked again, so the example that sends the developer's key never names
+ * another host.
+ */
+internal fun endpointOn(base: String, address: String): String {
+  val cloud = runCatching { java.net.URI(base.trim()) }.getOrNull()?.takeIf { it.scheme.equals("https", true) && !it.host.isNullOrEmpty() }
+    ?: return base
+  val a = address.trim()
+  val u = runCatching { java.net.URI(a) }.getOrNull()
+  if (u != null && u.scheme.equals("https", true) && u.host.equals(cloud.host, true) && u.port == -1 && u.rawUserInfo == null) return a
+  // The path alone, set on tafs cloud's own address: whatever it holds stays in the path, never the host.
+  val path = when {
+    u == null -> a
+    u.isOpaque -> u.schemeSpecificPart.orEmpty()
+    else -> u.path.orEmpty()
+  }.trimStart('/', '\\')
+  return runCatching { java.net.URI("https", cloud.host, "/$path", null) }.getOrNull()
+    ?.takeIf { it.host.equals(cloud.host, true) && it.port == -1 && it.rawUserInfo == null }?.toASCIIString()
+    ?: base.trimEnd('/')
+}
