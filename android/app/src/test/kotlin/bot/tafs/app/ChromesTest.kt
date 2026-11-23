@@ -176,6 +176,14 @@ class ChromesTest {
     // planque widened the list, or there's no signature of its own: nothing signed, nothing sent.
     assertFalse(m.switchChrome(grant(wiki + "evil.example", sig), home))
     assertFalse(m.switchChrome(grant(wiki, null), home))
+    // A signature this phone made, but for another Chrome or another grant, doesn't vouch for this one.
+    suspend fun signed(chrome: String, grantId: String) = ChromePairing.rawSignature(java.util.Base64.getMimeDecoder().decode(
+      signer.signApproval(ChromePairing.sitesBytes(chrome, grantId, wiki), "approve")))!!
+    val forOtherChrome = signed("chr_home", "g1")
+    val forOtherGrant = signed("chr_work", "g2")
+    auth.fingerprints.clear()
+    assertFalse("signed for another Chrome", m.switchChrome(grant(wiki, forOtherChrome), home))
+    assertFalse("signed for another grant", m.switchChrome(grant(wiki, forOtherGrant), home))
     assertTrue(auth.fingerprints.isEmpty() && transport.requestsTo(put).isEmpty())
     // The sites it signed: signed again for the new Chrome, behind one fingerprint naming it, and sent.
     transport.answer(put, 200, """{"id":"g1","status":"connected"}""")
