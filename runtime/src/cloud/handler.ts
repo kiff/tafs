@@ -4,7 +4,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification } from "./push.js";
@@ -1154,7 +1154,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (!me.capabilities.includes("holds.answer")) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
     // The run goes on to its next model turn: the person who lets it go on has allowed AI use (docs/accounts.md).
     await requireAIConsent(event, me, deps);
-    return goOn(me, taf, parts[4] ?? "", deps);
+    return goOn(me, taf, parts[4] ?? "", deps, langOf(event));
   }
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "allow") {
     need(me, "cards.manage");
@@ -5008,7 +5008,10 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     // its mark kept, so no run starts in between.
     if (sw && sw.n === n && draft) return { switching: await agentsCall(() => deps.agents.replaceSwitchDraft(me.tenantID, taf.id, n, draft)) };
     if (sw && sw.n === n) await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id));
-    return { switching: await beginSwitch(me, taf, n, draft, parseBody(event).stop_blocking === true, deps) };
+    const began = await beginSwitch(me, taf, n, draft, parseBody(event).stop_blocking === true, deps);
+    // A task that waited on the owner's answer and was stopped to let the version in: said, so the apps tell the owner (and
+    // offer to send its message again), never a silent stop (23 Nov, the owner's panel test).
+    return { switching: began.switching, ...(began.stopped.length ? { stopped: began.stopped, words: wordsIn(langOf(event)).switch_stopped } : {}) };
   }
   if (sub === "live") {
     // The draft the switch waits for: prepared by switch, or the version's own.
@@ -6260,7 +6263,7 @@ async function allowRoute(event: HTTPEvent, taf: Taf, exception: string, deps: D
   });
 }
 
-async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): Promise<unknown> {
+async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps, lang: Lang): Promise<unknown> {
   if (!exception) throw new HTTPError(404, "not found");
   try {
     const out = await deps.agents.continueHeld(me.tenantID, taf.id, exception);
@@ -6268,7 +6271,12 @@ async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): 
   } catch (err) {
     if (refused(err, "waiting_for_kiff", "run_changed")) return { status: "waiting" };
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
-    if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no run of this taf waits on that held call");
+    // The owner's yes landed after the run that paused on the call had ended: nothing ran, and the apps say so, in the
+    // owner's language, with Run again (the same line in every app).
+    if (err instanceof AgentsError && err.status === 404) {
+      const words = wordsIn(lang).hold_run_ended;
+      throw new HTTPError(404, "no run of this taf waits on that held call", { code: "run_ended", words });
+    }
     throw agentsFailure(err);
   }
 }
@@ -6928,7 +6936,7 @@ export function blockedWords(n: number, runs: Array<{ status: string; trigger: s
     : waiting ? `${runs.length} tasks are going, one waiting on your answer` : `${runs.length} tasks are at work`;
   return stopping
     ? `Version ${n} isn't installed yet: ${what} and hasn't stopped. Try again in a moment.`
-    : `Version ${n} can't go live while ${what}. Stop it and install, or wait until it's done.`;
+    : `Version ${n} can't go live while ${what}. Stop it and install, or wait until it's done.${waiting ? " Stopping it withdraws the call it's waiting on, and its message won't run." : ""}`;
 }
 
 /** How long a switch asked to stop what blocks it waits for a running run's checkpoint, and how often it looks. */
@@ -6941,13 +6949,16 @@ export const STOP_WAIT = { tries: 8, everyMs: 1500 };
  * first (a paused one's held calls withdrawn in KIFF, a running one at its
  * next checkpoint) and the switch is tried again until they have ended.
  */
-async function beginSwitch(me: KIFFIdentity, taf: Taf, n: number, draft: string | undefined, stopBlocking: boolean, deps: Deps): Promise<unknown> {
+async function beginSwitch(me: KIFFIdentity, taf: Taf, n: number, draft: string | undefined, stopBlocking: boolean, deps: Deps): Promise<{ switching: Switching; stopped: Array<{ run: string; session: string }> }> {
   const wait = deps.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
   const stopped = new Set<string>();
+  // The runs that waited on the owner's answer (PAUSED) and were stopped: their held calls were withdrawn, their messages never ran.
+  const waiting = new Map<string, string>();
   for (let tries = 0; ; tries++) {
     let blocking: BlockingRun[];
     try {
-      return await deps.agents.beginSwitch(me.tenantID, taf.id, n, draft);
+      const switching = await deps.agents.beginSwitch(me.tenantID, taf.id, n, draft);
+      return { switching, stopped: [...waiting].map(([run, session]) => ({ run, session })) };
     } catch (err) {
       if (!(err instanceof AgentsError) || err.status !== 409 || !err.blocking?.length) return agentsCall(() => Promise.reject(err));
       blocking = err.blocking;
@@ -6962,6 +6973,9 @@ async function beginSwitch(me: KIFFIdentity, taf: Taf, n: number, draft: string 
       if (stopped.has(b.id)) continue;
       try {
         await deps.agents.cancelRun(me.tenantID, taf.id, b.id);
+        // Only a run really stopped counts: one whose cancel answers 409 had ended meanwhile (the owner's answer may have let it
+        // finish), so "its message didn't run" would be false.
+        if (b.status === "PAUSED") waiting.set(b.id, b.session);
       } catch (err) {
         if (!(err instanceof AgentsError) || err.status !== 409) throw agentsFailure(err); // 409: it ended meanwhile
       }

@@ -16,6 +16,10 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const zhHant: Words = {
   work_working: "處理中",
   work_waiting_approval: "等待您核准",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "該次執行已經結束，所以沒有執行任何動作。",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "安裝此版本時，停止了正在等待你回覆的項目：被保留的呼叫已撤回，訊息也沒有執行。你可以再傳送一次。",
   your_step_title: "您的步驟",
   your_step_done: "完成",
   your_step_skip: "略過",

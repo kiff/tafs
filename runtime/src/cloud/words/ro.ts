@@ -16,6 +16,10 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const ro: Words = {
   work_working: "Lucrează la asta",
   work_waiting_approval: "Așteaptă aprobarea dvs.",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "Rularea aceea se încheiase deja, așa că nu s-a făcut nimic.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Instalarea acestei versiuni a oprit ceea ce aștepta răspunsul tău: apelul reținut a fost retras, iar mesajul nu a fost executat. Îl poți trimite din nou.",
   your_step_title: "Pasul dvs.",
   your_step_done: "Gata",
   your_step_skip: "Săriți peste",

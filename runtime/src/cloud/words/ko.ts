@@ -13,6 +13,10 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const ko: Words = {
   work_working: "작업 중",
   work_waiting_approval: "내 승인을 기다리는 중",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "그 실행은 이미 끝났기 때문에 아무것도 실행되지 않았습니다.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "이 버전을 설치하면서 당신의 답변을 기다리던 작업이 중지되었습니다. 보류된 호출은 철회되었고 메시지는 실행되지 않았습니다. 다시 보낼 수 있습니다.",
   your_step_title: "내 단계",
   your_step_done: "완료",
   your_step_skip: "건너뛰기",
