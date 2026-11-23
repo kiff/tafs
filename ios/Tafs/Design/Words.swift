@@ -5847,7 +5847,7 @@ enum Words {
     /// In a right-to-left language each value is set apart (U+2068 FIRST STRONG ISOLATE … U+2069 POP DIRECTIONAL
     /// ISOLATE), so a taf's or person's name in Latin letters takes its own direction without turning the sentence
     /// around it. Left to right, values are as they are. Inside the isolate a value carries no direction character of
-    /// its own (qa-kiff, #1557), so none can close it early, whoever calls.
+    /// its own, so none can close it early, whoever calls.
     static func isolated(_ values: [String], in locale: Locale) -> [String] {
         guard Locale.characterDirection(forLanguage: locale.language.languageCode?.identifier ?? locale.identifier) == .rightToLeft else { return values }
         return values.map { "\u{2068}\(withoutDirection($0))\u{2069}" }

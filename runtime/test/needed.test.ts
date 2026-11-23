@@ -24,14 +24,14 @@ describe("which tafs need an app (needed.ts)", () => {
     expect([...appVendors({ entry: "qonto-invoicing@2", vendor: "Qonto" })].sort()).toEqual(["qonto", "qontoinvoicing"]);
   });
 
-  // kiff-qa's 1: an app no taf needs is needed by none, so a connection for any taf is refused.
+  // An app no taf needs is needed by none, so a connection for any taf is refused.
   it("by recipe: a taf whose recipe names the app; never a taf whose recipe doesn't (the owner's Stripe under a Gmail taf)", () => {
     expect(neededBy(stripe, [desk, refunds], recipes)).toEqual([{ taf: "taf-refunds", name: "Refunds" }]);
     expect(neededBy(gmail, [desk, refunds], recipes)).toEqual([{ taf: "taf-refunds", name: "Refunds" }, { taf: "taf-desk", name: "Unanswered emails" }]);
     expect(neededBy({ entry: "typeform@1", vendor: "Typeform" }, [desk, refunds], recipes)).toEqual([]);
   });
 
-  // kiff-qa's 4: an app two tafs need is needed by each, in name order.
+  // An app two tafs need is needed by each, in name order.
   it("by Card: a taf whose Card in force has a rule on one of the app's connections' actions, whichever taf asked for it", () => {
     const grants = [grant("g1", "refunds")];
     expect(neededBy(stripe, [desk, refunds, chargebacks], recipes, grants, [card("chargebacks", "refund_charge_k3")]))
@@ -51,7 +51,7 @@ describe("which tafs need an app (needed.ts)", () => {
       [card("chargebacks", "setup_k3")])).toEqual([]);
   });
 
-  // kiff-qa on the first review: holding a connection never counts, or the retest's Stripe under a Gmail taf could be
+  // Holding a connection never counts, or the retest's Stripe under a Gmail taf could be
   // connected there again by an app that sends no proof. Without the grants and Cards, the recipes alone decide.
   it("holding a connection never makes a taf need the app: without the grants and Cards, the recipes alone decide", () => {
     expect(neededBy(stripe, [desk], recipes)).toEqual([]);
@@ -59,7 +59,7 @@ describe("which tafs need an app (needed.ts)", () => {
     expect(neededBy(stripe, [desk, refunds], recipes)).toEqual([{ taf: "taf-refunds", name: "Refunds" }]);
   });
 
-  // kiff-qa's 5: the owner's Stripe made under "Unanswered emails" is listed, so it can be withdrawn.
+  // The owner's Stripe made under "Unanswered emails" is listed, so it can be withdrawn.
   it("a live connection of the app held by a taf that doesn't need it is misplaced; one held by a taf that does isn't", () => {
     const grants = [grant("g-wrong", "desk"), grant("g-right", "refunds"), grant("g-gone", "desk", { status: "disconnected" }), grant("g-other", "someone-else")];
     const needed = neededBy(stripe, [desk, refunds], recipes, grants, []);

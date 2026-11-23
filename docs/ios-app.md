@@ -604,7 +604,7 @@ Card", with every new Card's lines under it, in the draft's order, where the fir
 is (`DraftCardsView.shown`). **Each Card's lines stay together, and only a whole Card exactly like an
 earlier one is shown once.** A single line is never dropped for being on an earlier Card: a Card's
 total names no tool ("20 calls a day"), so two Cards with the same total each show it after their own
-tool, and the owner never reads less than they sign (qa-kiff, 23 Nov). A Card the draft changes, or
+tool, and the owner never reads less than they sign. A Card the draft changes, or
 keeps unchanged, keeps its own panel and place, and the Cards it removes follow, as before. Tests:
 `VersionsTests.testADraftsNewCardsShowAsOneAndAChangedCardAlone`,
 `VersionsTests.testANewCardsTotalIsShownForEachCardThatHasIt`.
@@ -1431,7 +1431,7 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
 
 ## Help: Chrome and the emailed code, in How tafs works
 
-Two short sections in How tafs works (the screen Account and Home open, `HowTafsWorksView`), words in `help.json` in every language (legal-i18n's drafts, pinned by key): **Chrome** ("tafs can work in your Chrome": what it does, only on the sites you allow, in its own tabs; where Account › Chrome lists each Chrome and what it is used for; unpairing ends its connections), shown only where planque offers Chrome (`model.chromes != nil`); and **Sign in with an emailed code** (turn it on in Account › Sign-in; KIFF emails a code that works once for 10 minutes; never give it to anyone), shown only where KIFF can send codes (`codeSignIn.available`). The screens are named with the app's own titles (`{account}`, `{chrome}`, `{sign_in}`, `{needs_you}`), so each language writes them as the app does. The app says nothing about what the person can't use.
+Two short sections in How tafs works (the screen Account and Home open, `HowTafsWorksView`), words in `help.json` in every language: **Chrome** ("tafs can work in your Chrome": what it does, only on the sites you allow, in its own tabs; where Account › Chrome lists each Chrome and what it is used for; unpairing ends its connections), shown only where planque offers Chrome (`model.chromes != nil`); and **Sign in with an emailed code** (turn it on in Account › Sign-in; KIFF emails a code that works once for 10 minutes; never give it to anyone), shown only where KIFF can send codes (`codeSignIn.available`). The screens are named with the app's own titles (`{account}`, `{chrome}`, `{sign_in}`, `{needs_you}`), so each language writes them as the app does. The app says nothing about what the person can't use.
 
 ## Account › Chrome: what each Chrome is used for
 

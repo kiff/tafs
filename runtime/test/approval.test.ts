@@ -2791,7 +2791,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     });
   });
 
-  // kiff-qa on #1100: the conversation that can't be read is never trusted; it's read again, nothing signed.
+  // The conversation that can't be read is never trusted; it's read again, nothing signed.
   it("a conversation that can't be read isn't trusted: the card reads again, and nothing is signed", async () => {
     // How many conversation reads a tap makes, the rules' own read last; then the same tap with only that read failing.
     const count = await setUp("refuse");
@@ -2812,7 +2812,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     expect(s.checks).toEqual([]);
   });
 
-  // kiff-qa on #1100: the rules hold for every tool the taf holds, the same taf's other connections included.
+  // The rules hold for every tool the taf holds, the same taf's other connections included.
   it("another connection's tool of the same taf follows the agreed rules too", async () => {
     const s = services();
     const mail = [{ tool: "send_reply", name: "send_reply_m7", title: "Send a reply" }];
@@ -3001,7 +3001,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(await said.tap()).toMatchObject({ outcome: "sign" });
     });
 
-    // qa-kiff's condition 2: a limit the notice says that no Card holds is refused already, by the figure the rules give it.
+    // A limit the notice says that no Card holds is refused already, by the figure the rules give it.
     it("a limit the notice says, €50 each, on a Card without it: refused (rules_figures)", async () => {
       const { s, rules, tap } = await setUp("refuse");
       s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [

@@ -69,7 +69,7 @@ object Res {
 
   /**
    * Languages whose figures the app writes in Western digits, 0–9, though their own locale writes others: Arabic, as its lines and
-   * its legal pages write figures (legal-i18n, 22 Nov; iOS's `Words.localeIdentifiers`). Dates are `java.time`'s, already 0–9
+   * its legal pages write figures (iOS's `Words.localeIdentifiers`). Dates are `java.time`'s, already 0–9
    * and Gregorian.
    */
   internal val LATIN_DIGITS = setOf("ar")
@@ -101,7 +101,7 @@ object Res {
 
   /**
    * What the app copies: the text alone, with no direction character, so a code, a key or an address copied from a right-to-left
-   * screen (whose values are set apart, [isolated]) pastes as its own characters (qa-kiff, #1557).
+   * screen (whose values are set apart, [isolated]) pastes as its own characters.
    */
   fun clip(label: String, text: String): android.content.ClipData = android.content.ClipData.newPlainText(label, withoutDirection(text))
 }

@@ -2,7 +2,7 @@ import XCTest
 @testable import Tafs
 
 /// A line in a right-to-left language sets each value apart (FSI … PDI), so "Rae" or "€150.00" inside an Arabic or
-/// Hebrew sentence keeps its own direction without turning the sentence (agentgabo and dev-android, 20 Nov). Left to
+/// Hebrew sentence keeps its own direction without turning the sentence. Left to
 /// right, values are exactly as passed, so no line in today's eight languages changes.
 final class IsolatedValuesTests: XCTestCase {
     func testRightToLeftLinesIsolateTheirValues() {
@@ -18,7 +18,7 @@ final class IsolatedValuesTests: XCTestCase {
         }
     }
 
-    /// qa-kiff's two asks: a value's own direction characters are taken out inside the isolate, so it can't close it
+    /// A value's own direction characters are taken out inside the isolate, so it can't close it
     /// early; and what's copied carries none, so a code copied from an Arabic screen pastes as its own characters.
     func testAValueCantCloseItsIsolateAndCopiesAreBare() {
         XCTAssertEqual(Words.isolated(["Ra\u{2069}e\u{202E}"], in: Locale(identifier: "ar")), ["\u{2068}Rae\u{2069}"])
@@ -32,7 +32,7 @@ final class IsolatedValuesTests: XCTestCase {
         XCTAssertTrue(Eyebrow.ideographic("기억하는 것"))
         XCTAssertTrue(Eyebrow.ideographic("確認が必要"))
         XCTAssertTrue(Eyebrow.ideographic("内 TAFS"))
-        // Arabic is formatted with Western digits and the Gregorian calendar (legal-i18n, 22 Nov): its figures read 0–9, as its
+        // Arabic is formatted with Western digits and the Gregorian calendar: its figures read 0–9, as its
         // legal pages and its lines write them, and a date isn't the Hijri one. Any other language is its own code.
         let arabic = Words.locale(for: "ar")
         let digits = NumberFormatter()

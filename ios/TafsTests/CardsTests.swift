@@ -73,7 +73,7 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(Money.usd(300).formatted, Money.usd(300).figure)
     }
 
-    /// A revoked Card (dev-android's K5 finding a): VoiceOver says "Revoked", never "No end date" or what's
+    /// A revoked Card: VoiceOver says "Revoked", never "No end date" or what's
     /// "left today" on a Card nothing can use; a live one keeps both.
     func testARevokedCardSaysRevokedAloneWithNoBalance() {
         let card = TafCard(id: "c", title: "Replies", rules: [], calls: CardTotal(limit: 20, used: 0, window: .day))
@@ -139,7 +139,7 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(money.heroLine, "\(money.hero!.figure) \(money.hero!.words)")
     }
 
-    /// agentgabo's nit on #1567/#1571: a calls Card's figures are written as the line's language writes numbers, the
+    /// A calls Card's figures are written as the line's language writes numbers, the
     /// limit too, so a 10,000-call Card never reads "9,999 … of 10000".
     func testACallsCardsFiguresAreAllWrittenAsNumbers() {
         let big = TafCard(id: "b", title: "Reads", rules: [], calls: CardTotal(limit: 10000, used: 1, window: .day))

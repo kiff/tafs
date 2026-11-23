@@ -55,7 +55,7 @@ class PlayInternal(unittest.TestCase):
         self.assertEqual([n["language"] for n in release["releaseNotes"]], p.LOCALES)
 
     def test_the_commit_sends_nothing_for_review(self):
-        # PM, 20 Nov: a plain commit sent every change pending in Play Console for review (128's review restarted). The
+        # A plain commit sent every change pending in Play Console for review (128's review restarted). The
         # internal upload commits its own edit only, never a review, for the phone and for the watch.
         p.version_code = lambda wear=False: 400000010 if wear else 137
         self.answers["/edits/e1/bundles"] = {"versionCode": 137}

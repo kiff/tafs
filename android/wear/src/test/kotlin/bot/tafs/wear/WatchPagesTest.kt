@@ -289,7 +289,7 @@ class WatchPagesTest {
     assertTrue("the top line meets the face's curve", insideTheFace(line.getBoundsInRoot()))
   }
 
-  /** On the 40 mm face, the heard words' two lines stay clear of the curve, with room to spare (mac12's #1439 note). */
+  /** On the 40 mm face, the heard words' two lines stay clear of the curve, with room to spare. */
   @Test fun theHeardWordsStayInsideTheFaceAt40mm() {
     roundFace()
     show(read, voice = WatchModel.Voice.Listening("Move my call with Nord Atelier to Thursday at ten, and tell Ivo", null, since = System.currentTimeMillis()))
@@ -509,7 +509,7 @@ class WatchPagesTest {
     assertEquals("Refunded for order A-1039.\n" + Words.Watch.moreOnPhone, AskResults.alertText(answered.copy(line = "Refunded €84 for order A-1039.")))
     assertEquals("Paused until Monday 08:00.", AskResults.alertText(answered.copy(line = "Paused until Monday 08:00.")))
     assertEquals(Words.Watch.moreOnPhone, AskResults.alertText(answered.copy(line = "€84")))
-    // Spacing or a trailing ":" alone takes nothing out, so nothing is added (qa-kiff, #1445).
+    // Spacing or a trailing ":" alone takes nothing out, so nothing is added.
     assertEquals("Here's what I found:", AskResults.alertText(answered.copy(line = "Here's what I found:")))
   }
 

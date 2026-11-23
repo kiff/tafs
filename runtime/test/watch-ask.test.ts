@@ -327,7 +327,7 @@ describe("the line the watch shows and says", () => {
   });
 });
 
-describe("a watch request's words (W2, legal-i18n's 8 languages)", () => {
+describe("a watch request's words (W2)", () => {
   const base = { id: "wa_1", client_id: "w_1", person: "ana", at: "2026-11-19T10:00:00Z", updated: "2026-11-19T10:00:00Z" } as const;
   it("name who holds it: Coach until a taf has it, then the taf, in the person's language", () => {
     expect(shownAsk({ ...base, state: "accepted" } as Ask, "en").words).toBe("Sent · Coach has it");

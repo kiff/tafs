@@ -1256,7 +1256,7 @@ struct TafCardFace: View {
     /// and until when.
     static func spoken(_ card: TafCard, issuedBy: String, revoked: Bool) -> String {
         var parts: [String] = []
-        // A revoked Card allows nothing: no "left today" over it (dev-android's K5 finding a).
+        // A revoked Card allows nothing: no "left today" over it.
         if !revoked, let line = card.heroLine { parts.append(line) }
         parts.append([card.title, card.environmentLabel].compactMap { $0 }.joined(separator: ", "))
         parts += card.facts
@@ -1296,7 +1296,7 @@ struct TafCardFace: View {
                 VStack(alignment: .trailing, spacing: 1) {
                     // A Card with no end says so, never a far-off date (kiff/tafs#96).
                     // Revoked: said alone, in the place of the end, never over "No end date" or a date it won't
-                    // reach (dev-android's K5 finding a; tafs cloud doesn't send when it was revoked).
+                    // reach (tafs cloud doesn't send when it was revoked).
                     if revoked {
                         Text(Words.Card.revoked).scaledFont(12, weight: .semibold)
                     } else {

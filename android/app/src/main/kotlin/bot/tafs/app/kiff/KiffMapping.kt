@@ -431,7 +431,7 @@ object KiffMapping {
    * only words. Blank is none.
    */
   /**
-   * A line from KIFF, a vendor or a taf as an approval, the record, a notification or the watch draws it (qa-kiff, 20 Nov): no
+   * A line from KIFF, a vendor or a taf as an approval, the record, a notification or the watch draws it: no
    * direction character (U+202A–U+202E, U+2066–U+2069, U+200E, U+200F, U+061C, the set iOS's `FileText.isDirection` names), so a
    * payee name can't reorder how an amount or an IBAN beside it looks; any other control character becomes a space. Right-to-left
    * letters themselves stay.

@@ -1,1 +1,1 @@
-- **Turkmen in the apps.** Every screen, message and sample on iPhone, iPad, Mac and Android reads in Turkmen, with the legal pages in Turkmen (kiff.dev/tk/…). A first draft by legal-i18n: wording is fixed forward, and a native read follows.
+- **Turkmen in the apps.** Every screen, message and sample on iPhone, iPad, Mac and Android reads in Turkmen, with the legal pages in Turkmen (kiff.dev/tk/…). A first draft: wording is fixed forward, and a native read follows.

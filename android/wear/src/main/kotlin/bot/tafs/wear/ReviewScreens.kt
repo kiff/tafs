@@ -142,8 +142,8 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
       T("%d:%02d / 0:%02d".format(seconds / 60, seconds % 60, LISTEN_LIMIT_MS / 1000), 13.sp, Look.text, lines = 1)
       Spacer(Modifier.height(2.dp))
       // The words as they're heard; before Start, what to do. Two lines: a third would meet the face's curve at its sides. Their
-      // width follows the face: on the 40 mm Watch 5 the face is ~151 dp across at the second line, so 150 dp ran to its edge
-      // (mac12's #1439 note); 44 mm keeps 150.
+      // width follows the face: on the 40 mm Watch 5 the face is ~151 dp across at the second line, so 150 dp ran to its edge;
+      // 44 mm keeps 150.
       T(heard?.takeIf { it.isNotEmpty() } ?: Words.Watch.tapStart, 12.sp, if (heard.isNullOrEmpty()) Look.dim else Look.send,
         modifier = Modifier.width(heardWidth).testTag(RECORD_HEARD), lines = 2, lineHeight = 15.sp)
     }
@@ -220,7 +220,7 @@ private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: 
       // The recording, on the watch only: Play and Pause from where it stopped, and where it is.
       val playback = act.playback
       if (audio != null && playback != null) item { PlayRow(audio, playback) }
-      // Inset from the round edge, so no line of a long transcript is cut where the face curves (qa-kiff's device read, #1409).
+      // Inset from the round edge, so no line of a long transcript is cut where the face curves.
       item { Text(text, style = MaterialTheme.typography.bodyMedium, color = Look.send, modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)) }
       probe?.let { item { Text(it, fontSize = 9.sp, color = Look.faint, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) } }
     }

@@ -108,7 +108,7 @@ MANAGED = "changesNotSentForReview must not be set"
 def commit(edit: str, token: str) -> str:
     """
     Commits the edit without sending anything for review, and says how. With managed publishing off, a plain commit sent every
-    change pending in the console for review (PM, 20 Nov: 128's review restarted), so the commit asks for none. With it on, Play
+    change pending in the console for review (an internal upload once restarted 128's review), so the commit asks for none. With it on, Play
     refuses that parameter (400, 21 Nov) because nothing it commits goes out before the console's Publish: then, and only on
     those words, the edit is committed plainly. Any other refusal stops here, committing nothing.
     """

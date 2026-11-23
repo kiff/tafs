@@ -251,7 +251,7 @@ class OnboardingWelcomeTest {
   @Test fun aPhoneHasNoPhoneWay() {
     compose.setContent { TafsTheme { OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { "v" }) } }
     assertTrue(compose.onAllNodesWithTag("onboarding.with_phone").fetchSemanticsNodes().isEmpty())
-    // Nor the old Sign in with KIFF: it would sign in with the box unticked and no consent recorded (qa-kiff, #1532).
+    // Nor the old Sign in with KIFF: it would sign in with the box unticked and no consent recorded.
     assertTrue(compose.onAllNodesWithText(Words.SignIn.withKiff).fetchSemanticsNodes().isEmpty())
     compose.onNodeWithTag("onboarding.continue").assertIsNotEnabled()
   }

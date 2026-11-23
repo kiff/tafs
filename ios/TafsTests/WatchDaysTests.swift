@@ -51,7 +51,7 @@ final class WatchDaysTests: XCTestCase {
         XCTAssertNotNil(WatchTurnRow.time(turns[0].saidAt))
         XCTAssertNotNil(WatchTurnRow.time(turns[1].saidAt), "with fractional seconds too")
         XCTAssertNil(WatchTurnRow.time(""))
-        // In the account's zone, as the day is: 23:30 UTC is the next morning's 00:30 in Paris (qa-kiff's read).
+        // In the account's zone, as the day is: 23:30 UTC is the next morning's 00:30 in Paris.
         // Compared with the same clock time in UTC, so it holds whatever the platform's short form is.
         let paris = TimeZone(identifier: "Europe/Paris")!, utc = TimeZone(identifier: "UTC")!, en = Locale(identifier: "en_GB")
         let late = "2026-11-18T23:30:00Z"
@@ -66,7 +66,7 @@ final class WatchDaysTests: XCTestCase {
         let model = WatchDaysModel(reading: reading)
         await model.load()
         XCTAssertEqual(model.days.map(\.date), ["2026-11-19", "2026-11-18"], "newest first, as tafs cloud sends them")
-        // The account's today, not the phone's: on an account a day behind the phone, "Today" is the 18th (agentgabo's read).
+        // The account's today, not the phone's: on an account a day behind the phone, "Today" is the 18th.
         XCTAssertEqual(model.title("2026-11-18"), Words.Calendar.today)
         XCTAssertNotEqual(model.title("2026-11-19"), Words.Calendar.today)
         reading.fails = true

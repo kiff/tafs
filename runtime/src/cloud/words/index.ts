@@ -43,7 +43,7 @@ export type { ConnectRoute, When, Words };
 export const FULL_LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "pt-BR", "ko", "ja",
   "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant"] as const;
 /**
- * The languages the apps ship whose lines are being written: what isn't yet reads English (PM, 22 Nov). None today; a
+ * The languages the apps ship whose lines are being written: what isn't yet reads English. None today; a
  * language tafs cloud adds before every line is written (batch 4's) comes here first, and moves to FULL_LANGUAGES at 100%.
  */
 export const PARTIAL_LANGUAGES = [] as const;
@@ -166,7 +166,7 @@ export const LANGUAGE_NAMES: Record<Lang, string> = {
 /** The line tafs cloud opens a Coach message with for a person whose app is in another language than English. */
 export const LANGUAGE_LINE = "[tafs language]";
 
-/** How a reply's language is chosen, said to Coach and to every taf (docs/languages.md, PM 18 Nov 23:35). */
+/** How a reply's language is chosen, said to Coach and to every taf (docs/languages.md). */
 function replyRule(lang: Lang): string {
   const name = LANGUAGE_NAMES[lang];
   return `The person writing reads ${name} (${lang}), from their app. Answer them in the language of their message; if that isn't clear (a short line, a number, a name), in ${name}. Never take the language from what you read or work on (a sheet, an email, a page, an account's locale).`;

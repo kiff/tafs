@@ -72,7 +72,7 @@ this page says what is there now and what each step adds.
 cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug
 ```
 
-- **Ask tafs on the watch face** (`AskComplicationService`, kiff/work#14): a complication the person adds to their face, a
+- **Ask tafs on the watch face** (`AskComplicationService`): a complication the person adds to their face, a
   microphone (with "tafs" beside it where the face shows text) that opens the app listening, as the tile's Ask tafs does
   (`WatchActivity.EXTRA_LISTEN`; the watch's lock is asked first, as for any ask). Short text, monochromatic image or small
   image, whichever the face's slot takes; TalkBack reads "Ask tafs". It shows nothing else, no count, no taf and nothing a held
@@ -166,7 +166,7 @@ With it on (`WatchModel(briefOn = true)` in the tests):
 
 ## Version 2 (behind a switch, being built)
 
-Wear v2 follows the owner-approved mockup v2.1 (kiff/work `watch-v2/`). It's built behind `WATCH_V2`
+Wear v2 follows the owner-approved mockup v2.1. It's built behind `WATCH_V2`
 (`wear/…/WatchPages.kt`, from `BuildConfig.WATCH_V2`): **on in every release build from 0.4.0** (400,000,005), the build the
 owner tried on a Galaxy Watch 5 and sends to Play's review, and off in debug builds and the unit tests, which pass it where they
 need it. What waits on a server piece stays behind its own switch (step vii). Steps: (i) the phone's three new reads (`taf`, `calendar`,
@@ -196,7 +196,7 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
 - **The Inbox, Tafs and Account** were stand-ins here, as v1 reads them; steps (iv), (v) and (vi) below replace them. Before the
   phone answers, or when it can't, each page says so in v1's words.
 - **Words:** `watch.page.*`, `watch.inbox_unread`, `watch.inbox_empty`, `watch.menu` and `watch.trust` are new, in all 8
-  languages (legal-i18n's list); the rest are the phone's own (`coach.ask`, `coach.title`, `home.title`, `settings.title`,
+  languages; the rest are the phone's own (`coach.ask`, `coach.title`, `home.title`, `settings.title`,
   `taf.halt.title`). Nothing new is asked of the phone, and nothing is stored on the watch.
 
 **Step (iii), first half: record, check, send** (`ReviewScreens.kt`, `WatchModel(reviewFirst = true)`, `WatchModelTest`,
@@ -261,7 +261,7 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   kept 7200 ms · peak 9100", "audio: recognizer refused it (error 5)" or "audio: microphone not opened". A recognizer that
   refuses it before it's ready to listen is noted for the app's life, and the next Start listens with the watch's own microphone
   as v1 does, with no recording and no Play. Whether the Galaxy Watch 5's recognizer takes it is checked on the owner's watch; if
-  it doesn't, the choice is the owner's (PM 19 Nov 01:19).
+  it doesn't, the choice is the owner's.
 - **v1 is unchanged** with the switch off: what's heard is sent the moment the person stops (`whatsHeardGoesAtOnceWithNothingToConfirm`).
 - **Words:** `watch.type`, `watch.quick_reply`, `watch.qr.*`, `watch.type_hint`, `watch.review`, `watch.rerecord`,
   `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in
@@ -311,7 +311,7 @@ on this watch until tafs cloud keeps them in step with the phone (server piece c
   to add.
 - **Words:** `watch.what_it_does`, `watch.nothing_waits`, `watch.its_settings`, `watch.swipe_settings`, `watch.settings_of`,
   `watch.halt_this`, `watch.resume_on_phone`, `watch.halt_pick_title`, `watch.all_your_tafs`, `watch.halt_now_count` (a count)
-  and `watch.halt_all_q`, in all 8 languages (legal-i18n's list); the rest are the phone's (`card.its_card`,
+  and `watch.halt_all_q`, in all 8 languages; the rest are the phone's (`card.its_card`,
   `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`, `halt.explain.running_all`, `halt.now`,
   `taf.halt.title`). Nothing new is asked of the phone.
 
@@ -344,9 +344,9 @@ to them:
 - **Left out:** "Alerts on this watch". The watch's own notifications are only an ask's result; Needs you's alerts are the
   phone's, which Wear OS bridges, and the watch app doesn't switch them today. A switch with that name would leave those on, so
   it waits until it can switch both.
-- **Words:** `watch.check_phone_title`, `watch.check_phone_sub` (legal-i18n's line without "on this call"),
+- **Words:** `watch.check_phone_title`, `watch.check_phone_sub`,
   `watch.nothing_sent_until`, `watch.calendar_today`, `watch.signed_in`, `watch.sign_out_q`, `watch.sign_out_sub` and
-  `watch.signed_out_here` (not in legal-i18n's list) are new, in all 8 languages; the rest are the phone's (`common.ok`,
+  `watch.signed_out_here` are new, in all 8 languages; the rest are the phone's (`common.ok`,
   `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`, `settings.plan`,
   `settings.version`, `settings.language_title`, `settings.sign_out`, `sign_in.with_phone`).
 
@@ -397,7 +397,7 @@ counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the tw
 (the answer you can't miss), W4 (Ask Coach as one conversation), W7 (colour by meaning), W8 and W9 (round screens, Send at the
 foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" and the page back on the microphone after a
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
-to production only **after 0.4.0's review passes**, so the review isn't restarted (PM, 19 Nov 13:04).
+to production only **after 0.4.0's review passes**, so the review isn't restarted.
 
 **400,000,010 (0.4.5)** is a production build again: no timing readout, no recording kept. It carries every language the
 phone ships (Japanese, Brazilian Portuguese and the Baltic and batch 2 languages, #1688; Turkish, Indonesian, Vietnamese,

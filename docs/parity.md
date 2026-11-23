@@ -1,6 +1,6 @@
 # Parity: every feature on every device
 
-One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. parity-steward keeps this page; a PR that moves a row updates it, and the desktop columns follow each repo's `docs/port-checklist.md`.
+One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A PR that moves a row updates this page, and the desktop columns follow each repo's `docs/port-checklist.md`.
 
 **Read from:** kiff/tafs main `5e1b8ba` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `7a1c139`, kiff/tafs-windows `92a03f3` and kiff/tafs-linux `b1d4d69`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
 
@@ -190,7 +190,7 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 - **QuestionsCard**
   - **macOS 12** (partial): An answer sent the old way, as a message, read back in words (`QuestionAnswers.words`); a refusal for want of the AI-data consent keeping the card quietly (it says tafs cloud's why here)…
 - **RecordView**
-  - **macOS 12** (partial): a receipt's Chrome shots (`chrome.shot_open`, `ChromeShotView`, with ChromeViews.swift); Report this payment (the desktop-macos lane's)
+  - **macOS 12** (partial): a receipt's Chrome shots (`chrome.shot_open`, `ChromeShotView`, with ChromeViews.swift); Report this payment
 - **ReportPaymentSheet**
   - **macOS 12** (not started)
 - **SetupChatView**
