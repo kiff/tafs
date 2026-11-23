@@ -15,12 +15,13 @@ class PublicText(unittest.TestCase):
     def test_a_thread_the_pm_or_a_dated_rule_is_found(self):
         pm = "P" + "M"
         for line in ["see kiff/work#16", f"decided ({pm})", f"{pm} 18 Nov 23:35", f"({pm}, 20 Nov)", f"the {pm}'s call",
-                     "(owner, 13 Nov 2026)", "owner's 22 Nov"]:
+                     "(owner, 13 Nov 2026)", "owner's 22 Nov",
+                     "(read on #12)", "(review of kiff/tafs#1858)", "(review on)"]:
             self.assertIsNotNone(public_text.named(line), line)
 
     def test_ordinary_words_are_left(self):
         for line in ["2:05 PM", "AM/PM", "var lane: UInt64 = 0", "the owner's rule: approve on your phone",
-                     "dashlane.com", "a PM2.5 reading"]:
+                     "dashlane.com", "a PM2.5 reading", "a read on the same connection)"]:
             self.assertIsNone(public_text.named(line), line)
 
     def test_a_name_is_matched_by_its_hash_as_a_whole_word(self):
