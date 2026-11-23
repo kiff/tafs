@@ -234,8 +234,8 @@ a dead connection), and the apps (the replace choice at pairing, the Chrome on e
 - **Waking the extension** (`chrome/src/push.js`): a service worker Chrome has stopped can't be reached, so the extension gives planque a
   **Web Push subscription**, and planque sends **one silent push** (no data) when a taf needs this Chrome and it isn't connected; the worker
   wakes on the `push` event and connects. After each welcome the extension sends `{type: "push", subscription: {endpoint, keys: {p256dh, auth}},
-  sig}`, the sig being this Chrome's key over `tafs-chrome/push/v1` and `{chrome_id, subscription}` (an https endpoint and the two keys,
-  nothing else). planque's **VAPID public key is pinned in the build** (`config.js` `pushKey`, public, one per environment, like the step key), so
+  sig}`, the sig being this Chrome's key over `tafs-chrome/push/v1` and the subscription as sent (an https endpoint and the two keys,
+  nothing else; planque checks it over that JSON). planque's **VAPID public key is pinned in the build** (`config.js` `pushKey`, public, one per environment, like the step key), so
   nothing at connect can swap it; a build with none subscribes to nothing and goes on connecting by its alarm. The subscription is silent
   (`userVisibleOnly: false`, from Chrome 121), which is why the manifest asks `notifications`: Chrome asks it of an extension that receives push, and warns at install.
   **The extension never shows a notification**, and the push carries no data. On Chrome before 121 the subscribe is refused and the extension
