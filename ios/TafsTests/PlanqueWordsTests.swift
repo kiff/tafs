@@ -75,4 +75,33 @@ final class PlanqueWordsTests: XCTestCase {
             }
         }
     }
+
+    /// A vendor that refuses planque's client (`502 vendor_refused_client`) is said in planque's words, which name whose it
+    /// is, never "it isn't working on our side". planque's `words`, when sent, still come first; any other 502 is the app's
+    /// line for a service that's down. As Android's `aVendorThatRefusesPlanquesClientIsSaidInPlanquesWords`.
+    func testAVendorThatRefusesPlanquesClientIsSaidInPlanquesWords() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: URLSession(configuration: config))
+        planque.tenant = "t_01"
+        planque.deviceID = "dev_1"
+        planque.signer = { _ in "sig" }
+        let said = "mcp.vendor.example doesn't allow tafs to sign in yet, so nothing was connected. It isn't something you can change from here."
+        let path = "POST /v1/accounts/t_01/grants/g_1/confirm"
+        for (body, shown) in [(#"{"error":"\#(said)","code":"vendor_refused_client"}"#, said),
+                              (#"{"error":"x","code":"vendor_refused_client","words":"Stripe said no."}"#, "Stripe said no."),
+                              (#"{"error":"upstream timeout"}"#, PlainError.words(status: 502)),
+                              (#"{"error":"upstream timeout","code":"something_else"}"#, PlainError.words(status: 502))] {
+            StubProtocol.responses[path] = (502, body)
+            do {
+                _ = try await planque.confirm(grantID: "g_1", code: "c")
+                XCTFail("refused")
+            } catch {
+                XCTAssertEqual(error.localizedDescription, shown, body)
+                XCTAssertFalse(error.localizedDescription.contains("upstream"), body)
+            }
+        }
+    }
 }

@@ -1,0 +1,1 @@
+- **A taf in the Chrome side panel answers in the language you write:** the panel's browser language no longer decides it, so an English message in a French Chrome is answered in English ([docs/languages.md](docs/languages.md)).
