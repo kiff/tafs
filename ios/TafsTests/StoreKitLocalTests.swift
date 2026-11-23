@@ -126,9 +126,16 @@ final class StoreKitLocalTests: XCTestCase {
         _ = await purchases.buy(rayo, accountToken: UUID())
         let bought = sent.lines.count
         XCTAssertEqual(bought, 1)
-        let id = try XCTUnwrap(session.allTransactions().first { $0.productIdentifier == rayo }?.identifier)
+        // The purchase just made is the newest of this pack's, if the session still lists the one
+        // setUp's probe made before it cleared them.
+        let id = try XCTUnwrap(session.allTransactions()
+            .filter { $0.productIdentifier == rayo }
+            .max { $0.identifier < $1.identifier }?.identifier)
         try session.refundTransaction(identifier: id)
-        for _ in 0..<50 where sent.lines.count == bought {
+        // StoreKit's local session reports a refund in its own time: up to 20 seconds, done as
+        // soon as it's sent. (`for … where` would only skip the sleep, never stop the loop.)
+        for _ in 0..<200 {
+            if sent.lines.count > bought { break }
             try await Task.sleep(nanoseconds: 100_000_000)
         }
         XCTAssertGreaterThan(sent.lines.count, bought, "the refund reached KIFF")
