@@ -15,6 +15,7 @@ Chrome için tafs, tafs'larınızın kendi Chrome'unuzda, yalnızca izin verdiğ
 • Chrome, kurulum sırasında bir kez tüm sitelere erişim ister. tafs yalnızca her görevin listelediği sitelerde çalışır ve bunları telefonunuzda onaylarsınız.
 • Ödeme yapmak, sipariş vermek ve kayıtlı bir girişi doldurmak her zaman telefonunuzdaki onayınızı bekler.
 • Bir sayfayı metin ve form alanları olarak okur; parola, kart ve kod alanları çıkarılır. Diğer sekmelerinizi veya geçmişinizi asla okumaz.
+• Bir taf, sayfadaki bir adımı size bırakabilir; örneğin bir arama ya da kart numarası yazmak. Adımı siz yaparsınız ve sayfayı yeniden okuduğunda alanlara yazdıklarınız dışarıda bırakılır.
 • Bankalar, cüzdanlar, parola yöneticileri, ödemeler, sağlık ve devlet siteleri, telefonunuzda bir görev için birine izin vermediğiniz sürece asla işlenmez.
 • Kayıtlı girişler isteğe bağlıdır ve bu bilgisayarda mühürlenir. tafs ve KIFF onları asla görmez.
 • Yan panel, bu Chrome'da çalışan taf'ı gösterir ve onunla orada, tafs uygulamasındaki gibi konuşursunuz. “Bu site için yeni bir taf kur”, Coach'u açar; Coach bir sayfayı yalnızca “Bu sayfayı paylaş” düğmesine tıkladığınızda görür ve o zaman yalnızca o sayfayı, aynı alanlar kaldırılmış olarak.

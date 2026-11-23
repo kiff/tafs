@@ -13,6 +13,11 @@ the terms below, so a word on a button is the word in a notification, an email a
   counts against a limit or how an amount is checked.
 - **Amounts and dates format by the phone's locale,** as they do now: `1.240,00 €` in German,
   `1 240,00 €` in French, `€1,240.00` in English.
+- **Ordinals** ("this would be the 6th call", a Card's `{nth}`) are the system's, except in five languages where it
+  writes English's suffix or the wrong gender, which each app writes itself from CLDR's ordinal classes, in the
+  language's own figures: Turkmen -nji, or -njy where n % 10 is 6 or 9 or n is 10 (6-njy); Urdu ویں (6ویں); Hindi in
+  the feminine, as a call is, ली री री थी ठी then वीं, with 0 bare (6ठी); Bengali ম য় য় র্থ ষ্ঠ by class, else তম (৬ষ্ঠ, ২১তম);
+  Mongolian -р (6-р). iOS writes them in `Words.ordinal`, Android in `Ordinals`.
 - **The binding texts are in English:** Terms, Privacy and the DPA. Their translations, and each country's section,
   are published in the country's language beside English; the English text binds, except where local law requires
   the local-language text to bind (Quebec's Charter of the French language). The owner's ruling, 20 Nov.

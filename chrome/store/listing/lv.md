@@ -15,6 +15,7 @@ tafs Chrome ļauj taviem tafiem strādāt tavā Chrome, tikai tajās vietnēs, k
 • Chrome instalēšanas laikā vienreiz pieprasa piekļuvi visām vietnēm. tafs strādā tikai vietnēs, ko norāda katrs uzdevums un ko tu apstiprini tālrunī.
 • Maksāšana, pasūtījuma veikšana un saglabātas pierakstīšanās aizpildīšana vienmēr gaida tavu apstiprinājumu tālrunī.
 • Tas lasa lapu kā tekstu un veidlapas laukus, bez paroles, kartes un koda laukiem. Tas nekad nelasa tavas citas cilnes vai vēsturi.
+• Tafs var nodot tev vienu soli lapā, piemēram, ierakstīt meklēšanu vai kartes numuru. Tu to izdari pats, un, kad tas lapu lasa vēlreiz, laukos ierakstītais tiek izlaists.
 • Banku, maku, paroļu pārvaldnieku, maksājumu, veselības un valsts iestāžu vietnes nekad netiek apstrādātas, ja vien tu neatļauj vienu no tām vienam uzdevumam tālrunī.
 • Saglabātās pierakstīšanās ir neobligātas un aizzīmogotas šajā datorā. tafs un KIFF tās nekad neredz.
 • Sānjosla rāda taf, kas strādā šajā Chrome, un tu ar to runā tur, tāpat kā tafs lietotnē. „Iestatīt jaunu taf šai vietnei“ atver Coach, kas redz lapu tikai tad, kad noklikšķini uz „Kopīgot šo lapu“, un tad tikai šo lapu, ar tiem pašiem noņemtajiem laukiem.

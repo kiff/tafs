@@ -15,6 +15,7 @@ tafs per a Chrome deixa que els teus tafs treballin al teu propi Chrome, només 
 • Chrome et demana una sola vegada, en instal·lar-lo, accés a tots els llocs. tafs només treballa als llocs que indica cada tasca, que aproves al telèfon.
 • Pagar, fer una comanda i omplir un inici de sessió desat sempre esperen la teva aprovació al telèfon.
 • Llegeix una pàgina com a text i camps de formulari, sense els camps de contrasenya, targeta i codi. Mai no llegeix les teves altres pestanyes ni l'historial.
+• Un taf et pot passar un pas d'una pàgina, com escriure una cerca o un número de targeta. El fas tu mateix, i quan torna a llegir la pàgina, el que has escrit als camps queda fora.
 • Els llocs de bancs, carteres, gestors de contrasenyes, pagaments, salut i administració pública mai no es tracten, tret que en permetis un, per a una tasca, al telèfon.
 • Els inicis de sessió desats són opcionals i queden segellats en aquest ordinador. tafs i KIFF mai no els veuen.
 • El tauler lateral mostra el taf que treballa en aquest Chrome, i hi parles, com a l'app tafs. «Configura un taf nou per a aquest lloc» obre Coach, que només veu una pàgina quan fas clic a «Comparteix aquesta pàgina», i llavors només aquesta pàgina, amb els mateixos camps eliminats.

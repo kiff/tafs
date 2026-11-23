@@ -1624,6 +1624,81 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Phones 2: a run of Coach's that ended without an answer (`failed`, tafs cloud's own answer in
+    /// contracts/conversation-failed.json) is Coach's chat's last line, in tafs cloud's words, by a taf's chat's rules: no
+    /// words, a chat with nothing in it, or a later read with none is no line; a run this chat followed live and saw fail
+    /// already has its own line with Retry, so the thread's for that run isn't added, while another run's still is.
+    func testCoachsRunThatEndedWithoutAnAnswerIsItsChatsLastLine() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        // The thread as read, whichever chat the read names.
+        func thread(_ json: String) {
+            StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, json)
+            StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, json)
+            StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/sess1"] = (200, json)
+        }
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("contracts/conversation-failed.json")
+        let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let answer = String(decoding: try JSONSerialization.data(withJSONObject: try XCTUnwrap(root["answer"])), as: UTF8.self)
+        let words = try XCTUnwrap(((root["answer"] as? [String: Any])?["failed"] as? [String: Any])?["words"] as? String)
+        thread(answer)
+        await model.loadSetup()
+        XCTAssertNil(model.setupError)
+        XCTAssertEqual(model.setupThread.failed, TafsCloud.RunFailed(run: "run2", words: words))
+        let line = try XCTUnwrap(model.setupRunFailedLine)
+        XCTAssertEqual(line.from, .taf)
+        XCTAssertEqual(line.text, words, "tafs cloud's words, as they are")
+        XCTAssertTrue(model.setupThread.items.allSatisfy { $0.at < line.at }, "last, after everything else")
+
+        // Words with nothing in them are no line; a failed of another shape leaves the thread read, with none.
+        thread(#"{"messages":[{"at":"2026-10-16T12:00:00.000Z","from":"owner","kind":"message","text":"Hi","session":"s1"}],"components":[],"failed":{"run":"r2","code":"ai_unavailable","words":"  "}}"#)
+        await model.loadSetupThread()
+        XCTAssertNil(model.setupThread.failed)
+        XCTAssertNil(model.setupRunFailedLine)
+        thread(#"{"messages":[{"at":"2026-10-16T12:00:00.000Z","from":"owner","kind":"message","text":"Hi","session":"s1"}],"components":[],"failed":{"run":7,"words":["x"]}}"#)
+        await model.loadSetupThread()
+        XCTAssertNil(model.setupError)
+        XCTAssertEqual(model.setupThread.messages.count, 1)
+        XCTAssertNil(model.setupRunFailedLine)
+
+        // A chat with nothing in it yet shows none.
+        thread(#"{"messages":[],"components":[],"failed":{"run":"r2","words":"Our AI provider isn't serving us right now."}}"#)
+        await model.loadSetupThread()
+        XCTAssertNotNil(model.setupThread.failed)
+        XCTAssertNil(model.setupRunFailedLine)
+
+        // A run followed live that ended ERROR has its own line, with Retry: the thread's for that run isn't added.
+        let failedR2 = #"{"messages":[{"at":"2026-10-16T12:00:00.000Z","from":"owner","kind":"message","text":"Connect my Stripe","session":"s1"}],"components":[],"failed":{"run":"r2","words":"Our AI provider isn't serving us right now."}}"#
+        thread(failedR2)
+        model.streamOpener = { _, _ in
+            AsyncThrowingStream { c in
+                c.yield(.session("s1", newSession: false, run: "r2"))
+                c.yield(.end(status: "ERROR", stop: "error"))
+                c.finish()
+            }
+        }
+        let delivered = await model.sendSetup("Connect my Stripe")
+        XCTAssertTrue(delivered)
+        await model.setupStream?.value
+        XCTAssertEqual(model.setupEnded, .failed(retry: "Connect my Stripe"))
+        XCTAssertEqual(model.setupThread.failed?.run, "r2")
+        XCTAssertNil(model.setupRunFailedLine, "one refused line per run")
+
+        // Another run's failure, read later, is still said.
+        thread(failedR2.replacingOccurrences(of: #""run":"r2""#, with: #""run":"r3""#))
+        await model.loadSetupThread()
+        XCTAssertEqual(model.setupRunFailedLine?.text, "Our AI provider isn't serving us right now.")
+
+        // A later read with none clears it.
+        thread(#"{"messages":[{"at":"2026-10-16T12:00:00.000Z","from":"owner","kind":"message","text":"Connect my Stripe","session":"s1"}],"components":[]}"#)
+        await model.loadSetupThread()
+        XCTAssertNil(model.setupThread.failed)
+        XCTAssertNil(model.setupRunFailedLine)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// A run that fails part-way says so and offers Retry, which sends its message again; a
     /// stopped run is marked stopped (#58 B1, B8).
     func testARunThatFailsPartWayOffersRetry() async throws {

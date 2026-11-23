@@ -25,7 +25,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 
 **The three biggest gaps**
 1. **macOS 12** is furthest behind: 8 screens not started and 31 partial. Most partials wait on approving on this Mac with a security key, landing PR by PR (trials: tafs-macos#182).
-2. **iPhone still behind Android on one phone feature not yet in review** ([Phones](#phones-iphone-and-android-feature-by-feature) 2): a failed run's line in Coach's chat. Three more are in review: the loop card (8), the re-pair re-check (14) and one signature to pair a Chrome ([Your Chrome](#your-chrome) 5).
+2. **iPhone behind Android on two phone features, both in review** ([Phones](#phones-iphone-and-android-feature-by-feature) 8, [Your Chrome](#your-chrome) 5): the loop card and one signature to pair a Chrome. The release card (Phones 16) waits on planque and KIFF on both phones.
 3. **Apple Watch behind Wear OS** ([Watches](#watches)): Keep for later, a complication, Hear the answer, and three switches built but off until the owner's yes or the privacy page.
 
 ## The iPad's screens
@@ -203,8 +203,8 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **macOS 12** (partial): Delete account itself: signed by the device key and erasing tafs cloud's, planque's and KIFF's sides (`deleteAccount`); its click says this Mac can't approve, and sends nothing
   - **Windows** (partial): `SignInView`'s Copy. The KIFF account's rows from `GET /v1/me` (KIFF account, Signed in as, `AccountLines`); People & groups under People & apps (#73, merged); the Plan section (`PlanRow`)…
 - **TafChatView**
-  - **iPhone/iPad** (partial): the loop card (Read on, Stop here): in review, tafs#1861; a failed run's line in Coach's chat (a taf's chat has it, #1766) (see Phones 2, 8)
-  - **Mac 13+** (partial): the loop card (Read on, Stop here): in review, tafs#1861; a failed run's line in Coach's chat (a taf's chat has it, #1766) (see Phones 2, 8)
+  - **iPhone/iPad** (partial): the loop card (Read on, Stop here): in review, tafs#1861 (see Phones 8)
+  - **Mac 13+** (partial): the loop card (Read on, Stop here): in review, tafs#1861 (see Phones 8)
   - **macOS 12** (partial): What Coach's conversation also misses (attachments, questions); `SteadyMarkdown`
   - **Linux** (partial): attachments and the mic; the sample's chat
 - **TafDetailView**
@@ -254,7 +254,7 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | # | Feature | iPhone/iPad | Android | Where it's said |
 | -: | :- | :- | :- | :- |
 | 1 | KIFF's words for a connection, v2 (`POST /v1/profiles/words?v=2`) | done (tafs#1762) | done (1.27.7) | coach.md, "KIFF's words for a connection" |
-| 2 | A failed run's refused line, with Retry | partial: a taf's chat (tafs#1766); not yet Coach's chat | done (`chatFailed`, `ChatEnd.Failed`) | android-app.md:24-30, ios-app.md |
+| 2 | A failed run's refused line, with Retry | done (tafs#1867: Coach's chat; a taf's chat: tafs#1766) | done (`chatFailed`, `ChatEnd.Failed`) | android-app.md:24-30, ios-app.md |
 | 3 | An answered connect card: its Card line opens that Card as signed | done (tafs#1771) | done | coach.md:55-60 |
 | 4 | View-only read from `approval_mode` in `GET /v1/me` | done (tafs#1772) | done | approvals.md:158-162 |
 | 5 | A removed taf's connections ended by tafs cloud, not the phone | done (`AppModel.removeTaf`) | done (1.17.1) | connect-apps.md:128-133 |
@@ -266,7 +266,7 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | 11 | How tafs works: Chrome and the emailed code | done (tafs#1758) | done (tafs#1758, which carried #1759) | onboarding.md |
 | 12 | Coach's Start screen: its tools and Cards signed in one go | done (`start.words`, `/v1/connections/batch`) | done (1.20) | coach.md:140-159 |
 | 13 | An API door's address only ever on tafs cloud's own host (as Windows and Linux) | done (tafs#1768) | done (tafs#1770) | doors.md |
-| 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | partial: re-reads the connections, no check against what it showed | in review: tafs#1761 | android-app.md, "Pairing a Chrome" |
+| 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | done (tafs#1859) | done (tafs#1761) | android-app.md, "Pairing a Chrome" |
 | 15 | A re-pairing after a reinstall starts on the one Chrome alike | done (tafs#1780) | done (tafs#1781) | chrome.md, "Your Chrome" 1 |
 | 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | not started (designed: tafs#1786) | not started (designed: tafs#1786) | chrome.md, "The phone's release card" |
 

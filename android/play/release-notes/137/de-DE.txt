@@ -1,0 +1,3 @@
+• „So funktioniert tafs“ erklärt jetzt dein Chrome und die Anmeldung mit einem per E-Mail gesendeten Code.
+• „Coach seine Tools geben“ sagt jetzt, wenn sich nichts verbinden ließ, statt still zu bleiben.
+• Der „6. Aufruf“ einer Card steht jetzt richtig auf Turkmenisch, Urdu, Hindi, Bengalisch und Mongolisch.

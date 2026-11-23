@@ -1,0 +1,1 @@
+- **Chrome Web Store listing:** a bullet on the hand-over: a taf can hand you one step on a page, you do it yourself, and what you typed in the fields is left out when it reads the page again, in every language.

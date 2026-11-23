@@ -1,0 +1,3 @@
+• « Comment fonctionne tafs » explique désormais votre Chrome et la connexion avec un code envoyé par e-mail.
+• « Donner ses outils à Coach » le dit désormais quand rien n’a pu être connecté, au lieu de rester muet.
+• Le « 6e appel » d’une Card s’écrit désormais correctement en turkmène, ourdou, hindi, bengali et mongol.

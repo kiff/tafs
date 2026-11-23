@@ -1,6 +1,7 @@
 package bot.tafs.app.design
 
 import android.content.Context
+import bot.tafs.app.model.Ordinals
 import bot.tafs.app.model.Res
 import java.util.Locale
 
@@ -15,8 +16,12 @@ class AndroidWords(private val context: Context) : Res.Source {
   override fun list(items: List<String>, language: String): String =
     android.icu.text.ListFormatter.getInstance(Locale.forLanguageTag(language)).format(items)
 
-  override fun ordinal(n: Long, language: String): String =
-    android.icu.text.MessageFormat("{0,ordinal}", Res.figures(Locale.forLanguageTag(language))).format(arrayOf<Any>(n))
+  /** [n] in order: [Ordinals] where ICU has no ordinal that fits a call, with the language's own figures; else ICU's. */
+  override fun ordinal(n: Long, language: String): String {
+    val locale = Res.figures(Locale.forLanguageTag(language))
+    return Ordinals.written(n, locale.language, android.icu.text.NumberFormat.getIntegerInstance(locale).format(n))
+      ?: android.icu.text.MessageFormat("{0,ordinal}", locale).format(arrayOf<Any>(n))
+  }
 
   companion object {
     /**
