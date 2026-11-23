@@ -348,7 +348,7 @@ What landed or is in review on 23 Nov, device by device. "—" means the feature
 | Trials of a new version on the security key | done | done | in review: tafs-macos#182 | done | in review: tafs-linux#96 | — |
 | Sign in again and Replace the key on a connection | done | done | not for it: made on the phone (planque takes no security key) | done (tafs-windows#268) | partial: on the phone (connecting is the phone's here) | — |
 | A connection's own page from planque's row, with its actions | done | done | partial | in review: tafs-windows#269 | partial | — |
-| An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812 in review) | done (tafs#1814: the chat's line, with Retry) | built, not yet a PR (the chat's line, with Retry) | not started | in review: tafs-windows#271 (said on Needs you, not in the chat) | built, not yet a PR | — |
+| An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | not started | in review: tafs-windows#271 (said on Needs you, not in the chat) | built, not yet a PR | — |
 | The side panel is the taf in this Chrome (tafs#1799), no client named (tafs#1810), the read after an act waits for its navigation (tafs#1811) | — | — | — | — | — | done |
 
 ## Docs that say otherwise
