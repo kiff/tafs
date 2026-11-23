@@ -544,6 +544,14 @@ export function watchAskNotification(askID: string): Notification {
   return { kind: "background", payload: { aps: { "content-available": 1 }, change: "watch_ask", ask_id: askID } };
 }
 
+/**
+ * The person's watch Inbox marks changed (docs/watch-app.md, step iv): nothing but that, for the phone to read them with
+ * its own session and pass to its watch. Never an id, a line's words or its taf.
+ */
+export function watchInboxNotification(): Notification {
+  return { kind: "background", payload: { aps: { "content-available": 1 }, change: "watch_inbox" } };
+}
+
 function answeredNotification(holdID: string): Notification {
   return { kind: "background", payload: { aps: { "content-available": 1 }, hold_id: holdID, answered: true } };
 }

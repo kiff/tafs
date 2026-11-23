@@ -1,0 +1,3 @@
+- **iPhone and iPad: the first minute after signing in comes in order.** "Your data and the AI" and the time-zone question no longer open under "You're connected": the celebration, then the consent, then the zone. And an account on UTC is no longer asked to switch to GMT, which is the same time. As on Android.
+- **iPhone and iPad: a phone with no Face ID says what to do.** It now says to add Face ID or a fingerprint to approve from it, rather than to sign in again, which changed nothing.
+- **iPhone and iPad: an opened attachment stays in the app's own folder**, whatever name or id it comes with.
