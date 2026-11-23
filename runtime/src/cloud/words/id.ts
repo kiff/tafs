@@ -18,6 +18,8 @@ export const id: Words = {
   work_waiting_approval: "Menunggu persetujuan Anda",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Proses itu sudah berakhir, jadi tidak ada yang dijalankan.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Menginstal versi ini menghentikan hal yang menunggu jawaban Anda: panggilan yang ditahan ditarik kembali dan pesannya tidak dijalankan. Anda dapat mengirimnya lagi.",
   your_step_title: "Langkah Anda",
   your_step_done: "Selesai",
   your_step_skip: "Lewati",

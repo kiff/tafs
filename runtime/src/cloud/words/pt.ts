@@ -15,6 +15,8 @@ export const pt: Words = {
   work_waiting_approval: "À espera da sua aprovação",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Essa execução já tinha terminado, por isso nada foi feito.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Ao instalar esta versão, parou o que esperava pela sua resposta: a chamada retida foi retirada e a mensagem não foi executada. Pode enviá-la de novo.",
   your_step_title: "O seu passo",
   your_step_done: "Concluído",
   your_step_skip: "Saltar",

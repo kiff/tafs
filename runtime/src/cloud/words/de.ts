@@ -15,6 +15,8 @@ export const de: Words = {
   work_waiting_approval: "Wartet auf deine Genehmigung",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Dieser Lauf war schon beendet, deshalb wurde nichts ausgeführt.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Beim Installieren dieser Version wurde gestoppt, was auf deine Antwort wartete: Der zurückgehaltene Aufruf wurde zurückgezogen und die Nachricht wurde nicht ausgeführt. Du kannst sie erneut senden.",
   your_step_title: "Dein Schritt",
   your_step_done: "Erledigt",
   your_step_skip: "Überspringen",

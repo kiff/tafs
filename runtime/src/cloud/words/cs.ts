@@ -18,6 +18,8 @@ export const cs: Words = {
   work_waiting_approval: "Čeká na vaše schválení",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Ten běh už skončil, takže se nic neprovedlo.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Instalace této verze zastavila to, co čekalo na tvou odpověď: zadržené volání bylo staženo a zpráva se neprovedla. Můžeš ji poslat znovu.",
   your_step_title: "Váš krok",
   your_step_done: "Hotovo",
   your_step_skip: "Přeskočit",
