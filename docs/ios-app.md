@@ -1403,6 +1403,14 @@ come back only when you connect them again."). The connections are planque's gra
 failed is not listed (`ChromeConnections`). The replace pick at pairing, and a connection's Chrome on the taf's page, follow
 planque#365's route and the extension's own pairing bytes.
 
+## Repeated reads slow down and spread
+
+Where a screen repeats a server read (`PollPace`; docs/scale.md): a **taf's chat** while an answer is owed reads at 4 s for ten reads, 8 s for ten, 12 s for ten
+(`chatPollBudget`, 30 reads, about four minutes; skipped while a stream is live); **Setup's chat** reads at 1 s (3 s idle) for ten reads, then 2, 4 and at most 8 times
+that, and a card still waiting on its grant keeps the read going as before; **People** reads on open and on pull-to-refresh, then every minute while it
+changes and slower (up to five minutes) while the answers are the same, and **not while the app isn't in front**. Every wait is up to a fifth shorter, never
+longer, so phones that started together don't read together. A stream or a push, where there is one, is what tells a screen of a change; this is only the fallback.
+
 ## Pairing a Chrome that replaces one
 
 "Your Chrome" 1 ([chrome.md](chrome.md)): on the offered Chrome's screen a pick says which paired Chrome this one replaces, or "A new Chrome (replaces none)". It starts on the Chrome with the offer's `profile_id` (an id the extension keeps for its Chrome profile and planque relays as a hint), else on the one paired Chrome of the same browser and system, else on none (`ChromeReplace.preselect`; two alike is never a guess). Choosing one shows what moves ("Moves to this Chrome: wikipedia.org"), the connections that end with the old Chrome, and that the old Chrome is unpaired once this one is paired. The confirm sends `replaces` and `carried` (`[{grant, sites}]`, at most 50), and the same fingerprint signs `carried` inside the pairing the extension checks (`ChromePairing.signedBytes`, tafs#1754), so planque can't change the list; with nothing chosen, nothing moves and the pairing is as before. **A connection moves only if the phone's own key verifies its sites:** planque's grant read gives each extension connection's `chrome_sites_sig` (the phone's signature over `{chrome_id, grant, sites}` made at approval) and `chrome_sites_carried` (planque#369), and `ChromeReplace.carried` carries a connection only when `ChromePairing.sitesSignatureHolds` accepts the signature for the Chrome being replaced (never what planque says of the sites). A connection with no verifying signature, or one carried here from an earlier Chrome (empty signature), ends with the old Chrome, as unpairing does, and the screen says so. The connections are read again just before the confirm.
