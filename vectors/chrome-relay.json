@@ -1,0 +1,493 @@
+{
+ "about": "The owner's Chrome relay (docs/chrome.md, \"Steps\"): planque's signed steps, one per op, the extension's signed answers (a page, a refusal, a hand-over handed) and the person's answers to a hand-over. Each message has its label, its body, the exact bytes signed (label, a zero byte, the body's JCS) and a signature that verifies under the key named. The extension (chrome/test/vectors.test.js) and planque (its vendored copy, testdata/chrome-relay.json) read the same file. A step travels as {type: \"step\", step, sig}; an answer as {type, ...body, sig}, so neither can sign or check a field the other doesn't.",
+ "planque_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErhOamSwfqpiievXZ2OMuV11SAbuGo6Z5VlvHlgrzqsB_lCjWhUEL73l3eYhl4YIkJezaG-sKfcOQoFu8jODo4A",
+ "extension_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6Kn49v2y9QHRlPZ6s69Zm-PKZmbBvQkCizgA7x9S5_zUBdAjB_LvAhcKkzNHlE5-mGX-91YbT0X2R6EnHAQJ7g",
+ "chrome_id": "chr_1",
+ "now": 1800000000000,
+ "steps": [
+  {
+   "name": "step open",
+   "label": "tafs-chrome/step/v1",
+   "body": {
+    "id": "run_1.1",
+    "nonce": "nonce-1",
+    "exp": 1800000010000,
+    "chrome_id": "chr_1",
+    "run": "run_1",
+    "taf": "Book finder",
+    "grant": "grt_1",
+    "sites": [
+     "books.example"
+    ],
+    "sites_signed": {
+     "sites": [
+      "books.example"
+     ],
+     "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    "op": "open",
+    "url": "https://books.example/"
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvc3RlcC92MQB7ImNocm9tZV9pZCI6ImNocl8xIiwiZXhwIjoxODAwMDAwMDEwMDAwLCJncmFudCI6ImdydF8xIiwiaWQiOiJydW5fMS4xIiwibm9uY2UiOiJub25jZS0xIiwib3AiOiJvcGVuIiwicnVuIjoicnVuXzEiLCJzaXRlcyI6WyJib29rcy5leGFtcGxlIl0sInNpdGVzX3NpZ25lZCI6eyJzaWciOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUEiLCJzaXRlcyI6WyJib29rcy5leGFtcGxlIl19LCJ0YWYiOiJCb29rIGZpbmRlciIsInVybCI6Imh0dHBzOi8vYm9va3MuZXhhbXBsZS8ifQ",
+   "sig": "YK_2gpI0COlzDYtYeRT1xLHFQt9GimxZ5ml9BKA1_iURgY6qc9a2HpHVp7jRAiyhCKmC2teyZ1mF8qY6j0LE_w",
+   "wire": {
+    "type": "step",
+    "step": {
+     "id": "run_1.1",
+     "nonce": "nonce-1",
+     "exp": 1800000010000,
+     "chrome_id": "chr_1",
+     "run": "run_1",
+     "taf": "Book finder",
+     "grant": "grt_1",
+     "sites": [
+      "books.example"
+     ],
+     "sites_signed": {
+      "sites": [
+       "books.example"
+      ],
+      "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "op": "open",
+     "url": "https://books.example/"
+    },
+    "sig": "YK_2gpI0COlzDYtYeRT1xLHFQt9GimxZ5ml9BKA1_iURgY6qc9a2HpHVp7jRAiyhCKmC2teyZ1mF8qY6j0LE_w"
+   }
+  },
+  {
+   "name": "step read",
+   "label": "tafs-chrome/step/v1",
+   "body": {
+    "id": "run_1.2",
+    "nonce": "nonce-2",
+    "exp": 1800000010000,
+    "chrome_id": "chr_1",
+    "run": "run_1",
+    "taf": "Book finder",
+    "grant": "grt_1",
+    "sites": [
+     "books.example"
+    ],
+    "sites_signed": {
+     "sites": [
+      "books.example"
+     ],
+     "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    "op": "read"
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvc3RlcC92MQB7ImNocm9tZV9pZCI6ImNocl8xIiwiZXhwIjoxODAwMDAwMDEwMDAwLCJncmFudCI6ImdydF8xIiwiaWQiOiJydW5fMS4yIiwibm9uY2UiOiJub25jZS0yIiwib3AiOiJyZWFkIiwicnVuIjoicnVuXzEiLCJzaXRlcyI6WyJib29rcy5leGFtcGxlIl0sInNpdGVzX3NpZ25lZCI6eyJzaWciOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUEiLCJzaXRlcyI6WyJib29rcy5leGFtcGxlIl19LCJ0YWYiOiJCb29rIGZpbmRlciJ9",
+   "sig": "m2tUf3ddRH-JyrQZJlIF4R47n2NDrpPH9y9k3O0VqT8l6e6dImW7Y0NbUowvONnoyf7L3zM_4L6bJXOy4QjjHg",
+   "wire": {
+    "type": "step",
+    "step": {
+     "id": "run_1.2",
+     "nonce": "nonce-2",
+     "exp": 1800000010000,
+     "chrome_id": "chr_1",
+     "run": "run_1",
+     "taf": "Book finder",
+     "grant": "grt_1",
+     "sites": [
+      "books.example"
+     ],
+     "sites_signed": {
+      "sites": [
+       "books.example"
+      ],
+      "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "op": "read"
+    },
+    "sig": "m2tUf3ddRH-JyrQZJlIF4R47n2NDrpPH9y9k3O0VqT8l6e6dImW7Y0NbUowvONnoyf7L3zM_4L6bJXOy4QjjHg"
+   }
+  },
+  {
+   "name": "step act",
+   "label": "tafs-chrome/step/v1",
+   "body": {
+    "id": "run_1.3",
+    "nonce": "nonce-3",
+    "exp": 1800000010000,
+    "chrome_id": "chr_1",
+    "run": "run_1",
+    "taf": "Book finder",
+    "grant": "grt_1",
+    "sites": [
+     "books.example"
+    ],
+    "sites_signed": {
+     "sites": [
+      "books.example"
+     ],
+     "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    "op": "act",
+    "read_id": "rd_1",
+    "act": {
+     "kind": "fill",
+     "ref": "f2",
+     "value": "atlas"
+    }
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvc3RlcC92MQB7ImFjdCI6eyJraW5kIjoiZmlsbCIsInJlZiI6ImYyIiwidmFsdWUiOiJhdGxhcyJ9LCJjaHJvbWVfaWQiOiJjaHJfMSIsImV4cCI6MTgwMDAwMDAxMDAwMCwiZ3JhbnQiOiJncnRfMSIsImlkIjoicnVuXzEuMyIsIm5vbmNlIjoibm9uY2UtMyIsIm9wIjoiYWN0IiwicmVhZF9pZCI6InJkXzEiLCJydW4iOiJydW5fMSIsInNpdGVzIjpbImJvb2tzLmV4YW1wbGUiXSwic2l0ZXNfc2lnbmVkIjp7InNpZyI6IkFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQSIsInNpdGVzIjpbImJvb2tzLmV4YW1wbGUiXX0sInRhZiI6IkJvb2sgZmluZGVyIn0",
+   "sig": "6RJl4i6eQXdHF8GaNX_AnYuZiOy3Los2kx_8ZZDE0CemgEGDEIF-gI7q1WsPYnGrNuUVpPYCpKDjlkvHZbFzog",
+   "wire": {
+    "type": "step",
+    "step": {
+     "id": "run_1.3",
+     "nonce": "nonce-3",
+     "exp": 1800000010000,
+     "chrome_id": "chr_1",
+     "run": "run_1",
+     "taf": "Book finder",
+     "grant": "grt_1",
+     "sites": [
+      "books.example"
+     ],
+     "sites_signed": {
+      "sites": [
+       "books.example"
+      ],
+      "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "op": "act",
+     "read_id": "rd_1",
+     "act": {
+      "kind": "fill",
+      "ref": "f2",
+      "value": "atlas"
+     }
+    },
+    "sig": "6RJl4i6eQXdHF8GaNX_AnYuZiOy3Los2kx_8ZZDE0CemgEGDEIF-gI7q1WsPYnGrNuUVpPYCpKDjlkvHZbFzog"
+   }
+  },
+  {
+   "name": "step hand",
+   "label": "tafs-chrome/step/v1",
+   "body": {
+    "id": "run_1.4",
+    "nonce": "nonce-4",
+    "exp": 1800000010000,
+    "chrome_id": "chr_1",
+    "run": "run_1",
+    "taf": "Book finder",
+    "grant": "grt_1",
+    "sites": [
+     "books.example"
+    ],
+    "sites_signed": {
+     "sites": [
+      "books.example"
+     ],
+     "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    "op": "hand",
+    "read_id": "rd_1",
+    "hand": {
+     "words": "Type the title you're looking for in the search box, then tap Done.",
+     "ref": "f2"
+    }
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvc3RlcC92MQB7ImNocm9tZV9pZCI6ImNocl8xIiwiZXhwIjoxODAwMDAwMDEwMDAwLCJncmFudCI6ImdydF8xIiwiaGFuZCI6eyJyZWYiOiJmMiIsIndvcmRzIjoiVHlwZSB0aGUgdGl0bGUgeW91J3JlIGxvb2tpbmcgZm9yIGluIHRoZSBzZWFyY2ggYm94LCB0aGVuIHRhcCBEb25lLiJ9LCJpZCI6InJ1bl8xLjQiLCJub25jZSI6Im5vbmNlLTQiLCJvcCI6ImhhbmQiLCJyZWFkX2lkIjoicmRfMSIsInJ1biI6InJ1bl8xIiwic2l0ZXMiOlsiYm9va3MuZXhhbXBsZSJdLCJzaXRlc19zaWduZWQiOnsic2lnIjoiQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBIiwic2l0ZXMiOlsiYm9va3MuZXhhbXBsZSJdfSwidGFmIjoiQm9vayBmaW5kZXIifQ",
+   "sig": "y4y_nm0GVAWkydkFm4eknQ2IK2ijc7QOOd9w_p4kwfy8hOFrC_7A3AORBPW1PlAwUYHr_BsXo0Ya1D1iQ9nZiA",
+   "wire": {
+    "type": "step",
+    "step": {
+     "id": "run_1.4",
+     "nonce": "nonce-4",
+     "exp": 1800000010000,
+     "chrome_id": "chr_1",
+     "run": "run_1",
+     "taf": "Book finder",
+     "grant": "grt_1",
+     "sites": [
+      "books.example"
+     ],
+     "sites_signed": {
+      "sites": [
+       "books.example"
+      ],
+      "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "op": "hand",
+     "read_id": "rd_1",
+     "hand": {
+      "words": "Type the title you're looking for in the search box, then tap Done.",
+      "ref": "f2"
+     }
+    },
+    "sig": "y4y_nm0GVAWkydkFm4eknQ2IK2ijc7QOOd9w_p4kwfy8hOFrC_7A3AORBPW1PlAwUYHr_BsXo0Ya1D1iQ9nZiA"
+   }
+  },
+  {
+   "name": "step close",
+   "label": "tafs-chrome/step/v1",
+   "body": {
+    "id": "run_1.5",
+    "nonce": "nonce-5",
+    "exp": 1800000010000,
+    "chrome_id": "chr_1",
+    "run": "run_1",
+    "taf": "Book finder",
+    "grant": "grt_1",
+    "sites": [
+     "books.example"
+    ],
+    "sites_signed": {
+     "sites": [
+      "books.example"
+     ],
+     "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    "op": "close"
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvc3RlcC92MQB7ImNocm9tZV9pZCI6ImNocl8xIiwiZXhwIjoxODAwMDAwMDEwMDAwLCJncmFudCI6ImdydF8xIiwiaWQiOiJydW5fMS41Iiwibm9uY2UiOiJub25jZS01Iiwib3AiOiJjbG9zZSIsInJ1biI6InJ1bl8xIiwic2l0ZXMiOlsiYm9va3MuZXhhbXBsZSJdLCJzaXRlc19zaWduZWQiOnsic2lnIjoiQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBIiwic2l0ZXMiOlsiYm9va3MuZXhhbXBsZSJdfSwidGFmIjoiQm9vayBmaW5kZXIifQ",
+   "sig": "CiYCXghvefKQQjVUwHBZneflgtamhGoYxt-Hil_FVQAEkT9Gc2d1awyZa0nZ5yjCcTWv6YVN1K8Xwv3392mn5w",
+   "wire": {
+    "type": "step",
+    "step": {
+     "id": "run_1.5",
+     "nonce": "nonce-5",
+     "exp": 1800000010000,
+     "chrome_id": "chr_1",
+     "run": "run_1",
+     "taf": "Book finder",
+     "grant": "grt_1",
+     "sites": [
+      "books.example"
+     ],
+     "sites_signed": {
+      "sites": [
+       "books.example"
+      ],
+      "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "op": "close"
+    },
+    "sig": "CiYCXghvefKQQjVUwHBZneflgtamhGoYxt-Hil_FVQAEkT9Gc2d1awyZa0nZ5yjCcTWv6YVN1K8Xwv3392mn5w"
+   }
+  }
+ ],
+ "results": [
+  {
+   "name": "result page (open)",
+   "label": "tafs-chrome/result/v1",
+   "body": {
+    "id": "run_1.1",
+    "nonce": "nonce-1",
+    "chrome_id": "chr_1",
+    "ok": true,
+    "page": {
+     "read_id": "rd_1",
+     "url": "https://books.example/",
+     "title": "Example Books",
+     "text": "Find your next book.",
+     "fields": [
+      {
+       "ref": "f2",
+       "label": "Search books",
+       "kind": "search",
+       "value": ""
+      }
+     ],
+     "controls": [
+      {
+       "ref": "c1",
+       "label": "Search"
+      }
+     ],
+     "links": [
+      {
+       "ref": "l1",
+       "label": "Atlases",
+       "url": "https://books.example/atlases"
+      }
+     ]
+    },
+    "error": null
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvcmVzdWx0L3YxAHsiY2hyb21lX2lkIjoiY2hyXzEiLCJlcnJvciI6bnVsbCwiaWQiOiJydW5fMS4xIiwibm9uY2UiOiJub25jZS0xIiwib2siOnRydWUsInBhZ2UiOnsiY29udHJvbHMiOlt7ImxhYmVsIjoiU2VhcmNoIiwicmVmIjoiYzEifV0sImZpZWxkcyI6W3sia2luZCI6InNlYXJjaCIsImxhYmVsIjoiU2VhcmNoIGJvb2tzIiwicmVmIjoiZjIiLCJ2YWx1ZSI6IiJ9XSwibGlua3MiOlt7ImxhYmVsIjoiQXRsYXNlcyIsInJlZiI6ImwxIiwidXJsIjoiaHR0cHM6Ly9ib29rcy5leGFtcGxlL2F0bGFzZXMifV0sInJlYWRfaWQiOiJyZF8xIiwidGV4dCI6IkZpbmQgeW91ciBuZXh0IGJvb2suIiwidGl0bGUiOiJFeGFtcGxlIEJvb2tzIiwidXJsIjoiaHR0cHM6Ly9ib29rcy5leGFtcGxlLyJ9fQ",
+   "sig": "L4ty693cvQbjRrJzqM1v1HQkqePGIQ-We3pbZs0DBb4DkYcwD4wAz22O_pOf_iR1wbJUr-bFAfXV4AYC_gBPAg",
+   "wire": {
+    "type": "result",
+    "id": "run_1.1",
+    "nonce": "nonce-1",
+    "chrome_id": "chr_1",
+    "ok": true,
+    "page": {
+     "read_id": "rd_1",
+     "url": "https://books.example/",
+     "title": "Example Books",
+     "text": "Find your next book.",
+     "fields": [
+      {
+       "ref": "f2",
+       "label": "Search books",
+       "kind": "search",
+       "value": ""
+      }
+     ],
+     "controls": [
+      {
+       "ref": "c1",
+       "label": "Search"
+      }
+     ],
+     "links": [
+      {
+       "ref": "l1",
+       "label": "Atlases",
+       "url": "https://books.example/atlases"
+      }
+     ]
+    },
+    "error": null,
+    "sig": "L4ty693cvQbjRrJzqM1v1HQkqePGIQ-We3pbZs0DBb4DkYcwD4wAz22O_pOf_iR1wbJUr-bFAfXV4AYC_gBPAg"
+   }
+  },
+  {
+   "name": "result refused (open)",
+   "label": "tafs-chrome/result/v1",
+   "body": {
+    "id": "run_1.1",
+    "nonce": "nonce-1",
+    "chrome_id": "chr_1",
+    "ok": false,
+    "page": null,
+    "error": {
+     "code": "site_not_listed",
+     "detail": "not one of this grant's sites"
+    }
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvcmVzdWx0L3YxAHsiY2hyb21lX2lkIjoiY2hyXzEiLCJlcnJvciI6eyJjb2RlIjoic2l0ZV9ub3RfbGlzdGVkIiwiZGV0YWlsIjoibm90IG9uZSBvZiB0aGlzIGdyYW50J3Mgc2l0ZXMifSwiaWQiOiJydW5fMS4xIiwibm9uY2UiOiJub25jZS0xIiwib2siOmZhbHNlLCJwYWdlIjpudWxsfQ",
+   "sig": "oQRbZj4yAbETqRS-TTrbb-mafaEO4rAj1NyyWT3f2zsnHWAEMStKWBq1aduQ4R1j6MyN-ioqlBLH42k3D3VISA",
+   "wire": {
+    "type": "result",
+    "id": "run_1.1",
+    "nonce": "nonce-1",
+    "chrome_id": "chr_1",
+    "ok": false,
+    "page": null,
+    "error": {
+     "code": "site_not_listed",
+     "detail": "not one of this grant's sites"
+    },
+    "sig": "oQRbZj4yAbETqRS-TTrbb-mafaEO4rAj1NyyWT3f2zsnHWAEMStKWBq1aduQ4R1j6MyN-ioqlBLH42k3D3VISA"
+   }
+  },
+  {
+   "name": "result handed (hand)",
+   "label": "tafs-chrome/result/v1",
+   "body": {
+    "id": "run_1.4",
+    "nonce": "nonce-4",
+    "chrome_id": "chr_1",
+    "ok": true,
+    "page": null,
+    "error": null,
+    "handed": true
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvcmVzdWx0L3YxAHsiY2hyb21lX2lkIjoiY2hyXzEiLCJlcnJvciI6bnVsbCwiaGFuZGVkIjp0cnVlLCJpZCI6InJ1bl8xLjQiLCJub25jZSI6Im5vbmNlLTQiLCJvayI6dHJ1ZSwicGFnZSI6bnVsbH0",
+   "sig": "uWmiERjmE54PcA949kwtdUzZss4aDPxxM5ilgU5NJNSKFYDoavUGLcsdav2q3qKmfwEdSKWns2SyukbDFyUbxA",
+   "wire": {
+    "type": "result",
+    "id": "run_1.4",
+    "nonce": "nonce-4",
+    "chrome_id": "chr_1",
+    "ok": true,
+    "page": null,
+    "error": null,
+    "handed": true,
+    "sig": "uWmiERjmE54PcA949kwtdUzZss4aDPxxM5ilgU5NJNSKFYDoavUGLcsdav2q3qKmfwEdSKWns2SyukbDFyUbxA"
+   }
+  }
+ ],
+ "hand_results": [
+  {
+   "name": "hand_result done",
+   "label": "tafs-chrome/hand/v1",
+   "body": {
+    "hand": "run_1.4",
+    "outcome": "done",
+    "page": {
+     "read_id": "rd_1",
+     "url": "https://books.example/",
+     "title": "Example Books",
+     "text": "Find your next book.",
+     "fields": [
+      {
+       "ref": "f2",
+       "label": "Search books",
+       "kind": "search"
+      }
+     ],
+     "controls": [
+      {
+       "ref": "c1",
+       "label": "Search"
+      }
+     ],
+     "links": [
+      {
+       "ref": "l1",
+       "label": "Atlases",
+       "url": "https://books.example/atlases"
+      }
+     ]
+    }
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvaGFuZC92MQB7ImhhbmQiOiJydW5fMS40Iiwib3V0Y29tZSI6ImRvbmUiLCJwYWdlIjp7ImNvbnRyb2xzIjpbeyJsYWJlbCI6IlNlYXJjaCIsInJlZiI6ImMxIn1dLCJmaWVsZHMiOlt7ImtpbmQiOiJzZWFyY2giLCJsYWJlbCI6IlNlYXJjaCBib29rcyIsInJlZiI6ImYyIn1dLCJsaW5rcyI6W3sibGFiZWwiOiJBdGxhc2VzIiwicmVmIjoibDEiLCJ1cmwiOiJodHRwczovL2Jvb2tzLmV4YW1wbGUvYXRsYXNlcyJ9XSwicmVhZF9pZCI6InJkXzEiLCJ0ZXh0IjoiRmluZCB5b3VyIG5leHQgYm9vay4iLCJ0aXRsZSI6IkV4YW1wbGUgQm9va3MiLCJ1cmwiOiJodHRwczovL2Jvb2tzLmV4YW1wbGUvIn19",
+   "sig": "LSqwjPbul9yZrbOrIe_k5idi09PChP2dGB3aqRXPOCoH-QggEWyNcFYofpj3DMXaTR71vlxo3WwtmjQv7QzCaQ",
+   "wire": {
+    "type": "hand_result",
+    "hand": "run_1.4",
+    "outcome": "done",
+    "page": {
+     "read_id": "rd_1",
+     "url": "https://books.example/",
+     "title": "Example Books",
+     "text": "Find your next book.",
+     "fields": [
+      {
+       "ref": "f2",
+       "label": "Search books",
+       "kind": "search"
+      }
+     ],
+     "controls": [
+      {
+       "ref": "c1",
+       "label": "Search"
+      }
+     ],
+     "links": [
+      {
+       "ref": "l1",
+       "label": "Atlases",
+       "url": "https://books.example/atlases"
+      }
+     ]
+    },
+    "sig": "LSqwjPbul9yZrbOrIe_k5idi09PChP2dGB3aqRXPOCoH-QggEWyNcFYofpj3DMXaTR71vlxo3WwtmjQv7QzCaQ"
+   }
+  },
+  {
+   "name": "hand_result declined",
+   "label": "tafs-chrome/hand/v1",
+   "body": {
+    "hand": "run_1.4",
+    "outcome": "declined"
+   },
+   "signing_bytes": "dGFmcy1jaHJvbWUvaGFuZC92MQB7ImhhbmQiOiJydW5fMS40Iiwib3V0Y29tZSI6ImRlY2xpbmVkIn0",
+   "sig": "S43PSaw98W4ldvwnCZLYmrDbv2lifO9GJ0aNskkP0ynEzGeFb3JP4I_dpVgdCakKAAJxU5xH0_8UW4JDar6OOg",
+   "wire": {
+    "type": "hand_result",
+    "hand": "run_1.4",
+    "outcome": "declined",
+    "sig": "S43PSaw98W4ldvwnCZLYmrDbv2lifO9GJ0aNskkP0ynEzGeFb3JP4I_dpVgdCakKAAJxU5xH0_8UW4JDar6OOg"
+   }
+  }
+ ]
+}

@@ -15,7 +15,7 @@ import org.junit.Test
 
 /**
  * A payee name, an IBAN or a reason from KIFF, a vendor, a taf or tafs cloud never carries a direction character onto an
- * approval, the record, a notification or the watch (qa-kiff, 20 Nov): U+202E or an isolate could make what sits beside an
+ * approval, the record, a notification or the watch: U+202E or an isolate could make what sits beside an
  * amount look reordered. They're taken out; any other control character is a space; right-to-left letters stay.
  */
 class DirectionCharacterTest {

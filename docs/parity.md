@@ -2,7 +2,7 @@
 
 One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. parity-steward keeps this page; a PR that moves a row updates it, and the desktop columns follow each repo's `docs/port-checklist.md`.
 
-**Read from:** kiff/tafs main `cdda761` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `3ff3327`, kiff/tafs-windows `e9177ba` and kiff/tafs-linux `94802a4`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
+**Read from:** kiff/tafs main `cdda761` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `b0a3e69`, kiff/tafs-windows `a7954c2` and kiff/tafs-linux `460c5bd`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
 
 - **Mac 13+** is the iPad app built with Mac Catalyst ([mac-app.md](mac-app.md)): it follows the iPad unless that page says it differs.
 - **macOS 12, Windows, Linux** are native ports ([kiff/tafs-macos](https://github.com/kiff/tafs-macos), [kiff/tafs-windows](https://github.com/kiff/tafs-windows), [kiff/tafs-linux](https://github.com/kiff/tafs-linux)).
@@ -13,20 +13,20 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 
 | Device | Totals | Counted over |
 | :- | :- | :- |
-| iPhone/iPad | done 56, partial 2 | the 58 iPad view files |
-| Mac 13+ | done 54, partial 4 | the 58 iPad view files |
-| macOS 12 | done 21, partial 30, not for it 7 | the 58 iPad view files |
+| iPhone/iPad | done 57, partial 1 | the 58 iPad view files |
+| Mac 13+ | done 55, partial 3 | the 58 iPad view files |
+| macOS 12 | done 23, partial 28, not for it 7 | the 58 iPad view files |
 | Windows | done 50, not for it 8 | the 58 iPad view files |
-| Linux | done 40, partial 12, not started 1, not for it 5 | the 58 iPad view files |
+| Linux | done 50, partial 2, not started 1, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | done 24, partial 3, not started 1, not for it 4 | the [Watches](#watches) table |
 | Apple Watch | done 17, partial 6, not started 4, not for it 5 | the [Watches](#watches) table |
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
-1. **macOS 12** is furthest behind: 30 screens partial and 7 not for it. Most partials wait on approving on this Mac with a security key, landing PR by PR.
-2. **Linux:** 12 partial and 1 not started. Its "Allow this from now on" waits on its security-key approvals, as macOS 12 has them (counted as not started: see "Counting checks").
-3. **Apple Watch behind Wear OS** ([Watches](#watches)): Keep for later, a complication, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level but for the loop card and one-touch pairing, both in review.)
+1. **macOS 12** is furthest behind: 28 screens partial and 7 not for it. Most partials wait on approving on this Mac with a security key, landing PR by PR.
+2. **Linux:** 2 partial and 1 not started. Its "Allow this from now on" waits on its security-key approvals, as macOS 12 has them (counted as not started: see "Counting checks").
+3. **Apple Watch behind Wear OS** ([Watches](#watches)): Keep for later, a complication, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level but for the loop card, in review.)
 
 ## The iPad's screens
 
@@ -35,30 +35,30 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | iPad view file | What | iPhone/iPad | Mac 13+ | macOS 12 | Windows | Linux | Android |
 | :- | :- | :- | :- | :- | :- | :- | :- |
 | AIConsentView | The AI-data consent screen, and Account's row for it | done | done | done | done | done | done |
-| APIDoorViews | A door "From another application": its count and cap, last request, keys, New key, Revoke, the instructions | done | done | partial | done | partial | done |
+| APIDoorViews | A door "From another application": its count and cap, last request, keys, New key, Revoke, the instructions | done | done | partial | done | done | done |
 | AccountPreferencesView | Account's theme and time zone pickers | done | done | done | done | done | done |
 | AllowSheetView | "Allow this from now on" | done | done | done | done | not started | done |
-| AppEventApprovalSheet | An app event's filters before signing a subscription | done | done | partial | done | partial | done |
+| AppEventApprovalSheet | An app event's filters before signing a subscription | done | done | partial | done | done | done |
 | ApprovalSetupView | This device's approval readiness, and the gate in place of an approval's button | done | partial | partial | done | done | done |
 | AttachViews | Attaching photos and files in a chat | done | done | partial | done | done | done |
 | BriefView | "Your brief": decisions first with Coach's recommendation, the next move, what got done | done | done | partial | done | done | done |
 | CalendarView | Calendar: Day, Week, Month | done | done | done | done | done | done |
 | ChromeShotView | Screenshots of a run's acts in the owner's Chrome | done | done | done | done | done | done |
-| ChromeViews | Account › Chrome: paired Chromes, Pair a Chrome, Unpair, once planque offers it | partial | partial | partial | done | done | done |
+| ChromeViews | Account › Chrome: paired Chromes, Pair a Chrome, Unpair, once planque offers it | done | done | partial | done | done | done |
 | CoachMode | Coach mode over the app: the panel, its toolbar, the phone's sheet | done | done | partial | done | done | done |
-| CoachToolsStep | Coach's tools still to give, and what's given as Start's screen draws it | done | done | partial | done | partial | done |
+| CoachToolsStep | Coach's tools still to give, and what's given as Start's screen draws it | done | done | partial | done | done | done |
 | ConnectAppsView | Connect apps, a connected app's detail, connecting's approval | done | done | partial | done | partial | done |
 | CreditsViews | The credits the account's tafs used, and one taf's runs | done | done | partial | done | done | done |
 | DeleteAccountView | Deleting the account | done | done | done | done | done | done |
 | DevicesView | Account › Devices | done | done | partial | done | done | done |
 | DiscardSettingUp | Discard a taf being set up | done | done | done | done | done | done |
-| DoorsView | A taf's Doors tab | done | done | partial | done | partial | done |
-| DriveViews | The phone's: Coach drives the phone's own screen (docs/drive.md is the iOS and Android contract)… | done | done | not for it | not for it | partial | done |
+| DoorsView | A taf's Doors tab | done | done | partial | done | done | done |
+| DriveViews | The phone's: Coach drives the phone's own screen (docs/drive.md is the iOS and Android contract)… | done | done | not for it | not for it | done | done |
 | ExportChatsView | Export my chats | done | done | done | done | done | done |
 | FilesViews | Files: the account's or a taf's, newest first, the list beside the open file | done | done | partial | done | done | done |
 | HaltScreen | A halt of one taf or every taf | done | done | done | done | done | done |
 | HomeRecipes | Home with no taf: the recipes | done | done | partial | done | done | done |
-| HomeSplitView | The sidebar for the whole app and what it opens | done | done | partial | done | partial | done |
+| HomeSplitView | The sidebar for the whole app and what it opens | done | done | partial | done | done | done |
 | HomeView | The phone's Home. A wide window uses HomeSplitView. Its first Home (lines 137–152: Ask Coach and How tafs work… | done | done | not for it | not for it | not for it | done |
 | MicButton | The iPad's promise is that recognition runs on the device only… | done | done | done | not for it | not for it | done |
 | NeedsYouView | Needs you: held calls, "Did this happen?", steps, Coach's waits, knocks, alerts | done | done | partial | done | done | done |
@@ -67,7 +67,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | OnboardingView | The welcome: what tafs is, the tick for both Terms with the privacy links and the age line… | done | done | partial | done | done | done |
 | PairComputerView | The phone's side of pairing: the camera reads a computer's code. | done | done | not for it | not for it | not for it | done |
 | PairSignInView | Signing in from another phone | done | partial | done | done | done | done |
-| PeopleViews | People & groups, naming a group, adding someone | done | done | partial | done | done | done |
+| PeopleViews | People & groups, naming a group, adding someone | done | done | done | done | done | done |
 | PlanViews | Buying credits and Solo, asking an admin, declining a request | done | done | partial | done | done | done |
 | QuestionsCard | Several questions Coach asks at once: each question's choices, Something else…, Send answers… | done | done | partial | done | done | done |
 | RecipeGallery | The jobs' gallery | done | done | done | done | done | done |
@@ -76,7 +76,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | ReportAnswerSheet | Report an answer | done | done | done | done | done | done |
 | ReportPaymentSheet | "Report this payment" from a receipt: KIFF marks it and the taf is halted | done | done | done | done | done | done |
 | SetupChatView | Coach's conversation | done | done | partial | done | partial | done |
-| SetupShapePanel | What Coach has made so far | done | done | partial | done | partial | done |
+| SetupShapePanel | What Coach has made so far | done | done | partial | done | done | done |
 | ShareViews | Sharing a taf (`ShareLine`, `ShareTafSheet`), and the Overview (`OverviewView`) | done | done | partial | done | done | done |
 | SignInView | `SignInView`: Sign in with KIFF. Also `SettingsView`, `PlanRow`, `AccountView`, `AccountLines` (Account) | done | done | partial | done | done | done |
 | TafChatView | A taf's chat | partial | partial | partial | done | done | done |
@@ -84,13 +84,13 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | TafDialPanel | Not reachable at the pin: the iPad opens `DoorsView` only as `.only(door.id)` from Setup › Starts when… | done | done | not for it | not for it | done | not for it |
 | TafKnobRemote | Not reachable at the pin, as `TafDialPanel`. Reopen it if the iPad turns it on. | done | done | not for it | not for it | not for it | not for it |
 | TafKnobView | Not reachable at the pin, as `TafDialPanel` (only `TafKnobView.color` is reused, by Coach's chat)… | done | done | not for it | not for it | done | not for it |
-| TafPresentationViews | A taf's Activity list and its rows, from tafs cloud; Setup's ring and memory | done | done | partial | done | partial | done |
-| TafSetupViews | A taf's Setup: Starts when, Results go to, the pending dial | done | done | partial | done | partial | done |
+| TafPresentationViews | A taf's Activity list and its rows, from tafs cloud; Setup's ring and memory | done | done | done | done | done | done |
+| TafSetupViews | A taf's Setup: Starts when, Results go to, the pending dial | done | done | partial | done | done | done |
 | TafsBar | The phone's bar along the foot. A wide window has the sidebar. | done | done | not for it | not for it | not for it | done |
 | TrialViews | Trials of a new version | done | done | done | done | done | done |
 | UsageView | Plan & usage: the balance, buying, who bills, members' requests | done | done | partial | done | done | done |
 | WatchDaysViews | "From your watch" in Coach's Previous conversations | done | done | done | done | done | done |
-| WorkLog | What a taf or Coach does while it answers, and what it did | done | done | done | done | partial | done |
+| WorkLog | What a taf or Coach does while it answers, and what it did | done | done | done | done | done | done |
 | YourStepCard | A step a taf hands the person | done | done | done | done | done | done |
 
 ### Missing, and why not
@@ -99,31 +99,26 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 
 - **APIDoorViews**
   - **macOS 12** (partial): New key (the phone's: a key is shown once); the API instructions (when ported, the example's address is only ever on tafs cloud's own host, over HTTPS…
-  - **Linux** (partial): `NewKeySheet` and `IssuedKeyView` (a key is only made signed, so never here); Coach's `DoorDraftCard` (a draft is approved signed: with Coach's drafts)
 - **AllowSheetView**
   - **Linux** (not started): "Allow this from now on" answers a held call on the device; Linux answers held calls in KIFF until its security-key approvals land, as macOS 12 has them. Not a platform limit, so not "not for it".
 - **AppEventApprovalSheet**
   - **macOS 12** (partial): Approving it: it signs planque's trigger for the grant (`POST grants/{id}/triggers`), a route this Mac never signs
-  - **Linux** (partial): `driveTerms` (Coach driving the app isn't on Linux)
 - **ApprovalSetupView**
   - **Mac 13+** (partial): Touch ID approval not yet checked on a real signed Mac (CI only); a Mac signed in through the browser is view-only (docs/mac-app.md)
   - **macOS 12** (partial): `ReadinessReader`, `ApprovalGate`, `ApprovalNotice`: no Mac approves yet
 - **AttachViews**
   - **macOS 12** (partial): Take photo (this Mac's camera); Quick Look in place (a file opens in the app this Mac opens its kind with)
 - **BriefView**
-  - **macOS 12** (partial): A held call's own page (Approve isn't on macOS 12 yet); the mission log's Ask Coach; alert routing by `brief_kind`; the sample brief
+  - **macOS 12** (partial): A held call's own page; the sample brief (the Mac has no sample mode yet). Not for macOS 12: alert routing by `brief_kind`, which comes with tafs cloud's push, which needs a signed build
 - **ChromeViews**
-  - **iPhone/iPad** (partial): "Your Chrome" 5 (one signature for both acts): in review, tafs#1865
-  - **Mac 13+** (partial): "Your Chrome" 5 (one signature for both acts): in review, tafs#1865
   - **macOS 12** (partial): Each Chrome's own connections, and Unpair naming them (waiting on tafs' words)
 - **CoachMode**
   - **macOS 12** (partial): The dimmed ground and its tap outside, and closing by a drag past the narrowest or a swipe: on the Mac the screen beside Coach stays usable, and Back or Esc close it. `PhoneCoachPanel` is the phone's
 - **CoachToolsStep**
   - **macOS 12** (partial): Giving them: signed with the approval key, then KIFF's connections batch and Coach's Cards' draft, the phone's; `CoachToolsGiven`'s Start screen (`start: true`)…
-  - **Linux** (partial): Giving them (signed, the phone's); `CoachToolsGiven`'s Start screen (`start: true`), which belongs to Coach's first Start (signed); opening the step after a first Start
 - **ConnectAppsView**
   - **macOS 12** (partial): Not for macOS 12, each drawn up to its approval and made on the phone: connecting and Sign in again, giving or replacing a key, the receipt's Disconnect…
-  - **Linux** (partial): `startConnect` (connecting is done on the phone: a request started here could never be approved here); planque's read of the connections (`readsConnections`: set up with planque, signed)…
+  - **Linux** (partial): `startConnect` (connecting is done on the phone: a request started here could never be approved here); the key's sheet in tafs cloud's words, pasting a key…
 - **CreditsViews**
   - **macOS 12** (partial): Opening a taf's run (`KnobRequestDetail`); a taf's line in `CreditsPanel` opening its runs; the period before on a taf's runs
 - **DeleteAccountView**
@@ -132,11 +127,9 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **macOS 12** (partial): Remove and Add a passkey (each signed); Add a device is the phone's (`PairComputerView`)
 - **DoorsView**
   - **macOS 12** (partial): WhatsApp's signup (on a phone); the Slack door's approval and its subscription's removal; `DoorDial` and `DoorRim`, not reachable at the pin (as Windows found)
-  - **Linux** (partial): `SlackDoorSheet` (Starts when's); WhatsApp's signup (it comes back to the iPhone's own address: the shared line says where it's added)
 - **DriveViews**
   - **macOS 12** (not for it): The phone's: Coach drives the phone's own screen (tafs docs/drive.md is the iOS and Android contract). As Windows (tafs-windows#242).
   - **Windows** (not for it): The phone's: Coach drives the phone's own screen (docs/drive.md is the iOS and Android contract), so there's nothing on Windows for it to drive.
-  - **Linux** (partial): Approving a drive (signed, the phone's) and Not now: a drive card is answered on the phone, never here
 - **FilesViews**
   - **macOS 12** (partial): Share; the system preview of a file with no text start; the chat's file chips
 - **HaltScreen**
@@ -145,7 +138,6 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **macOS 12** (partial): Handing a recipe to a new Coach conversation; Own words opening a new conversation (`startNewTaf`)
 - **HomeSplitView**
   - **macOS 12** (partial): Shared with you; Other agents; tafs being set up and Discard; the recipes strip and Explore; + New's gallery; the Unreachable and Plan lines at the foot
-  - **Linux** (partial): Discard on a computer with no security key (the phone's)
 - **HomeView**
   - **macOS 12** (not for it): The phone's compact home (`TafsTab` draws it only below regular width, HomeSplitView.swift:10-14). This Mac always has the sidebar: its Overview is `ShareViews`' `OverviewView`…
   - **Windows** (not for it): The phone's Home. A wide window uses HomeSplitView. Its first Home (lines 137–152: Ask Coach and How tafs works over an empty Home) is every desktop's, and is on Windows (`OverviewPage`…
@@ -154,7 +146,7 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **Windows** (not for it): The iPad's promise is that recognition runs on the device only, so no audio leaves it (`Dictation.swift`: "no audio leaves the phone"; `voice.voice_becomes_text_device_not`)…
   - **Linux** (not for it): The iPad's dictation is on the device only (`requiresOnDeviceRecognition`), and a Linux desktop has no on-device speech recognition: no mic, as the iPad draws none where no on-device locale exists…
 - **NeedsYouView**
-  - **macOS 12** (partial): Allow from now on; Refuse's Touch ID or password confirmation; `CoachWaitingCard`'s swipe (its button is on the Mac); `AlertsCard`; knocks
+  - **macOS 12** (partial): "Did this happen?"'s Yes and No (KIFF's `did-this-happen` is an approval: a security-key act, not built yet). Not for macOS 12: `AlertsCard`…
 - **NotificationSettingsView**
   - **macOS 12** (partial): `AlertingTafsView` (which tafs alert); alerts with tafs closed, which need a signed build
 - **OnboardingView**
@@ -165,8 +157,6 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **Linux** (not for it): The phone's side of pairing: the camera reads a computer's code. The computer's side is tafs-macos's, ported in tafs-linux's `docs/pairing.md` (`pairing.rs`, `tafs-core/pairing.rs`).
 - **PairSignInView**
   - **Mac 13+** (partial): built (the iPad's "from another phone"); not yet tried on a real Mac (docs/mac-app.md)
-- **PeopleViews**
-  - **macOS 12** (partial): Making, renaming or deleting a group and changing its people (each signed)
 - **PlanViews**
   - **macOS 12** (partial): Nothing to port: `BuyCreditsView` and `SoloView` are the App Store's, not for macOS 12
 - **QuestionsCard**
@@ -176,17 +166,16 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **Linux** (partial): Approve, Decline, the sign-in's button and Not now (`ApprovalGate`'s line instead); planque's grant on an approval (the card's own title and words stand for it…
 - **SetupShapePanel**
   - **macOS 12** (partial): Shown while planque is read with this Mac's proof (as Windows), where the iPad waits for `planqueReady`, which this Mac is only after a Start made on it
-  - **Linux** (partial): The tools it connects, from planque's grants (this computer reads none); shown without `planqueReady`, which this computer never is
 - **ShareViews**
-  - **macOS 12** (partial): `ShareTafSheet`: sharing is signed with Face ID on the iPad, so it waits for this Mac to approve; the Overview reading its list again by itself
+  - **macOS 12** (partial): the Overview reading its list again by itself
 - **SignInView**
   - **macOS 12** (partial): Delete account itself: signed by the device key and erasing tafs cloud's, planque's and KIFF's sides (`deleteAccount`); its click says this Mac can't approve, and sends nothing
 - **TafChatView**
   - **iPhone/iPad** (partial): the loop card (Read on, Stop here): in review, tafs#1861 (see Phones 8)
   - **Mac 13+** (partial): the loop card (Read on, Stop here): in review, tafs#1861 (see Phones 8)
-  - **macOS 12** (partial): What Coach's conversation also misses (attachments, questions); `SteadyMarkdown`
+  - **macOS 12** (partial): What Coach's conversation also misses (attachments, questions)
 - **TafDetailView**
-  - **macOS 12** (partial): Connect again; a request's Your step card in `WorkPanel` (with Needs you)
+  - **macOS 12** (partial): Connect again
 - **TafDialPanel**
   - **Android** (not for it): not reachable on the iPad at the pin (it opens `DoorsView` only as `.only(door.id)`)
   - **macOS 12** (not for it): Not reachable on the iPad at the pin: it opens `DoorsView` only as `.only(door.id)`, so the remote never shows. To reopen if the iPad turns it on. As Windows (tafs-windows#242).
@@ -200,20 +189,14 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **Android** (not for it): not reachable on the iPad at the pin (it opens `DoorsView` only as `.only(door.id)`)
   - **macOS 12** (not for it): The same as `TafDialPanel` (only `TafKnobView.color` is reused, by Coach's chat). As Windows (tafs-windows#242).
   - **Windows** (not for it): Not reachable at the pin, as `TafDialPanel` (only `TafKnobView.color` is reused, by Coach's chat). Reopen it if the iPad turns it on.
-- **TafPresentationViews**
-  - **macOS 12** (partial): a call's receipt from its row
-  - **Linux** (partial): Signing a connection in again from a next step (planque's grants aren't read here: Connect apps instead)
 - **TafSetupViews**
   - **macOS 12** (partial): Not sent with Send again (the taf's work); Make it live and approving an app event, each signed
-  - **Linux** (partial): Slack's channels (planque's grants aren't read here, so `SlackDoorSheet` says to connect first)
 - **TafsBar**
   - **macOS 12** (not for it): The phone's bar along the foot. The Mac has the sidebar (`HomeSplitView`).
   - **Windows** (not for it): The phone's bar along the foot. A wide window has the sidebar.
   - **Linux** (not for it): The phone's bar along the foot. A wide screen has the sidebar.
 - **UsageView**
-  - **macOS 12** (partial): Raise the limit (an approval), also as a raise request's answer; who bills the plan (`billingPanel`) and Manage. Buying credits and Solo are not for macOS 12 (`PlanViews.swift`'s store views)
-- **WorkLog**
-  - **Linux** (partial): a connected tool's title from planque (`toolTitle`): its name in KIFF in words stands for it
+  - **macOS 12** (partial): Raise the limit (an approval), also as a raise request's answer. Buying credits and Solo are not for macOS 12 (`PlanViews.swift`'s store views)
 
 ## Phones: iPhone and Android, feature by feature
 
@@ -248,7 +231,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | 2 | Use another Chrome for a connection (planque's `use_another_chrome`, signed for the new Chrome) | done (tafs#1776) | done (tafs#1783) | not for it: planque tells it |
 | 3 | Unpairing ends its connections, and says which | done (tafs#1751) | done (tafs#1756) | not for it |
 | 4 | Each Chrome says what it's used for; a connection names its Chrome | done (tafs#1751, #1776) | done (tafs#1756, #1777) | not for it |
-| 5 | One fingerprint for pairing and the extension's KIFF device | in review: tafs#1865 | done (`confirmChromeOneTouch`) | done |
+| 5 | One fingerprint for pairing and the extension's KIFF device | done (tafs#1865, `pairChromeOneTouch`) | done (`confirmChromeOneTouch`) | done |
 | 6 | Isolation: each connection's sites signed per Chrome | done | done | done (`checkSites`, `checkAllowances`) |
 
 ## Chrome extension
@@ -329,6 +312,10 @@ hardware, the act signed only by the phone's key); "not built yet" is never one.
 - **macOS 12, DeleteAccountView** says "not for macOS 12" because KIFF takes a deletion only signed by the phone's approval
   key. Linux draws the same sheet and counts it ported with that line; by the rule it's **ported** on both, counted here as
   done.
+- **Linux's five rows moved to Ported by tafs-linux#112** (APIDoorViews, HomeSplitView, AppEventApprovalSheet, DriveViews,
+  CoachToolsStep): each item left out is a real limit. A key is shown once and Linux can't hide a window from screen
+  recording; Discard and Approve are signed, and Linux signs only with a security key; no drive runs on a computer; access
+  is never granted from a computer.
 - Every other "not for it" (the phone's Home and bar, pairing from the phone's camera, Coach driving the phone, the
   unreachable dial, on-device dictation on Linux and Windows) is a real limit of the device.
 

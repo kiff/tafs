@@ -4,7 +4,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { LABEL, b64u, fromB64u, hmac, sha256, concat, signingBytes } from "../src/crypto.js";
+import { LABEL, b64u, fromB64u, hmac, sha256, concat, signingBytes, importPublic, verify, newKeyPair } from "../src/crypto.js";
+import { checkStep, Nonces, result } from "../src/protocol.js";
+import { handMessage } from "../src/hand.js";
 import { extensionProof, oneTouchProof, readCarried, hex } from "../src/pairing.js";
 
 const v = JSON.parse(readFileSync(new URL("../../vectors/chrome-pairing.json", import.meta.url), "utf8"));
@@ -69,4 +71,54 @@ test("a release signs the vector's bytes, takes only the vector's handles, and h
   assert.equal(await checkRelease(release, { ...at, step: { ...step, read_id: "rd_8" } }), false, "another read");
   assert.equal(await checkRelease({ ...release, nonce: "AAECAwQFBgcICQoLDA0OEA" }, at), false, "another nonce");
   assert.equal(await checkRelease(release, { ...at, now: r.exp + 1 }), false, "late");
+});
+
+// vectors/chrome-relay.json: planque's signed steps and the extension's signed answers, each with the exact bytes signed.
+// planque reads the same file (its testdata/chrome-relay.json), so a field one side signs and the other doesn't, or a
+// difference in how a body is put into bytes, fails on one side or the other before any key is involved.
+const relay = JSON.parse(readFileSync(new URL("../../vectors/chrome-relay.json", import.meta.url), "utf8"));
+
+test("each relay message's signed bytes are the extension's own, and its signature verifies under the key named", async () => {
+  const planqueKey = await importPublic(relay.planque_key);
+  const extensionKey = await importPublic(relay.extension_key);
+  for (const [list, key] of [[relay.steps, planqueKey], [relay.results, extensionKey], [relay.hand_results, extensionKey]]) {
+    for (const m of list) {
+      assert.equal(b64u(signingBytes(m.label, m.body)), m.signing_bytes, m.name);
+      assert.equal(await verify(key, m.label, m.body, m.sig), true, m.name);
+      // A step travels as {type: "step", step, sig}; an answer as {type, ...body, sig}: the wire carries exactly the signed body.
+      const { type, sig, ...rest } = m.wire;
+      assert.deepEqual(type === "step" ? rest.step : rest, m.body, m.name);
+      assert.equal(sig, m.sig, m.name);
+    }
+  }
+});
+
+test("every step planque signs is taken by checkStep, and its ops are exactly the runner's", async () => {
+  for (const m of relay.steps) {
+    const checked = await checkStep(m.wire, { planqueKey: relay.planque_key, chromeId: relay.chrome_id, nonces: new Nonces(() => relay.now), now: relay.now });
+    assert.equal(checked.why, null, m.name);
+  }
+  const src = readFileSync(new URL("../src/runner.js", import.meta.url), "utf8");
+  const body = src.slice(src.indexOf("async dispatch(run, step)"));
+  const ops = [...body.slice(0, body.indexOf("default:")).matchAll(/case "([a-z_]+)":/g)].map((x) => x[1]);
+  assert.deepEqual(relay.steps.map((m) => m.body.op).sort(), [...ops].sort());
+});
+
+test("the extension's answers sign exactly the vector's bodies: a page, a refusal, handed, and the person's Done and Not now", async () => {
+  const key = await newKeyPair(); // any key: the bytes signed are what's compared
+  const byId = Object.fromEntries(relay.steps.map((m) => [m.body.id, m.body]));
+  for (const m of relay.results) {
+    const step = byId[m.body.id];
+    const out = m.body.handed ? { handed: true } : m.body.error ? { error: m.body.error } : { page: m.body.page };
+    const { type, sig, ...body } = await result(key.privateKey, { id: step.id, nonce: step.nonce }, relay.chrome_id, out);
+    assert.equal(type, "result", m.name);
+    assert.equal(b64u(signingBytes(LABEL.result, body)), m.signing_bytes, m.name);
+    assert.equal(await verify(key.publicKey, LABEL.result, body, sig), true, m.name);
+  }
+  for (const m of relay.hand_results) {
+    const { type, sig, ...body } = await handMessage(key.privateKey, m.body);
+    assert.equal(type, "hand_result", m.name);
+    assert.equal(b64u(signingBytes(LABEL.hand, body)), m.signing_bytes, m.name);
+    assert.equal(await verify(key.publicKey, LABEL.hand, body, sig), true, m.name);
+  }
 });
