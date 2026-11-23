@@ -1,0 +1,1 @@
+- **iPhone and iPad: pairing a Chrome takes one signature.** Where the extension checks it, the one Face ID that pairs a Chrome now makes one signature over both the pairing and the extension's view-only KIFF device, as on Android. An older extension is paired as before, with two signatures under the same Face ID.

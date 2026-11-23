@@ -1518,6 +1518,72 @@ final class AppModel: ObservableObject {
             if !carried.isEmpty { confirmation.carried = carried }
         }
         let reason = Words.Chrome.pairPrompt(name: name)
+        // One signature for both acts where the extension checks it ("Your Chrome" 5): the pairing it verifies and its KIFF
+        // device, under one `kiff.requests.v1`. Only on its proof under the code's secret, so planque can't turn it on. Else
+        // the two signatures an older extension expects, under the same Face ID.
+        if let kiffDevice, offer.oneTouch,
+           ChromePairing.oneTouchProofHolds(secret: p.secret, key: chromeKey, proof: offer.oneTouchProof, kiffOffer: offer.kiffOffer) {
+            guard await pairChromeOneTouch(p, &confirmation, device: kiffDevice, reason: reason, tenant: tenant, gen: gen) else { return false }
+        } else {
+            guard await pairChromeTwice(p, &confirmation, device: kiffDevice, reason: reason, tenant: tenant, gen: gen) else { return false }
+        }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        do {
+            _ = try await planque.confirmChromePairing(p.pairing, confirmation)
+        } catch {
+            chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            return false
+        }
+        await refreshChromes()
+        return true
+    }
+
+    /// The pairing under one signature ("Your Chrome" 5): the approval key signs `kiff.requests.v1` once, behind one Face ID,
+    /// over the SHA-256 of the pairing bytes the extension checks and of KIFF's `kiff.request.v1` for the extension's
+    /// view-only device, with one `signed_at`. KIFF gets its request with that signature and the pairing's hash (`v3`,
+    /// `with=`); planque's confirm carries the same signature as `phone_sig` (raw r‖s), with the account, `signed_at` and KIFF's
+    /// hash, which the extension rebuilds it from. KIFF's device goes first, as with two signatures: a Chrome is never
+    /// confirmed without the device it reads and chats as. As Android's `confirmChromeOneTouch`.
+    private func pairChromeOneTouch(_ p: ChromePairingInProgress, _ confirmation: inout ChromePairing.Confirmation, device: PairingRequest,
+                                    reason: String, tenant: String, gen: Int) async -> Bool {
+        kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let pairHash: String
+        let signature: String
+        do {
+            prepared = try kiff.preparePairing(device, signedAt: signedAt)
+            pairHash = RequestsTogether.hash(try ChromePairing.signedBytes(pairing: p.pairing, confirmation))
+            let kiffHash = RequestsTogether.hash(prepared.message)
+            signature = try await signer.signApproval(RequestsTogether.message(tenant: tenant, signedAt: signedAt, pairHash, kiffHash), reason: reason)
+            confirmation.phoneSig = try ChromePairing.rawSignature(fromDER: signature)
+            confirmation.tenant = tenant
+            confirmation.signedAt = signedAt
+            confirmation.kiffRequestSHA256 = kiffHash
+        } catch {
+            if gen == accountGeneration { chromesError = ApprovalReadiness.notDone(error, what: reason, unconfirmedWords: Words.Approval.cancelled) }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        do {
+            _ = try await kiff.approvePairing(prepared, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: pairHash))
+        } catch KIFFClient.KIFFError.server(_, let message, let why) {
+            chromesError = Self.pairingRefusal(message: message, reason: why)
+            return false
+        } catch {
+            chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            return false
+        }
+        return gen == accountGeneration
+    }
+
+    /// The pairing as an extension that predates one signature expects it: the approval key signs the pairing behind Face ID,
+    /// then, under that same Face ID, KIFF's request for the extension's view-only device, when it offered one.
+    private func pairChromeTwice(_ p: ChromePairingInProgress, _ confirmation: inout ChromePairing.Confirmation, device kiffDevice: PairingRequest?,
+                                 reason: String, tenant: String, gen: Int) async -> Bool {
         do {
             let bytes = try ChromePairing.signedBytes(pairing: p.pairing, confirmation)
             let der = try await signer.signApproval(bytes, reason: reason)
@@ -1544,18 +1610,7 @@ final class AppModel: ObservableObject {
                 return false
             }
         }
-        let signer = self.signer
-        planque.tenant = tenant
-        planque.signer = { try signer.signConfirmed($0) }
-        defer { planque.signer = nil }
-        do {
-            _ = try await planque.confirmChromePairing(p.pairing, confirmation)
-        } catch {
-            chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
-            return false
-        }
-        await refreshChromes()
-        return true
+        return gen == accountGeneration
     }
 
     /// The KIFF device an extension's offer carries, when it carries one: only a view-only browser extension, as KIFF reads
