@@ -1407,11 +1407,14 @@ planque#365's route and the extension's own pairing bytes.
 
 "Your Chrome" 2 and 4 ([chrome.md](chrome.md)): a browser connection's page (`ConnectionDetailView`, the connection that runs in the owner's own
 Chrome) says which Chrome it runs in ("In Work Mac · Chrome 131", as planque names it, `request.browser.chrome_name`) and, where the
-owner manages the connection and another Chrome is paired, offers **Use another Chrome**. Choosing one signs the connection's sites for that
-Chrome with the approval key under one Face ID (`ChromePairing.switchBytes`: `tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`, the sites
-it already has), then `PUT …/grants/{grant}/chrome {chrome_id, chrome_sites_sig}` (`PlanqueClient.switchChrome`) moves it; its sites and Card
-stay, and the extension runs nothing whose sites aren't signed for it. Only a connection planque moves is offered it (approved and not
-ended or failed: `ChromeSwitch.canSwitch`). The Chromes and the connection are read again after it goes through.
+owner manages the connection, planque offers the move (its row's `use_another_chrome` action, `how: "chrome"`: planque asks the same rule its
+`PUT …/chrome` applies, so the app keeps no status list) and another Chrome is paired, offers **Use another Chrome** in planque's words.
+Choosing one signs the connection's sites for that Chrome with the approval key under one Face ID (`ChromePairing.switchBytes`:
+`tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`), **only if this phone's own signature already verifies those sites for the Chrome
+it uses now** (`ChromeSwitch.signedSites`, as a re-pairing checks before it carries): a planque that widened the list gets no signature,
+and a connection carried here from an earlier Chrome has none of its own to move. Then `PUT …/grants/{grant}/chrome {chrome_id,
+chrome_sites_sig}` (`PlanqueClient.switchChrome`) moves it; its sites and Card stay, and the extension runs nothing whose sites aren't
+signed for it. The Chromes and the connection are read again after it goes through.
 
 ## Pairing a Chrome that replaces one
 

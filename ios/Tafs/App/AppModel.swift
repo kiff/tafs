@@ -1556,14 +1556,19 @@ final class AppModel: ObservableObject {
         await refreshChromes()
     }
 
-    /// Moves a browser connection to another paired Chrome ("Your Chrome" 2): the phone signs the connection's sites for that
-    /// Chrome under one Face ID (`ChromePairing.switchBytes`), then planque's `PUT …/grants/{grant}/chrome` moves it. Its sites
+    /// Moves a browser connection to another paired Chrome ("Your Chrome" 2): where planque offers the move, and its sites verify under
+    /// this phone's own signature, the phone signs those sites for that Chrome under one Face ID (`ChromePairing.switchBytes`), then planque's `PUT …/grants/{grant}/chrome` moves it. Its sites
     /// and Card stay. Says why when it didn't go through (`chromesError`); true when planque moved it.
     func switchChrome(_ grant: PlanqueClient.Grant, to chrome: PlanqueClient.Chrome) async -> Bool {
-        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant, ChromeSwitch.canSwitch(grant),
-              let sites = grant.request.browser?.sites else { return false }
+        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant, ChromeSwitch.action(of: grant) != nil else { return false }
         if approvalViewOnly { chromesError = approvalKeyLostWords; return false }
         chromesError = nil
+        // The sites signed again are the ones this phone's own signature verifies for the Chrome it uses now, never what planque says.
+        guard let sites = ChromeSwitch.signedSites(of: grant, phoneKey: signer.approvalPublicKeyDER) else {
+            chromesError = Words.Common.didntGoThrough(what: "\(Words.Chrome.switchPrompt(name: chrome.name))",
+                                                       why: "\(PlanqueClient.PlanqueError.digestMismatch.localizedDescription)")
+            return false
+        }
         let gen = accountGeneration
         let signer = self.signer
         let reason = Words.Chrome.switchPrompt(name: chrome.name)

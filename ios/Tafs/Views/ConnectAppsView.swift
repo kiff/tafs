@@ -1208,7 +1208,7 @@ struct ConnectionDetailView: View {
                 if g.request.browser?.driver == "extension" {
                     chromeSection(g)
                 }
-                let actions = (g.actions ?? []).filter(\.known)
+                let actions = (g.actions ?? []).filter(\.known).filter { $0.id != PlanqueClient.Grant.Action.useAnotherChrome }
                 if model.canManageCards, !actions.isEmpty {
                     Section {
                         ForEach(actions) { action in
@@ -1252,20 +1252,21 @@ struct ConnectionDetailView: View {
     /// under one Face ID; its sites and Card stay.
     @ViewBuilder private func chromeSection(_ g: PlanqueClient.Grant) -> some View {
         let name = g.request.browser?.chromeName ?? ""
+        let move = model.canManageCards ? ChromeSwitch.action(of: g) : nil
         let others = ChromeSwitch.others(for: g, in: model.chromes ?? [])
-        if !name.isEmpty || (model.canManageCards && ChromeSwitch.canSwitch(g) && !others.isEmpty) {
+        if !name.isEmpty || (move != nil && !others.isEmpty) {
             Section {
                 if !name.isEmpty {
                     Text(Words.Chrome.heldIn(name: name)).scaledFont(14).foregroundColor(Theme.soft)
                         .accessibilityIdentifier("connect.chrome")
                 }
-                if model.canManageCards, ChromeSwitch.canSwitch(g), !others.isEmpty {
+                if let move, !others.isEmpty {
                     Menu {
                         ForEach(others) { chrome in
                             Button(chrome.name) { moveTo(chrome, g) }
                         }
                     } label: {
-                        Text(Words.Chrome.switch)
+                        Text(move.words)
                     }
                     .disabled(model.connecting != nil || busy)
                     .accessibilityIdentifier("connect.chrome.switch")

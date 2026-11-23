@@ -242,21 +242,49 @@ final class ChromeConnectionsTests: XCTestCase {
         XCTAssertEqual(ChromeConnections.sites(of: []), "")
     }
 
-    /// A connection moves to another paired Chrome only if it runs in the owner's own Chrome, has sites (the phone signs them again for
-    /// the new Chrome), and planque would move it: approved and not ended or failed. The choices are the other Chromes, never its own.
-    func testAConnectionMovesOnlyWhenItCanAndOnlyToAnotherChrome() throws {
-        for status in ["approved", "signed_in", "connected", "listed", "needs_reconnect"] {
-            XCTAssertTrue(ChromeSwitch.canSwitch(try grant("g", chrome: "chr_a", status: status, sites: ["wikipedia.org"])), status)
+    /// The move is offered only where planque offers it (`use_another_chrome`, `how: "chrome"`), for a connection in the owner's own
+    /// Chrome: the app keeps no status list. Another id, another `how` or no words is no move; the choices are the other Chromes.
+    func testAConnectionMovesOnlyWherePlanqueOffersItAndOnlyToAnotherChrome() throws {
+        func offered(_ id: String, how: String, words: String = "Use another Chrome", driver: String? = "extension") throws -> PlanqueClient.Grant {
+            var g = try grant("g", chrome: "chr_a", status: "connected", sites: ["wikipedia.org"], driver: driver)
+            g.actions = [.init(id: id, words: words, how: how)]
+            return g
         }
-        for status in ["pending", "failed", "disconnected"] {
-            XCTAssertFalse(ChromeSwitch.canSwitch(try grant("g", chrome: "chr_a", status: status, sites: ["wikipedia.org"])), status)
-        }
-        XCTAssertFalse(ChromeSwitch.canSwitch(try grant("g", chrome: "chr_a", status: "connected", sites: [])), "no sites, nothing to sign")
-        XCTAssertFalse(ChromeSwitch.canSwitch(try grant("g", chrome: nil, status: "connected", sites: ["wikipedia.org"], driver: nil)), "planque's hosted browser")
+        XCTAssertEqual(ChromeSwitch.action(of: try offered("use_another_chrome", how: "chrome"))?.words, "Use another Chrome")
+        XCTAssertNil(ChromeSwitch.action(of: try offered("use_another_chrome", how: "put")), "a how this app doesn't know")
+        XCTAssertNil(ChromeSwitch.action(of: try offered("use_another_chrome", how: "chrome", words: "")), "no words")
+        XCTAssertNil(ChromeSwitch.action(of: try offered("remove", how: "chrome")), "another action")
+        XCTAssertNil(ChromeSwitch.action(of: try offered("use_another_chrome", how: "chrome", driver: nil)), "planque's hosted browser")
+        XCTAssertNil(ChromeSwitch.action(of: try grant("g", chrome: "chr_a", status: "connected", sites: ["wikipedia.org"])), "a planque that sends none")
         let g = try grant("g", chrome: "chr_a", status: "connected", sites: ["wikipedia.org"])
         let chromes = [try chrome("chr_a"), try chrome("chr_b"), try chrome("chr_c")]
         XCTAssertEqual(ChromeSwitch.others(for: g, in: chromes).map(\.id), ["chr_b", "chr_c"])
         XCTAssertEqual(ChromeSwitch.others(for: g, in: [try chrome("chr_a")]).map(\.id), [], "one Chrome: nothing to move to")
+    }
+
+    /// The sites signed again for the new Chrome are the ones this phone's own signature verifies for the Chrome the connection uses now:
+    /// never what planque says (a planque that widened the list gets no signature), nor a connection carried here, nor another key's.
+    func testOnlySitesThisPhoneSignedAreSignedAgain() throws {
+        let key = P256.Signing.PrivateKey()
+        let phone = key.publicKey.derRepresentation
+        func sig(_ grant: String, chrome: String = "chr_a", sites: [String], by signer: P256.Signing.PrivateKey? = nil) throws -> String {
+            let bytes = try ChromePairing.sitesBytes(chromeID: chrome, grant: grant, sites: sites)
+            return try ChromePairing.rawSignature(fromDER: (signer ?? key).signature(for: bytes).derRepresentation.base64EncodedString())
+        }
+        func make(sites: [String], sig: String?, carried: String? = nil) throws -> PlanqueClient.Grant {
+            var g = try grant("g1", chrome: "chr_a", status: "connected", sites: sites)
+            g.chromeSitesSig = sig
+            g.chromeSitesCarried = carried
+            return g
+        }
+        XCTAssertEqual(ChromeSwitch.signedSites(of: try make(sites: ["wikipedia.org"], sig: try sig("g1", sites: ["wikipedia.org"])), phoneKey: phone), ["wikipedia.org"])
+        XCTAssertNil(ChromeSwitch.signedSites(of: try make(sites: ["wikipedia.org", "evil.example"], sig: try sig("g1", sites: ["wikipedia.org"])), phoneKey: phone), "widened by planque")
+        XCTAssertNil(ChromeSwitch.signedSites(of: try make(sites: ["wikipedia.org"], sig: nil), phoneKey: phone), "no signature")
+        XCTAssertNil(ChromeSwitch.signedSites(of: try make(sites: ["wikipedia.org"], sig: nil, carried: "chr_old"), phoneKey: phone), "carried, none of its own")
+        XCTAssertNil(ChromeSwitch.signedSites(of: try make(sites: ["wikipedia.org"], sig: try sig("g1", sites: ["wikipedia.org"], by: P256.Signing.PrivateKey())), phoneKey: phone), "another key")
+        XCTAssertNil(ChromeSwitch.signedSites(of: try make(sites: ["wikipedia.org"], sig: try sig("g1", chrome: "chr_b", sites: ["wikipedia.org"])), phoneKey: phone), "for another Chrome")
+        XCTAssertNil(ChromeSwitch.signedSites(of: try make(sites: ["wikipedia.org"], sig: try sig("g2", sites: ["wikipedia.org"])), phoneKey: phone), "for another grant")
+        XCTAssertNil(ChromeSwitch.signedSites(of: try make(sites: [], sig: try sig("g1", sites: [])), phoneKey: phone), "no sites")
     }
 
     /// What the phone signs to move a connection is its sites for the Chrome it moves to, the same bytes the extension and planque check

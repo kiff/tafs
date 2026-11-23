@@ -17,14 +17,22 @@ enum ChromeConnections {
 /// holds for it, which the phone's fingerprint then signs for the new Chrome (`ChromePairing.Carried`).
 /// Which Chrome a browser connection runs in, and where it may move ("Your Chrome" 2 and 4).
 enum ChromeSwitch {
-    /// The statuses planque moves a connection in: one the owner approved and that hasn't ended or failed.
-    static let movable: Set<String> = ["approved", "signed_in", "connected", "listed", "needs_reconnect"]
+    /// The action planque offers on this connection's row, only where its own `PUT …/chrome` would accept the move (one rule, in the
+    /// service): the app keeps no status list of its own, and a planque that doesn't send it offers no move.
+    static func action(of grant: PlanqueClient.Grant) -> PlanqueClient.Grant.Action? {
+        guard grant.request.browser?.driver == "extension" else { return nil }
+        return (grant.actions ?? []).first { $0.id == PlanqueClient.Grant.Action.useAnotherChrome && $0.known }
+    }
 
-    /// Whether this connection can move to another Chrome: one that runs in the owner's own Chrome, has sites (what the phone signs
-    /// again) and is in a status planque moves.
-    static func canSwitch(_ grant: PlanqueClient.Grant) -> Bool {
-        guard let browser = grant.request.browser, browser.driver == "extension", !(browser.sites ?? []).isEmpty else { return false }
-        return movable.contains(grant.status)
+    /// The sites to sign again for the new Chrome: the connection's own, **only if this phone's own signature verifies** them for the
+    /// Chrome it uses now (`chrome_sites_sig` over `{chrome_id, grant, sites}`, by `phoneKey`, its approval key). Never from what planque
+    /// says: a planque that widened the list would otherwise get the owner's signature over the wider one. Nil for anything else
+    /// (no signature, another key, other sites, a connection carried here from an earlier Chrome).
+    static func signedSites(of grant: PlanqueClient.Grant, phoneKey: Data) -> [String]? {
+        guard let browser = grant.request.browser, browser.driver == "extension", let chrome = browser.chrome, !chrome.isEmpty,
+              let sites = browser.sites, !sites.isEmpty, sites.count <= 100, let sig = grant.chromeSitesSig, !sig.isEmpty,
+              ChromePairing.sitesSignatureHolds(sig, publicKeyDER: phoneKey, chromeID: chrome, grant: grant.id, sites: sites) else { return nil }
+        return sites
     }
 
     /// The paired Chromes it could move to: every one but the one it uses.
