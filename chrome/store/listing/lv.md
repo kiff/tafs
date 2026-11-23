@@ -12,6 +12,7 @@ tafs Chrome ļauj taviem tafiem strādāt tavā Chrome, tikai tajās vietnēs, k
 
 • Savieno šo Chrome ar tālruni: tafs lietotnē atver Konts › Chrome › Savienot Chrome pārī un ievadi parādīto kodu.
 • Tafs strādā savās cilnēs, tevis redzamā cilņu grupā. Tu vari to jebkurā brīdī apturēt vai pārtraukt, un tas apstājas, kad pieskaries kādai tā cilnei.
+• Chrome instalēšanas laikā vienreiz pieprasa piekļuvi visām vietnēm. tafs strādā tikai vietnēs, ko norāda katrs uzdevums un ko tu apstiprini tālrunī.
 • Maksāšana, pasūtījuma veikšana un saglabātas pierakstīšanās aizpildīšana vienmēr gaida tavu apstiprinājumu tālrunī.
 • Tas lasa lapu kā tekstu un veidlapas laukus, bez paroles, kartes un koda laukiem. Tas nekad nelasa tavas citas cilnes vai vēsturi.
 • Banku, maku, paroļu pārvaldnieku, maksājumu, veselības un valsts iestāžu vietnes nekad netiek apstrādātas, ja vien tu neatļauj vienu no tām vienam uzdevumam tālrunī.

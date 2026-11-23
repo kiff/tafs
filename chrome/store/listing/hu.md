@@ -12,6 +12,7 @@ A tafs Chrome-hoz azt teszi lehetővé, hogy a tafjaid a saját Chrome-odban dol
 
 • Párosítsd ezt a Chrome-ot a telefonoddal: a tafs alkalmazásban nyisd meg ezt: Fiók › Chrome › Chrome párosítása, és írd be a megjelenő kódot.
 • A taf saját lapokon dolgozik, egy általad látható laprészlegben. Bármikor szüneteltetheted vagy leállíthatod, és szünetel, ha megérintesz egy lapját.
+• A Chrome telepítéskor egyszer kér hozzáférést az összes webhelyhez. A tafs csak azokon a webhelyeken dolgozik, amelyeket az egyes feladatok megneveznek, és amelyeket te jóváhagysz a telefonodon.
 • A fizetés, a rendelés leadása és a mentett bejelentkezés kitöltése mindig a telefonodon várja a jóváhagyásodat.
 • Az oldalt szövegként és űrlapmezőkként olvassa, a jelszó-, kártya- és kódmezők nélkül. Soha nem olvassa a többi lapodat vagy az előzményeidet.
 • Bankok, pénztárcák, jelszókezelők, fizetések, egészségügyi és hatósági oldalak soha nincsenek feldolgozva, kivéve ha egyet engedélyezel egy feladatra a telefonodon.
