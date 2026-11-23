@@ -125,6 +125,12 @@ route, status, ms}`, with every id in the route masked as `:id`. It never logs a
 query or an id. A check such as "did the phone register for alerts" is read from these lines in the
 function's CloudWatch logs.
 
+The scheduled tick (every 5 minutes) logs one line per sweep (`tick.ts`): `{event: "sweep", name,
+accounts, ms}`, and `failed: true` when the sweep threw, which ends that tick. `name` is the
+sweep's (`deletions`, `late`, `briefs`, …) and `accounts` how many accounts with tafs the tick
+read. A tick that grows toward the function's timeout shows which sweep grew; one that stops
+partway shows where. It never logs an account, a taf or an error's words.
+
 Each of Coach's tool calls adds one line (`called` in `coach.ts`): `{event: "coach_tool", tool,
 outcome, taf?}`. `outcome` is `done`, `done_with_error`, `refused_by_tool`, `refused` (no permit, or
 not the account's Coach), `repeat` (a retried operation's kept answer), `busy` or `failed`. `taf` is
