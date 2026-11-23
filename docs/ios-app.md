@@ -1148,7 +1148,8 @@ keeps the session and says it couldn't load, as before.
   screenshots. **Nothing opens under it** (`RootView.celebrating`, as Android's): the AI-data consent waits until the
   celebration and its cards are gone, and the time-zone question until the consent is answered too. So the order is
   the celebration, the consent, then the zone. The zone is asked only when the phone's and the account's keep different
-  times: GMT, UTC, Etc/UTC and Z are one (`AppModel.sameTime`), and Europe/London isn't GMT.
+  times: GMT, UTC, Etc/UTC and Z are one (`AppModel.sameTime`), but only zones fixed by definition are joined, as Android's
+  `ZoneId.normalized()`: Europe/London isn't GMT, and Asia/Tokyo isn't Asia/Seoul, though they share an offset today.
 - **A phone with no Face ID or fingerprint** holds no approval key, so KIFF signs it in view-only. Its line says to add
   one (`approval.add_face_id_first`, `AppModel.noApprovalKeyHere`), not only to sign in again, which changes nothing until
   one is added. A view-only phone that holds a key keeps KIFF's line, and a Mac its own.

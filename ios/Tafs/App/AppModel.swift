@@ -343,18 +343,21 @@ final class AppModel: ObservableObject {
     }
 
     /// Whether two zones always keep the same time, so switching between them changes nothing: the same id, or two names for
-    /// one fixed offset (GMT, UTC, Etc/UTC, Z). A zone with a summer time (Europe/London) isn't GMT, and an unknown id is never
-    /// the same as another. As Android's `sameTime` (tafs#1675).
+    /// one offset that is fixed by definition (GMT, UTC, Etc/UTC, Z, the `Etc/GMT±n` zones). A zone that merely keeps one
+    /// offset today (Asia/Tokyo and Asia/Seoul) is never joined, since its rules can change; nor is a zone with a summer time
+    /// (Europe/London isn't GMT), or an unknown id. As Android's `sameTime`, whose `ZoneId.normalized()` joins only these.
     nonisolated static func sameTime(_ a: String, _ b: String) -> Bool {
         if a == b { return true }
-        // A zone that never changes its offset (no summer time, none coming), as its offset; nil for any other or an unknown id.
-        func fixed(_ id: String) -> Int? {
-            guard let zone = id == "Z" ? TimeZone(secondsFromGMT: 0) : TimeZone(identifier: id),
-                  zone.nextDaylightSavingTimeTransition == nil, !zone.isDaylightSavingTime() else { return nil }
-            return zone.secondsFromGMT()
-        }
-        guard let x = fixed(a), let y = fixed(b) else { return false }
+        guard let x = fixedByDefinition(a), let y = fixedByDefinition(b) else { return false }
         return x == y
+    }
+
+    /// The offset of a zone that is fixed by definition, in seconds; nil for any other.
+    nonisolated static func fixedByDefinition(_ id: String) -> Int? {
+        if id == "Z" { return 0 }
+        guard ["UTC", "GMT", "UCT", "Universal", "Zulu", "Greenwich"].contains(id) || id.hasPrefix("Etc/"),
+              let zone = TimeZone(identifier: id) else { return nil }
+        return zone.secondsFromGMT()
     }
 
     /// The owner's answer to the time zone offer: yes sets it (one Face ID), no is remembered.

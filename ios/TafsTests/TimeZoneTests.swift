@@ -26,6 +26,9 @@ final class TimeZoneTests: XCTestCase {
         XCTAssertFalse(AppModel.sameTime("UTC", "Not/AZone"), "an unknown id")
         XCTAssertFalse(AppModel.sameTime("Etc/GMT-1", "UTC"), "another fixed offset")
         XCTAssertTrue(AppModel.sameTime("Etc/GMT-1", "Etc/GMT-1"))
+        XCTAssertFalse(AppModel.sameTime("Asia/Tokyo", "Asia/Seoul"), "one offset today, but their rules can change")
+        XCTAssertFalse(AppModel.sameTime("Asia/Tokyo", "Etc/GMT-9"), "only zones fixed by definition are joined")
+        XCTAssertFalse(AppModel.sameTime("Asia/Kolkata", "Asia/Colombo"))
     }
 
     func testTheAccountSaysItsTimeZone() throws {
