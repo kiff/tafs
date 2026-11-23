@@ -601,8 +601,10 @@ step over: `op: "hand"`, `hand: {words, ref?}`, `read_id`, signed like every ste
   planque's own limit). A touch after the answer pauses as before.
 - **Done reads the page back to the taf without what is in its fields.** The read after a hand-over leaves out every field's `value`
   (a text, the checked state, a select's chosen option; `withoutValues`), so the taf learns the field is there and nothing of what was
-  typed; planque blanks them again. **A residual, said plainly:** a page that echoes what was typed into its own text (a summary, "your card
-  ends 4242") is still read as text, masked only by pattern, as any read is. **Not now** gives no page.
+  typed; planque blanks them again. **The text inside an editable region** (`contenteditable`, `role=textbox`, where a form made of one holds what
+  was typed) is left out of that read too (`TafsPage.read(offset, {withoutEditable: true})`). **A residual, said plainly:** a page that echoes what
+  was typed into its own, non-editable text (a summary, "your card ends 4242") is still read as text, masked only by pattern, as any read is.
+  **Not now** gives no page.
 - **The answer is its own message,** `{type: "hand_result", hand, outcome: "done" | "declined", page?, sig}`, `sig` this Chrome's key over
   `tafs-chrome/hand/v1` and `{hand, outcome, page?}` (a new label, so a step's result can never stand for it). planque takes the first and
   answers `{type: "hand_kept", hand}`, or `{type: "hand_refused", hand, code}` with `unknown_hand`, `expired`, `unsigned` or `too_large`.

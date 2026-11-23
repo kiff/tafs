@@ -476,3 +476,55 @@ test("a page too long or too deep for the covers to be sure of gives no picture,
   await fine.evaluate(() => globalThis.TafsPage.unmaskShot());
   await fine.close();
 });
+
+test("the read after a hand-over leaves out the text of an editable region, and puts the page back as it was", { skip: !playwright }, async () => {
+  const page = await open();
+  await page.evaluate(() => {
+    const div = document.createElement("div");
+    div.setAttribute("contenteditable", "true");
+    div.style.display = "block";
+    div.textContent = "My card 5500 0000 0000 0004 is for Ana Pérez";
+    document.body.append(div);
+    const box = document.createElement("div");
+    box.setAttribute("role", "textbox");
+    box.textContent = "typed into a role textbox";
+    document.body.append(box);
+    const off = document.createElement("div");
+    off.setAttribute("contenteditable", "false");
+    off.textContent = "not editable, stays";
+    document.body.append(off);
+  });
+  const plain = await page.evaluate(() => TafsPage.read());
+  assert.match(plain.text, /typed into a role textbox/, "an ordinary read has the page's whole text");
+  assert.match(plain.text, /Ana Pérez|Ana P/, "and what is in an editable region");
+  const after = await page.evaluate(() => TafsPage.read(0, { withoutEditable: true }));
+  assert.doesNotMatch(after.text, /Ana P|role textbox|5500/, after.text);
+  assert.match(after.text, /not editable, stays/, "a region marked contenteditable=false is the page's own");
+  assert.match(after.text, /Your account/, "the rest of the page is read as ever");
+  // Put back exactly as it was.
+  const shown = await page.evaluate(() => [...document.querySelectorAll('[contenteditable="true"], [role="textbox"]')].map((e) => e.style.display));
+  assert.deepEqual(shown, ["block", ""], "each region's own display is restored");
+  assert.match((await page.evaluate(() => TafsPage.read())).text, /typed into a role textbox/);
+  await page.close();
+});
+
+test("Show me outlines one field and nothing else: no click, no focus, every pointer through, and it goes", { skip: !playwright }, async () => {
+  const page = await open();
+  const read = await page.evaluate(() => TafsPage.read());
+  const email = read.fields.find((f) => f.label === "Email");
+  await page.evaluate(() => { window.__clicks = 0; document.addEventListener("click", () => window.__clicks++, true); });
+  const out = await page.evaluate(([ref, id]) => TafsPage.outline(ref, id), [email.ref, read.read_id]);
+  assert.deepEqual(out, { ok: true });
+  const box = await page.evaluate(() => { const b = document.querySelector("[data-tafs-outline]"); return b && { events: getComputedStyle(b).pointerEvents, position: getComputedStyle(b).position }; });
+  assert.deepEqual(box, { events: "none", position: "fixed" });
+  assert.equal(await page.evaluate(() => document.activeElement === document.body), true, "nothing was focused");
+  assert.equal(await page.evaluate(() => window.__clicks), 0, "nothing was clicked");
+  // Another read's ref, or an unknown one: nothing is drawn.
+  assert.deepEqual(await page.evaluate(([ref]) => TafsPage.outline(ref, "rd_other"), [email.ref]), { ok: false, code: "page_changed" });
+  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-outline]").length), 0, "a failed outline leaves none");
+  assert.deepEqual(await page.evaluate(([id]) => TafsPage.outline("f99", id), [read.read_id]), { ok: false, code: "ref_unknown" });
+  await page.evaluate(([ref, id]) => TafsPage.outline(ref, id), [email.ref, read.read_id]);
+  await page.evaluate(() => TafsPage.unoutline());
+  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-outline]").length), 0, "asked to go, it goes");
+  await page.close();
+});

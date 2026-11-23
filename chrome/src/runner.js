@@ -426,7 +426,8 @@ export class Runner {
     }
     let page = null;
     try {
-      const read = await this.read(run);
+      // Without what is in the fields, and without the text of an editable region: what the person typed is not the taf's.
+      const read = await this.read(run, 0, { withoutEditable: true });
       if (read.page) page = withoutValues(read.page);
     } catch {
       // The page couldn't be read back: Done still goes to the taf, with no page, and it reads again.
@@ -551,13 +552,13 @@ export class Runner {
     return res && res.result;
   }
 
-  async read(run, offset = 0) {
+  async read(run, offset = 0, opts = {}) {
     if (run.tab == null) return { error: { code: "no_page" } };
     const tab = await this.chrome.tabs.get(run.tab);
     const refused = refuseURL(tab.url || "", run.sites, run.allowed);
     if (refused) return { error: { code: refused.code } };
     await this.inject(run.tab, run);
-    const page = await this.inTab(run.tab, (o) => globalThis.TafsPage.read(o), [offset]);
+    const page = await this.inTab(run.tab, (o, p) => globalThis.TafsPage.read(o, p), [offset, opts]);
     if (!page) return { error: { code: "page_unresponsive" } };
     // The handles of sign-ins saved for this exact origin, never their values: a taf names one to ask for a sealed fill.
     if (this.vault) {

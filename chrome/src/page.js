@@ -311,10 +311,30 @@
    * windows of MAX_TEXT characters of its masked text: `offset` asks for a later one, and a page that goes on says so
    * (`more`, and the `next_offset` to ask for). Fields, controls and links are the page's whole, in every window.
    */
-  function read(offset) {
+  /**
+   * The page's text. With `withoutEditable` (the read after a hand-over), what is inside an editable region (`contenteditable`, a
+   * `role=textbox`) is left out: a person's typing there is part of the text and no pattern mask is enough for it. Those regions are
+   * hidden for the moment the text is read, in one step with no paint between, and put back as they were.
+   */
+  function bodyText(withoutEditable) {
+    if (!document.body) return "";
+    if (!withoutEditable) return document.body.innerText;
+    const hidden = [];
+    for (const el of document.querySelectorAll('[contenteditable]:not([contenteditable="false"]), [role="textbox"]')) {
+      hidden.push([el, el.style.display]);
+      el.style.display = "none";
+    }
+    try {
+      return document.body.innerText;
+    } finally {
+      for (const [el, display] of hidden) el.style.display = display;
+    }
+  }
+
+  function read(offset, opts) {
     refs = new Map();
     prints = new Map();
-    const text = M.maskText((document.body ? document.body.innerText : "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim());
+    const text = M.maskText(bodyText(!!(opts && opts.withoutEditable)).replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim());
     const start = Number.isSafeInteger(offset) && offset > 0 ? Math.min(offset, text.length) : 0;
     // A window never ends inside a surrogate pair (an emoji): it stops one short, and the next starts with the whole character.
     let end = Math.min(start + MAX_TEXT, text.length);
