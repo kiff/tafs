@@ -194,7 +194,7 @@ A new global shortcut is added to `KeyCommand.global` and to one of `MacMenu`'s 
 
 Once the person has a device that approves, KIFF enrols **no** approval key for a computer signed in through the browser, and its session is `approval_mode: view`. A Mac approves only once it's **paired from a phone**: signed out, then signed in with "from another phone" and its QR code. TestFlight build 2 showed it: Touch ID worked on the Mac, and Setup refused the answer ("didn't sign that answer").
 
-The app reads `approval_mode` when it signs in (`KIFFClient.DeviceToken.viewOnly`). A view-only session is view-only from the start: it registers no approval key and shows the view-only words, and Coach's Approve stops before Touch ID, with those words on the card. Held calls already did. On the Mac the words are the Mac's own (`approval.view_only_mac`): "This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device."
+The app reads `approval_mode` when it signs in (`KIFFClient.DeviceToken.viewOnly`), and again from the account (`GET /v1/me`, `Account.viewOnly`). A view-only session is view-only from the start: it registers no approval key and shows the view-only words, and Coach's Approve stops before Touch ID, with those words on the card. Held calls already did. On the Mac the words are the Mac's own (`approval.view_only_mac`): "This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device."
 
 ## Where the Mac draws a control differently
 
