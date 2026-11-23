@@ -1,0 +1,2 @@
+• Quand vous répondez à une carte de Coach, elle reste en haut de la conversation et la réponse de Coach s'affiche dessous.
+• « Une nouvelle Card » montre les limites de chaque Card après son propre outil : un deuxième outil ne paraît jamais illimité avant votre empreinte.
