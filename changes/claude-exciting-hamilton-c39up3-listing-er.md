@@ -1,0 +1,1 @@
+- **Chrome Web Store listing (German):** a taf is masculine, as in the app ("er", "ihn").

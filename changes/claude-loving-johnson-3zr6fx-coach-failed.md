@@ -1,0 +1,1 @@
+- **iPhone and iPad: when Coach's run ends without an answer, Coach's chat says so.** If the AI provider can't be reached or the run fails, tafs cloud's words for it are the last line of Coach's chat, as they already are in a taf's chat and on Android. A run you watched fail already shows its own line with Retry, so it isn't said twice.
