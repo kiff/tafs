@@ -1125,7 +1125,9 @@ opens its connections, under each taf's name:
 - **Each row** is planque's `title` ("Gmail · name@example.com"), then **Used by** its `used_by`, then its
   `health.words` ("Gmail's sign-in expired on 14 Nov"), amber when not `ok`. No id, and no button beside
   it (`DescribedConnectionRow`).
-- **A tap opens its detail first:** its health, the tafs that depend on it, then only the `actions`
+- **A tap opens its detail first:** its health, which of the owner's Chromes it runs in for one there ("In Work Mac",
+  `chrome.held_in` with planque's `chrome_name`, `connectionChromeLine`; nothing for planque's hosted browser or any other
+  connection, as iOS), the tafs that depend on it, then only the `actions`
   planque sent, in its order: `approve` is Sign in again on itself (`reconnect`), `key` a new key, and
   `delete` the signed removal. An action whose `how` this build doesn't know isn't drawn, so a leftover
   shows only planque's **Remove unfinished connection**, never Sign in again.
@@ -1516,7 +1518,7 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   extension gets a second fingerprint for the device. KIFF's refusal, in its own words, confirms nothing.
 - **Re-pairing replaces, never adds** (docs/chrome.md "Your Chrome" 1). When Chromes are already paired, the offer shows
   **Replaces** (`chrome.replace_title`): each paired Chrome, and "A new Chrome (replaces none)". The pick starts on the Chrome
-  with the offer's `profile_id`; else, when one side has no id, the one paired Chrome on the same browser and system; else
+  with the offer's `profile_id`; else (a reinstalled extension has a new id) the one paired Chrome on the same browser and system; else
   none, never a guess between two (`ChromePairing.replacedBy`, as iOS's `ChromeReplace.preselect`). With a Chrome picked:
   - "Moves to this Chrome: {sites}" lists what moves. That is only each connection planque lists live on the old Chrome whose
     `chrome_sites_sig` (this phone's own signature at approval) verifies with this phone's approval key for that Chrome
@@ -1863,6 +1865,13 @@ keyguard, then waits until it is awake and unlocked, since a just-booted emulato
 and an activity launched then never gets a window ("No compose hierarchies found"). It
 also closes a system dialog left over from boot, and each test sets its screen with `setShown`,
 which waits until there's a Compose hierarchy to read before reading it.
+
+Robolectric's Android jar (`android-all-instrumented`, SDK 35, the one every test runs on) comes through Gradle, never
+Robolectric's own download at test time, which hit Maven Central's rate limit on CI and failed every Robolectric test at
+once. Gradle fetches it once into its cache (CI's `setup-gradle` keeps that between runs), the root `build.gradle.kts`
+copies it into each app's `build/robolectric-jars`, and the tests run Robolectric offline from there. Its version is
+`robolectric-android-all` in `libs.versions.toml`, next to Robolectric's: a new Robolectric or SDK changes both, and a jar
+that doesn't match fails every Robolectric test at once.
 
 ## The app map
 

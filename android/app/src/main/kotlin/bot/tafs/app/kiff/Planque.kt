@@ -75,7 +75,13 @@ data class GrantRequest(
 
 /** A browser grant's limits: which browser drives it, the paired Chrome an extension grant uses, and every site it may reach. */
 @Serializable
-data class GrantBrowser(val driver: String? = null, val chrome: String? = null, val sites: List<String>? = null) {
+data class GrantBrowser(
+  val driver: String? = null,
+  val chrome: String? = null,
+  val sites: List<String>? = null,
+  /** The name of the owner's Chrome it runs in, as planque sets it from the pairing ("Your Chrome" 2). */
+  @SerialName("chrome_name") val chromeName: String? = null,
+) {
   companion object {
     /** The driver of a grant that uses the owner's own Chrome; none for planque's hosted browser. */
     const val EXTENSION = "extension"

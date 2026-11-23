@@ -193,11 +193,16 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     // Only exactly KIFF's count goes: 9,999, a per total, or another window is the owner's figure as before.
     // Each near miss differs from KIFF's count in one way only (qa-kiff's mutants): the limit, the quantity, the window
     // (each call's), or a per (a day's, a week's, a lifetime's total for each charge).
+    // So is one that itself says it's refused past (the owner's "refuse past 10,000 a day"): KIFF's count only holds.
     for (const other of [{ ...KIFFS, limit: 9_999 }, { ...KIFFS, quantity: "sum(amount)" }, { ...KIFFS, window: "call" as const },
-      { ...KIFFS, per: "charge" }, { ...KIFFS, window: "rolling_7d", per: "charge" }, { ...KIFFS, window: "lifetime", per: "charge" }]) {
+      { ...KIFFS, per: "charge" }, { ...KIFFS, window: "rolling_7d", per: "charge" }, { ...KIFFS, window: "lifetime", per: "charge" },
+      { ...KIFFS, over: "refuse" as const }]) {
       const kept = rulesAgreement([notice("n1", rule([EACH, other])), confirm("c1", "n1"), answered("c1", "agree")]);
       expect(kept.state === "agreed" && kept.rules[0]!.limits, JSON.stringify(other)).toEqual([EACH, other]);
     }
+    // Saying "ask" past it is how KIFF's count works already: still KIFF's, still dropped.
+    const asked = rulesAgreement([notice("n1", rule([EACH, { ...KIFFS, over: "ask" as const }])), confirm("c1", "n1"), answered("c1", "agree")]);
+    expect(asked.state === "agreed" && asked.rules[0]!.limits).toEqual([EACH]);
   });
 
   // kiff-qa's 3 to 6: a rule's figures are read whole or not at all, so a notice with one it can't read carries no rules.
