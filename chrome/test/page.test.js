@@ -489,6 +489,9 @@ test("the read after a hand-over leaves out the text of an editable region, and 
     box.setAttribute("role", "textbox");
     box.textContent = "typed into a role textbox";
     document.body.append(box);
+    const style = document.createElement("style"); // a page that insists on showing its editable regions
+    style.textContent = '[contenteditable="true"], [role="textbox"] { display: block !important }';
+    document.head.append(style);
     const off = document.createElement("div");
     off.setAttribute("contenteditable", "false");
     off.textContent = "not editable, stays";

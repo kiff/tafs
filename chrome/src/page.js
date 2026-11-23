@@ -321,13 +321,16 @@
     if (!withoutEditable) return document.body.innerText;
     const hidden = [];
     for (const el of document.querySelectorAll('[contenteditable]:not([contenteditable="false"]), [role="textbox"]')) {
-      hidden.push([el, el.style.display]);
-      el.style.display = "none";
+      hidden.push([el, el.style.getPropertyValue("display"), el.style.getPropertyPriority("display")]);
+      el.style.setProperty("display", "none", "important"); // a page's own !important can't keep it showing
     }
     try {
       return document.body.innerText;
     } finally {
-      for (const [el, display] of hidden) el.style.display = display;
+      for (const [el, display, priority] of hidden) {
+        if (display) el.style.setProperty("display", display, priority);
+        else el.style.removeProperty("display");
+      }
     }
   }
 
