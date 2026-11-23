@@ -4068,9 +4068,11 @@ final class AppModel: ObservableObject {
                 let signedAt = ISO8601DateFormatter().string(from: clock())
                 var nextStep: String?
                 if case .nextStep(let step) = answer { nextStep = step }
+                // A hold KIFF serves with a browser block's hash: every answer signs it as the ninth line, Refuse included.
                 let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: kiffID,
                                                        answer: Self.kiffAnswer(answer),
-                                                       nextStep: nextStep, accountingVersion: version, signedAt: signedAt)
+                                                       nextStep: nextStep, accountingVersion: version, signedAt: signedAt,
+                                                       browserSHA256: call.browserSHA256 ?? held.first(where: { same($0, call) })?.browserSHA256)
                 // Approving, or raising a Card, grants authority: the approval key signs it,
                 // under the Face ID it checks itself, once KIFF holds it (kiff/tafs#233).
                 let grants = sessionHasApprovalKey && (answer == .approveOnce || answer == .extraRoom)

@@ -326,6 +326,7 @@ enum KIFFMapping {
         // so they're drawn only in the block's page part, never as what the card asks.
         call.browser = browserStep(e.browser)
         call.sealedFill = sealedFill(e)
+        call.browserSHA256 = e.browserSHA256
         return call
     }
 

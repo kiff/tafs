@@ -504,6 +504,9 @@ struct HeldCall: Identifiable, Hashable, Codable {
     /// A sealed fill the release card can draw and sign (docs/chrome.md, "The phone's release card"); nil for any other call,
     /// and for a fill whose block doesn't check out, which then offers Refuse only.
     var sealedFill: SealedFill?
+    /// KIFF's hash of the hold's browser block (`browser_sha256`), as it sent it. Every answer to such a hold signs it as
+    /// `kiff.answer.v1`'s ninth line, Refuse included, as KIFF checks it: so Refuse always works, whatever the card can draw.
+    var browserSHA256: String?
 }
 
 /// A held sealed fill, as the release card signs it: planque's `release_fields`, copied byte for byte, and KIFF's hash of the

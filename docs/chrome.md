@@ -628,7 +628,9 @@ signed over the vector's bytes. **Android's card is built, off too:**
 - **Allow this fill** asks **one** Face ID, naming the part and the site (`chrome.release_prompt_password` or
   `_username`), never from a notification's action, an unlock reused or an answer already confirmed. Under it, the approval key
   signs the answer, `kiff.answer.v1` with the block's hash as a ninth line, then the release over the vector's bytes, with a new
-  16-byte nonce and `exp` 60 s after the Face ID. A hold that ended meanwhile sends nothing. Both go in one `approve-once`,
+  16-byte nonce and `exp` 60 s after the Face ID. A hold that ended meanwhile sends nothing. **Every answer** to a hold KIFF
+  serves with `browser_sha256` signs it as the ninth line, as KIFF sent it, Refuse included and whatever the card's switch,
+  since KIFF checks it on any answer to such a hold: so Refuse always goes. Both go in one `approve-once`,
   `release` beside `signature` (`KIFFClient.approveOnce`). Tests: `SealedReleaseTests` (the vector), `PlanqueTests` (the card's
   block, checks and signing), `BrowserStepCardTests` (planque's block is a fill).
 

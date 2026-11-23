@@ -1460,6 +1460,29 @@ extension PlanqueTests {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Refuse on a hold KIFF serves with `browser_sha256` signs it as the ninth line, as KIFF sent it, whatever the card can
+    /// draw: with the card off, and even when the hash isn't the block's. So Refuse always goes, as KIFF checks it.
+    func testRefusingAHoldWithABrowserHashSignsItAsTheNinthLine() async throws {
+        let (block, _) = try Self.sealedBlock()
+        let served = String(repeating: "a", count: 64)
+        let signer = ReleaseSigner()
+        let model = try await releaseModel(signer, held: Self.heldFill(block: block, sha256: served))
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/reject"] = (200, #"{"id":"ce_1"}"#)
+        let call = try XCTUnwrap(model.held.first)
+        XCTAssertNil(call.sealedFill, "the hash isn't the block's: no card")
+        XCTAssertEqual(call.browserSHA256, served)
+        await model.answer(call, with: .refuse)
+        let sent = try XCTUnwrap(self.sent("POST", "api.test", "/v1/me/card-exceptions/ce_1/reject").first, model.lastError ?? "")
+        let body = try XCTUnwrap(try JSONSerialization.jsonObject(with: try XCTUnwrap(sent.httpBody)) as? [String: Any])
+        let signature = try XCTUnwrap(body["signature"] as? [String: Any])
+        let message = KIFFClient.answerMessage(tenant: "t_01", exceptionID: "ce_1", answer: "reject", nextStep: nil, accountingVersion: 2,
+                                               signedAt: try XCTUnwrap(signature["signed_at"] as? String), browserSHA256: served)
+        XCTAssertEqual(String(decoding: message, as: UTF8.self).components(separatedBy: "\n").count, 9)
+        let sig = try P256.Signing.ECDSASignature(derRepresentation: try XCTUnwrap(Data(base64Encoded: try XCTUnwrap(signature["value"] as? String))))
+        XCTAssertTrue(signer.key.publicKey.isValidSignature(sig, for: message), "the device key, over the nine lines")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// The phone's own checks, whatever planque says: a Chrome it isn't paired with, or a site no connection of this phone's
     /// signed for that Chrome, signs nothing.
     func testAReleaseIsRefusedForAChromeOrSiteThisPhoneDidntSign() async throws {
