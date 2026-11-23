@@ -1409,7 +1409,7 @@ Where a screen repeats a server read (`PollPace`; docs/scale.md): a **taf's chat
 (`chatPollBudget`, 30 reads, about four minutes; skipped while a stream is live); **Setup's chat** reads at 1 s (3 s idle) for ten reads, then 2, 4 and at most 8 times
 that, and a card still waiting on its grant keeps the read going as before; **People** reads on open and on pull-to-refresh, then every minute while it
 changes and slower (up to five minutes) while the answers are the same, and **not while the app isn't in front**. Every wait is up to a fifth shorter, never
-longer, so phones that started together don't read together. A stream or a push, where there is one, is what tells a screen of a change; this is only the fallback.
+longer, so phones that started together don't read together. **Coming back to the app reads a chat's or Setup's thread once, at once** (not after the next slowed-down wait). A stream or a push, where there is one, is what tells a screen of a change; this is only the fallback.
 
 ## Pairing a Chrome that replaces one
 

@@ -46,4 +46,14 @@ final class PollPaceTests: XCTestCase {
         XCTAssertTrue(source.contains("guard scenePhase == .active else { return }"))
         XCTAssertTrue(source.contains("PollPace.quietWait"))
     }
+
+    /// Coming back to the app reads a chat's thread once, at once, so a run that ended while the phone was away shows now.
+    func testComingBackToTheAppReadsTheThreadAtOnce() throws {
+        for (file, call) in [("Tafs/Views/TafChatView.swift", "await model.loadChat(tafID)"), ("Tafs/Views/SetupChatView.swift", "await model.loadSetupThread()")] {
+            let source = (try? String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent(file), encoding: .utf8)) ?? ""
+            XCTAssertTrue(source.contains(".onChange(of: scenePhase)"), file)
+            XCTAssertTrue(source.contains("if phase == .active { Task { \(call) } }"), file)
+        }
+    }
 }

@@ -7,6 +7,7 @@ import UIKit
 /// signs there.
 struct SetupChatView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
     /// The taf to improve (kiff/tafs#107): the chat opens a new conversation on it.
     var improving: UUID? = nil
     /// Whether this screen has opened its improvement: once, not each time it appears.
@@ -133,6 +134,10 @@ struct SetupChatView: View {
                 model.improveTaf(improving)
             }
             await model.followSetup()
+        }
+        // Back in front: Setup's thread is read once, at once, not after the next wait of the slowed-down poll.
+        .onChange(of: scenePhase) { phase in
+            if phase == .active { Task { await model.loadSetupThread() } }
         }
     }
 

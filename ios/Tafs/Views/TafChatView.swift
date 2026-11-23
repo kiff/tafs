@@ -6,6 +6,7 @@ import SwiftUI
 /// written, a held call shows where it was held, and nothing the owner writes is lost.
 struct TafChatView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
     let tafID: UUID
     /// The owner scrolled the thread: down (true), toward what's newer, or back up. The taf's
     /// page folds its header's second line away going down, so the chat has the screen.
@@ -56,6 +57,11 @@ struct TafChatView: View {
         }
         .task(id: tafID) {
             await model.followChat(tafID)
+        }
+        // Back in front: the thread is read once, at once, so a run that ended while the phone was away shows now, not after the
+        // next wait of the slowed-down poll.
+        .onChange(of: scenePhase) { phase in
+            if phase == .active { Task { await model.loadChat(tafID) } }
         }
         .sheet(item: $reporting) { ReportAnswerSheet(answer: $0).environmentObject(model) }
     }
