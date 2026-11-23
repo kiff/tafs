@@ -45,7 +45,8 @@ final class TimeZoneTests: XCTestCase {
     func testANewAccountTakesThePhonesZoneWithNoQuestion() async throws {
         // The phone's zone, whatever the runner's is: only a phone on UTC has nothing to send.
         let here = TimeZone.current.identifier
-        try XCTSkipIf(here == "UTC", "this runner is on UTC")
+        // A runner on UTC, or on a zone that is the same time as UTC (GMT, say), is never asked: nothing to test here.
+        try XCTSkipIf(AppModel.sameTime(here, "UTC"), "this runner keeps UTC's time")
         func signedIn(_ setup: String) async -> AppModel {
             StubProtocol.responses = [:]
             StubProtocol.sent = []
