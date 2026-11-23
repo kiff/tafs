@@ -88,5 +88,12 @@
   "hand_show": { "message": "Покажете ми", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Готово", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Не сега", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Пишете само там, където се доверявате на тази страница.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Пишете само там, където се доверявате на тази страница.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Страницата се е променила, откакто taf я прочете, така че няма какво да се посочи. Потърсете го, както казва taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Това поле или бутон не се вижда на екрана в момента. По-широк прозорец може да го покаже, или го потърсете, както казва taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Страницата не отговори. Потърсете го, както казва taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Това е страницата. Taf не е посочил поле или бутон.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Предадено на вас", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Вие го направихте", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Казахте „Не сега“", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

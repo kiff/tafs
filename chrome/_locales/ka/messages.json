@@ -87,6 +87,13 @@
   "hand_says": { "message": "taf ამბობს", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
   "hand_show": { "message": "მაჩვენე", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "მზადაა", "description": "Button on that card: the person did it" },
-  "hand_declined": { "message": "Ახლა არა", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "აკრიფეთ მხოლოდ იქ, სადაც ამ გვერდს ენდობით.", "description": "Fixed line on that card under the taf's words" }
+  "hand_declined": { "message": "ახლა არა", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "აკრიფეთ მხოლოდ იქ, სადაც ამ გვერდს ენდობით.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "გვერდი შეიცვალა მას შემდეგ, რაც taf-მა ის წაიკითხა, ამიტომ საჩვენებელი არაფერია. მოძებნეთ ისე, როგორც taf ამბობს.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "ეს ველი ან ღილაკი ახლა ეკრანზე არ ჩანს. უფრო ფართო ფანჯარამ შეიძლება აჩვენოს, ან მოძებნეთ ისე, როგორც taf ამბობს.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "გვერდმა არ უპასუხა. მოძებნეთ ისე, როგორც taf ამბობს.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "ეს ის გვერდია. taf-ს არ დაუსახელებია ველი ან ღილაკი, რომ აჩვენოს.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "გადმოგეცათ", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "თქვენ შეასრულეთ", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "თქვენ თქვით „ახლა არა“", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

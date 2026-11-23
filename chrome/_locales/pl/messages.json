@@ -88,5 +88,12 @@
   "hand_show": { "message": "Pokaż mi", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Gotowe", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Nie teraz", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Wpisuj tylko tam, gdzie ufasz tej stronie.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Wpisuj tylko tam, gdzie ufasz tej stronie.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Strona zmieniła się, odkąd taf ją przeczytał, więc nie ma czego wskazać. Szukaj tak, jak mówi taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Tego pola lub przycisku nie ma teraz na ekranie. Szersze okno może je pokazać albo szukaj tak, jak mówi taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Strona nie odpowiedziała. Szukaj tak, jak mówi taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "To jest ta strona. Taf nie wskazał pola ani przycisku.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Przekazano Tobie", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Zrobione przez Ciebie", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Wybrano „Nie teraz”", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

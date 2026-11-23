@@ -88,5 +88,12 @@
   "hand_show": { "message": "Mutasd meg", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Kész", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Most nem", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Csak ott írj be valamit, ahol megbízol ebben az oldalban.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Csak ott írj be valamit, ahol megbízol ebben az oldalban.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Az oldal megváltozott, mióta a taf elolvasta, így nincs mire mutatni. Keresd úgy, ahogy a taf mondja.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Az a mező vagy gomb most nem látszik a képernyőn. Egy szélesebb ablakban megjelenhet, vagy keresd úgy, ahogy a taf mondja.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Az oldal nem válaszolt. Keresd úgy, ahogy a taf mondja.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Ez az az oldal. A taf nem nevezett meg mezőt vagy gombot, amelyre mutatni lehetne.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Átadva neked", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Megcsináltad", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Azt mondtad: „Most nem”", "description": "Step list: the person pressed Not now on the Your turn card."}
 }
