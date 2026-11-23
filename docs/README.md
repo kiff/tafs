@@ -11,6 +11,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | Page | What it covers |
 |---|---|
 | [How tafs fits together](#how-tafs-fits-together) | The app, tafs cloud, kiff/agents, KIFF and planque, and who decides what |
+| [scale.md](scale.md) | What breaks at 1,000 and 10,000 users, ranked by what breaks first, each with its owner and a fix, and the target for every device |
 | [runtime.md](runtime.md) | What a taf runs on (kiff/agents), its definition and KIFF's skill, and tafs cloud |
 | [tafs.md](tafs.md) | A taf: its job, definition, schedule, runs, reports, memory, Record, pausing and removing it |
 | [taf-screen.md](taf-screen.md) | The app's screens: the bar, Record by taf, a taf's four tabs, Setup › Starts when and Results go to, Account › Alerts, dark |
@@ -34,6 +35,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [api.md](api.md) | tafs cloud's HTTP API, every route |
 | [ios-app.md](ios-app.md) | The app's code: its model, screens, services, launch arguments and tests |
 | [mac-app.md](mac-app.md) | The Mac app (macOS 13 and later): the iPhone and iPad app built with Mac Catalyst, what differs from the iPad, its tests, and what isn't done yet |
+| [parity.md](parity.md) | Every feature on every device (iPhone and iPad, Mac, macOS 12, Windows, Linux, Android, the watches, the Chrome extension): done, partial, not started, or not for it and why |
 | [files.md](files.md) | Files: what the tafs deliver in their runs, kept 30 days, shared as the file itself, seen by everyone on the account (iPhone and iPad, behind a switch) |
 | [watch-app.md](watch-app.md) | The Apple Watch companion (watchOS 10 and later): what it does in v1, how it reaches tafs cloud and KIFF through the iPhone, and where its code is |
 | [computer-passkeys.md](computer-passkeys.md) | How a computer approves with a passkey: a Mac with Touch ID, Windows Hello, and a USB security key or the phone for a Mac without Touch ID and Linux; what a passkey approval carries |

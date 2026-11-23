@@ -156,7 +156,7 @@ wrote it.
 - **The phone signs only these:** `POST /v1/connections/batch` on the gateway and `POST /v1/me/agent-drafts`, and only with
   KIFF's words for the Cards. Anything else, an unknown scheme, a draft without those words, or no `start` starts Coach as before.
 
-iOS follows.
+iPhone and iPad do the same (`SetupChatView`'s Start screen, `KIFFClient`'s `/v1/connections/batch`).
 
 ## What Coach shows
 

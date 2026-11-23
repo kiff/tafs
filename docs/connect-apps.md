@@ -129,8 +129,8 @@ doesn't say the taf was removed, because it may be one you don't see.
 When you remove a taf for good, tafs cloud ends its connections with it, under the same
 confirmation: every one only that taf used, whatever its state; one another taf uses stays.
 The confirmation says which go and which stay before the fingerprint. If they couldn't be
-ended, the result says so, and tafs tries again each time it refreshes. On Android (from
-1.17.1) the phone no longer disconnects them itself; iOS follows.
+ended, the result says so, and tafs tries again each time it refreshes. Neither phone
+disconnects them itself (Android from 1.17.1; iOS `AppModel.removeTaf`).
 
 Connections left by a taf that was removed earlier show under **From removed tafs**, with
 that taf's name. **Clear these connections** ends the ones no live taf uses, after one
