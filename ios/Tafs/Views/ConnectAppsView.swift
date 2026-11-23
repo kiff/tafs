@@ -566,6 +566,8 @@ struct AppConnectionsView: View {
     @State private var cancelling: PlanqueClient.Grant?
     /// The key-based connection taking a new key (gap 13), on the key sheet.
     @State private var replacing: PlanqueClient.Grant?
+    /// Sign in again's sheet, open on this connection (docs/connect-apps.md).
+    @State private var reapproving: TafsCloud.ConnectStart?
     /// The removed tafs' connections whose Clear waits for the owner's yes.
     @State private var clearing: [String]?
 
@@ -632,6 +634,7 @@ struct AppConnectionsView: View {
         .sheet(item: $replacing) { g in
             ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
         }
+        .reapprovalSheet($reapproving)
         // Asked first, naming the one taf it ends; only then Face ID, in the same words.
         .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0), alsoStops: model.alsoStops($0)) } ?? "",
                             isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
@@ -706,7 +709,7 @@ struct AppConnectionsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 } else if model.canManageCards, !g.cancellable {
                     Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain) {
-                        if g.takesKey { replacing = g } else { Task { await model.reconnect(g) } }
+                        if g.takesKey { replacing = g } else { reapproving = model.reconnectStart(g) }
                     }
                     .buttonStyle(.borderless)
                     .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
@@ -792,6 +795,29 @@ struct AppConnectionsView: View {
 
 }
 
+/// Sign in again's sheet (docs/connect-apps.md): a connection's Sign in again sets `start` (`AppModel.reconnectStart`), and
+/// the connection's approval opens on it, as planque has it now, with Approve. `then` follows once it's signed in again.
+struct ReapprovalSheet: ViewModifier {
+    @Binding var start: TafsCloud.ConnectStart?
+    var then: (() async -> Void)? = nil
+    @EnvironmentObject private var model: AppModel
+
+    func body(content: Content) -> some View {
+        content.sheet(isPresented: Binding(get: { start != nil }, set: { if !$0 { start = nil } })) {
+            if let start {
+                ConnectApprovalSheet(start: start, onAgain: then).environmentObject(model)
+            }
+        }
+    }
+}
+
+extension View {
+    /// Sign in again's approval sheet, opened on `start`.
+    func reapprovalSheet(_ start: Binding<TafsCloud.ConnectStart?>, then: (() async -> Void)? = nil) -> some View {
+        modifier(ReapprovalSheet(start: start, then: then))
+    }
+}
+
 /// A connection's approval over the list: what it may do, KIFF's words for it, then Face ID.
 /// Approving opens the vendor's sign-in. An API-key vendor takes its key here instead, on a
 /// sheet that looks and acts protected (docs/secure-connection.md): tafs cloud's words for it,
@@ -807,6 +833,9 @@ struct ConnectApprovalSheet: View {
     /// Coach's card this sheet was opened from, when it carries the taf's Card as a draft: the
     /// key and that Card can then go under one Face ID (docs/secure-connection.md).
     var card: SetupComponent? = nil
+    /// Sign in again (`start.again`): what follows once it's signed in again, before the sheet closes (a taf's page read
+    /// again, tafs cloud's done words).
+    var onAgain: (() async -> Void)? = nil
     /// The key and the Card went under one signature: Coach's card is answered already.
     @State private var together = false
     /// The pasted key. It's never drawn: only its last 4 characters are.
@@ -860,7 +889,8 @@ struct ConnectApprovalSheet: View {
                 }
                 .padding(20)
             }
-            .navigationTitle(start.needsKey && sheet != nil ? "" : grant.map { Words.Coach.connectService(service: "\($0.vendor)") } ?? Words.Connect.Apps.connect)
+            .navigationTitle(start.again ? Words.Connect.signInAgain
+                             : start.needsKey && sheet != nil ? "" : grant.map { Words.Coach.connectService(service: "\($0.vendor)") } ?? Words.Connect.Apps.connect)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -1160,6 +1190,13 @@ struct ConnectApprovalSheet: View {
                         finish()
                     }
                 }
+            } else if start.again {
+                // Signed in again on the digest this sheet drew: a request that changed since signs nothing, and this
+                // sheet says so over the new one.
+                if await model.reconnect(grant.id, shown: grant.digest, fresh: start.fresh) {
+                    await onAgain?()
+                    dismiss()
+                }
             } else if let done = await model.connect(grantID: grant.id, shown: grant.digest), done.connected || done.listed {
                 dismiss()
             }
@@ -1187,6 +1224,8 @@ struct ConnectionDetailView: View {
     @State private var asking: PlanqueClient.Grant.Action?
     /// The key-based connection taking a new key, on the key sheet.
     @State private var replacing: PlanqueClient.Grant?
+    /// Sign in again's sheet, open on this connection (docs/connect-apps.md).
+    @State private var reapproving: TafsCloud.ConnectStart?
     @State private var busy = false
 
     var body: some View {
@@ -1238,6 +1277,7 @@ struct ConnectionDetailView: View {
         .sheet(item: $replacing) { g in
             ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
         }
+        .reapprovalSheet($reapproving)
         // One more ask, in planque's words, naming what stops; only then Face ID.
         .confirmationDialog(asking?.words ?? "", isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } }),
                             titleVisibility: .visible, presenting: asking) { action in
@@ -1288,7 +1328,7 @@ struct ConnectionDetailView: View {
 
     private func take(_ action: PlanqueClient.Grant.Action, _ g: PlanqueClient.Grant) {
         if action.removes { asking = action; return }
-        if action.how == "key" { replacing = g } else { Task { await model.reconnect(g) } }
+        if action.how == "key" { replacing = g } else { reapproving = model.reconnectStart(g) }
     }
 
     private func remove() {

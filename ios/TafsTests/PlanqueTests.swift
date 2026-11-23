@@ -953,12 +953,54 @@ final class PlanqueTests: XCTestCase {
         XCTAssertNil(model.shownWords(for: g), "nothing has read KIFF's words yet")
         StubProtocol.sent = []
 
-        await model.reconnect(g)
-        XCTAssertNil(model.reconnectErrors["g_01"])
+        let signedIn = await model.reconnect(g.id, shown: g.digest)
+        XCTAssertTrue(signedIn, model.lastError ?? "")
         XCTAssertEqual(StubProtocol.sent.filter { $0.url?.path == "/v1/profiles/words" }.count, 1)
         XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(digest)"])
         let approve = body(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").first)
         XCTAssertNotNil(approve["kiff_profile"], "the words read are signed into the approval")
+        XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").count, 1)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Sign in again opens the connection's approval sheet first (docs/connect-apps.md, as Android's tafs#1826): nothing is
+    /// signed or sent before Approve. Approve signs only the digest the sheet drew: one older than the request signs nothing
+    /// and says it's out of date; the one drawn signs it once, behind one Face ID.
+    func testSignInAgainOpensTheSheetFirstAndSignsOnlyWhatItShowed() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        let (grant, digest, words) = try profiledGrant()
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grant)]}"#)
+        StubProtocol.responses["POST /v1/profiles/words?v=2"] = (200, words)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"connected","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00Z"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, grant)
+        vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
+        await model.refreshConnections()
+        let g = try XCTUnwrap(model.grants.first { $0.id == "g_01" })
+        StubProtocol.sent = []
+
+        // Sign in again: the sheet's start, and nothing else.
+        let start = try XCTUnwrap(model.reconnectStart(g))
+        XCTAssertEqual(start.grant, "g_01")
+        XCTAssertTrue(start.again)
+        XCTAssertFalse(start.needsKey)
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID before Approve")
+        XCTAssertTrue(StubProtocol.sent.isEmpty, "nothing read, signed or sent before the sheet")
+
+        // Approve on what an older sheet drew: nothing signed, and the sheet says it's out of date.
+        let stale = await model.reconnect("g_01", shown: String(repeating: "0", count: 64), fresh: start.fresh)
+        XCTAssertFalse(stale)
+        XCTAssertEqual(model.lastError, Words.Version.outOfDateCard)
+        XCTAssertTrue(signer.prompts.isEmpty)
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty)
+
+        // Approve on the digest the sheet drew: signed once, then planque confirms the sign-in.
+        let signedIn = await model.reconnect("g_01", shown: digest, fresh: start.fresh)
+        XCTAssertTrue(signedIn, model.lastError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(digest)"])
+        XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").count, 1)
         XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").count, 1)
         Keychain.delete(AppModel.planqueAccount)
     }
@@ -975,9 +1017,10 @@ final class PlanqueTests: XCTestCase {
         let g = try XCTUnwrap(model.grants.first { $0.id == "g_01" })
         StubProtocol.sent = []
 
-        await model.reconnect(g)
-        XCTAssertNotNil(model.reconnectErrors["g_01"])
-        XCTAssertEqual(model.reconnectErrors["g_01"], model.profileWordsError["g_01"])
+        let signedIn = await model.reconnect(g.id, shown: g.digest)
+        XCTAssertFalse(signedIn)
+        XCTAssertNotNil(model.lastError)
+        XCTAssertEqual(model.lastError, model.profileWordsError["g_01"])
         XCTAssertTrue(signer.prompts.isEmpty)
         XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty)
         Keychain.delete(AppModel.planqueAccount)
