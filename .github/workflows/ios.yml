@@ -21,6 +21,12 @@ name: iOS
 # run sets external to false. Its testers
 # are the BETA_TESTERS secret (this repository's logs are public).
 
+# Our own Mac test runner: the pull-request test jobs (test, watch, ipad, screenshots here; build in mac.yml) run on
+# the self-hosted runner labelled kiff-mac only while the repository variable MAC_RUNNER is "on", and only for a pull
+# request from a branch of this repository (never a fork, a push to main, a tag or a manual run). With MAC_RUNNER off or
+# unset, every job runs on GitHub's macos-26, as before. The runner holds no secrets: testflight and every job that
+# uses an environment or a secret never take the label. Each moved job keeps its timeout, so a hung job can't hold the
+# one Mac. Off in one step: set MAC_RUNNER to "off".
 on:
   push:
     branches: [main]
@@ -220,7 +226,7 @@ jobs:
   test:
     needs: changes
     if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && (needs.changes.outputs.tested != 'true' || needs.changes.outputs.ui == 'true')
-    runs-on: macos-26
+    runs-on: ${{ (vars.MAC_RUNNER == 'on' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","kiff-mac"]') || 'macos-26' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -304,7 +310,7 @@ jobs:
   watch:
     needs: changes
     if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && needs.changes.outputs.watch == 'true'
-    runs-on: macos-26
+    runs-on: ${{ (vars.MAC_RUNNER == 'on' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","kiff-mac"]') || 'macos-26' }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -363,7 +369,7 @@ jobs:
   ipad:
     needs: changes
     if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && needs.changes.outputs.ipad == 'true' && needs.changes.outputs.ipad_tested != 'true'
-    runs-on: macos-26
+    runs-on: ${{ (vars.MAC_RUNNER == 'on' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","kiff-mac"]') || 'macos-26' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -422,7 +428,7 @@ jobs:
   screenshots:
     needs: changes
     if: needs.changes.outputs.shots != 'none' && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
-    runs-on: macos-26
+    runs-on: ${{ (vars.MAC_RUNNER == 'on' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","kiff-mac"]') || 'macos-26' }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
