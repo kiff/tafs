@@ -12,7 +12,7 @@ object Legal {
    * The languages kiff.dev serves tafs's legal pages in, besides English (the unprefixed page, and the one that binds).
    * Traditional Chinese (zh-Hant) is served at `/zh/`, and Serbian in Latin script (sr-Latn) at `/sr/`: each tag's language.
    */
-  val SERVED = setOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "sr", "sq", "ka", "hy", "az", "ar", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi")
+  val SERVED = setOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "sr", "sq", "ka", "hy", "az", "ar", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "ur")
 
   /**
    * The regional variants kiff.dev serves these four pages in under their own lowercase path: Brazil's at `/pt-br/` (only the

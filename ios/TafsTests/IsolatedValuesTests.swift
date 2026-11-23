@@ -43,6 +43,7 @@ final class IsolatedValuesTests: XCTestCase {
         XCTAssertEqual(Words.locale(for: "fr").identifier, "fr")
         XCTAssertEqual(Words.isolated(["x"], in: arabic), ["\u{2068}x\u{2069}"], "still right to left")
         XCTAssertEqual(ScaledFont.design(.monospaced, language: "ar"), .default, "the monospaced face splits Arabic's joined letters")
+        XCTAssertEqual(ScaledFont.design(.monospaced, language: "ur"), .default, "and Urdu's")
         XCTAssertEqual(ScaledFont.design(.monospaced, language: "fr"), .monospaced)
         XCTAssertEqual(ScaledFont.design(.rounded, language: "ar"), .rounded, "only the monospaced face is replaced")
         XCTAssertTrue(Eyebrow.ideographic("بانتظارك"), "Arabic's letters join: no tracking, no monospaced face")
