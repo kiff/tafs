@@ -25,12 +25,17 @@ export const SWEEPS: Sweep[] = [
   ["consent", sweepConsent], ["first_runs", sweepFirstRuns], ["stale_coach", sweepStaleCoach], ["mission_log", sweepMissionLog], ["briefs", sweepBriefs],
 ];
 
-/** The tick's groups, each one event of the 5-minute rule: about even by the first tick's times, deletions first. */
+/**
+ * The tick's groups, each one event of the 5-minute rule, run side by side: about even by the first tick's times,
+ * deletions first. Two sweeps that write the same items go in one group (docs/maintaining.md lists what each writes),
+ * and so does a new sweep that writes what another does.
+ */
 export const GROUPS: Record<string, readonly string[]> = {
   "tick-1": ["deletions", "handovers", "replies", "deliveries"],
   "tick-2": ["failing", "health"],
-  "tick-3": ["held", "late", "your_steps"],
-  "tick-4": ["consent", "first_runs"],
+  "tick-3": ["late", "your_steps"],
+  // held and consent both replay an account's held door messages (replayHeld): one group, so never side by side.
+  "tick-4": ["held", "consent", "first_runs"],
   "tick-5": ["stale_coach", "mission_log", "briefs"],
 };
 
