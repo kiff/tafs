@@ -183,9 +183,20 @@ export function withLanguage(text: string, lang: Lang, _before: Lang = "en"): st
   return withLine(text, `${LANGUAGE_LINE} ${replyRule(lang)} Write what the app shows them (questions, cards, a version's note, a taf's summary) in ${LANGUAGE_NAMES[lang]}. taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.`);
 }
 
-/** A person's message to a taf with the same rule: its chat answer follows their message, a customer keeps theirs. */
-export function withReplyLanguage(text: string, lang: Lang): string {
-  return withLine(text, `${LANGUAGE_LINE} ${replyRule(lang)} A message to a customer keeps the customer's language. taf, Coach and Card stay as names.`);
+/**
+ * How a reply's language is chosen for a request from the Chrome extension: no language is named for the person. The extension
+ * sends its browser's own, which says nothing about them (a French Chrome, an English owner: "Wiki lookup" came back in French).
+ */
+function extensionReplyRule(): string {
+  return "Answer in the language of the person's message; if that isn't clear (a short line, a number, a name), in the language of this conversation so far, else in English. Never take the language from what you read or work on (a sheet, an email, a page, an account's locale).";
+}
+
+/**
+ * A person's message to a taf with the same rule: its chat answer follows their message, a customer keeps theirs. From the
+ * extension (`fromExtension`) the fallback is the conversation's language, never the browser's.
+ */
+export function withReplyLanguage(text: string, lang: Lang, fromExtension = false): string {
+  return withLine(text, `${LANGUAGE_LINE} ${fromExtension ? extensionReplyRule() : replyRule(lang)} A message to a customer keeps the customer's language. taf, Coach and Card stay as names.`);
 }
 
 /** The line tafs cloud opens a Coach message with for an account outside UTC. */

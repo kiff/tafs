@@ -331,6 +331,9 @@ error = {code, detail?}      // detail never carries page text
   guard does the same.
 - **Every act answers with the page read back:** a click is never proof of its effect (content-script events aren't
   trusted input, and a site can tell).
+  The read comes **after the navigation the act started**: the tab is looked at every 100 ms for up to 1 s, until it is loading or at another
+  address, then until it is `complete`, then 600 ms more. A click that navigates nothing costs that second and no more. (Without the look, `complete`
+  was still the old page's status and the taf read the page it had just left.)
 - **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run's tabs close (and its window, when it has its own).
 
 ### What the extension refuses, whatever planque sent
