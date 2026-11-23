@@ -4475,7 +4475,6 @@ class AppModel(
     return generation == accountGeneration
   }
 
-  /** Unpairs a Chrome: planque deletes its key at once. It takes power away, so this phone's own signature is enough. */
   /**
    * Moves [grant] to [to] ("Your Chrome" 2), where planque offers `use_another_chrome`: the sites this phone signed for it
    * ([bot.tafs.app.kiff.ChromePairing.signedSites], never planque's list as given) are signed for [to] with the approval key
@@ -4518,6 +4517,7 @@ class AppModel(
     return true
   }
 
+  /** Unpairs a Chrome: planque deletes its key at once. It takes power away, so this phone's own signature is enough. */
   suspend fun removeChrome(chrome: bot.tafs.app.kiff.Chrome) {
     try {
       chromeCall { planque.removeChrome(chrome.id) } ?: return

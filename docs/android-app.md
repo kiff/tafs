@@ -1133,8 +1133,9 @@ opens its connections, under each taf's name:
   account's other paired Chromes by name (`chromesToMoveTo`). One tapped moves the connection: the sites this phone signed for
   it on its Chrome now, checked with its approval key (`ChromePairing.signedSites`, never planque's list as given), are signed
   for the new Chrome behind one fingerprint naming it (`chrome.switch_prompt`), and `PUT …/grants/{id}/chrome` sends that
-  signature (`AppModel.switchChrome`). A list planque widened, or a connection carried from an earlier Chrome (no signature of
-  its own), signs nothing and says so. planque offers the action only where it would move it, so the app keeps no status rule. An action whose `how` this build doesn't know isn't drawn, so a leftover
+  signature (`AppModel.switchChrome`). A list planque widened, a signature for another Chrome or grant, or a connection carried from
+  an earlier Chrome (no signature of its own), signs nothing: the line is "{Move this connection to name} didn't go through"
+  with the request-mismatch words (`common.didnt_go_through`, `PlanqueError.DigestMismatch`), and nothing is sent. planque offers the action only where it would move it, so the app keeps no status rule. An action whose `how` this build doesn't know isn't drawn, so a leftover
   shows only planque's **Remove unfinished connection**, never Sign in again.
 - **A removal asks once more,** with planque's `stops` ("Unanswered customer emails will stop using
   Gmail."), and only then the fingerprint. Remove is never beside a row.
