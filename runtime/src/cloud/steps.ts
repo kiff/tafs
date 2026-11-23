@@ -249,6 +249,8 @@ export function whyOf(text: unknown): string | undefined {
   if (typeof text !== "string") return undefined;
   let line = text.split("\n").map((l) => l.trim()).find(Boolean) ?? "";
   line = line.replace(/^(?:planque|kiff|tafs cloud|the (?:vendor|provider|tool)) answered \d{3}:\s*/i, "");
+  // The connection's own "Refused by planque:": the step already reads as refused, and the relay's name never shows.
+  line = line.replace(/^refused by planque:\s*/i, "");
   line = line
     // A person's email, a URL (with whatever it carries), a credential and what follows it.
     .replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, "it")
@@ -278,7 +280,12 @@ export function whyOf(text: unknown): string | undefined {
     .replace(/\(\s*(?:(?:[a-z]+\s+)?it[\s,]*)*\)/g, "").replace(/,\s*(?=[).;])/g, "").replace(/\(\s*\)/g, "")
     .replace(/\bit(?:\s+it)+\b/g, "it")
     .replace(/\s{2,}/g, " ").replace(/\s+([,.;:)])/g, "$1").trim();
-  if (line.length > 160) line = `${line.slice(0, 159).replace(/\s+\S*$/, "")}…`;
+  // Past 160 characters, the reason ends where a sentence or clause of it does, whole, when one ends far enough in
+  // (a refusal's first sentence says why, the next how to go on); else at a word, with "…".
+  if (line.length > 160) {
+    const end = Math.max(line.lastIndexOf(". ", 159), line.lastIndexOf("; ", 159));
+    line = end >= 60 ? line.slice(0, end + 1).replace(/;$/, ".") : `${line.slice(0, 159).replace(/\s+\S*$/, "")}…`;
+  }
   line = line.replace(/[\s,;:]+$/, "");
   return /[A-Za-z]{3,}/.test(line.replace(/\bit\b/g, "")) ? line : undefined;
 }
@@ -468,11 +475,15 @@ export function coachGuard(text: unknown): boolean {
     // A call on something that waits for the person (rules to agree, a key to give): the person is already being asked, so the
     // step is not made, never "Coach couldn't connect" in red over a card that is waiting for them (Android 120, 19 Nov, Pipedrive).
     || /\bwaits[_ ]for[_ ]the[_ ]owner'?s?[_ ]approval\b|\bwaits_for_approval\b/i.test(line)
-    // Tools set on a grant that is still pending, with no sign-in of its own ("only a listed or connected grant takes tools;
-    // this one is pending"): the request already named its tools and its card waits for the owner, so Coach's extra tools call
-    // is its own to drop, never "Coach couldn't connect" in red over that card (23 Nov, a browser taf in the owner's Chrome).
+    // Tools set on a grant that is still pending ("only a listed or connected grant takes tools; this one is pending"): a
+    // browser grant whose card waits for the owner, or an app grant still waiting for its sign-in. Either way the request
+    // already named its tools and the person is already being asked, so Coach's extra tools call is its own to drop, never
+    // "Coach couldn't connect" in red over that card (23 Nov, a browser taf in the owner's Chrome).
     // Any other state (failed, revoked, ended) stays a real refusal.
-    || /\bonly a listed or connected grant takes tools; this one is pending\b/i.test(line);
+    || /\bonly a listed or connected grant takes tools; this one is pending\b/i.test(line)
+    // More tools on a grant asked for with its tools at once (a browser in the owner's Chrome): Coach asks one new request
+    // with every tool and the taf's Card, as the refusal says, never "Coach couldn't connect" in red (23 Nov, the hand-over).
+    || /\bwas asked for with its tools at once, so it takes no more\b/i.test(line);
 }
 
 /**

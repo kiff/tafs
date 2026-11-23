@@ -1342,6 +1342,9 @@
     <string name="help_code_lead">Aktifkan di %1$s › %2$s. Setelah itu, saat Anda memintanya, KIFF mengirim kode lewat email yang berlaku sekali, selama 10 menit, di browser yang memintanya.</string>
     <string name="help_code_safe">Jangan berikan kode ini kepada siapa pun. KIFF tidak akan pernah memintanya dari Anda.</string>
     <string name="help_code_title">Masuk dengan kode lewat email</string>
+    <string name="help_security_key_lead">Di Linux, atau di Mac dengan macOS 12, menyetujui di komputer ini memerlukan kunci keamanan FIDO2: kunci USB kecil yang Anda sentuh, dengan PIN-nya sendiri. Flashdisk USB biasa tidak bisa. Tanpa kunci itu, komputer ini hanya menampilkan, dan Anda menyetujui di ponsel.</string>
+    <string name="help_security_key_title">Setujui dengan kunci keamanan di komputer ini</string>
+    <string name="help_security_key_use">Tambahkan saat Anda memasangkan komputer ini. Setelah itu, setiap persetujuan menunjukkan apa yang Anda setujui dan meminta Anda mencolokkan kunci, menyentuhnya, lalu memasukkan PIN-nya; tafs tidak pernah menyimpan PIN. Di Mac dengan macOS 12, Touch ID tidak bisa menyetujui.</string>
     <string name="home_calendar_not_read">Kalender tidak dapat dibaca. %1$s</string>
     <string name="home_cant_reach_kiff">Tidak dapat menghubungi KIFF</string>
     <string name="home_choose_taf">Pilih sebuah taf.</string>

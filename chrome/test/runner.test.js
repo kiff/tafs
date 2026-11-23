@@ -16,6 +16,7 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
   const listeners = {};
   const on = (name) => ({ addListener: (f) => (listeners[name] = f) });
   const tabs = new Map();
+  const groups = new Map(); // tab id → its group, as Chrome's tabs.get says it
   let nextTab = 100;
   const pageFor = (url) => page || { read_id: "rd_" + calls.length, url, title: "t", text: "", fields: [{ ref: "f1", label: "Email", kind: "email" }], controls: [{ ref: "c1", label: "Save" }, { ref: "c2", label: "Pay now" }], links: [] };
   let actAnswer = { ok: true };
@@ -23,6 +24,7 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
     calls,
     listeners,
     tabsMap: tabs,
+    groupsMap: groups,
     setAct: (a) => (actAnswer = a),
     setNextTab: (n) => (nextTab = n),
     webNavigation: { onBeforeNavigate: on("before"), onCommitted: on("committed"), onCreatedNavigationTarget: on("created") },
@@ -32,7 +34,7 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
         calls.push(["tabs.query"]);
         return [];
       },
-      get: async (id) => ({ id, status: "complete", url: tabs.get(id) }),
+      get: async (id) => ({ id, status: "complete", url: tabs.get(id), groupId: groups.get(id) ?? -1 }),
       update: async (id, props) => {
         calls.push(["tabs.update", id, props]);
         if (props.url) tabs.set(id, props.url);
@@ -40,9 +42,14 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
       group: async (o) => {
         calls.push(["tabs.group", o]);
         if (groupFails) throw new Error("No group");
-        return 7;
+        for (const t of o.tabIds || []) groups.set(t, o.groupId ?? 7);
+        return o.groupId ?? 7;
       },
       remove: async (id) => calls.push(["tabs.remove", id]),
+      ungroup: async (ids) => {
+        calls.push(["tabs.ungroup", ids]);
+        for (const t of [].concat(ids)) groups.delete(t);
+      },
       create: async (o) => {
         calls.push(["tabs.create", o]);
         if (createFails) throw new Error("No window with id");
@@ -808,6 +815,7 @@ test("a taf's next run leaves a kept tab the person has moved or is using, and c
     ["still where it was left", () => {}, true],
     ["moved to another page", (c, tab) => c.tabsMap.set(tab, "https://elsewhere.example/"), false],
     ["in front of the window in use", (c) => { c.front = true; }, false],
+    ["in use, in a group of the person's own", (c, tab) => { c.front = true; c.groupsMap.set(tab, 99); }, false],
   ]) {
     const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
     c.front = false;
@@ -822,8 +830,32 @@ test("a taf's next run leaves a kept tab the person has moved or is using, and c
     await r.handle(step({ run: "run_2", id: "op2" }));
     const gone = c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).includes(tab);
     assert.equal(gone, closes, what);
+    // A tab that stays leaves the run's own "· done" group, so the group of a run that's over goes; never a group the person
+    // put it in. A tab that closes needs nothing.
+    const theirs = what.includes("of the person's own");
+    const ungrouped = c.calls.filter((x) => x[0] === "tabs.ungroup").flatMap((x) => x[1]).includes(tab);
+    assert.equal(ungrouped, !closes && !theirs, what + ": out of the run's done group only");
+    if (theirs) assert.equal(c.groupsMap.get(tab), 99, "the person's own group keeps it");
     assert.deepEqual(await r.doneTabs(), {}, "the record goes either way: a tab the person has taken is not the taf's to track");
   }
+});
+
+test("a person watching each run of a taf doesn't collect one done group per run: each earlier run's tab leaves its group", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  // The owner's hand-over test: the latest run's tab is always the one in front, in the window they use.
+  const get = c.tabs.get;
+  c.tabs.get = async (id) => ({ ...(await get(id)), windowId: 3, active: true });
+  c.windows.get = async (id) => ({ id, focused: true });
+  const r = runner(c);
+  const tabs = [];
+  for (const n of [1, 2, 3]) {
+    await r.handle(step({ run: "run_" + n, id: "op" + n }));
+    tabs.push([...c.tabsMap.keys()].at(-1));
+    await r.stop("run_" + n);
+  }
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]), [], "nothing the person is looking at closes");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.ungroup").flatMap((x) => x[1]), tabs.slice(0, 2), "the two earlier runs' tabs leave their groups");
+  assert.deepEqual(Object.keys(await r.doneTabs()), ["Rae"], "only the latest run is kept as the taf's");
 });
 
 test("unpairing closes a kept tab the person has moved too", async () => {

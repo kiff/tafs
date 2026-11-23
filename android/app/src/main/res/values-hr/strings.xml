@@ -1452,6 +1452,9 @@
     <string name="help_code_lead">Uključite to u %1$s › %2$s. Zatim vam KIFF na zahtjev e-poštom šalje kod koji vrijedi jednom, 10 minuta, u pregledniku koji ga je zatražio.</string>
     <string name="help_code_safe">Nikome nikad ne dajte ovaj kod. KIFF ga od vas nikad neće tražiti.</string>
     <string name="help_code_title">Prijava kodom iz e-pošte</string>
+    <string name="help_security_key_lead">Na Linuxu ili na Macu s macOS-om 12 za odobravanje na ovom računalu treba vam sigurnosni ključ FIDO2: mali USB ključ koji dodirnete, s vlastitim PIN-om. Običan USB stick neće raditi. Bez njega ovo računalo samo prikazuje, a odobravate na telefonu.</string>
+    <string name="help_security_key_title">Odobravanje sigurnosnim ključem na ovom računalu</string>
+    <string name="help_security_key_use">Dodajte ga kad uparujete ovo računalo. Zatim svako odobrenje pokazuje što odobravate i traži da priključite ključ, dodirnete ga i unesete njegov PIN; tafs nikad ne sprema PIN. Na Macu s macOS-om 12 Touch ID ne može odobravati.</string>
     <string name="home_calendar_not_read">Kalendar nije bilo moguće pročitati. %1$s</string>
     <string name="home_cant_reach_kiff">Nije moguće doći do KIFF-a</string>
     <string name="home_choose_taf">Odaberite taf.</string>

@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">Bunu %1$s › %2$s bölməsində aktiv edin. Sonra istədikdə KIFF bir dəfə, 10 dəqiqə ərzində, onu istəyən brauzerdə işləyən kodu e-poçtla göndərir.</string>
     <string name="help_code_safe">Bu kodu heç kimə verməyin. KIFF onu sizdən heç vaxt istəməyəcək.</string>
     <string name="help_code_title">E-poçtla gələn kodla daxil olun</string>
+    <string name="help_security_key_lead">Linux-da və ya macOS 12 olan Mac-də bu kompüterdə təsdiq etmək üçün FIDO2 təhlükəsizlik açarı lazımdır: toxunduğunuz, öz PIN-i olan kiçik USB açar. Adi USB fləş işləməyəcək. Açar olmadan bu kompüter yalnız göstərir, təsdiqi isə telefonunuzda edirsiniz.</string>
+    <string name="help_security_key_title">Bu kompüterdə təhlükəsizlik açarı ilə təsdiq edin</string>
+    <string name="help_security_key_use">Bu kompüteri cütləşdirəndə onu əlavə edin. Sonra hər təsdiq nəyi təsdiq etdiyinizi göstərir və açarı qoşmağınızı, ona toxunmağınızı və PIN-ini daxil etməyinizi istəyir; tafs PIN-i heç vaxt saxlamır. macOS 12 olan Mac-də Touch ID ilə təsdiq etmək olmur.</string>
     <string name="home_calendar_not_read">Təqvim oxuna bilmədi. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF-ə çatmaq olmur</string>
     <string name="home_choose_taf">Taf seçin.</string>

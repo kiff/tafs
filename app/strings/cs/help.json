@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs může pracovat ve vašem Chrome",
   "help.code_lead": "Zapněte to v části {account} › {sign_in}. Pak vám KIFF na požádání pošle e-mailem kód, který platí jednou, 10 minut, v prohlížeči, který o něj požádal.",
   "help.code_safe": "Nikdy tento kód nikomu nesdělujte. KIFF vás o něj nikdy nepožádá.",
-  "help.code_title": "Přihlášení kódem z e-mailu"
+  "help.code_title": "Přihlášení kódem z e-mailu",
+  "help.security_key_lead": "V Linuxu nebo na Macu se systémem macOS 12 je ke schvalování na tomto počítači potřeba bezpečnostní klíč FIDO2: malý USB klíč, kterého se dotknete a který má vlastní PIN. Obyčejný USB flash disk nestačí. Bez klíče tento počítač jen zobrazuje a schvalujete v telefonu.",
+  "help.security_key_title": "Schvalování bezpečnostním klíčem na tomto počítači",
+  "help.security_key_use": "Přidejte ho při párování tohoto počítače. Každé schválení pak ukáže, co schvalujete, a požádá vás, abyste klíč připojili, dotkli se ho a zadali jeho PIN; tafs PIN nikdy neukládá. Na Macu se systémem macOS 12 nelze schvalovat pomocí Touch ID."
 }

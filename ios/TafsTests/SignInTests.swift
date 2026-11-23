@@ -132,12 +132,28 @@ final class SignInTests: XCTestCase {
             XCTAssertEqual(Legal.page("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/privacy")
         }
         XCTAssertEqual(Legal.page("terms", language: "sw").absoluteString, "https://kiff.dev/tafs/terms", "a language kiff.dev doesn't serve opens English")
-        XCTAssertEqual(Legal.terms, Legal.page("terms", language: Legal.language))
+        XCTAssertEqual(Legal.terms, Legal.page("terms", language: Legal.site))
         XCTAssertTrue(Words.languages.contains(Legal.language))
-        // A script or regional variant ("zh-Hant", "pt-BR") is served under its language ("zh", "pt").
-        XCTAssertTrue(Legal.translated.isSubset(of: Set(Words.languages.map { String($0.split(separator: "-")[0]) })), "kiff.dev serves pages only in languages the app ships")
-        // A regional variant (pt-BR) opens its language's pages (`Legal.language` is "pt"), so it needs none of its own.
+        // A script variant ("zh-Hant", "sr-Latn") is served under its language ("zh", "sr"); Brazilian Portuguese has its own pages.
+        XCTAssertTrue(Legal.translated.subtracting(["pt-br"]).isSubset(of: Set(Words.languages.map { String($0.split(separator: "-")[0]) })), "kiff.dev serves pages only in languages the app ships")
+        XCTAssertTrue(Words.languages.contains("pt-BR"), "pt-br's pages are for a language the app ships")
         XCTAssertEqual(Set(Words.languages.filter { !$0.contains("-") }).subtracting(["en"]).subtracting(Legal.translated), [], "every shipped language has its page (Korean and Japanese since 21 Nov, Estonian, Lithuanian and Latvian with them)")
+    }
+
+    /// Brazilian Portuguese opens its own legal pages, tafs's and KIFF's, at the lower-case `/pt-br/` (kiff.dev doesn't serve
+    /// `/pt-BR/`), while `Legal.language` stays "pt" for KIFF's pages and tafs cloud. Any other Portuguese stays on `/pt/`.
+    func testBrazilianPortugueseOpensItsOwnLegalPages() {
+        XCTAssertEqual(Legal.site(catalog: "pt-BR", language: "pt"), "pt-br")
+        XCTAssertEqual(Legal.site(catalog: "pt_BR", language: "pt"), "pt-br")
+        XCTAssertEqual(Legal.site(catalog: "pt", language: "pt"), "pt")
+        XCTAssertEqual(Legal.site(catalog: "en", language: "en"), "en")
+        XCTAssertEqual(Legal.site(catalog: "zh-Hant", language: "zh"), "zh")
+        XCTAssertEqual(Legal.page("terms", language: "pt-br").absoluteString, "https://kiff.dev/pt-br/tafs/terms")
+        XCTAssertEqual(Legal.page("privacy", language: "pt-br").absoluteString, "https://kiff.dev/pt-br/tafs/privacy")
+        XCTAssertEqual(Legal.kiffPage("terms", language: "pt-br").absoluteString, "https://kiff.dev/pt-br/terms")
+        XCTAssertEqual(Legal.kiffPage("privacy", language: "pt-br").absoluteString, "https://kiff.dev/pt-br/privacy")
+        XCTAssertEqual(Legal.page("terms", language: "pt").absoluteString, "https://kiff.dev/pt/tafs/terms")
+        XCTAssertEqual(Legal.label("Terms", language: "pt-br"), "Terms", "its own page: the link doesn't say it's in English")
     }
 
     /// KIFF's own Terms and Privacy, the account's, beside tafs's: in the app's language where kiff.dev serves it.

@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">Ony %1$s › %2$s bölüminde açyň. Soňra siz soranyňyzda, KIFF bir gezek, 10 minutlap, ony soran brauzerde işleýän kody email bilen iberýär.</string>
     <string name="help_code_safe">Bu kody hiç kime bermäň. KIFF ony sizden hiç haçan soramaz.</string>
     <string name="help_code_title">Email bilen iberilen kod bilen giriň</string>
+    <string name="help_security_key_lead">Linux-da ýa-da macOS 12 bolan Mac-da bu kompýuterde tassyklamak üçin FIDO2 howpsuzlyk açary gerek: degip ulanylýan, öz PIN-i bolan kiçi USB açar. Adaty USB fleşka işlemez. Açar bolmasa, bu kompýuter diňe görkezýär, tassyklamany bolsa telefonyňyzda edýärsiňiz.</string>
+    <string name="help_security_key_title">Bu kompýuterde howpsuzlyk açary bilen tassyklaň</string>
+    <string name="help_security_key_use">Bu kompýuteri goşalanyňyzda ony goşuň. Soňra her tassyklama näme tassyklaýandygyňyzy görkezýär we açary dakmagyňyzy, oňa degmegiňizi we PIN-ini girizmegiňizi soraýar; tafs PIN-i hiç haçan saklamaýar. macOS 12 bolan Mac-da Touch ID bilen tassyklap bolmaýar.</string>
     <string name="home_calendar_not_read">Senenama okalyp bilinmedi. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF-e ýetip bolmaýar</string>
     <string name="home_choose_taf">Taf saýlaň.</string>

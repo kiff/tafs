@@ -1397,6 +1397,9 @@
     <string name="help_code_lead">Schalte es unter %1$s › %2$s ein. Dann schickt dir KIFF auf Wunsch einen Code per E-Mail, der einmal gilt, 10 Minuten lang, in dem Browser, der ihn angefordert hat.</string>
     <string name="help_code_safe">Gib diesen Code niemandem weiter. KIFF fragt dich nie danach.</string>
     <string name="help_code_title">Mit einem per E-Mail gesendeten Code anmelden</string>
+    <string name="help_security_key_lead">Unter Linux oder auf einem Mac mit macOS 12 brauchst du zum Genehmigen an diesem Computer einen FIDO2-Sicherheitsschlüssel: einen kleinen USB-Schlüssel, den du berührst, mit eigener PIN. Ein gewöhnlicher USB-Stick funktioniert nicht. Ohne ihn zeigt dieser Computer nur an, und du genehmigst auf deinem Handy.</string>
+    <string name="help_security_key_title">Mit einem Sicherheitsschlüssel an diesem Computer genehmigen</string>
+    <string name="help_security_key_use">Füge ihn hinzu, wenn du diesen Computer koppelst. Danach zeigt jede Genehmigung, was du genehmigst, und bittet dich, den Schlüssel einzustecken, ihn zu berühren und seine PIN einzugeben; tafs speichert die PIN nie. Auf einem Mac mit macOS 12 kann Touch ID nicht genehmigen.</string>
     <string name="home_calendar_not_read">Der Kalender konnte nicht gelesen werden. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF nicht erreichbar</string>
     <string name="home_choose_taf">Wähle einen taf.</string>

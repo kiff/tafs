@@ -4,5 +4,8 @@
   "help.chrome_title": "tafs kan in je Chrome werken",
   "help.code_lead": "Zet het aan in {account} › {sign_in}. Als je erom vraagt, mailt KIFF je daarna een code die één keer werkt, 10 minuten lang, in de browser die erom vroeg.",
   "help.code_safe": "Geef deze code aan niemand. KIFF vraagt er nooit om.",
-  "help.code_title": "Inloggen met een code per e-mail"
+  "help.code_title": "Inloggen met een code per e-mail",
+  "help.security_key_lead": "Op Linux, of op een Mac met macOS 12, heb je om op deze computer goed te keuren een FIDO2-beveiligingssleutel nodig: een kleine USB-sleutel die je aanraakt, met een eigen pincode. Een gewone USB-stick werkt niet. Zonder sleutel toont deze computer alleen, en keur je goed op je telefoon.",
+  "help.security_key_title": "Goedkeuren met een beveiligingssleutel op deze computer",
+  "help.security_key_use": "Voeg hem toe wanneer je deze computer koppelt. Daarna laat elke goedkeuring zien wat je goedkeurt en vraagt je de sleutel erin te steken, hem aan te raken en de pincode in te voeren; tafs bewaart de pincode nooit. Op een Mac met macOS 12 kan Touch ID niet goedkeuren."
 }

@@ -399,6 +399,8 @@ data class CoachToolsStep(
   val give: String = "",
   @kotlinx.serialization.SerialName("not_now") val notNow: String = "",
   val row: String = "",
+  /** Said when the batch went but tafs cloud still asks for the same one: nothing was connected. Absent until tafs cloud sends it. */
+  @kotlinx.serialization.SerialName("not_connected") val notConnected: String = "",
 ) {
   @Serializable
   data class Group(val name: String = "", val line: String = "", val tools: List<Tool> = emptyList())

@@ -1,0 +1,1 @@
+- **Android: "Give Coach its tools" no longer ends silently when nothing was connected.** If the gateway takes the batch but tafs cloud still asks for the same one, the step says Coach's tools weren't given, in tafs cloud's words when it sends them (docs/coach.md).

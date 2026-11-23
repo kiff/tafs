@@ -1,0 +1,1 @@
+- **Replacing a Chrome again keeps the connections an earlier replacement carried (iPhone and iPad):** the phone checks, with its own key, that the earlier pairing it signed carried each one with exactly those sites ([docs/ios-app.md](docs/ios-app.md)).

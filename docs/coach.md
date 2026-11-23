@@ -159,6 +159,11 @@ wrote it.
 
 iPhone and iPad do the same (`SetupChatView`'s Start screen, `KIFFClient`'s `/v1/connections/batch`).
 
+**A batch that connects nothing is said, never redrawn silently.** If the gateway takes the batch (200, every tool `already`
+there) and tafs cloud's next read still asks for that same batch, nothing was connected: the step says so, in tafs cloud's
+`coach_tools_step.not_connected` when it sends it, else the app's `coach.tools_not_given`. A Card drafted once the batch is in
+isn't that: the step is drawn again with it, as before (Android: `AppModel.giveCoachTools`; iPhone and iPad follow).
+
 ## What Coach shows
 
 Coach writes messages and shows cards (`SetupComponent.Kind`). A card grants nothing by
@@ -262,7 +267,7 @@ new `check` replaces the taf's check. A check moved to another app moves the run
 version from `improve-a-taf` whose instructions read there and name none of the old tools. A wake never
 takes input: the words a schedule's run opens with can't be changed from Coach, so what runs do changes
 in the taf's instructions. A version's note says only what its instructions or draft carry: a new
-summary alone changes no run (skills `the-dial@8`, `improve-a-taf@3`).
+summary alone changes no run (skills `the-dial@8`, `improve-a-taf@4`).
 
 **What it will likely use, before the owner approves.** Before the result of a new taf with
 `cron`, and before `version_install` of a dial version of a scheduled taf, Coach calls
