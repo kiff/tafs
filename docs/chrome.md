@@ -622,7 +622,8 @@ signed over the vector's bytes. **Android's card is built, off too:**
   only (`BrowserStepBlock`, `Text(verbatim:)`), never a link or anything tappable.
 - **Its checks are the phone's own** (`SealedRelease.refusal`, `AppModel.fillRefusal`): the Chrome is paired; the origin is
   `https` with no path or user, and within a site **this phone's own key signed** for that Chrome on one of the account's
-  connections (`ChromeSwitch.signedSites`, `tafs-chrome/sites/v1`), never sites planque relays. iPhone and iPad sign no
+  **live** connections (`ChromeSwitch.signedSites`, `tafs-chrome/sites/v1`), never sites planque relays. A disconnected
+  connection keeps its signature, so it's never counted. iPhone and iPad sign no
   sensitive-site allowance, so a sensitive site is always refused there.
 - **Allow this fill** asks **one** Face ID, naming the part and the site (`chrome.release_prompt_password` or
   `_username`), never from a notification's action, an unlock reused or an answer already confirmed. Under it, the approval key

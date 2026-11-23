@@ -3959,14 +3959,15 @@ final class AppModel: ObservableObject {
     var sealedReleaseOn = SealedRelease.enabled
 
     /// Why the phone won't sign `call`'s release, by its own checks; nil where it may, or where it isn't a sealed fill the card
-    /// can draw. The sites are the ones this phone's own key signed for that Chrome on the account's connections
-    /// (`ChromeSwitch.signedSites`, `tafs-chrome/sites/v1`), never sites planque relays. iPhone and iPad sign no sensitive-site
+    /// can draw. The sites are the ones this phone's own key signed for that Chrome on the account's **live** connections
+    /// (`ChromeSwitch.signedSites`, `tafs-chrome/sites/v1`), never sites planque relays: a disconnected connection keeps its
+    /// signature, so it's never counted. iPhone and iPad sign no sensitive-site
     /// allowance, so a sensitive site is always refused here.
     func fillRefusal(_ call: HeldCall) -> SealedRelease.Refusal? {
         guard let sealed = call.sealedFill else { return nil }
         let fill = sealed.fill(expiresAt: call.expiresAt)
         let key = signer.approvalPublicKeyDER
-        let sites = grants.filter { $0.request.browser?.chrome == fill.chromeID }
+        let sites = grants.filter { $0.connected && $0.request.browser?.chrome == fill.chromeID }
             .compactMap { ChromeSwitch.signedSites(of: $0, phoneKey: key) }.flatMap { $0 }
         return SealedRelease.refusal(fill, pairedChromes: Set((chromes ?? []).map(\.id)), signedSites: sites,
                                      allowedSensitive: [], now: clock())

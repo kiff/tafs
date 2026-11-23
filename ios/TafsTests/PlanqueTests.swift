@@ -1475,6 +1475,12 @@ extension PlanqueTests {
         XCTAssertEqual(model.fillRefusal(call), .chrome)
         StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}"#)
         await model.refreshChromes()
+        // A disconnected connection keeps its signature, but it's no site the owner has connected now.
+        let ownSig = try ChromePairing.rawSignature(fromDER: signer.approvalKey.signature(
+            for: try ChromePairing.sitesBytes(chromeID: "chr_1", grant: "g1", sites: ["shop.example"])).derRepresentation.base64EncodedString())
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[{"id":"g1","status":"revoked","text":"","digest":"d","events":[],"chrome_sites_sig":"\#(ownSig)","request":{"server":"s","agent":"a","tools":[],"browser":{"driver":"extension","chrome":"chr_1","sites":["shop.example"]}}}]}"#)
+        await model.refreshConnections()
+        XCTAssertEqual(model.fillRefusal(call), .notSigned, "only live connections count")
         // The connection's sites signed by another key: not this phone's, so not a site it connected.
         let otherSig = try ChromePairing.rawSignature(fromDER: P256.Signing.PrivateKey().signature(
             for: try ChromePairing.sitesBytes(chromeID: "chr_1", grant: "g1", sites: ["shop.example"])).derRepresentation.base64EncodedString())
