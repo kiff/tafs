@@ -316,7 +316,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | Masking what a page read shows | done | |
 | Coach in the side panel | done | reading and chatting; a card that needs approving sends the owner to the phone |
 | Re-pairing replaces (Your Chrome 1), one fingerprint (5), isolation (6) | done | |
-| Sealed values (Saved sign-ins) | partial | the extension checks the release; the phone's card that signs `tafs-chrome/release/v1` isn't built |
+| Sealed values (Saved sign-ins) | partial | the extension checks the release; the phone's card that signs `tafs-chrome/release/v1` is designed ([chrome.md](chrome.md), "The phone's release card") and isn't built |
 | Screenshots of a run's acts | partial | built; off (`config.js`) until planque keeps them and the privacy words are live |
 | In the Chrome Web Store | partial | CI builds the package (`chrome-package.yml`); the upload waits on the owner's yes |
 | Approving a held step in Chrome | not for it | the extension is view-only; the card is the phone's (iOS `BrowserStepBlock`, Android `NeedsYouView`) |
