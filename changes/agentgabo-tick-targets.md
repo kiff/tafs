@@ -1,0 +1,1 @@
+- **The infrastructure script puts the tick's five targets.** A rerun of `infra/aws.sh` sends the 5-minute rule one event per sweep group (`tick-1` to `tick-5`) and removes the single target that ran every sweep, so no sweep runs twice; a test keeps the script's groups the same as the runtime's.
