@@ -251,7 +251,7 @@ that does the same:
 `ChatPinUITests` holds steps 2 to 5 and step 8 in a taf's chat, and a message that couldn't go
 (`-sampleSendFails`).
 
-The two apps differ in one place: only iOS pins Coach's answered card.
+Both apps pin Coach's answered card: on Android, answering a card in Coach's chat keeps its ref (`coachAnsweredCard`) and the chat pins that card's row, as a sent message's (`ChatPinTest`).
 
 With no message pinned (a chat just opened, or a reply that came without the owner sending),
 the thread follows its end. While a run works, the dots and then its answer are one row at
@@ -393,7 +393,13 @@ taf wrote before it, never by clock alone (`chatItems`, `placed`, `heldAfterItsW
   the card was.
 - The run paused on the call goes on once it's answered. The app asks tafs cloud to
   continue it at once (`POST /v1/tafs/{id}/holds/{exception}/continue`), and shows the
-  taf working again.
+  taf working again. When tafs cloud answers **404 `run_ended`** (no run waits on that call: the run had
+  ended, so the call never ran), the app says so in its `words`, never silence: the chat shows the
+  line a run that failed part-way shows, with Retry on the owner's last message, and the screen they
+  answered on shows the same words. Any other refusal is left to the alert and the hold's expiry, as before.
+- **A version that goes in can stop a task that waits on the owner's answer** (`POST …/versions/{n}/switch` with `stop_blocking`, from the owner's approval
+  of a version's Card): tafs cloud's answer then names it (`stopped: [{run, session}]`, with `words`), and the app says so in the same
+  line, with Retry on the owner's last message of that session, never silence. A switch that stopped nothing waiting says nothing.
 
 ## Cards that wait for an answer
 

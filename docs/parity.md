@@ -18,7 +18,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | macOS 12 | done 12, partial 31, not started 8, not for it 7 | the 58 iPad view files |
 | Windows | done 40, partial 9, not started 1, not for it 8 | the 58 iPad view files |
 | Linux | done 30, partial 21, not started 1, not for it 6 | the 58 iPad view files |
-| Android | done 54, partial 1, not for it 3 | the 58 iPad view files |
+| Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | done 24, partial 3, not started 1, not for it 4 | the [Watches](#watches) table |
 | Apple Watch | done 17, partial 6, not started 4, not for it 5 | the [Watches](#watches) table |
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
@@ -75,7 +75,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | RecordView | The Record, its rows, filters and receipts | done | done | partial | done | done | done |
 | ReportAnswerSheet | Report an answer | done | done | done | done | done | done |
 | ReportPaymentSheet | "Report this payment" from a receipt: KIFF marks it and the taf is halted | done | done | not started | done | done | done |
-| SetupChatView | Coach's conversation | partial | partial | partial | done | partial | partial |
+| SetupChatView | Coach's conversation | partial | partial | partial | done | partial | done |
 | SetupShapePanel | What Coach has made so far | done | done | not started | done | partial | done |
 | ShareViews | Sharing a taf (`ShareLine`, `ShareTafSheet`), and the Overview (`OverviewView`) | done | done | partial | done | done | done |
 | SignInView | `SignInView`: Sign in with KIFF. Also `SettingsView`, `PlanRow`, `AccountView`, `AccountLines` (Account) | done | done | partial | partial | done | done |
@@ -198,7 +198,6 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **Mac 13+** (partial): the answered connect card reopening the signed Card: in review, tafs#1771 (see Phones 3)
   - **macOS 12** (partial): Approving a connection or a Card; attachments; `SetupShapePanel`, `CoachToolsStep`, `DriveCard`; an approval a newer one for the same connection replaced, folded as history (`replaced`)…
   - **Linux** (partial): Approve, Decline, the sign-in's button and Not now (`ApprovalGate`'s line instead); planque's grant on an approval (the card's own title and words stand for it…
-  - **Android** (partial): Coach's answered card isn't pinned (only iOS pins it, docs/chat.md)
 - **SetupShapePanel**
   - **macOS 12** (not started): SetupShape
   - **Linux** (partial): The tools it connects, from planque's grants (this computer reads none); shown without `planqueReady`, which this computer never is

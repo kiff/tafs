@@ -1,0 +1,2 @@
+• Answering one of Coach's cards keeps that card at the top of the chat, with Coach's answer growing under it.
+• “A new Card” shows each Card's own limits after its tool, so a second tool never reads as unlimited before your fingerprint.

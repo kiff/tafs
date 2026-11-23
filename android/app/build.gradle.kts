@@ -12,8 +12,8 @@ android {
     applicationId = "dev.kiff.tafs"
     minSdk = 30
     targetSdk = 37
-    versionCode = 134
-    versionName = "1.45.0"
+    versionCode = 135
+    versionName = "1.46.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 

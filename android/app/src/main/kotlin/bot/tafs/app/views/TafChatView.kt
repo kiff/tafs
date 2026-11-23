@@ -299,6 +299,24 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
     // The thread changed under it (the answer landed, a row came or went above it): it's put back at the top.
     pinned?.let { pinTo(it, animated = false) }
   }
+  // Coach's card just answered takes the pin, as on iOS (docs/chat.md): its answer starts Coach's next answer, so the card goes to
+  // the top with the work and the answer under it, as a sent message does.
+  // Only when it changes, as iOS's `.onChange`: the chat drawn afresh (back in Coach, the phone turned) opens at its newest, never
+  // at a card answered before. `pinnedCard` is the one already pinned, or there when the view was drawn.
+  val answeredCard = if (tafId == COACH_CHAT) state.coachAnsweredCard?.let { "c|$it" } else null
+  var pinnedCard by remember(tafId) { mutableStateOf(answeredCard) }
+  LaunchedEffect(answeredCard, answeredCard in keys) {
+    if (answeredCard == pinnedCard) return@LaunchedEffect
+    val key = answeredCard?.takeIf { it in keys } ?: return@LaunchedEffect
+    pinnedCard = key
+    pinText = null
+    pinnedWords = null
+    pinned = key
+    following = false
+    touched = false
+    room = listState.layoutInfo.viewportEndOffset.coerceAtLeast(0)
+    pinTo(key, animated = true)
+  }
   // The screen grows as the keyboard goes down on sending: the pinned message is put back at the top once it has.
   val repin by rememberUpdatedState({ pinned?.let { pinTo(it, animated = false) }; Unit })
   LaunchedEffect(listState) {

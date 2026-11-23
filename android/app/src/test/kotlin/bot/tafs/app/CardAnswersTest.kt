@@ -90,6 +90,31 @@ class CardAnswersTest {
     assertTrue("never the chat's text form", transport.requestsTo("POST /v1/tafs/setup_1/messages").isEmpty())
     assertEquals("Agree", m.state.value.coachComponents.single().answer?.let(CoachWords::answered))
     assertFalse(m.state.value.cardsAnswering.contains(CoachWords.cardKey("s1", "c1")))
+    // The card answered here takes the pin in Coach's chat (docs/chat.md): its ref, as its row is keyed.
+    assertEquals(m.state.value.coachComponents.single().ref, m.state.value.coachAnsweredCard)
+    // A message sent to Coach takes the pin itself, as iOS sets it again on each send: the card answered before no longer does,
+    // so Coach's chat drawn afresh later opens at its newest, never back at that card.
+    m.sendChat("And one more thing", COACH_CHAT) {}
+    settle()
+    assertNull(m.state.value.coachAnsweredCard)
+  }
+
+  @Test fun aNewConversationWithCoachLetsGoOfTheAnsweredCard() = runTest {
+    reads()
+    val confirm = cards.first().second
+    transport.answer(conversation, 200, """{"messages":[],"components":[${shown("c1", confirm)}]}""")
+    transport.answer(conversation, 200, """{"messages":[],"components":[${shown("c1", confirm, """{"state":"answered","words":"Agree"}""")}]}""")
+    transport.answer("POST /v1/tafs/setup_1/components/c1/answer", 200, """{"session":"s1","run":"r1","status":"running"}""")
+    transport.answer("GET /v1/tafs/setup_1/runs/r1/stream", 200, sse("end" to """{"status":"COMPLETED","stop":"end_turn"}"""))
+    val m = model()
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertTrue(m.answerCard("confirm", "c1", "agree"))
+    settle()
+    assertEquals(m.state.value.coachComponents.single().ref, m.state.value.coachAnsweredCard)
+    // A new conversation starts with nothing pinned: the old thread's card isn't in it.
+    m.newCoachChat()
+    assertNull(m.state.value.coachAnsweredCard)
   }
 
   @Test fun anAnswerTafsCloudTookNeverLeavesTheCardSendingEvenIfTheThreadCantBeRead() = runTest {
