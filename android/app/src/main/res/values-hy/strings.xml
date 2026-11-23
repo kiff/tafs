@@ -625,6 +625,8 @@
     <string name="chrome_shot_none">Այս քայլի համար պատկեր չի պահվել։</string>
     <string name="chrome_shot_open">Տեսնել էջը այս քայլից առաջ</string>
     <string name="chrome_shot_title">Այս քայլից առաջ</string>
+    <string name="chrome_switch">Օգտագործել այլ Chrome</string>
+    <string name="chrome_switch_prompt">Տեղափոխել այս կապը %1$s-ին</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Զույգավորումը չեղարկելը ավարտում է այն օգտագործող կապերը՝ %1$s։ Դրանք կվերադառնան միայն, եթե նորից միացնես։</string>
     <string name="chrome_used_for">Օգտագործվում է՝ %1$s</string>

@@ -625,6 +625,8 @@
     <string name="chrome_shot_none">Për këtë hap nuk është ruajtur asnjë imazh.</string>
     <string name="chrome_shot_open">Shiko faqen para këtij hapi</string>
     <string name="chrome_shot_title">Para këtij hapi</string>
+    <string name="chrome_switch">Përdor një tjetër Chrome</string>
+    <string name="chrome_switch_prompt">Zhvendose këtë lidhje te %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Heqja e çiftimit i përfundon lidhjet që e përdorin: %1$s. Kthehen vetëm kur t\'i lidhësh përsëri.</string>
     <string name="chrome_used_for">Përdoret për %1$s</string>
