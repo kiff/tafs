@@ -1,5 +1,6 @@
 import { test, mock } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat, signingBytes, requestsMessage } from "../src/crypto.js";
 import { profileId } from "../src/store.js";
 import { Nonces, checkStep, clockOffset, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS, MAX_OFFSET_MS, SKEW_MS, SKEW_KNOWN_MS } from "../src/protocol.js";
@@ -42,6 +43,43 @@ test("a step runs only when planque signed it for this Chrome, unexpired and new
   const changed = await signed(step({ nonce: "n9" }));
   changed.step.sites = ["evil.example"];
   assert.equal((await checkStep(changed, ctx)).why, "not signed by planque", "a field changed after signing");
+});
+
+// The hand-over's step, as planque signs it (chrome_hand.go): op "hand", the read it was planned from, and the taf's words
+// with the field to outline.
+function handStep(extra = {}) {
+  return step({ op: "hand", read_id: "rd_1", hand: { words: "Type the word yourself, then tap Done.", ref: "f2" }, ...extra });
+}
+
+test("a hand-over step signed by planque is taken like any other step", async () => {
+  const p = await planque();
+  const ctx = { planqueKey: p.key, chromeId: "chr_1", nonces: new Nonces(() => NOW), now: NOW };
+  const signed = async (s) => ({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) });
+  const ok = await checkStep(await signed(handStep()), ctx);
+  assert.equal(ok.why, null, "0.2.1 answered every hand-over as malformed (bad_step) here, before the runner saw it");
+  assert.equal(ok.step.op, "hand");
+  // And held to the same rules as any step.
+  assert.equal((await checkStep(await signed(handStep()), ctx)).why, "seen before");
+  assert.equal((await checkStep(await signed(handStep({ nonce: "h2", exp: NOW - SKEW_MS - 1 })), ctx)).why, "expired");
+  assert.equal((await checkStep(await signed(handStep({ nonce: "h3", sites: [] })), ctx)).why, "no sites");
+  const changed = await signed(handStep({ nonce: "h4" }));
+  changed.step.hand.words = "Type your password here.";
+  assert.equal((await checkStep(changed, ctx)).why, "not signed by planque", "the words changed after signing");
+});
+
+// The runner's ops and checkStep's must be the same set: an op the runner runs but checkStep refuses never reaches it
+// (0.2.1's "hand"), and one checkStep takes that the runner doesn't know is a bad_step only later.
+test("every op the runner runs is an op a signed step may carry", async () => {
+  const src = readFileSync(new URL("../src/runner.js", import.meta.url), "utf8");
+  const body = src.slice(src.indexOf("async dispatch(run, step)"));
+  const ops = [...body.slice(0, body.indexOf("default:")).matchAll(/case "([a-z_]+)":/g)].map((m) => m[1]);
+  assert.deepEqual([...ops].sort(), ["act", "close", "hand", "open", "read"]);
+  const p = await planque();
+  const ctx = { planqueKey: p.key, chromeId: "chr_1", nonces: new Nonces(() => NOW), now: NOW };
+  for (const op of ops) {
+    const s = step({ nonce: "op-" + op, op });
+    assert.equal((await checkStep({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) }, ctx)).why, null, op);
+  }
 });
 
 test("each answer, hello and welcome is signed for its purpose", async () => {
@@ -544,6 +582,28 @@ test("an answer over the relay's limit is page_too_large, signed", async () => {
   const { sig, type, ...body } = answer;
   assert.equal(await verify(await pub(ext), LABEL.result, body, sig), true);
   relay.close();
+});
+
+test("a signed hand-over step reaches the runner over the relay and is answered handed, signed", async () => {
+  const p = await planque();
+  const ops = [];
+  const runner = { active: false, handle: async (s) => (ops.push(s.op), s.op === "hand" ? { handed: true } : { error: { code: "bad_step" } }), stop: async () => {} };
+  const { relay, ext, ws } = await relayWith(p, { runner });
+  try {
+    await handshake(p, ws);
+    const s = handStep();
+    await ws.deliver({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) });
+    assert.deepEqual(ops, ["hand"], "the step reached the runner");
+    const answer = ws.sent.at(-1);
+    assert.equal(answer.type, "result");
+    assert.equal(answer.ok, true);
+    assert.equal(answer.handed, true);
+    assert.equal(answer.error, null);
+    const { sig, type, ...body } = answer;
+    assert.equal(await verify(await pub(ext), LABEL.result, body, sig), true);
+  } finally {
+    relay.close();
+  }
 });
 
 test("a connection dropped during a run is opened again at once; idle, it waits for the alarm", async () => {
