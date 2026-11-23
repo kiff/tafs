@@ -1073,7 +1073,10 @@ struct DraftCardsView: View {
     /// How a draft's Cards show: its new Cards as one, "A new Card" (KIFF's draft has one per
     /// tool, and five panels read as five Cards to approve); a changed or unchanged Card alone.
     enum Shown: Equatable {
-        /// Every new Card's lines, each once, in the draft's order.
+        /// Every new Card's lines, in the draft's order, each Card's lines kept together. A Card whose
+        /// lines are exactly an earlier one's shows once; a single line is never dropped for being
+        /// seen before, since a total ("20 calls a day") names no tool and belongs to the Card it
+        /// follows (the owner never reads less than they sign).
         case new(lines: [String])
         case one(card: KIFFClient.DraftCard, lines: [String])
     }
@@ -1086,8 +1089,8 @@ struct DraftCardsView: View {
         return cards.indices.compactMap { i -> Shown? in
             if !fresh.contains(i) { return .one(card: cards[i], lines: lines[i]) }
             guard i == fresh.first else { return nil }
-            var seen = Set<String>()
-            return .new(lines: fresh.flatMap { lines[$0] }.filter { seen.insert($0).inserted })
+            var seen = Set<[String]>()
+            return .new(lines: fresh.filter { seen.insert(lines[$0]).inserted }.flatMap { lines[$0] })
         }
     }
 
