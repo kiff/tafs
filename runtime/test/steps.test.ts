@@ -297,6 +297,14 @@ describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () =
     // A call on a grant that waits for the owner's approval is not a failure of the app.
     expect(coachGuard("Pipedrive waits for the owner's approval: it isn't usable yet")).toBe(true);
     expect(coachGuard("waits_for_approval: Pipedrive waits for the owner's approval")).toBe(true);
+    // Tools set on a pending grant whose card already waits for the owner (a browser taf, 23 Nov): Coach's own extra step.
+    expect(coachGuard("only a listed or connected grant takes tools; this one is pending")).toBe(true);
+    expect(coachGuard("planque answered 409: only a listed or connected grant takes tools; this one is pending")).toBe(true);
+    s.call("planque", { action: "tools", grant: "grt_web123" }, "c7");
+    expect(s.connectionRefusal("c7", "only a listed or connected grant takes tools; this one is pending")).toBeUndefined();
+    // Any other state is a real refusal.
+    expect(coachGuard("only a listed or connected grant takes tools; this one is failed")).toBe(false);
+    expect(coachGuard("only a listed or connected grant takes tools; this one is revoked")).toBe(false);
     expect(coachGuard("the sign-in to Pipedrive didn't finish")).toBe(false);
     // The request's own shape, as planque checks it: Coach wrote it, and Coach fixes it (job 3's pinned post tool).
     expect(coachGuard("fixed argument visibility.com.linkedin.ugc.MemberNetworkVisibility must be a dotted path with a JSON value")).toBe(true);

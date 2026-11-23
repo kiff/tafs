@@ -1,0 +1,4 @@
+• Aprovar uma chamada retida depois de a tarefa já ter terminado indica agora que nada foi executado, com «Tentar novamente».
+• Instalar uma versão que interrompe uma tarefa à espera da sua resposta indica-o, com «Tentar novamente».
+• Iniciar sessão novamente mostra primeiro a aprovação da ligação; emparelhar de novo um Chrome volta a verificar mesmo antes da sua impressão digital.
+• O chat de um taf é lido com menos frequência enquanto espera, e nunca em segundo plano.

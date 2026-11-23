@@ -1,0 +1,4 @@
+• Zatwierdzenie oczekującego wywołania po zakończeniu jego zadania mówi teraz, że nic się nie wykonało, z „Ponów” przy Twojej wiadomości.
+• Instalacja wersji, która zatrzymuje zadanie czekające na Twoją odpowiedź, mówi o tym, z „Ponów” przy jego wiadomości.
+• Ponowne logowanie najpierw pokazuje zatwierdzenie połączenia, a ponowne parowanie Chrome sprawdza jeszcze raz tuż przed odciskiem palca.
+• Czat tafa jest czytany rzadziej, gdy czeka, i wcale, gdy aplikacja działa w tle.

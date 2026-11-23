@@ -1125,6 +1125,8 @@ enum Words {
         static var remove: String { Words.line("chrome.remove") }
         /// Unpair {name}
         static func removeNamed(name: String) -> String { Words.line("chrome.remove_named", name) }
+        /// What moves to this Chrome changed, so nothing was paired. Check it and pair again.
+        static var replaceChanged: String { Words.line("chrome.replace_changed") }
         /// Moves to this Chrome: {sites}
         static func replaceMoves(sites: String) -> String { Words.line("chrome.replace_moves", sites) }
         /// A new Chrome (replaces none)

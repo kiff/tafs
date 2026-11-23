@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { GROUPS } from "../src/cloud/tick.js";
 
 /** Every TAFS_ variable the code reads, from its sources. */
 function flagsRead(dir: string): Set<string> {
@@ -23,5 +24,15 @@ describe("infra/aws.sh", () => {
     expect(read.length).toBeGreaterThan(0);
     for (const flag of read) expect(kept, `${flag} isn't kept by infra/aws.sh`).toContain(flag);
     expect(script).toContain("$FLAGS_ENV}");
+  });
+
+  // The 5-minute rule's targets are the tick's groups, one each; the one target that ran every sweep is gone,
+  // or a rerun would put it back beside them and every sweep would run twice.
+  it("puts one tick target per group and removes the all-sweeps one", () => {
+    const script = readFileSync(new URL("../../infra/aws.sh", import.meta.url), "utf8");
+    const loop = script.match(/for g in ((?:tick-\d+ ?)+); do/);
+    expect(loop?.[1]!.trim().split(/\s+/)).toEqual(Object.keys(GROUPS));
+    expect(script).toContain("remove-targets --rule tafs-cloud-deletions --ids tafs-cloud ");
+    expect(script).not.toMatch(/sweep\\+":\\+"deletions/);
   });
 });

@@ -616,6 +616,7 @@
     <string name="chrome_refused">इस कोड का उपयोग किसी और Chrome ने किया, इसलिए कुछ नहीं जुड़ा। फिर शुरू करें।</string>
     <string name="chrome_remove">जोड़ी हटाएँ</string>
     <string name="chrome_remove_named">%1$s की जोड़ी हटाएँ</string>
+    <string name="chrome_replace_changed">इस Chrome में जाने वाली चीज़ें बदल गईं, इसलिए कुछ भी नहीं जोड़ा गया। इसे जांचें और फिर से जोड़ें।</string>
     <string name="chrome_replace_moves">इस Chrome में जाता है: %1$s</string>
     <string name="chrome_replace_none">एक नया Chrome (किसी को नहीं बदलता)</string>
     <string name="chrome_replace_title">बदलता है</string>
