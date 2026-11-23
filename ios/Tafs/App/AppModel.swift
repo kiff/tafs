@@ -9340,10 +9340,10 @@ final class AppModel: ObservableObject {
         var lastOwner: String?
         var polls = 0
         while !Task.isCancelled {
-            // Every second while Setup works, so its words show as soon as it writes them.
-            // While Setup works, soon after it writes, then slower as the reads go on (never every second for long), with jitter.
+            // While Setup works, soon after it writes, then slower as the reads go on (never every second for long), with jitter. A card
+            // waiting on its grant keeps the base pace: it's read only while it waits, and says so after a minute.
             let base = setupThinking ? setupWorkingPollInterval : setupPollInterval
-            try? await Task.sleep(nanoseconds: PollPace.jittered(base * PollPace.setupFactor(afterReads: polls)))
+            try? await Task.sleep(nanoseconds: PollPace.jittered(PollPace.setupWait(base: base, afterReads: polls, cardWaits: cardWaitsOnItsGrant)))
             if Task.isCancelled { return }
             // A stream shows what Setup does, and reloads the thread itself, except a card still waiting on
             // its grant: planque can list it after the stream's last read, and a quiet stream reads nothing

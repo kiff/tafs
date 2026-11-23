@@ -24,6 +24,13 @@ final class PollPaceTests: XCTestCase {
         XCTAssertEqual(PollPace.chatFactor(afterReads: 500), 3, "a cap, not a growth")
     }
 
+    /// A card waiting on its grant keeps Setup's base pace past the budget (desktop-windows' note): it isn't slowed to 8×.
+    func testACardWaitingOnItsGrantKeepsTheBasePace() {
+        XCTAssertEqual(PollPace.setupWait(base: 3, afterReads: 70, cardWaits: true), 3)
+        XCTAssertEqual(PollPace.setupWait(base: 3, afterReads: 70, cardWaits: false), 24)
+        XCTAssertEqual(PollPace.setupWait(base: 1, afterReads: 0, cardWaits: false), 1)
+    }
+
     func testSetupNeverReadsEverySecondForLong() {
         XCTAssertEqual([0, 9, 10, 29, 30, 59, 60, 1_000].map { PollPace.setupFactor(afterReads: $0) }, [1, 1, 2, 2, 4, 4, 8, 8])
     }

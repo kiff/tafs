@@ -19,6 +19,12 @@ enum PollPace {
         polls < 10 ? 1 : polls < 30 ? 2 : polls < 60 ? 4 : 8
     }
 
+    /// Setup's wait before its next read: `base` times `setupFactor`, except while a card waits on its grant, which keeps `base`
+    /// (that read is time-boxed: the card says it couldn't be read after a minute, and stops waiting after ten).
+    static func setupWait(base: UInt64, afterReads polls: Int, cardWaits: Bool) -> UInt64 {
+        cardWaits ? base : base * setupFactor(afterReads: polls)
+    }
+
     /// A list read while its screen is open: `base` after a change, doubling while the answers are the same, up to `cap`.
     static func quietWait(after current: UInt64, changed: Bool, base: UInt64, cap: UInt64) -> UInt64 {
         changed ? base : min(max(current, base) * 2, cap)
