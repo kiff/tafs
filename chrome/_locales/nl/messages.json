@@ -82,5 +82,11 @@
   "taf_error": { "message": "Dit is niet bij $TAF$ aangekomen. Probeer het opnieuw.", "placeholders": { "taf": { "content": "$1" } } },
   "tafs_not_read": { "message": "Je tafs konden niet worden gelezen. Probeer het opnieuw." },
   "no_taf_here": { "message": "Er werkt nog geen taf in deze Chrome." },
-  "setup_taf": { "message": "Een nieuwe taf instellen voor deze site" }
+  "setup_taf": { "message": "Een nieuwe taf instellen voor deze site" },
+  "hand_title": { "message": "Jij bent aan de beurt", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "De taf zegt", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Laat het zien", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Klaar", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Nu niet", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Typ alleen waar je deze pagina vertrouwt.", "description": "Fixed line on that card under the taf's words" }
 }

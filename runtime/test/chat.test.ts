@@ -1145,6 +1145,25 @@ describe("a held call answered (kiff/tafs#206)", () => {
     expect((await call(w, "POST", `/v1/tafs/${MAX}/holds/exc_1/continue`, { token: "approver" })).status).toBe(404);
   });
 
+  it("says, in the owner's language, that the run had ended and nothing ran, when the owner's yes lands after it (23 Nov: the panel's typing step)", async () => {
+    const w = world();
+    // No run of the taf paused on that call any more: the run ended, and the call never ran.
+    const en = await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_gone/continue`, { token: "approver" });
+    expect(en.status).toBe(404);
+    expect(en.body).toMatchObject({ code: "run_ended", words: "That run had ended, so nothing ran." });
+    const fr = await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_gone/continue`, { token: "approver", headers: { "Accept-Language": "fr-FR" } });
+    expect(fr.body).toMatchObject({ code: "run_ended", words: "Cette exécution était déjà terminée, donc rien n'a été fait." });
+    // A run that paused on the call goes on and says nothing of the kind.
+    const run = await w.agents.api.startRun("t_acme", RAE, "Refund pi_1", ANA);
+    Object.assign(w.agents.runs.find((x) => x.id === run.id)!, {
+      status: "PAUSED",
+      requirements: [{ call_id: "c1", tool: "refund", input: {}, operation: "op1", exception: "exc_live" }],
+    });
+    const live = await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_live/continue`, { token: "approver" });
+    expect(live.status).toBe(200);
+    expect(JSON.stringify(live.body)).not.toContain("run_ended");
+  });
+
   it("is only for a role that may answer held calls", async () => {
     const w = world();
     const run = await w.agents.api.startRun("t_acme", RAE, "Refund pi_1", ANA);

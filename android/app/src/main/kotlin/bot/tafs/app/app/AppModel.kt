@@ -7629,15 +7629,41 @@ class AppModel(
     val generation = accountGeneration
     _state.update { it.copy(chatAwaiting = it.chatAwaiting + (tafId to clock())) }
     scope.launch {
+      var runEnded: String? = null
       try {
         cloud.continueHeld(cloudId, kiffId)
       } catch (e: CancellationException) {
         throw e
+      } catch (e: bot.tafs.app.kiff.CloudError) {
+        // The yes landed after the run that waited on the call had ended: nothing ran, and the owner is told so in tafs cloud's
+        // words, never silence. Any other refusal stays best effort: the alert and the hold's expiry still continue it.
+        if (e.status == 404 && e.code == "run_ended") runEnded = e.words?.takeIf { it.isNotBlank() }
       } catch (_: Exception) {
       }
       if (generation != accountGeneration) return@launch
+      if (runEnded != null) {
+        runEndedAfterApproval(tafId, runEnded)
+        readThread(tafId)
+        return@launch
+      }
       readThread(tafId)
       followChat(tafId)
+    }
+  }
+
+  /**
+   * The owner approved a held call after its run had ended (tafs cloud answered `run_ended`): nothing ran. The chat ends as a run
+   * that failed part-way does, in tafs cloud's [words], with Retry on the owner's last message, and nothing shows as working; the
+   * screen they answered on says it too. Without a message to send again, only the words.
+   */
+  internal fun runEndedAfterApproval(tafId: String, words: String) {
+    val retry = _state.value.chats[tafId]?.lastOrNull { it.from == ChatMessage.From.owner }?.text?.takeIf { it.isNotBlank() }
+    _state.update { s ->
+      s.copy(
+        lastError = words,
+        chatAwaiting = s.chatAwaiting - tafId,
+        chatEnded = if (retry != null) s.chatEnded + (tafId to ChatEnd.Failed(retry, emptyList(), words)) else s.chatEnded,
+      )
     }
   }
 

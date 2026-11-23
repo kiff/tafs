@@ -16,6 +16,10 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const ja: Words = {
   work_working: "作業中",
   work_waiting_approval: "あなたの承認を待っています",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "その実行はすでに終了していたため、何も実行されませんでした。",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "このバージョンをインストールしたため、あなたの回答を待っていたものが停止しました。保留中の呼び出しは取り下げられ、メッセージは実行されませんでした。もう一度送信できます。",
   your_step_title: "あなたの手順",
   your_step_done: "完了",
   your_step_skip: "スキップ",
