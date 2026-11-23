@@ -59,17 +59,21 @@ export class HandAnswers {
     await this.store.set((await this.all()).filter((a) => a.hand !== hand));
   }
 
-  /** planque's answer to one: done with it, or (too large) once more without the page. */
+  /**
+   * planque's answer to one: done with it, or (too large) once more without the page. Resolves to the hand-over to send again **now**
+   * (only the too-large one, without its page), else null: an answer planque couldn't store (`not_kept`) waits for the next welcome, so a
+   * failing store is not answered by a loop.
+   */
   async heard(m) {
-    if (!m || typeof m.hand !== "string") return;
-    if (m.type === "hand_kept") return this.drop(m.hand);
-    if (m.type !== "hand_refused") return;
+    if (!m || typeof m.hand !== "string") return null;
+    if (m.type === "hand_kept") return this.drop(m.hand).then(() => null);
+    if (m.type !== "hand_refused") return null;
     if (m.code === "too_large") {
       const a = (await this.all()).find((x) => x.hand === m.hand);
-      if (a && a.page) return this.add({ ...a, page: null });
+      if (a && a.page) return this.add({ ...a, page: null }).then(() => m.hand);
     }
     // planque couldn't keep it just now (a store failure): it stays, and goes again on the next welcome, until it is kept or too old.
-    if (m.code === "not_kept") return;
-    return this.drop(m.hand); // unknown_hand, expired, unsigned: sending it again changes nothing
+    if (m.code === "not_kept") return null;
+    return this.drop(m.hand).then(() => null); // unknown_hand, expired, unsigned: sending it again changes nothing
   }
 }

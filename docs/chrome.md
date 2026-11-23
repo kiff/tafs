@@ -618,7 +618,7 @@ step over: `op: "hand"`, `hand: {words, ref?}`, `read_id`, signed like every ste
   `tafs-chrome/hand/v1` and `{hand, outcome, page?}` (a new label, so a step's result can never stand for it). planque takes the first and
   answers `{type: "hand_kept", hand}`, or `{type: "hand_refused", hand, code}` with `unknown_hand`, `expired`, `unsigned`, `too_large` or `not_kept`.
   The extension keeps the answer (in `chrome.storage.session`, which survives the worker stopping) and **sends it again on each welcome until
-  `hand_kept`**, stops on `unknown_hand`, `expired` or `unsigned`, keeps it and sends it again on the next welcome after `not_kept` (planque's store failed just then), and on `too_large` sends Done once more with no page. A page over the
+  `hand_kept`**, stops on `unknown_hand`, `expired` or `unsigned`, keeps it and sends it again **on the next welcome only** after `not_kept` (planque's store failed just then; never at once, so a failing store is not answered by a loop), and on `too_large` sends Done once more with no page. A page over the
   relay's 120 KB cap goes as Done with no page, and the taf reads again. A run that ends with a hand-over open answers it declined.
 
 ## The taf in the side panel
