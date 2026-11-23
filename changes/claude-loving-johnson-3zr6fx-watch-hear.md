@@ -1,0 +1,1 @@
+- **Apple Watch: Hear reads Coach's answer aloud.** Under Coach's answer, on Coach's screen and on an opened Inbox line, Hear reads the words with the watch's own voice, in the app's language, on its speaker or your headphones. Nothing is sent or kept. As on Wear OS.

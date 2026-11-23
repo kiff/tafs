@@ -69,6 +69,8 @@ struct InboxLineScreen: View {
     @ObservedObject var inbox: InboxModel
     @ObservedObject var needsYou: NeedsYouModel
     @Environment(\.dismiss) private var close
+    /// Hear: Coach's answer read aloud on the watch.
+    @StateObject private var hear = WatchHear()
 
     /// The line's heading: its taf, Coach for Coach's answer, or a taf when the phone couldn't name it.
     static func title(_ line: InboxLine) -> String {
@@ -89,6 +91,7 @@ struct InboxLineScreen: View {
                     Text(Self.title(line)).font(.headline)
                     Text(line.line)
                 }
+                HearButton(text: line.line, hear: hear)
             case .held:
                 if let call = Self.held(line, in: needsYou.state) {
                     // The call whole, as the phone's Needs you words it; Refuse here, Approve only on the phone.
