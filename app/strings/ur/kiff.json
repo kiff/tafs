@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "KIFF سے پوچھا جا رہا ہے: {title}…",
+  "kiff.did_not_reach_kiff_try": "یہ KIFF تک نہیں پہنچا۔ دوبارہ کوشش کریں۔",
+  "kiff.kiff_can_not_do_sign": "KIFF ابھی یہ نہیں کر سکتا: اس {device} سے منظور کرنے کے لیے سیٹنگز سے دوبارہ سائن اِن کریں۔",
+  "kiff.kiff_did_not_answer_expected": "KIFF نے توقع کے مطابق جواب نہیں دیا۔ دوبارہ کوشش کریں۔",
+  "kiff.kiff_words_do_not_match": "KIFF کے الفاظ ان کی جانچ سے نہیں ملتے۔ کچھ بھی منظور نہیں کیا جا سکتا۔"
+}

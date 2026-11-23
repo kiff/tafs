@@ -237,7 +237,7 @@ PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["o
            # Batch 6. Turkmen has one and other.
            "tk": ["one"],
            # Batch 7. Hindi's "one" covers 0 and 1; Urdu has one and other.
-           "hi": ["one"],
+           "hi": ["one"], "ur": ["one"],
            "ru": ["one", "few", "many"], "ms": [], "uz": ["one"]}
 
 

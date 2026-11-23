@@ -42,5 +42,6 @@
     <locale android:name="lo" />
     <locale android:name="tk" />
     <locale android:name="hi" />
+    <locale android:name="ur" />
     <locale android:name="pt-BR" />
 </locale-config>

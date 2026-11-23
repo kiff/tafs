@@ -1,0 +1,17 @@
+{
+  "report.already": "آپ اس جواب کی پہلے ہی رپورٹ کر چکے ہیں۔",
+  "report.cant_from_here": "اس جواب کی رپورٹ یہاں سے نہیں کی جا سکتی۔",
+  "report.menu": "اس جواب کی رپورٹ کریں",
+  "report.not_sent": "آپ کی رپورٹ نہیں بھیجی گئی۔ {why}",
+  "report.not_sent_why": "نہیں بھیجا گیا: {failed}",
+  "report.note_hint": "ایک نوٹ شامل کریں (اختیاری)",
+  "report.note_most_characters": "نوٹ زیادہ سے زیادہ 1,000 حروف کا ہو سکتا ہے۔",
+  "report.person_kiff_reads_your_report": "KIFF کا ایک شخص آپ کی رپورٹ کو جواب جیسا لکھا گیا تھا ویسا پڑھتا ہے۔",
+  "report.reason.harmful": "نقصان دہ",
+  "report.reason.offensive": "قابلِ اعتراض",
+  "report.reason.other": "دیگر",
+  "report.reason.wrong": "غلط",
+  "report.runs_not_loaded": "اس کے رن لوڈ نہیں ہو سکے۔ {why}",
+  "report.thanks": "شکریہ۔ KIFF میں کوئی آپ کی رپورٹ پڑھے گا۔",
+  "report.what_wrong": "اس میں کیا غلط ہے؟"
+}

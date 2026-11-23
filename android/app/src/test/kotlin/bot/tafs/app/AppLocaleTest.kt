@@ -77,7 +77,7 @@ class AppLocaleTest {
   // Batch 5, read as each would ship: plain codes, as the libraries' folders are. Uzbek is Latin by default; a phone that names
   // Cyrillic reads the Latin lines too, as Uzbekistan's official script is Latin. Russian serves Kazakhstan and Kyrgyzstan.
   @Test fun batchFiveIsReadByItsPlainCodes() {
-    val shipped = AppLocale.TAGS + listOf("ca", "mn", "ne", "km", "lo", "mk", "tk", "hi", "ru", "ms", "uz")
+    val shipped = AppLocale.TAGS + listOf("ca", "mn", "ne", "km", "lo", "mk", "tk", "hi", "ur", "ru", "ms", "uz")
     for (tag in listOf("ru", "ru-RU", "ru-KZ", "ru-KG")) assertEquals(tag, "ru", AppLocale.known(tag, shipped))
     for (tag in listOf("uz", "uz-UZ", "uz-Latn-UZ", "uz-Cyrl-UZ")) assertEquals(tag, "uz", AppLocale.known(tag, shipped))
     for (tag in listOf("mk-MK", "ca-ES", "ca-AD", "mn-MN", "ne-NP", "km-KH", "lo-LA", "ms-MY", "ms-BN")) assertEquals(tag, tag.substringBefore('-'), AppLocale.known(tag, shipped))
@@ -111,10 +111,10 @@ class AppLocaleTest {
 
   @Test fun theListIsThePhonesLanguageThenTheShippedOnesInOrderNamedInThemselves() {
     val rows = AppLocale.choices(device = "phone")
-    assertEquals(43, rows.size)
+    assertEquals(44, rows.size)
     assertEquals(AppLocale.Choice(null, "This phone's language"), rows.first())
     assertEquals(
-      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "tr" to "Türkçe", "id" to "Indonesia", "vi" to "Tiếng Việt", "th" to "ไทย", "ar" to "العربية", "sr-Latn" to "Srpski (latinica)", "sq" to "Shqip", "ka" to "ქართული", "hy" to "Հայերեն", "az" to "Azərbaycan", "bn" to "বাংলা", "he" to "עברית", "ca" to "Català", "mk" to "Македонски", "mn" to "Монгол", "ne" to "नेपाली", "km" to "ខ្មែរ", "lo" to "ລາວ", "tk" to "Türkmen dili", "hi" to "हिन्दी", "pt-BR" to "Português (Brasil)"),
+      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "tr" to "Türkçe", "id" to "Indonesia", "vi" to "Tiếng Việt", "th" to "ไทย", "ar" to "العربية", "sr-Latn" to "Srpski (latinica)", "sq" to "Shqip", "ka" to "ქართული", "hy" to "Հայերեն", "az" to "Azərbaycan", "bn" to "বাংলা", "he" to "עברית", "ca" to "Català", "mk" to "Македонски", "mn" to "Монгол", "ne" to "नेपाली", "km" to "ខ្មែរ", "lo" to "ລາວ", "tk" to "Türkmen dili", "hi" to "हिन्दी", "ur" to "اردو", "pt-BR" to "Português (Brasil)"),
       rows.drop(1).filter { it.tag != "zh-Hant" }.map { it.tag to it.title },
     )
     // Traditional Chinese is named with its script, so it doesn't read as Simplified: "中文 (繁體)", whichever brackets the system uses.
