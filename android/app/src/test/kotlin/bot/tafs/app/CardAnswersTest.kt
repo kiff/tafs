@@ -99,6 +99,24 @@ class CardAnswersTest {
     assertNull(m.state.value.coachAnsweredCard)
   }
 
+  @Test fun aNewConversationWithCoachLetsGoOfTheAnsweredCard() = runTest {
+    reads()
+    val confirm = cards.first().second
+    transport.answer(conversation, 200, """{"messages":[],"components":[${shown("c1", confirm)}]}""")
+    transport.answer(conversation, 200, """{"messages":[],"components":[${shown("c1", confirm, """{"state":"answered","words":"Agree"}""")}]}""")
+    transport.answer("POST /v1/tafs/setup_1/components/c1/answer", 200, """{"session":"s1","run":"r1","status":"running"}""")
+    transport.answer("GET /v1/tafs/setup_1/runs/r1/stream", 200, sse("end" to """{"status":"COMPLETED","stop":"end_turn"}"""))
+    val m = model()
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertTrue(m.answerCard("confirm", "c1", "agree"))
+    settle()
+    assertEquals(m.state.value.coachComponents.single().ref, m.state.value.coachAnsweredCard)
+    // A new conversation starts with nothing pinned: the old thread's card isn't in it.
+    m.newCoachChat()
+    assertNull(m.state.value.coachAnsweredCard)
+  }
+
   @Test fun anAnswerTafsCloudTookNeverLeavesTheCardSendingEvenIfTheThreadCantBeRead() = runTest {
     reads()
     val signIn = cards[3].second
