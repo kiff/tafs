@@ -470,7 +470,7 @@ A scroll's `direction` is where the content comes from: `down` shows what's belo
   - **A test fails the build** on a listed confirming control without its mark, and on any control whose words confirm without it, string constants included.
   - The overlay window draws the border, the caption and the dot, and the capture leaves it out.
   - **Locking:** iOS doesn't say a lock apart from leaving the app. When the app resigns active, it reports `locked` if protected data is unavailable within 0.6 s, and `left_app` otherwise. A real lock may read as `left_app`; either way the drive ends.
-  - **iOS has no approval window,** so the signer's drive rule there is Face ID or Touch ID on every approval, with no reuse of a recent unlock.
+  - **The approval window is suspended during a drive, as on Android:** every approval takes Face ID or Touch ID, never the passcode, with no reuse of a recent unlock (`ApprovalSigner.authenticate`, `DriveRule.on`).
 
 ### What the app reports, and when it starts
 

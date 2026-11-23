@@ -1,0 +1,1 @@
+- **Android:** an `api` door's address, and the example built from it, are only ever on tafs cloud's own host over HTTPS, as on iPhone, Windows and Linux ([docs/doors.md](../docs/doors.md)).
