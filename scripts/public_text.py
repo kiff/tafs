@@ -2,7 +2,7 @@
 
 So nothing names a planning thread, the PM, a dated decision, or a team's own name for its working lanes and reviewers.
 Those names are matched by the first 16 hex digits of their SHA-256, so this file doesn't spell them out either. To add
-one: printf %s NAME | sha256sum | cut -c1-16. GitHub logins stay only where they do something: the files in KEEP.
+one: printf %s NAME | sha256sum | cut -c1-16. GitHub logins stay only where they do something: the files in KEEP, with this check and its test.
 
 Run from the repository's root: `python3 scripts/public_text.py`. It prints each line it finds and exits 1, else "clean".
 """
@@ -26,7 +26,7 @@ WORD = re.compile(r"(?<![@\w-])[a-z0-9]+(?:-[a-z0-9]+)*(?![\w-])")
 # Where a login does something: who reviews what, who may merge, and their tests and docs.
 KEEP = {
     ".github/CODEOWNERS", ".github/automerge.json", "scripts/test_automerge.py", "scripts/test_codeowners.py",
-    "docs/maintaining.md", "scripts/public_text.py",
+    "docs/maintaining.md", "scripts/public_text.py", "scripts/test_public_text.py",
 }
 
 
