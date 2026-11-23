@@ -15,15 +15,14 @@ final class PollPaceTests: XCTestCase {
         }
     }
 
-    func testAChatReadsSlowerAsTheReadsForOneMessageGoOn() {
-        let factors: [UInt64] = (0..<30).map { PollPace.chatFactor(afterReads: $0) }
-        let total: UInt64 = factors.reduce(0, +)
-        XCTAssertEqual(total, 60, "ten reads at 1×, ten at 2×, ten at 3×")
-        XCTAssertEqual(PollPace.chatFactor(afterReads: 0), 1)
-        XCTAssertEqual(PollPace.chatFactor(afterReads: 9), 1)
-        XCTAssertEqual(PollPace.chatFactor(afterReads: 10), 2)
-        XCTAssertEqual(PollPace.chatFactor(afterReads: 20), 3)
-        XCTAssertEqual(PollPace.chatFactor(afterReads: 500), 3, "a cap, not a growth")
+    /// Following a run with no stream (Android 1.22): 2.5 s for the first minute, 5 s to the third, 10 s to the sixth, then 15 s.
+    func testFollowingARunSlowsDownOverTime() {
+        let seconds: [TimeInterval] = [0, 59, 60, 179, 180, 359, 360, 1_800]
+        let waits: [UInt64] = seconds.map { PollPace.followDelay(after: $0) }
+        let expected: [UInt64] = [2_500_000_000, 2_500_000_000, 5_000_000_000, 5_000_000_000, 10_000_000_000, 10_000_000_000, 15_000_000_000, 15_000_000_000]
+        XCTAssertEqual(waits, expected)
+        let scaled: UInt64 = PollPace.followDelay(after: 0, scale: 0.001)
+        XCTAssertEqual(scaled, 2_500_000, "tests shorten it")
     }
 
     /// A card waiting on its grant keeps Setup's base pace past the budget: it isn't slowed to 8×.

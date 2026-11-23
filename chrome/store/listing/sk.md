@@ -15,6 +15,7 @@ tafs pre Chrome nechá vaše tafy pracovať vo vašom vlastnom Chrome, len na st
 • Chrome sa pri inštalácii raz opýta na prístup ku všetkým webom. tafs pracuje len na weboch, ktoré uvádza každá úloha a ktoré schvaľujete v telefóne.
 • Platba, odoslanie objednávky a vyplnenie uloženého prihlásenia vždy čakajú na vaše schválenie v telefóne.
 • Číta stránku ako text a polia formulára, bez polí pre heslo, kartu a kód. Nikdy nečíta vaše ďalšie karty ani históriu.
+• Taf vám môže odovzdať jeden krok na stránke, napríklad napísať vyhľadávanie alebo číslo karty. Urobíte ho sami, a keď stránku znova číta, to, čo ste napísali do polí, vynechá.
 • Stránky bánk, peňaženiek, správcov hesiel, platieb, zdravia a úradov sa nikdy nespracúvajú, ak jednu z nich nepovolíte pre jednu úlohu v telefóne.
 • Uložené prihlásenia sú voliteľné a na tomto počítači zapečatené. tafs a KIFF ich nikdy nevidia.
 • Bočný panel ukazuje taf, ktorý pracuje v tomto Chrome, a rozprávate sa s ním tam, ako v aplikácii tafs. „Nastaviť nový taf pre tento web“ otvorí Coacha, ktorý vidí stránku, len keď kliknete na „Zdieľať túto stránku“, a potom len túto stránku, s rovnakými odstránenými poľami.

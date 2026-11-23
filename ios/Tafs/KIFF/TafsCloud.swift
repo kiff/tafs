@@ -2568,12 +2568,16 @@ final class TafsCloud {
             var give = ""
             var notNow = ""
             var row = ""
-            enum CodingKeys: String, CodingKey { case title, intro, groups, details, ask, give, notNow = "not_now", row }
+            /// What to say when Give went but nothing was connected (tafs cloud still asks for the same batch); empty from a
+            /// tafs cloud that doesn't send it, when the app's own `coach.tools_not_given` is said.
+            var notConnected = ""
+            enum CodingKeys: String, CodingKey { case title, intro, groups, details, ask, give, notNow = "not_now", row, notConnected = "not_connected" }
 
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 title = Self.text(c, .title); intro = Self.text(c, .intro); details = Self.text(c, .details)
                 ask = Self.text(c, .ask); give = Self.text(c, .give); notNow = Self.text(c, .notNow); row = Self.text(c, .row)
+                notConnected = Self.text(c, .notConnected)
                 groups = ((try? c.decodeIfPresent([LenientItem<Group>].self, forKey: .groups)) ?? nil)?.compactMap(\.value) ?? []
             }
 

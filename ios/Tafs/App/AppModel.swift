@@ -2315,6 +2315,13 @@ final class AppModel: ObservableObject {
         }
         guard gen == accountGeneration else { return false }
         await loadCoachTools()
+        // The batch went and KIFF took it, yet tafs cloud still asks for the very same batch: nothing was connected (KIFF counted
+        // every tool as already there). Said, in tafs cloud's words when it sends them, never a silent redraw (as Android).
+        if let sent = tools.connect, let after = coachTools, after.toGive, after.connect?.body == sent.body {
+            let said = after.step?.notConnected.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            coachToolsError = said.isEmpty ? Words.Coach.toolsNotGiven(why: "").trimmingCharacters(in: .whitespaces) : said
+            return false
+        }
         return coachTools?.given == true
     }
 
@@ -6515,35 +6522,70 @@ final class AppModel: ObservableObject {
         heldCalls(for: tafID).max { $0.heldAt < $1.heldAt }
     }
 
-    /// How often a thread is reloaded while the taf owes an answer, and how many times for
-    /// one unanswered message (30 reads: 4 s for ten, 8 s for ten, then 12 s, each up to a fifth shorter; about 4 minutes).
-    /// Tests shorten both.
-    var chatPollInterval: UInt64 = 4_000_000_000
-    var chatPollBudget = 30
+    /// Following a run to its end (docs/chat.md, "A run Android follows to its end"; Android 1.22). With no stream open,
+    /// the thread is read while the taf is at work or owes an answer: every 2.5 s for the first minute, 5 s to the third,
+    /// 10 s to the sixth, then 15 s, for about 31 minutes (`chatFollowLimit`), each wait up to a fifth shorter. With a stream
+    /// open, the thread is still read every 30 s (`chatStreamCheck`), since a stream can stay quiet long after its run ended.
+    /// Tests shorten them all (`chatFollowScale`, `chatFollowLimit`, `chatStreamCheck`, `chatIdleTick`).
+    var chatFollowScale: Double = 1
+    var chatFollowLimit: TimeInterval = 31 * 60
+    var chatStreamCheck: UInt64 = 30_000_000_000
+    /// How often the loop looks again while nothing is followed: no read, only whether a run is now at work.
+    var chatIdleTick: UInt64 = 4_000_000_000
 
-    /// Loads a taf's thread, then reloads it while the taf owes an answer: at most
-    /// `chatPollBudget` times for each unanswered message, starting again only when the
-    /// owner sends another. Ends when the task is cancelled (the view goes away).
+    /// Loads a taf's thread, then follows its runs to their end: reads that slow down over time while the taf is at work
+    /// with no stream, a check every 30 s while a stream is open (dropping a live answer that outlived its run), and a
+    /// stream picked back up for a run at work that nothing here follows. Starts again when the owner sends another
+    /// message. Ends when the task is cancelled (the view goes away). On iOS nothing runs while the app is in the
+    /// background (it's suspended), and coming back reads the thread at once (`TafChatView`).
     func followChat(_ tafID: UUID) async {
         await loadChat(tafID)
         await resumeChat(tafID)
-        var waitingFor: String?
-        var polls = 0
+        var since: Date?
+        var lastOwner: String?
         while !Task.isCancelled {
-            // Slower as the reads for one unanswered message go on, and never the same instant on every phone.
-            try? await Task.sleep(nanoseconds: PollPace.jittered(chatPollInterval * PollPace.chatFactor(afterReads: polls)))
-            if Task.isCancelled { return }
-            // A stream shows what the taf does, and reloads the thread itself.
-            if chatState(tafID).live != nil { continue }
+            if chatState(tafID).live != nil {
+                since = nil
+                try? await Task.sleep(nanoseconds: PollPace.jittered(chatStreamCheck))
+                if Task.isCancelled { return }
+                guard mode == .kiff, chatState(tafID).live != nil else { continue }
+                await loadChat(tafID)
+                dropStaleLive(tafID)
+                continue
+            }
             await resumeChat(tafID)
             if chatState(tafID).live != nil { continue }
-            guard mode == .kiff, awaitingReply(tafID) || chatThinking(tafID),
-                  let last = chats[tafID]?.last(where: { $0.from == .owner })?.id else { continue }
-            if last != waitingFor { waitingFor = last; polls = 0 }
-            guard polls < chatPollBudget else { continue }
-            polls += 1
+            let mine = chats[tafID]?.last(where: { $0.from == .owner })?.id
+            if mine != lastOwner { lastOwner = mine; since = nil }
+            guard mode == .kiff, awaitingReply(tafID) || chatThinking(tafID) else {
+                since = nil
+                try? await Task.sleep(nanoseconds: chatIdleTick)
+                continue
+            }
+            let start = since ?? clock()
+            since = start
+            let elapsed = clock().timeIntervalSince(start)
+            guard elapsed < chatFollowLimit else {
+                try? await Task.sleep(nanoseconds: chatIdleTick)
+                continue
+            }
+            try? await Task.sleep(nanoseconds: PollPace.jittered(PollPace.followDelay(after: elapsed, scale: chatFollowScale)))
+            if Task.isCancelled { return }
             await loadChat(tafID)
         }
+    }
+
+    /// A live answer whose run tafs cloud no longer says is at work, standing for more than 15 s: its stream went quiet
+    /// without an end. It goes, so "…" and Stop go and the thread shows what the run wrote, and the quiet stream is closed
+    /// so the next run is followed again (Android's `STREAM_CHECK_MS`).
+    func dropStaleLive(_ tafID: UUID) {
+        let s = chatState(tafID)
+        guard let live = s.live else { return }
+        let working = s.working.flatMap { $0 == s.stopped ? nil : $0 }
+        guard working == nil, clock().timeIntervalSince(live.started) > 15 else { return }
+        chatStreams[tafID]?.cancel()
+        chatStreams[tafID] = nil
+        chatStates[tafID]?.live = nil
     }
 
     /// Picks back up a run of the person's that tafs cloud says is at work while nothing here

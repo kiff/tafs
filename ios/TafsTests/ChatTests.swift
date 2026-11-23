@@ -1510,17 +1510,53 @@ final class ChatTests: XCTestCase {
         XCTAssertTrue(model.chatErrors.isEmpty)
     }
 
-    func testPollingStopsWhenTheBudgetForAnUnansweredMessageRunsOut() async throws {
+    /// With no stream, a run is followed by reads that slow down over time, for about 31 minutes, then not at all until the
+    /// owner writes again (Android 1.22; here the waits and the limit are shortened).
+    func testFollowingARunWithNoStreamReadsUntilItsLimitThenStops() async throws {
         let (model, id) = await kiffModel()
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"message","text":"Anyone there?","session":"sesn_1"}]}"#)
-        model.chatPollInterval = 2_000_000   // 2 ms
-        model.chatPollBudget = 3
+        model.chatFollowScale = 0.001       // 2.5 ms between reads
+        model.chatFollowLimit = 0.08        // 80 ms of following
+        model.chatIdleTick = 2_000_000      // 2 ms
         let follow = Task { await model.followChat(id) }
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await Task.sleep(nanoseconds: 250_000_000)
+        let atLimit = count("GET", "/v1/tafs/depl_1/conversation")
+        try await Task.sleep(nanoseconds: 150_000_000)
         follow.cancel()
         await follow.value
         XCTAssertTrue(model.awaitingReply(id))
-        XCTAssertEqual(count("GET", "/v1/tafs/depl_1/conversation"), 1 + 3, "the first load, then three reloads, then none")
+        XCTAssertGreaterThan(atLimit, 3, "read again and again while it's followed")
+        XCTAssertEqual(count("GET", "/v1/tafs/depl_1/conversation"), atLimit, "past its limit, no more reads")
+    }
+
+    /// While a stream is open, the thread is still read now and then. Once tafs cloud says nothing is at work and the live answer
+    /// has stood more than 15 s, it goes ("…" and Stop with it) and the quiet stream is closed, so the next run is followed again.
+    func testAQuietStreamWhoseRunEndedIsDroppedOnTheNextCheck() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"Refund the last order","session":"sesn_9"}],
+         "working":{"session":"sesn_9","run":"r1"}}
+        """)
+        model.resumeOpener = { _, _ in AsyncThrowingStream { _ in } }   // opens, then never says anything
+        model.chatStreamCheck = 3_000_000   // 3 ms
+        model.chatIdleTick = 2_000_000
+        let follow = Task { await model.followChat(id) }
+        for _ in 0..<2000 where model.chatState(id).live == nil { try await Task.sleep(nanoseconds: 1_000_000) }
+        XCTAssertNotNil(model.chatState(id).live, "picked back up by its stream")
+        // Still at work: the live answer stays.
+        try await Task.sleep(nanoseconds: 30_000_000)
+        XCTAssertNotNil(model.chatState(id).live)
+        // The run ended, and the stream never said so.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"Refund the last order","session":"sesn_9"},
+                     {"at":"2026-10-14T09:01:20Z","from":"taf","kind":"message","text":"Refunded.","session":"sesn_9"}]}
+        """)
+        for _ in 0..<2000 where model.chatState(id).live != nil { try await Task.sleep(nanoseconds: 1_000_000) }
+        follow.cancel()
+        await follow.value
+        XCTAssertNil(model.chatState(id).live, "dropped on the next check")
+        XCTAssertNil(model.chatStreams[id], "the quiet stream is closed")
+        XCTAssertEqual(model.chats[id]?.last?.text, "Refunded.")
     }
 
     func testATafNotOnTafsCloudCannotChat() async throws {
