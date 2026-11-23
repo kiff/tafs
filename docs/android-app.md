@@ -1530,6 +1530,15 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
     `chrome_sites_sig` (this phone's own signature at approval) verifies with this phone's approval key for that Chrome
     (`ChromePairing.carriedFrom`, `AppModel.chromeMoves`), at most 50. Never planque's sites as given. Another key's, another
     Chrome's, wider sites, one not listed live, one carried before (no signature of its own): none move.
+  - A connection carried here by an earlier re-pairing has no signature of its own. It moves again only as the pairing that
+    carried it vouches (planque#373's `paired_with`, `ChromePairing.pairingVouches`):
+    - that pairing's `phone_key` is this phone's approval key;
+    - its signature holds over the extension's pairing bytes, alone (`tafs-chrome/pair/v1`) or in the one-touch form
+      (`kiff.requests.v1` beside KIFF's request, never beside itself);
+    - it names the connection with exactly its sites.
+
+    planque also checks that the pairing was made for that Chrome's key. The Chromes list doesn't carry the key's hash, so the
+    phone can't.
   - "{name} is unpaired once this one is paired." The connections that don't move end with it, as Unpair does.
   - Just before the fingerprint, the Chromes and connections are read again, as iOS does, and the list is checked again. It
     signs only if that's the list the owner was shown. If a connection ended or the old Chrome went meanwhile, nothing is
