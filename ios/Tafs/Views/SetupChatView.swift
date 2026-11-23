@@ -819,7 +819,7 @@ struct SetupChatView: View {
         // A sent message goes to the top of the view and stays (kiff/tafs#138), even while
         // Setup works: the message waits there, and the answer fills the space below.
         pinNext = true
-        // As the model keeps it: trimmed (review on #154).
+        // As the model keeps it: trimmed.
         pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         sentBefore = Set(model.setupThread.items.map(\.id))
         following = false

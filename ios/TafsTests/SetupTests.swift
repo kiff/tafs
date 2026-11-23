@@ -2133,7 +2133,7 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// A sent message is found again by its words (kiff/tafs#138, review on #154): as stored,
+    /// A sent message is found again by its words (kiff/tafs#138): as stored,
     /// and as the end of a queued message it was joined to; never a different message.
     func testASentMessageIsFoundByItsWords() {
         XCTAssertTrue(SetupThread.matchesSent("look up pi_1", "look up pi_1"))

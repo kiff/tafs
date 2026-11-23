@@ -2,7 +2,7 @@ import XCTest
 @testable import Tafs
 
 /// Setup › Results go to: tafs' own places switch from the live taf's places, never a waiting
-/// version's (a review on #447), and always keep one on.
+/// version's, and always keep one on.
 final class ResultsPlacesTests: XCTestCase {
     private func place(_ id: String, _ place: String, on: Bool) -> TafsCloud.Knob.Item {
         TafsCloud.Knob.Item(id: id, place: place, label: place, words: "", on: on)

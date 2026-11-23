@@ -357,7 +357,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("improves: the taf's id from the first line");
     expect(flat).toContain("Never say it's live: the owner decides");
     expect(flat).not.toContain("A taf can't move to a new version yet");
-    // A read tool left off the Card is refused by KIFF: every tool goes on it (review on #108).
+    // A read tool left off the Card is refused by KIFF: every tool goes on it.
     expect(flat).toContain("Every tool the taf gets goes on its Card, the read tools too: KIFF refuses any call no Card covers");
     // A question gets its answer, not a plan (the owner's Coach mode test on 429).
     expect(flat).toContain("When the owner asks a question (how it's going, why something happened), answer it in one or two short sentences and stop");
@@ -380,7 +380,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("A limit the owner already gave, in their first message or later, is that limit");
     // The schedule is decided before the result, with the owner's case as the example (item 43).
     expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about), set unscheduled on the result's taf");
-    // The result applies that rule for any vendor (review on kiff/tafs#238), in roles (kiff/agents#293).
+    // The result applies that rule for any vendor, in roles (kiff/agents#293).
     expect(flat).toContain("Decide unscheduled by the rule above, for any vendor: a taf whose tools list payments but not the requests to refund them is one");
     // The result's name is the one tafs will give it, not another taf's (kiff/tafs#236, item 5).
     expect(flat).toContain("Its name is one no other taf has (tafs_state): if it's taken, the first free \"<name> 2\", \"<name> 3\"…, as tafs would name it; call it that.");

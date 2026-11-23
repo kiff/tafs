@@ -3950,7 +3950,7 @@ final class AppModel: ObservableObject {
     /// Whether this person manages the taf, as KIFF says for it: its Card, versions, doors,
     /// halting it and removing it. Without KIFF's answer for it (not read yet, or failed),
     /// nothing is shown: an Editor manages only the tafs they made, which the role alone
-    /// can't say (review on #275).
+    /// can't say.
     /// The app shows only what they can do (the 805 retest: a Viewer saw Halt, Versions,
     /// Revoke and the doors' controls, each refused only once tapped).
     func manages(_ tafID: UUID) -> Bool {
@@ -7036,7 +7036,7 @@ final class AppModel: ObservableObject {
 
     /// KIFF's record with the owner's answers it doesn't have yet: an answered call KIFF
     /// still lists as held, or not yet at all, reads as answered. Once KIFF has the outcome,
-    /// its record carries the call and the answer is let go (review on #160): a bridge until
+    /// its record carries the call and the answer is let go: a bridge until
     /// KIFF catches up, not a second record.
     func withDecisions(_ kiff: [RecordEntry]) -> [RecordEntry] {
         let (out, settled) = Self.merge(kiff, decided: decided)

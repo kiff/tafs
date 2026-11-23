@@ -147,7 +147,7 @@ final class AttachmentsTests: XCTestCase {
     }
 
     /// Send waits while a file is going up, words or not: a message never goes without a file
-    /// just attached (the review on #287). Ready files wait while the taf works; words alone don't.
+    /// just attached. Ready files wait while the taf works; words alone don't.
     func testSendWaitsWhileAFileIsGoingUp() async throws {
         let (model, id) = try await kiffModel()
         let key = id.uuidString
