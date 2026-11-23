@@ -691,6 +691,8 @@
     <string name="chrome_shot_none">Za ta korak ni shranjene nobene slike.</string>
     <string name="chrome_shot_open">Poglej stran pred tem korakom</string>
     <string name="chrome_shot_title">Pred tem korakom</string>
+    <string name="chrome_switch">Uporabi drug Chrome</string>
+    <string name="chrome_switch_prompt">Premakni to povezavo v %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Z odstranitvijo seznanitve se končajo povezave, ki ga uporabljajo: %1$s. Vrnejo se šele, ko jih znova povežeš.</string>
     <string name="chrome_used_for">Uporablja se za %1$s</string>

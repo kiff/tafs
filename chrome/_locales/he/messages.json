@@ -42,8 +42,6 @@
   "step_resumed": { "message": "חודש" },
   "step_stopped": { "message": "הופסק" },
   "step_closed": { "message": "הסתיים" },
-  "allow_site": { "message": "אפשר את $SITE$ ב-Chrome", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "נדרש האישור שלך ב-Chrome עבור $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "לא בוצע ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "כתוב ל-Coach" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "דבר עם Coach" },
   "coach_empty_body": { "message": "זו אותה שיחה כמו באפליקציית tafs. Coach רואה את הדף הזה רק אם תשתף אותו." },
   "share_note": { "message": "שולח ל-Coach את הדף הזה בלבד, בלי שדות סיסמה, כרטיס וקוד." },
-  "share_declined": { "message": "לא שותף: ל-tafs אין הרשאה לאתר הזה ב-Chrome." },
-  "share_permission": { "message": "בפעם הראשונה באתר, Chrome שואל אם להכניס אליו את tafs." },
   "vault_title": { "message": "כניסות שמורות" },
   "vault_body": { "message": "נשמר כאן, חתום במחשב הזה. taf יכול לבקש להשתמש בו רק באתר המדויק הזה, והוא מוקלד רק אחרי שאישרת את המילוי הזה בטלפון. tafs ו-KIFF לא רואים אותו לעולם." },
   "vault_site": { "message": "אתר" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "שיחות קודמות" },
   "coach_previous_none": { "message": "אין שיחות קודמות." },
   "coach_previous_error": { "message": "לא ניתן היה לטעון את השיחות הקודמות." },
-  "coach_untitled": { "message": "שיחה" }
+  "coach_untitled": { "message": "שיחה" },
+  "taf_choose": { "message": "דבר עם" },
+  "taf_placeholder": { "message": "הודעה אל $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "זה לא הגיע אל $TAF$. נסה שוב.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "לא ניתן היה לקרוא את ה-tafs שלך. נסה שוב." },
+  "no_taf_here": { "message": "עדיין אין taf שעובד ב-Chrome הזה." },
+  "setup_taf": { "message": "הגדרת taf חדש לאתר הזה" }
 }

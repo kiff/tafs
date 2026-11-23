@@ -31,6 +31,8 @@
   "chrome.shot_none": "មិនមានរូបភាពដែលបានរក្សាទុកសម្រាប់ជំហាននេះទេ។",
   "chrome.shot_open": "មើលទំព័រមុនជំហាននេះ",
   "chrome.shot_title": "មុនជំហាននេះ",
+  "chrome.switch": "ប្រើ Chrome ផ្សេង",
+  "chrome.switch_prompt": "ផ្លាស់ទីការតភ្ជាប់នេះទៅ {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "ការលុបការផ្គូផ្គងនឹងបញ្ចប់ការតភ្ជាប់ដែលប្រើវា៖ {sites}។ វានឹងត្រឡប់មកវិញ លុះត្រាតែអ្នកតភ្ជាប់ម្តងទៀត។",
   "chrome.used_for": "ប្រើសម្រាប់ {sites}",

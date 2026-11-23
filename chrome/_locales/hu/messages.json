@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Folytatva" },
   "step_stopped": { "message": "Leállt" },
   "step_closed": { "message": "Kész" },
-  "allow_site": { "message": "$SITE$ engedélyezése a Chrome-ban", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "A jóváhagyásod kell a Chrome-ban ehhez: $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "nem történt meg ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "Üzenet a Coach-nak" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "Beszélj a Coach-csal" },
   "coach_empty_body": { "message": "Ugyanaz a csevegés, mint a tafs alkalmazásban. A Coach csak akkor látja ezt az oldalt, ha megosztod." },
   "share_note": { "message": "Ezt az egy oldalt küldi el a Coach-nak, a jelszó-, kártya- és kódmezők nélkül." },
-  "share_declined": { "message": "Nincs megosztva: a tafs ezen az oldalon nincs engedélyezve a Chrome-ban." },
-  "share_permission": { "message": "Egy oldalon először a Chrome megkérdezi, beengedd-e a tafs-ot." },
   "vault_title": { "message": "Mentett bejelentkezések" },
   "vault_body": { "message": "Itt mentve, lepecsételve ezen a számítógépen. A taf csak pontosan ezen az oldalon kérheti a használatát, és csak azután kerül beírásra, hogy ezt az egy kitöltést jóváhagytad a telefonodon. A tafs és a KIFF soha nem látja." },
   "vault_site": { "message": "Oldal" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Korábbi beszélgetések" },
   "coach_previous_none": { "message": "Nincsenek korábbi beszélgetések." },
   "coach_previous_error": { "message": "A korábbi beszélgetéseket nem sikerült betölteni." },
-  "coach_untitled": { "message": "Beszélgetés" }
+  "coach_untitled": { "message": "Beszélgetés" },
+  "taf_choose": { "message": "Beszélj vele:" },
+  "taf_placeholder": { "message": "Üzenet neki: $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Nem jutott el hozzá: $TAF$. Próbáld újra.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "A tafsaidat nem sikerült beolvasni. Próbáld újra." },
+  "no_taf_here": { "message": "Ebben a Chrome-ban még nem dolgozik taf." },
+  "setup_taf": { "message": "Új taf beállítása ehhez az oldalhoz" }
 }

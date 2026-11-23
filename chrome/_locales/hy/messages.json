@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Վերսկսվեց" },
   "step_stopped": { "message": "Դադարեցված է" },
   "step_closed": { "message": "Ավարտվեց" },
-  "allow_site": { "message": "Թույլատրել $SITE$-ը Chrome-ում", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "Պետք է ձեր «այո»-ն Chrome-ում $SITE$-ի համար", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "չկատարվեց ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "Գրեք Coach-ին" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "Խոսեք Coach-ի հետ" },
   "coach_empty_body": { "message": "Սա նույն զրույցն է, ինչ tafs հավելվածում։ Coach-ը տեսնում է այս էջը միայն եթե դուք կիսվեք։" },
   "share_note": { "message": "Coach-ին ուղարկում է այս մեկ էջը՝ առանց գաղտնաբառի, քարտի և կոդի դաշտերի։" },
-  "share_declined": { "message": "Չկիսվեց. tafs-ը Chrome-ում այս կայքում թույլտվություն չունի։" },
-  "share_permission": { "message": "Կայքում առաջին անգամ Chrome-ը հարցնում է՝ թույլ տալ, որ tafs-ը մտնի։" },
   "vault_title": { "message": "Պահված մուտքեր" },
   "vault_body": { "message": "Պահված է այստեղ, կնքված այս համակարգչում։ Taf-ը կարող է խնդրել օգտագործել այն միայն հենց այդ կայքում, և այն մուտքագրվում է միայն այն բանից հետո, երբ հեռախոսում հաստատեք այդ մեկ լրացումը։ tafs-ը և KIFF-ը երբեք չեն տեսնում այն։" },
   "vault_site": { "message": "Կայք" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Նախորդ զրույցները" },
   "coach_previous_none": { "message": "Նախորդ զրույցներ չկան։" },
   "coach_previous_error": { "message": "Նախորդ զրույցները հնարավոր չեղավ բեռնել։" },
-  "coach_untitled": { "message": "Զրույց" }
+  "coach_untitled": { "message": "Զրույց" },
+  "taf_choose": { "message": "Խոսել" },
+  "taf_placeholder": { "message": "Հաղորդագրություն $TAF$-ին", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Այն չհասավ $TAF$-ին։ Կրկին փորձեք։", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Ձեր tafs-երը չհաջողվեց կարդալ։ Կրկին փորձեք։" },
+  "no_taf_here": { "message": "Այս Chrome-ում դեռ ոչ մի taf չի աշխատում։" },
+  "setup_taf": { "message": "Կարգավորել նոր taf այս կայքի համար" }
 }

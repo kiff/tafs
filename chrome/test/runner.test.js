@@ -11,7 +11,7 @@ const SHOP = await signedSites(["shop.example"]);
 const PAYPAL = await signedSites(["paypal.com"]);
 
 /** A fake of the parts of Chrome's extension API the runner uses, recording every call. */
-function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFails = false, createFails = false } = {}) {
+function fakeChrome({ page = null, ownerWindow = null, groupFails = false, createFails = false } = {}) {
   const calls = [];
   const listeners = {};
   const on = (name) => ({ addListener: (f) => (listeners[name] = f) });
@@ -67,7 +67,6 @@ function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFa
         return ownerWindow;
       },
     },
-    permissions: { contains: async () => permitted },
     declarativeNetRequest: { updateSessionRules: async (o) => calls.push(["dnr", o]) },
     scripting: {
       executeScript: async (o) => {
@@ -319,15 +318,6 @@ test("when the tab can't be grouped in the owner's window, only the run's tab cl
   const tab = [...c.tabsMap.keys()][0];
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[tab]]);
   assert.ok(!c.calls.some((x) => x[0] === "windows.remove"), "the owner's window stays");
-});
-
-test("a site Chrome hasn't let the extension into waits for the owner's yes in the side panel", async () => {
-  const c = fakeChrome({ permitted: false });
-  const r = runner(c);
-  const out = await r.handle(step());
-  assert.equal(out.error.code, "needs_site_permission");
-  assert.deepEqual(r.state()[0].asks, ["shop.example"]);
-  assert.ok(!c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js"), "nothing read without it");
 });
 
 test("a run's tab is fenced by Chrome's own rules before it loads: only its sites, never plain http", async () => {

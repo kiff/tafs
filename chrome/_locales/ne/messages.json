@@ -42,8 +42,6 @@
   "step_resumed": { "message": "फेरि सुरु भयो" },
   "step_stopped": { "message": "रोकिएको" },
   "step_closed": { "message": "सकियो" },
-  "allow_site": { "message": "Chrome मा $SITE$ लाई अनुमति दिनुहोस्", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "$SITE$ का लागि Chrome मा तपाईंको स्वीकृति चाहिन्छ", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "गरिएन ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "Coach लाई सन्देश पठाउनुहोस्" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "Coach सँग कुरा गर्नुहोस्" },
   "coach_empty_body": { "message": "यो tafs एपमा जस्तै उही च्याट हो। तपाईंले साझा गर्नुभयो भने मात्र Coach ले यो पृष्ठ देख्छ।" },
   "share_note": { "message": "पासवर्ड, कार्ड र कोडका ठाउँ हटाएर यो एउटा पृष्ठ मात्र Coach लाई पठाउँछ।" },
-  "share_declined": { "message": "साझा गरिएन: Chrome मा यो साइटमा tafs लाई अनुमति छैन।" },
-  "share_permission": { "message": "साइटमा पहिलो पटक Chrome ले tafs लाई भित्र पस्न दिने कि नदिने भनी सोध्छ।" },
   "vault_title": { "message": "सुरक्षित गरिएका साइन इन" },
   "vault_body": { "message": "यहाँ सुरक्षित गरिएको, यो कम्प्युटरमा छाप लगाइएको। taf ले ठ्याक्कै त्यही साइटमा प्रयोग गर्न मात्र माग्न सक्छ, र तपाईंले फोनमा त्यो एउटा भराइ स्वीकृत गरेपछि मात्र टाइप हुन्छ। tafs र KIFF ले यसलाई कहिल्यै देख्दैनन्।" },
   "vault_site": { "message": "साइट" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "अघिल्ला कुराकानी" },
   "coach_previous_none": { "message": "अघिल्ला कुराकानी छैनन्।" },
   "coach_previous_error": { "message": "अघिल्ला कुराकानी लोड गर्न सकिएन।" },
-  "coach_untitled": { "message": "कुराकानी" }
+  "coach_untitled": { "message": "कुराकानी" },
+  "taf_choose": { "message": "कुरा गर्नुहोस्" },
+  "taf_placeholder": { "message": "$TAF$ लाई सन्देश", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "यो $TAF$ सम्म पुगेन। फेरि प्रयास गर्नुहोस्।", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "तपाईंका tafs पढ्न सकिएन। फेरि प्रयास गर्नुहोस्।" },
+  "no_taf_here": { "message": "यो Chrome मा अझै कुनै taf काम गर्दैन।" },
+  "setup_taf": { "message": "यो साइटका लागि नयाँ taf सेट अप गर्नुहोस्" }
 }

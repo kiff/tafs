@@ -592,6 +592,8 @@
     <string name="chrome_shot_none">此步驟沒有保存圖片。</string>
     <string name="chrome_shot_open">查看此步驟之前的頁面</string>
     <string name="chrome_shot_title">此步驟之前</string>
+    <string name="chrome_switch">使用另一個 Chrome</string>
+    <string name="chrome_switch_prompt">將此連線移到 %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">解除配對會結束使用它的連線：%1$s。重新連線後才會恢復。</string>
     <string name="chrome_used_for">用於 %1$s</string>

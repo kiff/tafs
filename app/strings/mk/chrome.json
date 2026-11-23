@@ -31,6 +31,8 @@
   "chrome.shot_none": "За овој чекор нема зачувана слика.",
   "chrome.shot_open": "Види ја страницата пред овој чекор",
   "chrome.shot_title": "Пред овој чекор",
+  "chrome.switch": "Користи друг Chrome",
+  "chrome.switch_prompt": "Премести ја оваа врска на {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Прекинувањето на спарувањето ги завршува врските што го користат: {sites}. Се враќаат само ако повторно ги поврзеш.",
   "chrome.used_for": "Се користи за {sites}",

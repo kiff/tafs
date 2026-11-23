@@ -172,7 +172,6 @@ export class Runner {
       site: r.site,
       paused: r.paused,
       stopped: r.stopped,
-      asks: r.asks.slice(),
       steps: r.steps.slice(-50),
     }));
   }
@@ -305,7 +304,6 @@ export class Runner {
         at: this.now(), // when its last step began or ended
         steps: [],
         site: "",
-        asks: [], // sites waiting on the owner's yes in Chrome
       };
       this.runs.set(run.id, run);
     }
@@ -463,25 +461,11 @@ export class Runner {
     return res && res.result;
   }
 
-  /** Whether Chrome lets the extension into `url`'s site: the owner allows each site once, from the side panel. */
-  async permitted(run, url) {
-    const host = new URL(url).hostname;
-    const site = run.sites.find((s) => host === s || host.endsWith("." + s)) || host;
-    const ok = await this.chrome.permissions.contains({ origins: ["https://" + host + "/*"] });
-    if (!ok && !run.asks.includes(site)) {
-      run.asks.push(site);
-      this.record(run, { op: "ask", site });
-    }
-    if (ok) run.asks = run.asks.filter((s) => s !== site);
-    return ok;
-  }
-
   async read(run, offset = 0) {
     if (run.tab == null) return { error: { code: "no_page" } };
     const tab = await this.chrome.tabs.get(run.tab);
     const refused = refuseURL(tab.url || "", run.sites, run.allowed);
     if (refused) return { error: { code: refused.code } };
-    if (!(await this.permitted(run, tab.url))) return { error: { code: "needs_site_permission" } };
     await this.inject(run.tab, run);
     const page = await this.inTab(run.tab, (o) => globalThis.TafsPage.read(o), [offset]);
     if (!page) return { error: { code: "page_unresponsive" } };

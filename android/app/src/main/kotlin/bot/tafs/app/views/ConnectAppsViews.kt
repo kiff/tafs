@@ -192,6 +192,8 @@ fun ConnectAppsSheet(
   /** Gives a key-based connection a new key, or signs a sign-in one in again (gap 13); null for someone who can't. */
   onReplaceKey: ((bot.tafs.app.kiff.Grant) -> Unit)? = null,
   onSignInAgain: ((bot.tafs.app.kiff.Grant) -> Unit)? = null,
+  // "Your Chrome" 2: planque's `use_another_chrome` (how "chrome"), to the Chrome picked; true when it moved.
+  onUseAnotherChrome: (suspend (bot.tafs.app.kiff.Grant, bot.tafs.app.kiff.Chrome) -> Boolean)? = null,
   /** The connection that just came back signed in, and leaving that note. */
   onConnectedNow: (bot.tafs.app.kiff.Grant) -> Unit = {},
   dismissConnectedNow: () -> Unit = {},
@@ -213,6 +215,9 @@ fun ConnectAppsSheet(
   // A connection planque describes (title, who uses it, health, actions): its row opens this detail first, and a removal asks again.
   var detail by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
   var confirmingRemove by androidx.compose.runtime.remember { mutableStateOf<Pair<bot.tafs.app.kiff.Grant, bot.tafs.app.kiff.GrantAction>?>(null) }
+  // A connection whose Chrome is being picked, with planque's words for the action.
+  var movingChrome by androidx.compose.runtime.remember { mutableStateOf<Pair<bot.tafs.app.kiff.Grant, String>?>(null) }
+  var moving by androidx.compose.runtime.remember { mutableStateOf(false) }
   val tafs = state.connectableTafs
   val connect: ((ConnectApps.App) -> Unit)? = onConnect?.takeIf { tafs.isNotEmpty() }?.let { start ->
     { app ->
@@ -372,6 +377,7 @@ fun ConnectAppsSheet(
                 "approve" -> onSignInAgain?.let { f -> { f(live) } }
                 "key" -> onReplaceKey?.let { f -> { detail = null; f(live) } }
                 "delete" -> onDisconnect?.let { { confirmingRemove = live to a } }
+                "chrome" -> onUseAnotherChrome?.let { { detail = null; movingChrome = live to a.words } }
                 else -> null
               }
               act?.let { go ->
@@ -387,6 +393,38 @@ fun ConnectAppsSheet(
         confirmButton = {},
         dismissButton = {
           Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).tapping { detail = null }.padding(12.dp))
+        },
+      )
+    }
+    // Another Chrome: the account's other paired Chromes, by name; one tapped is signed for behind the fingerprint and moved.
+    movingChrome?.let { (g, words) ->
+      val others = chromesToMoveTo(g, state.chromes)
+      DriveAlert(
+        onDismissRequest = { if (!moving) movingChrome = null },
+        containerColor = Theme.background,
+        title = { Text(words, style = scaled(20, FontWeight.Bold, Theme.ink)) },
+        text = {
+          Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            connectionChromeLine(g)?.let { Text(it, style = scaled(14, color = Theme.soft)) }
+            others.forEach { c ->
+              Text(
+                c.name,
+                style = scaled(16, FontWeight.SemiBold, if (moving) Theme.dim else Theme.amberText),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).testTag("$CONNECTION_CHROME-${c.id}").confirms().tapping(enabled = !moving) {
+                  moving = true
+                  readScope.launch {
+                    val moved = onUseAnotherChrome?.invoke(g, c) == true
+                    moving = false
+                    if (moved) movingChrome = null
+                  }
+                }.padding(vertical = 10.dp),
+              )
+            }
+          }
+        },
+        confirmButton = {},
+        dismissButton = {
+          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !moving) { movingChrome = null }.padding(12.dp))
         },
       )
     }
@@ -802,6 +840,12 @@ internal fun connectionChromeLine(g: bot.tafs.app.kiff.Grant): String? {
   if (b.driver != bot.tafs.app.kiff.GrantBrowser.EXTENSION) return null
   return b.chromeName?.trim()?.takeIf { it.isNotEmpty() }?.let { Words.Chrome.heldIn(name = it) }
 }
+
+/** The account's paired Chromes a connection can be moved to: every one but the Chrome it runs in now, in planque's order. */
+internal fun chromesToMoveTo(g: bot.tafs.app.kiff.Grant, chromes: List<bot.tafs.app.kiff.Chrome>?): List<bot.tafs.app.kiff.Chrome> =
+  chromes.orEmpty().filter { it.id != g.request.browser?.chrome }
+
+internal const val CONNECTION_CHROME = "connection-chrome"
 
 /** The app a connection belongs to, by its Connect apps title, for a detail opened from its row. */
 private fun app0(state: AppState, g: bot.tafs.app.kiff.Grant): String = bot.tafs.app.model.ConnectionWords.appName(g, state.connectApps)

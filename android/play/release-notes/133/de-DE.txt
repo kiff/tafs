@@ -1,0 +1,4 @@
+• Chrome: mit einem Fingerabdruck koppeln, dort, wo die Erweiterung ihn prüft.
+• Erneutes Koppeln fragt, welches Chrome es ersetzt, und übernimmt nur Verbindungen, die dieses Telefon signiert hat.
+• Konto › Chrome zeigt, wofür jedes Chrome genutzt wird und was Entkoppeln beendet; „Anderes Chrome verwenden“ verschiebt eine Verbindung.
+• Anmelden mit einem Code per E-Mail: in Konto › Anmeldung einschalten.
