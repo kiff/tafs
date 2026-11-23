@@ -37,17 +37,10 @@ object SealedRelease {
     if (it == "password") Part.PASSWORD else Part.USERNAME
   }
 
-  /** The grant's sites as this phone signed them (`step.sites_signed`): planque relays them and can't widen them. */
-  @Serializable
-  data class SitesSigned(val sites: List<String>, val sig: String)
-
-  /** A sensitive site this phone allowed for the grant (`step.sensitive_allowed`), with its `tafs-chrome/sensitive/v1` signature. */
-  @Serializable
-  data class Allowance(val site: String, val sig: String)
-
   /**
-   * A held sealed fill, as the card reads it: the held step's own fields, copied byte for byte into what's signed, and what the
-   * phone checks before it signs. [expiresAt] is the hold's end (unix ms).
+   * A held sealed fill, as the card reads it: the block's `release_fields`, copied byte for byte into what's signed. [expiresAt]
+   * is the hold's end (unix ms). Nothing else of the block decides whether it's signed: the sites come from this phone's own
+   * signed grants ([refusal]).
    */
   @Serializable
   data class Fill(
@@ -57,16 +50,17 @@ object SealedRelease {
     val origin: String,
     val fieldRef: String,
     val readId: String,
-    val grant: String,
-    val sitesSigned: SitesSigned?,
-    val sensitiveAllowed: List<Allowance> = emptyList(),
     val expiresAt: Long,
+    /** KIFF's `browser_sha256`, set only when it's the served block's own hash; null otherwise, and then nothing is signed. */
+    val blockSha256: String? = null,
   )
 
   /** Why the phone won't sign a release, whatever planque says: the card is then drawn as an unreadable hold, and says why. */
   enum class Refusal {
     /** The hold has no op, read or field to name. */
     INCOMPLETE,
+    /** KIFF's `browser_sha256` isn't the hash of the block drawn: what the owner reads wouldn't be what the answer signs. */
+    BLOCK,
     /** The handle isn't exactly `sec_<id>:password` or `:username`. */
     HANDLE,
     /** The Chrome isn't one this phone is paired with. */
@@ -75,33 +69,35 @@ object SealedRelease {
     EXPIRED,
     /** The origin isn't `https://host` (an optional port, no path, no user). */
     ORIGIN,
-    /** The origin isn't within the sites this phone signed for the grant, or that signature doesn't hold. */
+    /** The origin isn't within the sites this phone signed for any of the account's connections on that Chrome. */
     NOT_SIGNED,
-    /** A sensitive site with no allowance of this phone's own for it. */
+    /**
+     * A sensitive site (a bank, wallet, password manager, payment, health or government account): this phone keeps no
+     * `tafs-chrome/sensitive/v1` allowance of its own to check one against, so it never signs a release for one.
+     */
     SENSITIVE,
   }
 
   /**
    * Whether the phone may sign a release for [fill] (null) or why not. [pairedChromes] are the Chromes this phone is paired with,
-   * [approvalKeyDER] its approval key's public key, [now] in unix ms. Every check is the phone's own, never planque's word.
+   * [grants] the account's connections as planque lists them, [approvalKeyDER] its approval key's public key, [now] in unix ms.
+   * Every check is the phone's own, never planque's word: the origin must be within the sites this phone signed, with
+   * [approvalKeyDER], for one of [grants] on that same Chrome that's still connected ([ChromePairing.signedSites]). A list
+   * planque widened, another key's signature, a connection on another Chrome, or one the owner ended counts for nothing. And
+   * the block must be the one KIFF's answer covers ([Fill.blockSha256]).
    */
-  fun refusal(fill: Fill, pairedChromes: Set<String>, approvalKeyDER: ByteArray, now: Long): Refusal? {
+  fun refusal(fill: Fill, pairedChromes: Set<String>, grants: List<Grant>, approvalKeyDER: ByteArray, now: Long): Refusal? {
     if (fill.op.isEmpty() || fill.readId.isEmpty() || fill.fieldRef.isEmpty()) return Refusal.INCOMPLETE
+    if (fill.blockSha256.isNullOrEmpty()) return Refusal.BLOCK
     if (part(fill.sealed) == null) return Refusal.HANDLE
     if (fill.chromeId.isEmpty() || fill.chromeId !in pairedChromes) return Refusal.CHROME
     if (now >= fill.expiresAt) return Refusal.EXPIRED
     val host = httpsHost(fill.origin) ?: return Refusal.ORIGIN
-    val signed = fill.sitesSigned ?: return Refusal.NOT_SIGNED
-    if (signed.sites.none { within(host, it) }) return Refusal.NOT_SIGNED
-    if (!ChromePairing.verifiesRaw(approvalKeyDER, ChromePairing.sitesBytes(fill.chromeId, fill.grant, signed.sites), signed.sig)) {
-      return Refusal.NOT_SIGNED
-    }
-    if (ChromePairing.isSensitive(host)) {
-      val allowed = fill.sensitiveAllowed.any { a ->
-        within(host, a.site) && ChromePairing.verifiesRaw(approvalKeyDER, ChromePairing.sensitiveBytes(fill.chromeId, fill.grant, a.site), a.sig)
-      }
-      if (!allowed) return Refusal.SENSITIVE
-    }
+    // Only live connections: one the owner disconnected keeps its signature, but no longer stands for its sites.
+    val signed = grants.filter { it.connected && it.request.browser?.chrome == fill.chromeId }
+      .mapNotNull { ChromePairing.signedSites(it, approvalKeyDER) }
+    if (signed.none { sites -> sites.any { within(host, it) } }) return Refusal.NOT_SIGNED
+    if (ChromePairing.isSensitive(host)) return Refusal.SENSITIVE
     return null
   }
 
@@ -120,7 +116,7 @@ object SealedRelease {
 
   /** Why the card can't allow [refusal], in the card's words. A late hold says nothing here: the card says it expired. */
   fun refusalWords(refusal: Refusal): String? = when (refusal) {
-    Refusal.INCOMPLETE, Refusal.HANDLE -> bot.tafs.app.model.Words.Chrome.releaseUnreadable
+    Refusal.INCOMPLETE, Refusal.BLOCK, Refusal.HANDLE -> bot.tafs.app.model.Words.Chrome.releaseUnreadable
     Refusal.CHROME -> bot.tafs.app.model.Words.Chrome.releaseOtherChrome
     Refusal.EXPIRED -> null
     Refusal.ORIGIN -> bot.tafs.app.model.Words.Chrome.releaseNotHttps
@@ -159,13 +155,14 @@ object SealedRelease {
   suspend fun release(
     fill: Fill,
     pairedChromes: Set<String>,
+    grants: List<Grant>,
     approvalKeyDER: ByteArray,
     now: Long,
     nonce: String = newNonce(),
     clock: () -> Long = { now },
     sign: suspend (built: () -> ByteArray) -> String,
   ): Release? {
-    if (refusal(fill, pairedChromes, approvalKeyDER, now) != null) return null
+    if (refusal(fill, pairedChromes, grants, approvalKeyDER, now) != null) return null
     var exp = 0L
     val der = sign {
       exp = clock() + VALID_MS

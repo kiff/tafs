@@ -7639,7 +7639,7 @@ class AppModel(
   /** Why the phone won't sign [call]'s release, by its own checks; null where it may, or where the call isn't a sealed fill. */
   fun fillRefusal(call: HeldCall): bot.tafs.app.kiff.SealedRelease.Refusal? {
     val fill = call.browser?.fill ?: return null
-    return bot.tafs.app.kiff.SealedRelease.refusal(fill, pairedChromes(), signer.approvalPublicKeyDER, clock().toEpochMilli())
+    return bot.tafs.app.kiff.SealedRelease.refusal(fill, pairedChromes(), _state.value.grants, signer.approvalPublicKeyDER, clock().toEpochMilli())
   }
 
   private fun pairedChromes(): Set<String> = _state.value.chromes.orEmpty().map { it.id }.toSet()
@@ -7656,7 +7656,7 @@ class AppModel(
     }
     val part = r.part(fill.sealed) ?: return null
     return try {
-      r.release(fill, pairedChromes(), signer.approvalPublicKeyDER, clock().toEpochMilli(), clock = { clock().toEpochMilli() }) { built ->
+      r.release(fill, pairedChromes(), _state.value.grants, signer.approvalPublicKeyDER, clock().toEpochMilli(), clock = { clock().toEpochMilli() }) { built ->
         signer.signCritical(r.prompt(part, call.browser?.site.orEmpty()), built)
       } ?: run { fail(Words.Chrome.releaseUnreadable); null }
     } catch (e: SignerException) {
@@ -7685,7 +7685,7 @@ class AppModel(
     var signedAt = ""
     val message = {
       signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
-      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt)
+      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt, call.browserSha256)
     }
     // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
     // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no
