@@ -469,6 +469,94 @@ one exact origin (`chrome/src/vault.js`).
 | `release_missing` | no release, one not signed by the paired phone, for another step, field or origin, expired, or already used |
 | `sealed_unknown` | no sign-in is saved under that handle for this origin |
 
+### The phone's release card (design, not built)
+
+The extension already refuses a sealed fill without the phone's `tafs-chrome/release/v1` (`protocol.checkRelease`). This is the
+card on the phone that makes one. It is a hold like any other (see "The approval card"), so a release is **never** made by a
+rule, a limit, a watch or the extension. **Its lock is the approval's own:** Allow signs with the approval key behind a
+fresh Face ID or fingerprint every time, never from a notification's action or a reused unlock, and never inside an
+approval window (whose tap signs with the device key, which can't make this signature). Allow carries the confirm mark, and
+its `chrome.release_*` words go on Android's confirm-mark list, as `tafs-chrome/sites/v1`'s do.
+
+**When it comes.** A taf's `act.sealed` step makes planque hold the step. A sealed fill is always held: no standing rule
+or daily limit approves it, since it moves a stored sign-in into a page. planque's hold carries the `browser` block (site,
+origin, the element's label, which Chrome) and the release's own fields below.
+
+**What the owner sees,** in this order:
+
+1. "Fill a saved sign-in?", the taf's name and its own reason (KIFF's `taf_reason`, as on any hold).
+2. **The site large** (its registrable domain) and **the full origin small** (an internationalised domain stays in its
+   `xn--` form), and which Chrome ("In Work Mac").
+3. **Which part: "Password" or "Username or email."** The phone accepts a handle only if it matches
+   `^sec_[A-Za-z0-9_-]+:(password|username)$`, exactly two segments, and reads the part from it, never from planque's words.
+   Anything else (a third segment, another part, an empty id) is no release: the card is drawn as an unreadable hold (the
+   hold's summary only) and nothing is signed. The extension reads the part as the segment after the first colon (`runner.js`
+   `fillSealed`, `vault.js`), so a three-segment handle would show one part and fill the other; it refuses such a handle too
+   (a follow-up PR of mine, with its test), and the vector's refused cases include one.
+4. Under "On the page", the field's label and the page's title as planque read them, as every page word is drawn: one plain
+   line, verbatim, never as what the card asks.
+5. One fixed line: "It never leaves your Chrome. tafs doesn't see it." (the phone never has the value, and says so rather than
+   showing a stand-in; the line is the same for either part), and how long the card is good for.
+6. **Allow this fill** and **Refuse.** Allow asks for Face ID or the fingerprint.
+
+**What is signed.** One touch, two signatures (as the pairing's): the hold's answer, and the release. **Precondition:** the
+hold's answer covers the `browser` block's JCS SHA-256, so the phone signs over what it drew; that is the approval card's
+own "until that's in the answer" step and isn't built, so until it is, the card can't be shipped as an approval of what it
+drew, and the release is the only signature over the handle, origin and field. The release is the phone's approval key over
+`tafs-chrome/release/v1` and
+
+```
+{chrome_id, op, sealed, origin, field_ref, read_id, nonce, exp}
+```
+
+- `chrome_id`, `op` (the step's id), `sealed` (the handle), `origin`, `field_ref` and `read_id` are the held step's own,
+  copied byte for byte. `chrome_id` is the paired Chrome the card names, never another.
+- `nonce` is the phone's own: at least 16 random bytes, unpadded base64url, made when the owner allows and never reused.
+  `exp` is 60 s after that moment, in unix ms. The extension compares it with its own clock as it is (`checkRelease` takes no
+  clock offset) and takes at most 2 minutes ahead, so a phone clock ahead by more than about 60 s, or behind by more than
+  60 s, has every release refused: the owner sees "Not filled. Check that this phone's clock is right", from planque's
+  `release_missing` answer.
+- The answer carries `release: {chrome_id, op, origin, nonce, exp, sig}`, and planque puts it on the step as `step.release`.
+
+**Where the phone refuses to sign,** whatever planque says (it shows the hold as unreadable, and says why):
+- the origin isn't `https`, or its registrable domain isn't within the sites of the step's `sites_signed`, which the phone
+  verifies against its own key (`tafs-chrome/sites/v1`): the phone never signs a release for a site its owner didn't connect;
+- the origin is a sensitive site and no `sensitive_allowed` entry of the step verifies against its own key
+  (`tafs-chrome/sensitive/v1`) for this grant and site;
+- the Chrome isn't one it is paired with, or the hold has no `read_id`, `field_ref` or a handle of the shape above;
+- the hold has expired (below): the owner's late yes signs nothing, and planque asks again with a new step.
+
+**Refuse, ignore or late.** Refuse signs no release and answers the hold's refusal, as any hold: it takes power away, so it needs
+no lock. The taf is told the owner said no, and nothing is filled.
+
+**How long a card lives.** The extension ends a run that gets no step for 5 minutes (`RUN_IDLE_MS`, swept as Stop by `idle`),
+and a held fill sends none while it waits. So a sealed fill's hold lives **3 minutes**, not longer, and the card shows the
+time left; an unanswered card ends at that expiry and the taf is told nothing was filled. An Allow after the expiry signs
+nothing. If the run ended or the page changed (`page_changed`) before the release arrived, planque tells the owner "Not
+filled", never "filled", and the owner's yes buys nothing further. (Keeping a run with a held fill from counting as idle, as a
+paused one doesn't, would let a card live longer: a later change, in the extension and planque both.)
+
+**One card per fill.** A sign-in is two fills (username, then password), so two cards. Folding the two into one card, one touch, two
+releases, is a later change, once one card is built and used.
+
+**What the card can't promise,** and says nothing about:
+- The phone never reads the page or the saved entry. The field's label and the page's words are planque's relay of what
+  the extension read; they are not signed. What the signature does hold is the handle, the exact origin, the field's ref on
+  the read the owner's taf planned from, and the 60 s.
+- The extension enforces the rest: a password handle goes only into a password field, a username handle only into a text,
+  email or username field; the tab's exact origin, the top frame, and the read the step was planned from; the nonce is taken once.
+  A compromised planque could therefore choose which fitting field on that origin gets the value (a username into another
+  text field, say). It can never send a value anywhere else, make a release, or fill a field of the wrong kind.
+
+**Open for planque** (its docs, not this one): the held call's kind for a sealed fill, how the answer's `release` reaches
+the step, and the vector for `tafs-chrome/release/v1` (`vectors/chrome-release.json`, made from `checkRelease` and checked by
+the extension's and each app's tests) that both apps need before they sign.
+
+**For the apps,** the card is built once on iPhone and iPad (`BrowserStepBlock`'s sibling in `NeedsYouView`) and once on
+Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every language and each tested against the vector: a
+release made from it is accepted by `checkRelease`, and one with any field changed, another Chrome's, an expired one, or
+a reused nonce is refused.
+
 ## Coach in the side panel
 
 The side panel talks to Coach: the same chat the apps use, through tafs cloud's own routes (`GET /v1/setup`,
@@ -549,5 +637,5 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 ## Not done yet
 
-- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it; the card that signs it is still to build.
+- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it; the card that signs it is designed ("The phone's release card") and still to build.
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.
