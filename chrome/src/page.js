@@ -588,5 +588,36 @@
     return true;
   }
 
-  root.TafsPage = { read, act, fillSealed, kindOf, listen, maskForShot, unmaskShot };
+  let outlineBox = null;
+  let outlineTimer = null;
+
+  /**
+   * "Show me" for a hand-over: draws an outline round the field or button `ref` names in read `readId`, and nothing else. It
+   * never scrolls, focuses or clicks (the box lets every pointer through), and goes after a few seconds or when asked.
+   */
+  function outline(ref, readId) {
+    unoutline();
+    if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
+    const el = refs.get(ref);
+    if (!el || !el.isConnected || prints.get(ref) !== printOf(el) || !visible(el)) return { ok: false, code: "ref_unknown" };
+    const r = el.getBoundingClientRect();
+    const box = document.createElement("div");
+    box.setAttribute("data-tafs-outline", "");
+    box.style.cssText = `position:fixed;left:${r.left - 4}px;top:${r.top - 4}px;width:${r.width + 8}px;height:${r.height + 8}px;` +
+      "outline:3px solid #F29A2E;border-radius:6px;pointer-events:none;z-index:2147483647;box-shadow:0 0 0 4px rgba(242,154,46,.25)";
+    document.documentElement.appendChild(box);
+    outlineBox = box;
+    outlineTimer = setTimeout(unoutline, 8000);
+    return { ok: true };
+  }
+
+  function unoutline() {
+    clearTimeout(outlineTimer);
+    if (outlineBox) outlineBox.remove();
+    outlineBox = null;
+    for (const stray of document.querySelectorAll("[data-tafs-outline]")) stray.remove();
+    return true;
+  }
+
+  root.TafsPage = { read, act, fillSealed, kindOf, listen, maskForShot, unmaskShot, outline, unoutline };
 })(globalThis);

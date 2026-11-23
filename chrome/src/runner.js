@@ -4,6 +4,7 @@
 // whatever started it. The owner's own input in a run's tab pauses the run.
 
 import { refuseURL, bareURL } from "./sites.js";
+import { HAND_MAX_MS, validWords, withoutValues } from "./hand.js";
 
 /**
  * The run's own blank page: where its tab opens and where a refused move is sent. It loads nothing, so the guard lets
@@ -36,12 +37,13 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null, onHandAnswer = () => {} }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
     this.shots = shots; // the picture kept of each act (shot.js); null: none is taken
+    this.onHandAnswer = onHandAnswer; // the person's answer to a hand-over, to give planque ({hand, outcome, page}); the service worker signs and keeps it
     this.vault = vault; // sealed sign-ins (vault.js); none, and a sealed fill is refused
     this.now = now;
     this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
@@ -172,6 +174,7 @@ export class Runner {
       site: r.site,
       paused: r.paused,
       stopped: r.stopped,
+      hand: this.handOpen(r) ? { id: r.hand.id, words: r.hand.words, ref: r.hand.ref !== undefined } : null,
       steps: r.steps.slice(-50),
     }));
   }
@@ -192,6 +195,9 @@ export class Runner {
   ownerInput(tabId) {
     const run = this.runOfTab(tabId);
     if (!run || run.paused || run.stopped) return;
+    // While a step is handed to the person, their typing in the page is what was asked: it pauses nothing, and a touch after
+    // Done or Not now pauses as before.
+    if (this.handOpen(run)) return;
     run.paused = "owner";
     this.record(run, { op: "pause", by: "owner" });
   }
@@ -227,6 +233,8 @@ export class Runner {
   }
 
   async closeRun(run) {
+    // A step still handed to the person ends with the run: planque is told "not now", not left to its 30 minutes.
+    if (run.hand) this.endHand(run, "declined");
     for (const t of run.tabs) {
       this.tabRun.delete(t);
       await this.unfence(t);
@@ -267,7 +275,7 @@ export class Runner {
   /** Closes the windows of runs nobody sent a step to for RUN_IDLE_MS, as Stop does. Called by the service worker's alarm. */
   async sweep() {
     for (const run of [...this.runs.values()]) {
-      if (run.stopped || run.paused || this.tails.has(run.id)) continue;
+      if (run.stopped || run.paused || this.tails.has(run.id) || this.handOpen(run)) continue; // a person takes longer than the idle limit
       if (this.now() - run.at > RUN_IDLE_MS) {
         run.stopped = true;
         this.record(run, { op: "stop", by: "idle" });
@@ -343,6 +351,8 @@ export class Runner {
     switch (step.op) {
       case "open":
         return this.open(run, step.url);
+      case "hand":
+        return this.hand(run, step);
       case "read":
         if (step.offset != null && !(Number.isSafeInteger(step.offset) && step.offset >= 0)) return { error: { code: "bad_step", detail: "offset" } };
         return this.read(run, step.offset);
@@ -355,6 +365,86 @@ export class Runner {
       default:
         return { error: { code: "bad_step" } };
     }
+  }
+
+  /** Whether a step is handed to the person in this run and still open: not answered, not past its 30 minutes. */
+  handOpen(run) {
+    if (!run.hand) return false;
+    if (this.now() >= run.hand.until) {
+      run.hand = null; // planque's own 30 minutes end it too
+      return false;
+    }
+    return true;
+  }
+
+  /** Closes the run's open hand-over with `outcome` and gives the answer to planque, with `page` when there is one. */
+  endHand(run, outcome, page = null) {
+    const hand = run.hand;
+    run.hand = null;
+    if (hand) this.onHandAnswer({ hand: hand.id, outcome, page });
+  }
+
+  /**
+   * A step handed to the person ("fill in the card number, then tap Done"): the panel shows "Your turn" with the taf's words and the
+   * person does it in the page. It is answered at once as handed; the person's Done or Not now comes later (`answerHand`). Checked
+   * here as any step is, trusting nothing of planque's checks: the words, the field or button named, the read it was planned from, and
+   * the page's site.
+   */
+  async hand(run, step) {
+    if (run.tab == null) return { error: { code: "no_page" } };
+    const h = step.hand;
+    if (!h || typeof h !== "object" || !validWords(h.words) || (h.ref !== undefined && typeof h.ref !== "string")) {
+      return { error: { code: "bad_step", detail: "the words of a hand-over are 1 to 280 characters of plain text" } };
+    }
+    const page = run.pages.get(step.read_id);
+    if (!page) return { error: { code: "page_changed" } };
+    if (h.ref !== undefined && ![...(page.fields || []), ...(page.controls || [])].some((x) => x.ref === h.ref)) {
+      return { error: { code: "bad_step", detail: "the field or button isn't in the read" } };
+    }
+    const tab = await this.chrome.tabs.get(run.tab);
+    const refused = refuseURL(tab.url || "", run.sites, run.allowed);
+    if (refused) return { error: { code: refused.code } };
+    // One at a time: a new one ends the one still open as declined.
+    if (run.hand) this.endHand(run, "declined");
+    run.hand = { id: step.id, words: h.words, ref: h.ref, readId: step.read_id, until: this.now() + HAND_MAX_MS };
+    this.onChange(this.state());
+    return { handed: true };
+  }
+
+  /**
+   * The person's answer to the hand-over: Done reads the page back for the taf **without what is in its fields**, Not now says no.
+   * `{error}` when none is open.
+   */
+  async answerHand(runId, outcome) {
+    const run = this.runs.get(runId);
+    if (!run || !this.handOpen(run) || (outcome !== "done" && outcome !== "declined")) return { error: { code: "no_hand" } };
+    if (outcome === "declined") {
+      this.endHand(run, "declined");
+      this.record(run, { op: "hand", kind: "declined" });
+      this.onChange(this.state());
+      return { ok: true };
+    }
+    let page = null;
+    try {
+      const read = await this.read(run);
+      if (read.page) page = withoutValues(read.page);
+    } catch {
+      // The page couldn't be read back: Done still goes to the taf, with no page, and it reads again.
+    }
+    this.endHand(run, "done", page);
+    this.record(run, { op: "hand" });
+    this.onChange(this.state());
+    return { ok: true };
+  }
+
+  /** "Show me": the run's tab to the front, and the field or button the taf named outlined (nothing else, nothing scrolled or clicked). */
+  async showHand(runId) {
+    const run = this.runs.get(runId);
+    if (!run || !this.handOpen(run) || run.tab == null) return { error: { code: "no_hand" } };
+    await this.chrome.tabs.update(run.tab, { active: true });
+    if (run.windowId != null && this.chrome.windows.update) await this.chrome.windows.update(run.windowId, { focused: true }).catch(() => {});
+    if (run.hand.ref !== undefined) await this.inTab(run.tab, (ref, id) => globalThis.TafsPage.outline(ref, id), [run.hand.ref, run.hand.readId]).catch(() => {});
+    return { ok: true };
   }
 
   async open(run, url) {
