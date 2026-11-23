@@ -140558,6 +140558,12 @@
             "value": "อนุญาตการกรอกนี้"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu doldurmaga rugsat beriň"
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
@@ -140801,6 +140807,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ข้อมูลนี้ไม่เคยออกจาก Chrome ของคุณ tafs มองไม่เห็น"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ol hiç haçan Chrome-yňyzdan çykmaýar. tafs ony görmeýär."
           }
         },
         "tr": {
@@ -141048,6 +141060,12 @@
             "value": "คุณไม่ได้เชื่อมต่อ Chrome นี้กับเว็บไซต์นี้ จึงอนุญาตไม่ได้"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siz bu Chrome-y bu saýta birikdirmediňiz, şonuň üçin oňa rugsat berip bolmaýar."
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
@@ -141291,6 +141309,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "หน้านี้ไม่ใช่หน้า https ที่ปลอดภัย จึงอนุญาตไม่ได้"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sahypa howpsuz https sahypasy däl, şonuň üçin oňa rugsat berip bolmaýar."
           }
         },
         "tr": {
@@ -141538,6 +141562,12 @@
             "value": "การกรอกนี้สำหรับ Chrome ที่ไม่ได้จับคู่กับโทรศัพท์เครื่องนี้ จึงอนุญาตไม่ได้"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ol bu telefon bilen goşalanmadyk Chrome üçin, şonuň üçin oňa rugsat berip bolmaýar."
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
@@ -141781,6 +141811,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "รหัสผ่าน"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parol"
           }
         },
         "tr": {
@@ -142028,6 +142064,12 @@
             "value": "อนุญาตการกรอกบน %1$@"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ saýtynda doldurmaga rugsat beriň"
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
@@ -142271,6 +142313,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ปล่อยรหัสผ่านให้ %1$@"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ üçin paroly beriň"
           }
         },
         "tr": {
@@ -142518,6 +142566,12 @@
             "value": "ปล่อยชื่อผู้ใช้ให้ %1$@"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ üçin ulanyjy adyny beriň"
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
@@ -142761,6 +142815,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "นี่คือเว็บไซต์ที่มีความอ่อนไหวซึ่งคุณยังไม่ได้อนุญาตสำหรับ Chrome นี้ จึงอนุญาตไม่ได้"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu siziň bu Chrome üçin rugsat bermedik duýgur saýtyňyz, şonuň üçin oňa rugsat berip bolmaýar."
           }
         },
         "tr": {
@@ -143008,6 +143068,12 @@
             "value": "กรอกข้อมูลการลงชื่อเข้าใช้ที่บันทึกไว้ไหม"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ýatda saklanan girişi doldurmalymy?"
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
@@ -143253,6 +143319,12 @@
             "value": "อ่านการกรอกนี้ไม่ได้ จึงอนุญาตไม่ได้ คุณยังปฏิเสธได้"
           }
         },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu doldurmany okap bolmaýar, şonuň üçin oňa rugsat berip bolmaýar. Ony henizem ret edip bilersiňiz."
+          }
+        },
         "tr": {
           "stringUnit": {
             "state": "translated",
@@ -143496,6 +143568,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ชื่อผู้ใช้หรืออีเมล"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ulanyjy ady ýa-da email"
           }
         },
         "tr": {
