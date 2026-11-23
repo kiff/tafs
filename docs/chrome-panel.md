@@ -42,9 +42,14 @@ it over and carries on after.
   or button. The toolbar badge says the taf waits.
 - **The extension never acts for the person here.** It types nothing, clicks nothing and fills nothing. A sealed value is
   never offered.
-- **Done reads the page back to the taf,** masked as every read is. **Not now** answers the step as declined. A
-  hand-over that waits past its step's time (the step's `exp`) ends with the run's usual words, and the taf decides what
-  next.
+- **A hand-over isn't an ordinary step.** planque waits for a step's signed result inside one call, far shorter than a
+  person needs to find a card and type it. So the hand-over is answered at once as **handed**, and the run waits. The
+  person's **Done** or **Not now** comes back later as its own signed result. planque keeps that result until the taf asks
+  for it, as it keeps a late result today. The taf decides what to do if none comes.
+- **Done reads the page back to the taf, without what the person typed.** The read after a hand-over leaves out the
+  **values** of every field the person filled: any input, select or editable, not only those a pattern would mask. The taf
+  learns only that each is filled. A card number or a one-time code never reaches the taf, KIFF or planque, even masked.
+  **Not now** answers the hand-over as declined.
 - A hand-over never approves anything held. A held step is still a card (below).
 
 ## Approving in the panel
@@ -100,7 +105,8 @@ computer's password alone.
    or phone route?
 2. **KIFF:** the approval page's route for one held call; how a computer's passkey is registered for a Chrome
    with no tafs desktop app; and where the "biometric" mark lives on the device record.
-3. **The hand-over step:** planque's `op: "hand"` and its result, and the tool the taf asks it with.
+3. **planque:** the hand-over's own result, kept until read. Its step and result shapes, and how long it's kept, are planque's
+   to design, along with the tool the taf asks it with.
 4. **Gate 1's test:** a Mac with Touch ID and a Windows PC with Hello, each registering a kiff.dev passkey in Chrome.
 
 ## At 10,000 users
