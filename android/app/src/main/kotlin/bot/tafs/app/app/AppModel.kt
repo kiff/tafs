@@ -5191,6 +5191,7 @@ class AppModel(
 
   /** The sheet open on [call], and tafs cloud's offer read: true when it's what was offered and can be signed. */
   suspend fun openAllowNow(call: HeldCall): Boolean {
+    if (!bot.tafs.app.model.HoldAllow.allowable(call)) return false
     _state.update { it.copy(allow = AllowSheetState(call, busy = true)) }
     return loadAllow(round = false)
   }

@@ -608,7 +608,7 @@ signed over the vector's bytes. **Android's card is built, off too:**
   goes to KIFF's `approve-once` with `release: {chrome_id, op, origin, nonce, exp, sig}` beside its `signature`. **KIFF's half
   must take it and hand it to planque.**
 - **Never allowed without its release:** with the card off, a sealed fill is drawn as any step with Refuse only, and no other way
-  of approving (a notification's action, an approval window's tap, an answer signed elsewhere, Extra room) allows it. A sealed fill with no
+  of approving (a notification's action, an approval window's tap, an answer signed elsewhere, Extra room) allows it, and "Allow this from now on" is never offered for one (`HoldAllow.allowable`). A sealed fill with no
   `expires_at` reads as expired. Tests: `SealedFillCardTest`.
 
 ## A step handed to the person

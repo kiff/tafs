@@ -186,6 +186,16 @@ class SealedFillCardTest {
     assertEquals(Words.Chrome.releaseUnreadable, m.state.value.lastError)
   }
 
+  @Test fun noStandingRuleIsOfferedForASealedFill() = runTest {
+    val m = model(held(fill(sitesSig(listOf("shop.example")))))
+    val call = m.state.value.held.single()
+    // Even over a limit "Allow this from now on" could change: a sealed fill is always held, and allowed only with its release.
+    val overALimit = call.copy(breachOutcomes = listOf(bot.tafs.app.model.HoldAllow.ALLOWABLE.first()))
+    assertTrue(bot.tafs.app.model.HoldAllow.allowable(overALimit.copy(browser = overALimit.browser!!.copy(fill = null))))
+    assertFalse(bot.tafs.app.model.HoldAllow.allowable(overALimit))
+    assertFalse(m.openAllowNow(overALimit))
+  }
+
   @Test fun aSealedFillWithNoEndIsExpiredNotTenMinutes() = runTest {
     val m = model(held(fill(sitesSig(listOf("shop.example")))).replace(""","expires_at":"2099-01-01T00:00:00Z"""", ""))
     val call = m.state.value.held.single()

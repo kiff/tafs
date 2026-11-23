@@ -21,7 +21,8 @@ object HoldAllow {
 
   /** A hold (not a currency mismatch, not Coach's install) whose every breach a Card change can lift. */
   fun allowable(call: HeldCall): Boolean =
-    call.install == null && call.kind != "card_unit" && call.breachOutcomes.isNotEmpty() && call.breachOutcomes.all { it in ALLOWABLE }
+    // A sealed fill is always held, and allowed only with its release (docs/chrome.md): no standing rule ever takes it.
+    call.browser?.fill == null && call.install == null && call.kind != "card_unit" && call.breachOutcomes.isNotEmpty() && call.breachOutcomes.all { it in ALLOWABLE }
 
   /**
    * The device signs what the person saw. KIFF's draft is for [agent] (and, when KIFF says, made from held call [hold]); it retires
