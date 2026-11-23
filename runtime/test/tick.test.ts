@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Deps } from "../src/cloud/handler.js";
-import { tick } from "../src/cloud/tick.js";
+import { erasedBy, tick } from "../src/cloud/tick.js";
 import { memoryTafs } from "./fakes.js";
 
 function depsWith(accounts: string[]) {
@@ -46,5 +46,30 @@ describe("the scheduled tick", () => {
     expect(lines).toHaveLength(1);
     expect(JSON.parse(lines[0])).toMatchObject({ event: "sweep", name: "late", accounts: 1, failed: true });
     expect(lines[0]).not.toContain("t_a");
+  });
+
+  it("takes an account the deletions sweep erased out of the list every later sweep gets, and counts it before", async () => {
+    const { d, reads } = depsWith(["t_a", "t_gone", "t_half"]);
+    const seen: string[][] = [];
+    const lines: string[] = [];
+    await tick(d, [
+      ["deletions", async () => [
+        { tenant: "t_gone", done: ["tafs", "planque", "kiff"], pending: false },
+        // Its own data not erased yet (the tafs step failed): still swept, as before.
+        { tenant: "t_half", done: [], pending: true },
+      ]],
+      ["late", async (x) => seen.push(await x.tafs.tenants())],
+      ["briefs", async (x) => seen.push(await x.tafs.tenants())],
+    ], (l) => lines.push(l));
+    expect(seen).toEqual([["t_a", "t_half"], ["t_a", "t_half"]]);
+    expect(lines.map((l) => (JSON.parse(l) as { accounts: number }).accounts)).toEqual([3, 2, 2]);
+    expect(reads()).toBe(1);
+  });
+
+  it("erasedBy reads only the deletions sweep's own erasures", () => {
+    expect(erasedBy("deletions", [{ tenant: "t_a", done: ["tafs"], pending: true }, { tenant: "t_b", done: ["planque"], pending: true }])).toEqual(["t_a"]);
+    expect(erasedBy("late", [{ tenant: "t_a", done: ["tafs"] }])).toEqual([]);
+    expect(erasedBy("deletions", undefined)).toEqual([]);
+    expect(erasedBy("deletions", [null, { tenant: 7, done: ["tafs"] }])).toEqual([]);
   });
 });
