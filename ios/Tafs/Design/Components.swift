@@ -341,9 +341,9 @@ extension Date {
 /// unprefixed path, never `/en/`. A link to the English page from another language says so (`label`).
 enum Legal {
     /// The languages kiff.dev serves tafs's Terms and Privacy in, besides English. Traditional Chinese (`zh-Hant`) is served
-    /// under its language, `/zh/`, and Serbian in Latin script (`sr-Latn`) at `/sr/`: `Legal.language` is "zh" and "sr" for them, as it
-    /// is "pt" for pt-BR.
-    static let translated: Set<String> = ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "ar", "sr", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi"]
+    /// under its language, `/zh/`, and Serbian in Latin script (`sr-Latn`) at `/sr/`: `Legal.language` is "zh" and "sr" for them.
+    /// Brazilian Portuguese has its own pages, at the lower-case `/pt-br/` (`Legal.site`); any other Portuguese reads `/pt/`.
+    static let translated: Set<String> = ["de", "es", "fr", "it", "nl", "pl", "pt", "pt-br", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "ar", "sr", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi"]
 
     static var terms: URL { page("terms") }
     static var privacy: URL { page("privacy") }
@@ -352,13 +352,13 @@ enum Legal {
     static var kiffPrivacy: URL { kiffPage("privacy") }
 
     /// A KIFF page in `language` where it's served, else in English.
-    static func kiffPage(_ name: String, language: String = Legal.language) -> URL {
+    static func kiffPage(_ name: String, language: String = Legal.site) -> URL {
         let prefix = translated.contains(language) ? "/\(language)" : ""
         return URL(string: "https://kiff.dev\(prefix)/\(name)")!
     }
 
     /// A page in `language` where it's served, else in English.
-    static func page(_ name: String, language: String = Legal.language) -> URL {
+    static func page(_ name: String, language: String = Legal.site) -> URL {
         let prefix = translated.contains(language) ? "/\(language)" : ""
         return URL(string: "https://kiff.dev\(prefix)/tafs/\(name)")!
     }
@@ -366,9 +366,19 @@ enum Legal {
     /// The language the app's own screens are written in.
     static var language: String { KIFFClient.appLanguage }
 
+    /// The language kiff.dev's legal pages open in for the app's lines: `Legal.language`, except Brazilian Portuguese, which
+    /// has its own pages at the lower-case `/pt-br/` (kiff.dev doesn't serve `/pt-BR/`). `Legal.language` stays "pt" for it,
+    /// as KIFF's own pages and tafs cloud read it.
+    static var site: String { site(catalog: Words.bundle.localizedString(forKey: "_language", value: "en", table: nil), language: language) }
+
+    /// `site` for the catalog the lines are read from (`pt-BR`, as the catalog names it) and the app's language.
+    static func site(catalog: String, language: String) -> String {
+        catalog.replacingOccurrences(of: "_", with: "-").lowercased() == "pt-br" && language == "pt" ? "pt-br" : language
+    }
+
     /// A link's words, saying the page is in English only when it opens in English and the app's
     /// lines aren't ("Terms (in English)", `settings.legal_in_english`).
-    static func label(_ words: String, language: String = Legal.language) -> String {
+    static func label(_ words: String, language: String = Legal.site) -> String {
         language == "en" || translated.contains(language) ? words : Words.Settings.legalInEnglish(label: words)
     }
 

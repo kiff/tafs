@@ -1438,7 +1438,8 @@ in `locales_config.xml` (tested in `test_strings.py`). **Before shipping one, ea
 language** to kiff.dev's pages and KIFF's (`KIFFClient`'s app language, `AppSignIn.pageLanguages`, the translated-pages
 set in `Components.swift`, and Android's twins): a variant reads its base's pages, as `pt-BR` reads `/pt/`, except the
 pages kiff.dev has in the variant itself. **pt-BR's four legal pages** (KIFF's and tafs's terms and privacy) are its own,
-at the lowercase `/pt-br/` (`/pt-BR/` isn't served); Android opens them there (`Legal.VARIANTS`).
+at the lowercase `/pt-br/` (`/pt-BR/` isn't served); Android opens them there (`Legal.VARIANTS`), and so do the
+iPhone and iPad (`Legal.site`, while `Legal.language` stays `pt` for KIFF's pages and tafs cloud).
 
 **pt-BR** (Wave 1, Brazil) ships: Brazilian forms over `pt`'s, "você" throughout, "celular", "tela", "arquivo", "senha",
 "Entrar" for signing in, "conexão" for a connection, and the system's own names on each platform (iOS "Ajustes", macOS
