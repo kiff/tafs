@@ -90,6 +90,11 @@ class CardAnswersTest {
     assertTrue("never the chat's text form", transport.requestsTo("POST /v1/tafs/setup_1/messages").isEmpty())
     assertEquals("Agree", m.state.value.coachComponents.single().answer?.let(CoachWords::answered))
     assertFalse(m.state.value.cardsAnswering.contains(CoachWords.cardKey("s1", "c1")))
+    // The card answered here takes the pin in Coach's chat (docs/chat.md): its ref, as its row is keyed.
+    assertEquals(m.state.value.coachComponents.single().ref, m.state.value.coachAnsweredCard)
+    // A new conversation starts with nothing pinned.
+    m.newCoachChat()
+    assertNull(m.state.value.coachAnsweredCard)
   }
 
   @Test fun anAnswerTafsCloudTookNeverLeavesTheCardSendingEvenIfTheThreadCantBeRead() = runTest {

@@ -18,6 +18,10 @@ import bot.tafs.app.design.LocalBiometry
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.kiff.Access
 import bot.tafs.app.kiff.Account
+import bot.tafs.app.kiff.CardAnswer
+import bot.tafs.app.kiff.KiffClient
+import bot.tafs.app.kiff.SetupComponent
+import bot.tafs.app.kiff.ShownComponent
 import bot.tafs.app.model.Card
 import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.LiveAnswer
@@ -150,6 +154,47 @@ class ChatPinTest {
     }
     rule.onNodeWithText("Coach 30 of the thread").assertIsDisplayed()
     sendAndAnswer(COACH_CHAT, before) { current = it }
+  }
+
+  /**
+   * Coach's card just answered takes the pin, as on iOS (docs/chat.md): its answer starts Coach's next answer, so the card goes to
+   * the top and stays there while Coach's work and words grow under it.
+   */
+  @Test fun coachsAnsweredCardGoesToTheTopAndCoachsAnswerGrowsUnderIt() {
+    val before = thread(30, chat = "Coach")
+    val rules = KiffClient.json.decodeFromString<SetupComponent>(
+      """{"type":"confirm","id":"rules","title":"Use these rules?","text":"Refund up to 100 each.","options":[{"label":"Agree","value":"agree"}]}""",
+    )
+    val card = ShownComponent(t0.plusSeconds(25 * 60L + 30), "s1", "r1", rules, CardAnswer(words = "Agree"))
+    fun coach(answered: Boolean, working: Boolean, live: LiveAnswer? = null) =
+      state(COACH_CHAT, before, working = working, live = live).copy(coachComponents = listOf(card), coachAnsweredCard = if (answered) card.ref else null)
+    var current by mutableStateOf(coach(answered = false, working = false))
+    rule.setShown {
+      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(current, actions, loadCoach = {}, onBack = {}) } }
+    }
+    rule.onNodeWithText("Coach 30 of the thread").assertIsDisplayed()
+    fun cardTop(): Float {
+      val list = rule.onNodeWithTag("chat-thread").fetchSemanticsNode().boundsInRoot.top
+      return rule.onNodeWithText("Use these rules?").fetchSemanticsNode().boundsInRoot.top - list
+    }
+    // Answered on this phone: the card goes to the top.
+    current = coach(answered = true, working = true)
+    rule.waitForIdle()
+    val most = 24f * rule.density.density
+    val pinnedAt = cardTop()
+    assertTrue("the answered card is $pinnedAt px from the list's top", pinnedAt >= 0f && pinnedAt <= most)
+    // Coach's work and answer grow under it without moving it.
+    rule.mainClock.autoAdvance = false
+    val tops = mutableListOf<Float>()
+    var live = LiveAnswer(started = sentAt, session = "s1", run = "run_9", state = LiveState("thinking", "Reading your answer"))
+    current = coach(answered = true, working = true, live = live); repeat(4) { rule.mainClock.advanceTimeByFrame(); tops += cardTop() }
+    for (word in "Agreed, so Refunds gets these rules on its Card, and I'll ask you to approve them next.".split(" ")) {
+      live = live.copy(text = live.text + "$word ")
+      current = coach(answered = true, working = true, live = live); repeat(2) { rule.mainClock.advanceTimeByFrame(); tops += cardTop() }
+    }
+    rule.mainClock.autoAdvance = true
+    rule.waitForIdle()
+    for ((i, top) in tops.withIndex()) assertTrue("frame $i: the card moved from $pinnedAt to $top: $tops", abs(top - pinnedAt) <= 1f)
   }
 
   /** The owner scrolls back: the chat is theirs, and the answer still growing doesn't pull the message back up. */

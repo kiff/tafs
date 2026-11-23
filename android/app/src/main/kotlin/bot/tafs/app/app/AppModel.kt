@@ -451,6 +451,11 @@ data class AppState(
   val drafts: Map<String, String> = emptyMap(),
   /** Cards whose answer tafs cloud took, before the thread has it: shown answered, never as open again. */
   val cardsTaken: Set<String> = emptySet(),
+  /**
+   * The Coach card answered last on this phone (its `ref`), as iOS's `setupAnsweredCard`: its answer starts Coach's next answer,
+   * so Coach's chat pins the card to the top, with the work and the answer under it, as a sent message is (docs/chat.md).
+   */
+  val coachAnsweredCard: String? = null,
   val cardErrors: Map<String, String> = emptyMap(),
   /** Coach's cards in its thread, folded. */
   val coachComponents: List<ShownComponent> = emptyList(),
@@ -2142,7 +2147,7 @@ class AppModel(
         coachChat = null, coachFresh = true, coachImproving = null, coachContext = null, coachComponents = emptyList(), coachDrives = emptyList(), coachLines = emptyList(),
         chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatUnsent = s.chatUnsent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
         chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT, chatSteering = s.chatSteering - COACH_CHAT,
-        chatErrors = s.chatErrors - COACH_CHAT,
+        chatErrors = s.chatErrors - COACH_CHAT, coachAnsweredCard = null,
       )
     }
   }
@@ -6739,8 +6744,9 @@ class AppModel(
       _state.update { it.copy(cardsAnswering = it.cardsAnswering - key) }
     }
     if (generation != accountGeneration) return false
-    // Taken: the card shows it's answered at once, until the thread's words for it come.
-    _state.update { it.copy(cardsTaken = it.cardsTaken + key) }
+    // Taken: the card shows it's answered at once, until the thread's words for it come. In Coach's chat it takes the pin, since its
+    // answer starts Coach's next answer.
+    _state.update { it.copy(cardsTaken = it.cardsTaken + key, coachAnsweredCard = if (coach) key else it.coachAnsweredCard) }
     if (coach) answered.session?.let { if (_state.value.coachChat == null) settleCoachChat(it) }
     // Coach or the taf is at work again: it reads as thinking until its run is followed, and the run's end reads the thread again.
     _state.update { it.copy(chatAwaiting = it.chatAwaiting + (chat to clock()), chatEnded = it.chatEnded - chat) }
