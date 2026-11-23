@@ -6099,7 +6099,9 @@ final class AppModel: ObservableObject {
         lastError = words
         let sessions = Set(sw.stopped.map(\.session))
         let owner = (chats[tafID] ?? []).filter { $0.from == .owner }
-        guard let text = (owner.last { sessions.contains($0.session) } ?? owner.last)?.text, !text.isEmpty else { return }
+        // Only a message of a stopped session: with none loaded, the words alone, never another session's message (a message that
+        // already ran must not be sent twice).
+        guard let text = owner.last(where: { sessions.contains($0.session) })?.text, !text.isEmpty else { return }
         chatStates[tafID, default: ChatState()].awaiting = nil
         chatStates[tafID]?.ended = .failed(retry: text)
         chatStates[tafID]?.endedRun = nil

@@ -352,12 +352,19 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
         _ = await model.prepareSwitch(v2, of: id, stopBlocking: true)
         XCTAssertNil(model.chatState(id).failedWhy)
+        // A stopped session none of whose messages is loaded: the words alone, never another session's message to send again (a message
+        // that already ran must not be sent twice).
+        let words = "Installing this version stopped what was waiting on your answer: its held call was withdrawn and its message wasn't carried out. You can send it again."
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, #"{"switching":{"n":2,"draft":"d_02","at":"2026-10-20T08:00:00Z"},"stopped":[{"run":"run_x","session":"sess_unknown"}],"words":"\#(words)"}"#)
+        _ = await model.prepareSwitch(v2, of: id, stopBlocking: true)
+        XCTAssertNil(model.chatState(id).ended, "no Retry without that session's message")
+        XCTAssertEqual(model.lastError, words, "the words are still said")
         // A task waiting on the owner's answer was stopped: the chat says it, and offers Retry on that session's message.
-        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, #"{"switching":{"n":2,"draft":"d_02","at":"2026-10-20T08:00:00Z"},"stopped":[{"run":"run_p","session":"sess_p"}],"words":"Installing this version stopped the task that was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again."}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, #"{"switching":{"n":2,"draft":"d_02","at":"2026-10-20T08:00:00Z"},"stopped":[{"run":"run_p","session":"sess_p"}],"words":"Installing this version stopped what was waiting on your answer: its held call was withdrawn and its message wasn't carried out. You can send it again."}"#)
         let sw = await model.prepareSwitch(v2, of: id, stopBlocking: true)
         XCTAssertEqual(sw?.stopped, [TafsCloud.StoppedRun(run: "run_p", session: "sess_p")])
         XCTAssertEqual(model.chatState(id).ended, .failed(retry: "Refund pi_1"), "that session's message, not the last one")
-        XCTAssertEqual(model.chatState(id).failedWhy, "Installing this version stopped the task that was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again.")
+        XCTAssertEqual(model.chatState(id).failedWhy, words)
         XCTAssertNil(model.chatState(id).awaiting)
     }
 
