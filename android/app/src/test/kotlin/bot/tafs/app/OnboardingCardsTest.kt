@@ -23,6 +23,8 @@ import bot.tafs.app.views.HomeView
 import bot.tafs.app.views.OnboardingCards
 import bot.tafs.app.views.onboardingSampleCard
 import bot.tafs.app.views.onboardingSampleTafs
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -102,6 +104,32 @@ class OnboardingCardsTest {
     compose.onNodeWithTag("how_it_works.Control").performClick()
     compose.waitForIdle()
     compose.onNodeWithText(Words.Onboarding.getStarted).assertExists()
+  }
+
+  /**
+   * Its Chrome and emailed-code sections show only what this account can use (as iOS's): none by default, each when it applies,
+   * with the screens named as the app names them.
+   */
+  @Test fun howTafsWorksSaysChromeAndTheCodeOnlyWhereTheyApply() {
+    tall()
+    var shown by androidx.compose.runtime.mutableStateOf(false to false)
+    compose.setContent { TafsTheme { bot.tafs.app.views.HowTafsWorksSheet(chrome = shown.first, code = shown.second, onClose = {}) } }
+    assertTrue(compose.onAllNodesWithTag(bot.tafs.app.views.HOW_IT_WORKS_CHROME).fetchSemanticsNodes().isEmpty())
+    assertTrue(compose.onAllNodesWithTag(bot.tafs.app.views.HOW_IT_WORKS_CODE).fetchSemanticsNodes().isEmpty())
+    shown = true to false
+    compose.waitForIdle()
+    compose.onNodeWithTag(bot.tafs.app.views.HOW_IT_WORKS_CHROME).performScrollTo()
+    compose.onNodeWithText(Words.Help.chromeTitle).assertExists()
+    compose.onNodeWithText(Words.Help.chromeLead(needsYou = Words.NeedsYou.title)).assertExists()
+    compose.onNodeWithText(Words.Help.chromeManage(account = Words.Settings.title, chrome = Words.Chrome.title)).assertExists()
+    assertTrue(compose.onAllNodesWithTag(bot.tafs.app.views.HOW_IT_WORKS_CODE).fetchSemanticsNodes().isEmpty())
+    shown = false to true
+    compose.waitForIdle()
+    compose.onNodeWithTag(bot.tafs.app.views.HOW_IT_WORKS_CODE).performScrollTo()
+    compose.onNodeWithText(Words.Help.codeLead(account = Words.Settings.title, signIn = Words.Settings.SignInCode.title)).assertExists()
+    compose.onNodeWithText(Words.Help.codeSafe).assertExists()
+    assertTrue(compose.onAllNodesWithTag(bot.tafs.app.views.HOW_IT_WORKS_CHROME).fetchSemanticsNodes().isEmpty())
+    assertTrue("the screens are named in the line", Words.Help.codeLead(account = Words.Settings.title, signIn = Words.Settings.SignInCode.title).contains(Words.Settings.SignInCode.title))
   }
 
   @Test fun thePicturesDrawTheSamplesOwnTafsAndCard() {

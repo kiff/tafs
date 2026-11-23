@@ -1197,7 +1197,16 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
     }
   }
   // The three cards over the whole app, full screen; Skip and Get started end them, seen on this device from then on.
-  if (howItWorksOpen) bot.tafs.app.views.HowTafsWorksSheet(onClose = { howItWorksOpen = false })
+  if (howItWorksOpen) {
+    // Its Chrome and emailed-code sections show only what this account can use: planque offering Chromes, KIFF able to send a code.
+    // Read here, not left to Account: opened from Home first, it still knows both.
+    LaunchedEffect(Unit) { model.refreshChromes(); model.loadCodeSignIn() }
+    bot.tafs.app.views.HowTafsWorksSheet(
+      chrome = state.chromes != null,
+      code = state.codeSignIn?.available == true,
+      onClose = { howItWorksOpen = false },
+    )
+  }
   // Back is Skip.
   cardsOpen?.let { start ->
     val finish = {

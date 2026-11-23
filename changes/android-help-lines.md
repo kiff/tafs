@@ -1,0 +1,1 @@
+- **Android:** How tafs works says what tafs can do in your Chrome, and how to sign in with an emailed code, each only where you can use it, as on iPhone and iPad ([docs/onboarding.md](../docs/onboarding.md)).
