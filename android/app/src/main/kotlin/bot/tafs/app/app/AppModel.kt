@@ -9815,6 +9815,25 @@ data class AllowSheetState(
   val rounded: Boolean = false,
 )
 
-/** An address on [base] when it's a path, as given when it's already a whole https URL. */
-internal fun endpointOn(base: String, address: String): String =
-  if (address.startsWith("https://")) address else base.trimEnd('/') + "/" + address.trimStart('/')
+/**
+ * A door's address on tafs cloud ([base]), whole. Only ever on tafs cloud's own host, over HTTPS (as iOS, Windows and Linux): a
+ * whole address is kept only when it's https on that host with no port or user; anything else, another host or a scheme with
+ * no host of its own, is its path on tafs cloud, checked again, so the example that sends the developer's key never names
+ * another host.
+ */
+internal fun endpointOn(base: String, address: String): String {
+  val cloud = runCatching { java.net.URI(base.trim()) }.getOrNull()?.takeIf { it.scheme.equals("https", true) && !it.host.isNullOrEmpty() }
+    ?: return base
+  val a = address.trim()
+  val u = runCatching { java.net.URI(a) }.getOrNull()
+  if (u != null && u.scheme.equals("https", true) && u.host.equals(cloud.host, true) && u.port == -1 && u.rawUserInfo == null) return a
+  // The path alone, set on tafs cloud's own address: whatever it holds stays in the path, never the host.
+  val path = when {
+    u == null -> a
+    u.isOpaque -> u.schemeSpecificPart.orEmpty()
+    else -> u.path.orEmpty()
+  }.trimStart('/', '\\')
+  return runCatching { java.net.URI("https", cloud.host, "/$path", null) }.getOrNull()
+    ?.takeIf { it.host.equals(cloud.host, true) && it.port == -1 && it.rawUserInfo == null }?.toASCIIString()
+    ?: base.trimEnd('/')
+}
