@@ -797,6 +797,11 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   approve changed since it was shown" (`version.out_of_date_card`), and the next Give signs exactly it. Cards that
   come only once the batch is in were never on the step, so they aren't given with it either: the step is drawn
   again with them, and the next Give gives them behind its own Face ID.
+- **A batch that connected nothing is said, never redrawn silently.** If KIFF took the batch but tafs cloud's next read still
+  asks for the very same batch (KIFF counted every tool as already there), Give says so: tafs cloud's
+  `coach_tools_step.not_connected` when it sends it, else "Coach's tools weren't given." (`coach.tools_not_given`). A Card
+  drafted once the batch is in is the normal next step, above. As on Android (tafs#1853). Test:
+  `CoachToolsTests.testABatchThatConnectsNothingSaysSoInsteadOfRedrawingSilently`.
 - **After Not now** (`CoachToolsRow`): one line above the conversation, tafs cloud's `row`, which
   opens the same step. It's never a panel there, so the message box keeps its room.
 - **A phone that can't approve yet** reads why in the button's place (`ApprovalGate`), and

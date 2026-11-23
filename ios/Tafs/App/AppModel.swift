@@ -2306,6 +2306,13 @@ final class AppModel: ObservableObject {
         }
         guard gen == accountGeneration else { return false }
         await loadCoachTools()
+        // The batch went and KIFF took it, yet tafs cloud still asks for the very same batch: nothing was connected (KIFF counted
+        // every tool as already there). Said, in tafs cloud's words when it sends them, never a silent redraw (as Android).
+        if let sent = tools.connect, let after = coachTools, after.toGive, after.connect?.body == sent.body {
+            let said = after.step?.notConnected.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            coachToolsError = said.isEmpty ? Words.Coach.toolsNotGiven(why: "").trimmingCharacters(in: .whitespaces) : said
+            return false
+        }
         return coachTools?.given == true
     }
 
