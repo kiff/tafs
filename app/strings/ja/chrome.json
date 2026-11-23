@@ -22,6 +22,7 @@
   "chrome.refused": "別のChromeがこのコードを使ったため、何もペアリングされませんでした。もう一度やり直してください。",
   "chrome.remove": "ペアリングを解除",
   "chrome.remove_named": "{name}のペアリングを解除",
+  "chrome.replace_changed": "このChromeに移るものが変わったため、ペアリングしませんでした。確認して、もう一度ペアリングしてください。",
   "chrome.replace_moves": "このChromeに移る：{sites}",
   "chrome.replace_none": "新しいChrome（置き換えなし）",
   "chrome.replace_title": "置き換え先",

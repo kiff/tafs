@@ -251,7 +251,7 @@ that does the same:
 `ChatPinUITests` holds steps 2 to 5 and step 8 in a taf's chat, and a message that couldn't go
 (`-sampleSendFails`).
 
-The two apps differ in one place: only iOS pins Coach's answered card.
+Both apps pin Coach's answered card: on Android, answering a card in Coach's chat keeps its ref (`coachAnsweredCard`) and the chat pins that card's row, as a sent message's (`ChatPinTest`).
 
 With no message pinned (a chat just opened, or a reply that came without the owner sending),
 the thread follows its end. While a run works, the dots and then its answer are one row at

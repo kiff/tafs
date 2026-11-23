@@ -22,6 +22,7 @@
   "chrome.refused": "অন্য একটি Chrome এই কোড ব্যবহার করেছে, তাই কিছু জোড়া লাগেনি। আবার শুরু করুন।",
   "chrome.remove": "জোড়া ছাড়ান",
   "chrome.remove_named": "{name}-এর জোড়া ছাড়ান",
+  "chrome.replace_changed": "এই Chrome-এ যা সরে যায় তা বদলে গেছে, তাই কিছুই জোড়া লাগেনি। দেখে নিয়ে আবার জোড়া লাগান।",
   "chrome.replace_moves": "এই Chrome-এ সরে যায়: {sites}",
   "chrome.replace_none": "নতুন Chrome (কোনোটি প্রতিস্থাপন করে না)",
   "chrome.replace_title": "প্রতিস্থাপন করে",

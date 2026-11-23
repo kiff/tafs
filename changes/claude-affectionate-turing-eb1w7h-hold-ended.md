@@ -1,0 +1,1 @@
+- **An approval that lands after its run ended says so:** when you approve a held call and the run that waited on it has already ended, tafs says that nothing ran, in your language, instead of staying silent ([docs/api.md](docs/api.md)).

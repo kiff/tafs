@@ -200,6 +200,56 @@ class ChromePairingTest {
     assertEquals("", bot.tafs.app.kiff.chromeSites(older.connections))
   }
 
+  /**
+   * A connection carried by a re-pairing has no signature of its own (planque#373): the pairing that carried it vouches for it
+   * when it's carried again, only once this phone's own key verifies that pairing, alone or in the one-touch form, and only with
+   * exactly the sites the pairing named for it.
+   */
+  @Test fun aConnectionCarriedBeforeMovesAgainOnlyAsThisPhonesPairingVouches() {
+    val phone = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+    val other = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+    fun raw(key: java.security.PrivateKey, bytes: ByteArray) = ChromePairing.rawSignature(
+      Signature.getInstance("SHA256withECDSA").run { initSign(key); update(bytes); sign() })!!
+    val wiki = listOf("wikipedia.org")
+    fun body(phoneKey: ByteArray = phone.public.encoded, carried: List<bot.tafs.app.kiff.ChromePairedCarried> = listOf(bot.tafs.app.kiff.ChromePairedCarried("g1", wiki))) =
+      bot.tafs.app.kiff.ChromePairedBody("pr_1", "a".repeat(43), "win", ChromePairing.base64Url(phoneKey), "proof", carried)
+    fun bytes(b: bot.tafs.app.kiff.ChromePairedBody) = ChromePairing.signedBytes(b.pairing,
+      ChromePairing.Confirmation(b.chromeKeySha256, b.name, b.phoneKey, b.phoneProof, b.carried.map { ChromePairing.Carried(it.grant, it.sites) }))
+    val alone = bot.tafs.app.kiff.ChromePairedWith(body(), raw(phone.private, bytes(body())))
+    val key = phone.public.encoded
+    assertTrue("alone, signed by this phone", ChromePairing.pairingVouches(alone, key))
+    assertFalse("another phone's key", ChromePairing.pairingVouches(alone, other.public.encoded))
+    assertFalse("signed by another phone", ChromePairing.pairingVouches(alone.copy(phoneSig = raw(other.private, bytes(body()))), key))
+    assertFalse("its carried list changed after signing", ChromePairing.pairingVouches(alone.copy(body = body(carried = listOf(bot.tafs.app.kiff.ChromePairedCarried("g1", wiki + "evil.example")))), key))
+    assertFalse("names another phone's key", ChromePairing.pairingVouches(bot.tafs.app.kiff.ChromePairedWith(body(other.public.encoded), raw(other.private, bytes(body(other.public.encoded)))), key))
+    // One-touch: the pairing beside KIFF's request under kiff.requests.v1.
+    val pairHash = bot.tafs.app.kiff.KiffClient.messageHash(bytes(body()))
+    val kiffHash = "b".repeat(64)
+    val together = bot.tafs.app.kiff.ChromePairedWith(body(), raw(phone.private, bot.tafs.app.kiff.KiffClient.requestsMessage("t_01", "2026-11-23T01:00:00Z", pairHash, kiffHash)),
+      tenant = "t_01", signedAt = "2026-11-23T01:00:00Z", kiffRequestSha256 = kiffHash)
+    assertTrue("one-touch, as signed", ChromePairing.pairingVouches(together, key))
+    assertFalse("another account", ChromePairing.pairingVouches(together.copy(tenant = "t_02"), key))
+    assertFalse("another time", ChromePairing.pairingVouches(together.copy(signedAt = "2026-11-23T01:00:01Z"), key))
+    assertFalse("half the form", ChromePairing.pairingVouches(together.copy(signedAt = null), key))
+    assertFalse("read as a pairing alone", ChromePairing.pairingVouches(together.copy(tenant = null, signedAt = null, kiffRequestSha256 = null), key))
+    val self = bot.tafs.app.kiff.ChromePairedWith(body(), raw(phone.private, bot.tafs.app.kiff.KiffClient.requestsMessage("t_01", "t", pairHash, pairHash)),
+      tenant = "t_01", signedAt = "t", kiffRequestSha256 = pairHash)
+    assertFalse("paired with itself", ChromePairing.pairingVouches(self, key))
+
+    // carriedFrom: the carried-before connection moves with exactly the sites its pairing named, and only then.
+    fun grant(sites: List<String>, carriedTo: String? = "chr_win") = bot.tafs.app.kiff.Grant(
+      id = "g1", status = "connected", request = bot.tafs.app.kiff.GrantRequest(browser = GrantBrowser(GrantBrowser.EXTENSION, "chr_win", sites)),
+      chromeSitesCarried = carriedTo,
+    )
+    val win = bot.tafs.app.kiff.Chrome("chr_win", "win", connections = listOf(bot.tafs.app.kiff.ChromeConnection("g1", "Rae", wiki)), pairedWith = alone)
+    assertEquals(listOf(ChromePairing.Carried("g1", wiki)), ChromePairing.carriedFrom(win, listOf(grant(wiki)), key))
+    assertEquals(listOf(ChromePairing.Carried("g1", wiki)), ChromePairing.carriedFrom(win.copy(pairedWith = together), listOf(grant(wiki)), key))
+    assertEquals("planque widened it", emptyList<ChromePairing.Carried>(), ChromePairing.carriedFrom(win, listOf(grant(wiki + "evil.example")), key))
+    assertEquals("carried to another Chrome", emptyList<ChromePairing.Carried>(), ChromePairing.carriedFrom(win, listOf(grant(wiki, "chr_old")), key))
+    assertEquals("no pairing kept", emptyList<ChromePairing.Carried>(), ChromePairing.carriedFrom(win.copy(pairedWith = null), listOf(grant(wiki)), key))
+    assertEquals("another phone's pairing", emptyList<ChromePairing.Carried>(), ChromePairing.carriedFrom(win, listOf(grant(wiki)), other.public.encoded))
+  }
+
   @Test fun theReplacedChromeIsTheOneWithTheOffersProfileIdElseNone() {
     val chromes = listOf(bot.tafs.app.kiff.Chrome("chr_a", "Work", profileId = "a".repeat(32)), bot.tafs.app.kiff.Chrome("chr_b", "Home"))
     fun offer(id: String) = bot.tafs.app.kiff.ChromeOffer(key = "k", proof = "p", profileId = id)
