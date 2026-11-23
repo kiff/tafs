@@ -802,3 +802,37 @@ test("a taf keeps only its latest finished run's tabs: its next run closes the e
   assert.equal(removed().length, 3, "unpairing closes the last taf's too");
   assert.deepEqual(stored.done, {});
 });
+
+test("a taf's next run leaves a kept tab the person has moved or is using, and closes one still where the run left it", async () => {
+  for (const [what, mutate, closes] of [
+    ["still where it was left", () => {}, true],
+    ["moved to another page", (c, tab) => c.tabsMap.set(tab, "https://elsewhere.example/"), false],
+    ["in front of the window in use", (c) => { c.front = true; }, false],
+  ]) {
+    const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+    c.front = false;
+    const get = c.tabs.get;
+    c.tabs.get = async (id) => ({ ...(await get(id)), windowId: 3, active: c.front });
+    c.windows.get = async (id) => ({ id, focused: true });
+    const r = runner(c);
+    await r.handle(step());
+    const tab = [...c.tabsMap.keys()][0];
+    await r.stop("run_1");
+    mutate(c, tab);
+    await r.handle(step({ run: "run_2", id: "op2" }));
+    const gone = c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).includes(tab);
+    assert.equal(gone, closes, what);
+    assert.deepEqual(await r.doneTabs(), {}, "the record goes either way: a tab the person has taken is not the taf's to track");
+  }
+});
+
+test("unpairing closes a kept tab the person has moved too", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  await r.stop("run_1");
+  c.tabsMap.set(tab, "https://elsewhere.example/");
+  await r.stopAll();
+  assert.ok(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).includes(tab));
+});
