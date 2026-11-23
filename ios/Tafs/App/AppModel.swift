@@ -1563,6 +1563,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant, ChromeSwitch.action(of: grant) != nil else { return false }
         if approvalViewOnly { chromesError = approvalKeyLostWords; return false }
         chromesError = nil
+        let signer = self.signer
         // The sites signed again are the ones this phone's own signature verifies for the Chrome it uses now, never what planque says.
         guard let sites = ChromeSwitch.signedSites(of: grant, phoneKey: signer.approvalPublicKeyDER) else {
             chromesError = Words.Common.didntGoThrough(what: "\(Words.Chrome.switchPrompt(name: chrome.name))",
@@ -1570,7 +1571,6 @@ final class AppModel: ObservableObject {
             return false
         }
         let gen = accountGeneration
-        let signer = self.signer
         let reason = Words.Chrome.switchPrompt(name: chrome.name)
         let signature: String
         do {
