@@ -16,22 +16,23 @@ saved sign-ins exist only so a taf can fill one on the exact site, after the pho
 
 ## Permission justifications
 
-Each permission in `chrome/manifest.json`, and why. The manifest asks for **no host permission at install**.
+Each permission in `chrome/manifest.json`, and why. The manifest asks for **one host permission at install**: every https site, as Claude in Chrome does.
 
 | Permission | Justification |
 |---|---|
 | `storage` | `chrome.storage.session` only, which Chrome keeps in memory: the pairing code while it is being typed, the extension's own status for the side panel, the relay's step nonces, and the list of phone releases already used, so a step replayed after Chrome stops the service worker can't run twice. Nothing is written to disk with it. (The pairing, the keys, the sealed sign-ins and the KIFF device session token live in IndexedDB, which `storage` does not cover; unpairing wipes them.) |
 | `alarms` | One alarm, once a minute: it wakes the service worker so the extension can reconnect to KIFF's connection service while it is paired, close the window of a run that nobody has sent a step to for a while, and close a connection that has been idle. |
-| `scripting` | Reads the page of a run's own tab as text and form fields, with password, card and code fields removed, and does one act (a click, a fill, a choice) that KIFF asked for and the extension checked. Also stops the page's dialogs from blocking a run's own tab. Only on a site the person has allowed. |
-| `sidePanel` | The side panel is the whole interface: pairing with the phone, what a taf is doing with Pause, Resume and Stop, the sites to allow, saved sign-ins, and Coach. |
+| `scripting` | Reads the page of a run's own tab as text and form fields, with password, card and code fields removed, and does one act (a click, a fill, a choice) that KIFF asked for and the extension checked. Also stops the page's dialogs from blocking a run's own tab. Only on a site the person's connection lists, which they approved on their phone. |
+| `sidePanel` | The side panel is the whole interface: pairing with the phone, what a taf is doing with Pause, Resume and Stop, saved sign-ins, and Coach. |
 | `tabs` | Opens the run's own window and tabs, reads the address and title of a run's tab to keep it on the sites the run lists, and, when the person clicks "Share this page", reads the title and address of the tab in front, once. Never any other tab. |
 | `tabGroups` | Puts a run's tabs in one visible group named for the taf ("tafs · Refunds"), so the person can see which tabs a taf is using. |
 | `webNavigation` | Sees a move to another site in a run's own tabs (a link, a redirect, a new window the page opens), so the extension can stop it unless the site is one of the run's sites. Nothing is recorded outside a run. |
 | `declarativeNetRequest` | A fence for a run's own tabs: a request to a host that is not one of the run's sites is blocked there. It only blocks, only in those tabs, and widens no access. |
-| Optional host permissions (`https://*/*`) | The extension does not hold access to any site at install. When a run needs a site, the side panel shows "Allow shop.example in Chrome" and Chrome asks the person, one site at a time. The extension reads and acts only on sites the person allowed, and never on a bank, wallet, password manager, payment, health or government site, a Chrome page or the Web Store, unless the person's phone allows that one site for one task. |
+| `notifications` | Chrome asks this of an extension that receives Web Push. It is used for one thing: a silent wake-up message from KIFF's connection service when a task needs this Chrome and the extension is asleep, so the extension can connect (no notification is ever shown, and the message carries no data). It sends nothing else and shows nothing. |
+| Host permissions (`https://*/*`) | Lets the extension work on the sites a person's connection lists, without Chrome asking again for each one. **It acts only on the sites each connection lists, which the person approves on their phone** (the phone signs the list, and the extension checks that signature before any step), and a network fence on each run's own tab blocks every other host. It never works on a bank, wallet, password manager, payment, health or government site, a Chrome page or the Web Store, unless the person's phone allows that one site for one task. It reads nothing in the background and nothing outside a run's own tab, except the one page a person shares with Coach by clicking "Share this page". |
 
 Not requested: `debugger`, `downloads`, `cookies`, `history`, `bookmarks`, `webRequest`, `nativeMessaging`,
-`clipboardRead`, `activeTab` and any host permission at install.
+`clipboardRead` and `activeTab`.
 
 ## Remote code
 

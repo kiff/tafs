@@ -31,6 +31,8 @@
   "chrome.shot_none": "ไม่มีภาพที่เก็บไว้สำหรับขั้นตอนนี้",
   "chrome.shot_open": "ดูหน้าก่อนขั้นตอนนี้",
   "chrome.shot_title": "ก่อนขั้นตอนนี้",
+  "chrome.switch": "ใช้ Chrome อื่น",
+  "chrome.switch_prompt": "ย้ายการเชื่อมต่อนี้ไปที่ {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "การเลิกจับคู่จะสิ้นสุดการเชื่อมต่อที่ใช้ Chrome นี้: {sites} และจะกลับมาก็ต่อเมื่อคุณเชื่อมต่อใหม่",
   "chrome.used_for": "ใช้สำหรับ {sites}",

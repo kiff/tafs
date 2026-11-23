@@ -4488,6 +4488,48 @@ class AppModel(
   }
 
   /** Unpairs a Chrome: planque deletes its key at once. It takes power away, so this phone's own signature is enough. */
+  /**
+   * Moves [grant] to [to] ("Your Chrome" 2), where planque offers `use_another_chrome`: the sites this phone signed for it
+   * ([bot.tafs.app.kiff.ChromePairing.signedSites], never planque's list as given) are signed for [to] with the approval key
+   * behind one fingerprint naming that Chrome, then planque moves it, and the connections and Chromes are read again. False when
+   * it didn't go through, with the line saying why.
+   */
+  suspend fun switchChrome(grant: bot.tafs.app.kiff.Grant, to: bot.tafs.app.kiff.Chrome): Boolean {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) return false
+    val pairing = bot.tafs.app.kiff.ChromePairing
+    val prompt = Words.Chrome.switchPrompt(name = to.name)
+    val sites = pairing.signedSites(grant, signer.approvalPublicKeyDER)
+      ?: return false.also { fail(Words.Common.didntGoThrough(what = prompt, why = ErrorWords.of(bot.tafs.app.kiff.PlanqueError.DigestMismatch))) }
+    val generation = accountGeneration
+    val sig = try {
+      val der = signer.signCritical(prompt) { pairing.sitesBytes(to.id, grant.id, sites) }
+      pairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: SignerException) {
+      return false
+    }
+    if (generation != accountGeneration) return false
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    planque.signer = { signer.signConfirmed(it) }
+    try {
+      planque.switchChrome(grant.id, to.id, sig)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      fail(Words.Common.didntGoThrough(what = prompt, why = ErrorWords.of(e)))
+      return false
+    } finally {
+      planque.signer = null
+    }
+    refreshConnections()
+    refreshChromes()
+    return true
+  }
+
   suspend fun removeChrome(chrome: bot.tafs.app.kiff.Chrome) {
     try {
       chromeCall { planque.removeChrome(chrome.id) } ?: return
