@@ -82,5 +82,11 @@
   "taf_error": { "message": "Nedošlo to k $TAF$. Zkuste to znovu.", "placeholders": { "taf": { "content": "$1" } } },
   "tafs_not_read": { "message": "Vaše tafs se nepodařilo načíst. Zkuste to znovu." },
   "no_taf_here": { "message": "V tomto Chromu zatím žádný taf nepracuje." },
-  "setup_taf": { "message": "Nastavit nový taf pro tento web" }
+  "setup_taf": { "message": "Nastavit nový taf pro tento web" },
+  "hand_title": { "message": "Jste na řadě", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "Taf říká", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Ukažte mi to", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Hotovo", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Teď ne", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Pište jen tam, kde této stránce důvěřujete.", "description": "Fixed line on that card under the taf's words" }
 }

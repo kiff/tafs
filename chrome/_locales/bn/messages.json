@@ -82,5 +82,11 @@
   "taf_error": { "message": "এটি $TAF$-এর কাছে পৌঁছায়নি। আবার চেষ্টা করুন।", "placeholders": { "taf": { "content": "$1" } } },
   "tafs_not_read": { "message": "আপনার tafs পড়া যায়নি। আবার চেষ্টা করুন।" },
   "no_taf_here": { "message": "এই Chrome-এ এখনও কোনো taf কাজ করে না।" },
-  "setup_taf": { "message": "এই সাইটের জন্য নতুন taf সেট আপ করুন" }
+  "setup_taf": { "message": "এই সাইটের জন্য নতুন taf সেট আপ করুন" },
+  "hand_title": { "message": "এবার আপনার পালা", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "taf বলছে", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "আমাকে দেখান", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "সম্পন্ন", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "এখন নয়", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "শুধু যেখানে আপনি এই পৃষ্ঠাকে বিশ্বাস করেন সেখানেই লিখুন।", "description": "Fixed line on that card under the taf's words" }
 }
