@@ -43,6 +43,7 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
         return 7;
       },
       remove: async (id) => calls.push(["tabs.remove", id]),
+      ungroup: async (ids) => calls.push(["tabs.ungroup", ids]),
       create: async (o) => {
         calls.push(["tabs.create", o]);
         if (createFails) throw new Error("No window with id");
@@ -822,8 +823,29 @@ test("a taf's next run leaves a kept tab the person has moved or is using, and c
     await r.handle(step({ run: "run_2", id: "op2" }));
     const gone = c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).includes(tab);
     assert.equal(gone, closes, what);
+    // A tab that stays leaves the taf's "· done" group, so the group of a run that's over goes; a tab that closes needs nothing.
+    const ungrouped = c.calls.filter((x) => x[0] === "tabs.ungroup").flatMap((x) => x[1]).includes(tab);
+    assert.equal(ungrouped, !closes, what + ": out of its done group");
     assert.deepEqual(await r.doneTabs(), {}, "the record goes either way: a tab the person has taken is not the taf's to track");
   }
+});
+
+test("a person watching each run of a taf doesn't collect one done group per run: each earlier run's tab leaves its group", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  // The owner's hand-over test: the latest run's tab is always the one in front, in the window they use.
+  const get = c.tabs.get;
+  c.tabs.get = async (id) => ({ ...(await get(id)), windowId: 3, active: true });
+  c.windows.get = async (id) => ({ id, focused: true });
+  const r = runner(c);
+  const tabs = [];
+  for (const n of [1, 2, 3]) {
+    await r.handle(step({ run: "run_" + n, id: "op" + n }));
+    tabs.push([...c.tabsMap.keys()].at(-1));
+    await r.stop("run_" + n);
+  }
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]), [], "nothing the person is looking at closes");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.ungroup").flatMap((x) => x[1]), tabs.slice(0, 2), "the two earlier runs' tabs leave their groups");
+  assert.deepEqual(Object.keys(await r.doneTabs()), ["Rae"], "only the latest run is kept as the taf's");
 });
 
 test("unpairing closes a kept tab the person has moved too", async () => {

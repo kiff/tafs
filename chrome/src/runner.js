@@ -254,8 +254,8 @@ export class Runner {
   /**
    * What a taf's last finished run left: its tabs close (and a window of its own), once, and the record goes. `gently` (a taf's next run):
    * a kept tab is the person's now, so it closes only while it is still at the address the run left it and isn't the tab in front
-   * of the window they are using; one they moved or are using stays, and so does a window of its own that still holds one. Unpairing
-   * closes them all.
+   * of the window they are using; one they moved or are using stays, out of the taf's group, and so does a window of its own that
+   * still holds one. Unpairing closes them all.
    */
   async closeDone(taf, gently = false) {
     const done = await this.doneTabs();
@@ -265,6 +265,7 @@ export class Runner {
     if (this.doneStore) await this.doneStore.set(done);
     const c = this.chrome;
     const close = [];
+    const spared = [];
     let kept = false;
     for (const t of left.tabs) {
       const id = typeof t === "number" ? t : t.id;
@@ -277,10 +278,15 @@ export class Runner {
       const win = tab.active ? await c.windows.get(tab.windowId).catch(() => null) : null;
       const inUse = tab.active && win && win.focused;
       const moved = typeof t !== "number" && t.url != null && (tab.url || "") !== t.url;
-      if (inUse || moved) kept = true;
-      else close.push(id);
+      if (inUse || moved) {
+        kept = true;
+        spared.push(id);
+      } else close.push(id);
     }
     if (close.length) await c.tabs.remove(close).catch(() => {});
+    // A tab the person has taken stays where it is, but leaves the taf's "· done" group: that group named a run that is over,
+    // and Chrome ends a group once it's empty. So a person who watches each run doesn't collect one done group per run.
+    if (spared.length) await c.tabs.ungroup(spared).catch(() => {});
     if (left.window != null && !kept) await c.windows.remove(left.window).catch(() => {});
   }
 
