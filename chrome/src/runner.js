@@ -225,24 +225,38 @@ export class Runner {
     }
   }
 
-  async stop(runId) {
+  /**
+   * Ends a run. Its tabs stay open (the group renamed "· done"), as in Claude in Chrome: the person sees the pages the taf worked
+   * on, and nothing opens and closes under them. `close` closes them instead: unpairing, and a run that failed to set up.
+   */
+  async stop(runId, close = false) {
     const run = this.runs.get(runId);
     if (!run || run.stopped) return;
     run.stopped = true;
     this.record(run, { op: "stop" });
-    await this.closeRun(run);
+    // A run that never loaded a page has nothing of the person's to keep: its blank tab goes, as before.
+    await this.closeRun(run, close || !run.opened);
   }
 
   async stopAll() {
-    for (const id of [...this.runs.keys()]) await this.stop(id);
+    for (const id of [...this.runs.keys()]) await this.stop(id, true);
   }
 
-  async closeRun(run) {
+  async closeRun(run, close = true) {
     // A step still handed to the person ends with the run: planque is told "not now", not left to its 30 minutes.
     if (run.hand) this.endHand(run, "declined");
     for (const t of run.tabs) {
       this.tabRun.delete(t);
       await this.unfence(t);
+    }
+    if (!close) {
+      // The run's tabs are the person's now: no longer the run's, in a group that says it is done. Nothing of the run's closes.
+      if (run.groupId != null) {
+        await this.chrome.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf") + " · done", color: "grey" }).catch(() => {});
+      }
+      run.tabs.clear();
+      run.tab = null;
+      return;
     }
     // A window of the run's own goes with it; in the owner's window, only the run's own tabs close, never theirs.
     // The run's tabs always close, wherever they are now (the owner may have dragged one out of the run's window); a window of
@@ -284,7 +298,7 @@ export class Runner {
       if (this.now() - run.at > RUN_IDLE_MS) {
         run.stopped = true;
         this.record(run, { op: "stop", by: "idle" });
-        await this.closeRun(run);
+        await this.closeRun(run, false);
       }
     }
   }
@@ -365,7 +379,7 @@ export class Runner {
         return this.act(run, step);
       case "close":
         run.stopped = true;
-        await this.closeRun(run);
+        await this.closeRun(run, false);
         return { page: null };
       default:
         return { error: { code: "bad_step" } };
@@ -484,11 +498,12 @@ export class Runner {
         }
       } catch (e) {
         // A window that could not be set up is not left open, blank and unfenced, on the owner's screen.
-        await this.stop(run.id).catch(() => {});
+        await this.stop(run.id, true).catch(() => {});
         throw e;
       }
     }
     // In a window of its own the run's tab is the one in front; in the owner's window it stays in the background.
+    run.opened = true;
     await c.tabs.update(run.tab, run.ownWindow ? { url, active: true } : { url });
     await this.loaded(run.tab);
     return this.read(run);

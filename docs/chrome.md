@@ -334,7 +334,7 @@ error = {code, detail?}      // detail never carries page text
   The read comes **after the navigation the act started**: the tab is looked at every 100 ms for up to 1 s, until it is loading or at another
   address, then until it is `complete`, then 600 ms more. A click that navigates nothing costs that second and no more. (Without the look, `complete`
   was still the old page's status and the taf read the page it had just left.)
-- **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run's tabs close (and its window, when it has its own).
+- **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run ends and **its tabs stay open**, as in Claude in Chrome (see the next section); only unpairing closes them.
 
 ### What the extension refuses, whatever planque sent
 
@@ -361,11 +361,13 @@ was done.
 ## Runs
 
 - **A run opens in the window the owner is using,** as one background tab in a tab group, "tafs · Rae", in orange,
-  beside their tabs. Their active tab stays in front and the run never takes focus. When the run ends, only the tabs the
-  run opened close, wherever they are by then (a tab the owner dragged elsewhere included); the window and the owner's
-  tabs stay. When the window last used is private or a pop-up, or there is no normal window (the run never opens in a
-  private window), the run gets a window of its own, opened without focus, and that window closes with its tabs. A Stop
-  that lands while the tab is still being opened closes it too.
+  beside their tabs. Their active tab stays in front and the run never takes focus. **When the run ends, its tabs stay open** (the
+  taf's close step, planque's `stop`, the person's Stop, the idle sweep): the person sees the pages the taf worked on and
+  nothing opens and closes under them. The group is renamed "tafs · Rae · done" and turns grey, its fence goes, and the tabs are no longer the
+  run's: a touch in one pauses nothing and a step can't reach it. **Only unpairing closes them** (the tabs the run opened, wherever they are
+  by then, and a window of its own); so does a run that never loaded a page (a Stop while the tab is still being opened, or a window that
+  couldn't be set up), since a blank tab is nothing to keep. When the window last used is private or a pop-up, or there is no normal window (the run
+  never opens in a private window), the run gets a window of its own, opened without focus, and it stays with its tabs.
 - **The runner touches only tabs it opened.** It never lists the owner's tabs, and it ignores navigation events from
   any other tab. A tab a run's page opens joins the run only on the run's sites; anything else is closed.
 - **A request off the run's sites never leaves.** As a run's tab opens, before it loads anything, the runner gives
@@ -384,9 +386,9 @@ was done.
   what it read: a click that did nothing, done again, would do nothing a third time. A different act, a different page or
   a different answer starts the count again, and so does Resume. The read's own id and the sealed handles don't count as a
   change. A run paused this way is not swept, like one the owner paused: its tabs stay open until the owner acts.
-- **A run nobody sends a step to for five minutes ends** as Stop does (its tabs close, and its window when it has its own), recorded as `stop` by `idle`: planque's
-  `close` is only sent after a call, and takes power away, so a call that timed out or a lost `close` must not leave a window
-  open. The service worker's minute alarm does the sweeping. A run the owner paused isn't idle, and neither is one with a step
+- **A run nobody sends a step to for five minutes ends** as Stop does (its tabs stay, as at any end), recorded as `stop` by `idle`: planque's
+  `close` is only sent after a call, and takes power away, so a call that timed out or a lost `close` must not leave a run
+  fenced and counting as active. The service worker's minute alarm does the sweeping. A run the owner paused isn't idle, and neither is one with a step
   running.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
   read never lands in the middle of an act. Pause and Stop don't wait.
