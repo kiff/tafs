@@ -175,6 +175,7 @@
     <string name="billing_ask_someone_pack">Alguém pede %1$s.</string>
     <string name="billing_ask_someone_raise">Alguém pede para aumentar o limite de gastos.</string>
     <string name="billing_bought_not_recorded">Comprado. O KIFF ainda não o adicionou: o tafs tenta novamente quando abrir.</string>
+    <string name="billing_buy_on_phone">Compre o Solo ou créditos no app tafs do seu celular.</string>
     <string name="billing_by_agreement">Gerido pelo acordo da sua empresa</string>
     <string name="billing_by_apple">Faturado pela Apple</string>
     <string name="billing_by_google_play">Faturado pelo Google Play</string>
@@ -230,6 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">O Solo é uma assinatura por %1$s, a %2$s, cobrada na sua conta Apple. É renovada a cada %3$s até você cancelar.</string>
     <string name="billing_starts_free">Começa com %1$s grátis.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs para uma pessoa, todos os meses.</string>
+    <string name="billing_team_on_web">Assinar o Team em kiff.dev</string>
     <string name="billing_terms_use">Termos de Utilização</string>
     <string name="billing_test_purchase_credits">As compras de teste não adicionam créditos a esta conta.</string>
     <string name="billing_try_free">Experimente %1$s grátis</string>

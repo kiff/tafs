@@ -175,6 +175,7 @@
     <string name="billing_ask_someone_pack">Valaki ezt kéri: %1$s.</string>
     <string name="billing_ask_someone_raise">Valaki a költési limit emelését kéri.</string>
     <string name="billing_bought_not_recorded">Megvásárolva. A KIFF még nem adta hozzá: a tafs a következő megnyitáskor újra megpróbálja.</string>
+    <string name="billing_buy_on_phone">A Solót vagy krediteket a telefonodon, a tafs alkalmazásban veheted meg.</string>
     <string name="billing_by_agreement">A céged szerződése szerint kezelve</string>
     <string name="billing_by_apple">Számlázó: Apple</string>
     <string name="billing_by_google_play">Számlázó: Google Play</string>
@@ -230,6 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">A Solo egy %1$s időtartamú előfizetés %2$s áron, az Apple-fiókodra terhelve. Minden új %3$s elején megújul, amíg le nem mondod.</string>
     <string name="billing_starts_free">%1$s ingyenesen indul.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs egy személynek, minden hónapban.</string>
+    <string name="billing_team_on_web">Team beszerzése a kiff.dev oldalon</string>
     <string name="billing_terms_use">Felhasználási feltételek</string>
     <string name="billing_test_purchase_credits">A tesztvásárlások nem adnak krediteket ehhez a fiókhoz.</string>
     <string name="billing_try_free">Próbáld ki %1$s ingyen</string>

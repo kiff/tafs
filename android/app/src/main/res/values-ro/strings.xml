@@ -178,6 +178,7 @@
     <string name="billing_ask_someone_pack">Cineva cere %1$s.</string>
     <string name="billing_ask_someone_raise">Cineva cere mărirea limitei de cheltuieli.</string>
     <string name="billing_bought_not_recorded">Cumpărat. KIFF nu l-a adăugat încă: tafs reîncearcă la deschidere.</string>
+    <string name="billing_buy_on_phone">Cumpărați Solo sau credite din aplicația tafs de pe telefon.</string>
     <string name="billing_by_agreement">Gestionat prin contractul companiei dvs.</string>
     <string name="billing_by_apple">Facturat de Apple</string>
     <string name="billing_by_google_play">Facturat de Google Play</string>
@@ -237,6 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo este un abonament pe %1$s la %2$s, debitat din contul Apple. Se reînnoiește în fiecare %3$s până îl anulați.</string>
     <string name="billing_starts_free">Începe cu %1$s gratuit.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs pentru o persoană, în fiecare lună.</string>
+    <string name="billing_team_on_web">Obțineți Team pe kiff.dev</string>
     <string name="billing_terms_use">Condiții de utilizare</string>
     <string name="billing_test_purchase_credits">Achizițiile de test nu adaugă credite la acest cont.</string>
     <string name="billing_try_free">Încercați gratuit %1$s</string>

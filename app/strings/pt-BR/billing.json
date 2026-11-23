@@ -1,4 +1,5 @@
 {
+  "billing.buy_on_phone": "Compre o Solo ou créditos no app tafs do seu celular.",
   "billing.cancel_any_time_least_day": "Cancele quando quiser, pelo menos um dia antes da renovação, em Assinaturas na sua conta Apple.",
   "billing.contact_support": "O KIFF não consegue adicionar esta compra a esta conta. Você pagou por ela, então entre em contato com o suporte em support@kiff.dev e resolveremos isso.",
   "billing.conversation_goes_plan_tools_being": "À medida que a conversa avança, o plano, os apps a conectar e o Card do taf aparecem aqui.",
@@ -6,5 +7,6 @@
   "billing.only_someone_who_manages_account": "Só quem gerencia o faturamento da conta compra créditos.",
   "billing.pending_credits": "A compra está aguardando aprovação. Os seus créditos são adicionados quando ela for concluída.",
   "billing.play_unreachable": "Não foi possível contatar o Google Play. Tente novamente.",
-  "billing.solo_subscription_one_charged_your": "O Solo é uma assinatura por {period}, a {price}, cobrada na sua conta Apple. É renovada a cada {period_2} até você cancelar."
+  "billing.solo_subscription_one_charged_your": "O Solo é uma assinatura por {period}, a {price}, cobrada na sua conta Apple. É renovada a cada {period_2} até você cancelar.",
+  "billing.team_on_web": "Assinar o Team em kiff.dev"
 }

@@ -1,0 +1,1 @@
+- **Where to buy on a computer:** two lines for the desktop apps' Plan & usage: Solo and credits are bought in the tafs app on your phone, and Team on kiff.dev, in every language.

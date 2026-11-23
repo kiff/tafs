@@ -175,6 +175,7 @@
     <string name="billing_ask_someone_pack">Keegi palub: %1$s.</string>
     <string name="billing_ask_someone_raise">Keegi palub kululimiiti suurendada.</string>
     <string name="billing_bought_not_recorded">Ostetud. KIFF pole seda veel lisanud: tafs proovib uuesti, kui see avaneb.</string>
+    <string name="billing_buy_on_phone">Osta Solo või krediite oma telefoni tafsi rakenduses.</string>
     <string name="billing_by_agreement">Hallatakse sinu ettevõtte lepingu alusel.</string>
     <string name="billing_by_apple">Arveldab Apple</string>
     <string name="billing_by_google_play">Arveldab Google Play</string>
@@ -230,6 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo on tellimus, üks %1$s hinnaga %2$s, mis võetakse sinu Apple\'i kontolt. See uueneb iga %3$s, kuni tühistad.</string>
     <string name="billing_starts_free">Alguses %1$s tasuta.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafid ühele inimesele, iga kuu.</string>
+    <string name="billing_team_on_web">Võta Team kiff.dev-is</string>
     <string name="billing_terms_use">Kasutustingimused</string>
     <string name="billing_test_purchase_credits">Testostud ei lisa sellele kontole krediite.</string>
     <string name="billing_try_free">Proovi %1$s tasuta</string>

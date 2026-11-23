@@ -178,6 +178,7 @@
     <string name="billing_ask_someone_pack">Niekto žiada o %1$s.</string>
     <string name="billing_ask_someone_raise">Niekto žiada o zvýšenie limitu výdavkov.</string>
     <string name="billing_bought_not_recorded">Kúpené. KIFF to ešte nepridal: tafs to skúsi znova pri otvorení.</string>
+    <string name="billing_buy_on_phone">Solo alebo kredity si kúpte v aplikácii tafs v telefóne.</string>
     <string name="billing_by_agreement">Spravované zmluvou vašej firmy</string>
     <string name="billing_by_apple">Účtuje Apple</string>
     <string name="billing_by_google_play">Účtuje Google Play</string>
@@ -237,6 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo je predplatné na jeden %1$s za %2$s, účtované na váš účet Apple. Obnovuje sa každý %3$s, kým ho nezrušíte.</string>
     <string name="billing_starts_free">Začína %1$s zadarmo.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs pre jedného človeka, každý mesiac.</string>
+    <string name="billing_team_on_web">Získať Team na kiff.dev</string>
     <string name="billing_terms_use">Podmienky používania</string>
     <string name="billing_test_purchase_credits">Testovacie nákupy k tomuto účtu nepridávajú kredity.</string>
     <string name="billing_try_free">Vyskúšať %1$s zadarmo</string>
