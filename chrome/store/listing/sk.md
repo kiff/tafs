@@ -17,7 +17,7 @@ tafs pre Chrome nechá vaše tafy pracovať vo vašom vlastnom Chrome, len na st
 • Číta stránku ako text a polia formulára, bez polí pre heslo, kartu a kód. Nikdy nečíta vaše ďalšie karty ani históriu.
 • Stránky bánk, peňaženiek, správcov hesiel, platieb, zdravia a úradov sa nikdy nespracúvajú, ak jednu z nich nepovolíte pre jednu úlohu v telefóne.
 • Uložené prihlásenia sú voliteľné a na tomto počítači zapečatené. tafs a KIFF ich nikdy nevidia.
-• S Coachom hovorte v bočnom paneli. Coach vidí stránku len vtedy, keď kliknete na Zdieľať túto stránku, a potom len túto stránku, s rovnakými poľami odstránenými.
+• Bočný panel ukazuje taf, ktorý pracuje v tomto Chrome, a rozprávate sa s ním tam, ako v aplikácii tafs. „Nastaviť nový taf pre tento web“ otvorí Coacha, ktorý vidí stránku, len keď kliknete na „Zdieľať túto stránku“, a potom len túto stránku, s rovnakými odstránenými poľami.
 
 Čo taf prečíta, ide umelej inteligencii, ktorá vašu úlohu vykonáva, a ukladá sa s touto úlohou. KIFF ukladá stránku pred zmenou a po nej najviac 30 dní. Po zapnutí snímok obrazovky si každý krok, ktorý niečo vykoná, uloží aj jednu snímku stránky urobenú tesne pred akciou so skrytými poľami pre heslo, kartu a kód, najviac 30 dní. Vidíte ju len v aplikácii tafs a nikdy nejde umelej inteligencii. Zrušenie spárovania alebo odinštalovanie vymaže to, čo si rozšírenie uchováva vo vašom počítači.
 

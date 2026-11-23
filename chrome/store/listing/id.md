@@ -17,7 +17,7 @@ tafs untuk Chrome membiarkan taf Anda bekerja di Chrome Anda sendiri, hanya di s
 • Ia membaca halaman sebagai teks dan kolom formulir, tanpa kolom kata sandi, kartu, dan kode. Ia tidak pernah membaca tab lain atau riwayat Anda.
 • Situs bank, dompet, pengelola kata sandi, pembayaran, kesehatan, dan pemerintah tidak pernah diproses, kecuali Anda mengizinkan satu untuk satu tugas di ponsel.
 • Masuk yang tersimpan bersifat opsional dan disegel di komputer ini. tafs dan KIFF tidak pernah melihatnya.
-• Bicaralah dengan Coach di panel samping. Coach hanya melihat sebuah halaman saat Anda mengeklik Bagikan halaman ini, dan saat itu hanya halaman itu, dengan kolom yang sama dihapus.
+• Panel samping menampilkan taf yang bekerja di Chrome ini, dan Anda berbicara dengannya di sana, seperti di aplikasi tafs. “Siapkan taf baru untuk situs ini” membuka Coach, yang hanya melihat halaman saat Anda mengeklik “Bagikan halaman ini”, dan saat itu hanya halaman itu, dengan kolom yang sama dihapus.
 
 Yang dibaca sebuah taf masuk ke AI yang menjalankan tugas Anda dan disimpan bersama tugas itu. KIFF menyimpan halaman sebelum dan sesudah perubahan paling lama 30 hari. Setelah tangkapan layar diaktifkan, setiap langkah yang bertindak juga menyimpan satu tangkapan layar halaman, diambil sesaat sebelum tindakan dengan kolom kata sandi, kartu, dan kode disembunyikan, paling lama 30 hari. Anda hanya melihatnya di aplikasi tafs, dan tidak pernah dikirim ke AI. Memutuskan pasangan atau mencopot pemasangan menghapus apa yang disimpan ekstensi di komputer Anda.
 
