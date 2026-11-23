@@ -254,10 +254,11 @@ a dead connection), and the apps (the replace choice at pairing, the Chrome on e
 step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run, taf, grant,
         sites: ["shop.example", …], sites_signed: {sites, sig},        // sig: the phone's, tafs-chrome/sites/v1
         sensitive_allowed?: [{site, sig}],                            // sig: the phone's, tafs-chrome/sensitive/v1
-        op: "open" | "read" | "act" | "close",
+        op: "open" | "read" | "act" | "hand" | "close",
         url?,                          // open: a start URL or a link from the current read, already checked by planque
         offset?,                       // read: a later window of the page's text (a whole number, 0 or more; default 0)
-        read_id?,                      // act: the read it was planned from
+        read_id?,                      // act, hand: the read it was planned from
+        hand?: {words, ref?},          // hand: what the person is asked to do in the page (a step handed to the person, below)
         act?: {kind: "click" | "fill" | "select" | "check", ref, value?, sealed?},
         release?}                      // only with act.sealed: the phone's release
 ```
@@ -577,6 +578,37 @@ the extension's and each app's tests) that both apps need before they sign.
 Android (`NeedsYouView`), each drawn from `chrome.release_*` words in every language and each tested against the vector: a
 release made from it is accepted by `checkRelease`, and one with any field changed, another Chrome's, an expired one, or
 a reused nonce is refused.
+
+## A step handed to the person
+
+A taf sometimes needs the person to do one thing in the page (a card number, a check, a click on Send) and carries on after. It hands the
+step over: `op: "hand"`, `hand: {words, ref?}`, `read_id`, signed like every step, on the connection's own sites. The design is
+[chrome-panel.md](chrome-panel.md); planque's side (`browse_hand`, `browse_hand_result`) is its own.
+
+- **The extension acts for no one here.** It types, clicks and fills nothing, and no sealed value is offered. It answers the step **at once**
+  as handed (`{ok: true, handed: true}`, in the usual signed result), because a person takes longer than a step may wait, and the panel
+  shows **Your turn** (`hand.js`, `runner.js` `hand`). The person's answer is its own message, below.
+- **It checks the step itself and trusts nothing of planque's checks:** `words` is 1 to 280 characters of plain text with no control or
+  direction character (refused, never stripped: `validWords`); `ref`, when given, is a field or control **in the read the step names** (else
+  `bad_step`); that read must be one the extension has (else `page_changed`); the tab's page must pass `refuseURL` for the run's sites (a
+  sensitive site is refused); and **one hand-over is open per run**: a new one ends the old as declined.
+- **The card:** "Your turn", under "The taf says" the taf's words as plain text (never as a KIFF or extension line), a fixed line "Only type
+  where you trust this page.", and three buttons. **Show me** brings the run's tab to the front and outlines the named field or button
+  (`TafsPage.outline`: an outline that lets every pointer through, never a scroll, a focus or a click, gone after 8 s). **Done** and **Not
+  now** answer. The toolbar badge says "!" while one waits.
+- **A hand-over doesn't stop its run.** While one is open the run isn't swept as idle (a person takes longer than 5 minutes), and **the
+  person's own typing in the page doesn't pause it** (it is what was asked); both end with the answer or at its 30 minutes (`HAND_MAX_MS`,
+  planque's own limit). A touch after the answer pauses as before.
+- **Done reads the page back to the taf without what is in its fields.** The read after a hand-over leaves out every field's `value`
+  (a text, the checked state, a select's chosen option; `withoutValues`), so the taf learns the field is there and nothing of what was
+  typed; planque blanks them again. **A residual, said plainly:** a page that echoes what was typed into its own text (a summary, "your card
+  ends 4242") is still read as text, masked only by pattern, as any read is. **Not now** gives no page.
+- **The answer is its own message,** `{type: "hand_result", hand, outcome: "done" | "declined", page?, sig}`, `sig` this Chrome's key over
+  `tafs-chrome/hand/v1` and `{hand, outcome, page?}` (a new label, so a step's result can never stand for it). planque takes the first and
+  answers `{type: "hand_kept", hand}`, or `{type: "hand_refused", hand, code}` with `unknown_hand`, `expired`, `unsigned` or `too_large`.
+  The extension keeps the answer (in `chrome.storage.session`, which survives the worker stopping) and **sends it again on each welcome until
+  `hand_kept`**, stops on `unknown_hand`, `expired` or `unsigned`, and on `too_large` sends Done once more with no page. A page over the
+  relay's 120 KB cap goes as Done with no page, and the taf reads again. A run that ends with a hand-over open answers it declined.
 
 ## The taf in the side panel
 
