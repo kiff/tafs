@@ -1,0 +1,1 @@
+- **Android:** a taf's chat is read less and less while its run works (every 2.5 s for the first minute, then 5, 10 and 15 s), never in step with other phones, not at all while the app is in the background, and once at once when it comes back ([docs/chat.md](../docs/chat.md)).

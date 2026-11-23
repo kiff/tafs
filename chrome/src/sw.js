@@ -6,11 +6,12 @@ import { indexedStore, profileId } from "./store.js";
 import { newKeyPair, sha256, b64u, sign, LABEL, manifestHashOf } from "./crypto.js";
 import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
-import { Relay } from "./relay.js";
+import { Relay, MAX_RESULT_BYTES } from "./relay.js";
 import { Vault } from "./vault.js";
 import { tafsHere } from "./coachchat.js";
 import { Coach, reusing } from "./coach.js";
 import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
+import { HandAnswers, handMessage } from "./hand.js";
 import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
 import { refuseURL, hostOf } from "./sites.js";
@@ -28,14 +29,31 @@ const releaseStore = {
 const shots = config().screenshots
   ? new Shots({ chrome, inTab: (tabId, func, args) => chrome.scripting.executeScript({ target: { tabId }, func, args, world: "ISOLATED" }).then((r) => r && r[0] && r[0].result), keys: () => kept.keys, pairing: () => kept.pairing, base: config().api })
   : null;
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, shots });
+// The person's answers to a hand-over, kept (in memory Chrome keeps for the session) until planque says it has them, and sent again on
+// each welcome: the relay may be down when the person clicks.
+const handAnswers = new HandAnswers({
+  get: async () => (await chrome.storage.session.get("hands")).hands,
+  set: (hands) => chrome.storage.session.set({ hands }),
+});
+
+async function sendHands() {
+  if (!relay || !relay.connected || !kept.keys) return;
+  for (const a of await handAnswers.all()) {
+    // A page over the relay's cap goes as Done with no page: the taf reads again.
+    const answer = a.page && JSON.stringify(a.page).length > MAX_RESULT_BYTES ? { ...a, page: null } : a;
+    relay.send(await handMessage(kept.keys.privateKey, answer));
+  }
+}
+
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(sendHands).catch(() => {}) });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
     connections: (relay && relay.connections) || [], ...extra };
   chrome.storage.session.set({ state }).catch(() => {});
   chrome.runtime.sendMessage({ type: "state", state }).catch(() => {});
-  chrome.action.setBadgeText({ text: runner.active ? "ON" : "" }).catch(() => {});
+  const waiting = runner.state().some((r) => !r.stopped && r.hand);
+  chrome.action.setBadgeText({ text: waiting ? "!" : runner.active ? "ON" : "" }).catch(() => {});
   chrome.action.setBadgeBackgroundColor({ color: "#F29A2E" }).catch(() => {});
 }
 
@@ -89,7 +107,7 @@ async function connect() {
       get: async () => (await chrome.storage.session.get("nonces")).nonces || [],
       set: (entries) => chrome.storage.session.set({ nonces: entries }),
     };
-    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: announcePush, nonceStore });
+    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: async () => { await announcePush(); await sendHands(); }, onHandMessage: (m) => handAnswers.heard(m).then(sendHands), nonceStore });
   }
   relay.connect();
 }
@@ -269,6 +287,9 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
     },
     coach_chats: async () => ({ chats: await (await coach()).chats() }),
+    // The person's answer to a step handed to them, from the panel's card (the extension never acts for them).
+    hand_answer: async () => runner.answerHand(String(m.run), m.outcome),
+    hand_show: async () => runner.showHand(String(m.run)),
     // The tafs that work in this Chrome (planque's list, display only), as the person's own tafs. The panel asks when it's
     // shown and when the connections change, and that's when the person's tafs are read; a chat's reads and sends reuse them.
     taf_list: async () => {

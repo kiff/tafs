@@ -31,6 +31,7 @@ const STEP_WORDS = {
   pause: (s) => t(s.by === "failures" ? "step_paused_failures" : s.by === "no_progress" ? "step_paused_no_progress" : "step_paused"),
   resume: () => t("step_resumed"),
   stop: () => t("step_stopped"),
+  hand: (s) => t("hand_title") + (s.kind === "declined" ? " · " + t("hand_declined") : ""),
   close: () => t("step_closed"),
 };
 
@@ -62,6 +63,8 @@ function draw(state) {
   box.textContent = "";
   for (const run of runs) {
     const node = $("runTemplate").content.cloneNode(true);
+    // The template's words: a template's content isn't part of the document, so the page-wide pass above doesn't reach them.
+    for (const el of node.querySelectorAll("[data-m]")) el.textContent = t(el.dataset.m);
     node.querySelector(".taf").textContent = t("working", run.taf || "taf");
     node.querySelector(".where").textContent = run.site || "";
     const paused = node.querySelector(".paused");
@@ -69,7 +72,15 @@ function draw(state) {
       paused.hidden = false;
       paused.textContent = t(run.paused === "failures" ? "paused_failures" : run.paused === "no_progress" ? "paused_no_progress" : "paused_owner");
     }
-    // A site the grant lists that Chrome hasn't let the extension into yet: the owner allows it here, once.
+    // A step the taf handed to the person: its words as the taf's (plain text, never KIFF's or the extension's line), and three buttons.
+    const hand = node.querySelector(".hand");
+    if (run.hand) {
+      hand.hidden = false;
+      node.querySelector(".handWords").textContent = run.hand.words;
+      node.querySelector(".handShow").onclick = () => send({ type: "hand_show", run: run.id });
+      node.querySelector(".handDone").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "done" });
+      node.querySelector(".handNo").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "declined" });
+    }
     const list = node.querySelector(".steps");
     for (const s of run.steps.slice(-12)) {
       const li = document.createElement("li");

@@ -82,5 +82,11 @@
   "taf_error": { "message": "Tai nepasiekė $TAF$. Bandykite dar kartą.", "placeholders": { "taf": { "content": "$1" } } },
   "tafs_not_read": { "message": "Jūsų tafs nepavyko perskaityti. Bandykite dar kartą." },
   "no_taf_here": { "message": "Šiame „Chrome“ dar nedirba joks taf." },
-  "setup_taf": { "message": "Nustatyti naują taf šiai svetainei" }
+  "setup_taf": { "message": "Nustatyti naują taf šiai svetainei" },
+  "hand_title": { "message": "Jūsų eilė", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "Taf sako", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "Parodykite man", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "Atlikta", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "Ne dabar", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "Rašykite tik ten, kur pasitikite šiuo puslapiu.", "description": "Fixed line on that card under the taf's words" }
 }
