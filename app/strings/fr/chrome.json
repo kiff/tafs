@@ -31,6 +31,8 @@
   "chrome.shot_none": "Aucune image n'est conservée pour cette étape.",
   "chrome.shot_open": "Voir la page avant cette étape",
   "chrome.shot_title": "Avant cette étape",
+  "chrome.switch": "Utiliser un autre Chrome",
+  "chrome.switch_prompt": "Déplacer cette connexion vers {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Dissocier met fin aux connexions qui l'utilisent : {sites}. Elles ne reviennent que si vous les reconnectez.",
   "chrome.used_for": "Utilisé pour {sites}",

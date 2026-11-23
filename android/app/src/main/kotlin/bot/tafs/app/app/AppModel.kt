@@ -2844,12 +2844,22 @@ class AppModel(
     if (followers[tafId]?.isActive == true) return
     followers[tafId] = scope.launch {
       val me = coroutineContext[kotlinx.coroutines.Job]
-      var polls = 0
-      // Every few seconds at first, then every quarter minute: a long run (a setup's hand-over, a slow turn) is followed to its end,
-      // so its last words show and "…" goes, never left as it was when the reads ran out.
-      while (polls < CHAT_POLL_BUDGET + CHAT_SLOW_POLL_BUDGET && (busy(tafId) || (handOver != null && handingOver(handOver)))) {
-        delay(if (polls < CHAT_POLL_BUDGET) CHAT_POLL_MS else CHAT_SLOW_POLL_MS)
-        polls += 1
+      var waited = 0L
+      var reads = 0
+      // Often at first, then less and less (`chatFollowDelay`), each wait a little shorter at random so phones don't read in step;
+      // nothing while the app is in the background, and one read at once when it comes back, so a run that ended while the phone
+      // was away shows as ended. A long run (a setup's hand-over, a slow turn) is followed to its end, so its last words show and
+      // "…" goes, never left as when the reads ran out.
+      while (waited < CHAT_FOLLOW_MS && (busy(tafId) || (handOver != null && handingOver(handOver)))) {
+        if (!foreground.value) {
+          foreground.first { it }
+        } else {
+          val wait = chatFollowDelay(waited, chatJitter())
+          delay(wait)
+          waited += wait
+          if (!foreground.value) continue
+        }
+        reads += 1
         readThread(tafId)
         // A run at work that this phone hasn't followed yet (one that went on with no stream open, as Coach's does once tafs cloud
         // answers its result): its stream, from the start, as when the chat opens. The stream takes over from these reads.
@@ -2862,9 +2872,15 @@ class AppModel(
       }
       // The run stopped: done, or waiting on a call KIFF held. KIFF is read again, so a hold's card shows in the chat and in
       // Needs you, and the Card's amounts are today's. (Until the chat follows its run's stream, as iOS's does.)
-      if (polls > 0) refresh()
+      if (reads > 0) refresh()
     }
   }
+
+  /** Whether the app is on screen: a chat's reads wait while it isn't ([wentToBackground], [cameToForeground]). */
+  private val foreground = kotlinx.coroutines.flow.MutableStateFlow(true)
+
+  /** A chat read's jitter, in [-1, 0]: each wait a little shorter at random, never longer. A test sets it. */
+  var chatJitter: () -> Double = { -kotlin.random.Random.nextDouble() }
 
   private fun busy(tafId: String): Boolean = _state.value.let { tafId in it.chatWorking || tafId in it.chatAwaiting }
 
@@ -4475,6 +4491,48 @@ class AppModel(
     return generation == accountGeneration
   }
 
+  /**
+   * Moves [grant] to [to] ("Your Chrome" 2), where planque offers `use_another_chrome`: the sites this phone signed for it
+   * ([bot.tafs.app.kiff.ChromePairing.signedSites], never planque's list as given) are signed for [to] with the approval key
+   * behind one fingerprint naming that Chrome, then planque moves it, and the connections and Chromes are read again. False when
+   * it didn't go through, with the line saying why.
+   */
+  suspend fun switchChrome(grant: bot.tafs.app.kiff.Grant, to: bot.tafs.app.kiff.Chrome): Boolean {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) return false
+    val pairing = bot.tafs.app.kiff.ChromePairing
+    val prompt = Words.Chrome.switchPrompt(name = to.name)
+    val sites = pairing.signedSites(grant, signer.approvalPublicKeyDER)
+      ?: return false.also { fail(Words.Common.didntGoThrough(what = prompt, why = ErrorWords.of(bot.tafs.app.kiff.PlanqueError.DigestMismatch))) }
+    val generation = accountGeneration
+    val sig = try {
+      val der = signer.signCritical(prompt) { pairing.sitesBytes(to.id, grant.id, sites) }
+      pairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: SignerException) {
+      return false
+    }
+    if (generation != accountGeneration) return false
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    planque.signer = { signer.signConfirmed(it) }
+    try {
+      planque.switchChrome(grant.id, to.id, sig)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      fail(Words.Common.didntGoThrough(what = prompt, why = ErrorWords.of(e)))
+      return false
+    } finally {
+      planque.signer = null
+    }
+    refreshConnections()
+    refreshChromes()
+    return true
+  }
+
   /** Unpairs a Chrome: planque deletes its key at once. It takes power away, so this phone's own signature is enough. */
   suspend fun removeChrome(chrome: bot.tafs.app.kiff.Chrome) {
     try {
@@ -6020,6 +6078,7 @@ class AppModel(
    * Back sooner, it stays.
    */
   fun wentToBackground() {
+    foreground.value = false
     if (kiff.window == null) return
     windowClosing?.cancel()
     windowClosing = scope.launch {
@@ -6030,6 +6089,7 @@ class AppModel(
 
   /** Back on screen: a close waiting on the background is called off, and KIFF's words read again. */
   fun cameToForeground() {
+    foreground.value = true
     windowClosing?.cancel()
     windowClosing = null
     if (kiff.window != null) scope.launch { readWindowWords() }
@@ -7082,8 +7142,9 @@ class AppModel(
       // quiet for many minutes) shows as ended, never as "…" (readThread closes the stream then).
       val check = launch {
         while (true) {
-          delay(STREAM_CHECK_MS)
-          if (current()) readThread(tafId)
+          // Back from the background: read once at once (the stream may have gone quiet meanwhile), then every STREAM_CHECK_MS.
+          if (!foreground.value) foreground.first { it } else delay(STREAM_CHECK_MS)
+          if (current() && foreground.value) readThread(tafId)
         }
       }
       var ended: StreamEvent.End? = null
@@ -9635,6 +9696,25 @@ class AppModel(
     /** After the fast reads, one every [CHAT_SLOW_POLL_MS] while the run still works: about 25 minutes more. */
     const val CHAT_SLOW_POLL_MS = 15_000L
     const val CHAT_SLOW_POLL_BUDGET = 100
+
+    /** How long a run is followed by reads in all, waits counted: as long as before (about 31 minutes). */
+    const val CHAT_FOLLOW_MS = CHAT_POLL_MS * CHAT_POLL_BUDGET + CHAT_SLOW_POLL_MS * CHAT_SLOW_POLL_BUDGET
+
+    /**
+     * The wait before a chat's next read, [waited] ms into following it, as docs/scale.md asks of every client (back off, with
+     * jitter): every [CHAT_POLL_MS] for the first minute, when a reply most often comes; then 5 s to the third minute, 10 s to the
+     * sixth, and [CHAT_SLOW_POLL_MS] after. [jitter] in [-1, 0] takes up to a fifth off, so phones don't read in step; never more
+     * than the step, so a reply is never later than before.
+     */
+    fun chatFollowDelay(waited: Long, jitter: Double): Long {
+      val step = when {
+        waited < 60_000L -> CHAT_POLL_MS
+        waited < 180_000L -> 5_000L
+        waited < 360_000L -> 10_000L
+        else -> CHAT_SLOW_POLL_MS
+      }
+      return (step * (1.0 + 0.2 * jitter.coerceIn(-1.0, 0.0))).toLong()
+    }
 
     /**
      * Whether the run still waits on its person after this live line: `waiting_for_you` (a card that waits on them, or a held

@@ -12,16 +12,34 @@ export const MAX_RESULT_BYTES = 120 * 1024;
 /** A connection dropped during a run is opened again at once, then after 2, 4, … seconds, up to 30. */
 const RETRY_MS = [1_000, 2_000, 4_000, 8_000, 16_000, 30_000];
 
+/**
+ * This Chrome's live connections as planque lists them (the welcome, then `{type: "connections"}` on a change): what the side
+ * panel offers to talk to. **For display only, never authority:** what a step may do comes only from the signed step and the
+ * connection's phone-signed sites, and nothing here is ever taken as an allowed site. Anything malformed is left out.
+ */
+export function readConnections(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (const c of list) {
+    if (!c || typeof c.grant !== "string" || typeof c.agent !== "string" || !c.agent || typeof c.name !== "string") continue;
+    const sites = Array.isArray(c.sites) ? c.sites.filter((x) => typeof x === "string").slice(0, 100) : [];
+    out.push({ grant: c.grant, agent: c.agent, name: c.name.slice(0, 80), sites });
+    if (out.length === 50) break;
+  }
+  return out;
+}
+
 export class Relay {
   /**
    * `config` {relayURL, planqueKey, version, manifestHash}; `kept` {keys, pairing}; `runner` handles steps; `onUnpaired()`
    * wipes the extension; `WebSocket` is the browser's (a fake in tests).
    */
-  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
-    Object.assign(this, { config, kept, runner, onUnpaired, onChange, WebSocket, now });
+  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, onReady = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
+    Object.assign(this, { config, kept, runner, onUnpaired, onChange, onReady, WebSocket, now });
     this.nonces = new Nonces(now, nonceStore);
     this.ws = null;
     this.ready = false;
+    this.pushed = false;
     this.retries = 0;
     this.retry = null;
   }
@@ -114,15 +132,26 @@ export class Relay {
         const ok = await checkWelcome(m, { planqueKey: this.config.planqueKey, chromeId: pairing.chromeId, nonceP: this.nonceP, nonceE: this.nonceE });
         if (!ok) return this.close();
         this.ready = true;
+        this.connections = readConnections(m.connections);
         this.offset = clockOffset(m, this.now());
         this.retries = 0;
-        this.pinger = setInterval(() => this.runner.active && this.send({ type: "ping" }), PING_MS);
+        // Pinged while a run is on, and, until planque can wake this worker by push (`pushed`, set once the subscription went), all the
+        // time: traffic under 30 s keeps an MV3 worker, and so the socket, alive; an idle one is otherwise down half of each minute.
+        this.pushed = false;
+        this.pinger = setInterval(() => (this.runner.active || !this.pushed) && this.send({ type: "ping" }), PING_MS);
         this.onChange();
+        // Connected and proved: the moment to give planque this Chrome's push subscription (push.js).
+        Promise.resolve(this.onReady()).catch(() => {});
         return;
       }
       return this.close(); // anything else before the proofs ends the connection
     }
     if (m.type === "ping") return this.send({ type: "pong" });
+    if (m.type === "connections") {
+      this.connections = readConnections(m.connections);
+      this.onChange();
+      return;
+    }
     if (m.type === "pong") return;
     if (m.type === "step") {
       const checked = await checkStep(m, { planqueKey: this.config.planqueKey, chromeId: pairing.chromeId, nonces: this.nonces, now: this.now(), offset: this.offset ?? null });

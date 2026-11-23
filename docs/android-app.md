@@ -27,7 +27,7 @@ line. Before it, a turn refused after an approval read as "Waiting for you", the
 shows none. One refused line per run: a run
 followed live already ends with its own line, with Retry (`ChatEnd.Failed`, which keeps the stream's run), so the thread's line
 for that same run isn't added; another run's still is. `contracts/conversation-failed.json`, tafs cloud's own answer, is read in
-the same test. iOS follows: it doesn't draw `failed` yet.
+the same test. iOS draws it in a taf's chat by the same rules (`TafsCloud.RunFailed`, `AppModel.chatItems`); in Coach's, iOS follows.
 
 <p>
   <img src="screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">
@@ -1129,7 +1129,13 @@ opens its connections, under each taf's name:
   `chrome.held_in` with planque's `chrome_name`, `connectionChromeLine`; nothing for planque's hosted browser or any other
   connection, as iOS), the tafs that depend on it, then only the `actions`
   planque sent, in its order: `approve` is Sign in again on itself (`reconnect`), `key` a new key, and
-  `delete` the signed removal. An action whose `how` this build doesn't know isn't drawn, so a leftover
+  `delete` the signed removal, and `chrome` ("Use another Chrome", planque's `use_another_chrome`, "Your Chrome" 2): the
+  account's other paired Chromes by name (`chromesToMoveTo`). One tapped moves the connection: the sites this phone signed for
+  it on its Chrome now, checked with its approval key (`ChromePairing.signedSites`, never planque's list as given), are signed
+  for the new Chrome behind one fingerprint naming it (`chrome.switch_prompt`), and `PUT …/grants/{id}/chrome` sends that
+  signature (`AppModel.switchChrome`). A list planque widened, a signature for another Chrome or grant, or a connection carried from
+  an earlier Chrome (no signature of its own), signs nothing: the line is "{Move this connection to name} didn't go through"
+  with the request-mismatch words (`common.didnt_go_through`, `PlanqueError.DigestMismatch`), and nothing is sent. planque offers the action only where it would move it, so the app keeps no status rule. An action whose `how` this build doesn't know isn't drawn, so a leftover
   shows only planque's **Remove unfinished connection**, never Sign in again.
 - **A removal asks once more,** with planque's `stops` ("Unanswered customer emails will stop using
   Gmail."), and only then the fingerprint. Remove is never beside a row.

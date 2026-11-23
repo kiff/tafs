@@ -24,7 +24,22 @@
     <section id="paired" hidden>
       <h1 id="pairedName"></h1>
       <p data-m="paired_body"></p>
-      <section id="coach">
+      <section id="taf">
+        <label id="tafPickRow" class="pick" hidden><span data-m="taf_choose"></span> <select id="tafPick"></select></label>
+        <h2 id="tafName"></h2>
+        <ol id="tafThread" class="thread"></ol>
+        <p id="tafPhone" class="note" data-m="approve_on_phone" hidden></p>
+        <p id="tafNote" class="note"></p>
+        <form id="tafForm" hidden>
+          <textarea id="tafWords" rows="3" maxlength="2000"></textarea>
+          <div class="buttons">
+            <button type="submit" data-m="coach_send"></button>
+          </div>
+        </form>
+        <p id="noTaf" class="note" data-m="no_taf_here" hidden></p>
+      </section>
+      <button type="button" id="setupTaf" class="quiet" data-m="setup_taf"></button>
+      <section id="coach" hidden>
         <h2 data-m="coach_title"></h2>
         <div class="buttons">
           <button type="button" id="coachNew" class="quiet" data-m="coach_new"></button>
@@ -81,7 +96,6 @@
         <h2 class="taf"></h2>
         <p class="where"></p>
         <p class="paused" hidden></p>
-        <div class="asks"></div>
         <ol class="steps"></ol>
         <div class="buttons">
           <button class="pause" data-m="pause"></button>

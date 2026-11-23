@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Retomado" },
   "step_stopped": { "message": "Parado" },
   "step_closed": { "message": "Concluído" },
-  "allow_site": { "message": "Permitir $SITE$ no Chrome", "placeholders": { "site": { "content": "$1" } } },
-  "step_ask": { "message": "Precisa do seu sim no Chrome para $SITE$", "placeholders": { "site": { "content": "$1" } } },
   "step_refused": { "message": "não feito ($CODE$)", "placeholders": { "code": { "content": "$1" } } },
   "coach_title": { "message": "Coach", "description": "Side panel title" },
   "coach_placeholder": { "message": "Mensagem para o Coach", "description": "Composer placeholder" },
@@ -57,8 +55,6 @@
   "coach_empty_title": { "message": "Falar com o Coach", "description": "Empty chat: heading" },
   "coach_empty_body": { "message": "É o mesmo chat da app tafs. O Coach só vê esta página se a partilhar.", "description": "Empty chat: body" },
   "share_note": { "message": "Envia só esta página ao Coach, sem os campos de palavra-passe, cartão e código.", "description": "Note under Share this page" },
-  "share_declined": { "message": "Não partilhada: o tafs não tem permissão neste site no Chrome.", "description": "Owner said no to Chrome's site prompt" },
-  "share_permission": { "message": "Na primeira vez num site, o Chrome pergunta se permite o tafs nesse site.", "description": "Shown before Chrome's site prompt, first share on a site" },
   "coach_error": { "message": "Isso não chegou ao Coach. Tente de novo." },
   "coach_not_started": { "message": "Inicie primeiro o Coach no telemóvel." },
   "coach_working": { "message": "O Coach está a trabalhar…" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Conversas anteriores" },
   "coach_previous_none": { "message": "Não há conversas anteriores." },
   "coach_previous_error": { "message": "Não foi possível carregar as conversas anteriores." },
-  "coach_untitled": { "message": "Conversa" }
+  "coach_untitled": { "message": "Conversa" },
+  "taf_choose": { "message": "Falar com" },
+  "taf_placeholder": { "message": "Mensagem para $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Não chegou a $TAF$. Tente novamente.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Não foi possível ler os seus tafs. Tente novamente." },
+  "no_taf_here": { "message": "Ainda não há nenhum taf a trabalhar neste Chrome." },
+  "setup_taf": { "message": "Configurar um novo taf para este site" }
 }

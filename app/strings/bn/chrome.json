@@ -31,6 +31,8 @@
   "chrome.shot_none": "এই ধাপের কোনো ছবি রাখা নেই।",
   "chrome.shot_open": "এই ধাপের আগের পৃষ্ঠাটি দেখুন",
   "chrome.shot_title": "এই ধাপের আগে",
+  "chrome.switch": "অন্য একটি Chrome ব্যবহার করুন",
+  "chrome.switch_prompt": "এই সংযোগটি {name}-এ সরান",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "জোড়া ভাঙলে এটি ব্যবহার করা সংযোগগুলো শেষ হয়: {sites}। আবার সংযুক্ত করলেই সেগুলো ফিরে আসে।",
   "chrome.used_for": "{sites}-এর জন্য ব্যবহৃত",

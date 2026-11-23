@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Sürdürüldü" },
   "step_stopped": { "message": "Durduruldu" },
   "step_closed": { "message": "Bitti" },
-  "allow_site": { "message": "$SITE$ sitesine Chrome'da izin ver", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "$SITE$ için Chrome'da onayınız gerekiyor", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "yapılmadı ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "Coach'a mesaj yazın" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "Coach ile konuşun" },
   "coach_empty_body": { "message": "tafs uygulamasındakiyle aynı sohbet. Coach bu sayfayı yalnızca siz paylaşırsanız görür." },
   "share_note": { "message": "Bu tek sayfayı, parola, kart ve kod alanları çıkarılmış olarak Coach'a gönderir." },
-  "share_declined": { "message": "Paylaşılmadı: tafs'ın Chrome'da bu sitede izni yok." },
-  "share_permission": { "message": "Bir sitede ilk seferde Chrome, tafs'ın içeri girmesine izin verip vermeyeceğinizi sorar." },
   "vault_title": { "message": "Kayıtlı girişler" },
   "vault_body": { "message": "Burada kayıtlı, bu bilgisayarda mühürlü. Bir taf yalnızca tam o sitede kullanmak için isteyebilir ve yalnızca bu tek doldurmayı telefonunuzda onayladıktan sonra yazılır. tafs ve KIFF onu asla görmez." },
   "vault_site": { "message": "Site" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Önceki sohbetler" },
   "coach_previous_none": { "message": "Daha önceki sohbet yok." },
   "coach_previous_error": { "message": "Daha önceki sohbetler yüklenemedi." },
-  "coach_untitled": { "message": "Sohbet" }
+  "coach_untitled": { "message": "Sohbet" },
+  "taf_choose": { "message": "Şununla konuş:" },
+  "taf_placeholder": { "message": "$TAF$ için mesaj", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Bu, $TAF$ hedefine ulaşmadı. Tekrar deneyin.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "tafs'leriniz okunamadı. Tekrar deneyin." },
+  "no_taf_here": { "message": "Bu Chrome'da henüz çalışan bir taf yok." },
+  "setup_taf": { "message": "Bu site için yeni bir taf kur" }
 }

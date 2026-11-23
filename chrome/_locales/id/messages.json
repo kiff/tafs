@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Dilanjutkan" },
   "step_stopped": { "message": "Dihentikan" },
   "step_closed": { "message": "Selesai" },
-  "allow_site": { "message": "Izinkan $SITE$ di Chrome", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "Perlu persetujuan Anda di Chrome untuk $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "tidak dilakukan ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "Kirim pesan ke Coach" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "Bicara dengan Coach" },
   "coach_empty_body": { "message": "Ini obrolan yang sama dengan di aplikasi tafs. Coach hanya melihat halaman ini jika Anda membagikannya." },
   "share_note": { "message": "Mengirim satu halaman ini ke Coach, tanpa kolom kata sandi, kartu, dan kode." },
-  "share_declined": { "message": "Tidak dibagikan: tafs tidak diizinkan di situs ini di Chrome." },
-  "share_permission": { "message": "Saat pertama kali di sebuah situs, Chrome menanyakan apakah tafs boleh masuk." },
   "vault_title": { "message": "Masuk tersimpan" },
   "vault_body": { "message": "Disimpan di sini, disegel di komputer ini. Sebuah taf hanya bisa meminta memakainya di situs yang persis sama, dan baru diketik setelah Anda menyetujui satu pengisian itu di ponsel. tafs dan KIFF tidak pernah melihatnya." },
   "vault_site": { "message": "Situs" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Percakapan sebelumnya" },
   "coach_previous_none": { "message": "Belum ada percakapan sebelumnya." },
   "coach_previous_error": { "message": "Percakapan sebelumnya tidak dapat dimuat." },
-  "coach_untitled": { "message": "Percakapan" }
+  "coach_untitled": { "message": "Percakapan" },
+  "taf_choose": { "message": "Bicara dengan" },
+  "taf_placeholder": { "message": "Pesan untuk $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Itu tidak sampai ke $TAF$. Coba lagi.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Tafs Anda tidak dapat dibaca. Coba lagi." },
+  "no_taf_here": { "message": "Belum ada taf yang bekerja di Chrome ini." },
+  "setup_taf": { "message": "Siapkan taf baru untuk situs ini" }
 }

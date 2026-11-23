@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-/// KIFF's words for a connection's profile (`kiff.words.v1`): what the owner reads before
+/// KIFF's words for a connection's profile (`kiff.words.v1` or `kiff.words.v2`): what the owner reads before
 /// approving a connection, and signs. KIFF writes them, never Coach or
 /// the app: the app shows each line's text verbatim, in order, and `kind` only groups and
 /// styles it.
@@ -20,7 +20,10 @@ struct ProfileWords: Equatable {
         var caution: Bool { ProfileWords.cautionKinds.contains(kind) }
     }
 
-    static let version = "kiff.words.v1"
+    /// The words this app reads. It asks for v2 (`?v=2`): v1's lines less KIFF's bookkeeping (no "isn't
+    /// pinned to a version", the lost-answer line only where money moves). It takes either, and shows and
+    /// signs whichever KIFF sent, as Android does.
+    static let versions: Set<String> = ["kiff.words.v1", "kiff.words.v2"]
     static let cautionKinds: Set<String> = ["missing", "probation", "unpinned"]
 
     enum Failure: Error, Equatable, LocalizedError {
@@ -49,10 +52,10 @@ struct ProfileWords: Equatable {
         SHA256.hash(data: try JCS.canonical(value)).map { String(format: "%02x", $0) }.joined()
     }
 
-    /// KIFF's answer to `POST /v1/profiles/words`, checked against `profile`, the profile the
+    /// KIFF's answer to `POST /v1/profiles/words?v=2`, checked against `profile`, the profile the
     /// owner is shown: its digest, the words' version and their own digest.
     static func checked(_ data: Data, profile: JCS.Value) throws -> ProfileWords {
-        guard let answer = try? JCS.parse(data), let words = answer["words"], words["v"]?.string == version,
+        guard let answer = try? JCS.parse(data), let words = answer["words"], let v = words["v"]?.string, versions.contains(v),
               let profileSHA = answer["profile_sha256"]?.string, let wordsSHA = answer["words_sha256"]?.string,
               let raw = words["lines"]?.array else { throw Failure.notWords }
         guard try digest(profile) == profileSHA else { throw Failure.otherProfile }

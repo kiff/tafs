@@ -42,8 +42,6 @@
   "step_resumed": { "message": "Tęsiama" },
   "step_stopped": { "message": "Nutraukta" },
   "step_closed": { "message": "Baigta" },
-  "allow_site": { "message": "Leisti $SITE$ „Chrome“", "placeholders": {"site": {"content": "$1"}} },
-  "step_ask": { "message": "Reikia jūsų „taip“ „Chrome“ dėl $SITE$", "placeholders": {"site": {"content": "$1"}} },
   "step_refused": { "message": "neatlikta ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
   "coach_title": { "message": "Coach" },
   "coach_placeholder": { "message": "Žinutė „Coach“" },
@@ -63,8 +61,6 @@
   "coach_empty_title": { "message": "Pasikalbėkite su „Coach“" },
   "coach_empty_body": { "message": "Tai tas pats pokalbis kaip „tafs“ programėlėje. „Coach“ šį puslapį mato tik jei jį bendrinate." },
   "share_note": { "message": "„Coach“ išsiunčia šį vieną puslapį, be slaptažodžio, kortelės ir kodo laukų." },
-  "share_declined": { "message": "Nebendrinta: „tafs“ šioje svetainėje „Chrome“ neleidžiamas." },
-  "share_permission": { "message": "Pirmą kartą svetainėje „Chrome“ paklaus, ar įleisti „tafs“." },
   "vault_title": { "message": "Išsaugoti prisijungimai" },
   "vault_body": { "message": "Išsaugota čia, užantspauduota šiame kompiuteryje. Taf gali prašyti jį naudoti tik tiksliai toje svetainėje, o įvedamas jis tik tada, kai telefone patvirtinate tą vieną užpildymą. „tafs“ ir KIFF jo niekada nemato." },
   "vault_site": { "message": "Svetainė" },
@@ -80,5 +76,11 @@
   "coach_previous": { "message": "Ankstesni pokalbiai" },
   "coach_previous_none": { "message": "Ankstesnių pokalbių nėra." },
   "coach_previous_error": { "message": "Ankstesnių pokalbių nepavyko įkelti." },
-  "coach_untitled": { "message": "Pokalbis" }
+  "coach_untitled": { "message": "Pokalbis" },
+  "taf_choose": { "message": "Kalbėti su" },
+  "taf_placeholder": { "message": "Žinutė: $TAF$", "placeholders": { "taf": { "content": "$1" } } },
+  "taf_error": { "message": "Tai nepasiekė $TAF$. Bandykite dar kartą.", "placeholders": { "taf": { "content": "$1" } } },
+  "tafs_not_read": { "message": "Jūsų tafs nepavyko perskaityti. Bandykite dar kartą." },
+  "no_taf_here": { "message": "Šiame „Chrome“ dar nedirba joks taf." },
+  "setup_taf": { "message": "Nustatyti naują taf šiai svetainei" }
 }
