@@ -8,6 +8,8 @@ runs: it is text.
 | `listing/<code>.md` | The store listing in one language: name, short description (at most 132 characters, Chrome's limit) and the long description. English and the 39 other languages the apps ship (40 files, one per `shipped` language in `app/strings/languages.json`). |
 | `privacy-practices.md` | The answers for the dashboard's Privacy practices tab: single purpose, each permission, remote code, data use, the three certifications, with the judgment calls for the reviewers. |
 | `check.py` | `python3 chrome/store/check.py`: every shipped language has a listing, the short description is within 132 characters and is the manifest's own where the extension has the language, no placeholder is left, the privacy link is there. |
+| `screenshots/*.png` | The listing's screenshots, 1280×800 (the store's size): pairing, a taf at work, and a step handed to you ("Your turn"). Each is the extension's own side panel, next to a made-up shop (`books.example`), with made-up tafs and messages: no real account, site or person. |
+| `screenshots.cjs` | `node chrome/store/screenshots.cjs` (with Playwright and its Chromium) draws them again: the side panel from `chrome/sidepanel`, in English from `_locales/en`, with a stand-in for Chrome's APIs that holds only the scenes' made-up state. Run it after the side panel changes. |
 
 ## Where the words come from
 
