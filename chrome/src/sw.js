@@ -71,7 +71,7 @@ async function wipe() {
 async function announcePush() {
   const sub = subscriptionOf(await ensureSubscription(self.registration.pushManager, config().pushKey));
   if (!sub || !relay || !kept.keys || !kept.pairing) return;
-  relay.send(await pushMessage(kept.keys.privateKey, kept.pairing.chromeId, sub));
+  relay.send(await pushMessage(kept.keys.privateKey, sub));
   // From here planque can wake this worker, so it needn't be kept awake by pings while idle (relay.js).
   relay.pushed = true;
 }

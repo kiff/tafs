@@ -31,6 +31,8 @@
   "chrome.shot_none": "Այս քայլի համար պատկեր չի պահվել։",
   "chrome.shot_open": "Տեսնել էջը այս քայլից առաջ",
   "chrome.shot_title": "Այս քայլից առաջ",
+  "chrome.switch": "Օգտագործել այլ Chrome",
+  "chrome.switch_prompt": "Տեղափոխել այս կապը {name}-ին",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Զույգավորումը չեղարկելը ավարտում է այն օգտագործող կապերը՝ {sites}։ Դրանք կվերադառնան միայն, եթե նորից միացնես։",
   "chrome.used_for": "Օգտագործվում է՝ {sites}",

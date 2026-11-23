@@ -654,6 +654,19 @@ class PlanqueClient(
     if (e.status == 404) emptyList() else throw e
   }
 
+  /**
+   * Moves [grant] to the paired Chrome [chromeId] ("Your Chrome" 2, planque's `use_another_chrome` action):
+   * `PUT …/grants/{grant}/chrome {chrome_id, chrome_sites_sig}`, the sites signature raw r‖s for that Chrome. Its sites and
+   * Card stay.
+   */
+  suspend fun switchChrome(grant: String, chromeId: String, sitesSig: String) {
+    val body = kotlinx.serialization.json.buildJsonObject {
+      put("chrome_id", kotlinx.serialization.json.JsonPrimitive(chromeId))
+      put("chrome_sites_sig", kotlinx.serialization.json.JsonPrimitive(sitesSig))
+    }
+    raw("PUT", "grants/${escaped(grant)}/chrome", body.toString().toByteArray())
+  }
+
   /** Unpairs a Chrome: planque deletes its key at once. */
   suspend fun removeChrome(id: String) {
     raw("DELETE", "chromes/${escaped(id)}", null)

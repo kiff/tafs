@@ -1,0 +1,1 @@
+- **iPhone and iPad:** a taf's run that ended without an answer (the AI provider not serving us, or an error) is said as the chat's last line, in tafs cloud's words, as on Android ([docs/ios-app.md](../docs/ios-app.md)).

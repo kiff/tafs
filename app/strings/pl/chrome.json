@@ -31,6 +31,8 @@
   "chrome.shot_none": "Dla tego kroku nie zapisano żadnego obrazu.",
   "chrome.shot_open": "Zobacz stronę przed tym krokiem",
   "chrome.shot_title": "Przed tym krokiem",
+  "chrome.switch": "Użyj innej przeglądarki Chrome",
+  "chrome.switch_prompt": "Przenieś to połączenie do {name}",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "Rozparowanie kończy połączenia, które z niego korzystają: {sites}. Wrócą dopiero, gdy połączysz je ponownie.",
   "chrome.used_for": "Używana do: {sites}",
