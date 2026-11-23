@@ -123,7 +123,31 @@ class ApiDoorScreensTest {
 
   @Test fun anAddressThatIsAPathIsOnTafsCloudsOwnHost() {
     assertEquals("https://cloud.example/v1/doors/api/d/requests", bot.tafs.app.app.endpointOn("https://cloud.example/", "/v1/doors/api/d/requests"))
-    assertEquals("https://elsewhere.example/r", bot.tafs.app.app.endpointOn("https://cloud.example", "https://elsewhere.example/r"))
+    // Only ever on tafs cloud's own host, over HTTPS, whatever the address says (as iOS, Windows and Linux).
+    for ((address, shown) in listOf(
+      "https://cloud.example/v1/x" to "https://cloud.example/v1/x",
+      "https://CLOUD.example/v1/x" to "https://CLOUD.example/v1/x",
+      "v1/x" to "https://cloud.example/v1/x",
+      "https://elsewhere.example/r" to "https://cloud.example/r",
+      "http://cloud.example/v1/x" to "https://cloud.example/v1/x",
+      "https://cloud.example:8443/v1/x" to "https://cloud.example/v1/x",
+      "https://me@cloud.example/v1/x" to "https://cloud.example/v1/x",
+      "https://cloud.example.evil.example/v1/x" to "https://cloud.example/v1/x",
+      "//evil.example/v1/x" to "https://cloud.example/v1/x",
+      "foo:x@evil.example/v1/x" to "https://cloud.example/x@evil.example/v1/x",
+      "mailto:a@evil.example" to "https://cloud.example/a@evil.example",
+      "@evil.example/x" to "https://cloud.example/@evil.example/x",
+      "\\\\evil.example\\x" to "https://cloud.example/evil.example%5Cx",
+      "https://evil.example@cloud.example.evil.example/" to "https://cloud.example/",
+    )) {
+      val e = bot.tafs.app.app.endpointOn("https://cloud.example/", address)
+      assertEquals(address, shown, e)
+      val u = java.net.URI(e)
+      assertEquals(address, "https", u.scheme)
+      assertEquals(address, "cloud.example", u.host.lowercase())
+      assertEquals(address, -1, u.port)
+      assertEquals(address, null, u.rawUserInfo)
+    }
   }
 
   private val drafted = bot.tafs.app.kiff.DoorDraft.read("""{"draft_id":"draft-1","body":{"kind":"api","draft":{"name":"Order system",

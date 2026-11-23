@@ -52,10 +52,12 @@ describe("a taf's definition on kiff/agents", () => {
     expect(definition(ID, jobById("refunds"))).not.toHaveProperty("disclose");
     // No message carries a credit line: the owner's call, 7 Nov.
     expect(definition(ID, jobById("chargebacks"))).not.toHaveProperty("credit");
-    // A name stored before the cap, too long for any other language's line: English alone, and no lines at all.
+    // A name stored before the cap, too long for most languages' line: English to the byte, and lines only for the few
+    // languages whose line still fits (none of the five of #363), each within the 300 bytes.
     const long = definition(ID, { ...jobById("chargebacks"), writesFor: "😀".repeat(68) }).disclose!;
     expect(Buffer.byteLength(long.line)).toBe(300);
-    expect(long).not.toHaveProperty("lines");
+    expect(Object.keys(long.lines ?? {})).not.toEqual(expect.arrayContaining(["es"]));
+    for (const l of Object.values(long.lines ?? {})) expect(Buffer.byteLength(l)).toBeLessThanOrEqual(300);
     // Who it writes for, once the owner said: the line names them, here and in the prompt (gap 18).
     const named = definition(ID, { ...jobById("chargebacks"), writesFor: "Kiff Agents OÜ" });
     expect(named.disclose?.line).toBe("Written by an AI agent on behalf of Kiff Agents OÜ.");
