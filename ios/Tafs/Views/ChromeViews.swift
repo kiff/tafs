@@ -20,8 +20,9 @@ enum ChromeReplace {
     /// the one paired Chrome on the same browser and system. Nothing otherwise ("a new Chrome").
     static func preselect(offer: PlanqueClient.ChromeOffer, chromes: [PlanqueClient.Chrome]) -> PlanqueClient.Chrome? {
         if !offer.profileID.isEmpty, let same = chromes.first(where: { $0.profileID == offer.profileID }) { return same }
-        let alike = chromes.filter { ($0.profileID ?? "").isEmpty || offer.profileID.isEmpty }
-            .filter { !offer.browser.isEmpty && $0.browser == offer.browser && !offer.os.isEmpty && $0.os == offer.os }
+        // A reinstalled extension has a new profile id, so a Chrome with another id is still a candidate: the one of the same browser
+        // and system (docs/chrome.md, "Your Chrome" 1). Two alike is never a guess, and the owner can pick another or none.
+        let alike = chromes.filter { !offer.browser.isEmpty && $0.browser == offer.browser && !offer.os.isEmpty && $0.os == offer.os }
         return alike.count == 1 ? alike[0] : nil
     }
 

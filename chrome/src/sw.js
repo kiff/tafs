@@ -8,7 +8,7 @@ import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
 import { Vault } from "./vault.js";
-import { Coach } from "./coach.js";
+import { Coach, reusing } from "./coach.js";
 import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
 import { refuseURL, hostOf } from "./sites.js";
@@ -192,10 +192,12 @@ async function unpairHere() {
 
 // Coach in the side panel (docs/chrome.md). The session is the view-only KIFF device's, kept with the pairing and wiped
 // with it; without one, the panel says Coach is on the phone.
+// One Coach for the session, so the account's Coach id is read once, not on every read of the chat.
+const coachFor = reusing((token) => new Coach({ token, lang: chrome.i18n.getUILanguage() }));
 async function coach() {
   const session = await indexedStore.get("kiff_session");
   if (!session || !session.token) throw Object.assign(new Error("no session"), { code: "no_session" });
-  return new Coach({ token: session.token, lang: chrome.i18n.getUILanguage() });
+  return coachFor(session.token);
 }
 
 /** The tab the owner is looking at, for "Share this page" only: one tab, on the owner's tap, never listed otherwise. */

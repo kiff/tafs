@@ -229,7 +229,7 @@ asked once more and then signed, and New key while it holds fewer than two: name
 own, as on iPhone; never while the door is busy), signed, then shown once with Copy, where to send requests, an example and
 Done. Copy marks the clip sensitive (Android 13 and later) and clears it a minute later if it's still tafs's own clip,
 while tafs runs; Done forgets the key. API instructions show where to send requests (the door's `address` on tafs cloud's
-host, `AppModel.apiEndpoint`) and the example, which reads the key from the caller's own `$TAFS_API_KEY` and never holds
+host only, over HTTPS: a whole address elsewhere is its path on tafs cloud, `AppModel.apiEndpoint`, `endpointOn`) and the example, which reads the key from the caller's own `$TAFS_API_KEY` and never holds
 one. Removing an `api` door says its keys stop working and is signed (`ApiDoorScreensTest`).
 
 **Coach's drafted door, approved on the phone** (iOS `DoorDraftCard`, drawn when Coach sends the card, which it does only where `TAFS_API_DOORS` is on). Coach's `taf_door_api`
