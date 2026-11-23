@@ -16,6 +16,10 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const lt: Words = {
   work_working: "Vykdoma",
   work_waiting_approval: "Laukia jūsų patvirtinimo",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "Tas paleidimas jau buvo pasibaigęs, todėl nieko nebuvo atlikta.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Įdiegus šią versiją sustojo tai, kas laukė tavo atsakymo: sulaikytas skambutis buvo atšauktas, o žinutė nebuvo įvykdyta. Gali ją išsiųsti dar kartą.",
   your_step_title: "Jūsų žingsnis",
   your_step_done: "Atlikta",
   your_step_skip: "Praleisti",
