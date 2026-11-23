@@ -105,7 +105,9 @@ final class BrowserStepCardTests: XCTestCase {
         let sealed = #"{"site":"shop.example","action_words":"Fill the password","sealed_fill":{"chrome_id":"chr_a","op":"fill","sealed":"h.x","origin":"https://shop.example"}}"#
         for block in [sealed,
                       #"{"sealed_fill":{"chrome_id":"chr_a"}}"#,
-                      #"{"site":"shop.example","action_words":"Fill the email","fill":{"field_ref":"e3"}}"#] {
+                      #"{"site":"shop.example","action_words":"Fill the email","fill":{"field_ref":"e3"}}"#,
+                      // planque's own block (`sealedBlock`): its signed fields under `release_fields`.
+                      #"{"v":"planque.browser.v1","tenant":"t_01","op":"op_9","site":"shop.example","origin":"https://shop.example","action_words":"Fill the password","context":{"title":"Sign in","text":""},"chrome":{"id":"chr_a","name":"Work Mac"},"release_fields":{"chrome_id":"chr_a","op":"op_9","sealed":"sec_Ab3:password","origin":"https://shop.example","field_ref":"f2","read_id":"rd_1"}}"#] {
             let call = try held(browser: block)
             XCTAssertEqual(call.needsRelease, true, block)
             XCTAssertFalse(call.approvableOnce, block)
@@ -114,7 +116,8 @@ final class BrowserStepCardTests: XCTestCase {
         let said = try held(browser: sealed, kiff: #","can_approve_once":true"#)
         XCTAssertFalse(said.approvableOnce)
         // A step with no fill, or a fill that's null, is any other step.
-        for block in [#"{"site":"shop.example","action_words":"Click “Pay”"}"#, #"{"site":"shop.example","action_words":"Click","sealed_fill":null}"#] {
+        for block in [#"{"site":"shop.example","action_words":"Click “Pay”"}"#, #"{"site":"shop.example","action_words":"Click","sealed_fill":null}"#,
+                      #"{"site":"shop.example","action_words":"Click","release_fields":null}"#] {
             let call = try held(browser: block)
             XCTAssertNil(call.needsRelease, block)
             XCTAssertTrue(call.approvableOnce, block)

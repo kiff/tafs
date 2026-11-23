@@ -716,7 +716,7 @@ final class KIFFClient {
         /// and the total are KIFF's own `taf_reason` and amount, as for any hold.
         var browserBlock: BrowserBlock? = nil
         var browser: BrowserStep? { browserBlock?.step }
-        /// The held step is a sign-in fill (`browser.sealed_fill`, or a plain `browser.fill`): allowing it takes a
+        /// The held step is a sign-in fill (planque's `browser.release_fields`, or `sealed_fill` or a plain `fill`): allowing it takes a
         /// release from this phone's approval key (docs/chrome.md, "never an allowing answer without its release"),
         /// which iPhone and iPad can't make yet. Read apart from the step card, so a fill is known even when its card
         /// can't be drawn.
@@ -738,7 +738,9 @@ final class KIFFClient {
                 // A block that isn't an object can't be read: it's never allowed on a guess, so it counts as a fill
                 // (as on every other app). JSON null is no block at all (the hold's own field is nil then).
                 guard let c = try? decoder.container(keyedBy: Key.self) else { needsRelease = true; return }
-                needsRelease = ["sealed_fill", "fill"].contains { k in
+                // planque's block names the release's fields (`release_fields`, planque's `sealedBlock`); `sealed_fill` and `fill`
+                // are the names the apps first read. Any of them, not null, is a fill.
+                needsRelease = ["release_fields", "sealed_fill", "fill"].contains { k in
                     c.contains(Key(stringValue: k)) && !((try? c.decodeNil(forKey: Key(stringValue: k))) ?? true)
                 }
             }
