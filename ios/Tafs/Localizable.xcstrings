@@ -153667,6 +153667,12 @@
             "value": "Başka bir Chrome kullan"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دوسرا Chrome استعمال کریں"
+          }
+        },
         "vi": {
           "stringUnit": {
             "state": "translated",
@@ -153922,6 +153928,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu bağlantıyı %1$@ tarayıcısına taşı"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس کنکشن کو %1$@ پر منتقل کریں"
           }
         },
         "vi": {
