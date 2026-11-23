@@ -1412,10 +1412,17 @@ from legal-i18n; a native read fixes it forward.
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
-(`disclosureLines` in `runtime/src/jobs.ts`, mirrored by kiff/agents). It's in English, Spanish, French,
-German, Portuguese and Italian today. **Dutch and Polish come with the language work:** "Geschreven door
-een AI-agent voor <writes_for>." and "Napisane przez agenta AI dla <writes_for>.", each with the words
-that tell a message's language, in tafs and kiff/agents together.
+(`disclosureLines` in `runtime/src/jobs.ts`, mirrored by kiff/agents). It's in English and in every other
+language the apps speak: 42 lines, each saying "written by an AI agent" and, with a name, "on behalf of
+<writes_for>" ("Geschreven door een AI-agent namens <writes_for>."), written by legal-i18n as first drafts that
+native reads fix forward, keyed by the two-letter code (`zh` is Traditional Chinese, `sr` Serbian). A message's
+language is told by `languageOf` (`runtime/src/jobs.ts`, `agent/language.go` in kiff/agents, the same word lists
+and the same sentences in both tests): a script one language owns says it, a script several share (Latin,
+Cyrillic, Arabic, Devanagari) is told by common words, and a text it isn't sure of, a mix, or two languages tied
+gets the default line (Urdu is never taken for Arabic). A new language adds its two sentences, its common words
+if its script is shared, and its row in both tests. The longest line (Greek's, 105 bytes besides the name) leaves a
+new `writes_for` 195 bytes; a longer name stored before still works, with the languages whose line doesn't fit left
+out.
 
 ## Regional variants
 
