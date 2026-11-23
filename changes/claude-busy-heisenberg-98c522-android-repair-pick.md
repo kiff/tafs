@@ -1,0 +1,1 @@
+- **Android:** re-pairing a reinstalled extension starts on the one paired Chrome of the same browser and system, as on iPhone and iPad; two alike are never guessed ([docs/android-app.md](../docs/android-app.md), "Pairing a Chrome").

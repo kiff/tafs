@@ -24,6 +24,9 @@ jobs:
       - name: Test the packaging
         run: python3 -m unittest chrome/store/test_package.py
 
+      - name: Check the icons have no background
+        run: python3 -m unittest chrome/store/test_icons.py
+
       - name: Check the package's files
         run: python3 chrome/store/package.py --check
 
