@@ -22,6 +22,7 @@
   "chrome.refused": "Un alt Chrome a folosit acest cod, așa că nu s-a asociat nimic. Începeți din nou.",
   "chrome.remove": "Disociați",
   "chrome.remove_named": "Disociați {name}",
+  "chrome.replace_changed": "S-a schimbat ce trece la acest Chrome, așa că nu s-a asociat nimic. Verifică și asociază din nou.",
   "chrome.replace_moves": "Trece la acest Chrome: {sites}",
   "chrome.replace_none": "Un Chrome nou (nu înlocuiește niciunul)",
   "chrome.replace_title": "Înlocuiește",

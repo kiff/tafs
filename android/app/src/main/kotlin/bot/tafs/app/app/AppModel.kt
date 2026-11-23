@@ -4354,13 +4354,16 @@ class AppModel(
    * gets both under one `kiff.requests.v1` signature ([confirmChromeOneTouch]); an older one gets the two prompts. False when it didn't go through.
    */
   /**
-   * The sites that move when [old] is replaced, as the owner reads them before the fingerprint: each connection this phone signed
-   * for [old], checked with its own key ([bot.tafs.app.kiff.ChromePairing.carriedFrom]), the same list [confirmChrome] signs.
+   * The connections that move when [old] is replaced, as the owner reads them before the fingerprint: each this phone signed for
+   * [old], checked with its own key ([bot.tafs.app.kiff.ChromePairing.carriedFrom]). [confirmChrome] signs this list and no other.
    */
-  fun chromeMoves(old: bot.tafs.app.kiff.Chrome): List<String> =
-    bot.tafs.app.kiff.ChromePairing.carriedFrom(old, _state.value.grants, signer.approvalPublicKeyDER).flatMap { it.sites }.distinct()
+  fun chromeMoves(old: bot.tafs.app.kiff.Chrome): List<bot.tafs.app.kiff.ChromePairing.Carried> =
+    bot.tafs.app.kiff.ChromePairing.carriedFrom(old, _state.value.grants, signer.approvalPublicKeyDER)
 
-  suspend fun confirmChrome(p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String, replaces: bot.tafs.app.kiff.Chrome? = null): Boolean {
+  suspend fun confirmChrome(
+    p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String,
+    replaces: bot.tafs.app.kiff.Chrome? = null, shown: List<bot.tafs.app.kiff.ChromePairing.Carried> = emptyList(),
+  ): Boolean {
     val pairing = bot.tafs.app.kiff.ChromePairing
     val chromeKey = pairing.base64UrlDecoded(offer.key) ?: return false
     if (!pairing.extensionProofHolds(p.secret, chromeKey, offer.proof, offer.kiffOffer)) return false
@@ -4374,8 +4377,20 @@ class AppModel(
     val generation = accountGeneration
     val name = pairing.name(typed, Words.Chrome.browserOn(browser = offer.browser, system = offer.os))
     // A re-pairing (docs/chrome.md "Your Chrome" 1): the connections that move are those this phone signed for the replaced
-    // Chrome, checked with its own key; they go inside the pairing the extension checks, so planque can't change them.
-    val carried = replaces?.let { pairing.carriedFrom(it, _state.value.grants, phoneKey) }.orEmpty()
+    // Chrome, checked with its own key; they go inside the pairing the extension checks, so planque can't change them. Read
+    // again just now, as iOS does, so what's signed is live; and signed only if it's what the owner was shown. If it changed
+    // (a connection ended, the Chrome went), nothing is signed, and the sheet says so over the new list, to pair again on. A
+    // read that failed signs nothing either, with its own line: the list it would sign is no longer known to be live.
+    val changed = { false.also { _state.update { it.copy(chromesError = Words.Chrome.replaceChanged) } } }
+    val old = replaces?.let { r ->
+      refreshChromes()
+      if (_state.value.chromesError != null) return false
+      refreshConnections()
+      _state.value.connectionsError?.let { why -> return false.also { _state.update { it.copy(chromesError = Words.Chrome.notLoaded(why = why)) } } }
+      _state.value.chromes?.firstOrNull { it.id == r.id } ?: return changed()
+    }
+    val carried = old?.let { pairing.carriedFrom(it, _state.value.grants, phoneKey) }.orEmpty()
+    if (old != null && carried != shown) return changed()
     val confirmation = pairing.confirmation(p.secret, chromeKey, name, phoneKey).copy(carried = carried)
     val reason = Words.Chrome.pairPrompt(name = name)
     // One fingerprint for both acts where the extension checks it (docs/chrome.md "Your Chrome" 5): the pairing it verifies and
@@ -7752,6 +7767,25 @@ class AppModel(
   }
 
   /**
+   * A switch that stopped a task waiting on the owner's answer (`stop_blocking`; the owner's panel test, 23 Nov): said in tafs
+   * cloud's words, and the chat ends as a run that didn't go through, with Run again on the owner's last message of a stopped
+   * session (one tap, never by itself). Nothing when nothing waiting was stopped.
+   */
+  internal fun switchStopped(tafId: String, begun: bot.tafs.app.kiff.SwitchResponse) {
+    val words = begun.words?.takeIf { it.isNotBlank() } ?: return
+    if (begun.stopped.isEmpty()) return
+    val sessions = begun.stopped.map { it.session }.toSet()
+    val retry = _state.value.chats[tafId]?.lastOrNull { it.from == ChatMessage.From.owner && it.session in sessions }?.text?.takeIf { it.isNotBlank() }
+    _state.update { s ->
+      s.copy(
+        lastError = words,
+        chatAwaiting = s.chatAwaiting - tafId,
+        chatEnded = if (retry != null) s.chatEnded + (tafId to ChatEnd.Failed(retry, emptyList(), words)) else s.chatEnded,
+      )
+    }
+  }
+
+  /**
    * Begins the switch to a version: tafs cloud prepares the Card draft it waits for, which the owner then reads, and
    * from here nothing of the taf runs. With [redraft], its Cards are drafted again. Null, with the reason in
    * [AppState.versionErrors], when it can't begin; a run in the way is named, with the one step that clears it.
@@ -7763,9 +7797,13 @@ class AppModel(
     versionError(tafId, null)
     _state.update { it.copy(blockedInstalls = it.blockedInstalls - tafId) }
     return try {
-      cloud.beginSwitch(cloudId, version.n, redraft, stopBlocking).also { sw ->
-        if (generation == accountGeneration) _state.update { it.copy(switches = it.switches + (tafId to sw), staleVersionCards = it.staleVersionCards - tafId) }
-      }.takeIf { generation == accountGeneration }
+      cloud.beginSwitch(cloudId, version.n, redraft, stopBlocking).let { begun ->
+        if (generation != accountGeneration) return null
+        val sw = begun.switching
+        _state.update { it.copy(switches = it.switches + (tafId to sw), staleVersionCards = it.staleVersionCards - tafId) }
+        switchStopped(tafId, begun)
+        sw
+      }
     } catch (e: CancellationException) {
       throw e
     } catch (e: CloudError) {
@@ -7873,7 +7911,7 @@ class AppModel(
 
     // Begun before any Card changes, with the draft tafs cloud prepared: from here nothing of the taf runs. Again for
     // a switch under way is the same switch.
-    val sw = try {
+    val begun = try {
       cloud.beginSwitch(cloudId, version.n, stopBlocking = stopBlocking)
     } catch (e: CancellationException) {
       throw e
@@ -7882,7 +7920,9 @@ class AppModel(
       return false
     }
     if (generation != accountGeneration) return false
+    val sw = begun.switching
     _state.update { it.copy(switches = it.switches + (tafId to sw)) }
+    switchStopped(tafId, begun)
 
     var draft: AgentDraft? = null
     if (sw.draft != null) {

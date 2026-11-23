@@ -1,0 +1,1 @@
+- **Android: installing a version that stops a waiting task says so:** the chat says the task stopped and its message didn't run, in tafs's words, with Run again on that message (never sent by itself) ([docs/api.md](../docs/api.md)).
