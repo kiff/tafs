@@ -1,0 +1,1 @@
+- **docs/chrome.md says how a connection carried by one re-pairing is carried again:** the new Chrome keeps the pairing as the phone signed it (planque's `paired_with`), and a later re-pairing carries the connection only when the phone's own key verifies it for that Chrome and exactly its sites, as planque checks too.
