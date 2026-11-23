@@ -120,7 +120,13 @@ final class BrowserStepCardTests: XCTestCase {
             XCTAssertTrue(call.approvableOnce, block)
         }
         XCTAssertNil(try held(browser: nil).needsRelease)
-        XCTAssertNil(try held(browser: "42").needsRelease)
+        XCTAssertNil(try held(browser: "null").needsRelease, "JSON null is no block")
+        // A block that isn't an object can't be read, so it's never allowed on a guess.
+        for block in ["42", "[1]", #""shop.example""#] {
+            let call = try held(browser: block)
+            XCTAssertEqual(call.needsRelease, true, block)
+            XCTAssertFalse(call.approvableOnce, block)
+        }
     }
 
     /// A step's context with the wrong shape loses that part only.

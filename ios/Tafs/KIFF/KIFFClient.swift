@@ -735,7 +735,9 @@ final class KIFFClient {
             init(step: BrowserStep? = nil, needsRelease: Bool = false) { self.step = step; self.needsRelease = needsRelease }
             init(from decoder: Decoder) throws {
                 step = try? BrowserStep(from: decoder)
-                guard let c = try? decoder.container(keyedBy: Key.self) else { return }
+                // A block that isn't an object can't be read: it's never allowed on a guess, so it counts as a fill
+                // (as on every other app). JSON null is no block at all (the hold's own field is nil then).
+                guard let c = try? decoder.container(keyedBy: Key.self) else { needsRelease = true; return }
                 needsRelease = ["sealed_fill", "fill"].contains { k in
                     c.contains(Key(stringValue: k)) && !((try? c.decodeNil(forKey: Key(stringValue: k))) ?? true)
                 }

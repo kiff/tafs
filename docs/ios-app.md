@@ -1389,9 +1389,9 @@ and iPad don't draw the release card yet. So such a hold offers **no Approve onc
 now on"**, only Refuse, with `chrome.release_unreadable` ("This fill can't be read, so it can't be allowed. You can still
 refuse it."). `CardException.BrowserBlock` reads the fill apart from the step card, so a fill is known even when its card
 can't be drawn, and a block of the wrong shape never fails the hold. KIFF's `can_approve_once` doesn't override it
-(`KIFFMapping.held`; `HoldAllow.allowable`, the one rule behind Allow and its sheet). The server refuses an allow without a release too, from any client, before
-the sealed fill is turned on (kiff/work#21). Tests: `BrowserStepCardTests.testASignInFillOffersNoApproveOnceUntilTheReleaseCardExists`,
-`AllowFromNowOnTests.testAHeldCallKeepsItsAgentAndItsBreaches`.
+(`KIFFMapping.held`; `HoldAllow.allowable`, the one rule behind Allow, its sheet's open and confirm; `AppModel.answer`, which signs no allowing answer for a fill whoever asks). A `browser` block that isn't an object counts as a fill: never allowed on a guess. Before sign-in fills are turned on, the server refuses an allow without a release too, from any client. Tests: `BrowserStepCardTests.testASignInFillOffersNoApproveOnceUntilTheReleaseCardExists`,
+`AllowFromNowOnTests.testAHeldCallKeepsItsAgentAndItsBreaches`,
+`ApprovalKeyTests.testASignInFillIsNeverApprovedOrGivenExtraRoomOnlyRefused`.
 
 ## Account › Sign-in: the email-code setting
 
