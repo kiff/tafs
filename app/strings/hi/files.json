@@ -1,0 +1,43 @@
+{
+  "files.account_row": {
+    "one": "{count} फ़ाइल · 30 दिन रखी जाती है",
+    "other": "{count} फ़ाइल · 30 दिन रखी जाती है"
+  },
+  "files.all": "सभी",
+  "files.all_tafs": "सभी taf",
+  "files.by_run": "रन के अनुसार",
+  "files.by_taf": "taf के अनुसार",
+  "files.delete_body": "यह इस खाते के सभी लोगों के लिए फ़ाइलें से तुरंत चली जाती है। इसे पलटा नहीं जा सकता।",
+  "files.delete_now": "अभी हटाएँ",
+  "files.delete_question": "“{name}” अभी हटाएँ?",
+  "files.deleted": "सभी के लिए हटाई गई",
+  "files.download": "डाउनलोड करें",
+  "files.empty": "अभी कुछ नहीं। जब कोई taf किसी रन में रिपोर्ट, शीट या दस्तावेज़ बनाता है, तो वह यहाँ 30 दिन रखा जाता है, ताकि इस खाते के सभी लोग उसे खोल, सहेज या साझा कर सकें।",
+  "files.everyone": "इस खाते के सभी लोग",
+  "files.goes_away": "हट जाती है",
+  "files.goes_in_days": {
+    "one": "{count} दिन में हट जाती है",
+    "other": "{count} दिन में हट जाती है"
+  },
+  "files.goes_on": "{date} (उसकी रन के 30 दिन बाद)",
+  "files.goes_today": "आज हट जाती है",
+  "files.goes_tomorrow": "कल हट जाती है",
+  "files.in_run": "रन में",
+  "files.kept_line": "हर फ़ाइल उसकी रन से 30 दिन रखी जाती है, फिर अपने आप हट जाती है। इस खाते के सभी लोग ये फ़ाइलें देखते हैं। आपकी अपनी चैट के संलग्नक अपने संदेशों के साथ रहते हैं।",
+  "files.kept_until": "इसकी फ़ाइलें {date} तक रखी जाती हैं",
+  "files.made_by": "किसने बनाई",
+  "files.none_yet": "अभी कोई नहीं · 30 दिन रखी जाती हैं",
+  "files.pick_one": "यहाँ देखने के लिए कोई फ़ाइल चुनें।",
+  "files.preview_start": "केवल शुरुआत दिखाई गई है। पूरा पढ़ने के लिए फ़ाइल डाउनलोड करें।",
+  "files.saved": "इस डिवाइस पर सहेजी गई",
+  "files.see_in_chat": "इसे चैट में देखें",
+  "files.share": "साझा करें",
+  "files.size": "आकार",
+  "files.taf_row": {
+    "one": "इसकी रन से {count} फ़ाइल",
+    "other": "इसकी रन से {count} फ़ाइल"
+  },
+  "files.title": "फ़ाइलें",
+  "files.type": "प्रकार",
+  "files.who_sees": "कौन देखता है"
+}

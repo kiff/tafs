@@ -5682,7 +5682,7 @@ enum Words {
 
     /// The languages the app's screens are written in, as `languages.json` ships them: what it
     /// asks the servers for, never a language only Siri's phrases are in.
-    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "pt-BR"]
+    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "pt-BR"]
 
     /// The catalog the lines are read from: the system's pick for the app, or the language picked
     /// in the app (`AppLanguage.choose`), so a pick applies at once, with no relaunch.

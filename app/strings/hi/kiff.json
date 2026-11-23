@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "KIFF से पूछा जा रहा है: {title}…",
+  "kiff.did_not_reach_kiff_try": "यह KIFF तक नहीं पहुँचा। फिर कोशिश करें।",
+  "kiff.kiff_can_not_do_sign": "KIFF अभी यह नहीं कर सकता: इस {device} से मंज़ूर करने के लिए सेटिंग से फिर साइन इन करें।",
+  "kiff.kiff_did_not_answer_expected": "KIFF ने अपेक्षा के अनुसार उत्तर नहीं दिया। फिर कोशिश करें।",
+  "kiff.kiff_words_do_not_match": "KIFF के शब्द उनकी जाँच से मेल नहीं खाते। कुछ भी मंज़ूर नहीं किया जा सकता।"
+}

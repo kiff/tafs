@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "पूरा Card",
+    "other": "पूरा Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, फिर वह आपसे पूछता है",
+  "card.calls_left": {
+    "one": "{count} कॉल बाकी",
+    "other": "{count} कॉल बाकी"
+  },
+  "card.calls_left_line": {
+    "one": "{limit} में से {window} {count} कॉल बाकी",
+    "other": "{limit} में से {window} {count} कॉल बाकी"
+  },
+  "card.calls_used_of": {
+    "one": "{window} {count} कॉल में से {used}",
+    "other": "{window} {count} कॉल में से {used}"
+  },
+  "card.calls_window": {
+    "one": "{window} {count} कॉल",
+    "other": "{window} {count} कॉल"
+  },
+  "card.card_confirmed_kiff": "Card · KIFF द्वारा पुष्ट",
+  "card.card_draft_kiff": "Card · मसौदा · KIFF द्वारा",
+  "card.card_got_room_call_needed": "उसके Card को इस कॉल के लिए ज़रूरी जगह मिल गई, उस कुल के रीसेट होने तक",
+  "card.card_not_issued": "Card जारी नहीं हुआ। ",
+  "card.card_revoked": "Card रद्द हुआ",
+  "card.check.always_asks": "{rule}: हमेशा आपसे पूछता है",
+  "card.check.never_allowed": "{rule}: कभी अनुमति नहीं",
+  "card.check.not_on_card": "इस taf के Card में नहीं",
+  "card.check.over_count": {
+    "one": "{window} {count} से अधिक",
+    "other": "{window} {count} से अधिक"
+  },
+  "card.check.over_each": "हर एक पर {amount} से अधिक",
+  "card.check.over_total": "{window} {amount} से अधिक",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "खत्म हुआ",
+  "card.ended_on": "{date} को खत्म हुआ",
+  "card.ends": "खत्म होता है",
+  "card.extra_room": "+{extra} अतिरिक्त जगह {window}",
+  "card.extra_room_prefix": "+{formatted} अतिरिक्त जगह ",
+  "card.extra_room_until": "+{extra} अतिरिक्त जगह {ends} तक",
+  "card.figure_left": "{figure} बाकी",
+  "card.heading": {
+    "one": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{window}{each} {count} कॉल: यह {item} {nth} होती",
+    "other": "{window}{each} {count} कॉल: यह {item} {nth} होती"
+  },
+  "card.held.each_call_asks": "हर कॉल पहले आपसे पूछती है",
+  "card.held.for_each": " हर {name} के लिए",
+  "card.held.for_each_join": " हर एक के लिए ",
+  "card.held.for_item": " {item} के लिए",
+  "card.held.over_count": {
+    "one": "{count} कॉल की उसकी सीमा से अधिक: यह {nth} होती",
+    "other": "{count} कॉल की उसकी सीमा से अधिक: यह {nth} होती"
+  },
+  "card.held.over_one_call": "{amount} एक कॉल के लिए {cap} की सीमा से अधिक है",
+  "card.held.over_total": "{amount} से {cap} का कुल पार हो जाता",
+  "card.hero.calls_left_of": {
+    "one": "{limit} में से {window} कॉल बाकी",
+    "other": "{limit} में से {window} कॉल बाकी"
+  },
+  "card.hero.calls_use_unavailable": "{window} कॉल · उपयोग उपलब्ध नहीं",
+  "card.hero.left_of": "{limit} में से {window} बाकी",
+  "card.hero.left_of_extra": "{base} + {extra} अतिरिक्त जगह में से {window} बाकी",
+  "card.hero.left_of_extra_until": "{base} + {extra} अतिरिक्त जगह में से {window} बाकी, {ends} तक",
+  "card.hero.left_of_note": "{limit} में से {window} बाकी{note}",
+  "card.hero.no_currency": "कोई मुद्रा नहीं",
+  "card.hero.no_currency_suffix": " · कोई मुद्रा नहीं",
+  "card.hero.use_unavailable": "{window} · उपयोग उपलब्ध नहीं",
+  "card.hero.use_unavailable_note": "{label} · उपयोग उपलब्ध नहीं{note}",
+  "card.how_counted": "यह कैसे गिना जाता है",
+  "card.issue_prompt": "{taf} का Card जारी करें",
+  "card.issued_by": "जारीकर्ता",
+  "card.issued_by_account": "खाता",
+  "card.issued_by_named": "जारीकर्ता: {who}",
+  "card.its_card": "उसका Card",
+  "card.kiff_did_not_revoke_cards": "KIFF ने उसके {cards_left} Card रद्द नहीं किए: उन्हें KIFF में रद्द करें।",
+  "card.left": "{window} {amount} बाकी",
+  "card.left_extra_room": "{own} + {extra} अतिरिक्त जगह में से {current} बाकी{until}{note}",
+  "card.limit_can_not_raised_right": "सीमा अभी यहाँ से बढ़ाई नहीं जा सकती।",
+  "card.limit_raised_read_balance_again": "सीमा बढ़ाई गई। इसे फिर बढ़ाने से पहले शेष राशि फिर पढ़ें।",
+  "card.line.calls_in_window": {
+    "one": "{window} {count} कॉल{then}",
+    "other": "{window} {count} कॉल{then}"
+  },
+  "card.line.more_asks": "; इससे ज़्यादा पर पहले आपसे पूछता है",
+  "card.line.then_asks": ", फिर वह आपसे पूछता है",
+  "card.line.total_in_window": "{window} कुल {amount}{then}",
+  "card.line.up_to_each": "हर एक के लिए {amount} तक",
+  "card.more": {
+    "one": "{count} और",
+    "other": "{count} और"
+  },
+  "card.no_actions": "अभी कोई कार्रवाई नहीं",
+  "card.no_actions_short": "अभी कोई कार्रवाई नहीं",
+  "card.no_currency": "{amount} (कोई मुद्रा नहीं)",
+  "card.no_end_date": "कोई समाप्ति तिथि नहीं",
+  "card.outcome.not_a_resource": "Card के संसाधनों में से नहीं",
+  "card.outcome.outside": "Card के बाहर",
+  "card.outcome.over_one_action": "एक कार्रवाई के लिए Card की सीमा से अधिक",
+  "card.outcome.over_total": "Card के कुल से अधिक",
+  "card.outside_held": "बाहर: आपके लिए रोका गया",
+  "card.outside_refused": "बाहर: अस्वीकार",
+  "card.over_limit_calls_would": "{limit} कॉल की उसकी सीमा से अधिक: यह {nth} होती",
+  "card.revoke_failed": "KIFF ने Card रद्द नहीं किया। {why}",
+  "card.revoked": "रद्द किया गया",
+  "card.rule.always_asks": "हमेशा आपसे पूछता है",
+  "card.rule.at_most_each": "≤ हर एक {amount}",
+  "card.rule.at_most_each_refused_above": "≤ हर एक {amount} · उससे ऊपर अस्वीकार",
+  "card.rule.calls": {
+    "one": "{window} {count} कॉल",
+    "other": "{window} {count} कॉल"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{window} {count} कॉल, फिर वह आपसे पूछता है",
+    "other": "{window} {count} कॉल, फिर वह आपसे पूछता है"
+  },
+  "card.rule.in_total": "{window} कुल {amount}",
+  "card.rule.never": "कभी नहीं",
+  "card.rule.total_then_asks": "{window} कुल {amount}, फिर वह आपसे पूछता है",
+  "card.rule.up_to_each": "हर एक के लिए {amount} तक; ज़्यादा पर पहले आपसे पूछता है",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "taf का Card",
+  "card.tools": {
+    "one": "{count} टूल",
+    "other": "{count} टूल"
+  },
+  "card.until": "तक",
+  "card.until_date": "{date} तक",
+  "card.until_ends": " {ends} तक",
+  "card.used_of": "{window} {limit} में से {used}",
+  "card.window.a_day": "प्रतिदिन",
+  "card.window.a_month": "प्रति माह",
+  "card.window.a_week": "प्रति सप्ताह",
+  "card.window.any_day": "किसी भी 24 घंटे में",
+  "card.window.any_hour": "किसी भी घंटे में",
+  "card.window.any_week": "किसी भी 7 दिन में",
+  "card.window.in_total": "कुल",
+  "card.window.in_total_window": "कुल {window}",
+  "card.window.last_day": "पिछले 24 घंटे में",
+  "card.window.last_hour": "पिछले घंटे में",
+  "card.window.last_week": "पिछले 7 दिन में",
+  "card.window.so_far": "अब तक",
+  "card.window.this_month": "इस महीने",
+  "card.window.this_week": "इस सप्ताह",
+  "card.window.today": "आज",
+  "card.within_card": "Card के भीतर"
+}
