@@ -2739,6 +2739,17 @@ final class TafsCloud {
         /// The KIFF draft whose confirmation it waits for.
         let draft: String?
         let at: Date
+        /// The tasks the switch stopped because they waited on the owner's answer (their held calls withdrawn, their messages never
+        /// ran), and tafs cloud's words for it: from the switch's answer, never from the version state. Empty when nothing was stopped.
+        var stopped: [StoppedRun] = []
+        var stoppedWords: String? = nil
+        enum CodingKeys: String, CodingKey { case n, draft, at }
+    }
+
+    /// A run a switch stopped while it waited on the owner's answer.
+    struct StoppedRun: Decodable, Equatable {
+        let run: String
+        let session: String
     }
 
     /// The taf's versions, oldest first, the live one marked, and a switch under way.
@@ -2769,9 +2780,12 @@ final class TafsCloud {
             let stopBlocking: Bool
             enum CodingKeys: String, CodingKey { case redraft, stopBlocking = "stop_blocking" }
         }
-        struct Response: Decodable { let switching: Switching }
+        struct Response: Decodable { let switching: Switching; let stopped: [StoppedRun]?; let words: String? }
         let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions/\(n)/switch", body: Body(redraft: redraft, stopBlocking: stopBlocking))
-        return r.switching
+        var switching = r.switching
+        switching.stopped = r.stopped ?? []
+        switching.stoppedWords = r.stopped?.isEmpty == false ? r.words : nil
+        return switching
     }
 
     /// Drops the switch under way while its Card isn't confirmed; once it is, tafs cloud
