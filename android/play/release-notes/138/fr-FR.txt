@@ -1,0 +1,1 @@
+• L’exemple des « Instructions de l’API » d’une porte indique désormais toujours l’adresse de tafs cloud elle-même, entre guillemets, pour que vous puissiez le coller sans risque dans un terminal.

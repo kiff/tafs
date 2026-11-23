@@ -1,0 +1,1 @@
+• The example in a door’s “API instructions” now always names tafs cloud’s own address, in quotes, so it’s safe to paste into a terminal.
