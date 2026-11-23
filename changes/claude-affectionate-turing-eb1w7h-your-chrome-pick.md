@@ -1,0 +1,1 @@
+- **Pairing a Chrome again can replace the old one:** the phone offers which Chrome it replaces, moves that Chrome's connections to the new one under the same fingerprint, and unpairs the old ([docs/chrome.md](docs/chrome.md)).

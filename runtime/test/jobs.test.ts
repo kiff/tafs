@@ -3,16 +3,33 @@ import { describe, expect, it } from "vitest";
 import { DISCLOSURE_LINE, DISCLOSURE_MAX_BYTES, disclosureLine, disclosureLineFor, disclosureLines, JOBS, jobById, languageOf, OLD_DISCLOSURE_LINE, ownJob, systemPrompt, WRITES_FOR_MAX_BYTES, writesForIn, writesForOf } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
 
+/** Every language the apps speak that a disclosure line comes in (tafs app/strings/languages.json, with Hindi, Urdu and Turkmen): the five of #363 and the 37 after them. */
+const APP_LANGUAGES = ["ar", "az", "bg", "bn", "ca", "cs", "de", "el", "es", "et", "fr", "he", "hi", "hr", "hu", "hy", "id", "it", "ja", "ka", "km", "ko", "lo", "lt", "lv", "mk", "mn", "ne", "nl", "pl", "pt", "ro", "sk", "sl", "sq", "sr", "th", "tk", "tr", "ur", "vi", "zh"];
+
 describe("the disclosure line, in the message's language (kiff/agents#363)", () => {
   it("names who the messages come from in each language, and tells a text's language as kiff/agents does", () => {
     const acme = { writesFor: "Acme" };
-    expect(disclosureLines(acme)).toEqual({
+    const lines = disclosureLines(acme);
+    expect(lines).toMatchObject({
       es: "Escrito por un agente de IA en nombre de Acme.",
       fr: "Rédigé par un agent d'IA au nom de Acme.",
       de: "Von einem KI-Agenten im Auftrag von Acme geschrieben.",
       pt: "Escrito por um agente de IA em nome de Acme.",
       it: "Scritto da un agente di IA per conto di Acme.",
+      hi: "Acme की ओर से AI एजेंट द्वारा लिखा गया।",
+      tr: "Acme adına bir yapay zekâ ajanı tarafından yazıldı.",
+      ko: "Acme을(를) 대신해 AI 에이전트가 작성했습니다.",
+      ar: "كتبه وكيل ذكاء اصطناعي نيابةً عن Acme.",
     });
+    // Every language the apps speak has its line, naming who the messages come from, and none is over what kiff/agents takes.
+    expect(Object.keys(lines).sort()).toEqual(APP_LANGUAGES);
+    for (const [lang, line] of Object.entries(lines)) {
+      expect(line, lang).toContain("Acme");
+      expect(Buffer.byteLength(line), lang).toBeLessThanOrEqual(DISCLOSURE_MAX_BYTES);
+    }
+    // Naming no one: the same languages, none with a name in it.
+    expect(Object.keys(disclosureLines({})).sort()).toEqual(APP_LANGUAGES);
+    for (const [lang, line] of Object.entries(disclosureLines({}))) expect(line, lang).not.toContain("Acme");
     expect(disclosureLines({}).es).toBe("Escrito por un agente de IA.");
     for (const [lang, text] of [
       ["es", "Hecho: te hemos devuelto 42,00 EUR del pedido 1043 a tu tarjeta original. Llegará en 5–10 días."],
@@ -24,27 +41,103 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
     ] as const) {
       expect(languageOf(text), text).toBe(lang);
     }
-    // Too little to tell, as much of two languages, or one it has no line in: the default line.
-    for (const text of ["OK", "Gracias.", "Hola, gracias. Olá, obrigado.", "Teie tagasimakse on tehtud."]) {
+    // Too little to tell, or as much of two languages: the default line.
+    for (const text of ["OK", "Gracias.", "Hola, gracias. Olá, obrigado."]) {
       expect(disclosureLineFor(acme, text), text).toBe("Written by an AI agent on behalf of Acme.");
     }
+    // Estonian has its line now: the sentence the apps give it.
+    expect(disclosureLineFor(acme, "Teie tagasimakse on tehtud ja see on meie.")).toBe(lines.et);
     expect(disclosureLineFor(acme, "Hecho: te hemos devuelto el importe del pedido 1043.")).toBe("Escrito por un agente de IA en nombre de Acme.");
     // An html part's tags aren't its words, even English ones in an attribute.
     expect(languageOf('<span title="the order is for you and your thanks">Hola, gracias.</span>')).toBe("es");
   });
 
+  // The same sentences as kiff/agents' agent/language_test.go: a door's reply and a taf's own message pick the same language.
+  it("recognises every language the apps speak in a message written in it, as kiff/agents does", () => {
+    for (const [lang, text] of [
+    ["en", "Your refund has been issued. Thanks for your order."],
+    ["es", "Hola, hemos recibido su pedido y el reembolso está en camino. Gracias por su paciencia."],
+    ["pt", "Olá, recebemos o seu pedido e o reembolso está a caminho. Obrigado pela paciência."],
+    ["fr", "Bonjour, nous avons bien reçu votre commande et le remboursement est en route. Merci de votre patience."],
+    ["de", "Hallo, wir haben Ihre Bestellung erhalten und die Rückerstattung ist auf dem Weg. Danke für Ihre Geduld."],
+    ["it", "Ciao, abbiamo ricevuto il tuo ordine e il rimborso è in arrivo. Grazie per la pazienza."],
+    ["nl", "Uw bestelling is verzonden en wij hebben de factuur ook bijgevoegd. Graag gedaan."],
+    ["pl", "Dziękujemy za zamówienie. Twoje zamówienie jest w drodze i nie wymaga nic więcej."],
+    ["ca", "Gràcies per la seva comanda. Ens plau informar-vos que és en camí."],
+    ["et", "Tere! Teie tellimus on tehtud ja see saadetakse meie ladudest, palun oodake."],
+    ["lt", "Labas! Jūsų užsakymas yra išsiųstas ir buvo patvirtintas. Ačiū."],
+    ["lv", "Sveiki! Jūsu pasūtījums ir nosūtīts un tas ir apstiprināts. Paldies."],
+    ["cs", "Dobrý den, děkujeme za objednávku. Váš balík je na cestě a bude doručen brzy."],
+    ["sk", "Dobrý deň, ďakujeme za objednávku. Váš balík je na ceste a bol odoslaný."],
+    ["sl", "Zdravo, hvala za naročilo. Vaš paket je na poti in bil je poslan."],
+    ["hu", "Szia! Köszönöm a rendelést. A csomag a mi raktárunkból van úton, kérem várjon."],
+    ["ro", "Bună! Mulțumim pentru comanda dumneavoastră. Pachetul este în drum și vă rog să așteptați."],
+    ["hr", "Hvala na narudžbi. Molim, vaša narudžba je na putu i bio sam sretan da se javim."],
+    ["sr", "Hvala na porudžbini. Vaša porudžbina je na putu, šta još mogu da uradim ovde?"],
+    ["tr", "Merhaba, siparişiniz için teşekkürler. Paketiniz yolda ve çok yakında teslim edilecek."],
+    ["id", "Halo, terima kasih atas pesanan Anda. Paket ini sudah dikirim dan tidak ada masalah."],
+    ["vi", "Chào bạn, cảm ơn bạn đã đặt hàng. Đơn hàng của bạn đã được gửi và không có vấn đề."],
+    ["sq", "Përshëndetje, faleminderit për porosinë. Paketa juaj është në rrugë dhe nuk ka probleme."],
+    ["az", "Salam, sifarişiniz üçün təşəkkür edirik. Bağlama göndərildi və problem yoxdur, biz buradayıq."],
+    ["tk", "Salam! Sargydyňyz üçin sagbol. Ammarlama ýolda we hiç hili problema ýok, biz bu ýerde."],
+    ["bg", "Здравейте, благодаря за поръчката. Пратката е на път и това е всичко, моля изчакайте."],
+    ["mk", "Здраво, благодарам за нарачката. Пратката е на пат и тоа е сè, ве молам почекајте."],
+    ["mn", "Сайн байна уу? Захиалга баярлалаа. Таны ачаа замдаа явж байна, энэ бол бүх зүйл."],
+    ["ar", "مرحبا، شكرا لطلبك. هذا الطرد في الطريق ونحن هنا إن كان لديك ما تسأل عنه."],
+    ["ur", "ہیلو، آپ کے آرڈر کا شکریہ۔ آپ کا پارسل راستے میں ہے اور ہم یہاں ہیں۔"],
+    ["ne", "नमस्ते, तपाईंको अर्डरको लागि धन्यवाद। तपाईं र हामी यहाँ छौँ, यो प्याकेज बाटोमा छ।"],
+    ["hi", "नमस्ते, आपके ऑर्डर के लिए धन्यवाद। आपका पार्सल रास्ते में है और हम यहाँ हैं।"],
+    ["el", "Γεια σας, ευχαριστούμε για την παραγγελία σας."],
+    ["he", "שלום, תודה על ההזמנה שלך."],
+    ["th", "สวัสดี ขอบคุณสำหรับคำสั่งซื้อของคุณ"],
+    ["lo", "ສະບາຍດີ ຂອບໃຈສໍາລັບການສັ່ງຊື້ຂອງທ່ານ"],
+    ["km", "សួស្តី អរគុណសម្រាប់ការបញ្ជាទិញរបស់អ្នក"],
+    ["ka", "გამარჯობა, გმადლობთ შეკვეთისთვის."],
+    ["hy", "Բարեւ, շնորհակալություն պատվերի համար։"],
+    ["bn", "নমস্কার, আপনার অর্ডারের জন্য ধন্যবাদ।"],
+    ["ko", "안녕하세요, 주문해 주셔서 감사합니다."],
+    ["ja", "こんにちは、ご注文ありがとうございます。"],
+    ["zh", "您好，感谢您的订购。您的包裹已经寄出。"],
+    ] as const) {
+      expect(languageOf(text), `${lang}: ${text}`).toBe(lang);
+    }
+    // Serbian in Cyrillic is "sr" as well, and Japanese written mostly in kanji is still Japanese (it has kana).
+    expect(languageOf("Здраво, хвала на поруџбини. Пошиљка је на путу и то је све, молим вас сачекајте.")).toBe("sr");
+    expect(languageOf("ご注文の商品は本日発送しました。")).toBe("ja");
+    // Urdu is not Arabic, though both are written in the Arabic script; a short Urdu text says no language, never "ar".
+    expect(languageOf("ہیلو، آپ کے آرڈر کا شکریہ۔ آپ کا پارسل راستے میں ہے اور ہم یہاں ہیں۔")).toBe("ur");
+    expect(languageOf("مرحبا، شكرا لطلبك. هذا الطرد في الطريق ونحن هنا إن كان لديك ما تسأل عنه.")).toBe("ar");
+    for (const text of ["پارسل راستے میں", "ابھی", "طلب", "سلام دوست عزیز، خوش آمدید"]) expect(languageOf(text), text).not.toBe("ar");
+    // A script several languages share says none by itself, and two that share their words tie: the default line.
+    for (const text of ["тест", "नमस्ते", "नमस्ते धन्यवाद", "и е на", "Hvala, molim, je na putu i bio"]) expect(languageOf(text), text).toBe("");
+    // The majority script reads, a name in another doesn't change it; half and half, no letters, too few words say none.
+    expect(languageOf("안녕하세요, 주문해 주셔서 감사합니다. Order 1043 hello")).toBe("ko");
+    expect(languageOf("Gracias, hemos enviado su pedido de 東京 hoy. Gracias por su paciencia.")).toBe("es");
+    for (const text of ["", "12345 !!!", "OK", "你好你好 abcd", "안녕 hello world"]) expect(languageOf(text), text).toBe("");
+    // Kana says Japanese; Han alone says Chinese; Hangul with some Han says Korean; words with combining marks stay whole.
+    expect([languageOf("カタカナ"), languageOf("汉字"), languageOf("한국어 漢字 한국어"), languageOf("ऑर्डर कृपया"), languageOf("अर्डर कृपया")]).toEqual(["ja", "zh", "ko", "hi", "ne"]);
+    // The line that heads a message is the one in its language, for any of them.
+    const acme = { writesFor: "Acme" };
+    expect(disclosureLineFor(acme, "नमस्ते, आपके ऑर्डर के लिए धन्यवाद। आपका पार्सल रास्ते में है और हम यहाँ हैं।")).toBe("Acme की ओर से AI एजेंट द्वारा लिखा गया।");
+    expect(disclosureLineFor(acme, "안녕하세요, 주문해 주셔서 감사합니다.")).toBe("Acme을(를) 대신해 AI 에이전트가 작성했습니다.");
+  });
+
   it("leaves out a language whose line wouldn't fit in what kiff/agents takes, and caps a new name so every line fits", () => {
     expect(DISCLOSURE_MAX_BYTES).toBe(300);
-    expect(WRITES_FOR_MAX_BYTES).toBe(251); // German's line carries the most: 49 bytes besides the name ("im Auftrag von")
+    // Greek's line carries the most besides the name (105 bytes: "Γράφτηκε από πράκτορα τεχνητής νοημοσύνης εκ μέρους του …", two bytes a letter), so a new name may be 195 bytes.
+    expect(WRITES_FOR_MAX_BYTES).toBe(195);
     const bytes = (s: string) => Buffer.byteLength(s);
-    // A new name at the cap (63 characters, 251 bytes): its line fits in every language, German's to the byte.
-    const atCap = "😀".repeat(62) + "aaa";
-    expect(bytes(atCap)).toBe(251);
+    const overhead = (lang: string) => bytes(disclosureLines({ writesFor: "x" })[lang]!) - 1;
+    expect(Math.max(...APP_LANGUAGES.map(overhead))).toBe(DISCLOSURE_MAX_BYTES - WRITES_FOR_MAX_BYTES);
+    expect(overhead("el")).toBe(DISCLOSURE_MAX_BYTES - WRITES_FOR_MAX_BYTES);
+    // A new name at the cap (51 characters, 195 bytes): its line fits in every language, Greek's to the byte.
+    const atCap = "😀".repeat(48) + "aaa";
+    expect(bytes(atCap)).toBe(195);
     expect(writesForOf(atCap)).toBe(atCap);
     expect(() => writesForOf(atCap + "a")).toThrow("writes_for");
     const all = disclosureLines({ writesFor: atCap });
-    expect(Object.keys(all).sort()).toEqual(["de", "es", "fr", "it", "pt"]);
-    expect(bytes(all.de!)).toBe(300);
+    expect(Object.keys(all).sort()).toEqual(APP_LANGUAGES);
+    expect(bytes(all.el!)).toBe(300);
     for (const l of [disclosureLine({ writesFor: atCap }), ...Object.values(all)]) expect(bytes(l)).toBeLessThanOrEqual(300);
     // A name stored before the cap, or a company's name from KIFF, up to 272 bytes: English fits to the byte, in
     // the shorter "for" it had before "on behalf of", and heads its messages in every language, none other fitting.
@@ -54,15 +147,26 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
     expect(disclosureLine({ writesFor: "Acme" })).toBe("Written by an AI agent on behalf of Acme.");
     expect(writesForIn("Written by an AI agent on behalf of Acme.")).toBe("Acme");
     expect(writesForIn("Written by an AI agent for Acme.")).toBe("Acme");
-    expect(disclosureLines({ writesFor: stored })).toEqual({});
+    // (and lines only for the few languages whose line is shorter still, none of the five of #363)
+    const fits = disclosureLines({ writesFor: stored });
+    expect(Object.keys(fits).filter((l) => ["es", "fr", "de", "pt", "it"].includes(l))).toEqual([]);
+    for (const l of Object.values(fits)) expect(bytes(l)).toBeLessThanOrEqual(300);
     expect(disclosureLineFor({ writesFor: stored }, "Hecho: te hemos devuelto el importe del pedido 1043.")).toBe(disclosureLine({ writesFor: stored }));
-    expect(systemPrompt({ ...jobById("refunds"), writesFor: stored })).not.toContain("In other languages");
-    // In between (258 bytes): the languages whose line fits stay, German doesn't.
-    const between = "😀".repeat(64) + "aa";
+    // The prompt lists only the lines that fit, so it never offers the model one that kiff/agents would refuse.
+    const stuffed = systemPrompt({ ...jobById("refunds"), writesFor: stored });
+    expect(stuffed).not.toContain('es "');
+    expect(stuffed).toContain(`Your disclosure line: "${disclosureLine({ writesFor: stored })}"`);
+    // In between (220 bytes, a name stored before the cap): the languages whose line fits stay; Greek's (105 besides the name),
+    // Hindi's (85) and Khmer's (83) don't.
+    const between = "😀".repeat(55);
+    expect(bytes(between)).toBe(220);
     const some = disclosureLines({ writesFor: between });
-    expect(Object.keys(some).sort()).toEqual(["es", "fr", "it", "pt"]);
-    expect(bytes(some.es!)).toBe(300);
-    expect(disclosureLineFor({ writesFor: between }, "Ihre Erstattung von 42,00 EUR für die Bestellung 1043 ist erledigt. Danke!")).toBe(disclosureLine({ writesFor: between }));
+    expect(Object.keys(some)).toEqual(expect.arrayContaining(["es", "fr", "de", "pt", "it"]));
+    expect([some.el, some.hi, some.km]).toEqual([undefined, undefined, undefined]);
+    expect(some.ne).toBeDefined();
+    expect(Object.keys(some).length).toBeLessThan(APP_LANGUAGES.length);
+    for (const l of Object.values(some)) expect(bytes(l)).toBeLessThanOrEqual(300);
+    expect(disclosureLineFor({ writesFor: between }, "Γεια σας, ευχαριστούμε για την παραγγελία σας.")).toBe(disclosureLine({ writesFor: between }));
   });
 
   it("asks the taf to start with its line, in the language it writes in, and gives it each one", () => {
@@ -94,7 +198,9 @@ describe("jobs", () => {
     expect(own).toEqual({ id: "custom", name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", cron: "",
       instructions: "What this job does: Reminds customers of overdue invoices.\n\nNever change an invoice." });
     const prompt = systemPrompt(own);
-    expect(prompt).toContain("Your job: Invoices.\n\nYour disclosure line: \"Written by an AI agent.\"\nIn other languages: es \"Escrito por un agente de IA.\", fr \"Rédigé par un agent d'IA.\", de \"Von einem KI-Agenten geschrieben.\", pt \"Escrito por um agente de IA.\", it \"Scritto da un agente di IA.\"\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.");
+    const others = Object.entries(disclosureLines({})).map(([lang, line]) => `${lang} "${line}"`).join(", ");
+    expect(others.startsWith('es "Escrito por un agente de IA.", fr "Rédigé par un agent d\'IA.", de "Von einem KI-Agenten geschrieben.", pt "Escrito por um agente de IA.", it "Scritto da un agente di IA."')).toBe(true);
+    expect(prompt).toContain(`Your job: Invoices.\n\nYour disclosure line: "Written by an AI agent."\nIn other languages: ${others}\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.`);
     // Who it writes for, once the owner said (gaps 16 and 18): never "for the company".
     expect(systemPrompt({ ...own, writesFor: "Kiff Agents OÜ" })).toContain('Your disclosure line: "Written by an AI agent on behalf of Kiff Agents OÜ."');
     expect(prompt).toContain("kiff_pending");

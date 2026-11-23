@@ -2859,7 +2859,9 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ job: "custom", summary: own.summary, work: { kickoff: own.kickoff, instructions: own.instructions } });
     // Its definition carries the job as drafted, and its schedule asks each run for the kickoff.
     const def = w.agents.agents.get(`t_acme|${NEW}`)!;
-    expect(def.instructions).toContain("Your job: Invoices.\n\nYour disclosure line: \"Written by an AI agent.\"\nIn other languages: es \"Escrito por un agente de IA.\", fr \"Rédigé par un agent d'IA.\", de \"Von einem KI-Agenten geschrieben.\", pt \"Escrito por um agente de IA.\", it \"Scritto da un agente di IA.\"\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice or offer a discount.");
+    const others = Object.entries(disclosureLines({})).map(([lang, line]) => `${lang} "${line}"`).join(", ");
+    expect(others.startsWith('es "Escrito por un agente de IA.", fr "Rédigé par un agent d\'IA.", de "Von einem KI-Agenten geschrieben.", pt "Escrito por um agente de IA.", it "Scritto da un agente di IA."')).toBe(true);
+    expect(def.instructions).toContain(`Your job: Invoices.\n\nYour disclosure line: "Written by an AI agent."\nIn other languages: ${others}\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice or offer a discount.`);
     expect(w.agents.schedules.get(`t_acme|${NEW}`)).toMatchObject({ cron: "0 9 * * 1-5", input: own.kickoff, enabled: true });
     expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} 0 9 * * 1-5 UTC`, `trigger ${NEW}`]);
     // Its job line is what Coach said it does, and its dial's face names it.
@@ -5461,14 +5463,14 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   // On #574: the name fits kiff/agents' 300-byte line in any script, on one line, unpadded.
   it("refuses a writes_for that doesn't fit the disclosure line", async () => {
-    for (const bad of ["株".repeat(84), " Kiff", "Kiff ", "Kiff\nAgents", "x".repeat(101)]) {
+    for (const bad of ["株".repeat(84), "株".repeat(66), " Kiff", "Kiff ", "Kiff\nAgents", "x".repeat(101)]) {
       const { w, note, answer } = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: bad } });
       w.agents.access.set("u_ana", { cards_manage: true });
       await note();
       expect(JSON.stringify(answer()), bad).toContain("writes_for is who the taf's messages come from");
     }
-    // 83 of a 3-byte script fits: 249 bytes, so the line fits in every language, German's within 300 (#587).
-    const fits = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(83) } });
+    // 65 of a 3-byte script fits: 195 bytes, so the line fits in every language, Greek's within 300 (#587).
+    const fits = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(65) } });
     fits.w.agents.access.set("u_ana", { cards_manage: true });
     await fits.note();
     expect(fits.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });

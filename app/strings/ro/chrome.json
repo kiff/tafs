@@ -22,11 +22,17 @@
   "chrome.refused": "Un alt Chrome a folosit acest cod, așa că nu s-a asociat nimic. Începeți din nou.",
   "chrome.remove": "Disociați",
   "chrome.remove_named": "Disociați {name}",
+  "chrome.replace_moves": "Trece la acest Chrome: {sites}",
+  "chrome.replace_none": "Un Chrome nou (nu înlocuiește niciunul)",
+  "chrome.replace_title": "Înlocuiește",
+  "chrome.replace_unpairs": "{name} este dezasociat de îndată ce acesta este asociat.",
   "chrome.shot_failed": "Imaginea nu a putut fi încărcată.",
   "chrome.shot_kept": "Păstrată 30 de zile, apoi ștearsă.",
   "chrome.shot_none": "Pentru acest pas nu este păstrată nicio imagine.",
   "chrome.shot_open": "Vezi pagina de dinainte de acest pas",
   "chrome.shot_title": "Înainte de acest pas",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Dezasocierea încheie conexiunile care îl folosesc: {sites}. Revin doar dacă le conectezi din nou.",
+  "chrome.used_for": "Folosit pentru {sites}",
   "chrome.waiting": "Se așteaptă Chrome…"
 }

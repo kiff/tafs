@@ -86,14 +86,29 @@ object ChromePairing {
     base64Url(hmac(secret, PHONE_PROOF_LABEL, phoneKey + sha256(chromeKey)))
 
   /** What the phone signs to confirm the pairing, and sends with its signature. */
-  data class Confirmation(val chromeKeySha256: String, val name: String, val phoneKey: String, val phoneProof: String)
+  data class Confirmation(
+    val chromeKeySha256: String,
+    val name: String,
+    val phoneKey: String,
+    val phoneProof: String,
+    /**
+     * A re-pairing's carried connections (docs/chrome.md "Your Chrome" 1): each grant that moves to this Chrome and its sites,
+     * read from the old Chrome's signed copy, in the order the phone writes them. Empty for a first pairing, and then not in
+     * the signed body at all, so a first pairing's bytes are as they always were.
+     */
+    val carried: List<Carried> = emptyList(),
+  )
+
+  /** One connection a re-pairing carries: its grant and its sites, as signed. */
+  data class Carried(val grant: String, val sites: List<String>)
 
   fun confirmation(secret: String, chromeKey: ByteArray, name: String, phoneKey: ByteArray): Confirmation =
     Confirmation(chromeKeyHash(chromeKey), name, base64Url(phoneKey), phoneProof(secret, phoneKey, chromeKey))
 
   /**
    * The bytes the phone signs for [c] of pairing [pairing]: label ‖ 0x00 ‖ JCS of
-   * `{pairing, chrome_key_sha256, name, phone_key, phone_proof}`.
+   * `{pairing, chrome_key_sha256, name, phone_key, phone_proof}`, and `carried: [{grant, sites}]` when a re-pairing carries
+   * connections, as the extension rebuilds it (`checkConfirmation`).
    */
   fun signedBytes(pairing: String, c: Confirmation): ByteArray {
     val body = buildJsonObject {
@@ -102,6 +117,14 @@ object ChromePairing {
       put("name", JsonPrimitive(c.name))
       put("phone_key", JsonPrimitive(c.phoneKey))
       put("phone_proof", JsonPrimitive(c.phoneProof))
+      if (c.carried.isNotEmpty()) {
+        put("carried", kotlinx.serialization.json.JsonArray(c.carried.map { e ->
+          buildJsonObject {
+            put("grant", JsonPrimitive(e.grant))
+            put("sites", kotlinx.serialization.json.JsonArray(e.sites.map { JsonPrimitive(it) }))
+          }
+        }))
+      }
     }
     return PAIR_LABEL.toByteArray(Charsets.UTF_8) + byteArrayOf(0) + Jcs.canonical(body).toByteArray(Charsets.UTF_8)
   }
@@ -201,6 +224,60 @@ object ChromePairing {
     val s = integer() ?: return null
     if (i != der.size) return null
     return base64Url(r + s)
+  }
+
+  /** [raw] r‖s (64 bytes, base64url) as the DER `SHA256withECDSA` verifies; null when it isn't 64 bytes. */
+  fun derSignature(raw: String): ByteArray? {
+    val b = base64UrlDecoded(raw)?.takeIf { it.size == 64 } ?: return null
+    fun integer(v: ByteArray): ByteArray {
+      val trimmed = v.dropWhile { it == 0.toByte() }.toByteArray()
+      val t = if (trimmed.isEmpty()) byteArrayOf(0) else trimmed
+      val body = if (t[0].toInt() and 0x80 != 0) byteArrayOf(0) + t else t
+      return byteArrayOf(0x02, body.size.toByte()) + body
+    }
+    val seq = integer(b.copyOfRange(0, 32)) + integer(b.copyOfRange(32, 64))
+    return byteArrayOf(0x30, seq.size.toByte()) + seq
+  }
+
+  /** Whether [raw] (r‖s, base64url) is the key [publicKeyDER]'s P-256 signature of [message]. Anything malformed is false. */
+  fun verifiesRaw(publicKeyDER: ByteArray, message: ByteArray, raw: String): Boolean = runCatching {
+    val der = derSignature(raw) ?: return false
+    val key = java.security.KeyFactory.getInstance("EC").generatePublic(java.security.spec.X509EncodedKeySpec(publicKeyDER))
+    java.security.Signature.getInstance("SHA256withECDSA").run { initVerify(key); update(message); verify(der) }
+  }.getOrDefault(false)
+
+  /**
+   * What a re-pairing carries from [old] (docs/chrome.md "Your Chrome" 1): of the live connections planque lists on it
+   * (`connections`, planque's rule, never the app's), each whose sites this phone signed for it, read from the phone's own
+   * signature (`chrome_sites_sig`) and checked here with [approvalKeyDER], never from planque's word. One whose signature doesn't
+   * hold, or that has none (one carried before), isn't carried: it ends with the old Chrome. At most the extension's limits
+   * (50 connections, 100 sites each).
+   */
+  fun carriedFrom(old: Chrome, grants: List<Grant>, approvalKeyDER: ByteArray): List<Carried> {
+    val live = old.connections.orEmpty().map { it.grant }.toSet()
+    return grants.mapNotNull { g ->
+      val b = g.request.browser
+      val sites = b?.sites.orEmpty()
+      val sig = g.chromeSitesSig
+      when {
+        g.id !in live || b?.driver != GrantBrowser.EXTENSION || b.chrome != old.id -> null
+        sites.isEmpty() || sites.size > 100 || sig.isNullOrEmpty() -> null
+        !verifiesRaw(approvalKeyDER, sitesBytes(old.id, g.id, sites), sig) -> null
+        else -> Carried(g.id, sites)
+      }
+    }.take(50)
+  }
+
+  /**
+   * What the pick starts on, as iOS's `ChromeReplace.preselect`: the paired Chrome whose profile id is the offer's; else, when one
+   * side has no id (an extension from before ids, or one reinstalled), the one paired Chrome on the same browser and system. None
+   * otherwise ("a new Chrome"), never a guess between two.
+   */
+  fun replacedBy(offer: ChromeOffer, chromes: List<Chrome>): Chrome? {
+    if (offer.profileId.isNotEmpty()) chromes.firstOrNull { it.profileId == offer.profileId }?.let { return it }
+    val alike = chromes.filter { it.profileId.isNullOrEmpty() || offer.profileId.isEmpty() }
+      .filter { offer.browser.isNotEmpty() && it.browser == offer.browser && offer.os.isNotEmpty() && it.os == offer.os }
+    return alike.singleOrNull()
   }
 
   /** A name for the Chrome: the owner's, trimmed, at most [NAME_MAX] characters; the browser's own words when they gave none. */

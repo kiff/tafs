@@ -22,11 +22,17 @@
   "chrome.refused": "Inny Chrome użył tego kodu, więc nic nie zostało powiązane. Zacznij od nowa.",
   "chrome.remove": "Usuń powiązanie",
   "chrome.remove_named": "Usuń powiązanie z {name}",
+  "chrome.replace_moves": "Przechodzi do tego Chrome: {sites}",
+  "chrome.replace_none": "Nowa przeglądarka Chrome (nic nie zastępuje)",
+  "chrome.replace_title": "Zastępuje",
+  "chrome.replace_unpairs": "{name} zostaje rozparowany, gdy ten zostanie sparowany.",
   "chrome.shot_failed": "Nie udało się wczytać obrazu.",
   "chrome.shot_kept": "Przechowywany przez 30 dni, potem usuwany.",
   "chrome.shot_none": "Dla tego kroku nie zapisano żadnego obrazu.",
   "chrome.shot_open": "Zobacz stronę przed tym krokiem",
   "chrome.shot_title": "Przed tym krokiem",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Rozparowanie kończy połączenia, które z niego korzystają: {sites}. Wrócą dopiero, gdy połączysz je ponownie.",
+  "chrome.used_for": "Używana do: {sites}",
   "chrome.waiting": "Czekam na Chrome…"
 }
