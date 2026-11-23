@@ -68,6 +68,8 @@ export class HandAnswers {
       const a = (await this.all()).find((x) => x.hand === m.hand);
       if (a && a.page) return this.add({ ...a, page: null });
     }
+    // planque couldn't keep it just now (a store failure): it stays, and goes again on the next welcome, until it is kept or too old.
+    if (m.code === "not_kept") return;
     return this.drop(m.hand); // unknown_hand, expired, unsigned: sending it again changes nothing
   }
 }
