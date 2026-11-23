@@ -302,5 +302,11 @@
   },
   "setup_taf": {
     "message": "इस साइट के लिए नया taf सेट अप करें"
-  }
+  },
+  "hand_title": { "message": "आपकी बारी", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "taf कहता है", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "मुझे दिखाएँ", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "हो गया", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "अभी नहीं", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "केवल वहीं टाइप करें जहाँ आप इस पेज पर भरोसा करते हैं।", "description": "Fixed line on that card under the taf's words" }
 }
