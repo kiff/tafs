@@ -1,0 +1,4 @@
+• Chrome: associe-o com uma só impressão digital, onde a extensão a verifica.
+• Associar de novo um Chrome pergunta qual substitui e só move as ligações assinadas por este telemóvel.
+• Conta › Chrome diz para que serve cada Chrome e o que termina ao desassociá-lo; «Usar outro Chrome» move uma ligação.
+• Inicie sessão com um código enviado por email: ative-o em Conta › Início de sessão.
