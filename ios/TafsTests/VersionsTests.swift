@@ -342,7 +342,7 @@ final class VersionsTests: XCTestCase {
     /// A switch that stopped a task waiting on the owner's answer (tafs cloud names it in `stopped`, with its words): the chat says so, with
     /// Retry on the owner's last message of that session, never silence. A switch that stopped nothing says nothing.
     func testASwitchThatStoppedAWaitingTaskSaysSoAndOffersRetry() async throws {
-        let (model, id) = await kiffModel()
+        let (model, id) = await kiffModel(signer: StubSigner())
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"message","text":"Refund pi_1","session":"sess_p"},{"at":"2026-10-14T09:05:00Z","from":"owner","kind":"message","text":"Another thing","session":"sess_other"}]}"#)
         await model.loadVersions(id)
