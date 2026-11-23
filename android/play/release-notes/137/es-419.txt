@@ -1,0 +1,3 @@
+• «Cómo funciona tafs» ahora explica tu Chrome y el inicio de sesión con un código enviado por correo.
+• «Dar a Coach sus herramientas» ahora lo dice cuando no se pudo conectar nada, en lugar de quedarse en silencio.
+• La «6.ª llamada» de una Card ahora se lee bien en turcomano, urdu, hindi, bengalí y mongol.

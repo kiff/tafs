@@ -1,0 +1,3 @@
+• How tafs works now explains your Chrome and signing in with a code sent by email.
+• “Give Coach its tools” now says so when nothing could be connected, instead of going quiet.
+• A Card’s “6th call” now reads right in Turkmen, Urdu, Hindi, Bengali and Mongolian.
