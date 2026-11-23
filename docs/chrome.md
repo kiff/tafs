@@ -330,7 +330,7 @@ error = {code, detail?}      // detail never carries page text
 | `address_private` | an IP address (in any form a browser reads), or a local name (`.local`, `.internal`, …) |
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
 | `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
-| `needs_site_permission` | Chrome hasn't let the extension into that site yet: the side panel offers "Allow shop.example in Chrome" |
+| `needs_site_permission` | Chrome hasn't let the extension into that site yet, and the owner didn't allow it within 12 s: the side panel offers "Allow shop.example in Chrome" (`detail` names the site) |
 | `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since |
 | `ref_unknown` | the read has no such ref, or its element is gone, or it has become something else since the read: the element's tag, type, name, label, words and link target, and the words of the row it sits in, must be what the read saw |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
@@ -385,7 +385,10 @@ was done.
   - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
     reported, a confirm answers no, and a "leave this page?" handler is dropped.
   - In the isolated world: `mask.js` and `page.js`.
-- **The toolbar badge shows "ON" while a run is on.** The side panel shows the taf, the site, the last steps, and Pause,
+- **A site Chrome hasn't let in is waited for, not failed at once.** An open of it makes no tab until the owner allows it, and a read
+  of a page it navigated to waits on that page, for up to 12 s each (planque waits 20 s for a step's result), checking each half second: the panel shows "Allow shop.example in Chrome", the toolbar badge shows "!", and the run goes on the
+  moment the owner allows it. Only after 12 s does the step answer `needs_site_permission`, naming the site. Stop or Pause ends the wait.
+- **The toolbar badge shows "ON" while a run is on, and "!" while one waits for a site's Allow.** The side panel shows the taf, the site, the last steps, and Pause,
   Resume and Stop.
 
 ## Masking

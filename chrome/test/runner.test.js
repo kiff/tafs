@@ -11,9 +11,10 @@ const SHOP = await signedSites(["shop.example"]);
 const PAYPAL = await signedSites(["paypal.com"]);
 
 /** A fake of the parts of Chrome's extension API the runner uses, recording every call. */
-function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFails = false, createFails = false } = {}) {
+function fakeChrome({ permitted = true, allowAfter = null, page = null, ownerWindow = null, groupFails = false, createFails = false } = {}) {
   const calls = [];
   const listeners = {};
+  let checks = 0;
   const on = (name) => ({ addListener: (f) => (listeners[name] = f) });
   const tabs = new Map();
   let nextTab = 100;
@@ -22,6 +23,12 @@ function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFa
   const c = {
     calls,
     listeners,
+    get checks() {
+      return checks;
+    },
+    set checks(n) {
+      checks = n;
+    },
     tabsMap: tabs,
     setAct: (a) => (actAnswer = a),
     setNextTab: (n) => (nextTab = n),
@@ -67,7 +74,8 @@ function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFa
         return ownerWindow;
       },
     },
-    permissions: { contains: async () => permitted },
+    // `allowAfter`: the owner clicks Allow after that many checks.
+    permissions: { contains: async () => (allowAfter == null ? permitted : ++c.checks > allowAfter) },
     declarativeNetRequest: { updateSessionRules: async (o) => calls.push(["dnr", o]) },
     scripting: {
       executeScript: async (o) => {
@@ -319,6 +327,49 @@ test("when the tab can't be grouped in the owner's window, only the run's tab cl
   const tab = [...c.tabsMap.keys()][0];
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[tab]]);
   assert.ok(!c.calls.some((x) => x[0] === "windows.remove"), "the owner's window stays");
+});
+
+test("a site Chrome hasn't let in is waited for, and the run goes on the moment the owner allows it", async () => {
+  const c = fakeChrome({ allowAfter: 7 });
+  let madeAt = -1;
+  const create = c.windows.create;
+  c.windows.create = async (o) => ((madeAt = c.checks), create(o));
+  const states = [];
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, onChange: (runs) => states.push(runs.map((x) => x.asks.slice())) });
+  const out = await r.handle(step());
+  assert.ok(out.page, "the read went through after the Allow");
+  assert.ok(states.some((s) => s.some((asks) => asks.includes("shop.example"))), "the panel was told which site to allow");
+  assert.deepEqual(r.state()[0].asks, [], "the ask is gone once allowed");
+  assert.ok(c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js"), "read only after the Allow");
+  assert.ok(madeAt > 7, "the tab was made only after the Allow (after check " + madeAt + ")");
+});
+
+test("a site nobody allows answers needs_site_permission naming it, and keeps asking", async () => {
+  const c = fakeChrome({ permitted: false });
+  const r = runner(c);
+  const out = await r.handle(step());
+  assert.deepEqual(out.error, { code: "needs_site_permission", detail: "shop.example" });
+  assert.deepEqual(r.state()[0].asks, ["shop.example"]);
+  assert.ok(!c.calls.some((x) => x[0] === "windows.create" || x[0] === "tabs.create" || x[0] === "tabs.update"), "no tab was opened for it");
+});
+
+test("the wait for a site's Allow ends inside planque's 20 s for a step's result", async () => {
+  const c = fakeChrome({ permitted: false });
+  let slept = 0;
+  const r = new Runner({ chrome: c, sleep: async (ms) => { slept += ms; }, paired: () => paired });
+  const out = await r.handle(step());
+  assert.equal(out.error.code, "needs_site_permission");
+  assert.ok(slept > 0 && slept <= 12_000, `waited ${slept} ms`);
+});
+
+test("a Stop during the wait for a site's Allow ends the wait", async () => {
+  const c = fakeChrome({ permitted: false });
+  let r;
+  let n = 0;
+  r = new Runner({ chrome: c, sleep: async () => { if (++n === 3) await r.stop("run_1"); }, paired: () => paired });
+  const out = await r.handle(step());
+  assert.equal(out.error.code, "needs_site_permission");
+  assert.ok(n < 10, "it didn't wait out the 12 s");
 });
 
 test("a site Chrome hasn't let the extension into waits for the owner's yes in the side panel", async () => {
