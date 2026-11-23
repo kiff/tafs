@@ -16,6 +16,8 @@ export const ptBR: Words = {
   ...pt,
   work_working: "Em andamento",
   work_waiting_approval: "Aguardando sua aprovação",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "Essa execução já tinha terminado, então nada foi feito.",
   your_step_title: "Seu passo",
   your_step_skip: "Pular",
   your_step_reminder: (what: string) => `Seu passo ainda está aguardando: ${what}`,
