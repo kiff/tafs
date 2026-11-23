@@ -1482,7 +1482,7 @@ final class AppModel: ObservableObject {
     var approvalPublicKey: Data { signer.approvalPublicKeyDER }
 
     func confirmChrome(_ p: ChromePairingInProgress, offer: PlanqueClient.ChromeOffer, name typed: String,
-                       replacing old: PlanqueClient.Chrome? = nil) async -> Bool {
+                       replacing old: PlanqueClient.Chrome? = nil, shown: [ChromePairing.Carried] = []) async -> Bool {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant,
               let chromeKey = ChromePairing.base64URLDecoded(offer.key),
               ChromePairing.extensionProofHolds(secret: p.secret, key: chromeKey, proof: offer.proof, kiffOffer: offer.kiffOffer),
@@ -1496,12 +1496,25 @@ final class AppModel: ObservableObject {
         // and the fingerprint signs them inside the pairing the extension checks. With nothing chosen, nothing moves.
         if let picked = old {
             // The Chrome's own list (planque's `connections`) and the grants (their signatures) are both read again, so what is carried
-            // is what is live now, never what the pick showed a while ago.
+            // is what is live now. It's signed only if it's exactly what the owner was shown (`shown`): if a connection ended or the
+            // Chrome went meanwhile, nothing is signed, and the sheet says so over the new list, to pair again on. A read that failed
+            // signs nothing either, since the list is no longer known to be live (as Android's `confirmChrome`).
             await refreshChromes()
-            await refreshConnections()
-            let old = chromes?.first { $0.id == picked.id } ?? picked
-            confirmation.replaces = old.id
-            let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phoneKey)
+            guard chromesError == nil else { return false }
+            guard await refreshConnections() else {
+                chromesError = Words.Chrome.notLoaded(why: connectionsReadError ?? Words.Chrome.replaceChanged)
+                return false
+            }
+            guard let live = chromes?.first(where: { $0.id == picked.id }) else {
+                chromesError = Words.Chrome.replaceChanged
+                return false
+            }
+            let carried = ChromeReplace.carried(from: live, in: grants, phoneKey: phoneKey)
+            guard carried == shown else {
+                chromesError = Words.Chrome.replaceChanged
+                return false
+            }
+            confirmation.replaces = live.id
             if !carried.isEmpty { confirmation.carried = carried }
         }
         let reason = Words.Chrome.pairPrompt(name: name)
@@ -7271,18 +7284,33 @@ final class AppModel: ObservableObject {
     /// `planque.signer`: it runs whenever the app comes back to the front, which is also
     /// when the owner returns from the vendor's sign-in, mid-way through a Face ID step that
     /// still needs its signer to confirm the sign-in.
-    func refreshConnections() async {
+    /// Reads the account's connections (planque's grants) again. True when the read went through: a caller that signs from them
+    /// (a re-pairing's carried list) needs to know they're live.
+    @discardableResult
+    func refreshConnections() async -> Bool {
         let gen = accountGeneration
-        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return }
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return false }
         await loadDeviceID()
-        guard gen == accountGeneration else { return }
+        guard gen == accountGeneration else { return false }
         let signer = self.signer
         planque.tenant = tenant
         let cards = Set(setupThread.components.map(\.component).filter { $0.type == .approval }.map(\.id))
-        guard let list = try? await planque.grants(signedBy: { try signer.signConfirmed($0) }), gen == accountGeneration else { return }
+        let list: [PlanqueClient.Grant]
+        do {
+            list = try await planque.grants(signedBy: { try signer.signConfirmed($0) })
+        } catch {
+            if gen == accountGeneration { connectionsReadError = error.localizedDescription }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
         grants = list
         grantsReadFor.formUnion(cards)
+        connectionsReadError = nil
+        return true
     }
+
+    /// Why the last read of the connections failed, for a line that says so; nil once one goes through.
+    private(set) var connectionsReadError: String?
 
     /// Sets this phone up with planque, once per account, behind one Face ID: planque gets
     /// the phone's key, and a KIFF key that connects tools and does nothing else, minted
@@ -7985,6 +8013,23 @@ final class AppModel: ObservableObject {
     /// failed part-way, with the message that started it to send again.
     enum RunEnd: Equatable { case stopped, failed(retry: String) }
     @Published private(set) var setupEnded: RunEnd?
+    /// The run whose stream ended `failed` here (`setupEnded`), as the stream named it; nil when it named none. The thread's
+    /// `failed` for that run isn't said again; another run's still is (`setupRunFailedLine`).
+    private var setupEndedRun: String?
+
+    /// A run of Coach's that ended without an answer: tafs cloud's words (the thread's `failed`), as Coach's chat's last line,
+    /// by a taf's chat's rules (`runFailedLine`, Android's `chatItems`):
+    /// - one refused line per run: a run followed live here already ended with its own, with Retry (`setupEnded`), so the
+    ///   thread's line for that run isn't added; another run's still is. A stream that named no run is taken as this one;
+    /// - none while an answer streams, or while a new message is being sent (the old failure isn't its answer);
+    /// - a chat with nothing in it (a new conversation) had no run here to fail.
+    /// Its `at` is a moment after the thread's last message, so its id stays the same as items come.
+    var setupRunFailedLine: TafsCloud.ChatMessage? {
+        guard let failed = setupThread.failed, setupLive == nil, !setupSending, !setupFresh,
+              let last = setupThread.items.map(\.at).max() else { return nil }
+        if case .failed? = setupEnded, setupEndedRun == nil || setupEndedRun == failed.run { return nil }
+        return TafsCloud.ChatMessage(at: last.addingTimeInterval(0.001), from: .taf, text: failed.words, session: "failed|" + failed.run)
+    }
 
     /// The Setup chat shown (kiff/tafs#73): one the owner reopened or started here, the
     /// newest at launch (kiff/tafs#389), or nil for the latest ones together when there's
@@ -9315,7 +9360,10 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         // The run is over: Setup is no longer at work, whatever it wrote.
         if ended != nil { setupAwaiting = nil }
-        if ended == "ERROR" { setupEnded = .failed(retry: text) }
+        if ended == "ERROR" {
+            setupEnded = .failed(retry: text)
+            setupEndedRun = setupLive?.run
+        }
         if ended == "CANCELLED" { setupEnded = .stopped }
         // The recorded answer first, then the live one goes: no gap between them.
         await loadSetupThread()

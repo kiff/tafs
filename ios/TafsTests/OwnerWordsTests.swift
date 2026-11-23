@@ -380,6 +380,32 @@ final class HeldReasonWordsTests: XCTestCase {
         XCTAssertEqual(got, ["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "101st", "111th"])
     }
 
+    /// The languages the system's ICU writes no ordinal for a call in (English "6th" instead, or Hindi's masculine) are written
+    /// from CLDR's ordinal classes, with the language's own digits; every other language stays the system's.
+    func testOrdinalsInTheLanguagesTheSystemDoesntWriteForACall() {
+        let ns = [1, 2, 3, 4, 6, 9, 10, 21]
+        func ordinals(_ code: String) -> [String] { ns.map { Words.ordinal($0, locale: Words.locale(for: code)) } }
+        func digits(_ code: String) -> [String] {
+            let f = NumberFormatter()
+            f.numberStyle = .none
+            f.locale = Words.locale(for: code)
+            return ns.map { f.string(from: NSNumber(value: $0)) ?? String($0) }
+        }
+        func with(_ code: String, _ suffixes: [String]) -> [String] { zip(digits(code), suffixes).map { $0 + $1 } }
+        XCTAssertEqual(ordinals("tk"), with("tk", ["-nji", "-nji", "-nji", "-nji", "-njy", "-njy", "-njy", "-nji"]))
+        XCTAssertEqual(ordinals("ur"), with("ur", Array(repeating: "ویں", count: ns.count)))
+        XCTAssertEqual(ordinals("hi"), with("hi", ["ली", "री", "री", "थी", "ठी", "वीं", "वीं", "वीं"]))
+        XCTAssertEqual(ordinals("bn"), with("bn", ["ম", "য়", "য়", "র্থ", "ষ্ঠ", "ম", "ম", "তম"]))
+        XCTAssertEqual(ordinals("mn"), with("mn", Array(repeating: "-р", count: ns.count)))
+        // Hindi's 0 stays bare.
+        let zero = NumberFormatter()
+        zero.numberStyle = .none
+        zero.locale = Words.locale(for: "hi")
+        XCTAssertEqual(Words.ordinal(0, locale: Words.locale(for: "hi")), zero.string(from: NSNumber(value: 0)) ?? "0")
+        // Every other language is the system's, as before.
+        XCTAssertEqual(Words.ordinal(21, locale: Locale(identifier: "en")), "21st")
+    }
+
     func testACoachHoldIsNamedCoachInItsAlert() throws {
         let e = try KIFFClient.decoder.decode(KIFFClient.CardException.self, from: Data("""
         {"id":"exc-1","subject":"setup","action":"taf_results","entity_id":"x","status":"held","breaches":[],

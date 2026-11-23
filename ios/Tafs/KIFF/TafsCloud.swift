@@ -2642,12 +2642,15 @@ final class TafsCloud {
         struct Response: Decodable {
             let messages: [ChatMessage]; let components: [LenientShown]?; let working: Working?; let coachLines: [LenientLine]?
             let items: [LenientDrive]?; let steering: LenientSteering?
-            enum CodingKeys: String, CodingKey { case messages, components, working, items, steering, coachLines = "coach_lines" }
+            /// One with no words, or of another shape, is no line, never the thread with it.
+            let failed: RunFailed.Lenient?
+            enum CodingKeys: String, CodingKey { case messages, components, working, items, steering, failed, coachLines = "coach_lines" }
         }
         let r = try KIFFClient.decoder.decode(Response.self, from: data)
         return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)),
                            working: r.working?.session, coachLines: (r.coachLines ?? []).compactMap(\.line),
-                           drives: (r.items ?? []).compactMap(\.drive), workingRun: r.working?.run, steering: r.steering?.steering)
+                           drives: (r.items ?? []).compactMap(\.drive), workingRun: r.working?.run, steering: r.steering?.steering,
+                           failed: r.failed?.failed)
     }
 
     /// How a task Coach handed a taf went (kiff/tafs#206), shown in Coach's chat until
