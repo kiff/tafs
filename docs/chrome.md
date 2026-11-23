@@ -158,6 +158,10 @@ or switching never leaves a connection pointing at a Chrome that's gone. Nothing
      on the replace's approval ("moves Wiki lookup: wikipedia.org"). planque moves exactly the grants it sent, each only
      if it's on the Chrome replaced with exactly those sites; if planque relayed another list, the extension's check of
      `phone_sig` fails and nothing is paired. Ending the old Chrome's other connections is taking power away, as unpair is.
+   - **Carried again:** a carried connection has no `sites_sig` of its own, so the new Chrome keeps the pairing as the phone
+     signed it (planque's `paired_with` on the Chromes list: the pairing body and `phone_sig`). A later re-pairing carries it
+     only when the phone verifies that `phone_sig` with its own key, for that Chrome's key and exactly the connection's sites,
+     as planque checks too; else it ends with the old Chrome.
    - **The extension's rule for `carried`:** read only from the confirmed pairing body; at most 50 connections and 100
      sites each, no grant twice, each site passing the same check as a grant's sites, in the order sent. A step for a
      carried grant is accepted when its sites are within the carried sites for that grant (the same "within" as a fresh
