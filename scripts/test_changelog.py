@@ -28,6 +28,24 @@ class Check(unittest.TestCase):
         errors = changelog.check([("A", "changes/a-b.md"), ("D", "changes/old.md")], "a/b")
         self.assertIn("another pull request's fragment", errors[0])
 
+    def test_another_fragment_may_change_only_to_take_out_a_name(self):
+        # A thread link and a dated rule, built here so this file doesn't hold them itself.
+        thread, dated = "kiff/" + "work#16", "(the owner, 12 " + "Nov)"
+        before = f"- **Hindi in the apps.** A first draft, see {thread}: wording is fixed forward {dated}.\n"
+        after = "- **Hindi in the apps.** This is a first draft: wording is fixed forward.\n"
+        self.assertTrue(changelog.cleans_names(before, after))
+        # Nothing named before: an ordinary rewrite of someone else's entry, refused.
+        self.assertFalse(changelog.cleans_names(after, after.replace("Hindi", "Urdu")))
+        # Still named after, or emptied: refused.
+        self.assertFalse(changelog.cleans_names(before, after + f"See {thread}.\n"))
+        self.assertFalse(changelog.cleans_names(before, "\n"))
+        changed = [("A", "changes/a-b.md"), ("M", "changes/old.md")]
+        self.assertEqual(changelog.check(changed, "a/b", cleaned=frozenset({"changes/old.md"})), [])
+        self.assertIn("another pull request's fragment", changelog.check(changed, "a/b")[0])
+        # Only a change: removing a fragment stays refused, cleaned or not.
+        removed = [("A", "changes/a-b.md"), ("D", "changes/old.md")]
+        self.assertIn("another pull request's fragment", changelog.check(removed, "a/b", cleaned=frozenset({"changes/old.md"}))[0])
+
     def test_the_folders_readme_isnt_a_fragment(self):
         self.assertEqual(changelog.check([("A", "changes/a-b.md"), ("M", "changes/README.md")], "a/b"), [])
 

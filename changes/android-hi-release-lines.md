@@ -1,1 +1,1 @@
-- **Hindi in the apps.** Every screen, message and sample on iPhone, iPad, Mac and Android reads in Hindi, with the legal pages in Hindi (kiff.dev/hi/…). A first draft by legal-i18n: wording is fixed forward, and a native read follows.
+- **Hindi in the apps.** Every screen, message and sample on iPhone, iPad, Mac and Android reads in Hindi, with the legal pages in Hindi (kiff.dev/hi/…). This is a first draft: wording is fixed forward, and a native read follows.

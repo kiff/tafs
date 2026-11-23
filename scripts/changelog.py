@@ -12,8 +12,11 @@ the same line. A change with nothing user-visible adds an empty file.
         fold. An empty one: filling it is its entry, and leaving it empty is
         the empty file. One holding an earlier pull request's entry: leaving
         it as it is stands for this pull request's empty file, and changing
-        it would rewrite that entry, so it fails. Dependabot's pull requests
-        are exempt. A
+        it would rewrite that entry, so it fails. The one change allowed to
+        another pull request's fragment is the public-text check's: it named
+        a lane, a thread, its manager or a dated rule, and now names none
+        (scripts/public_text.py), so a release never folds such a line into
+        CHANGELOG.md. Dependabot's pull requests are exempt. A
         release branch (release/...) carries the fold instead: CHANGELOG.md
         edited and fragments only removed, none added or changed.
     changelog.py fold [--release "1.8.0 (2026-11-12)"]
@@ -41,11 +44,24 @@ def git(*args: str, cwd: str = ROOT) -> str:
     return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout
 
 
-def check(changed: list[tuple[str, str]], branch: str, empty_on_base: bool = False, filled_on_base: bool = False) -> list[str]:
+def cleans_names(before: str, after: str) -> bool:
+    """Whether an edit to another pull request's fragment is the public-text check's: the fragment named a lane, a
+    thread, its manager or a dated rule (scripts/public_text.py), names none now, and still says something."""
+    import public_text
+
+    def named(text: str) -> bool:
+        return any(public_text.named(line) for line in text.splitlines())
+
+    return named(before) and not named(after) and after.strip() != ""
+
+
+def check(changed: list[tuple[str, str]], branch: str, empty_on_base: bool = False, filled_on_base: bool = False,
+          cleaned: frozenset = frozenset()) -> list[str]:
     """What's wrong with a pull request's changes ((status, path) pairs against its base).
 
     empty_on_base: the branch's own fragment is already on the base, and empty.
-    filled_on_base: it's already on the base, holding an earlier pull request's entry."""
+    filled_on_base: it's already on the base, holding an earlier pull request's entry.
+    cleaned: other fragments whose change only takes out what the public-text check finds (`cleans_names`)."""
     if branch.startswith("dependabot/"):
         return []
     fragments = [(status, path) for status, path in changed
@@ -63,7 +79,10 @@ def check(changed: list[tuple[str, str]], branch: str, empty_on_base: bool = Fal
     if any(path == CHANGELOG for _, path in changed):
         errors.append(f"{CHANGELOG} is edited: put the entry in {fragment_name(branch)} instead")
     added = [path for status, path in fragments if status.startswith("A")]
-    others = [path for status, path in fragments if not status.startswith("A")]
+    # Another pull request's fragment changed only to take out a name the public-text check finds: allowed, as the
+    # release would otherwise fold that name into CHANGELOG.md. Removing one, or any other change, stays an error.
+    others = [path for status, path in fragments
+              if not status.startswith("A") and not (status.startswith("M") and path in cleaned)]
     want = fragment_name(branch)
     if empty_on_base and not any(path == want and status.startswith("D") for status, path in fragments):
         # The name came back after its pull request merged, and its empty fragment waits for the
@@ -148,7 +167,10 @@ def main(argv: list[str]) -> int:
         out = git("diff", "--name-status", "--no-renames", f"{args.base}...HEAD")
         changed = [tuple(line.split("\t", 1)) for line in out.splitlines() if line]
         size = own_fragment_size(args.base, args.branch)
-        errors = check(changed, args.branch, empty_on_base=size == 0, filled_on_base=(size or 0) > 0)
+        cleaned = frozenset(path for status, path in changed
+                            if status.startswith("M") and path.startswith(CHANGES + "/") and path != fragment_name(args.branch)
+                            and cleans_names(git("show", f"{args.base}:{path}"), git("show", f"HEAD:{path}")))
+        errors = check(changed, args.branch, empty_on_base=size == 0, filled_on_base=(size or 0) > 0, cleaned=cleaned)
         for e in errors:
             print(f"::error::{e}")
         return 1 if errors else 0

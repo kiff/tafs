@@ -1,1 +1,1 @@
-- **Docs:** the Google Play listing in Korean (title, short description, full description), for mac-local to add as ko-KR.
+- **Docs:** the Google Play listing in Korean (title, short description, full description), ready to add in Play Console as ko-KR.
