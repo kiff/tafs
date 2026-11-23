@@ -51,6 +51,22 @@ final class FilesTests: XCTestCase {
         XCTAssertEqual(TafFilesEntry.label(count: 2), Words.Files.title + ", " + Words.Files.tafRow(count: 2))
     }
 
+    /// An opened attachment's copy stays inside the app's folder whatever tafs cloud sends (as Android's tafs#1737): its id is
+    /// one plain folder, and its name its last part, a bare `.` or `..` read as `file`.
+    func testAnOpenedAttachmentsIdAndNameStayInsideTheAppsFolder() {
+        XCTAssertEqual(AppModel.openedFolder("att_01-x"), "att_01-x", "an id as tafs cloud makes it is kept")
+        XCTAssertEqual(AppModel.openedFolder("../../Library"), "Library")
+        XCTAssertEqual(AppModel.openedFolder("../.."), "file")
+        XCTAssertEqual(AppModel.openedFolder("a/b\\c d"), "abcd")
+        XCTAssertEqual(AppModel.openedFolder("é1"), "1", "ASCII only")
+        XCTAssertEqual(FileText.name("..", fallback: "file"), "file")
+        XCTAssertEqual(FileText.name("../../x.pdf", fallback: "file"), "x.pdf")
+        let root = AppModel.openedFiles.standardizedFileURL.path
+        let copy = AppModel.openedFiles.appendingPathComponent(AppModel.openedFolder("../../Library"), isDirectory: true)
+            .appendingPathComponent(FileText.name("..", fallback: "file")).standardizedFileURL.path
+        XCTAssertTrue(copy.hasPrefix(root + "/"), copy)
+    }
+
     func testFilesAreKeptThirtyDays() {
         XCTAssertEqual(FilesFeature.keptDays, 30)
     }
