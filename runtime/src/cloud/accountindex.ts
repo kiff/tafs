@@ -3,7 +3,7 @@
  * reads 17 small items instead of scanning the whole table.
  *
  * At 10,000 users: 10,000 ids over 16 items (`accounts#00` … `accounts#15`, about
- * 20 KB each, far under DynamoDB's 400 KB), read in one BatchGetItem. Without the
+ * 20 KB each, far under DynamoDB's 400 KB), 17 reads at once. Without the
  * index every sweep scans the table, which grows with every account's tafs,
  * names, drafts and alerts.
  *
@@ -17,7 +17,6 @@
 import { createHash } from "node:crypto";
 import {
   type AttributeValue,
-  BatchGetItemCommand,
   GetItemCommand,
   PutItemCommand,
   ScanCommand,
@@ -36,7 +35,7 @@ export function shardOf(tenant: string): string {
 }
 
 /** What the index needs of DynamoDB: the client's send, as `lambda.ts` has it. */
-export type Send = (command: BatchGetItemCommand | GetItemCommand | PutItemCommand | ScanCommand | UpdateItemCommand) => Promise<unknown>;
+export type Send = (command: GetItemCommand | PutItemCommand | ScanCommand | UpdateItemCommand) => Promise<unknown>;
 
 export interface AccountIndex {
   /** Every account with tafs: the index, checked against a scan once an hour. */
@@ -48,25 +47,17 @@ export interface AccountIndex {
 }
 
 export function accountIndex(send: Send, table: string): AccountIndex {
-  /** The ids each shard holds, and when the index was last checked. */
+  /** The ids each shard holds, and when the index was last checked: 17 reads, at once. */
   async function read(): Promise<{ ids: Set<string>; checkedAt?: number }> {
+    const keys = [...Array.from({ length: ACCOUNT_SHARDS }, (_, i) => `accounts#${String(i).padStart(2, "0")}`), CHECKED];
+    const items = await Promise.all(keys.map(async (id) => ((await send(new GetItemCommand({
+      TableName: table, Key: { id: { S: id } }, ConsistentRead: true,
+    }))) as { Item?: Record<string, AttributeValue> }).Item));
     const ids = new Set<string>();
     let checkedAt: number | undefined;
-    let keys: Record<string, AttributeValue>[] = [
-      ...Array.from({ length: ACCOUNT_SHARDS }, (_, i) => ({ id: { S: `accounts#${String(i).padStart(2, "0")}` } })),
-      { id: { S: CHECKED } },
-    ];
-    // DynamoDB may leave some keys unread under load: they're asked again.
-    for (let tries = 0; keys.length > 0; tries++) {
-      if (tries === 5) throw new Error("the account index couldn't be read");
-      const out = (await send(new BatchGetItemCommand({
-        RequestItems: { [table]: { Keys: keys, ConsistentRead: true } },
-      }))) as { Responses?: Record<string, Record<string, AttributeValue>[]>; UnprocessedKeys?: Record<string, { Keys?: Record<string, AttributeValue>[] }> };
-      for (const item of out.Responses?.[table] ?? []) {
-        if (item.id?.S === CHECKED) checkedAt = Number(item.checked_at?.N);
-        else for (const id of item.ids?.SS ?? []) ids.add(id);
-      }
-      keys = out.UnprocessedKeys?.[table]?.Keys ?? [];
+    for (const item of items) {
+      if (item?.id?.S === CHECKED) checkedAt = Number(item.checked_at?.N);
+      else for (const id of item?.ids?.SS ?? []) ids.add(id);
     }
     return { ids, checkedAt: Number.isFinite(checkedAt) ? checkedAt : undefined };
   }

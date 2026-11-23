@@ -5,23 +5,14 @@ import { ACCOUNT_SHARDS, CHECK_EVERY_MS, accountIndex, shardOf } from "../src/cl
 type Item = Record<string, AttributeValue>;
 
 /** A table as DynamoDB keeps it, for the commands the index sends; a scan pages two items at a time. */
-function table(opts: { unprocessedOnce?: boolean; scanMisses?: string[] } = {}) {
+function table(opts: { scanMisses?: string[] } = {}) {
   const items = new Map<string, Item>();
   const sent: string[] = [];
-  let unprocessed = opts.unprocessedOnce ?? false;
   const send = async (c: { constructor: { name: string }; input: unknown }): Promise<unknown> => {
     const name = c.constructor.name;
     sent.push(name);
     const input = c.input as Record<string, any>;
     switch (name) {
-      case "BatchGetItemCommand": {
-        const [t, req] = Object.entries(input.RequestItems as Record<string, { Keys: Item[] }>)[0];
-        let keys = req.Keys;
-        let left: Item[] = [];
-        if (unprocessed) { unprocessed = false; left = keys.slice(5); keys = keys.slice(0, 5); }
-        const found = keys.flatMap((k) => (items.has(k.id.S!) ? [items.get(k.id.S!)!] : []));
-        return { Responses: { [t]: found }, UnprocessedKeys: left.length ? { [t]: { Keys: left } } : {} };
-      }
       case "GetItemCommand":
         return { Item: items.get(input.Key.id.S) };
       case "PutItemCommand":
@@ -67,7 +58,7 @@ describe("the sweeps' account index", () => {
 
     t.sent.length = 0;
     expect(await ix.list(hour - 1)).toEqual(["t_a", "t_b", "t_c"]);
-    expect(t.sent).toEqual(["BatchGetItemCommand"]);
+    expect(t.sent).toEqual(Array(17).fill("GetItemCommand"));
   });
 
   it("lists an account added since without a scan", async () => {
@@ -111,17 +102,5 @@ describe("the sweeps' account index", () => {
     await ix.add("t_gone"); // its erasure raced a scan: in the index, no tafs item
     expect(await ix.list(hour)).toEqual(["t_live"]);
     expect(t.items.get(shardOf("t_gone"))?.ids?.SS ?? []).not.toContain("t_gone");
-  });
-
-  it("reads again the keys DynamoDB left unread", async () => {
-    const t = table({ unprocessedOnce: true });
-    for (const id of ["t_a", "t_b", "t_c", "t_d", "t_e", "t_f"]) t.items.set(`tafs#${id}`, { id: { S: `tafs#${id}` } });
-    await accountIndex(table().send, "names").list(0); // a fresh table: nothing to say
-    const ix = accountIndex(t.send, "names");
-    for (const id of ["t_a", "t_b", "t_c", "t_d", "t_e", "t_f"]) await ix.add(id);
-    t.items.set("accounts#checked", { id: { S: "accounts#checked" }, checked_at: { N: "0" } });
-    expect(await ix.list(1)).toEqual(["t_a", "t_b", "t_c", "t_d", "t_e", "t_f"]);
-    expect(t.sent.filter((s) => s === "BatchGetItemCommand")).toHaveLength(2);
-    expect(t.sent).not.toContain("ScanCommand");
   });
 });
