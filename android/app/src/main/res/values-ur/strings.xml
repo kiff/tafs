@@ -625,6 +625,8 @@
     <string name="chrome_shot_none">اس مرحلے کے لیے کوئی تصویر نہیں رکھی گئی۔</string>
     <string name="chrome_shot_open">اس مرحلے سے پہلے صفحہ دیکھیں</string>
     <string name="chrome_shot_title">اس مرحلے سے پہلے</string>
+    <string name="chrome_switch">دوسرا Chrome استعمال کریں</string>
+    <string name="chrome_switch_prompt">اس کنکشن کو %1$s پر منتقل کریں</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">جوڑ ختم کرنے سے وہ کنکشن ختم ہو جاتے ہیں جو اسے استعمال کرتے ہیں: %1$s۔ وہ تبھی واپس آتے ہیں جب آپ انہیں دوبارہ جوڑیں۔</string>
     <string name="chrome_used_for">%1$s کے لیے استعمال ہوتا ہے</string>

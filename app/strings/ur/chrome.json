@@ -31,6 +31,8 @@
   "chrome.shot_none": "اس مرحلے کے لیے کوئی تصویر نہیں رکھی گئی۔",
   "chrome.shot_open": "اس مرحلے سے پہلے صفحہ دیکھیں",
   "chrome.shot_title": "اس مرحلے سے پہلے",
+  "chrome.switch": "دوسرا Chrome استعمال کریں",
+  "chrome.switch_prompt": "اس کنکشن کو {name} پر منتقل کریں",
   "chrome.title": "Chrome",
   "chrome.unpair_ends": "جوڑ ختم کرنے سے وہ کنکشن ختم ہو جاتے ہیں جو اسے استعمال کرتے ہیں: {sites}۔ وہ تبھی واپس آتے ہیں جب آپ انہیں دوبارہ جوڑیں۔",
   "chrome.used_for": "{sites} کے لیے استعمال ہوتا ہے",
