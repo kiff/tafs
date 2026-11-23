@@ -19,7 +19,7 @@ export const sl: Words = {
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Ta zagon se je že končal, zato se ni zgodilo nič.",
   // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
-  switch_stopped: "Z namestitvijo te različice se je ustavilo tisto, kar je čakalo na tvoj odgovor: zadržani klic je bil umaknjen, sporočilo pa se ni izvedlo. Lahko ga pošlješ znova.",
+  switch_stopped: "Z namestitvijo te različice se je ustavilo tisto, kar je čakalo na vaš odgovor: zadržani klic je bil umaknjen, sporočilo pa se ni izvedlo. Lahko ga pošljete znova.",
   your_step_title: "Vaš korak",
   your_step_done: "Opravljeno",
   your_step_skip: "Preskoči",

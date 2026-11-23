@@ -19,7 +19,7 @@ export const ro: Words = {
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Rularea aceea se încheiase deja, așa că nu s-a făcut nimic.",
   // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
-  switch_stopped: "Instalarea acestei versiuni a oprit ceea ce aștepta răspunsul tău: apelul reținut a fost retras, iar mesajul nu a fost executat. Îl poți trimite din nou.",
+  switch_stopped: "Instalarea acestei versiuni a oprit ceea ce aștepta răspunsul dvs.: apelul reținut a fost retras, iar mesajul nu a fost executat. Îl puteți trimite din nou.",
   your_step_title: "Pasul dvs.",
   your_step_done: "Gata",
   your_step_skip: "Săriți peste",

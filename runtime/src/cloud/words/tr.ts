@@ -19,7 +19,7 @@ export const tr: Words = {
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "O çalıştırma zaten bitmişti, bu yüzden hiçbir şey yapılmadı.",
   // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
-  switch_stopped: "Bu sürümü yüklemek, yanıtını bekleyen şeyi durdurdu: bekletilen çağrı geri çekildi ve mesaj çalıştırılmadı. Yeniden gönderebilirsin.",
+  switch_stopped: "Bu sürümü yüklemek, yanıtınızı bekleyen şeyi durdurdu: bekletilen çağrı geri çekildi ve mesaj çalıştırılmadı. Yeniden gönderebilirsiniz.",
   your_step_title: "Sizin adımınız",
   your_step_done: "Bitti",
   your_step_skip: "Atla",

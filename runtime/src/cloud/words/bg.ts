@@ -19,7 +19,7 @@ export const bg: Words = {
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Това изпълнение вече беше приключило, затова нищо не беше направено.",
   // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
-  switch_stopped: "Инсталирането на тази версия спря това, което чакаше твоя отговор: задържаното извикване беше оттеглено, а съобщението не беше изпълнено. Можеш да го изпратиш отново.",
+  switch_stopped: "Инсталирането на тази версия спря това, което чакаше вашия отговор: задържаното извикване беше оттеглено, а съобщението не беше изпълнено. Можете да го изпратите отново.",
   your_step_title: "Вашата стъпка",
   your_step_done: "Готово",
   your_step_skip: "Пропускане",
