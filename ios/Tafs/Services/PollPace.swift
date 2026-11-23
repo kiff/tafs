@@ -9,9 +9,11 @@ enum PollPace {
         UInt64(Double(nanoseconds) * min(max(unit, 0.8), 1.0))
     }
 
-    /// A taf's chat, waiting for an answer: the base wait for the first ten reads, twice it to the twentieth, three times after.
-    static func chatFactor(afterReads polls: Int) -> UInt64 {
-        polls < 10 ? 1 : polls < 20 ? 2 : 3
+    /// Following a run to its end with no stream (Android 1.22): every 2.5 s for the first minute, 5 s to the third, 10 s to
+    /// the sixth, then 15 s. `scale` shortens it in tests.
+    static func followDelay(after elapsed: TimeInterval, scale: Double = 1) -> UInt64 {
+        let seconds: Double = elapsed < 60 ? 2.5 : elapsed < 180 ? 5 : elapsed < 360 ? 10 : 15
+        return UInt64(seconds * scale * 1_000_000_000)
     }
 
     /// Setup's chat: the base wait for the first ten reads, then 2, 4 and at most 8 times it as the reads go on.
