@@ -9,9 +9,10 @@ export const ENVIRONMENTS = Object.freeze({
     // The picture kept of each act (docs/chrome.md, "Screenshots of a run's acts"): off until planque stores them and the
     // Privacy page says so. A build with it on is a new build.
     screenshots: false,
-    // planque's VAPID public key (base64url, a 65-byte P-256 point: public), pinned like the step key. Empty until planque's deploy has made the
-    // pair: with none the extension subscribes to no push and goes on connecting by its alarm (src/push.js).
-    pushKey: "",
+    // planque's VAPID public key (base64url, a 65-byte P-256 point: public), pinned like the step key: production's, as
+    // `GET https://planque.kiff.dev/v1/extension/push-key` gives it. Empty, the extension subscribes to no push and goes on connecting
+    // by its alarm (src/push.js).
+    pushKey: "BIHbie0VS70RRKdfN4ktucZVf3UTRbtnuw6DG_HkIb139xzoNhfZKTdE37rwu1DyKjqm3S7A7ouAJHMgKlY00fs",
     planqueKey: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAExS_lxBTwDdO8wf8ksu6kkIF8r3Z-Vp3tWZUKjlBjQezW0BhCCW_0tkGqRewu0qBL8KDggls0cjFF-NDcnAjH7g", // planque's tafs-chrome step key (SPKI, base64url): a public key
   },
 });

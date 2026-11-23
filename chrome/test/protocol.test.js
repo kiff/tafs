@@ -451,6 +451,32 @@ test("an idle relay pings every 20 s to keep the worker up, until planque can wa
   }
 });
 
+test("an idle worker is let sleep only when planque says it keeps the push subscription, and a refusal keeps the ping going", async () => {
+  mock.timers.enable({ apis: ["setInterval"] });
+  try {
+    const p = await planque();
+    const runner = { active: false, handle: async () => ({}), stop: async () => {} };
+    const { relay, ws } = await relayWith(p, { runner });
+    await handshake(p, ws);
+    const pings = () => ws.sent.filter((m) => m.type === "ping").length;
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 1, "no push yet: kept awake");
+    await ws.deliver({ type: "push_refused", code: "push_endpoint" });
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 2, "refused: still kept awake");
+    await ws.deliver({ type: "push_kept" });
+    assert.equal(relay.pushed, true);
+    mock.timers.tick(40_000);
+    assert.equal(pings(), 2, "kept: the push wakes it, so no ping");
+    await ws.deliver({ type: "push_refused", code: "push_unsigned" });
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 3, "a later refusal (a new subscription refused) starts it again");
+    relay.close();
+  } finally {
+    mock.timers.reset();
+  }
+});
+
 test("a step before the welcome, or a forged welcome, ends the connection", async () => {
   const p = await planque();
   const early = await relayWith(p);

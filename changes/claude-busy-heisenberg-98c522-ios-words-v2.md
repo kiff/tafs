@@ -1,0 +1,1 @@
+- **iPhone and iPad:** a connection's approval shows KIFF's words v2, as Android does: the same lines without KIFF's bookkeeping (no "isn't pinned to a version", and the lost-answer line only where money moves). Either version is checked and signed as KIFF sent it ([docs/coach.md](../docs/coach.md), "KIFF's words for a connection").

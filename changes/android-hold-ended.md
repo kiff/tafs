@@ -1,0 +1,1 @@
+- **An approval after its run ended says so (Android):** when you approve a held call and the run that waited on it had already ended, the chat says that nothing ran, in tafs's words, with Retry on your last message ([docs/chat.md](../docs/chat.md)).

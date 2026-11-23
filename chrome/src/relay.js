@@ -34,8 +34,8 @@ export class Relay {
    * `config` {relayURL, planqueKey, version, manifestHash}; `kept` {keys, pairing}; `runner` handles steps; `onUnpaired()`
    * wipes the extension; `WebSocket` is the browser's (a fake in tests).
    */
-  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, onReady = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
-    Object.assign(this, { config, kept, runner, onUnpaired, onChange, onReady, WebSocket, now });
+  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, onReady = () => {}, onHandMessage = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
+    Object.assign(this, { config, kept, runner, onUnpaired, onChange, onReady, onHandMessage, WebSocket, now });
     this.nonces = new Nonces(now, nonceStore);
     this.ws = null;
     this.ready = false;
@@ -153,6 +153,21 @@ export class Relay {
       return;
     }
     if (m.type === "pong") return;
+    // planque has this Chrome's push subscription (`push_kept`), or refused it (`push_refused`): only the first lets an idle worker
+    // sleep, since only then can a push wake it. A refusal keeps the idle ping going.
+    if (m.type === "push_kept") {
+      this.pushed = true;
+      return;
+    }
+    if (m.type === "push_refused") {
+      this.pushed = false;
+      return;
+    }
+    // planque has the person's answer to a hand-over (or says it never will): the extension stops keeping it (hand.js).
+    if (m.type === "hand_kept" || m.type === "hand_refused") {
+      Promise.resolve(this.onHandMessage(m)).catch(() => {});
+      return;
+    }
     if (m.type === "step") {
       const checked = await checkStep(m, { planqueKey: this.config.planqueKey, chromeId: pairing.chromeId, nonces: this.nonces, now: this.now(), offset: this.offset ?? null });
       if (checked.why) {
