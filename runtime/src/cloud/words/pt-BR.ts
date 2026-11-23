@@ -18,6 +18,8 @@ export const ptBR: Words = {
   work_waiting_approval: "Aguardando sua aprovação",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Essa execução já tinha terminado, então nada foi feito.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Ao instalar esta versão, parou o que esperava pela sua resposta: a chamada retida foi retirada e a mensagem não foi executada. Você pode enviá-la de novo.",
   your_step_title: "Seu passo",
   your_step_skip: "Pular",
   your_step_reminder: (what: string) => `Seu passo ainda está aguardando: ${what}`,

@@ -3460,7 +3460,8 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const named = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
     expect(named.status).toBe(409);
     expect(named.body.blocking).toEqual([{ run: "run_p", session: "sess_p", status: "PAUSED", trigger: "owner" }]);
-    expect(named.body.words).toBe("Version 2 can't go live while a task waits on your answer. Stop it and install, or wait until it's done.");
+    // It says what stopping costs, before the owner taps: the call it waits on is withdrawn, and its message won't run.
+    expect(named.body.words).toBe("Version 2 can't go live while a task waits on your answer. Stop it and install, or wait until it's done. Stopping it withdraws the call it's waiting on, and its message won't run.");
     expect(w.agents.calls).not.toContain(`cancelRun ${RAE} run_p`);
 
     const stopped = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { stop_blocking: true } });
@@ -3469,7 +3470,29 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.runs.find((r) => r.id === "run_p")?.status).toBe("CANCELLED");
     // The task that waited on the owner's answer was stopped, and the answer says so (the owner's panel test, 23 Nov).
     expect(stopped.body.stopped).toEqual([{ run: "run_p", session: "sess_p" }]);
-    expect(stopped.body.words).toBe("Installing this version stopped the task that was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again.");
+    expect(stopped.body.words).toBe("Installing this version stopped what was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again.");
+  });
+
+  it("says the stop in the owner's language, and names only a run that was really stopped (a cancel that answers 409 had ended meanwhile)", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "draft" };
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_p", agent: RAE, session: "sess_p", trigger: "owner", status: "PAUSED", cost_micro_usd: 0, turns: 1, created: "2026-10-20T09:00:00Z", updated: "2026-10-20T09:00:00Z" } as never);
+    const fr = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { stop_blocking: true }, headers: { "Accept-Language": "fr-FR" } });
+    expect(fr.status).toBe(200);
+    expect(fr.body.words).toBe("L'installation de cette version a arrêté ce qui attendait votre réponse : l'appel retenu a été retiré et le message n'a pas été exécuté. Vous pouvez le renvoyer.");
+    // The same run, but its cancel answers 409: it had ended meanwhile, so nothing is said of it.
+    const w2 = twoVersions();
+    w2.account.drafts = { drf_v2: "draft" };
+    w2.agents.runs.unshift({ tenant: "t_acme", id: "run_q", agent: RAE, session: "sess_q", trigger: "owner", status: "PAUSED", cost_micro_usd: 0, turns: 1, created: "2026-10-20T09:00:00Z", updated: "2026-10-20T09:00:00Z" } as never);
+    const cancel = w2.agents.api.cancelRun.bind(w2.agents.api);
+    w2.agents.api.cancelRun = async (tenant, agent, id) => {
+      await cancel(tenant, agent, id);
+      throw new AgentsError(409, "run_ended", "the run ended");
+    };
+    const ended = await call(w2, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { stop_blocking: true } });
+    expect(ended.status).toBe(200);
+    expect(ended.body).not.toHaveProperty("stopped");
+    expect(ended.body).not.toHaveProperty("words");
   });
 
   it("says nothing was stopped when the switch finds nothing in the way, or only a task at work", async () => {

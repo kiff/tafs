@@ -18,6 +18,8 @@ export const vi: Words = {
   work_waiting_approval: "Đang chờ bạn phê duyệt",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "Lượt chạy đó đã kết thúc, nên không có gì được thực hiện.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Việc cài đặt phiên bản này đã dừng việc đang chờ câu trả lời của bạn: lệnh gọi bị giữ đã được rút lại và tin nhắn chưa được thực hiện. Bạn có thể gửi lại.",
   your_step_title: "Bước của bạn",
   your_step_done: "Xong",
   your_step_skip: "Bỏ qua",

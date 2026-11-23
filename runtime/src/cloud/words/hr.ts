@@ -18,6 +18,8 @@ export const hr: Words = {
   work_waiting_approval: "Čeka vaše odobrenje",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "To je izvođenje već završilo, pa se ništa nije izvršilo.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Instalacija ove verzije zaustavila je ono što je čekalo tvoj odgovor: zadržani poziv je povučen, a poruka nije izvršena. Možeš je ponovno poslati.",
   your_step_title: "Vaš korak",
   your_step_done: "Gotovo",
   your_step_skip: "Preskočite",

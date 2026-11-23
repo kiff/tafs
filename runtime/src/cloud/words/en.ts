@@ -16,6 +16,8 @@ export const en = {
   work_waiting_approval: "Waiting for your approval",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
   hold_run_ended: "That run had ended, so nothing ran.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Installing this version stopped what was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again.",
   // "Your step": a step a taf may never take, handed to its owner to finish (docs/api.md, "Your step").
   your_step_title: "Your step",
   your_step_done: "Done",

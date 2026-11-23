@@ -5011,7 +5011,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     const began = await beginSwitch(me, taf, n, draft, parseBody(event).stop_blocking === true, deps);
     // A task that waited on the owner's answer and was stopped to let the version in: said, so the apps tell the owner (and
     // offer to send its message again), never a silent stop (23 Nov, the owner's panel test).
-    return { switching: began.switching, ...(began.stopped.length ? { stopped: began.stopped, words: stoppedWords(began.stopped.length) } : {}) };
+    return { switching: began.switching, ...(began.stopped.length ? { stopped: began.stopped, words: wordsIn(langOf(event)).switch_stopped } : {}) };
   }
   if (sub === "live") {
     // The draft the switch waits for: prepared by switch, or the version's own.
@@ -6936,14 +6936,7 @@ export function blockedWords(n: number, runs: Array<{ status: string; trigger: s
     : waiting ? `${runs.length} tasks are going, one waiting on your answer` : `${runs.length} tasks are at work`;
   return stopping
     ? `Version ${n} isn't installed yet: ${what} and hasn't stopped. Try again in a moment.`
-    : `Version ${n} can't go live while ${what}. Stop it and install, or wait until it's done.`;
-}
-
-/** What the owner is told when installing a version stopped the task that waited on their answer. */
-export function stoppedWords(count: number): string {
-  return count === 1
-    ? "Installing this version stopped the task that was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again."
-    : `Installing this version stopped ${count} tasks that were waiting on your answer: their held calls were withdrawn and their messages didn't run. You can send them again.`;
+    : `Version ${n} can't go live while ${what}. Stop it and install, or wait until it's done.${waiting ? " Stopping it withdraws the call it's waiting on, and its message won't run." : ""}`;
 }
 
 /** How long a switch asked to stop what blocks it waits for a running run's checkpoint, and how often it looks. */
@@ -6978,9 +6971,11 @@ async function beginSwitch(me: KIFFIdentity, taf: Taf, n: number, draft: string 
     }
     for (const b of blocking) {
       if (stopped.has(b.id)) continue;
-      if (b.status === "PAUSED") waiting.set(b.id, b.session);
       try {
         await deps.agents.cancelRun(me.tenantID, taf.id, b.id);
+        // Only a run really stopped counts: one whose cancel answers 409 had ended meanwhile (the owner's answer may have let it
+        // finish), so "its message didn't run" would be false.
+        if (b.status === "PAUSED") waiting.set(b.id, b.session);
       } catch (err) {
         if (!(err instanceof AgentsError) || err.status !== 409) throw agentsFailure(err); // 409: it ended meanwhile
       }
