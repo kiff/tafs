@@ -24,6 +24,9 @@ googleServices = "4.6.0"
 junit = "4.13.2"
 # The watch's store screenshots, drawn on the JVM (docs/watch-wear.md): test-only.
 robolectric = "4.17"
+# Robolectric 4.17's Android 15 (SDK 35) jar, the one every test runs on (`@Config(sdk = [35])`). A new Robolectric or SDK
+# changes it; offline, a jar that doesn't match fails every Robolectric test at once, never quietly.
+robolectric-android-all = "15-robolectric-13954326-i7"
 roborazzi = "1.77.0"
 kotlin = "2.4.21"
 nav3Core = "1.0.1"
@@ -72,6 +75,7 @@ androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core",
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 junit = { module = "junit:junit", version.ref = "junit" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+robolectric-android-all = { module = "org.robolectric:android-all-instrumented", version.ref = "robolectric-android-all" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }

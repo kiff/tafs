@@ -364,6 +364,7 @@ fun ConnectAppsSheet(
         text = {
           Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             live.health?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(15, FontWeight.SemiBold, if (live.health?.ok == true) Theme.ok else Theme.amberText)) }
+            connectionChromeLine(live)?.let { Text(it, style = scaled(14, color = Theme.soft)) }
             live.usedBy?.filter { it.isNotBlank() }?.takeIf { it.isNotEmpty() }?.let { bot.tafs.app.model.ConnectionWords.usedBy(it) }?.let { Text(it, style = scaled(14, color = Theme.soft)) }
             state.coachNotes[live.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
             live.actions.orEmpty().forEach { a ->
@@ -791,6 +792,16 @@ fun ConnectApprovalSheet(
 fun usedBy(state: AppState, app: ConnectApps.App): List<String> =
   app.usedBy?.map { it.name }?.filter { it.isNotBlank() }?.distinct()
     ?: byTaf(state, connectionsOf(state, app)).sections.map { it.taf }
+
+/**
+ * Which of the owner's Chromes a connection runs in ("Your Chrome" 2, docs/chrome.md): "In Work Mac", by the name planque gives
+ * it. None for planque's hosted browser, any other connection, or a name planque didn't send. As iOS's connection page.
+ */
+internal fun connectionChromeLine(g: bot.tafs.app.kiff.Grant): String? {
+  val b = g.request.browser ?: return null
+  if (b.driver != bot.tafs.app.kiff.GrantBrowser.EXTENSION) return null
+  return b.chromeName?.trim()?.takeIf { it.isNotEmpty() }?.let { Words.Chrome.heldIn(name = it) }
+}
 
 /** The app a connection belongs to, by its Connect apps title, for a detail opened from its row. */
 private fun app0(state: AppState, g: bot.tafs.app.kiff.Grant): String = bot.tafs.app.model.ConnectionWords.appName(g, state.connectApps)
