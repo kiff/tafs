@@ -28,3 +28,19 @@ export function chatTitle(chat, fallback) {
   const t = chat && typeof chat.title === "string" ? chat.title.trim() : "";
   return t || fallback;
 }
+
+/** The panel's read of a chat while it's open: often while Coach is at work or the owner just wrote, seldom otherwise. */
+export const POLL_BUSY_MS = 4_000;
+export const POLL_IDLE_MS = 30_000;
+/** How long after the owner's message the panel keeps reading often, whether or not Coach is shown at work yet. */
+export const BUSY_AFTER_SEND_MS = 60_000;
+
+/**
+ * How long until the panel reads the chat again, or null for never. A fresh conversation has no chat to read, so nothing
+ * polls it; a chat read often while Coach is at work or a message was just sent, and every 30 s otherwise (to see an answer
+ * from the phone). A panel nobody sees reads nothing (the caller stops it while hidden).
+ */
+export function pollDelay({ view, working = false, sentAt = 0, now = Date.now() }) {
+  if (view.fresh) return null;
+  return working || now - sentAt < BUSY_AFTER_SEND_MS ? POLL_BUSY_MS : POLL_IDLE_MS;
+}
