@@ -1,0 +1,312 @@
+{
+  "name": {
+    "message": "tafs"
+  },
+  "description": {
+    "message": "अपने taf को अपने Chrome में केवल उन साइटों पर काम करने दें जिन्हें आप मंज़ूर करें, हर जोखिम वाला कदम आपके फ़ोन पर मंज़ूर होगा।"
+  },
+  "pair_title": {
+    "message": "इस Chrome को अपने फ़ोन से जोड़ें"
+  },
+  "pair_body": {
+    "message": "अपने फ़ोन पर tafs खोलें, फिर खाता › Chrome › Chrome जोड़ें खोलें। जो कोड दिखे उसे यहाँ लिखें।"
+  },
+  "pair_profile": {
+    "message": "tafs अपनी ही Chrome प्रोफ़ाइल में काम करता है। वहाँ केवल उन्हीं साइटों में साइन इन करें जिन्हें आप अपने taf से उपयोग करवाना चाहते हैं।"
+  },
+  "pair_code_label": {
+    "message": "आपके फ़ोन का कोड"
+  },
+  "pair_button": {
+    "message": "जोड़ें"
+  },
+  "pair_sending": {
+    "message": "भेजा जा रहा है…"
+  },
+  "pair_waiting": {
+    "message": "अब अपने फ़ोन पर पुष्टि करें।"
+  },
+  "pair_error_code": {
+    "message": "यह कोड सही नहीं है, या इसकी समय-सीमा खत्म हो गई है। अपने फ़ोन पर फिर से शुरू करें।"
+  },
+  "pair_error_expired": {
+    "message": "कोड की समय-सीमा खत्म हो गई। अपने फ़ोन पर फिर से शुरू करें।"
+  },
+  "pair_error_proof": {
+    "message": "यह जुड़ाव पक्का नहीं हो सका, इसलिए कुछ नहीं जुड़ा। अपने फ़ोन पर फिर से शुरू करें।"
+  },
+  "pair_error_planque": {
+    "message": "tafs तक पहुँचा नहीं जा सका। थोड़ी देर में फिर कोशिश करें।"
+  },
+  "pair_error_not_released": {
+    "message": "एक्सटेंशन का यह बिल्ड नहीं जुड़ सकता। tafs को Chrome Web Store से इंस्टॉल करें।"
+  },
+  "pair_error_none": {
+    "message": "अपने फ़ोन पर फिर से शुरू करें।"
+  },
+  "pair_error_failed": {
+    "message": "कुछ गड़बड़ हो गई। फिर कोशिश करें।"
+  },
+  "paired_title": {
+    "message": "$NAME$ के रूप में जुड़ गया",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "paired_body": {
+    "message": "आपके taf इस Chrome का उपयोग केवल उन साइटों पर कर सकते हैं जो कनेक्शन सूचीबद्ध करता है। जोखिम वाले कदम आप अपने फ़ोन पर मंज़ूर करते हैं।"
+  },
+  "idle": {
+    "message": "अभी यहाँ कोई taf काम नहीं कर रहा।"
+  },
+  "unpair": {
+    "message": "इस Chrome की जोड़ी हटाएँ"
+  },
+  "unpair_confirm": {
+    "message": "इस Chrome की जोड़ी हटाएँ? दोबारा जोड़ने तक आपके taf इसका उपयोग नहीं कर पाएँगे।"
+  },
+  "connected": {
+    "message": "जुड़ा हुआ"
+  },
+  "waiting": {
+    "message": "tafs का इंतज़ार"
+  },
+  "working": {
+    "message": "$TAF$ काम कर रहा है",
+    "placeholders": {
+      "taf": {
+        "content": "$1"
+      }
+    }
+  },
+  "paused_owner": {
+    "message": "थमा हुआ: आप यह टैब उपयोग कर रहे हैं।"
+  },
+  "paused_failures": {
+    "message": "लगातार तीन कदम न चलने पर थम गया।"
+  },
+  "paused_no_progress": {
+    "message": "थमा हुआ: एक ही कदम ने लगातार दो बार कुछ नहीं बदला।"
+  },
+  "pause": {
+    "message": "थामें"
+  },
+  "resume": {
+    "message": "फिर शुरू करें"
+  },
+  "stop": {
+    "message": "बंद करें"
+  },
+  "step_open": {
+    "message": "$SITE$ खोला गया",
+    "placeholders": {
+      "site": {
+        "content": "$1"
+      }
+    }
+  },
+  "step_read": {
+    "message": "पेज पढ़ा गया"
+  },
+  "step_act_click": {
+    "message": "क्लिक किया गया"
+  },
+  "step_act_fill": {
+    "message": "एक फ़ील्ड भरा गया"
+  },
+  "step_act_select": {
+    "message": "एक विकल्प चुना गया"
+  },
+  "step_act_check": {
+    "message": "एक बॉक्स पर निशान लगाया गया"
+  },
+  "step_navigate": {
+    "message": "$SITE$ पर जाना रोका गया",
+    "placeholders": {
+      "site": {
+        "content": "$1"
+      }
+    }
+  },
+  "step_paused": {
+    "message": "थमा हुआ"
+  },
+  "step_paused_failures": {
+    "message": "बार-बार विफल होने पर थम गया"
+  },
+  "step_paused_no_progress": {
+    "message": "थमा हुआ: कुछ नहीं बदला"
+  },
+  "step_resumed": {
+    "message": "फिर शुरू किया गया"
+  },
+  "step_stopped": {
+    "message": "बंद किया गया"
+  },
+  "step_closed": {
+    "message": "पूरा हुआ"
+  },
+  "step_refused": {
+    "message": "नहीं हुआ ($CODE$)",
+    "placeholders": {
+      "code": {
+        "content": "$1"
+      }
+    }
+  },
+  "coach_title": {
+    "message": "Coach",
+    "description": "Side panel title"
+  },
+  "coach_placeholder": {
+    "message": "Coach को संदेश लिखें",
+    "description": "Composer placeholder"
+  },
+  "coach_send": {
+    "message": "भेजें",
+    "description": "Send button"
+  },
+  "coach_working": {
+    "message": "Coach काम कर रहा है…"
+  },
+  "coach_error": {
+    "message": "यह Coach तक नहीं पहुँचा। फिर कोशिश करें।"
+  },
+  "coach_not_started": {
+    "message": "पहले अपने फ़ोन पर Coach शुरू करें।"
+  },
+  "unpaired": {
+    "message": "यह Chrome अब जुड़ा नहीं है। अपने फ़ोन के tafs ऐप से इसे फिर जोड़ें।",
+    "description": "A request refused because the Chrome is unpaired"
+  },
+  "approve_on_phone": {
+    "message": "अपने फ़ोन पर मंज़ूर करें",
+    "description": "Where an approval waits"
+  },
+  "share_button": {
+    "message": "यह पेज साझा करें",
+    "description": "Share toggle"
+  },
+  "share_preview": {
+    "message": "आपके संदेश के साथ जाता है:",
+    "description": "Label above the page preview (URL and title) before sending"
+  },
+  "share_remove": {
+    "message": "हटाएँ",
+    "description": "Remove the shared page from the message"
+  },
+  "share_chars": {
+    "message": "$N$ अक्षर",
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      }
+    }
+  },
+  "share_unavailable": {
+    "message": "यह पेज साझा नहीं किया जा सकता।",
+    "description": "chrome:// pages, the Web Store, PDFs and other pages that can't be read"
+  },
+  "share_error_site_blocked": {
+    "message": "ऐसे पेज कभी साझा नहीं होते: बैंक, वॉलेट, पासवर्ड, भुगतान, स्वास्थ्य और सरकारी साइटें।"
+  },
+  "share_error_bad_url": {
+    "message": "केवल https पेज साझा किए जा सकते हैं।"
+  },
+  "coach_empty_title": {
+    "message": "Coach से बात करें",
+    "description": "Empty chat: heading"
+  },
+  "coach_empty_body": {
+    "message": "यह वही चैट है जो tafs ऐप में है। Coach यह पेज तभी देखता है जब आप इसे साझा करें।",
+    "description": "Empty chat: body"
+  },
+  "share_note": {
+    "message": "यह एक पेज Coach को भेजता है, पासवर्ड, कार्ड और कोड वाले फ़ील्ड हटाकर।",
+    "description": "Note under Share this page"
+  },
+  "vault_title": {
+    "message": "सहेजे गए साइन इन"
+  },
+  "vault_body": {
+    "message": "यहाँ सहेजे गए, इस कंप्यूटर पर सील किए हुए। कोई taf उसी सटीक साइट पर इनमें से एक उपयोग करने को कह सकता है, और वह तभी टाइप होता है जब आप अपने फ़ोन पर वही एक भराई मंज़ूर करें। tafs और KIFF इसे कभी नहीं देखते।"
+  },
+  "vault_site": {
+    "message": "साइट"
+  },
+  "vault_username": {
+    "message": "उपयोगकर्ता नाम या ईमेल (वैकल्पिक)"
+  },
+  "vault_password": {
+    "message": "पासवर्ड"
+  },
+  "vault_save": {
+    "message": "सील करके सहेजें"
+  },
+  "vault_saved": {
+    "message": "सहेज लिया। यह इस कंप्यूटर पर सील है।"
+  },
+  "vault_error": {
+    "message": "सहेजा नहीं गया: साइट के लिए https और पासवर्ड चाहिए।"
+  },
+  "vault_remove": {
+    "message": "हटाएँ"
+  },
+  "vault_with_username": {
+    "message": "उपयोगकर्ता नाम के साथ"
+  },
+  "vault_one_per_site": {
+    "message": "हर साइट के लिए एक साइन इन: उसी साइट के लिए दूसरा सहेजने पर वह बदल जाता है।"
+  },
+  "coach_new": {
+    "message": "नई बातचीत"
+  },
+  "coach_previous": {
+    "message": "पिछली बातचीत"
+  },
+  "coach_previous_none": {
+    "message": "कोई पिछली बातचीत नहीं।"
+  },
+  "coach_previous_error": {
+    "message": "पिछली बातचीत लोड नहीं हो सकी।"
+  },
+  "coach_untitled": {
+    "message": "बातचीत"
+  },
+  "taf_choose": {
+    "message": "इससे बात करें"
+  },
+  "taf_placeholder": {
+    "message": "$TAF$ को संदेश लिखें",
+    "placeholders": {
+      "taf": {
+        "content": "$1"
+      }
+    }
+  },
+  "taf_error": {
+    "message": "यह $TAF$ तक नहीं पहुँचा। फिर कोशिश करें।",
+    "placeholders": {
+      "taf": {
+        "content": "$1"
+      }
+    }
+  },
+  "tafs_not_read": {
+    "message": "आपके taf पढ़े नहीं जा सके। फिर कोशिश करें।"
+  },
+  "no_taf_here": {
+    "message": "इस Chrome में अभी कोई taf काम नहीं करता।"
+  },
+  "setup_taf": {
+    "message": "इस साइट के लिए नया taf सेट अप करें"
+  },
+  "hand_title": { "message": "आपकी बारी", "description": "Title of the panel card where the taf asks the person to do a step themselves" },
+  "hand_says": { "message": "taf कहता है", "description": "Label above the taf's own words on that card; it reads as the taf speaking" },
+  "hand_show": { "message": "मुझे दिखाएँ", "description": "Button on that card: brings the page to the front and outlines the field" },
+  "hand_done": { "message": "हो गया", "description": "Button on that card: the person did it" },
+  "hand_declined": { "message": "अभी नहीं", "description": "Button on that card: the person won't do it now" },
+  "hand_careful": { "message": "केवल वहीं टाइप करें जहाँ आप इस पेज पर भरोसा करते हैं।", "description": "Fixed line on that card under the taf's words" }
+}

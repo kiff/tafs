@@ -1372,6 +1372,43 @@ First draft, from legal-i18n; a native read fixes it forward.
 | Usage | Ulanyş |
 | Cancel / Continue | Goýbolsun / Dowam ediň |
 
+## Batch 7: Hindi and Urdu
+
+### Hindi (hi)
+
+Hindi in Devanagari, addressed as **आप**, the polite form, with buttons in the polite imperative ("मंज़ूर करें", "अस्वीकार करें",
+"जारी रखें"). taf, Card, Coach, KIFF, Setup and planque are names and stay in Latin letters; a plural "s" is never added ("दो taf") and
+Card is used as a masculine noun. A count takes the singular noun after the number ("3 taf", "2 कॉल"), so both plural forms are the same.
+The English possessive "{owner}'s Card" is "{owner} का Card". A door is "द्वार", a knock "दस्तक", a call "कॉल", a receipt "रसीद", the
+Record "रिकॉर्ड", a run "रन". Numbers are Western digits; quotes are “ ”; sentences end with the danda "।". The weekdays are
+सोम, मंगल, बुध, गुरु, शुक्र, शनि, रवि and the months जनवरी, फ़रवरी, मार्च, अप्रैल, मई, जून, जुलाई, अगस्त, सितंबर, अक्टूबर, नवंबर,
+दिसंबर. Menu paths of the phone's own settings that the phone shows in English stay in English. Plural forms: one, other. First draft,
+from legal-i18n; a native read fixes it forward.
+
+| English | Hindi |
+|---|---|
+| Needs you | आपका इंतज़ार |
+| Approve / Approve once | मंज़ूर करें / एक बार मंज़ूर करें |
+| Refuse | अस्वीकार करें |
+| held | रोकी गई |
+| Halt / Halted | रोकें / रोका गया |
+| Stopped | रुका |
+| Pause / Paused | थामें / थमा हुआ |
+| Resume | फिर शुरू करें |
+| Revoke | रद्द करें |
+| Record | रिकॉर्ड |
+| Connect / connection | जोड़ें / कनेक्शन |
+| Pair / Unpair | जोड़ी बनाएँ / जोड़ी हटाएँ |
+| Account | खाता |
+| credits | क्रेडिट |
+| security key | सुरक्षा कुंजी |
+| Sign in / Sign out | साइन इन करें / साइन आउट करें |
+| Inbox | Inbox |
+| Overview | अवलोकन |
+| Calendar | कैलेंडर |
+| Usage | उपयोग |
+| Cancel / Continue | छोड़ें / जारी रखें |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
