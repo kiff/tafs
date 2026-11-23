@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -195,6 +196,22 @@ class ChatPinTest {
     rule.mainClock.autoAdvance = true
     rule.waitForIdle()
     for ((i, top) in tops.withIndex()) assertTrue("frame $i: the card moved from $pinnedAt to $top: $tops", abs(top - pinnedAt) <= 1f)
+  }
+
+  /** Coach's chat drawn afresh (back in Coach, the phone turned) opens at its newest, never at a card answered before. */
+  @Test fun coachsChatDrawnAfreshOpensAtItsNewestNotAtAnOldAnsweredCard() {
+    val before = thread(30, chat = "Coach")
+    val rules = KiffClient.json.decodeFromString<SetupComponent>(
+      """{"type":"confirm","id":"rules","title":"Use these rules?","text":"Refund up to 100 each.","options":[{"label":"Agree","value":"agree"}]}""",
+    )
+    val card = ShownComponent(t0.plusSeconds(10 * 60L + 30), "s1", "r1", rules, CardAnswer(words = "Agree"))
+    val current = state(COACH_CHAT, before).copy(coachComponents = listOf(card), coachAnsweredCard = card.ref)
+    rule.setShown {
+      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(current, actions, loadCoach = {}, onBack = {}) } }
+    }
+    rule.waitForIdle()
+    rule.onNodeWithText("Coach 30 of the thread").assertIsDisplayed()
+    assertTrue("the old card isn't on screen", rule.onAllNodesWithText("Use these rules?").fetchSemanticsNodes().isEmpty())
   }
 
   /** The owner scrolls back: the chat is theirs, and the answer still growing doesn't pull the message back up. */

@@ -6915,7 +6915,13 @@ class AppModel(
     fun current() = generation == accountGeneration && (tafId != COACH_CHAT || coachToken == coachGeneration)
     val pending = ChatMessage(nextStamp(tafId), ChatMessage.From.owner, words, "pending", attachments = refs)
     append(tafId, pending)
-    _state.update { it.copy(chatSent = it.chatSent + (tafId to (it.chatSent[tafId].orEmpty() + pending)), chatEnded = it.chatEnded - tafId) }
+    // A message sent to Coach takes the pin itself: the card answered before no longer does, as iOS sets it again on each send.
+    _state.update {
+      it.copy(
+        chatSent = it.chatSent + (tafId to (it.chatSent[tafId].orEmpty() + pending)), chatEnded = it.chatEnded - tafId,
+        coachAnsweredCard = if (tafId == COACH_CHAT) null else it.coachAnsweredCard,
+      )
+    }
     var streamed: kotlinx.coroutines.flow.Flow<StreamEvent>? = null
     try {
       if (isTrialChat(tafId)) {

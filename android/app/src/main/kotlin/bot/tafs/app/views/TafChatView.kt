@@ -301,9 +301,14 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   }
   // Coach's card just answered takes the pin, as on iOS (docs/chat.md): its answer starts Coach's next answer, so the card goes to
   // the top with the work and the answer under it, as a sent message does.
+  // Only when it changes, as iOS's `.onChange`: the chat drawn afresh (back in Coach, the phone turned) opens at its newest, never
+  // at a card answered before. `pinnedCard` is the one already pinned, or there when the view was drawn.
   val answeredCard = if (tafId == COACH_CHAT) state.coachAnsweredCard?.let { "c|$it" } else null
+  var pinnedCard by remember(tafId) { mutableStateOf(answeredCard) }
   LaunchedEffect(answeredCard, answeredCard in keys) {
-    val key = answeredCard?.takeIf { it in keys && it != pinned } ?: return@LaunchedEffect
+    if (answeredCard == pinnedCard) return@LaunchedEffect
+    val key = answeredCard?.takeIf { it in keys } ?: return@LaunchedEffect
+    pinnedCard = key
     pinText = null
     pinnedWords = null
     pinned = key

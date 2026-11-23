@@ -92,8 +92,10 @@ class CardAnswersTest {
     assertFalse(m.state.value.cardsAnswering.contains(CoachWords.cardKey("s1", "c1")))
     // The card answered here takes the pin in Coach's chat (docs/chat.md): its ref, as its row is keyed.
     assertEquals(m.state.value.coachComponents.single().ref, m.state.value.coachAnsweredCard)
-    // A new conversation starts with nothing pinned.
-    m.newCoachChat()
+    // A message sent to Coach takes the pin itself, as iOS sets it again on each send: the card answered before no longer does,
+    // so Coach's chat drawn afresh later opens at its newest, never back at that card.
+    m.sendChat("And one more thing", COACH_CHAT) {}
+    settle()
     assertNull(m.state.value.coachAnsweredCard)
   }
 
