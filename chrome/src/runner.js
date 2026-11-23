@@ -251,15 +251,37 @@ export class Runner {
     return this.done;
   }
 
-  /** What a taf's last finished run left: its tabs close (and a window of its own), once, and the record goes. */
-  async closeDone(taf) {
+  /**
+   * What a taf's last finished run left: its tabs close (and a window of its own), once, and the record goes. `gently` (a taf's next run):
+   * a kept tab is the person's now, so it closes only while it is still at the address the run left it and isn't the tab in front
+   * of the window they are using; one they moved or are using stays, and so does a window of its own that still holds one. Unpairing
+   * closes them all.
+   */
+  async closeDone(taf, gently = false) {
     const done = await this.doneTabs();
     const left = done[taf];
     if (!left) return;
     delete done[taf];
     if (this.doneStore) await this.doneStore.set(done);
-    if (left.tabs.length) await this.chrome.tabs.remove(left.tabs).catch(() => {});
-    if (left.window != null) await this.chrome.windows.remove(left.window).catch(() => {});
+    const c = this.chrome;
+    const close = [];
+    let kept = false;
+    for (const t of left.tabs) {
+      const id = typeof t === "number" ? t : t.id;
+      if (!gently) {
+        close.push(id);
+        continue;
+      }
+      const tab = await c.tabs.get(id).catch(() => null);
+      if (!tab) continue; // already gone
+      const win = tab.active ? await c.windows.get(tab.windowId).catch(() => null) : null;
+      const inUse = tab.active && win && win.focused;
+      const moved = typeof t !== "number" && t.url != null && (tab.url || "") !== t.url;
+      if (inUse || moved) kept = true;
+      else close.push(id);
+    }
+    if (close.length) await c.tabs.remove(close).catch(() => {});
+    if (left.window != null && !kept) await c.windows.remove(left.window).catch(() => {});
   }
 
   async closeAllDone() {
@@ -269,9 +291,11 @@ export class Runner {
   /** A run that ended leaves its tabs as the taf's last: an earlier run's of the same taf close now. */
   async leaveDone(run) {
     const taf = run.taf || "taf";
-    await this.closeDone(taf);
+    await this.closeDone(taf, true);
     const done = await this.doneTabs();
-    done[taf] = { tabs: [...run.tabs], window: run.ownWindow && run.windowId != null ? run.windowId : null };
+    const tabs = [];
+    for (const id of run.tabs) tabs.push({ id, url: ((await this.chrome.tabs.get(id).catch(() => null)) || {}).url || null });
+    done[taf] = { tabs, window: run.ownWindow && run.windowId != null ? run.windowId : null };
     if (this.doneStore) await this.doneStore.set(done);
   }
 
@@ -509,7 +533,7 @@ export class Runner {
       // A tab of its own in the window the owner is using, in the background: their active tab and their other tabs are
       // never touched, and the run's group sits beside them. With no such window, a window of its own, not focused.
       // The taf's last finished run's tabs close now, so the calls of one taf never pile up; the person saw the page where it stopped.
-      await this.closeDone(run.taf || "taf");
+      await this.closeDone(run.taf || "taf", true);
       const made = await this.runTab();
       // Stop or close landed while the tab was being made: nothing of the run's is left open, least of all among the owner's tabs.
       if (run.stopped) {
