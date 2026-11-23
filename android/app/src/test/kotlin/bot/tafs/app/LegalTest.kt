@@ -42,12 +42,15 @@ class LegalTest {
     assertEquals("Terms", Legal.label("Terms", "sr-Latn"))
   }
 
-  @Test fun aRegionalVariantOpensItsLanguagesPages() {
-    assertEquals("https://kiff.dev/pt/tafs/terms", Legal.terms("pt-BR"))
-    assertEquals("https://kiff.dev/pt/tafs/privacy", Legal.privacy("pt-BR"))
-    assertEquals("https://kiff.dev/pt/terms", Legal.kiffTerms("pt-BR"))
-    assertEquals("https://kiff.dev/pt/privacy", Legal.kiffPrivacy("pt-BR"))
+  // Brazil's legal pages are its own, at the lowercase /pt-br/ (kiff.dev doesn't serve /pt-BR/); Portugal's stay at /pt/.
+  @Test fun brazilOpensItsOwnLegalPages() {
+    assertEquals("https://kiff.dev/pt-br/tafs/terms", Legal.terms("pt-BR"))
+    assertEquals("https://kiff.dev/pt-br/tafs/privacy", Legal.privacy("pt-BR"))
+    assertEquals("https://kiff.dev/pt-br/terms", Legal.kiffTerms("pt-BR"))
+    assertEquals("https://kiff.dev/pt-br/privacy", Legal.kiffPrivacy("pt-BR"))
     assertEquals("Terms", Legal.label("Terms", "pt-BR"))
+    assertEquals("https://kiff.dev/pt/tafs/terms", Legal.terms("pt"))
+    assertEquals("https://kiff.dev/pt/privacy", Legal.kiffPrivacy("pt-PT"))
   }
 
   @Test fun aLanguageWithNoPageOpensEnglishAndSaysSo() {

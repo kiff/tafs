@@ -5191,6 +5191,7 @@ class AppModel(
 
   /** The sheet open on [call], and tafs cloud's offer read: true when it's what was offered and can be signed. */
   suspend fun openAllowNow(call: HeldCall): Boolean {
+    if (!bot.tafs.app.model.HoldAllow.allowable(call)) return false
     _state.update { it.copy(allow = AllowSheetState(call, busy = true)) }
     return loadAllow(round = false)
   }
@@ -7527,6 +7528,15 @@ class AppModel(
       return false
     }
     val kiffId = call.kiffId
+    // A sealed fill is allowed only with its release, made here behind its own fingerprint: never with the switch off, from a
+    // notification's action or an approval window's tap (presigned), or by any other way round. Refusing it is always open.
+    // Extra room would let it go on with no release at all, so it's never offered for one.
+    if (call.needsRelease && (answer is Answer.ExtraRoom ||
+        answer is Answer.ApproveOnce && (call.browser?.fill == null || !sealedReleaseOn || kiffId == null || presigned != null || confirmed || installed || approvedWithCard))
+    ) {
+      fail(Words.Chrome.releaseUnreadable)
+      return false
+    }
     if (approvedWithCard && kiffId != null) {
       // KIFF holds the answer already: the Record says so, and the paused run goes on.
       applyAnswer(call, answer, null)
@@ -7554,9 +7564,20 @@ class AppModel(
       fail(KiffClient.APPROVAL_KEY_LOST)
       return false
     }
+    // A sealed fill (docs/chrome.md, "The phone's release card"): the release first, behind its own fingerprint, then the hold's
+    // answer behind another (Android's approval key unlocks for one signature each). Nothing is sent unless both are signed.
+    val fill = call.browser?.fill?.takeIf { answer is Answer.ApproveOnce }
+    val release = if (fill == null) null else when (val made = release(call, fill)) {
+      null -> return false
+      else -> made
+    }
     val generation = accountGeneration
     val answered = try {
-      presigned ?: signAnswer(call, answer, Words.NeedsYou.Prompt.answer(summary = call.proposed.summary), confirmed)
+      presigned ?: signAnswer(
+        call, answer,
+        if (release != null) Words.Chrome.releasePromptAllow(site = call.browser?.site.orEmpty()) else Words.NeedsYou.Prompt.answer(summary = call.proposed.summary),
+        confirmed,
+      )
     } catch (e: SignerException) {
       // Nothing was sent, so the hold stays where it was; say so after why (requirement: a clear outcome, the request kept). A
       // closed prompt's line already says the request is kept.
@@ -7574,7 +7595,7 @@ class AppModel(
     if (kiffId != null) {
       try {
         when (answer) {
-          Answer.ApproveOnce -> kiff.approveOnce(kiffId, signed)
+          Answer.ApproveOnce -> kiff.approveOnce(kiffId, signed, release)
           Answer.Refuse -> kiff.reject(kiffId, null, signed)
           is Answer.NextStep -> kiff.reject(kiffId, answer.step, signed)
           Answer.ExtraRoom -> kiff.changeCard(kiffId, signed)
@@ -7600,6 +7621,44 @@ class AppModel(
       refresh()
     }
     return true
+  }
+
+  /**
+   * The release card's switch ([SealedRelease.ENABLED]): off until planque holds a sealed fill. Tests turn it on to check the
+   * card's two signatures; nothing else does.
+   */
+  internal var sealedReleaseOn: Boolean = bot.tafs.app.kiff.SealedRelease.ENABLED
+
+  /** Why the phone won't sign [call]'s release, by its own checks; null where it may, or where the call isn't a sealed fill. */
+  fun fillRefusal(call: HeldCall): bot.tafs.app.kiff.SealedRelease.Refusal? {
+    val fill = call.browser?.fill ?: return null
+    return bot.tafs.app.kiff.SealedRelease.refusal(fill, pairedChromes(), signer.approvalPublicKeyDER, clock().toEpochMilli())
+  }
+
+  private fun pairedChromes(): Set<String> = _state.value.chromes.orEmpty().map { it.id }.toSet()
+
+  /**
+   * The release for a sealed fill, behind the approval key's own fingerprint, whose prompt says which part goes to which site.
+   * Null when the phone's checks refuse it or the owner didn't confirm: the card then says why, and nothing is sent.
+   */
+  private suspend fun release(call: HeldCall, fill: bot.tafs.app.kiff.SealedRelease.Fill): bot.tafs.app.kiff.SealedRelease.Release? {
+    val r = bot.tafs.app.kiff.SealedRelease
+    fillRefusal(call)?.let { refused ->
+      fail(r.refusalWords(refused) ?: Words.NeedsYou.expiredLine)
+      return null
+    }
+    val part = r.part(fill.sealed) ?: return null
+    return try {
+      r.release(fill, pairedChromes(), signer.approvalPublicKeyDER, clock().toEpochMilli(), clock = { clock().toEpochMilli() }) { built ->
+        signer.signCritical(r.prompt(part, call.browser?.site.orEmpty()), built)
+      } ?: run { fail(Words.Chrome.releaseUnreadable); null }
+    } catch (e: SignerException) {
+      fail(
+        if (e is bot.tafs.app.signing.PromptClosed) Words.Approval.cancelledNothingApprovedRequestKept
+        else "${notSigned(e, Words.Common.notSentUnconfirmed)} ${bot.tafs.app.model.ApprovalWords.KEPT}",
+      )
+      null
+    }
   }
 
   /** An answer to a held call, signed: [value] for the Record, and [kiff] what KIFF checks, for a call KIFF holds. */

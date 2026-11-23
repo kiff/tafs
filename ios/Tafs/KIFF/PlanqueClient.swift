@@ -254,9 +254,11 @@ final class PlanqueClient {
 
         /// One thing the owner can do with a connection that works for it now, as planque offers it:
         /// `sign_in_again` (`approve`: a new sign-in on this same connection; `key`: a new key),
-        /// `remove` (`delete`, with `stops`: what stops, for one more ask), `remove_unfinished` (`delete`).
+        /// `remove` (`delete`, with `stops`: what stops, for one more ask), `remove_unfinished` (`delete`), `use_another_chrome` (`chrome`).
         struct Action: Decodable, Equatable, Identifiable {
             static let signInAgain = "sign_in_again", remove = "remove", removeUnfinished = "remove_unfinished"
+            /// `chrome`: move to another paired Chrome (`PUT …/grants/{grant}/chrome`, signed with the sites for the Chrome chosen).
+            static let useAnotherChrome = "use_another_chrome"
             var id = ""
             var words = ""
             var how = ""
@@ -277,6 +279,7 @@ final class PlanqueClient {
                 switch id {
                 case Self.signInAgain: return how == "approve" || how == "key"
                 case Self.remove, Self.removeUnfinished: return how == "delete"
+                case Self.useAnotherChrome: return how == "chrome"
                 default: return false
                 }
             }
@@ -824,6 +827,17 @@ final class PlanqueClient {
 
     func removeChrome(_ id: String) async throws {
         _ = try await raw("DELETE", "chromes/\(escaped(id))", body: nil)
+    }
+
+    /// Moves one browser connection to another paired Chrome (`PUT …/grants/{grant}/chrome`, "Your Chrome" 2): its sites and Card stay,
+    /// and `sitesSignature` is this phone's signature over those sites for the new Chrome (`ChromePairing.switchBytes`).
+    func switchChrome(grant: String, to chromeID: String, sitesSignature: String) async throws {
+        struct Body: Encodable {
+            let chromeID: String
+            let sitesSignature: String
+            enum CodingKeys: String, CodingKey { case chromeID = "chrome_id", sitesSignature = "chrome_sites_sig" }
+        }
+        _ = try await raw("PUT", "grants/\(escaped(grant))/chrome", body: try JSONEncoder().encode(Body(chromeID: chromeID, sitesSignature: sitesSignature)))
     }
 
     private func escaped(_ s: String) -> String {

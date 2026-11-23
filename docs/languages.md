@@ -1399,7 +1399,9 @@ behind. A count takes its base's plural forms.
 iOS's catalog gets a `pt-BR` localization and `Words.languages` lists it; Android gets `values-pt-rBR` and a `pt-BR` entry
 in `locales_config.xml` (tested in `test_strings.py`). **Before shipping one, each app is checked where it maps a
 language** to kiff.dev's pages and KIFF's (`KIFFClient`'s app language, `AppSignIn.pageLanguages`, the translated-pages
-set in `Components.swift`, and Android's twins): a variant reads its base's pages, as `pt-BR` reads `/pt/`.
+set in `Components.swift`, and Android's twins): a variant reads its base's pages, as `pt-BR` reads `/pt/`, except the
+pages kiff.dev has in the variant itself. **pt-BR's four legal pages** (KIFF's and tafs's terms and privacy) are its own,
+at the lowercase `/pt-br/` (`/pt-BR/` isn't served); Android opens them there (`Legal.VARIANTS`).
 
 **pt-BR** (Wave 1, Brazil) ships: Brazilian forms over `pt`'s, "você" throughout, "celular", "tela", "arquivo", "senha",
 "Entrar" for signing in, "conexão" for a connection, and the system's own names on each platform (iOS "Ajustes", macOS
