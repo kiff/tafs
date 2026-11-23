@@ -1,0 +1,1 @@
+- **iPhone, iPad and Android, Brazilian Portuguese:** the email-code sign-in setting now reads in Brazil's words ("Entrar com um código enviado por e-mail", "Login", "Salvo"), not Portugal's, matching KIFF's pt-BR emails ([docs/languages.md](../docs/languages.md), "Regional variants").
