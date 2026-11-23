@@ -126,7 +126,7 @@ class ApiDoorScreensTest {
     // Only ever on tafs cloud's own host, over HTTPS, whatever the address says (as iOS, Windows and Linux).
     for ((address, shown) in listOf(
       "https://cloud.example/v1/x" to "https://cloud.example/v1/x",
-      "https://CLOUD.example/v1/x" to "https://CLOUD.example/v1/x",
+      "https://CLOUD.example/v1/x" to "https://cloud.example/v1/x",
       "v1/x" to "https://cloud.example/v1/x",
       "https://elsewhere.example/r" to "https://cloud.example/r",
       "http://cloud.example/v1/x" to "https://cloud.example/v1/x",
@@ -134,10 +134,10 @@ class ApiDoorScreensTest {
       "https://me@cloud.example/v1/x" to "https://cloud.example/v1/x",
       "https://cloud.example.evil.example/v1/x" to "https://cloud.example/v1/x",
       "//evil.example/v1/x" to "https://cloud.example/v1/x",
-      "foo:x@evil.example/v1/x" to "https://cloud.example",
-      "mailto:a@evil.example" to "https://cloud.example",
-      "@evil.example/x" to "https://cloud.example",
-      "\\\\evil.example\\x" to "https://cloud.example",
+      "foo:x@evil.example/v1/x" to "https://cloud.example/",
+      "mailto:a@evil.example" to "https://cloud.example/",
+      "@evil.example/x" to "https://cloud.example/",
+      "\\\\evil.example\\x" to "https://cloud.example/",
       "https://evil.example@cloud.example.evil.example/" to "https://cloud.example/",
     )) {
       val e = bot.tafs.app.app.endpointOn("https://cloud.example/", address)
@@ -152,7 +152,7 @@ class ApiDoorScreensTest {
 
   /**
    * The example is pasted into a shell, so the endpoint keeps only a plain path (letters, digits and `/ _ . ~ -`), with no
-   * query or fragment, else it's tafs cloud's own address alone; and the example quotes it, so the shell takes it as it is.
+   * query or fragment, else it's tafs cloud's own address alone, with its slash; and the example quotes it, so the shell takes it as it is.
    */
   @Test fun anEndpointKeepsOnlyAPlainPathAndTheExampleQuotesIt() {
     for (address in listOf(
@@ -161,7 +161,7 @@ class ApiDoorScreensTest {
       "https://cloud.example/v1/doors/api/d\$(id)", "https://cloud.example/v1/doors/api/d;id",
       "https://cloud.example/v1/doors/api/d?x=\$(id)", "https://cloud.example/v1/doors/api/d#\$(id)",
       "https://cloud.example/v1/doors/api/d%27",
-    )) assertEquals(address, "https://cloud.example", bot.tafs.app.app.endpointOn("https://cloud.example/", address))
+    )) assertEquals(address, "https://cloud.example/", bot.tafs.app.app.endpointOn("https://cloud.example/", address))
     // tafs cloud's own door paths are plain, and kept.
     assertEquals("https://cloud.example/v1/doors/api/door_ord7/requests",
       bot.tafs.app.app.endpointOn("https://cloud.example/", "/v1/doors/api/door_ord7/requests"))

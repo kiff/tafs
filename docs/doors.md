@@ -224,7 +224,8 @@ but the key. Where to send work is only ever on tafs cloud's own host, over HTTP
 Linux): a whole address elsewhere, or one whose scheme has no host of its own, becomes its path on tafs cloud, so the
 example never names another host. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
 **On Android** (`endpointOn`), the path is kept only when it's plain (letters, digits and `/ _ . ~ -`, as tafs cloud's
-`/v1/doors/api/door_…/requests`) with no query or fragment, else it's tafs cloud's own address alone, and the example puts
+`/v1/doors/api/api-…/requests`) with no query or fragment, else it's tafs cloud's own address alone (`https://<host>/`); a
+same-host address is written again on tafs cloud's host as it writes it; and the example puts
 the endpoint in single quotes; iOS and the desktops follow.
 
 **Android's screen for an `api` door** (`ApiDoorPanels`, `views/ApiDoorViews.kt`) replaces its usual panel while the switch is on: the door's
