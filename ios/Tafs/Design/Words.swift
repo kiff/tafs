@@ -1125,6 +1125,8 @@ enum Words {
         static var remove: String { Words.line("chrome.remove") }
         /// Unpair {name}
         static func removeNamed(name: String) -> String { Words.line("chrome.remove_named", name) }
+        /// What moves to this Chrome changed, so nothing was paired. Check it and pair again.
+        static var replaceChanged: String { Words.line("chrome.replace_changed") }
         /// Moves to this Chrome: {sites}
         static func replaceMoves(sites: String) -> String { Words.line("chrome.replace_moves", sites) }
         /// A new Chrome (replaces none)
@@ -1143,6 +1145,10 @@ enum Words {
         static var shotOpen: String { Words.line("chrome.shot_open") }
         /// Before this step
         static var shotTitle: String { Words.line("chrome.shot_title") }
+        /// Use another Chrome
+        static var `switch`: String { Words.line("chrome.switch") }
+        /// Move this connection to {name}
+        static func switchPrompt(name: String) -> String { Words.line("chrome.switch_prompt", name) }
         /// Chrome
         static var title: String { Words.line("chrome.title") }
         /// Unpairing ends the connections that use it: {sites}. They come back only when you connect them again.

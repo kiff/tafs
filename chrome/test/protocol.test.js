@@ -5,7 +5,7 @@ import { profileId } from "../src/store.js";
 import { Nonces, checkStep, clockOffset, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS, MAX_OFFSET_MS, SKEW_MS, SKEW_KNOWN_MS } from "../src/protocol.js";
 import { parseCode, offer, checkConfirmation, extensionProof, oneTouchProof, postOffer, readCarried, ALPHABET, hex } from "../src/pairing.js";
 import { checkSites } from "../src/protocol.js";
-import { Relay, MAX_RESULT_BYTES } from "../src/relay.js";
+import { Relay, readConnections, MAX_RESULT_BYTES } from "../src/relay.js";
 
 const pub = async (k) => b64u(await publicSPKI(k.publicKey));
 
@@ -358,7 +358,7 @@ class FakeSocket {
   }
 }
 
-async function relayWith(p, { runner } = {}) {
+async function relayWith(p, { runner, onReady } = {}) {
   const ext = await newKeyPair();
   const handled = [];
   let wiped = false;
@@ -367,6 +367,7 @@ async function relayWith(p, { runner } = {}) {
     kept: { keys: ext, pairing: { chromeId: "chr_1" } },
     runner: runner || { active: false, handle: async (s) => (handled.push(s), { page: { read_id: "rd_1", url: "https://shop.example/" } }), stop: async () => {} },
     onUnpaired: () => (wiped = true),
+    ...(onReady ? { onReady } : {}),
     WebSocket: FakeSocket,
     now: () => NOW,
   });
@@ -407,6 +408,73 @@ test("the relay takes steps only after both ends proved themselves", async () =>
   assert.equal(handled.length, 1, "an unsigned step never reaches the runner");
   assert.equal(ws.sent.at(-1).error.code, "bad_step");
   relay.close();
+});
+
+test("the relay says it is ready only once the welcome proved planque, so a push subscription goes only to planque", async () => {
+  const p = await planque();
+  let ready = 0;
+  const { relay, ws } = await relayWith(p, { onReady: () => ready++ });
+  await ws.deliver({ type: "challenge", nonce_p: "np" });
+  assert.equal(ready, 0, "not before the welcome");
+  await ws.deliver({ type: "welcome", sig: await sign(p.keys.privateKey, LABEL.welcome, { chrome_id: "chr_1", nonce_p: "np", nonce_e: ws.sent.at(-1).nonce_e }) });
+  assert.equal(ready, 1);
+  const forged = await relayWith(p, { onReady: () => ready++ });
+  await forged.ws.deliver({ type: "challenge", nonce_p: "np" });
+  const other = await planque();
+  await forged.ws.deliver({ type: "welcome", sig: await sign(other.keys.privateKey, LABEL.welcome, { chrome_id: "chr_1", nonce_p: "np", nonce_e: forged.ws.sent.at(-1).nonce_e }) });
+  assert.equal(ready, 1, "a welcome that isn't planque's gets nothing");
+  relay.close(); // its keepalive timer would hold the test process open
+  forged.relay.close();
+});
+
+test("an idle relay pings every 20 s to keep the worker up, until planque can wake it by push; a run pings either way", async () => {
+  mock.timers.enable({ apis: ["setInterval"] });
+  try {
+    const p = await planque();
+    const runner = { active: false, handle: async () => ({}), stop: async () => {} };
+    const { relay, ws } = await relayWith(p, { runner });
+    await handshake(p, ws);
+    const pings = () => ws.sent.filter((m) => m.type === "ping").length;
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 1, "idle, no push: kept awake");
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 2);
+    relay.pushed = true; // the subscription went: the push wakes it, so the worker may sleep
+    mock.timers.tick(40_000);
+    assert.equal(pings(), 2, "idle with a push subscription: no ping");
+    runner.active = true;
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 3, "a run pings whatever the push");
+    relay.close();
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test("an idle worker is let sleep only when planque says it keeps the push subscription, and a refusal keeps the ping going", async () => {
+  mock.timers.enable({ apis: ["setInterval"] });
+  try {
+    const p = await planque();
+    const runner = { active: false, handle: async () => ({}), stop: async () => {} };
+    const { relay, ws } = await relayWith(p, { runner });
+    await handshake(p, ws);
+    const pings = () => ws.sent.filter((m) => m.type === "ping").length;
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 1, "no push yet: kept awake");
+    await ws.deliver({ type: "push_refused", code: "push_endpoint" });
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 2, "refused: still kept awake");
+    await ws.deliver({ type: "push_kept" });
+    assert.equal(relay.pushed, true);
+    mock.timers.tick(40_000);
+    assert.equal(pings(), 2, "kept: the push wakes it, so no ping");
+    await ws.deliver({ type: "push_refused", code: "push_unsigned" });
+    mock.timers.tick(20_000);
+    assert.equal(pings(), 3, "a later refusal (a new subscription refused) starts it again");
+    relay.close();
+  } finally {
+    mock.timers.reset();
+  }
 });
 
 test("a step before the welcome, or a forged welcome, ends the connection", async () => {
@@ -582,4 +650,22 @@ test("the clock slack's values are pinned: a wider one is a decision, not a drif
   assert.equal(SKEW_MS, 60_000, "slack without planque's time");
   assert.equal(SKEW_KNOWN_MS, 5_000, "slack with it");
   assert.equal(MAX_OFFSET_MS, 120_000, "the most the welcome's time may move the clock");
+});
+
+test("the relay keeps this Chrome's live connections from the welcome and each change, display only, malformed left out", async () => {
+  const p = await planque();
+  let changes = 0;
+  const { relay, ws } = await relayWith(p);
+  relay.onChange = () => changes++;
+  await ws.deliver({ type: "challenge", nonce_p: "np" });
+  const h = ws.sent.at(-1);
+  const one = { grant: "g1", agent: "agt_wiki", name: "Wiki lookup", sites: ["wikipedia.org"] };
+  await ws.deliver({ type: "welcome", sig: await sign(p.keys.privateKey, LABEL.welcome, { chrome_id: "chr_1", nonce_p: "np", nonce_e: h.nonce_e }), connections: [one, { grant: "g2" }, null, { ...one, agent: "" }] });
+  assert.deepEqual(relay.connections, [one], "only well-formed ones");
+  await ws.deliver({ type: "connections", connections: [] });
+  assert.deepEqual(relay.connections, []);
+  assert.ok(changes >= 2, "the panel hears each change");
+  assert.deepEqual(readConnections("x"), []);
+  assert.deepEqual(readConnections([{ ...one, sites: ["a.example", 7] }])[0].sites, ["a.example"]);
+  relay.close();
 });

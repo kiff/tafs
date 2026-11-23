@@ -1,0 +1,1 @@
+- **Android:** re-pairing a Chrome reads its connections again just before the fingerprint, and signs only the list you were shown ([docs/android-app.md](../docs/android-app.md), "Pairing a Chrome").

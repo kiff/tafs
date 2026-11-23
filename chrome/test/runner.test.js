@@ -11,7 +11,7 @@ const SHOP = await signedSites(["shop.example"]);
 const PAYPAL = await signedSites(["paypal.com"]);
 
 /** A fake of the parts of Chrome's extension API the runner uses, recording every call. */
-function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFails = false, createFails = false } = {}) {
+function fakeChrome({ page = null, ownerWindow = null, groupFails = false, createFails = false } = {}) {
   const calls = [];
   const listeners = {};
   const on = (name) => ({ addListener: (f) => (listeners[name] = f) });
@@ -67,7 +67,6 @@ function fakeChrome({ permitted = true, page = null, ownerWindow = null, groupFa
         return ownerWindow;
       },
     },
-    permissions: { contains: async () => permitted },
     declarativeNetRequest: { updateSessionRules: async (o) => calls.push(["dnr", o]) },
     scripting: {
       executeScript: async (o) => {
@@ -169,7 +168,7 @@ test("three failed acts in a row pause the run; Resume goes on", async () => {
   assert.ok((await r.handle(step({ op: "read" }))).page);
 });
 
-test("the owner's input in a run's tab pauses it, and Stop closes its window", async () => {
+test("the owner's input in a run's tab pauses it, and Stop leaves its tabs and window open", async () => {
   const c = fakeChrome();
   const r = runner(c);
   await r.handle(step());
@@ -177,14 +176,14 @@ test("the owner's input in a run's tab pauses it, and Stop closes its window", a
   r.ownerInput(tab);
   assert.equal((await r.handle(step({ op: "read" }))).error.code, "paused_by_owner");
   await r.stop("run_1");
-  assert.ok(c.calls.some((x) => x[0] === "windows.remove"));
+  assert.ok(!c.calls.some((x) => x[0] === "windows.remove" || x[0] === "tabs.remove"), "what the taf worked on stays for the person");
   assert.equal((await r.handle(step({ op: "read" }))).error.code, "stopped");
   assert.equal(r.active, false);
 });
 
 const OWNER_WINDOW = { id: 3, type: "normal", incognito: false };
 
-test("a run opens a background tab in the owner's window, and Stop closes only the run's tabs", async () => {
+test("a run opens a background tab in the owner's window, and Stop leaves it open, in a group that says done", async () => {
   const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
   const r = runner(c);
   await r.handle(step());
@@ -197,11 +196,20 @@ test("a run opens a background tab in the owner's window, and Stop closes only t
   const nav = c.calls.find((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/");
   assert.equal(nav[2].active, undefined, "the owner's active tab stays in front");
   await r.stop("run_1");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[tab]], "the run's tab, nothing else");
-  assert.ok(!c.calls.some((x) => x[0] === "windows.remove"), "the owner's window stays");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.remove" || x[0] === "windows.remove"), "nothing closes");
+  const done = c.calls.filter((x) => x[0] === "tabGroups.update").pop();
+  assert.equal(done[2].title, "tafs · Rae · done", "the group says the run is done");
+  assert.equal(r.active, false);
+  // Unpairing is what closes it.
+  const u = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const q = runner(u);
+  await q.handle(step());
+  await q.stopAll();
+  assert.deepEqual(u.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[[...u.tabsMap.keys()][0]]], "the run's tab, nothing else");
+  assert.ok(!u.calls.some((x) => x[0] === "windows.remove"), "the owner's window stays");
 });
 
-test("a run in the owner's window touches only tab ids it created", async () => {
+test("a run in the owner's window touches only tab ids it created (unpairing closes them)", async () => {
   const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
   const r = runner(c);
   await r.handle(step());
@@ -213,7 +221,7 @@ test("a run in the owner's window touches only tab ids it created", async () => 
   // A tab the run's page opens on its sites joins the run, and goes with it.
   c.listeners.created({ sourceTabId: tab, tabId: 556, url: "https://shop.example/help" });
   await r.handle(step({ op: "read" }));
-  await r.stop("run_1");
+  await r.stopAll();
   const ours = new Set([tab, 556]);
   for (const x of c.calls.filter((y) => y[0] === "executeScript")) assert.ok(ours.has(x[2]), `a script ran in tab ${x[2]}, which the run didn't open`);
   const fenced = c.calls.filter((x) => x[0] === "dnr").flatMap((x) => (x[1].addRules || []).flatMap((rule) => rule.condition.tabIds || []));
@@ -227,7 +235,7 @@ test("a run in the owner's window touches only tab ids it created", async () => 
   assert.deepEqual([...c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1])].sort(), [tab, 556].sort(), "only those two close");
 });
 
-test("with no window to join, or a private one, a run has a window of its own and Stop closes it", async () => {
+test("with no window to join, or a private one, a run has a window of its own, which Stop leaves and unpairing closes", async () => {
   for (const ownerWindow of [null, { id: 4, type: "normal", incognito: true }, { id: 5, type: "popup", incognito: false }]) {
     const c = fakeChrome({ ownerWindow });
     const r = runner(c);
@@ -237,18 +245,25 @@ test("with no window to join, or a private one, a run has a window of its own an
     const nav = c.calls.find((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/");
     assert.equal(nav[2].active, true, "in its own window the run's tab is the one in front");
     await r.stop("run_1");
+    assert.ok(!c.calls.some((x) => x[0] === "windows.remove" || x[0] === "tabs.remove"), "Stop leaves it");
+    const u = fakeChrome({ ownerWindow });
+    const q = runner(u);
+    await q.handle(step());
+    await q.stopAll();
+    c.calls.length = 0;
+    c.calls.push(...u.calls);
     assert.ok(c.calls.some((x) => x[0] === "windows.remove" && x[1] === 9));
     // The window goes with its tab: the tab is closed first, then the window.
     assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1].length), [1]);
   }
 });
 
-test("a run's own window the owner has emptied (its tab dragged out) still has its tab closed at Stop", async () => {
+test("a run's own window the owner has emptied (its tab dragged out) still has its tab closed at unpairing", async () => {
   const c = fakeChrome();
   const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
-  await r.stop("run_1");
+  await r.stopAll();
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[tab]]);
   assert.ok(c.calls.some((x) => x[0] === "windows.remove"));
 });
@@ -260,9 +275,10 @@ test("a Stop that lands while the tab is being made leaves nothing open, in the 
     let release;
     const gate = new Promise((resolve) => (release = resolve));
     const made = ownerWindow ? c.tabs.create : c.windows.create;
-    (ownerWindow ? c.tabs : c.windows)[ownerWindow ? "create" : "create"] = async (o) => (await gate, made(o));
+    let reached = false; // the open is at the tab being made, not before it: a timer would only guess
+    (ownerWindow ? c.tabs : c.windows)[ownerWindow ? "create" : "create"] = async (o) => ((reached = true), await gate, made(o));
     const opening = r.handle(step());
-    await new Promise((resolve) => setTimeout(resolve, 5));
+    while (!reached) await new Promise((resolve) => setTimeout(resolve, 1));
     await r.stop("run_1"); // nothing of the run's exists yet to close
     release();
     const out = await opening;
@@ -281,9 +297,10 @@ test("a Stop that lands while the tab is being fenced and grouped closes it, and
   let release;
   const gate = new Promise((resolve) => (release = resolve));
   const update = c.tabGroups.update;
-  c.tabGroups.update = async (...args) => (await gate, update(...args));
+  let reached = false;
+  c.tabGroups.update = async (...args) => ((reached = true), await gate, update(...args));
   const opening = r.handle(step());
-  await new Promise((resolve) => setTimeout(resolve, 5));
+  while (!reached) await new Promise((resolve) => setTimeout(resolve, 1));
   await r.stop("run_1"); // the tab is the run's by now: this closes it
   release();
   assert.equal((await opening).error.code, "stopped");
@@ -303,7 +320,7 @@ test("a tab group the owner has broken up doesn't lose the run its pop-up, and a
   };
   c.listeners.created({ sourceTabId: tab, tabId: 556, url: "https://shop.example/help" });
   await new Promise((resolve) => setTimeout(resolve, 5));
-  await r.stop("run_1");
+  await r.stopAll();
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).sort(), [tab, 556].sort(), "the pop-up is still the run's");
   // The owner's window closed between getLastFocused and tabs.create.
   const d = fakeChrome({ ownerWindow: OWNER_WINDOW, createFails: true });
@@ -319,15 +336,6 @@ test("when the tab can't be grouped in the owner's window, only the run's tab cl
   const tab = [...c.tabsMap.keys()][0];
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").map((x) => x[1]), [[tab]]);
   assert.ok(!c.calls.some((x) => x[0] === "windows.remove"), "the owner's window stays");
-});
-
-test("a site Chrome hasn't let the extension into waits for the owner's yes in the side panel", async () => {
-  const c = fakeChrome({ permitted: false });
-  const r = runner(c);
-  const out = await r.handle(step());
-  assert.equal(out.error.code, "needs_site_permission");
-  assert.deepEqual(r.state()[0].asks, ["shop.example"]);
-  assert.ok(!c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js"), "nothing read without it");
 });
 
 test("a run's tab is fenced by Chrome's own rules before it loads: only its sites, never plain http", async () => {
@@ -488,7 +496,7 @@ test("on a checkout page a taf clicks nothing, and a dialog the page raised stop
   assert.equal(r2.runs.get("run_1").failures, 1);
 });
 
-test("a run nobody sends a step to for five minutes is closed, as Stop does; a paused one, or one with a step running, is not", async () => {
+test("a run nobody sends a step to for five minutes ends, as Stop does (its tabs stay); a paused one, or one with a step running, is not", async () => {
   let clock = 1_000_000;
   const c = fakeChrome();
   const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock });
@@ -503,7 +511,8 @@ test("a run nobody sends a step to for five minutes is closed, as Stop does; a p
   clock += 2 * 60_000;
   await r.sweep();
   assert.equal(r.runs.get("run_1").stopped, true);
-  assert.ok(c.calls.some((x) => x[0] === "windows.remove"), "its window is gone");
+  assert.ok(!c.calls.some((x) => x[0] === "windows.remove" || x[0] === "tabs.remove"), "its tabs stay for the person");
+  assert.equal(c.calls.filter((x) => x[0] === "tabGroups.update").pop()[2].title, "tafs · Rae · done");
   assert.equal(r.state()[0].steps.at(-1).by, "idle");
   assert.equal(r.active, false);
   // The owner's pause is waiting for the owner, not a dropped call.
@@ -598,4 +607,232 @@ test("an act takes its picture first, a read never does, and a picture that fail
     assert.equal(done.error, undefined);
     assert.ok(c2.calls.some((x) => x[0] === "page" && x[1] === "act end"));
   }
+});
+
+// A step handed to the person (docs/chrome-panel.md): the taf says what it needs done in the page, the person does it, and Done or
+// Not now goes back to planque as its own answer. The extension acts for no one here.
+const FILLED = { read_id: "rd_h", url: "https://shop.example/pay", title: "Pay", text: "Pay now", fields: [{ ref: "f1", label: "Card number", kind: "card", masked: true }, { ref: "f2", label: "Name", kind: "text", value: "Ana Pérez" }, { ref: "f3", label: "Gift", kind: "checkbox", value: "checked" }], controls: [{ ref: "c1", label: "Pay now" }], links: [] };
+
+async function handing() {
+  const c = fakeChrome({ page: FILLED });
+  const answers = [];
+  let clock = 1_000_000;
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock, onHandAnswer: (a) => answers.push(a) });
+  await r.handle(step());
+  const hand = (extra = {}, words = "Fill in the card number, then tap Done") => ({ id: "h1", op: "hand", read_id: "rd_h", hand: { words, ref: "f1" }, ...extra });
+  return { c, r, answers, hand, tick: (ms) => (clock += ms), tab: () => [...c.tabsMap.keys()][0] };
+}
+
+test("a step handed to the person is answered at once as handed, and waits for them", async () => {
+  const { r, answers, hand } = await handing();
+  const out = await r.handle(step(hand()));
+  assert.deepEqual(out, { handed: true });
+  assert.deepEqual(r.state()[0].hand, { id: "h1", words: "Fill in the card number, then tap Done", ref: true });
+  assert.deepEqual(answers, [], "nothing is answered for the person");
+});
+
+test("the extension checks a hand-over itself: its words, the field it names, the read, and the page's site", async () => {
+  const { r, hand } = await handing();
+  const bad = { "no words": hand({}, ""), "only spaces": hand({}, "   "), "a newline": hand({}, "Fill\nin"), "a direction mark": hand({}, "Fill in ‮elif"), "281 characters": hand({}, "a".repeat(281)), "words that aren't text": hand({ hand: { words: 7 } }), "a ref that isn't text": hand({ hand: { words: "ok", ref: 3 } }), "no hand": { id: "h2", op: "hand", read_id: "rd_h" } };
+  for (const [why, s] of Object.entries(bad)) assert.equal((await r.handle(step(s))).error.code, "bad_step", why);
+  assert.equal((await r.handle(step(hand({ hand: { words: "ok", ref: "f9" } })))).error.code, "bad_step", "a ref that is not in the read");
+  assert.equal((await r.handle(step(hand({ read_id: "rd_other" })))).error.code, "page_changed", "a read the extension doesn't have");
+  assert.equal((await r.handle(step(hand({ hand: { words: "a".repeat(280) } })))).handed, true, "280 characters are fine");
+  assert.equal((await r.handle(step(hand({ id: "h3", hand: { words: "ok" } })))).handed, true, "no ref is fine");
+  assert.equal(r.state()[0].hand.ref, false);
+});
+
+test("a hand-over on a page off the run's sites is refused, as any step is", async () => {
+  const { c, r, hand, tab } = await handing();
+  c.tabsMap.set(tab(), "https://evil.example/pay");
+  assert.equal((await r.handle(step(hand()))).error.code, "site_not_listed");
+  assert.equal(r.state()[0].hand, null);
+});
+
+test("the person typing in the page doesn't pause the run while a step is handed to them, and does after", async () => {
+  const { r, hand, tab } = await handing();
+  await r.handle(step(hand()));
+  r.ownerInput(tab());
+  assert.ok((await r.handle(step({ id: "r1", op: "read" }))).page, "typing was what was asked");
+  await r.answerHand("run_1", "done");
+  r.ownerInput(tab());
+  assert.equal((await r.handle(step({ id: "r2", op: "read" }))).error.code, "paused_by_owner", "a touch after the answer pauses as before");
+});
+
+test("a run with a step handed to the person isn't swept as idle, until the hand-over's 30 minutes are up", async () => {
+  const { r, hand, tick } = await handing();
+  await r.handle(step(hand()));
+  tick(10 * 60_000);
+  await r.sweep();
+  assert.equal(r.state()[0].stopped, false, "ten minutes: the person is still at it");
+  assert.notEqual(r.state()[0].hand, null);
+  tick(21 * 60_000);
+  await r.sweep();
+  assert.equal(r.state()[0].hand, null, "past 30 minutes it is over");
+  assert.equal(r.state()[0].stopped, true, "and the run is idle like any other");
+});
+
+test("Done reads the page back without what is in its fields; Not now says no; either answers once", async () => {
+  const { r, answers, hand } = await handing();
+  await r.handle(step(hand()));
+  assert.deepEqual(await r.answerHand("run_1", "done"), { ok: true });
+  assert.equal(answers.length, 1);
+  assert.equal(answers[0].hand, "h1");
+  assert.equal(answers[0].outcome, "done");
+  const page = answers[0].page;
+  assert.ok(page.fields.length === 3 && page.fields.every((f) => !("value" in f)), JSON.stringify(page.fields));
+  assert.deepEqual(page.fields.map((f) => f.label), ["Card number", "Name", "Gift"], "the taf learns the fields are there");
+  assert.equal(page.title, "Pay");
+  assert.equal(r.state()[0].hand, null);
+  assert.equal((await r.answerHand("run_1", "done")).error.code, "no_hand", "answered once");
+  await r.handle(step(hand({ id: "h2" })));
+  assert.deepEqual(await r.answerHand("run_1", "declined"), { ok: true });
+  assert.deepEqual(answers[1], { hand: "h2", outcome: "declined", page: null });
+  assert.equal((await r.answerHand("run_1", "maybe")).error.code, "no_hand");
+  assert.equal((await r.answerHand("run_x", "done")).error.code, "no_hand");
+});
+
+test("a new hand-over ends the one still open as declined, and Stop ends it too", async () => {
+  const { r, answers, hand } = await handing();
+  await r.handle(step(hand()));
+  await r.handle(step(hand({ id: "h2" })));
+  assert.deepEqual(answers, [{ hand: "h1", outcome: "declined", page: null }], "one open per run");
+  assert.equal(r.state()[0].hand.id, "h2");
+  await r.stop("run_1");
+  assert.deepEqual(answers.at(-1), { hand: "h2", outcome: "declined", page: null }, "planque is told, not left to its 30 minutes");
+});
+
+test("Show me brings the run's tab to the front and outlines the field the taf named, and clicks nothing", async () => {
+  const { c, r, hand, tab } = await handing();
+  const outlined = [];
+  const run = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => (String(o.func).includes("TafsPage.outline") ? (outlined.push(o.args), [{ result: { ok: true } }]) : run(o));
+  c.windows.update = async (id, props) => c.calls.push(["windows.update", id, props]);
+  await r.handle(step(hand()));
+  assert.deepEqual(await r.showHand("run_1"), { ok: true });
+  assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab() && x[2].active === true), "the tab comes to the front");
+  assert.deepEqual(outlined, [["f1", "rd_h"]], "only the field named, from the read the hand-over was planned from");
+  assert.ok(!c.calls.some((x) => x[0] === "page" && x[1].startsWith("act")), "nothing was clicked or typed");
+  assert.equal((await r.showHand("run_x")).error.code, "no_hand");
+});
+
+// The read after an act waits for the navigation the act starts (the owner's run 2: "The page still showed the start page afterwards").
+async function actOn(c, extra = {}) {
+  const waits = [];
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : (waits.push(ms), Promise.resolve())), paired: () => paired });
+  await r.handle(step());
+  const out = await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" }, ...extra }));
+  return { out, waits, runner: r };
+}
+
+test("a click that navigates is read after the new page loads, not from the old page still marked complete", async () => {
+  const c = fakeChrome({ page: PLAIN });
+  const base = c.tabs.get;
+  let state = "before";
+  let loadingPolls = 0;
+  c.tabs.get = async (id) => {
+    const t = await base(id);
+    if (state === "before") return t;
+    // The click has happened: a moment later the tab starts loading the results page, then finishes.
+    if (loadingPolls < 3) {
+      loadingPolls++;
+      return loadingPolls === 1 ? t : { ...t, status: "loading", url: "https://shop.example/results" };
+    }
+    return { ...t, status: "complete", url: "https://shop.example/results" };
+  };
+  const inject = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    if (o.func && String(o.func).includes("TafsPage.act")) state = "after";
+    return inject(o);
+  };
+  const { out } = await actOn(c);
+  assert.ok(out.page, "the act answers a page");
+  // The tab was asked again after the click until it had started loading and finished.
+  assert.ok(loadingPolls >= 3, "the runner kept looking until the navigation had begun and ended; polls: " + loadingPolls);
+});
+
+test("a click that navigates nothing waits one second at most for a navigation and then reads", async () => {
+  const c = fakeChrome({ page: PLAIN });
+  const { out, waits } = await actOn(c);
+  assert.ok(out.page, JSON.stringify(out));
+  const looked = waits.filter((ms) => ms === 100).length;
+  assert.equal(looked, 10, "ten looks of 100 ms, then it reads");
+});
+
+test("a run that ends by planque's close step or stop keeps its tabs; one that never loaded a page, and unpairing, close them", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const closed = await r.handle(step({ id: "op3", op: "close" }));
+  assert.deepEqual(closed, { page: null });
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.remove" || x[0] === "windows.remove"), "the close step leaves the tabs");
+  assert.equal(r.runs.get("run_1").tab, null, "no longer the run's");
+  assert.equal(r.runs.get("run_1").tabs.size, 0);
+  // A touch in a tab the run let go of is no run's business.
+  const tab = [...c.tabsMap.keys()][0];
+  r.ownerInput(tab);
+  assert.equal(r.runs.get("run_1").paused, null);
+});
+
+test("a taf keeps only its latest finished run's tabs: its next run closes the earlier ones, another taf's stay, unpairing closes all", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const stored = {};
+  const doneStore = { get: async () => JSON.parse(JSON.stringify(stored.done || {})), set: async (d) => (stored.done = JSON.parse(JSON.stringify(d))) };
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, doneStore });
+  const removed = () => c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]);
+  await r.handle(step());
+  const first = [...c.tabsMap.keys()].at(-1);
+  await r.stop("run_1");
+  assert.deepEqual(removed(), [], "the finished run's tabs stay");
+  // Another taf's run: the first taf's tabs are not its to close.
+  await r.handle(step({ run: "run_b", id: "opb", taf: "Sam" }));
+  assert.deepEqual(removed(), [], "another taf's tabs stay");
+  await r.stop("run_b");
+  // The first taf runs again: its earlier tabs close as the new one opens, and nothing of Sam's.
+  await r.handle(step({ run: "run_3", id: "op3" }));
+  assert.deepEqual(removed(), [[first]].flat(), "only its own earlier run's tabs close");
+  assert.equal(Object.keys(stored.done).length, 1, "only Sam's is kept now");
+  // A new worker finds what was kept.
+  const d = new Runner({ chrome: c, sleep, paired: () => paired, doneStore });
+  await d.closeDone("Sam");
+  assert.equal(removed().length, 2, "a restarted worker closes what the last one kept");
+  r.done = null; // this runner read the store before the other one closed Sam's
+  await r.stop("run_3");
+  await r.stopAll();
+  assert.equal(removed().length, 3, "unpairing closes the last taf's too");
+  assert.deepEqual(stored.done, {});
+});
+
+test("a taf's next run leaves a kept tab the person has moved or is using, and closes one still where the run left it", async () => {
+  for (const [what, mutate, closes] of [
+    ["still where it was left", () => {}, true],
+    ["moved to another page", (c, tab) => c.tabsMap.set(tab, "https://elsewhere.example/"), false],
+    ["in front of the window in use", (c) => { c.front = true; }, false],
+  ]) {
+    const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+    c.front = false;
+    const get = c.tabs.get;
+    c.tabs.get = async (id) => ({ ...(await get(id)), windowId: 3, active: c.front });
+    c.windows.get = async (id) => ({ id, focused: true });
+    const r = runner(c);
+    await r.handle(step());
+    const tab = [...c.tabsMap.keys()][0];
+    await r.stop("run_1");
+    mutate(c, tab);
+    await r.handle(step({ run: "run_2", id: "op2" }));
+    const gone = c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).includes(tab);
+    assert.equal(gone, closes, what);
+    assert.deepEqual(await r.doneTabs(), {}, "the record goes either way: a tab the person has taken is not the taf's to track");
+  }
+});
+
+test("unpairing closes a kept tab the person has moved too", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  await r.stop("run_1");
+  c.tabsMap.set(tab, "https://elsewhere.example/");
+  await r.stopAll();
+  assert.ok(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).includes(tab));
 });

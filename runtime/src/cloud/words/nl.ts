@@ -13,6 +13,10 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const nl: Words = {
   work_working: "Bezig",
   work_waiting_approval: "Wacht op je goedkeuring",
+  // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
+  hold_run_ended: "Die run was al afgelopen, dus er is niets uitgevoerd.",
+  // The owner's version went in and stopped what waited on their answer: said, with the way to send it again.
+  switch_stopped: "Door deze versie te installeren is gestopt wat op je antwoord wachtte: de vastgehouden oproep is ingetrokken en het bericht is niet uitgevoerd. Je kunt het opnieuw sturen.",
   your_step_title: "Jouw stap",
   your_step_done: "Klaar",
   your_step_skip: "Overslaan",

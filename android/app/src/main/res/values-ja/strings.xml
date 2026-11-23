@@ -583,6 +583,7 @@
     <string name="chrome_refused">別のChromeがこのコードを使ったため、何もペアリングされませんでした。もう一度やり直してください。</string>
     <string name="chrome_remove">ペアリングを解除</string>
     <string name="chrome_remove_named">%1$sのペアリングを解除</string>
+    <string name="chrome_replace_changed">このChromeに移るものが変わったため、ペアリングしませんでした。確認して、もう一度ペアリングしてください。</string>
     <string name="chrome_replace_moves">このChromeに移る：%1$s</string>
     <string name="chrome_replace_none">新しいChrome（置き換えなし）</string>
     <string name="chrome_replace_title">置き換え先</string>
@@ -592,6 +593,8 @@
     <string name="chrome_shot_none">このステップの画像は保存されていません。</string>
     <string name="chrome_shot_open">このステップの前のページを見る</string>
     <string name="chrome_shot_title">このステップの前</string>
+    <string name="chrome_switch">別のChromeを使う</string>
+    <string name="chrome_switch_prompt">この接続を%1$sに移す</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">ペアリングを解除すると、このChromeを使う接続が終了します：%1$s。接続し直すまで戻りません。</string>
     <string name="chrome_used_for">%1$sに使用</string>

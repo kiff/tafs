@@ -251,7 +251,7 @@ that does the same:
 `ChatPinUITests` holds steps 2 to 5 and step 8 in a taf's chat, and a message that couldn't go
 (`-sampleSendFails`).
 
-The two apps differ in one place: only iOS pins Coach's answered card.
+Both apps pin Coach's answered card: on Android, answering a card in Coach's chat keeps its ref (`coachAnsweredCard`) and the chat pins that card's row, as a sent message's (`ChatPinTest`).
 
 With no message pinned (a chat just opened, or a reply that came without the owner sending),
 the thread follows its end. While a run works, the dots and then its answer are one row at
@@ -393,7 +393,10 @@ taf wrote before it, never by clock alone (`chatItems`, `placed`, `heldAfterItsW
   the card was.
 - The run paused on the call goes on once it's answered. The app asks tafs cloud to
   continue it at once (`POST /v1/tafs/{id}/holds/{exception}/continue`), and shows the
-  taf working again.
+  taf working again. When tafs cloud answers **404 `run_ended`** (no run waits on that call: the run had
+  ended, so the call never ran), the app says so in its `words`, never silence: the chat shows the
+  line a run that failed part-way shows, with Retry on the owner's last message, and the screen they
+  answered on shows the same words. Any other refusal is left to the alert and the hold's expiry, as before.
 
 ## Cards that wait for an answer
 
@@ -514,11 +517,20 @@ held call was answered, then `end`.
 
 **A run Android follows to its end, never left as "…"** (Android 1.22):
 - With no stream open (one couldn't open, or a run went on with none, as Coach's does once tafs cloud
-  answers its result), the thread is read every 2.5 s for about 6 minutes, then every 15 s for about
-  25 more, while tafs cloud says a run is at work (`followChat`).
+  answers its result), the thread is read less and less while tafs cloud says a run is at work
+  (`followChat`, `chatFollowDelay`): every 2.5 s for the first minute, 5 s to the third, 10 s to the
+  sixth, then 15 s, for about 31 minutes in all.
+  - Each wait is up to a fifth shorter at random, so phones don't read in step, and never longer than
+    its step.
+  - Nothing is read while the app is in the background. Coming back reads once, at once, so a run that
+    ended meanwhile shows as ended; then the back-off goes on.
+  - At 10,000 users each with a run followed this way, that's about 167 reads per run where it was 250,
+    and none from phones in the background (docs/scale.md). The first minute is as before, so this
+    trims a long run's tail, not the peak; the stream and the push are what lower the peak.
 - A run those reads find at work that this phone hasn't followed yet is picked back up by its stream,
   which takes over from the reads.
-- While a stream is open, the thread is still read every 30 s (`STREAM_CHECK_MS`). A stream can stay
+- While a stream is open, the thread is still read every 30 s (`STREAM_CHECK_MS`), not while the app
+  is in the background, and once at once when it comes back. A stream can stay
   quiet for many minutes after its run ended without saying so. Once tafs cloud says nothing is at
   work there, and the live answer has stood for more than 15 s, any read (that check, or coming back
   to the chat) drops the live answer, so "…" and Stop go and the thread shows what the run wrote.

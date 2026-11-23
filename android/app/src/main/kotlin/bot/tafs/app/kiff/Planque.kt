@@ -166,6 +166,8 @@ data class Grant(
    * under this phone's own key ([ChromePairing.carriedFrom]): never planque's word for it.
    */
   @SerialName("chrome_sites_sig") val chromeSitesSig: String? = null,
+  /** The Chrome a re-pairing carried this connection to, when it has no signature of its own (its sites are in that pairing). */
+  @SerialName("chrome_sites_carried") val chromeSitesCarried: String? = null,
   @SerialName("held_until") val heldUntil: String? = null,
   /** The vendor's name, as planque gives it: what its server calls itself. */
   @SerialName("vendor") val vendorName: String? = null,
@@ -654,6 +656,19 @@ class PlanqueClient(
     if (e.status == 404) emptyList() else throw e
   }
 
+  /**
+   * Moves [grant] to the paired Chrome [chromeId] ("Your Chrome" 2, planque's `use_another_chrome` action):
+   * `PUT …/grants/{grant}/chrome {chrome_id, chrome_sites_sig}`, the sites signature raw r‖s for that Chrome. Its sites and
+   * Card stay.
+   */
+  suspend fun switchChrome(grant: String, chromeId: String, sitesSig: String) {
+    val body = kotlinx.serialization.json.buildJsonObject {
+      put("chrome_id", kotlinx.serialization.json.JsonPrimitive(chromeId))
+      put("chrome_sites_sig", kotlinx.serialization.json.JsonPrimitive(sitesSig))
+    }
+    raw("PUT", "grants/${escaped(grant)}/chrome", body.toString().toByteArray())
+  }
+
   /** Unpairs a Chrome: planque deletes its key at once. */
   suspend fun removeChrome(id: String) {
     raw("DELETE", "chromes/${escaped(id)}", null)
@@ -805,7 +820,37 @@ data class Chrome(
    * unpairing it ends, and the only connections a re-pairing can carry. Null from a planque that doesn't list them yet.
    */
   val connections: List<ChromeConnection>? = null,
+  /**
+   * The pairing that carried connections to this Chrome, as this phone signed it for the extension (planque#373): what vouches
+   * for a connection carried here, which has no signature of its own, when it's carried again. Checked with this phone's key
+   * ([ChromePairing.pairingVouches]), never taken as planque's word. Null when no re-pairing carried anything here.
+   */
+  @SerialName("paired_with") val pairedWith: ChromePairedWith? = null,
 )
+
+/** A re-pairing as this phone signed it (`paired_with`): the extension's pairing body, its signature, and the one-touch form's parts. */
+@Serializable
+data class ChromePairedWith(
+  val body: ChromePairedBody,
+  @SerialName("phone_sig") val phoneSig: String,
+  val tenant: String? = null,
+  @SerialName("signed_at") val signedAt: String? = null,
+  @SerialName("kiff_request_sha256") val kiffRequestSha256: String? = null,
+)
+
+/** The pairing body the extension checks (`pairing.js` `checkConfirmation`). */
+@Serializable
+data class ChromePairedBody(
+  val pairing: String,
+  @SerialName("chrome_key_sha256") val chromeKeySha256: String,
+  val name: String,
+  @SerialName("phone_key") val phoneKey: String,
+  @SerialName("phone_proof") val phoneProof: String,
+  val carried: List<ChromePairedCarried> = emptyList(),
+)
+
+@Serializable
+data class ChromePairedCarried(val grant: String, val sites: List<String> = emptyList())
 
 /** A connection a Chrome runs, as planque lists it: its grant, the taf's name, and its sites. */
 @Serializable

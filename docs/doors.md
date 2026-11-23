@@ -220,7 +220,9 @@ in tafs cloud's words, paused or open); its keys, each by name, when made and la
 (asked once more, in the owner's words: requests not started are cancelled, one running finishes) and New key (its name,
 the door's own when left blank; at most two); the key shown once (covered whenever the app isn't in front, so the app switcher's snapshot never holds it, and while the screen is recorded or mirrored, as Android's `FLAG_SECURE`; Copy key (to this device only, and off the pasteboard a minute later), where to send work, and an example that
 reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
-but the key. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
+but the key. Where to send work is only ever on tafs cloud's own host, over HTTPS (`APIDoorText.endpoint`, as Windows and
+Linux): a whole address elsewhere, or one whose scheme has no host of its own, becomes its path on tafs cloud, so the
+example never names another host. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
 
 **Android's screen for an `api` door** (`ApiDoorPanels`, `views/ApiDoorViews.kt`) replaces its usual panel while the switch is on: the door's
 state and its switch (off pauses it at once; on is signed), today against its cap, the last request in

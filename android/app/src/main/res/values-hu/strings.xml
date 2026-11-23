@@ -616,6 +616,7 @@
     <string name="chrome_refused">Egy másik Chrome használta ezt a kódot, így semmi sem lett párosítva. Kezdd újra.</string>
     <string name="chrome_remove">Párosítás megszüntetése</string>
     <string name="chrome_remove_named">Párosítás megszüntetése: %1$s</string>
+    <string name="chrome_replace_changed">Megváltozott, mi kerül át ebbe a Chrome-ba, ezért semmi sem lett párosítva. Nézd át, és párosítsd újra.</string>
     <string name="chrome_replace_moves">Átkerül ebbe a Chrome-ba: %1$s</string>
     <string name="chrome_replace_none">Új Chrome (nem cserél le egyet sem)</string>
     <string name="chrome_replace_title">Lecseréli</string>
@@ -625,6 +626,8 @@
     <string name="chrome_shot_none">Ehhez a lépéshez nincs elmentett kép.</string>
     <string name="chrome_shot_open">A lap megtekintése e lépés előtt</string>
     <string name="chrome_shot_title">E lépés előtt</string>
+    <string name="chrome_switch">Másik Chrome használata</string>
+    <string name="chrome_switch_prompt">A kapcsolat áthelyezése ide: %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">A párosítás megszüntetése véget vet az őt használó kapcsolatoknak: %1$s. Csak akkor térnek vissza, ha újra összekapcsolod őket.</string>
     <string name="chrome_used_for">Ehhez használja: %1$s</string>

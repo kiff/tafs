@@ -616,6 +616,7 @@
     <string name="chrome_refused">Друг Chrome го искористи овој код, па ништо не е спарено. Почни одново.</string>
     <string name="chrome_remove">Раздвои</string>
     <string name="chrome_remove_named">Раздвои го %1$s</string>
+    <string name="chrome_replace_changed">Она што преминува на овој Chrome се смени, па ништо не е спарено. Провери и спари повторно.</string>
     <string name="chrome_replace_moves">Преминува на овој Chrome: %1$s</string>
     <string name="chrome_replace_none">Нов Chrome (не заменува ниеден)</string>
     <string name="chrome_replace_title">Заменува</string>
@@ -625,6 +626,8 @@
     <string name="chrome_shot_none">За овој чекор нема зачувана слика.</string>
     <string name="chrome_shot_open">Види ја страницата пред овој чекор</string>
     <string name="chrome_shot_title">Пред овој чекор</string>
+    <string name="chrome_switch">Користи друг Chrome</string>
+    <string name="chrome_switch_prompt">Премести ја оваа врска на %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Прекинувањето на спарувањето ги завршува врските што го користат: %1$s. Се враќаат само ако повторно ги поврзеш.</string>
     <string name="chrome_used_for">Се користи за %1$s</string>

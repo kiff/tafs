@@ -177,6 +177,34 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertFalse(model.approvalViewOnly)
     }
 
+    /// KIFF also says it in the account (`approval_mode: "view"` in `GET /v1/me`): a session whose sign-in didn't say so
+    /// is view-only as soon as the account loads, as on Android.
+    func testTheAccountSaysASessionIsViewOnly() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: TwoKeySigner(),
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t_01","tenant_slug":"acme","time_zone":"UTC","approval_mode":"view"}"#)
+        await model.useSession("kiff_dev_x", tenant: "t_01")
+        await model.refresh()
+        XCTAssertNotNil(model.kiffAccount, "the account was read")
+        XCTAssertTrue(model.approvalViewOnly)
+        XCTAssertTrue(model.approvalKeyLost)
+        XCTAssertEqual(model.approvalKeyLostWords, ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.viewOnly)
+        XCTAssertFalse(try KIFFClient.decoder.decode(KIFFClient.Account.self, from: Data(#"{"tenant_id":"t","tenant_slug":"a"}"#.utf8)).viewOnly,
+                       "a KIFF that doesn't say")
+        XCTAssertFalse(try KIFFClient.decoder.decode(KIFFClient.Account.self, from: Data(#"{"tenant_id":"t","tenant_slug":"a","approval_mode":"approve"}"#.utf8)).viewOnly,
+                       "an account that approves")
+    }
+
     /// Coach's Approve on a view-only session stops before Face ID or Touch ID, with the view-only words on
     /// the card, in both of its ways (an app's sign-in, and a key with its Card).
     func testCoachsApproveOnAViewOnlySessionStopsBeforeTheFingerprint() throws {

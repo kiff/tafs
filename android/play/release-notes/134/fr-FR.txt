@@ -1,0 +1,4 @@
+• Approuver un appel retenu après la fin de sa tâche indique maintenant que rien ne s'est exécuté, avec « Réessayer » sur votre message.
+• Installer une version qui arrête une tâche en attente de votre réponse vous le dit, avec « Réessayer » sur son message.
+• Se reconnecter affiche l'approbation de la connexion avant votre empreinte, et associer de nouveau un Chrome revérifie juste avant.
+• Le chat d'un taf est lu moins souvent quand il attend, et plus du tout quand l'app est en arrière-plan.

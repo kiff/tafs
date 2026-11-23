@@ -616,6 +616,7 @@
     <string name="chrome_refused">Өөр Chrome энэ кодыг ашигласан тул юу ч хослуулаагүй. Дахин эхлүүлнэ үү.</string>
     <string name="chrome_remove">Хослолыг салгах</string>
     <string name="chrome_remove_named">%1$s-ийн хослолыг салгах</string>
+    <string name="chrome_replace_changed">Энэ Chrome руу шилжих зүйл өөрчлөгдсөн тул юу ч хослуулаагүй. Шалгаад дахин хослуулна уу.</string>
     <string name="chrome_replace_moves">Энэ Chrome руу шилжинэ: %1$s</string>
     <string name="chrome_replace_none">Шинэ Chrome (юуг ч солихгүй)</string>
     <string name="chrome_replace_title">Солих</string>
@@ -625,6 +626,8 @@
     <string name="chrome_shot_none">Энэ алхамд зориулж хадгалсан зураг алга.</string>
     <string name="chrome_shot_open">Энэ алхмын өмнөх хуудсыг харах</string>
     <string name="chrome_shot_title">Энэ алхмын өмнө</string>
+    <string name="chrome_switch">Өөр Chrome ашиглах</string>
+    <string name="chrome_switch_prompt">Энэ холболтыг %1$s руу зөөх</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Хослолыг салгавал үүнийг ашигладаг холболтууд дуусна: %1$s. Тэдгээр дахин холбосон тохиолдолд л буцна.</string>
     <string name="chrome_used_for">%1$s-д ашиглагдана</string>

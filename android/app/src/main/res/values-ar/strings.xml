@@ -748,6 +748,7 @@
     <string name="chrome_refused">استخدم Chrome آخر هذا الرمز فلم يتم إقران شيء. ابدأ من جديد.</string>
     <string name="chrome_remove">إلغاء الإقران</string>
     <string name="chrome_remove_named">إلغاء إقران %1$s</string>
+    <string name="chrome_replace_changed">تغيّر ما ينتقل إلى هذا المتصفح، فلم يُقرَن شيء. راجعه وأقرِن من جديد.</string>
     <string name="chrome_replace_moves">تنتقل إلى هذا المتصفح: %1$s</string>
     <string name="chrome_replace_none">متصفح Chrome جديد (لا يستبدل أيًّا منها)</string>
     <string name="chrome_replace_title">يستبدل</string>
@@ -757,6 +758,8 @@
     <string name="chrome_shot_none">لا توجد صورة محفوظة لهذه الخطوة.</string>
     <string name="chrome_shot_open">عرض الصفحة قبل هذه الخطوة</string>
     <string name="chrome_shot_title">قبل هذه الخطوة</string>
+    <string name="chrome_switch">استخدم Chrome آخر</string>
+    <string name="chrome_switch_prompt">انقل هذا الاتصال إلى %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">إلغاء الإقران ينهي الاتصالات التي تستخدمه: %1$s. لا تعود إلا إذا وصلتها من جديد.</string>
     <string name="chrome_used_for">يُستخدم لـ %1$s</string>

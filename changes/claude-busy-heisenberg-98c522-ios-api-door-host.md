@@ -1,0 +1,1 @@
+- **iPhone and iPad:** an `api` door's address, and the example that sends your key, are only ever on tafs cloud's own host over HTTPS, as on Windows and Linux ([docs/doors.md](../docs/doors.md)).

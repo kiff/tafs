@@ -616,6 +616,7 @@
     <string name="chrome_refused">Outro Chrome usou este código, por isso nada foi associado. Comece de novo.</string>
     <string name="chrome_remove">Desassociar</string>
     <string name="chrome_remove_named">Desassociar %1$s</string>
+    <string name="chrome_replace_changed">O que passa para este Chrome mudou, por isso nada foi associado. Verifique e associe de novo.</string>
     <string name="chrome_replace_moves">Passa para este Chrome: %1$s</string>
     <string name="chrome_replace_none">Um novo Chrome (não substitui nenhum)</string>
     <string name="chrome_replace_title">Substitui</string>
@@ -625,6 +626,8 @@
     <string name="chrome_shot_none">Não há nenhuma imagem guardada deste passo.</string>
     <string name="chrome_shot_open">Ver a página antes deste passo</string>
     <string name="chrome_shot_title">Antes deste passo</string>
+    <string name="chrome_switch">Usar outro Chrome</string>
+    <string name="chrome_switch_prompt">Mover esta ligação para %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Desemparelhar termina as ligações que o usam: %1$s. Só voltam se as ligar de novo.</string>
     <string name="chrome_used_for">Usado para %1$s</string>

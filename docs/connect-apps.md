@@ -109,7 +109,9 @@ connections to the app stay connected. New actions stop through that connection;
 finish. When no other taf uses the same sign-in, it also asks the app to revoke it; that part may finish later, on the
 app's side. If the app signs you out on its side (a
 changed password, an expired session), the taf says so and waits for you: **Sign in again**
-asks for one approval, then the app's own page.
+shows the connection's approval first, planque's words for it as it is now, then asks for one approval, then the app's own
+page. The approval signs only what that sheet showed: if the connection asks for more meanwhile, nothing is signed and the
+sheet shows it again. (Android; on iOS, Sign in again still asks for the approval at once, and follows.)
 
 ### An app's connections, taf by taf
 

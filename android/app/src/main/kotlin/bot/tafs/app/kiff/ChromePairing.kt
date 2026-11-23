@@ -169,6 +169,21 @@ object ChromePairing {
     return rawSignature(Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
   }
 
+  /**
+   * The sites [grant] may move to another Chrome with ("Your Chrome" 2), as iOS's `ChromeSwitch.signedSites`: the ones this
+   * phone signed for it on the Chrome it uses now, checked with [approvalKeyDER] (its approval key), never planque's list as
+   * given. Null when its signature doesn't hold: a list planque widened, another Chrome's or another grant's signature, or a
+   * connection carried here from an earlier Chrome, which has none of its own. The phone never signs sites it didn't sign.
+   */
+  fun signedSites(grant: Grant, approvalKeyDER: ByteArray): List<String>? {
+    val b = grant.request.browser ?: return null
+    if (b.driver != GrantBrowser.EXTENSION) return null
+    val chrome = b.chrome?.takeIf { it.isNotEmpty() } ?: return null
+    val sites = b.sites?.takeIf { it.isNotEmpty() && it.size <= 100 } ?: return null
+    val sig = grant.chromeSitesSig?.takeIf { it.isNotEmpty() } ?: return null
+    return sites.takeIf { verifiesRaw(approvalKeyDER, sitesBytes(chrome, grant.id, sites), sig) }
+  }
+
   private fun labelled(label: String, body: JsonObject): ByteArray =
     label.toByteArray(Charsets.UTF_8) + byteArrayOf(0) + Jcs.canonical(body).toByteArray(Charsets.UTF_8)
 
@@ -255,18 +270,49 @@ object ChromePairing {
    */
   fun carriedFrom(old: Chrome, grants: List<Grant>, approvalKeyDER: ByteArray): List<Carried> {
     val live = old.connections.orEmpty().map { it.grant }.toSet()
+    // A connection carried here before has no signature of its own: the pairing that carried it vouches for it, once that
+    // pairing holds under this phone's own key (planque#373, "Your Chrome" 1).
+    val vouched = old.pairedWith?.takeIf { pairingVouches(it, approvalKeyDER) }?.body?.carried.orEmpty()
     return grants.mapNotNull { g ->
       val b = g.request.browser
       val sites = b?.sites.orEmpty()
       val sig = g.chromeSitesSig
       when {
         g.id !in live || b?.driver != GrantBrowser.EXTENSION || b.chrome != old.id -> null
-        sites.isEmpty() || sites.size > 100 || sig.isNullOrEmpty() -> null
-        !verifiesRaw(approvalKeyDER, sitesBytes(old.id, g.id, sites), sig) -> null
-        else -> Carried(g.id, sites)
+        sites.isEmpty() || sites.size > 100 -> null
+        !sig.isNullOrEmpty() -> Carried(g.id, sites).takeIf { verifiesRaw(approvalKeyDER, sitesBytes(old.id, g.id, sites), sig) }
+        // Carried before: only with exactly the sites that pairing named for it.
+        g.chromeSitesCarried == old.id && vouched.any { it.grant == g.id && it.sites == sites } -> Carried(g.id, sites)
+        else -> null
       }
     }.take(50)
   }
+
+  /**
+   * Whether [pw], a pairing planque kept on a Chrome (`paired_with`), is one this phone signed: its `phone_key` is this phone's
+   * approval key ([approvalKeyDER]), and its signature holds over the extension's pairing bytes, alone (`tafs-chrome/pair/v1`)
+   * or, for a one-touch pairing, in `kiff.requests.v1` beside KIFF's request (never beside itself). False for anything else.
+   */
+  fun pairingVouches(pw: ChromePairedWith, approvalKeyDER: ByteArray): Boolean = runCatching {
+    val body = pw.body
+    if (approvalKeyDER.isEmpty() || body.phoneKey != base64Url(approvalKeyDER)) return false
+    val confirmation = Confirmation(
+      chromeKeySha256 = body.chromeKeySha256, name = body.name, phoneKey = body.phoneKey, phoneProof = body.phoneProof,
+      carried = body.carried.map { Carried(it.grant, it.sites) },
+    )
+    val bytes = signedBytes(body.pairing, confirmation)
+    val together = listOf(pw.tenant, pw.signedAt, pw.kiffRequestSha256)
+    val message = when {
+      together.all { it.isNullOrEmpty() } -> bytes
+      together.any { it.isNullOrEmpty() } -> return false
+      else -> {
+        val pairHash = KiffClient.messageHash(bytes)
+        if (pw.kiffRequestSha256 == pairHash) return false
+        KiffClient.requestsMessage(pw.tenant!!, pw.signedAt!!, pairHash, pw.kiffRequestSha256!!)
+      }
+    }
+    verifiesRaw(approvalKeyDER, message, pw.phoneSig)
+  }.getOrDefault(false)
 
   /**
    * What the pick starts on, as iOS's `ChromeReplace.preselect`: the paired Chrome whose profile id is the offer's; else the one

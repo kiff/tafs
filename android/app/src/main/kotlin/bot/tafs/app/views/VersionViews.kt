@@ -417,7 +417,11 @@ fun DraftCardsView(draft: AgentDraft) {
 
 /** How a draft's Cards show: its new Cards as one, "A new Card" (KIFF's draft has one per tool); a changed or unchanged Card alone. */
 internal sealed interface DraftCardShown {
-  /** Every new Card's lines, each once, in the draft's order. */
+  /**
+   * Every new Card's lines, in the draft's order, each Card's lines kept together. A Card whose lines are exactly an earlier
+   * one's shows once; a single line is never dropped for being seen before, since a total ("20 calls a day") names no tool and
+   * belongs to the Card it follows: the owner never reads less than they sign.
+   */
   data class New(val lines: List<String>) : DraftCardShown
   data class One(val card: DraftCard, val lines: List<String>) : DraftCardShown
 }
@@ -430,7 +434,7 @@ internal fun draftCardsShown(draft: AgentDraft): List<DraftCardShown> {
   return cards.indices.mapNotNull { i ->
     when {
       i !in fresh -> DraftCardShown.One(cards[i], lines.getOrElse(i) { emptyList() })
-      i == fresh.first() -> DraftCardShown.New(fresh.flatMap { lines.getOrElse(it) { emptyList() } }.distinct())
+      i == fresh.first() -> DraftCardShown.New(fresh.map { lines.getOrElse(it) { emptyList() } }.distinct().flatten())
       else -> null
     }
   }

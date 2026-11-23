@@ -583,6 +583,7 @@
     <string name="chrome_refused">มี Chrome อื่นใช้รหัสนี้แล้ว จึงยังไม่ได้จับคู่อะไร เริ่มใหม่อีกครั้ง</string>
     <string name="chrome_remove">ยกเลิกการจับคู่</string>
     <string name="chrome_remove_named">ยกเลิกการจับคู่ %1$s</string>
+    <string name="chrome_replace_changed">สิ่งที่ย้ายมายัง Chrome นี้เปลี่ยนไป จึงยังไม่ได้จับคู่ ตรวจสอบแล้วจับคู่อีกครั้ง</string>
     <string name="chrome_replace_moves">ย้ายมายัง Chrome นี้: %1$s</string>
     <string name="chrome_replace_none">Chrome ใหม่ (ไม่แทนที่ตัวใด)</string>
     <string name="chrome_replace_title">แทนที่</string>
@@ -592,6 +593,8 @@
     <string name="chrome_shot_none">ไม่มีภาพที่เก็บไว้สำหรับขั้นตอนนี้</string>
     <string name="chrome_shot_open">ดูหน้าก่อนขั้นตอนนี้</string>
     <string name="chrome_shot_title">ก่อนขั้นตอนนี้</string>
+    <string name="chrome_switch">ใช้ Chrome อื่น</string>
+    <string name="chrome_switch_prompt">ย้ายการเชื่อมต่อนี้ไปที่ %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">การเลิกจับคู่จะสิ้นสุดการเชื่อมต่อที่ใช้ Chrome นี้: %1$s และจะกลับมาก็ต่อเมื่อคุณเชื่อมต่อใหม่</string>
     <string name="chrome_used_for">ใช้สำหรับ %1$s</string>

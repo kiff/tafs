@@ -583,6 +583,7 @@
     <string name="chrome_refused">另一個 Chrome 使用了此代碼，因此未配對任何項目。請重新開始。</string>
     <string name="chrome_remove">取消配對</string>
     <string name="chrome_remove_named">取消配對 %1$s</string>
+    <string name="chrome_replace_changed">要轉移到這個 Chrome 的內容已變更，所以沒有配對。請確認後再配對一次。</string>
     <string name="chrome_replace_moves">轉移到這個 Chrome：%1$s</string>
     <string name="chrome_replace_none">新的 Chrome（不取代任何一個）</string>
     <string name="chrome_replace_title">取代</string>
@@ -592,6 +593,8 @@
     <string name="chrome_shot_none">此步驟沒有保存圖片。</string>
     <string name="chrome_shot_open">查看此步驟之前的頁面</string>
     <string name="chrome_shot_title">此步驟之前</string>
+    <string name="chrome_switch">使用另一個 Chrome</string>
+    <string name="chrome_switch_prompt">將此連線移到 %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">解除配對會結束使用它的連線：%1$s。重新連線後才會恢復。</string>
     <string name="chrome_used_for">用於 %1$s</string>

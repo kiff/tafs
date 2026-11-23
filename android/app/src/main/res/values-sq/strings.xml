@@ -616,6 +616,7 @@
     <string name="chrome_refused">Një Chrome tjetër e përdori këtë kod, ndaj asgjë nuk u çiftua. Filloni sërish.</string>
     <string name="chrome_remove">Hiqni çiftimin</string>
     <string name="chrome_remove_named">Hiqni çiftimin: %1$s</string>
+    <string name="chrome_replace_changed">Ajo që kalon te ky Chrome ndryshoi, prandaj nuk u çiftua asgjë. Kontrolloje dhe çifto përsëri.</string>
     <string name="chrome_replace_moves">Kalon te ky Chrome: %1$s</string>
     <string name="chrome_replace_none">Një Chrome i ri (nuk zëvendëson asnjë)</string>
     <string name="chrome_replace_title">Zëvendëson</string>
@@ -625,6 +626,8 @@
     <string name="chrome_shot_none">Për këtë hap nuk është ruajtur asnjë imazh.</string>
     <string name="chrome_shot_open">Shiko faqen para këtij hapi</string>
     <string name="chrome_shot_title">Para këtij hapi</string>
+    <string name="chrome_switch">Përdor një tjetër Chrome</string>
+    <string name="chrome_switch_prompt">Zhvendose këtë lidhje te %1$s</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">Heqja e çiftimit i përfundon lidhjet që e përdorin: %1$s. Kthehen vetëm kur t\'i lidhësh përsëri.</string>
     <string name="chrome_used_for">Përdoret për %1$s</string>

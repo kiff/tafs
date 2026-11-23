@@ -1094,6 +1094,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         // Gap 13: a new key on the key sheet over the list, or a sign-in again, each behind the fingerprint.
         onReplaceKey = if (state.canManageCards) model::openReplaceKey else null,
         onSignInAgain = if (state.canManageCards) model::startReconnect else null,
+        // "Your Chrome" 2: planque's action moves a connection to another paired Chrome, behind the fingerprint.
+        onUseAnotherChrome = if (state.canManageCards) ({ g, c -> model.switchChrome(g, c) }) else null,
         onConnectedNow = { grant -> model.dismissConnectedNow(); showingConnectApps = false; model.improveInCoach(grant.request.agent) },
         dismissConnectedNow = model::dismissConnectedNow,
       )

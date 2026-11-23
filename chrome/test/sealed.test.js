@@ -3,7 +3,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Vault, originOf } from "../src/vault.js";
+import { Vault, originOf, parseHandle } from "../src/vault.js";
 import { memoryStore } from "../src/store.js";
 import { Runner } from "../src/runner.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
@@ -129,4 +129,25 @@ test("a sealed password goes only into a password field, and a username only int
   const user = fill(id, { id: "op_2", act: { kind: "fill", ref: "f1", sealed: id + ":username" } });
   const out = await r.handle({ ...user, release: await release(phone, user, undefined, { nonce: "r2" }) });
   assert.ok(out.page, JSON.stringify(out.error));
+});
+
+test("a handle is exactly sec_<id>:password or sec_<id>:username, so the part the phone's card names is the part that is filled", async () => {
+  assert.deepEqual(parseHandle("sec_abc-1_Z:password"), { id: "sec_abc-1_Z", part: "password" });
+  assert.deepEqual(parseHandle("sec_abc:username"), { id: "sec_abc", part: "username" });
+  for (const bad of ["sec_x:password:username", "sec_x:username:password", "sec_x:password:", "sec_x:token", "sec_:password", "x:password", "sec_x", "", ":password", " sec_x:password", "sec_x:password\n", "sec_x::password", 7, null, undefined, { toString: () => "sec_x:password" }]) {
+    assert.equal(parseHandle(bad), null, JSON.stringify(String(bad)));
+  }
+});
+
+test("a handle with a third segment is refused whole: nothing is released, opened or filled, and the vault opens none", async () => {
+  const { phone, id, r, c, vault } = await setup();
+  // The phone's card would name the first or the last part; the extension must not pick the other.
+  // On the field each could be filled into by reading only its first or its last part: the password field, and the email field.
+  for (const [sealed, ref] of [[id + ":password:username", "f2"], [id + ":username:password", "f1"]]) {
+    const step = fill(id, { id: "op_" + sealed.length, act: { kind: "fill", ref, sealed } });
+    const out = await r.handle({ ...step, release: await release(phone, step, undefined, { nonce: "n" + sealed.length }) });
+    assert.equal(out.error.code, "secret_field", sealed);
+    assert.equal(await vault.open(sealed, "https://shop.example"), null);
+  }
+  assert.ok(!c.calls.some((x) => x[0] === "fillSealed"), "nothing was filled");
 });

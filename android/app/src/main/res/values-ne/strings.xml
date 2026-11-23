@@ -616,6 +616,7 @@
     <string name="chrome_refused">अर्को Chrome ले यो कोड प्रयोग गर्‍यो, त्यसैले केही जोडिएन। फेरि सुरु गर्नुहोस्।</string>
     <string name="chrome_remove">जोडी हटाउनुहोस्</string>
     <string name="chrome_remove_named">%1$s को जोडी हटाउनुहोस्</string>
+    <string name="chrome_replace_changed">यो Chrome मा सर्ने कुरा बदलियो, त्यसैले केही पनि जोडिएन। जाँच गरेर फेरि जोड्नुहोस्।</string>
     <string name="chrome_replace_moves">यो Chrome मा सर्छ: %1$s</string>
     <string name="chrome_replace_none">नयाँ Chrome (कुनै प्रतिस्थापन गर्दैन)</string>
     <string name="chrome_replace_title">प्रतिस्थापन गर्छ</string>
@@ -625,6 +626,8 @@
     <string name="chrome_shot_none">यो चरणको कुनै तस्बिर राखिएको छैन।</string>
     <string name="chrome_shot_open">यो चरणअघिको पृष्ठ हेर्नुहोस्</string>
     <string name="chrome_shot_title">यो चरणअघि</string>
+    <string name="chrome_switch">अर्को Chrome प्रयोग गर्नुहोस्</string>
+    <string name="chrome_switch_prompt">यो जडानलाई %1$s मा सार्नुहोस्</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_unpair_ends">जोडी हटाउँदा यसलाई प्रयोग गर्ने जडानहरू समाप्त हुन्छन्: %1$s। तिनीहरू फेरि जोड्दा मात्र फर्कन्छन्।</string>
     <string name="chrome_used_for">%1$s का लागि प्रयोग गरिएको</string>
