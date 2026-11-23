@@ -172,6 +172,7 @@
     <string name="billing_ask_someone_pack">누군가 %1$s을(를) 요청합니다.</string>
     <string name="billing_ask_someone_raise">누군가 지출 한도를 올려 달라고 요청합니다.</string>
     <string name="billing_bought_not_recorded">구매했습니다. KIFF가 아직 추가하지 않았습니다. tafs를 열면 다시 시도합니다.</string>
+    <string name="billing_buy_on_phone">Solo나 크레딧은 휴대폰의 tafs 앱에서 구매하세요.</string>
     <string name="billing_by_agreement">회사 계약으로 관리됨</string>
     <string name="billing_by_apple">Apple이 청구</string>
     <string name="billing_by_google_play">Google Play가 청구</string>
@@ -223,6 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo는 %2$s의 %1$s 단위 구독이며 Apple 계정에 청구됩니다. 취소할 때까지 매%3$s 갱신됩니다.</string>
     <string name="billing_starts_free">%1$s 무료로 시작합니다.</string>
     <string name="billing_tafs_kiff_one_person_every">한 사람을 위한 tafs, 매월.</string>
+    <string name="billing_team_on_web">kiff.dev에서 Team 시작하기</string>
     <string name="billing_terms_use">이용 약관</string>
     <string name="billing_test_purchase_credits">테스트 구매는 이 계정에 크레딧을 추가하지 않습니다.</string>
     <string name="billing_try_free">%1$s 무료 체험</string>

@@ -175,6 +175,7 @@
     <string name="billing_ask_someone_pack">ვიღაც ითხოვს: %1$s.</string>
     <string name="billing_ask_someone_raise">ვიღაც ითხოვს ხარჯვის ლიმიტის გაზრდას.</string>
     <string name="billing_bought_not_recorded">ნაყიდია. KIFF-მა ის ჯერ არ დაამატა: tafs ხელახლა ცდის გახსნისას.</string>
+    <string name="billing_buy_on_phone">Solo ან კრედიტები იყიდეთ tafs-ის აპში თქვენს ტელეფონზე.</string>
     <string name="billing_by_agreement">იმართება თქვენი კომპანიის შეთანხმებით</string>
     <string name="billing_by_apple">ანგარიშს უწერს Apple</string>
     <string name="billing_by_google_play">ანგარიშს უწერს Google Play</string>
@@ -230,6 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo არის გამოწერა ერთი პერიოდისთვის (%1$s) %2$s-ად, რომელიც თქვენს Apple ანგარიშს ჩამოეჭრება. ახლდება ყოველ პერიოდში (%3$s), სანამ არ გააუქმებთ.</string>
     <string name="billing_starts_free">იწყება უფასოდ: %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs ერთი ადამიანისთვის, ყოველ თვე.</string>
+    <string name="billing_team_on_web">მიიღეთ Team kiff.dev-ზე</string>
     <string name="billing_terms_use">გამოყენების პირობები</string>
     <string name="billing_test_purchase_credits">სატესტო შეძენები ამ ანგარიშს კრედიტებს არ უმატებს.</string>
     <string name="billing_try_free">სცადეთ უფასოდ: %1$s</string>

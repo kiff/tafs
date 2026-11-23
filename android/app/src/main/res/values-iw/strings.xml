@@ -178,6 +178,7 @@
     <string name="billing_ask_someone_pack">מישהו מבקש %1$s.</string>
     <string name="billing_ask_someone_raise">מישהו מבקש להעלות את מגבלת ההוצאה.</string>
     <string name="billing_bought_not_recorded">נרכש. KIFF עדיין לא הוסיף אותו: tafs ינסה שוב כשייפתח.</string>
+    <string name="billing_buy_on_phone">את Solo או קרדיטים קונים באפליקציית tafs בטלפון.</string>
     <string name="billing_by_agreement">מנוהל לפי ההסכם של החברה שלך</string>
     <string name="billing_by_apple">החיוב דרך Apple</string>
     <string name="billing_by_google_play">החיוב דרך Google Play</string>
@@ -237,6 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo הוא מנוי של %1$s אחד ב-%2$s, המחויב בחשבון Apple שלך. הוא מתחדש כל %3$s עד שתבטל.</string>
     <string name="billing_starts_free">מתחיל עם %1$s חינם.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs לאדם אחד, כל חודש.</string>
+    <string name="billing_team_on_web">מעבר ל-Team ב-kiff.dev</string>
     <string name="billing_terms_use">תנאי שימוש</string>
     <string name="billing_test_purchase_credits">רכישות בדיקה לא מוסיפות קרדיטים לחשבון הזה.</string>
     <string name="billing_try_free">%1$s בחינם</string>

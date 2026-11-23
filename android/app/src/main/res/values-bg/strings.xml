@@ -175,6 +175,7 @@
     <string name="billing_ask_someone_pack">Някой иска %1$s.</string>
     <string name="billing_ask_someone_raise">Някой иска увеличаване на лимита на разходите.</string>
     <string name="billing_bought_not_recorded">Закупено. KIFF още не го е добавил: tafs ще опита отново при отваряне.</string>
+    <string name="billing_buy_on_phone">Купете Solo или кредити от приложението tafs на телефона си.</string>
     <string name="billing_by_agreement">Управлява се по договора на вашата компания</string>
     <string name="billing_by_apple">Таксува се от Apple</string>
     <string name="billing_by_google_play">Таксува се от Google Play</string>
@@ -230,6 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo е абонамент за един %1$s на цена %2$s, таксуван в акаунта ви в Apple. Подновява се всеки %3$s, докато не го анулирате.</string>
     <string name="billing_starts_free">Започва с %1$s безплатно.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs за един човек, всеки месец.</string>
+    <string name="billing_team_on_web">Вземете Team в kiff.dev</string>
     <string name="billing_terms_use">Условия за ползване</string>
     <string name="billing_test_purchase_credits">Тестовите покупки не добавят кредити към този акаунт.</string>
     <string name="billing_try_free">Опитайте %1$s безплатно</string>

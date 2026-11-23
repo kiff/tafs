@@ -200,6 +200,7 @@ object Words {
       val someoneRaise: String get() = Res.s(R.string.billing_ask_someone_raise)
     }
     val boughtNotRecorded: String get() = Res.s(R.string.billing_bought_not_recorded)
+    val buyOnPhone: String get() = Res.s(R.string.billing_buy_on_phone)
     val byAgreement: String get() = Res.s(R.string.billing_by_agreement)
     val byApple: String get() = Res.s(R.string.billing_by_apple)
     val byGooglePlay: String get() = Res.s(R.string.billing_by_google_play)
@@ -249,6 +250,7 @@ object Words {
     fun soloSubscriptionOneChargedYour(period: String, price: String, period2: String): String = Res.s(R.string.billing_solo_subscription_one_charged_your, period, price, period2)
     fun startsFree(trial: String): String = Res.s(R.string.billing_starts_free, trial)
     val tafsKiffOnePersonEvery: String get() = Res.s(R.string.billing_tafs_kiff_one_person_every)
+    val teamOnWeb: String get() = Res.s(R.string.billing_team_on_web)
     val termsUse: String get() = Res.s(R.string.billing_terms_use)
     val testPurchaseCredits: String get() = Res.s(R.string.billing_test_purchase_credits)
     fun tryFree(trial: String): String = Res.s(R.string.billing_try_free, trial)

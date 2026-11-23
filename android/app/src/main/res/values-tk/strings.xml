@@ -175,6 +175,7 @@
     <string name="billing_ask_someone_pack">Kimdir biri %1$s soraýar.</string>
     <string name="billing_ask_someone_raise">Kimdir biri çykdajy çägini ýokary galdyrmagy soraýar.</string>
     <string name="billing_bought_not_recorded">Satyn alyndy. KIFF ony heniz goşmady: tafs açylanda täzeden synanyşýar.</string>
+    <string name="billing_buy_on_phone">Solo-ny ýa-da krediti telefonyňyzdaky tafs programmasyndan satyn alyň.</string>
     <string name="billing_by_agreement">Kompaniýaňyzyň şertnamasy bilen dolanylýar</string>
     <string name="billing_by_apple">Apple tarapyndan hasaba goýulýar</string>
     <string name="billing_by_google_play">Google Play tarapyndan hasaba goýulýar</string>
@@ -230,6 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo %2$s bahadan bir %1$s abunadyr, Apple hasabyňyzdan alynýar. Ol siz ýatyrýançaňyz her %3$s täzelenýär.</string>
     <string name="billing_starts_free">%1$s mugt başlaýar.</string>
     <string name="billing_tafs_kiff_one_person_every">Bir adam üçin tafs, her aý.</string>
+    <string name="billing_team_on_web">Team-i kiff.dev-de alyň</string>
     <string name="billing_terms_use">Ulanyş şertleri</string>
     <string name="billing_test_purchase_credits">Synag satyn almalary bu hasaba kredit goşmaýar.</string>
     <string name="billing_try_free">%1$s mugt synanyşyň</string>

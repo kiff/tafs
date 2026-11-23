@@ -172,6 +172,7 @@
     <string name="billing_ask_someone_pack">%1$sの依頼があります。</string>
     <string name="billing_ask_someone_raise">利用上限の引き上げの依頼があります。</string>
     <string name="billing_bought_not_recorded">購入しました。KIFFはまだ追加していません。tafsを開くと再試行します。</string>
+    <string name="billing_buy_on_phone">Soloやクレジットは、スマートフォンのtafsアプリで購入してください。</string>
     <string name="billing_by_agreement">会社の契約で管理</string>
     <string name="billing_by_apple">Appleが請求</string>
     <string name="billing_by_google_play">Google Playが請求</string>
@@ -223,6 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Soloは%2$sの%1$s単位のサブスクリプションで、Apple IDに請求されます。解約するまで%3$sごとに更新されます。</string>
     <string name="billing_starts_free">%1$s無料で始まります。</string>
     <string name="billing_tafs_kiff_one_person_every">1人用のtafs、毎月。</string>
+    <string name="billing_team_on_web">kiff.devでTeamを始める</string>
     <string name="billing_terms_use">利用規約</string>
     <string name="billing_test_purchase_credits">テスト購入ではこのアカウントにクレジットは追加されません。</string>
     <string name="billing_try_free">%1$s無料で試す</string>

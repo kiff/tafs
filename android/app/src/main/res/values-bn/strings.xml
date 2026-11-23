@@ -175,6 +175,7 @@
     <string name="billing_ask_someone_pack">কেউ %1$s চাইছেন।</string>
     <string name="billing_ask_someone_raise">কেউ খরচের সীমা বাড়াতে চাইছেন।</string>
     <string name="billing_bought_not_recorded">কেনা হয়েছে। KIFF এখনও তা যোগ করেনি: tafs খুললে আবার চেষ্টা করে।</string>
+    <string name="billing_buy_on_phone">Solo বা ক্রেডিট আপনার ফোনের tafs অ্যাপে কিনুন।</string>
     <string name="billing_by_agreement">আপনার কোম্পানির চুক্তি অনুযায়ী পরিচালিত</string>
     <string name="billing_by_apple">Apple বিল করে</string>
     <string name="billing_by_google_play">Google Play বিল করে</string>
@@ -230,6 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo হলো এক %1$s-এর %2$s দামের সাবস্ক্রিপশন, আপনার Apple অ্যাকাউন্ট থেকে কাটা হয়। আপনি বাতিল না করা পর্যন্ত প্রতি %3$s নবায়ন হয়।</string>
     <string name="billing_starts_free">%1$s বিনামূল্যে দিয়ে শুরু।</string>
     <string name="billing_tafs_kiff_one_person_every">একজন ব্যক্তির জন্য tafs, প্রতি মাসে।</string>
+    <string name="billing_team_on_web">kiff.dev-এ Team নিন</string>
     <string name="billing_terms_use">ব্যবহারের শর্তাবলী</string>
     <string name="billing_test_purchase_credits">পরীক্ষামূলক কেনাকাটা এই অ্যাকাউন্টে ক্রেডিট যোগ করে না।</string>
     <string name="billing_try_free">%1$s বিনামূল্যে চেষ্টা করুন</string>

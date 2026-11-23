@@ -172,6 +172,7 @@
     <string name="billing_ask_someone_pack">Seseorang meminta %1$s.</string>
     <string name="billing_ask_someone_raise">Seseorang meminta kenaikan batas pengeluaran.</string>
     <string name="billing_bought_not_recorded">Terbeli. KIFF belum menambahkannya: tafs mencoba lagi saat dibuka.</string>
+    <string name="billing_buy_on_phone">Beli Solo atau kredit di aplikasi tafs di ponsel Anda.</string>
     <string name="billing_by_agreement">Dikelola oleh perjanjian perusahaan Anda</string>
     <string name="billing_by_apple">Ditagih oleh Apple</string>
     <string name="billing_by_google_play">Ditagih oleh Google Play</string>
@@ -223,6 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo adalah langganan seharga %2$s / %1$s, ditagihkan ke akun Apple Anda. Diperpanjang di akhir setiap periode (%3$s) sampai Anda membatalkan.</string>
     <string name="billing_starts_free">Dimulai dengan %1$s gratis.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs untuk satu orang, setiap bulan.</string>
+    <string name="billing_team_on_web">Dapatkan Team di kiff.dev</string>
     <string name="billing_terms_use">Ketentuan Penggunaan</string>
     <string name="billing_test_purchase_credits">Pembelian uji coba tidak menambahkan kredit ke akun ini.</string>
     <string name="billing_try_free">Coba gratis %1$s</string>
