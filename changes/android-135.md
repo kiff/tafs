@@ -1,0 +1,1 @@
+- **Android 135 (1.46.0)** for Play's internal track: answering one of Coach's cards keeps it at the top of the chat; "A new Card" shows each Card's own limits after its tool.

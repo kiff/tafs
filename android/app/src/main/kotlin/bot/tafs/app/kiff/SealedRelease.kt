@@ -3,6 +3,8 @@ package bot.tafs.app.kiff
 import java.net.URI
 import java.security.SecureRandom
 import java.util.Base64
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 
@@ -36,15 +38,18 @@ object SealedRelease {
   }
 
   /** The grant's sites as this phone signed them (`step.sites_signed`): planque relays them and can't widen them. */
+  @Serializable
   data class SitesSigned(val sites: List<String>, val sig: String)
 
   /** A sensitive site this phone allowed for the grant (`step.sensitive_allowed`), with its `tafs-chrome/sensitive/v1` signature. */
+  @Serializable
   data class Allowance(val site: String, val sig: String)
 
   /**
    * A held sealed fill, as the card reads it: the held step's own fields, copied byte for byte into what's signed, and what the
    * phone checks before it signs. [expiresAt] is the hold's end (unix ms).
    */
+  @Serializable
   data class Fill(
     val chromeId: String,
     val op: String,
@@ -101,7 +106,32 @@ object SealedRelease {
   }
 
   /** The release that goes in the hold's answer (`release`), for planque to put on the step. */
-  data class Release(val chromeId: String, val op: String, val origin: String, val nonce: String, val exp: Long, val sig: String)
+  data class Release(val chromeId: String, val op: String, val origin: String, val nonce: String, val exp: Long, val sig: String) {
+    /** As the answer carries it: `{chrome_id, op, origin, nonce, exp, sig}`. */
+    fun json(): JsonObject = buildJsonObject {
+      put("chrome_id", JsonPrimitive(chromeId))
+      put("op", JsonPrimitive(op))
+      put("origin", JsonPrimitive(origin))
+      put("nonce", JsonPrimitive(nonce))
+      put("exp", JsonPrimitive(exp))
+      put("sig", JsonPrimitive(sig))
+    }
+  }
+
+  /** Why the card can't allow [refusal], in the card's words. A late hold says nothing here: the card says it expired. */
+  fun refusalWords(refusal: Refusal): String? = when (refusal) {
+    Refusal.INCOMPLETE, Refusal.HANDLE -> bot.tafs.app.model.Words.Chrome.releaseUnreadable
+    Refusal.CHROME -> bot.tafs.app.model.Words.Chrome.releaseOtherChrome
+    Refusal.EXPIRED -> null
+    Refusal.ORIGIN -> bot.tafs.app.model.Words.Chrome.releaseNotHttps
+    Refusal.NOT_SIGNED -> bot.tafs.app.model.Words.Chrome.releaseNotConnected
+    Refusal.SENSITIVE -> bot.tafs.app.model.Words.Chrome.releaseSensitive
+  }
+
+  /** What the release's fingerprint prompt says it signs: which part, for which site. */
+  fun prompt(part: Part, site: String): String =
+    if (part == Part.PASSWORD) bot.tafs.app.model.Words.Chrome.releasePromptPassword(site = site)
+    else bot.tafs.app.model.Words.Chrome.releasePromptUsername(site = site)
 
   /** The bytes the approval key signs: label ‖ 0x00 ‖ JCS of the eight fields (vectors/chrome-release.json `signed_bytes`). */
   fun bytes(chromeId: String, op: String, sealed: String, origin: String, fieldRef: String, readId: String, nonce: String, exp: Long): ByteArray =
@@ -122,9 +152,9 @@ object SealedRelease {
   fun newNonce(): String = ChromePairing.base64Url(ByteArray(16).also { random.nextBytes(it) })
 
   /**
-   * The release for [fill], made at [now]: a new nonce, `exp` 60 s on, and [sign]'s signature (the approval key's DER, base64,
-   * behind the fingerprint) as raw r‖s. Refused (null) when [refusal] refuses, so a release is never made for a fill the card
-   * couldn't draw.
+   * The release for [fill], checked at [now]: a new nonce, `exp` 60 s after the owner allowed ([clock], read once the prompt
+   * succeeded), and [sign]'s signature (the approval key's DER, base64, behind the fingerprint) as raw r‖s. Refused (null) when
+   * [refusal] refuses, so a release is never made for a fill the card couldn't draw.
    */
   suspend fun release(
     fill: Fill,
@@ -132,11 +162,15 @@ object SealedRelease {
     approvalKeyDER: ByteArray,
     now: Long,
     nonce: String = newNonce(),
+    clock: () -> Long = { now },
     sign: suspend (built: () -> ByteArray) -> String,
   ): Release? {
     if (refusal(fill, pairedChromes, approvalKeyDER, now) != null) return null
-    val exp = now + VALID_MS
-    val der = sign { bytes(fill.chromeId, fill.op, fill.sealed, fill.origin, fill.fieldRef, fill.readId, nonce, exp) }
+    var exp = 0L
+    val der = sign {
+      exp = clock() + VALID_MS
+      bytes(fill.chromeId, fill.op, fill.sealed, fill.origin, fill.fieldRef, fill.readId, nonce, exp)
+    }
     val sig = ChromePairing.rawSignature(Base64.getMimeDecoder().decode(der)) ?: return null
     return Release(fill.chromeId, fill.op, fill.origin, nonce, exp, sig)
   }

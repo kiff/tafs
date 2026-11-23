@@ -15,6 +15,32 @@ enum ChromeConnections {
 /// Re-pairing replaces, never adds ("Your Chrome" 1, docs/chrome.md): which paired Chrome a new one replaces, and the connections
 /// that move to it. The pick is the owner's; only a connection that is live on the Chrome replaced moves, with the sites planque
 /// holds for it, which the phone's fingerprint then signs for the new Chrome (`ChromePairing.Carried`).
+/// Which Chrome a browser connection runs in, and where it may move ("Your Chrome" 2 and 4).
+enum ChromeSwitch {
+    /// The action planque offers on this connection's row, only where its own `PUT …/chrome` would accept the move (one rule, in the
+    /// service): the app keeps no status list of its own, and a planque that doesn't send it offers no move.
+    static func action(of grant: PlanqueClient.Grant) -> PlanqueClient.Grant.Action? {
+        guard grant.request.browser?.driver == "extension" else { return nil }
+        return (grant.actions ?? []).first { $0.id == PlanqueClient.Grant.Action.useAnotherChrome && $0.known }
+    }
+
+    /// The sites to sign again for the new Chrome: the connection's own, **only if this phone's own signature verifies** them for the
+    /// Chrome it uses now (`chrome_sites_sig` over `{chrome_id, grant, sites}`, by `phoneKey`, its approval key). Never from what planque
+    /// says: a planque that widened the list would otherwise get the owner's signature over the wider one. Nil for anything else
+    /// (no signature, another key, other sites, a connection carried here from an earlier Chrome).
+    static func signedSites(of grant: PlanqueClient.Grant, phoneKey: Data) -> [String]? {
+        guard let browser = grant.request.browser, browser.driver == "extension", let chrome = browser.chrome, !chrome.isEmpty,
+              let sites = browser.sites, !sites.isEmpty, sites.count <= 100, let sig = grant.chromeSitesSig, !sig.isEmpty,
+              ChromePairing.sitesSignatureHolds(sig, publicKeyDER: phoneKey, chromeID: chrome, grant: grant.id, sites: sites) else { return nil }
+        return sites
+    }
+
+    /// The paired Chromes it could move to: every one but the one it uses.
+    static func others(for grant: PlanqueClient.Grant, in chromes: [PlanqueClient.Chrome]) -> [PlanqueClient.Chrome] {
+        chromes.filter { $0.id != grant.request.browser?.chrome }
+    }
+}
+
 enum ChromeReplace {
     /// What the pick starts on: the Chrome with the offer's profile id; else, when the extension was reinstalled and its id is new,
     /// the one paired Chrome on the same browser and system. Nothing otherwise ("a new Chrome").
