@@ -15,6 +15,7 @@ tafs pentru Chrome lasă tafs-urile dvs. să lucreze în propriul Chrome, doar p
 • Chrome cere o singură dată, la instalare, acces la toate site-urile. tafs lucrează doar pe site-urile pe care le indică fiecare sarcină și pe care le aprobați pe telefon.
 • Plata, plasarea unei comenzi și completarea unei autentificări salvate așteaptă întotdeauna aprobarea dvs. pe telefon.
 • Citește o pagină ca text și câmpuri de formular, fără câmpurile de parolă, card și cod. Nu citește niciodată celelalte file sau istoricul dvs..
+• Un taf vă poate preda un pas dintr-o pagină, cum ar fi tastarea unei căutări sau a unui număr de card. Îl faceți dvs., iar când citește din nou pagina, ce ați tastat în câmpuri este omis.
 • Site-urile băncilor, portofelelor, managerilor de parole, plăților, sănătății și autorităților nu sunt folosite niciodată, decât dacă permiteți unul, pentru o sarcină, pe telefon.
 • Autentificările salvate sunt opționale și sigilate pe acest computer. tafs și KIFF nu le văd niciodată.
 • Panoul lateral arată taf-ul care lucrează în acest Chrome, iar dumneavoastră vorbiți cu el acolo, ca în aplicația tafs. „Configurați un taf nou pentru acest site” deschide Coach, care vede o pagină doar când faceți clic pe „Distribuie această pagină”, și atunci doar acea pagină, cu aceleași câmpuri eliminate.

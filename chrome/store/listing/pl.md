@@ -15,6 +15,7 @@ tafs dla Chrome pozwala Twoim tafom pracować w Twoim własnym Chrome, tylko na 
 • Chrome przy instalacji raz prosi o dostęp do wszystkich witryn. tafs działa tylko na witrynach wskazanych przez każde zadanie, które zatwierdzasz w telefonie.
 • Płacenie, składanie zamówienia i wypełnianie zapisanego logowania zawsze czekają na Twoje zatwierdzenie w telefonie.
 • Czyta stronę jako tekst i pola formularza, bez pól hasła, karty i kodu. Nigdy nie czyta Twoich innych kart ani historii.
+• Taf może przekazać Ci jeden krok na stronie, na przykład wpisanie wyszukiwania lub numeru karty. Robisz to sam, a gdy znów czyta stronę, to, co wpisałeś w pola, jest pomijane.
 • Strony banków, portfeli, menedżerów haseł, płatności, zdrowia i urzędów nigdy nie są używane, chyba że pozwolisz na jedną, na jedno zadanie, w telefonie.
 • Zapisane logowania są opcjonalne i zapieczętowane na tym komputerze. tafs i KIFF nigdy ich nie widzą.
 • Panel boczny pokazuje taf pracujący w tym Chrome i tam z nim rozmawiasz, tak jak w aplikacji tafs. „Skonfiguruj nowy taf dla tej witryny” otwiera Coacha, który widzi stronę tylko wtedy, gdy klikniesz „Udostępnij tę stronę”, i wtedy tylko tę stronę, z tymi samymi usuniętymi polami.

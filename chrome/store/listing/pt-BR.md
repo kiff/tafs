@@ -15,6 +15,7 @@ O tafs para Chrome deixa seus tafs trabalharem no seu próprio Chrome, só nos s
 • O Chrome pede uma única vez, na instalação, acesso a todos os sites. O tafs só trabalha nos sites que cada tarefa indica, e que você aprova no celular.
 • Pagar, fazer um pedido e preencher um login salvo sempre esperam sua aprovação no celular.
 • Ele lê uma página como texto e campos de formulário, sem os campos de senha, cartão e código. Nunca lê suas outras abas nem seu histórico.
+• Um taf pode passar para você uma etapa de uma página, como digitar uma busca ou um número de cartão. Você mesmo faz, e quando ele lê a página de novo, o que você digitou nos campos fica de fora.
 • Sites de bancos, carteiras, gerenciadores de senhas, pagamentos, saúde e governo nunca são usados, a menos que você permita um, para uma tarefa, no celular.
 • Logins salvos são opcionais e ficam selados neste computador. O tafs e o KIFF nunca os veem.
 • O painel lateral mostra o taf que trabalha neste Chrome, e você conversa com ele ali, como no app tafs. “Configurar um novo taf para este site” abre o Coach, que só vê uma página quando você clica em “Compartilhar esta página”, e então só essa página, com os mesmos campos removidos.
