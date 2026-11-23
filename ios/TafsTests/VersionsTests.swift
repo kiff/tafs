@@ -339,6 +339,28 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(order[live...].contains("/v1/home"), "the list read again after the install")
     }
 
+    /// A switch that stopped a task waiting on the owner's answer (tafs cloud names it in `stopped`, with its words): the chat says so, with
+    /// Retry on the owner's last message of that session, never silence. A switch that stopped nothing says nothing.
+    func testASwitchThatStoppedAWaitingTaskSaysSoAndOffersRetry() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"message","text":"Refund pi_1","session":"sess_p"},{"at":"2026-10-14T09:05:00Z","from":"owner","kind":"message","text":"Another thing","session":"sess_other"}]}"#)
+        await model.loadVersions(id)
+        await model.loadChat(id)
+        let v2 = try XCTUnwrap(model.versions[id]?.last)
+        // Nothing was stopped: no line.
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        _ = await model.prepareSwitch(v2, of: id, stopBlocking: true)
+        XCTAssertNil(model.chatState(id).failedWhy)
+        // A task waiting on the owner's answer was stopped: the chat says it, and offers Retry on that session's message.
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, #"{"switching":{"n":2,"draft":"d_02","at":"2026-10-20T08:00:00Z"},"stopped":[{"run":"run_p","session":"sess_p"}],"words":"Installing this version stopped the task that was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again."}"#)
+        let sw = await model.prepareSwitch(v2, of: id, stopBlocking: true)
+        XCTAssertEqual(sw?.stopped, [TafsCloud.StoppedRun(run: "run_p", session: "sess_p")])
+        XCTAssertEqual(model.chatState(id).ended, .failed(retry: "Refund pi_1"), "that session's message, not the last one")
+        XCTAssertEqual(model.chatState(id).failedWhy, "Installing this version stopped the task that was waiting on your answer: its held call was withdrawn and its message didn't run. You can send it again.")
+        XCTAssertNil(model.chatState(id).awaiting)
+    }
+
     /// Installing a version with its Card while Coach's tools are still to give: the install's
     /// one Face ID gives nothing of Coach's tools, and their own step is asked after it
     /// (docs/coach.md › Coach's tools step), as on Android 1.3.
