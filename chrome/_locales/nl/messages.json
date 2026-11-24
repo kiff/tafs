@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Een taf verwijder je op je telefoon: open hem in de tafs-app en kies Verwijderen. Daar keur je het verwijderen goed."},
   "bar_go": {"message": "Naar zijn tabblad"},
   "bar_paused": {"message": "$TAF$ is gepauzeerd", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ is klaar", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ is klaar", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach leest deze pagina bij verzenden: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Gelezen: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Niet op deze site"},
+  "aside_on": {"message": "Deze site lezen"},
+  "aside_off_line": {"message": "Coach leest $HOST$ niet: je hebt het uitgezet", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach leest $HOST$ niet: een bank-, betaal-, mail- of gezondheidssite", "placeholders": {"host": {"content": "$1"}}}
 }

@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Taf noņem tālrunī: atver to tafs lietotnē, tad Noņemt. Noņemšanu apstiprina tur."},
   "bar_go": {"message": "Pāriet uz tā cilni"},
   "bar_paused": {"message": "$TAF$ ir iepauzēts", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ ir pabeidzis", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ ir pabeidzis", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Nosūtot Coach izlasa šo lapu: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Lasa: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Ne šajā vietnē"},
+  "aside_on": {"message": "Lasīt šo vietni"},
+  "aside_off_line": {"message": "Coach nelasa $HOST$: tu to izslēdzi", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach nelasa $HOST$: bankas, maksājumu, pasta vai veselības vietne", "placeholders": {"host": {"content": "$1"}}}
 }

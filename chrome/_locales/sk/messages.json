@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Taf sa odstraňuje v telefóne: otvorte ho v aplikácii tafs a potom Odstrániť. Odstránenie sa schvaľuje tam."},
   "bar_go": {"message": "Prejsť na jeho kartu"},
   "bar_paused": {"message": "$TAF$ je pozastavený", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ je hotový", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ je hotový", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach si pri odoslaní prečíta túto stránku: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Číta: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Nie na tomto webe"},
+  "aside_on": {"message": "Čítať tento web"},
+  "aside_off_line": {"message": "Coach nečíta $HOST$: vypli ste to", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach nečíta $HOST$: web banky, platieb, pošty alebo zdravia", "placeholders": {"host": {"content": "$1"}}}
 }

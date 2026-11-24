@@ -264,5 +264,11 @@
   "taf_remove_on_phone": {"message": "taf आपके फ़ोन पर हटाया जाता है: इसे tafs ऐप में खोलें, फिर हटाएँ। हटाने की मंज़ूरी वहीं दी जाती है।"},
   "bar_go": {"message": "इसके टैब पर जाएँ"},
   "bar_paused": {"message": "$TAF$ थमा हुआ है", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ का काम पूरा हुआ", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ का काम पूरा हुआ", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "भेजने पर Coach यह पेज पढ़ता है: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "पढ़ रहा है: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "इस साइट पर नहीं"},
+  "aside_on": {"message": "यह साइट पढ़ें"},
+  "aside_off_line": {"message": "Coach $HOST$ नहीं पढ़ता: आपने इसे बंद किया है", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach $HOST$ नहीं पढ़ता: यह बैंक, भुगतान, मेल या स्वास्थ्य साइट है", "placeholders": {"host": {"content": "$1"}}}
 }

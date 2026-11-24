@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "A tafot a telefonodon lehet eltávolítani: nyisd meg a tafs alkalmazásban, majd Eltávolítás. Az eltávolítást ott hagyod jóvá."},
   "bar_go": {"message": "Ugrás a lapjára"},
   "bar_paused": {"message": "Szüneteltetve: $TAF$", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "Kész: $TAF$", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "Kész: $TAF$", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "A Coach küldéskor elolvassa ezt az oldalt: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Olvasva: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Ezen a webhelyen ne"},
+  "aside_on": {"message": "Webhely olvasása"},
+  "aside_off_line": {"message": "A Coach nem olvassa: $HOST$ – kikapcsoltad", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "A Coach nem olvassa: $HOST$ – banki, fizetési, levelezési vagy egészségügyi webhely", "placeholders": {"host": {"content": "$1"}}}
 }

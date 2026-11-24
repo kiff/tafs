@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Taf се отстранува на телефонот: отворете го во апликацијата tafs, па Отстрани. Отстранувањето се одобрува таму."},
   "bar_go": {"message": "Оди на неговото јазиче"},
   "bar_paused": {"message": "$TAF$ е паузиран", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ заврши", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ заврши", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach ја чита оваа страница кога ќе испратите: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Чита: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Не на оваа страница"},
+  "aside_on": {"message": "Читај ја оваа страница"},
+  "aside_off_line": {"message": "Coach не чита $HOST$: го исклучивте", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach не чита $HOST$: страница за банка, плаќања, пошта или здравје", "placeholders": {"host": {"content": "$1"}}}
 }

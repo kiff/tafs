@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Un taf se supprime sur votre téléphone : ouvrez-le dans l'app tafs, puis Supprimer. Sa suppression y est approuvée."},
   "bar_go": {"message": "Aller à son onglet"},
   "bar_paused": {"message": "$TAF$ est en pause", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ a terminé", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ a terminé", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach lit cette page quand vous envoyez : $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Lecture : $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Pas sur ce site"},
+  "aside_on": {"message": "Lire ce site"},
+  "aside_off_line": {"message": "Coach ne lit pas $HOST$ : vous l'avez désactivé", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach ne lit pas $HOST$ : site de banque, de paiement, de messagerie ou de santé", "placeholders": {"host": {"content": "$1"}}}
 }

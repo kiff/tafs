@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Taf šalinamas telefone: atidarykite jį „tafs“ programėlėje, tada Pašalinti. Pašalinimas patvirtinamas ten."},
   "bar_go": {"message": "Eiti į jo skirtuką"},
   "bar_paused": {"message": "$TAF$ pristabdytas", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ baigė", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ baigė", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Siunčiant Coach perskaito šį puslapį: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Skaitoma: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Ne šioje svetainėje"},
+  "aside_on": {"message": "Skaityti šią svetainę"},
+  "aside_off_line": {"message": "Coach neskaito $HOST$: jūs tai išjungėte", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach neskaito $HOST$: banko, mokėjimų, pašto ar sveikatos svetainė", "placeholders": {"host": {"content": "$1"}}}
 }

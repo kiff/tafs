@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "taf ტელეფონიდან ამოიღება: გახსენით tafs აპში, შემდეგ ამოღება. ამოღება იქ დასტურდება."},
   "bar_go": {"message": "მის ჩანართზე გადასვლა"},
   "bar_paused": {"message": "$TAF$ დაპაუზებულია", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$-მა დაასრულა", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$-მა დაასრულა", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "გაგზავნისას Coach ამ გვერდს კითხულობს: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "იკითხება: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "არა ამ საიტზე"},
+  "aside_on": {"message": "ამ საიტის წაკითხვა"},
+  "aside_off_line": {"message": "Coach არ კითხულობს $HOST$-ს: თქვენ გამორთეთ", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach არ კითხულობს $HOST$-ს: ბანკის, გადახდის, ფოსტის ან ჯანმრთელობის საიტია", "placeholders": {"host": {"content": "$1"}}}
 }

@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "يُزال الـ taf من هاتفك: افتحه في تطبيق tafs، ثم إزالة. تتم الموافقة على إزالته هناك."},
   "bar_go": {"message": "الانتقال إلى علامة تبويبه"},
   "bar_paused": {"message": "$TAF$ متوقف مؤقتًا", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "انتهى $TAF$", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "انتهى $TAF$", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "يقرأ Coach هذه الصفحة عند الإرسال: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "يقرأ: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "ليس على هذا الموقع"},
+  "aside_on": {"message": "اقرأ هذا الموقع"},
+  "aside_off_line": {"message": "لا يقرأ Coach ‏$HOST$: أوقفت ذلك", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "لا يقرأ Coach ‏$HOST$: موقع بنك أو دفع أو بريد أو صحة", "placeholders": {"host": {"content": "$1"}}}
 }
