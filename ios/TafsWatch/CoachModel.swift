@@ -139,6 +139,15 @@ final class CoachModel: ObservableObject {
         self.drafts = drafts
         self.pause = pause
         kept = taf == nil ? drafts?.read() : nil
+        // As the Inbox: nothing of it stays on a watch without a passcode.
+        checkLock()
+    }
+
+    /// The app was opened or put away, as the Inbox's `checkLock`: on a watch without a passcode, a message kept for later is
+    /// deleted, unsent, as the Inbox's lines are, so the watch keeps nothing without one. A watch that's only locked keeps it.
+    func checkLock() {
+        guard taf == nil, drafts != nil, !lock.isSecure else { return }
+        deleteKept()
     }
 
     /// The words are on their way, or Coach is at them: nothing else is sent, re-recorded or deleted.
