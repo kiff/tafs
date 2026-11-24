@@ -494,7 +494,10 @@
     <string name="chat_it_lower">ມັນ</string>
     <string name="chat_jump_latest_something_new">ໄປຫາອັນຫຼ້າສຸດ, ມີສິ່ງໃໝ່</string>
     <string name="chat_jump_to_latest">ໄປຫາອັນຫຼ້າສຸດ</string>
+    <string name="chat_link_blocked_body">tafs ເປີດຈາກການສົນທະນາສະເພາະໜ້າເວັບທີ່ປອດໄພ. ລິ້ງນີ້ໄປຫາ: %1$s</string>
+    <string name="chat_link_blocked_title">ລິ້ງນີ້ຈະບໍ່ເປີດ</string>
     <string name="chat_link_confirm_body">ມັນມາຈາກໜ້າທີ່ Coach ອ່ານ. ມັນໄປຫາ: %1$s</string>
+    <string name="chat_link_confirm_body_live">ຄຳຕອບນີ້ຍັງຂຽນຢູ່. ລິ້ງນີ້ໄປຫາ: %1$s</string>
     <string name="chat_link_confirm_open">ເປີດ</string>
     <string name="chat_link_confirm_title">ເປີດລິ້ງນີ້ບໍ?</string>
     <string name="chat_message_carries_most_files">ຂໍ້ຄວາມໜຶ່ງມີໄດ້ສູງສຸດ %1$s ໄຟລ໌.</string>

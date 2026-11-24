@@ -494,7 +494,10 @@
     <string name="chat_it_lower">このtaf</string>
     <string name="chat_jump_latest_something_new">最新へ移動（新着あり）</string>
     <string name="chat_jump_to_latest">最新へ移動</string>
+    <string name="chat_link_blocked_body">tafsはチャットから安全なウェブページだけを開きます。このリンクの移動先: %1$s</string>
+    <string name="chat_link_blocked_title">このリンクは開きません</string>
     <string name="chat_link_confirm_body">Coachが読んだページからのリンクです。移動先: %1$s</string>
+    <string name="chat_link_confirm_body_live">この回答はまだ作成中です。このリンクの移動先: %1$s</string>
     <string name="chat_link_confirm_open">開く</string>
     <string name="chat_link_confirm_title">このリンクを開きますか？</string>
     <string name="chat_message_carries_most_files">1つのメッセージに添付できるのは最大%1$sファイルです。</string>

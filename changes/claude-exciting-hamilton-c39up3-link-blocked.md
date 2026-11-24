@@ -1,0 +1,1 @@
+- **Words for links that won't open, and for an answer still being written** (iPhone, iPad, Android): "This link won't open", "tafs opens only secure web pages from a chat", and "Coach is still answering", each with where the link goes, in all 44 languages ([chat.md](docs/chat.md)).

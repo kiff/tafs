@@ -620,6 +620,13 @@ export const en = {
   record_removed: (name: string) => `${name} (removed)`,
   record_none: (q: string) => `Nothing in the Record matches "${q}"`,
   record_case_failed: (step: string, detail: string) => `${step} didn't go through: ${detail}`,
+  // The Record's refusals a person can reach (`code` beside them): a search too long, a search's pages moved by a new
+  // call, an export's days, an export too big for one file.
+  record_query_too_long: (max: number) => `A search can be up to ${max} characters. Make it shorter.`,
+  record_changed: "The Record changed meanwhile. Search again to see the newest.",
+  record_export_order: "The last day is before the first. Choose the days again.",
+  record_export_days: (max: number) => `An export can cover up to ${max} days. Choose fewer days.`,
+  record_export_too_big: "Too much happened on those days for one export. Export fewer days at a time.",
   next_reconnect: "Connect it again",
   next_try_later: "Try again later: the app was busy or down",
   next_ask_coach: "Ask Coach to change the taf",
