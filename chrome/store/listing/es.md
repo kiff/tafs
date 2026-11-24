@@ -18,7 +18,7 @@ tafs para Chrome deja que tus tafs trabajen en tu propio Chrome, solo en los sit
 • Un taf puede pasarte un paso de una página, como escribir una búsqueda o un número de tarjeta. Lo haces tú, y cuando vuelve a leer la página, lo que escribiste en los campos queda fuera.
 • Los sitios de bancos, carteras, gestores de contraseñas, pagos, salud y administración pública nunca se trabajan, salvo que permitas uno, para una tarea, en el teléfono.
 • Nunca guarda tus contraseñas. En una página de inicio de sesión, el taf se detiene y te pide que inicies sesión tú, en tu propia pestaña.
-• El panel lateral muestra el taf que trabaja en este Chrome, y hablas con él ahí, como en la app de tafs. «Configurar un taf nuevo para este sitio» abre Coach, que lee la página en la que empieza, con los mismos campos eliminados.
+• El panel lateral muestra el taf que trabaja en este Chrome, y hablas con él ahí, como en la app de tafs. «Configurar un taf nuevo para este sitio» abre Coach, en su propia vista. Cuando envías un mensaje a Coach, lee la página que tienes delante con los mismos campos eliminados, salvo en sitios de banco, pagos, correo o salud y en los sitios que desactives, y muestra «Leyendo:» y el sitio bajo tu mensaje.
 
 Lo que lee un taf va a la IA que ejecuta tu tarea y se guarda con esa tarea. KIFF guarda la página antes y después de un cambio 30 días como máximo. Cuando se activen las capturas de pantalla, cada paso que actúa también guarda una captura de la página, tomada justo antes de la acción con los campos de contraseña, tarjeta y código ocultos, 30 días como máximo. Solo la ves en la app tafs y nunca va a la IA. Desvincular o desinstalar borra lo que la extensión guarda en tu ordenador.
 

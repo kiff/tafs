@@ -38,6 +38,7 @@ import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./cal
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine } from "./connections.js";
+import { normalHost, pageSiteRefused } from "./page-sites.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -3166,12 +3167,15 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   await markConnected(me.tenantID, shown, deps, lang);
   await markPlanNeeded(me.tenantID, shown, deps, lang);
   const last = messages.slice(-CHAT.maxThread);
-  // The site each of the person's messages to Coach went with (PAGE): tafs cloud's record of its host, never the page.
-  if (taf.job === SETUP_JOB && deps.coach) {
-    await Promise.all(last.filter((m) => m.from === "owner" && m.id.endsWith(".in")).map(async (m) => {
-      const host = await deps.coach!.get(pageReadKey(me.tenantID, m.id.slice(0, -".in".length))).catch(() => undefined);
-      if (typeof host === "string" && host) m.reading = host;
-    }));
+  // The site each of the person's messages to Coach went with (PAGE): tafs cloud's record of its host, never the page. One
+  // read for the whole thread, and none when no message in view is a run's own input.
+  const inputs = taf.job === SETUP_JOB && deps.coach ? last.filter((m) => m.from === "owner" && m.id.endsWith(".in")) : [];
+  if (inputs.length) {
+    const hosts = new Map((await pageReads(deps.coach!, me.tenantID, me.subject, deps.now?.() ?? new Date())).map((r) => [r.run, r.host]));
+    for (const m of inputs) {
+      const host = hosts.get(m.id.slice(0, -".in".length));
+      if (host) m.reading = host;
+    }
   }
   return { messages: last, components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, agreements, ...(usage ? { usage } : {}) };
 }
@@ -6332,13 +6336,33 @@ export const ATTACHMENTS = { perMessage: 5 };
 /**
  * A page Coach reads with one message (docs/chat.md, "Coach reads the page you're on"): at most `bytes` as the run
  * reads it, kiff/agents' bound (`server.MaxAside`), and a title of at most `title` characters. Its host is kept
- * `keptMs`, as long as the chat's messages, so each message says which site went with it; its text never is.
+ * `keptMs` from that message, as long as the chat's messages, so each message says which site went with it; its text
+ * never is. Each person's last `kept` page messages are kept, more than a thread shows (`CHAT.maxThread`).
  */
-export const PAGE = { bytes: 24_000, title: 300, keptMs: 30 * 24 * 3600_000 } as const;
+export const PAGE = { bytes: 24_000, title: 300, keptMs: 30 * 24 * 3600_000, kept: 200 } as const;
 
-/** Where a run's page host is kept: by run, as the message that carried it is named. */
-export function pageReadKey(tenant: string, run: string): string {
-  return `${tenant}#page-read#${run}`;
+/**
+ * Where a person's page hosts are kept: one item for all their messages to Coach that carried a page, `{run, host, at}`
+ * each, newest last. A thread read reads it once, whatever its length.
+ */
+export function pageReadsKey(tenant: string, person: string): string {
+  return `${tenant}#page-reads#${person}`;
+}
+
+type PageRead = { run: string; host: string; at: string };
+
+/**
+ * A person's kept page hosts, by the run whose message carried each: only those from the last `PAGE.keptMs`, each kept
+ * for its own message's time, however recently the item was written. None when nothing is kept.
+ */
+async function pageReads(store: CoachStore, tenant: string, person: string, now: Date): Promise<PageRead[]> {
+  const kept = await store.get(pageReadsKey(tenant, person)).catch(() => undefined);
+  const reads = (kept as { reads?: unknown } | undefined)?.reads;
+  const since = now.getTime() - PAGE.keptMs;
+  return Array.isArray(reads)
+    ? reads.filter((r): r is PageRead => typeof r?.run === "string" && typeof r?.host === "string" && typeof r?.at === "string" &&
+      Date.parse(r.at) > since)
+    : [];
 }
 
 /**
@@ -6368,11 +6392,15 @@ function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | u
     throw bad("page.url isn't an address");
   }
   if (u.protocol !== "https:" || !u.hostname || u.username || u.password) throw bad("Coach reads only an https page, with nothing signed in its address");
+  // As the extension reads a host, so no form of one (a trailing dot, upper case) gets past the lists.
+  const host = normalHost(u.hostname);
+  // Never a bank, payment, mail or health site, nor the Web Store: the extension never sends one, and this holds whatever does.
+  if (pageSiteRefused(host, u.pathname)) throw bad("Coach never reads a bank, payment, mail or health site, or Chrome's Web Store");
   const title = (p.title ?? "").replace(/\s+/g, " ").trim().slice(0, PAGE.title);
   const aside = `Address: ${u.origin}${u.pathname}\n` + (title ? `Title: ${title}\n` : "") +
     (p.truncated ? "Only the start of the page is here: it goes on past it.\n" : "") + "\n" + p.text;
   if (Buffer.byteLength(aside, "utf8") > PAGE.bytes) throw bad(`a page goes with a message at most ${PAGE.bytes} bytes`);
-  return { host: u.hostname, aside };
+  return { host, aside };
 }
 
 /**
@@ -6398,11 +6426,20 @@ function startedBy(run: { created?: unknown }, began: Date): boolean {
   return !Number.isNaN(created) && created >= began.getTime() - PAGE_RUN_MARGIN_MS;
 }
 
+/**
+ * Keeps the host of the page `run` read, beside the person's others: one read and one write, on a send that carried a page
+ * (one at a time from a person's panel). Two at once could keep one host fewer: the one message would say no `reading`.
+ */
 async function keepPageRead(me: KIFFIdentity, run: string, host: string, deps: Deps): Promise<void> {
   console.log(JSON.stringify({ event: "coach_page_read", tenant: me.tenantID, run, host }));
   if (!deps.coach) return;
   const now = deps.now?.() ?? new Date();
-  await deps.coach.put(pageReadKey(me.tenantID, run), host, new Date(now.getTime() + PAGE.keptMs)).catch(() => undefined);
+  const store = deps.coach;
+  // Those past their own time are dropped as this one goes in.
+  await pageReads(store, me.tenantID, me.subject, now)
+    .then((reads) => store.put(pageReadsKey(me.tenantID, me.subject),
+      { reads: [...reads, { run, host, at: now.toISOString() }].slice(-PAGE.kept) }, new Date(now.getTime() + PAGE.keptMs)))
+    .catch(() => undefined);
 }
 
 /**

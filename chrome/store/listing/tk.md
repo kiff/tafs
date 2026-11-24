@@ -18,7 +18,7 @@ Chrome üçin tafs, tafs-laryňyzyň öz Chrome-ňyzda diňe rugsat beren sahypa
 • Taf sahypadaky bir ädimi size berip biler, meselem gözleg ýa-da kart belgisini ýazmak. Ony özüňiz edýärsiňiz, sahypany täzeden okanda bolsa meýdanlara ýazanyňyz aýrylýar.
 • Banklar, gapjyklar, parol dolandyryjylary, tölegler, saglyk we döwlet sahypalary hiç haçan işlenmeýär, telefonyňyzda bir tabşyryk üçin birine rugsat bermeseňiz.
 • Ol parollaryňyzy hiç haçan saklamaýar. Giriş sahypasynda taf durýar we sizden öz bellikçäňizde özüňiziň girmegiňizi soraýar.
-• Gapdal panel bu Chrome-da işleýän taf-y görkezýär, we siz onuň bilen tafs programmasyndaky ýaly şol ýerde gürleşýärsiňiz. “Bu sahypa üçin täze taf guruň” Coach-y açýar, ol başlaýan sahypasyny şol bir meýdanlar aýrylan görnüşde okaýar.
+• Gapdal panel bu Chrome-da işleýän taf-y görkezýär, we siz onuň bilen tafs programmasyndaky ýaly şol ýerde gürleşýärsiňiz. “Bu sahypa üçin täze taf guruň” Coach-y açýar, öz görnüşinde. Coach-a habar iberseňiz, ol öňdäki sahypany şol bir meýdanlar aýrylan görnüşde okaýar, bank, töleg, poçta ýa-da saglyk saýtlaryndan we siziň öçüren saýtlaryňyzdan başga, we habaryňyzyň aşagynda “Okalýar:” we saýty görkezýär.
 
 Taf-yň okaýan zady tabşyryklygyňyzy ýerine ýetirýän AI-a gidýär we şol tabşyryk bilen saklanýar. KIFF üýtgetmeden öňki we soňky sahypany iň köp 30 gün saklaýar. Skrinşotlar açylandan soň, hereket edýän her ädim hem sahypanyň bir skrinşotyny saklaýar, ol hereketden öň, parol, kart we kod meýdanlary gizlenen halda alynýar, iň köp 30 gün. Ony diňe tafs programmasynda görýärsiňiz, we ol hiç haçan AI-a gitmeýär. Goşalamany aýyrmak ýa-da pozmak giňeltmäniň kompýuteriňizde saklaýanlaryny pozýar.
 

@@ -18,7 +18,7 @@ tafs Chrome'ile laseb sinu tafidel töötada sinu enda Chromes, ainult sinu luba
 • Taf saab anda sulle lehel ühe sammu, näiteks otsingu või kaardinumbri sisestamise. Teed selle ise ja kui see lehte uuesti loeb, jäetakse väljadesse kirjutatu välja.
 • Pankade, rahakottide, paroolihaldurite, maksete, tervise ja riigiasutuste saite ei töödelda kunagi, kui sa ei luba ühte neist ühe ülesande jaoks telefonis.
 • See ei hoia kunagi sinu paroole. Sisselogimislehel taf peatub ja palub sul ise sisse logida, oma vahelehel.
-• Külgriba näitab selles Chrome'is töötavat tafi ja sa räägid temaga seal, nagu tafsi rakenduses. „Seadista selle saidi jaoks uus taf“ avab Coachi, mis loeb lehte, millelt ta alustab, samade eemaldatud väljadega.
+• Külgriba näitab selles Chrome'is töötavat tafi ja sa räägid temaga seal, nagu tafsi rakenduses. „Seadista selle saidi jaoks uus taf“ avab Coachi, omas vaates. Kui saadad Coachile sõnumi, loeb ta eesoleva lehe samade eemaldatud väljadega, välja arvatud panga, maksete, posti või tervise saidid ja saidid, mille välja lülitad, ning näitab sinu sõnumi all „Loeb:“ ja saiti.
 
 Mida taf loeb, läheb tehisintellektile, mis sinu ülesannet täidab, ja säilitatakse selle ülesandega. KIFF säilitab lehe enne muudatust ja pärast seda kuni 30 päeva. Kui ekraanipildid on sisse lülitatud, säilitab iga tegutsev samm ka ühe lehe ekraanipildi, mis tehakse vahetult enne toimingut peidetud parooli-, kaardi- ja koodiväljadega, kuni 30 päeva. Näed seda ainult tafs-i rakenduses ja see ei lähe kunagi tehisintellektile. Sidumise lõpetamine või eemaldamine kustutab selle, mida laiendus sinu arvutis hoiab.
 

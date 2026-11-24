@@ -18,7 +18,7 @@ tafs Chrome ļauj taviem tafiem strādāt tavā Chrome, tikai tajās vietnēs, k
 • Tafs var nodot tev vienu soli lapā, piemēram, ierakstīt meklēšanu vai kartes numuru. Tu to izdari pats, un, kad tas lapu lasa vēlreiz, laukos ierakstītais tiek izlaists.
 • Banku, maku, paroļu pārvaldnieku, maksājumu, veselības un valsts iestāžu vietnes nekad netiek apstrādātas, ja vien tu neatļauj vienu no tām vienam uzdevumam tālrunī.
 • Tas nekad neglabā tavas paroles. Pierakstīšanās lapā taf apstājas un lūdz tevi pierakstīties pašam, savā cilnē.
-• Sānjosla rāda taf, kas strādā šajā Chrome, un tu ar to runā tur, tāpat kā tafs lietotnē. „Iestatīt jaunu taf šai vietnei“ atver Coach, kas nolasa lapu, kurā sāk, ar tiem pašiem noņemtajiem laukiem.
+• Sānjosla rāda taf, kas strādā šajā Chrome, un tu ar to runā tur, tāpat kā tafs lietotnē. „Iestatīt jaunu taf šai vietnei“ atver Coach, savā skatā. Kad nosūti Coach ziņu, tas nolasa priekšējo lapu ar tiem pašiem noņemtajiem laukiem, izņemot banku, maksājumu, pasta vai veselības vietnes un tevis izslēgtās vietnes, un zem tavas ziņas rāda „Lasa:“ un vietni.
 
 Ko tafs izlasa, nonāk mākslīgajā intelektā, kas veic tavu uzdevumu, un tiek glabāts kopā ar to uzdevumu. KIFF glabā lapu pirms izmaiņas un pēc tās ne ilgāk kā 30 dienas. Kad ekrānuzņēmumi ir ieslēgti, katrs solis, kas veic darbību, glabā arī vienu lapas ekrānuzņēmumu, kas uzņemts tieši pirms darbības ar paslēptiem paroles, kartes un koda laukiem, ne ilgāk kā 30 dienas. Tu to redzi tikai tafs lietotnē, un tas nekad nenonāk mākslīgajā intelektā. Atvienošana vai atinstalēšana izdzēš to, ko paplašinājums glabā tavā datorā.
 

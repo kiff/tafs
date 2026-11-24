@@ -1,0 +1,1 @@
+- **tafs cloud never takes a page from a bank, payment, mail or health site.** Coach's `page` from a sensitive or mail site, or the Web Store, is `400 page_refused`, with the extension's own lists, held equal by a test. ([chat.md](docs/chat.md))
