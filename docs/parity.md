@@ -2,7 +2,7 @@
 
 One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why); a watch row reads **built** while its code has merged but the owner hasn't seen it work ([Watches](#watches)). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A PR that moves a row updates this page, and the desktop columns follow each repo's `docs/port-checklist.md`.
 
-**Read from:** kiff/tafs main `ab36368` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `1d6ee13`, kiff/tafs-windows `5975aab` and kiff/tafs-linux `8f2c563`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
+**Read from:** kiff/tafs main `ab36368` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `6c882ee`, kiff/tafs-windows `942f6c2` and kiff/tafs-linux `b93c3d1`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
 
 - **Mac 13+** is the iPad app built with Mac Catalyst ([mac-app.md](mac-app.md)): it follows the iPad unless that page says it differs.
 - **macOS 12, Windows, Linux** are native ports ([kiff/tafs-macos](https://github.com/kiff/tafs-macos), [kiff/tafs-windows](https://github.com/kiff/tafs-windows), [kiff/tafs-linux](https://github.com/kiff/tafs-linux)).
@@ -15,7 +15,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | :- | :- | :- |
 | iPhone/iPad | done 58 | the 58 iPad view files |
 | Mac 13+ | done 56, partial 2 | the 58 iPad view files |
-| macOS 12 | done 43, partial 7, not for it 8 | the 58 iPad view files |
+| macOS 12 | done 44, partial 6, not for it 8 | the 58 iPad view files |
 | Windows | done 50, not for it 8 | the 58 iPad view files |
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
@@ -24,7 +24,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
-1. **macOS 12** is furthest behind: 7 screens partial and 8 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 7 are real work: approvals on this Mac's security key, a key shown once, alerts that wait on the signed build, and a few reads.
+1. **macOS 12** is furthest behind: 6 screens partial and 8 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 6 are real work: approvals on this Mac's security key, a key shown once, alerts that wait on the signed build, and a few reads.
 2. **Linux** is level with the iPad: 53 screens done, and 5 not for it, each with its reason. "Allow this from now on" landed last (tafs-linux#120).
 3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): a complication, and four switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
@@ -35,7 +35,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | iPad view file | What | iPhone/iPad | Mac 13+ | macOS 12 | Windows | Linux | Android |
 | :- | :- | :- | :- | :- | :- | :- | :- |
 | AIConsentView | The AI-data consent screen, and Account's row for it | done | done | done | done | done | done |
-| APIDoorViews | A door "From another application": its count and cap, last request, keys, New key, Revoke, the instructions | done | done | partial | done | done | done |
+| APIDoorViews | A door "From another application": its count and cap, last request, keys, New key, Revoke, the instructions | done | done | done | done | done | done |
 | AccountPreferencesView | Account's theme and time zone pickers | done | done | done | done | done | done |
 | AllowSheetView | "Allow this from now on" | done | done | done | done | done | done |
 | AppEventApprovalSheet | An app event's filters before signing a subscription | done | done | done | done | done | done |
@@ -97,8 +97,6 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 
 Per file, each device that isn't done. The desktop lines are short forms of the checklist's own; the checklist has the whole line.
 
-- **APIDoorViews**
-  - **macOS 12** (partial): A drafted door's Approve, which issues a key too: real work, the same sheet
 - **ApprovalSetupView**
   - **Mac 13+** (partial): Touch ID approval not yet checked on a real signed Mac (CI only); a Mac signed in through the browser is view-only (docs/mac-app.md)
 - **BriefView**
