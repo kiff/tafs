@@ -522,6 +522,9 @@
     <string name="chat_it_lower">ez</string>
     <string name="chat_jump_latest_something_new">Ugrás a legújabbra, van valami új</string>
     <string name="chat_jump_to_latest">Ugrás a legújabbra</string>
+    <string name="chat_link_confirm_body">Egy olyan oldalról származik, amelyet a Coach elolvasott. Ide vezet: %1$s</string>
+    <string name="chat_link_confirm_open">Megnyitás</string>
+    <string name="chat_link_confirm_title">Megnyitod ezt a linket?</string>
     <string name="chat_message_carries_most_files">Egy üzenet legfeljebb %1$s fájlt visz.</string>
     <string name="chat_message_taf">Üzenet neki: %1$s</string>
     <string name="chat_message_your_taf">Üzenet a tafodnak</string>
