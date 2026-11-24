@@ -138,8 +138,10 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   so a page can't steer Coach into starting another app's action. Open opens it; Cancel, or a tap outside, opens nothing. An answer still being written asks too, whatever its turn: a resumed or
   repeated stream sends no `session` event, so it can't yet say, and the thread read that follows settles it. The
   question is held once per chat (`LinkConfirm`), so an answer that finishes while it's up doesn't take it away.
+  In any other answer a plain `https` link opens on the tap, and any other link (`tel:`, `sms:`, another app's scheme,
+  plain `http`) asks the same question, with no Open (`linkAsks`): no link in a chat starts another app's action on a tap.
   `MarkdownText(onLink = ...)` hands a link's address to the caller instead of opening it; with none, links open as
-  before.
+  before (the chat always passes one).
 - **A message that answers a card waiting in the chat** goes on in that card's run with the person's words alone
   (kiff/agents answers the card with them). It reads no page, and no message says `reading` for it: tafs cloud
   keeps a host only for a run the send started, one kiff/agents created once the send began (a card's run is older,

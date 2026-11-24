@@ -17,6 +17,7 @@ import bot.tafs.app.model.Words
 import bot.tafs.app.views.LinkConfirm
 import bot.tafs.app.views.LocalAskLink
 import bot.tafs.app.views.PageTurnText
+import bot.tafs.app.views.linkAsks
 import bot.tafs.app.views.linkOpens
 import org.junit.Assert.assertFalse
 import org.robolectric.RuntimeEnvironment
@@ -109,5 +110,14 @@ class LinkConfirmTest {
     assertTrue("in the Arabic words", body.any { it in '\u0600'..'\u06FF' })
     // A direction character in the address can't close the isolate early.
     assertFalse(Words.Chat.linkConfirmBody("https://a.example/\u2069\u202Ex").contains("\u202E"))
+  }
+
+  /** In any answer, a link that isn't plain https asks (with no Open); a plain https link opens on the tap unless it's a page turn's. */
+  @Test fun aChatLinkThatIsntHttpsAsksInEveryAnswer() {
+    assertFalse(linkAsks("https://shop.example/a", pageTurn = false))
+    assertTrue(linkAsks("https://shop.example/a", pageTurn = true))
+    for (url in listOf("tel:+15550100", "bank://pay?to=1", "http://shop.example/", "intent://x#Intent;end", "https://shop.example/a b")) {
+      assertTrue(url, linkAsks(url, pageTurn = false))
+    }
   }
 }

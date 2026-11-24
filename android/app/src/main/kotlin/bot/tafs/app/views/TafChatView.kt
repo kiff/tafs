@@ -982,10 +982,21 @@ internal fun linkOpens(url: String): Boolean {
 
 /**
  * A taf's words, as the chat draws them. When [asks] (an answer from a turn that read a page in the person's Chrome, or one still
- * being written), a link doesn't open on the tap: it goes to the chat's [LinkConfirm]. Otherwise a link opens as before.
+ * being written), a link doesn't open on the tap: it goes to the chat's [LinkConfirm]. Otherwise a plain https link opens on the
+ * tap, and any other goes there too ([linkAsks]).
  */
 @Composable
 internal fun PageTurnText(text: String, asks: Boolean) {
-  val ask = LocalAskLink.current
-  MarkdownText(text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), onLink = if (asks) (ask ?: {}) else null)
+  val ask = LocalAskLink.current ?: {}
+  val uri = androidx.compose.ui.platform.LocalUriHandler.current
+  MarkdownText(text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), onLink = { url ->
+    if (linkAsks(url, asks)) ask(url) else runCatching { uri.openUri(url) }
+  })
 }
+
+/**
+ * Whether a link in a taf's words asks before it opens: always in an answer from a page turn or one still being written, and in
+ * any answer when it isn't a plain https address ([linkOpens]), so no chat link starts another app's action (a `tel:`, a bank's
+ * scheme) or goes over plain http on a tap. That question then has no Open.
+ */
+internal fun linkAsks(url: String, pageTurn: Boolean): Boolean = pageTurn || !linkOpens(url)
