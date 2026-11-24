@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
 import { refuseURL, bareURL, sensitive, siteOK, asideRefusal } from "../src/sites.js";
+import { readForCoach } from "../src/asideread.js";
 import { refuse, PAY_WORDS, KINDS } from "../src/guard.js";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -331,4 +332,40 @@ test("Coach reads only the tab in front of the panel's window, on https, never a
   assert.equal(asideRefusal(tab("https://my.1password.com/vault"), at), "sensitive", "the run's sensitive list applies");
   assert.equal(asideRefusal(tab("https://news.example/today"), at), "off", "a site the person switched off");
   assert.equal(asideRefusal(tab("https://www.news.example/today"), at), null, "off is the exact host the person switched");
+});
+
+test("the page is checked again on the address it was read on: a tab that moved onto a refused page sends nothing", async () => {
+  const fake = ({ before, after, readOn, active = true }) => {
+    const calls = [];
+    let n = 0;
+    return {
+      calls,
+      tabs: { get: async (id) => ({ id, active: n++ === 0 ? true : active, windowId: 2, incognito: false, url: n === 1 ? before : after }) },
+      scripting: {
+        executeScript: async (o) => {
+          calls.push(o.files ? "inject" : "read");
+          return o.files ? [{}] : [{ result: { href: readOn, url: "https://x.example/masked", title: "T", text: "words", truncated: false } }];
+        },
+      },
+    };
+  };
+  // The same page throughout: it's read and sent, without its whole address.
+  let c = fake({ before: "https://shop.example/a", after: "https://shop.example/a", readOn: "https://shop.example/a?token=1" });
+  let got = await readForCoach(c, 7, 2, []);
+  assert.deepEqual(got, { host: "shop.example", page: { url: "https://x.example/masked", title: "T", text: "words", truncated: false } });
+  assert.ok(!("href" in got.page), "the whole address never leaves");
+  // Gated on a shop, read on a bank it moved to: nothing sent.
+  c = fake({ before: "https://shop.example/a", after: "https://my.1password.com/", readOn: "https://my.1password.com/vault" });
+  got = await readForCoach(c, 7, 2, []);
+  assert.deepEqual([got.why, got.page], ["sensitive", undefined]);
+  // Onto a host the person switched off.
+  c = fake({ before: "https://shop.example/a", after: "https://news.example/", readOn: "https://news.example/x" });
+  assert.equal((await readForCoach(c, 7, 2, ["news.example"])).why, "off");
+  // The tab went behind another before the read finished.
+  c = fake({ before: "https://shop.example/a", after: "https://shop.example/a", readOn: "https://shop.example/a", active: false });
+  assert.equal((await readForCoach(c, 7, 2, [])).why, "not_front");
+  // Refused on the first check: nothing is even injected.
+  c = fake({ before: "https://my.1password.com/", after: "https://my.1password.com/", readOn: "https://my.1password.com/" });
+  assert.equal((await readForCoach(c, 7, 2, [])).why, "sensitive");
+  assert.deepEqual(c.calls, []);
 });

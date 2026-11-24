@@ -1,7 +1,7 @@
 // The service worker (docs/chrome.md): it keeps the pairing, connects to planque when paired, and runs what planque sends
 // through the runner. It wakes on an alarm while it sleeps, connects, and lets the connection drop when no run is on.
 
-import { asideRefusal } from "./sites.js";
+import { asideTab, readForCoach } from "./asideread.js";
 import { config } from "./config.js";
 import { indexedStore, profileId, forgetSavedSignIns } from "./store.js";
 import { actionBadge, actionTitle } from "./coachchat.js";
@@ -260,37 +260,13 @@ async function asideOff() {
   return ((await chrome.storage.local.get(ASIDE_OFF))[ASIDE_OFF] || []).filter((h) => typeof h === "string");
 }
 
-/** The tab [tabId] if it's what the panel of [windowId] has in front, its host, and why it may not be read (or null). */
-async function asideTab(tabId, windowId) {
-  if (typeof tabId !== "number" || typeof windowId !== "number") return { why: "not_front" };
-  const tab = await chrome.tabs.get(tabId).catch(() => null);
-  let host = "";
-  try {
-    host = new URL(tab && tab.url ? tab.url : "").hostname.toLowerCase();
-  } catch {
-    // no address: nothing to name
-  }
-  return { tab, host, why: asideRefusal(tab, { windowId, off: await asideOff() }) };
-}
-
 async function asideStatus(tabId, windowId) {
-  const { host, why } = await asideTab(tabId, windowId);
+  const { host, why } = await asideTab(chrome, tabId, windowId, await asideOff());
   return { host, why };
 }
 
 async function asideRead(tabId, windowId) {
-  const { tab, host, why } = await asideTab(tabId, windowId);
-  if (why) return { host, why };
-  try {
-    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["src/mask.js", "src/aside.js"] });
-    const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: () => globalThis.TafsAside.read() });
-    const page = res && res.result;
-    if (!page || typeof page.text !== "string") return { host, why: "unread" };
-    return { host, page };
-  } catch {
-    // A page that can't be read is no reason to hold the message: it goes with the person's words alone.
-    return { host, why: "unread" };
-  }
+  return readForCoach(chrome, tabId, windowId, await asideOff());
 }
 
 /** "Not on this site": the person's own list of hosts Coach never reads, kept in this Chrome only. */

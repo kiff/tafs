@@ -755,6 +755,10 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
     characters and 20,000 bytes of UTF-8, with `truncated`. Only `mask.js` and `aside.js` go into that tab, for that one read:
     nothing listens or stays.
   - **Said every time:** above Coach's box, "Coach reads this page when you send: ‹site›", or why it doesn't, with the switch.
+  - **Checked twice** (`src/asideread.js` `readForCoach`): before the read, and again after it on the address the read was
+    actually taken on (`aside.js` reports it, and it never leaves Chrome), with a fresh look that the tab is still the one in
+    front. A tab that moved in between (a redirect, a link, a click as the person sends) onto a page the gate refuses sends
+    nothing.
   - A page that can't be read is no reason to hold the message: it goes with the person's words alone.
 - **It reads sparingly** (`coachchat.js` `pollDelay`), so the load doesn't grow with each open panel. A fresh conversation is
   read once (is Coach reachable) and never polled. A chat is read every 4 s while Coach is at work and for a minute after the

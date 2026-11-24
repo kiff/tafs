@@ -51,6 +51,8 @@
       if (last >= 0xd800 && last <= 0xdbff) end -= 1;
     }
     return {
+      // The address this read was taken on, whole, for the service worker's second check only: it never leaves this Chrome.
+      href: location.href,
       url: M.maskURL(bare(location.href)) || bare(location.href),
       title: M.maskText(String(document.title || "").replace(/\s+/g, " ").trim().slice(0, 300)),
       text: all.slice(0, end),
