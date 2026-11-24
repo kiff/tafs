@@ -88,5 +88,12 @@
   "hand_show": { "message": "Pokažite mi", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Gotovo", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Ne sada", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Upisujte samo ondje gdje vjerujete ovoj stranici.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Upisujte samo ondje gdje vjerujete ovoj stranici.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Stranica se promijenila otkad ju je taf pročitao, pa nema na što pokazati. Potražite to kako taf kaže.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "To polje ili gumb trenutačno nije na zaslonu. Šire bi ga okno moglo prikazati, ili ga potražite kako taf kaže.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Stranica nije odgovorila. Potražite to kako taf kaže.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Ovo je ta stranica. Taf nije naveo polje ni gumb na koji bi se pokazalo.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Predano vama", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Učinili ste to", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Rekli ste „Ne sada”", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

@@ -88,5 +88,12 @@
   "hand_show": { "message": "Mənə göstərin", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Hazırdır", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Indi yox", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Yalnız bu səhifəyə etibar etdiyiniz yerdə yazın.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Yalnız bu səhifəyə etibar etdiyiniz yerdə yazın.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Taf oxuyandan bəri səhifə dəyişib, ona görə göstəriləcək bir şey yoxdur. Onu taf dediyi kimi axtarın.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "O sahə və ya düymə hazırda ekranda deyil. Daha geniş pəncərə onu göstərə bilər, ya da onu taf dediyi kimi axtarın.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Səhifə cavab vermədi. Onu taf dediyi kimi axtarın.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Bu, həmin səhifədir. Taf göstəriləcək sahə və ya düymə adlandırmayıb.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Sizə verildi", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Siz etdiniz", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Siz «Indi yox» dediniz", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

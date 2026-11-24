@@ -88,5 +88,12 @@
   "hand_show": { "message": "แสดงให้ดู", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "เสร็จแล้ว", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "ไม่ใช่ตอนนี้", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "พิมพ์เฉพาะในที่ที่คุณเชื่อถือหน้านี้", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "พิมพ์เฉพาะในที่ที่คุณเชื่อถือหน้านี้", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "หน้าเปลี่ยนไปแล้วตั้งแต่ taf อ่าน จึงไม่มีอะไรให้ชี้ ลองหาตามที่ taf บอก", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "ช่องหรือปุ่มนั้นไม่อยู่บนหน้าจอตอนนี้ หน้าต่างที่กว้างขึ้นอาจแสดงให้เห็น หรือลองหาตามที่ taf บอก", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "หน้าไม่ตอบสนอง ลองหาตามที่ taf บอก", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "นี่คือหน้านั้น taf ไม่ได้ระบุช่องหรือปุ่มให้ชี้", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "ส่งต่อให้คุณแล้ว", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "คุณทำแล้ว", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "คุณเลือก “ไม่ใช่ตอนนี้”", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

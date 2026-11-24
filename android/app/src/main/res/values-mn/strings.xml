@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo бол %1$s-ийн захиалга, үнэ %2$s, таны Apple бүртгэлээс төлөгдөнө. Та цуцлах хүртэл %3$s бүр сунгагдана.</string>
     <string name="billing_starts_free">%1$s үнэгүй эхэлнэ.</string>
     <string name="billing_tafs_kiff_one_person_every">Нэг хүнд зориулсан taf-ууд, сар бүр.</string>
-    <string name="billing_team_on_web">kiff.dev дээр Team авах</string>
+    <string name="billing_team_on_web">kiff.dev дээр Company авах</string>
     <string name="billing_terms_use">Ашиглалтын нөхцөл</string>
     <string name="billing_test_purchase_credits">Туршилтын худалдан авалт энэ бүртгэлд кредит нэмэхгүй.</string>
     <string name="billing_try_free">%1$s үнэгүй туршаад үзэх</string>

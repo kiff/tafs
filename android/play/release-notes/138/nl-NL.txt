@@ -1,0 +1,1 @@
+• Het voorbeeld in de ‘API-instructies’ van een deur noemt nu altijd het eigen adres van tafs cloud, tussen aanhalingstekens, zodat je het veilig in een terminal kunt plakken.

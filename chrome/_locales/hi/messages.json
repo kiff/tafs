@@ -308,5 +308,12 @@
   "hand_show": { "message": "मुझे दिखाएँ", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "हो गया", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "अभी नहीं", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "केवल वहीं टाइप करें जहाँ आप इस पेज पर भरोसा करते हैं।", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "केवल वहीं टाइप करें जहाँ आप इस पेज पर भरोसा करते हैं।", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "taf के पढ़ने के बाद से पेज बदल गया है, इसलिए दिखाने को कुछ नहीं है। जैसा taf कहता है, वैसे ढूँढें।", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "वह फ़ील्ड या बटन अभी स्क्रीन पर नहीं है। चौड़ी विंडो में दिख सकता है, या जैसा taf कहता है, वैसे ढूँढें।", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "पेज ने जवाब नहीं दिया। जैसा taf कहता है, वैसे ढूँढें।", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "यही वह पेज है। taf ने दिखाने के लिए कोई फ़ील्ड या बटन नहीं बताया।", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "आपको सौंपा गया", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "आपने कर दिया", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "आपने “अभी नहीं” कहा", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

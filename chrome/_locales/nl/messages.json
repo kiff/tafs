@@ -88,5 +88,12 @@
   "hand_show": { "message": "Laat het zien", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Klaar", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Nu niet", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Typ alleen waar je deze pagina vertrouwt.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Typ alleen waar je deze pagina vertrouwt.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "De pagina is veranderd sinds de taf hem las, dus er is niets om aan te wijzen. Zoek het zoals de taf zegt.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Dat veld of die knop staat nu niet op het scherm. Een breder venster laat het misschien zien, of zoek het zoals de taf zegt.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "De pagina gaf geen antwoord. Zoek het zoals de taf zegt.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Dit is de pagina. De taf noemde geen veld of knop om aan te wijzen.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Aan jou overgedragen", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Jij hebt het gedaan", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Je zei ‘Nu niet’", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

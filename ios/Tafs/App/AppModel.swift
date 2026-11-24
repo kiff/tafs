@@ -337,9 +337,27 @@ final class AppModel: ObservableObject {
 
     private func offerTimeZone(_ account: KIFFClient.Account) {
         let device = TimeZone.current.identifier
-        guard (account.timeZone ?? "UTC") != device else { timeZoneOffer = nil; return }
+        guard !Self.sameTime(account.timeZone ?? "UTC", device) else { timeZoneOffer = nil; return }
         guard remembered?.string(forKey: declinedZoneKey) != device else { return }
         timeZoneOffer = device
+    }
+
+    /// Whether two zones always keep the same time, so switching between them changes nothing: the same id, or two names for
+    /// one offset that is fixed by definition (GMT, UTC, Etc/UTC, Z, the `Etc/GMT±n` zones). A zone that merely keeps one
+    /// offset today (Asia/Tokyo and Asia/Seoul) is never joined, since its rules can change; nor is a zone with a summer time
+    /// (Europe/London isn't GMT), or an unknown id. As Android's `sameTime`, whose `ZoneId.normalized()` joins only these.
+    nonisolated static func sameTime(_ a: String, _ b: String) -> Bool {
+        if a == b { return true }
+        guard let x = fixedByDefinition(a), let y = fixedByDefinition(b) else { return false }
+        return x == y
+    }
+
+    /// The offset of a zone that is fixed by definition, in seconds; nil for any other.
+    nonisolated static func fixedByDefinition(_ id: String) -> Int? {
+        if id == "Z" { return 0 }
+        guard ["UTC", "GMT", "UCT", "Universal", "Zulu", "Greenwich"].contains(id) || id.hasPrefix("Etc/"),
+              let zone = TimeZone(identifier: id) else { return nil }
+        return zone.secondsFromGMT()
     }
 
     /// The owner's answer to the time zone offer: yes sets it (one Face ID), no is remembered.
@@ -454,8 +472,14 @@ final class AppModel: ObservableObject {
     /// What the person reads while this phone can't approve: the view-only words, or the lost key's.
     /// A view-only Mac says how a Mac is added from a phone; a phone or tablet, to sign in again or use the other phone.
     var approvalKeyLostWords: String {
-        approvalViewOnly ? (ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.viewOnly) : KIFFClient.approvalKeyLost
+        guard approvalViewOnly else { return KIFFClient.approvalKeyLost }
+        if ThisDevice.isMac { return Words.Approval.viewOnlyMac }
+        // No approval key on this phone at all (no Face ID or fingerprint enrolled): signing in again changes nothing until one
+        // is added, so it says that, as Android's `viewOnlyLine` (tafs#1661). Sign in again stays offered.
+        return noApprovalKeyHere ? Words.Approval.addFaceIdFirst(device: "\(ThisDevice.kind)") : Words.Approval.viewOnly
     }
+    /// This device holds no approval key: no Face ID, Touch ID or fingerprint is enrolled, so it can't approve until one is.
+    var noApprovalKeyHere: Bool { signer.approvalPublicKeyDER.isEmpty }
     /// A re-link waiting for the person's browser: the code to check there, and the page.
     struct Relink: Equatable { let userCode: String; let url: URL }
     @Published private(set) var relink: Relink?
@@ -5801,16 +5825,25 @@ final class AppModel: ObservableObject {
     /// Where Export my chats writes its two files (kiff/tafs#424): removed with the opened files.
     static let exportedFiles = FileManager.default.temporaryDirectory.appendingPathComponent("export", isDirectory: true)
 
+    /// An opened attachment's folder under `openedFiles`: tafs cloud's id kept to ASCII letters, digits, `_` and `-`, so an id
+    /// such as `../../Library` stays one folder inside it (as Android's `openFile`, tafs#1737). An id with nothing left is `file`.
+    static func openedFolder(_ id: String) -> String {
+        let kept = String(id.unicodeScalars.filter { $0.isASCII && (CharacterSet.alphanumerics.contains($0) || $0 == "_" || $0 == "-") })
+        return kept.isEmpty ? "file" : kept
+    }
+
     /// A file the person attached, downloaded to open full size: a temporary copy under its
-    /// own name, removed by the system. Nil when it couldn't be read; the notice says why.
+    /// own name, removed by the system. Nil when it couldn't be read; the notice says why. Neither tafs cloud's id nor the
+    /// file's name can reach outside `openedFiles`: the id is one plain folder (`openedFolder`), and the name its last part
+    /// (`FileText.name`), a bare `.` or `..` read as `file`.
     func openFile(_ ref: TafsCloud.AttachmentRef, in key: String) async -> URL? {
         let target = key == Self.setupFiles ? setupTaf?.id : UUID(uuidString: key).flatMap { cloudTaf(for: $0)?.id }
         guard mode == .kiff, let target else { return nil }
         do {
             let data = try await cloud.attachment(target, file: ref.id)
-            let dir = Self.openedFiles.appendingPathComponent(ref.id, isDirectory: true)
+            let dir = Self.openedFiles.appendingPathComponent(Self.openedFolder(ref.id), isDirectory: true)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            let url = dir.appendingPathComponent((ref.name as NSString).lastPathComponent)
+            let url = dir.appendingPathComponent(FileText.name(ref.name, fallback: "file"))
             try data.write(to: url, options: [.atomic, .completeFileProtection])
             return url
         } catch {

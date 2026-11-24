@@ -1,0 +1,2 @@
+- tafs cloud keeps the watch Inbox's read and dismissed lines, by id alone, per person (`GET`/`POST /v1/watch/inbox`), and tells the person's phones when they change (`change: watch_inbox`).
+- A watch request's change is now pushed to the person's iPhone too, not only to an Android phone, with its id alone.

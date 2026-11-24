@@ -88,5 +88,12 @@
   "hand_show": { "message": "Näita mulle", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Valmis", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Mitte praegu", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Sisesta ainult seal, kus sa sellele lehele usaldad.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Sisesta ainult seal, kus sa sellele lehele usaldad.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Leht on muutunud pärast seda, kui taf selle luges, seega pole millelegi osutada. Otsi seda nii, nagu taf ütleb.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Seda välja või nuppu pole praegu ekraanil. Laiem aken võib selle näidata, või otsi seda nii, nagu taf ütleb.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Leht ei vastanud. Otsi seda nii, nagu taf ütleb.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "See on see leht. Taf ei nimetanud välja ega nuppu, millele osutada.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Sulle üle antud", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Sa tegid selle", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Sa ütlesid „Mitte praegu“", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

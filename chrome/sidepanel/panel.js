@@ -23,6 +23,11 @@ function hostOf(url) {
   }
 }
 
+// Why Show me pointed to no field, in the panel's words (runner.showHand's `why`).
+const SHOW_LINE = { page_changed: "hand_show_changed", ref_unknown: "hand_show_hidden", page_unresponsive: "hand_show_unanswered", no_ref: "hand_show_no_field" };
+const showSaid = new Map(); // run id → {hand, why}: the last Show me's line for that run's open hand-over
+let lastState = {};
+
 const STEP_WORDS = {
   open: (s) => t("step_open", hostOf(s.url)),
   read: () => t("step_read"),
@@ -31,7 +36,8 @@ const STEP_WORDS = {
   pause: (s) => t(s.by === "failures" ? "step_paused_failures" : s.by === "no_progress" ? "step_paused_no_progress" : "step_paused"),
   resume: () => t("step_resumed"),
   stop: () => t("step_stopped"),
-  hand: (s) => t("hand_title") + (s.kind === "declined" ? " · " + t("hand_declined") : ""),
+  // Handed, then the person's answer: each its own line, so Done never reads as a second "Your turn".
+  hand: (s) => t(s.kind === "done" ? "step_hand_done" : s.kind === "declined" ? "step_hand_declined" : "step_handed"),
   close: () => t("step_closed"),
 };
 
@@ -44,6 +50,7 @@ let lastConnections = null;
 let lastRuns = null;
 
 function draw(state) {
+  lastState = state;
   $("conn").textContent = state.paired ? t(state.connected ? "connected" : "waiting") : "";
   const connections = JSON.stringify(state.connections || []);
   if (state.paired && connections !== lastConnections) {
@@ -77,7 +84,17 @@ function draw(state) {
     if (run.hand) {
       hand.hidden = false;
       node.querySelector(".handWords").textContent = run.hand.words;
-      node.querySelector(".handShow").onclick = () => send({ type: "hand_show", run: run.id });
+      // Show me says what it did when it couldn't point to the field: kept per hand-over, so a redraw keeps the line.
+      const shown = node.querySelector(".handShown");
+      const said = showSaid.get(run.id);
+      shown.hidden = !(said && said.hand === run.hand.id);
+      if (!shown.hidden) shown.textContent = t(SHOW_LINE[said.why]);
+      node.querySelector(".handShow").onclick = async () => {
+        const out = await send({ type: "hand_show", run: run.id }).catch(() => null);
+        if (out && out.why && SHOW_LINE[out.why]) showSaid.set(run.id, { hand: run.hand.id, why: out.why });
+        else showSaid.delete(run.id);
+        draw(lastState);
+      };
       node.querySelector(".handDone").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "done" });
       node.querySelector(".handNo").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "declined" });
     }

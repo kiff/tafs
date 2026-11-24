@@ -67,7 +67,7 @@
   "billing.solo_subscription_one_charged_your": "Solo ແມ່ນການສະໝັກໜຶ່ງ{period} ລາຄາ {price} ເກັບຈາກບັນຊີ Apple ຂອງທ່ານ. ມັນຕໍ່ອາຍຸທຸກ{period_2} ຈົນກວ່າທ່ານຍົກເລີກ.",
   "billing.starts_free": "ເລີ່ມຟຣີ {trial}.",
   "billing.tafs_kiff_one_person_every": "taf ສຳລັບຄົນໜຶ່ງ, ທຸກເດືອນ.",
-  "billing.team_on_web": "ຮັບ Team ທີ່ kiff.dev",
+  "billing.team_on_web": "ຮັບ Company ທີ່ kiff.dev",
   "billing.terms_use": "ຂໍ້ກຳນົດການໃຊ້ງານ",
   "billing.test_purchase_credits": "ການຊື້ທົດລອງບໍ່ເພີ່ມເຄຣດິດໃສ່ບັນຊີນີ້.",
   "billing.try_free": "ລອງຟຣີ {trial}",

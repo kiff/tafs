@@ -88,5 +88,12 @@
   "hand_show": { "message": "Cho tôi xem", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Xong", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Không phải bây giờ", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Chỉ nhập ở nơi bạn tin tưởng trang này.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Chỉ nhập ở nơi bạn tin tưởng trang này.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Trang đã thay đổi từ khi taf đọc, nên không có gì để chỉ. Hãy tìm theo lời taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Ô hoặc nút đó hiện không có trên màn hình. Cửa sổ rộng hơn có thể hiện ra, hoặc hãy tìm theo lời taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Trang không phản hồi. Hãy tìm theo lời taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Đây là trang đó. Taf không nêu ô hay nút nào để chỉ.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Đã giao cho bạn", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Bạn đã làm xong", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Bạn đã chọn “Không phải bây giờ”", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

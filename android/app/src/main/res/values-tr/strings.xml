@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo, %2$s / %1$s tutarında bir aboneliktir ve Apple hesabınızdan tahsil edilir. Siz iptal edene kadar her dönem sonunda (%3$s) yenilenir.</string>
     <string name="billing_starts_free">%1$s ücretsiz başlar.</string>
     <string name="billing_tafs_kiff_one_person_every">Bir kişi için tafs, her ay.</string>
-    <string name="billing_team_on_web">kiff.dev\'de Team\'e geçin</string>
+    <string name="billing_team_on_web">kiff.dev\'de Company\'ye geçin</string>
     <string name="billing_terms_use">Kullanım Şartları</string>
     <string name="billing_test_purchase_credits">Test satın almaları bu hesaba kredi eklemez.</string>
     <string name="billing_try_free">%1$s ücretsiz dene</string>

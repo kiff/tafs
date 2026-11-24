@@ -8,5 +8,5 @@
   "billing.pending_credits": "A compra está aguardando aprovação. Os seus créditos são adicionados quando ela for concluída.",
   "billing.play_unreachable": "Não foi possível contatar o Google Play. Tente novamente.",
   "billing.solo_subscription_one_charged_your": "O Solo é uma assinatura por {period}, a {price}, cobrada na sua conta Apple. É renovada a cada {period_2} até você cancelar.",
-  "billing.team_on_web": "Assinar o Team em kiff.dev"
+  "billing.team_on_web": "Assinar o Company em kiff.dev"
 }
