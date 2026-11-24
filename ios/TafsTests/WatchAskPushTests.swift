@@ -73,16 +73,17 @@ final class WatchAskPushTests: XCTestCase {
         XCTAssertEqual(pushed.reads, 0)
     }
 
+    /// Its own id: what the watch read is kept in `CoachFollow` for the run of the tests.
     func testAWatchStillReadingOrTafsOpenGetsNoBanner() async {
-        pushes.sent("ask_1", at: t)
-        let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "ask_1", sent: nil)
+        pushes.sent("ask_reading", at: t)
+        let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "ask_reading", sent: nil)
         CoachFollow.watchReading(ticket, at: t.addingTimeInterval(-2))
-        let reading = await push("ask_1", reply: WatchReply(.ok, coach: done, answering: false))
+        let reading = await push("ask_reading", reply: WatchReply(.ok, coach: done, answering: false))
         XCTAssertTrue(reading.posted.isEmpty, "the watch shows it itself")
         t.addTimeInterval(CoachFollow.watchAway + 1)
-        let open = await push("ask_1", reply: WatchReply(.ok, coach: done, answering: false), phoneInUse: true)
+        let open = await push("ask_reading", reply: WatchReply(.ok, coach: done, answering: false), phoneInUse: true)
         XCTAssertTrue(open.posted.isEmpty, "Coach's chat on the iPhone shows it")
-        let away = await push("ask_1", reply: WatchReply(.ok, coach: done, answering: false))
+        let away = await push("ask_reading", reply: WatchReply(.ok, coach: done, answering: false))
         XCTAssertEqual(away.posted, [done], "put away, iPhone not in use: posted")
     }
 
