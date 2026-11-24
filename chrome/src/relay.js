@@ -19,8 +19,9 @@ const CUT_LINKS = 50;
  * Gap 4: smaller and smaller copies of a page too large to send, each saying what it cut (`truncated`), to try in turn. The
  * text goes first, since planque's fingerprint of a read (its refs, labels and options) doesn't count it: a page cut there
  * is still the read the taf acts on. Then a select's options past 10, then links past 50, then the rest of the text and the
- * links. A cut text says where it goes on (`more`, `next_offset`), as a window does. Fields and controls are never cut: they
- * are what an act names.
+ * links. The fingerprint does count options and links (planque's `browser.Read`), so a page cut there reads as another read
+ * than the same page uncut. A cut text says where it goes on (`more`, `next_offset`), as a window does. Fields and controls
+ * are never cut: they are what an act names.
  */
 export function cutPages(page) {
   const out = [];

@@ -224,7 +224,10 @@ a dead connection), and the apps (the replace choice at pairing, the Chrome on e
   - A message carries at most 128 KB. A result over 120 KB has its page cut until it fits (`relay.js` `cutPages`), and the
     page says what was cut (`truncated`: `text`, `options`, `links`). The text goes first, to 4,000 characters, with `more`
     and `next_offset` as a window has, since planque's fingerprint of a read doesn't count text; then a select's options past
-    10, links past 50, the rest of the text, and every link. Fields and controls are never cut: an act names them. **An act
+    10, links past 50, the rest of the text, and every link. The fingerprint does count options and links, so a page cut
+    there is another read than the same page uncut: steady while the page stays over the limit, but a page near it can go
+    from one to the other and give `page_changed`, and the taf reads again. Fields and controls are never cut: an act names
+    them. **An act
     that ran is never answered as failed for its size** (a taf told its click failed may click Submit again). Only a page
     whose fields and controls alone are over the limit is answered `page_too_large`, signed as any result.
 - **Keepalive:** `{type: "ping"}` / `{type: "pong"}` every 20 s while a run is on. MV3 keeps the service worker alive
