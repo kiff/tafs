@@ -192,7 +192,7 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   DELETE /v1/tafs/{id}                remove it: its schedule, runs, chats, notes and key; free its name
  *   GET  /v1/push                       this phone's registration and server-defined alert choices (Tafs-Device-Token header, or ?device_token=)
  *   DELETE /v1/push                     unregister this phone, by its token in the JSON body
- *   POST /v1/push                       {device_token, platform?, environment, sound?, alert_target?, kinds?}: this phone gets the account's alerts (platform ios, the default, or android)
+ *   POST /v1/push                       {device_token, platform?, environment, sound?, alert_target?, kinds?}: this phone gets the account's alerts (platform ios, the default, macos for macOS 12's app, or android)
  *   DELETE /v1/push/{token}             it stops
  *   POST /v1/alerts                     {alert_target}: KIFF's alert target for the account, with no phone's alerts (kiff/tafs#206)
  *   GET  /v1/alerts                     whether tafs cloud holds KIFF's alert secret for the account
