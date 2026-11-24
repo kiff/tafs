@@ -11,7 +11,7 @@ Deja que tus tafs trabajen en tu propio Chrome, solo en los sitios que permites,
 tafs para Chrome deja que tus tafs trabajen en tu propio Chrome, solo en los sitios que permitas. Cada paso arriesgado espera tu aprobación en el teléfono.
 
 • Vincula este Chrome con tu teléfono: en la app de tafs, abre Cuenta › Chrome › Vincular un Chrome y escribe el código que aparece.
-• Un taf trabaja en sus propias pestañas, en un grupo de pestañas que puedes ver. Puedes pausarlo o detenerlo en cualquier momento, y se pausa cuando tocas una de sus pestañas.
+• Un taf trabaja en sus propias pestañas, en un grupo de pestañas que puedes ver. Puedes pausarlo o detenerlo en cualquier momento, y se pausa cuando tocas una de sus pestañas. Mientras trabaja, una pequeña barra en la página al frente de cada ventana te permite pausarlo, detenerlo o ir a su pestaña. No lee nada de esa página.
 • Chrome pide una sola vez, al instalar, acceso a todos los sitios. tafs solo trabaja en los sitios que indica cada tarea, que apruebas en el teléfono.
 • Pagar y hacer un pedido siempre esperan tu aprobación en el teléfono.
 • Lee una página como texto y campos de formulario, sin los campos de contraseña, tarjeta y código. Nunca lee tus otras pestañas ni tu historial.
