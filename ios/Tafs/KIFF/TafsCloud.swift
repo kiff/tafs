@@ -1879,6 +1879,13 @@ final class TafsCloud {
         }
     }
 
+    /// Whether a JSON value is the literal `true`. JSONSerialization gives a number and a boolean as the same NSNumber, so
+    /// `as? Bool` would take `1` as `true`: only a JSON boolean counts, as the thread's `page_turn` decodes it.
+    nonisolated static func isTrue(_ value: Any?) -> Bool {
+        guard let n = value as? NSNumber, CFGetTypeID(n) == CFBooleanGetTypeID() else { return false }
+        return n.boolValue
+    }
+
     /// One event of tafs cloud's stream, from its name and its line of JSON; nil when unknown.
     nonisolated static func streamEvent(_ name: String, data: Data) -> StreamEvent? {
         let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
@@ -1886,7 +1893,7 @@ final class TafsCloud {
         case "session":
             return (o["session"] as? String).map {
                 .session($0, newSession: o["new_session"] as? Bool ?? false, run: o["run"] as? String,
-                         message: (o["message"] as? [String: Any])?["id"] as? String, pageTurn: o["page_turn"] as? Bool == true)
+                         message: (o["message"] as? [String: Any])?["id"] as? String, pageTurn: isTrue(o["page_turn"]))
             }
         case "taken": return .taken
         case "text": return (o["text"] as? String).map(StreamEvent.text)

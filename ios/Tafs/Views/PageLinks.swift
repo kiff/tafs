@@ -27,6 +27,17 @@ enum PageLinks {
     /// The address as the confirm shows it: whole, as the link has it, in a left-to-right isolate so an Arabic, Hebrew or
     /// Urdu line around it never reorders its parts.
     static func shown(_ url: URL) -> String { "\u{2066}" + url.absoluteString + "\u{2069}" }
+
+    /// The confirm's line with the address set apart left to right in every language. `Words.line` sets a value apart by
+    /// its first letter (U+2068) in a right-to-left language and takes out any direction character, so the address goes in
+    /// after the line is made, in its own left-to-right isolate: an Arabic, Hebrew or Urdu sentence can't reorder it.
+    static func confirmBody(_ url: URL) -> String {
+        let mark = "\u{E000}"
+        let address = shown(URL(string: Words.withoutDirection(url.absoluteString)) ?? url)
+        return Words.Chat.linkConfirmBody(address: mark)
+            .replacingOccurrences(of: "\u{2068}" + mark + "\u{2069}", with: address)
+            .replacingOccurrences(of: mark, with: address)
+    }
 }
 
 /// Asks before opening a link in words from a page turn (`PageLinks`); does nothing when `on` is false.
@@ -50,7 +61,7 @@ struct PageLinkGuard: ViewModifier {
                     if PageLinks.opens(url) { Button(Words.Chat.linkConfirmOpen) { openURL(url) } }
                     Button(Words.Common.cancel, role: .cancel) {}
                 } message: { url in
-                    Text(Words.Chat.linkConfirmBody(address: PageLinks.shown(url)))
+                    Text(PageLinks.confirmBody(url))
                 }
         } else {
             content

@@ -43,7 +43,7 @@ final class PageLinksTests: XCTestCase {
         let url = try XCTUnwrap(URL(string: "https://shop.example/very/long/path?token=abc&next=%2Fpay#frag"))
         let shown = PageLinks.shown(url)
         XCTAssertEqual(shown, "\u{2066}https://shop.example/very/long/path?token=abc&next=%2Fpay#frag\u{2069}")
-        XCTAssertTrue(Words.Chat.linkConfirmBody(address: shown).contains(url.absoluteString))
+        XCTAssertTrue(PageLinks.confirmBody(url).contains(shown), "the line holds the address in its isolate")
     }
 
     /// In a right-to-left language the address keeps its order: the confirm's line holds it whole, inside its isolate, so the
@@ -52,7 +52,7 @@ final class PageLinksTests: XCTestCase {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         AppLanguage.choose("ar", defaults: defaults)
         let url = try XCTUnwrap(URL(string: "https://shop.example/a/b-2?id=42&q=x.y"))
-        let line = Words.Chat.linkConfirmBody(address: PageLinks.shown(url))
+        let line = PageLinks.confirmBody(url)
         XCTAssertNotEqual(line, "It came from a page Coach read. It goes to: \(PageLinks.shown(url))", "the Arabic line")
         XCTAssertTrue(line.contains("\u{2066}https://shop.example/a/b-2?id=42&q=x.y\u{2069}"))
     }
