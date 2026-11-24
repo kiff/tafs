@@ -1,0 +1,1 @@
+- **Chrome: the page consent names one-time codes again.** One-time codes named as one in English, French, Spanish or German in the page's text are masked too, in all 43 languages ([chrome.md](docs/chrome.md)).
