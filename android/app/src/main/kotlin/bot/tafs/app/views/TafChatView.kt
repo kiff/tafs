@@ -782,7 +782,7 @@ private fun LiveWork(live: LiveAnswer) {
     }
     // An answer still being written can't yet say whether its turn read a page (a resumed stream carries no flag): its links
     // ask first, until the thread read says.
-    if (writing) PageTurnText(live.text, asks = true)
+    if (writing) PageTurnText(live.text, asks = true, live = true)
   }
 }
 
@@ -936,7 +936,7 @@ private fun AskCoachCard(text: String, ask: ((String) -> Unit)?) {
 internal fun sentWords(stored: String, sent: String): Boolean = stored == sent || stored.endsWith("\n\n" + sent)
 
 /** Where a link that asks first goes: the chat's one [LinkConfirm]. */
-internal val LocalAskLink = androidx.compose.runtime.staticCompositionLocalOf<((String) -> Unit)?> { null }
+internal val LocalAskLink = androidx.compose.runtime.staticCompositionLocalOf<((url: String, live: Boolean) -> Unit)?> { null }
 
 /**
  * Holds the chat's "Open this link?" (docs/chat.md): the whole address, Open and Cancel. It's kept here, above the messages,
@@ -945,13 +945,15 @@ internal val LocalAskLink = androidx.compose.runtime.staticCompositionLocalOf<((
 @Composable
 internal fun LinkConfirm(content: @Composable () -> Unit) {
   var confirming by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+  var fromLive by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
   val uri = androidx.compose.ui.platform.LocalUriHandler.current
-  androidx.compose.runtime.CompositionLocalProvider(LocalAskLink provides { url: String -> confirming = url }) { content() }
+  androidx.compose.runtime.CompositionLocalProvider(LocalAskLink provides { url: String, live: Boolean -> fromLive = live; confirming = url }) { content() }
   confirming?.let { url ->
     bot.tafs.app.drive.DriveAlert(
       onDismissRequest = { confirming = null },
-      title = { Text(Words.Chat.linkConfirmTitle) },
-      text = { Text(linkConfirmBody(url), modifier = Modifier.testTag("link-confirm-body")) },
+      // A link that won't open says so; one that will says where it came from: a page Coach read, or an answer still coming.
+      title = { Text(if (linkOpens(url)) Words.Chat.linkConfirmTitle else Words.Chat.linkBlockedTitle) },
+      text = { Text(linkQuestionBody(url, fromLive), modifier = Modifier.testTag("link-confirm-body")) },
       // Open only for an address that opens a web page over https; anything else (another app's scheme, tel:, http:) gets the
       // address and Cancel alone, so a page can't steer Coach into starting another app's action.
       confirmButton = {
@@ -976,9 +978,18 @@ internal fun LinkConfirm(content: @Composable () -> Unit) {
  * It's put in after formatting, since `Res.s` sets a value apart by its first letter (U+2068) and takes out any direction
  * character.
  */
-internal fun linkConfirmBody(url: String): String {
+internal fun linkConfirmBody(url: String): String = withAddress(url, Words.Chat::linkConfirmBody)
+
+/** The body for [url]: one that won't open says why; one that will says it's from a page Coach read, or an answer still coming. */
+internal fun linkQuestionBody(url: String, live: Boolean): String = when {
+  !linkOpens(url) -> withAddress(url, Words.Chat::linkBlockedBody)
+  live -> withAddress(url, Words.Chat::linkConfirmBodyLive)
+  else -> linkConfirmBody(url)
+}
+
+private fun withAddress(url: String, words: (String) -> String): String {
   val shown = "\u2066${bot.tafs.app.model.Res.withoutDirection(url)}\u2069"
-  return Words.Chat.linkConfirmBody("\uE000").replace("\u2068\uE000\u2069", shown).replace("\uE000", shown)
+  return words("\uE000").replace("\u2068\uE000\u2069", shown).replace("\uE000", shown)
 }
 
 /**
@@ -997,11 +1008,11 @@ internal fun linkOpens(url: String): Boolean {
  * tap, and any other goes there too ([linkAsks]).
  */
 @Composable
-internal fun PageTurnText(text: String, asks: Boolean) {
-  val ask = LocalAskLink.current ?: {}
+internal fun PageTurnText(text: String, asks: Boolean, live: Boolean = false) {
+  val ask = LocalAskLink.current ?: { _, _ -> }
   val uri = androidx.compose.ui.platform.LocalUriHandler.current
   MarkdownText(text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), onLink = { url ->
-    if (linkAsks(url, asks)) ask(url) else runCatching { uri.openUri(url) }
+    if (linkAsks(url, asks)) ask(url, live) else runCatching { uri.openUri(url) }
   })
 }
 

@@ -139,7 +139,10 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   repeated stream sends no `session` event, so it can't yet say, and the thread read that follows settles it. The
   question is held once per chat (`LinkConfirm`), so an answer that finishes while it's up doesn't take it away.
   In any other answer a plain `https` link opens on the tap, and any other link (`tel:`, `sms:`, another app's scheme,
-  plain `http`) asks the same question, with no Open (`linkAsks`): no link in a chat starts another app's action on a tap.
+  plain `http`) asks too, with no Open (`linkAsks`): no link in a chat starts another app's action on a tap. Each
+  question says what's true of its link (`linkQuestionBody`): one that won't open is "This link won't open"
+  (`chat.link_blocked_title`, `chat.link_blocked_body`); one in an answer still being written says so
+  (`chat.link_confirm_body_live`); a page turn's says it came from a page Coach read (`chat.link_confirm_body`).
   `MarkdownText(onLink = ...)` hands a link's address to the caller instead of opening it; with none, links open as
   before (the chat always passes one).
 - **A message that answers a card waiting in the chat** goes on in that card's run with the person's words alone
