@@ -869,6 +869,23 @@ jobs:
         with:
           persist-credentials: false
 
+      # The App Store build is made with the newest released Xcode 27 on the image (the iOS 27 and watchOS 27 SDKs),
+      # not the image's default. A runner without one stops here and lists the Xcodes it has, rather than uploading a
+      # build made with an older SDK.
+      - name: Use the newest Xcode 27
+        run: |
+          echo "Xcodes on this runner:"; ls -d /Applications/Xcode*.app || true
+          xcode=$({ ls -d /Applications/Xcode_27*.app 2>/dev/null || true; } | python3 -c '
+          import re, sys
+          found = [l.strip() for l in sys.stdin if l.strip() and not re.search(r"beta|rc|candidate", l, re.I)]
+          version = lambda p: [int(n) for n in re.findall(r"\d+", p.rsplit("/", 1)[-1])]
+          print(max(found, key=version) if found else "")
+          ')
+          [ -n "$xcode" ] || { echo "::error::No released Xcode 27 on this runner image: the App Store build needs the iOS 27 SDK"; exit 1; }
+          sudo xcode-select -s "$xcode/Contents/Developer"
+          xcodebuild -version
+          echo "iOS SDK $(xcrun --sdk iphoneos --show-sdk-version) ($(xcrun --sdk iphoneos --show-sdk-build-version)), watchOS SDK $(xcrun --sdk watchos --show-sdk-version)"
+
       # With the watch app embedded (ios/watch-embed.yml): only this build carries it.
       - name: Generate the Xcode project
         env:
