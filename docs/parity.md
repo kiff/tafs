@@ -20,7 +20,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Linux | done 52, not started 1, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | done 24, partial 3, not started 1, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | done 17, partial 6, not started 4, not for it 5 | the [Watches](#watches) table |
+| Apple Watch | done 18, partial 5, not started 4, not for it 5 | the [Watches](#watches) table |
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
@@ -251,7 +251,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | 7 | Check before sending (Re-record, Delete, Type, Quick reply) | done | done | |
 | 8 | Keep for later | not started | done | Apple Watch keeps no draft yet |
 | 9 | Send, then "Coach is answering" | done | done | |
-| 10 | The answer: Hear it, and Reply | in review: tafs#1868 (Hear) | done | Apple Watch: Reply done; Hear in review (`WatchHear`) |
+| 10 | The answer: Hear it, and Reply | done (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | done | |
 | 11 | An answer you can't miss, with the app put away | partial | done | Apple Watch: iOS doesn't promise the background time; tafs cloud now pushes watch asks to the iPhone, which doesn't read them yet |
 | 12 | Coach as one conversation | done | done | |
 | 13 | Chat with one taf | done | done | tafs cloud's switch still decides per account |
@@ -285,7 +285,7 @@ What landed or is in review on 23 Nov, device by device (read again at 22:50 Par
 | Sign in again and Replace the key on a connection | done | done | not for it: made on the phone (planque takes no security key) | done (tafs-windows#268) | partial: drawn up to planque's signature, signed on the phone | — |
 | Sign in again shows the connection's approval sheet first, and signs only the request it showed | done (tafs#1878) | done (tafs#1826) | as the row above | as the row above | as the row above | — |
 | A sealed sign-in fill's release card | held: no passwords go through the extension (the owner's decision) | merged and off, stays off (tafs#1882) | — | — | — | — |
-| "Allow this from now on" checks its own `matches`: a revision Card's `current.id`, when sent, must equal `revises` (now); a Card key the check doesn't compare is refused (once KIFF's draft schema is pinned in `contracts`) | in progress | to do | in review: tafs-macos#222 | in review: tafs-windows#330 | in progress (after tafs-linux#120) | — |
+| "Allow this from now on" checks its own `matches`: a revision Card's `current.id`, when sent, must equal `revises` (now); a Card key the check doesn't compare is refused (once KIFF's draft schema is pinned in `contracts`) | in progress | to do | done (tafs-macos#222) | in review: tafs-windows#330 | in progress (after tafs-linux#120) | — |
 | A connection's own page from planque's row, with its actions | done | done | partial | done (tafs-windows#269) | partial | — |
 | An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | not started | done (tafs-windows#271: said on Needs you, not in the chat) | done (tafs-linux#99) | — |
 | An API door's example safe to paste into a shell (a plain path only, quoted; `vectors/api-door-endpoint.json`, tafs#1877) | in review: tafs#1875 | done (tafs#1874) | done (tafs-macos#205) | done (tafs-windows#323) | done (tafs-linux#111) | — |
