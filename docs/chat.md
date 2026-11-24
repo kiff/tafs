@@ -149,14 +149,19 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   (kiff/agents answers the card with them). It reads no page, and no message says `reading` for it: tafs cloud
   keeps a host only for a run the send started, one kiff/agents created once the send began (a card's run is older,
   by a model turn at least).
-- **The confirm, on the iPhone and iPad:** a tap on a link in a message with `page_turn`, or in any answer still
-  arriving (a stream picked back up or sent again has no `session` event to say it, so it asks until the thread's
-  read settles it), opens nothing. It shows "Open this link?", "It came from a page Coach read. It
-  goes to: {address}" with the whole address, never shortened and always left to right, then **Open** or **Cancel**
-  (`chat.link_confirm_*`, `PageLinkGuard`). Open is offered for an `https` address with a host and no space, control or
-  direction character in it (`PageLinks.opens`): another app's deep link, `tel:`, `sms:`, plain `http`, or an address
-  with an override in it shows its address with Cancel only, so a page can't steer Coach into another app's action, or
-  show one address and open another. A message without it, and the owner's own words, open links as before.
+- **The confirm, on the iPhone and iPad** (`PageLinks`, `PageLinkGuard`). A link in an answer, a taf's or Coach's:
+  - **One that isn't a clean `https` address** opens nothing, in any answer: "This link won't open", "tafs opens only
+    secure web pages from a chat. This link goes to: {address}", and **Cancel** alone (`chat.link_blocked_*`). Clean
+    means `https` with a host and no space, control or direction character in it, as written or percent-decoded
+    (`PageLinks.opens`). So another app's deep link, `tel:`, `sms:`, `mailto:`, plain `http`, or an address with an
+    override in it can't start another app's action, or show one address and open another.
+  - **A clean `https` link** opens on a tap, except in a message with `page_turn`, or in Coach's answer still arriving (a
+    stream picked back up or sent again has no `session` event to say it, so it asks until the thread's read settles
+    it). There, a tap shows "Open this link?" with "It came from a page Coach read. It goes to: {address}", or, still
+    arriving, "This answer is still being written. This link goes to: {address}" (`chat.link_confirm_*`), then **Open**
+    or **Cancel**. A taf's answer still arriving asks only about a link that won't open.
+  - **The address** is shown whole, never shortened, and always left to right, in its own isolate, in every language.
+  - **The owner's own words** open their links as before.
 
 ## The answer as it comes
 
