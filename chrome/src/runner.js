@@ -234,6 +234,20 @@ export class Runner {
     this.record(run, { op: "pause", by: "owner" });
   }
 
+  /**
+   * The panel's head (D2): brings a live run's tab to the front, in its window. Nothing else: no act, no read. A run this
+   * Chrome doesn't hold, or one stopped or with no tab yet, is `no_run`.
+   */
+  async goTo(runId) {
+    const run = this.runs.get(runId);
+    if (!run || run.stopped || run.tab == null) return { error: "no_run" };
+    await this.chrome.tabs.update(run.tab, { active: true });
+    if (run.windowId != null && this.chrome.windows && this.chrome.windows.update) {
+      await Promise.resolve(this.chrome.windows.update(run.windowId, { focused: true })).catch(() => {});
+    }
+    return {};
+  }
+
   pause(runId) {
     const run = this.runs.get(runId);
     if (run && !run.stopped) {

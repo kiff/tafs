@@ -1,0 +1,1 @@
+- **Chrome: the side panel follows the tab.** With several tafs at work, each in its own tab, the panel shows the chat of the taf whose tab is in front, and lists the tafs working in this Chrome at the top; a click goes to that taf's tab. ([chrome-panel.md](docs/chrome-panel.md))

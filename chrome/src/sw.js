@@ -261,6 +261,7 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     pause: async () => runner.pause(m.run),
     resume: async () => runner.resume(m.run),
     stop: async () => runner.stop(m.run),
+    go_to_run: async () => runner.goTo(String(m.run)),
     coach_thread: async () => {
       claimKiff().catch(() => {});
       return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };

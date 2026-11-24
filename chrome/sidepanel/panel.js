@@ -1,7 +1,7 @@
 // The side panel: pairing by the phone's code, and while a taf works, what it's doing, with Pause, Resume and Stop. It
 // shows only what the service worker reports; it decides nothing.
 
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork } from "../src/coachchat.js";
 
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
@@ -64,7 +64,12 @@ function draw(state) {
   $("paired").hidden = !state.paired;
   if (!state.paired) return;
   $("pairedName").textContent = t("paired_title", state.name || "");
-  const runs = (state.runs || []).filter((r) => !r.stopped);
+  const live = (state.runs || []).filter((r) => !r.stopped);
+  // D2: the run of the tab in front first, so the card under the chat is the taf's whose tab this is.
+  const here = runOfTab(activeTab, live);
+  const runs = here ? [here, ...live.filter((r) => r !== here)] : live;
+  drawAtWork();
+  follow();
   $("idle").hidden = runs.length > 0;
   const box = $("runs");
   box.textContent = "";
@@ -117,6 +122,61 @@ function draw(state) {
 chrome.runtime.onMessage.addListener((m) => {
   if (m && m.type === "state") draw(m.state);
 });
+
+// D2, several tafs, several tabs (docs/chrome-panel.md): the panel follows the tab in front of its own window. On a tab a
+// taf is working in, it shows that taf's chat and its run first; on any other tab, the person's own pick stays.
+let activeTab = null;
+let panelWindow = null;
+
+function followTab(tabId) {
+  activeTab = typeof tabId === "number" ? tabId : null;
+  // Only once the service worker's state is in: an empty one would draw the pairing screen for a moment.
+  if (lastState && "paired" in lastState) draw(lastState);
+}
+
+chrome.windows.getCurrent().then((w) => {
+  panelWindow = w.id;
+  return chrome.tabs.query({ active: true, windowId: w.id });
+}).then(([tab]) => tab && followTab(tab.id)).catch(() => {});
+
+chrome.tabs.onActivated.addListener(({ tabId, windowId }) => {
+  if (panelWindow === null || windowId === panelWindow) followTab(tabId);
+});
+
+/** The taf whose tab is in front, picked for the chat: only when it changes, so the person's own pick holds elsewhere. */
+let followed = null;
+function follow() {
+  const taf = tafOfTab(activeTab, (lastState && lastState.runs) || [], tafs);
+  const id = taf ? taf.id : null;
+  if (id === followed) return;
+  followed = id;
+  if (!id || id === tafId) return;
+  tafId = id;
+  $("tafPick").value = id;
+  $("tafName").textContent = tafName();
+  $("tafWords").placeholder = t("taf_placeholder", tafName());
+  $("tafThread").textContent = "";
+  tafIdle = 0;
+  readTaf();
+}
+
+/** The panel's head: each taf at work in this Chrome, once; a click brings its tab to the front. */
+function drawAtWork() {
+  const working = tafsAtWork((lastState && lastState.runs) || [], tafs);
+  const list = $("atWorkList");
+  list.textContent = "";
+  $("atWork").hidden = working.length === 0;
+  const hereTaf = tafOfTab(activeTab, (lastState && lastState.runs) || [], tafs);
+  for (const w of working) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip quiet" + (w.waiting ? " waiting" : "") + (hereTaf && hereTaf.id === w.id ? " here" : "");
+    b.textContent = w.name;
+    b.setAttribute("aria-label", t("go_to_taf", w.name));
+    b.onclick = () => send({ type: "go_to_run", run: w.run });
+    list.append(b);
+  }
+}
 
 $("pairForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -321,6 +381,9 @@ async function loadTafs() {
   $("tafNote").textContent = r.error ? t(r.error === "no_session" ? "unpaired" : "tafs_not_read") : "";
   if (!tafId) $("tafThread").textContent = "";
   tafIdle = 0;
+  drawAtWork();
+  followed = null;
+  follow();
   readTaf();
 }
 
