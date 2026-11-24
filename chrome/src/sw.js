@@ -59,6 +59,8 @@ const kept = { keys: null, pairing: null };
 
 async function load() {
   // The extension keeps no sign-in (docs/chrome.md, "What's kept"): what an earlier version saved is deleted on every start.
+  // A delete that fails (the database busy) is tried again on the next load(), which every entry into the worker goes
+  // through; nothing reads those keys meanwhile.
   await forgetSavedSignIns(indexedStore).catch(() => {});
   kept.keys = (await indexedStore.get("keys")) || null;
   kept.pairing = (await indexedStore.get("pairing")) || null;
