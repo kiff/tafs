@@ -77,7 +77,7 @@
         <ol id="coachThread" class="thread"></ol>
         <p id="coachPhone" class="note" data-m="approve_on_phone" hidden></p>
         <p id="coachNote" class="note"></p>
-        <p id="coachReads" class="note" hidden><span id="coachReadsWords"></span> <button type="button" id="coachReadsSwitch" class="quiet small" hidden></button></p>
+        <p id="coachReads" class="note" hidden><span id="coachReadsWords"></span> <button type="button" id="coachReadsSwitch" class="quiet small" hidden></button> <button type="button" id="coachReadsStop" class="quiet small" data-m="page_consent_withdraw"></button></p>
         <form id="coachForm">
           <textarea id="coachWords" rows="3" maxlength="2000" data-m-placeholder="coach_placeholder"></textarea>
           <div class="buttons">
@@ -125,7 +125,7 @@
 
     <section id="pageConsent" class="sheet" role="dialog" aria-modal="true" aria-labelledby="pageConsentTitle" hidden>
       <div class="sheetbody">
-        <h2 id="pageConsentTitle" data-m="page_consent_title"></h2>
+        <h2 id="pageConsentTitle" tabindex="-1" data-m="page_consent_title"></h2>
         <ul>
           <li data-m="page_consent_what"></li>
           <li data-m="page_consent_when"></li>

@@ -696,7 +696,9 @@ function openConsent() {
   consentFrom = document.activeElement;
   closeMenu();
   $("pageConsent").hidden = false;
-  $("pageConsentAllow").focus();
+  // The screen's heading takes the focus, never Allow: it may open by itself while the person types in Coach's box, and an
+  // Enter or a space there must not give consent. Allowing is a deliberate press.
+  $("pageConsentTitle").focus();
 }
 
 function closeConsent(giveFocus = true) {
@@ -725,11 +727,14 @@ $("pageConsentAllow").onclick = async () => {
   drawReads();
   if (current === "settings") drawSettings();
 };
-$("pageConsentStop").onclick = async () => {
+/** Withdrawing, as easy as allowing: one tap from the chat (beside what a send reads), and in Settings. */
+async function withdrawPage() {
   await send({ type: "page_withdraw" }).catch(() => null);
   drawReads();
-  drawSettings();
-};
+  if (current === "settings") drawSettings();
+}
+$("pageConsentStop").onclick = withdrawPage;
+$("coachReadsStop").onclick = withdrawPage;
 
 $("coachReadsSwitch").onclick = async () => {
   if (!readsHost) return;
