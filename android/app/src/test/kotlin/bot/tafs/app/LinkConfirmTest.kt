@@ -17,6 +17,7 @@ import bot.tafs.app.model.Words
 import bot.tafs.app.views.LinkConfirm
 import bot.tafs.app.views.LocalAskLink
 import bot.tafs.app.views.PageTurnText
+import bot.tafs.app.views.linkConfirmBody
 import bot.tafs.app.views.linkOpens
 import org.junit.Assert.assertFalse
 import org.robolectric.RuntimeEnvironment
@@ -104,10 +105,10 @@ class LinkConfirmTest {
   @Test fun inArabicTheAddressIsSetApartLeftToRight() {
     RuntimeEnvironment.setQualifiers("ar")
     Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
-    val body = Words.Chat.linkConfirmBody("https://shop.example/a/b?q=1&n=20")
+    val body = linkConfirmBody("https://shop.example/a/b?q=1&n=20")
     assertTrue(body, body.contains("\u2066https://shop.example/a/b?q=1&n=20\u2069"))
     assertTrue("in the Arabic words", body.any { it in '\u0600'..'\u06FF' })
     // A direction character in the address can't close the isolate early.
-    assertFalse(Words.Chat.linkConfirmBody("https://a.example/\u2069\u202Ex").contains("\u202E"))
+    assertFalse(linkConfirmBody("https://a.example/\u2069\u202Ex").contains("\u202E"))
   }
 }

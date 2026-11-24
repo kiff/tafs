@@ -951,7 +951,7 @@ internal fun LinkConfirm(content: @Composable () -> Unit) {
     bot.tafs.app.drive.DriveAlert(
       onDismissRequest = { confirming = null },
       title = { Text(Words.Chat.linkConfirmTitle) },
-      text = { Text(Words.Chat.linkConfirmBody(url), modifier = Modifier.testTag("link-confirm-body")) },
+      text = { Text(linkConfirmBody(url), modifier = Modifier.testTag("link-confirm-body")) },
       // Open only for an address that opens a web page over https; anything else (another app's scheme, tel:, http:) gets the
       // address and Cancel alone, so a page can't steer Coach into starting another app's action.
       confirmButton = {
@@ -968,6 +968,17 @@ internal fun LinkConfirm(content: @Composable () -> Unit) {
       containerColor = Theme.panel,
     )
   }
+}
+
+/**
+ * The question's body with the whole address set apart left to right (U+2066 … U+2069) in every language, its own direction
+ * characters taken out, so a right-to-left sentence around it can't reorder its `/ ? . 0-9` parts: what's shown is what opens.
+ * It's put in after formatting, since `Res.s` sets a value apart by its first letter (U+2068) and takes out any direction
+ * character.
+ */
+internal fun linkConfirmBody(url: String): String {
+  val shown = "\u2066${bot.tafs.app.model.Res.withoutDirection(url)}\u2069"
+  return Words.Chat.linkConfirmBody("\uE000").replace("\u2068\uE000\u2069", shown).replace("\uE000", shown)
 }
 
 /**
