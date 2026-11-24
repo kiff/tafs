@@ -1,0 +1,1 @@
+- **Android 142 (1.48.5) for Play's internal track:** adding someone to a group, or changing their role, asks for your fingerprint, as sharing a taf does (#1989).
