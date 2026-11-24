@@ -432,10 +432,17 @@ was done.
   and held for the run), the network fence of each run tab (rules set before the tab loads anything, blocking every other host), `refuseURL` on every
   open, read, commit and navigation, the sensitive-site rule (a bank, wallet, payment, health or government site never opens without the
   phone's own allowance for that grant), and `window.open` off in a run's tabs. A run on a site its connection lists just runs.
-- **The toolbar badge shows "ON" while a run is on.** The side panel shows the taf, the site, the last steps, and Pause,
+- **The toolbar says a taf is at work** (`coachchat.js` `actionBadge`, `actionTitle`): a mark (●) on the badge while a run is on, "!" while one waits on the person, nothing otherwise, the same in every language; its tooltip names who works, in the extension's words ("Rae is working"), and is the extension's name when none does. The side panel shows the taf, the site, the last steps, and Pause,
   Resume and Stop.
 
 ## While a taf works on a page
+
+- **Its group says so.** The run's tab group is titled "tafs · Rae is working" (`working`, in every language) and is orange for
+  as long as the run lives; its end turns it grey, "· done" (`Runner.workingTitle`).
+- **Where it acts, a moment first.** Before an act on a ref (a click, a fill, a select, a tick, a key, a scroll to it), the
+  element is outlined in amber for half a second (`OUTLINE_MS`, Show me's outline), after the act's picture so the outline
+  isn't in it; the act takes it away. Back and a scroll of the page name no ref and outline nothing. The outline lets every
+  pointer through, so it never stands in the act's way.
 
 - **The page says so.** While a run works in a tab, a thin bar across the top of the page (`TafsPage.showBar`) says which
   taf is working ("Rae is working on this page", `bar_working`), with **Stop**. It is shown on every read of the run's tab,

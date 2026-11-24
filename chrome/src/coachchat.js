@@ -131,3 +131,20 @@ export function idleDelay(idleReads, jitter = Math.random()) {
   const step = Math.min(IDLE_MOST_MS, IDLE_FIRST_MS * 2 ** Math.max(0, idleReads));
   return Math.round(step * (1 - 0.2 * Math.min(1, Math.max(0, jitter))));
 }
+
+/**
+ * The toolbar's badge, a signal that a taf is at work in this Chrome: "!" when a run waits on the person (a hand-over), "●"
+ * while one works, nothing when none does. A mark, not a word, so it reads the same in every language.
+ */
+export function actionBadge(live) {
+  const runs = (live || []).filter((r) => r && !r.stopped);
+  if (runs.some((r) => r.hand)) return "!";
+  return runs.length ? "\u25CF" : "";
+}
+
+/** The toolbar's tooltip: who is at work ("Rae is working", one name per taf, once each), or the extension's name when none is. */
+export function actionTitle(live, say) {
+  const names = [...new Set((live || []).filter((r) => r && !r.stopped).map((r) => r.taf || "taf"))];
+  if (!names.length) return say("name") || "tafs";
+  return names.map((n) => say("working", [n]) || n).join(" · ");
+}
