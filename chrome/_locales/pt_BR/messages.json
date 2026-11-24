@@ -105,7 +105,7 @@
   "page_consent_off": { "message": "O Coach não lê a página em que você está." },
   "page_consent_turn_on": { "message": "Deixar o Coach ler a página…" },
   "page_consent_title": { "message": "Deixar o Coach ler a página da frente quando você enviar?" },
-  "page_consent_what": { "message": "Quando você envia aqui uma mensagem para o Coach, o texto da aba da frente desta janela vai junto: o endereço dela (sem nada depois de ? ou #), o título e as palavras. Senhas, números de cartão e códigos da página ficam de fora." },
+  "page_consent_what": { "message": "Quando você envia aqui uma mensagem para o Coach, o texto da aba da frente desta janela vai junto: o endereço dela (sem nada depois de ? ou #), o título e as palavras. Os valores dos campos e as senhas não são lidos; os números de cartão são cortados para os quatro últimos dígitos; as chaves e os segredos identificados são mascarados." },
   "page_consent_when": { "message": "Só quando você envia, só essa aba, e nunca um site de banco, pagamentos, e-mail ou saúde, nem um que você desativou." },
   "page_consent_never": { "message": "Ele vai para o tafs, que o envia ao Claude da Anthropic para responder a você, como a sua mensagem. O tafs guarda só o nome do site, nunca a página; a resposta do Coach pode citá-la." },
   "page_consent_change": { "message": "Você pode enviar uma mensagem sem a página a qualquer momento, e parar com isso aqui quando quiser." },

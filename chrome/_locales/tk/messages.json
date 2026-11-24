@@ -274,7 +274,7 @@
   "page_consent_off": { "message": "Coach siziň açan sahypaňyzy okamaýar." },
   "page_consent_turn_on": { "message": "Coach-a sahypany okamaga rugsat beriň…" },
   "page_consent_title": { "message": "Ugradanyňyzda Coach öňdäki sahypany okasynmy?" },
-  "page_consent_what": { "message": "Bu ýerde Coach-a hat ugradanyňyzda, bu penjiräniň öňündäki goýmanyň teksti hem gidýär: onuň salgysy (? ýa-da # belgisinden soňkusyz), ady we sözleri. Sahypadaky parollar, kart belgileri we kodlar aýrylýar." },
+  "page_consent_what": { "message": "Bu ýerde Coach-a hat ugradanyňyzda, bu penjiräniň öňündäki goýmanyň teksti hem gidýär: onuň salgysy (? ýa-da # belgisinden soňkusyz), ady we sözleri. Meýdançalaryň bahalary we parollar okalmaýar; kart belgileri soňky dört sanyna çenli gysgaldylýar; açarlar we bellenen gizlin maglumatlar gizlenýär." },
   "page_consent_when": { "message": "Diňe ugradanyňyzda, diňe şol goýma, we hiç haçan bank, töleg, poçta ýa-da saglyk sahypasy ýa-da siziň öçüren sahypaňyz däl." },
   "page_consent_never": { "message": "Ol tafs-a gidýär, tafs hem size jogap bermek üçin ony Anthropic-iň Claude-yna ugradýar, hatyňyz ýaly. tafs diňe saýtyň adyny saklaýar, sahypany hiç haçan; Coach-yň jogaby ondan sitata getirip biler." },
   "page_consent_change": { "message": "Islendik wagt sahypasyz hat ugradyp we muny bu ýerde islän wagtyňyz togtadyp bilersiňiz." },

@@ -105,7 +105,7 @@
   "page_consent_off": { "message": "Coach ne čita stranicu na kojoj ste." },
   "page_consent_turn_on": { "message": "Dozvolite da Coach čita stranicu…" },
   "page_consent_title": { "message": "Da li da Coach pri slanju čita stranicu napred?" },
-  "page_consent_what": { "message": "Kada ovde pošaljete poruku Coachu, sa njom ide tekst kartice napred u ovom prozoru: njena adresa (bez ičega posle ? ili #), naslov i reči. Lozinke, brojevi kartica i kodovi na stranici se izostavljaju." },
+  "page_consent_what": { "message": "Kada ovde pošaljete poruku Coachu, sa njom ide tekst kartice napred u ovom prozoru: njena adresa (bez ičega posle ? ili #), naslov i reči. Vrednosti polja i lozinke se ne čitaju; brojevi kartica se skraćuju na poslednje četiri cifre; ključevi i označene tajne se maskiraju." },
   "page_consent_when": { "message": "Samo kada šaljete, samo ta kartica i nikada sajt banke, plaćanja, pošte ili zdravlja, ni onaj koji ste isključili." },
   "page_consent_never": { "message": "Ide u tafs, koji ga šalje Claudeu kompanije Anthropic da vam odgovori, kao i vašu poruku. tafs čuva samo ime sajta, nikada stranicu; Coachov odgovor može da je citira." },
   "page_consent_change": { "message": "Poruku bez stranice možete poslati bilo kada i ovde to zaustaviti kad god želite." },
