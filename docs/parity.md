@@ -20,7 +20,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | built 25, partial 3, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | built 20, partial 5, not started 2, not for it 5 | the [Watches](#watches) table |
+| Apple Watch | built 21, partial 4, not started 2, not for it 5 | the [Watches](#watches) table |
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
