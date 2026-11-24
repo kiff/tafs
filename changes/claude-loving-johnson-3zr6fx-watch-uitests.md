@@ -1,0 +1,1 @@
+- **Apple Watch: UI tests for what a simulator can show.** The watch app launched with `-watch-demo` asks a phone of fixed answers, so `TafsWatchUITests` walks Coach's home, the Inbox, Refuse, Your tafs, Halt, Account and Sign out, and the phone out of reach, with no Simulator app and no signed-in iPhone ([watch-app.md](docs/watch-app.md)).

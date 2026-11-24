@@ -628,11 +628,29 @@ The iPhone's notifications show on the watch by themselves. On a held call's not
   from the wrist.
 - **Approve once** only opens tafs on the phone. Nothing can be approved from the wrist.
 
+## The demo phone
+
+The watch app launched with `-watch-demo` asks a phone of fixed answers (`WatchDemo`, `DemoPhone`) instead of the paired
+iPhone, with a passcode set (`DemoLock`), and keeps its Inbox and Sign out on this watch in a folder emptied at each
+launch. Everything else is the app as shipped. It's compiled into Debug builds only (`#if DEBUG`, checked by the `watch` job),
+so a release build has no demo phone and no way to take the passcode away. The demo phone answers with three tafs (Refunds; Late parcels, paused; Lead follow-up, halted), two held calls,
+today's calendar, the account and Coach, and Refuse and Halt change what it answers next, as the phone's relay does.
+`-watch-demo-no-passcode` takes the passcode away, `-watch-demo-unreachable` puts the phone out of reach,
+`-watch-demo-cloud-down` has the phone fail to reach tafs cloud, and `-watch-demo-taf-page` opens a taf on its page,
+as with taf chat off, since a UI test can't reliably turn the vertical page from a taf's chat down to its page.
+
+`TafsWatchUITests` walks the rows a simulator can show with it, in the TafsWatch scheme, so CI's `watch` job runs them:
+Coach's home and its unread line, the Menu, the Inbox's held calls with Approve left to the phone, Refuse, Your tafs, a
+taf's page and Halt this taf, Halt without a passcode, Account and Sign out on this watch, the phone out of reach, and the
+phone not reaching tafs cloud. They need no Simulator app and no signed-in iPhone. What only a real watch shows (dictation,
+Hear on the speaker, the system's passcode prompt, the relay to a real phone) stays a check on a real watch.
+
 ## Where it lives
 
 - `ios/TafsWatch/`: the watchOS app, with a single target (watchOS 10 and later).
 - `ios/TafsWatchTests/`: its unit tests, on a watch simulator.
-- `ios/project.yml`: the `TafsWatch` and `TafsWatchTests` targets, and the `TafsWatch` scheme.
+- `ios/TafsWatchUITests/`: its UI tests, on the demo phone ([The demo phone](#the-demo-phone)).
+- `ios/project.yml`: the `TafsWatch`, `TafsWatchTests` and `TafsWatchUITests` targets, and the `TafsWatch` scheme.
   The phone's `Tafs` scheme doesn't build the watch app.
 - The words are the phone's (`app/strings`, 8 languages). The watch compiles the generated
   `Words.swift` and its catalog, and its own lines are the `watch.*` keys.

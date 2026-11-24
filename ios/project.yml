@@ -291,6 +291,21 @@ targets:
         TEST_HOST: $(BUILT_PRODUCTS_DIR)/TafsWatch.app/TafsWatch
         BUNDLE_LOADER: $(TEST_HOST)
         SUPPORTS_MACCATALYST: NO
+  # The watch's checks a simulator can show, as UI tests (docs/watch-app.md, "The demo phone"): the watch app as shipped,
+  # on the demo phone (`-watch-demo`, `WatchDemo`), pressed and read with no Simulator app and no signed-in iPhone.
+  TafsWatchUITests:
+    type: bundle.ui-testing
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - TafsWatchUITests
+    dependencies:
+      - target: TafsWatch
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: TafsWatch
+        SUPPORTS_MACCATALYST: NO
 schemes:
   Tafs:
     build:
@@ -323,5 +338,6 @@ schemes:
         TafsWatch: all
         TafsWatchWidgets: all
         TafsWatchTests: [test]
+        TafsWatchUITests: [test]
     test:
-      targets: [TafsWatchTests]
+      targets: [TafsWatchTests, TafsWatchUITests]
