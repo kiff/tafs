@@ -789,6 +789,12 @@ export class Runner {
     if (step.act.ref) {
       const shown = await this.inTab(run.tab, (r, id) => globalThis.TafsPage.outline(r, id), [step.act.ref, step.read_id]).catch(() => null);
       if (shown && shown.ok) await this.sleep(OUTLINE_MS);
+      // The outline is what makes a person react ("it's about to click that"): a Pause, their own click or key in the page
+      // (which pauses the run), or a Stop in those moments holds the act. Nothing reaches the page.
+      if (run.stopped || run.paused) {
+        if (run.tab != null) await this.inTab(run.tab, () => globalThis.TafsPage.unoutline()).catch(() => {});
+        return { error: { code: run.stopped ? "stopped" : PAUSE_CODES[run.paused] || "paused_by_owner" } };
+      }
     }
     const before = await this.chrome.tabs.get(run.tab).catch(() => null);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);

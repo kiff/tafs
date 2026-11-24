@@ -1033,3 +1033,30 @@ test("an act on a ref is outlined first, after its picture, for a moment; back a
   await r.handle(step({ op: "act", read_id: last, act: { kind: "scroll" } }));
   assert.ok(!order.some((x) => x[0] === "outline"), "a scroll of the page names no ref");
 });
+
+test("a Pause, the person's own input or a Stop while the outline shows holds the act: the page is never touched", async () => {
+  for (const [what, code] of [["pause", "paused_by_owner"], ["input", "paused_by_owner"], ["stop", "stopped"]]) {
+    const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [] } });
+    const order = [];
+    const exec = c.scripting.executeScript;
+    c.scripting.executeScript = async (o) => {
+      const src = String(o.func || "");
+      if (src.includes("TafsPage.outline")) return [{ result: { ok: true } }];
+      if (src.includes("TafsPage.unoutline")) order.push("unoutline");
+      if (src.includes("TafsPage.act")) order.push("act");
+      return exec(o);
+    };
+    let r;
+    const during = async () => {
+      if (what === "pause") r.pause("run_1");
+      if (what === "input") r.ownerInput([...c.tabsMap.keys()][0]);
+      if (what === "stop") await r.stop("run_1");
+    };
+    r = new Runner({ chrome: c, paired: () => paired, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : ms === OUTLINE_MS ? during() : Promise.resolve()) });
+    await r.handle(step());
+    const out = await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }));
+    assert.equal(out.error && out.error.code, code, what);
+    assert.ok(!order.includes("act"), what + ": the page's act is never called");
+    if (what !== "stop") assert.ok(order.includes("unoutline"), what + ": the outline is taken away");
+  }
+});
