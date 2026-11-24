@@ -1,0 +1,1 @@
+- **Chrome: a paused run nothing will resume ends after 15 minutes.** The floating bar and the tab group no longer say a taf is paused, or working, for a run whose turn is over ([chrome.md](docs/chrome.md)).

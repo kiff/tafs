@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Runner, RUN_IDLE_MS, OUTLINE_MS } from "../src/runner.js";
+import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS } from "../src/runner.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 
 // The paired phone: it signs each grant's sites (tafs-chrome/sites/v1) and sensitive allowances.
@@ -534,7 +534,7 @@ test("on a checkout page a taf clicks nothing, and a dialog the page raised stop
   assert.equal(r2.runs.get("run_1").failures, 1);
 });
 
-test("a run nobody sends a step to for 150 s ends, as Stop does (its tabs stay); a paused one, or one with a step running, is not", async () => {
+test("a run nobody sends a step to for 150 s ends, as Stop does (its tabs stay); a paused one waits longer, and one with a step running isn't swept", async () => {
   assert.equal(RUN_IDLE_MS, 150_000, "a little over planque's 2 minutes between a turn's calls");
   let clock = 1_000_000;
   const c = fakeChrome();
@@ -554,14 +554,57 @@ test("a run nobody sends a step to for 150 s ends, as Stop does (its tabs stay);
   assert.equal(c.calls.filter((x) => x[0] === "tabGroups.update").pop()[2].title, "tafs · Rae · done");
   assert.equal(r.state()[0].steps.at(-1).by, "idle");
   assert.equal(r.active, false);
-  // The owner's pause is waiting for the owner, not a dropped call.
+  // The owner's pause waits for the owner, past the 150 s, while a taf holds its step for the Resume.
   const d = fakeChrome();
   const r2 = new Runner({ chrome: d, sleep, paired: () => paired, now: () => clock });
   await r2.handle(step());
   r2.pause("run_1");
-  clock += 60 * 60_000;
+  clock += 5 * 60_000;
   await r2.sweep();
-  assert.equal(r2.runs.get("run_1").stopped, false);
+  assert.equal(r2.runs.get("run_1").stopped, false, "five minutes paused: still waiting for Resume");
+  assert.ok(PAUSED_IDLE_MS > 10 * 60_000, "longer than a taf holds a step for the Resume");
+});
+
+test("a paused run a taf still holds is kept; one nothing will resume ends after 15 minutes, and the bar goes", async () => {
+  assert.equal(PAUSED_IDLE_MS, 15 * 60_000);
+  let clock = 1_000_000;
+  const c = fakeChrome();
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock });
+  await r.handle(step());
+  r.pause("run_1");
+  // The taf holds its step, sending it again every 10 s: each is answered paused, and each keeps the run.
+  for (let i = 0; i < 6 * 20; i++) {
+    clock += 10_000;
+    assert.equal((await r.handle(step({ id: "h" + i, op: "read" }))).error.code, "paused_by_owner");
+    await r.sweep();
+  }
+  assert.equal(r.runs.get("run_1").stopped, false, "twenty minutes held: never ended under the taf");
+  // Resume: the run goes on, and the 150 s count starts at the Resume.
+  r.resume("run_1");
+  clock += 2 * 60_000;
+  await r.sweep();
+  assert.equal(r.runs.get("run_1").stopped, false);
+  assert.ok((await r.handle(step({ id: "after", op: "read" }))).page, "it goes on after Resume");
+  // A pause no step follows (the taf's turn ended on it): kept for 15 minutes from the pause, then ended as Stop is.
+  r.pause("run_1");
+  clock += PAUSED_IDLE_MS - 1_000;
+  await r.sweep();
+  assert.equal(r.runs.get("run_1").stopped, false, "just under 15 minutes from the pause");
+  clock += 2_000;
+  await r.sweep();
+  assert.equal(r.runs.get("run_1").stopped, true, "past 15 minutes: nothing will resume it");
+  assert.equal(r.state()[0].steps.at(-1).by, "idle");
+  assert.equal(r.active, false, "so the bar, the badge and the group stop saying it works");
+  assert.ok(!c.calls.some((x) => x[0] === "windows.remove" || x[0] === "tabs.remove"), "its tabs stay for the person");
+  // A run paused by its own failures, which no step follows either, ends the same way.
+  const d = fakeChrome();
+  const r2 = new Runner({ chrome: d, sleep, paired: () => paired, now: () => clock });
+  await r2.handle(step());
+  await new Promise((done) => setTimeout(done, 0)); // the step's tail is let go once it's answered
+  r2.runs.get("run_1").paused = "failures";
+  clock += PAUSED_IDLE_MS + 1_000;
+  await r2.sweep();
+  assert.equal(r2.runs.get("run_1").stopped, true);
 });
 
 test("a fenced tab's rule ids are small whatever the tab id is, a rule's id never repeats across tabs, and a run's rules go when it ends", async () => {
