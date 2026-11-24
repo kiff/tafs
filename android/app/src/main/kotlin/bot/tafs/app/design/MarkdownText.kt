@@ -154,12 +154,16 @@ fun isNumericColumn(column: Int, rows: List<List<String>>): Boolean {
  * Bold, italic, links and inline code; the text as written when it isn't Markdown. A mark that is
  * never closed shows as written.
  */
-fun inlineMarkdown(text: String, linkColor: Color = Theme.blue, codeBackground: Color = Theme.raised): AnnotatedString =
-  buildAnnotatedString { appendInline(text, linkColor, codeBackground) }
+/**
+ * [onLink], when given, is called with a link's address instead of opening it: the caller decides (a link from a page Coach read
+ * asks first). With none, a link opens as before.
+ */
+fun inlineMarkdown(text: String, linkColor: Color = Theme.blue, codeBackground: Color = Theme.raised, onLink: ((String) -> Unit)? = null): AnnotatedString =
+  buildAnnotatedString { appendInline(text, linkColor, codeBackground, onLink) }
 
 private val linkRe = Regex("""^\[([^\]]*)]\(([^)]*)\)""")
 
-private fun AnnotatedString.Builder.appendInline(text: String, linkColor: Color, codeBackground: Color) {
+private fun AnnotatedString.Builder.appendInline(text: String, linkColor: Color, codeBackground: Color, onLink: ((String) -> Unit)? = null) {
   var i = 0
   while (i < text.length) {
     val c = text[i]
@@ -168,7 +172,7 @@ private fun AnnotatedString.Builder.appendInline(text: String, linkColor: Color,
       text.startsWith("**", i) -> {
         val end = text.indexOf("**", i + 2)
         if (end > i + 2) {
-          withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { appendInline(text.substring(i + 2, end), linkColor, codeBackground) }
+          withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { appendInline(text.substring(i + 2, end), linkColor, codeBackground, onLink) }
           i = end + 2
         } else { append("**"); i += 2 }
       }
@@ -182,7 +186,7 @@ private fun AnnotatedString.Builder.appendInline(text: String, linkColor: Color,
       (c == '*' || c == '_') && opensItalic(text, i) -> {
         val end = closesItalic(text, i)
         if (end > i + 1) {
-          withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { appendInline(text.substring(i + 1, end), linkColor, codeBackground) }
+          withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { appendInline(text.substring(i + 1, end), linkColor, codeBackground, onLink) }
           i = end + 1
         } else { append(c); i += 1 }
       }
@@ -190,7 +194,8 @@ private fun AnnotatedString.Builder.appendInline(text: String, linkColor: Color,
         val m = linkRe.find(text.substring(i))
         if (m != null) {
           val url = m.groupValues[2]
-          withLink(LinkAnnotation.Url(url, TextLinkStyles(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline)))) {
+          val styles = TextLinkStyles(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline))
+          withLink(LinkAnnotation.Url(url, styles, onLink?.let { open -> androidx.compose.ui.text.LinkInteractionListener { open(url) } })) {
             append(m.groupValues[1])
           }
           i += m.value.length
@@ -224,29 +229,29 @@ private fun closesItalic(text: String, from: Int): Int {
 
 /** A message's Markdown, drawn as text: no Markdown symbol shows as written. */
 @Composable
-fun MarkdownText(text: String, size: Int = 15, color: Color = Theme.ink, modifier: Modifier = Modifier) {
+fun MarkdownText(text: String, size: Int = 15, color: Color = Theme.ink, modifier: Modifier = Modifier, onLink: ((String) -> Unit)? = null) {
   val blocks = parseMarkdown(text)
   // Lines about 1.4 times the text's size apart: the font's own 1.2, and a fifth more.
   val style = scaled(size, color = color).copy(lineHeight = (size * 1.4f).sp)
   Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
     blocks.forEach { block ->
       when (block) {
-        is MarkdownBlock.Paragraph -> Text(inlineMarkdown(block.text), style = style)
-        is MarkdownBlock.Heading -> Text(inlineMarkdown(block.text), style = style.copy(fontSize = (size + 1).sp, fontWeight = FontWeight.SemiBold))
+        is MarkdownBlock.Paragraph -> Text(inlineMarkdown(block.text, onLink = onLink), style = style)
+        is MarkdownBlock.Heading -> Text(inlineMarkdown(block.text, onLink = onLink), style = style.copy(fontSize = (size + 1).sp, fontWeight = FontWeight.SemiBold))
         is MarkdownBlock.Bullet -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           Text("•", style = style)
-          Text(inlineMarkdown(block.text), style = style, modifier = Modifier.weight(1f, fill = false))
+          Text(inlineMarkdown(block.text, onLink = onLink), style = style, modifier = Modifier.weight(1f, fill = false))
         }
         is MarkdownBlock.Numbered -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           Text("${block.n}.", style = style.copy(fontFeatureSettings = "tnum"))
-          Text(inlineMarkdown(block.text), style = style, modifier = Modifier.weight(1f, fill = false))
+          Text(inlineMarkdown(block.text, onLink = onLink), style = style, modifier = Modifier.weight(1f, fill = false))
         }
         is MarkdownBlock.Code -> Text(
           block.text,
           style = scaled(size - 2, color = color, mono = true),
           modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Theme.raised).padding(8.dp),
         )
-        is MarkdownBlock.Table -> MarkdownTable(block.rows, size)
+        is MarkdownBlock.Table -> MarkdownTable(block.rows, size, onLink)
       }
     }
   }
@@ -257,7 +262,7 @@ fun MarkdownText(text: String, size: Int = 15, color: Color = Theme.ink, modifie
  * numbers aligned on the right. A table wider than the message scrolls sideways.
  */
 @Composable
-private fun MarkdownTable(rows: List<List<String>>, size: Int) {
+private fun MarkdownTable(rows: List<List<String>>, size: Int, onLink: ((String) -> Unit)? = null) {
   val columns = rows.maxOfOrNull { it.size } ?: 0
   Row(Modifier.horizontalScroll(rememberScrollState())) {
     for (c in 0 until columns) {
@@ -266,7 +271,7 @@ private fun MarkdownTable(rows: List<List<String>>, size: Int) {
         rows.forEachIndexed { r, row ->
           Box(Modifier.padding(vertical = 6.dp, horizontal = 8.dp)) {
             Text(
-              inlineMarkdown(row.getOrElse(c) { "" }),
+              inlineMarkdown(row.getOrElse(c) { "" }, onLink = onLink),
               style = scaled(size - 1, if (r == 0) FontWeight.SemiBold else FontWeight.Normal, Theme.ink),
               maxLines = 1,
               softWrap = false,

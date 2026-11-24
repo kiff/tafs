@@ -129,6 +129,12 @@ private val RowGap = 8.dp
  */
 @Composable
 fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: Modifier = Modifier) {
+  // One "Open this link?" for the whole chat, so it stays up when the answer it was asked from finishes and is drawn anew.
+  LinkConfirm { TafChatScreen(tafId, state, actions, modifier) }
+}
+
+@Composable
+private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, modifier: Modifier) {
   val taf = state.taf(tafId)
   LaunchedEffect(tafId) { actions.loadChat(tafId) }
   // What the owner wrote and hasn't sent, kept by the app, not the screen: leaving the chat and coming back keeps it, as iOS does.
@@ -704,7 +710,7 @@ private fun MessageBody(
       message.work?.let { WorkSummary(it) }
       // Full width, with no bubble, as the taf writes (#58). Copy under it; Report under More actions, once tafs cloud has an id for it.
       AnswerWithActions(message.text, onReport?.takeIf { message.serverId != null }) {
-        MarkdownText(message.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
+        PageTurnText(message.text, asks = message.pageTurn)
       }
       MessageTime(message)
     }
@@ -774,7 +780,9 @@ private fun LiveWork(live: LiveAnswer) {
         Text(line, style = scaled(13, color = if (waiting) Theme.amberText else Theme.dim))
       }
     }
-    if (writing) MarkdownText(live.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
+    // An answer still being written can't yet say whether its turn read a page (a resumed stream carries no flag): its links
+    // ask first, until the thread read says.
+    if (writing) PageTurnText(live.text, asks = true)
   }
 }
 
@@ -926,3 +934,69 @@ private fun AskCoachCard(text: String, ask: ((String) -> Unit)?) {
 
 /** Whether a message in the thread is the one the owner sent with [sent]: the same words, or them after its files' lines. */
 internal fun sentWords(stored: String, sent: String): Boolean = stored == sent || stored.endsWith("\n\n" + sent)
+
+/** Where a link that asks first goes: the chat's one [LinkConfirm]. */
+internal val LocalAskLink = androidx.compose.runtime.staticCompositionLocalOf<((String) -> Unit)?> { null }
+
+/**
+ * Holds the chat's "Open this link?" (docs/chat.md): the whole address, Open and Cancel. It's kept here, above the messages,
+ * so a live answer that finishes while it's up (drawn again as a message) doesn't take it away under the person's finger.
+ */
+@Composable
+internal fun LinkConfirm(content: @Composable () -> Unit) {
+  var confirming by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+  val uri = androidx.compose.ui.platform.LocalUriHandler.current
+  androidx.compose.runtime.CompositionLocalProvider(LocalAskLink provides { url: String -> confirming = url }) { content() }
+  confirming?.let { url ->
+    bot.tafs.app.drive.DriveAlert(
+      onDismissRequest = { confirming = null },
+      title = { Text(Words.Chat.linkConfirmTitle) },
+      text = { Text(linkConfirmBody(url), modifier = Modifier.testTag("link-confirm-body")) },
+      // Open only for an address that opens a web page over https; anything else (another app's scheme, tel:, http:) gets the
+      // address and Cancel alone, so a page can't steer Coach into starting another app's action.
+      confirmButton = {
+        if (linkOpens(url)) {
+          androidx.compose.material3.TextButton({
+            confirming = null
+            runCatching { uri.openUri(url) }
+          }, Modifier.confirms()) { Text(Words.Chat.linkConfirmOpen) }
+        } else {
+          androidx.compose.material3.TextButton({ confirming = null }) { Text(Words.Common.cancel, color = Theme.soft) }
+        }
+      },
+      dismissButton = if (linkOpens(url)) ({ androidx.compose.material3.TextButton({ confirming = null }) { Text(Words.Common.cancel, color = Theme.soft) } }) else null,
+      containerColor = Theme.panel,
+    )
+  }
+}
+
+/**
+ * The question's body with the whole address set apart left to right (U+2066 … U+2069) in every language, its own direction
+ * characters taken out, so a right-to-left sentence around it can't reorder its `/ ? . 0-9` parts: what's shown is what opens.
+ * It's put in after formatting, since `Res.s` sets a value apart by its first letter (U+2068) and takes out any direction
+ * character.
+ */
+internal fun linkConfirmBody(url: String): String {
+  val shown = "\u2066${bot.tafs.app.model.Res.withoutDirection(url)}\u2069"
+  return Words.Chat.linkConfirmBody("\uE000").replace("\u2068\uE000\u2069", shown).replace("\uE000", shown)
+}
+
+/**
+ * Whether "Open this link?" offers Open for [url]: an `https` address with a host, and nothing in it that could make what's
+ * shown differ from what opens (direction characters, other controls, spaces).
+ */
+internal fun linkOpens(url: String): Boolean {
+  if (url.any { it.isWhitespace() || it.isISOControl() } || bot.tafs.app.model.Res.withoutDirection(url) != url) return false
+  val u = runCatching { java.net.URI(url) }.getOrNull() ?: return false
+  return u.scheme.equals("https", ignoreCase = true) && !u.host.isNullOrEmpty()
+}
+
+/**
+ * A taf's words, as the chat draws them. When [asks] (an answer from a turn that read a page in the person's Chrome, or one still
+ * being written), a link doesn't open on the tap: it goes to the chat's [LinkConfirm]. Otherwise a link opens as before.
+ */
+@Composable
+internal fun PageTurnText(text: String, asks: Boolean) {
+  val ask = LocalAskLink.current
+  MarkdownText(text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), onLink = if (asks) (ask ?: {}) else null)
+}

@@ -1,0 +1,1 @@
+- **Android: a link in Coach's answer about a page asks first.** When Coach answered from a page in your Chrome, or is still answering, tapping a link shows its whole address and asks "Open this link?" before anything opens ([chat.md](docs/chat.md)).

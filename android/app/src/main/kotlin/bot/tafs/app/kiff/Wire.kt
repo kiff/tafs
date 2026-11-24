@@ -333,6 +333,8 @@ data class WireChatMessage(
   val counted: String? = null,
   /** A connection its work asked for that the connection server refused, not connected since: tafs cloud's lines (docs/chat.md). */
   val refused: WireRefused? = null,
+  /** Coach's answer from a turn that read a page in the person's Chrome: its links ask before they open (docs/chat.md). */
+  @kotlinx.serialization.SerialName("page_turn") val pageTurn: Boolean? = null,
 )
 
 /** A refused connection's lines, each tafs cloud's words: the step's, the server's reason ("Why: …"), and what to do next. */
