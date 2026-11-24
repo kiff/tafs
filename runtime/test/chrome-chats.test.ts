@@ -144,15 +144,39 @@ describe("a Chrome sees only the chats begun in it", () => {
     expect(JSON.stringify(mine.body)).not.toContain("My secret plan");
   });
 
-  // Invariant: the side panel uploads nothing, so a file a Chrome's message names is never sent, and nothing starts
-  it("refuses a message that names a file", async () => {
+  // Invariant: a Chrome attaches files as the apps do: declared by the person on that taf, sent once, never another's, and never read back from a Chrome
+  // Category: privacy
+  // Attack: a Chrome's message names a file it didn't declare (another chat's, the phone's, or one already sent), or reads a file back
+  // Refused: kiff/agents takes only the person's own unsent file declared on that taf; GET …/attachments/{id} is closed to a Chrome
+  it("declares a file, sends it with a message once, and never reads one back", async () => {
     const w = await world();
     vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const file = { media_type: "application/pdf", name: "brief.pdf", size: 2048, sha256: "a".repeat(64) };
+    const declared = await call(w, "chromeA", "POST", `/v1/tafs/${COACH}/attachments`, file);
+    expect(declared.status, JSON.stringify(declared.body)).toBe(200);
+    const id = (declared.body.attachment as { id: string }).id;
+    expect((declared.body.upload as { url: string; method: string }).method).toBe("PUT");
+
+    const session = await say(w, "chromeA", "Read this", { new_chat: true, attachments: [id] });
+    const mine = await threadOf(w, "chromeA", session);
+    expect(JSON.stringify(mine.body)).toContain("brief.pdf");
+    // Sent once: naming it again is refused, and nothing starts.
     const runs = w.agents.runs.length;
-    const r = await call(w, "chromeA", "POST", `/v1/tafs/${COACH}/messages`, { text: "look", new_chat: true, attachments: ["att_someone_elses"] });
-    expect(r.status).toBe(400);
+    const again = await call(w, "chromeA", "POST", `/v1/tafs/${COACH}/messages`, { text: "again", session, attachments: [id] });
+    expect(again.status).toBe(409);
     expect(w.agents.runs.length).toBe(runs);
-    expect(await listed(w, "chromeA")).toEqual([]);
+    // Another taf's file, or one that isn't there, is never sent.
+    const rae = await call(w, "chromeA", "POST", `/v1/tafs/${RAE}/attachments`, file);
+    const other = await call(w, "chromeA", "POST", `/v1/tafs/${COACH}/messages`, { text: "look", session, attachments: [(rae.body.attachment as { id: string }).id] });
+    expect(other.status).toBe(404);
+    const none = await call(w, "chromeA", "POST", `/v1/tafs/${COACH}/messages`, { text: "look", session, attachments: ["att_" + "0".repeat(31) + "9"] });
+    expect(none.status).toBe(404);
+    expect(w.agents.runs.length).toBe(runs);
+    // A Chrome never reads a file back, its own included.
+    expect((await call(w, "chromeA", "GET", `/v1/tafs/${COACH}/attachments/${id}`)).status).toBe(404);
+    // A taf's own chat takes files from a Chrome too.
+    const forRae = await call(w, "chromeA", "POST", `/v1/tafs/${RAE}/attachments`, file);
+    await say(w, "chromeA", "For you", { new_chat: true, attachments: [(forRae.body.attachment as { id: string }).id] }, RAE);
   });
 
   // Invariant: its live thread, and where a message with no chat goes, are its newest own chat, never the person's newest elsewhere

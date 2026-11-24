@@ -739,9 +739,9 @@ answered; it stays until the chat as tafs cloud reads it has that message, by th
 (`message.id`, `stillPending`), never by its words, and two minutes at most; on a failure it goes and the words come back to
 the box. The working line goes under the last message while the chat says it
 works. A chat the person is at the end of follows new messages; one scrolled up isn't moved. The pairing's lines ("Paired as
-…") show on the taf's own view only, so Coach, its conversations and Settings get the room. No attachment and no microphone:
-the side panel sends no files (tafs cloud refuses them from a Chrome), and Chrome's speech recognition would send the voice
-to Google, which the on-device promise rules out. **Settings** holds Coach's page reading (its state, the page consent's screen,
+…") show on the taf's own view only, so Coach, its conversations and Settings get the room. **Files** go with a message from
+0.2.10 (below, "Files on a message"). No microphone: Chrome's speech recognition would send the voice to Google, which the
+on-device promise rules out. **Settings** holds Coach's page reading (its state, the page consent's screen,
 Stop reading pages) and **Unpair this Chrome**; the chat screens hold only the chat.
 **Remove this taf** says it's removed on the phone: tafs cloud takes a removal only signed by the phone's approval key or a
 computer's passkey, which this Chrome has neither of.
@@ -776,8 +776,8 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   hold only those. A chat it didn't begin is 404 by its id (its thread, a message into it, archiving it). Its live thread,
   and where a message with no chat goes, are its own newest chat or a new one. A re-pair is a new KIFF device, so it starts
   empty. A view-only device session KIFF names neither a device nor a platform for is taken as a Chrome with no chats (fail closed); once KIFF names the device, only its platform says Chrome.
-- **A Chrome calls only the side panel's routes:** the Coach and tafs reads, a taf's thread, chats, messages and archiving,
-  and the page consent. Every other tafs cloud route answers it 404 (export included), so a route added later is closed to
+- **A Chrome calls only the side panel's routes:** the Coach and tafs reads, a taf's thread, chats, messages, declaring a
+  file for a message (`POST …/attachments`, never reading one back), archiving, and the page consent. Every other tafs cloud route answers it 404 (export included), so a route added later is closed to
   it until it's listed.
 
 - **Chrome treats those calls as the extension's own** (it holds every https site, tafs cloud's included), so they need no CORS
@@ -854,6 +854,33 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 - **No page goes with the owner's words.** There is no "Share this page": when Coach or a taf works on a page, its
   first step there is to read it itself, through planque, as any run's read (masked, fenced, on the connection's sites).
 - **Coach can set up a browser taf for the site in front of the owner;** the grant is approved on the phone, as always.
+
+## Files on a message
+
+From 0.2.10 a message from the side panel, to Coach or to a taf, can carry files, as in the apps
+([attachments.md](attachments.md)): the same types and limits, at most 5 a message, each image redrawn first.
+
+- **Picking:** the **+** on the left of the composer opens Chrome's own file picker (`<input type="file" multiple>`), and
+  that is the only way in: no page, tab, screen or folder is read for a file, no camera, no microphone, and no permission
+  is asked. The picker offers the types that may go (`ACCEPT`, `chrome/src/attach.js`).
+- **Ready:** a file's type comes from its name's extension first, then the type the computer gives it (Windows calls a
+  `.csv` Excel's). Photos (JPEG, PNG, GIF, WebP) up to 10 MB, PDF up to 25 MB, plain text, CSV, Markdown, Word (`.docx`) and
+  Excel (`.xlsx`) up to 2 MB. Every image is redrawn as a JPEG on white, its long edge at most 2,576 pixels, so only its
+  pixels go (no location or other metadata) and it goes as `<name>.jpg`; one the browser can't read isn't sent. A sixth file,
+  a kind that can't go, or one over its limit shows in the tray with why, and never goes up (`prepare`, `refusal`).
+- **Up:** the service worker declares it to tafs cloud as the session (`{type: "attach"}` → `POST /v1/tafs/{id}/attachments`
+  with `{media_type, name, size, sha256}`), on Coach or on that taf (only a taf of this Chrome). The panel then uploads its
+  bytes itself, straight to the https address the answer gives, with its method and headers and no cookies (`upload`): they
+  never pass through tafs cloud, and the extension keeps no copy.
+- **The tray:** each file is a chip above the box, with its name, "Uploading…" or why it didn't go, and **×** to remove it.
+  Coach's chat has one tray and each taf's chat its own, so a file declared on one taf never goes to another.
+- **Send:** waits while a file is still going up. A message may be words, files, or both; it carries the ready files' ids
+  (`attachments`, at most 5). Files with no words go without the page: a page goes only with words. Once sent, those
+  files leave the tray; one that didn't go up stays, with why. The message shows at once, as any (its files' names when it
+  has no words).
+- **At tafs cloud:** as from the apps. kiff/agents keeps each file for the person alone, takes only their own unsent file
+  declared on that taf, each once, and the model reads it with the message; it's kept with the chat for 30 days. A Chrome
+  never reads a file back (`GET …/attachments/{att}` is 404 to it), and its own chats still hold only what was sent in them.
 
 ## Screenshots of a run's acts
 

@@ -19,6 +19,7 @@ tafs dla Chrome pozwala Twoim tafom pracować w Twoim własnym Chrome, tylko na 
 • Strony banków, portfeli, menedżerów haseł, płatności, zdrowia i urzędów nigdy nie są używane, chyba że pozwolisz na jedną, na jedno zadanie, w telefonie.
 • Nigdy nie przechowuje Twoich haseł. Na stronie logowania taf zatrzymuje się i prosi Cię o samodzielne zalogowanie się we własnej karcie.
 • Panel boczny pokazuje taf pracujący w tym Chrome i tam z nim rozmawiasz, tak jak w aplikacji tafs. „Skonfiguruj nowy taf dla tej witryny” otwiera Coacha, we własnym widoku. Gdy wysyłasz Coachowi wiadomość, odczytuje stronę na wierzchu z tymi samymi usuniętymi polami, z wyjątkiem witryn banków, płatności, poczty lub zdrowia oraz witryn, które wyłączysz, i pokazuje pod Twoją wiadomością „Czyta:” i witrynę.
+• Pliki, które wybierzesz, trafiają do tafs cloud i do Claude, tak jak załączniki w aplikacjach tafs.
 
 To, co czyta taf, trafia do AI, która wykonuje Twoje zadanie, i jest przechowywane razem z tym zadaniem. KIFF przechowuje stronę przed zmianą i po niej najwyżej 30 dni. Po włączeniu zrzutów ekranu każdy krok, który działa, zachowuje też jeden zrzut strony, zrobiony tuż przed działaniem z ukrytymi polami hasła, karty i kodu, najwyżej 30 dni. Widzisz go tylko w aplikacji tafs i nigdy nie trafia do AI. Rozparowanie lub odinstalowanie usuwa to, co rozszerzenie trzyma na Twoim komputerze.
 

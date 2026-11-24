@@ -19,6 +19,7 @@ O tafs para Chrome deixa seus tafs trabalharem no seu próprio Chrome, só nos s
 • Sites de bancos, carteiras, gerenciadores de senhas, pagamentos, saúde e governo nunca são usados, a menos que você permita um, para uma tarefa, no celular.
 • Ela nunca guarda suas senhas. Numa página de login, o taf para e pede que você mesmo faça login, na sua própria aba.
 • O painel lateral mostra o taf que trabalha neste Chrome, e você conversa com ele ali, como no app tafs. “Configurar um novo taf para este site” abre o Coach, na própria visualização. Quando você envia uma mensagem ao Coach, ele lê a página da frente com os mesmos campos removidos, exceto em sites de banco, pagamento, e-mail ou saúde e nos sites que você desativar, e mostra “Lendo:” e o site abaixo da sua mensagem.
+• Os arquivos que você escolhe vão para o tafs cloud e para o Claude, como os anexos nos apps tafs.
 
 O que um taf lê vai para a IA que executa sua tarefa e fica guardado com essa tarefa. O KIFF guarda a página antes e depois de uma alteração por no máximo 30 dias. Quando as capturas de tela forem ativadas, cada passo que age também guarda uma captura da página, feita logo antes da ação com os campos de senha, cartão e código ocultos, por no máximo 30 dias. Você a vê só no app tafs, e ela nunca vai para a IA. Desparear ou desinstalar apaga o que a extensão guarda no seu computador.
 

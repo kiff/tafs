@@ -287,5 +287,12 @@
   "settings_reads_title": { "message": "Coach اور وہ صفحہ جس پر آپ ہیں", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "جب آپ Coach کو پیغام بھیجتے ہیں تو وہ سامنے والا صفحہ پڑھتا ہے۔", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "یہ Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "“$TITLE$” کے لیے مزید", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "“$TITLE$” کے لیے مزید", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "فائلیں منسلک کریں" },
+  "attach_remove": { "message": "$NAME$ ہٹائیں", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "اپ لوڈ ہو رہا ہے…" },
+  "attach_too_big": { "message": "بہت بڑی: اس قسم کی فائل کے لیے زیادہ سے زیادہ $SIZE$", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "اس قسم کی فائل منسلک نہیں ہو سکتی۔ صرف تصاویر، PDF، ٹیکسٹ، CSV، Markdown، Word یا Excel۔" },
+  "attach_too_many": { "message": "ایک پیغام میں زیادہ سے زیادہ 5 فائلیں۔" },
+  "attach_failed": { "message": "اپ لوڈ نہیں ہوئی۔ اسے ہٹائیں اور دوبارہ کوشش کریں۔" }
 }

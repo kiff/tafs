@@ -33,13 +33,16 @@ export function chromeOf(me: KIFFIdentity): { device: string } | undefined {
 
 /**
  * The routes a Chrome's side panel calls (chrome/src/coach.js), and no other: the account's Coach and tafs, a taf's
- * thread and chats, sending to it, archiving its own chats, and the page consent. Paths as they arrive, unescaped ids.
+ * thread and chats, sending to it, a file it attaches (declared here, its bytes uploaded straight to storage, as the apps
+ * do), archiving its own chats, and the page consent. Never a file read back: the panel doesn't reopen one. Paths as they
+ * arrive, unescaped ids.
  */
 export const CHROME_ROUTES: ReadonlyArray<{ method: string; path: RegExp }> = [
   { method: "GET", path: /^\/v1\/setup$/ },
   { method: "GET", path: /^\/v1\/tafs$/ },
   { method: "GET", path: /^\/v1\/tafs\/[^/]+\/conversation(\/[^/]+)?$/ },
   { method: "POST", path: /^\/v1\/tafs\/[^/]+\/messages$/ },
+  { method: "POST", path: /^\/v1\/tafs\/[^/]+\/attachments$/ },
   { method: "GET", path: /^\/v1\/tafs\/[^/]+\/chats(\/archived)?$/ },
   { method: "POST", path: /^\/v1\/tafs\/[^/]+\/chats\/[^/]+\/(archive|unarchive)$/ },
   { method: "GET", path: /^\/v1\/me\/page-consent$/ },

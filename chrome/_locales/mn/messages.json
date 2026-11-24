@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach болон таны байгаа хуудас", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach руу мессеж илгээхэд урд талын хуудсыг уншина.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Энэ Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "“$TITLE$”-д зориулсан бусад", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "“$TITLE$”-д зориулсан бусад", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Файл хавсаргах" },
+  "attach_remove": { "message": "Хасах: $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Байршуулж байна…" },
+  "attach_too_big": { "message": "Хэт том байна: энэ төрлийн файл хамгийн ихдээ $SIZE$", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Энэ төрлийн файлыг хавсаргах боломжгүй. Зөвхөн зураг, PDF, текст, CSV, Markdown, Word эсвэл Excel." },
+  "attach_too_many": { "message": "Нэг мессежид хамгийн ихдээ 5 файл." },
+  "attach_failed": { "message": "Байршсангүй. Үүнийг хасаад дахин оролдоно уу." }
 }

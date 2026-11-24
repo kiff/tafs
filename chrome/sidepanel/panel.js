@@ -3,6 +3,7 @@
 
 import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork, switchDraft, turnOver, stillPending } from "../src/coachchat.js";
 import { render as renderWords } from "../src/chatmd.js";
+import { ACCEPT, prepare, upload, readyIDs, uploading, counted, afterSent } from "../src/attach.js";
 
 /** A message's words: the person's as they typed them; a taf's or Coach's with their Markdown drawn, opening no link. */
 function words(li, m) {
@@ -520,20 +521,23 @@ $("coachNew").onclick = () => {
 
 async function sendCoach(alone) {
   const words = $("coachWords").value.trim();
-  if (!words) return;
+  // Send waits while a file is still going up; a message may be words, files, or both.
+  if (uploading(trayOf(COACH_TRAY))) return;
+  const files = readyIDs(trayOf(COACH_TRAY));
+  if (!words && !files.length) return;
   // Shown at once, as in the app: the person's message at the bottom right and Coach's working line under it, before tafs
   // cloud has answered. The box is cleared now; on a failure the words come back to it, never lost.
-  coachPending = { words, id: null, at: Date.now() };
+  coachPending = { words: words || fileNames(COACH_TRAY), id: null, at: Date.now() };
   $("coachWords").value = "";
   $("coachNote").textContent = "";
   $("coachEmpty").hidden = true;
   const list = $("coachThread");
-  showPending(list, words);
+  showPending(list, words || fileNames(COACH_TRAY));
   list.append(workingLine(t("coach_working")));
   toEnd();
   // The page in front of this panel's window goes with the words only with the person's page consent and if the gate lets
   // it (sw.js, pageconsent.js): only on this send. "Send without the page" sends the words alone, whatever the consent.
-  const r = await send({ type: "coach_send", words, alone, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow, ...sendOptions(view) }).catch(() => ({ error: "failed" }));
+  const r = await send({ type: "coach_send", words, alone, attachments: files, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow, ...sendOptions(view) }).catch(() => ({ error: "failed" }));
   if (r.error) {
     coachPending = null;
     for (const el of list.querySelectorAll(".pending, .working")) el.remove();
@@ -543,7 +547,9 @@ async function sendCoach(alone) {
   }
   // From now on it's matched by the id tafs cloud gave it; an answer with none leaves the chat as tafs cloud reads it.
   const id = sentID(r.sent);
-  if (coachPending && coachPending.words === words) coachPending = id ? { ...coachPending, id } : null;
+  if (coachPending && coachPending.words === (words || coachPending.words)) coachPending = id ? { ...coachPending, id } : null;
+  // The files it carried are gone from the tray; any that didn't go up stay, with why.
+  setTray(COACH_TRAY, afterSent(trayOf(COACH_TRAY), files));
   view = afterSend(view, r.sent);
   sentAt = Date.now();
   drawCoach();
@@ -654,6 +660,7 @@ function switchTaf(id) {
   drafts = out.drafts;
   $("tafWords").value = out.text;
   tafId = next;
+  drawTray(next);
 }
 
 $("tafPick").onchange = () => {
@@ -668,28 +675,32 @@ $("tafForm").onsubmit = async (e) => {
   e.preventDefault();
   const words = $("tafWords").value.trim();
   const to = tafId;
-  if (!words || !to) return;
+  if (!to || uploading(trayOf(to))) return;
+  const files = readyIDs(trayOf(to));
+  if (!words && !files.length) return;
+  const said = words || fileNames(to);
   // Shown at once, as Coach's are: the message, and the taf's working line under it; the box is cleared now, its words kept
   // to come back on a failure.
-  tafPending = { taf: to, words, id: null, at: Date.now() };
+  tafPending = { taf: to, words: said, id: null, at: Date.now() };
   $("tafWords").value = "";
   $("tafNote").textContent = "";
-  showPending($("tafThread"), words);
+  showPending($("tafThread"), said);
   $("tafThread").append(workingLine(t("working", tafName())));
   toEnd();
-  const r = await send({ type: "taf_send", taf: to, words, clientID: crypto.randomUUID() }).catch(() => ({ error: "failed" }));
+  const r = await send({ type: "taf_send", taf: to, words, attachments: files, clientID: crypto.randomUUID() }).catch(() => ({ error: "failed" }));
   if (r.error) {
     tafPending = null;
     if (tafId === to) {
       for (const el of $("tafThread").querySelectorAll(".pending, .working")) el.remove();
       if (!$("tafWords").value) $("tafWords").value = words;
       $("tafNote").textContent = t("taf_error", tafName());
-    } else if (!drafts.get(to)) drafts.set(to, words);
+    } else if (words && !drafts.get(to)) drafts.set(to, words);
     return;
   }
   tafSentAt = Date.now();
   const sent = sentID(r.sent);
-  if (tafPending && tafPending.taf === to && tafPending.words === words) tafPending = sent ? { ...tafPending, id: sent } : null;
+  if (tafPending && tafPending.taf === to && tafPending.words === said) tafPending = sent ? { ...tafPending, id: sent } : null;
+  setTray(to, afterSent(trayOf(to), files));
   // Sent: those words are gone from the taf they went to, and from nowhere else (the chat may have switched meanwhile).
   if (tafId !== to) drafts.delete(to);
   readTaf();
@@ -844,4 +855,119 @@ function toEnd() {
 function sentID(sent) {
   const id = sent && sent.message && sent.message.id;
   return typeof id === "string" && id ? id : null;
+}
+
+/*
+ * Files on a message (docs/chrome.md, "Files on a message"), as in the apps: picked with Chrome's own file picker only (the
+ * + in the composer), at most 5, each made ready (attach.js: its type and limit checked, an image redrawn as a JPEG), declared
+ * to tafs cloud through the service worker and uploaded by the panel straight to the address it gives. Each shows as a chip
+ * above the box until Send, with a × to remove it. Coach's chat has one tray, each taf's chat its own: a file declared on one
+ * taf never goes to another.
+ */
+const COACH_TRAY = "coach";
+const trays = new Map();
+let trayKeys = 0;
+
+function trayOf(target) {
+  return trays.get(target) || [];
+}
+
+function setTray(target, tray) {
+  if (tray.length) trays.set(target, tray);
+  else trays.delete(target);
+  drawTray(target);
+}
+
+/** Changes one file of a tray, found by its key: a file removed while it went up is left removed. */
+function updateFile(target, key, change) {
+  const tray = trayOf(target);
+  if (!tray.some((f) => f.key === key)) return;
+  setTray(target, tray.map((f) => (f.key === key ? { ...f, ...change } : f)));
+}
+
+/** The names of the files ready to go, for the message shown at once when it has no words. */
+function fileNames(target) {
+  return trayOf(target).filter((f) => f.state === "ready").map((f) => f.name).join(", ");
+}
+
+function trayList(target) {
+  return target === COACH_TRAY ? $("coachFiles") : $("tafFiles");
+}
+
+/** Draws a tray's chips: each file's name, where it stands, and × to remove it. Only the chat on show draws its tray. */
+function drawTray(target) {
+  if (target !== COACH_TRAY && target !== tafId) return;
+  const list = trayList(target);
+  list.textContent = "";
+  for (const f of trayOf(target)) {
+    const li = document.createElement("li");
+    li.className = f.state;
+    const name = document.createElement("span");
+    name.className = "fileName";
+    name.textContent = f.name;
+    li.append(name);
+    const state = f.state === "uploading" ? t("attach_uploading") : f.state === "refused" ? f.why : f.state === "failed" ? t("attach_failed") : "";
+    if (state) {
+      const s = document.createElement("span");
+      s.className = "fileState";
+      s.textContent = state;
+      li.append(s);
+    }
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", t("attach_remove", f.name));
+    remove.title = t("attach_remove", f.name);
+    remove.onclick = () => setTray(target, trayOf(target).filter((x) => x.key !== f.key));
+    li.append(remove);
+    list.append(li);
+  }
+  list.hidden = !list.children.length;
+}
+
+/** Why a file can't go, in the panel's words. */
+function refusedWords(refused) {
+  if (refused.code === "too_many") return t("attach_too_many");
+  if (refused.code === "too_big") return t("attach_too_big", refused.size);
+  return t("attach_type");
+}
+
+/** The files picked for target's next message: each shown at once, made ready, declared, and uploaded. */
+async function attachFiles(target, picked) {
+  for (const file of picked) {
+    const key = ++trayKeys;
+    const refusedNow = counted(trayOf(target)) >= 5 ? { code: "too_many" } : null;
+    setTray(target, [...trayOf(target), { key, name: file.name, state: refusedNow ? "refused" : "uploading", ...(refusedNow ? { why: refusedWords(refusedNow) } : {}) }]);
+    if (refusedNow) continue;
+    // Counted before this one was added: the tray already holds it, going up.
+    const ready = await prepare(file, { count: counted(trayOf(target)) - 1 });
+    if (ready.refused) {
+      updateFile(target, key, { state: "refused", why: refusedWords(ready.refused) });
+      continue;
+    }
+    updateFile(target, key, { name: ready.name });
+    try {
+      const declare = async (f) => {
+        const out = await send({ type: "attach", taf: target === COACH_TRAY ? null : target, file: f });
+        if (!out || out.error) throw Object.assign(new Error("not declared"), { code: "failed" });
+        return out;
+      };
+      const id = await upload(ready, { declare });
+      updateFile(target, key, { state: "ready", id });
+    } catch {
+      updateFile(target, key, { state: "failed" });
+    }
+  }
+}
+
+for (const [button, input, target] of [["coachAttach", "coachFile", () => COACH_TRAY], ["tafAttach", "tafFile", () => tafId]]) {
+  $(input).accept = ACCEPT;
+  $(button).onclick = () => $(input).click();
+  $(input).onchange = () => {
+    const to = target();
+    const picked = [...($(input).files || [])];
+    $(input).value = "";
+    if (to && picked.length) attachFiles(to, picked);
+  };
 }

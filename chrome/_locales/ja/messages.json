@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coachと今いるページ", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coachにメッセージを送ると、Coachは前面のページを読みます。", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "このChrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "「$TITLE$」のその他の操作", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "「$TITLE$」のその他の操作", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "ファイルを添付" },
+  "attach_remove": { "message": "$NAME$ を削除", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "アップロード中…" },
+  "attach_too_big": { "message": "大きすぎます：この種類のファイルは $SIZE$ までです", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "この種類のファイルは添付できません。写真、PDF、テキスト、CSV、Markdown、Word、Excel のみです。" },
+  "attach_too_many": { "message": "1 件のメッセージにつきファイルは 5 個までです。" },
+  "attach_failed": { "message": "アップロードできませんでした。削除してもう一度お試しください。" }
 }

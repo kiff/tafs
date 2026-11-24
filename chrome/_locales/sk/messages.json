@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach a stránka, na ktorej ste", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach si prečíta stránku vpredu, keď mu pošlete správu.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Tento Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Viac pre „$TITLE$“", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Viac pre „$TITLE$“", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Priložiť súbory" },
+  "attach_remove": { "message": "Odstrániť $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Nahrávam…" },
+  "attach_too_big": { "message": "Príliš veľký: pre tento druh súboru najviac $SIZE$", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Tento druh súboru nemožno priložiť. Len fotky, PDF, text, CSV, Markdown, Word alebo Excel." },
+  "attach_too_many": { "message": "Najviac 5 súborov v jednej správe." },
+  "attach_failed": { "message": "Nenahralo sa. Odstráňte ho a skúste to znova." }
 }

@@ -19,6 +19,7 @@ tafs cho Chrome để các taf của bạn làm việc trong chính Chrome của
 • Trang của ngân hàng, ví, trình quản lý mật khẩu, thanh toán, y tế và cơ quan nhà nước không bao giờ được xử lý, trừ khi bạn cho phép một trang cho một tác vụ trên điện thoại.
 • Tiện ích không bao giờ lưu mật khẩu của bạn. Ở trang đăng nhập, taf dừng lại và đề nghị bạn tự đăng nhập, trong thẻ của chính bạn.
 • Bảng điều khiển bên hiển thị taf đang làm việc trong Chrome này, và bạn trò chuyện với nó tại đó, như trong ứng dụng tafs. “Thiết lập taf mới cho trang này” mở Coach, trong chế độ xem riêng. Khi bạn gửi tin nhắn cho Coach, nó đọc trang phía trước và bỏ các trường ấy, trừ trang ngân hàng, thanh toán, thư hoặc sức khỏe và các trang bạn tắt, rồi hiện “Đang đọc:” và trang web dưới tin nhắn của bạn.
+• Tệp bạn chọn được gửi tới tafs cloud và Claude, như tệp đính kèm trong các ứng dụng tafs.
 
 Những gì một taf đọc được đưa tới AI đang thực hiện tác vụ của bạn và được lưu cùng tác vụ đó. KIFF lưu trang trước và sau một thay đổi tối đa 30 ngày. Khi ảnh chụp màn hình được bật, mỗi bước thực hiện thao tác còn lưu một ảnh chụp màn hình của trang, chụp ngay trước thao tác với các trường mật khẩu, thẻ và mã được ẩn, tối đa 30 ngày. Bạn chỉ xem được ảnh trong ứng dụng tafs và nó không bao giờ được gửi tới AI. Hủy ghép hoặc gỡ cài đặt sẽ xóa những gì tiện ích lưu trên máy tính của bạn.
 

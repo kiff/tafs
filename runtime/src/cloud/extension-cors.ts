@@ -14,7 +14,8 @@ const EXTENSION_ORIGIN = /^chrome-extension:\/\/[a-p]{32}$/;
 
 /**
  * The routes the side panel calls: the account's Coach, its live conversation or one chat of it, its list of chats
- * (Previous conversations), and a message to it. Reads and a send only: archiving a chat stays the apps'.
+ * (Previous conversations), a message to it, and a file declared for one (its bytes go straight to storage). Reads and a
+ * send only: archiving a chat stays the apps'.
  */
 const EXTENSION_ROUTES = [
   /^\/v1\/setup$/,
@@ -24,6 +25,7 @@ const EXTENSION_ROUTES = [
   /^\/v1\/tafs\/[^/]+\/conversation\/[^/]+$/,
   /^\/v1\/tafs\/[^/]+\/chats$/,
   /^\/v1\/tafs\/[^/]+\/messages$/,
+  /^\/v1\/tafs\/[^/]+\/attachments$/,
 ];
 
 function origin(event: HTTPEvent): string {

@@ -47,7 +47,10 @@
         <p id="tafPhone" class="note" data-m="approve_on_phone" hidden></p>
         <p id="tafNote" class="note"></p>
         <form id="tafForm" class="composer" hidden>
+          <ul id="tafFiles" class="files" hidden></ul>
           <div class="box">
+            <button type="button" id="tafAttach" class="attach" data-m-label="attach_files">+</button>
+            <input type="file" id="tafFile" multiple hidden>
             <textarea id="tafWords" rows="2" maxlength="2000"></textarea>
             <button type="submit" class="send" data-m-label="coach_send">↑</button>
           </div>
@@ -80,7 +83,10 @@
         <div class="dock">
         <p id="coachReads" class="note" hidden><span id="coachReadsWords"></span> <button type="button" id="coachReadsSwitch" class="quiet small" hidden></button> <button type="button" id="coachReadsStop" class="quiet small" data-m="page_consent_withdraw"></button></p>
         <form id="coachForm" class="composer">
+          <ul id="coachFiles" class="files" hidden></ul>
           <div class="box">
+            <button type="button" id="coachAttach" class="attach" data-m-label="attach_files">+</button>
+            <input type="file" id="coachFile" multiple hidden>
             <textarea id="coachWords" rows="2" maxlength="2000" data-m-placeholder="coach_placeholder"></textarea>
             <button type="submit" class="send" data-m-label="coach_send">↑</button>
           </div>

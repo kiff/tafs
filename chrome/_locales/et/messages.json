@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach ja leht, millel te olete", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach loeb eesolevat lehte, kui saadate talle sõnumi.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "See Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Rohkem: „$TITLE$“", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Rohkem: „$TITLE$“", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Lisa failid" },
+  "attach_remove": { "message": "Eemalda $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Üleslaadimine…" },
+  "attach_too_big": { "message": "Liiga suur: seda tüüpi faili jaoks kuni $SIZE$", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Seda tüüpi faili ei saa lisada. Ainult fotod, PDF, tekst, CSV, Markdown, Word või Excel." },
+  "attach_too_many": { "message": "Kuni 5 faili sõnumi kohta." },
+  "attach_failed": { "message": "Ei laaditud üles. Eemalda see ja proovi uuesti." }
 }

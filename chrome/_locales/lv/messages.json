@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach un lapa, kurā esat", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach izlasa priekšā esošo lapu, kad nosūtāt tam ziņu.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Šis Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Vairāk: “$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Vairāk: “$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Pievienot failus" },
+  "attach_remove": { "message": "Noņemt $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Augšupielādē…" },
+  "attach_too_big": { "message": "Pārāk liels: šāda veida failam ne vairāk kā $SIZE$", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Šāda veida failu nevar pievienot. Tikai fotoattēli, PDF, teksts, CSV, Markdown, Word vai Excel." },
+  "attach_too_many": { "message": "Ne vairāk kā 5 faili vienā ziņā." },
+  "attach_failed": { "message": "Netika augšupielādēts. Noņem to un pamēģini vēlreiz." }
 }

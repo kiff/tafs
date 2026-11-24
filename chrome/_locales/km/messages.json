@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach និងទំព័រដែលអ្នកកំពុងនៅ", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach អានទំព័រខាងមុខ ពេលអ្នកផ្ញើសារទៅវា។", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Chrome នេះ", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "ច្រើនទៀតសម្រាប់ “$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "ច្រើនទៀតសម្រាប់ “$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "ភ្ជាប់ឯកសារ" },
+  "attach_remove": { "message": "ដក $NAME$ ចេញ", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "កំពុងផ្ទុកឡើង…" },
+  "attach_too_big": { "message": "ធំពេក៖ យ៉ាងច្រើន $SIZE$ សម្រាប់ឯកសារប្រភេទនេះ", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "មិនអាចភ្ជាប់ឯកសារប្រភេទនេះបានទេ។ មានតែរូបថត PDF អត្ថបទ CSV Markdown Word ឬ Excel ប៉ុណ្ណោះ។" },
+  "attach_too_many": { "message": "យ៉ាងច្រើន 5 ឯកសារក្នុងមួយសារ។" },
+  "attach_failed": { "message": "មិនបានផ្ទុកឡើងទេ។ សូមដកវាចេញ ហើយព្យាយាមម្តងទៀត។" }
 }

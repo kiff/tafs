@@ -19,6 +19,7 @@ Chrome için tafs, tafs'larınızın kendi Chrome'unuzda, yalnızca izin verdiğ
 • Bankalar, cüzdanlar, parola yöneticileri, ödemeler, sağlık ve devlet siteleri, telefonunuzda bir görev için birine izin vermediğiniz sürece asla işlenmez.
 • Parolalarınızı asla saklamaz. Bir oturum açma sayfasında taf durur ve sizden kendi sekmenizde kendiniz oturum açmanızı ister.
 • Yan panel, bu Chrome'da çalışan taf'ı gösterir ve onunla orada, tafs uygulamasındaki gibi konuşursunuz. “Bu site için yeni bir taf kur”, Coach'u açar; Coach kendi görünümünde açılır. Coach'a mesaj gönderdiğinizde, öndeki sayfayı aynı alanlar kaldırılmış olarak okur; banka, ödeme, e-posta veya sağlık siteleri ve kapattığınız siteler hariç. Mesajınızın altında “Okunuyor:” ve siteyi gösterir.
+• Seçtiğiniz dosyalar, tafs uygulamalarındaki ekler gibi tafs cloud'a ve Claude'a gider.
 
 Bir tafın okuduğu, görevinizi yürüten yapay zekâya gider ve o görevle birlikte saklanır. KIFF, bir değişiklikten önceki ve sonraki sayfayı en fazla 30 gün saklar. Ekran görüntüleri açıldıktan sonra, işlem yapan her adım sayfanın bir ekran görüntüsünü de saklar; görüntü, işlemden hemen önce parola, kart ve kod alanları gizlenerek alınır ve en fazla 30 gün saklanır. Yalnızca tafs uygulamasında görürsünüz ve yapay zekâya asla gitmez. Eşleştirmeyi kaldırmak veya eklentiyi silmek, eklentinin bilgisayarınızda sakladıklarını siler.
 
