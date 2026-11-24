@@ -67,7 +67,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | OnboardingView | The welcome: what tafs is, the tick for both Terms with the privacy links and the age line… | done | done | done | done | done | done |
 | PairComputerView | The phone's side of pairing: the camera reads a computer's code. | done | done | not for it | not for it | not for it | done |
 | PairSignInView | Signing in from another phone | done | partial | done | done | done | done |
-| PeopleViews | People & groups, naming a group, adding someone | done | done | done | done | done | done |
+| PeopleViews | People & groups, naming a group, adding someone (adding someone or naming a manager is approved as sharing is) | done | done | done | done | done | done |
 | PlanViews | Buying credits and Solo, asking an admin, declining a request | done | done | done | done | done | done |
 | QuestionsCard | Several questions Coach asks at once: each question's choices, Something else…, Send answers… | done | done | done | done | done | done |
 | RecipeGallery | The jobs' gallery | done | done | done | done | done | done |
