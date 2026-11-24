@@ -843,6 +843,10 @@ struct ConnectApprovalSheet: View {
     /// Its last 4 characters, kept for the receipt after the key itself is forgotten.
     @State private var last4 = ""
     @State private var busy = false
+    /// Sign in again: the digest of the connection as this sheet first drew it, which Approve signs. A grant read again while
+    /// the sheet is open changes what's drawn, never what's signed: Approve then signs nothing and says it's out of date, and
+    /// the new one is what the next Approve signs.
+    @State private var drawnDigest: String?
     /// tafs cloud's words for the key's sheet, once read.
     @State private var sheet: TafsCloud.ConnectionSheet?
     /// tafs cloud's words were asked for, and came or didn't.
@@ -918,6 +922,7 @@ struct ConnectApprovalSheet: View {
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(busy || !ready(grant))
         }
+        .onAppear { if start.again, drawnDigest == nil { drawnDigest = grant.digest } }
     }
 
     // MARK: A key, on the protected sheet, in tafs cloud's words
@@ -1193,9 +1198,12 @@ struct ConnectApprovalSheet: View {
             } else if start.again {
                 // Signed in again on the digest this sheet drew: a request that changed since signs nothing, and this
                 // sheet says so over the new one.
-                if await model.reconnect(grant.id, shown: grant.digest, fresh: start.fresh) {
+                if await model.reconnect(grant.id, shown: drawnDigest ?? grant.digest, fresh: start.fresh) {
                     await onAgain?()
                     dismiss()
+                } else if model.lastError == Words.Version.outOfDateCard {
+                    // Out of date: the sheet now draws the request as it is, and that's what the next Approve signs.
+                    drawnDigest = model.grants.first { $0.id == grant.id }?.digest
                 }
             } else if let done = await model.connect(grantID: grant.id, shown: grant.digest), done.connected || done.listed {
                 dismiss()

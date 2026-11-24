@@ -1301,6 +1301,13 @@ final class ChatTests: XCTestCase {
     /// The loop card (docs/chat.md): a run that read page after page of one list waits in the taf's own chat on "Still reading",
     /// with Read on and Stop here in tafs cloud's words. The answer goes to the taf's route with the card's chat, as its option's
     /// value, and the run that goes on is followed again. A second tap sends nothing, and an answered card offers nothing.
+    /// An answered loop card says tafs cloud's words for the answer, else "Answered.": never nothing where its buttons were.
+    func testAnAnsweredLoopCardAlwaysSaysSo() {
+        XCTAssertEqual(LoopCardView.answeredLine("Stop here"), "Stop here")
+        XCTAssertEqual(LoopCardView.answeredLine(""), Words.Coach.answered)
+        XCTAssertEqual(LoopCardView.answeredLine("  \n"), Words.Coach.answered)
+    }
+
     func testALoopCardIsDrawnInTheTafsChatAndItsAnswerGoesToTheTafsRoute() async throws {
         let (model, id) = await kiffModel()
         let loop = #"{"at":"2026-10-14T09:02:00Z","session":"sesn_9","run":"r1","component":{"type":"confirm","id":"tafs-loop-1","loop":{"tool":"list_invoices","pages":5},"title":"Still reading","text":"It has read 5 pages of the same list.","options":[{"value":"tafs_loop_continue","label":"Read on"},{"value":"tafs_loop_summarise","label":"Stop here"}]}}"#

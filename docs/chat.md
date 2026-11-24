@@ -593,7 +593,8 @@ the failure colour, and add none of their own (`RefusedLines`). The live stream'
   answer goes to the taf's route, `POST /v1/tafs/{id}/components/{component}/answer` with the card's own chat
   (`AppModel.answerTafCard`). The run that goes on is followed as after any card. iPhone and iPad draw it the same way
   (`TafsCloud.LoopCard`, `LoopCardView`), with tafs cloud's words, and answer it on the taf's route with the card's chat
-  (`AppModel.answerLoopCard`); the run that goes on is followed again.
+  (`AppModel.answerLoopCard`); the run that goes on is followed again. Once answered, the card says tafs cloud's words
+  for the answer, else "Answered." (`coach.answered`), never nothing where its buttons were.
 - A message that came through a door shows with its door and sender ([doors.md](doors.md)).
 - `GET /v1/tafs/{id}/chats` lists the person's chats, newest first, each named by the
   start of what they asked. One tap reopens a chat.

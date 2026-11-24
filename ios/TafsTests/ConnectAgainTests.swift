@@ -47,6 +47,17 @@ final class ConnectAgainTests: XCTestCase {
         XCTAssertTrue(app.contains("let done = await connect(grantID: grantID, shown: shown, again: true, fresh: fresh)"))
     }
 
+    /// Sign in again signs the digest its sheet first drew, never the live grant's: a grant read again while the sheet is open
+    /// changes what's drawn, and Approve then signs nothing and says it's out of date (`connect`'s check, tested in
+    /// `PlanqueTests`), and takes the new one for the next Approve.
+    func testSignInAgainSignsTheDigestItsSheetFirstDrew() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let view = try String(contentsOf: root.appendingPathComponent("Views/ConnectAppsView.swift"), encoding: .utf8)
+        XCTAssertTrue(view.contains(".onAppear { if start.again, drawnDigest == nil { drawnDigest = grant.digest } }"), "kept as first drawn")
+        XCTAssertTrue(view.contains("model.reconnect(grant.id, shown: drawnDigest ?? grant.digest, fresh: start.fresh)"), "that one signed")
+        XCTAssertTrue(view.contains("drawnDigest = model.grants.first { $0.id == grant.id }?.digest"), "out of date: the new one next")
+    }
+
     /// On the taf's Setup, first, for whoever manages it: that connection signed in again here, and the
     /// taf read again; tafs cloud's done words once planque says connected.
     func testTheTafSignsThatConnectionInAgainItself() throws {
