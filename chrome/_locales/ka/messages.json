@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "დაარქივებული საუბრები არ არის."},
   "coach_archive_error": {"message": "არ გამოვიდა. სცადეთ ხელახლა."},
   "taf_remove": {"message": "ამ taf-ის ამოღება"},
-  "taf_remove_on_phone": {"message": "taf ტელეფონიდან ამოიღება: გახსენით tafs აპში, შემდეგ ამოღება. ამოღება იქ დასტურდება."}
+  "taf_remove_on_phone": {"message": "taf ტელეფონიდან ამოიღება: გახსენით tafs აპში, შემდეგ ამოღება. ამოღება იქ დასტურდება."},
+  "bar_go": {"message": "მის ჩანართზე გადასვლა"},
+  "bar_paused": {"message": "$TAF$ დაპაუზებულია", "placeholders": {"taf": {"content": "$1"}}}
 }

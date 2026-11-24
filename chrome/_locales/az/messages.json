@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Arxivlənmiş söhbət yoxdur."},
   "coach_archive_error": {"message": "Alınmadı. Yenidən cəhd edin."},
   "taf_remove": {"message": "Bu taf-ı silin"},
-  "taf_remove_on_phone": {"message": "Taf telefonunuzda silinir: onu tafs tətbiqində açın, sonra Silin. Silinmə orada təsdiqlənir."}
+  "taf_remove_on_phone": {"message": "Taf telefonunuzda silinir: onu tafs tətbiqində açın, sonra Silin. Silinmə orada təsdiqlənir."},
+  "bar_go": {"message": "Onun sekməsinə keçin"},
+  "bar_paused": {"message": "$TAF$ fasilədədir", "placeholders": {"taf": {"content": "$1"}}}
 }

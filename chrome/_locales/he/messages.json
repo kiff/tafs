@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "אין שיחות בארכיון."},
   "coach_archive_error": {"message": "זה לא הצליח. נסה שוב."},
   "taf_remove": {"message": "הסרת ה-taf הזה"},
-  "taf_remove_on_phone": {"message": "taf מוסר בטלפון: פתח אותו באפליקציית tafs ואז הסרה. ההסרה מאושרת שם."}
+  "taf_remove_on_phone": {"message": "taf מוסר בטלפון: פתח אותו באפליקציית tafs ואז הסרה. ההסרה מאושרת שם."},
+  "bar_go": {"message": "מעבר ללשונית שלו"},
+  "bar_paused": {"message": "$TAF$ מושהה", "placeholders": {"taf": {"content": "$1"}}}
 }

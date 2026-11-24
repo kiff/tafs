@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Nessuna conversazione archiviata."},
   "coach_archive_error": {"message": "Non è andato a buon fine. Riprova."},
   "taf_remove": {"message": "Rimuovi questo taf"},
-  "taf_remove_on_phone": {"message": "Un taf si rimuove dal telefono: aprilo nell'app tafs, poi Rimuovi. La rimozione si approva lì."}
+  "taf_remove_on_phone": {"message": "Un taf si rimuove dal telefono: aprilo nell'app tafs, poi Rimuovi. La rimozione si approva lì."},
+  "bar_go": {"message": "Vai alla sua scheda"},
+  "bar_paused": {"message": "$TAF$ è in pausa", "placeholders": {"taf": {"content": "$1"}}}
 }

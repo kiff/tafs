@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "No hi ha converses arxivades."},
   "coach_archive_error": {"message": "No s'ha pogut fer. Torna-ho a provar."},
   "taf_remove": {"message": "Treu aquest taf"},
-  "taf_remove_on_phone": {"message": "Un taf es treu al telèfon: obre'l a l'app tafs i toca Treu. Allà s'aprova que es tregui."}
+  "taf_remove_on_phone": {"message": "Un taf es treu al telèfon: obre'l a l'app tafs i toca Treu. Allà s'aprova que es tregui."},
+  "bar_go": {"message": "Ves a la seva pestanya"},
+  "bar_paused": {"message": "$TAF$ està en pausa", "placeholders": {"taf": {"content": "$1"}}}
 }

@@ -262,5 +262,7 @@
   "coach_archived_none": {"message": "Arhiwlenen gürrüň ýok."},
   "coach_archive_error": {"message": "Başartmady. Gaýtadan synanyşyň."},
   "taf_remove": {"message": "Bu taf-y aýyryň"},
-  "taf_remove_on_phone": {"message": "Taf telefonyňyzda aýrylýar: ony tafs programmasynda açyň, soň Aýyryň. Aýyrmak şol ýerde tassyklanýar."}
+  "taf_remove_on_phone": {"message": "Taf telefonyňyzda aýrylýar: ony tafs programmasynda açyň, soň Aýyryň. Aýyrmak şol ýerde tassyklanýar."},
+  "bar_go": {"message": "Onuň goýmasyna geç"},
+  "bar_paused": {"message": "$TAF$ bes edildi", "placeholders": {"taf": {"content": "$1"}}}
 }

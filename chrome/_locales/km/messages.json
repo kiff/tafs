@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "គ្មានការសន្ទនាក្នុងបណ្ណសារទេ។"},
   "coach_archive_error": {"message": "មិនបានសម្រេចទេ។ សូមព្យាយាមម្តងទៀត។"},
   "taf_remove": {"message": "ដក taf នេះចេញ"},
-  "taf_remove_on_phone": {"message": "taf ត្រូវដកចេញនៅលើទូរសព្ទរបស់អ្នក៖ បើកវានៅក្នុងកម្មវិធី tafs រួចចុច ដកចេញ។ ការដកចេញត្រូវយល់ព្រមនៅទីនោះ។"}
+  "taf_remove_on_phone": {"message": "taf ត្រូវដកចេញនៅលើទូរសព្ទរបស់អ្នក៖ បើកវានៅក្នុងកម្មវិធី tafs រួចចុច ដកចេញ។ ការដកចេញត្រូវយល់ព្រមនៅទីនោះ។"},
+  "bar_go": {"message": "ទៅកាន់ផ្ទាំងរបស់វា"},
+  "bar_paused": {"message": "$TAF$ បានផ្អាក", "placeholders": {"taf": {"content": "$1"}}}
 }

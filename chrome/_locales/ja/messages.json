@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "アーカイブした会話はありません。"},
   "coach_archive_error": {"message": "完了できませんでした。もう一度お試しください。"},
   "taf_remove": {"message": "このtafを削除"},
-  "taf_remove_on_phone": {"message": "tafの削除はスマートフォンで行います。tafsアプリで開いて「削除」を選んでください。削除はそこで承認します。"}
+  "taf_remove_on_phone": {"message": "tafの削除はスマートフォンで行います。tafsアプリで開いて「削除」を選んでください。削除はそこで承認します。"},
+  "bar_go": {"message": "そのタブへ移動"},
+  "bar_paused": {"message": "$TAF$は一時停止中", "placeholders": {"taf": {"content": "$1"}}}
 }

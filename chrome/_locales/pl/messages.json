@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Brak zarchiwizowanych rozmów."},
   "coach_archive_error": {"message": "Nie udało się. Spróbuj ponownie."},
   "taf_remove": {"message": "Usuń tego tafa"},
-  "taf_remove_on_phone": {"message": "Tafa usuwa się na telefonie: otwórz go w aplikacji tafs, potem Usuń. Tam zatwierdzasz usunięcie."}
+  "taf_remove_on_phone": {"message": "Tafa usuwa się na telefonie: otwórz go w aplikacji tafs, potem Usuń. Tam zatwierdzasz usunięcie."},
+  "bar_go": {"message": "Przejdź do jego karty"},
+  "bar_paused": {"message": "$TAF$ jest wstrzymany", "placeholders": {"taf": {"content": "$1"}}}
 }

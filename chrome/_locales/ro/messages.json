@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Nicio conversație arhivată."},
   "coach_archive_error": {"message": "Nu a reușit. Încercați din nou."},
   "taf_remove": {"message": "Eliminați acest taf"},
-  "taf_remove_on_phone": {"message": "Un taf se elimină de pe telefon: deschideți-l în aplicația tafs, apoi Eliminați. Eliminarea se aprobă acolo."}
+  "taf_remove_on_phone": {"message": "Un taf se elimină de pe telefon: deschideți-l în aplicația tafs, apoi Eliminați. Eliminarea se aprobă acolo."},
+  "bar_go": {"message": "Accesați fila sa"},
+  "bar_paused": {"message": "$TAF$ este întrerupt", "placeholders": {"taf": {"content": "$1"}}}
 }

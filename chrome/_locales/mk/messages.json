@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Нема архивирани разговори."},
   "coach_archive_error": {"message": "Не успеа. Обидете се повторно."},
   "taf_remove": {"message": "Отстрани го овој taf"},
-  "taf_remove_on_phone": {"message": "Taf се отстранува на телефонот: отворете го во апликацијата tafs, па Отстрани. Отстранувањето се одобрува таму."}
+  "taf_remove_on_phone": {"message": "Taf се отстранува на телефонот: отворете го во апликацијата tafs, па Отстрани. Отстранувањето се одобрува таму."},
+  "bar_go": {"message": "Оди на неговото јазиче"},
+  "bar_paused": {"message": "$TAF$ е паузиран", "placeholders": {"taf": {"content": "$1"}}}
 }
