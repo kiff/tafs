@@ -952,16 +952,32 @@ internal fun LinkConfirm(content: @Composable () -> Unit) {
       onDismissRequest = { confirming = null },
       title = { Text(Words.Chat.linkConfirmTitle) },
       text = { Text(Words.Chat.linkConfirmBody(url), modifier = Modifier.testTag("link-confirm-body")) },
+      // Open only for an address that opens a web page over https; anything else (another app's scheme, tel:, http:) gets the
+      // address and Cancel alone, so a page can't steer Coach into starting another app's action.
       confirmButton = {
-        androidx.compose.material3.TextButton({
-          confirming = null
-          runCatching { uri.openUri(url) }
-        }, Modifier.confirms()) { Text(Words.Chat.linkConfirmOpen) }
+        if (linkOpens(url)) {
+          androidx.compose.material3.TextButton({
+            confirming = null
+            runCatching { uri.openUri(url) }
+          }, Modifier.confirms()) { Text(Words.Chat.linkConfirmOpen) }
+        } else {
+          androidx.compose.material3.TextButton({ confirming = null }) { Text(Words.Common.cancel, color = Theme.soft) }
+        }
       },
-      dismissButton = { androidx.compose.material3.TextButton({ confirming = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
+      dismissButton = if (linkOpens(url)) ({ androidx.compose.material3.TextButton({ confirming = null }) { Text(Words.Common.cancel, color = Theme.soft) } }) else null,
       containerColor = Theme.panel,
     )
   }
+}
+
+/**
+ * Whether "Open this link?" offers Open for [url]: an `https` address with a host, and nothing in it that could make what's
+ * shown differ from what opens (direction characters, other controls, spaces).
+ */
+internal fun linkOpens(url: String): Boolean {
+  if (url.any { it.isWhitespace() || it.isISOControl() } || bot.tafs.app.model.Res.withoutDirection(url) != url) return false
+  val u = runCatching { java.net.URI(url) }.getOrNull() ?: return false
+  return u.scheme.equals("https", ignoreCase = true) && !u.host.isNullOrEmpty()
 }
 
 /**

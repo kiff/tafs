@@ -131,8 +131,11 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   page or its host, and no other answer carries it, an answered card's included.
   On Android, a taf message with `pageTurn` (`ChatMessage.pageTurn`, from the thread) draws its words with
   `PageTurnText(asks = true)`: a tap on a link opens no browser but asks "Open this link?" (`chat.link_confirm_title`),
-  with the link's whole address in the body (`chat.link_confirm_body`, kept left to right), Open and Cancel. Open opens
-  it; Cancel, or a tap outside, opens nothing. An answer still being written asks too, whatever its turn: a resumed or
+  with the link's whole address in the body (`chat.link_confirm_body`, set apart left to right with U+2066 … U+2069 in
+  every language, its own direction characters taken out, so a right-to-left sentence can't reorder it), Open and Cancel.
+  Open is offered only for an `https` address with a host and no spaces, controls or direction characters
+  (`linkOpens`); anything else (another app's scheme, `tel:`, `sms:`, plain `http`) shows its address and Cancel alone,
+  so a page can't steer Coach into starting another app's action. Open opens it; Cancel, or a tap outside, opens nothing. An answer still being written asks too, whatever its turn: a resumed or
   repeated stream sends no `session` event, so it can't yet say, and the thread read that follows settles it. The
   question is held once per chat (`LinkConfirm`), so an answer that finishes while it's up doesn't take it away.
   `MarkdownText(onLink = ...)` hands a link's address to the caller instead of opening it; with none, links open as

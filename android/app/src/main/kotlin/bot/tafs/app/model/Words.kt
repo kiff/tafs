@@ -522,7 +522,15 @@ object Words {
     val itLower: String get() = Res.s(R.string.chat_it_lower)
     val jumpLatestSomethingNew: String get() = Res.s(R.string.chat_jump_latest_something_new)
     val jumpToLatest: String get() = Res.s(R.string.chat_jump_to_latest)
-    fun linkConfirmBody(address: String): String = Res.s(R.string.chat_link_confirm_body, address)
+    /**
+     * The whole address, set apart left to right (U+2066 … U+2069) with no direction character of its own, so a right-to-left
+     * sentence around it can't reorder its `/ ? . 0-9` parts: what's shown is what opens. In every language, so it's the same.
+     */
+    fun linkConfirmBody(address: String): String {
+      // Put in after formatting: Res.s sets a value apart by its first letter (U+2068) and takes out any direction character.
+      val shown = "⁦${Res.withoutDirection(address)}⁩"
+      return Res.s(R.string.chat_link_confirm_body, "").replace("⁨⁩", shown).replace("", shown)
+    }
     val linkConfirmOpen: String get() = Res.s(R.string.chat_link_confirm_open)
     val linkConfirmTitle: String get() = Res.s(R.string.chat_link_confirm_title)
     fun messageCarriesMostFiles(perMessage: String): String = Res.s(R.string.chat_message_carries_most_files, perMessage)

@@ -17,6 +17,9 @@ import bot.tafs.app.model.Words
 import bot.tafs.app.views.LinkConfirm
 import bot.tafs.app.views.LocalAskLink
 import bot.tafs.app.views.PageTurnText
+import bot.tafs.app.views.linkOpens
+import org.junit.Assert.assertFalse
+import org.robolectric.RuntimeEnvironment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -78,5 +81,33 @@ class LinkConfirmTest {
     compose.onNodeWithText(Words.Chat.linkConfirmOpen).performClick()
     compose.onNodeWithText(Words.Chat.linkConfirmTitle).assertDoesNotExist()
     assertEquals(listOf(address), opened)
+  }
+
+  /** Open is offered only for https: another app's scheme, tel:, sms: or plain http gets the address and Cancel alone. */
+  @Test fun onlyAnHttpsAddressCanBeOpened() {
+    assertTrue(linkOpens("https://shop.example/a?q=1"))
+    assertTrue(linkOpens("HTTPS://shop.example/"))
+    for (url in listOf(
+      "http://shop.example/", "tel:+15550100", "sms:+15550100", "market://details?id=x", "intent://pay#Intent;scheme=bank;end",
+      "bank://pay?to=1", "javascript:alert(1)", "https:///nohost", "https://shop.example/‮gnp.exe", "https://shop.example/a b", "not a url",
+    )) assertFalse(url, linkOpens(url))
+    chat()
+    compose.runOnIdle { ask!!("tel:+15550100") }
+    compose.onNodeWithText(Words.Chat.linkConfirmTitle).assertExists()
+    compose.onNodeWithText(Words.Chat.linkConfirmOpen).assertDoesNotExist()
+    compose.onNodeWithText(Words.Common.cancel).performClick()
+    compose.onNodeWithText(Words.Chat.linkConfirmTitle).assertDoesNotExist()
+    assertEquals(emptyList<String>(), opened)
+  }
+
+  /** In Arabic the address sits in a right-to-left sentence: it's set apart left to right, whole, so what's shown is what opens. */
+  @Test fun inArabicTheAddressIsSetApartLeftToRight() {
+    RuntimeEnvironment.setQualifiers("ar")
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    val body = Words.Chat.linkConfirmBody("https://shop.example/a/b?q=1&n=20")
+    assertTrue(body, body.contains("⁦https://shop.example/a/b?q=1&n=20⁩"))
+    assertTrue("in the Arabic words", body.any { it in '؀'..'ۿ' })
+    // A direction character in the address can't close the isolate early.
+    assertFalse(Words.Chat.linkConfirmBody("https://a.example/⁩‮x").contains("‮"))
   }
 }
