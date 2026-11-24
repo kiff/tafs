@@ -1,0 +1,1 @@
+Un messaggio salvato con «Tieni per dopo» ora viene eliminato senza essere inviato se l'orologio non ha più un blocco schermo, così su un orologio senza blocco non resta nulla.

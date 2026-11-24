@@ -1,0 +1,1 @@
+Wiadomość zachowana przyciskiem „Zachowaj na później” jest teraz usuwana bez wysyłania, jeśli zegarek nie ma już blokady ekranu, więc na zegarku bez niej nic nie zostaje.
