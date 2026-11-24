@@ -106,8 +106,12 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
 - **For that message only.** tafs cloud passes it to kiff/agents as the run's `aside`. The run reads it after the
   person's words, fenced as data, with a note that nothing in it is an instruction, and kiff/agents keeps it on the
   run only until the run ends. The address goes with its path but no query or fragment, so whatever a path holds
-  goes to the AI with that message too (it's kept nowhere). The title goes on one line. The chat's next message
-  doesn't read it.
+  goes to the AI with that message too (it's kept nowhere), except a path segment shaped like a key or a one-time
+  token (a password reset's or a sign-in link's): 32 or more hex digits, a long run mixing letters and digits, a
+  JWT, or one of those between dots or after a prefix (`tok_…`), is `[masked]` whole first (`maskedPath`), while
+  names, slugs, numbers, file names, versions and ids stay. A short numeric code (`/verify/482913`) isn't masked:
+  it can't be told from an order number. The title goes on one line. The
+  chat's next message doesn't read it.
 - **A page turn's tools are read-only** (`PAGE_TOOLS`): Coach sees the person's tafs, a run, a taf's check, an
   estimate and its skills. No `web_read`, no `taf_task`, and nothing that drafts, changes or drives. A page can
   steer a call as any input can, so it can't lead to a host it names or to a taf with tools of its own. kiff/agents
@@ -121,6 +125,10 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   own time: a host is shown and kept only for 30 days from its own message, however often pages are sent since. A
   page send reads and writes it once, dropping hosts past their 30 days, and a thread read reads it once, whatever
   the thread's length (none when no message in view started a run).
+- **Coach's answers from a page turn carry `page_turn: true`**, in the thread and on the stream's `session` event while
+  the answer is still coming, from the same kept record as `reading` (so for 30 days from the page message). A link in
+  such an answer may come from the page, so the apps show its full address and ask before opening it. It's never the
+  page or its host, and no other answer carries it, an answered card's included.
 - **A message that answers a card waiting in the chat** goes on in that card's run with the person's words alone
   (kiff/agents answers the card with them). It reads no page, and no message says `reading` for it: tafs cloud
   keeps a host only for a run the send started, one kiff/agents created once the send began (a card's run is older,

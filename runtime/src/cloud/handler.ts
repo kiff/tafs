@@ -38,7 +38,7 @@ import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./cal
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine } from "./connections.js";
-import { normalHost, pageSiteRefused } from "./page-sites.js";
+import { maskedPath, normalHost, pageSiteRefused } from "./page-sites.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -2848,6 +2848,11 @@ export interface ThreadMessage {
   answers?: string;
   /** On a person's message to Coach that carried the page they had open: that page's host, as tafs cloud kept it (PAGE). */
   reading?: string;
+  /**
+   * On Coach's answer from a turn that read a page the person had open: a link in it may come from that page, so the apps show
+   * its full address and ask before opening it. Never the page, nor its host.
+   */
+  page_turn?: true;
   /** On a run's report: where its result went, in tafs cloud's words, above the taf's own (delivery.ts). */
   delivered?: string;
   /** On a job run's report: its count from the record, in tafs cloud's words (`countedLine`), never the model's numbers. */
@@ -3167,14 +3172,17 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   await markConnected(me.tenantID, shown, deps, lang);
   await markPlanNeeded(me.tenantID, shown, deps, lang);
   const last = messages.slice(-CHAT.maxThread);
-  // The site each of the person's messages to Coach went with (PAGE): tafs cloud's record of its host, never the page. One
-  // read for the whole thread, and none when no message in view is a run's own input.
-  const inputs = taf.job === SETUP_JOB && deps.coach ? last.filter((m) => m.from === "owner" && m.id.endsWith(".in")) : [];
-  if (inputs.length) {
+  // The site each of the person's messages to Coach went with (PAGE), and which of Coach's answers came from a turn that read
+  // a page (`page_turn`): tafs cloud's record of the host, never the page. One read for the whole thread, and none when no
+  // message in view is a run's.
+  const ofRuns = taf.job === SETUP_JOB && deps.coach ? last.filter((m) => m.id.endsWith(".in") || m.from === "taf") : [];
+  if (ofRuns.length) {
     const hosts = new Map((await pageReads(deps.coach!, me.tenantID, me.subject, deps.now?.() ?? new Date())).map((r) => [r.run, r.host]));
-    for (const m of inputs) {
-      const host = hosts.get(m.id.slice(0, -".in".length));
-      if (host) m.reading = host;
+    for (const m of ofRuns) {
+      const host = hosts.get(m.id.slice(0, m.id.lastIndexOf(".")));
+      if (!host) continue;
+      if (m.from === "owner") m.reading = host;
+      else m.page_turn = true;
     }
   }
   return { messages: last, components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, agreements, ...(usage ? { usage } : {}) };
@@ -6397,7 +6405,8 @@ function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | u
   // Never a bank, payment, mail or health site, nor the Web Store: the extension never sends one, and this holds whatever does.
   if (pageSiteRefused(host, u.pathname)) throw bad("Coach never reads a bank, payment, mail or health site, or Chrome's Web Store");
   const title = (p.title ?? "").replace(/\s+/g, " ").trim().slice(0, PAGE.title);
-  const aside = `Address: ${u.origin}${u.pathname}\n` + (title ? `Title: ${title}\n` : "") +
+  // A path segment shaped like a key or a one-time token (a reset or sign-in link) never reaches the AI.
+  const aside = `Address: ${u.origin}${maskedPath(u.pathname)}\n` + (title ? `Title: ${title}\n` : "") +
     (p.truncated ? "Only the start of the page is here: it goes on past it.\n" : "") + "\n" + p.text;
   if (Buffer.byteLength(aside, "utf8") > PAGE.bytes) throw bad(`a page goes with a message at most ${PAGE.bytes} bytes`);
   return { host, aside };
@@ -6909,6 +6918,8 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
     let first: IteratorResult<RunStreamEvent> | undefined;
     let at: RunAt;
     let titles: ToolTitles = new Map();
+    // Whether this send's run read the page (`page_turn` on the stream's session event).
+    let pageTurn = false;
     try {
       const text = lines.text(owner);
       const [chosen, ai, known] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps), titlesOf(event, me, taf, deps)]);
@@ -6930,7 +6941,10 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
         timing.mark("first_event");
         // Only a run this send started read the page (startedBy): a card's answer goes on in its own run, without it.
         const started = first.done || first.value.event !== "run" ? undefined : first.value.data as { id?: unknown; created?: unknown } | undefined;
-        if (page && started && typeof started.id === "string" && startedBy(started, began)) await keepPageRead(me, started.id, page.host, deps);
+        if (page && started && typeof started.id === "string" && startedBy(started, began)) {
+          await keepPageRead(me, started.id, page.host, deps);
+          pageTurn = true;
+        }
       } catch (err) {
         throw agentsFailure(err);
       }
@@ -6941,7 +6955,7 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
       throw err;
     }
     // Once the answer ends, what the person wrote that waited for it goes (docs/chat.md).
-    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps, taf), "", langOf(event))), () => settleChats(event, me, taf, deps));
+    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps, taf), "", langOf(event), pageTurn)), () => settleChats(event, me, taf, deps));
     return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
@@ -7347,7 +7361,7 @@ function actionOf(sent: string | undefined): string {
   try { const a = (JSON.parse(sent ?? "null") as { action?: unknown } | null)?.action; return typeof a === "string" ? a : ""; } catch { return ""; }
 }
 
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en"): AsyncGenerator<string> {
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en", pageTurn = false): AsyncGenerator<string> {
   const steps = new Steps(titles, lang);
   const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
@@ -7421,7 +7435,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (typeof d.id === "string") runID = d.id;
         if (keep && !keep.session && typeof d.session === "string" && d.session) keep.session = d.session;
         return at ? sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id,
-          ...(typeof d.id === "string" ? { message: { id: inputID(d.id), at: d.created } } : {}) }) : undefined;
+          ...(typeof d.id === "string" ? { message: { id: inputID(d.id), at: d.created } } : {}), ...(pageTurn ? { page_turn: true } : {}) }) : undefined;
       case "delta":
         if (!at) return undefined;
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
