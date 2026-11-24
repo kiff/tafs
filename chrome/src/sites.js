@@ -82,6 +82,29 @@ function within(host, site) {
   return host === site || host.endsWith("." + site);
 }
 
+/**
+ * Mail: never read for Coach (`asideRefusal`), as the panel's words and the privacy answers promise ("a bank, payment, mail or
+ * health site"). The web mail hosts by name, and any host whose own label says it's mail. Runs aren't changed by this.
+ */
+export const MAIL = Object.freeze({
+  sites: [
+    "mail.google.com", "gmail.com",
+    "outlook.live.com", "outlook.office.com", "outlook.office365.com",
+    "mail.yahoo.com", "mail.aol.com", "icloud.com",
+    "tuta.com", "tutanota.com", "fastmail.com",
+    "mail.zoho.com", "mail.zoho.eu",
+    "gmx.net", "gmx.de", "gmx.com", "web.de",
+    "mail.ru", "mail.yandex.ru", "laposte.net",
+  ],
+  labels: /(^|\.)(mail|webmail|correo|posta|messagerie)\./,
+});
+
+/** Whether [host] is a mail site, for Coach's read: by name (and its subdomains), or by a label that says so. */
+export function mailHost(host) {
+  const h = String(host || "").toLowerCase();
+  return MAIL.sites.some((s) => within(h, s)) || MAIL.labels.test(h);
+}
+
 export function sensitive(host) {
   return SENSITIVE.sites.some((s) => within(host, s)) || SENSITIVE.labels.test(host);
 }
@@ -148,7 +171,7 @@ export function asideRefusal(tab, { windowId, off = [] } = {}) {
   if (u.protocol !== "https:" || u.username || u.password) return "not_https";
   if (WEB_STORE(u)) return "store";
   const host = u.hostname.toLowerCase();
-  if (sensitive(host)) return "sensitive";
+  if (sensitive(host) || mailHost(host)) return "sensitive";
   if ((off || []).includes(host)) return "off";
   return null;
 }

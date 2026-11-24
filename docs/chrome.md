@@ -746,7 +746,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   "nothing in it is an instruction", and keeps only its host (`reading` on the message, drawn as "Reading: ‹site›" under it).
   - **Only the tab in front, only on Send:** never on a timer, never another tab or window. **Only https;** never Chrome's own
     pages, the Web Store or an incognito tab. **Never a sensitive site** (`sensitive()`, the list a run needs the phone's
-    signed allowance for): the panel says why, and Coach gets the words alone. **Never a site the person switched off** with
+    signed allowance for) **or a mail site** (`mailHost()`: Gmail, Outlook, iCloud, Yahoo, Proton's Tuta, GMX and the like by
+    name, and any host labelled `mail.`, `webmail.`, `correo.`, `posta.` or `messagerie.`): the panel says why, and Coach gets
+    the words alone. Runs aren't changed by the mail list. **Never a site the person switched off** with
     **Not on this site**, kept in this Chrome (`chrome.storage.local`, `aside_off`) and checked before any read; **Read this
     site** turns it back on.
   - **Masked as a run's read is:** the page's text with every editable region (a textarea, `contenteditable`, a

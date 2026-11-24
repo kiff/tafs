@@ -1,0 +1,1 @@
+- **Chrome: Coach never reads a mail site.** Gmail, Outlook and other web mail join banks, payments and health as pages Coach's read refuses, as the panel and the privacy answers say. ([chrome.md](docs/chrome.md))
