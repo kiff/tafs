@@ -230,6 +230,11 @@ describe("jobs", () => {
       expect(prompt).toContain("leave any write that may need the owner's approval");
       // A click the Card allowed was narrated as "a click, which needs approval" while nothing was held (the 0.2.2 try).
       expect(prompt.replace(/\s+/g, " ")).toContain("Before KIFF answers, never say a call needs or waits for the owner's approval, in the chat or as you work: a write your Card allows simply runs. A call waits for approval only once KIFF holds it.");
+      // What couldn't be read is said, never filled from memory; a page no read links to goes through the site's search
+      // (Chrome 0.2.4's try, 24 Nov: three typed addresses refused url_not_read before the taf searched).
+      const flat = prompt.replace(/\s+/g, " ");
+      expect(flat).toContain("When something you need couldn't be read (a tool refused it, it didn't answer, or your run was stopped first), say so in your answer: what you couldn't read, and what you did read. Never fill the gap from memory with what it would say, even when you think you know.");
+      expect(flat).toContain("a page that nothing you read links to is reached through the site's own search: fill its search field, then press Enter on it (or click its search button), in one step. Never an address you put together.");
       // An item left behind a hold was explained with a limit no read gave (Chargebacks, 20 Nov, 2 runs of 3).
       expect(prompt.replace(/\s+/g, " ")).toContain("An item you didn't reach because your run paused on a hold is said as just that (\"A-1048: not done, since my run paused on the hold first\"), with no limit named for it: you never made its call, so you can't know what KIFF would have done with it.");
       // Tools' descriptions carry the Card's line, so "no limit was read" was untrue (Eval 44732158037).

@@ -242,6 +242,33 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect([...preToolLines([say(1, "Primero miro."), ev(2, "tool_call"), say(3, "…so I'm asking again."), ev(4, "tool_call")])]).toEqual(["r1.1"]);
   });
 
+  // 24 Nov, Chrome 0.2.4's try: read after its run ended, the run's calls were only its `called` lines (kiff/agents
+  // keeps `tool_call` until the run ends), so its notes reached the chat as messages.
+  it("leaves the notes out of a run read after its end, when its calls are only their called lines", () => {
+    const ev = (seq: number, kind: string, body?: unknown) => ({ run: "r1", seq, kind, ...(body === undefined ? {} : { body }) });
+    const say = (seq: number, text: string) => ev(seq, "agent_message", { text });
+    const called = (seq: number, url: string, outcome = "done") => ev(seq, "called", { tool: "browse_open_hxqb", input: { url }, outcome });
+    // Tonight's run, as kept: its owner message, its calls' lines and usage, three notes, and its answer.
+    const got = preToolLines([
+      ev(1, "owner_message", { text: "Start at www.wikipedia.org, …" }),
+      ev(7, "called", { tool: "kiff_pending", input: {}, outcome: "done" }),
+      called(10, "https://www.wikipedia.org"), ev(11, "usage"),
+      say(12, "Opening pages is a read; I'll go straight to the article."),
+      called(15, "https://en.wikipedia.org/wiki/Lighthouse", "failed"), ev(16, "usage"),
+      say(17, "Follow the English link first."),
+      called(20, "https://en.wikipedia.org/"), ev(21, "usage"), ev(24, "call_ref"),
+      called(41, "https://www.wikipedia.org"), ev(42, "usage"),
+      say(43, "Follow the English link, then I'll need to search."),
+      ev(47, "called", { tool: "browse_act_hxqb", input: { steps: [{ click: "l1" }] }, outcome: "done" }),
+      called(59, "https://en.wikipedia.org/wiki/Lens"), ev(66, "usage"),
+      say(67, "The first paragraph of Lighthouse has only four links, not five, so I followed those four."),
+    ]);
+    expect([...got].sort()).toEqual(["r1.12", "r1.17", "r1.43"]);
+    // While the run goes, a call's tool_call and then its called line: the note is left out once, the answer kept.
+    const live = preToolLines([say(1, "Follow the English link first."), ev(2, "tool_call"), ev(3, "tool_result"), ev(4, "called", { tool: "x", outcome: "done" }), say(5, "Done.")]);
+    expect([...live]).toEqual(["r1.1"]);
+  });
+
   it("sends a one-line text its call follows as the answer when the run ends with nothing after it", async () => {
     const w = world();
     w.agents.streamed.push(
