@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "คุณเลือก “ไม่ใช่ตอนนี้”", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ กำลังทำงานบนหน้านี้", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "กำลังทำงานใน Chrome นี้", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "ไปที่แท็บของ $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "ไปที่แท็บของ $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← กลับ"},
+  "coach_archive": {"message": "เก็บถาวร"},
+  "coach_archive_named": {"message": "เก็บ “$TITLE$” ถาวร", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "นำกลับมา"},
+  "coach_unarchive_named": {"message": "นำ “$TITLE$” กลับมา", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "ที่เก็บถาวร"},
+  "coach_archived_body": {"message": "การสนทนาที่เก็บถาวรจะเก็บไว้ 30 วัน แล้วถูกลบ"},
+  "coach_archived_none": {"message": "ไม่มีการสนทนาที่เก็บถาวร"},
+  "coach_archive_error": {"message": "ไม่สำเร็จ ลองใหม่อีกครั้ง"},
+  "taf_remove": {"message": "นำ taf นี้ออก"},
+  "taf_remove_on_phone": {"message": "taf นำออกได้บนโทรศัพท์ของคุณ: เปิดในแอป tafs แล้วแตะ นำออก การนำออกจะอนุมัติที่นั่น"}
 }

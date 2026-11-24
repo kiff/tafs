@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Thatë «Jo tani»", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ po punon në këtë faqe", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Duke punuar në këtë Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Shko te skeda e $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Shko te skeda e $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Prapa"},
+  "coach_archive": {"message": "Arkivo"},
+  "coach_archive_named": {"message": "Arkivo “$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Ktheje"},
+  "coach_unarchive_named": {"message": "Ktheje “$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Të arkivuara"},
+  "coach_archived_body": {"message": "Bisedat e arkivuara mbahen 30 ditë, pastaj fshihen."},
+  "coach_archived_none": {"message": "Nuk ka biseda të arkivuara."},
+  "coach_archive_error": {"message": "Nuk u krye. Provoni sërish."},
+  "taf_remove": {"message": "Hiqeni këtë taf"},
+  "taf_remove_on_phone": {"message": "Një taf hiqet në telefon: hapeni në aplikacionin tafs, pastaj Hiqeni. Heqja miratohet atje."}
 }

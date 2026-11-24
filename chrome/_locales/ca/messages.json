@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Has dit «Ara no»", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ treballa en aquesta pàgina", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Treballant en aquest Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Ves a la pestanya de $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Ves a la pestanya de $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Enrere"},
+  "coach_archive": {"message": "Arxiva"},
+  "coach_archive_named": {"message": "Arxiva «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Recupera"},
+  "coach_unarchive_named": {"message": "Recupera «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Arxivades"},
+  "coach_archived_body": {"message": "Les converses arxivades es guarden 30 dies i després s'eliminen."},
+  "coach_archived_none": {"message": "No hi ha converses arxivades."},
+  "coach_archive_error": {"message": "No s'ha pogut fer. Torna-ho a provar."},
+  "taf_remove": {"message": "Treu aquest taf"},
+  "taf_remove_on_phone": {"message": "Un taf es treu al telèfon: obre'l a l'app tafs i toca Treu. Allà s'aprova que es tregui."}
 }

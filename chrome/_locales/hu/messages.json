@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Azt mondtad: „Most nem”", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ ezen az oldalon dolgozik", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Ebben a Chrome-ban dolgoznak", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Ugrás a lapjára: $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Ugrás a lapjára: $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Vissza"},
+  "coach_archive": {"message": "Archiválás"},
+  "coach_archive_named": {"message": "„$TITLE$” archiválása", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Visszaállítás"},
+  "coach_unarchive_named": {"message": "„$TITLE$” visszaállítása", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Archivált"},
+  "coach_archived_body": {"message": "Az archivált beszélgetéseket 30 napig őrizzük, aztán töröljük."},
+  "coach_archived_none": {"message": "Nincsenek archivált beszélgetések."},
+  "coach_archive_error": {"message": "Ez nem sikerült. Próbáld újra."},
+  "taf_remove": {"message": "A taf eltávolítása"},
+  "taf_remove_on_phone": {"message": "A tafot a telefonodon lehet eltávolítani: nyisd meg a tafs alkalmazásban, majd Eltávolítás. Az eltávolítást ott hagyod jóvá."}
 }

@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Řekli jste „Teď ne“", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ pracuje na této stránce", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Pracují v tomto Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Přejít na kartu $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Přejít na kartu $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Zpět"},
+  "coach_archive": {"message": "Archivovat"},
+  "coach_archive_named": {"message": "Archivovat „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Vrátit"},
+  "coach_unarchive_named": {"message": "Vrátit „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Archivované"},
+  "coach_archived_body": {"message": "Archivované rozhovory se uchovávají 30 dní, pak se smažou."},
+  "coach_archived_none": {"message": "Žádné archivované rozhovory."},
+  "coach_archive_error": {"message": "Nepovedlo se. Zkuste to znovu."},
+  "taf_remove": {"message": "Odstranit tento taf"},
+  "taf_remove_on_phone": {"message": "Taf se odstraňuje v telefonu: otevřete ho v aplikaci tafs a pak Odstranit. Odstranění se schvaluje tam."}
 }

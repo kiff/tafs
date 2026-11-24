@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Та «Одоо биш» гэж хэлсэн", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ энэ хуудсан дээр ажиллаж байна", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Энэ Chrome дээр ажиллаж байна", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "$TAF$-ийн таб руу очих", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "$TAF$-ийн таб руу очих", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Буцах"},
+  "coach_archive": {"message": "Архивлах"},
+  "coach_archive_named": {"message": "“$TITLE$”-ийг архивлах", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Буцаах"},
+  "coach_unarchive_named": {"message": "“$TITLE$”-ийг буцаах", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Архивласан"},
+  "coach_archived_body": {"message": "Архивласан яриаг 30 хоног хадгалаад дараа нь устгана."},
+  "coach_archived_none": {"message": "Архивласан яриа алга."},
+  "coach_archive_error": {"message": "Болсонгүй. Дахин оролдоно уу."},
+  "taf_remove": {"message": "Энэ taf-ыг хасах"},
+  "taf_remove_on_phone": {"message": "Taf-ыг утсан дээрээ хасна: tafs аппад нээгээд Хасах-ыг дарна уу. Хасахыг тэнд зөвшөөрнө."}
 }

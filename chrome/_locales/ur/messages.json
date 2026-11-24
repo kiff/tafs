@@ -251,5 +251,16 @@
   "step_hand_declined": {"message": "آپ نے “ابھی نہیں” کہا", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ اس صفحے پر کام کر رہا ہے", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "اس Chrome میں کام کر رہے ہیں", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "$TAF$ کے ٹیب پر جائیں", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "$TAF$ کے ٹیب پر جائیں", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "→ واپس"},
+  "coach_archive": {"message": "آرکائیو کریں"},
+  "coach_archive_named": {"message": "“$TITLE$” آرکائیو کریں", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "واپس لائیں"},
+  "coach_unarchive_named": {"message": "“$TITLE$” واپس لائیں", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "آرکائیو شدہ"},
+  "coach_archived_body": {"message": "آرکائیو شدہ گفتگو 30 دن رکھی جاتی ہے، پھر حذف ہو جاتی ہے۔"},
+  "coach_archived_none": {"message": "کوئی آرکائیو شدہ گفتگو نہیں۔"},
+  "coach_archive_error": {"message": "یہ نہیں ہو سکا۔ دوبارہ کوشش کریں۔"},
+  "taf_remove": {"message": "یہ taf ہٹائیں"},
+  "taf_remove_on_phone": {"message": "taf آپ کے فون پر ہٹایا جاتا ہے: اسے tafs ایپ میں کھولیں، پھر ہٹائیں۔ ہٹانے کی منظوری وہیں دی جاتی ہے۔"}
 }
