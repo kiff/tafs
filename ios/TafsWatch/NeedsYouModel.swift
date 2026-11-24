@@ -54,13 +54,13 @@ final class NeedsYouModel: ObservableObject {
         }
         switch reply.outcome {
         case .ok:
-            if let needsYou = reply.needsYou { state = .loaded(needsYou) } else { state = .failed(Words.Alert.tafsCouldNotReachKiff) }
+            if let needsYou = reply.needsYou { state = .loaded(needsYou) } else { state = .failed(Words.Watch.phoneCouldNotReachCloud) }
             if briefOn, case .loaded = state { await loadBrief() }
         case .signedOut:
             state = .signedOut
             brief = nil
         case .failed:
-            state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
+            state = .failed(reply.line ?? Words.Watch.phoneCouldNotReachCloud)
         case .refused, .stale, .notYet, .answered:
             // The phone dropped it, is an older version, or answered as if to a Refuse: ask again
             // from the screen.

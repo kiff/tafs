@@ -39,12 +39,12 @@ final class AccountPageModel: ObservableObject {
         }
         switch reply.outcome {
         case .ok:
-            guard let account = reply.account else { state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff); return }
+            guard let account = reply.account else { state = .failed(reply.line ?? Words.Watch.phoneCouldNotReachCloud); return }
             state = .loaded(account)
         case .signedOut:
             state = .signedOut
         case .failed:
-            state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
+            state = .failed(reply.line ?? Words.Watch.phoneCouldNotReachCloud)
         case .notYet:
             state = .updatePhone
         case .refused, .stale, .answered:
