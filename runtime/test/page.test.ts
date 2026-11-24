@@ -237,6 +237,20 @@ describe("Coach reads the page the person has open, with their message", () => {
     expect((r.body.message as { reading?: string }).reading).toBe("shop.example");
   });
 
+  // Invariant: a reset or sign-in link's token in the page's path never reaches the AI, on either route
+  it("a path segment shaped like a token is masked in the run's Address, on both routes", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const token = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+    for (const via of [send, stream]) {
+      const r = await via(w, COACH, { text: "What do I do here?", page: { ...PAGE_SENT, url: `https://shop.example/reset/${token}/confirm` } });
+      expect(r.status).toBe(200);
+      const sent = w.agents.asides.get(w.agents.runs.at(-1)!.id)!;
+      expect(sent.aside.startsWith("Address: https://shop.example/reset/[masked]/confirm\n")).toBe(true);
+      expect(sent.aside).not.toContain(token);
+    }
+  });
+
   it("a page just inside the bound goes, its title kept to one line", async () => {
     const w = await world();
     vi.spyOn(console, "log").mockImplementation(() => undefined);

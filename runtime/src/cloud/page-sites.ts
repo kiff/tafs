@@ -57,3 +57,39 @@ export function pageSiteRefused(host: string, path: string): "store" | "sensitiv
   if (MAIL.sites.some((s) => within(host, s)) || MAIL.labels.test(host)) return "sensitive";
   return null;
 }
+
+/** What a path segment shaped like a key or a one-time token is replaced by, as the extension masks a secret. */
+export const PATH_MASK = "[masked]";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Whether one path segment (percent-decoded) looks like a key or a one-time token rather than a name: 32 or more hex digits; 24
+ * or more base64url characters with upper case, lower case and digits together; or 32 or more letters and digits mixed. A
+ * word, a slug (`late-parcels-2024`), a number or a UUID (an id) is kept.
+ */
+export function tokenSegment(segment: string): boolean {
+  if (UUID.test(segment)) return false;
+  if (/^[A-Fa-f0-9]{32,}$/.test(segment)) return true;
+  if (/^[A-Za-z0-9_-]{24,}={0,2}$/.test(segment) && /[A-Z]/.test(segment) && /[a-z]/.test(segment) && /[0-9]/.test(segment)) return true;
+  return /^[A-Za-z0-9]{32,}$/.test(segment) && /[0-9]/.test(segment) && /[A-Za-z]/.test(segment);
+}
+
+/**
+ * The page's path as the run reads it in its `Address:` line: every segment shaped like a key or a one-time token masked (a
+ * password reset's or a sign-in link's token, a share link's secret), the rest as sent. The query and fragment never come.
+ */
+export function maskedPath(pathname: string): string {
+  return pathname
+    .split("/")
+    .map((s) => {
+      let d = s;
+      try {
+        d = decodeURIComponent(s);
+      } catch {
+        // a segment that isn't valid percent-encoding is read as written
+      }
+      return tokenSegment(d) ? PATH_MASK : s;
+    })
+    .join("/");
+}

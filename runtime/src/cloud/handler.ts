@@ -38,7 +38,7 @@ import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./cal
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine } from "./connections.js";
-import { normalHost, pageSiteRefused } from "./page-sites.js";
+import { maskedPath, normalHost, pageSiteRefused } from "./page-sites.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -6397,7 +6397,8 @@ function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | u
   // Never a bank, payment, mail or health site, nor the Web Store: the extension never sends one, and this holds whatever does.
   if (pageSiteRefused(host, u.pathname)) throw bad("Coach never reads a bank, payment, mail or health site, or Chrome's Web Store");
   const title = (p.title ?? "").replace(/\s+/g, " ").trim().slice(0, PAGE.title);
-  const aside = `Address: ${u.origin}${u.pathname}\n` + (title ? `Title: ${title}\n` : "") +
+  // A path segment shaped like a key or a one-time token (a reset or sign-in link) never reaches the AI.
+  const aside = `Address: ${u.origin}${maskedPath(u.pathname)}\n` + (title ? `Title: ${title}\n` : "") +
     (p.truncated ? "Only the start of the page is here: it goes on past it.\n" : "") + "\n" + p.text;
   if (Buffer.byteLength(aside, "utf8") > PAGE.bytes) throw bad(`a page goes with a message at most ${PAGE.bytes} bytes`);
   return { host, aside };
