@@ -30,6 +30,7 @@
     <string name="alert_prompt">احصل على تنبيه عندما يحتاجك taf</string>
     <string name="alert_role_cant">دورك في حساب KIFF هذا لا يتيح تشغيل التنبيهات.</string>
     <string name="alert_sign_in_again">سجّل الدخول عبر KIFF مرة أخرى لتشغيل التنبيهات: لا يستطيع تسجيل الدخول هذا التوقيع عن الهاتف.</string>
+    <string name="alert_sign_out_anyway">تسجيل الخروج على أي حال</string>
     <string name="alert_silent">صامت</string>
     <string name="alert_silent_example">ردود الدعم أُجيب عنها maria@… · بالبريد الإلكتروني</string>
     <string name="alert_sound">صوت</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">غير متاح</string>
     <string name="alert_status_off">متوقف</string>
     <string name="alert_status_on">قيد التشغيل</string>
+    <string name="alert_still_on_after_sign_out_body">لم يتمكن tafs من إيقافها (%1$s). حاول مرة أخرى، أو سجّل الخروج على أي حال وأوقف إشعارات tafs من الإعدادات.</string>
+    <string name="alert_still_on_after_sign_out_title">قد يظل هذا الجهاز (%1$s) يتلقى تنبيهات هذا الحساب</string>
     <string name="alert_taf_needs_you">%1$s بانتظارك</string>
     <plurals name="alert_tafs">
         <item quantity="zero">لا tafs ›</item>

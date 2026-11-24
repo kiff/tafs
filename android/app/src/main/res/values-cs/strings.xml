@@ -30,6 +30,7 @@
     <string name="alert_prompt">Dostávejte upozornění, když vás taf potřebuje</string>
     <string name="alert_role_cant">Vaše role v tomto účtu KIFF nemůže zapnout upozornění.</string>
     <string name="alert_sign_in_again">Pro zapnutí upozornění se znovu přihlaste přes KIFF: toto přihlášení nemůže podepisovat za telefon.</string>
+    <string name="alert_sign_out_anyway">Přesto se odhlásit</string>
     <string name="alert_silent">Tiše</string>
     <string name="alert_silent_example">Odpovědi zákazníkům odpověděl maria@… · E-mailem</string>
     <string name="alert_sound">Zvuk</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Není k dispozici</string>
     <string name="alert_status_off">Vypnuto</string>
     <string name="alert_status_on">Zapnuto</string>
+    <string name="alert_still_on_after_sign_out_body">tafs je nedokázal vypnout (%1$s). Zkuste to znovu, nebo se přesto odhlaste a vypněte oznámení pro tafs v Nastavení.</string>
+    <string name="alert_still_on_after_sign_out_title">Tento %1$s může dál dostávat upozornění tohoto účtu</string>
     <string name="alert_taf_needs_you">%1$s vás potřebuje</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

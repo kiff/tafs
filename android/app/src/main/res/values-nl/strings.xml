@@ -30,6 +30,7 @@
     <string name="alert_prompt">Krijg een melding als een taf op jou wacht</string>
     <string name="alert_role_cant">Jouw rol in dit KIFF-account kan geen meldingen aanzetten.</string>
     <string name="alert_sign_in_again">Log opnieuw in met KIFF om meldingen aan te zetten: deze login kan niet voor de telefoon ondertekenen.</string>
+    <string name="alert_sign_out_anyway">Toch uitloggen</string>
     <string name="alert_silent">Stil</string>
     <string name="alert_silent_example">Supportantwoorden heeft maria@… geantwoord · Via e-mail</string>
     <string name="alert_sound">Geluid</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Niet beschikbaar</string>
     <string name="alert_status_off">Uit</string>
     <string name="alert_status_on">Aan</string>
+    <string name="alert_still_on_after_sign_out_body">tafs kon ze niet uitzetten (%1$s). Probeer het opnieuw, of log toch uit en zet meldingen voor tafs uit in Instellingen.</string>
+    <string name="alert_still_on_after_sign_out_title">Deze %1$s krijgt misschien nog meldingen van dit account</string>
     <string name="alert_taf_needs_you">%1$s wacht op jou</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

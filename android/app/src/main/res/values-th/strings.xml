@@ -30,6 +30,7 @@
     <string name="alert_prompt">รับการแจ้งเตือนเมื่อ taf ต้องการคุณ</string>
     <string name="alert_role_cant">บทบาทของคุณในบัญชี KIFF นี้เปิดการแจ้งเตือนไม่ได้</string>
     <string name="alert_sign_in_again">เข้าสู่ระบบด้วย KIFF อีกครั้งเพื่อเปิดการแจ้งเตือน: การเข้าสู่ระบบนี้ลงนามให้โทรศัพท์ไม่ได้</string>
+    <string name="alert_sign_out_anyway">ออกจากระบบต่อไป</string>
     <string name="alert_silent">เงียบ</string>
     <string name="alert_silent_example">ฝ่ายสนับสนุนตอบ maria@… แล้ว · ทางอีเมล</string>
     <string name="alert_sound">เสียง</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">ไม่พร้อมใช้งาน</string>
     <string name="alert_status_off">ปิด</string>
     <string name="alert_status_on">เปิด</string>
+    <string name="alert_still_on_after_sign_out_body">tafs ปิดการแจ้งเตือนไม่ได้ (%1$s) ลองอีกครั้ง หรือออกจากระบบต่อไป แล้วปิดการแจ้งเตือนสำหรับ tafs ในการตั้งค่า</string>
+    <string name="alert_still_on_after_sign_out_title">%1$sเครื่องนี้อาจยังได้รับการแจ้งเตือนของบัญชีนี้</string>
     <string name="alert_taf_needs_you">%1$s ต้องการคุณ</string>
     <plurals name="alert_tafs">
         <item quantity="other">%1$s taf ›</item>

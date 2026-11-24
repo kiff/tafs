@@ -27,6 +27,7 @@
   "alert.prompt": "ຮັບການແຈ້ງເຕືອນເມື່ອ taf ຕ້ອງການທ່ານ",
   "alert.role_cant": "ບົດບາດຂອງທ່ານໃນບັນຊີ KIFF ນີ້ເປີດການແຈ້ງເຕືອນບໍ່ໄດ້.",
   "alert.sign_in_again": "ເຂົ້າສູ່ລະບົບດ້ວຍ KIFF ອີກເພື່ອເປີດການແຈ້ງເຕືອນ: ການເຂົ້າສູ່ລະບົບນີ້ລົງລາຍເຊັນສຳລັບໂທລະສັບບໍ່ໄດ້.",
+  "alert.sign_out_anyway": "ອອກຈາກລະບົບເລີຍ",
   "alert.silent": "ງຽບ",
   "alert.silent_example": "ການຕອບສະໜັບສະໜູນຕອບ maria@… · ທາງອີເມວ",
   "alert.sound": "ສຽງ",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "ບໍ່ມີ",
   "alert.status.off": "ປິດ",
   "alert.status.on": "ເປີດ",
+  "alert.still_on_after_sign_out.body": "tafs ປິດມັນບໍ່ໄດ້ ({why}). ລອງໃໝ່ ຫຼື ອອກຈາກລະບົບເລີຍ ແລ້ວປິດການແຈ້ງເຕືອນສຳລັບ tafs ໃນການຕັ້ງຄ່າ.",
+  "alert.still_on_after_sign_out.title": "{device} ນີ້ອາດຍັງໄດ້ຮັບການແຈ້ງເຕືອນຂອງບັນຊີນີ້",
   "alert.taf_needs_you": "{taf} ຕ້ອງການທ່ານ",
   "alert.tafs": {
     "other": "taf {count} ›"

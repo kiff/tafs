@@ -30,6 +30,7 @@
     <string name="alert_prompt">جب کسی taf کو آپ کی ضرورت ہو تو الرٹ پائیں</string>
     <string name="alert_role_cant">اس KIFF اکاؤنٹ میں آپ کا کردار الرٹس آن نہیں کر سکتا۔</string>
     <string name="alert_sign_in_again">الرٹس آن کرنے کے لیے KIFF سے دوبارہ سائن اِن کریں: یہ سائن اِن فون کے لیے دستخط نہیں کر سکتا۔</string>
+    <string name="alert_sign_out_anyway">پھر بھی سائن آؤٹ کریں</string>
     <string name="alert_silent">خاموش</string>
     <string name="alert_silent_example">سپورٹ جوابات نے maria@… کو جواب دیا · ای میل سے</string>
     <string name="alert_sound">آواز</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">دستیاب نہیں</string>
     <string name="alert_status_off">بند</string>
     <string name="alert_status_on">آن</string>
+    <string name="alert_still_on_after_sign_out_body">tafs انہیں بند نہیں کر سکا (%1$s)۔ دوبارہ کوشش کریں، یا پھر بھی سائن آؤٹ کریں اور سیٹنگز میں tafs کی اطلاعات بند کریں۔</string>
+    <string name="alert_still_on_after_sign_out_title">اس %1$s پر اب بھی اس اکاؤنٹ کے الرٹس آ سکتے ہیں</string>
     <string name="alert_taf_needs_you">%1$s کو آپ کی ضرورت ہے</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

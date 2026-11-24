@@ -30,6 +30,7 @@
     <string name="alert_prompt">कुनै taf लाई तपाईं चाहिँदा सूचना पाउनुहोस्</string>
     <string name="alert_role_cant">यस KIFF खातामा तपाईंको भूमिकाले सूचना खोल्न सक्दैन।</string>
     <string name="alert_sign_in_again">सूचना खोल्न KIFF बाट फेरि साइन इन गर्नुहोस्: यो साइन इनले फोनका लागि हस्ताक्षर गर्न सक्दैन।</string>
+    <string name="alert_sign_out_anyway">जे भए पनि साइन आउट गर्नुहोस्</string>
     <string name="alert_silent">मौन</string>
     <string name="alert_silent_example">सहायता जवाफ maria@… लाई जवाफ दिइयो · इमेलबाट</string>
     <string name="alert_sound">आवाज</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">उपलब्ध छैन</string>
     <string name="alert_status_off">बन्द</string>
     <string name="alert_status_on">खुला</string>
+    <string name="alert_still_on_after_sign_out_body">tafs ले तिनलाई बन्द गर्न सकेन (%1$s)। फेरि प्रयास गर्नुहोस्, वा जे भए पनि साइन आउट गरेर सेटिङमा tafs का सूचनाहरू बन्द गर्नुहोस्।</string>
+    <string name="alert_still_on_after_sign_out_title">यो %1$s मा अझै यस खाताका सूचनाहरू आउन सक्छन्</string>
     <string name="alert_taf_needs_you">%1$s ले तपाईंलाई पर्खिरहेको छ</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

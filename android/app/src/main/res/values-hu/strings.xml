@@ -30,6 +30,7 @@
     <string name="alert_prompt">Kapj értesítést, ha egy tafnak szüksége van rád</string>
     <string name="alert_role_cant">A szerepköröd ebben a KIFF-fiókban nem kapcsolhatja be az értesítéseket.</string>
     <string name="alert_sign_in_again">Az értesítések bekapcsolásához jelentkezz be újra a KIFF-fel: ez a bejelentkezés nem tud aláírni a telefon nevében.</string>
+    <string name="alert_sign_out_anyway">Kijelentkezés mégis</string>
     <string name="alert_silent">Néma</string>
     <string name="alert_silent_example">Az Ügyfélszolgálati válaszok válaszolt neki: maria@… · E-mailben</string>
     <string name="alert_sound">Hang</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Nem érhető el</string>
     <string name="alert_status_off">Ki</string>
     <string name="alert_status_on">Be</string>
+    <string name="alert_still_on_after_sign_out_body">A tafs nem tudta kikapcsolni őket (%1$s). Próbáld újra, vagy jelentkezz ki mégis, és kapcsold ki a tafs értesítéseit a Beállításokban.</string>
+    <string name="alert_still_on_after_sign_out_title">Ez az eszköz (%1$s) talán továbbra is megkapja ennek a fióknak az értesítéseit</string>
     <string name="alert_taf_needs_you">%1$s rád vár</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

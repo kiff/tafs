@@ -30,6 +30,7 @@
     <string name="alert_prompt">Merrni një njoftim kur një taf ka nevojë për ju</string>
     <string name="alert_role_cant">Roli juaj në këtë llogari KIFF nuk mund të aktivizojë njoftimet.</string>
     <string name="alert_sign_in_again">Hyni sërish me KIFF për të aktivizuar njoftimet: kjo hyrje nuk mund të nënshkruajë për telefonin.</string>
+    <string name="alert_sign_out_anyway">Dil gjithsesi</string>
     <string name="alert_silent">Pa zë</string>
     <string name="alert_silent_example">Përgjigjet e mbështetjes u përgjigjën maria@… · Me email</string>
     <string name="alert_sound">Zë</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Nuk ofrohet</string>
     <string name="alert_status_off">Joaktiv</string>
     <string name="alert_status_on">Aktiv</string>
+    <string name="alert_still_on_after_sign_out_body">tafs nuk arriti t\'i çaktivizojë (%1$s). Provoni sërish, ose dilni gjithsesi dhe çaktivizoni njoftimet për tafs te Cilësimet.</string>
+    <string name="alert_still_on_after_sign_out_title">Kjo pajisje (%1$s) mund të vazhdojë të marrë njoftimet e kësaj llogarie</string>
     <string name="alert_taf_needs_you">%1$s ka nevojë për ju</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

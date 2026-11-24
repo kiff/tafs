@@ -30,6 +30,7 @@
     <string name="alert_prompt">Otrzymuj alert, gdy taf czeka na Ciebie</string>
     <string name="alert_role_cant">Twoja rola na tym koncie KIFF nie pozwala włączyć alertów.</string>
     <string name="alert_sign_in_again">Zaloguj się ponownie przez KIFF, aby włączyć alerty: to logowanie nie może podpisywać za ten telefon.</string>
+    <string name="alert_sign_out_anyway">Wyloguj mimo to</string>
     <string name="alert_silent">Bez dźwięku</string>
     <string name="alert_silent_example">Odpowiedzi wsparcia odpowiedział maria@… · Przez e-mail</string>
     <string name="alert_sound">Dźwięk</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Niedostępne</string>
     <string name="alert_status_off">Wyłączone</string>
     <string name="alert_status_on">Włączone</string>
+    <string name="alert_still_on_after_sign_out_body">tafs nie mógł ich wyłączyć (%1$s). Spróbuj ponownie albo mimo to wyloguj się i wyłącz powiadomienia tafs w Ustawieniach.</string>
+    <string name="alert_still_on_after_sign_out_title">Ten %1$s może nadal dostawać alerty tego konta</string>
     <string name="alert_taf_needs_you">%1$s czeka na Ciebie</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

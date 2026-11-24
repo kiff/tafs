@@ -30,6 +30,7 @@
     <string name="alert_prompt">Receba um alerta quando um taf precisar de você</string>
     <string name="alert_role_cant">A sua função nesta conta KIFF não pode ativar alertas.</string>
     <string name="alert_sign_in_again">Entre novamente com o KIFF para ativar os alertas: esta sessão não pode assinar pelo telefone.</string>
+    <string name="alert_sign_out_anyway">Sair mesmo assim</string>
     <string name="alert_silent">Silencioso</string>
     <string name="alert_silent_example">Respostas de suporte respondeu a maria@… · Por email</string>
     <string name="alert_sound">Som</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Indisponível</string>
     <string name="alert_status_off">Desativado</string>
     <string name="alert_status_on">Ativado</string>
+    <string name="alert_still_on_after_sign_out_body">O tafs não conseguiu desativá-los (%1$s). Tente novamente, ou saia mesmo assim e desative as notificações do tafs nas Configurações.</string>
+    <string name="alert_still_on_after_sign_out_title">Este %1$s pode continuar a receber os alertas desta conta</string>
     <string name="alert_taf_needs_you">%1$s precisa de você</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

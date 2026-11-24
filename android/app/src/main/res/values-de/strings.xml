@@ -30,6 +30,7 @@
     <string name="alert_prompt">Lass dich benachrichtigen, wenn ein taf dich braucht</string>
     <string name="alert_role_cant">Deine Rolle in diesem KIFF-Konto kann keine Benachrichtigungen einschalten.</string>
     <string name="alert_sign_in_again">Melde dich erneut mit KIFF an, um Benachrichtigungen einzuschalten: Diese Anmeldung kann nicht für das Telefon signieren.</string>
+    <string name="alert_sign_out_anyway">Trotzdem abmelden</string>
     <string name="alert_silent">Lautlos</string>
     <string name="alert_silent_example">Support-Antworten hat maria@… geantwortet · Per E-Mail</string>
     <string name="alert_sound">Ton</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Nicht verfügbar</string>
     <string name="alert_status_off">Aus</string>
     <string name="alert_status_on">An</string>
+    <string name="alert_still_on_after_sign_out_body">tafs konnte sie nicht ausschalten (%1$s). Versuch es erneut oder melde dich trotzdem ab und schalte die Benachrichtigungen für tafs in den Einstellungen aus.</string>
+    <string name="alert_still_on_after_sign_out_title">Dieses %1$s bekommt vielleicht weiter die Benachrichtigungen dieses Kontos</string>
     <string name="alert_taf_needs_you">%1$s braucht dich</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

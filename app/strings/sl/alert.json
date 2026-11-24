@@ -27,6 +27,7 @@
   "alert.prompt": "Prejmite opozorilo, ko vas taf potrebuje",
   "alert.role_cant": "Vaša vloga v tem računu KIFF ne more vklopiti opozoril.",
   "alert.sign_in_again": "Za vklop opozoril se znova prijavite s KIFF: ta prijava ne more podpisovati za telefon.",
+  "alert.sign_out_anyway": "Vseeno se odjavi",
   "alert.silent": "Tiho",
   "alert.silent_example": "Odgovori strankam je odgovoril maria@… · Po e-pošti",
   "alert.sound": "Zvok",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Ni na voljo",
   "alert.status.off": "Izklopljeno",
   "alert.status.on": "Vklopljeno",
+  "alert.still_on_after_sign_out.body": "tafs jih ni mogel izklopiti ({why}). Poskusite znova ali se vseeno odjavite in v Nastavitvah izklopite obvestila za tafs.",
+  "alert.still_on_after_sign_out.title": "Ta {device} morda še vedno prejema opozorila tega računa",
   "alert.taf_needs_you": "{taf} vas potrebuje",
   "alert.tafs": {
     "one": "{count} taf ›",

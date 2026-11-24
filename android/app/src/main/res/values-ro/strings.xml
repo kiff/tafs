@@ -30,6 +30,7 @@
     <string name="alert_prompt">Primiți o alertă când un taf are nevoie de dvs.</string>
     <string name="alert_role_cant">Rolul dvs. în acest cont KIFF nu poate activa alertele.</string>
     <string name="alert_sign_in_again">Conectați-vă din nou cu KIFF pentru a activa alertele: această conectare nu poate semna pentru telefon.</string>
+    <string name="alert_sign_out_anyway">Deconectați-vă oricum</string>
     <string name="alert_silent">Silențios</string>
     <string name="alert_silent_example">Răspunsuri la suport i-a răspuns lui maria@… · Prin e-mail</string>
     <string name="alert_sound">Sunet</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Indisponibil</string>
     <string name="alert_status_off">Dezactivat</string>
     <string name="alert_status_on">Activat</string>
+    <string name="alert_still_on_after_sign_out_body">tafs nu le-a putut dezactiva (%1$s). Încercați din nou sau deconectați-vă oricum și dezactivați notificările pentru tafs în Configurări.</string>
+    <string name="alert_still_on_after_sign_out_title">Acest dispozitiv (%1$s) poate primi în continuare alertele acestui cont</string>
     <string name="alert_taf_needs_you">%1$s vă așteaptă</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

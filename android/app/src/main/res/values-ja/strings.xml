@@ -30,6 +30,7 @@
     <string name="alert_prompt">tafがあなたを必要としたときに通知を受け取る</string>
     <string name="alert_role_cant">このKIFFアカウントでのあなたの役割では、通知をオンにできません。</string>
     <string name="alert_sign_in_again">通知をオンにするには、もう一度KIFFでサインインしてください：このサインインではスマートフォンで署名できません。</string>
+    <string name="alert_sign_out_anyway">このままサインアウト</string>
     <string name="alert_silent">サイレント</string>
     <string name="alert_silent_example">サポート返信がmaria@…に回答しました・メールで</string>
     <string name="alert_sound">サウンド</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">利用不可</string>
     <string name="alert_status_off">オフ</string>
     <string name="alert_status_on">オン</string>
+    <string name="alert_still_on_after_sign_out_body">tafsは通知をオフにできませんでした（%1$s）。もう一度試すか、このままサインアウトして、設定でtafsの通知をオフにしてください。</string>
+    <string name="alert_still_on_after_sign_out_title">この%1$sには、まだこのアカウントの通知が届く可能性があります</string>
     <string name="alert_taf_needs_you">%1$sがあなたを必要としています</string>
     <plurals name="alert_tafs">
         <item quantity="other">taf %1$s個 ›</item>

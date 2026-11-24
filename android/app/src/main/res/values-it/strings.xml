@@ -30,6 +30,7 @@
     <string name="alert_prompt">Ricevi un avviso quando un taf ti aspetta</string>
     <string name="alert_role_cant">Il tuo ruolo in questo account KIFF non può attivare gli avvisi.</string>
     <string name="alert_sign_in_again">Accedi di nuovo con KIFF per attivare gli avvisi: questo accesso non può firmare per il telefono.</string>
+    <string name="alert_sign_out_anyway">Esci comunque</string>
     <string name="alert_silent">Silenzioso</string>
     <string name="alert_silent_example">Risposte al supporto ha risposto a maria@… · Via email</string>
     <string name="alert_sound">Suono</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Non disponibile</string>
     <string name="alert_status_off">Disattivo</string>
     <string name="alert_status_on">Attivo</string>
+    <string name="alert_still_on_after_sign_out_body">tafs non è riuscito a disattivarli (%1$s). Riprova, oppure esci comunque e disattiva le notifiche per tafs in Impostazioni.</string>
+    <string name="alert_still_on_after_sign_out_title">Questo %1$s potrebbe ancora ricevere gli avvisi di questo account</string>
     <string name="alert_taf_needs_you">%1$s ti aspetta</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

@@ -30,6 +30,7 @@
     <string name="alert_prompt">Recevoir une alerte quand un taf vous attend</string>
     <string name="alert_role_cant">Votre rôle sur ce compte KIFF ne permet pas d\'activer les alertes.</string>
     <string name="alert_sign_in_again">Reconnectez-vous avec KIFF pour activer les alertes : cette connexion ne peut pas signer pour le téléphone.</string>
+    <string name="alert_sign_out_anyway">Se déconnecter quand même</string>
     <string name="alert_silent">Silencieux</string>
     <string name="alert_silent_example">Réponses au support a répondu à maria@… · Par e-mail</string>
     <string name="alert_sound">Son</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Non disponible</string>
     <string name="alert_status_off">Désactivé</string>
     <string name="alert_status_on">Activé</string>
+    <string name="alert_still_on_after_sign_out_body">tafs n\'a pas pu les désactiver (%1$s). Réessayez, ou déconnectez-vous quand même et désactivez les notifications pour tafs dans Réglages.</string>
+    <string name="alert_still_on_after_sign_out_title">%2$s peut encore recevoir les alertes de ce compte</string>
     <string name="alert_taf_needs_you">%1$s vous attend</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

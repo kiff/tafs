@@ -30,6 +30,7 @@
     <string name="alert_prompt">Taf таныг хэрэгтэй үед мэдэгдэл авах</string>
     <string name="alert_role_cant">KIFF-ийн энэ бүртгэл дэх таны үүрэг мэдэгдлийг асааж чадахгүй.</string>
     <string name="alert_sign_in_again">Мэдэгдлийг асаахын тулд KIFF-ээр дахин нэвтэрнэ үү: энэ нэвтрэлт утасны өмнөөс гарын үсэг зурж чадахгүй.</string>
+    <string name="alert_sign_out_anyway">Ямар ч байсан гарах</string>
     <string name="alert_silent">Дуугүй</string>
     <string name="alert_silent_example">Дэмжлэгийн хариу maria@… руу хариулсан · Имэйлээр</string>
     <string name="alert_sound">Дуу</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Боломжгүй</string>
     <string name="alert_status_off">Унтраасан</string>
     <string name="alert_status_on">Асаасан</string>
+    <string name="alert_still_on_after_sign_out_body">tafs тэдгээрийг унтрааж чадсангүй (%1$s). Дахин оролдох эсвэл ямар ч байсан гараад, Тохиргоонд tafs-ийн мэдэгдлийг унтраана уу.</string>
+    <string name="alert_still_on_after_sign_out_title">Энэ %1$s энэ бүртгэлийн мэдэгдлийг үргэлжлүүлэн авч магадгүй</string>
     <string name="alert_taf_needs_you">%1$s таныг хүлээж байна</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

@@ -27,6 +27,7 @@
   "alert.prompt": "當 taf 需要您時收到通知",
   "alert.role_cant": "您在此 KIFF 帳號中的角色無法開啟通知。",
   "alert.sign_in_again": "請重新以 KIFF 登入以開啟通知：這次登入無法為手機簽署。",
+  "alert.sign_out_anyway": "仍然登出",
   "alert.silent": "靜音",
   "alert.silent_example": "客服回覆已回覆 maria@… · 透過電子郵件",
   "alert.sound": "聲音",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "無法使用",
   "alert.status.off": "關閉",
   "alert.status.on": "開啟",
+  "alert.still_on_after_sign_out.body": "tafs 無法關閉通知（{why}）。請再試一次，或仍然登出，然後在「設定」中關閉 tafs 的通知。",
+  "alert.still_on_after_sign_out.title": "這部{device}可能仍會收到此帳號的通知",
   "alert.taf_needs_you": "{taf} 需要您",
   "alert.tafs": {
     "other": "{count} 個 taf ›"
