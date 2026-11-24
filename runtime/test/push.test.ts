@@ -815,6 +815,30 @@ describe("an Android phone's alerts", () => {
     expect(registration({ device_token: FCM_TOKEN, platform: "android" })).toEqual({ token: FCM_TOKEN, platform: "android", environment: "production", silent: false });
     expect(registration({ device_token: TOKEN_A.toUpperCase(), environment: "sandbox" })).toEqual({ token: TOKEN_A, platform: "ios", environment: "sandbox", silent: false });
   });
+
+  // macOS 12's own app (kiff/tafs-macos): an APNs token as an iPhone's, kept as `macos` so it's sent on the Mac's topic.
+  it("takes a Mac's registration as an iPhone's, kept as macos", async () => {
+    expect(registration({ device_token: TOKEN_A.toUpperCase(), platform: "macos", environment: "production", sound: false }))
+      .toEqual({ token: TOKEN_A, platform: "macos", environment: "production", silent: true });
+    expect(() => registration({ device_token: FCM_TOKEN, platform: "macos", environment: "production" })).toThrow("in hex");
+    expect(() => registration({ device_token: TOKEN_A, platform: "macos" })).toThrow("sandbox or production");
+    expect(() => registration({ device_token: TOKEN_A, platform: "windows", environment: "production" })).toThrow("ios, macos or android");
+    const push = memoryPush();
+    const r = await call("POST", "/v1/push", { push, headers: { authorization: "Bearer ana" }, body: JSON.stringify({ device_token: TOKEN_A, platform: "macos", environment: "sandbox" }) });
+    expect(r.status).toBeLessThan(300);
+    expect(push.devices.get("t_acme")?.[0]).toMatchObject({ token: TOKEN_A, platform: "macos", environment: "sandbox" });
+  });
+
+  it("sends a Mac's alert through Apple, never Google", async () => {
+    const push = memoryPush();
+    push.secrets.set("t_acme", [SECRET]);
+    push.devices.set("t_acme", [{ token: TOKEN_A, platform: "macos", environment: "production", subject: "u_ana", answers: true, at: "" }]);
+    const sent: string[] = [];
+    const ios = fakeAPNs(() => { sent.push("apple"); return "sent"; });
+    const android = fakeAPNs(() => { sent.push("google"); return "sent"; });
+    await alert(held(), push, { apns: routing({ ios, android }) });
+    expect(sent).toEqual(["apple"]);
+  });
 });
 
 
