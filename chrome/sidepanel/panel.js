@@ -1,7 +1,7 @@
 // The side panel: pairing by the phone's code, and while a taf works, what it's doing, with Pause, Resume and Stop. It
 // shows only what the service worker reports; it decides nothing.
 
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork, switchDraft } from "../src/coachchat.js";
 
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
@@ -151,7 +151,7 @@ function follow() {
   if (id === followed) return;
   followed = id;
   if (!id || id === tafId) return;
-  tafId = id;
+  switchTaf(id);
   $("tafPick").value = id;
   $("tafName").textContent = tafName();
   $("tafWords").placeholder = t("taf_placeholder", tafName());
@@ -371,7 +371,7 @@ async function loadTafs() {
     o.textContent = x.name;
     pick.append(o);
   }
-  if (!tafs.some((x) => x.id === tafId)) tafId = tafs.length ? tafs[0].id : null;
+  if (!tafs.some((x) => x.id === tafId)) switchTaf(tafs.length ? tafs[0].id : null);
   pick.value = tafId || "";
   $("tafPickRow").hidden = tafs.length < 2;
   $("noTaf").hidden = tafs.length > 0 || !!r.error;
@@ -421,8 +421,21 @@ function scheduleTaf() {
   tafTimer = setTimeout(readTaf, busy ? 4000 : idleDelay(tafIdle++));
 }
 
+// What's typed for each taf, kept while another's chat is on show (switchDraft): never sent to another taf.
+let drafts = new Map();
+
+/** Shows taf [id]'s chat: what was typed for the one before is kept for it, and the new one's own draft comes back. */
+function switchTaf(id) {
+  const next = id || null;
+  if (next === tafId) return;
+  const out = switchDraft(drafts, tafId, next, $("tafWords").value);
+  drafts = out.drafts;
+  $("tafWords").value = out.text;
+  tafId = next;
+}
+
 $("tafPick").onchange = () => {
-  tafId = $("tafPick").value || null;
+  switchTaf($("tafPick").value || null);
   $("tafName").textContent = tafName();
   $("tafWords").placeholder = tafId ? t("taf_placeholder", tafName()) : "";
   tafIdle = 0;
@@ -432,14 +445,17 @@ $("tafPick").onchange = () => {
 $("tafForm").onsubmit = async (e) => {
   e.preventDefault();
   const words = $("tafWords").value.trim();
-  if (!words || !tafId) return;
-  const r = await send({ type: "taf_send", taf: tafId, words, clientID: crypto.randomUUID() });
+  const to = tafId;
+  if (!words || !to) return;
+  const r = await send({ type: "taf_send", taf: to, words, clientID: crypto.randomUUID() });
   if (r.error) {
-    $("tafNote").textContent = t("taf_error", tafName());
+    if (tafId === to) $("tafNote").textContent = t("taf_error", tafName());
     return;
   }
   tafSentAt = Date.now();
-  $("tafWords").value = "";
+  // Sent: those words are gone from the taf they went to, and from nowhere else (the chat may have switched meanwhile).
+  if (tafId === to) $("tafWords").value = "";
+  else drafts.delete(to);
   readTaf();
 };
 

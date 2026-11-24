@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS, tafsHere, idleDelay, IDLE_FIRST_MS, IDLE_MOST_MS, tafOfRun, runOfTab, tafOfTab, tafsAtWork } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS, tafsHere, idleDelay, IDLE_FIRST_MS, IDLE_MOST_MS, tafOfRun, runOfTab, tafOfTab, tafsAtWork, switchDraft } from "../src/coachchat.js";
 
 test("the panel opens on a fresh conversation, whose first message starts a new chat", () => {
   assert.equal(FRESH.fresh, true);
@@ -127,4 +127,25 @@ test("the head lists each taf at work once, in the runs' order, and none when no
   assert.deepEqual(tafsAtWork(runs, offered).map((t) => [t.id, t.run, t.waiting]), [["taf-b", "r1", false], ["taf-a", "r2", false]]);
   assert.deepEqual(tafsAtWork([], offered), []);
   assert.equal(tafOfRun({ id: "r", grant: "g-a" }, null), null);
+});
+
+test("words typed for one taf stay that taf's: a switch keeps them, and the other taf's box is its own", () => {
+  // Typed for Alpha, then Beta's tab comes to the front: the box is empty for Beta, never Alpha's words.
+  let d = switchDraft(new Map(), "taf-a", "taf-b", "Refund order 42");
+  assert.equal(d.text, "");
+  assert.equal(d.drafts.get("taf-a"), "Refund order 42");
+  // Typed for Beta too, then back to Alpha: Alpha's words come back, Beta's are kept for Beta.
+  d = switchDraft(d.drafts, "taf-b", "taf-a", "Pause until Monday");
+  assert.equal(d.text, "Refund order 42");
+  assert.equal(d.drafts.get("taf-b"), "Pause until Monday");
+  assert.equal(d.drafts.has("taf-a"), false, "the one on show holds its words in the box, not twice");
+  // An emptied box leaves no draft behind; a switch to no taf empties the box.
+  d = switchDraft(d.drafts, "taf-a", "taf-b", "");
+  assert.equal(d.text, "Pause until Monday");
+  assert.equal(d.drafts.has("taf-a"), false);
+  d = switchDraft(d.drafts, "taf-b", null, "x");
+  assert.equal(d.text, "");
+  assert.equal(d.drafts.get("taf-b"), "x");
+  // The first taf shown starts empty.
+  assert.deepEqual(switchDraft(null, null, "taf-a", "").text, "");
 });

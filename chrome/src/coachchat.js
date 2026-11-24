@@ -76,6 +76,23 @@ export function tafOfRun(run, tafs) {
   return (tafs || []).find((t) => Array.isArray(t.grants) && t.grants.includes(run.grant)) || null;
 }
 
+/**
+ * Words typed for a taf stay that taf's (D2): switching the chat to another taf, by its tab, a chip or the picker, keeps
+ * what was typed for the one before and brings back what was typed for the new one, or nothing. Never carried over: Send
+ * goes to the taf on show, and an instruction for one taf must never reach another. Returns the drafts after and the text
+ * the box now holds.
+ */
+export function switchDraft(drafts, from, to, typed) {
+  const next = new Map(drafts || []);
+  if (from) {
+    if (typed) next.set(from, typed);
+    else next.delete(from);
+  }
+  const text = (to && next.get(to)) || "";
+  if (to) next.delete(to);
+  return { drafts: next, text };
+}
+
 /** The live run whose tab [tabId] is: the tab it acts in first, then any tab it opened. Null for a tab of no live run. */
 export function runOfTab(tabId, runs) {
   if (typeof tabId !== "number") return null;
