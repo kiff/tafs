@@ -1,0 +1,1 @@
+- **Android 140 (1.48.3) for Play's internal track:** Raise the limit says the spend limit as it is now, in the account's currency (#1932).

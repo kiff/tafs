@@ -1,0 +1,1 @@
+• „Limit erhöhen“ zeigt jetzt das aktuelle Ausgabelimit, bevor du es erhöhst, in der Währung deines Kontos.
