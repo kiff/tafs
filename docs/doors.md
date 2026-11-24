@@ -221,13 +221,12 @@ in tafs cloud's words, paused or open); its keys, each by name, when made and la
 the door's own when left blank; at most two); the key shown once (covered whenever the app isn't in front, so the app switcher's snapshot never holds it, and while the screen is recorded or mirrored, as Android's `FLAG_SECURE`; Copy key (to this device only, and off the pasteboard a minute later), where to send work, and an example that
 reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
 but the key. Where to send work is only ever on tafs cloud's own host, over HTTPS (`APIDoorText.endpoint`, as Windows and
-Linux): a whole address elsewhere, or one whose scheme has no host of its own, becomes its path on tafs cloud, so the
-example never names another host. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
-**On Android** (`endpointOn`), the path is kept only when it's plain (letters, digits and `/ _ . ~ -`, as tafs cloud's
-`/v1/doors/api/api-…/requests`), else it's tafs cloud's own address alone (`https://<host>/`); a query or fragment never
-travels; a
-same-host address is written again on tafs cloud's host as it writes it; and the example puts
-the endpoint in single quotes; iOS and the desktops follow.
+Linux): it's always rebuilt on tafs cloud's host, with no port, user, query or fragment, so the example never names another
+host. The example is pasted into a shell, so the path is kept only if it's made of unreserved characters
+(`^/[A-Za-z0-9/_.~-]*$`); anything else is tafs cloud's address alone, and the example single-quotes the endpoint
+(`curl -X POST '<endpoint>'`), the shared rule every app follows (vectors/api-door-endpoint.json, `DoorsTests`). Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
+**On Android** (`endpointOn`) the same rule holds: a same-host address is written again on tafs cloud's host as it writes it, and
+`ApiDoorVectorTest` reads the same vector.
 
 **Android's screen for an `api` door** (`ApiDoorPanels`, `views/ApiDoorViews.kt`) replaces its usual panel while the switch is on: the door's
 state and its switch (off pauses it at once; on is signed), today against its cap, the last request in
