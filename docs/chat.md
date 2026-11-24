@@ -125,6 +125,12 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   (kiff/agents answers the card with them). It reads no page, and no message says `reading` for it: tafs cloud
   keeps a host only for a run the send started, one kiff/agents created once the send began (a card's run is older,
   by a model turn at least).
+- **A link in a page turn's answer asks first.** A taf's message from a run that read a page carries
+  `page_turn: true`, and so does the stream's `session` event for it. Coach may have taken a link from the page,
+  so the iPhone and iPad don't open one from that message on a tap. They show "Open this link?", "It came from a page
+  Coach read. It goes to: {address}" with the whole address, never shortened and always left to right, then
+  **Open** or **Cancel** (`chat.link_confirm_*`, `PageLinkGuard`). A message without it, and the owner's own words,
+  open links as before. An older tafs cloud sends no flag, so nothing asks.
 
 ## The answer as it comes
 

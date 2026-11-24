@@ -1,0 +1,1 @@
+- **iPhone and iPad: a link in Coach's answer to a page it read asks before opening.** On a message marked `page_turn`, a tapped link shows its whole address, then Open or Cancel ([chat.md](docs/chat.md)).

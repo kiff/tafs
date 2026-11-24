@@ -5966,7 +5966,7 @@ final class AppModel: ObservableObject {
             for try await e in events {
                 guard gen == accountGeneration else { return }
                 switch e {
-                case .session(let session, _, let run, let message):
+                case .session(let session, _, let run, let message, _):
                     chatStates[tafID]?.live?.session = session
                     chatStates[tafID]?.live?.run = run
                     if let sent, let message { markSent(sent, serverID: message, in: tafID) }
@@ -9301,6 +9301,8 @@ final class AppModel: ObservableObject {
         var parts: [ReplyPart] = []
         /// When it started: the time its words are shown under.
         var started = Date()
+        /// Its run read the page in front (the stream's `page_turn`): a link in its words asks before opening.
+        var pageTurn = false
         /// The summary so far of what it's thinking now (kiff/tafs#285); cleared once it writes.
         /// Never drawn: the live line says what it's doing.
         var thinking = ""
@@ -9441,9 +9443,11 @@ final class AppModel: ObservableObject {
             for try await e in events {
                 guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                 switch e {
-                case .session(let session, let newSession, let run, let message):
+                case .session(let session, let newSession, let run, let message, let pageTurn):
                     if followNewSetupChat(session, newSession: newSession, sent: sent) { conversation = setupConversationGeneration }
                     setupLive?.session = session
+                    // A run that read the page in front (picked back up here): its words' links ask before opening.
+                    if pageTurn { setupLive?.pageTurn = true }
                     if let run { setupLive?.run = run }
                     settleSetupChat(session)
                     if let sent, let message { markSetupSent(sent, serverID: message) }
