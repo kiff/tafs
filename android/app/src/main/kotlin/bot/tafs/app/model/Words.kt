@@ -528,8 +528,8 @@ object Words {
      */
     fun linkConfirmBody(address: String): String {
       // Put in after formatting: Res.s sets a value apart by its first letter (U+2068) and takes out any direction character.
-      val shown = "⁦${Res.withoutDirection(address)}⁩"
-      return Res.s(R.string.chat_link_confirm_body, "").replace("⁨⁩", shown).replace("", shown)
+      val shown = "\u2066${Res.withoutDirection(address)}\u2069"
+      return Res.s(R.string.chat_link_confirm_body, "\uE000").replace("\u2068\uE000\u2069", shown).replace("\uE000", shown)
     }
     val linkConfirmOpen: String get() = Res.s(R.string.chat_link_confirm_open)
     val linkConfirmTitle: String get() = Res.s(R.string.chat_link_confirm_title)

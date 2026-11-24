@@ -89,7 +89,7 @@ class LinkConfirmTest {
     assertTrue(linkOpens("HTTPS://shop.example/"))
     for (url in listOf(
       "http://shop.example/", "tel:+15550100", "sms:+15550100", "market://details?id=x", "intent://pay#Intent;scheme=bank;end",
-      "bank://pay?to=1", "javascript:alert(1)", "https:///nohost", "https://shop.example/‮gnp.exe", "https://shop.example/a b", "not a url",
+      "bank://pay?to=1", "javascript:alert(1)", "https:///nohost", "https://shop.example/\u202Egnp.exe", "https://shop.example/a b", "not a url",
     )) assertFalse(url, linkOpens(url))
     chat()
     compose.runOnIdle { ask!!("tel:+15550100") }
@@ -105,9 +105,9 @@ class LinkConfirmTest {
     RuntimeEnvironment.setQualifiers("ar")
     Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
     val body = Words.Chat.linkConfirmBody("https://shop.example/a/b?q=1&n=20")
-    assertTrue(body, body.contains("⁦https://shop.example/a/b?q=1&n=20⁩"))
-    assertTrue("in the Arabic words", body.any { it in '؀'..'ۿ' })
+    assertTrue(body, body.contains("\u2066https://shop.example/a/b?q=1&n=20\u2069"))
+    assertTrue("in the Arabic words", body.any { it in '\u0600'..'\u06FF' })
     // A direction character in the address can't close the isolate early.
-    assertFalse(Words.Chat.linkConfirmBody("https://a.example/⁩‮x").contains("‮"))
+    assertFalse(Words.Chat.linkConfirmBody("https://a.example/\u2069\u202Ex").contains("\u202E"))
   }
 }
