@@ -5591,6 +5591,8 @@ enum Words {
         }
         /// Paused: its schedule is off. It still answers what you send.
         static var pausedStillAnswers: String { Words.line("watch.paused_still_answers") }
+        /// Your phone couldn't reach tafs cloud. Try again.
+        static var phoneCouldNotReachCloud: String { Words.line("watch.phone_could_not_reach_cloud") }
         /// Couldn't talk to your phone. Try again.
         static var phoneLinkFailed: String { Words.line("watch.phone_link_failed") }
         /// Your phone didn't answer in time. Try again.

@@ -129,6 +129,7 @@
     <string name="watch_page_brief">الملخص</string>
     <string name="watch_page_inbox">الوارد</string>
     <string name="watch_paused_still_answers">متوقف مؤقتًا: جدوله متوقف. ما زال يردّ على ما ترسله.</string>
+    <string name="watch_phone_could_not_reach_cloud">تعذّر على هاتفك الوصول إلى tafs cloud. حاول مرة أخرى.</string>
     <string name="watch_phone_link_failed">تعذّر التواصل مع هاتفك. حاول مرة أخرى.</string>
     <string name="watch_phone_no_answer">لم يرد هاتفك في الوقت المناسب. حاول مرة أخرى.</string>
     <string name="watch_phone_no_app">tafs غير مثبّت على هاتفك. ثبّته هناك ثم حاول مرة أخرى.</string>

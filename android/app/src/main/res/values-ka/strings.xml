@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">მიმოხილვა</string>
     <string name="watch_page_inbox">შემოსულები</string>
     <string name="watch_paused_still_answers">დაპაუზებულია: მისი განრიგი გამორთულია. ის მაინც პასუხობს, რასაც გაუგზავნით.</string>
+    <string name="watch_phone_could_not_reach_cloud">თქვენმა ტელეფონმა ვერ დაუკავშირდა tafs cloud-ს. სცადეთ ხელახლა.</string>
     <string name="watch_phone_link_failed">თქვენს ტელეფონს ვერ დავუკავშირდით. სცადეთ ხელახლა.</string>
     <string name="watch_phone_no_answer">თქვენმა ტელეფონმა დროზე არ უპასუხა. სცადეთ ხელახლა.</string>
     <string name="watch_phone_no_app">tafs თქვენს ტელეფონზე არ არის. დააყენეთ იქ, შემდეგ სცადეთ ხელახლა.</string>

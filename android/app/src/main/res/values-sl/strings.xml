@@ -2978,6 +2978,7 @@
     <string name="watch_page_brief">Pregled</string>
     <string name="watch_page_inbox">Nabiralnik</string>
     <string name="watch_paused_still_answers">Začasno ustavljeno: njegov urnik je izklopljen. Še vedno odgovarja na to, kar pošljete.</string>
+    <string name="watch_phone_could_not_reach_cloud">Telefon ni mogel doseči tafs cloud. Poskusite znova.</string>
     <string name="watch_phone_link_failed">S telefonom ni bilo mogoče komunicirati. Poskusite znova.</string>
     <string name="watch_phone_no_answer">Telefon ni pravočasno odgovoril. Poskusite znova.</string>
     <string name="watch_phone_no_app">tafs ni v vašem telefonu. Namestite ga tja in poskusite znova.</string>

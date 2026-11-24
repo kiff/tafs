@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">بریف</string>
     <string name="watch_page_inbox">ان باکس</string>
     <string name="watch_paused_still_answers">رکا ہوا: اس کا شیڈول بند ہے۔ آپ جو بھیجیں اس کا جواب پھر بھی دیتا ہے۔</string>
+    <string name="watch_phone_could_not_reach_cloud">آپ کا فون tafs cloud تک نہیں پہنچ سکا۔ دوبارہ کوشش کریں۔</string>
     <string name="watch_phone_link_failed">آپ کے فون سے بات نہیں ہو سکی۔ دوبارہ کوشش کریں۔</string>
     <string name="watch_phone_no_answer">آپ کے فون نے وقت پر جواب نہیں دیا۔ دوبارہ کوشش کریں۔</string>
     <string name="watch_phone_no_app">tafs آپ کے فون پر نہیں ہے۔ اسے وہاں انسٹال کریں، پھر دوبارہ کوشش کریں۔</string>

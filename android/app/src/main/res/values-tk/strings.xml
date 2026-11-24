@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">Gysgaça maglumat</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Bes edildi: onuň tertibi öçük. Ol henizem iberýän zadyňyza jogap berýär.</string>
+    <string name="watch_phone_could_not_reach_cloud">Telefonyňyz tafs cloud-a baglanyp bilmedi. Täzeden synanyşyň.</string>
     <string name="watch_phone_link_failed">Telefonyňyz bilen gürleşip bolmady. Täzeden synanyşyň.</string>
     <string name="watch_phone_no_answer">Telefonyňyz wagtynda jogap bermedi. Täzeden synanyşyň.</string>
     <string name="watch_phone_no_app">tafs telefonyňyzda ýok. Ony şol ýerde guruň, soňra täzeden synanyşyň.</string>

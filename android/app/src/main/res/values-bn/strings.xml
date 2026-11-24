@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">সারসংক্ষেপ</string>
     <string name="watch_page_inbox">ইনবক্স</string>
     <string name="watch_paused_still_answers">বিরতিতে আছে: এর সূচি বন্ধ। আপনি যা পাঠান তার উত্তর এটি এখনও দেয়।</string>
+    <string name="watch_phone_could_not_reach_cloud">আপনার ফোন tafs cloud-এ পৌঁছাতে পারেনি। আবার চেষ্টা করুন।</string>
     <string name="watch_phone_link_failed">আপনার ফোনের সঙ্গে যোগাযোগ করা যায়নি। আবার চেষ্টা করুন।</string>
     <string name="watch_phone_no_answer">আপনার ফোন সময়মতো সাড়া দেয়নি। আবার চেষ্টা করুন।</string>
     <string name="watch_phone_no_app">tafs আপনার ফোনে নেই। সেখানে ইনস্টল করুন, তারপর আবার চেষ্টা করুন।</string>

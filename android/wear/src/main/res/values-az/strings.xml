@@ -109,6 +109,7 @@
     <string name="watch_page_brief">Xülasə</string>
     <string name="watch_page_inbox">Gələnlər</string>
     <string name="watch_paused_still_answers">Fasilədədir: cədvəli söndürülüb. O, hələ də göndərdiklərinizə cavab verir.</string>
+    <string name="watch_phone_could_not_reach_cloud">Telefonunuz tafs cloud ilə əlaqə qura bilmədi. Yenidən cəhd edin.</string>
     <string name="watch_phone_link_failed">Telefonunuzla əlaqə alınmadı. Yenidən cəhd edin.</string>
     <string name="watch_phone_no_answer">Telefonunuz vaxtında cavab vermədi. Yenidən cəhd edin.</string>
     <string name="watch_phone_no_app">tafs telefonunuzda yoxdur. Onu orada quraşdırın, sonra yenidən cəhd edin.</string>

@@ -67,6 +67,7 @@
   "watch.page.brief": "Pregled",
   "watch.page.inbox": "Nabiralnik",
   "watch.paused_still_answers": "Začasno ustavljeno: njegov urnik je izklopljen. Še vedno odgovarja na to, kar pošljete.",
+  "watch.phone_could_not_reach_cloud": "Telefon ni mogel doseči tafs cloud. Poskusite znova.",
   "watch.phone_link_failed": "S telefonom ni bilo mogoče komunicirati. Poskusite znova.",
   "watch.phone_no_answer": "Telefon ni pravočasno odgovoril. Poskusite znova.",
   "watch.phone_no_app": "tafs ni v vašem telefonu. Namestite ga tja in poskusite znova.",

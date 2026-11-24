@@ -59,6 +59,7 @@
   "watch.page.brief": "Résumé",
   "watch.page.inbox": "Boîte de réception",
   "watch.paused_still_answers": "En pause : son planning est arrêté. Il répond quand même à ce que vous envoyez.",
+  "watch.phone_could_not_reach_cloud": "Votre téléphone n'a pas pu joindre tafs cloud. Réessayez.",
   "watch.phone_link_failed": "La liaison avec votre téléphone a échoué. Réessayez.",
   "watch.phone_no_answer": "Votre téléphone n'a pas répondu à temps. Réessayez.",
   "watch.phone_no_app": "tafs n'est pas installé sur votre téléphone. Installez-le, puis réessayez.",

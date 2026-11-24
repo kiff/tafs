@@ -63,6 +63,7 @@
   "watch.page.brief": "Suvestinė",
   "watch.page.inbox": "Gautieji",
   "watch.paused_still_answers": "Pristabdyta: tvarkaraštis išjungtas. Jis vis tiek atsako į tai, ką siunčiate.",
+  "watch.phone_could_not_reach_cloud": "Telefonui nepavyko pasiekti tafs cloud. Bandykite dar kartą.",
   "watch.phone_link_failed": "Nepavyko susisiekti su telefonu. Bandykite dar kartą.",
   "watch.phone_no_answer": "Telefonas laiku neatsakė. Bandykite dar kartą.",
   "watch.phone_no_app": "Jūsų telefone nėra tafs. Įdiekite ją ten ir bandykite dar kartą.",

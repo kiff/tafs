@@ -2741,6 +2741,7 @@
     <string name="watch_page_brief">摘要</string>
     <string name="watch_page_inbox">收件匣</string>
     <string name="watch_paused_still_answers">已暫停：它的排程已關閉。它仍會回覆您傳送的內容。</string>
+    <string name="watch_phone_could_not_reach_cloud">您的手機無法連線到 tafs cloud。請再試一次。</string>
     <string name="watch_phone_link_failed">無法與您的手機通訊。請再試一次。</string>
     <string name="watch_phone_no_answer">您的手機沒有及時回應。請再試一次。</string>
     <string name="watch_phone_no_app">您的手機上沒有 tafs。請在手機上安裝，然後再試一次。</string>

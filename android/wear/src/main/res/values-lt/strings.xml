@@ -114,6 +114,7 @@
     <string name="watch_page_brief">Suvestinė</string>
     <string name="watch_page_inbox">Gautieji</string>
     <string name="watch_paused_still_answers">Pristabdyta: tvarkaraštis išjungtas. Jis vis tiek atsako į tai, ką siunčiate.</string>
+    <string name="watch_phone_could_not_reach_cloud">Telefonui nepavyko pasiekti tafs cloud. Bandykite dar kartą.</string>
     <string name="watch_phone_link_failed">Nepavyko susisiekti su telefonu. Bandykite dar kartą.</string>
     <string name="watch_phone_no_answer">Telefonas laiku neatsakė. Bandykite dar kartą.</string>
     <string name="watch_phone_no_app">Jūsų telefone nėra tafs. Įdiekite ją ten ir bandykite dar kartą.</string>

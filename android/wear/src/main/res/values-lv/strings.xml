@@ -114,6 +114,7 @@
     <string name="watch_page_brief">Kopsavilkums</string>
     <string name="watch_page_inbox">Iesūtne</string>
     <string name="watch_paused_still_answers">Iepauzēts: tā grafiks ir izslēgts. Tas joprojām atbild uz to, ko tu sūti.</string>
+    <string name="watch_phone_could_not_reach_cloud">Tālrunis nevarēja sasniegt tafs cloud. Mēģini vēlreiz.</string>
     <string name="watch_phone_link_failed">Neizdevās sazināties ar tālruni. Mēģini vēlreiz.</string>
     <string name="watch_phone_no_answer">Tālrunis laikus neatbildēja. Mēģini vēlreiz.</string>
     <string name="watch_phone_no_app">Tavā tālrunī nav tafs. Instalē to tur, tad mēģini vēlreiz.</string>

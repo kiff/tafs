@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">Resum</string>
     <string name="watch_page_inbox">Safata d\'entrada</string>
     <string name="watch_paused_still_answers">En pausa: la seva programació està desactivada. Encara respon el que li envies.</string>
+    <string name="watch_phone_could_not_reach_cloud">El teu telèfon no ha pogut connectar amb tafs cloud. Torna-ho a provar.</string>
     <string name="watch_phone_link_failed">No s\'ha pogut parlar amb el telèfon. Torna-ho a provar.</string>
     <string name="watch_phone_no_answer">El teu telèfon no ha respost a temps. Torna-ho a provar.</string>
     <string name="watch_phone_no_app">tafs no és al teu telèfon. Instal·la\'l allà i torna-ho a provar.</string>
