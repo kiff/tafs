@@ -125,6 +125,10 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   own time: a host is shown and kept only for 30 days from its own message, however often pages are sent since. A
   page send reads and writes it once, dropping hosts past their 30 days, and a thread read reads it once, whatever
   the thread's length (none when no message in view started a run).
+- **Coach's answers from a page turn carry `page_turn: true`**, in the thread and on the stream's `session` event while
+  the answer is still coming, from the same kept record as `reading` (so for 30 days from the page message). A link in
+  such an answer may come from the page, so the apps show its full address and ask before opening it. It's never the
+  page or its host, and no other answer carries it, an answered card's included.
 - **A message that answers a card waiting in the chat** goes on in that card's run with the person's words alone
   (kiff/agents answers the card with them). It reads no page, and no message says `reading` for it: tafs cloud
   keeps a host only for a run the send started, one kiff/agents created once the send began (a card's run is older,

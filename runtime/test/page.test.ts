@@ -251,6 +251,47 @@ describe("Coach reads the page the person has open, with their message", () => {
     }
   });
 
+  // Invariant: Coach's answers from a turn that read a page carry page_turn, so the apps ask before opening a link in them; no other answer does
+  it("marks Coach's answers from a page turn with page_turn, in the thread and on the stream, and no other", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const paged = await send(w, COACH, { text: "What's this page?", page: PAGE_SENT });
+    const run1 = w.agents.runs.find((x) => x.id === paged.body.run)!;
+    w.agents.say(run1, "It's the refund policy: see https://evil.example/claim.");
+    const plain = await send(w, COACH, { text: "Thanks", session: paged.body.session });
+    const run2 = w.agents.runs.find((x) => x.id === plain.body.run)!;
+    w.agents.say(run2, "You're welcome.");
+    const answers = (await thread(w)).filter((m) => m.from === "taf") as Array<{ text: string; page_turn?: true }>;
+    expect(answers.find((m) => m.text.includes("refund policy"))?.page_turn).toBe(true);
+    expect(answers.find((m) => m.text === "You're welcome.")?.page_turn).toBeUndefined();
+    // Never the host or anything of the page on Coach's answer.
+    expect(JSON.stringify(answers)).not.toContain("shop.example");
+
+    // The stream says it on its session event, while the answer is still coming: for a page send, and not otherwise.
+    const sessionOf = async (body: unknown) => {
+      const r = await handleStream(event("POST", `/v1/tafs/${COACH}/messages/stream`, body), deps(w));
+      let raw = "";
+      for await (const chunk of r.body) raw += chunk;
+      for await (const e of readEvents(new Response(raw).body!)) if (e.event === "session") return e.data as Record<string, unknown>;
+      return undefined;
+    };
+    expect((await sessionOf({ text: "And this one?", page: PAGE_SENT }))?.page_turn).toBe(true);
+    expect((await sessionOf({ text: "And without a page?" }))?.page_turn).toBeUndefined();
+  });
+
+  it("a page sent while a card waits marks no answer page_turn on the stream", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const first = await send(w, COACH, { text: "Set up refunds" });
+    const waiting = w.agents.runs.find((x) => x.id === first.body.run)!;
+    waiting.created = new Date(NOW.getTime() - 60_000).toISOString();
+    w.agents.cardWaits.run = waiting;
+    const r = await handleStream(event("POST", `/v1/tafs/${COACH}/messages/stream`, { text: "Yes", session: first.body.session, page: PAGE_SENT }), deps(w));
+    let raw = "";
+    for await (const chunk of r.body) raw += chunk;
+    expect(raw).not.toContain("page_turn");
+  });
+
   it("a page just inside the bound goes, its title kept to one line", async () => {
     const w = await world();
     vi.spyOn(console, "log").mockImplementation(() => undefined);
