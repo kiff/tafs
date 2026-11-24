@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · пакет кредити</string>
     <string name="usage_packs_keep">Никогаш не истекува</string>
     <string name="usage_period">период</string>
+    <string name="usage_raise_limit_from">Лимитот за трошење сега е %1$s.</string>
     <string name="usage_raise_limit_not_raised">Лимитот не е зголемен. %1$s</string>
     <string name="usage_raise_limit_prompt">Зголеми го лимитот за трошење</string>
     <string name="usage_raise_limit_sign_in_first">Најави се со KIFF за да го зголемиш лимитот.</string>

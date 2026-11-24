@@ -2512,6 +2512,7 @@
     <string name="usage_pack_named">%1$s · ຊຸດເຄຣດິດ</string>
     <string name="usage_packs_keep">ບໍ່ເຄີຍໝົດອາຍຸ</string>
     <string name="usage_period">ໄລຍະ</string>
+    <string name="usage_raise_limit_from">ຂີດຈຳກັດການໃຊ້ຈ່າຍຕອນນີ້ແມ່ນ %1$s.</string>
     <string name="usage_raise_limit_not_raised">ຂີດຈຳກັດບໍ່ໄດ້ຖືກເພີ່ມ. %1$s</string>
     <string name="usage_raise_limit_prompt">ເພີ່ມຂີດຈຳກັດການໃຊ້ຈ່າຍ</string>
     <string name="usage_raise_limit_sign_in_first">ເຂົ້າສູ່ລະບົບດ້ວຍ KIFF ເພື່ອເພີ່ມຂີດຈຳກັດ.</string>

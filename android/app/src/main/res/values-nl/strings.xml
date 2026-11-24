@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · een pakket credits</string>
     <string name="usage_packs_keep">Verloopt nooit</string>
     <string name="usage_period">periode</string>
+    <string name="usage_raise_limit_from">De uitgavenlimiet is nu %1$s.</string>
     <string name="usage_raise_limit_not_raised">De limiet is niet verhoogd. %1$s</string>
     <string name="usage_raise_limit_prompt">De uitgavenlimiet verhogen</string>
     <string name="usage_raise_limit_sign_in_first">Log in met KIFF om de limiet te verhogen.</string>

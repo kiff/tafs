@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · un paquet de crèdits</string>
     <string name="usage_packs_keep">No caduca mai</string>
     <string name="usage_period">període</string>
+    <string name="usage_raise_limit_from">El límit de despesa ara és de %1$s.</string>
     <string name="usage_raise_limit_not_raised">El límit no s\'ha pujat. %1$s</string>
     <string name="usage_raise_limit_prompt">Puja el límit de despesa</string>
     <string name="usage_raise_limit_sign_in_first">Inicia la sessió amb KIFF per pujar el límit.</string>

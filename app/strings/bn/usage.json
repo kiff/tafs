@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · একটি ক্রেডিট প্যাক",
   "usage.packs_keep": "মেয়াদ কখনও শেষ হয় না",
   "usage.period": "মেয়াদ",
+  "usage.raise_limit.from": "খরচের সীমা এখন {amount}।",
   "usage.raise_limit.not_raised": "সীমা বাড়ানো হয়নি। {why}",
   "usage.raise_limit.prompt": "খরচের সীমা বাড়ান",
   "usage.raise_limit.sign_in_first": "সীমা বাড়াতে KIFF দিয়ে সাইন ইন করুন।",

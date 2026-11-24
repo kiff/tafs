@@ -2777,6 +2777,7 @@ object Words {
     val packsKeep: String get() = Res.s(R.string.usage_packs_keep)
     val period: String get() = Res.s(R.string.usage_period)
     object RaiseLimit {
+      fun from(amount: String): String = Res.s(R.string.usage_raise_limit_from, amount)
       fun notRaised(why: String): String = Res.s(R.string.usage_raise_limit_not_raised, why)
       val prompt: String get() = Res.s(R.string.usage_raise_limit_prompt)
       val signInFirst: String get() = Res.s(R.string.usage_raise_limit_sign_in_first)

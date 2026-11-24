@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · egy kreditcsomag",
   "usage.packs_keep": "Soha nem jár le",
   "usage.period": "időszak",
+  "usage.raise_limit.from": "A költési limit most {amount}.",
   "usage.raise_limit.not_raised": "A limit nem lett megemelve. {why}",
   "usage.raise_limit.prompt": "A költési limit emelése",
   "usage.raise_limit.sign_in_first": "A limit emeléséhez jelentkezz be a KIFF-fel.",

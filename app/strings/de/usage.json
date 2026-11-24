@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · ein Credit-Paket",
   "usage.packs_keep": "Verfällt nie",
   "usage.period": "Zeitraum",
+  "usage.raise_limit.from": "Das Ausgabenlimit liegt jetzt bei {amount}.",
   "usage.raise_limit.not_raised": "Das Limit wurde nicht erhöht. {why}",
   "usage.raise_limit.prompt": "Ausgabenlimit erhöhen",
   "usage.raise_limit.sign_in_first": "Melde dich mit KIFF an, um das Limit zu erhöhen.",

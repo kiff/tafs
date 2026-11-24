@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · пакет кредити",
   "usage.packs_keep": "Никога не изтича",
   "usage.period": "период",
+  "usage.raise_limit.from": "Лимитът на разходите сега е {amount}.",
   "usage.raise_limit.not_raised": "Лимитът не беше увеличен. {why}",
   "usage.raise_limit.prompt": "Увеличаване на лимита на разходите",
   "usage.raise_limit.sign_in_first": "Влезте с KIFF, за да увеличите лимита.",

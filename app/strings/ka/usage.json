@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · კრედიტების პაკეტი",
   "usage.packs_keep": "არასოდეს იწურება",
   "usage.period": "პერიოდი",
+  "usage.raise_limit.from": "ხარჯვის ლიმიტი ახლა {amount}-ია.",
   "usage.raise_limit.not_raised": "ლიმიტი არ გაიზარდა. {why}",
   "usage.raise_limit.prompt": "გაზარდეთ ხარჯვის ლიმიტი",
   "usage.raise_limit.sign_in_first": "შედით KIFF-ით ლიმიტის გასაზრდელად.",

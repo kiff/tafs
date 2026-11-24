@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · pakiet kredytów",
   "usage.packs_keep": "Nigdy nie wygasa",
   "usage.period": "okres",
+  "usage.raise_limit.from": "Limit wydatków wynosi teraz {amount}.",
   "usage.raise_limit.not_raised": "Limit nie został podniesiony. {why}",
   "usage.raise_limit.prompt": "Podnieś limit wydatków",
   "usage.raise_limit.sign_in_first": "Zaloguj się przez KIFF, aby podnieść limit.",

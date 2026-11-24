@@ -2652,6 +2652,7 @@
     <string name="usage_pack_named">%1$s · un pachet de credite</string>
     <string name="usage_packs_keep">Nu expiră niciodată</string>
     <string name="usage_period">perioadă</string>
+    <string name="usage_raise_limit_from">Limita de cheltuieli este acum %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limita nu a fost mărită. %1$s</string>
     <string name="usage_raise_limit_prompt">Măriți limita de cheltuieli</string>
     <string name="usage_raise_limit_sign_in_first">Conectați-vă cu KIFF pentru a mări limita.</string>

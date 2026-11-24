@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · 크레딧 팩",
   "usage.packs_keep": "만료되지 않음",
   "usage.period": "기간",
+  "usage.raise_limit.from": "현재 지출 한도는 {amount}입니다.",
   "usage.raise_limit.not_raised": "한도를 올리지 못했습니다. {why}",
   "usage.raise_limit.prompt": "지출 한도 올리기",
   "usage.raise_limit.sign_in_first": "한도를 올리려면 KIFF로 로그인하세요.",

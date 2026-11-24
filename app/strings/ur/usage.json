@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · کریڈٹس کا ایک پیک",
   "usage.packs_keep": "کبھی ختم نہیں ہوتا",
   "usage.period": "مدت",
+  "usage.raise_limit.from": "خرچ کی حد اس وقت {amount} ہے۔",
   "usage.raise_limit.not_raised": "حد نہیں بڑھائی گئی۔ {why}",
   "usage.raise_limit.prompt": "خرچ کی حد بڑھائیں",
   "usage.raise_limit.sign_in_first": "حد بڑھانے کے لیے KIFF سے سائن اِن کریں۔",

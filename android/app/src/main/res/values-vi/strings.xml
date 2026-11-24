@@ -2512,6 +2512,7 @@
     <string name="usage_pack_named">%1$s · một gói tín dụng</string>
     <string name="usage_packs_keep">Không bao giờ hết hạn</string>
     <string name="usage_period">kỳ</string>
+    <string name="usage_raise_limit_from">Hạn mức chi tiêu hiện là %1$s.</string>
     <string name="usage_raise_limit_not_raised">Hạn mức chưa được nâng. %1$s</string>
     <string name="usage_raise_limit_prompt">Nâng hạn mức chi tiêu</string>
     <string name="usage_raise_limit_sign_in_first">Hãy đăng nhập bằng KIFF để nâng hạn mức.</string>

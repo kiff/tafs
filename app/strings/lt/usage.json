@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · kreditų paketas",
   "usage.packs_keep": "Nenustoja galioti",
   "usage.period": "laikotarpį",
+  "usage.raise_limit.from": "Išlaidų limitas dabar yra {amount}.",
   "usage.raise_limit.not_raised": "Limitas nepadidintas. {why}",
   "usage.raise_limit.prompt": "Padidinti išlaidų limitą",
   "usage.raise_limit.sign_in_first": "Prisijunkite su KIFF, kad galėtumėte padidinti limitą.",

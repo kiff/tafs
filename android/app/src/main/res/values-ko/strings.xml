@@ -2512,6 +2512,7 @@
     <string name="usage_pack_named">%1$s · 크레딧 팩</string>
     <string name="usage_packs_keep">만료되지 않음</string>
     <string name="usage_period">기간</string>
+    <string name="usage_raise_limit_from">현재 지출 한도는 %1$s입니다.</string>
     <string name="usage_raise_limit_not_raised">한도를 올리지 못했습니다. %1$s</string>
     <string name="usage_raise_limit_prompt">지출 한도 올리기</string>
     <string name="usage_raise_limit_sign_in_first">한도를 올리려면 KIFF로 로그인하세요.</string>

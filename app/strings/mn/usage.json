@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · кредитийн багц",
   "usage.packs_keep": "Хэзээ ч дуусахгүй",
   "usage.period": "үе",
+  "usage.raise_limit.from": "Зарцуулалтын хязгаар одоо {amount} байна.",
   "usage.raise_limit.not_raised": "Хязгаарыг нэмэгдүүлсэнгүй. {why}",
   "usage.raise_limit.prompt": "Зарцуулалтын хязгаарыг нэмэгдүүлэх",
   "usage.raise_limit.sign_in_first": "Хязгаарыг нэмэгдүүлэхийн тулд KIFF-ээр нэвтэрнэ үү.",

@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · krediidipakett</string>
     <string name="usage_packs_keep">Ei aegu kunagi</string>
     <string name="usage_period">periood</string>
+    <string name="usage_raise_limit_from">Kululimiit on praegu %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limiiti ei suurendatud. %1$s</string>
     <string name="usage_raise_limit_prompt">Suurenda kululimiiti</string>
     <string name="usage_raise_limit_sign_in_first">Limiidi suurendamiseks logi sisse KIFFiga.</string>

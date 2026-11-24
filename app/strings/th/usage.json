@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · แพ็กเครดิต",
   "usage.packs_keep": "ไม่มีวันหมดอายุ",
   "usage.period": "รอบ",
+  "usage.raise_limit.from": "ขีดจำกัดการใช้จ่ายตอนนี้คือ {amount}",
   "usage.raise_limit.not_raised": "ยังไม่ได้เพิ่มขีดจำกัด {why}",
   "usage.raise_limit.prompt": "เพิ่มขีดจำกัดการใช้จ่าย",
   "usage.raise_limit.sign_in_first": "เข้าสู่ระบบด้วย KIFF เพื่อเพิ่มขีดจำกัด",

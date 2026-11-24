@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · حزمة أرصدة",
   "usage.packs_keep": "لا تنتهي صلاحيتها",
   "usage.period": "فترة",
+  "usage.raise_limit.from": "حد الإنفاق الآن {amount}.",
   "usage.raise_limit.not_raised": "لم يُرفع الحد. {why}",
   "usage.raise_limit.prompt": "رفع حد الإنفاق",
   "usage.raise_limit.sign_in_first": "سجّل الدخول عبر KIFF لرفع الحد.",
