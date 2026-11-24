@@ -308,6 +308,56 @@ describe("tafs cloud", () => {
     expect(r.body.jobs.map((j: { id: string }) => j.id)).toContain("refunds");
   });
 
+  // On a person's read of the tafs list, at most hourly, the account's devices are checked against KIFF's people.
+  it("drops a departed member's alert devices and narrows a demoted one's, on a tafs read, at most hourly", async () => {
+    const w = world();
+    const rows = new Map<string, Device>();
+    const dev = (token: string, subject: string, answers: boolean): Device => ({ token, environment: "production", subject, answers, at: "" });
+    for (const d of [dev("t_ana", "u_ana", true), dev("t_bo", "u_bo", true), dev("t_cy", "u_cy", true)]) rows.set(d.token, d);
+    let reads = 0;
+    let members: unknown = [
+      { subject: "u_ana", status: "active", capabilities: ["read", "cards.manage", "holds.answer"] },
+      { subject: "u_bo", status: "active", capabilities: ["read"] },
+      { subject: "u_cy", status: "removed", capabilities: [] },
+    ];
+    const inner = depsOf(w).fetch!;
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now),
+      push: { get: async () => ({ devices: [...rows.values()], secrets: [] }), addDevice: async (_t: string, d: Device) => { rows.set(d.token, d); },
+        removeDevice: async (_t: string, token: string) => { rows.delete(token); }, addSecret: async () => undefined },
+      fetch: (async (url: string, init?: RequestInit) => {
+        if (new URL(String(url)).pathname === "/v1/tenant/members") { reads++; return members ? new Response(JSON.stringify({ members }), { status: 200 }) : new Response("{}", { status: 503 }); }
+        return inner(url as never, init);
+      }) as typeof fetch };
+    const read = () => handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    // Fail closed: KIFF can't say who's on the account, says no one is, or leaves out the reader, whose own session just
+    // read it. Nothing changes, and the next read asks again.
+    const listed = members;
+    for (const wrong of [undefined, [], [{ subject: "u_bo", status: "active", capabilities: [] }], [{ subject: "u_ana", status: "removed", capabilities: [] }]]) {
+      members = wrong;
+      expect((await read()).statusCode).toBe(200);
+      expect([...rows.keys()].sort()).toEqual(["t_ana", "t_bo", "t_cy"]);
+      expect(rows.get("t_bo")).toMatchObject({ answers: true });
+    }
+    expect(reads).toBe(4);
+    members = listed;
+    expect((await read()).statusCode).toBe(200);
+    expect(reads).toBe(5);
+    warn.mockRestore();
+    // Cy left: their device goes. Bo is a viewer now: theirs stays, with no held calls.
+    expect([...rows.keys()].sort()).toEqual(["t_ana", "t_bo"]);
+    expect(rows.get("t_bo")).toMatchObject({ answers: false, addsTasks: false, manages: false });
+    // Ana's row didn't say she manages Cards; her role does, but a device is never widened.
+    expect(rows.get("t_ana")).toMatchObject({ answers: true });
+    expect(rows.get("t_ana")?.manages).not.toBe(true);
+    expect(log.mock.calls.map((c) => String(c[0])).filter((l) => l.includes("alert_devices_synced"))).toEqual([JSON.stringify({ event: "alert_devices_synced", tenant: "t_acme", removed: 1, updated: 1 })]);
+    // Within the hour, no read of KIFF's people.
+    await read();
+    expect(reads).toBe(5);
+    log.mockRestore();
+  });
+
   it("shows recipes only while the account has no live taf and suggestions are on, decided here (kiff/tafs#476)", async () => {
     const w = world();
     const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
