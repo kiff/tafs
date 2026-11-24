@@ -209,7 +209,7 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | 13 | An API door's address only ever on tafs cloud's own host, with only a plain path, and its example quoted for a shell | done (host: tafs#1768); the plain path and quotes: in review, tafs#1875 | done (host: tafs#1770; the plain path and quotes: tafs#1874) | doors.md, `vectors/api-door-endpoint.json` |
 | 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | done (tafs#1859) | done (tafs#1761) | android-app.md, ios-app.md, "Pairing a Chrome" |
 | 15 | A re-pairing after a reinstall starts on the one Chrome alike | done (tafs#1780) | done (tafs#1781) | chrome.md, "Your Chrome" 1 |
-| 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | held by the owner's decision (24 Nov 01:00): no passwords in the extension. Built and off on its release-card branch, not opened | built, off (tafs#1830, #1837, tafs#1882: planque's `release_fields`, live connections only, the served block's hash). Waits on planque handing a sealed fill and KIFF's `browser_sha256` (kiff/cloud#129) | chrome.md, "The phone's release card" |
+| 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | in review, off (its release-card branch, not yet a PR): live connections only | built, off (tafs#1830, #1837, tafs#1882: planque's `release_fields`, live connections only, the served block's hash). Waits on planque handing a sealed fill and KIFF's `browser_sha256` (kiff/cloud#129) | chrome.md, "The phone's release card" |
 
 ## Your Chrome
 
@@ -289,7 +289,7 @@ What landed or is in review on 23 Nov, device by device (read again at 22:50 Par
 | Trials of a new version on the security key | done | done | done (tafs-macos#182) | done | done (tafs-linux#96) | — |
 | Sign in again and Replace the key on a connection | done | done | not for it: made on the phone (planque takes no security key) | done (tafs-windows#268) | partial: drawn up to planque's signature, signed on the phone | — |
 | Sign in again shows the connection's approval sheet first, and signs only the request it showed | done (tafs#1878) | done (tafs#1826) | as the row above | as the row above | as the row above | — |
-| A sealed sign-in fill's release card: only this phone's own signed sites, live connections only, the served block's hash signed | held by the owner's decision (24 Nov 01:00): no passwords in the extension; built and off on its branch, not opened | done, off (tafs#1882) | — | — | — | — |
+| A sealed sign-in fill's release card: only this phone's own signed sites, live connections only, the served block's hash signed | in review (its release-card branch, not yet a PR); off | done, off (tafs#1882) | — | — | — | — |
 | A connection's own page from planque's row, with its actions | done | done | partial | done (tafs-windows#269) | partial | — |
 | An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | not started | done (tafs-windows#271: said on Needs you, not in the chat) | done (tafs-linux#99) | — |
 | An API door's example safe to paste into a shell (a plain path only, quoted; `vectors/api-door-endpoint.json`, tafs#1877) | in review: tafs#1875 | done (tafs#1874) | done (tafs-macos#205) | done (tafs-windows#323) | done (tafs-linux#111) | — |
