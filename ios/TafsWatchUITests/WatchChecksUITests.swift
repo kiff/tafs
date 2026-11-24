@@ -13,11 +13,17 @@ final class WatchChecksUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    /// The app, opened on the demo phone, with any of the demo's other switches.
+    /// The app, opened on the demo phone, with any of the demo's other switches. A watch simulator now and then fails to
+    /// bring the app up ("is not running"), which says nothing about the app, so it's launched again, up to three times.
     private func launch(_ more: String...) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-watch-demo", "-AppleLanguages", "(en)", "-AppleLocale", "en_GB"] + more
-        app.launch()
+        for attempt in 1...3 {
+            app.launch()
+            if app.wait(for: .runningForeground, timeout: 10) { return app }
+            if attempt < 3 { app.terminate() }
+        }
+        XCTFail("the watch app didn't come to the front in three launches")
         return app
     }
 
@@ -187,5 +193,39 @@ final class WatchChecksUITests: XCTestCase {
         let app = launch("-watch-demo-cloud-down")
         open("Tafs", in: app)
         shows("Your phone couldn't reach tafs cloud. Try again.", in: app)
+    }
+
+    /// The App Store's Apple Watch screenshots (docs/screenshots.md, "Apple Watch"): Coach's home, the Inbox, a held call,
+    /// Your tafs and a taf's page, each kept as an attachment named for its file. Run by ios/scripts/watch-store-shots.sh
+    /// on a watch of an App Store size; skipped otherwise, so the `watch` job doesn't pay for it.
+    func testStoreScreenshots() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["TAFS_STORE_SHOTS"] == "1",
+                          "store screenshots: ios/scripts/watch-store-shots.sh")
+        var app = launch()
+        shows("Ask Coach", in: app)
+        keep("watch-1-coach", app)
+        open("Inbox", in: app)
+        shows("Refunds", in: app)
+        keep("watch-2-inbox", app)
+        openLine("Refunds", in: app)
+        shows("Approve on your phone", in: app)
+        keep("watch-3-held-call", app)
+
+        app = launch("-watch-demo-taf-page")
+        open("Tafs", in: app)
+        shows("Lead follow-up", in: app)
+        keep("watch-4-tafs", app)
+        openLine("Refunds", in: app)
+        shows("What it does", in: app)
+        keep("watch-5-taf", app)
+    }
+
+    /// The screen as it is, once it has settled, kept with the test's results under `name`.
+    private func keep(_ name: String, _ app: XCUIApplication) {
+        RunLoop.current.run(until: Date().addingTimeInterval(1.5))
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = name
+        shot.lifetime = .keepAlways
+        add(shot)
     }
 }

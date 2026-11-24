@@ -52,6 +52,10 @@ on:
         description: Also give the build to the external Beta testers (after Apple's review). Off keeps it to Team.
         type: boolean
         default: true
+      watch_shots:
+        description: "Also make the Apple Watch's App Store screenshots (ios/scripts/watch-store-shots.sh), as the watch-store-shots artifact."
+        type: boolean
+        default: false
 
 # A pull request's runs share one group, so a newer push cancels the older run.
 # Every other run (main, tags, TestFlight builds) has a group of its own, keyed
@@ -879,6 +883,35 @@ jobs:
         with:
           name: screenshots
           path: ${{ runner.temp }}/shots
+
+  # The Apple Watch's App Store screenshots, on a manual run that asks for them (docs/screenshots.md, "Apple Watch"):
+  # five screens from the demo phone on a watch of an App Store size, as the watch-store-shots artifact. Nothing is uploaded
+  # to App Store Connect, and no secret is read.
+  watch-store-shots:
+    if: github.event_name == 'workflow_dispatch' && inputs.watch_shots
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: The watch's screenshots
+        run: |
+          # The image ships a watchOS runtime for its Xcode; if it doesn't, the platform is downloaded once, here.
+          xcrun simctl list runtimes | grep -q watchOS || xcodebuild -downloadPlatform watchOS
+          ios/scripts/watch-store-shots.sh "$RUNNER_TEMP/watch-store-shots"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: watch-store-shots
+          path: ${{ runner.temp }}/watch-store-shots/*.png
+          if-no-files-found: error
 
   # After the tests and the iPad's, or without them when main already passed
   # them with the same app (changes.tested, changes.ipad_tested). A tag never
