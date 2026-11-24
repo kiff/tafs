@@ -1,0 +1,1 @@
+- **Apple Watch: Keep for later is on.** When a Send to Coach gets no answer from the phone, the watch offers to keep the message and sends it once the phone is back; the privacy page says so ([watch-app.md](docs/watch-app.md)).

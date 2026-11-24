@@ -668,8 +668,8 @@ final class CoachModelTests: XCTestCase {
         XCTAssertEqual(FileDraftStore.storeKey, "tafs.draft", "Wear OS's name")
     }
 
-    /// Off until the privacy page's Apple Watch paragraph says the watch keeps it, and the owner's yes.
-    func testKeepForLaterIsOff() {
-        XCTAssertFalse(CoachModel.keepForLaterOn)
+    /// On, with the privacy page's Apple Watch paragraph saying the watch keeps it, and the owner's yes.
+    func testKeepForLaterIsOn() {
+        XCTAssertTrue(CoachModel.keepForLaterOn)
     }
 }
