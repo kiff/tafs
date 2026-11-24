@@ -94,5 +94,6 @@
   "taf_remove": {"message": "このtafを削除"},
   "taf_remove_on_phone": {"message": "tafの削除はスマートフォンで行います。tafsアプリで開いて「削除」を選んでください。削除はそこで承認します。"},
   "bar_go": {"message": "そのタブへ移動"},
-  "bar_paused": {"message": "$TAF$は一時停止中", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$は一時停止中", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$の作業が完了", "placeholders": {"taf": {"content": "$1"}}}
 }

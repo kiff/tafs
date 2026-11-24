@@ -94,5 +94,6 @@
   "taf_remove": {"message": "A taf eltávolítása"},
   "taf_remove_on_phone": {"message": "A tafot a telefonodon lehet eltávolítani: nyisd meg a tafs alkalmazásban, majd Eltávolítás. Az eltávolítást ott hagyod jóvá."},
   "bar_go": {"message": "Ugrás a lapjára"},
-  "bar_paused": {"message": "Szüneteltetve: $TAF$", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "Szüneteltetve: $TAF$", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "Kész: $TAF$", "placeholders": {"taf": {"content": "$1"}}}
 }

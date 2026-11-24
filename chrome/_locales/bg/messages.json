@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Премахване на този taf"},
   "taf_remove_on_phone": {"message": "Taf се премахва от телефона: отворете го в приложението tafs, после Премахване. Премахването се одобрява там."},
   "bar_go": {"message": "Към раздела му"},
-  "bar_paused": {"message": "$TAF$ е на пауза", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ е на пауза", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ приключи", "placeholders": {"taf": {"content": "$1"}}}
 }

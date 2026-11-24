@@ -263,5 +263,6 @@
   "taf_remove": {"message": "Bu taf-y aýyryň"},
   "taf_remove_on_phone": {"message": "Taf telefonyňyzda aýrylýar: ony tafs programmasynda açyň, soň Aýyryň. Aýyrmak şol ýerde tassyklanýar."},
   "bar_go": {"message": "Onuň goýmasyna geç"},
-  "bar_paused": {"message": "$TAF$ bes edildi", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ bes edildi", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ tamamlady", "placeholders": {"taf": {"content": "$1"}}}
 }

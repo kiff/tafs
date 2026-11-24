@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Usuń tego tafa"},
   "taf_remove_on_phone": {"message": "Tafa usuwa się na telefonie: otwórz go w aplikacji tafs, potem Usuń. Tam zatwierdzasz usunięcie."},
   "bar_go": {"message": "Przejdź do jego karty"},
-  "bar_paused": {"message": "$TAF$ jest wstrzymany", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ jest wstrzymany", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ skończył", "placeholders": {"taf": {"content": "$1"}}}
 }

@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Treu aquest taf"},
   "taf_remove_on_phone": {"message": "Un taf es treu al telèfon: obre'l a l'app tafs i toca Treu. Allà s'aprova que es tregui."},
   "bar_go": {"message": "Ves a la seva pestanya"},
-  "bar_paused": {"message": "$TAF$ està en pausa", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ està en pausa", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ ha acabat", "placeholders": {"taf": {"content": "$1"}}}
 }

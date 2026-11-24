@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Deze taf verwijderen"},
   "taf_remove_on_phone": {"message": "Een taf verwijder je op je telefoon: open hem in de tafs-app en kies Verwijderen. Daar keur je het verwijderen goed."},
   "bar_go": {"message": "Naar zijn tabblad"},
-  "bar_paused": {"message": "$TAF$ is gepauzeerd", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ is gepauzeerd", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ is klaar", "placeholders": {"taf": {"content": "$1"}}}
 }

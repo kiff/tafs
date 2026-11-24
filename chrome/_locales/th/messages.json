@@ -94,5 +94,6 @@
   "taf_remove": {"message": "นำ taf นี้ออก"},
   "taf_remove_on_phone": {"message": "taf นำออกได้บนโทรศัพท์ของคุณ: เปิดในแอป tafs แล้วแตะ นำออก การนำออกจะอนุมัติที่นั่น"},
   "bar_go": {"message": "ไปที่แท็บของมัน"},
-  "bar_paused": {"message": "$TAF$ หยุดชั่วคราวแล้ว", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ หยุดชั่วคราวแล้ว", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ ทำเสร็จแล้ว", "placeholders": {"taf": {"content": "$1"}}}
 }

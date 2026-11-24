@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Հեռացնել այս taf-ը"},
   "taf_remove_on_phone": {"message": "Taf-ը հեռացվում է հեռախոսում. բացեք այն tafs հավելվածում, ապա Հեռացնել։ Հեռացումը հաստատվում է այնտեղ։"},
   "bar_go": {"message": "Անցնել նրա ներդիրին"},
-  "bar_paused": {"message": "$TAF$-ը դադարեցված է", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$-ը դադարեցված է", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$-ն ավարտեց", "placeholders": {"taf": {"content": "$1"}}}
 }

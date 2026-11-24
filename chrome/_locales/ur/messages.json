@@ -263,5 +263,6 @@
   "taf_remove": {"message": "یہ taf ہٹائیں"},
   "taf_remove_on_phone": {"message": "taf آپ کے فون پر ہٹایا جاتا ہے: اسے tafs ایپ میں کھولیں، پھر ہٹائیں۔ ہٹانے کی منظوری وہیں دی جاتی ہے۔"},
   "bar_go": {"message": "اس کے ٹیب پر جائیں"},
-  "bar_paused": {"message": "$TAF$ رکا ہوا ہے", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ رکا ہوا ہے", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ کا کام مکمل", "placeholders": {"taf": {"content": "$1"}}}
 }

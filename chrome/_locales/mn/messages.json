@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Энэ taf-ыг хасах"},
   "taf_remove_on_phone": {"message": "Taf-ыг утсан дээрээ хасна: tafs аппад нээгээд Хасах-ыг дарна уу. Хасахыг тэнд зөвшөөрнө."},
   "bar_go": {"message": "Түүний таб руу очих"},
-  "bar_paused": {"message": "$TAF$ түр зогссон", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ түр зогссон", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ дууссан", "placeholders": {"taf": {"content": "$1"}}}
 }

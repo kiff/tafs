@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Bu taf'ı kaldır"},
   "taf_remove_on_phone": {"message": "Bir taf telefonunuzda kaldırılır: tafs uygulamasında açın, sonra Kaldır. Kaldırma orada onaylanır."},
   "bar_go": {"message": "Sekmesine git"},
-  "bar_paused": {"message": "$TAF$ duraklatıldı", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ duraklatıldı", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ bitirdi", "placeholders": {"taf": {"content": "$1"}}}
 }

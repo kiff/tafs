@@ -94,5 +94,6 @@
   "taf_remove": {"message": "यो taf हटाउनुहोस्"},
   "taf_remove_on_phone": {"message": "taf तपाईंको फोनमा हटाइन्छ: यसलाई tafs एपमा खोल्नुहोस्, त्यसपछि हटाउनुहोस्। हटाउने स्वीकृति त्यहीँ दिइन्छ।"},
   "bar_go": {"message": "यसको ट्याबमा जानुहोस्"},
-  "bar_paused": {"message": "$TAF$ पज गरिएको छ", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ पज गरिएको छ", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ ले सक्यो", "placeholders": {"taf": {"content": "$1"}}}
 }

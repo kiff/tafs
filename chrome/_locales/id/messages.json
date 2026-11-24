@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Hapus taf ini"},
   "taf_remove_on_phone": {"message": "Taf dihapus di ponsel Anda: buka di aplikasi tafs, lalu Hapus. Penghapusannya disetujui di sana."},
   "bar_go": {"message": "Buka tabnya"},
-  "bar_paused": {"message": "$TAF$ sedang dijeda", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ sedang dijeda", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ sudah selesai", "placeholders": {"taf": {"content": "$1"}}}
 }

@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Eemalda see taf"},
   "taf_remove_on_phone": {"message": "Taf eemaldatakse telefonis: ava see tafsi rakenduses ja vali Eemalda. Eemaldamine kinnitatakse seal."},
   "bar_go": {"message": "Mine selle vahekaardile"},
-  "bar_paused": {"message": "$TAF$ on pausil", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ on pausil", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ on valmis", "placeholders": {"taf": {"content": "$1"}}}
 }

@@ -94,5 +94,6 @@
   "taf_remove": {"message": "ເອົາ taf ນີ້ອອກ"},
   "taf_remove_on_phone": {"message": "taf ຖືກເອົາອອກໃນໂທລະສັບຂອງທ່ານ: ເປີດມັນໃນແອັບ tafs, ແລ້ວ ເອົາອອກ. ການເອົາອອກຖືກອະນຸມັດຢູ່ທີ່ນັ້ນ."},
   "bar_go": {"message": "ໄປທີ່ແທັບຂອງມັນ"},
-  "bar_paused": {"message": "$TAF$ ຢຸດຊົ່ວຄາວແລ້ວ", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ ຢຸດຊົ່ວຄາວແລ້ວ", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ ເຮັດແລ້ວ", "placeholders": {"taf": {"content": "$1"}}}
 }

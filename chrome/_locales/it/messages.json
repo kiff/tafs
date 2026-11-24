@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Rimuovi questo taf"},
   "taf_remove_on_phone": {"message": "Un taf si rimuove dal telefono: aprilo nell'app tafs, poi Rimuovi. La rimozione si approva lì."},
   "bar_go": {"message": "Vai alla sua scheda"},
-  "bar_paused": {"message": "$TAF$ è in pausa", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ è in pausa", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ ha finito", "placeholders": {"taf": {"content": "$1"}}}
 }

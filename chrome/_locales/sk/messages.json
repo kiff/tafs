@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Odstrániť tento taf"},
   "taf_remove_on_phone": {"message": "Taf sa odstraňuje v telefóne: otvorte ho v aplikácii tafs a potom Odstrániť. Odstránenie sa schvaľuje tam."},
   "bar_go": {"message": "Prejsť na jeho kartu"},
-  "bar_paused": {"message": "$TAF$ je pozastavený", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ je pozastavený", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ je hotový", "placeholders": {"taf": {"content": "$1"}}}
 }

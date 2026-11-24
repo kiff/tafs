@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Eliminați acest taf"},
   "taf_remove_on_phone": {"message": "Un taf se elimină de pe telefon: deschideți-l în aplicația tafs, apoi Eliminați. Eliminarea se aprobă acolo."},
   "bar_go": {"message": "Accesați fila sa"},
-  "bar_paused": {"message": "$TAF$ este întrerupt", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ este întrerupt", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ a terminat", "placeholders": {"taf": {"content": "$1"}}}
 }

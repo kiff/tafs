@@ -94,5 +94,6 @@
   "taf_remove": {"message": "이 taf 삭제"},
   "taf_remove_on_phone": {"message": "taf는 휴대폰에서 삭제합니다. tafs 앱에서 열고 삭제를 누르세요. 삭제 승인도 거기서 합니다."},
   "bar_go": {"message": "해당 탭으로 이동"},
-  "bar_paused": {"message": "$TAF$ 일시 중지됨", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ 일시 중지됨", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ 작업 완료", "placeholders": {"taf": {"content": "$1"}}}
 }

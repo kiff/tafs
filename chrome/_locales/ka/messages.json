@@ -94,5 +94,6 @@
   "taf_remove": {"message": "ამ taf-ის ამოღება"},
   "taf_remove_on_phone": {"message": "taf ტელეფონიდან ამოიღება: გახსენით tafs აპში, შემდეგ ამოღება. ამოღება იქ დასტურდება."},
   "bar_go": {"message": "მის ჩანართზე გადასვლა"},
-  "bar_paused": {"message": "$TAF$ დაპაუზებულია", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ დაპაუზებულია", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$-მა დაასრულა", "placeholders": {"taf": {"content": "$1"}}}
 }

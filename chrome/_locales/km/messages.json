@@ -94,5 +94,6 @@
   "taf_remove": {"message": "ដក taf នេះចេញ"},
   "taf_remove_on_phone": {"message": "taf ត្រូវដកចេញនៅលើទូរសព្ទរបស់អ្នក៖ បើកវានៅក្នុងកម្មវិធី tafs រួចចុច ដកចេញ។ ការដកចេញត្រូវយល់ព្រមនៅទីនោះ។"},
   "bar_go": {"message": "ទៅកាន់ផ្ទាំងរបស់វា"},
-  "bar_paused": {"message": "$TAF$ បានផ្អាក", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ បានផ្អាក", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ បានបញ្ចប់", "placeholders": {"taf": {"content": "$1"}}}
 }

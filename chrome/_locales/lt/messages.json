@@ -94,5 +94,6 @@
   "taf_remove": {"message": "Pašalinti šį taf"},
   "taf_remove_on_phone": {"message": "Taf šalinamas telefone: atidarykite jį „tafs“ programėlėje, tada Pašalinti. Pašalinimas patvirtinamas ten."},
   "bar_go": {"message": "Eiti į jo skirtuką"},
-  "bar_paused": {"message": "$TAF$ pristabdytas", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ pristabdytas", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ baigė", "placeholders": {"taf": {"content": "$1"}}}
 }

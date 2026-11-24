@@ -94,5 +94,6 @@
   "taf_remove": {"message": "移除這個 taf"},
   "taf_remove_on_phone": {"message": "taf 要在手機上移除：在 tafs 應用程式中開啟它，然後點「移除」。移除會在那裡核准。"},
   "bar_go": {"message": "前往它的分頁"},
-  "bar_paused": {"message": "$TAF$ 已暫停", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ 已暫停", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ 已完成", "placeholders": {"taf": {"content": "$1"}}}
 }
