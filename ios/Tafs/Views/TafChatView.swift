@@ -827,6 +827,14 @@ struct LoopCardView: View {
     let card: TafsCloud.LoopCard
     let taken: Bool
     let answer: (String) -> Void
+
+    /// What an answered card says: tafs cloud's words for the answer, else "Answered.", so an answered card never shows
+    /// nothing where its buttons were.
+    static func answeredLine(_ words: String) -> String {
+        let said = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        return said.isEmpty ? Words.Coach.answered : said
+    }
+
     var body: some View {
         Panel {
             if !card.title.isEmpty {
@@ -838,7 +846,7 @@ struct LoopCardView: View {
                     .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
             }
             if let answered = card.answered {
-                if !answered.isEmpty { Text(answered).scaledFont(13).foregroundColor(Theme.dim) }
+                Text(Self.answeredLine(answered)).scaledFont(13).foregroundColor(Theme.dim)
             } else {
                 ForEach(Array(card.options.enumerated()), id: \.offset) { i, option in
                     if i == 0 {

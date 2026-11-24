@@ -1,0 +1,1 @@
+- **iPhone and iPad: two fixes from review.** Sign in again on a connection signs the very terms its sheet first showed, even if they're read again while it's open ([connect-apps.md](docs/connect-apps.md)). An answered "Still reading" card says "Answered." when tafs cloud sends no words for the answer ([chat.md](docs/chat.md)).
