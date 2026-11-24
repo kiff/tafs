@@ -1,7 +1,8 @@
 import XCTest
 
-/// A link in an answer opens only through `PageLinks.ask` (docs/chat.md, "The confirm"): a long-press offers no Open Link and
-/// no preview, which would open it without the question, and a tap on a link that won't open asks with Cancel alone. The
+/// A link in an answer opens only through `PageLinks.ask` (docs/chat.md, "The confirm"): after a long-press, tafs stays in front
+/// and nothing opens, and a system opener it offers (Open Link, Call…) either isn't there or still asks first. A tap on a link
+/// that won't open asks with Cancel alone. The
 /// sample taf's answer carries a `tel:` and an https link (`-sampleReplyLinks YES`), so this runs with no server.
 final class LinkLongPressUITests: TafsUITestCase {
     @MainActor
@@ -21,18 +22,33 @@ final class LinkLongPressUITests: TafsUITestCase {
         XCTAssertTrue(tel.waitForExistence(timeout: 10), "the tel: link in the answer")
         XCTAssertTrue(web.exists, "the https link in the answer")
 
-        /// Nothing on screen offers to open a link without the question: no Open Link item, no preview's Open.
-        func noOpenLink(_ what: String) {
-            for name in ["Open Link", "Open", "Open in Safari"] {
-                XCTAssertFalse(app.buttons[name].exists || app.menuItems[name].exists, "\(what): \(name) is offered")
-            }
-            attach(app, what)
+        let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+        /// tafs is still in front, and nothing else opened: not Safari, not a call.
+        func stillHere(_ what: String) {
+            XCTAssertEqual(app.state, .runningForeground, "\(what): tafs left the front")
+            XCTAssertNotEqual(safari.state, .runningForeground, "\(what): Safari opened")
         }
 
-        for (link, what) in [(tel, "long-press on tel:"), (web, "long-press on https")] {
+        for (link, what, question) in [(tel, "long-press on tel:", "This link won't open"), (web, "long-press on https", nil)] {
             link.press(forDuration: 1.2)
-            noOpenLink(what)
-            // Whatever the long-press showed (a selection's Copy, or nothing), it goes before the next step.
+            attach(app, what)
+            stillHere(what)
+            // A system opener the long-press offers must go through the question, never around it (mac12's check): one that
+            // isn't offered at all is the expected case.
+            for name in ["Open Link", "Open", "Open in Safari", "Call", "Send Message", "FaceTime"] {
+                let item = app.buttons[name].exists ? app.buttons[name] : app.menuItems[name]
+                guard item.exists else { continue }
+                item.tap()
+                stillHere("\(what), \(name)")
+                if let question {
+                    XCTAssertTrue(app.alerts[question].waitForExistence(timeout: 5), "\(what), \(name): opened without the question")
+                    app.alerts[question].buttons["Cancel"].tap()
+                } else {
+                    XCTFail("\(what): \(name) is offered, which opens it without PageLinks.ask")
+                }
+                break
+            }
+            // Whatever else the long-press showed (a selection's Copy, or nothing), it goes before the next step.
             app.tap()
         }
 
