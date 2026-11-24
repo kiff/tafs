@@ -11,7 +11,7 @@ Biarkan taf Anda bekerja di Chrome Anda sendiri, hanya di situs yang diizinkan. 
 tafs untuk Chrome membiarkan taf Anda bekerja di Chrome Anda sendiri, hanya di situs yang Anda izinkan. Setiap langkah berisiko menunggu persetujuan Anda di ponsel.
 
 • Pasangkan Chrome ini dengan ponsel Anda: di aplikasi tafs, buka Akun › Chrome › Pasangkan Chrome dan ketik kode yang ditampilkan.
-• Sebuah taf bekerja di tab miliknya sendiri, dalam grup tab yang bisa Anda lihat. Anda bisa menjeda atau menghentikannya kapan saja, dan ia berhenti sejenak saat Anda menyentuh salah satu tabnya.
+• Sebuah taf bekerja di tab miliknya sendiri, dalam grup tab yang bisa Anda lihat. Anda bisa menjeda atau menghentikannya kapan saja, dan ia berhenti sejenak saat Anda menyentuh salah satu tabnya. Selama bekerja, bilah kecil di halaman depan setiap jendela memungkinkan Anda menjeda, menghentikan, atau membuka tabnya. Bilah itu tidak membaca apa pun dari halaman tersebut.
 • Chrome meminta sekali saat pemasangan untuk akses ke semua situs. tafs hanya bekerja di situs yang disebutkan setiap tugas, yang Anda setujui di ponsel.
 • Membayar dan membuat pesanan selalu menunggu persetujuan Anda di ponsel.
 • Ia membaca halaman sebagai teks dan kolom formulir, tanpa kolom kata sandi, kartu, dan kode. Ia tidak pernah membaca tab lain atau riwayat Anda.

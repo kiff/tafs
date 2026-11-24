@@ -11,7 +11,7 @@ Pustite svojim tafom delati v vašem Chromu, samo na dovoljenih straneh. Tvegani
 tafs za Chrome pusti vašim tafom delati v vašem lastnem Chromu, samo na straneh, ki jih dovolite. Vsak tvegan korak čaka na vašo odobritev v telefonu.
 
 • Povežite ta Chrome s telefonom: v aplikaciji tafs odprite Račun › Chrome › Seznani Chrome in vnesite prikazano kodo.
-• Taf dela v svojih zavihkih, v skupini zavihkov, ki jo vidite. Kadar koli ga lahko začasno ustavite ali ustavite, začasno pa se ustavi, ko se dotaknete enega njegovih zavihkov.
+• Taf dela v svojih zavihkih, v skupini zavihkov, ki jo vidite. Kadar koli ga lahko začasno ustavite ali ustavite, začasno pa se ustavi, ko se dotaknete enega njegovih zavihkov. Medtem ko dela, vam majhna vrstica na sprednji strani vsakega okna omogoča, da ga začasno ustavite, ustavite ali odprete njegov zavihek. S te strani ne bere ničesar.
 • Chrome ob namestitvi enkrat zahteva dostop do vseh spletnih mest. tafs dela samo na mestih, ki jih navede vsaka naloga in ki jih odobrite v telefonu.
 • Plačilo in oddaja naročila vedno čakata na vašo odobritev v telefonu.
 • Stran bere kot besedilo in polja obrazca, brez polj za geslo, kartico in kodo. Nikoli ne bere vaših drugih zavihkov ali zgodovine.

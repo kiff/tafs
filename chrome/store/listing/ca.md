@@ -11,7 +11,7 @@ Deixa que els teus tafs treballin al teu Chrome, només als llocs permesos. Els 
 tafs per a Chrome deixa que els teus tafs treballin al teu propi Chrome, només als llocs que permetis. Cada pas arriscat espera la teva aprovació al telèfon.
 
 • Vincula aquest Chrome amb el teu telèfon: a l'app tafs, obre Compte › Chrome › Aparella un Chrome i escriu el codi que es mostra.
-• Un taf treballa a les seves pròpies pestanyes, en un grup de pestanyes que pots veure. El pots posar en pausa o aturar en qualsevol moment, i es posa en pausa quan toques una de les seves pestanyes.
+• Un taf treballa a les seves pròpies pestanyes, en un grup de pestanyes que pots veure. El pots posar en pausa o aturar en qualsevol moment, i es posa en pausa quan toques una de les seves pestanyes. Mentre treballa, una barra petita a la pàgina de davant de cada finestra et permet posar-lo en pausa, aturar-lo o anar a la seva pestanya. No llegeix res d'aquella pàgina.
 • Chrome et demana una sola vegada, en instal·lar-lo, accés a tots els llocs. tafs només treballa als llocs que indica cada tasca, que aproves al telèfon.
 • Pagar i fer una comanda sempre esperen la teva aprovació al telèfon.
 • Llegeix una pàgina com a text i camps de formulari, sense els camps de contrasenya, targeta i codi. Mai no llegeix les teves altres pestanyes ni l'historial.

@@ -11,7 +11,7 @@ Nechajte svoje tafy pracovať vo vašom Chrome, len na povolených stránkach. R
 tafs pre Chrome nechá vaše tafy pracovať vo vašom vlastnom Chrome, len na stránkach, ktoré povolíte. Každý riskantný krok čaká na vaše schválenie v telefóne.
 
 • Spárujte tento Chrome s telefónom: v aplikácii tafs otvorte Účet › Chrome › Spárovať Chrome a zadajte zobrazený kód.
-• Taf pracuje vo vlastných kartách, v skupine kariet, ktorú vidíte. Môžete ho kedykoľvek pozastaviť alebo zastaviť a pozastaví sa, keď sa dotknete jednej z jeho kariet.
+• Taf pracuje vo vlastných kartách, v skupine kariet, ktorú vidíte. Môžete ho kedykoľvek pozastaviť alebo zastaviť a pozastaví sa, keď sa dotknete jednej z jeho kariet. Kým pracuje, malý pruh na stránke vpredu v každom okne vám umožní ho pozastaviť, zastaviť alebo prejsť na jeho kartu. Z tej stránky nič nečíta.
 • Chrome sa pri inštalácii raz opýta na prístup ku všetkým webom. tafs pracuje len na weboch, ktoré uvádza každá úloha a ktoré schvaľujete v telefóne.
 • Platba a odoslanie objednávky vždy čakajú na vaše schválenie v telefóne.
 • Číta stránku ako text a polia formulára, bez polí pre heslo, kartu a kód. Nikdy nečíta vaše ďalšie karty ani históriu.
