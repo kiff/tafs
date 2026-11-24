@@ -189,6 +189,16 @@ have gone out on its own").
     whether it's unchanged, so the phone can compare from the draft alone. When KIFF names the
     Card in force it quotes (`current.id`), it must be the Card `revises` names, or nothing is
     signed; without it, the check is as before (Android and iOS: `HoldAllow.matches`);
+  - **every key of each of the draft's Cards is one that check reads** (`HoldAllow.keysKnown`, both apps): the draft is
+    read as KIFF sent its bytes, and a Card, the Card in force it quotes, a grant, a per-call cap, a total, a scope or a
+    `quantity_of` carrying any other key with a value is not what was offered, so a term KIFF adds later is never signed
+    unseen. A key whose value is null sets nothing. A Card's own `id`, when sent, must be the Card it `revises`, and a
+    `quantity_of` must say what its `quantity` says (`sum(amount_cents)` is `{kind: sum, parameter: amount_cents}`,
+    `count` is `{kind: count}`). The keys are listed once, with test cases, in `vectors/agent-draft-keys.json`, over
+    KIFF's own answer pinned in `contracts/kiff-agent-draft-from-hold.json` (written by kiff/cloud's test
+    `TestAgentDraftFromHoldContract`). A few keys are read but not compared, each with why in the vector
+    (`read_not_compared`): KIFF's `lines` and a grant's `title` are words, and the Card in force's `active`, `domain_id`
+    and `hold_expiry_seconds` can't change through a draft this check signs;
   - it signs the `version` it read.
 - One signature: the draft's confirm with the approval key KIFF names, with
   `hold: {id, accounting_version}` when the switch is on.

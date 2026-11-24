@@ -559,6 +559,15 @@ class KiffClient(
   suspend fun draft(id: String): AgentDraft = call("GET", "/v1/me/agent-drafts/${escaped(id)}")
 
   /**
+   * A draft and its bytes as KIFF sent them, for the check that reads every key of its Cards before the phone signs it
+   * ([bot.tafs.app.model.HoldAllow.keysKnown], docs/allow-from-now-on.md).
+   */
+  suspend fun draftRaw(id: String): Pair<AgentDraft, String> {
+    val text = String(send("GET", "/v1/me/agent-drafts/${escaped(id)}"))
+    return json.decodeFromString<AgentDraft>(text.ifEmpty { "{}" }) to text
+  }
+
+  /**
    * Confirms a draft another agent submitted, exactly the [version] the owner was shown: KIFF issues its Cards. A
    * signed setup call, by the approval key where the session has one: set [setupSigner] first.
    */

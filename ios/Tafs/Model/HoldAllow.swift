@@ -224,7 +224,72 @@ enum HoldAllow {
         -> (answer: TafsCloud.AllowAnswer, draft: KIFFClient.AgentDraft?, matches: Bool) {
         let answer = try await cloud.allowOffer(taf: taf, exception: call.kiffID ?? "", round: round)
         guard let offer = answer.offer, !offer.draft.isEmpty else { return (answer, nil, false) }
-        let draft = try await kiff.draft(id: offer.draft)
-        return (answer, draft, matches(draft, offer, agent: call.agent, hold: call.kiffID, action: call.proposed.action))
+        let (draft, raw) = try await kiff.draftRaw(id: offer.draft)
+        // Signed only when it's what was offered and every key of its Cards is one this check reads.
+        return (answer, draft, keysKnown(raw) && matches(draft, offer, agent: call.agent, hold: call.kiffID, action: call.proposed.action))
+    }
+
+    /// The keys each object of a draft's Cards may carry: those `matches` compares, and the few it reads as words or knows
+    /// to be unchanged. The shared vector (vectors/agent-draft-keys.json) lists the same, and its cases are this app's tests,
+    /// Android's and tafs cloud's.
+    static let keys: [String: Set<String>] = [
+        "card": ["id", "revises", "current", "unchanged", "grants", "aggregates", "on_exceed", "lines", "subject", "subjects", "domain",
+                 "environment", "location", "valid_from", "valid_until", "hold_expiry", "revoked_at"],
+        "current": ["id", "grants", "aggregates", "on_exceed", "lines", "subject", "subjects", "domain", "environment", "location",
+                    "valid_from", "valid_until", "active", "domain_id", "hold_expiry_seconds"],
+        "grant": ["action", "title", "per_action_max", "resources", "entity_states", "next_steps"],
+        "cap": ["quantity", "quantity_of", "max", "unit", "scale"],
+        "total": ["quantity", "quantity_of", "limit", "window", "unit", "scale", "measure", "per"],
+        "resources": ["parameter", "values"],
+        "quantity_of": ["kind", "parameter"],
+    ]
+
+    /// "Allow this from now on", its second half: every key of each of the draft's Cards, as KIFF sent them, is one this
+    /// check reads (`keys`), so a term KIFF adds later is never signed unseen. A key whose value is null sets nothing. A
+    /// Card's `id`, when sent, is the Card it revises. A `quantity_of` says what its `quantity` says: "sum(amount_cents)" is
+    /// {kind: sum, parameter: amount_cents}, "count" is {kind: count}. The draft's own keys aren't a Card's.
+    static func keysKnown(_ raw: Data) -> Bool {
+        guard let root = try? JSONSerialization.jsonObject(with: raw) as? [String: Any] else { return false }
+        func absent(_ v: Any?) -> Bool { v == nil || v is NSNull }
+        func only(_ v: Any?, _ kind: String) -> [String: Any]? {
+            guard let o = v as? [String: Any], let allowed = keys[kind] else { return nil }
+            for (k, value) in o where !(value is NSNull) && !allowed.contains(k) { return nil }
+            return o
+        }
+        func list(_ v: Any?, _ each: (Any) -> Bool) -> Bool {
+            if absent(v) { return true }
+            guard let all = v as? [Any] else { return false }
+            return all.allSatisfy(each)
+        }
+        func quantityOf(_ o: [String: Any]) -> Bool {
+            if absent(o["quantity_of"]) { return true }
+            guard let of = only(o["quantity_of"], "quantity_of"), let quantity = o["quantity"] as? String,
+                  let kind = of["kind"] as? String else { return false }
+            if !absent(of["parameter"]), !(of["parameter"] is String) { return false }
+            let parameter = of["parameter"] as? String
+            let pattern = try? NSRegularExpression(pattern: #"^([A-Za-z0-9_]+)\((.+)\)$"#)
+            let whole = NSRange(quantity.startIndex..., in: quantity)
+            if let m = pattern?.firstMatch(in: quantity, range: whole), let k = Range(m.range(at: 1), in: quantity), let p = Range(m.range(at: 2), in: quantity) {
+                return kind == String(quantity[k]) && parameter == String(quantity[p])
+            }
+            return kind == quantity && parameter == nil
+        }
+        func cap(_ v: Any) -> Bool { only(v, "cap").map(quantityOf) ?? false }
+        func total(_ v: Any) -> Bool { only(v, "total").map(quantityOf) ?? false }
+        func grant(_ v: Any) -> Bool {
+            guard let g = only(v, "grant") else { return false }
+            return list(g["per_action_max"], cap) && (absent(g["resources"]) || only(g["resources"], "resources") != nil)
+        }
+        func terms(_ t: [String: Any]) -> Bool { list(t["grants"], grant) && list(t["aggregates"], total) }
+        return list(root["cards"]) { v in
+            guard let card = only(v, "card") else { return false }
+            if !absent(card["id"]) {
+                guard let id = card["id"] as? String, id == card["revises"] as? String else { return false }
+            }
+            guard terms(card) else { return false }
+            if absent(card["current"]) { return true }
+            guard let current = only(card["current"], "current") else { return false }
+            return terms(current)
+        }
     }
 }
