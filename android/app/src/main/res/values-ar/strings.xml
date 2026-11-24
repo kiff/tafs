@@ -634,7 +634,10 @@
     <string name="chat_it_lower">هو</string>
     <string name="chat_jump_latest_something_new">الانتقال إلى الأحدث، يوجد جديد</string>
     <string name="chat_jump_to_latest">الانتقال إلى الأحدث</string>
+    <string name="chat_link_blocked_body">لا يفتح tafs من المحادثة إلا صفحات الويب الآمنة. يؤدي هذا الرابط إلى: %1$s</string>
+    <string name="chat_link_blocked_title">لن يُفتح هذا الرابط</string>
     <string name="chat_link_confirm_body">جاء من صفحة قرأها Coach. يؤدي إلى: %1$s</string>
+    <string name="chat_link_confirm_body_live">ما زالت هذه الإجابة قيد الكتابة. يؤدي هذا الرابط إلى: %1$s</string>
     <string name="chat_link_confirm_open">فتح</string>
     <string name="chat_link_confirm_title">هل تريد فتح هذا الرابط؟</string>
     <string name="chat_message_carries_most_files">تحمل الرسالة %1$s ملفات على الأكثر.</string>

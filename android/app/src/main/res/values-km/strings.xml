@@ -494,7 +494,10 @@
     <string name="chat_it_lower">វា</string>
     <string name="chat_jump_latest_something_new">លោតទៅចុងក្រោយ មានអ្វីថ្មី</string>
     <string name="chat_jump_to_latest">លោតទៅចុងក្រោយ</string>
+    <string name="chat_link_blocked_body">tafs បើកតែទំព័របណ្ដាញដែលមានសុវត្ថិភាពពីការជជែកប៉ុណ្ណោះ។ តំណនេះនាំទៅ៖ %1$s</string>
+    <string name="chat_link_blocked_title">តំណនេះនឹងមិនបើកទេ</string>
     <string name="chat_link_confirm_body">វាមកពីទំព័រដែល Coach បានអាន។ វានាំទៅ៖ %1$s</string>
+    <string name="chat_link_confirm_body_live">ចម្លើយនេះនៅតែកំពុងសរសេរ។ តំណនេះនាំទៅ៖ %1$s</string>
     <string name="chat_link_confirm_open">បើក</string>
     <string name="chat_link_confirm_title">បើកតំណនេះ?</string>
     <string name="chat_message_carries_most_files">សារមួយផ្ទុកឯកសារបានអតិបរមា %1$s។</string>

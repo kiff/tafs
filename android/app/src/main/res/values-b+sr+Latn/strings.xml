@@ -550,7 +550,10 @@
     <string name="chat_it_lower">on</string>
     <string name="chat_jump_latest_something_new">Skočite na najnovije, ima nešto novo</string>
     <string name="chat_jump_to_latest">Skočite na najnovije</string>
+    <string name="chat_link_blocked_body">tafs iz ćaskanja otvara samo bezbedne veb-stranice. Ovaj link vodi na: %1$s</string>
+    <string name="chat_link_blocked_title">Ovaj link se neće otvoriti</string>
     <string name="chat_link_confirm_body">Dolazi sa stranice koju je Coach pročitao. Vodi na: %1$s</string>
+    <string name="chat_link_confirm_body_live">Ovaj odgovor se još piše. Ovaj link vodi na: %1$s</string>
     <string name="chat_link_confirm_open">Otvori</string>
     <string name="chat_link_confirm_title">Otvoriti ovaj link?</string>
     <string name="chat_message_carries_most_files">Poruka nosi najviše %1$s datoteka.</string>

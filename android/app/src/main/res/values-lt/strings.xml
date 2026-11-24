@@ -550,7 +550,10 @@
     <string name="chat_it_lower">jis</string>
     <string name="chat_jump_latest_something_new">Pereiti prie naujausių, yra naujų</string>
     <string name="chat_jump_to_latest">Pereiti prie naujausių</string>
+    <string name="chat_link_blocked_body">„tafs“ iš pokalbio atidaro tik saugius tinklalapius. Ši nuoroda veda į: %1$s</string>
+    <string name="chat_link_blocked_title">Ši nuoroda nebus atidaryta</string>
     <string name="chat_link_confirm_body">Ji gauta iš puslapio, kurį perskaitė „Coach“. Ji veda į: %1$s</string>
+    <string name="chat_link_confirm_body_live">Šis atsakymas dar rašomas. Ši nuoroda veda į: %1$s</string>
     <string name="chat_link_confirm_open">Atidaryti</string>
     <string name="chat_link_confirm_title">Atidaryti šią nuorodą?</string>
     <string name="chat_message_carries_most_files">Žinutėje gali būti ne daugiau kaip %1$s failų.</string>
