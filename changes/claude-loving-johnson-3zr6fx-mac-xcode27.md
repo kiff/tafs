@@ -1,0 +1,1 @@
+- **Mac: the App Store build is made with Xcode 27**, so it's built for macOS 27 ([mac-app.md](docs/mac-app.md)).
