@@ -522,7 +522,10 @@
     <string name="chat_it_lower">ez</string>
     <string name="chat_jump_latest_something_new">Ugrás a legújabbra, van valami új</string>
     <string name="chat_jump_to_latest">Ugrás a legújabbra</string>
+    <string name="chat_link_blocked_body">A tafs csevegésből csak biztonságos weboldalakat nyit meg. Ez a link ide vezet: %1$s</string>
+    <string name="chat_link_blocked_title">Ez a link nem nyílik meg</string>
     <string name="chat_link_confirm_body">Egy olyan oldalról származik, amelyet a Coach elolvasott. Ide vezet: %1$s</string>
+    <string name="chat_link_confirm_body_live">A Coach még válaszol. Ez a link ide vezet: %1$s</string>
     <string name="chat_link_confirm_open">Megnyitás</string>
     <string name="chat_link_confirm_title">Megnyitod ezt a linket?</string>
     <string name="chat_message_carries_most_files">Egy üzenet legfeljebb %1$s fájlt visz.</string>

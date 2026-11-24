@@ -522,7 +522,10 @@
     <string name="chat_it_lower">ai</string>
     <string name="chat_jump_latest_something_new">Shkoni te e fundit, ka diçka të re</string>
     <string name="chat_jump_to_latest">Shkoni te e fundit</string>
+    <string name="chat_link_blocked_body">Nga një bisedë, tafs hap vetëm faqe interneti të sigurta. Kjo lidhje të çon te: %1$s</string>
+    <string name="chat_link_blocked_title">Kjo lidhje nuk do të hapet</string>
     <string name="chat_link_confirm_body">Vjen nga një faqe që lexoi Coach. Të çon te: %1$s</string>
+    <string name="chat_link_confirm_body_live">Coach po përgjigjet ende. Kjo lidhje të çon te: %1$s</string>
     <string name="chat_link_confirm_open">Hap</string>
     <string name="chat_link_confirm_title">Të hapet kjo lidhje?</string>
     <string name="chat_message_carries_most_files">Një mesazh mban më së shumti %1$s skedarë.</string>

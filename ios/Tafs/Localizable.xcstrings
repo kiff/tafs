@@ -125027,6 +125027,532 @@
         }
       }
     },
+    "chat.link_blocked_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يفتح tafs من المحادثة إلا صفحات الويب الآمنة. يؤدي هذا الرابط إلى: %1$@"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs söhbətdən yalnız təhlükəsiz veb səhifələri açır. Bu keçid gedir: %1$@"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs отваря от чата само защитени уеб страници. Тази връзка води към: %1$@"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs চ্যাট থেকে কেবল সুরক্ষিত ওয়েব পৃষ্ঠা খোলে। এই লিঙ্কটি যায়: %1$@"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des d'un xat, tafs només obre pàgines web segures. Aquest enllaç porta a: %1$@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs z chatu otevírá jen zabezpečené webové stránky. Tento odkaz vede na: %1$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs öffnet aus einem Chat nur sichere Webseiten. Dieser Link führt zu: %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs opens only secure web pages from a chat. This link goes to: %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desde un chat, tafs solo abre páginas web seguras. Este enlace lleva a: %1$@"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs avab vestlusest ainult turvalisi veebilehti. See link viib aadressile: %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depuis un chat, tafs n'ouvre que des pages web sécurisées. Ce lien mène à : %1$@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs פותח מצ'אט רק דפי אינטרנט מאובטחים. הקישור הזה מוביל אל: %1$@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs चैट से केवल सुरक्षित वेब पेज खोलता है। यह लिंक यहाँ ले जाता है: %1$@"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs iz razgovora otvara samo sigurne web-stranice. Ova poveznica vodi na: %1$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tafs csevegésből csak biztonságos weboldalakat nyit meg. Ez a link ide vezet: %1$@"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs-ը զրույցից բացում է միայն անվտանգ վեբ էջեր։ Այս հղումը տանում է՝ %1$@"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dari chat, tafs hanya membuka halaman web yang aman. Tautan ini menuju: %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da una chat, tafs apre solo pagine web sicure. Questo link porta a: %1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafsはチャットから安全なウェブページだけを開きます。このリンクの移動先: %1$@"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ჩატიდან მხოლოდ დაცულ ვებგვერდებს ხსნის. ეს ბმული მიდის: %1$@"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs បើកតែទំព័របណ្ដាញដែលមានសុវត្ថិភាពពីការជជែកប៉ុណ្ណោះ។ តំណនេះនាំទៅ៖ %1$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs는 채팅에서 안전한 웹 페이지만 엽니다. 이 링크의 주소: %1$@"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ເປີດຈາກການສົນທະນາສະເພາະໜ້າເວັບທີ່ປອດໄພ. ລິ້ງນີ້ໄປຫາ: %1$@"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„tafs“ iš pokalbio atidaro tik saugius tinklalapius. Ši nuoroda veda į: %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs no tērzēšanas atver tikai drošas tīmekļa lapas. Šī saite ved uz: %1$@"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs од разговор отвора само безбедни веб-страници. Оваа врска води до: %1$@"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs чатаас зөвхөн аюулгүй вэб хуудас нээдэг. Энэ холбоосын хаяг: %1$@"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ले च्याटबाट सुरक्षित वेब पृष्ठहरू मात्र खोल्छ। यो लिङ्क जान्छ: %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanuit een chat opent tafs alleen beveiligde webpagina's. Deze link gaat naar: %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs otwiera z czatu tylko bezpieczne strony internetowe. Ten link prowadzi do: %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir de um chat, o tafs só abre páginas web seguras. Esta ligação leva a: %1$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir de um chat, o tafs só abre páginas web seguras. Este link leva a: %1$@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dintr-o conversație, tafs deschide doar pagini web securizate. Acest link duce la: %1$@"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs z chatu otvára iba zabezpečené webové stránky. Tento odkaz vedie na: %1$@"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs iz klepeta odpira le varne spletne strani. Ta povezava vodi na: %1$@"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nga një bisedë, tafs hap vetëm faqe interneti të sigurta. Kjo lidhje të çon te: %1$@"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs iz ćaskanja otvara samo bezbedne veb-stranice. Ovaj link vodi na: %1$@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs เปิดจากแชตได้เฉพาะหน้าเว็บที่ปลอดภัย ลิงก์นี้ไปที่: %1$@"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs söhbetdeşlikden diňe howpsuz web sahypalaryny açýar. Bu baglanyşyk şu ýere alyp barýar: %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs bir sohbetten yalnızca güvenli web sayfalarını açar. Bu bağlantı şuraya gider: %1$@"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs چیٹ سے صرف محفوظ ویب صفحات کھولتا ہے۔ یہ لنک یہاں جاتا ہے: %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Từ cuộc trò chuyện, tafs chỉ mở các trang web an toàn. Liên kết này đi tới: %1$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs 只會從對話開啟安全的網頁。這個連結前往：%1$@"
+          }
+        }
+      }
+    },
+    "chat.link_blocked_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لن يُفتح هذا الرابط"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu keçid açılmayacaq"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тази връзка няма да се отвори"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই লিঙ্কটি খুলবে না"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquest enllaç no s'obrirà"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento odkaz se neotevře"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Link wird nicht geöffnet"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This link won't open"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este enlace no se abrirá"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seda linki ei avata"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce lien ne s'ouvrira pas"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הקישור הזה לא ייפתח"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह लिंक नहीं खुलेगा"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ova se poveznica neće otvoriti"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a link nem nyílik meg"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Այս հղումը չի բացվի"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tautan ini tidak akan dibuka"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo link non si aprirà"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このリンクは開きません"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ეს ბმული არ გაიხსნება"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "តំណនេះនឹងមិនបើកទេ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 링크는 열리지 않습니다"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ລິ້ງນີ້ຈະບໍ່ເປີດ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ši nuoroda nebus atidaryta"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šī saite netiks atvērta"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оваа врска нема да се отвори"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ холбоос нээгдэхгүй"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो लिङ्क खुल्दैन"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze link wordt niet geopend"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten link się nie otworzy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta ligação não abre"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este link não vai abrir"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest link nu se va deschide"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento odkaz sa neotvorí"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta povezava se ne bo odprla"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjo lidhje nuk do të hapet"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovaj link se neće otvoriti"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลิงก์นี้จะไม่เปิด"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu baglanyşyk açylmaz"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bağlantı açılmayacak"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ لنک نہیں کھلے گا"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liên kết này sẽ không mở"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個連結不會開啟"
+          }
+        }
+      }
+    },
     "chat.link_confirm_body": {
       "extractionState": "manual",
       "localizations": {
@@ -125286,6 +125812,269 @@
           "stringUnit": {
             "state": "translated",
             "value": "這個連結來自 Coach 讀過的頁面。前往：%1$@"
+          }
+        }
+      }
+    },
+    "chat.link_confirm_body_live": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما زال Coach يجيب. يؤدي هذا الرابط إلى: %1$@"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach hələ cavab verir. Bu keçid gedir: %1$@"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach още отговаря. Тази връзка води към: %1$@"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach এখনও উত্তর দিচ্ছে। এই লিঙ্কটি যায়: %1$@"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach encara està responent. Aquest enllaç porta a: %1$@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ještě odpovídá. Tento odkaz vede na: %1$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach antwortet noch. Dieser Link führt zu: %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach is still answering. This link goes to: %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach aún está respondiendo. Este enlace lleva a: %1$@"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach alles vastab. See link viib aadressile: %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach est encore en train de répondre. Ce lien mène à : %1$@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach עדיין עונה. הקישור הזה מוביל אל: %1$@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach अभी जवाब दे रहा है। यह लिंक यहाँ ले जाता है: %1$@"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach još odgovara. Ova poveznica vodi na: %1$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Coach még válaszol. Ez a link ide vezet: %1$@"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach-ը դեռ պատասխանում է։ Այս հղումը տանում է՝ %1$@"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach masih menjawab. Tautan ini menuju: %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach sta ancora rispondendo. Questo link porta a: %1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coachはまだ回答中です。このリンクの移動先: %1$@"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ჯერ კიდევ პასუხობს. ეს ბმული მიდის: %1$@"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach នៅតែកំពុងឆ្លើយ។ តំណនេះនាំទៅ៖ %1$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach가 아직 답변 중입니다. 이 링크의 주소: %1$@"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ຍັງຕອບຢູ່. ລິ້ງນີ້ໄປຫາ: %1$@"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Coach“ dar atsakinėja. Ši nuoroda veda į: %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach vēl atbild. Šī saite ved uz: %1$@"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach сè уште одговара. Оваа врска води до: %1$@"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach хариулсаар байна. Энэ холбоосын хаяг: %1$@"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach अझै जवाफ दिँदै छ। यो लिङ्क जान्छ: %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach is nog aan het antwoorden. Deze link gaat naar: %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach wciąż odpowiada. Ten link prowadzi do: %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Coach ainda está a responder. Esta ligação leva a: %1$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Coach ainda está respondendo. Este link leva a: %1$@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach încă răspunde. Acest link duce la: %1$@"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ešte odpovedá. Tento odkaz vedie na: %1$@"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach še odgovarja. Ta povezava vodi na: %1$@"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach po përgjigjet ende. Kjo lidhje të çon te: %1$@"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach još odgovara. Ovaj link vodi na: %1$@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ยังตอบอยู่ ลิงก์นี้ไปที่: %1$@"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach entek jogap berýär. Bu baglanyşyk şu ýere alyp barýar: %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach hâlâ yanıtlıyor. Bu bağlantı şuraya gider: %1$@"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ابھی جواب دے رہا ہے۔ یہ لنک یہاں جاتا ہے: %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach vẫn đang trả lời. Liên kết này đi tới: %1$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach 仍在回答。這個連結前往：%1$@"
           }
         }
       }
