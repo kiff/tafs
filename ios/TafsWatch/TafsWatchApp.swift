@@ -5,21 +5,28 @@ import SwiftUI
 /// watch holds neither. Approvals stay on the phone.
 @main
 struct TafsWatchApp: App {
-    @StateObject private var needsYou = NeedsYouModel(phone: PhoneLink.shared)
-    @StateObject private var tafs = TafsModel(phone: PhoneLink.shared)
+    // The paired iPhone, or the demo's phone of fixed answers under `-watch-demo` (`WatchDemo`, for the UI tests).
+    @StateObject private var needsYou = NeedsYouModel(phone: WatchDemo.phone, lock: WatchDemo.lock)
+    @StateObject private var tafs = TafsModel(phone: WatchDemo.phone, lock: WatchDemo.lock)
     /// v2 keeps one message for later on the watch (row 8), behind its switch; v1 keeps nothing.
-    @StateObject private var coach = CoachModel(phone: PhoneLink.shared,
+    @StateObject private var coach = CoachModel(phone: WatchDemo.phone, lock: WatchDemo.lock,
                                                 drafts: WatchV2.on && CoachModel.keepForLaterOn ? FileDraftStore() : nil)
-    /// v2's Inbox, kept on the watch while it has a passcode (step iv).
-    @StateObject private var inbox = InboxModel(phone: PhoneLink.shared)
-    /// v2: signed out on this watch alone (Account's Sign out), kept across restarts.
-    @StateObject private var signIn = WatchSignIn()
+    /// v2's Inbox, kept on the watch while it has a passcode (step iv). The demo keeps it in its own folder, emptied at launch.
+    @StateObject private var inbox = WatchDemo.on
+        ? InboxModel(store: FileInboxStore(url: WatchDemo.folder.appendingPathComponent("inbox.json")), lock: WatchDemo.lock,
+                     phone: WatchDemo.phone)
+        : InboxModel(phone: PhoneLink.shared)
+    /// v2: signed out on this watch alone (Account's Sign out), kept across restarts; the demo's in its own folder.
+    @StateObject private var signIn = WatchDemo.on
+        ? WatchSignIn(store: WatchSignIn.FileStore(url: WatchDemo.folder.appendingPathComponent("signed-out")))
+        : WatchSignIn()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
         // A recording an app ended mid-transfer left behind (row 44, A).
         VoiceModel.sweepLeftovers()
-        PhoneLink.shared.start()
+        // The demo asks no real phone.
+        if !WatchDemo.on { PhoneLink.shared.start() }
     }
 
     var body: some Scene {

@@ -113,7 +113,7 @@ jobs:
           uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
           # What the watch app is built from: its own folders, the relay's contract (WatchShared), the phone's words it
           # compiles, the project file. And this workflow.
-          watch='^(ios/(TafsWatch|TafsWatchTests|Shared|WatchShared)/|ios/(project|watch-embed)\.yml$|ios/Tafs/Design/Words\.swift$|ios/Tafs/Localizable\.xcstrings$|\.github/workflows/ios\.yml$)'
+          watch='^(ios/(TafsWatch|TafsWatchTests|TafsWatchUITests|Shared|WatchShared)/|ios/(project|watch-embed)\.yml$|ios/Tafs/Design/Words\.swift$|ios/Tafs/Localizable\.xcstrings$|\.github/workflows/ios\.yml$)'
           # What the route walk (RouteWalkUITests) depends on besides the screens: AppModel's
           # open(route:) and its hook, the routes and the map. With the UI tests it always runs;
           # otherwise it runs beside the unit tests when one of these changes.
@@ -305,7 +305,7 @@ jobs:
     needs: changes
     if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && needs.changes.outputs.watch == 'true'
     runs-on: macos-26
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -316,6 +316,7 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen generate
 
+      # The unit tests, then the simulator checks as UI tests on the demo phone (TafsWatchUITests).
       - name: Build and test on a watch simulator
         run: |
           cd ios
