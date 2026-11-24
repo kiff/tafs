@@ -146,7 +146,7 @@ internal fun GallerySheet(
 ) {
   var picked by rememberSaveable { mutableStateOf<String?>(null) }
   val groups = gallery.byCategory
-  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background, maxWidth = bot.tafs.app.design.PageWidth.Gallery) {
     Column(
       Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),

@@ -716,6 +716,23 @@ failed or disconnected says planque's words for its state, in their language, el
 on the card, in Taking shape and in the line under the card (`SetupShapeTest`, `CoachStartTest`).
 iPhone and iPad say the same; there the card's answer carries those words.
 
+## Wide screens
+
+On a tablet, or any window wider than a page needs, each page is **one column, centred, capped by its kind**, as on every
+app (docs/parity.md, "One layout on every app"). The caps are named in one place, `design/PageWidth.kt`:
+
+- `PageWidth.Reading`, 720 dp: Account, Devices, People, Needs you, Connect apps, Plan & usage, a taf's chat, and any other
+  sheet unless it says otherwise;
+- `PageWidth.List`, 980 dp: the Overview, your tafs (the home list), sharing;
+- `PageWidth.Gallery`, 640 dp: the recipe gallery;
+- `PageWidth.Calendar`, 1180 dp.
+
+`Modifier.pageColumn(max)` centres the column, then caps it; text and rows inside stay aligned to the start, and a window
+narrower than the cap is unchanged. **Every sheet takes its cap through `DriveSheet(maxWidth = …)`**, as a sheet of its own
+(`sheetMaxWidth`) and beside a tablet's sidebar, where it draws in place. A cap written after a column fills the window does
+nothing, which is how the Overview and the Calendar used to sit capped at the left. `PageWidthTest` fails on a page that
+sets its own number. Android has no Brief screen, and Alerts are a section of Account.
+
 ## The bar
 
 Five places under every screen: **Account** · **Tafs** · **Needs you** · **Record** · **Coach**.

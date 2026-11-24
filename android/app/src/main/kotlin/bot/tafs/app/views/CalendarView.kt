@@ -70,6 +70,8 @@ import bot.tafs.app.model.zone
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import bot.tafs.app.design.PageWidth
+import bot.tafs.app.design.pageColumn
 
 private val HOUR_HEIGHT = 44.dp
 
@@ -102,7 +104,7 @@ fun CalendarView(
   BoxWithConstraints(Modifier.fillMaxSize().background(Theme.background).statusBarsPadding().testTag("calendar")) {
     val layout = CalendarLayout.of(maxWidth.value.toInt(), maxHeight.value.toInt())
     Column(
-      Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(if (layout == CalendarLayout.Wide) 24.dp else 16.dp).widthIn(max = 1180.dp),
+      Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(if (layout == CalendarLayout.Wide) 24.dp else 16.dp).pageColumn(PageWidth.Calendar),
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
       if (onBack != null) {
