@@ -72,7 +72,9 @@ export function inline(text, marks = {}) {
   // Where the next `]` and the next line break are, kept as `i` moves on, so an answer full of `[` stays linear.
   let close = -2;
   let lineEnd = -2;
-  let noAddressAt = -1; // a `](` whose address never closes: not read again for the next `[`
+  // An address read from before here ran to here without its `)`: any start before it fails the same way (its run of
+  // non-`)`, non-space characters ends at the same place), so it isn't read again. Keeps an answer full of `](` linear.
+  let noAddressBefore = -1;
   let i = 0;
   while (i < s.length) {
     const c = s[i];
@@ -104,7 +106,7 @@ export function inline(text, marks = {}) {
       if (close !== -1 && close <= i) close = s.indexOf("]", i + 1);
       if (lineEnd !== -1 && lineEnd <= i) lineEnd = s.indexOf("\n", i + 1);
       // A link's words end at the next `]`, on the same line, and its address follows at once in `(…)`.
-      if (close > i + 1 && close !== noAddressAt && (lineEnd === -1 || close < lineEnd) && s[close + 1] === "(") {
+      if (close > i + 1 && close + 2 >= noAddressBefore && (lineEnd === -1 || close < lineEnd) && s[close + 1] === "(") {
         ADDRESS.lastIndex = close + 2;
         const m = ADDRESS.exec(s);
         if (m) {
@@ -113,7 +115,7 @@ export function inline(text, marks = {}) {
           i = ADDRESS.lastIndex;
           continue;
         }
-        noAddressAt = close;
+        noAddressBefore = addressRunEnd(s, close + 2);
       }
     }
     plain += c;
@@ -121,6 +123,13 @@ export function inline(text, marks = {}) {
   }
   flush();
   return out;
+}
+
+/** Where a run of address characters (anything but `)` and space) starting at `from` ends. */
+function addressRunEnd(s, from) {
+  let j = from;
+  while (j < s.length && s[j] !== ")" && !/\s/.test(s[j])) j++;
+  return j;
 }
 
 function runs(doc, parent, text) {

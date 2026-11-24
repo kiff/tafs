@@ -94,6 +94,13 @@ test("an answer full of [ stays quick: no copy of the rest of the text at each o
   const t2 = Date.now();
   assert.deepEqual(inline(unclosed), [{ text: unclosed }], "an address that never closes is no link");
   assert.ok(Date.now() - t2 < 2_000, "and is read once");
+  // Many `[a](`, each with its own `]`, and no `)` anywhere: every address runs to the end, so it's read once in all.
+  const many = "[a](".repeat(50_000);
+  const t3 = Date.now();
+  assert.deepEqual(inline(many), [{ text: many }]);
+  assert.ok(Date.now() - t3 < 2_000, "an address run that never closes is read once, from any start");
+  // A failed address doesn't stop a later, real link.
+  assert.deepEqual(inline("[a](b c [d](https://e.example/)").at(-1), { text: "d", link: "https://e.example/" });
   // Links are still found anywhere in a long answer.
   assert.deepEqual(inline("a ".repeat(5_000) + "[w](https://a.example/)").at(-1), { text: "w", link: "https://a.example/" });
 });
