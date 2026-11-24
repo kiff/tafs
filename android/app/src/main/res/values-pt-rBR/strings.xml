@@ -522,7 +522,10 @@
     <string name="chat_it_lower">ele</string>
     <string name="chat_jump_latest_something_new">Ir para o mais recente, há algo novo</string>
     <string name="chat_jump_to_latest">Ir para o mais recente</string>
+    <string name="chat_link_blocked_body">A partir de um chat, o tafs só abre páginas web seguras. Este link leva a: %1$s</string>
+    <string name="chat_link_blocked_title">Este link não vai abrir</string>
     <string name="chat_link_confirm_body">Veio de uma página que o Coach leu. Leva a: %1$s</string>
+    <string name="chat_link_confirm_body_live">Esta resposta ainda está sendo escrita. Este link leva a: %1$s</string>
     <string name="chat_link_confirm_open">Abrir</string>
     <string name="chat_link_confirm_title">Abrir este link?</string>
     <string name="chat_message_carries_most_files">Uma mensagem leva no máximo %1$s arquivos.</string>

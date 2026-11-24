@@ -522,7 +522,10 @@
     <string name="chat_it_lower">тој</string>
     <string name="chat_jump_latest_something_new">Скокни до најновото, има нешто ново</string>
     <string name="chat_jump_to_latest">Скокни до најновото</string>
+    <string name="chat_link_blocked_body">tafs од разговор отвора само безбедни веб-страници. Оваа врска води до: %1$s</string>
+    <string name="chat_link_blocked_title">Оваа врска нема да се отвори</string>
     <string name="chat_link_confirm_body">Доаѓа од страница што ја прочита Coach. Води до: %1$s</string>
+    <string name="chat_link_confirm_body_live">Овој одговор сè уште се пишува. Оваа врска води до: %1$s</string>
     <string name="chat_link_confirm_open">Отвори</string>
     <string name="chat_link_confirm_title">Да се отвори ли оваа врска?</string>
     <string name="chat_message_carries_most_files">Една порака носи најмногу %1$s датотеки.</string>
