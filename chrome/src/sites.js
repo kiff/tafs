@@ -95,8 +95,11 @@ export const MAIL = Object.freeze({
     "mail.zoho.com", "mail.zoho.eu",
     "gmx.net", "gmx.de", "gmx.com", "web.de",
     "mail.ru", "mail.yandex.ru", "laposte.net",
+    "outlook.cloud.microsoft", "hey.com", "freemail.hu",
   ],
-  labels: /(^|\.)(mail|webmail|correo|posta|messagerie)\./,
+  // The word for mail as a host's own label, in the extension's languages: mail, webmail, Outlook Web Access (owa), email
+  // (Seznam, T-Online), correo, correio, posta, poczta (Onet, WP, Interia), messagerie, levelezes.
+  labels: /(^|\.)(mail|webmail|owa|email|correo|correio|posta|poczta|messagerie|levelezes)\./,
 });
 
 /** Whether [host] is a mail site, for Coach's read: by name (and its subdomains), or by a label that says so. */
@@ -169,8 +172,11 @@ export function asideRefusal(tab, { windowId, off = [] } = {}) {
     return "not_https";
   }
   if (u.protocol !== "https:" || u.username || u.password) return "not_https";
-  if (WEB_STORE(u)) return "store";
-  const host = u.hostname.toLowerCase();
+  // As hostOf normalises it (lowercase, ideographic dots, no trailing dot): "paypal.com." is paypal.com, so no form of a host
+  // gets past the lists, and the person's switch is checked in the form it's kept in.
+  const host = hostOf(tab.url);
+  if (!host) return "not_https";
+  if (WEB_STORE({ hostname: host, pathname: u.pathname })) return "store";
   if (sensitive(host) || mailHost(host)) return "sensitive";
   if ((off || []).includes(host)) return "off";
   return null;

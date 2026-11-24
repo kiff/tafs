@@ -392,3 +392,25 @@ test("Coach never reads a mail site: Gmail, Outlook, any webmail host, by name o
   assert.equal(mailHost("MAIL.GOOGLE.COM"), true);
   assert.equal(mailHost("shop.example"), false);
 });
+
+test("the mail rule reaches every language's word and Outlook's new address, and a trailing dot gets past nothing", () => {
+  const tab = (url) => ({ id: 7, active: true, windowId: 2, incognito: false, url });
+  const at = { windowId: 2, off: ["news.example"] };
+  for (const url of [
+    "https://outlook.cloud.microsoft/mail/",
+    "https://owa.example.com/owa/",
+    "https://app.hey.com/",
+    "https://poczta.onet.pl/",
+    "https://email.seznam.cz/",
+    "https://email.t-online.de/",
+    "https://correio.example.com.br/",
+    "https://freemail.hu/",
+    "https://levelezes.example.hu/",
+  ]) assert.equal(asideRefusal(tab(url), at), "sensitive", url);
+  // A trailing dot is the same host: no list is got past by it, the person's switch included.
+  assert.equal(asideRefusal(tab("https://outlook.live.com./"), at), "sensitive");
+  assert.equal(asideRefusal(tab("https://mail.google.com./mail/"), at), "sensitive");
+  assert.equal(asideRefusal(tab("https://www.paypal.com./"), at), "sensitive");
+  assert.equal(asideRefusal(tab("https://news.example./"), at), "off");
+  assert.equal(asideRefusal(tab("https://shop.example./"), at), null, "an ordinary host with a trailing dot is still read");
+});

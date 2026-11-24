@@ -800,5 +800,9 @@ test("what Coach gets of a page: its masked text, never a field's value, typed t
   await page.evaluate(() => (document.body.innerHTML = "<pre>" + "日本語".repeat(9000) + "</pre>"));
   const long = await page.evaluate(() => TafsAside.read());
   assert.ok(new TextEncoder().encode(long.text).length <= 20000 && long.truncated, "at most 20,000 bytes, and says it was cut");
+  await page.goto("https://shop.example/" + "p".repeat(2500));
+  await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: ASIDE });
+  assert.equal(await page.evaluate(() => TafsAside.read().url), "https://shop.example/", "a path past 2,000 characters goes; the origin stays");
   await page.close();
 });

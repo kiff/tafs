@@ -9,12 +9,15 @@
 ((root) => {
   const MAX_CHARS = 20000;
   const MAX_BYTES = 20000;
+  // The address sent: origin and path, at most this long; a longer path goes, and the origin alone is sent.
+  const MAX_URL = 2000;
   const M = root.TafsMask;
 
   function bare(href) {
     try {
       const u = new URL(href);
-      return u.origin + u.pathname;
+      const whole = u.origin + u.pathname;
+      return whole.length <= MAX_URL ? whole : u.origin + "/";
     } catch {
       return "";
     }
