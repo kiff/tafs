@@ -1,1 +1,1 @@
-Każdy z Twoich zegarków pokazuje teraz tę samą skrzynkę odbiorczą: to, co przeczytasz lub odrzucisz na jednym, jest przeczytane lub znika na pozostałych. tafs na Wear OS mówi też po hindi, urdu i turkmeńsku.
+Każdy z Twoich zegarków pokazuje teraz tę samą „Skrzynkę”: to, co przeczytasz lub odrzucisz na jednym, jest przeczytane lub znika na pozostałych. tafs na Wear OS mówi też po hindi, urdu i turkmeńsku.
