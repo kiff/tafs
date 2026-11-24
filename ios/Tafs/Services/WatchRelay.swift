@@ -141,13 +141,13 @@ enum WatchRelay {
             do {
                 return WatchReply(.ok, needsYou: try await reading.needsYou(now: now))
             } catch {
-                return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+                return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
             }
         case .tafs:
             do {
                 return WatchReply(.ok, tafs: try await reading.tafs(), zone: AccountTime.zone.identifier)
             } catch {
-                return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+                return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
             }
         case .refuse:
             switch await reading.refuse(hold: request.hold ?? "", now: now) {
@@ -192,14 +192,14 @@ enum WatchRelay {
                 guard let chat = try await reading.tafChat(request.taf ?? "") else { return WatchReply(.failed, line: Words.Watch.openOnPhone) }
                 return WatchReply(.ok, chat: chat, zone: AccountTime.zone.identifier)
             } catch {
-                return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+                return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
             }
         case .brief:
             // Read only: nothing is answered or signed from the brief, on the phone or the wrist.
             do {
                 return WatchReply(.ok, brief: try await reading.brief())
             } catch {
-                return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+                return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
             }
         case .taf, .calendar, .account:
             // The watch v2 pages: reads only, nothing answered or signed.
@@ -216,7 +216,7 @@ enum WatchRelay {
                     return WatchReply(.ok, account: try await reading.account())
                 }
             } catch {
-                return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+                return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
             }
         }
     }
@@ -564,7 +564,7 @@ struct KeptWatchReading: WatchReading {
         if ticket.askID == nil, !Self.coachChats.contains(ticket.chat) {
             // Not reached is said as such; only a chat that is someone else's is refused.
             let setup: TafsCloud.CloudTaf?
-            do { setup = try await cloud.setup() } catch { return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff) }
+            do { setup = try await cloud.setup() } catch { return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud) }
             guard let setup, setup.id == ticket.chat else { return WatchReply(.refused) }
             Self.coachChats.insert(setup.id)
         }
@@ -579,7 +579,7 @@ struct KeptWatchReading: WatchReading {
     func readCoach(_ ticket: WatchCoachTicket) async -> WatchReply {
         if let id = ticket.askID { return await readAsk(id) }
         guard let thread = try? await cloud.setupThread(ticket.chat, session: ticket.session) else {
-            return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+            return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
         }
         let answer = Self.answer(in: thread, after: ticket.sent, session: ticket.session)
         return WatchReply(.ok, coach: answer, answering: thread.working != nil)
@@ -588,7 +588,7 @@ struct KeptWatchReading: WatchReading {
     /// A watch request read once: while it's at work, "still answering"; once it ends, or a call of it waits for the owner,
     /// its line (else tafs cloud's words for its state), with "Approve on your phone" for the held call.
     func readAsk(_ id: String) async -> WatchReply {
-        guard let asked = try? await cloud.watchAsk(id) else { return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff) }
+        guard let asked = try? await cloud.watchAsk(id) else { return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud) }
         return Self.reply(asked)
     }
 
@@ -657,7 +657,7 @@ struct KeptWatchReading: WatchReading {
         do {
             return WatchReply(.ok, marks: try await cloud.watchInbox())
         } catch {
-            return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+            return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
         }
     }
 
@@ -665,7 +665,7 @@ struct KeptWatchReading: WatchReading {
         do {
             return WatchReply(.ok, marks: try await cloud.markWatchInbox(marks))
         } catch {
-            return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+            return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
         }
     }
 }

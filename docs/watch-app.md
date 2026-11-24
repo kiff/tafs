@@ -54,6 +54,8 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   queued. It carries the time it was made, and the phone drops one more than 30 seconds old,
   either way.
 - **Signed out:** the phone answers only that, and the watch shows nothing of the account.
+- **A read tafs cloud doesn't answer:** the phone says "Your phone couldn't reach tafs cloud. Try again."
+  (`watch.phone_could_not_reach_cloud`). The notification's own Refuse keeps its line about KIFF.
 - **With tafs closed:** the phone answers with the session it keeps, as a hold's notification
   is filled in (`HoldNotification`), so the phone can be locked in a pocket.
 - **Refuse** is the notification's own refusal (`NotificationRefuse.refuse`): signed with the
