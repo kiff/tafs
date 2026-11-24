@@ -4,6 +4,14 @@ import XCTest
 /// Links in a taf's words from a page turn ask before opening (`page_turn`, `PageLinkGuard`): the flag as tafs cloud sends
 /// it, on the thread's messages and on the stream, and the address as the confirm shows it.
 final class PageLinksTests: XCTestCase {
+    private let suite = "PageLinksTests"
+
+    override func tearDown() {
+        UserDefaults().removePersistentDomain(forName: suite)
+        Words.bundle = .main
+        super.tearDown()
+    }
+
     private func message(_ json: String) throws -> TafsCloud.ChatMessage {
         try KIFFClient.decoder.decode(TafsCloud.ChatMessage.self, from: Data(json.utf8))
     }
@@ -35,5 +43,24 @@ final class PageLinksTests: XCTestCase {
         let shown = PageLinks.shown(url)
         XCTAssertEqual(shown, "\u{2066}https://shop.example/very/long/path?token=abc&next=%2Fpay#frag\u{2069}")
         XCTAssertTrue(Words.Chat.linkConfirmBody(address: shown).contains(url.absoluteString))
+    }
+
+    /// In a right-to-left language the address keeps its order: the confirm's line holds it whole, inside its isolate, so the
+    /// address read is the one that opens.
+    func testInArabicTheAddressKeepsItsOrder() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        AppLanguage.choose("ar", defaults: defaults)
+        let url = try XCTUnwrap(URL(string: "https://shop.example/a/b-2?id=42&q=x.y"))
+        let line = Words.Chat.linkConfirmBody(address: PageLinks.shown(url))
+        XCTAssertNotEqual(line, "It came from a page Coach read. It goes to: \(PageLinks.shown(url))", "the Arabic line")
+        XCTAssertTrue(line.contains("\u{2066}https://shop.example/a/b-2?id=42&q=x.y\u{2069}"))
+    }
+
+    /// Open is offered for an https address alone: another app's deep link, a phone number or plain http gets Cancel only.
+    func testOnlyAnHttpsAddressCanBeOpened() throws {
+        for ok in ["https://shop.example/a", "HTTPS://shop.example"] { XCTAssertTrue(PageLinks.opens(try XCTUnwrap(URL(string: ok))), ok) }
+        for no in ["http://shop.example", "tel:+15551234", "sms:+15551234", "bank://pay?to=x", "market://details?id=x", "mailto:a@b.c"] {
+            XCTAssertFalse(PageLinks.opens(try XCTUnwrap(URL(string: no))), no)
+        }
     }
 }
