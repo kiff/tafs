@@ -550,6 +550,12 @@
     <string name="chat_it_lower">on</string>
     <string name="chat_jump_latest_something_new">Skočite na najnovije, ima nešto novo</string>
     <string name="chat_jump_to_latest">Skočite na najnovije</string>
+    <string name="chat_link_blocked_body">tafs iz ćaskanja otvara samo bezbedne veb-stranice. Ovaj link vodi na: %1$s</string>
+    <string name="chat_link_blocked_title">Ovaj link se neće otvoriti</string>
+    <string name="chat_link_confirm_body">Dolazi sa stranice koju je Coach pročitao. Vodi na: %1$s</string>
+    <string name="chat_link_confirm_body_live">Ovaj odgovor se još piše. Ovaj link vodi na: %1$s</string>
+    <string name="chat_link_confirm_open">Otvori</string>
+    <string name="chat_link_confirm_title">Otvoriti ovaj link?</string>
     <string name="chat_message_carries_most_files">Poruka nosi najviše %1$s datoteka.</string>
     <string name="chat_message_taf">Poruka za taf %1$s</string>
     <string name="chat_message_your_taf">Poruka za vaš taf</string>
@@ -2652,6 +2658,7 @@
     <string name="usage_pack_named">%1$s · paket kredita</string>
     <string name="usage_packs_keep">Nikad ne ističe</string>
     <string name="usage_period">period</string>
+    <string name="usage_raise_limit_from">Ograničenje potrošnje sada je %1$s.</string>
     <string name="usage_raise_limit_not_raised">Ograničenje nije podignuto. %1$s</string>
     <string name="usage_raise_limit_prompt">Podignite ograničenje potrošnje</string>
     <string name="usage_raise_limit_sign_in_first">Prijavite se KIFF-om da podignete ograničenje.</string>

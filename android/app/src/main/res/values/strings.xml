@@ -522,6 +522,12 @@
     <string name="chat_it_lower">it</string>
     <string name="chat_jump_latest_something_new">Jump to the latest, something new</string>
     <string name="chat_jump_to_latest">Jump to the latest</string>
+    <string name="chat_link_blocked_body">tafs opens only secure web pages from a chat. This link goes to: %1$s</string>
+    <string name="chat_link_blocked_title">This link won\'t open</string>
+    <string name="chat_link_confirm_body">It came from a page Coach read. It goes to: %1$s</string>
+    <string name="chat_link_confirm_body_live">This answer is still being written. This link goes to: %1$s</string>
+    <string name="chat_link_confirm_open">Open</string>
+    <string name="chat_link_confirm_title">Open this link?</string>
     <string name="chat_message_carries_most_files">A message carries at most %1$s files.</string>
     <string name="chat_message_taf">Message %1$s</string>
     <string name="chat_message_your_taf">Message your taf</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · a pack of credits</string>
     <string name="usage_packs_keep">Never expires</string>
     <string name="usage_period">period</string>
+    <string name="usage_raise_limit_from">The spend limit is %1$s now.</string>
     <string name="usage_raise_limit_not_raised">The limit wasn\'t raised. %1$s</string>
     <string name="usage_raise_limit_prompt">Raise the spend limit</string>
     <string name="usage_raise_limit_sign_in_first">Sign in with KIFF to raise the limit.</string>

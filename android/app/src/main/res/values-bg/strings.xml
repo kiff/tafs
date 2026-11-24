@@ -522,6 +522,12 @@
     <string name="chat_it_lower">той</string>
     <string name="chat_jump_latest_something_new">Към най-новото, има нещо ново</string>
     <string name="chat_jump_to_latest">Към най-новото</string>
+    <string name="chat_link_blocked_body">tafs отваря от чата само защитени уеб страници. Тази връзка води към: %1$s</string>
+    <string name="chat_link_blocked_title">Тази връзка няма да се отвори</string>
+    <string name="chat_link_confirm_body">Тя идва от страница, която Coach прочете. Води към: %1$s</string>
+    <string name="chat_link_confirm_body_live">Този отговор още се пише. Тази връзка води към: %1$s</string>
+    <string name="chat_link_confirm_open">Отваряне</string>
+    <string name="chat_link_confirm_title">Да се отвори ли тази връзка?</string>
     <string name="chat_message_carries_most_files">Едно съобщение носи най-много %1$s файла.</string>
     <string name="chat_message_taf">Съобщение до %1$s</string>
     <string name="chat_message_your_taf">Съобщение до вашия taf</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · пакет кредити</string>
     <string name="usage_packs_keep">Никога не изтича</string>
     <string name="usage_period">период</string>
+    <string name="usage_raise_limit_from">Лимитът на разходите сега е %1$s.</string>
     <string name="usage_raise_limit_not_raised">Лимитът не беше увеличен. %1$s</string>
     <string name="usage_raise_limit_prompt">Увеличаване на лимита на разходите</string>
     <string name="usage_raise_limit_sign_in_first">Влезте с KIFF, за да увеличите лимита.</string>

@@ -422,6 +422,14 @@ export interface RunAt {
    */
   attachments?: string[];
   /**
+   * The page the person had open as they wrote this message (kiff/agents' `aside`): the run reads it after their words,
+   * fenced as data, for this message only, and kiff/agents keeps it on the run only until the run ends. Only a person's
+   * own chat message carries one. `asideTools` are the only tools the run is offered while it reads it (`aside_tools`,
+   * required with it: none is a turn that only answers).
+   */
+  aside?: string;
+  asideTools?: readonly string[];
+  /**
    * The request's name at its origin (a door message's id) and where it came from (docs/reliability.md): one key
    * starts one run, however often it's sent, and a second send gets the first run.
    */
@@ -516,6 +524,7 @@ function runAt(at: RunAt): Record<string, unknown> {
     ...(at.live && !at.session ? { chat: "live" } : {}),
     ...(at.grant ? { run_grant: at.grant } : {}),
     ...(at.attachments?.length ? { attachments: at.attachments } : {}),
+    ...(at.aside ? { aside: at.aside, aside_tools: [...(at.asideTools ?? [])] } : {}),
     ...(at.dedupKey ? { dedup_key: at.dedupKey, ...(at.source ? { source: at.source } : {}) } : {}),
     ...(at.outcomes?.length ? { outcomes: at.outcomes } : {}),
     // A new session's skills (the Coach skills design, way 1); a session that exists keeps its own.

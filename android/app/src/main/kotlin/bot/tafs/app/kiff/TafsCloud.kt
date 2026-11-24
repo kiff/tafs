@@ -183,6 +183,7 @@ class TafsCloud(
           counted = m.counted?.trim()?.ifEmpty { null },
           refused = m.refused?.let { r -> Refused(r.words, r.why?.trim()?.ifEmpty { null }, r.next) }?.takeIf { it.lines.isNotEmpty() },
           kind = if (m.kind == "kickoff") ChatMessage.Kind.kickoff else ChatMessage.Kind.message,
+          pageTurn = m.pageTurn == true,
           work = m.work?.let { w -> Work(w.ms, w.steps.map { WorkStep(it.tool, it.error == true || it.failed == true, it.notMade == true, it.words?.trim()?.ifEmpty { null }, it.why) }) },
           // A mark the app can't read leaves the message as a plain one.
           door = m.door?.let { mark ->

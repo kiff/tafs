@@ -67,9 +67,28 @@ data class TafCredits(
   val next: String? = null,
 )
 
-/** What the balance offers this person: raising the spend limit, in tafs cloud's words for its button, from the limit now. */
+/**
+ * What the balance offers this person: raising the spend limit, in tafs cloud's words for its button, from the limit now
+ * ([fromCents], in [currency]'s smallest unit). [currency] is ISO 4217, the one tafs cloud words every amount in; a tafs cloud
+ * from before it sends none.
+ */
 @Serializable
-data class BalanceRaise(val words: String, @SerialName("from_cents") val fromCents: Long? = null)
+data class BalanceRaise(val words: String, @SerialName("from_cents") val fromCents: Long? = null, val currency: String? = null) {
+  /**
+   * The limit now, for the app to format in its own language: none without both the figure and a currency the platform knows
+   * (`java.util.Currency`), never in one the app assumes. Its decimals are the currency's own: 2 for EUR, 0 for JPY, 3 for KWD.
+   */
+  val limitNow: bot.tafs.app.model.Money?
+    get() {
+      val minor = fromCents?.takeIf { it >= 0 } ?: return null
+      val code = currency?.takeIf { RAISE_CURRENCY.matches(it) } ?: return null
+      val digits = runCatching { java.util.Currency.getInstance(code).defaultFractionDigits }.getOrNull()?.takeIf { it >= 0 } ?: return null
+      return bot.tafs.app.model.Money(minor, code, digits)
+    }
+}
+
+/** An ISO 4217 code as tafs cloud sends one: three capitals, nothing else. */
+private val RAISE_CURRENCY = Regex("^[A-Z]{3}$")
 
 /**
  * The balance now (docs/accounts.md#the-balance-read): `state` ok, warning or waiting, and while waiting `why` (credits_used_up,

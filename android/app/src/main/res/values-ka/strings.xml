@@ -522,6 +522,12 @@
     <string name="chat_it_lower">ის</string>
     <string name="chat_jump_latest_something_new">გადადით უახლესზე, არის რაღაც ახალი</string>
     <string name="chat_jump_to_latest">გადადით უახლესზე</string>
+    <string name="chat_link_blocked_body">tafs ჩატიდან მხოლოდ დაცულ ვებგვერდებს ხსნის. ეს ბმული მიდის: %1$s</string>
+    <string name="chat_link_blocked_title">ეს ბმული არ გაიხსნება</string>
+    <string name="chat_link_confirm_body">ის მოვიდა გვერდიდან, რომელიც Coach-მა წაიკითხა. მიდის: %1$s</string>
+    <string name="chat_link_confirm_body_live">ეს პასუხი ჯერ კიდევ იწერება. ეს ბმული მიდის: %1$s</string>
+    <string name="chat_link_confirm_open">გახსნა</string>
+    <string name="chat_link_confirm_title">გავხსნათ ეს ბმული?</string>
     <string name="chat_message_carries_most_files">შეტყობინება მაქსიმუმ %1$s ფაილს იტევს.</string>
     <string name="chat_message_taf">შეტყობინება: %1$s</string>
     <string name="chat_message_your_taf">მისწერეთ თქვენს taf-ს</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · კრედიტების პაკეტი</string>
     <string name="usage_packs_keep">არასოდეს იწურება</string>
     <string name="usage_period">პერიოდი</string>
+    <string name="usage_raise_limit_from">ხარჯვის ლიმიტი ახლა %1$s-ია.</string>
     <string name="usage_raise_limit_not_raised">ლიმიტი არ გაიზარდა. %1$s</string>
     <string name="usage_raise_limit_prompt">გაზარდეთ ხარჯვის ლიმიტი</string>
     <string name="usage_raise_limit_sign_in_first">შედით KIFF-ით ლიმიტის გასაზრდელად.</string>

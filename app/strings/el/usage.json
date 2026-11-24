@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · ένα πακέτο μονάδων",
   "usage.packs_keep": "Δεν λήγει ποτέ",
   "usage.period": "περίοδο",
+  "usage.raise_limit.from": "Το όριο δαπανών είναι τώρα {amount}.",
   "usage.raise_limit.not_raised": "Το όριο δεν αυξήθηκε. {why}",
   "usage.raise_limit.prompt": "Αύξησε το όριο δαπανών",
   "usage.raise_limit.sign_in_first": "Συνδέσου με την KIFF για να αυξήσεις το όριο.",

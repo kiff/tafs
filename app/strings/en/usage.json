@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · a pack of credits",
   "usage.packs_keep": "Never expires",
   "usage.period": "period",
+  "usage.raise_limit.from": "The spend limit is {amount} now.",
   "usage.raise_limit.not_raised": "The limit wasn't raised. {why}",
   "usage.raise_limit.prompt": "Raise the spend limit",
   "usage.raise_limit.sign_in_first": "Sign in with KIFF to raise the limit.",

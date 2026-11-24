@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · 一個點數包",
   "usage.packs_keep": "永不過期",
   "usage.period": "期",
+  "usage.raise_limit.from": "目前的支出上限為 {amount}。",
   "usage.raise_limit.not_raised": "上限尚未提高。{why}",
   "usage.raise_limit.prompt": "提高支出上限",
   "usage.raise_limit.sign_in_first": "請先以 KIFF 登入，才能提高上限。",

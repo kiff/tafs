@@ -80,7 +80,6 @@
   "step_handed": {"message": "Odovzdané vám", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Urobili ste to", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Povedali ste „Teraz nie“", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ pracuje na tejto stránke", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Pracujú v tomto Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Prejsť na kartu $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Späť"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "Žiadne archivované rozhovory."},
   "coach_archive_error": {"message": "Nepodarilo sa. Skúste to znova."},
   "taf_remove": {"message": "Odstrániť tento taf"},
-  "taf_remove_on_phone": {"message": "Taf sa odstraňuje v telefóne: otvorte ho v aplikácii tafs a potom Odstrániť. Odstránenie sa schvaľuje tam."}
+  "taf_remove_on_phone": {"message": "Taf sa odstraňuje v telefóne: otvorte ho v aplikácii tafs a potom Odstrániť. Odstránenie sa schvaľuje tam."},
+  "bar_go": {"message": "Prejsť na jeho kartu"},
+  "bar_paused": {"message": "$TAF$ je pozastavený", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ je hotový", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach si pri odoslaní prečíta túto stránku: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Číta: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Nie na tomto webe"},
+  "aside_on": {"message": "Čítať tento web"},
+  "aside_off_line": {"message": "Coach nečíta $HOST$: vypli ste to", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach nečíta $HOST$: web banky, platieb, pošty alebo zdravia", "placeholders": {"host": {"content": "$1"}}}
 }

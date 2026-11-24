@@ -38,7 +38,8 @@ import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./cal
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine } from "./connections.js";
-import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { maskedPath, normalHost, pageSiteRefused } from "./page-sites.js";
+import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
@@ -645,7 +646,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   } catch (err) {
     if (err instanceof HTTPError) return json(err.status, { error: err.message, ...(await withRefusalWords(event, err, deps)) });
     if (err instanceof DoorError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
-    if (err instanceof ActivityError) return json(err.status, { error: err.message });
+    if (err instanceof ActivityError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}), ...(err.words ? { words: err.words } : {}) });
     if (err instanceof KIFFError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
     if (err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
@@ -2845,6 +2846,13 @@ export interface ThreadMessage {
   attachments?: AttachmentRef[];
   /** The card the owner's message answered, by id: they wrote while it waited, and their words were its answer. */
   answers?: string;
+  /** On a person's message to Coach that carried the page they had open: that page's host, as tafs cloud kept it (PAGE). */
+  reading?: string;
+  /**
+   * On Coach's answer from a turn that read a page the person had open: a link in it may come from that page, so the apps show
+   * its full address and ask before opening it. Never the page, nor its host.
+   */
+  page_turn?: true;
   /** On a run's report: where its result went, in tafs cloud's words, above the taf's own (delivery.ts). */
   delivered?: string;
   /** On a job run's report: its count from the record, in tafs cloud's words (`countedLine`), never the model's numbers. */
@@ -3163,7 +3171,21 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   const shown = components.slice(-CHAT.maxThread);
   await markConnected(me.tenantID, shown, deps, lang);
   await markPlanNeeded(me.tenantID, shown, deps, lang);
-  return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, agreements, ...(usage ? { usage } : {}) };
+  const last = messages.slice(-CHAT.maxThread);
+  // The site each of the person's messages to Coach went with (PAGE), and which of Coach's answers came from a turn that read
+  // a page (`page_turn`): tafs cloud's record of the host, never the page. One read for the whole thread, and none when no
+  // message in view is a run's.
+  const ofRuns = taf.job === SETUP_JOB && deps.coach ? last.filter((m) => m.id.endsWith(".in") || m.from === "taf") : [];
+  if (ofRuns.length) {
+    const hosts = new Map((await pageReads(deps.coach!, me.tenantID, me.subject, deps.now?.() ?? new Date())).map((r) => [r.run, r.host]));
+    for (const m of ofRuns) {
+      const host = hosts.get(m.id.slice(0, m.id.lastIndexOf(".")));
+      if (!host) continue;
+      if (m.from === "owner") m.reading = host;
+      else m.page_turn = true;
+    }
+  }
+  return { messages: last, components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, agreements, ...(usage ? { usage } : {}) };
 }
 
 /** The owner's message already in the thread with these words, in this chat, at this time: one send, recorded twice. */
@@ -3864,6 +3886,8 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps,
   // Before a message answers a card the old way, too.
   await requireAIConsent(event, me, deps);
   const owner = chatText(event, files(event).length > 0);
+  // Refused before anything else: a page that can't go never leaves a message that went without it.
+  pageOf(event, taf);
   // The app's id for this message: sent again (its fallback after a stream that failed), it's answered from
   // what the first send did, never acted on twice.
   const key = clientMessageKey(event, me);
@@ -4937,10 +4961,16 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   const attached = files(event);
   if (attached.length) at.attachments = attached;
   if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
+  const page = pageOf(event, taf);
+  withPage(at, page);
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const input = await withCoachSkills(me, taf, at, text, event, deps);
+  const began = deps.now?.() ?? new Date();
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, input, at, ai, notify));
-  return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created } };
+  // Only a run this send started read the page: a card's answer went on in its own run, without it.
+  const read = page && startedBy(run, began) ? page.host : undefined;
+  if (read) await keepPageRead(me, run.id, read, deps);
+  return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created, ...(read ? { reading: read } : {}) } };
 }
 
 /**
@@ -6312,6 +6342,116 @@ function files(event: HTTPEvent): string[] {
 export const ATTACHMENTS = { perMessage: 5 };
 
 /**
+ * A page Coach reads with one message (docs/chat.md, "Coach reads the page you're on"): at most `bytes` as the run
+ * reads it, kiff/agents' bound (`server.MaxAside`), and a title of at most `title` characters. Its host is kept
+ * `keptMs` from that message, as long as the chat's messages, so each message says which site went with it; its text
+ * never is. Each person's last `kept` page messages are kept, more than a thread shows (`CHAT.maxThread`).
+ */
+export const PAGE = { bytes: 24_000, title: 300, keptMs: 30 * 24 * 3600_000, kept: 200 } as const;
+
+/**
+ * Where a person's page hosts are kept: one item for all their messages to Coach that carried a page, `{run, host, at}`
+ * each, newest last. A thread read reads it once, whatever its length.
+ */
+export function pageReadsKey(tenant: string, person: string): string {
+  return `${tenant}#page-reads#${person}`;
+}
+
+type PageRead = { run: string; host: string; at: string };
+
+/**
+ * A person's kept page hosts, by the run whose message carried each: only those from the last `PAGE.keptMs`, each kept
+ * for its own message's time, however recently the item was written. None when nothing is kept.
+ */
+async function pageReads(store: CoachStore, tenant: string, person: string, now: Date): Promise<PageRead[]> {
+  const kept = await store.get(pageReadsKey(tenant, person)).catch(() => undefined);
+  const reads = (kept as { reads?: unknown } | undefined)?.reads;
+  const since = now.getTime() - PAGE.keptMs;
+  return Array.isArray(reads)
+    ? reads.filter((r): r is PageRead => typeof r?.run === "string" && typeof r?.host === "string" && typeof r?.at === "string" &&
+      Date.parse(r.at) > since)
+    : [];
+}
+
+/**
+ * The page the person had open, sent beside their words to Coach as `page: {url, title, text, truncated}` (the
+ * Chrome side panel): what the run reads, and the host each message shows (`reading`). Only Coach reads one, only an
+ * https page with no credentials in its address, kept to its address with no query or fragment. Anything else is a
+ * 400, and nothing starts. A message that answers a card waiting in the chat goes on with the person's words alone,
+ * and says no `reading`: only a message whose run read the page says which site went with it.
+ */
+function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | undefined {
+  const raw = parseBody(event).page;
+  if (raw === undefined || raw === null) return undefined;
+  const bad = (why: string) => new HTTPError(400, why, { code: "page_refused" });
+  if (taf.job !== SETUP_JOB) throw bad("only Coach reads the page you have open");
+  // A page goes with the person's words, never alone (kiff/agents takes an aside only with an input).
+  if (!withoutTafsLines(str(parseBody(event).text)).trim()) throw bad("a page goes with your words");
+  if (typeof raw !== "object" || Array.isArray(raw)) throw bad("page is {url, title, text, truncated}");
+  const p = raw as Record<string, unknown>;
+  if (typeof p.url !== "string" || typeof p.text !== "string" || (p.title !== undefined && typeof p.title !== "string") ||
+      (p.truncated !== undefined && typeof p.truncated !== "boolean")) {
+    throw bad("page is {url, title, text, truncated}");
+  }
+  let u: URL;
+  try {
+    u = new URL(p.url);
+  } catch {
+    throw bad("page.url isn't an address");
+  }
+  if (u.protocol !== "https:" || !u.hostname || u.username || u.password) throw bad("Coach reads only an https page, with nothing signed in its address");
+  // As the extension reads a host, so no form of one (a trailing dot, upper case) gets past the lists.
+  const host = normalHost(u.hostname);
+  // Never a bank, payment, mail or health site, nor the Web Store: the extension never sends one, and this holds whatever does.
+  if (pageSiteRefused(host, u.pathname)) throw bad("Coach never reads a bank, payment, mail or health site, or Chrome's Web Store");
+  const title = (p.title ?? "").replace(/\s+/g, " ").trim().slice(0, PAGE.title);
+  // A path segment shaped like a key or a one-time token (a reset or sign-in link) never reaches the AI.
+  const aside = `Address: ${u.origin}${maskedPath(u.pathname)}\n` + (title ? `Title: ${title}\n` : "") +
+    (p.truncated ? "Only the start of the page is here: it goes on past it.\n" : "") + "\n" + p.text;
+  if (Buffer.byteLength(aside, "utf8") > PAGE.bytes) throw bad(`a page goes with a message at most ${PAGE.bytes} bytes`);
+  return { host, aside };
+}
+
+/**
+ * Sends a run that reads a page with only the tools a page may lead to (PAGE_TOOLS), and keeps its host, never its
+ * text, for the message's `reading`. The log says the host, never the page.
+ */
+function withPage(at: RunAt, page: { host: string; aside: string } | undefined): void {
+  if (!page) return;
+  at.aside = page.aside;
+  at.asideTools = PAGE_TOOLS;
+}
+
+/** How far kiff/agents' clock may be behind tafs cloud's for a run to still count as this send's (startedBy). */
+export const PAGE_RUN_MARGIN_MS = 1000;
+
+/**
+ * Whether kiff/agents started `run` for this send, so it read the page: a run created once the send began. A message
+ * that answers a card waiting in the chat goes on in that card's run instead (kiff/agents' wroteInstead), which reads
+ * no page, and was created before the card it waits on was shown, a model turn earlier at least.
+ */
+function startedBy(run: { created?: unknown }, began: Date): boolean {
+  const created = typeof run.created === "string" ? Date.parse(run.created) : NaN;
+  return !Number.isNaN(created) && created >= began.getTime() - PAGE_RUN_MARGIN_MS;
+}
+
+/**
+ * Keeps the host of the page `run` read, beside the person's others: one read and one write, on a send that carried a page
+ * (one at a time from a person's panel). Two at once could keep one host fewer: the one message would say no `reading`.
+ */
+async function keepPageRead(me: KIFFIdentity, run: string, host: string, deps: Deps): Promise<void> {
+  console.log(JSON.stringify({ event: "coach_page_read", tenant: me.tenantID, run, host }));
+  if (!deps.coach) return;
+  const now = deps.now?.() ?? new Date();
+  const store = deps.coach;
+  // Those past their own time are dropped as this one goes in.
+  await pageReads(store, me.tenantID, me.subject, now)
+    .then((reads) => store.put(pageReadsKey(me.tenantID, me.subject),
+      { reads: [...reads, { run, host, at: now.toISOString() }].slice(-PAGE.kept) }, new Date(now.getTime() + PAGE.keptMs)))
+    .catch(() => undefined);
+}
+
+/**
  * POST /v1/tafs/{id}/attachments: a file the person will attach to a message in their own
  * chat (kiff/tafs#209). kiff/agents checks its type and size, keeps it for them alone, and
  * answers where to upload its bytes: the phone sends them there, never through tafs cloud.
@@ -6748,6 +6888,7 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
     await requireAIConsent(event, me, deps);
     const attached = files(event);
     const owner = chatText(event, attached.length > 0);
+    const page = pageOf(event, taf);
     // The app's id for this message: sent again, it gets what the first send did, never a second run.
     const key = clientMessageKey(event, me);
     const again = key ? await sentBefore(event, me, taf, key, owner, deps) : undefined;
@@ -6777,6 +6918,8 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
     let first: IteratorResult<RunStreamEvent> | undefined;
     let at: RunAt;
     let titles: ToolTitles = new Map();
+    // Whether this send's run read the page (`page_turn` on the stream's session event).
+    let pageTurn = false;
     try {
       const text = lines.text(owner);
       const [chosen, ai, known] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps), titlesOf(event, me, taf, deps)]);
@@ -6785,15 +6928,23 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
       titles = known;
       if (attached.length) at.attachments = attached;
       if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
+      withPage(at, page);
       try {
         // Coach's runs are announced when they pause, so a result it shows is
         // handed over by tafs cloud with no phone needed (handOver).
         const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
         const input = await withCoachSkills(me, taf, at, text, event, deps);
         timing.mark("skills");
+        const began = deps.now?.() ?? new Date();
         run = deps.agents.streamRun(me.tenantID, taf.id, input, at, ai, notify);
         first = await run.next();
         timing.mark("first_event");
+        // Only a run this send started read the page (startedBy): a card's answer goes on in its own run, without it.
+        const started = first.done || first.value.event !== "run" ? undefined : first.value.data as { id?: unknown; created?: unknown } | undefined;
+        if (page && started && typeof started.id === "string" && startedBy(started, began)) {
+          await keepPageRead(me, started.id, page.host, deps);
+          pageTurn = true;
+        }
       } catch (err) {
         throw agentsFailure(err);
       }
@@ -6804,7 +6955,7 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
       throw err;
     }
     // Once the answer ends, what the person wrote that waited for it goes (docs/chat.md).
-    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps, taf), "", langOf(event))), () => settleChats(event, me, taf, deps));
+    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps, taf), "", langOf(event), pageTurn)), () => settleChats(event, me, taf, deps));
     return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
@@ -7210,7 +7361,7 @@ function actionOf(sent: string | undefined): string {
   try { const a = (JSON.parse(sent ?? "null") as { action?: unknown } | null)?.action; return typeof a === "string" ? a : ""; } catch { return ""; }
 }
 
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en"): AsyncGenerator<string> {
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en", pageTurn = false): AsyncGenerator<string> {
   const steps = new Steps(titles, lang);
   const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
@@ -7284,7 +7435,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (typeof d.id === "string") runID = d.id;
         if (keep && !keep.session && typeof d.session === "string" && d.session) keep.session = d.session;
         return at ? sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id,
-          ...(typeof d.id === "string" ? { message: { id: inputID(d.id), at: d.created } } : {}) }) : undefined;
+          ...(typeof d.id === "string" ? { message: { id: inputID(d.id), at: d.created } } : {}), ...(pageTurn ? { page_turn: true } : {}) }) : undefined;
       case "delta":
         if (!at) return undefined;
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
@@ -7698,7 +7849,7 @@ async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, 
     if (!seesEvery) {
       throw new HTTPError(403, "exporting receipts is for the people who see every taf's Record");
     }
-    return receiptsExport({ token: bearer(event), from: q.get("from"), to: q.get("to"), tafs, zone }, deps.fetch, deps.kiffBase);
+    return receiptsExport({ token: bearer(event), from: q.get("from"), to: q.get("to"), tafs, zone, lang }, deps.fetch, deps.kiffBase);
   }
   throw new HTTPError(404, "not found");
 }
@@ -10842,7 +10993,11 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
     const draftID = typeof body.draft_id === "string" ? body.draft_id : "";
     const draftKey = doorKeys.apiDraft(me.tenantID, taf.id, draftID);
     const kept = draftID ? (await ctx.doors.store.get(draftKey)) as KeptAPIDraft | undefined : undefined;
-    if (!kept || kept.used || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed or was used: ask Coach again");
+    // Refused as the draft's read refuses it, in the person's words: a used draft names its door, so an app whose card
+    // was open while the door was made elsewhere says it's made; a lapsed or unknown one says to ask Coach again.
+    const w = wordsIn(langOf(event));
+    if (kept?.used) throw new HTTPError(410, "a door was made from this draft", { code: "draft_used", words: w.door_draft_used, door_id: kept.used.door });
+    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed: ask Coach again", { code: "draft_lapsed", words: w.door_draft_lapsed });
     if (canonical(draft) !== canonical(apiDraftOf(kept.draft))) throw new HTTPError(409, "this isn't the draft Coach made: ask Coach again");
     const added = await addAPIDoor(ctx, owner, taf, body);
     // Used once: what's kept now says a door was made from it (no draft), until the draft would have lapsed.

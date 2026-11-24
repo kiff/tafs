@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · क्रेडिटको प्याक",
   "usage.packs_keep": "कहिल्यै सकिँदैन",
   "usage.period": "अवधि",
+  "usage.raise_limit.from": "खर्च सीमा अहिले {amount} छ।",
   "usage.raise_limit.not_raised": "सीमा बढाइएन। {why}",
   "usage.raise_limit.prompt": "खर्च सीमा बढाउनुहोस्",
   "usage.raise_limit.sign_in_first": "सीमा बढाउन KIFF बाट साइन इन गर्नुहोस्।",

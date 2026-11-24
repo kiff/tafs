@@ -80,7 +80,6 @@
   "step_handed": {"message": "Iu dorëzua juve", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "E bëtë ju", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Thatë «Jo tani»", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ po punon në këtë faqe", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Duke punuar në këtë Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Shko te skeda e $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Prapa"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "Nuk ka biseda të arkivuara."},
   "coach_archive_error": {"message": "Nuk u krye. Provoni sërish."},
   "taf_remove": {"message": "Hiqeni këtë taf"},
-  "taf_remove_on_phone": {"message": "Një taf hiqet në telefon: hapeni në aplikacionin tafs, pastaj Hiqeni. Heqja miratohet atje."}
+  "taf_remove_on_phone": {"message": "Një taf hiqet në telefon: hapeni në aplikacionin tafs, pastaj Hiqeni. Heqja miratohet atje."},
+  "bar_go": {"message": "Shko te skeda e tij"},
+  "bar_paused": {"message": "$TAF$ është pezulluar", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ mbaroi", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach e lexon këtë faqe kur dërgoni: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Po lexon: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Jo në këtë sajt"},
+  "aside_on": {"message": "Lexo këtë sajt"},
+  "aside_off_line": {"message": "Coach nuk e lexon $HOST$: e çaktivizuat", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach nuk e lexon $HOST$: sajt banke, pagesash, poste ose shëndeti", "placeholders": {"host": {"content": "$1"}}}
 }

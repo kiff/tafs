@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { ActivityCall } from "../src/cloud/activity.js";
-import { caseKey, caseView, EXPORT_MAX_RECEIPTS, MAX_SCAN, receiptsExport, recordMatches, recordPage, type RecordTaf } from "../src/cloud/record.js";
+import { ActivityError, type ActivityCall } from "../src/cloud/activity.js";
+import { wordsIn } from "../src/cloud/words/index.js";
+import { caseKey, caseView, EXPORT_MAX_DAYS, EXPORT_MAX_RECEIPTS, MAX_Q, MAX_SCAN, receiptsExport, recordMatches, recordPage, type RecordTaf } from "../src/cloud/record.js";
 
 const now = new Date("2026-11-11T12:00:00Z");
 const refunds: RecordTaf = { id: "taf-refunds", name: "Refunds", kiffAgent: "agent-refunds" };
@@ -150,6 +151,38 @@ describe("the receipts export", () => {
     await expect(exportOf([], "2026-11-11", "2026-11-10").out).rejects.toThrow("on or after");
     const full = Array.from({ length: EXPORT_MAX_RECEIPTS + 1 }, (_, i) => call(i, 1));
     await expect(exportOf(full, "2026-11-11", "2026-11-11").out).rejects.toThrow("export fewer days");
+  });
+
+  it("says each refusal a person can reach in their language, with its code; an app's own mistake stays English alone", async () => {
+    const refusal = async (p: Promise<unknown>) => {
+      const e = await p.then(() => undefined, (err: unknown) => err);
+      expect(e).toBeInstanceOf(ActivityError);
+      const { status, code, words } = e as ActivityError;
+      return { status, code, words };
+    };
+    const de = (calls: ActivityCall[], query: string) =>
+      recordPage({ token: "session", scope: "account#person", tafs, zone: "Europe/Paris", now, query: new URLSearchParams(query), lang: "de" }, kiff(calls).net, "https://kiff.test");
+    const exportIn = (calls: ActivityCall[], from: string, to: string, lang?: "fr") =>
+      receiptsExport({ token: "session", from, to, tafs, zone: "Europe/Paris", lang }, kiff(calls).net, "https://kiff.test");
+    const [en, deW, fr] = [wordsIn("en"), wordsIn("de"), wordsIn("fr")];
+    expect(await refusal(page([], `q=${"x".repeat(MAX_Q + 1)}`))).toEqual({ status: 400, code: "query_too_long", words: en.record_query_too_long(MAX_Q) });
+    expect(await refusal(de([], `q=${"x".repeat(MAX_Q + 1)}`))).toEqual({ status: 400, code: "query_too_long", words: deW.record_query_too_long(MAX_Q) });
+    // The longest search is still read.
+    await expect(page([], `q=${"x".repeat(MAX_Q)}`)).resolves.toMatchObject({ entries: [] });
+    const many = Array.from({ length: 30 }, (_, i) => call(i, i, { about: `Order ${2000 + i}` }));
+    const first = await page(many, "q=order&limit=20");
+    expect(await refusal(de([call(99, 0, { about: "Order 1999" }), ...many], `q=order&limit=20&cursor=${first.next_cursor}`)))
+      .toEqual({ status: 409, code: "record_changed", words: deW.record_changed });
+    expect(await refusal(exportIn([], "2026-11-11", "2026-11-10", "fr"))).toEqual({ status: 400, code: "export_range", words: fr.record_export_order });
+    expect(await refusal(exportIn([], "2026-08-01", "2026-11-11", "fr"))).toEqual({ status: 400, code: "export_range", words: fr.record_export_days(EXPORT_MAX_DAYS) });
+    expect(await refusal(exportIn(Array.from({ length: EXPORT_MAX_RECEIPTS + 1 }, (_, i) => call(i, 1)), "2026-11-11", "2026-11-11")))
+      .toEqual({ status: 400, code: "export_too_big", words: en.record_export_too_big });
+    expect(await refusal(exportIn(Array.from({ length: MAX_SCAN * 100 + 1 }, (_, i) => call(i, 1, { receipt: null })), "2026-11-11", "2026-11-11")))
+      .toEqual({ status: 400, code: "export_too_big", words: en.record_export_too_big });
+    // An app's own mistakes: no code, no words.
+    for (const p of [page([], "limit=0"), page([], "from=11/05/2026"), page(many, `q=other&cursor=${first.next_cursor}`), exportIn([], "", "2026-11-11")]) {
+      expect(await refusal(p)).toMatchObject({ status: 400, code: undefined, words: undefined });
+    }
   });
 
   it("covers 92 days at most, both days counted", async () => {

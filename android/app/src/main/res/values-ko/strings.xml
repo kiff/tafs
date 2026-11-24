@@ -494,6 +494,12 @@
     <string name="chat_it_lower">이 taf</string>
     <string name="chat_jump_latest_something_new">새 내용이 있습니다. 최신으로 이동</string>
     <string name="chat_jump_to_latest">최신으로 이동</string>
+    <string name="chat_link_blocked_body">tafs는 채팅에서 안전한 웹 페이지만 엽니다. 이 링크의 주소: %1$s</string>
+    <string name="chat_link_blocked_title">이 링크는 열리지 않습니다</string>
+    <string name="chat_link_confirm_body">Coach가 읽은 페이지에서 온 링크입니다. 이동할 주소: %1$s</string>
+    <string name="chat_link_confirm_body_live">이 답변은 아직 작성 중입니다. 이 링크의 주소: %1$s</string>
+    <string name="chat_link_confirm_open">열기</string>
+    <string name="chat_link_confirm_title">이 링크를 열까요?</string>
     <string name="chat_message_carries_most_files">메시지 하나에 파일은 최대 %1$s개입니다.</string>
     <string name="chat_message_taf">%1$s에게 메시지</string>
     <string name="chat_message_your_taf">내 taf에게 메시지</string>
@@ -2512,6 +2518,7 @@
     <string name="usage_pack_named">%1$s · 크레딧 팩</string>
     <string name="usage_packs_keep">만료되지 않음</string>
     <string name="usage_period">기간</string>
+    <string name="usage_raise_limit_from">현재 지출 한도는 %1$s입니다.</string>
     <string name="usage_raise_limit_not_raised">한도를 올리지 못했습니다. %1$s</string>
     <string name="usage_raise_limit_prompt">지출 한도 올리기</string>
     <string name="usage_raise_limit_sign_in_first">한도를 올리려면 KIFF로 로그인하세요.</string>

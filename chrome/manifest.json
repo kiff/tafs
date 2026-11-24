@@ -3,7 +3,7 @@
   "name": "__MSG_name__",
   "short_name": "tafs",
   "description": "__MSG_description__",
-  "version": "0.2.4",
+  "version": "0.2.6",
   "default_locale": "en",
   "minimum_chrome_version": "116",
   "background": { "service_worker": "src/sw.js", "type": "module" },

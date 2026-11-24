@@ -1,6 +1,7 @@
 // The service worker (docs/chrome.md): it keeps the pairing, connects to planque when paired, and runs what planque sends
 // through the runner. It wakes on an alarm while it sleeps, connects, and lets the connection drop when no run is on.
 
+import { asideTab, readForCoach } from "./asideread.js";
 import { config } from "./config.js";
 import { indexedStore, profileId, forgetSavedSignIns } from "./store.js";
 import { actionBadge, actionTitle } from "./coachchat.js";
@@ -244,6 +245,39 @@ async function onlyHere(taf) {
   if (!(await tafsOfThisChrome()).some((t) => t.id === taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
 }
 
+// The floating bar follows the tab in front of each window, and a page that loads again draws it again.
+chrome.tabs.onActivated.addListener(() => runner.queueBars());
+chrome.windows.onFocusChanged.addListener(() => runner.queueBars());
+chrome.tabs.onUpdated.addListener((id, change, tab) => {
+  if (change.status === "complete" && tab && tab.active) runner.queueBars();
+});
+
+// Coach reads the page in front (docs/chrome.md, "Coach reads the page you're on"): on the person's send, the tab in front
+// of the panel's own window, once, through aside.js; never on a timer, never another tab, never a site the gate refuses.
+const ASIDE_OFF = "aside_off";
+
+async function asideOff() {
+  return ((await chrome.storage.local.get(ASIDE_OFF))[ASIDE_OFF] || []).filter((h) => typeof h === "string");
+}
+
+async function asideStatus(tabId, windowId) {
+  const { host, why } = await asideTab(chrome, tabId, windowId, await asideOff());
+  return { host, why };
+}
+
+async function asideRead(tabId, windowId) {
+  return readForCoach(chrome, tabId, windowId, await asideOff());
+}
+
+/** "Not on this site": the person's own list of hosts Coach never reads, kept in this Chrome only. */
+async function asideSwitch(host, off) {
+  if (!host) return { error: "no_host" };
+  const now = await asideOff();
+  const next = off ? [...new Set([...now, host])] : now.filter((h) => h !== host);
+  await chrome.storage.local.set({ [ASIDE_OFF]: next });
+  return { off };
+}
+
 chrome.runtime.onMessage.addListener((m, sender, reply) => {
   if (!m || typeof m.type !== "string") return;
   // Only the extension's own pages speak to it, apart from a content script's "owner_input".
@@ -251,9 +285,9 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     if (sender.tab) runner.ownerInput(sender.tab.id);
     return;
   }
-  // Stop on the bar in a run's tab (page.js showBar): only from that tab's own content script, and only for its run.
-  if (m.type === "bar_stop") {
-    if (sender.tab && sender.id === chrome.runtime.id) runner.stopByPerson(sender.tab.id);
+  // A press on the floating bar (bar.js): only from the extension's own content script in a tab, and only for a run it holds.
+  if (m.type === "bar") {
+    if (sender.tab && sender.id === chrome.runtime.id && typeof m.run === "string") runner.barPress(m.run, String(m.act || ""), sender.tab.id).catch(() => {});
     return;
   }
   if (sender.id !== chrome.runtime.id || sender.tab) return;
@@ -291,9 +325,16 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       await onlyHere(m.taf);
       return { sent: await (await coach()).sendToTaf(m.taf, m.words, m.clientID) };
     },
-    coach_send: async () => ({
-      sent: await (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true }),
-    }),
+    coach_send: async () => {
+      const page = await asideRead(m.tabId, m.windowId);
+      return {
+        sent: await (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page }),
+        reading: page.page ? page.host : null,
+        notReading: page.why || null,
+      };
+    },
+    aside_status: async () => asideStatus(m.tabId, m.windowId),
+    aside_site: async () => asideSwitch(String(m.host || ""), m.off === true),
     state: async () => {
       await load();
       publish();

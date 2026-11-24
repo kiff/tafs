@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · កញ្ចប់ក្រេឌីត",
   "usage.packs_keep": "មិនដែលផុតកំណត់",
   "usage.period": "រយៈពេល",
+  "usage.raise_limit.from": "ដែនកំណត់ការចំណាយឥឡូវនេះគឺ {amount}។",
   "usage.raise_limit.not_raised": "ដែនកំណត់មិនត្រូវបានបង្កើនទេ។ {why}",
   "usage.raise_limit.prompt": "បង្កើនដែនកំណត់ការចំណាយ",
   "usage.raise_limit.sign_in_first": "ចូលដោយ KIFF ដើម្បីបង្កើនដែនកំណត់។",

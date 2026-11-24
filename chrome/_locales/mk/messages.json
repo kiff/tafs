@@ -80,7 +80,6 @@
   "step_handed": {"message": "Предадено на вас", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Вие го направивте", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Рековте „Не сега“", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ работи на оваа страница", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Работат во овој Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Оди на јазичето на $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Назад"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "Нема архивирани разговори."},
   "coach_archive_error": {"message": "Не успеа. Обидете се повторно."},
   "taf_remove": {"message": "Отстрани го овој taf"},
-  "taf_remove_on_phone": {"message": "Taf се отстранува на телефонот: отворете го во апликацијата tafs, па Отстрани. Отстранувањето се одобрува таму."}
+  "taf_remove_on_phone": {"message": "Taf се отстранува на телефонот: отворете го во апликацијата tafs, па Отстрани. Отстранувањето се одобрува таму."},
+  "bar_go": {"message": "Оди на неговото јазиче"},
+  "bar_paused": {"message": "$TAF$ е паузиран", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ заврши", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach ја чита оваа страница кога ќе испратите: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Чита: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Не на оваа страница"},
+  "aside_on": {"message": "Читај ја оваа страница"},
+  "aside_off_line": {"message": "Coach не чита $HOST$: го исклучивте", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach не чита $HOST$: страница за банка, плаќања, пошта или здравје", "placeholders": {"host": {"content": "$1"}}}
 }

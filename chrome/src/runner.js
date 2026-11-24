@@ -24,9 +24,11 @@ const NAV_WAIT_MS = 1000;
 const NAV_LOOK_MS = 100;
 const STEP_TIMEOUT_MS = 20_000;
 const FAILURES_TO_PAUSE = 3;
-// A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its tabs close (and its window, when it has its own). One
-// the owner paused isn't idle, it's waiting for the owner.
-const RUN_IDLE_MS = 5 * 60_000;
+// A run nobody has sent a step to for this long has ended (its turn is over, a lost close, a call that timed out): it ends as Stop
+// does, its tabs kept. planque keeps a taf's run for the turn's next call only within 2 minutes of the last one (chromeRunIdle), so
+// this is a little over that: the bar, the badge and the group stop saying the taf works soon after its turn. One the owner paused
+// isn't idle, it's waiting for the owner.
+export const RUN_IDLE_MS = 150_000;
 // A finished run's group turns grey ("· done") this long after it ends, unless the taf's next run starts first (greyLater).
 const DONE_GRACE_MS = 15_000;
 // Why Show me pointed to no field, as the panel says it: the page changed, the field isn't on screen, the page didn't answer.
@@ -115,6 +117,9 @@ export class Runner {
       run.tabs.delete(tabId);
       this.tabRun.delete(tabId);
       if (run.tab === tabId) run.tab = [...run.tabs][0] ?? null;
+      // The person closed the run's last tab: that's their Stop. The run ends now (a hand-over open answers not now), rather than
+      // saying the taf works until the idle sweep. A run still setting its first tab up has none yet and isn't touched.
+      if (!run.tabs.size && run.opened && !run.stopped) this.stop(run.id, false, "person").catch(() => {});
     });
   }
 
@@ -206,6 +211,7 @@ export class Runner {
       }
     }
     this.onChange(this.state());
+    this.queueBars();
   }
 
   /**
@@ -218,12 +224,78 @@ export class Runner {
     await this.stop(run.id, false, "person");
   }
 
-  /** Shows the bar in the run's tab: the taf's name and Stop, in the extension's words. A page that can't take it is no reason to fail. */
-  async showBar(run) {
-    if (run.tab == null) return;
-    const words = this.say("bar_working", [run.taf || "taf"]) || (run.taf || "taf");
-    const stop = this.say("stop") || "Stop";
-    await this.inTab(run.tab, (w, s) => globalThis.TafsPage.showBar(w, s), [words, stop]).catch(() => {});
+  /**
+   * A press on the floating bar (bar.js), for run [runId]: Go to its tab, Pause, Resume or Stop, as the panel's own buttons do.
+   * Only a run this Chrome holds and that still lives; anything else does nothing.
+   */
+  async barPress(runId, act, tabId = null) {
+    const run = this.runs.get(runId);
+    if (!run || run.stopped) return { error: "no_run" };
+    // Resume gives power back: only from the run's own tab, never from a bar drawn on another page (bar.js shows it only there).
+    if (act === "resume" && !run.tabs.has(tabId)) return { error: "not_here" };
+    if (act === "go") return this.goTo(runId);
+    if (act === "pause") return this.pause(runId);
+    if (act === "resume") return this.resume(runId);
+    if (act === "stop") return this.stop(runId, false, "person");
+    return { error: "bad_act" };
+  }
+
+  /** What the bar says for [run]: in the extension's words, with its buttons' labels. */
+  barState(run, here) {
+    const taf = run.taf || "taf";
+    const say = (key, sub, or) => this.say(key, sub) || or;
+    return {
+      run: run.id,
+      here,
+      paused: !!run.paused,
+      words: run.paused ? say("bar_paused", [taf], taf) : say("working", [taf], taf),
+      labels: { go: say("bar_go", [], "Go to its tab"), pause: say("pause", [], "Pause"), resume: say("resume", [], "Resume"), stop: say("stop", [], "Stop") },
+    };
+  }
+
+  /** Brings the bars up to date, one sync at a time; a change while one runs is taken by the next. */
+  queueBars() {
+    if (this.barsQueued) return this.barsQueued;
+    const before = this.barsRunning || Promise.resolve();
+    this.barsQueued = before.then(() => {
+      this.barsQueued = null;
+      this.barsRunning = this.syncBars().catch(() => {});
+      return this.barsRunning;
+    });
+    return this.barsQueued;
+  }
+
+  /**
+   * The floating bar (D1 v2, docs/chrome.md, "While a taf works"): while a run lives, the tab in front of each normal window
+   * shows it, for the run whose tab it is or else the first live run; with none, it goes from every tab it was on. Only https
+   * tabs, which the extension may reach; Chrome's own pages and the like are left alone. Nothing is read from those tabs: the
+   * bar is drawn in them, and that's all.
+   */
+  async syncBars() {
+    const live = [...this.runs.values()].filter((r) => !r.stopped && r.tab != null);
+    const want = new Map();
+    if (live.length) {
+      const wins = await (async () => this.chrome.windows.getAll({ windowTypes: ["normal"] }))().catch(() => []);
+      for (const w of wins || []) {
+        const [tab] = await (async () => this.chrome.tabs.query({ active: true, windowId: w.id }))().catch(() => []);
+        if (!tab || typeof tab.id !== "number" || !/^https:\/\//.test(tab.url || "")) continue;
+        const own = this.runOfTab(tab.id);
+        const run = own && !own.stopped ? own : live[0];
+        want.set(tab.id, this.barState(run, run.tabs.has(tab.id)));
+      }
+    }
+    for (const t of this.barTabs || []) {
+      if (!want.has(t)) await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
+    }
+    for (const [t, s] of want) {
+      try {
+        await this.chrome.scripting.executeScript({ target: { tabId: t }, files: ["src/bar.js"] });
+        await this.inTab(t, (x) => globalThis.TafsBar.show(x), [s]);
+      } catch {
+        // A page that can't take it is no reason to fail: the panel and the group still show the run.
+      }
+    }
+    this.barTabs = new Set(want.keys());
   }
 
   /** The owner touched a run's tab: that run pauses until Resume. */
@@ -377,15 +449,21 @@ export class Runner {
   }
 
   greyGroup(taf, groupId) {
-    return Promise.resolve(this.chrome.tabGroups.update(groupId, { title: "tafs · " + taf + " · done", color: "grey" })).catch(() => {});
+    return Promise.resolve(this.chrome.tabGroups.update(groupId, { title: this.doneTitle(taf), color: "grey" })).catch(() => {});
+  }
+
+  /** A group whose run is over, in the extension's words ("Rae is done"), as `workingTitle` is while it works. */
+  doneTitle(taf) {
+    const name = taf || "taf";
+    return "tafs · " + (this.say("group_done", [name]) || name + " · done");
   }
 
   async closeRun(run, close = true) {
     // A step still handed to the person ends with the run: planque is told "not now", not left to its 30 minutes.
     if (run.hand) this.endHand(run, "declined");
     for (const t of run.tabs) {
-      // The bar goes with the run: the tab is the person's again.
-      await this.inTab(t, () => globalThis.TafsPage && globalThis.TafsPage.hideBar()).catch(() => {});
+      // The bar goes with the run: the tab is the person's again (the next sync takes it from any other tab).
+      await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
       this.tabRun.delete(t);
       await this.unfence(t);
     }
@@ -747,8 +825,6 @@ export class Runner {
     await this.inject(run.tab, run);
     const page = await this.inTab(run.tab, (o, p) => globalThis.TafsPage.read(o, p), [offset, opts]);
     if (!page) return { error: { code: "page_unresponsive" } };
-    // Every read is the run at work in this tab: the bar says so, with Stop (a new page needs it again).
-    await this.showBar(run);
     run.pages.set(page.read_id, page);
     if (run.pages.size > 20) run.pages.delete(run.pages.keys().next().value);
     return { page };

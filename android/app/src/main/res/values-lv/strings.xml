@@ -550,6 +550,12 @@
     <string name="chat_it_lower">tas</string>
     <string name="chat_jump_latest_something_new">Pāriet uz jaunāko, ir kas jauns</string>
     <string name="chat_jump_to_latest">Pāriet uz jaunāko</string>
+    <string name="chat_link_blocked_body">tafs no tērzēšanas atver tikai drošas tīmekļa lapas. Šī saite ved uz: %1$s</string>
+    <string name="chat_link_blocked_title">Šī saite netiks atvērta</string>
+    <string name="chat_link_confirm_body">Tā nāk no lapas, ko Coach izlasīja. Tā ved uz: %1$s</string>
+    <string name="chat_link_confirm_body_live">Šī atbilde vēl tiek rakstīta. Šī saite ved uz: %1$s</string>
+    <string name="chat_link_confirm_open">Atvērt</string>
+    <string name="chat_link_confirm_title">Vai atvērt šo saiti?</string>
     <string name="chat_message_carries_most_files">Ziņā var būt ne vairāk kā %1$s faili.</string>
     <string name="chat_message_taf">Ziņa: %1$s</string>
     <string name="chat_message_your_taf">Raksti savam taf</string>
@@ -2652,6 +2658,7 @@
     <string name="usage_pack_named">%1$s · kredītu pakete</string>
     <string name="usage_packs_keep">Bez derīguma termiņa</string>
     <string name="usage_period">periodā</string>
+    <string name="usage_raise_limit_from">Tēriņu limits pašlaik ir %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limits netika palielināts. %1$s</string>
     <string name="usage_raise_limit_prompt">Palielināt tēriņu limitu</string>
     <string name="usage_raise_limit_sign_in_first">Pieraksties ar KIFF, lai palielinātu limitu.</string>

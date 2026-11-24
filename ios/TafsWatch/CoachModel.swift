@@ -142,6 +142,15 @@ final class CoachModel: ObservableObject {
         self.drafts = drafts
         self.pause = pause
         kept = taf == nil ? drafts?.read() : nil
+        // As the Inbox: nothing of it stays on a watch without a passcode.
+        checkLock()
+    }
+
+    /// The app was opened or put away, as the Inbox's `checkLock`: on a watch without a passcode, a message kept for later is
+    /// deleted, unsent, as the Inbox's lines are, so the watch keeps nothing without one. A watch that's only locked keeps it.
+    func checkLock() {
+        guard taf == nil, drafts != nil, !lock.isSecure else { return }
+        deleteKept()
     }
 
     /// The complication was tapped: Coach's home listens, as its microphone does. Nothing is sent before the person's Send.

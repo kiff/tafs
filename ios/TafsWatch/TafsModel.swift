@@ -74,7 +74,7 @@ final class TafsModel: ObservableObject {
             cache.clear()
             answered()
         case .failed:
-            state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
+            state = .failed(reply.line ?? Words.Watch.phoneCouldNotReachCloud)
             answered()
         case .refused, .stale, .notYet, .answered:
             unreachable()

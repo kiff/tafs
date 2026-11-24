@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · een pakket credits",
   "usage.packs_keep": "Verloopt nooit",
   "usage.period": "periode",
+  "usage.raise_limit.from": "De uitgavenlimiet is nu {amount}.",
   "usage.raise_limit.not_raised": "De limiet is niet verhoogd. {why}",
   "usage.raise_limit.prompt": "De uitgavenlimiet verhogen",
   "usage.raise_limit.sign_in_first": "Log in met KIFF om de limiet te verhogen.",

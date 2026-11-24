@@ -1,0 +1,1 @@
+- **Chrome: a floating bar while a taf works.** The page in front of every window shows who is working, with Go to its tab, Pause or Resume, and Stop, until the taf's work ends. It replaces the bar at the top of the run's own tab. No new permission. ([chrome.md](docs/chrome.md))

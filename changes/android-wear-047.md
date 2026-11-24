@@ -1,0 +1,1 @@
+- **Wear OS 0.4.7 (400,000,012) for Play's internal track:** a message kept for later is deleted, unsent, on a watch with no screen lock ([watch-wear.md](docs/watch-wear.md)).

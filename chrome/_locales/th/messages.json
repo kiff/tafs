@@ -80,7 +80,6 @@
   "step_handed": {"message": "ส่งต่อให้คุณแล้ว", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "คุณทำแล้ว", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "คุณเลือก “ไม่ใช่ตอนนี้”", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ กำลังทำงานบนหน้านี้", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "กำลังทำงานใน Chrome นี้", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "ไปที่แท็บของ $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← กลับ"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "ไม่มีการสนทนาที่เก็บถาวร"},
   "coach_archive_error": {"message": "ไม่สำเร็จ ลองใหม่อีกครั้ง"},
   "taf_remove": {"message": "นำ taf นี้ออก"},
-  "taf_remove_on_phone": {"message": "taf นำออกได้บนโทรศัพท์ของคุณ: เปิดในแอป tafs แล้วแตะ นำออก การนำออกจะอนุมัติที่นั่น"}
+  "taf_remove_on_phone": {"message": "taf นำออกได้บนโทรศัพท์ของคุณ: เปิดในแอป tafs แล้วแตะ นำออก การนำออกจะอนุมัติที่นั่น"},
+  "bar_go": {"message": "ไปที่แท็บของมัน"},
+  "bar_paused": {"message": "$TAF$ หยุดชั่วคราวแล้ว", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ ทำเสร็จแล้ว", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach จะอ่านหน้านี้เมื่อคุณส่ง: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "กำลังอ่าน: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "ไม่ใช่ในเว็บไซต์นี้"},
+  "aside_on": {"message": "อ่านเว็บไซต์นี้"},
+  "aside_off_line": {"message": "Coach ไม่อ่าน $HOST$: คุณปิดไว้", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach ไม่อ่าน $HOST$: เป็นเว็บไซต์ธนาคาร การชำระเงิน อีเมล หรือสุขภาพ", "placeholders": {"host": {"content": "$1"}}}
 }

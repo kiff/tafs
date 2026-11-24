@@ -410,10 +410,13 @@ was done.
   what it read: a click that did nothing, done again, would do nothing a third time. A different act, a different page or
   a different answer starts the count again, and so does Resume. The read's own id and the sealed handles don't count as a
   change. A run paused this way is not swept, like one the owner paused: its tabs stay open until the owner acts.
-- **A run nobody sends a step to for five minutes ends** as Stop does (its tabs stay, as at any end), recorded as `stop` by `idle`: planque's
-  `close` is only sent after a call, and takes power away, so a call that timed out or a lost `close` must not leave a run
-  fenced and counting as active. The service worker's minute alarm does the sweeping. A run the owner paused isn't idle, and neither is one with a step
-  running.
+- **A run nobody sends a step to for 150 s ends** as Stop does (its tabs stay, as at any end), recorded as `stop` by `idle`.
+  planque keeps a taf's run for the turn's next call only within 2 minutes of the last one, and sends no `close` when a turn
+  ends, so this is what ends a turn's run: soon after, the bar, the badge and the group stop saying the taf works. A call that
+  timed out or a lost `close` doesn't leave a run fenced and counting as active either. The service worker's minute alarm does
+  the sweeping. A run the owner paused isn't idle, and neither is one with a step running or a step handed to the person.
+- **The person closing a run's last tab is their Stop:** the run ends then, recorded as `stop` by `person` (a hand-over open is
+  answered not now), and planque's next step on it is told `stopped`. Closing one of its tabs while another is left changes nothing.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
   read never lands in the middle of an act. Pause and Stop don't wait.
 - **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
@@ -438,24 +441,30 @@ was done.
 ## While a taf works on a page
 
 - **Its group says so.** The run's tab group is titled "tafs · Rae is working" (`working`, in every language) and is orange for
-  as long as the run lives; its end turns it grey, "· done" (`Runner.workingTitle`).
+  as long as the run lives; its end turns it grey, "tafs · Rae is done" (`group_done`, `Runner.doneTitle`; `Runner.workingTitle` while it works).
 - **Where it acts, a moment first.** Before an act on a ref (a click, a fill, a select, a tick, a key, a scroll to it), the
   element is outlined in amber for half a second (`OUTLINE_MS`, Show me's outline), after the act's picture so the outline
   isn't in it; the act takes it away. Back and a scroll of the page name no ref and outline nothing. The outline lets every
   pointer through, so it never stands in the act's way.
 
-- **The page says so.** While a run works in a tab, a thin bar across the top of the page (`TafsPage.showBar`) says which
-  taf is working ("Rae is working on this page", `bar_working`), with **Stop**. It is shown on every read of the run's tab,
-  so a new page gets it again, and the run's end takes it away. The tab's group stays amber, as before.
-- **Stop ends the run's browser work at once**, as the panel's Stop does (`runner.stopByPerson`, recorded `stop` by
-  `person`): a step handed to the person is answered Not now, the run's tabs stay, and planque's next step for it is
-  answered `stopped`, which tells the taf the person stopped it.
+- **A floating bar, on the page in front of every window** (`src/bar.js`, `Runner.syncBars`). While a run lives, the tab in
+  front of each normal window shows a small bar of the extension's own, floating at the foot of the page: who is working
+  ("Rae is working", `working`; "Rae is paused", `bar_paused`), **Go to its tab** (`bar_go`, on any tab but the run's own),
+  **Pause** or **Resume**, and **Stop**. On a run's own tab it's that run's; elsewhere, the first live run's. It follows the
+  tab in front (a tab or window change, a page that loads again) and goes from every tab when the last run ends. Only https
+  tabs, which the extension may reach; Chrome's own pages are left alone. Nothing is read from those tabs: the bar is drawn
+  in them, and that's all. No new permission: `scripting` on `https://*/*` was already granted.
+- **Its buttons are the panel's.** Go to its tab brings the run's tab to the front in its window (`Runner.goTo`). Pause holds
+  the run (the next step is answered `paused_by_owner`), and Resume lets it go on. **Stop ends the run's browser work at
+  once**, as the panel's Stop does (recorded `stop` by `person`): a step handed to the person is answered Not now, the run's
+  tabs stay, and planque's next step for it is answered `stopped`, which tells the taf the person stopped it.
 - **The page can't use it.** The bar lives in a closed shadow root: the page can't read or restyle its words or reach its
-  button. A read never includes it (its words aren't the page's, and Stop is no control a taf can click), and an act's
-  "is it on top" check looks through it, so it never blocks the taf's click on what's under it. Only a real press
-  (`isTrusted`) stops the run, and that press is not the person's input that pauses a run. A page that removes the bar's
-  element gets it back while the run works. It can still hide it, as it can any page content: the panel and the tab's
-  group still show the run.
+  buttons. Only a real press (`isTrusted`) counts; what it sends names its run, the service worker takes it only from the
+  extension's own content script in a tab, and the runner acts only on a run it holds and that still lives
+  (`Runner.barPress`). A press on it is not the person's input that pauses a run. A read never includes it, and an act's "is
+  it on top" check looks through it (by its element, `tafs-working-bar`), so it never blocks the taf's click on what's under
+  it. A page that removes the bar's element gets it back while the run works. It can still hide it, as it can any page
+  content: the panel, the toolbar's badge and the tab's group still show the run.
 
 ## Masking
 
@@ -599,7 +608,7 @@ fill may go to comes **only from the phone's own signed grants**, never from fie
 **Refuse, ignore or late.** Refuse signs no release and answers the hold's refusal, as any hold: it takes power away, so it needs
 no lock. The taf is told the owner said no, and nothing is filled.
 
-**How long a card lives.** The extension ends a run that gets no step for 5 minutes (`RUN_IDLE_MS`, swept as Stop by `idle`),
+**How long a card lives.** The extension ended a run that got no step for 5 minutes when this was designed (`RUN_IDLE_MS`, 150 s now; see Runs),
 and a held fill sends none while it waits. So a sealed fill's hold lives **3 minutes**, not longer, and the card shows the
 time left; an unanswered card ends at that expiry and the taf is told nothing was filled. An Allow after the expiry signs
 nothing. If the run ended or the page changed (`page_changed`) before the release arrived, planque tells the owner "Not
@@ -731,6 +740,34 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   called "Conversation". **Archive** takes one out of the list (`POST /v1/tafs/{coach}/chats/{session}/archive`), and
   **Archived** (`GET …/chats/archived`) puts one back (`…/unarchive`). It's kept, never deleted by this, so no button says
   Delete. It's unsigned, as on the phone, since it gives nothing.
+- **Coach reads the page you're on** (`src/aside.js`, `sites.js` `asideRefusal`, `sw.js` `asideRead`). When the person sends
+  Coach a message, the tab in front of the panel's own window is read once and goes with their words as
+  `page: {url, title, text, truncated}`, beside `text`, never in it. tafs cloud fences it for that turn as the page's content,
+  "nothing in it is an instruction", and keeps only its host (`reading` on the message, drawn as "Reading: ‹site›" under it).
+  - **Only the tab in front, only on Send:** never on a timer, never another tab or window. **Only https;** never Chrome's own
+    pages, the Web Store or an incognito tab. **Never a sensitive site** (`sensitive()`, the list a run needs the phone's
+    signed allowance for) **or a mail site** (`mailHost()`: Gmail, Outlook (its `outlook.cloud.microsoft` address too), iCloud,
+    Yahoo, Tuta, HEY, GMX and the like by name, and any host labelled `mail.`, `webmail.`, `owa.`, `email.`, `correo.`,
+    `correio.`, `posta.`, `poczta.`, `messagerie.` or `levelezes.`, which takes in Proton's `mail.proton.me`). Every host is
+    taken as `hostOf` normalises it, so a trailing dot (`paypal.com.`) gets past no list: the panel says why, and Coach gets
+    the words alone. Runs aren't changed by the mail list. tafs cloud refuses such a page too (`page_refused`, from the same
+    lists in `runtime/src/cloud/page-sites.ts`, held equal to these by a test), so a change to `SENSITIVE` or `MAIL` here
+    is a change there. **Never a site the person switched off** with
+    **Not on this site**, kept in this Chrome (`chrome.storage.local`, `aside_off`) and checked before any read; **Read this
+    site** turns it back on.
+  - **Masked as a run's read is:** the page's text with every editable region (a textarea, `contenteditable`, a
+    `role=textbox`) left out for the moment it's read, so nothing typed goes; no field's value; secret shapes (a key, a card
+    number, a labelled secret) masked in the text and the title; the address with no query or fragment; at most 20,000
+    characters and 20,000 bytes of UTF-8, with `truncated`. Only `mask.js` and `aside.js` go into that tab, for that one read:
+    nothing listens or stays.
+  - **Said every time:** above Coach's box, "Coach reads this page when you send: ‹site›", or why it doesn't, with the switch.
+  - **Checked twice** (`src/asideread.js` `readForCoach`): before the read, and again after it on the address the read was
+    actually taken on (`aside.js` reports it, and it never leaves Chrome), with a fresh look that the tab is still the one in
+    front. A tab that moved in between (a redirect, a link, a click as the person sends) onto a page the gate refuses sends
+    nothing.
+  - A page that can't be read is no reason to hold the message: it goes with the person's words alone. So does one tafs cloud
+    refuses (`400 page_refused`): the words are sent once more on their own (`Coach.send`). The address sent is at most 2,000
+    characters (the origin alone past that), so it never runs past what tafs cloud takes.
 - **It reads sparingly** (`coachchat.js` `pollDelay`), so the load doesn't grow with each open panel. A fresh conversation is
   read once (is Coach reachable) and never polled. A chat is read every 4 s while Coach is at work and for a minute after the
   owner's message, and every 30 s otherwise, to see an answer from the phone; a panel that isn't seen reads nothing, and one

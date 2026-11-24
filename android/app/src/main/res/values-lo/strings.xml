@@ -494,6 +494,12 @@
     <string name="chat_it_lower">ມັນ</string>
     <string name="chat_jump_latest_something_new">ໄປຫາອັນຫຼ້າສຸດ, ມີສິ່ງໃໝ່</string>
     <string name="chat_jump_to_latest">ໄປຫາອັນຫຼ້າສຸດ</string>
+    <string name="chat_link_blocked_body">tafs ເປີດຈາກການສົນທະນາສະເພາະໜ້າເວັບທີ່ປອດໄພ. ລິ້ງນີ້ໄປຫາ: %1$s</string>
+    <string name="chat_link_blocked_title">ລິ້ງນີ້ຈະບໍ່ເປີດ</string>
+    <string name="chat_link_confirm_body">ມັນມາຈາກໜ້າທີ່ Coach ອ່ານ. ມັນໄປຫາ: %1$s</string>
+    <string name="chat_link_confirm_body_live">ຄຳຕອບນີ້ຍັງຂຽນຢູ່. ລິ້ງນີ້ໄປຫາ: %1$s</string>
+    <string name="chat_link_confirm_open">ເປີດ</string>
+    <string name="chat_link_confirm_title">ເປີດລິ້ງນີ້ບໍ?</string>
     <string name="chat_message_carries_most_files">ຂໍ້ຄວາມໜຶ່ງມີໄດ້ສູງສຸດ %1$s ໄຟລ໌.</string>
     <string name="chat_message_taf">ສົ່ງຂໍ້ຄວາມຫາ %1$s</string>
     <string name="chat_message_your_taf">ສົ່ງຂໍ້ຄວາມຫາ taf ຂອງທ່ານ</string>
@@ -2512,6 +2518,7 @@
     <string name="usage_pack_named">%1$s · ຊຸດເຄຣດິດ</string>
     <string name="usage_packs_keep">ບໍ່ເຄີຍໝົດອາຍຸ</string>
     <string name="usage_period">ໄລຍະ</string>
+    <string name="usage_raise_limit_from">ຂີດຈຳກັດການໃຊ້ຈ່າຍຕອນນີ້ແມ່ນ %1$s.</string>
     <string name="usage_raise_limit_not_raised">ຂີດຈຳກັດບໍ່ໄດ້ຖືກເພີ່ມ. %1$s</string>
     <string name="usage_raise_limit_prompt">ເພີ່ມຂີດຈຳກັດການໃຊ້ຈ່າຍ</string>
     <string name="usage_raise_limit_sign_in_first">ເຂົ້າສູ່ລະບົບດ້ວຍ KIFF ເພື່ອເພີ່ມຂີດຈຳກັດ.</string>

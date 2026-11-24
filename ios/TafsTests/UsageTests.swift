@@ -32,6 +32,22 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(b.homeLine, "80% of the spend limit is used")
     }
 
+    /// The limit now (`usage.raise_limit.from`), from `from_cents` in tafs cloud's `currency`, formatted by the app: none
+    /// without a currency (a tafs cloud from before it), never one the app assumes.
+    func testTheLimitNowIsFormattedInTafsCloudsCurrency() throws {
+        typealias Offer = TafsCloud.Balance.Offer
+        let euros = try KIFFClient.decoder.decode(Offer.self, from: Data(#"{"words":"Raise","from_cents":120000,"currency":"EUR"}"#.utf8))
+        XCTAssertEqual(euros.limitNow, Money(minor: 120000, currency: "EUR", scale: 2))
+        XCTAssertEqual(euros.limitNowLine, Words.Usage.RaiseLimit.from(amount: Money(minor: 120000, currency: "EUR", scale: 2).figure))
+        let yen = try KIFFClient.decoder.decode(Offer.self, from: Data(#"{"words":"Raise","from_cents":5000,"currency":"JPY"}"#.utf8))
+        XCTAssertEqual(yen.limitNow?.scale, 0, "a currency with no minor unit")
+        for json in [#"{"words":"Raise","from_cents":120000}"#, #"{"words":"Raise","from_cents":120000,"currency":"euro"}"#,
+                     #"{"words":"Raise","currency":"EUR"}"#] {
+            let offer = try KIFFClient.decoder.decode(Offer.self, from: Data(json.utf8))
+            XCTAssertNil(offer.limitNowLine, json)
+        }
+    }
+
     /// Waiting, with no plan bounding it, and what the store may sell: a part the app can't read
     /// is left out, never the read.
     func testTheBalanceReadIsLenient() throws {

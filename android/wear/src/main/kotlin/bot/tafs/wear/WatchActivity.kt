@@ -44,7 +44,7 @@ class WatchActivity : ComponentActivity() {
     val keyguard = getSystemService(android.app.KeyguardManager::class.java)
     // A screen lock set and the watch unlocked now: the confirmation for an ask, a Refuse and a Halt (docs/watch-wear.md).
     WatchModel(
-      DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, tile = TileCount(PreferencesTileStore(this)),
+      DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, secure = { keyguard.isDeviceSecure }, tile = TileCount(PreferencesTileStore(this)),
       // Only v2 keeps a message for later, an Inbox, and signs out on the watch alone.
       drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
       inboxStore = if (WATCH_V2) PreferencesInboxStore(this) else null,

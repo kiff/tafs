@@ -550,6 +550,12 @@
     <string name="chat_it_lower">el</string>
     <string name="chat_jump_latest_something_new">Salt la cele mai noi, e ceva nou</string>
     <string name="chat_jump_to_latest">Salt la cele mai noi</string>
+    <string name="chat_link_blocked_body">Dintr-o conversație, tafs deschide doar pagini web securizate. Acest link duce la: %1$s</string>
+    <string name="chat_link_blocked_title">Acest link nu se va deschide</string>
+    <string name="chat_link_confirm_body">Provine dintr-o pagină citită de Coach. Duce la: %1$s</string>
+    <string name="chat_link_confirm_body_live">Acest răspuns încă se scrie. Acest link duce la: %1$s</string>
+    <string name="chat_link_confirm_open">Deschideți</string>
+    <string name="chat_link_confirm_title">Deschideți acest link?</string>
     <string name="chat_message_carries_most_files">Un mesaj poartă cel mult %1$s fișiere.</string>
     <string name="chat_message_taf">Mesaj către %1$s</string>
     <string name="chat_message_your_taf">Mesaj către taful dvs.</string>
@@ -2652,6 +2658,7 @@
     <string name="usage_pack_named">%1$s · un pachet de credite</string>
     <string name="usage_packs_keep">Nu expiră niciodată</string>
     <string name="usage_period">perioadă</string>
+    <string name="usage_raise_limit_from">Limita de cheltuieli este acum %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limita nu a fost mărită. %1$s</string>
     <string name="usage_raise_limit_prompt">Măriți limita de cheltuieli</string>
     <string name="usage_raise_limit_sign_in_first">Conectați-vă cu KIFF pentru a mări limita.</string>

@@ -522,6 +522,12 @@
     <string name="chat_it_lower">այն</string>
     <string name="chat_jump_latest_something_new">Անցեք վերջինին, ինչ-որ նոր բան կա</string>
     <string name="chat_jump_to_latest">Անցեք վերջինին</string>
+    <string name="chat_link_blocked_body">tafs-ը զրույցից բացում է միայն անվտանգ վեբ էջեր։ Այս հղումը տանում է՝ %1$s</string>
+    <string name="chat_link_blocked_title">Այս հղումը չի բացվի</string>
+    <string name="chat_link_confirm_body">Այն եկել է մի էջից, որը Coach-ը կարդացել է։ Տանում է՝ %1$s</string>
+    <string name="chat_link_confirm_body_live">Այս պատասխանը դեռ գրվում է։ Այս հղումը տանում է՝ %1$s</string>
+    <string name="chat_link_confirm_open">Բացել</string>
+    <string name="chat_link_confirm_title">Բացե՞լ այս հղումը</string>
     <string name="chat_message_carries_most_files">Հաղորդագրությունը տեղավորում է առավելագույնը %1$s ֆայլ։</string>
     <string name="chat_message_taf">Հաղորդագրություն՝ %1$s</string>
     <string name="chat_message_your_taf">Գրեք ձեր taf-ին</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · կրեդիտների փաթեթ</string>
     <string name="usage_packs_keep">Երբեք չի սպառվում</string>
     <string name="usage_period">ժամանակահատված</string>
+    <string name="usage_raise_limit_from">Ծախսի սահմանաչափը հիմա %1$s է։</string>
     <string name="usage_raise_limit_not_raised">Սահմանաչափը չբարձրացվեց։ %1$s</string>
     <string name="usage_raise_limit_prompt">Բարձրացրեք ծախսի սահմանաչափը</string>
     <string name="usage_raise_limit_sign_in_first">Մուտք գործեք KIFF-ով՝ սահմանաչափը բարձրացնելու համար։</string>

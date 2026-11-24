@@ -494,6 +494,12 @@
     <string name="chat_it_lower">このtaf</string>
     <string name="chat_jump_latest_something_new">最新へ移動（新着あり）</string>
     <string name="chat_jump_to_latest">最新へ移動</string>
+    <string name="chat_link_blocked_body">tafsはチャットから安全なウェブページだけを開きます。このリンクの移動先: %1$s</string>
+    <string name="chat_link_blocked_title">このリンクは開きません</string>
+    <string name="chat_link_confirm_body">Coachが読んだページからのリンクです。移動先: %1$s</string>
+    <string name="chat_link_confirm_body_live">この回答はまだ作成中です。このリンクの移動先: %1$s</string>
+    <string name="chat_link_confirm_open">開く</string>
+    <string name="chat_link_confirm_title">このリンクを開きますか？</string>
     <string name="chat_message_carries_most_files">1つのメッセージに添付できるのは最大%1$sファイルです。</string>
     <string name="chat_message_taf">%1$sにメッセージ</string>
     <string name="chat_message_your_taf">tafにメッセージ</string>
@@ -2512,6 +2518,7 @@
     <string name="usage_pack_named">%1$s・クレジットパック</string>
     <string name="usage_packs_keep">有効期限なし</string>
     <string name="usage_period">期間</string>
+    <string name="usage_raise_limit_from">現在の利用上限は %1$s です。</string>
     <string name="usage_raise_limit_not_raised">上限は引き上げられませんでした。%1$s</string>
     <string name="usage_raise_limit_prompt">利用上限を引き上げる</string>
     <string name="usage_raise_limit_sign_in_first">上限を引き上げるには、KIFFでサインインしてください。</string>

@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · balíček kreditů",
   "usage.packs_keep": "Nikdy nevyprší",
   "usage.period": "období",
+  "usage.raise_limit.from": "Limit útraty je teď {amount}.",
   "usage.raise_limit.not_raised": "Limit se nezvýšil. {why}",
   "usage.raise_limit.prompt": "Zvýšit limit útraty",
   "usage.raise_limit.sign_in_first": "Pro zvýšení limitu se přihlaste přes KIFF.",

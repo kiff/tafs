@@ -550,6 +550,12 @@
     <string name="chat_it_lower">on</string>
     <string name="chat_jump_latest_something_new">Přejít na nejnovější, je tu něco nového</string>
     <string name="chat_jump_to_latest">Přejít na nejnovější</string>
+    <string name="chat_link_blocked_body">tafs z chatu otevírá jen zabezpečené webové stránky. Tento odkaz vede na: %1$s</string>
+    <string name="chat_link_blocked_title">Tento odkaz se neotevře</string>
+    <string name="chat_link_confirm_body">Pochází ze stránky, kterou Coach přečetl. Vede na: %1$s</string>
+    <string name="chat_link_confirm_body_live">Tato odpověď se ještě píše. Tento odkaz vede na: %1$s</string>
+    <string name="chat_link_confirm_open">Otevřít</string>
+    <string name="chat_link_confirm_title">Otevřít tento odkaz?</string>
     <string name="chat_message_carries_most_files">Zpráva unese nejvýš %1$s souborů.</string>
     <string name="chat_message_taf">Napsat %1$s</string>
     <string name="chat_message_your_taf">Napsat svému tafu</string>
@@ -2652,6 +2658,7 @@
     <string name="usage_pack_named">%1$s · balíček kreditů</string>
     <string name="usage_packs_keep">Nikdy nevyprší</string>
     <string name="usage_period">období</string>
+    <string name="usage_raise_limit_from">Limit útraty je teď %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limit se nezvýšil. %1$s</string>
     <string name="usage_raise_limit_prompt">Zvýšit limit útraty</string>
     <string name="usage_raise_limit_sign_in_first">Pro zvýšení limitu se přihlaste přes KIFF.</string>

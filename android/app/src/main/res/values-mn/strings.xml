@@ -522,6 +522,12 @@
     <string name="chat_it_lower">тэр</string>
     <string name="chat_jump_latest_something_new">Хамгийн сүүлийнх рүү үсрэх, шинэ зүйл байна</string>
     <string name="chat_jump_to_latest">Хамгийн сүүлийнх рүү үсрэх</string>
+    <string name="chat_link_blocked_body">tafs чатаас зөвхөн аюулгүй вэб хуудас нээдэг. Энэ холбоосын хаяг: %1$s</string>
+    <string name="chat_link_blocked_title">Энэ холбоос нээгдэхгүй</string>
+    <string name="chat_link_confirm_body">Энэ нь Coach-ийн уншсан хуудаснаас ирсэн. Хүрэх хаяг: %1$s</string>
+    <string name="chat_link_confirm_body_live">Энэ хариултыг бичсээр байна. Энэ холбоосын хаяг: %1$s</string>
+    <string name="chat_link_confirm_open">Нээх</string>
+    <string name="chat_link_confirm_title">Энэ холбоосыг нээх үү?</string>
     <string name="chat_message_carries_most_files">Нэг мессеж хамгийн ихдээ %1$s файл авч явна.</string>
     <string name="chat_message_taf">%1$s-д бичих</string>
     <string name="chat_message_your_taf">Өөрийн taf-д бичих</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · кредитийн багц</string>
     <string name="usage_packs_keep">Хэзээ ч дуусахгүй</string>
     <string name="usage_period">үе</string>
+    <string name="usage_raise_limit_from">Зарцуулалтын хязгаар одоо %1$s байна.</string>
     <string name="usage_raise_limit_not_raised">Хязгаарыг нэмэгдүүлсэнгүй. %1$s</string>
     <string name="usage_raise_limit_prompt">Зарцуулалтын хязгаарыг нэмэгдүүлэх</string>
     <string name="usage_raise_limit_sign_in_first">Хязгаарыг нэмэгдүүлэхийн тулд KIFF-ээр нэвтэрнэ үү.</string>

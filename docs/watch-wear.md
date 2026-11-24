@@ -241,8 +241,10 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   (`tafs.draft`). Coach's home shows it with "Kept on this watch. It's sent when your phone is in reach again." and **Delete**.
   It's sent at the next read that reaches the phone, from an unlocked watch only, under its **own id**, so tafs cloud starts it at
   most once; once taken it's gone from the watch and shows as an ask at work, and anything else leaves it for the next read. It's
-  deleted on Delete and when the phone says it's signed out. Putting the app away keeps it, and so does the watch locking, since
-  the person asked for it to be sent. v1 offers none (`v1OffersNoKeepForLater`).
+  deleted on Delete and when the phone says it's signed out, and, unsent, on a watch with no screen lock, checked as the
+  Inbox's lines are (`WatchModel.checkLock`): when the app starts, opens or is put away, so the watch keeps nothing without
+  one (as the Apple Watch's). Putting the app away keeps it, and so does the watch locking, since the person asked for it to
+  be sent. v1 offers none (`v1OffersNoKeepForLater`).
 - **Play and Pause** (`VoiceAudio.kt`, `Listener(keepAudio = true)`), **only in a test version** (`BuildConfig.KEEP_AUDIO`: a
   `-test` `versionName`, or `TAFS_WATCH_AUDIO=1`). On the owner's Galaxy Watch 5 the app's own recording wasn't the path the
   watch took, so the probe never ran (#1716, W1), and a production build keeps no recording: its review is the words alone.
@@ -412,6 +414,11 @@ counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the tw
 foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" and the page back on the microphone after a
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
 to production only **after 0.4.0's review passes**, so the review isn't restarted.
+
+**400,000,012 (0.4.7)** closes a gap found live in 0.4.6: a message kept for later is deleted, unsent, once the watch has no
+screen lock, checked when the app starts, opens or is put away (`WatchModel.checkLock`, #1943), as the Inbox's lines are. A
+watch that's only locked keeps it. To `wear:internal` on merge, with its notes in the listing's 11 languages; the Privacy
+page's Wear OS item says the same from this version on.
 
 **400,000,011 (0.4.6)** brings the watch to main's code for the owner's second Galaxy Watch pass: the Inbox's read and
 dismissed in step across the person's watches (row 21, #1892), Hindi, Urdu and Turkmen (#1842, #1843, #1841), and the line
@@ -615,7 +622,8 @@ watch doesn't know is shown as Open on phone, never guessed at.
   sign-out and when the watch comes off the wrist; the lists, Your tafs and the asks and their results stay in memory. v2 (behind
   `WATCH_V2`) keeps more, all in the app's private storage:
   - `tafs.draft`: one message kept for later, its text, ask id and the ask it continues; gone on Delete, once it's sent and
-    taken, and on either sign-out; not on a lock or put-away, since the person asked for it to be sent.
+    taken, on either sign-out, and on a watch with no screen lock; not on a lock or put-away of a watch with one, since the
+    person asked for it to be sent.
   - `tafs.inbox`: the Inbox's lines (`ask:`/`held:` id, kind, the taf's name, the result's line or what a held call wants, the
     time first seen, read) and the bare ids taken away. Its read and dismissed ids, and only those, also go to tafs cloud
     through the phone (row 21, above), so the person's other watches show the same. No amount and no reason: the phone takes any amount out of what a call wants before it goes, even where KIFF's title writes one in (`WatchRelay.withoutAmount`): first the call's own amount however it's written, then any figure with a currency beside it (a sign, a code or a word, such as €, zł, kr, PLN or euros); a number with no currency, such as an order's, stays. An answer's line, or its state in tafs cloud's words (`AskLine.words`, e.g. "No taf took it") where there's no line, is kept the same way (`Amounts.strip`, in `watchlink`, the one rule both share); opened while the app holds the answer, it shows whole. An answer that was only an amount is kept blank, and its line reads "The rest is on your phone." (`watch.more_on_phone`), as on the Apple Watch. The lines go when the app is opened or put away

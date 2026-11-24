@@ -955,6 +955,18 @@ enum Words {
         static var jumpLatestSomethingNew: String { Words.line("chat.jump_latest_something_new") }
         /// Jump to the latest
         static var jumpToLatest: String { Words.line("chat.jump_to_latest") }
+        /// tafs opens only secure web pages from a chat. This link goes to: {address}
+        static func linkBlockedBody(address: String) -> String { Words.line("chat.link_blocked_body", address) }
+        /// This link won't open
+        static var linkBlockedTitle: String { Words.line("chat.link_blocked_title") }
+        /// It came from a page Coach read. It goes to: {address}
+        static func linkConfirmBody(address: String) -> String { Words.line("chat.link_confirm_body", address) }
+        /// This answer is still being written. This link goes to: {address}
+        static func linkConfirmBodyLive(address: String) -> String { Words.line("chat.link_confirm_body_live", address) }
+        /// Open
+        static var linkConfirmOpen: String { Words.line("chat.link_confirm_open") }
+        /// Open this link?
+        static var linkConfirmTitle: String { Words.line("chat.link_confirm_title") }
         /// A message carries at most {per_message} files.
         static func messageCarriesMostFiles(perMessage: String) -> String { Words.line("chat.message_carries_most_files", perMessage) }
         /// Message {taf}
@@ -5144,6 +5156,8 @@ enum Words {
         /// period
         static var period: String { Words.line("usage.period") }
         enum RaiseLimit {
+            /// The spend limit is {amount} now.
+            static func from(amount: String) -> String { Words.line("usage.raise_limit.from", amount) }
             /// The limit wasn't raised. {why}
             static func notRaised(why: String) -> String { Words.line("usage.raise_limit.not_raised", why) }
             /// Raise the spend limit

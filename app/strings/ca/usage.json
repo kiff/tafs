@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · un paquet de crèdits",
   "usage.packs_keep": "No caduca mai",
   "usage.period": "període",
+  "usage.raise_limit.from": "El límit de despesa ara és de {amount}.",
   "usage.raise_limit.not_raised": "El límit no s'ha pujat. {why}",
   "usage.raise_limit.prompt": "Puja el límit de despesa",
   "usage.raise_limit.sign_in_first": "Inicia la sessió amb KIFF per pujar el límit.",

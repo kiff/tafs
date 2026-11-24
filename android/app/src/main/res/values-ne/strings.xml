@@ -522,6 +522,12 @@
     <string name="chat_it_lower">यो</string>
     <string name="chat_jump_latest_something_new">पछिल्लोमा जानुहोस्, केही नयाँ छ</string>
     <string name="chat_jump_to_latest">पछिल्लोमा जानुहोस्</string>
+    <string name="chat_link_blocked_body">tafs ले च्याटबाट सुरक्षित वेब पृष्ठहरू मात्र खोल्छ। यो लिङ्क जान्छ: %1$s</string>
+    <string name="chat_link_blocked_title">यो लिङ्क खुल्दैन</string>
+    <string name="chat_link_confirm_body">यो Coach ले पढेको पृष्ठबाट आएको हो। यो जान्छ: %1$s</string>
+    <string name="chat_link_confirm_body_live">यो जवाफ अझै लेखिँदै छ। यो लिङ्क जान्छ: %1$s</string>
+    <string name="chat_link_confirm_open">खोल्नुहोस्</string>
+    <string name="chat_link_confirm_title">यो लिङ्क खोल्ने?</string>
     <string name="chat_message_carries_most_files">एउटा सन्देशले बढीमा %1$s फाइल बोक्छ।</string>
     <string name="chat_message_taf">%1$s लाई सन्देश पठाउनुहोस्</string>
     <string name="chat_message_your_taf">आफ्नो taf लाई सन्देश पठाउनुहोस्</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · क्रेडिटको प्याक</string>
     <string name="usage_packs_keep">कहिल्यै सकिँदैन</string>
     <string name="usage_period">अवधि</string>
+    <string name="usage_raise_limit_from">खर्च सीमा अहिले %1$s छ।</string>
     <string name="usage_raise_limit_not_raised">सीमा बढाइएन। %1$s</string>
     <string name="usage_raise_limit_prompt">खर्च सीमा बढाउनुहोस्</string>
     <string name="usage_raise_limit_sign_in_first">सीमा बढाउन KIFF बाट साइन इन गर्नुहोस्।</string>

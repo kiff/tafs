@@ -550,6 +550,12 @@
     <string name="chat_it_lower">on</string>
     <string name="chat_jump_latest_something_new">Prejsť na najnovšie, je tu niečo nové</string>
     <string name="chat_jump_to_latest">Prejsť na najnovšie</string>
+    <string name="chat_link_blocked_body">tafs z chatu otvára iba zabezpečené webové stránky. Tento odkaz vedie na: %1$s</string>
+    <string name="chat_link_blocked_title">Tento odkaz sa neotvorí</string>
+    <string name="chat_link_confirm_body">Pochádza zo stránky, ktorú Coach prečítal. Vedie na: %1$s</string>
+    <string name="chat_link_confirm_body_live">Táto odpoveď sa ešte píše. Tento odkaz vedie na: %1$s</string>
+    <string name="chat_link_confirm_open">Otvoriť</string>
+    <string name="chat_link_confirm_title">Otvoriť tento odkaz?</string>
     <string name="chat_message_carries_most_files">Správa unesie najviac %1$s súborov.</string>
     <string name="chat_message_taf">Napísať %1$s</string>
     <string name="chat_message_your_taf">Napísať svojmu tafu</string>
@@ -2652,6 +2658,7 @@
     <string name="usage_pack_named">%1$s · balík kreditov</string>
     <string name="usage_packs_keep">Nikdy nevyprší</string>
     <string name="usage_period">obdobie</string>
+    <string name="usage_raise_limit_from">Limit výdavkov je teraz %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limit sa nezvýšil. %1$s</string>
     <string name="usage_raise_limit_prompt">Zvýšiť limit výdavkov</string>
     <string name="usage_raise_limit_sign_in_first">Na zvýšenie limitu sa prihláste cez KIFF.</string>

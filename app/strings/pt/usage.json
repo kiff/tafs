@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · um pacote de créditos",
   "usage.packs_keep": "Nunca expira",
   "usage.period": "período",
+  "usage.raise_limit.from": "O limite de gastos é agora de {amount}.",
   "usage.raise_limit.not_raised": "O limite não foi aumentado. {why}",
   "usage.raise_limit.prompt": "Aumentar o limite de gastos",
   "usage.raise_limit.sign_in_first": "Inicie sessão com o KIFF para aumentar o limite.",

@@ -80,7 +80,6 @@
   "step_handed": {"message": "Passato a te", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "L'hai fatto", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Hai detto «Non ora»", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ sta lavorando su questa pagina", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Al lavoro in questo Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Vai alla scheda di $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Indietro"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "Nessuna conversazione archiviata."},
   "coach_archive_error": {"message": "Non è andato a buon fine. Riprova."},
   "taf_remove": {"message": "Rimuovi questo taf"},
-  "taf_remove_on_phone": {"message": "Un taf si rimuove dal telefono: aprilo nell'app tafs, poi Rimuovi. La rimozione si approva lì."}
+  "taf_remove_on_phone": {"message": "Un taf si rimuove dal telefono: aprilo nell'app tafs, poi Rimuovi. La rimozione si approva lì."},
+  "bar_go": {"message": "Vai alla sua scheda"},
+  "bar_paused": {"message": "$TAF$ è in pausa", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ ha finito", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach legge questa pagina quando invii: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Letta: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Non su questo sito"},
+  "aside_on": {"message": "Leggi questo sito"},
+  "aside_off_line": {"message": "Coach non legge $HOST$: l'hai disattivato", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach non legge $HOST$: è un sito di banca, pagamenti, posta o salute", "placeholders": {"host": {"content": "$1"}}}
 }

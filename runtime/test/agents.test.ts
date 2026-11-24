@@ -126,6 +126,11 @@ describe("kiff/agents client", () => {
     // A door's request names what its run may answer with (request_outcome); without them, none go.
     await agents.startRun("t_acme", "taf1", "Hello", { outcomes: ["accepted", "declined"] });
     expect(JSON.parse(sent[5]!.body ?? "")).toEqual({ input: "Hello", outcomes: ["accepted", "declined"], background: true });
+    // A page the person had open goes with its tools, always both: none named is `[]`, never left out.
+    await agents.startRun("t_acme", "taf1", "Hello", { aside: "Address: https://shop.example/", asideTools: ["tafs_state"] });
+    expect(JSON.parse(sent[6]!.body ?? "")).toEqual({ input: "Hello", aside: "Address: https://shop.example/", aside_tools: ["tafs_state"], background: true });
+    await agents.startRun("t_acme", "taf1", "Hello", { aside: "Address: https://shop.example/" });
+    expect(JSON.parse(sent[7]!.body ?? "")).toEqual({ input: "Hello", aside: "Address: https://shop.example/", aside_tools: [], background: true });
   });
 
   it("reads and archives a person's sessions as theirs", async () => {

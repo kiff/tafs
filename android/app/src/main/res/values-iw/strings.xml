@@ -550,6 +550,12 @@
     <string name="chat_it_lower">הוא</string>
     <string name="chat_jump_latest_something_new">מעבר לאחרון, יש משהו חדש</string>
     <string name="chat_jump_to_latest">מעבר לאחרון</string>
+    <string name="chat_link_blocked_body">tafs פותח מצ\'אט רק דפי אינטרנט מאובטחים. הקישור הזה מוביל אל: %1$s</string>
+    <string name="chat_link_blocked_title">הקישור הזה לא ייפתח</string>
+    <string name="chat_link_confirm_body">הוא הגיע מדף ש-Coach קרא. הוא מוביל אל: %1$s</string>
+    <string name="chat_link_confirm_body_live">התשובה הזו עדיין נכתבת. הקישור הזה מוביל אל: %1$s</string>
+    <string name="chat_link_confirm_open">פתיחה</string>
+    <string name="chat_link_confirm_title">לפתוח את הקישור הזה?</string>
     <string name="chat_message_carries_most_files">הודעה נושאת לכל היותר %1$s קבצים.</string>
     <string name="chat_message_taf">הודעה ל-%1$s</string>
     <string name="chat_message_your_taf">הודעה ל-taf שלך</string>
@@ -2652,6 +2658,7 @@
     <string name="usage_pack_named">%1$s · חבילת קרדיטים</string>
     <string name="usage_packs_keep">לא פגה</string>
     <string name="usage_period">תקופה</string>
+    <string name="usage_raise_limit_from">מגבלת ההוצאה כרגע היא %1$s.</string>
     <string name="usage_raise_limit_not_raised">המגבלה לא הועלתה. %1$s</string>
     <string name="usage_raise_limit_prompt">העלאת מגבלת ההוצאה</string>
     <string name="usage_raise_limit_sign_in_first">יש להיכנס עם KIFF כדי להעלות את המגבלה.</string>

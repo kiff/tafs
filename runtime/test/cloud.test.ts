@@ -7243,6 +7243,14 @@ describe("the Record across the person's tafs", () => {
     expect(r.body.receipts).toEqual([{ trace_id: "tr-refund", signature: "sig" }]);
     expect(r.body.csv.split("\r\n").filter(Boolean)).toHaveLength(3);
     expect((await call(w, "GET", "/v1/record/receipts", { token: "ana_paris", query: "from=2026-01-01&to=2026-11-05" })).status).toBe(400);
+    // A refusal the person can reach carries its code and words in their language; the apps show the words as they are.
+    const days = await call(w, "GET", "/v1/record/receipts", { token: "ana_paris", query: "from=2026-01-01&to=2026-11-05", headers: { "accept-language": "es" } });
+    expect(days.body).toEqual({ error: "an export covers at most 92 days", code: "export_range", words: wordsIn("es").record_export_days(92) });
+    const long = await call(w, "GET", "/v1/record", { token: "ana_paris", query: `q=${"x".repeat(101)}`, headers: { "accept-language": "de" } });
+    expect(long.status).toBe(400);
+    expect(long.body).toEqual({ error: "a search is at most 100 characters", code: "query_too_long", words: wordsIn("de").record_query_too_long(100) });
+    // An app's own mistake: the English error alone.
+    expect((await call(w, "GET", "/v1/record", { token: "ana_paris", query: "limit=0" })).body).toEqual({ error: "limit is 1 to 50" });
   });
 });
 

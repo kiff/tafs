@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Runner, OUTLINE_MS } from "../src/runner.js";
+import { Runner, RUN_IDLE_MS, OUTLINE_MS } from "../src/runner.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 
 // The paired phone: it signs each grant's sites (tafs-chrome/sites/v1) and sensitive allowances.
@@ -534,19 +534,20 @@ test("on a checkout page a taf clicks nothing, and a dialog the page raised stop
   assert.equal(r2.runs.get("run_1").failures, 1);
 });
 
-test("a run nobody sends a step to for five minutes ends, as Stop does (its tabs stay); a paused one, or one with a step running, is not", async () => {
+test("a run nobody sends a step to for 150 s ends, as Stop does (its tabs stay); a paused one, or one with a step running, is not", async () => {
+  assert.equal(RUN_IDLE_MS, 150_000, "a little over planque's 2 minutes between a turn's calls");
   let clock = 1_000_000;
   const c = fakeChrome();
   const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock });
   await r.handle(step());
-  clock += 4 * 60_000;
+  clock += 2 * 60_000;
   await r.sweep();
-  assert.equal(r.runs.get("run_1").stopped, false, "four minutes is not idle");
+  assert.equal(r.runs.get("run_1").stopped, false, "two minutes, planque's wait for the turn's next call, is not idle");
   assert.ok((await r.handle(step({ op: "read" }))).page, "a step starts the count again");
-  clock += 4 * 60_000;
+  clock += 2 * 60_000;
   await r.sweep();
   assert.equal(r.runs.get("run_1").stopped, false);
-  clock += 2 * 60_000;
+  clock += 31_000;
   await r.sweep();
   assert.equal(r.runs.get("run_1").stopped, true);
   assert.ok(!c.calls.some((x) => x[0] === "windows.remove" || x[0] === "tabs.remove"), "its tabs stay for the person");
@@ -964,23 +965,59 @@ test("unpairing closes a kept tab the person has moved too", async () => {
   assert.ok(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).includes(tab));
 });
 
-// While a taf works in a tab, the page says so, with Stop (docs/chrome.md, "While a taf works on a page").
-test("every read shows the bar with the taf's name and Stop; the run's end takes it away", async () => {
+// The floating bar: the tab in front of each window, while a run lives (docs/chrome.md, "While a taf works").
+test("while a run lives, the tab in front of each window shows the bar, for its own run or the first; the run's end takes them all away", async () => {
   const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
-  const shown = [];
-  const run = c.scripting.executeScript;
+  const bars = [];
+  const exec = c.scripting.executeScript;
   c.scripting.executeScript = async (o) => {
     const src = String(o.func || "");
-    if (src.includes("TafsPage.showBar")) shown.push(["show", o.target.tabId, ...o.args]);
-    if (src.includes("hideBar")) shown.push(["hide", o.target.tabId]);
-    return run(o);
+    if (o.files && o.files.includes("src/bar.js")) bars.push(["inject", o.target.tabId]);
+    if (src.includes("TafsBar.show")) bars.push(["show", o.target.tabId, o.args[0]]);
+    if (src.includes("TafsBar.hide")) bars.push(["hide", o.target.tabId]);
+    return exec(o);
   };
-  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired, say: (key, sub) => (key === "bar_working" ? sub[0] + " is working on this page" : key === "stop" ? "Stop" : "") });
-  assert.ok((await r.handle(step())).page);
-  const tab = [...c.tabsMap.keys()][0];
-  assert.deepEqual(shown, [["show", tab, "Rae is working on this page", "Stop"]]);
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired, say: (key, sub) => (key === "working" ? sub[0] + " is working" : key === "bar_paused" ? sub[0] + " is paused" : "") });
+  await r.handle(step());
+  const runTab = [...c.tabsMap.keys()][0];
+  // Three windows: the run's (its tab in front), the person's on a page of their own, and one on Chrome's own page.
+  c.windows.getAll = async () => [{ id: 1 }, { id: 2 }, { id: 3 }];
+  c.tabs.query = async ({ windowId }) => [windowId === 1 ? { id: runTab, url: "https://shop.example/" } : windowId === 2 ? { id: 501, url: "https://news.example/today" } : { id: 502, url: "chrome://settings" }];
+  bars.length = 0;
+  await r.queueBars();
+  const shown = bars.filter((b) => b[0] === "show");
+  assert.deepEqual(shown.map((b) => [b[1], b[2].run, b[2].here, b[2].words]), [[runTab, "run_1", true, "Rae is working"], [501, "run_1", false, "Rae is working"]]);
+  assert.ok(!bars.some((b) => b[1] === 502), "Chrome's own pages are left alone");
+  assert.deepEqual(shown[0][2].labels, { go: "Go to its tab", pause: "Pause", resume: "Resume", stop: "Stop" });
+  // Paused: the bar says so, and offers Resume.
+  bars.length = 0;
+  r.pause("run_1");
+  await r.queueBars();
+  assert.ok(bars.filter((b) => b[0] === "show").every((b) => b[2].paused && b[2].words === "Rae is paused"));
+  // Stopped: every tab that showed it is cleared.
+  bars.length = 0;
   await r.stop("run_1");
-  assert.deepEqual(shown.at(-1), ["hide", tab]);
+  await r.queueBars();
+  assert.deepEqual([...new Set(bars.filter((b) => b[0] === "hide").map((b) => b[1]))].sort(), [501, runTab].sort(), "both tabs that showed it");
+  assert.ok(!bars.some((b) => b[0] === "show"));
+});
+
+test("a press on the bar acts only on a run this Chrome holds, as the panel's buttons do", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  assert.deepEqual(await r.barPress("run_9", "stop"), { error: "no_run" });
+  assert.deepEqual(await r.barPress("run_1", "explode"), { error: "bad_act" });
+  await r.barPress("run_1", "pause", 501);
+  assert.equal(r.runs.get("run_1").paused, "owner");
+  assert.deepEqual(await r.barPress("run_1", "resume", 501), { error: "not_here" }, "Resume gives power back: never from another page's bar");
+  assert.equal(r.runs.get("run_1").paused, "owner");
+  await r.barPress("run_1", "resume", [...c.tabsMap.keys()][0]);
+  assert.equal(r.runs.get("run_1").paused, null);
+  await r.barPress("run_1", "stop");
+  assert.equal(r.runs.get("run_1").stopped, true);
+  assert.deepEqual(r.state()[0].steps.filter((s) => s.op === "stop").map((s) => s.by), ["person"]);
+  assert.deepEqual(await r.barPress("run_1", "go"), { error: "no_run" }, "a stopped run is no one's to go to");
 });
 
 test("Stop on the bar ends the run at once, for that tab's run only; a hand-over open is told Not now", async () => {
@@ -1059,4 +1096,35 @@ test("a Pause, the person's own input or a Stop while the outline shows holds th
     assert.ok(!order.includes("act"), what + ": the page's act is never called");
     if (what !== "stop") assert.ok(order.includes("unoutline"), what + ": the outline is taken away");
   }
+});
+
+test("the person closing a run's last tab ends the run as their Stop; closing one of two, or a tab of no run, doesn't", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const [first] = [...r.runs.get("run_1").tabs];
+  // A pop-up of the run's page joins it: closing it leaves the run working in its first tab.
+  c.listeners.created({ sourceTabId: first, tabId: 555, url: "https://shop.example/help" });
+  c.listeners.removed(555);
+  await new Promise((done) => setTimeout(done, 0));
+  assert.equal(r.runs.get("run_1").stopped, false, "one of two closed: the run goes on");
+  c.listeners.removed(999);
+  await new Promise((done) => setTimeout(done, 0));
+  assert.equal(r.runs.get("run_1").stopped, false, "a tab of no run changes nothing");
+  c.listeners.removed(first);
+  await new Promise((done) => setTimeout(done, 0));
+  assert.equal(r.runs.get("run_1").stopped, true, "its last tab closed: the run ends");
+  const last = r.state()[0].steps.at(-1);
+  assert.deepEqual([last.op, last.by], ["stop", "person"]);
+  assert.ok(!r.state().some((x) => !x.stopped), "nothing says a taf works");
+  assert.equal((await r.handle(step({ op: "read" }))).error.code, "stopped", "and planque's next step on it is told");
+});
+
+test("a group whose run is over says so in the extension's words, as it said the taf was working", async () => {
+  const c = fakeChrome();
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, say: (key, sub) => (key === "group_done" ? sub[0] + " is done" : key === "working" ? sub[0] + " is working" : "") });
+  await r.handle(step());
+  await r.greyGroup("Rae", 7);
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabGroups.update").pop()[2], { title: "tafs · Rae is done", color: "grey" });
+  assert.equal(new Runner({ chrome: c, sleep, paired: () => paired }).doneTitle("Rae"), "tafs · Rae · done", "with no words, as before");
 });

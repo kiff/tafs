@@ -47,13 +47,13 @@ final class CalendarDayModel: ObservableObject {
         }
         switch reply.outcome {
         case .ok:
-            guard let read = reply.calendar else { state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff); return }
+            guard let read = reply.calendar else { state = .failed(reply.line ?? Words.Watch.phoneCouldNotReachCloud); return }
             if day == nil { today = read.day }
             state = .loaded(read)
         case .signedOut:
             state = .signedOut
         case .failed:
-            state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
+            state = .failed(reply.line ?? Words.Watch.phoneCouldNotReachCloud)
         case .notYet:
             state = .updatePhone
         case .refused, .stale, .answered:

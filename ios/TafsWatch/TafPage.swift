@@ -57,12 +57,12 @@ final class TafPageModel: ObservableObject {
             if let page = reply.tafPage, page.id == taf.id {
                 state = .loaded(page)
             } else {
-                state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
+                state = .failed(reply.line ?? Words.Watch.phoneCouldNotReachCloud)
             }
         case .signedOut:
             state = .signedOut
         case .failed:
-            state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
+            state = .failed(reply.line ?? Words.Watch.phoneCouldNotReachCloud)
         case .notYet:
             state = .updatePhone
         case .refused, .stale, .answered:

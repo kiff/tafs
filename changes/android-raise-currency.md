@@ -1,0 +1,1 @@
+- **Android: Raise the limit says the limit now.** Above the button, "The spend limit is €1,200 now.", formatted by the app in its own language from the figure and currency tafs cloud sends, and never in a currency it assumes ([accounts.md](docs/accounts.md)).

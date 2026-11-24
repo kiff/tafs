@@ -1,0 +1,1 @@
+- **Apple Watch: a message kept for later goes without a passcode, as the Inbox does.** With Keep for later on (it's off), a watch whose passcode is turned off deletes the kept message, unsent, when the app starts, opens or is put away, so the watch keeps nothing without a passcode ([watch-app.md](docs/watch-app.md)).

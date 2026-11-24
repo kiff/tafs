@@ -80,7 +80,6 @@
   "step_handed": {"message": "Size devredildi", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Siz yaptınız", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "«Şimdi değil» dediniz", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ bu sayfada çalışıyor", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Bu Chrome'da çalışıyor", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "$TAF$ sekmesine git", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Geri"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "Arşivlenen sohbet yok."},
   "coach_archive_error": {"message": "Olmadı. Tekrar deneyin."},
   "taf_remove": {"message": "Bu taf'ı kaldır"},
-  "taf_remove_on_phone": {"message": "Bir taf telefonunuzda kaldırılır: tafs uygulamasında açın, sonra Kaldır. Kaldırma orada onaylanır."}
+  "taf_remove_on_phone": {"message": "Bir taf telefonunuzda kaldırılır: tafs uygulamasında açın, sonra Kaldır. Kaldırma orada onaylanır."},
+  "bar_go": {"message": "Sekmesine git"},
+  "bar_paused": {"message": "$TAF$ duraklatıldı", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ bitirdi", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Gönderdiğinizde Coach bu sayfayı okur: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Okunuyor: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Bu sitede değil"},
+  "aside_on": {"message": "Bu siteyi oku"},
+  "aside_off_line": {"message": "Coach $HOST$ sitesini okumaz: siz kapattınız", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach $HOST$ sitesini okumaz: banka, ödeme, e-posta veya sağlık sitesi", "placeholders": {"host": {"content": "$1"}}}
 }

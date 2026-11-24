@@ -1,0 +1,1 @@
+Un message gardé avec « Garder pour plus tard » est désormais supprimé, sans être envoyé, si votre montre n'a plus de verrouillage de l'écran : rien ne reste sur une montre qui n'en a pas.

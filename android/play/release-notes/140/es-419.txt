@@ -1,0 +1,1 @@
+• «Subir el límite» ahora muestra el límite de gasto actual antes de subirlo, en la moneda de tu cuenta.

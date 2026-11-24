@@ -494,6 +494,12 @@
     <string name="chat_it_lower">nó</string>
     <string name="chat_jump_latest_something_new">Chuyển tới tin mới nhất, có điều gì mới</string>
     <string name="chat_jump_to_latest">Chuyển tới tin mới nhất</string>
+    <string name="chat_link_blocked_body">Từ cuộc trò chuyện, tafs chỉ mở các trang web an toàn. Liên kết này đi tới: %1$s</string>
+    <string name="chat_link_blocked_title">Liên kết này sẽ không mở</string>
+    <string name="chat_link_confirm_body">Liên kết đến từ một trang Coach đã đọc. Đi tới: %1$s</string>
+    <string name="chat_link_confirm_body_live">Câu trả lời này vẫn đang được viết. Liên kết này đi tới: %1$s</string>
+    <string name="chat_link_confirm_open">Mở</string>
+    <string name="chat_link_confirm_title">Mở liên kết này?</string>
     <string name="chat_message_carries_most_files">Một tin nhắn mang tối đa %1$s tệp.</string>
     <string name="chat_message_taf">Nhắn cho %1$s</string>
     <string name="chat_message_your_taf">Nhắn cho taf của bạn</string>
@@ -2512,6 +2518,7 @@
     <string name="usage_pack_named">%1$s · một gói tín dụng</string>
     <string name="usage_packs_keep">Không bao giờ hết hạn</string>
     <string name="usage_period">kỳ</string>
+    <string name="usage_raise_limit_from">Hạn mức chi tiêu hiện là %1$s.</string>
     <string name="usage_raise_limit_not_raised">Hạn mức chưa được nâng. %1$s</string>
     <string name="usage_raise_limit_prompt">Nâng hạn mức chi tiêu</string>
     <string name="usage_raise_limit_sign_in_first">Hãy đăng nhập bằng KIFF để nâng hạn mức.</string>

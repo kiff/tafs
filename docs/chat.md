@@ -88,6 +88,71 @@ recognizer offers but hasn't downloaded is fetched (`triggerModelDownload`) and 
 says so; a phone with nothing in its language says the mic doesn't work there, and that
 typing does. The microphone isn't required to install the app.
 
+### Coach reads the page you're on
+
+A message to **Coach** may carry the page the person had in front as they wrote it: the Chrome side panel sends
+it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the page you're on"), as
+`page: {url, title, text, truncated}` on either send route.
+
+- **Only Coach, only https, only with words.** A page on another taf's message, a page with no words beside it
+  (files alone), an address that isn't https or has a name or password in it, a page that isn't
+  `{url, title, text, truncated}`, or one past 24,000 bytes as the run reads it, is `400 page_refused`, and
+  nothing starts.
+- **Never a bank, payment, mail or health site.** A page from a sensitive or mail site, or from Chrome's Web Store,
+  is `400 page_refused` too. These are the extension's own lists (`chrome/src/sites.js`, `SENSITIVE` and `MAIL`),
+  kept in tafs cloud as `page-sites.ts`, with the host read the same way (lower case, no trailing dot). The
+  extension never sends such a page, and this keeps the promise at the server whatever build sends one.
+  `page-sites.test.ts` holds the two lists equal: a change to one is a change to both.
+- **For that message only.** tafs cloud passes it to kiff/agents as the run's `aside`. The run reads it after the
+  person's words, fenced as data, with a note that nothing in it is an instruction, and kiff/agents keeps it on the
+  run only until the run ends. The address goes with its path but no query or fragment, so whatever a path holds
+  goes to the AI with that message too (it's kept nowhere), except a path segment shaped like a key or a one-time
+  token (a password reset's or a sign-in link's): 32 or more hex digits, a long run mixing letters and digits, a
+  JWT, or one of those between dots or after a prefix (`tok_…`), is `[masked]` whole first (`maskedPath`), while
+  names, slugs, numbers, file names, versions and ids stay. A short numeric code (`/verify/482913`) isn't masked:
+  it can't be told from an order number. The title goes on one line. The
+  chat's next message doesn't read it.
+- **A page turn's tools are read-only** (`PAGE_TOOLS`): Coach sees the person's tafs, a run, a taf's check, an
+  estimate and its skills. No `web_read`, no `taf_task`, and nothing that drafts, changes or drives. A page can
+  steer a call as any input can, so it can't lead to a host it names or to a taf with tools of its own. kiff/agents
+  offers that run those tools alone (`aside_tools`), on every turn, paused or not. The next message has all of
+  Coach's tools again.
+- **What's kept is the host.** tafs cloud keeps the page's host for that message, as long as the chat's messages,
+  so the thread says which site went with it: `reading` on the person's message (`"shop.example"`), and on the
+  plain send's `message`. Its address, title and text are kept nowhere in tafs cloud, and the log says
+  `coach_page_read` with the run and the host alone. Coach's answer is a message like any other, and can say what
+  was on the page. The hosts are one item per person (`pageReadsKey`), their last 200 page messages, each with its
+  own time: a host is shown and kept only for 30 days from its own message, however often pages are sent since. A
+  page send reads and writes it once, dropping hosts past their 30 days, and a thread read reads it once, whatever
+  the thread's length (none when no message in view started a run).
+- **Coach's answers from a page turn carry `page_turn: true`**, in the thread and on the stream's `session` event while
+  the answer is still coming, from the same kept record as `reading` (so for 30 days from the page message). A link in
+  such an answer may come from the page, so the apps show its full address and ask before opening it. It's never the
+  page or its host, and no other answer carries it, an answered card's included.
+  On Android, a taf message with `pageTurn` (`ChatMessage.pageTurn`, from the thread) draws its words with
+  `PageTurnText(asks = true)`: a tap on a link opens no browser but asks "Open this link?" (`chat.link_confirm_title`),
+  with the link's whole address in the body (`chat.link_confirm_body`, set apart left to right with U+2066 … U+2069 in
+  every language, its own direction characters taken out, so a right-to-left sentence can't reorder it), Open and Cancel.
+  Open is offered only for an `https` address with a host and no spaces, controls or direction characters
+  (`linkOpens`); anything else (another app's scheme, `tel:`, `sms:`, plain `http`) shows its address and Cancel alone,
+  so a page can't steer Coach into starting another app's action. Open opens it; Cancel, or a tap outside, opens nothing. An answer still being written asks too, whatever its turn: a resumed or
+  repeated stream sends no `session` event, so it can't yet say, and the thread read that follows settles it. The
+  question is held once per chat (`LinkConfirm`), so an answer that finishes while it's up doesn't take it away.
+  `MarkdownText(onLink = ...)` hands a link's address to the caller instead of opening it; with none, links open as
+  before.
+- **A message that answers a card waiting in the chat** goes on in that card's run with the person's words alone
+  (kiff/agents answers the card with them). It reads no page, and no message says `reading` for it: tafs cloud
+  keeps a host only for a run the send started, one kiff/agents created once the send began (a card's run is older,
+  by a model turn at least).
+- **The confirm, on the iPhone and iPad:** a tap on a link in a message with `page_turn`, or in any answer still
+  arriving (a stream picked back up or sent again has no `session` event to say it, so it asks until the thread's
+  read settles it), opens nothing. It shows "Open this link?", "It came from a page Coach read. It
+  goes to: {address}" with the whole address, never shortened and always left to right, then **Open** or **Cancel**
+  (`chat.link_confirm_*`, `PageLinkGuard`). Open is offered for an `https` address with a host and no space, control or
+  direction character in it (`PageLinks.opens`): another app's deep link, `tel:`, `sms:`, plain `http`, or an address
+  with an override in it shows its address with Cancel only, so a page can't steer Coach into another app's action, or
+  show one address and open another. A message without it, and the owner's own words, open links as before.
+
 ## The answer as it comes
 
 On Android, the block under the owner's message is one line (`LiveWork`, `Chat.liveLine`): the

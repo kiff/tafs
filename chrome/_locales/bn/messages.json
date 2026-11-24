@@ -80,7 +80,6 @@
   "step_handed": {"message": "আপনাকে দেওয়া হয়েছে", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "আপনি করেছেন", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "আপনি বলেছেন “এখন নয়”", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ এই পৃষ্ঠায় কাজ করছে", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "এই Chrome-এ কাজ করছে", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "$TAF$-এর ট্যাবে যান", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← ফিরে যান"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "কোনো আর্কাইভ করা কথোপকথন নেই।"},
   "coach_archive_error": {"message": "হয়নি। আবার চেষ্টা করুন।"},
   "taf_remove": {"message": "এই taf সরান"},
-  "taf_remove_on_phone": {"message": "taf সরানো হয় আপনার ফোনে: tafs অ্যাপে এটি খুলুন, তারপর সরান। সরানোর অনুমোদন সেখানেই হয়।"}
+  "taf_remove_on_phone": {"message": "taf সরানো হয় আপনার ফোনে: tafs অ্যাপে এটি খুলুন, তারপর সরান। সরানোর অনুমোদন সেখানেই হয়।"},
+  "bar_go": {"message": "এর ট্যাবে যান"},
+  "bar_paused": {"message": "$TAF$ বিরতিতে আছে", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$-এর কাজ শেষ", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "পাঠালে Coach এই পেজটি পড়ে: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "পড়ছে: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "এই সাইটে নয়"},
+  "aside_on": {"message": "এই সাইট পড়ুন"},
+  "aside_off_line": {"message": "Coach $HOST$ পড়ে না: আপনি এটি বন্ধ করেছেন", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach $HOST$ পড়ে না: এটি ব্যাংক, পেমেন্ট, মেইল বা স্বাস্থ্য সাইট", "placeholders": {"host": {"content": "$1"}}}
 }

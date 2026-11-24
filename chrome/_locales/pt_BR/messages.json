@@ -80,7 +80,6 @@
   "step_handed": {"message": "Passou para você", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Você fez", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Você disse “Agora não”", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ está trabalhando nesta página", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Trabalhando neste Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Ir para a guia de $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Voltar"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "Nenhuma conversa arquivada."},
   "coach_archive_error": {"message": "Não deu certo. Tente de novo."},
   "taf_remove": {"message": "Remover este taf"},
-  "taf_remove_on_phone": {"message": "Um taf é removido no celular: abra-o no app tafs e toque em Remover. A remoção é aprovada lá."}
+  "taf_remove_on_phone": {"message": "Um taf é removido no celular: abra-o no app tafs e toque em Remover. A remoção é aprovada lá."},
+  "bar_go": {"message": "Ir para a guia dele"},
+  "bar_paused": {"message": "$TAF$ está em pausa", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ terminou", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "O Coach lê esta página quando você envia: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Lendo: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Não neste site"},
+  "aside_on": {"message": "Ler este site"},
+  "aside_off_line": {"message": "O Coach não lê $HOST$: você desativou", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "O Coach não lê $HOST$: é um site de banco, pagamento, e-mail ou saúde", "placeholders": {"host": {"content": "$1"}}}
 }

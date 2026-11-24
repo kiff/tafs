@@ -522,6 +522,12 @@
     <string name="chat_it_lower">ele</string>
     <string name="chat_jump_latest_something_new">Ir para o mais recente, há algo novo</string>
     <string name="chat_jump_to_latest">Ir para o mais recente</string>
+    <string name="chat_link_blocked_body">A partir de um chat, o tafs só abre páginas web seguras. Esta ligação leva a: %1$s</string>
+    <string name="chat_link_blocked_title">Esta ligação não abre</string>
+    <string name="chat_link_confirm_body">Veio de uma página que o Coach leu. Leva a: %1$s</string>
+    <string name="chat_link_confirm_body_live">Esta resposta ainda está a ser escrita. Esta ligação leva a: %1$s</string>
+    <string name="chat_link_confirm_open">Abrir</string>
+    <string name="chat_link_confirm_title">Abrir esta ligação?</string>
     <string name="chat_message_carries_most_files">Uma mensagem leva no máximo %1$s ficheiros.</string>
     <string name="chat_message_taf">Mensagem para %1$s</string>
     <string name="chat_message_your_taf">Mensagem para o seu taf</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · um pacote de créditos</string>
     <string name="usage_packs_keep">Nunca expira</string>
     <string name="usage_period">período</string>
+    <string name="usage_raise_limit_from">O limite de gastos é agora de %1$s.</string>
     <string name="usage_raise_limit_not_raised">O limite não foi aumentado. %1$s</string>
     <string name="usage_raise_limit_prompt">Aumentar o limite de gastos</string>
     <string name="usage_raise_limit_sign_in_first">Inicie sessão com o KIFF para aumentar o limite.</string>

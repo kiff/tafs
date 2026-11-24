@@ -80,7 +80,6 @@
   "step_handed": {"message": "Předáno vám", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Udělali jste to", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Řekli jste „Teď ne“", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ pracuje na této stránce", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Pracují v tomto Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Přejít na kartu $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Zpět"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "Žádné archivované rozhovory."},
   "coach_archive_error": {"message": "Nepovedlo se. Zkuste to znovu."},
   "taf_remove": {"message": "Odstranit tento taf"},
-  "taf_remove_on_phone": {"message": "Taf se odstraňuje v telefonu: otevřete ho v aplikaci tafs a pak Odstranit. Odstranění se schvaluje tam."}
+  "taf_remove_on_phone": {"message": "Taf se odstraňuje v telefonu: otevřete ho v aplikaci tafs a pak Odstranit. Odstranění se schvaluje tam."},
+  "bar_go": {"message": "Přejít na jeho kartu"},
+  "bar_paused": {"message": "$TAF$ je pozastaven", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ je hotov", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach si při odeslání přečte tuto stránku: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Čte: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Ne na tomto webu"},
+  "aside_on": {"message": "Číst tento web"},
+  "aside_off_line": {"message": "Coach nečte $HOST$: vypnuli jste to", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach nečte $HOST$: web banky, plateb, pošty nebo zdraví", "placeholders": {"host": {"content": "$1"}}}
 }

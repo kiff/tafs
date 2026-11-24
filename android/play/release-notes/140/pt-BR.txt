@@ -1,0 +1,1 @@
+• “Aumentar o limite” agora mostra o limite de gastos atual antes de você aumentá-lo, na moeda da sua conta.

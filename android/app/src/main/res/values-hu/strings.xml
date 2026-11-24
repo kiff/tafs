@@ -522,6 +522,12 @@
     <string name="chat_it_lower">ez</string>
     <string name="chat_jump_latest_something_new">Ugrás a legújabbra, van valami új</string>
     <string name="chat_jump_to_latest">Ugrás a legújabbra</string>
+    <string name="chat_link_blocked_body">A tafs csevegésből csak biztonságos weboldalakat nyit meg. Ez a link ide vezet: %1$s</string>
+    <string name="chat_link_blocked_title">Ez a link nem nyílik meg</string>
+    <string name="chat_link_confirm_body">Egy olyan oldalról származik, amelyet a Coach elolvasott. Ide vezet: %1$s</string>
+    <string name="chat_link_confirm_body_live">Ez a válasz még készül. Ez a link ide vezet: %1$s</string>
+    <string name="chat_link_confirm_open">Megnyitás</string>
+    <string name="chat_link_confirm_title">Megnyitod ezt a linket?</string>
     <string name="chat_message_carries_most_files">Egy üzenet legfeljebb %1$s fájlt visz.</string>
     <string name="chat_message_taf">Üzenet neki: %1$s</string>
     <string name="chat_message_your_taf">Üzenet a tafodnak</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · egy kreditcsomag</string>
     <string name="usage_packs_keep">Soha nem jár le</string>
     <string name="usage_period">időszak</string>
+    <string name="usage_raise_limit_from">A költési limit most %1$s.</string>
     <string name="usage_raise_limit_not_raised">A limit nem lett megemelve. %1$s</string>
     <string name="usage_raise_limit_prompt">A költési limit emelése</string>
     <string name="usage_raise_limit_sign_in_first">A limit emeléséhez jelentkezz be a KIFF-fel.</string>

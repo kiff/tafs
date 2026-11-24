@@ -1,0 +1,1 @@
+- **Coach's answers from a page turn say so (`page_turn`).** In the thread and on the stream's `session` event, so the apps can show a link's full address and ask before opening it. ([chat.md](docs/chat.md))

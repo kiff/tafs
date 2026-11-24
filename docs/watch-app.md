@@ -54,6 +54,8 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   queued. It carries the time it was made, and the phone drops one more than 30 seconds old,
   either way.
 - **Signed out:** the phone answers only that, and the watch shows nothing of the account.
+- **A read tafs cloud doesn't answer:** the phone says "Your phone couldn't reach tafs cloud. Try again."
+  (`watch.phone_could_not_reach_cloud`). The notification's own Refuse keeps its line about KIFF.
 - **With tafs closed:** the phone answers with the session it keeps, as a hold's notification
   is filled in (`HoldNotification`), so the phone can be locked in a pocket.
 - **Refuse** is the notification's own refusal (`NotificationRefuse.refuse`): signed with the
@@ -226,8 +228,10 @@ Nothing leaves the watch before Send:
     here), from a watch with a passcode only, **under its own id**, so tafs cloud starts it at most once if the first Send
     did arrive. Taken, it's gone from the watch and is a turn of the conversation, with Coach's answer in the Inbox as any;
     it never takes over the ask on screen. Anything else (no answer, an older phone, a failure) leaves it for the next read.
-  - **Deleted** on Delete, on Sign out on this watch, and when the phone says it's signed out. Putting the app away keeps
-    it, since the person asked for it to be sent.
+  - **Deleted** on Delete, on Sign out on this watch, and when the phone says it's signed out. Also, unsent, on a watch
+    without a passcode, checked as the Inbox's lines are (`CoachModel.checkLock`): when the app starts, opens or is put
+    away. So the watch keeps nothing without a passcode. Putting the app away on a watch with one keeps it, since the
+    person asked for it to be sent.
   - **Words:** `watch.keep_for_later` and `watch.kept_to_send`, already in every language; Delete is the phone's.
 - **v1 is unchanged:** with the switch off, Coach is v1's screen, its words shown before Send.
 - **Words:** all already shared (`watch.type`, `watch.type_hint`, `watch.quick_reply`, `watch.qr.*`, `watch.review`,
@@ -580,7 +584,7 @@ microphone, with "Ask Coach" where the family has room, in the circular, corner,
   phone.
 - **Keep for later, behind `CoachModel.keepForLaterOn` (off; row 8, as Wear OS's):** `tafs.draft.json`, one message to
   Coach the phone didn't answer: its words, its message id and the chat it continues. Complete file protection; gone once
-  the phone takes it, on Delete, and on either sign-out. **Switched on only with its sentence on the privacy page** and the
+  the phone takes it, on Delete, on either sign-out, and, as the Inbox, when the app opens or is put away without a passcode. **Switched on only with its sentence on the privacy page** and the
   owner's yes.
 - **So it opens at once, behind `WatchCache.on` (off; row 44, D, as Wear OS's tafs#1594):** `tafs.watch_cache`, Your
   tafs as last read: each taf's id, name, and whether it's halted or paused. Never a taf's state line (it can name what a

@@ -388,7 +388,7 @@ the spend limit, which the samples here leave out:
     "words": "Company · 4 seats · 80% of the spend limit used",
     "detail": "The plan's included credits are used. Beyond them, credits go on this period's invoice.",
     "warning": "80% of the spend limit is used. At the limit, your tafs wait until an admin raises it.",
-    "raise": { "words": "Raise the spend limit by one step", "from_cents": 12345 },
+    "raise": { "words": "Raise the spend limit by one step", "from_cents": 12345, "currency": "EUR" },
     "buy": null
   },
   "plan_line": "Company · 4 seats · 80% of the spend limit used",
@@ -409,8 +409,11 @@ the spend limit, which the samples here leave out:
   period's invoice.
 - `warning` is `null` below 80%. From 80%, and while waiting, it says what happens next and who can
   change it.
-- `raise` is `{words, from_cents}` only for someone who may raise the spend limit (Company,
-  `billing.manage`), else `null`. `from_cents` is the limit now, which the raise sends back.
+- `raise` is `{words, from_cents, currency}` only for someone who may raise the spend limit (Company,
+  `billing.manage`), else `null`. `from_cents` is the limit now, which the raise sends back, in `currency`'s
+  smallest unit; `currency` is ISO 4217, the one tafs cloud words every amount in. An app that shows the limit
+  now formats `from_cents` in `currency` with its own formatter, in the app's language: never a currency it
+  assumes, and never words of tafs cloud's for that figure.
 - `buy` is `null`, or `{solo, packs, first_month, coach}`: what the app may offer this person
   (`billing.manage`) in the store. `solo` is set on an account with no plan billed, and `packs`
   while Solo runs. The products and their store ids come from KIFF's usage read (`store`).
@@ -463,6 +466,10 @@ above. The app shows the words. Builds from before this show `words` as for any 
     read since." and offers **Read it again**, which signs nothing. No other raise is offered until
     the balance has been read.
   - A `limit_changed` refusal reads the balance again too, and offers the raise from the new limit.
+  - **The limit now** shows above the button, "The spend limit is €1,200 now." (`usage.raise_limit.from`), formatted by the
+    app in its own language from `from_cents` in `raise.currency`, at that currency's own decimals (2 for EUR, 0 for JPY).
+    With no `currency` (a tafs cloud from before it) or one that isn't a known ISO 4217 code, there's no line, never an
+    assumed currency (Android: `BalanceRaise.limitNow`).
 - **Settings' Plan card** shows `plan_line` in `plan_tone`'s colour, and opens Plan & usage.
   **Home** shows `home_line` when it's set. Both are read with each refresh.
 - **A chat or Run now refused** for credits shows its `words`, with no button.

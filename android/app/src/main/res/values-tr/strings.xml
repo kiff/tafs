@@ -522,6 +522,12 @@
     <string name="chat_it_lower">o</string>
     <string name="chat_jump_latest_something_new">En yeniye git, yeni bir şey var</string>
     <string name="chat_jump_to_latest">En yeniye git</string>
+    <string name="chat_link_blocked_body">tafs bir sohbetten yalnızca güvenli web sayfalarını açar. Bu bağlantı şuraya gider: %1$s</string>
+    <string name="chat_link_blocked_title">Bu bağlantı açılmayacak</string>
+    <string name="chat_link_confirm_body">Coach\'un okuduğu bir sayfadan geldi. Şuraya gider: %1$s</string>
+    <string name="chat_link_confirm_body_live">Bu yanıt hâlâ yazılıyor. Bu bağlantı şuraya gider: %1$s</string>
+    <string name="chat_link_confirm_open">Aç</string>
+    <string name="chat_link_confirm_title">Bu bağlantı açılsın mı?</string>
     <string name="chat_message_carries_most_files">Bir mesaj en fazla %1$s dosya taşır.</string>
     <string name="chat_message_taf">%1$s taf\'ına mesaj</string>
     <string name="chat_message_your_taf">Taf\'ınıza mesaj</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · bir kredi paketi</string>
     <string name="usage_packs_keep">Asla sona ermez</string>
     <string name="usage_period">dönem</string>
+    <string name="usage_raise_limit_from">Harcama limiti şu anda %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limit yükseltilmedi. %1$s</string>
     <string name="usage_raise_limit_prompt">Harcama limitini yükselt</string>
     <string name="usage_raise_limit_sign_in_first">Limiti yükseltmek için KIFF ile oturum açın.</string>

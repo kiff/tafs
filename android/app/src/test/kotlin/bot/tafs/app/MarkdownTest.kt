@@ -94,6 +94,18 @@ class MarkdownTest {
     assertEquals(1, text.getLinkAnnotations(0, text.length).size)
   }
 
+  /** A link from a page Coach read asks first: the caller gets its address instead of the link opening (docs/chat.md). */
+  @Test fun aLinkGoesToTheCallerWhenOneIsGivenAndOpensOtherwise() {
+    var asked: String? = null
+    val text = inlineMarkdown("see **[the receipt](https://kiff.dev/r/1)** and | [x](https://a.example/)", onLink = { asked = it })
+    val links = text.getLinkAnnotations(0, text.length).map { it.item as androidx.compose.ui.text.LinkAnnotation.Url }
+    assertEquals(listOf("https://kiff.dev/r/1", "https://a.example/"), links.map { it.url })
+    links.first().linkInteractionListener!!.onClick(links.first())
+    assertEquals("https://kiff.dev/r/1", asked)
+    val plain = inlineMarkdown("see [the receipt](https://kiff.dev/r/1)")
+    assertTrue("no caller: the link opens as before", plain.getLinkAnnotations(0, plain.length).all { (it.item as androidx.compose.ui.text.LinkAnnotation.Url).linkInteractionListener == null })
+  }
+
   @Test fun aMarkNeverClosedShowsAsWritten() {
     assertEquals("a **b", inlineMarkdown("a **b").text)
     assertEquals("a `b", inlineMarkdown("a `b").text)

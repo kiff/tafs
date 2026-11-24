@@ -55,7 +55,11 @@ struct TafsWatchApp: App {
             // In memory only: what was read goes once the app leaves the screen, and is read
             // again when it's back.
             // v2's Inbox is kept only with a passcode: checked when the app is put away and opened again.
-            if WatchV2.on, phase == .background || phase == .active { inbox.checkLock() }
+            if WatchV2.on, phase == .background || phase == .active {
+                inbox.checkLock()
+                // And a message kept for later, by the same rule (row 8).
+                coach.checkLock()
+            }
             // So it opens at once (row 44, D): kept only with a passcode.
             if phase == .background || phase == .active { tafs.cache.checkLock() }
             if phase == .background {

@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · կրեդիտների փաթեթ",
   "usage.packs_keep": "Երբեք չի սպառվում",
   "usage.period": "ժամանակահատված",
+  "usage.raise_limit.from": "Ծախսի սահմանաչափը հիմա {amount} է։",
   "usage.raise_limit.not_raised": "Սահմանաչափը չբարձրացվեց։ {why}",
   "usage.raise_limit.prompt": "Բարձրացրեք ծախսի սահմանաչափը",
   "usage.raise_limit.sign_in_first": "Մուտք գործեք KIFF-ով՝ սահմանաչափը բարձրացնելու համար։",

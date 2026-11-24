@@ -522,6 +522,12 @@
     <string name="chat_it_lower">ol</string>
     <string name="chat_jump_latest_something_new">Iň soňkusyna geçiň, täze bir zat bar</string>
     <string name="chat_jump_to_latest">Iň soňkusyna geçiň</string>
+    <string name="chat_link_blocked_body">tafs söhbetdeşlikden diňe howpsuz web sahypalaryny açýar. Bu baglanyşyk şu ýere alyp barýar: %1$s</string>
+    <string name="chat_link_blocked_title">Bu baglanyşyk açylmaz</string>
+    <string name="chat_link_confirm_body">Ol Coach-yň okan sahypasyndan geldi. Ol şu ýere alyp barýar: %1$s</string>
+    <string name="chat_link_confirm_body_live">Bu jogap entek ýazylýar. Bu baglanyşyk şu ýere alyp barýar: %1$s</string>
+    <string name="chat_link_confirm_open">Aç</string>
+    <string name="chat_link_confirm_title">Bu baglanyşyk açylsynmy?</string>
     <string name="chat_message_carries_most_files">Bir habar iň köp %1$s faýl göterýär.</string>
     <string name="chat_message_taf">%1$s-a habar iberiň</string>
     <string name="chat_message_your_taf">taf-yňyza habar iberiň</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · kredit paketi</string>
     <string name="usage_packs_keep">Möhleti gutarmaýar</string>
     <string name="usage_period">döwür</string>
+    <string name="usage_raise_limit_from">Çykdajy çägi häzir %1$s.</string>
     <string name="usage_raise_limit_not_raised">Çäk ýokary galdyrylmady. %1$s</string>
     <string name="usage_raise_limit_prompt">Çykdajy çägini ýokary galdyryň</string>
     <string name="usage_raise_limit_sign_in_first">Çägi ýokary galdyrmak üçin KIFF bilen giriň.</string>

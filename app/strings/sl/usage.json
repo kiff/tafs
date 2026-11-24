@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · paket kreditov",
   "usage.packs_keep": "Nikoli ne poteče",
   "usage.period": "obdobje",
+  "usage.raise_limit.from": "Omejitev porabe je zdaj {amount}.",
   "usage.raise_limit.not_raised": "Omejitev ni bila zvišana. {why}",
   "usage.raise_limit.prompt": "Zvišaj omejitev porabe",
   "usage.raise_limit.sign_in_first": "Za zvišanje omejitve se prijavite s KIFF.",

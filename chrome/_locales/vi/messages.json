@@ -80,7 +80,6 @@
   "step_handed": {"message": "Đã giao cho bạn", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Bạn đã làm xong", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Bạn đã chọn “Không phải bây giờ”", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ đang làm việc trên trang này", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Đang làm việc trong Chrome này", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Đi tới thẻ của $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Quay lại"},
@@ -93,5 +92,14 @@
   "coach_archived_none": {"message": "Không có cuộc trò chuyện nào đã lưu trữ."},
   "coach_archive_error": {"message": "Không thành công. Hãy thử lại."},
   "taf_remove": {"message": "Gỡ taf này"},
-  "taf_remove_on_phone": {"message": "Taf được gỡ trên điện thoại: mở nó trong ứng dụng tafs, rồi chọn Gỡ. Việc gỡ được phê duyệt ở đó."}
+  "taf_remove_on_phone": {"message": "Taf được gỡ trên điện thoại: mở nó trong ứng dụng tafs, rồi chọn Gỡ. Việc gỡ được phê duyệt ở đó."},
+  "bar_go": {"message": "Đi tới thẻ của nó"},
+  "bar_paused": {"message": "$TAF$ đã tạm dừng", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ đã xong", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach đọc trang này khi bạn gửi: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Đang đọc: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Không ở trang web này"},
+  "aside_on": {"message": "Đọc trang web này"},
+  "aside_off_line": {"message": "Coach không đọc $HOST$: bạn đã tắt", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach không đọc $HOST$: trang ngân hàng, thanh toán, thư hoặc sức khỏe", "placeholders": {"host": {"content": "$1"}}}
 }

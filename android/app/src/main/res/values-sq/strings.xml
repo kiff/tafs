@@ -522,6 +522,12 @@
     <string name="chat_it_lower">ai</string>
     <string name="chat_jump_latest_something_new">Shkoni te e fundit, ka diçka të re</string>
     <string name="chat_jump_to_latest">Shkoni te e fundit</string>
+    <string name="chat_link_blocked_body">Nga një bisedë, tafs hap vetëm faqe interneti të sigurta. Kjo lidhje të çon te: %1$s</string>
+    <string name="chat_link_blocked_title">Kjo lidhje nuk do të hapet</string>
+    <string name="chat_link_confirm_body">Vjen nga një faqe që lexoi Coach. Të çon te: %1$s</string>
+    <string name="chat_link_confirm_body_live">Kjo përgjigje po shkruhet ende. Kjo lidhje të çon te: %1$s</string>
+    <string name="chat_link_confirm_open">Hap</string>
+    <string name="chat_link_confirm_title">Të hapet kjo lidhje?</string>
     <string name="chat_message_carries_most_files">Një mesazh mban më së shumti %1$s skedarë.</string>
     <string name="chat_message_taf">Mesazh për %1$s</string>
     <string name="chat_message_your_taf">Mesazh për taf-in tuaj</string>
@@ -2582,6 +2588,7 @@
     <string name="usage_pack_named">%1$s · një paketë kreditesh</string>
     <string name="usage_packs_keep">Nuk skadon kurrë</string>
     <string name="usage_period">periudhë</string>
+    <string name="usage_raise_limit_from">Kufiri i shpenzimeve tani është %1$s.</string>
     <string name="usage_raise_limit_not_raised">Kufiri nuk u rrit. %1$s</string>
     <string name="usage_raise_limit_prompt">Rritni kufirin e shpenzimeve</string>
     <string name="usage_raise_limit_sign_in_first">Hyni me KIFF për të rritur kufirin.</string>

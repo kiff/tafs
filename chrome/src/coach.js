@@ -43,7 +43,7 @@ export class Coach {
     if (!id) return null;
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation" + (session ? "/" + encodeURIComponent(session) : ""));
     return {
-      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, session: m.session })),
+      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, session: m.session, ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}) })),
       working: t.working ? t.working.session : null,
       // A card that waits on the owner (an approval, a sign-in) is answered on the phone, never here.
       waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
@@ -131,7 +131,7 @@ export class Coach {
    * Sends the owner's words: into the live chat, into the chat `session` names, or,
    * with `newChat`, into a new one (the answer says its `session`).
    */
-  async send(words, { clientID, session = null, newChat = false } = {}) {
+  async send(words, { clientID, session = null, newChat = false, page = null } = {}) {
     const id = await this.coach();
     if (!id) throw Object.assign(new Error("Coach isn't started"), { code: "no_coach" });
     const text = String(words || "").trim().slice(0, MAX_TEXT);
@@ -139,7 +139,21 @@ export class Coach {
     const body = { text, client_message_id: clientID };
     if (newChat) body.new_chat = true;
     else if (session) body.session = session;
-    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", body);
+    // The page in front, read on this send (aside.js), as data for this turn only: tafs cloud keeps its host, never its text.
+    if (page && typeof page.url === "string" && typeof page.text === "string") {
+      body.page = { url: page.url, title: String(page.title || ""), text: page.text, truncated: page.truncated === true };
+    }
+    const path = "/v1/tafs/" + encodeURIComponent(id) + "/messages";
+    try {
+      return await this.call("POST", path, body);
+    } catch (e) {
+      // tafs cloud refused the page (nothing started): the person's words go once more on their own, as a page that can't be
+      // read never holds a message. The answer then names no page.
+      if (!body.page || e.status !== 400 || e.code !== "page_refused") throw e;
+      const { page: _dropped, ...words } = body; // eslint-disable-line no-unused-vars
+      const sent = await this.call("POST", path, words);
+      return { ...sent, page_refused: true };
+    }
   }
 }
 
