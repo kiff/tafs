@@ -212,7 +212,7 @@ const push: PushStore = {
       const m = v.M ?? {};
       const env = m.environment?.S;
       return env === "sandbox" || env === "production"
-        ? [{ token, platform: m.platform?.S === "android" ? "android" as const : "ios" as const, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, ...(m.manages ? { manages: m.manages.BOOL === true } : {}), silent: m.silent?.BOOL === true, ...(m.kinds?.S ? { kinds: parseKinds(JSON.parse(m.kinds.S)) } : {}), at: m.at?.S ?? "" }]
+        ? [{ token, platform: m.platform?.S === "android" ? "android" as const : m.platform?.S === "macos" ? "macos" as const : "ios" as const, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, ...(m.manages ? { manages: m.manages.BOOL === true } : {}), silent: m.silent?.BOOL === true, ...(m.kinds?.S ? { kinds: parseKinds(JSON.parse(m.kinds.S)) } : {}), at: m.at?.S ?? "" }]
         : [];
     });
     const secrets = Object.values(out.Item?.secrets?.M ?? {})
@@ -288,6 +288,8 @@ const apns = silencing(routing({
     keyID: process.env.APNS_KEY_ID ?? "",
     teamID: process.env.APNS_TEAM_ID ?? "",
     topic: process.env.APNS_TOPIC ?? "bot.tafs.app",
+    // macOS 12's own app (kiff/tafs-macos), registered as `macos`: the same team's key, its own topic.
+    macTopic: process.env.APNS_MAC_TOPIC ?? "bot.tafs.macos",
   }),
   android: fcm,
 }));

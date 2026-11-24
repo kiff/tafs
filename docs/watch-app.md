@@ -373,7 +373,25 @@ option A (19 Nov):
 - **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing; nor does an iPhone with tafs
   open on screen, where Coach's chat already shows the answer.
 - **Its limit:** iOS doesn't promise the background time, and an answer past the follow is only in Coach's chat. tafs
-  cloud's push to the iPhone (piece d, step (vii)) lifts it.
+  cloud's push to the iPhone lifts it for a watch request (below).
+
+**Row 11, an answer you can't miss, with the app put away** (`WatchAskPush`, tested in `WatchAskPushTests`): W3 past its
+follow, for a watch request (`coach_send` and a taf's chat).
+- **tafs cloud's push wakes the iPhone** each time a watch request changes: a silent push, `change: watch_ask` and the
+  request's id alone (`PushDelegate`). However long the answer takes, the iPhone reads that one request
+  (`GET /v1/watch/asks/{id}`) with the session it keeps, so it works with tafs not open and the iPhone locked.
+- **Only a request this iPhone sent for its watch.** The relay keeps the ids it sent (`WatchAskPushes`, ids only, never
+  words, each a day, at most 50): a push for any other request (an Android's watch, an iPad) reads nothing.
+- **Posted as W3 posts it,** once the request has ended or a call of it waits for the owner: "Coach", the answer with no
+  amount in it, then "Approve on your phone" or "The rest is on your phone.", under W3's identifier for the request.
+- **Once at most, and never twice:**
+  - a request is posted once, by W3's follow or by the push, whichever has it first;
+  - nothing is posted for an answer the watch read itself (kept past the follow), while the watch is reading (5 s), or
+    with tafs open on the iPhone;
+  - a request still at work posts nothing: the next push says when it changes.
+- **What it can't promise:** iOS may hold back silent pushes (Low Power Mode, a phone that's been closed by hand), so a
+  request is posted only once the iPhone is woken. Nothing new reaches the watch: it shows the iPhone's notification.
+- **Words:** none new. No change to the privacy text: the watch posts nothing of its own, and only ids are kept.
 - **Words:** none new (`coach.title`, `watch.approve_on_phone`, `watch.more_on_phone`). No change to the privacy text.
 
 **W4, Ask Coach as one conversation** (`CoachModel.turns`, `CoachHome`, `CoachTurnRow`; tested in `CoachModelTests`), the
@@ -518,8 +536,8 @@ Apple Watch before the iOS PR.
 **Two gaps on the service's side, before iOS can match:**
 1. **The result push reaches the iPhone too** (done in tafs cloud): each change goes to the person's phones, Android
    and iPhone, as a silent push (`content-available`, `change: watch_ask`, the ask's id alone). iOS throttles silent
-   pushes, so the watch also reads `asks` whenever it opens, and a missed push costs only time. Left: the phone's side,
-   in `AppModel.liveChange` (today an unknown `change` is ignored, so a build from before reads nothing).
+   pushes, so the watch also reads `asks` whenever it opens, and a missed push costs only time. The phone's side is
+   row 11's (`WatchAskPush`, above): it reads the request and posts it as W3 does. A build from before ignores the push.
 2. **Nothing new in KIFF or planque.**
 
 **Where watchOS differs:**

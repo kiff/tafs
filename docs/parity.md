@@ -216,7 +216,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 8 | Keep for later | built | built | Apple Watch: on (`CoachModel.keepForLaterOn`), with the privacy page's line and the owner's yes |
 | 9 | Send, then "Coach is answering" | built | built | |
 | 10 | The answer: Hear it, and Reply | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | built | |
-| 11 | An answer you can't miss, with the app put away | partial | built | Apple Watch: iOS doesn't promise the background time; tafs cloud now pushes watch asks to the iPhone, which doesn't read them yet |
+| 11 | An answer you can't miss, with the app put away | built | built | Apple Watch: tafs cloud's push for a watch request wakes the iPhone, which posts the answer as W3 does (`WatchAskPush`), for a request it sent |
 | 12 | Coach as one conversation | built | built | |
 | 13 | Chat with one taf | built | built | tafs cloud's switch still decides per account |
 | 14 | A taf's page and its settings | built | built | |
