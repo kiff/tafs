@@ -6958,6 +6958,7 @@ final class AppModel: ObservableObject {
         lines.append(done.isEmpty ? Words.Sample.Reply.nothingDone : Words.Sample.Reply.lately(done: done.joined(separator: "\n")))
         if waiting > 0 { lines.append(Words.Sample.Reply.waiting(count: waiting)) }
         lines.append(Words.Sample.Reply.note)
+        if Screenshots.sampleReplyLinks { lines.append(Screenshots.sampleLinks) }
         return lines.joined(separator: "\n\n")
     }
 
@@ -10715,6 +10716,11 @@ enum Screenshots {
     /// `-sampleSendFails YES`: the sample taf's chat keeps each message as not sent, for a UI test that a
     /// message that couldn't go lets the pin go and the chat goes to its end, as on Android.
     static var sampleSendFails: Bool { enabled && UserDefaults.standard.bool(forKey: "sampleSendFails") }
+    /// `-sampleReplyLinks YES`: the sample taf's answer ends with a `tel:` link and an https link, each labelled with its own
+    /// address, for a UI test that a link in an answer opens only through `PageLinks.ask` (no long-press Open Link).
+    static var sampleReplyLinks: Bool { enabled && UserDefaults.standard.bool(forKey: "sampleReplyLinks") }
+    /// The two links `sampleReplyLinks` adds, as Markdown.
+    static let sampleLinks = "[tel:+15551234](tel:+15551234) [https://shop.example/orders/5098](https://shop.example/orders/5098)"
     /// `-listSettlesOnReturn YES`: the list opens on its first taf, as for a person, and each
     /// time the app comes back its last taf moves to the top, as when another was used
     /// meanwhile: for a UI test that a pick stays open when the list settles (the 901 test).

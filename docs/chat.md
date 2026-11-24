@@ -162,6 +162,10 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
     or **Cancel**. A taf's answer still arriving asks only about a link that won't open.
   - **The address** is shown whole, never shortened, and always left to right, in its own isolate, in every language.
   - **The owner's own words** open their links as before.
+  - **Only a tap reaches the question,** through `openURL`. A UI test pins it (`LinkLongPressUITests`, on the sample's
+    answer with a `tel:` and an https link, `-sampleReplyLinks YES`): after a long-press tafs stays in front and nothing
+    opens, a system opener it offers for the `tel:` link (Open Link, Call…) still asks first, and a tap asks with Cancel
+    alone.
 
 ## The answer as it comes
 
