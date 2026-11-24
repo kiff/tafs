@@ -282,6 +282,10 @@ struct BalancePanel: View {
                     .accessibilityIdentifier("balance-read-again")
                 }
             } else if let raise = line.raise, model.mode == .kiff {
+                // The limit now, before the tap, beside the offer's words for the new one.
+                if let now = raise.limitNowLine {
+                    Text(now).scaledFont(13).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                }
                 ApprovalGate {
                     Button {
                         raising = true
