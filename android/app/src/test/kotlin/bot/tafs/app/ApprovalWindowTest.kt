@@ -73,6 +73,29 @@ class ApprovalWindowTest {
     assertTrue(transport.requestsTo("POST /v1/me/time-zone").single().headers["KIFF-Device-Signature"]!!.contains(",v1=dev"))
   }
 
+  /** Adding someone to a group is the approval key's even inside a held window: never a tap, and the window stays for the rest. */
+  @Test fun addingSomeoneToAGroupIsNeverATapInTheWindow() = runTest {
+    val signed = mutableListOf<String>()
+    val c = client().also {
+      it.setupSigner = { m -> signed += "device:" + String(m).lines().first(); "dev" }
+      it.approvalSigner = { built -> signed += "approval:" + String(built()).lines().first(); "app" }
+      it.window = ApprovalWindow(window, open = true)
+    }
+    transport.answer("PUT /v1/groups/g1/members/s1", 200)
+    transport.answer("DELETE /v1/groups/g1/members/s1", 200)
+    transport.answer("POST /v1/me/agent-drafts/d1/confirm", 200)
+    c.send("PUT", "/v1/groups/g1/members/s1", mapOf("role" to "member"))
+    c.send("DELETE", "/v1/groups/g1/members/s1")
+    c.send("POST", "/v1/me/agent-drafts/d1/confirm")
+    assertEquals(listOf("approval:kiff.request.v1", "device:kiff.request.v1", "device:kiff.request.v2"), signed)
+    val add = transport.requestsTo("PUT /v1/groups/g1/members/s1").single().headers["KIFF-Device-Signature"]!!
+    assertTrue(add, Regex("^t=[^,]+,v1=app$").matches(add))
+    // Taking someone out takes authority away: the current key, as before, never the window.
+    val removal = transport.requestsTo("DELETE /v1/groups/g1/members/s1").single().headers["KIFF-Device-Signature"]!!
+    assertTrue(removal, Regex("^t=[^,]+,v1=dev$").matches(removal))
+    assertEquals("the window stays for the next tap", window, c.window?.id)
+  }
+
   @Test fun anActThatTakesTheFingerprintEveryTimeIsSignedAgainByTheApprovalKeyAndTheWindowStays() = runTest {
     val signed = mutableListOf<String>()
     val c = client().also {

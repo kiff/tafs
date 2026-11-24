@@ -929,8 +929,9 @@ class KiffClient(
     val plain = (signedBy ?: setupSigner)?.let { s -> val signs: suspend (() -> ByteArray) -> String = { built -> s(built()) }; signs }
     val authority = signedBy == null && plain != null && !gateway && grantsAuthority(method, path)
     // Inside a held approval window, what the approval key would sign goes with the device key and the window's id: a tap
-    // (kiff/tafs#494). Opening a window is never signed in one.
-    val held = window?.id?.takeIf { inWindow && authority && path != WINDOW }
+    // (kiff/tafs#494). Opening a window is never signed in one, and neither is adding someone to a group: KIFF would take a
+    // window-named signature on that route as the device key's, so it's the approval key's, behind its fingerprint, always.
+    val held = window?.id?.takeIf { inWindow && authority && path != WINDOW && !(method == "PUT" && isGroupMember(path)) }
     val signer = if (held != null) plain else if (authority) approvalSigner ?: plain else plain
     val account = tenant
     if (method in WRITES && signed && signer != null && account != null) {
@@ -1059,6 +1060,9 @@ class KiffClient(
       // Removing a device: one that holds an approval key or a passkey goes only with an approval (§6).
       // A passkey of the account: removing one takes an approval, as a device's does.
       if (method == "DELETE") return isDevice(path) || isPasskey(path)
+      // Adding someone to a group, or changing their role there, gives them what the group can do: the approval key signs it,
+      // and KIFF's trail says so (`+critical`). Taking someone out (DELETE) takes authority away: the current key, as before.
+      if (method == "PUT") return isGroupMember(path)
       if (method != "POST") return false
       // Opening an approval window stands for a fingerprint: only the approval key opens one (kiff/tafs#494).
       if (path == WINDOW) return true
@@ -1075,6 +1079,12 @@ class KiffClient(
       if (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "grants" && parts[3].isNotEmpty()) return true
       if (path == "/v1/resume" || (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "resume" && parts[3].isNotEmpty())) return true
       return parts.size == 6 && path.startsWith("/v1/me/agent-drafts/") && parts[5] == "confirm" && parts[4].isNotEmpty()
+    }
+
+    /** `/v1/groups/{id}/members/{subject}`: one person in one group, never the list. */
+    private fun isGroupMember(path: String): Boolean {
+      val parts = path.split("/")
+      return parts.size == 6 && path.startsWith("/v1/groups/") && parts[4] == "members" && parts[3].isNotEmpty() && parts[5].isNotEmpty()
     }
 
     /** `/v1/me/passkeys/{id}`: one passkey, never the list. */
