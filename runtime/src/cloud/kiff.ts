@@ -23,6 +23,14 @@ export interface KIFFIdentity {
   companyName?: string;
   /** The account's kind, as KIFF gives it: a company's, shared by its people, or one person's own. */
   accountKind?: "company" | "personal";
+  /** A device's session (KIFF's `device_session`): a phone's or a computer's, bound to its key. */
+  deviceSession?: boolean;
+  /** How that device's session approves, as KIFF shows it (`approval_mode`): view, key, passkey or device_key. */
+  approvalMode?: string;
+  /** The device the session signed in from, from KIFF's session record (`device_id`), never from the request. */
+  deviceID?: string;
+  /** That device's platform as KIFF stored it at pairing (`device_platform`): "chrome" for the browser extension. */
+  devicePlatform?: string;
 }
 
 export class KIFFError extends Error {
@@ -68,6 +76,10 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
     time_zone?: string;
     tenant_display_name?: string;
     account_kind?: string;
+    device_session?: boolean;
+    approval_mode?: string;
+    device_id?: string;
+    device_platform?: string;
   };
   if (!me.tenant_id) throw new KIFFError(502, "KIFF did not say which account this is");
   return {
@@ -80,6 +92,10 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
     ...(typeof me.time_zone === "string" && me.time_zone ? { timeZone: me.time_zone } : {}),
     ...(companyNameOf(me.account_kind, me.tenant_display_name) ? { companyName: companyNameOf(me.account_kind, me.tenant_display_name) } : {}),
     ...(me.account_kind === "company" || me.account_kind === "personal" ? { accountKind: me.account_kind } : {}),
+    ...(me.device_session === true ? { deviceSession: true } : {}),
+    ...(typeof me.approval_mode === "string" && me.approval_mode ? { approvalMode: me.approval_mode } : {}),
+    ...(typeof me.device_id === "string" && me.device_id ? { deviceID: me.device_id } : {}),
+    ...(typeof me.device_platform === "string" && me.device_platform ? { devicePlatform: me.device_platform } : {}),
   };
 }
 

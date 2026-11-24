@@ -1,0 +1,1 @@
+- **Chrome: the side panel shows only the chats begun in that Chrome.** tafs cloud lists, opens and goes on only in a Chrome's own chats, by the device KIFF paired; the person's other chats stay on their phone ([chrome.md](docs/chrome.md#coach-in-the-side-panel)).
