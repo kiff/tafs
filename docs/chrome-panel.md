@@ -17,6 +17,15 @@ The panel is mainly for **watching a taf work**, with the person beside it. Coac
   - The panel shows the tafs whose connections run in this Chrome. planque gives the list in the relay's `welcome`, and
     again when one is approved, ends or moves (a planque change).
   - With one taf, it opens on it. With several, a picker sits at the top, with the one at work first.
+  - **Several tafs, several tabs: the panel follows the tab** (`panel.js` `follow`, `coachchat.js` `tafOfTab`). On a tab a
+    taf is working in, the panel shows that taf's chat, and its run's card first; on any other tab, the person's own pick
+    stays. A tab is a taf's by its run: each run carries the grant its steps came under, and the taf offered here is the one
+    whose connection holds that grant (`tafsHere` keeps each taf's grants). Never by the taf's name: a run whose grant no
+    taf here holds is no taf's. The panel listens only to its own window's tab changes, and the tab ids never leave Chrome.
+  - **The tafs at work, at the top** ("Working in this Chrome", `tafsAtWork`): one button per taf with a live run, its
+    name, an amber dot when one of its runs waits on the person, and a ring on the taf whose tab is in front. A click
+    brings that taf's tab to the front, in its window (`go_to_run`, `Runner.goTo`), and does nothing else: no read, no act.
+    Hidden when no taf works.
   - **The list is for display only, never authority.** What a step may do still comes only from the signed step and the
     connection's phone-signed sites. The extension never takes a site from the list as allowed.
 - **Its work, live.** While it runs, the panel shows each step as it happens: opened, read, typed, clicked, held. The

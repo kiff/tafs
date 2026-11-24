@@ -54,10 +54,73 @@ export function tafsHere(connections, tafs, workingName = null) {
   const out = [];
   for (const c of connections || []) {
     const t = byAgent.get(c.agent);
-    if (!t || out.some((o) => o.id === t.id)) continue;
-    out.push({ id: t.id, name: t.name || c.name, sites: c.sites });
+    if (!t) continue;
+    const had = out.find((o) => o.id === t.id);
+    // Each of the taf's connections here names a grant: a run carries its grant, so the panel knows whose run it is.
+    if (had) {
+      if (!had.grants.includes(c.grant)) had.grants.push(c.grant);
+      continue;
+    }
+    out.push({ id: t.id, name: t.name || c.name, sites: c.sites, grants: [c.grant] });
   }
   if (workingName) out.sort((a, b) => (b.name === workingName) - (a.name === workingName));
+  return out;
+}
+
+/**
+ * Several tafs, several tabs (docs/chrome.md, "The panel follows the tab"): the taf a run is for, by the grant its steps came
+ * under, among the tafs the panel offers (`tafsHere`). Null for a grant none of them holds: never a guess by the taf's name.
+ */
+export function tafOfRun(run, tafs) {
+  if (!run || typeof run.grant !== "string" || !run.grant) return null;
+  return (tafs || []).find((t) => Array.isArray(t.grants) && t.grants.includes(run.grant)) || null;
+}
+
+/**
+ * Words typed for a taf stay that taf's (D2): switching the chat to another taf, by its tab, a chip or the picker, keeps
+ * what was typed for the one before and brings back what was typed for the new one, or nothing. Never carried over: Send
+ * goes to the taf on show, and an instruction for one taf must never reach another. Returns the drafts after and the text
+ * the box now holds.
+ */
+export function switchDraft(drafts, from, to, typed) {
+  const next = new Map(drafts || []);
+  if (from) {
+    if (typed) next.set(from, typed);
+    else next.delete(from);
+  }
+  const text = (to && next.get(to)) || "";
+  if (to) next.delete(to);
+  return { drafts: next, text };
+}
+
+/** The live run whose tab [tabId] is: the tab it acts in first, then any tab it opened. Null for a tab of no live run. */
+export function runOfTab(tabId, runs) {
+  if (typeof tabId !== "number") return null;
+  const live = (runs || []).filter((r) => r && !r.stopped);
+  return live.find((r) => r.tab === tabId) || live.find((r) => Array.isArray(r.tabs) && r.tabs.includes(tabId)) || null;
+}
+
+/** The taf whose tab [tabId] is, or null: the panel then keeps the person's own pick. */
+export function tafOfTab(tabId, runs, tafs) {
+  return tafOfRun(runOfTab(tabId, runs), tafs);
+}
+
+/**
+ * The panel's head: each taf at work in this Chrome, once, with the run to go to (the first live one) and whether one of its
+ * runs waits on the person (a hand-over). A run whose taf the panel doesn't offer isn't listed.
+ */
+export function tafsAtWork(runs, tafs) {
+  const out = [];
+  for (const run of (runs || []).filter((r) => r && !r.stopped)) {
+    const taf = tafOfRun(run, tafs);
+    if (!taf) continue;
+    const had = out.find((o) => o.id === taf.id);
+    if (had) {
+      had.waiting = had.waiting || !!run.hand;
+      continue;
+    }
+    out.push({ id: taf.id, name: taf.name, run: run.id, waiting: !!run.hand });
+  }
   return out;
 }
 

@@ -68,6 +68,7 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
         return { id: 9, tabs: [{ id }] };
       },
       remove: async (id) => calls.push(["windows.remove", id]),
+      update: async (id, o) => calls.push(["windows.update", id, o]),
       // The window the owner last used, when a test gives one; none, as Chrome with no normal window open, throws.
       getLastFocused: async (o) => {
         calls.push(["windows.getLastFocused", o]);
@@ -176,6 +177,21 @@ test("back goes where the tab was and reads the page there; nothing runs in the 
   const ran = c.calls.slice(c.calls.findIndex((x) => x[0] === "tabs.goBack")).filter((x) => x[0] === "executeScript").length;
   assert.equal(c.calls.filter((x) => x[0] === "executeScript").length - scripts, ran, "only the read after, no act in the page");
   assert.equal((await r.handle(step({ op: "act", read_id: out.page.read_id, act: { kind: "back", ref: "c1" } }))).error.code, "bad_step");
+});
+
+test("the panel's head goes to a live run's tab and focuses its window; nothing else, and no run it doesn't hold", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  const before = c.calls.length;
+  assert.deepEqual(await r.goTo("run_1"), {});
+  const made = c.calls.slice(before);
+  assert.deepEqual(made.find((x) => x[0] === "tabs.update"), ["tabs.update", tab, { active: true }]);
+  assert.ok(made.every((x) => x[0] === "tabs.update" || x[0] === "windows.update"), "no read, no act");
+  assert.deepEqual(await r.goTo("run_9"), { error: "no_run" });
+  await r.stop("run_1");
+  assert.deepEqual(await r.goTo("run_1"), { error: "no_run" }, "a stopped run");
 });
 
 test("three failed acts in a row pause the run; Resume goes on", async () => {
