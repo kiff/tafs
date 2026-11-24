@@ -877,7 +877,7 @@ jobs:
           echo "Xcodes on this runner:"; ls -d /Applications/Xcode*.app || true
           xcode=$({ ls -d /Applications/Xcode_27*.app 2>/dev/null || true; } | python3 -c '
           import re, sys
-          found = [l.strip() for l in sys.stdin if l.strip() and not re.search(r"beta|rc", l, re.I)]
+          found = [l.strip() for l in sys.stdin if l.strip() and not re.search(r"beta|rc|candidate", l, re.I)]
           version = lambda p: [int(n) for n in re.findall(r"\d+", p.rsplit("/", 1)[-1])]
           print(max(found, key=version) if found else "")
           ')
