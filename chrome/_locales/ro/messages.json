@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Ați spus „Nu acum”", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ lucrează pe această pagină", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Lucrează în acest Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Accesați fila lui $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Accesați fila lui $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Înapoi"},
+  "coach_archive": {"message": "Arhivați"},
+  "coach_archive_named": {"message": "Arhivați „$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Restaurați"},
+  "coach_unarchive_named": {"message": "Restaurați „$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Arhivate"},
+  "coach_archived_body": {"message": "Fiecare mesaj se păstrează 30 de zile de când a fost scris, arhivat sau nu."},
+  "coach_archived_none": {"message": "Nicio conversație arhivată."},
+  "coach_archive_error": {"message": "Nu a reușit. Încercați din nou."},
+  "taf_remove": {"message": "Eliminați acest taf"},
+  "taf_remove_on_phone": {"message": "Un taf se elimină de pe telefon: deschideți-l în aplicația tafs, apoi Eliminați. Eliminarea se aprobă acolo."}
 }

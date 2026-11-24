@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "तपाईंले “अहिले होइन” भन्नुभयो", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ यो पृष्ठमा काम गर्दैछ", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "यो Chrome मा काम गर्दै", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "$TAF$ को ट्याबमा जानुहोस्", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "$TAF$ को ट्याबमा जानुहोस्", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← फर्कनुहोस्"},
+  "coach_archive": {"message": "अभिलेखमा राख्नुहोस्"},
+  "coach_archive_named": {"message": "“$TITLE$” अभिलेखमा राख्नुहोस्", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "फिर्ता ल्याउनुहोस्"},
+  "coach_unarchive_named": {"message": "“$TITLE$” फिर्ता ल्याउनुहोस्", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "अभिलेखमा"},
+  "coach_archived_body": {"message": "हरेक सन्देश लेखिएदेखि 30 दिन राखिन्छ, अभिलेखमा राखिएको होस् वा नहोस्।"},
+  "coach_archived_none": {"message": "अभिलेखमा कुनै कुराकानी छैन।"},
+  "coach_archive_error": {"message": "भएन। फेरि प्रयास गर्नुहोस्।"},
+  "taf_remove": {"message": "यो taf हटाउनुहोस्"},
+  "taf_remove_on_phone": {"message": "taf तपाईंको फोनमा हटाइन्छ: यसलाई tafs एपमा खोल्नुहोस्, त्यसपछि हटाउनुहोस्। हटाउने स्वीकृति त्यहीँ दिइन्छ।"}
 }

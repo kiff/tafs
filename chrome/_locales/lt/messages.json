@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Pasakėte „Ne dabar“", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ dirba šiame puslapyje", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Dirba šiame „Chrome“", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Eiti į $TAF$ skirtuką", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Eiti į $TAF$ skirtuką", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Atgal"},
+  "coach_archive": {"message": "Archyvuoti"},
+  "coach_archive_named": {"message": "Archyvuoti „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Grąžinti"},
+  "coach_unarchive_named": {"message": "Grąžinti „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Archyvuoti"},
+  "coach_archived_body": {"message": "Kiekviena žinutė saugoma 30 dienų nuo parašymo, archyvuota ar ne."},
+  "coach_archived_none": {"message": "Archyvuotų pokalbių nėra."},
+  "coach_archive_error": {"message": "Nepavyko. Bandykite dar kartą."},
+  "taf_remove": {"message": "Pašalinti šį taf"},
+  "taf_remove_on_phone": {"message": "Taf šalinamas telefone: atidarykite jį „tafs“ programėlėje, tada Pašalinti. Pašalinimas patvirtinamas ten."}
 }

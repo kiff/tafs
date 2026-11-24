@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "თქვენ თქვით „ახლა არა“", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ ამ გვერდზე მუშაობს", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "მუშაობენ ამ Chrome-ში", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "$TAF$-ის ჩანართზე გადასვლა", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "$TAF$-ის ჩანართზე გადასვლა", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← უკან"},
+  "coach_archive": {"message": "დაარქივება"},
+  "coach_archive_named": {"message": "„$TITLE$“-ის დაარქივება", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "დაბრუნება"},
+  "coach_unarchive_named": {"message": "„$TITLE$“-ის დაბრუნება", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "დაარქივებული"},
+  "coach_archived_body": {"message": "თითოეული შეტყობინება ინახება დაწერიდან 30 დღე, დაარქივებული იქნება თუ არა."},
+  "coach_archived_none": {"message": "დაარქივებული საუბრები არ არის."},
+  "coach_archive_error": {"message": "არ გამოვიდა. სცადეთ ხელახლა."},
+  "taf_remove": {"message": "ამ taf-ის ამოღება"},
+  "taf_remove_on_phone": {"message": "taf ტელეფონიდან ამოიღება: გახსენით tafs აპში, შემდეგ ამოღება. ამოღება იქ დასტურდება."}
 }

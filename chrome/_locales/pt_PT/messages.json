@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Disse «Agora não»", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ está a trabalhar nesta página", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "A trabalhar neste Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Ir para o separador de $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Ir para o separador de $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Voltar"},
+  "coach_archive": {"message": "Arquivar"},
+  "coach_archive_named": {"message": "Arquivar «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Repor"},
+  "coach_unarchive_named": {"message": "Repor «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Arquivadas"},
+  "coach_archived_body": {"message": "Cada mensagem é guardada durante 30 dias a partir de quando foi escrita, arquivada ou não."},
+  "coach_archived_none": {"message": "Nenhuma conversa arquivada."},
+  "coach_archive_error": {"message": "Não foi possível. Tente de novo."},
+  "taf_remove": {"message": "Remover este taf"},
+  "taf_remove_on_phone": {"message": "Um taf é removido no telemóvel: abra-o na app tafs e depois Remover. A remoção é aprovada aí."}
 }

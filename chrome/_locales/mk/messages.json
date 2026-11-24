@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Рековте „Не сега“", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ работи на оваа страница", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Работат во овој Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Оди на јазичето на $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Оди на јазичето на $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Назад"},
+  "coach_archive": {"message": "Архивирај"},
+  "coach_archive_named": {"message": "Архивирај „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Врати"},
+  "coach_unarchive_named": {"message": "Врати „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Архивирани"},
+  "coach_archived_body": {"message": "Секоја порака се чува 30 дена од кога е напишана, архивирана или не."},
+  "coach_archived_none": {"message": "Нема архивирани разговори."},
+  "coach_archive_error": {"message": "Не успеа. Обидете се повторно."},
+  "taf_remove": {"message": "Отстрани го овој taf"},
+  "taf_remove_on_phone": {"message": "Taf се отстранува на телефонот: отворете го во апликацијата tafs, па Отстрани. Отстранувањето се одобрува таму."}
 }

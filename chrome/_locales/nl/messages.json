@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Je zei ‘Nu niet’", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ werkt op deze pagina", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Aan het werk in deze Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Naar het tabblad van $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Naar het tabblad van $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Terug"},
+  "coach_archive": {"message": "Archiveren"},
+  "coach_archive_named": {"message": "„$TITLE$” archiveren", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Terugzetten"},
+  "coach_unarchive_named": {"message": "„$TITLE$” terugzetten", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Gearchiveerd"},
+  "coach_archived_body": {"message": "Elk bericht wordt 30 dagen bewaard vanaf het moment dat het is geschreven, gearchiveerd of niet."},
+  "coach_archived_none": {"message": "Geen gearchiveerde gesprekken."},
+  "coach_archive_error": {"message": "Dat is niet gelukt. Probeer het opnieuw."},
+  "taf_remove": {"message": "Deze taf verwijderen"},
+  "taf_remove_on_phone": {"message": "Een taf verwijder je op je telefoon: open hem in de tafs-app en kies Verwijderen. Daar keur je het verwijderen goed."}
 }

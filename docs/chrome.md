@@ -682,7 +682,9 @@ step over: `op: "hand"`, `hand: {words, ref?}`, `read_id`, signed like every ste
 ## The taf in the side panel
 
 The side panel is for watching a taf work and talking to it ([chrome-panel.md](chrome-panel.md)). Coach sits behind
-**Set up a new taf for this site**.
+**Set up a new taf for this site**, in a view of its own: the taf's chat goes out of sight, and **← Back** returns to it.
+**Remove this taf** says it's removed on the phone: tafs cloud takes a removal only signed by the phone's approval key or a
+computer's passkey, which this Chrome has neither of.
 
 - **Which tafs:** planque's list of this Chrome's live connections, `connections: [{grant, agent, name, sites}]`, comes in
   the relay's `welcome` and again on each change (`{type: "connections"}`, `readConnections`, at most 50). The panel offers
@@ -719,7 +721,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   answers with. **New conversation** goes back to a fresh one at any time. **Previous conversations** lists the person's
   earlier chats (`GET /v1/tafs/{coach}/chats`, newest first, a chat they set aside left out); a tap shows one
   (`GET /v1/tafs/{coach}/conversation/{session}`), and the next message goes into it (`session`). A chat with no title is
-  called "Conversation".
+  called "Conversation". **Archive** takes one out of the list (`POST /v1/tafs/{coach}/chats/{session}/archive`), and
+  **Archived** (`GET …/chats/archived`) puts one back (`…/unarchive`). It's kept, never deleted by this, so no button says
+  Delete. It's unsigned, as on the phone, since it gives nothing.
 - **It reads sparingly** (`coachchat.js` `pollDelay`), so the load doesn't grow with each open panel. A fresh conversation is
   read once (is Coach reachable) and never polled. A chat is read every 4 s while Coach is at work and for a minute after the
   owner's message, and every 30 s otherwise, to see an answer from the phone; a panel that isn't seen reads nothing, and one

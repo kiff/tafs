@@ -1,3 +1,7 @@
+/* Hidden means hidden, whatever display a rule below gives (".atwork" is flex, and showed while empty). */
+[hidden] {
+  display: none !important;
+}
 :root {
   --bg: #fffaf3;
   --ink: #1d1a16;
@@ -168,4 +172,38 @@ textarea {
   margin-inline-end: 6px;
   border-radius: 50%;
   background: var(--amber);
+}
+/* Coach's own view: Back, then its title on one line. */
+.viewhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.viewhead h2 {
+  margin: 0;
+}
+/* The person's conversations with Coach: a row each, the title opening it and Archive (or Put back) beside it. */
+ul.chats {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 8px;
+}
+ul.chats li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+ul.chats li.open .chat {
+  font-weight: 600;
+}
+ul.chats .chat {
+  flex: 1;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+button.small {
+  font-size: 12px;
+  padding: 2px 8px;
 }

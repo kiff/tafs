@@ -35,9 +35,17 @@ The panel is mainly for **watching a taf work**, with the person beside it. Coac
   (`GET /v1/tafs/{id}/conversation`, `POST …/messages`), read on each event: the panel shown, a send, a step seen on the
   relay. Then it's read every 4 s while it works or for a minute after a send. Idle, it backs off from 60 s to 5 minutes, each
   wait jittered, and nothing is read while the panel is hidden.
-- **Coach is a button:** "Set up a new taf for this site" opens Coach on **a new conversation**, every time (`startFresh`), in
-  the panel's own view: a new taf's setup never goes under the conversation open before. The earlier ones stay under
-  Previous conversations.
+- **Coach is a button:** "Set up a new taf for this site" opens **Coach's own view** (`showCoach`) on **a new conversation**,
+  every time (`startFresh`). The taf's chat goes out of sight rather than staying underneath, and **← Back** returns to it.
+  The runs stay below either view, since Pause, Stop and a hand-over are never hidden.
+  - **The person's conversations are listed** (Previous conversations, newest first). A tap opens one, and the one on show
+    is marked.
+  - **Archive** takes one out of the list (`POST /v1/tafs/{coach}/chats/{session}/archive`). **Archived** lists those, with
+    **Put back** (`…/unarchive`). Nothing is deleted, so the button never says Delete: an archived conversation is kept 30
+    days, then deleted, as the privacy page says. Archiving gives nothing, so it isn't signed, as on the phone. Archiving
+    the conversation on show starts a new one.
+- **Remove this taf** says where a taf is removed: on the phone. tafs cloud takes a removal (`DELETE /v1/tafs/{id}`) only
+  signed with the phone's approval key or a computer's passkey, and this Chrome has neither. The button removes nothing.
 
 ## A step handed to the person
 

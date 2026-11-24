@@ -70,6 +70,29 @@ test("Coach reads a chosen chat, lists the earlier ones, and sends into a chosen
 });
 
 
+test("a conversation is archived and put back on tafs cloud's own routes, unsigned, and the archived list reads its own route", async () => {
+  const calls = [];
+  const fetch = async (url, init) => {
+    calls.push([init.method, url, init.body, init.headers]);
+    const body = url.endsWith("/v1/setup")
+      ? { setup: { id: "taf-coach" } }
+      : url.endsWith("/chats/archived")
+        ? { chats: [{ session: "s4", title: "Old setup", updated: "2026-11-20T10:00:00Z" }, { title: "no session" }] }
+        : { session: "s4", archived: !url.endsWith("/unarchive") };
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const c = new Coach({ token: "kiff_session_view_only", fetch, base: "https://cloud.test" });
+  assert.deepEqual(await c.archivedChats(), [{ session: "s4", title: "Old setup", updated: "2026-11-20T10:00:00Z" }], "a chat with no session isn't offered");
+  assert.equal(calls.at(-1)[1], "https://cloud.test/v1/tafs/taf-coach/chats/archived");
+  await c.archive("s 4");
+  assert.deepEqual(calls.at(-1).slice(0, 3), ["POST", "https://cloud.test/v1/tafs/taf-coach/chats/s%204/archive", undefined], "its session escaped, no body");
+  assert.ok(!Object.keys(calls.at(-1)[3]).some((h) => /signature|passkey/i.test(h)), "nothing signed: archiving gives nothing");
+  await c.archive("s4", false);
+  assert.equal(calls.at(-1)[1], "https://cloud.test/v1/tafs/taf-coach/chats/s4/unarchive", "false puts it back");
+  await assert.rejects(c.archive(""), (e) => e.code === "bad_chat", "no session, nothing sent");
+  assert.equal(calls.filter((x) => x[0] === "POST").length, 2);
+});
+
 test("one Coach is kept for a session, so the account's Coach id is read once across every read of the chat", async () => {
   const calls = [];
   const fetch = async (url) => {

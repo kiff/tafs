@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Դուք ասացիք «Ոչ հիմա»", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$-ը աշխատում է այս էջում", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Աշխատում են այս Chrome-ում", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Անցնել $TAF$-ի ներդիրին", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Անցնել $TAF$-ի ներդիրին", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Հետ"},
+  "coach_archive": {"message": "Արխիվացնել"},
+  "coach_archive_named": {"message": "Արխիվացնել «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Վերադարձնել"},
+  "coach_unarchive_named": {"message": "Վերադարձնել «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Արխիվացված"},
+  "coach_archived_body": {"message": "Յուրաքանչյուր հաղորդագրություն պահվում է գրվելուց 30 օր՝ արխիվացված լինի, թե ոչ։"},
+  "coach_archived_none": {"message": "Արխիվացված զրույցներ չկան։"},
+  "coach_archive_error": {"message": "Չստացվեց։ Փորձեք նորից։"},
+  "taf_remove": {"message": "Հեռացնել այս taf-ը"},
+  "taf_remove_on_phone": {"message": "Taf-ը հեռացվում է հեռախոսում. բացեք այն tafs հավելվածում, ապա Հեռացնել։ Հեռացումը հաստատվում է այնտեղ։"}
 }

@@ -267,6 +267,9 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
     },
     coach_chats: async () => ({ chats: await (await coach()).chats() }),
+    coach_archived: async () => ({ chats: await (await coach()).archivedChats() }),
+    // Archive one of the person's chats with Coach, or put it back: kept either way, never deleted, and unsigned, as on the phone.
+    coach_archive: async () => ({ done: await (await coach()).archive(String(m.session || ""), m.archived !== false) }),
     // The person's answer to a step handed to them, from the panel's card (the extension never acts for them).
     hand_answer: async () => runner.answerHand(String(m.run), m.outcome),
     hand_show: async () => runner.showHand(String(m.run)),

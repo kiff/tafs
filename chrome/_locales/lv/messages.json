@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "Tu teici “Ne tagad”", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ strādā šajā lapā", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Strādā šajā Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "Pāriet uz $TAF$ cilni", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "Pāriet uz $TAF$ cilni", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "← Atpakaļ"},
+  "coach_archive": {"message": "Arhivēt"},
+  "coach_archive_named": {"message": "Arhivēt “$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "Atjaunot"},
+  "coach_unarchive_named": {"message": "Atjaunot “$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "Arhivētās"},
+  "coach_archived_body": {"message": "Katru ziņu glabā 30 dienas no tās uzrakstīšanas, arhivētu vai ne."},
+  "coach_archived_none": {"message": "Nav arhivētu sarunu."},
+  "coach_archive_error": {"message": "Neizdevās. Pamēģini vēlreiz."},
+  "taf_remove": {"message": "Noņemt šo taf"},
+  "taf_remove_on_phone": {"message": "Taf noņem tālrunī: atver to tafs lietotnē, tad Noņemt. Noņemšanu apstiprina tur."}
 }

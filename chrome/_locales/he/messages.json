@@ -82,5 +82,16 @@
   "step_hand_declined": {"message": "אמרת „לא עכשיו”", "description": "Step list: the person pressed Not now on the Your turn card."},
   "bar_working": {"message": "$TAF$ עובד על הדף הזה", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "עובדים ב-Chrome הזה", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
-  "go_to_taf": {"message": "מעבר ללשונית של $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
+  "go_to_taf": {"message": "מעבר ללשונית של $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
+  "coach_back": {"message": "→ חזרה"},
+  "coach_archive": {"message": "העברה לארכיון"},
+  "coach_archive_named": {"message": "העברת „$TITLE$” לארכיון", "placeholders": {"title": {"content": "$1"}}},
+  "coach_unarchive": {"message": "החזרה"},
+  "coach_unarchive_named": {"message": "החזרת „$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
+  "coach_archived": {"message": "בארכיון"},
+  "coach_archived_body": {"message": "כל הודעה נשמרת 30 יום מרגע כתיבתה, בארכיון או לא."},
+  "coach_archived_none": {"message": "אין שיחות בארכיון."},
+  "coach_archive_error": {"message": "זה לא הצליח. נסה שוב."},
+  "taf_remove": {"message": "הסרת ה-taf הזה"},
+  "taf_remove_on_phone": {"message": "taf מוסר בטלפון: פתח אותו באפליקציית tafs ואז הסרה. ההסרה מאושרת שם."}
 }
