@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Terugzetten"},
   "coach_unarchive_named": {"message": "„$TITLE$” terugzetten", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Gearchiveerd"},
-  "coach_archived_body": {"message": "Gearchiveerde gesprekken worden 30 dagen bewaard en daarna verwijderd."},
+  "coach_archived_body": {"message": "Elk bericht wordt 30 dagen bewaard vanaf het moment dat het is geschreven, gearchiveerd of niet."},
   "coach_archived_none": {"message": "Geen gearchiveerde gesprekken."},
   "coach_archive_error": {"message": "Dat is niet gelukt. Probeer het opnieuw."},
   "taf_remove": {"message": "Deze taf verwijderen"},

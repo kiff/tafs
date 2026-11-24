@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "ដាក់មកវិញ"},
   "coach_unarchive_named": {"message": "ដាក់ “$TITLE$” មកវិញ", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "ក្នុងបណ្ណសារ"},
-  "coach_archived_body": {"message": "ការសន្ទនាក្នុងបណ្ណសាររក្សាទុក 30 ថ្ងៃ បន្ទាប់មកត្រូវលុប។"},
+  "coach_archived_body": {"message": "សារនីមួយៗត្រូវរក្សាទុក 30 ថ្ងៃ គិតពីពេលសរសេរ ទោះទុកក្នុងបណ្ណសារឬអត់។"},
   "coach_archived_none": {"message": "គ្មានការសន្ទនាក្នុងបណ្ណសារទេ។"},
   "coach_archive_error": {"message": "មិនបានសម្រេចទេ។ សូមព្យាយាមម្តងទៀត។"},
   "taf_remove": {"message": "ដក taf នេះចេញ"},

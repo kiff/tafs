@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Връщане"},
   "coach_unarchive_named": {"message": "Връщане на „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Архивирани"},
-  "coach_archived_body": {"message": "Архивираните разговори се пазят 30 дни, след което се изтриват."},
+  "coach_archived_body": {"message": "Всяко съобщение се пази 30 дни от написването си, архивирано или не."},
   "coach_archived_none": {"message": "Няма архивирани разговори."},
   "coach_archive_error": {"message": "Не се получи. Опитайте отново."},
   "taf_remove": {"message": "Премахване на този taf"},

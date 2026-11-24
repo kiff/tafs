@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "元に戻す"},
   "coach_unarchive_named": {"message": "「$TITLE$」を元に戻す", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "アーカイブ済み"},
-  "coach_archived_body": {"message": "アーカイブした会話は30日間保管され、その後削除されます。"},
+  "coach_archived_body": {"message": "各メッセージは、アーカイブの有無にかかわらず、書かれた時点から30日間保管されます。"},
   "coach_archived_none": {"message": "アーカイブした会話はありません。"},
   "coach_archive_error": {"message": "完了できませんでした。もう一度お試しください。"},
   "taf_remove": {"message": "このtafを削除"},

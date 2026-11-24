@@ -81,7 +81,7 @@
   "coach_unarchive": { "message": "Put back", "description": "Beside an archived conversation: returns it to the list." },
   "coach_unarchive_named": { "message": "Put “$TITLE$” back", "description": "Accessible name of an archived conversation's Put back button.", "placeholders": { "title": { "content": "$1" } } },
   "coach_archived": { "message": "Archived", "description": "The list of conversations with Coach the person archived." },
-  "coach_archived_body": { "message": "Archived conversations are kept 30 days, then deleted.", "description": "Under Archived: what happens to an archived conversation, as the privacy page says." },
+  "coach_archived_body": { "message": "Each message is kept 30 days from when it was written, archived or not.", "description": "Under Archived: how long its messages are kept, as the privacy page says: 30 days from each message, archived or not." },
   "coach_archived_none": { "message": "No archived conversations." },
   "coach_archive_error": { "message": "That didn't go through. Try again.", "description": "Archive or Put back failed." },
   "taf_remove": { "message": "Remove this taf", "description": "Under a taf's chat: shows where a taf is removed (on the phone)." },

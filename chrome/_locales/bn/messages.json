@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "ফিরিয়ে আনুন"},
   "coach_unarchive_named": {"message": "“$TITLE$” ফিরিয়ে আনুন", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "আর্কাইভ করা"},
-  "coach_archived_body": {"message": "আর্কাইভ করা কথোপকথন 30 দিন রাখা হয়, তারপর মুছে ফেলা হয়।"},
+  "coach_archived_body": {"message": "প্রতিটি বার্তা লেখার সময় থেকে 30 দিন রাখা হয়, আর্কাইভ করা হোক বা না হোক।"},
   "coach_archived_none": {"message": "কোনো আর্কাইভ করা কথোপকথন নেই।"},
   "coach_archive_error": {"message": "হয়নি। আবার চেষ্টা করুন।"},
   "taf_remove": {"message": "এই taf সরান"},

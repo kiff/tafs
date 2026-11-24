@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Ripristina"},
   "coach_unarchive_named": {"message": "Ripristina «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Archiviate"},
-  "coach_archived_body": {"message": "Le conversazioni archiviate vengono conservate 30 giorni, poi eliminate."},
+  "coach_archived_body": {"message": "Ogni messaggio viene conservato 30 giorni da quando è stato scritto, archiviato o no."},
   "coach_archived_none": {"message": "Nessuna conversazione archiviata."},
   "coach_archive_error": {"message": "Non è andato a buon fine. Riprova."},
   "taf_remove": {"message": "Rimuovi questo taf"},

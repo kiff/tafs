@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "إعادة"},
   "coach_unarchive_named": {"message": "إعادة «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "المؤرشفة"},
-  "coach_archived_body": {"message": "تُحفظ المحادثات المؤرشفة 30 يومًا، ثم تُحذف."},
+  "coach_archived_body": {"message": "تُحفظ كل رسالة 30 يومًا من وقت كتابتها، سواء أُرشفت أم لا."},
   "coach_archived_none": {"message": "لا توجد محادثات مؤرشفة."},
   "coach_archive_error": {"message": "لم يتم ذلك. حاول مرة أخرى."},
   "taf_remove": {"message": "إزالة هذا الـ taf"},

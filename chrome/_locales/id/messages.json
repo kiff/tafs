@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Kembalikan"},
   "coach_unarchive_named": {"message": "Kembalikan “$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Diarsipkan"},
-  "coach_archived_body": {"message": "Percakapan yang diarsipkan disimpan 30 hari, lalu dihapus."},
+  "coach_archived_body": {"message": "Setiap pesan disimpan 30 hari sejak ditulis, diarsipkan atau tidak."},
   "coach_archived_none": {"message": "Tidak ada percakapan yang diarsipkan."},
   "coach_archive_error": {"message": "Tidak berhasil. Coba lagi."},
   "taf_remove": {"message": "Hapus taf ini"},

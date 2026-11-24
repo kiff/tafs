@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Буцаах"},
   "coach_unarchive_named": {"message": "“$TITLE$”-ийг буцаах", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Архивласан"},
-  "coach_archived_body": {"message": "Архивласан яриаг 30 хоног хадгалаад дараа нь устгана."},
+  "coach_archived_body": {"message": "Мессеж бүрийг архивласан эсэхээс үл хамааран бичсэнээс хойш 30 хоног хадгална."},
   "coach_archived_none": {"message": "Архивласан яриа алга."},
   "coach_archive_error": {"message": "Болсонгүй. Дахин оролдоно уу."},
   "taf_remove": {"message": "Энэ taf-ыг хасах"},

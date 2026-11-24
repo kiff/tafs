@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "החזרה"},
   "coach_unarchive_named": {"message": "החזרת „$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "בארכיון"},
-  "coach_archived_body": {"message": "שיחות בארכיון נשמרות 30 יום ואז נמחקות."},
+  "coach_archived_body": {"message": "כל הודעה נשמרת 30 יום מרגע כתיבתה, בארכיון או לא."},
   "coach_archived_none": {"message": "אין שיחות בארכיון."},
   "coach_archive_error": {"message": "זה לא הצליח. נסה שוב."},
   "taf_remove": {"message": "הסרת ה-taf הזה"},

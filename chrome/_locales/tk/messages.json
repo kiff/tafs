@@ -258,7 +258,7 @@
   "coach_unarchive": {"message": "Yzyna getir"},
   "coach_unarchive_named": {"message": "“$TITLE$” yzyna getir", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Arhiwlenen"},
-  "coach_archived_body": {"message": "Arhiwlenen gürrüňler 30 gün saklanýar, soň pozulýar."},
+  "coach_archived_body": {"message": "Her habar ýazylan wagtyndan 30 gün saklanýar, arhiwlenen bolsun ýa-da bolmasyn."},
   "coach_archived_none": {"message": "Arhiwlenen gürrüň ýok."},
   "coach_archive_error": {"message": "Başartmady. Gaýtadan synanyşyň."},
   "taf_remove": {"message": "Bu taf-y aýyryň"},

@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Atjaunot"},
   "coach_unarchive_named": {"message": "Atjaunot “$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Arhivētās"},
-  "coach_archived_body": {"message": "Arhivētās sarunas glabā 30 dienas, tad tās izdzēš."},
+  "coach_archived_body": {"message": "Katru ziņu glabā 30 dienas no tās uzrakstīšanas, arhivētu vai ne."},
   "coach_archived_none": {"message": "Nav arhivētu sarunu."},
   "coach_archive_error": {"message": "Neizdevās. Pamēģini vēlreiz."},
   "taf_remove": {"message": "Noņemt šo taf"},

@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Врати"},
   "coach_unarchive_named": {"message": "Врати „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Архивирани"},
-  "coach_archived_body": {"message": "Архивираните разговори се чуваат 30 дена, а потоа се бришат."},
+  "coach_archived_body": {"message": "Секоја порака се чува 30 дена од кога е напишана, архивирана или не."},
   "coach_archived_none": {"message": "Нема архивирани разговори."},
   "coach_archive_error": {"message": "Не успеа. Обидете се повторно."},
   "taf_remove": {"message": "Отстрани го овој taf"},
