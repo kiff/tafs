@@ -1,0 +1,1 @@
+- **iPhone and iPad: signing out tries harder to stop the account's alerts.** If taking this device's alerts back from tafs cloud fails, it's tried twice more; if it still fails, the signed-out screen says the device may still get that account's alerts, and how to stop them ([accounts.md](docs/accounts.md)).
