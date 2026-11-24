@@ -233,7 +233,9 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 
 ## One layout on every app
 
-On a wide window, every app draws a page the same way. This holds for the iPad, the Mac, Windows, Linux and an Android tablet.
+The rule: on a wide window, every app draws a page the same way: the iPad, the Mac, Windows, Linux and an Android tablet. The widths are the iPad's and the Mac's caps as they stood, now centred.
+
+Where each app stands: macOS 12 (tafs-macos#264), Linux (tafs-linux#136) and the iPhone, iPad and Mac 13+ (tafs#2009) are in review; Windows and Android aren't started.
 
 - **A centred column, capped.** Each page is one column, centred in the window, at most:
   - 720 points for reading pages: Account, Devices, People, Alerts, Chrome, Needs you, Connect apps, Plan & usage;
