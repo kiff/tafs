@@ -718,7 +718,9 @@ The side panel is for watching a taf work and talking to it ([chrome-panel.md](c
 one job each** (0.2.8, `sidepanel/panel.js` `showView`): the taf's chat, Coach's chat, Coach's conversations, or Settings;
 the runs (Pause, Resume, Stop, a hand-over) stay below whichever is on show. The **⋮ menu**, top right once paired, holds
 **Set up a new taf for this site** (Coach in a view of its own, on a fresh conversation; **← Back** returns to the taf),
-**Previous conversations** and **Settings**. **Settings** holds Coach's page reading (its state, the page consent's screen,
+**Previous conversations** and **Settings**. **Each chat's composer is the app's** (`form.composer`): the words in a
+rounded box with Send inside it on the right, a round ↑ named "Send"; Enter sends and Shift+Enter is a new line (never
+mid-composition in an input method); Coach's "Send without the page" is a small action under it. **Settings** holds Coach's page reading (its state, the page consent's screen,
 Stop reading pages) and **Unpair this Chrome**; the chat screens hold only the chat.
 **Remove this taf** says it's removed on the phone: tafs cloud takes a removal only signed by the phone's approval key or a
 computer's passkey, which this Chrome has neither of.
