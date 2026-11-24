@@ -17,8 +17,10 @@ import bot.tafs.app.model.Words
 import bot.tafs.app.views.LinkConfirm
 import bot.tafs.app.views.LocalAskLink
 import bot.tafs.app.views.PageTurnText
+import bot.tafs.app.views.linkAsks
 import bot.tafs.app.views.linkConfirmBody
 import bot.tafs.app.views.linkOpens
+import bot.tafs.app.views.linkQuestionBody
 import org.junit.Assert.assertFalse
 import org.robolectric.RuntimeEnvironment
 import org.junit.Assert.assertEquals
@@ -40,7 +42,7 @@ class LinkConfirmTest {
   @get:Rule val compose = createComposeRule()
 
   private val opened = mutableListOf<String>()
-  private var ask: ((String) -> Unit)? = null
+  private var ask: ((String, Boolean) -> Unit)? = null
   private var live by mutableStateOf(true)
   private val address = "https://shop.example/a/very/long/path?q=1"
 
@@ -64,7 +66,7 @@ class LinkConfirmTest {
 
   @Test fun itShowsTheWholeAddressAndCancelOpensNothing() {
     chat()
-    compose.runOnIdle { ask!!(address) }
+    compose.runOnIdle { ask!!(address, true) }
     compose.onNodeWithText(Words.Chat.linkConfirmTitle).assertExists()
     assertTrue(compose.onNodeWithTag("link-confirm-body").fetchSemanticsNode().config.toString().contains(address))
     compose.onNodeWithText(Words.Common.cancel).performClick()
@@ -74,7 +76,7 @@ class LinkConfirmTest {
 
   @Test fun itStaysUpWhenTheAnswerFinishesAndOpenOpensIt() {
     chat()
-    compose.runOnIdle { ask!!(address) }
+    compose.runOnIdle { ask!!(address, true) }
     compose.onNodeWithText(Words.Chat.linkConfirmTitle).assertExists()
     live = false
     compose.waitForIdle()
@@ -93,11 +95,11 @@ class LinkConfirmTest {
       "bank://pay?to=1", "javascript:alert(1)", "https:///nohost", "https://shop.example/\u202Egnp.exe", "https://shop.example/a b", "not a url",
     )) assertFalse(url, linkOpens(url))
     chat()
-    compose.runOnIdle { ask!!("tel:+15550100") }
-    compose.onNodeWithText(Words.Chat.linkConfirmTitle).assertExists()
+    compose.runOnIdle { ask!!("tel:+15550100", false) }
+    compose.onNodeWithText(Words.Chat.linkBlockedTitle).assertExists()
     compose.onNodeWithText(Words.Chat.linkConfirmOpen).assertDoesNotExist()
     compose.onNodeWithText(Words.Common.cancel).performClick()
-    compose.onNodeWithText(Words.Chat.linkConfirmTitle).assertDoesNotExist()
+    compose.onNodeWithText(Words.Chat.linkBlockedTitle).assertDoesNotExist()
     assertEquals(emptyList<String>(), opened)
   }
 
@@ -110,5 +112,28 @@ class LinkConfirmTest {
     assertTrue("in the Arabic words", body.any { it in '\u0600'..'\u06FF' })
     // A direction character in the address can't close the isolate early.
     assertFalse(linkConfirmBody("https://a.example/\u2069\u202Ex").contains("\u202E"))
+  }
+
+  /** In any answer, a link that isn't plain https asks (with no Open); a plain https link opens on the tap unless it's a page turn's. */
+  @Test fun aChatLinkThatIsntHttpsAsksInEveryAnswer() {
+    assertFalse(linkAsks("https://shop.example/a", pageTurn = false))
+    assertTrue(linkAsks("https://shop.example/a", pageTurn = true))
+    for (url in listOf("tel:+15550100", "bank://pay?to=1", "http://shop.example/", "intent://x#Intent;end", "https://shop.example/a b")) {
+      assertTrue(url, linkAsks(url, pageTurn = false))
+    }
+  }
+
+  /** Each question says what's true of its link: won't open, from an answer still coming, or from a page Coach read. */
+  @Test fun eachQuestionSaysWhereItsLinkCameFrom() {
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    val iso = { u: String -> "\u2066" + u + "\u2069" }
+    assertEquals(Words.Chat.linkBlockedBody(iso("tel:+15550100")), linkQuestionBody("tel:+15550100", live = false))
+    assertEquals(Words.Chat.linkBlockedBody(iso("tel:+15550100")), linkQuestionBody("tel:+15550100", live = true))
+    assertEquals(Words.Chat.linkConfirmBodyLive(iso(address)), linkQuestionBody(address, live = true))
+    assertEquals(Words.Chat.linkConfirmBody(iso(address)), linkQuestionBody(address, live = false))
+    chat()
+    compose.runOnIdle { ask!!("tel:+15550100", false) }
+    compose.onNodeWithText(Words.Chat.linkBlockedTitle).assertExists()
+    compose.onNodeWithText(Words.Chat.linkConfirmOpen).assertDoesNotExist()
   }
 }
