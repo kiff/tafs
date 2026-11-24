@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "taf 要在手機上移除：在 tafs 應用程式中開啟它，然後點「移除」。移除會在那裡核准。"},
   "bar_go": {"message": "前往它的分頁"},
   "bar_paused": {"message": "$TAF$ 已暫停", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ 已完成", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ 已完成", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "傳送時 Coach 會讀取這個頁面：$HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "讀取：$HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "不在這個網站讀取"},
+  "aside_on": {"message": "讀取這個網站"},
+  "aside_off_line": {"message": "Coach 不會讀取 $HOST$：您已關閉", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach 不會讀取 $HOST$：這是銀行、付款、郵件或健康網站", "placeholders": {"host": {"content": "$1"}}}
 }

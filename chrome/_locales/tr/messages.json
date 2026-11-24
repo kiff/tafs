@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Bir taf telefonunuzda kaldırılır: tafs uygulamasında açın, sonra Kaldır. Kaldırma orada onaylanır."},
   "bar_go": {"message": "Sekmesine git"},
   "bar_paused": {"message": "$TAF$ duraklatıldı", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ bitirdi", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ bitirdi", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Gönderdiğinizde Coach bu sayfayı okur: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Okunuyor: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Bu sitede değil"},
+  "aside_on": {"message": "Bu siteyi oku"},
+  "aside_off_line": {"message": "Coach $HOST$ sitesini okumaz: siz kapattınız", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach $HOST$ sitesini okumaz: banka, ödeme, e-posta veya sağlık sitesi", "placeholders": {"host": {"content": "$1"}}}
 }

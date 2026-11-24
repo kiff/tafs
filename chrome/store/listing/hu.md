@@ -11,7 +11,7 @@ Hagyd, hogy a tafjaid a saját Chrome-odban dolgozzanak, csak engedélyezett old
 A tafs Chrome-hoz azt teszi lehetővé, hogy a tafjaid a saját Chrome-odban dolgozzanak, csak azokon az oldalakon, amelyeket engedélyezel. Minden kockázatos lépés a telefonodon várja a jóváhagyásodat.
 
 • Párosítsd ezt a Chrome-ot a telefonoddal: a tafs alkalmazásban nyisd meg ezt: Fiók › Chrome › Chrome párosítása, és írd be a megjelenő kódot.
-• A taf saját lapokon dolgozik, egy általad látható laprészlegben. Bármikor szüneteltetheted vagy leállíthatod, és szünetel, ha megérintesz egy lapját.
+• A taf saját lapokon dolgozik, egy általad látható laprészlegben. Bármikor szüneteltetheted vagy leállíthatod, és szünetel, ha megérintesz egy lapját. Munka közben minden ablak elöl lévő oldalán egy kis sáv segítségével szüneteltetheted, leállíthatod vagy a lapjára ugorhatsz. A sáv semmit sem olvas arról az oldalról.
 • A Chrome telepítéskor egyszer kér hozzáférést az összes webhelyhez. A tafs csak azokon a webhelyeken dolgozik, amelyeket az egyes feladatok megneveznek, és amelyeket te jóváhagysz a telefonodon.
 • A fizetés és a rendelés leadása mindig a telefonodon várja a jóváhagyásodat.
 • Az oldalt szövegként és űrlapmezőkként olvassa, a jelszó-, kártya- és kódmezők nélkül. Soha nem olvassa a többi lapodat vagy az előzményeidet.

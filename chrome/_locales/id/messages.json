@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Taf dihapus di ponsel Anda: buka di aplikasi tafs, lalu Hapus. Penghapusannya disetujui di sana."},
   "bar_go": {"message": "Buka tabnya"},
   "bar_paused": {"message": "$TAF$ sedang dijeda", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ sudah selesai", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ sudah selesai", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach membaca halaman ini saat Anda mengirim: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Membaca: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Jangan di situs ini"},
+  "aside_on": {"message": "Baca situs ini"},
+  "aside_off_line": {"message": "Coach tidak membaca $HOST$: Anda mematikannya", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach tidak membaca $HOST$: situs bank, pembayaran, email, atau kesehatan", "placeholders": {"host": {"content": "$1"}}}
 }

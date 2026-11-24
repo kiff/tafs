@@ -51,7 +51,7 @@ final class TafPageModelTests: XCTestCase {
         let model = TafPageModel(taf: rae, phone: Phone(WatchReply(.ok, tafPage: page("depl_2", name: "Ivo"))), clock: { self.now },
                                  lock: Unlocked())
         await model.load()
-        XCTAssertEqual(model.state, .failed(Words.Alert.tafsCouldNotReachKiff))
+        XCTAssertEqual(model.state, .failed(Words.Watch.phoneCouldNotReachCloud))
         XCTAssertEqual(model.name, "Rae")
     }
 

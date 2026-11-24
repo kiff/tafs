@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "taf는 휴대폰에서 삭제합니다. tafs 앱에서 열고 삭제를 누르세요. 삭제 승인도 거기서 합니다."},
   "bar_go": {"message": "해당 탭으로 이동"},
   "bar_paused": {"message": "$TAF$ 일시 중지됨", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ 작업 완료", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ 작업 완료", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "보내면 Coach가 이 페이지를 읽습니다: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "읽음: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "이 사이트에서는 안 함"},
+  "aside_on": {"message": "이 사이트 읽기"},
+  "aside_off_line": {"message": "Coach가 $HOST$을(를) 읽지 않습니다: 꺼 두셨습니다", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach가 $HOST$을(를) 읽지 않습니다: 은행, 결제, 메일 또는 건강 사이트입니다", "placeholders": {"host": {"content": "$1"}}}
 }

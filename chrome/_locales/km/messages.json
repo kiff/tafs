@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "taf ត្រូវដកចេញនៅលើទូរសព្ទរបស់អ្នក៖ បើកវានៅក្នុងកម្មវិធី tafs រួចចុច ដកចេញ។ ការដកចេញត្រូវយល់ព្រមនៅទីនោះ។"},
   "bar_go": {"message": "ទៅកាន់ផ្ទាំងរបស់វា"},
   "bar_paused": {"message": "$TAF$ បានផ្អាក", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ បានបញ្ចប់", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ បានបញ្ចប់", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach អានទំព័រនេះពេលអ្នកផ្ញើ៖ $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "កំពុងអាន៖ $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "មិនមែននៅលើគេហទំព័រនេះ"},
+  "aside_on": {"message": "អានគេហទំព័រនេះ"},
+  "aside_off_line": {"message": "Coach មិនអាន $HOST$ ទេ៖ អ្នកបានបិទវា", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach មិនអាន $HOST$ ទេ៖ ជាគេហទំព័រធនាគារ ការទូទាត់ សំបុត្រ ឬសុខភាព", "placeholders": {"host": {"content": "$1"}}}
 }

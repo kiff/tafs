@@ -11,7 +11,7 @@ Laat je tafs werken in je eigen Chrome, alleen op de sites die je toestaat, met 
 tafs voor Chrome laat je tafs werken in je eigen Chrome, alleen op de sites die je toestaat. Elke riskante stap wacht op je goedkeuring op je telefoon.
 
 • Koppel deze Chrome aan je telefoon: open in de tafs-app Account › Chrome › Een Chrome koppelen en typ de getoonde code.
-• Een taf werkt in eigen tabbladen, in een tabbladgroep die je kunt zien. Je kunt hem altijd pauzeren of stoppen, en hij pauzeert als je een van zijn tabbladen aanraakt.
+• Een taf werkt in eigen tabbladen, in een tabbladgroep die je kunt zien. Je kunt hem altijd pauzeren of stoppen, en hij pauzeert als je een van zijn tabbladen aanraakt. Terwijl hij werkt, kun je hem met een kleine balk op de voorste pagina van elk venster pauzeren, stoppen of naar zijn tabblad gaan. Die balk leest niets van die pagina.
 • Chrome vraagt bij de installatie één keer om toegang tot alle sites. tafs werkt alleen op de sites die elke taak noemt, en die jij goedkeurt op je telefoon.
 • Betalen en een bestelling plaatsen wachten altijd op je goedkeuring op je telefoon.
 • Het leest een pagina als tekst en formuliervelden, zonder wachtwoord-, kaart- en codevelden. Het leest nooit je andere tabbladen of je geschiedenis.

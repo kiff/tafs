@@ -319,6 +319,15 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-mission-create", actions: ["mission_create"], limit: 0, asks: true },
 ];
 
+/**
+ * The only tools Coach has in a turn that reads the page the person has open (docs/chat.md, "Coach reads the page
+ * you're on"): kiff/agents offers that turn these alone (`aside_tools`). A page can steer a call as any input can, so
+ * a page turn reads the person's own tafs and their skills, and nothing else: no `web_read` (a page's words could
+ * send what it holds to a host they name), no `taf_task` (a taf has tools of its own), and nothing that drafts,
+ * changes or drives. The chat's next message without a page has all of Coach's tools again.
+ */
+export const PAGE_TOOLS = ["tafs_state", "taf_run", "taf_check", "taf_estimate", "read_skill"] as const;
+
 /** Coach's tools in the four groups the tools step shows, in TOOLS' order within each. */
 export const COACH_TOOL_GROUPS: Array<{ id: "watch" | "run" | "build" | "drive"; tools: string[] }> = [
   { id: "watch", tools: ["tafs_state", "taf_run", "taf_check"] },

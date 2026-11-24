@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "taf ຖືກເອົາອອກໃນໂທລະສັບຂອງທ່ານ: ເປີດມັນໃນແອັບ tafs, ແລ້ວ ເອົາອອກ. ການເອົາອອກຖືກອະນຸມັດຢູ່ທີ່ນັ້ນ."},
   "bar_go": {"message": "ໄປທີ່ແທັບຂອງມັນ"},
   "bar_paused": {"message": "$TAF$ ຢຸດຊົ່ວຄາວແລ້ວ", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ ເຮັດແລ້ວ", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ ເຮັດແລ້ວ", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach ອ່ານໜ້ານີ້ເມື່ອທ່ານສົ່ງ: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "ກຳລັງອ່ານ: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "ບໍ່ແມ່ນໃນເວັບໄຊນີ້"},
+  "aside_on": {"message": "ອ່ານເວັບໄຊນີ້"},
+  "aside_off_line": {"message": "Coach ບໍ່ອ່ານ $HOST$: ທ່ານປິດມັນແລ້ວ", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach ບໍ່ອ່ານ $HOST$: ເປັນເວັບໄຊທະນາຄານ, ການຈ່າຍເງິນ, ອີເມວ ຫຼື ສຸຂະພາບ", "placeholders": {"host": {"content": "$1"}}}
 }

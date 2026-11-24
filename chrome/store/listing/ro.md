@@ -11,7 +11,7 @@ Lăsați tafs-urile să lucreze în Chrome-ul dvs., doar pe site-urile permise. 
 tafs pentru Chrome lasă tafs-urile dvs. să lucreze în propriul Chrome, doar pe site-urile pe care le permiteți. Fiecare pas riscant așteaptă aprobarea dvs. pe telefon.
 
 • Asociați acest Chrome cu telefonul: în aplicația tafs deschideți Cont › Chrome › Asociați un Chrome și introduceți codul afișat.
-• Un taf lucrează în filele sale, într-un grup de file pe care îl vedeți. Îl puteți pune oricând în pauză sau opri, și se oprește singur când atingeți una dintre filele lui.
+• Un taf lucrează în filele sale, într-un grup de file pe care îl vedeți. Îl puteți pune oricând în pauză sau opri, și se oprește singur când atingeți una dintre filele lui. Cât lucrează, o bară mică pe pagina din față a fiecărei ferestre vă permite să-l puneți în pauză, să-l opriți sau să mergeți la fila lui. Nu citește nimic din acea pagină.
 • Chrome cere o singură dată, la instalare, acces la toate site-urile. tafs lucrează doar pe site-urile pe care le indică fiecare sarcină și pe care le aprobați pe telefon.
 • Plata și plasarea unei comenzi așteaptă întotdeauna aprobarea dvs. pe telefon.
 • Citește o pagină ca text și câmpuri de formular, fără câmpurile de parolă, card și cod. Nu citește niciodată celelalte file sau istoricul dvs..

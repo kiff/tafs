@@ -54,13 +54,13 @@ final class NeedsYouModel: ObservableObject {
         }
         switch reply.outcome {
         case .ok:
-            if let needsYou = reply.needsYou { state = .loaded(needsYou) } else { state = .failed(Words.Alert.tafsCouldNotReachKiff) }
+            if let needsYou = reply.needsYou { state = .loaded(needsYou) } else { state = .failed(Words.Watch.phoneCouldNotReachCloud) }
             if briefOn, case .loaded = state { await loadBrief() }
         case .signedOut:
             state = .signedOut
             brief = nil
         case .failed:
-            state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
+            state = .failed(reply.line ?? Words.Watch.phoneCouldNotReachCloud)
         case .refused, .stale, .notYet, .answered:
             // The phone dropped it, is an older version, or answered as if to a Refuse: ask again
             // from the screen.
@@ -104,7 +104,8 @@ final class NeedsYouModel: ObservableObject {
         answers[hold] = .sending
         let reached = await phone.reach(WatchRequest(.refuse, made: clock(), hold: hold))
         if reached.reply?.outcome == .signedOut { state = .signedOut; answers = [:]; return }
-        answers[hold] = WatchAnswer.from(reached, notDone: Words.Alert.notRefused)
+        // A refusal goes to KIFF: a failure the phone gives no words for says so.
+        answers[hold] = WatchAnswer.from(reached, notDone: Words.Alert.notRefused, unreached: Words.Alert.tafsCouldNotReachKiff)
     }
 
     /// The app left the screen: what was read goes.

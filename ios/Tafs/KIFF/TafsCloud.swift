@@ -536,11 +536,35 @@ final class TafsCloud {
     /// with a bar at `meter_pct`, and offers Raise the limit and buying only where tafs cloud
     /// says so. Lenient: a field it can't read is left out, never the read.
     struct Balance: Decodable, Equatable {
-        /// Raise the limit, as offered: its words, and the limit now, which the raise sends back.
+        /// Raise the limit, as offered: its words, and the limit now, which the raise sends back, in `currency`'s
+        /// smallest unit.
         struct Offer: Decodable, Equatable {
             let words: String
             var fromCents: Int? = nil
-            enum CodingKeys: String, CodingKey { case words, fromCents = "from_cents" }
+            /// The limit's currency (ISO 4217), which tafs cloud words every amount in. None from a tafs cloud before it:
+            /// the limit now isn't shown, never in a currency the app assumes.
+            var currency: String? = nil
+            enum CodingKeys: String, CodingKey { case words, fromCents = "from_cents", currency }
+
+            /// The limit now, formatted by the app in its own language: none without both the figure and a currency.
+            var limitNow: Money? {
+                guard let fromCents, fromCents >= 0, let currency,
+                      currency.range(of: #"^[A-Z]{3}$"#, options: .regularExpression) != nil else { return nil }
+                return Money(minor: Int64(fromCents), currency: currency, scale: Self.minorDigits(currency))
+            }
+
+            /// How many digits a currency's smallest unit has (2 for EUR, 0 for JPY), as the system knows it.
+            static func minorDigits(_ currency: String) -> Int {
+                let f = NumberFormatter()
+                f.numberStyle = .currency
+                f.currencyCode = currency
+                return f.maximumFractionDigits
+            }
+
+            /// "The spend limit is €1,200.00 now.", when tafs cloud names the currency.
+            var limitNowLine: String? {
+                limitNow.map { Words.Usage.RaiseLimit.from(amount: $0.figure) }
+            }
         }
         /// What the store may sell this person now: Solo, on an account with no plan billed,
         /// and packs of credits while Solo runs.

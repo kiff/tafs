@@ -11,7 +11,7 @@ Lini tafs tuaj të punojnë në Chrome-in tuaj, vetëm në faqet që lejoni. Çd
 tafs për Chrome i lë tafs tuaj të punojnë në Chrome-in tuaj, vetëm në faqet që lejoni. Çdo hap i rrezikshëm pret miratimin tuaj në telefon.
 
 • Çiftoni këtë Chrome me telefonin: në aplikacionin tafs hapni Llogaria › Chrome › Çiftoni një Chrome dhe shkruani kodin e shfaqur.
-• Një taf punon në skedat e veta, në një grup skedash që e shihni. Mund ta ndaloni përkohësisht ose ta ndaloni kurdo, dhe ndalon përkohësisht kur prekni një nga skedat e tij.
+• Një taf punon në skedat e veta, në një grup skedash që e shihni. Mund ta ndaloni përkohësisht ose ta ndaloni kurdo, dhe ndalon përkohësisht kur prekni një nga skedat e tij. Ndërsa punon, një shirit i vogël në faqen përpara në çdo dritare ju lejon ta ndaloni përkohësisht, ta ndaloni ose të shkoni te skeda e tij. Nuk lexon asgjë nga ajo faqe.
 • Chrome kërkon një herë, gjatë instalimit, qasje në të gjitha faqet. tafs punon vetëm në faqet që rendit çdo detyrë dhe që ju i miratoni në telefon.
 • Pagesa dhe bërja e një porosie presin gjithmonë miratimin tuaj në telefon.
 • Ai e lexon një faqe si tekst dhe fusha formulari, pa fushat e fjalëkalimit, kartës dhe kodit. Nuk i lexon kurrë skedat e tjera ose historikun tuaj.

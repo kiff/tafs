@@ -347,10 +347,17 @@ export function tafCreditsView(k: KIFFCredits, page: KIFFRuns, taf: CreditsTaf, 
   };
 }
 
+/**
+ * The currency KIFF's account amounts are in (its `limit_cents`, `raise_to_cents`, a pack's price): ISO 4217. Every figure
+ * tafs cloud words is formatted in it, and the raise offer names it beside `from_cents`, so an app formats the amount it
+ * signs in the same unit, never one it guessed.
+ */
+export const ACCOUNT_CURRENCY = "EUR";
+
 /** Euro cents as the apps show them: "€12", or "€12.34". */
 function euros(cents: number, lang: Lang = "en"): string {
   const whole = cents % 100 === 0;
-  return new Intl.NumberFormat(locale(lang), { style: "currency", currency: "EUR", minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: 2 })
+  return new Intl.NumberFormat(locale(lang), { style: "currency", currency: ACCOUNT_CURRENCY, minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: 2 })
     .format(cents / 100);
 }
 
@@ -370,7 +377,11 @@ export interface BalanceView {
     words: string;
     detail: string | null;
     warning: string | null;
-    raise: { words: string; from_cents: number } | null;
+    /**
+     * Raise the limit, offered: its words, the limit now that the raise signs (`from_cents`, in the currency's smallest
+     * unit), and that currency (ISO 4217), for the app to format `from_cents` itself.
+     */
+    raise: { words: string; from_cents: number; currency: string } | null;
     /**
      * What the app may offer this person in the store. `first_month` is the First month pack, offered
      * only while Solo runs, among the packs: `{ready: true, words: null}`. `coach` says what Coach's
@@ -425,7 +436,7 @@ export function balanceView(b: KIFFBalance, lang: Lang = "en", ranLately = true)
   const p = w.cr_pct(pct ?? 0);
   const waiting = b.state === "waiting";
   const raise = b.kind === "company" && b.can_raise && b.raise_to_cents > 0
-    ? { words: w.cr_raise_to(eur(b.raise_to_cents)), from_cents: b.limit_cents } : null;
+    ? { words: w.cr_raise_to(eur(b.raise_to_cents)), from_cents: b.limit_cents, currency: ACCOUNT_CURRENCY } : null;
   // The First month pack is bought once Solo runs, like any pack, and shown only then, among the
   // packs: before a plan, a lone pack that can't be bought only reads as an upsell.
   const firstMonth = b.can_buy?.once === true && b.kind === "solo" && b.can_buy.packs === true ? { ready: true, words: null } : null;

@@ -11,7 +11,7 @@ tafs-laryňyz öz Chrome-ňyzda diňe rugsat beren sahypalaryňyzda işlesin, he
 Chrome üçin tafs, tafs-laryňyzyň öz Chrome-ňyzda diňe rugsat beren sahypalaryňyzda işlemegine mümkinçilik berýär. Her howply ädim telefonyňyzda tassyklamagyňyzy garaşýar.
 
 • Bu Chrome-y telefonyňyza goşalaň: tafs programmasynda Hasap › Chrome › Chrome goşalaň bölümini açyň we görkezilen kody ýazyň.
-• Taf öz goýmalarynda, görüp boljak goýma toparynda işleýär. Ony islendik wagt bes edip ýa-da duruzyp bilersiňiz, we goýmalarynyň birine el degirseňiz, ol bes edilýär.
+• Taf öz goýmalarynda, görüp boljak goýma toparynda işleýär. Ony islendik wagt bes edip ýa-da duruzyp bilersiňiz, we goýmalarynyň birine el degirseňiz, ol bes edilýär. Ol işleýän wagty, her penjiräniň öňündäki sahypada kiçi zolak ony bes etmäge, duruzmaga ýa-da onuň goýmasyna geçmäge mümkinçilik berýär. Ol şol sahypadan hiç zat okamaýar.
 • Chrome guranyňyzda bir gezek ähli sahypalara girişi soraýar. tafs diňe her tabşyrygyň sanawlaýan sahypalarynda işleýär, olary telefonyňyzda tassyklaýarsyňyz.
 • Töleg etmek we sargyt bermek elmydama telefonyňyzdaky tassyklamaňyzy garaşýar.
 • Ol sahypany tekst we forma meýdanlary hökmünde okaýar, parol, kart we kod meýdanlary aýrylyp. Beýleki goýmalaryňyzy ýa-da taryhyňyzy hiç haçan okamaýar.

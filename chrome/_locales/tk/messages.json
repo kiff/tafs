@@ -264,5 +264,11 @@
   "taf_remove_on_phone": {"message": "Taf telefonyňyzda aýrylýar: ony tafs programmasynda açyň, soň Aýyryň. Aýyrmak şol ýerde tassyklanýar."},
   "bar_go": {"message": "Onuň goýmasyna geç"},
   "bar_paused": {"message": "$TAF$ bes edildi", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ tamamlady", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ tamamlady", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Iberseňiz, Coach bu sahypany okaýar: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Okalýar: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Bu saýtda däl"},
+  "aside_on": {"message": "Bu saýty oka"},
+  "aside_off_line": {"message": "Coach $HOST$ saýtyny okamaýar: siz öçürdiňiz", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach $HOST$ saýtyny okamaýar: bank, töleg, poçta ýa-da saglyk saýty", "placeholders": {"host": {"content": "$1"}}}
 }

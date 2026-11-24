@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Un taf es treu al telèfon: obre'l a l'app tafs i toca Treu. Allà s'aprova que es tregui."},
   "bar_go": {"message": "Ves a la seva pestanya"},
   "bar_paused": {"message": "$TAF$ està en pausa", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ ha acabat", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ ha acabat", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach llegeix aquesta pàgina quan envies: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Llegint: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "No en aquest lloc"},
+  "aside_on": {"message": "Llegeix aquest lloc"},
+  "aside_off_line": {"message": "Coach no llegeix $HOST$: ho has desactivat", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach no llegeix $HOST$: és un lloc de banc, pagaments, correu o salut", "placeholders": {"host": {"content": "$1"}}}
 }

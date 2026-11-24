@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Taf se odstrani v telefonu: odprite ga v aplikaciji tafs, nato Odstrani. Odstranitev se odobri tam."},
   "bar_go": {"message": "Pojdi na njegov zavihek"},
   "bar_paused": {"message": "$TAF$ je začasno ustavljen", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ je končal", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ je končal", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach prebere to stran, ko pošljete: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Bere: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Ne na tem spletnem mestu"},
+  "aside_on": {"message": "Beri to spletno mesto"},
+  "aside_off_line": {"message": "Coach ne bere $HOST$: izklopili ste ga", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach ne bere $HOST$: spletno mesto banke, plačil, pošte ali zdravja", "placeholders": {"host": {"content": "$1"}}}
 }
