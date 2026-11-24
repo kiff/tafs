@@ -1351,6 +1351,9 @@ final class KIFFClient {
 
         /// A Card's terms alone: what `current` holds.
         struct Terms: Decodable, Equatable {
+            /// The Card in force's own id, when KIFF names it: it must be the Card the draft `revises`
+            /// (`HoldAllow.matches`). None from a KIFF that doesn't send it, checked as before.
+            var id: String?
             let grants: [Grant]?
             let aggregates: [Aggregate]?
             var onExceed: String?
@@ -1364,7 +1367,7 @@ final class KIFFClient {
             var validFrom: String?
             var validUntil: String?
             enum CodingKeys: String, CodingKey {
-                case grants, aggregates, onExceed = "on_exceed", kiffLines = "lines"
+                case id, grants, aggregates, onExceed = "on_exceed", kiffLines = "lines"
                 case subject, subjects, domain, environment, location, validFrom = "valid_from", validUntil = "valid_until"
             }
             var lines: [String] { DraftCard(grants: grants, aggregates: aggregates, onExceed: onExceed, kiffLines: kiffLines).lines }
