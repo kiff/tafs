@@ -1,0 +1,1 @@
+- **Chrome: a taf's tab group says it's done in your language** ("tafs · Rae is done"), as it says the taf is working. ([chrome.md](docs/chrome.md))

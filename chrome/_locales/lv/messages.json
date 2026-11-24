@@ -80,7 +80,6 @@
   "step_handed": {"message": "Nodots tev", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Tu to izdarīji", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Tu teici “Ne tagad”", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ strādā šajā lapā", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Strādā šajā Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Pāriet uz $TAF$ cilni", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Atpakaļ"},
@@ -95,5 +94,6 @@
   "taf_remove": {"message": "Noņemt šo taf"},
   "taf_remove_on_phone": {"message": "Taf noņem tālrunī: atver to tafs lietotnē, tad Noņemt. Noņemšanu apstiprina tur."},
   "bar_go": {"message": "Pāriet uz tā cilni"},
-  "bar_paused": {"message": "$TAF$ ir iepauzēts", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ ir iepauzēts", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ ir pabeidzis", "placeholders": {"taf": {"content": "$1"}}}
 }

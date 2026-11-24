@@ -80,7 +80,6 @@
   "step_handed": {"message": "Átadva neked", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Megcsináltad", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Azt mondtad: „Most nem”", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ ezen az oldalon dolgozik", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Ebben a Chrome-ban dolgoznak", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Ugrás a lapjára: $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Vissza"},
@@ -95,5 +94,6 @@
   "taf_remove": {"message": "A taf eltávolítása"},
   "taf_remove_on_phone": {"message": "A tafot a telefonodon lehet eltávolítani: nyisd meg a tafs alkalmazásban, majd Eltávolítás. Az eltávolítást ott hagyod jóvá."},
   "bar_go": {"message": "Ugrás a lapjára"},
-  "bar_paused": {"message": "Szüneteltetve: $TAF$", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "Szüneteltetve: $TAF$", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "Kész: $TAF$", "placeholders": {"taf": {"content": "$1"}}}
 }

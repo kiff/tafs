@@ -80,7 +80,6 @@
   "step_handed": {"message": "Te l'ha passat", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Ho has fet", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Has dit «Ara no»", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ treballa en aquesta pàgina", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Treballant en aquest Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Ves a la pestanya de $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Enrere"},
@@ -95,5 +94,6 @@
   "taf_remove": {"message": "Treu aquest taf"},
   "taf_remove_on_phone": {"message": "Un taf es treu al telèfon: obre'l a l'app tafs i toca Treu. Allà s'aprova que es tregui."},
   "bar_go": {"message": "Ves a la seva pestanya"},
-  "bar_paused": {"message": "$TAF$ està en pausa", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ està en pausa", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ ha acabat", "placeholders": {"taf": {"content": "$1"}}}
 }

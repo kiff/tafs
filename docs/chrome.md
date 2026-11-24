@@ -441,7 +441,7 @@ was done.
 ## While a taf works on a page
 
 - **Its group says so.** The run's tab group is titled "tafs · Rae is working" (`working`, in every language) and is orange for
-  as long as the run lives; its end turns it grey, "· done" (`Runner.workingTitle`).
+  as long as the run lives; its end turns it grey, "tafs · Rae is done" (`group_done`, `Runner.doneTitle`; `Runner.workingTitle` while it works).
 - **Where it acts, a moment first.** Before an act on a ref (a click, a fill, a select, a tick, a key, a scroll to it), the
   element is outlined in amber for half a second (`OUTLINE_MS`, Show me's outline), after the act's picture so the outline
   isn't in it; the act takes it away. Back and a scroll of the page name no ref and outline nothing. The outline lets every
