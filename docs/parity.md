@@ -1,6 +1,6 @@
 # Parity: every feature on every device
 
-One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why); a watch row reads **built** while its code has merged but the owner's watch hasn't shown it working ([Watches](#watches)). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A PR that moves a row updates this page, and the desktop columns follow each repo's `docs/port-checklist.md`.
+One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why); a watch row reads **built** while its code has merged but the owner hasn't seen it work ([Watches](#watches)). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A PR that moves a row updates this page, and the desktop columns follow each repo's `docs/port-checklist.md`.
 
 **Read from:** kiff/tafs main `f513da4` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `7497741`, kiff/tafs-windows `9ec91ef` and kiff/tafs-linux `ceec200`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
 
@@ -26,7 +26,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 **The three biggest gaps**
 1. **macOS 12** is furthest behind: 21 screens partial and 7 not for it. About 13 of those lack only a step a service takes from the phone alone; a recount moves each to done with that service named, as Windows and Linux count them. The rest are real work, landing PR by PR.
 2. **Linux** is level with the iPad: 53 screens done, and 5 not for it, each with its reason. "Allow this from now on" landed last (tafs-linux#120).
-3. **The watches wait on the owner's own checks**: both failed earlier tries, so every merged row reads built until it works on the owner's watch. **Apple Watch is behind Wear OS** ([Watches](#watches)): Keep for later, a complication, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
+3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): Keep for later, a complication, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
 ## The iPad's screens
 
@@ -235,7 +235,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 
 ## Watches
 
-A watch row is **done** only once it works on the owner's own watch: merged code isn't enough. Both watches failed the owner's earlier tries, so until their checks come back (the Apple Watch on the iPhone's build 3974, the Galaxy Watch 5 on Wear's internal-track build), a row whose code has merged reads **built**. Each row moves to done, or to "broken on the owner's watch" with the build and the fix, from the owner's result.
+A watch row is **done** only once the owner has seen it work: on their Galaxy Watch 5 for Wear OS, and for the Apple Watch, which they don't own, in Xcode's simulator. Merged code isn't enough. Until the owner's checks of the current builds come back (the Apple Watch app in the iPhone's build 3974, Wear's internal-track build), a row whose code has merged reads **built**. Each row then moves to done, or to "broken on the owner's check" with the build and the fix, from the owner's result; a row whose code isn't in the build they checked stays built.
 
 | # | Feature | Apple Watch | Wear OS | Why, or what's missing |
 | -: | :- | :- | :- | :- |
