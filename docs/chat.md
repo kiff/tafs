@@ -133,8 +133,9 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   (kiff/agents answers the card with them). It reads no page, and no message says `reading` for it: tafs cloud
   keeps a host only for a run the send started, one kiff/agents created once the send began (a card's run is older,
   by a model turn at least).
-- **The confirm, on the iPhone and iPad:** a tap on a link in a message with `page_turn` (or in the answer still
-  arriving on a stream that said it) opens nothing. It shows "Open this link?", "It came from a page Coach read. It
+- **The confirm, on the iPhone and iPad:** a tap on a link in a message with `page_turn`, or in any answer still
+  arriving (a stream picked back up or sent again has no `session` event to say it, so it asks until the thread's
+  read settles it), opens nothing. It shows "Open this link?", "It came from a page Coach read. It
   goes to: {address}" with the whole address, never shortened and always left to right, then **Open** or **Cancel**
   (`chat.link_confirm_*`, `PageLinkGuard`). A message without it, and the owner's own words, open links as before.
 

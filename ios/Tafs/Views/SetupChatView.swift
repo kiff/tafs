@@ -348,8 +348,10 @@ struct SetupChatView: View {
                         TypingBubble(taf: nil, fullWidth: true).id("thinking")
                     }
                     if !model.setupLiveText.isEmpty {
+                        // Words still arriving ask before opening a link, whatever their turn: a stream picked back up or
+                        // sent again says nothing of `page_turn`, so only the thread's own read of the answer settles it.
                         ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: model.setupLiveText, session: "live",
-                                                                  pageTurn: model.setupLive?.pageTurn ?? false),
+                                                                  pageTurn: true),
                                    taf: nil, fullWidth: true, steady: true).id("live")
                     }
                     if !thinking { ended }
