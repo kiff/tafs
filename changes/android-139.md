@@ -1,0 +1,1 @@
+- **Android 139 (1.48.2)** for Play's internal track: "Allow this from now on" checks the Card in force it quotes is the Card revised (#1893), the phone side of the Wear Inbox in step (#1892), and the web plan button named Company (#1858).

@@ -1,0 +1,2 @@
+• “Allow this from now on” now checks that the Card in force it quotes is the Card being revised, and refuses it otherwise.
+• The button for the web plan now reads “Get Company on kiff.dev”.

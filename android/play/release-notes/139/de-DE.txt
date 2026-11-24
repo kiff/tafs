@@ -1,0 +1,2 @@
+• „Ab jetzt erlauben“ prüft jetzt, ob die geltende Card, die es zitiert, die überarbeitete Card ist, und lehnt sonst ab.
+• Der Button für den Web-Tarif heißt jetzt „Company auf kiff.dev holen“.

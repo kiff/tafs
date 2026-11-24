@@ -1,0 +1,2 @@
+• « Autoriser désormais » vérifie maintenant que la Card en vigueur qu’il cite est bien la Card révisée, et refuse sinon.
+• Le bouton de l’offre web s’intitule désormais « Passer à Company sur kiff.dev ».

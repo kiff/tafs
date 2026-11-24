@@ -1,0 +1,2 @@
+• „Zezwalaj od teraz” sprawdza teraz, czy obowiązująca Card, którą przytacza, to Card, która jest zmieniana, a w przeciwnym razie odmawia.
+• Przycisk planu w sieci brzmi teraz „Przejdź na Company w kiff.dev”.

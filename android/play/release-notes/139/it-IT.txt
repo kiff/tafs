@@ -1,0 +1,2 @@
+• «Consenti d’ora in poi» ora verifica che la Card in vigore che cita sia la Card che viene rivista, e altrimenti rifiuta.
+• Il pulsante del piano web ora dice «Passa a Company su kiff.dev».
