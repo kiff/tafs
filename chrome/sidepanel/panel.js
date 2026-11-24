@@ -321,7 +321,7 @@ async function renderCoach() {
   working = !!r.thread.working;
   if (coachPending && !stillPending(coachPending, r.thread.messages)) coachPending = null;
   // What was just sent stays on show until the chat has it, and Coach's working line goes under the last message, as in the app.
-  if (coachPending) showPending(list, coachPending);
+  if (coachPending) showPending(list, coachPending.words);
   if (coachPending || working) list.append(workingLine(t("coach_working")));
   if (atEnd) toEnd();
 }
@@ -523,7 +523,7 @@ async function sendCoach(alone) {
   if (!words) return;
   // Shown at once, as in the app: the person's message at the bottom right and Coach's working line under it, before tafs
   // cloud has answered. The box is cleared now; on a failure the words come back to it, never lost.
-  coachPending = words;
+  coachPending = { words, id: null, at: Date.now() };
   $("coachWords").value = "";
   $("coachNote").textContent = "";
   $("coachEmpty").hidden = true;
@@ -541,6 +541,9 @@ async function sendCoach(alone) {
     $("coachNote").textContent = t("coach_error");
     return;
   }
+  // From now on it's matched by the id tafs cloud gave it; an answer with none leaves the chat as tafs cloud reads it.
+  const id = sentID(r.sent);
+  if (coachPending && coachPending.words === words) coachPending = id ? { ...coachPending, id } : null;
   view = afterSend(view, r.sent);
   sentAt = Date.now();
   drawCoach();
@@ -616,7 +619,7 @@ async function readTaf() {
     }
     $("tafPhone").hidden = !r.thread.waitsOnPhone;
     tafWorking = !!r.thread.working;
-    if (tafPending && tafPending.taf === id && !stillPending(tafPending.words, r.thread.messages)) tafPending = null;
+    if (tafPending && tafPending.taf === id && !stillPending(tafPending, r.thread.messages)) tafPending = null;
     const pending = tafPending && tafPending.taf === id ? tafPending.words : null;
     if (pending) showPending(list, pending);
     if (pending || tafWorking) list.append(workingLine(t("working", tafName())));
@@ -668,7 +671,7 @@ $("tafForm").onsubmit = async (e) => {
   if (!words || !to) return;
   // Shown at once, as Coach's are: the message, and the taf's working line under it; the box is cleared now, its words kept
   // to come back on a failure.
-  tafPending = { taf: to, words };
+  tafPending = { taf: to, words, id: null, at: Date.now() };
   $("tafWords").value = "";
   $("tafNote").textContent = "";
   showPending($("tafThread"), words);
@@ -685,6 +688,8 @@ $("tafForm").onsubmit = async (e) => {
     return;
   }
   tafSentAt = Date.now();
+  const sent = sentID(r.sent);
+  if (tafPending && tafPending.taf === to && tafPending.words === words) tafPending = sent ? { ...tafPending, id: sent } : null;
   // Sent: those words are gone from the taf they went to, and from nowhere else (the chat may have switched meanwhile).
   if (tafId !== to) drafts.delete(to);
   readTaf();
@@ -803,7 +808,8 @@ chrome.tabs.onUpdated.addListener((id, change) => {
   if (id === activeTab && change.url) drawReads();
 });
 
-// The words just sent to Coach, or to a taf ({taf, words}), on show until the chat as tafs cloud reads it has them (stillPending).
+// The message just sent to Coach ({words, id, at}), or to a taf (with its taf), on show until the chat as tafs cloud reads it has
+// it by its id (stillPending).
 let coachPending = null;
 let tafPending = null;
 
@@ -832,4 +838,10 @@ function nearEnd() {
 
 function toEnd() {
   window.scrollTo({ top: document.documentElement.scrollHeight });
+}
+
+/** The id tafs cloud gave a message it took (`{message: {id}}`), or null. */
+function sentID(sent) {
+  const id = sent && sent.message && sent.message.id;
+  return typeof id === "string" && id ? id : null;
 }

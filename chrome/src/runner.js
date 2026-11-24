@@ -383,8 +383,9 @@ export class Runner {
    * under way: no step running, none for TURN_QUIET_MS, not paused, no step handed to the person.
    *
    * It isn't a Stop: planque isn't told the run stopped, and the run is forgotten here, as after the worker restarts. planque
-   * keeps a taf's run for its next call (chromeRunIdle), so the person's next message may come back to it: that call reads no
-   * page in it and goes on in a new run (planque's `restart`), never told "the owner stopped this run".
+   * keeps a taf's run for its next call (chromeRunIdle), so the person's next message may come back to it: a call that opens a
+   * page finds none in it and goes on in a new run (planque's `restart`), and a bare read is answered `no_page`; neither is
+   * told "the owner stopped this run".
    */
   async endTurn(runId) {
     const run = this.runs.get(runId);

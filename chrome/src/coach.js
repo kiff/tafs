@@ -43,7 +43,7 @@ export class Coach {
     if (!id) return null;
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation" + (session ? "/" + encodeURIComponent(session) : ""));
     return {
-      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, session: m.session, ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}) })),
+      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, session: m.session, ...(typeof m.id === "string" && m.id ? { id: m.id } : {}), ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}) })),
       working: t.working ? t.working.session : null,
       // A card that waits on the owner (an approval, a sign-in) is answered on the phone, never here.
       waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
@@ -79,7 +79,7 @@ export class Coach {
   async tafThread(id) {
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation");
     return {
-      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at })),
+      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, ...(typeof m.id === "string" && m.id ? { id: m.id } : {}) })),
       working: t.working ? t.working.session : null,
       waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
     };

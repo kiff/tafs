@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS, tafsHere, idleDelay, IDLE_FIRST_MS, IDLE_MOST_MS, tafOfRun, runOfTab, tafOfTab, tafsAtWork, switchDraft, actionBadge, actionTitle, turnOver } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS, tafsHere, idleDelay, IDLE_FIRST_MS, IDLE_MOST_MS, tafOfRun, runOfTab, tafOfTab, tafsAtWork, switchDraft, actionBadge, actionTitle, turnOver, stillPending, PENDING_MAX_MS } from "../src/coachchat.js";
 
 test("the panel opens on a fresh conversation, whose first message starts a new chat", () => {
   assert.equal(FRESH.fresh, true);
@@ -177,4 +177,14 @@ test("a taf's turn is over, in tafs cloud's word, only for its own live runs, an
   assert.deepEqual(turnOver("t_wiki", null, runs, tafs), [], "a chat that couldn't be read");
   assert.deepEqual(turnOver(null, { working: false }, runs, tafs), []);
   assert.deepEqual(turnOver("t_rae", { working: false }, runs, tafs), ["r5"], "never another taf's run");
+});
+
+test("a message just sent stays until the chat has it by its id, never by its words, and never for good", () => {
+  const now = 1_000_000;
+  const sent = { words: "Résume la page", id: "run_2.in", at: now };
+  assert.equal(stillPending({ ...sent, id: null }, [], now), true, "not answered yet: it stays");
+  assert.equal(stillPending(sent, [{ id: "run_1.in", from: "owner", text: "Résume la page" }], now), true, "the same words sent before don't clear it");
+  assert.equal(stillPending(sent, [{ id: "run_2.in", from: "owner", text: "[kept in another form] Résume la page" }], now), false, "its id clears it, whatever its words");
+  assert.equal(stillPending(sent, [], now + PENDING_MAX_MS + 1), false, "never on show for good");
+  assert.equal(stillPending(null, [], now), false);
 });

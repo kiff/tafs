@@ -87,14 +87,20 @@ export function turnOver(tafId, thread, runs, tafs) {
   return (runs || []).filter((r) => r && !r.stopped && !r.paused && !r.hand && (tafOfRun(r, tafs) || {}).id === tafId).map((r) => r.id);
 }
 
+/** How long a message just sent stays on show at most, whatever the chat says: a pending copy never stays for good. */
+export const PENDING_MAX_MS = 120_000;
+
 /**
- * Whether the words just sent are still to come in the chat as tafs cloud reads it: the panel shows them at once, as the app
- * does, and keeps showing them, with the working line under them, until the chat has the person's message with those words.
+ * Whether a message just sent ({words, id, at}) is still to come in the chat as tafs cloud reads it: the panel shows it at once,
+ * as the app does, with the working line under it, until the chat has the message by the id tafs cloud gave the send
+ * (`message.id`), never by its words, so a message tafs cloud keeps in another form still clears, and the same words sent twice
+ * clear each on their own. Before the send is answered there's no id yet: it stays. Past PENDING_MAX_MS it goes.
  */
-export function stillPending(words, messages) {
-  if (!words) return false;
-  const said = String(words).trim();
-  return !(messages || []).some((m) => m && m.from === "owner" && String(m.text || "").trim() === said);
+export function stillPending(pending, messages, now = Date.now()) {
+  if (!pending || !pending.words) return false;
+  if (now - (pending.at || 0) > PENDING_MAX_MS) return false;
+  if (!pending.id) return true;
+  return !(messages || []).some((m) => m && m.id === pending.id);
 }
 
 /**

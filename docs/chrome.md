@@ -421,9 +421,11 @@ was done.
   card go and its group says done at once, its tabs kept. A step that came under 10 s ago makes the panel read the chat again
   once it's quiet that long. **It isn't a Stop:** planque isn't told the run stopped, and the run is forgotten here, as
   after the worker restarts. planque keeps the run for the taf's next call for 2 minutes, so the person's next message may come
-  back to it; that call's first read finds no page there and goes on in a new run (planque's `restart`), and is never told
-  "the owner stopped this run". The panel only reads chats while it's open on the taf, so with the panel closed the 150 s
-  sweep still ends the run.
+  back to it; a call that opens a page finds no page there and goes on in a new run (planque's `restart`), and a bare read
+  is answered `no_page` (its tab was closed). Neither is ever told "the owner stopped this run". **This needs the panel open on that taf's chat:** `readTaf` is what sends `turn_over`, so
+  with the panel closed, or on another taf or view, the run still waits for the 150 s sweep. It lives in the extension
+  because the run, its tab group and whether a step is under way exist only in this Chrome; planque sends no end of a
+  turn, and a `stop` from planque at a turn's end could replace this later.
 - **A paused run gets 15 minutes** (`PAUSED_IDLE_MS`), counted from its last step, its pause or its Resume, whichever is
   last: a taf holds its step for the owner's Resume for up to 10 minutes, so a held run is never ended under it (a step sent
   meanwhile is answered `paused_by_owner` and keeps the run, like any step). One no step follows (the taf's turn ended on the pause, or
@@ -733,8 +735,9 @@ mid-composition in an input method); Coach's "Send without the page" is a small 
 (0.2.9): the panel's head and each view's own head (**← Back**, the view's name, **New conversation**, ⋮) stay at the top while
 the chat scrolls, and **the composer stays at the bottom**, Coach's line about the page it reads with it (`.dock`). **A message
 shows at once**, at the bottom right, with the working line under it ("Coach is working…", or the taf's), before tafs cloud has
-answered; it stays until the chat as tafs cloud reads it has the person's message with those words (`stillPending`), and on a
-failure it goes and the words come back to the box. The working line goes under the last message while the chat says it
+answered; it stays until the chat as tafs cloud reads it has that message, by the id tafs cloud gave the send
+(`message.id`, `stillPending`), never by its words, and two minutes at most; on a failure it goes and the words come back to
+the box. The working line goes under the last message while the chat says it
 works. A chat the person is at the end of follows new messages; one scrolled up isn't moved. The pairing's lines ("Paired as
 …") show on the taf's own view only, so Coach, its conversations and Settings get the room. No attachment and no microphone:
 the side panel sends no files (tafs cloud refuses them from a Chrome), and Chrome's speech recognition would send the voice

@@ -66,7 +66,8 @@ test("a message shows at once with the working line, stays until the chat has it
     assert.ok(shown > 0 && sent > shown, `${send}: shown before tafs cloud answers`);
     assert.ok(body.indexOf("workingLine(") > 0 && body.indexOf("workingLine(") < sent, `${send}: the working line too`);
     assert.match(body, new RegExp(`if \\(!\\$\\("${box}"\\)\\.value\\) \\$\\("${box}"\\)\\.value = words;`), `${send}: a failure gives the words back`);
-    assert.match(js, new RegExp(`${pending} && [^\\n]*!stillPending\\(`), `${pending}: kept until the chat has it`);
+    assert.match(js, new RegExp(`${pending} && [^\\n]*!stillPending\\(${pending}, r\\.thread\\.messages\\)`), `${pending}: kept until the chat has it`);
+    assert.match(js, new RegExp(`${pending} = [^\\n]*\\{ \\.\\.\\.${pending}, id[^\\n]*\\} : null;`), `${pending}: matched by the id tafs cloud gave it`);
   }
   assert.doesNotMatch(js, /note\.textContent = t\("coach_working"\)/, "the working line is in the chat, not a note under it");
 });
