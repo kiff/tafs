@@ -3,15 +3,7 @@
 // fresh look that it's still the tab in front: a tab that moved in between (a redirect, a link, the person's own click) onto a
 // page the gate refuses (a sensitive site, one switched off, another tab) sends nothing.
 
-import { asideRefusal } from "./sites.js";
-
-function hostOf(url) {
-  try {
-    return new URL(String(url || "")).hostname.toLowerCase();
-  } catch {
-    return "";
-  }
-}
+import { asideRefusal, hostOf } from "./sites.js";
 
 /** The tab [tabId] if it's what the panel of [windowId] has in front, its host, and why it may not be read (or null). */
 export async function asideTab(chrome, tabId, windowId, off) {

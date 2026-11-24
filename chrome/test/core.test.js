@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
-import { refuseURL, bareURL, sensitive, siteOK, asideRefusal } from "../src/sites.js";
+import { refuseURL, bareURL, sensitive, siteOK, asideRefusal, mailHost } from "../src/sites.js";
 import { readForCoach } from "../src/asideread.js";
 import { refuse, PAY_WORDS, KINDS } from "../src/guard.js";
 import { readFileSync } from "node:fs";
@@ -368,4 +368,49 @@ test("the page is checked again on the address it was read on: a tab that moved 
   c = fake({ before: "https://my.1password.com/", after: "https://my.1password.com/", readOn: "https://my.1password.com/" });
   assert.equal((await readForCoach(c, 7, 2, [])).why, "sensitive");
   assert.deepEqual(c.calls, []);
+});
+
+test("Coach never reads a mail site: Gmail, Outlook, any webmail host, by name or by its label", () => {
+  const tab = (url) => ({ id: 7, active: true, windowId: 2, incognito: false, url });
+  const at = { windowId: 2, off: [] };
+  for (const url of [
+    "https://mail.google.com/mail/u/0/#inbox",
+    "https://outlook.live.com/mail/0/",
+    "https://outlook.office.com/mail/",
+    "https://outlook.office365.com/owa/",
+    "https://webmail.example.org/",
+    "https://mail.example.fr/inbox",
+    "https://messagerie.orange.fr/",
+    "https://correo.example.es/",
+    "https://www.icloud.com/mail/",
+    "https://app.tuta.com/",
+    "https://mail.zoho.eu/",
+  ]) assert.equal(asideRefusal(tab(url), at), "sensitive", url);
+  // A mailbox word elsewhere in a name isn't mail: a shop called mailchimp, or a site about mail.
+  assert.equal(asideRefusal(tab("https://mailchimp.com/"), at), null);
+  assert.equal(asideRefusal(tab("https://www.royalmail.com/"), at), null);
+  assert.equal(mailHost("MAIL.GOOGLE.COM"), true);
+  assert.equal(mailHost("shop.example"), false);
+});
+
+test("the mail rule reaches every language's word and Outlook's new address, and a trailing dot gets past nothing", () => {
+  const tab = (url) => ({ id: 7, active: true, windowId: 2, incognito: false, url });
+  const at = { windowId: 2, off: ["news.example"] };
+  for (const url of [
+    "https://outlook.cloud.microsoft/mail/",
+    "https://owa.example.com/owa/",
+    "https://app.hey.com/",
+    "https://poczta.onet.pl/",
+    "https://email.seznam.cz/",
+    "https://email.t-online.de/",
+    "https://correio.example.com.br/",
+    "https://freemail.hu/",
+    "https://levelezes.example.hu/",
+  ]) assert.equal(asideRefusal(tab(url), at), "sensitive", url);
+  // A trailing dot is the same host: no list is got past by it, the person's switch included.
+  assert.equal(asideRefusal(tab("https://outlook.live.com./"), at), "sensitive");
+  assert.equal(asideRefusal(tab("https://mail.google.com./mail/"), at), "sensitive");
+  assert.equal(asideRefusal(tab("https://www.paypal.com./"), at), "sensitive");
+  assert.equal(asideRefusal(tab("https://news.example./"), at), "off");
+  assert.equal(asideRefusal(tab("https://shop.example./"), at), null, "an ordinary host with a trailing dot is still read");
 });

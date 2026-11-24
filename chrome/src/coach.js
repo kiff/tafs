@@ -143,7 +143,17 @@ export class Coach {
     if (page && typeof page.url === "string" && typeof page.text === "string") {
       body.page = { url: page.url, title: String(page.title || ""), text: page.text, truncated: page.truncated === true };
     }
-    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", body);
+    const path = "/v1/tafs/" + encodeURIComponent(id) + "/messages";
+    try {
+      return await this.call("POST", path, body);
+    } catch (e) {
+      // tafs cloud refused the page (nothing started): the person's words go once more on their own, as a page that can't be
+      // read never holds a message. The answer then names no page.
+      if (!body.page || e.status !== 400 || e.code !== "page_refused") throw e;
+      const { page: _dropped, ...words } = body; // eslint-disable-line no-unused-vars
+      const sent = await this.call("POST", path, words);
+      return { ...sent, page_refused: true };
+    }
   }
 }
 

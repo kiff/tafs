@@ -188,3 +188,26 @@ test("the page goes with a message as data of its own, never mixed into the pers
   const t = await c.thread();
   assert.deepEqual(t.messages.map((m) => m.reading || null), ["shop.example", null, null]);
 });
+
+test("a page tafs cloud refuses never holds the person's words: they go once more without it, and nothing names a page", async () => {
+  const calls = [];
+  const fetch = async (url, init) => {
+    const body = init.body ? JSON.parse(init.body) : null;
+    calls.push([init.method, url, body]);
+    if (url.endsWith("/v1/setup")) return { ok: true, status: 200, json: async () => ({ setup: { id: "taf-coach" } }) };
+    if (body && body.page) return { ok: false, status: 400, json: async () => ({ error: "the page is too large", code: "page_refused" }) };
+    return { ok: true, status: 202, json: async () => ({ session: "s1", run: "r1" }) };
+  };
+  const c = new Coach({ token: "kiff_session_view_only", fetch, base: "https://cloud.test" });
+  const sent = await c.send("What is this?", { clientID: "m1", page: { url: "https://shop.example/x", title: "T", text: "words", truncated: false } });
+  const posts = calls.filter((x) => x[0] === "POST");
+  assert.equal(posts.length, 2, "once with the page, once without");
+  assert.ok(posts[0][2].page && !posts[1][2].page);
+  assert.equal(posts[1][2].text, "What is this?");
+  assert.equal(posts[1][2].client_message_id, "m1", "the same message, sent once more");
+  assert.equal(sent.page_refused, true);
+  assert.equal(sent.reading, undefined);
+  // Any other refusal is the send's own: nothing is sent again.
+  const other = new Coach({ token: "t", base: "https://cloud.test", fetch: async (url, init) => (url.endsWith("/v1/setup") ? { ok: true, status: 200, json: async () => ({ setup: { id: "c" } }) } : { ok: false, status: 400, json: async () => ({ error: "x", code: "too_long" }) }) });
+  await assert.rejects(other.send("Hi", { clientID: "m2", page: { url: "https://a.example/", text: "t" } }), (e) => e.code === "too_long");
+});
