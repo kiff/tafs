@@ -603,6 +603,31 @@ class WatchModelTest {
     assertEquals(WatchModel.Draft("Move my call to six", "w_00000001", null), model.kept.value)
   }
 
+  /** A watch whose screen lock is turned off after a message was kept: the next open or put-away deletes it, unsent (row 8). */
+  @Test fun aKeptMessageIsDeletedUnsentWhenTheScreenLockIsTurnedOff() = runTest {
+    val drafts = Drafts().apply { kept = WatchModel.Draft("Pause Rae", "w_00000001", null) }
+    var secure = true
+    val phone = Phone { reads(it) }
+    val model = WatchModel(phone, now = { t }, unlocked = { secure }, secure = { secure }, reviewFirst = true, drafts = drafts)
+    model.checkLock()
+    assertEquals("a watch with a lock keeps it", "Pause Rae", model.kept.value?.text)
+    secure = false
+    model.clearInboxIfLocked() // put away
+    assertNull(model.kept.value)
+    assertNull(drafts.kept)
+    assertTrue("nothing sent", phone.asked.none { it is WatchRequest.Ask })
+    // A start on a watch with no lock: what was kept goes before anything shows.
+    val again = Drafts().apply { kept = WatchModel.Draft("Pause Rae", "w_00000001", null) }
+    val started = WatchModel(phone, now = { t }, unlocked = { false }, secure = { false }, reviewFirst = true, drafts = again)
+    assertNull(started.kept.value)
+    assertNull(again.kept)
+    // A watch that's only locked keeps it, since it was kept to be sent.
+    val locked = Drafts().apply { kept = WatchModel.Draft("Pause Rae", "w_00000001", null) }
+    val onWrist = WatchModel(phone, now = { t }, unlocked = { false }, secure = { true }, reviewFirst = true, drafts = locked)
+    onWrist.refresh()
+    assertEquals("Pause Rae", onWrist.kept.value?.text)
+  }
+
   @Test fun keptForLaterIsTextOnlyOnTheWatchAndGoesUnderItsOwnIdOnceThePhoneIsBack() = runTest {
     var reachable = false
     val phone = Phone {
