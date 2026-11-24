@@ -13,11 +13,17 @@ final class WatchChecksUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    /// The app, opened on the demo phone, with any of the demo's other switches.
+    /// The app, opened on the demo phone, with any of the demo's other switches. A watch simulator now and then fails to
+    /// bring the app up ("is not running"), which says nothing about the app, so it's launched again, up to three times.
     private func launch(_ more: String...) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-watch-demo", "-AppleLanguages", "(en)", "-AppleLocale", "en_GB"] + more
-        app.launch()
+        for attempt in 1...3 {
+            app.launch()
+            if app.wait(for: .runningForeground, timeout: 10) { return app }
+            if attempt < 3 { app.terminate() }
+        }
+        XCTFail("the watch app didn't come to the front in three launches")
         return app
     }
 
