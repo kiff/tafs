@@ -33,3 +33,14 @@ test("the consent is a screen over the whole panel, a modal dialog, never a line
   const coach = html.slice(html.indexOf('<section id="coach"'), html.indexOf('<section id="chats"'));
   assert.doesNotMatch(coach, /id="pageConsent"/, "not inside the chat");
 });
+
+test("the composers are the app's: Send inside the box on its right, named by its words, and Enter sends", () => {
+  for (const id of ["coachForm", "tafForm"]) {
+    const form = new RegExp(`<form id="${id}" class="composer"[^>]*>[\\s\\S]*?</form>`).exec(html);
+    assert.ok(form, id);
+    assert.match(form[0], /<div class="box">\s*<textarea[^>]*>\s*<\/textarea>\s*<button type="submit" class="send" data-m-label="coach_send">/, `${id}: Send right after the words, inside the box`);
+  }
+  assert.match(js, /el\.setAttribute\("aria-label", t\(el\.dataset\.mLabel\)\)/, "the sign has a name");
+  assert.match(js, /if \(e\.key !== "Enter" \|\| e\.shiftKey \|\| e\.isComposing \|\| e\.keyCode === 229\) return;/, "Shift+Enter and an input method's Enter don't send");
+  assert.match(js, /form\.requestSubmit\(\);/, "Enter goes through the form's own submit, as the button does");
+});

@@ -1,0 +1,1 @@
+- **Chrome: the side panel's chats send as the app's do.** Send is inside the message box on its right, Enter sends and Shift+Enter makes a new line ([chrome.md](docs/chrome.md)).

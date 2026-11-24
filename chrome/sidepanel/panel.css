@@ -351,3 +351,42 @@ ul.chats .chatWhen {
   color: var(--soft);
   font-size: 12px;
 }
+
+/* The composer, as the app's chat: the words in a rounded box, Send inside it on the right as a round ↑. */
+form.composer {
+  display: grid;
+  gap: 6px;
+}
+form.composer .box {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+form.composer .box:focus-within {
+  border-color: var(--amber);
+}
+form.composer textarea {
+  flex: 1;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  resize: none;
+  outline: none;
+  padding: 6px;
+}
+form.composer button.send {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+}
+form.composer #coachSendAlone {
+  justify-self: start;
+}

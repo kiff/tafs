@@ -14,6 +14,20 @@ const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
 for (const el of document.querySelectorAll("[data-m]")) el.textContent = t(el.dataset.m);
 for (const el of document.querySelectorAll("[data-m-placeholder]")) el.placeholder = t(el.dataset.mPlaceholder);
+// A button drawn as a sign (the composer's ↑): its words are its accessible name and its tooltip.
+for (const el of document.querySelectorAll("[data-m-label]")) {
+  el.setAttribute("aria-label", t(el.dataset.mLabel));
+  el.title = t(el.dataset.mLabel);
+}
+// The composers, as the app's chat: Enter sends, Shift+Enter is a new line, and nothing sends while an input method is
+// still composing a word.
+for (const form of document.querySelectorAll("form.composer")) {
+  form.querySelector("textarea").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || e.shiftKey || e.isComposing || e.keyCode === 229) return;
+    e.preventDefault();
+    form.requestSubmit();
+  });
+}
 
 const $ = (id) => document.getElementById(id);
 
