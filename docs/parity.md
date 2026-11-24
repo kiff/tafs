@@ -231,6 +231,19 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 31 | Working without the phone | not for it | not for it | the phone holds the session and the keys |
 | 32 | In the store | partial | partial | Apple Watch: only the TestFlight build carries it. Wear: the internal track; production is the owner's |
 
+## One layout on every app
+
+On a wide window, every app draws a page the same way. This holds for the iPad, the Mac, Windows, Linux and an Android tablet.
+
+- **A centred column, capped.** Each page is one column, centred in the window, at most:
+  - 720 points for reading pages: Account, Devices, People, Alerts, Chrome, Needs you, Connect apps, Plan & usage;
+  - 980 for list pages: Overview, sharing, an app's connections;
+  - 640 for the recipe gallery;
+  - 1100 for the Brief and 1180 for Calendar.
+
+  Text and rows inside the column stay aligned left, and a window narrower than the cap is unchanged. Each app keeps these caps as named constants, in one place, so no page sets its own number.
+- **An explanation sits beside its action.** On Account, Chrome's text goes under the Chrome row, with its button. How sign-in works goes into the sign-in section, said once. How it works is one entry. No section is only an explanation.
+
 ## Today's cross-device work
 
 What landed on 23 Nov, device by device, read again against each repo's main on 25 Nov. "—" means the feature isn't that device's. What's still open is listed under the table.
