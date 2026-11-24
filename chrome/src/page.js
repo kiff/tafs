@@ -463,6 +463,8 @@
    * The service worker reads the page back afterwards. Nothing here ever types a saved value: the extension keeps none.
    */
   function act(a, readId) {
+    // The outline that showed where the taf would act (runner.js, before each act) goes as the act starts.
+    unoutline();
     if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
     if (dialog) return { ok: false, code: "dialog_open" };
     // A scroll of the page itself names no ref (gap 7): by most of a screen, so what was at the bottom stays in view.

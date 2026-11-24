@@ -3,6 +3,7 @@
 
 import { config } from "./config.js";
 import { indexedStore, profileId, forgetSavedSignIns } from "./store.js";
+import { actionBadge, actionTitle } from "./coachchat.js";
 import { newKeyPair, sha256, b64u, sign, LABEL, manifestHashOf } from "./crypto.js";
 import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
@@ -51,9 +52,11 @@ function publish(extra = {}) {
     connections: (relay && relay.connections) || [], ...extra };
   chrome.storage.session.set({ state }).catch(() => {});
   chrome.runtime.sendMessage({ type: "state", state }).catch(() => {});
-  const waiting = runner.state().some((r) => !r.stopped && r.hand);
-  chrome.action.setBadgeText({ text: waiting ? "!" : runner.active ? "ON" : "" }).catch(() => {});
+  const live = runner.state().filter((r) => !r.stopped);
+  chrome.action.setBadgeText({ text: actionBadge(live) }).catch(() => {});
   chrome.action.setBadgeBackgroundColor({ color: "#F29A2E" }).catch(() => {});
+  // The toolbar says who is at work, in the extension's words ("Rae is working"); idle, its name, as the manifest has it.
+  chrome.action.setTitle({ title: actionTitle(live, (key, sub) => chrome.i18n.getMessage(key, sub)) }).catch(() => {});
 }
 
 const kept = { keys: null, pairing: null };

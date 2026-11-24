@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS, tafsHere, idleDelay, IDLE_FIRST_MS, IDLE_MOST_MS, tafOfRun, runOfTab, tafOfTab, tafsAtWork, switchDraft } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS, tafsHere, idleDelay, IDLE_FIRST_MS, IDLE_MOST_MS, tafOfRun, runOfTab, tafOfTab, tafsAtWork, switchDraft, actionBadge, actionTitle } from "../src/coachchat.js";
 
 test("the panel opens on a fresh conversation, whose first message starts a new chat", () => {
   assert.equal(FRESH.fresh, true);
@@ -148,4 +148,14 @@ test("words typed for one taf stay that taf's: a switch keeps them, and the othe
   assert.equal(d.drafts.get("taf-b"), "x");
   // The first taf shown starts empty.
   assert.deepEqual(switchDraft(null, null, "taf-a", "").text, "");
+});
+
+test("the toolbar says a taf is at work: a mark while one works, ! when one waits on you, and who it is in the tooltip", () => {
+  const say = (key, sub) => (key === "working" ? sub[0] + " is working" : key === "name" ? "tafs" : "");
+  assert.equal(actionBadge([]), "");
+  assert.equal(actionBadge([{ id: "r1", taf: "Rae", stopped: true }]), "", "a stopped run isn't at work");
+  assert.equal(actionBadge([{ id: "r1", taf: "Rae" }]), "\u25CF");
+  assert.equal(actionBadge([{ id: "r1", taf: "Rae" }, { id: "r2", taf: "Bo", hand: { id: "h1" } }]), "!");
+  assert.equal(actionTitle([], say), "tafs");
+  assert.equal(actionTitle([{ taf: "Rae" }, { taf: "Rae" }, { taf: "Bo" }], say), "Rae is working · Bo is working");
 });

@@ -708,3 +708,14 @@ test("only a real press of Stop stops the run: the page can't press it, and can'
   assert.equal(await page.evaluate(() => document.querySelector("tafs-working-bar")), null, "once the run ends it goes, and stays gone");
   await page.close();
 });
+
+test("the outline that shows where the taf will act goes as the act starts", { skip: !playwright }, async () => {
+  const page = await open();
+  const read = await page.evaluate(() => TafsPage.read());
+  const email = read.fields.find((f) => f.label === "Email").ref;
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.outline(r, id), [email, read.read_id]), { ok: true });
+  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-outline]").length), 1);
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "fill", ref: r, value: "bo@shop.example" }, id), [email, read.read_id]), { ok: true });
+  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-outline]").length), 0);
+  await page.close();
+});

@@ -42,6 +42,9 @@ function pageKey(page) {
   return rest;
 }
 
+/** How long the element an act is about to touch stays outlined before the act: long enough to see, short enough not to slow a run. */
+export const OUTLINE_MS = 500;
+
 export class Runner {
   /**
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
@@ -368,6 +371,16 @@ export class Runner {
     }).catch(() => {});
   }
 
+  /**
+   * The run's group says that its taf is working, in the extension's own words ("Rae is working"), for as long as the run
+   * lives: one of the signals, with the bar and the action's badge, that a taf is at work in this Chrome. Its end turns it
+   * grey, "· done".
+   */
+  workingTitle(run) {
+    const taf = run.taf || "taf";
+    return "tafs · " + (this.say("working", [taf]) || taf);
+  }
+
   greyGroup(taf, groupId) {
     return Promise.resolve(this.chrome.tabGroups.update(groupId, { title: "tafs · " + taf + " · done", color: "grey" })).catch(() => {});
   }
@@ -637,7 +650,7 @@ export class Runner {
         // Fenced before it loads anything of the run's.
         await this.fence(run, tabId);
         run.groupId = await c.tabs.group({ tabIds: [tabId], createProperties: { windowId } });
-        await c.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf"), color: "orange", collapsed: false });
+        await c.tabGroups.update(run.groupId, { title: this.workingTitle(run), color: "orange", collapsed: false });
         if (run.stopped) {
           // Stopped while it was fenced and grouped: its close ran before these tabs were the run's.
           await this.closeRun(run);
@@ -776,6 +789,18 @@ export class Runner {
       return this.read(run);
     }
     await this.pictureOf(run, step, page);
+    // Where the taf is about to act, shown for a moment first (Show me's outline), after the picture so it isn't in it. Only
+    // for an act on a ref: back and a scroll of the page name none. The act takes the outline away.
+    if (step.act.ref) {
+      const shown = await this.inTab(run.tab, (r, id) => globalThis.TafsPage.outline(r, id), [step.act.ref, step.read_id]).catch(() => null);
+      if (shown && shown.ok) await this.sleep(OUTLINE_MS);
+      // The outline is what makes a person react ("it's about to click that"): a Pause, their own click or key in the page
+      // (which pauses the run), or a Stop in those moments holds the act. Nothing reaches the page.
+      if (run.stopped || run.paused) {
+        if (run.tab != null) await this.inTab(run.tab, () => globalThis.TafsPage.unoutline()).catch(() => {});
+        return { error: { code: run.stopped ? "stopped" : PAUSE_CODES[run.paused] || "paused_by_owner" } };
+      }
+    }
     const before = await this.chrome.tabs.get(run.tab).catch(() => null);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);
     if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };

@@ -29,7 +29,7 @@ The panel is mainly for **watching a taf work**, with the person beside it. Coac
   - **The list is for display only, never authority.** What a step may do still comes only from the signed step and the
     connection's phone-signed sites. The extension never takes a site from the list as allowed.
 - **Its work, live.** While it runs, the panel shows each step as it happens: opened, read, typed, clicked, held. The
-  run's tab group ("tafs · {taf}") sits beside the person's tabs, and **Show** brings the run's tab to the front. Pause and
+  run's tab group ("tafs · {taf} is working", grey "· done" once it ends) sits beside the person's tabs, and **Show** brings the run's tab to the front. Pause and
   Stop stay.
 - **Its chat.** The person talks to the taf below its work. It's the same taf chat as the phone's
   (`GET /v1/tafs/{id}/conversation`, `POST …/messages`), read on each event: the panel shown, a send, a step seen on the
