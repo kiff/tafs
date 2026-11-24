@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
-import { refuseURL, bareURL, sensitive, siteOK } from "../src/sites.js";
+import { refuseURL, bareURL, sensitive, siteOK, asideRefusal } from "../src/sites.js";
 import { refuse, PAY_WORDS, KINDS } from "../src/guard.js";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -312,4 +312,23 @@ test("secretSpans names what a picture must cover: cards that pass Luhn, keys by
   assert.deepEqual(pick("order 1234567890123 and a long word " + "abcdefghij".repeat(4)), [], "not a card; no digit, so not a key");
   assert.deepEqual(pick("123e4567-e89b-12d3-a456-426614174000"), [], "a uuid has dashes and runs under 32");
   assert.deepEqual(pick(""), []);
+});
+
+test("Coach reads only the tab in front of the panel's window, on https, never a sensitive, switched-off, store or incognito page", () => {
+  const tab = (url, extra = {}) => ({ id: 7, active: true, windowId: 2, incognito: false, url, ...extra });
+  const at = { windowId: 2, off: ["news.example"] };
+  assert.equal(asideRefusal(tab("https://shop.example/item?x=1"), at), null);
+  assert.equal(asideRefusal(tab("https://shop.example/", { active: false }), at), "not_front", "a tab behind is never read");
+  assert.equal(asideRefusal(tab("https://shop.example/", { windowId: 3 }), at), "not_front", "nor another window's tab");
+  assert.equal(asideRefusal(null, at), "not_front");
+  assert.equal(asideRefusal(tab("https://shop.example/"), {}), "not_front", "no window named, nothing read");
+  assert.equal(asideRefusal(tab("http://shop.example/"), at), "not_https");
+  assert.equal(asideRefusal(tab("chrome://settings"), at), "not_https");
+  assert.equal(asideRefusal(tab("https://u:p@shop.example/"), at), "not_https");
+  assert.equal(asideRefusal(tab("https://chromewebstore.google.com/detail/x"), at), "store");
+  assert.equal(asideRefusal(tab("https://chrome.google.com/webstore/detail/x"), at), "store");
+  assert.equal(asideRefusal(tab("https://shop.example/", { incognito: true }), at), "incognito");
+  assert.equal(asideRefusal(tab("https://my.1password.com/vault"), at), "sensitive", "the run's sensitive list applies");
+  assert.equal(asideRefusal(tab("https://news.example/today"), at), "off", "a site the person switched off");
+  assert.equal(asideRefusal(tab("https://www.news.example/today"), at), null, "off is the exact host the person switched");
 });

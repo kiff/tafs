@@ -130,6 +130,7 @@ let panelWindow = null;
 
 function followTab(tabId) {
   activeTab = typeof tabId === "number" ? tabId : null;
+  drawReads();
   // Only once the service worker's state is in: an empty one would draw the pairing screen for a moment.
   if (lastState && "paired" in lastState) draw(lastState);
 }
@@ -283,6 +284,13 @@ async function renderCoach() {
     const li = document.createElement("li");
     li.className = m.from;
     li.textContent = m.text;
+    // The page that went with this message, by its host alone, as tafs cloud recorded it: never silent.
+    if (m.reading) {
+      const line = document.createElement("small");
+      line.className = "reading";
+      line.textContent = t("aside_reading", m.reading);
+      li.append(line);
+    }
     list.append(li);
   }
   $("coachPhone").hidden = !r.thread.waitsOnPhone;
@@ -396,7 +404,8 @@ $("coachForm").onsubmit = async (e) => {
   e.preventDefault();
   const words = $("coachWords").value.trim();
   if (!words) return;
-  const r = await send({ type: "coach_send", words, clientID: crypto.randomUUID(), ...sendOptions(view) });
+  // The page in front of this panel's window goes with the words, if the gate lets it (sw.js asideRead): only on this send.
+  const r = await send({ type: "coach_send", words, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow, ...sendOptions(view) });
   if (r.error) {
     $("coachNote").textContent = t("coach_error");
     return;
@@ -535,3 +544,37 @@ $("coachBack").onclick = () => showCoach(false);
 $("tafRemoveBtn").onclick = () => {
   $("tafRemoveWhy").hidden = !$("tafRemoveWhy").hidden;
 };
+
+// Coach reads the page you're on (docs/chrome.md): above Coach's box, what a send will read, and the person's own switch.
+// It's the page in front of this window, read only when they send; a sensitive site or one they switched off is never read.
+const READ_WHY = { sensitive: "aside_sensitive", off: "aside_off_line" };
+let readsHost = "";
+
+async function drawReads() {
+  const line = $("coachReads");
+  if (!line) return;
+  const r = await send({ type: "aside_status", tabId: activeTab, windowId: panelWindow }).catch(() => null);
+  const sw = $("coachReadsSwitch");
+  readsHost = (r && r.host) || "";
+  if (!r || !readsHost || (r.why && !READ_WHY[r.why])) {
+    // Chrome's own pages, an incognito tab, a page with no https address: nothing to read, nothing to say.
+    line.hidden = true;
+    return;
+  }
+  line.hidden = false;
+  $("coachReadsWords").textContent = r.why ? t(READ_WHY[r.why], readsHost) : t("aside_will", readsHost);
+  // The switch: off for a host it reads, back on for one switched off; a sensitive site has none (it's never read).
+  sw.hidden = r.why === "sensitive";
+  sw.textContent = t(r.why === "off" ? "aside_on" : "aside_off");
+  sw.dataset.off = r.why === "off" ? "0" : "1";
+}
+
+$("coachReadsSwitch").onclick = async () => {
+  if (!readsHost) return;
+  await send({ type: "aside_site", host: readsHost, off: $("coachReadsSwitch").dataset.off === "1" }).catch(() => null);
+  drawReads();
+};
+
+chrome.tabs.onUpdated.addListener((id, change) => {
+  if (id === activeTab && change.url) drawReads();
+});

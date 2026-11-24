@@ -1,6 +1,7 @@
 // The service worker (docs/chrome.md): it keeps the pairing, connects to planque when paired, and runs what planque sends
 // through the runner. It wakes on an alarm while it sleeps, connects, and lets the connection drop when no run is on.
 
+import { asideRefusal } from "./sites.js";
 import { config } from "./config.js";
 import { indexedStore, profileId, forgetSavedSignIns } from "./store.js";
 import { actionBadge, actionTitle } from "./coachchat.js";
@@ -251,6 +252,56 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
   if (change.status === "complete" && tab && tab.active) runner.queueBars();
 });
 
+// Coach reads the page in front (docs/chrome.md, "Coach reads the page you're on"): on the person's send, the tab in front
+// of the panel's own window, once, through aside.js; never on a timer, never another tab, never a site the gate refuses.
+const ASIDE_OFF = "aside_off";
+
+async function asideOff() {
+  return ((await chrome.storage.local.get(ASIDE_OFF))[ASIDE_OFF] || []).filter((h) => typeof h === "string");
+}
+
+/** The tab [tabId] if it's what the panel of [windowId] has in front, its host, and why it may not be read (or null). */
+async function asideTab(tabId, windowId) {
+  if (typeof tabId !== "number" || typeof windowId !== "number") return { why: "not_front" };
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  let host = "";
+  try {
+    host = new URL(tab && tab.url ? tab.url : "").hostname.toLowerCase();
+  } catch {
+    // no address: nothing to name
+  }
+  return { tab, host, why: asideRefusal(tab, { windowId, off: await asideOff() }) };
+}
+
+async function asideStatus(tabId, windowId) {
+  const { host, why } = await asideTab(tabId, windowId);
+  return { host, why };
+}
+
+async function asideRead(tabId, windowId) {
+  const { tab, host, why } = await asideTab(tabId, windowId);
+  if (why) return { host, why };
+  try {
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["src/mask.js", "src/aside.js"] });
+    const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: () => globalThis.TafsAside.read() });
+    const page = res && res.result;
+    if (!page || typeof page.text !== "string") return { host, why: "unread" };
+    return { host, page };
+  } catch {
+    // A page that can't be read is no reason to hold the message: it goes with the person's words alone.
+    return { host, why: "unread" };
+  }
+}
+
+/** "Not on this site": the person's own list of hosts Coach never reads, kept in this Chrome only. */
+async function asideSwitch(host, off) {
+  if (!host) return { error: "no_host" };
+  const now = await asideOff();
+  const next = off ? [...new Set([...now, host])] : now.filter((h) => h !== host);
+  await chrome.storage.local.set({ [ASIDE_OFF]: next });
+  return { off };
+}
+
 chrome.runtime.onMessage.addListener((m, sender, reply) => {
   if (!m || typeof m.type !== "string") return;
   // Only the extension's own pages speak to it, apart from a content script's "owner_input".
@@ -298,9 +349,16 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       await onlyHere(m.taf);
       return { sent: await (await coach()).sendToTaf(m.taf, m.words, m.clientID) };
     },
-    coach_send: async () => ({
-      sent: await (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true }),
-    }),
+    coach_send: async () => {
+      const page = await asideRead(m.tabId, m.windowId);
+      return {
+        sent: await (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page }),
+        reading: page.page ? page.host : null,
+        notReading: page.why || null,
+      };
+    },
+    aside_status: async () => asideStatus(m.tabId, m.windowId),
+    aside_site: async () => asideSwitch(String(m.host || ""), m.off === true),
     state: async () => {
       await load();
       publish();
