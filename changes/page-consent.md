@@ -1,0 +1,1 @@
+- **Coach reads the page in front only with the person's own page consent.** In Chrome, it's off until they allow it on a screen that says what goes, when, and where. The extension checks it before touching the tab, "Send without the page" is always there, and tafs cloud drops a page sent without it ([chrome.md](docs/chrome.md), [api.md](docs/api.md)).

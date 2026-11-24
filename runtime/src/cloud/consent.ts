@@ -85,6 +85,50 @@ function history(kept: Kept | undefined): Kept["earlier"] {
 }
 
 /*
+ * Coach reading the page in front (docs/chrome.md, "Coach reads the page you're on"): a consent of its own, beside the AI
+ * consent above, given and withdrawn in the Chrome extension, whose own screen says what goes to Anthropic and when. It
+ * gates one thing only: a page sent with a message to Coach. Without it the page is dropped and never read, kept or
+ * logged, and the message goes alone, on the AI consent as ever. Nothing else waits on it: no taf, no schedule. A new
+ * PAGE_CONSENT_VERSION asks again.
+ */
+
+/** The page consent's version: raised when what's read from the page, or where it goes, changes. */
+export const PAGE_CONSENT_VERSION = "1";
+
+/** Where one person's page consent is kept. */
+export const pageConsentKey = (tenant: string, subject: string) => `${tenant}#page-consent#${subject}`;
+
+/** What the extension draws: whether it's given for this version. Its words are the extension's own. */
+export interface PageConsentView { given: boolean; at?: string; version: string }
+
+/** The person's page consent for the current version, or undefined: none, withdrawn, older, or unreadable. */
+export async function pageConsentOf(store: CoachStore | undefined, tenant: string, subject: string): Promise<AIConsent | undefined> {
+  if (!store) return undefined;
+  const kept = await store.get(pageConsentKey(tenant, subject)).catch(() => undefined) as Kept | undefined;
+  return kept && !kept.withdrawn_at && kept.version === PAGE_CONSENT_VERSION && typeof kept.at === "string" ? { at: kept.at, version: kept.version } : undefined;
+}
+
+export function pageConsentView(consent: AIConsent | undefined): PageConsentView {
+  return { given: consent !== undefined, ...(consent ? { at: consent.at } : {}), version: PAGE_CONSENT_VERSION };
+}
+
+/** Records the person's yes to `version`; one that isn't the current one is refused, so an old screen can't say yes. */
+export async function givePageConsent(store: CoachStore, tenant: string, subject: string, version: unknown, now: Date): Promise<AIConsent | "stale"> {
+  if (version !== PAGE_CONSENT_VERSION) return "stale";
+  const consent = { at: now.toISOString(), version: PAGE_CONSENT_VERSION };
+  const kept = await store.get(pageConsentKey(tenant, subject)).catch(() => undefined) as Kept | undefined;
+  await store.put(pageConsentKey(tenant, subject), { ...consent, earlier: history(kept) }, new Date(now.getTime() + CONSENT_KEPT_MS));
+  return consent;
+}
+
+/** Withdraws it: from now on no page goes with their messages, until they allow it again. The record stays, as proof. */
+export async function withdrawPageConsent(store: CoachStore, tenant: string, subject: string, now: Date): Promise<void> {
+  const kept = await store.get(pageConsentKey(tenant, subject)).catch(() => undefined) as Kept | undefined;
+  if (!kept?.at || kept.withdrawn_at) return;
+  await store.put(pageConsentKey(tenant, subject), { ...kept, withdrawn_at: now.toISOString() }, new Date(now.getTime() + CONSENT_KEPT_MS));
+}
+
+/*
  * Runs with no person in the moment (docs/accounts.md, "Runs with no person in the moment"): a door's message, an app's
  * event, a held one released, a hand-off, a retry, a task Coach hands a taf, a run going on after KIFF's alert, and a
  * schedule's firing. Each taf's runs take one person's consent: its maker's, recorded when it's made; for a taf from

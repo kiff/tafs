@@ -101,5 +101,16 @@
   "no_taf_here": { "message": "No taf works in this Chrome yet." },
   "setup_taf": { "message": "Set up a new taf for this site" },
   "at_work": { "message": "Working in this Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front." },
-  "go_to_taf": { "message": "Go to $TAF$'s tab", "description": "Accessible name of a taf's button in that row.", "placeholders": { "taf": { "content": "$1" } } }
+  "go_to_taf": { "message": "Go to $TAF$'s tab", "description": "Accessible name of a taf's button in that row.", "placeholders": { "taf": { "content": "$1" } } },
+  "page_consent_off": { "message": "Coach doesn't read the page you're on.", "description": "Above Coach's message box while the page consent isn't given." },
+  "page_consent_turn_on": { "message": "Let Coach read the page…", "description": "Button that opens the page consent's screen." },
+  "page_consent_title": { "message": "Let Coach read the page in front when you send?", "description": "Title of the page consent's screen." },
+  "page_consent_what": { "message": "When you send a message to Coach here, the text of the tab in front of this window goes with it: its address (without anything after ? or #), its title and its words. Passwords, card numbers and codes on the page are left out.", "description": "The page consent: what is sent." },
+  "page_consent_when": { "message": "Only when you send, only that tab, and never a bank, payment, mail or health site, or one you switched off.", "description": "The page consent: when." },
+  "page_consent_never": { "message": "It goes to tafs, which sends it to Anthropic's Claude to answer you, as your message does. tafs keeps only the site's name, never the page.", "description": "The page consent: where it goes and what is kept." },
+  "page_consent_change": { "message": "You can send a message without the page at any time, and stop this here whenever you like.", "description": "The page consent: sending alone and withdrawing." },
+  "page_consent_allow": { "message": "Allow", "description": "The page consent's yes." },
+  "page_consent_not_now": { "message": "Not now", "description": "Closes the page consent's screen, leaving it off." },
+  "page_consent_withdraw": { "message": "Stop reading pages", "description": "Withdraws the page consent, beside the line saying which site a send reads." },
+  "coach_send_alone": { "message": "Send without the page", "description": "Sends the message to Coach with no page, while the page consent is given." }
 }

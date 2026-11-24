@@ -127,6 +127,24 @@ export class Coach {
     return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/chats/" + encodeURIComponent(session) + "/" + (archived ? "archive" : "unarchive"));
   }
 
+  /** The person's page consent at tafs cloud: `{given, version}` (Coach reading the page in front, docs/chrome.md). */
+  async pageConsent() {
+    const { consent } = await this.call("GET", "/v1/me/page-consent");
+    return consent || { given: false };
+  }
+
+  /** They allow it, to `version`'s words, from this extension's own screen. */
+  async allowPage(version) {
+    const { consent } = await this.call("POST", "/v1/me/page-consent", { version });
+    return consent || { given: false };
+  }
+
+  /** They withdraw it. */
+  async withdrawPage() {
+    const { consent } = await this.call("DELETE", "/v1/me/page-consent");
+    return consent || { given: false };
+  }
+
   /**
    * Sends the owner's words: into the live chat, into the chat `session` names, or,
    * with `newChat`, into a new one (the answer says its `session`).
