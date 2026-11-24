@@ -77,6 +77,33 @@ export function tafOfRun(run, tafs) {
 }
 
 /**
+ * The runs of taf [tafId] here whose turn is over, in tafs cloud's word: its chat, as the panel just read it, says it isn't
+ * working, and it isn't waiting on the person's phone (a step held for their answer goes on in the same tab once they answer).
+ * Only the taf's own runs, by their grant, never another's; the runner then ends each only if it has had no step for a while
+ * (runner.endTurn). Empty while the chat says it works, or when it couldn't be read.
+ */
+export function turnOver(tafId, thread, runs, tafs) {
+  if (!tafId || !thread || thread.working !== false || thread.waitsOnPhone) return [];
+  return (runs || []).filter((r) => r && !r.stopped && !r.paused && !r.hand && (tafOfRun(r, tafs) || {}).id === tafId).map((r) => r.id);
+}
+
+/** How long a message just sent stays on show at most, whatever the chat says: a pending copy never stays for good. */
+export const PENDING_MAX_MS = 120_000;
+
+/**
+ * Whether a message just sent ({words, id, at}) is still to come in the chat as tafs cloud reads it: the panel shows it at once,
+ * as the app does, with the working line under it, until the chat has the message by the id tafs cloud gave the send
+ * (`message.id`), never by its words, so a message tafs cloud keeps in another form still clears, and the same words sent twice
+ * clear each on their own. Before the send is answered there's no id yet: it stays. Past PENDING_MAX_MS it goes.
+ */
+export function stillPending(pending, messages, now = Date.now()) {
+  if (!pending || !pending.words) return false;
+  if (now - (pending.at || 0) > PENDING_MAX_MS) return false;
+  if (!pending.id) return true;
+  return !(messages || []).some((m) => m && m.id === pending.id);
+}
+
+/**
  * Words typed for a taf stay that taf's (D2): switching the chat to another taf, by its tab, a chip or the picker, keeps
  * what was typed for the one before and brings back what was typed for the new one, or nothing. Never carried over: Send
  * goes to the taf on show, and an instruction for one taf must never reach another. Returns the drafts after and the text

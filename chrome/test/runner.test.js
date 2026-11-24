@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS } from "../src/runner.js";
+import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS } from "../src/runner.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 
 // The paired phone: it signs each grant's sites (tafs-chrome/sites/v1) and sensitive allowances.
@@ -1233,4 +1233,61 @@ test("Pause, a long wait, then Resume: the held act never touches the page, plan
   assert.deepEqual(said.map((s) => s.state), ["paused", "working"], "one paused and one working, not one per held step");
   assert.equal(said[0].at, "2026-11-24T17:00:00.000Z");
   assert.equal(said[1].at, "2026-11-24T17:10:00.000Z");
+});
+
+// The owner's 0.2.8 walk-through (D): the group still said the taf was working right after Stop.
+test("the person's Stop greys the run's group at once; planque's stop and a run's own end keep the grace", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const graces = [];
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms === 15_000 ? new Promise((go) => graces.push(go)) : Promise.resolve()), paired: () => paired });
+  const greyed = () => c.calls.filter((x) => x[0] === "tabGroups.update" && x[2].color === "grey");
+  await r.handle(step());
+  await r.stop("run_1", false, "person");
+  assert.equal(graces.length, 0, "no grace to wait for");
+  assert.equal(greyed().length, 1, "grey at once");
+  assert.equal(greyed()[0][2].title, "tafs · Rae · done");
+  await r.handle(step({ run: "run_2" }));
+  await r.stop("run_2");
+  assert.equal(graces.length, 1, "planque's stop: the taf may call again within the grace");
+  assert.equal(greyed().length, 1, "not grey yet");
+});
+
+// The owner's 0.2.8 walk-through (C): the panel said "Wiki lookup travaille" after the taf's final reply, until Stop.
+test("the taf's turn over ends its quiet run here: grey at once, forgotten, planque never told it stopped, and a later call goes on in a new run", async () => {
+  let clock = 1_000_000;
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const states = [];
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock, onRunState: (s) => states.push(s) });
+  await r.handle(step());
+  await new Promise((go) => setImmediate(go)); // the step's slot is let go once its answer is out
+  clock += 4_000;
+  assert.deepEqual(await r.endTurn("run_1"), { ended: false, retryIn: TURN_QUIET_MS - 4_000 }, "a step a moment ago: not yet, and when to ask again");
+  assert.equal(r.state()[0].stopped, false);
+  clock += TURN_QUIET_MS;
+  assert.deepEqual(await r.endTurn("run_1"), { ended: true });
+  assert.deepEqual(r.state(), [], "the panel's card and the action's badge go: the run isn't listed");
+  assert.equal(c.calls.filter((x) => x[0] === "tabGroups.update").pop()[2].title, "tafs · Rae · done", "its group says done at once");
+  assert.ok(!c.calls.some((x) => x[0] === "windows.remove" || x[0] === "tabs.remove"), "its tabs stay for the person");
+  assert.deepEqual(states, [], "not a Stop: planque isn't told the run stopped, so a Pause later still reaches the taf");
+  // The person's next message within planque's 2 minutes comes back to the same run: its read finds no page (planque then
+  // goes on in a new run, as after the worker restarts), never "stopped", which tells the taf the owner stopped it.
+  assert.equal((await r.handle(step({ op: "read" }))).error.code, "no_page");
+});
+
+test("the turn over never ends a run that's paused, waits on the person, or has a step running", async () => {
+  let clock = 1_000_000;
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock });
+  await r.handle(step());
+  await new Promise((go) => setImmediate(go));
+  r.pause("run_1");
+  clock += 60_000;
+  assert.deepEqual(await r.endTurn("run_1"), { ended: false }, "paused: it waits for the person's Resume");
+  r.resume("run_1");
+  clock += 60_000;
+  r.tails.set("run_1", Promise.resolve());
+  assert.deepEqual(await r.endTurn("run_1"), { ended: false }, "a step under way");
+  r.tails.delete("run_1");
+  assert.deepEqual(await r.endTurn("nope"), { ended: false }, "a run it doesn't hold");
+  assert.deepEqual(await r.endTurn("run_1"), { ended: true });
 });

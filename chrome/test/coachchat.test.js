@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS, tafsHere, idleDelay, IDLE_FIRST_MS, IDLE_MOST_MS, tafOfRun, runOfTab, tafOfTab, tafsAtWork, switchDraft, actionBadge, actionTitle } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, POLL_BUSY_MS, POLL_IDLE_MS, BUSY_AFTER_SEND_MS, tafsHere, idleDelay, IDLE_FIRST_MS, IDLE_MOST_MS, tafOfRun, runOfTab, tafOfTab, tafsAtWork, switchDraft, actionBadge, actionTitle, turnOver, stillPending, PENDING_MAX_MS } from "../src/coachchat.js";
 
 test("the panel opens on a fresh conversation, whose first message starts a new chat", () => {
   assert.equal(FRESH.fresh, true);
@@ -158,4 +158,33 @@ test("the toolbar says a taf is at work: a mark while one works, ! when one wait
   assert.equal(actionBadge([{ id: "r1", taf: "Rae" }, { id: "r2", taf: "Bo", hand: { id: "h1" } }]), "!");
   assert.equal(actionTitle([], say), "tafs");
   assert.equal(actionTitle([{ taf: "Rae" }, { taf: "Rae" }, { taf: "Bo" }], say), "Rae is working · Bo is working");
+});
+
+test("a taf's turn is over, in tafs cloud's word, only for its own live runs, and never while it works or waits on the phone", () => {
+  const tafs = [{ id: "t_wiki", name: "Wiki lookup", grants: ["g_w"] }, { id: "t_rae", name: "Rae", grants: ["g_r"] }];
+  const runs = [
+    { id: "r1", grant: "g_w" },
+    { id: "r2", grant: "g_w", stopped: true },
+    { id: "r3", grant: "g_w", paused: "owner" },
+    { id: "r4", grant: "g_w", hand: { id: "h" } },
+    { id: "r5", grant: "g_r" },
+    { id: "r6", grant: "" },
+  ];
+  assert.deepEqual(turnOver("t_wiki", { working: false }, runs, tafs), ["r1"]);
+  assert.deepEqual(turnOver("t_wiki", { working: true }, runs, tafs), [], "it works");
+  assert.deepEqual(turnOver("t_wiki", { working: false, waitsOnPhone: true }, runs, tafs), [], "a step waits on the person's phone");
+  assert.deepEqual(turnOver("t_wiki", {}, runs, tafs), [], "a chat that doesn't say isn't over");
+  assert.deepEqual(turnOver("t_wiki", null, runs, tafs), [], "a chat that couldn't be read");
+  assert.deepEqual(turnOver(null, { working: false }, runs, tafs), []);
+  assert.deepEqual(turnOver("t_rae", { working: false }, runs, tafs), ["r5"], "never another taf's run");
+});
+
+test("a message just sent stays until the chat has it by its id, never by its words, and never for good", () => {
+  const now = 1_000_000;
+  const sent = { words: "Résume la page", id: "run_2.in", at: now };
+  assert.equal(stillPending({ ...sent, id: null }, [], now), true, "not answered yet: it stays");
+  assert.equal(stillPending(sent, [{ id: "run_1.in", from: "owner", text: "Résume la page" }], now), true, "the same words sent before don't clear it");
+  assert.equal(stillPending(sent, [{ id: "run_2.in", from: "owner", text: "[kept in another form] Résume la page" }], now), false, "its id clears it, whatever its words");
+  assert.equal(stillPending(sent, [], now + PENDING_MAX_MS + 1), false, "never on show for good");
+  assert.equal(stillPending(null, [], now), false);
 });

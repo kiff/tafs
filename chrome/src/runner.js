@@ -37,7 +37,13 @@ export const RUN_IDLE_MS = 150_000;
  */
 export const PAUSED_IDLE_MS = 15 * 60_000;
 // A finished run's group turns grey ("· done") this long after it ends, unless the taf's next run starts first (greyLater).
+// A run someone ended (the person's Stop, the idle sweep, the taf's turn over) has no next call to wait for: it greys at once.
 const DONE_GRACE_MS = 15_000;
+/**
+ * How long a run has had no step before the taf's turn being over, in tafs cloud's word, ends it here (endTurn): a step planque
+ * sends while the taf's chat is being read can't land on a run that just ended under it.
+ */
+export const TURN_QUIET_MS = 10_000;
 // Why Show me pointed to no field, as the panel says it: the page changed, the field isn't on screen, the page didn't answer.
 const SHOW_WHY = new Set(["page_changed", "ref_unknown", "page_unresponsive"]);
 const PAUSE_CODES = { failures: "paused_failures", no_progress: "paused_no_progress", owner: "paused_by_owner" };
@@ -366,8 +372,33 @@ export class Runner {
     if (!run || run.stopped) return;
     run.stopped = true;
     this.record(run, by ? { op: "stop", by } : { op: "stop" });
-    // A run that never loaded a page has nothing of the person's to keep: its blank tab goes, as before.
-    await this.closeRun(run, close || !run.opened);
+    // A run that never loaded a page has nothing of the person's to keep: its blank tab goes, as before. One the person stopped
+    // says done at once: nothing of the taf's will follow it in the grace.
+    await this.closeRun(run, close || !run.opened, by != null);
+  }
+
+  /**
+   * The taf's turn is over, in tafs cloud's word (its chat says it isn't working, read by the panel): its run here stops saying it
+   * works (the bar, the panel's card, the group, now "· done") instead of waiting for the idle sweep. Only a run with nothing
+   * under way: no step running, none for TURN_QUIET_MS, not paused, no step handed to the person.
+   *
+   * It isn't a Stop: planque isn't told the run stopped, and the run is forgotten here, as after the worker restarts. planque
+   * keeps a taf's run for its next call (chromeRunIdle), so the person's next message may come back to it: a call that opens a
+   * page finds none in it and goes on in a new run (planque's `restart`), and a bare read is answered `no_page`; neither is
+   * told "the owner stopped this run".
+   */
+  async endTurn(runId) {
+    const run = this.runs.get(runId);
+    if (!run || run.stopped || run.paused || this.tails.has(run.id) || this.handOpen(run)) return { ended: false };
+    // Too soon after its last step: the panel asks again once it's quiet that long, if tafs cloud still says so then.
+    const quiet = this.now() - run.at;
+    if (quiet < TURN_QUIET_MS) return { ended: false, retryIn: TURN_QUIET_MS - quiet };
+    run.stopped = true; // a step racing in while its tabs are let go is refused, not run in them
+    await this.closeRun(run, false, true);
+    this.runs.delete(run.id);
+    this.onChange(this.state());
+    this.queueBars();
+    return { ended: true };
   }
 
   async stopAll() {
@@ -473,7 +504,7 @@ export class Runner {
     return "tafs · " + (this.say("group_done", [name]) || name + " · done");
   }
 
-  async closeRun(run, close = true) {
+  async closeRun(run, close = true, doneNow = false) {
     // A step still handed to the person ends with the run: planque is told "not now", not left to its 30 minutes.
     if (run.hand) this.endHand(run, "declined");
     for (const t of run.tabs) {
@@ -484,7 +515,13 @@ export class Runner {
     }
     if (!close) {
       // The run's tabs are the person's now: no longer the run's, in a group that says it is done. Nothing of the run's closes.
-      if (run.groupId != null) this.greyLater(run.taf || "taf", run.groupId);
+      if (run.groupId != null) {
+        const taf = run.taf || "taf";
+        if (doneNow) {
+          this.greying.delete(taf);
+          await this.greyGroup(taf, run.groupId);
+        } else this.greyLater(taf, run.groupId);
+      }
       await this.leaveDone(run);
       run.tabs.clear();
       run.tab = null;
@@ -533,7 +570,7 @@ export class Runner {
       if (this.now() - run.at > (run.paused ? PAUSED_IDLE_MS : RUN_IDLE_MS)) {
         run.stopped = true;
         this.record(run, { op: "stop", by: "idle" });
-        await this.closeRun(run, false);
+        await this.closeRun(run, false, true);
       }
     }
   }

@@ -390,3 +390,73 @@ form.composer button.send {
 form.composer #coachSendAlone {
   justify-self: start;
 }
+
+/* F: the panel's head and a view's own head stay at the top while the chat scrolls (Retour, the view's name, Nouvelle
+   conversation, the menu), as in the app. The head covers the body's padding so nothing shows above it. */
+:root {
+  --headh: 52px;
+}
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--headh);
+  margin: -16px -16px 12px;
+  padding: 0 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.viewhead {
+  position: sticky;
+  top: var(--headh);
+  z-index: 15;
+  margin: -12px -16px 8px;
+  padding: 8px 16px;
+  background: var(--bg);
+}
+/* Outside the taf's own view, the pairing's lines and the idle line give the chat their room (Settings says them in its card). */
+#paired:not([data-view="tafView"]) > h1,
+#paired:not([data-view="tafView"]) > p {
+  display: none;
+}
+
+/* E: the composer stays at the bottom, the chat scrolling above it; Coach's line about the page goes with it. */
+.dock,
+#tafForm {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  margin: 0 -16px;
+  padding: 8px 16px 12px;
+  background: var(--bg);
+}
+.dock form.composer {
+  margin: 0;
+}
+/* The message just sent, before the chat has it, and the working line under the last message. */
+.thread li.pending {
+  opacity: 0.8;
+}
+.thread li.working {
+  justify-self: start;
+  padding: 2px 4px;
+  color: var(--soft);
+  font-style: italic;
+}
+.thread li.working::before {
+  content: "\25CF";
+  margin-inline-end: 6px;
+  color: var(--amber);
+  font-style: normal;
+  animation: tafs-pulse 1.2s ease-in-out infinite;
+}
+@keyframes tafs-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thread li.working::before {
+    animation: none;
+  }
+}

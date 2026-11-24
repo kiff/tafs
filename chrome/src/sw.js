@@ -345,7 +345,10 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     unpair: () => unpairHere(),
     pause: async () => runner.pause(m.run),
     resume: async () => runner.resume(m.run),
-    stop: async () => runner.stop(m.run),
+    // The panel's Stop is the person's, as the bar's is: the run's group says done at once.
+    stop: async () => runner.stop(m.run, false, "person"),
+    // tafs cloud says the taf's turn is over (the panel read its chat): its run here stops saying it works (runner.endTurn).
+    turn_over: async () => runner.endTurn(String(m.run)),
     go_to_run: async () => runner.goTo(String(m.run)),
     coach_thread: async () => {
       claimKiff().catch(() => {});
