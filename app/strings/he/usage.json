@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · חבילת קרדיטים",
   "usage.packs_keep": "לא פגה",
   "usage.period": "תקופה",
+  "usage.raise_limit.from": "מגבלת ההוצאה כרגע היא {amount}.",
   "usage.raise_limit.not_raised": "המגבלה לא הועלתה. {why}",
   "usage.raise_limit.prompt": "העלאת מגבלת ההוצאה",
   "usage.raise_limit.sign_in_first": "יש להיכנס עם KIFF כדי להעלות את המגבלה.",

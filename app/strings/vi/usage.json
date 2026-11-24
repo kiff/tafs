@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · một gói tín dụng",
   "usage.packs_keep": "Không bao giờ hết hạn",
   "usage.period": "kỳ",
+  "usage.raise_limit.from": "Hạn mức chi tiêu hiện là {amount}.",
   "usage.raise_limit.not_raised": "Hạn mức chưa được nâng. {why}",
   "usage.raise_limit.prompt": "Nâng hạn mức chi tiêu",
   "usage.raise_limit.sign_in_first": "Hãy đăng nhập bằng KIFF để nâng hạn mức.",

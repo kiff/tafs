@@ -2722,6 +2722,7 @@
     <string name="usage_pack_named">%1$s · pakiet kredytów</string>
     <string name="usage_packs_keep">Nigdy nie wygasa</string>
     <string name="usage_period">okres</string>
+    <string name="usage_raise_limit_from">Limit wydatków wynosi teraz %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limit nie został podniesiony. %1$s</string>
     <string name="usage_raise_limit_prompt">Podnieś limit wydatków</string>
     <string name="usage_raise_limit_sign_in_first">Zaloguj się przez KIFF, aby podnieść limit.</string>

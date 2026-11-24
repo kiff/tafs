@@ -2652,6 +2652,7 @@
     <string name="usage_pack_named">%1$s · balíček kreditů</string>
     <string name="usage_packs_keep">Nikdy nevyprší</string>
     <string name="usage_period">období</string>
+    <string name="usage_raise_limit_from">Limit útraty je teď %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limit se nezvýšil. %1$s</string>
     <string name="usage_raise_limit_prompt">Zvýšit limit útraty</string>
     <string name="usage_raise_limit_sign_in_first">Pro zvýšení limitu se přihlaste přes KIFF.</string>

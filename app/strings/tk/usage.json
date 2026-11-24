@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · kredit paketi",
   "usage.packs_keep": "Möhleti gutarmaýar",
   "usage.period": "döwür",
+  "usage.raise_limit.from": "Çykdajy çägi häzir {amount}.",
   "usage.raise_limit.not_raised": "Çäk ýokary galdyrylmady. {why}",
   "usage.raise_limit.prompt": "Çykdajy çägini ýokary galdyryň",
   "usage.raise_limit.sign_in_first": "Çägi ýokary galdyrmak üçin KIFF bilen giriň.",

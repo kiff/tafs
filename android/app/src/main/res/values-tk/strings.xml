@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · kredit paketi</string>
     <string name="usage_packs_keep">Möhleti gutarmaýar</string>
     <string name="usage_period">döwür</string>
+    <string name="usage_raise_limit_from">Çykdajy çägi häzir %1$s.</string>
     <string name="usage_raise_limit_not_raised">Çäk ýokary galdyrylmady. %1$s</string>
     <string name="usage_raise_limit_prompt">Çykdajy çägini ýokary galdyryň</string>
     <string name="usage_raise_limit_sign_in_first">Çägi ýokary galdyrmak üçin KIFF bilen giriň.</string>

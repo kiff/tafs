@@ -2512,6 +2512,7 @@
     <string name="usage_pack_named">%1$s · កញ្ចប់ក្រេឌីត</string>
     <string name="usage_packs_keep">មិនដែលផុតកំណត់</string>
     <string name="usage_period">រយៈពេល</string>
+    <string name="usage_raise_limit_from">ដែនកំណត់ការចំណាយឥឡូវនេះគឺ %1$s។</string>
     <string name="usage_raise_limit_not_raised">ដែនកំណត់មិនត្រូវបានបង្កើនទេ។ %1$s</string>
     <string name="usage_raise_limit_prompt">បង្កើនដែនកំណត់ការចំណាយ</string>
     <string name="usage_raise_limit_sign_in_first">ចូលដោយ KIFF ដើម្បីបង្កើនដែនកំណត់។</string>

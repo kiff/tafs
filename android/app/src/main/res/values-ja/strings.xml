@@ -2512,6 +2512,7 @@
     <string name="usage_pack_named">%1$s・クレジットパック</string>
     <string name="usage_packs_keep">有効期限なし</string>
     <string name="usage_period">期間</string>
+    <string name="usage_raise_limit_from">現在の利用上限は %1$s です。</string>
     <string name="usage_raise_limit_not_raised">上限は引き上げられませんでした。%1$s</string>
     <string name="usage_raise_limit_prompt">利用上限を引き上げる</string>
     <string name="usage_raise_limit_sign_in_first">上限を引き上げるには、KIFFでサインインしてください。</string>

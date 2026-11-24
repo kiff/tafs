@@ -24,6 +24,7 @@
   "usage.pack_named": "{name}・クレジットパック",
   "usage.packs_keep": "有効期限なし",
   "usage.period": "期間",
+  "usage.raise_limit.from": "現在の利用上限は {amount} です。",
   "usage.raise_limit.not_raised": "上限は引き上げられませんでした。{why}",
   "usage.raise_limit.prompt": "利用上限を引き上げる",
   "usage.raise_limit.sign_in_first": "上限を引き上げるには、KIFFでサインインしてください。",

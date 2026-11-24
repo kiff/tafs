@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · kredītu pakete",
   "usage.packs_keep": "Bez derīguma termiņa",
   "usage.period": "periodā",
+  "usage.raise_limit.from": "Tēriņu limits pašlaik ir {amount}.",
   "usage.raise_limit.not_raised": "Limits netika palielināts. {why}",
   "usage.raise_limit.prompt": "Palielināt tēriņu limitu",
   "usage.raise_limit.sign_in_first": "Pieraksties ar KIFF, lai palielinātu limitu.",

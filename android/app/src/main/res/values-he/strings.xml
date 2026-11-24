@@ -2652,6 +2652,7 @@
     <string name="usage_pack_named">%1$s · חבילת קרדיטים</string>
     <string name="usage_packs_keep">לא פגה</string>
     <string name="usage_period">תקופה</string>
+    <string name="usage_raise_limit_from">מגבלת ההוצאה כרגע היא %1$s.</string>
     <string name="usage_raise_limit_not_raised">המגבלה לא הועלתה. %1$s</string>
     <string name="usage_raise_limit_prompt">העלאת מגבלת ההוצאה</string>
     <string name="usage_raise_limit_sign_in_first">יש להיכנס עם KIFF כדי להעלות את המגבלה.</string>

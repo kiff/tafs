@@ -2862,6 +2862,7 @@
     <string name="usage_pack_named">%1$s · حزمة أرصدة</string>
     <string name="usage_packs_keep">لا تنتهي صلاحيتها</string>
     <string name="usage_period">فترة</string>
+    <string name="usage_raise_limit_from">حد الإنفاق الآن %1$s.</string>
     <string name="usage_raise_limit_not_raised">لم يُرفع الحد. %1$s</string>
     <string name="usage_raise_limit_prompt">رفع حد الإنفاق</string>
     <string name="usage_raise_limit_sign_in_first">سجّل الدخول عبر KIFF لرفع الحد.</string>

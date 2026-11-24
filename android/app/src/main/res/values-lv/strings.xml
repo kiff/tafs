@@ -2652,6 +2652,7 @@
     <string name="usage_pack_named">%1$s · kredītu pakete</string>
     <string name="usage_packs_keep">Bez derīguma termiņa</string>
     <string name="usage_period">periodā</string>
+    <string name="usage_raise_limit_from">Tēriņu limits pašlaik ir %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limits netika palielināts. %1$s</string>
     <string name="usage_raise_limit_prompt">Palielināt tēriņu limitu</string>
     <string name="usage_raise_limit_sign_in_first">Pieraksties ar KIFF, lai palielinātu limitu.</string>

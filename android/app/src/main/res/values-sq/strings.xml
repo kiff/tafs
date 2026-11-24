@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · një paketë kreditesh</string>
     <string name="usage_packs_keep">Nuk skadon kurrë</string>
     <string name="usage_period">periudhë</string>
+    <string name="usage_raise_limit_from">Kufiri i shpenzimeve tani është %1$s.</string>
     <string name="usage_raise_limit_not_raised">Kufiri nuk u rrit. %1$s</string>
     <string name="usage_raise_limit_prompt">Rritni kufirin e shpenzimeve</string>
     <string name="usage_raise_limit_sign_in_first">Hyni me KIFF për të rritur kufirin.</string>

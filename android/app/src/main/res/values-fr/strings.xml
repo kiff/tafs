@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · un pack de crédits</string>
     <string name="usage_packs_keep">N\'expire jamais</string>
     <string name="usage_period">période</string>
+    <string name="usage_raise_limit_from">Le plafond de dépenses est actuellement de %1$s.</string>
     <string name="usage_raise_limit_not_raised">La limite n\'a pas été relevée. %1$s</string>
     <string name="usage_raise_limit_prompt">Relever le plafond de dépenses</string>
     <string name="usage_raise_limit_sign_in_first">Connectez-vous avec KIFF pour relever la limite.</string>

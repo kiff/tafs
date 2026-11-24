@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · paket kredit",
   "usage.packs_keep": "Tidak pernah kedaluwarsa",
   "usage.period": "periode",
+  "usage.raise_limit.from": "Batas pengeluaran saat ini {amount}.",
   "usage.raise_limit.not_raised": "Batas tidak dinaikkan. {why}",
   "usage.raise_limit.prompt": "Naikkan batas pengeluaran",
   "usage.raise_limit.sign_in_first": "Masuk dengan KIFF untuk menaikkan batas.",

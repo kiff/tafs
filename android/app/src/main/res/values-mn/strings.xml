@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · кредитийн багц</string>
     <string name="usage_packs_keep">Хэзээ ч дуусахгүй</string>
     <string name="usage_period">үе</string>
+    <string name="usage_raise_limit_from">Зарцуулалтын хязгаар одоо %1$s байна.</string>
     <string name="usage_raise_limit_not_raised">Хязгаарыг нэмэгдүүлсэнгүй. %1$s</string>
     <string name="usage_raise_limit_prompt">Зарцуулалтын хязгаарыг нэмэгдүүлэх</string>
     <string name="usage_raise_limit_sign_in_first">Хязгаарыг нэмэгдүүлэхийн тулд KIFF-ээр нэвтэрнэ үү.</string>

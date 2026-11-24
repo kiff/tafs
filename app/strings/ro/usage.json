@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · un pachet de credite",
   "usage.packs_keep": "Nu expiră niciodată",
   "usage.period": "perioadă",
+  "usage.raise_limit.from": "Limita de cheltuieli este acum {amount}.",
   "usage.raise_limit.not_raised": "Limita nu a fost mărită. {why}",
   "usage.raise_limit.prompt": "Măriți limita de cheltuieli",
   "usage.raise_limit.sign_in_first": "Conectați-vă cu KIFF pentru a mări limita.",
