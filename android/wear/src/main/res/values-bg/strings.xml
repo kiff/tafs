@@ -109,6 +109,7 @@
     <string name="watch_page_brief">Резюме</string>
     <string name="watch_page_inbox">Входящи</string>
     <string name="watch_paused_still_answers">На пауза: графикът му е изключен. Все пак отговаря на това, което изпращате.</string>
+    <string name="watch_phone_could_not_reach_cloud">Телефонът ви не успя да се свърже с tafs cloud. Опитайте отново.</string>
     <string name="watch_phone_link_failed">Не можа да се осъществи връзка с телефона ви. Опитайте отново.</string>
     <string name="watch_phone_no_answer">Телефонът ви не отговори навреме. Опитайте отново.</string>
     <string name="watch_phone_no_app">tafs не е на телефона ви. Инсталирайте го там и опитайте отново.</string>

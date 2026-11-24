@@ -635,3 +635,76 @@ test("scroll moves the page by most of a screen, or brings a ref into view", { s
   }));
   await page.close();
 });
+
+// The bar a run shows while a taf works in a tab (docs/chrome.md, "While a taf works on a page").
+async function openWithBar() {
+  const page = await ctx.newPage();
+  await page.goto("https://shop.example/account");
+  await page.evaluate(() => {
+    globalThis.__sent = [];
+    globalThis.chrome = { runtime: { sendMessage: (m) => globalThis.__sent.push(m) } };
+    // A test's own look into the closed root, taken before page.js makes it: the page itself has no such hook.
+    const attach = Element.prototype.attachShadow;
+    Element.prototype.attachShadow = function (o) {
+      const root = attach.call(this, o);
+      if (this.localName === "tafs-working-bar") globalThis.__barRoot = root;
+      return root;
+    };
+    const top = document.createElement("button");
+    top.id = "topButton";
+    top.textContent = "Menu";
+    top.style.cssText = "position:fixed;top:6px;left:8px;z-index:10";
+    top.onclick = () => (globalThis.__menu = true);
+    document.body.appendChild(top);
+  });
+  await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: PAGE });
+  await page.evaluate(() => TafsPage.showBar("Rae is working on this page", "Stop"));
+  return page;
+}
+
+test("the bar says which taf is working, and nothing of it is in a read", { skip: !playwright }, async () => {
+  const page = await openWithBar();
+  assert.equal(await page.evaluate(() => globalThis.__barRoot.querySelector("span").textContent), "Rae is working on this page");
+  assert.equal(await page.evaluate(() => document.querySelector("tafs-working-bar").shadowRoot), null, "closed to the page");
+  const read = await page.evaluate(() => TafsPage.read());
+  assert.ok(!read.text.includes("is working on this page"), "its words aren't the page's");
+  assert.ok(!read.controls.some((c) => c.label === "Stop"), "its Stop is no control a taf can click");
+  await page.close();
+});
+
+test("an act on an element under the bar still lands: the check for what's on top looks through the bar", { skip: !playwright }, async () => {
+  const page = await openWithBar();
+  // The page's own button sits right under the bar's Stop, the one part of the bar that takes a pointer.
+  await page.evaluate(() => {
+    const r = globalThis.__barRoot.querySelector("button").getBoundingClientRect();
+    const b = document.getElementById("topButton");
+    b.style.left = r.left + "px";
+    b.style.top = r.top + "px";
+    b.style.width = r.width + "px";
+    b.style.height = r.height + "px";
+  });
+  const read = await page.evaluate(() => TafsPage.read());
+  const menu = read.controls.find((c) => c.label === "Menu");
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [menu.ref, read.read_id]), { ok: true });
+  assert.equal(await page.evaluate(() => globalThis.__menu), true);
+  await page.close();
+});
+
+test("only a real press of Stop stops the run: the page can't press it, and can't keep the bar away", { skip: !playwright }, async () => {
+  const page = await openWithBar();
+  await page.evaluate(() => globalThis.__barRoot.querySelector("button").click());
+  assert.deepEqual(await page.evaluate(() => globalThis.__sent), [], "a click the page made is no one's Stop");
+  const box = await page.evaluate(() => {
+    const r = globalThis.__barRoot.querySelector("button").getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  });
+  await page.mouse.click(box.x, box.y);
+  assert.deepEqual(await page.evaluate(() => globalThis.__sent), [{ type: "bar_stop" }], "a real press sends Stop, and is no owner input");
+  await page.evaluate(() => document.querySelector("tafs-working-bar").remove());
+  await page.waitForFunction(() => document.querySelector("tafs-working-bar"));
+  await page.evaluate(() => TafsPage.hideBar());
+  await page.evaluate(() => new Promise((r) => setTimeout(r, 50)));
+  assert.equal(await page.evaluate(() => document.querySelector("tafs-working-bar")), null, "once the run ends it goes, and stays gone");
+  await page.close();
+});

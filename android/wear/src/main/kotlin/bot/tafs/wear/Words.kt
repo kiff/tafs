@@ -136,6 +136,7 @@ object Words {
       val inbox: String get() = Res.s(R.string.watch_page_inbox)
     }
     val pausedStillAnswers: String get() = Res.s(R.string.watch_paused_still_answers)
+    val phoneCouldNotReachCloud: String get() = Res.s(R.string.watch_phone_could_not_reach_cloud)
     val phoneLinkFailed: String get() = Res.s(R.string.watch_phone_link_failed)
     val phoneNoAnswer: String get() = Res.s(R.string.watch_phone_no_answer)
     val phoneNoApp: String get() = Res.s(R.string.watch_phone_no_app)

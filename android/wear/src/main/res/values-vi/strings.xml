@@ -104,6 +104,7 @@
     <string name="watch_page_brief">Tóm tắt</string>
     <string name="watch_page_inbox">Hộp thư</string>
     <string name="watch_paused_still_answers">Đã tạm dừng: lịch của nó đã tắt. Nó vẫn trả lời những gì bạn gửi.</string>
+    <string name="watch_phone_could_not_reach_cloud">Điện thoại của bạn không kết nối được với tafs cloud. Hãy thử lại.</string>
     <string name="watch_phone_link_failed">Không liên lạc được với điện thoại của bạn. Hãy thử lại.</string>
     <string name="watch_phone_no_answer">Điện thoại của bạn không trả lời kịp. Hãy thử lại.</string>
     <string name="watch_phone_no_app">tafs chưa có trên điện thoại của bạn. Hãy cài ở đó, rồi thử lại.</string>

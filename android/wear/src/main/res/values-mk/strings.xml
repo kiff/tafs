@@ -109,6 +109,7 @@
     <string name="watch_page_brief">Преглед</string>
     <string name="watch_page_inbox">Приемно сандаче</string>
     <string name="watch_paused_still_answers">Паузиран: неговиот распоред е исклучен. Сè уште одговара на она што ќе му испратиш.</string>
+    <string name="watch_phone_could_not_reach_cloud">Твојот телефон не можеше да стигне до tafs cloud. Обиди се повторно.</string>
     <string name="watch_phone_link_failed">Не можеше да се разговара со телефонот. Обиди се повторно.</string>
     <string name="watch_phone_no_answer">Твојот телефон не одговори навреме. Обиди се повторно.</string>
     <string name="watch_phone_no_app">tafs не е на твојот телефон. Инсталирај го таму, па обиди се повторно.</string>

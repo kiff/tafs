@@ -104,6 +104,7 @@
     <string name="watch_page_brief">Ringkasan</string>
     <string name="watch_page_inbox">Kotak Masuk</string>
     <string name="watch_paused_still_answers">Dijeda: jadwalnya mati. Ia tetap menjawab apa yang Anda kirim.</string>
+    <string name="watch_phone_could_not_reach_cloud">Ponsel Anda tidak dapat menjangkau tafs cloud. Coba lagi.</string>
     <string name="watch_phone_link_failed">Tidak dapat berkomunikasi dengan ponsel Anda. Coba lagi.</string>
     <string name="watch_phone_no_answer">Ponsel Anda tidak menjawab tepat waktu. Coba lagi.</string>
     <string name="watch_phone_no_app">tafs tidak ada di ponsel Anda. Pasang di sana, lalu coba lagi.</string>

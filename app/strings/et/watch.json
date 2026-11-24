@@ -59,6 +59,7 @@
   "watch.page.brief": "Kokkuvõte",
   "watch.page.inbox": "Postkast",
   "watch.paused_still_answers": "Pausil: selle ajakava on väljas. See vastab ikka sellele, mida saadad.",
+  "watch.phone_could_not_reach_cloud": "Telefon ei saanud tafs cloudiga ühendust. Proovi uuesti.",
   "watch.phone_link_failed": "Telefoniga ei õnnestunud suhelda. Proovi uuesti.",
   "watch.phone_no_answer": "Telefon ei vastanud õigel ajal. Proovi uuesti.",
   "watch.phone_no_app": "tafsi pole telefonis. Paigalda see sinna ja proovi uuesti.",

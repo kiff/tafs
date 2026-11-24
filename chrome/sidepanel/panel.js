@@ -261,13 +261,16 @@ async function drawPast() {
 
 $("coachPast").addEventListener("toggle", () => $("coachPast").open && drawPast());
 
-$("coachNew").onclick = () => {
+/** A new conversation with Coach: nothing of the one before is shown or sent into. */
+function startFresh() {
   view = FRESH;
   $("coachWords").value = "";
   $("coachPast").open = false;
   $("coachThread").textContent = "";
   drawCoach();
-};
+}
+
+$("coachNew").onclick = startFresh;
 
 $("coachForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -378,8 +381,13 @@ $("tafForm").onsubmit = async (e) => {
 };
 
 // Coach sets up a new taf; it's a button now, not the panel's chat.
+// "Set up a new taf for this site" always opens a new conversation with Coach, in the panel's own view: never the one
+// already open, so a new taf's setup is never appended under another chat. Tapped again, it closes Coach.
 $("setupTaf").onclick = () => {
   $("coach").hidden = !$("coach").hidden;
-  if (!$("coach").hidden) drawCoach();
-  else clearTimeout(pollTimer);
+  if ($("coach").hidden) {
+    clearTimeout(pollTimer);
+    return;
+  }
+  startFresh();
 };

@@ -109,6 +109,7 @@
     <string name="watch_page_brief">ब्रीफ़</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">थमा हुआ: इसका निर्धारित समय बंद है। यह अब भी आपके भेजे का उत्तर देता है।</string>
+    <string name="watch_phone_could_not_reach_cloud">आपका फ़ोन tafs cloud तक नहीं पहुँच सका। फिर कोशिश करें।</string>
     <string name="watch_phone_link_failed">आपके फ़ोन से बात नहीं हो सकी। फिर कोशिश करें।</string>
     <string name="watch_phone_no_answer">आपके फ़ोन ने समय पर उत्तर नहीं दिया। फिर कोशिश करें।</string>
     <string name="watch_phone_no_app">tafs आपके फ़ोन पर नहीं है। उसे वहाँ इंस्टॉल करें, फिर फिर कोशिश करें।</string>

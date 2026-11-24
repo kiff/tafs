@@ -109,6 +109,7 @@
     <string name="watch_page_brief">Kokkuvõte</string>
     <string name="watch_page_inbox">Postkast</string>
     <string name="watch_paused_still_answers">Pausil: selle ajakava on väljas. See vastab ikka sellele, mida saadad.</string>
+    <string name="watch_phone_could_not_reach_cloud">Telefon ei saanud tafs cloudiga ühendust. Proovi uuesti.</string>
     <string name="watch_phone_link_failed">Telefoniga ei õnnestunud suhelda. Proovi uuesti.</string>
     <string name="watch_phone_no_answer">Telefon ei vastanud õigel ajal. Proovi uuesti.</string>
     <string name="watch_phone_no_app">tafsi pole telefonis. Paigalda see sinna ja proovi uuesti.</string>

@@ -79,5 +79,6 @@
   "hand_show_no_field": {"message": "これがそのページです。tafは示す欄やボタンを指定していません。", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "あなたに任されました", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "あなたが行いました", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "「今はしない」を選びました", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "「今はしない」を選びました", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$ がこのページで作業中", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }

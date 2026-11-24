@@ -5536,6 +5536,7 @@ final class AppModel: ObservableObject {
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
             chatStates[tafID]?.askCoach = thread.askCoach
+            chatStates[tafID]?.loopCards = thread.loopCards
             chatStates[tafID]?.runFailed = thread.failed
             // The thread is the source: tafs cloud says when the latest run stopped at a cap, and a
             // run at work, or one that answered since, is past it.
@@ -5866,6 +5867,10 @@ final class AppModel: ObservableObject {
         var unsent: [UnsentMessage] = []
         /// The taf's ask_coach cards, as its thread has them (kiff/tafs#476, gap 15).
         var askCoach: [TafsCloud.AskCoachCard] = []
+        /// The loop cards a run waits on in this chat ("Still reading"), as the thread has them.
+        var loopCards: [TafsCloud.LoopCard] = []
+        /// Loop cards answered here, by id: they show as answered at once, until the thread's words for it come.
+        var loopTaken: Set<String> = []
         /// The latest run ended without an answer, as the thread says (`failed`): tafs cloud's words,
         /// the chat's last line. A later read with none clears it.
         var runFailed: TafsCloud.RunFailed?
@@ -6323,6 +6328,8 @@ final class AppModel: ObservableObject {
         case knock(TafsCloud.Knock)
         /// A setting the taf hands to Coach (kiff/tafs#476, gap 15), at its time.
         case askCoach(TafsCloud.AskCoachCard)
+        /// A run that read page after page of one list asks whether to read on (the loop card), at its time.
+        case loopCard(TafsCloud.LoopCard)
         var id: String {
             switch self {
             case .message(let m): return "m|" + m.id
@@ -6333,6 +6340,7 @@ final class AppModel: ObservableObject {
             case .streaming(let id, _): return id
             case .knock(let k): return "d|" + k.id
             case .askCoach(let c): return "a|" + c.id
+            case .loopCard(let c): return "l|" + c.id
             }
         }
         var at: Date {
@@ -6346,6 +6354,7 @@ final class AppModel: ObservableObject {
             case .streaming(_, let m): return m.at
             case .knock(let k): return k.at
             case .askCoach(let c): return c.at
+            case .loopCard(let c): return c.at
             }
         }
     }
@@ -6369,6 +6378,8 @@ final class AppModel: ObservableObject {
         if mode == .kiff, !doorsOffered.isEmpty { items += (chatKnocks[tafID] ?? []).map(ChatItem.knock) }
         // The settings it handed to Coach, each at its time (kiff/tafs#476, gap 15).
         if mode == .kiff { items += (chatStates[tafID]?.askCoach ?? []).map(ChatItem.askCoach) }
+        // A run asking whether to read on, at its time, where it waits.
+        if mode == .kiff { items += (chatStates[tafID]?.loopCards ?? []).map(ChatItem.loopCard) }
         if let first = messages.first?.at {
             // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
             items += entries(for: tafID).filter {
@@ -6574,6 +6585,36 @@ final class AppModel: ObservableObject {
                 guard let key, let before else { continue }
                 chatStates[tafID]?.anchors[key] = before
             }
+        }
+    }
+
+    /// The owner's answer to a loop card ("Still reading": Read on or Stop here), as Android's `answerTafCard`: the option's
+    /// value goes to the taf's own route (`POST /v1/tafs/{id}/components/{component}/answer`) with the card's chat, and the run
+    /// that waited on it goes on and is followed to its end. A card that doesn't wait any more (409) is read again.
+    func answerLoopCard(_ tafID: UUID, card: TafsCloud.LoopCard, value: String) async {
+        guard mode == .kiff, card.answered == nil, card.options.contains(where: { $0.value == value }),
+              !chatState(tafID).loopTaken.contains(card.id), let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        chatStates[tafID, default: ChatState()].loopTaken.insert(card.id)
+        chatErrors[tafID] = nil
+        do {
+            let r = try await cloud.answerCard(c.id, component: card.id, answer: .text(value), session: card.session.isEmpty ? nil : card.session)
+            guard gen == accountGeneration else { return }
+            // The taf is at work again: it reads as thinking until its run is followed, and the run's end reads the thread again.
+            chatStates[tafID]?.awaiting = clock()
+            chatStates[tafID]?.ended = nil
+            await loadChat(tafID)
+            // The run paused on the card and goes on now: its stream is followed again, even if it was followed before the pause.
+            resumedRuns.remove(r.run)
+            await resumeChat(tafID)
+        } catch let e as TafsCloud.CloudError where e.status == 409 {
+            guard gen == accountGeneration else { return }
+            chatStates[tafID]?.loopTaken.remove(card.id)
+            await loadChat(tafID)
+        } catch {
+            guard gen == accountGeneration else { return }
+            chatStates[tafID]?.loopTaken.remove(card.id)
+            chatErrors[tafID] = Words.Common.didntGoThrough(what: card.title.isEmpty ? card.text : card.title, why: error.localizedDescription)
         }
     }
 

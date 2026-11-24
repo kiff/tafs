@@ -79,5 +79,6 @@
   "hand_show_no_field": {"message": "Questa è la pagina. Il taf non ha indicato un campo o un pulsante da mostrare.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "Passato a te", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "L'hai fatto", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "Hai detto «Non ora»", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "Hai detto «Non ora»", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$ sta lavorando su questa pagina", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }

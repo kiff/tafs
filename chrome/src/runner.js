@@ -45,11 +45,12 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, doneStore = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), say = (key, sub) => (globalThis.chrome && globalThis.chrome.i18n ? globalThis.chrome.i18n.getMessage(key, sub) : ""), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, doneStore = null }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
+    this.say = say; // the extension's own words (chrome.i18n), for the bar a run shows in its tab
     this.shots = shots; // the picture kept of each act (shot.js); null: none is taken
     this.onHandAnswer = onHandAnswer; // the person's answer to a hand-over, to give planque ({hand, outcome, page}); the service worker signs and keeps it
     this.now = now;
@@ -200,6 +201,24 @@ export class Runner {
     this.onChange(this.state());
   }
 
+  /**
+   * The person pressed Stop on the bar in a run's tab: the run's browser work ends at once, as the panel's Stop does, and
+   * planque's next step for it is answered `stopped` (the taf is told the person stopped it). Its tabs stay, as with Stop.
+   */
+  async stopByPerson(tabId) {
+    const run = this.runOfTab(tabId);
+    if (!run || run.stopped) return;
+    await this.stop(run.id, false, "person");
+  }
+
+  /** Shows the bar in the run's tab: the taf's name and Stop, in the extension's words. A page that can't take it is no reason to fail. */
+  async showBar(run) {
+    if (run.tab == null) return;
+    const words = this.say("bar_working", [run.taf || "taf"]) || (run.taf || "taf");
+    const stop = this.say("stop") || "Stop";
+    await this.inTab(run.tab, (w, s) => globalThis.TafsPage.showBar(w, s), [words, stop]).catch(() => {});
+  }
+
   /** The owner touched a run's tab: that run pauses until Resume. */
   ownerInput(tabId) {
     const run = this.runOfTab(tabId);
@@ -234,11 +253,11 @@ export class Runner {
    * closes under them. Only the latest finished run of each taf keeps its tabs: that taf's next run closes them when it opens.
    * `close` closes them at once instead: unpairing, and a run that failed to set up.
    */
-  async stop(runId, close = false) {
+  async stop(runId, close = false, by = null) {
     const run = this.runs.get(runId);
     if (!run || run.stopped) return;
     run.stopped = true;
-    this.record(run, { op: "stop" });
+    this.record(run, by ? { op: "stop", by } : { op: "stop" });
     // A run that never loaded a page has nothing of the person's to keep: its blank tab goes, as before.
     await this.closeRun(run, close || !run.opened);
   }
@@ -334,6 +353,8 @@ export class Runner {
     // A step still handed to the person ends with the run: planque is told "not now", not left to its 30 minutes.
     if (run.hand) this.endHand(run, "declined");
     for (const t of run.tabs) {
+      // The bar goes with the run: the tab is the person's again.
+      await this.inTab(t, () => globalThis.TafsPage && globalThis.TafsPage.hideBar()).catch(() => {});
       this.tabRun.delete(t);
       await this.unfence(t);
     }
@@ -694,6 +715,8 @@ export class Runner {
     await this.inject(run.tab, run);
     const page = await this.inTab(run.tab, (o, p) => globalThis.TafsPage.read(o, p), [offset, opts]);
     if (!page) return { error: { code: "page_unresponsive" } };
+    // Every read is the run at work in this tab: the bar says so, with Stop (a new page needs it again).
+    await this.showBar(run);
     run.pages.set(page.read_id, page);
     if (run.pages.size > 20) run.pages.delete(run.pages.keys().next().value);
     return { page };

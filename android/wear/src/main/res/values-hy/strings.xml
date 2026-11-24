@@ -109,6 +109,7 @@
     <string name="watch_page_brief">Ամփոփում</string>
     <string name="watch_page_inbox">Մուտքային</string>
     <string name="watch_paused_still_answers">Դադարեցված է․ նրա ժամանակացույցը անջատված է։ Այն դեռ պատասխանում է նրան, ինչ ուղարկում եք։</string>
+    <string name="watch_phone_could_not_reach_cloud">Ձեր հեռախոսը չկարողացավ կապվել tafs cloud-ի հետ։ Փորձեք նորից։</string>
     <string name="watch_phone_link_failed">Չհաջողվեց կապվել ձեր հեռախոսի հետ։ Փորձեք նորից։</string>
     <string name="watch_phone_no_answer">Ձեր հեռախոսը ժամանակին չպատասխանեց։ Փորձեք նորից։</string>
     <string name="watch_phone_no_app">tafs-ը ձեր հեռախոսում չէ։ Տեղադրեք այնտեղ, ապա նորից փորձեք։</string>

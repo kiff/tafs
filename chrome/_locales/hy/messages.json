@@ -79,5 +79,6 @@
   "hand_show_no_field": {"message": "Սա այդ էջն է։ Taf-ը ցույց տալու համար դաշտ կամ կոճակ չի նշել։", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "Փոխանցվեց ձեզ", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Դուք արեցիք", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "Դուք ասացիք «Ոչ հիմա»", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "Դուք ասացիք «Ոչ հիմա»", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$-ը աշխատում է այս էջում", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }

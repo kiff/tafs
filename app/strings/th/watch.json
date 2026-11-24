@@ -55,6 +55,7 @@
   "watch.page.brief": "สรุป",
   "watch.page.inbox": "กล่องข้อความ",
   "watch.paused_still_answers": "หยุดชั่วคราว: กำหนดการของมันปิดอยู่ มันยังตอบสิ่งที่คุณส่ง",
+  "watch.phone_could_not_reach_cloud": "โทรศัพท์ของคุณเชื่อมต่อ tafs cloud ไม่ได้ ลองอีกครั้ง",
   "watch.phone_link_failed": "คุยกับโทรศัพท์ของคุณไม่ได้ ลองอีกครั้ง",
   "watch.phone_no_answer": "โทรศัพท์ของคุณไม่ตอบทันเวลา ลองอีกครั้ง",
   "watch.phone_no_app": "tafs ไม่ได้อยู่บนโทรศัพท์ของคุณ ติดตั้งที่นั่น แล้วลองอีกครั้ง",

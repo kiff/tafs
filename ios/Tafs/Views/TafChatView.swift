@@ -144,6 +144,10 @@ struct TafChatView: View {
                                 case .askCoach(let card):
                                     AskCoachCardView(text: card.text, ask: model.mode == .kiff && model.mayUseCoach && model.manages(tafID)
                                                      ? { model.askCoachAbout(tafID, words: card.text) } : nil)
+                                case .loopCard(let card):
+                                    LoopCardView(card: card, taken: state.loopTaken.contains(card.id)) { value in
+                                        Task { await model.answerLoopCard(tafID, card: card, value: value) }
+                                    }
                                 }
                             }
                             .id(item.id)
@@ -816,6 +820,38 @@ struct AnsweredCardLine: View {
 /// A taf's card handing a setting to Coach (kiff/tafs#476, gap 15): the owner's request in the
 /// taf's words, and Ask Coach, which opens Coach on this taf with them in the box to send, as
 /// written or changed. Nothing is sent. Someone who can't change the taf reads it alone.
+/// The loop card (docs/chat.md): a run that read page after page of one list asks whether to read on. tafs cloud's words, as
+/// sent: its title, its line, and its two answers (Read on, Stop here). Once answered, or tapped here, it says how and offers
+/// nothing more.
+struct LoopCardView: View {
+    let card: TafsCloud.LoopCard
+    let taken: Bool
+    let answer: (String) -> Void
+    var body: some View {
+        Panel {
+            if !card.title.isEmpty {
+                Text(card.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if !card.text.isEmpty {
+                Text(card.text).scaledFont(14).foregroundColor(Theme.soft)
+                    .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
+            }
+            if let answered = card.answered {
+                if !answered.isEmpty { Text(answered).scaledFont(13).foregroundColor(Theme.dim) }
+            } else {
+                ForEach(Array(card.options.enumerated()), id: \.offset) { i, option in
+                    if i == 0 {
+                        Button(option.label) { answer(option.value) }.buttonStyle(PrimaryButtonStyle()).disabled(taken)
+                    } else {
+                        Button(option.label) { answer(option.value) }.buttonStyle(OutlineButtonStyle()).disabled(taken)
+                    }
+                }
+            }
+        }
+    }
+}
+
 struct AskCoachCardView: View {
     /// Its button, the same as Android's.
     static let askWord = Words.Coach.ask

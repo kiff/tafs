@@ -2899,6 +2899,7 @@
     <string name="watch_page_brief">Sažetak</string>
     <string name="watch_page_inbox">Pristigle</string>
     <string name="watch_paused_still_answers">Pauzirano: njegov je raspored isključen. I dalje odgovara na ono što pošaljete.</string>
+    <string name="watch_phone_could_not_reach_cloud">Vaš telefon nije mogao doći do tafs clouda. Pokušajte ponovno.</string>
     <string name="watch_phone_link_failed">Nije bilo moguće razgovarati s telefonom. Pokušajte ponovno.</string>
     <string name="watch_phone_no_answer">Vaš telefon nije odgovorio na vrijeme. Pokušajte ponovno.</string>
     <string name="watch_phone_no_app">tafs nije na vašem telefonu. Instalirajte ga tamo, pa pokušajte ponovno.</string>

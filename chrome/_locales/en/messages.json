@@ -39,6 +39,7 @@
   "pause": { "message": "Pause" },
   "resume": { "message": "Resume" },
   "stop": { "message": "Stop" },
+  "bar_working": { "message": "$TAF$ is working on this page", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": { "taf": { "content": "$1" } } },
   "step_open": { "message": "Opened $SITE$", "placeholders": { "site": { "content": "$1" } } },
   "step_read": { "message": "Read the page" },
   "step_act_click": { "message": "Clicked" },

@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">Resumen</string>
     <string name="watch_page_inbox">Bandeja</string>
     <string name="watch_paused_still_answers">En pausa: su programación está detenida. Aun así responde a lo que envías.</string>
+    <string name="watch_phone_could_not_reach_cloud">Tu teléfono no pudo conectar con tafs cloud. Vuelve a intentarlo.</string>
     <string name="watch_phone_link_failed">No se pudo conectar con tu teléfono. Vuelve a intentarlo.</string>
     <string name="watch_phone_no_answer">Tu teléfono no respondió a tiempo. Vuelve a intentarlo.</string>
     <string name="watch_phone_no_app">tafs no está en tu teléfono. Instálalo allí y vuelve a intentarlo.</string>

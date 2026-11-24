@@ -706043,6 +706043,269 @@
         }
       }
     },
+    "watch.phone_could_not_reach_cloud": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على هاتفك الوصول إلى tafs cloud. حاول مرة أخرى."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonunuz tafs cloud ilə əlaqə qura bilmədi. Yenidən cəhd edin."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефонът ви не успя да се свърже с tafs cloud. Опитайте отново."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আপনার ফোন tafs cloud-এ পৌঁছাতে পারেনি। আবার চেষ্টা করুন।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El teu telèfon no ha pogut connectar amb tafs cloud. Torna-ho a provar."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon se nemohl spojit s tafs cloud. Zkuste to znovu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Handy hat tafs cloud nicht erreicht. Versuch es erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your phone couldn't reach tafs cloud. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu teléfono no pudo conectar con tafs cloud. Vuelve a intentarlo."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon ei saanud tafs cloudiga ühendust. Proovi uuesti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre téléphone n'a pas pu joindre tafs cloud. Réessayez."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הטלפון שלך לא הצליח להתחבר ל-tafs cloud. יש לנסות שוב."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आपका फ़ोन tafs cloud तक नहीं पहुँच सका। फिर कोशिश करें।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaš telefon nije mogao doći do tafs clouda. Pokušajte ponovno."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A telefonod nem érte el a tafs cloudot. Próbáld újra."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ձեր հեռախոսը չկարողացավ կապվել tafs cloud-ի հետ։ Փորձեք նորից։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponsel Anda tidak dapat menjangkau tafs cloud. Coba lagi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il telefono non è riuscito a raggiungere tafs cloud. Riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スマートフォンが tafs cloud に接続できませんでした。もう一度お試しください。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "თქვენმა ტელეფონმა ვერ დაუკავშირდა tafs cloud-ს. სცადეთ ხელახლა."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ទូរសព្ទរបស់អ្នកមិនអាចភ្ជាប់ទៅ tafs cloud បានទេ។ សូមព្យាយាមម្តងទៀត។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴대폰이 tafs cloud에 연결하지 못했습니다. 다시 시도하세요."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ໂທລະສັບຂອງທ່ານເຊື່ອມຕໍ່ tafs cloud ບໍ່ໄດ້. ລອງໃໝ່."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonui nepavyko pasiekti tafs cloud. Bandykite dar kartą."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tālrunis nevarēja sasniegt tafs cloud. Mēģini vēlreiz."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Твојот телефон не можеше да стигне до tafs cloud. Обиди се повторно."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Таны утас tafs cloud-тай холбогдож чадсангүй. Дахин оролдоно уу."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "तपाईंको फोनले tafs cloud मा पुग्न सकेन। फेरि प्रयास गर्नुहोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoon kon tafs cloud niet bereiken. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon nie mógł połączyć się z tafs cloud. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O telemóvel não conseguiu contactar o tafs cloud. Tente novamente."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O celular não conseguiu acessar o tafs cloud. Tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonul nu a putut contacta tafs cloud. Încercați din nou."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefón sa nemohol spojiť s tafs cloud. Skúste to znova."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon ni mogel doseči tafs cloud. Poskusite znova."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefoni juaj nuk arriti të lidhej me tafs cloud. Provoni sërish."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaš telefon nije mogao da dođe do tafs clouda. Pokušajte ponovo."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "โทรศัพท์ของคุณเชื่อมต่อ tafs cloud ไม่ได้ ลองอีกครั้ง"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonyňyz tafs cloud-a baglanyp bilmedi. Täzeden synanyşyň."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonunuz tafs cloud'a ulaşamadı. Tekrar deneyin."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آپ کا فون tafs cloud تک نہیں پہنچ سکا۔ دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Điện thoại của bạn không kết nối được với tafs cloud. Hãy thử lại."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的手機無法連線到 tafs cloud。請再試一次。"
+          }
+        }
+      }
+    },
     "watch.phone_link_failed": {
       "extractionState": "manual",
       "localizations": {

@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">Përmbledhja</string>
     <string name="watch_page_inbox">Kutia hyrëse</string>
     <string name="watch_paused_still_answers">Pezulluar: orari i tij është joaktiv. Ende u përgjigjet atyre që dërgoni.</string>
+    <string name="watch_phone_could_not_reach_cloud">Telefoni juaj nuk arriti të lidhej me tafs cloud. Provoni sërish.</string>
     <string name="watch_phone_link_failed">Nuk u fol dot me telefonin tuaj. Provoni sërish.</string>
     <string name="watch_phone_no_answer">Telefoni juaj nuk u përgjigj në kohë. Provoni sërish.</string>
     <string name="watch_phone_no_app">tafs nuk është në telefonin tuaj. Instalojeni atje, pastaj provoni sërish.</string>

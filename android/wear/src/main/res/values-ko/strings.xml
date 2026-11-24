@@ -104,6 +104,7 @@
     <string name="watch_page_brief">브리핑</string>
     <string name="watch_page_inbox">받은편지함</string>
     <string name="watch_paused_still_answers">일시 중지됨: 일정이 꺼져 있습니다. 보내는 메시지에는 계속 답합니다.</string>
+    <string name="watch_phone_could_not_reach_cloud">휴대폰이 tafs cloud에 연결하지 못했습니다. 다시 시도하세요.</string>
     <string name="watch_phone_link_failed">휴대폰과 연결하지 못했습니다. 다시 시도하세요.</string>
     <string name="watch_phone_no_answer">휴대폰이 제시간에 응답하지 않았습니다. 다시 시도하세요.</string>
     <string name="watch_phone_no_app">휴대폰에 tafs가 설치되어 있지 않습니다. 설치한 후 다시 시도하세요.</string>

@@ -75,6 +75,7 @@
   "watch.page.brief": "الملخص",
   "watch.page.inbox": "الوارد",
   "watch.paused_still_answers": "متوقف مؤقتًا: جدوله متوقف. ما زال يردّ على ما ترسله.",
+  "watch.phone_could_not_reach_cloud": "تعذّر على هاتفك الوصول إلى tafs cloud. حاول مرة أخرى.",
   "watch.phone_link_failed": "تعذّر التواصل مع هاتفك. حاول مرة أخرى.",
   "watch.phone_no_answer": "لم يرد هاتفك في الوقت المناسب. حاول مرة أخرى.",
   "watch.phone_no_app": "tafs غير مثبّت على هاتفك. ثبّته هناك ثم حاول مرة أخرى.",

@@ -63,6 +63,7 @@
   "watch.page.brief": "Rezumat",
   "watch.page.inbox": "Mesajele primite",
   "watch.paused_still_answers": "Întrerupt: programul său este dezactivat. Totuși răspunde la ce îi trimiteți.",
+  "watch.phone_could_not_reach_cloud": "Telefonul nu a putut contacta tafs cloud. Încercați din nou.",
   "watch.phone_link_failed": "Nu s-a putut comunica cu telefonul. Încercați din nou.",
   "watch.phone_no_answer": "Telefonul nu a răspuns la timp. Încercați din nou.",
   "watch.phone_no_app": "tafs nu este pe telefon. Instalați-l acolo, apoi încercați din nou.",

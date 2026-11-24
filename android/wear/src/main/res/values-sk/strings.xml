@@ -114,6 +114,7 @@
     <string name="watch_page_brief">Prehľad</string>
     <string name="watch_page_inbox">Doručené</string>
     <string name="watch_paused_still_answers">Pozastavené: jeho plán je vypnutý. Na to, čo pošlete, stále odpovedá.</string>
+    <string name="watch_phone_could_not_reach_cloud">Telefón sa nemohol spojiť s tafs cloud. Skúste to znova.</string>
     <string name="watch_phone_link_failed">Nepodarilo sa spojiť s telefónom. Skúste to znova.</string>
     <string name="watch_phone_no_answer">Telefón neodpovedal včas. Skúste to znova.</string>
     <string name="watch_phone_no_app">tafs v telefóne nie je. Nainštalujte ho tam a skúste to znova.</string>

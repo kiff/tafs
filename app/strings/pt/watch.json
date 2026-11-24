@@ -59,6 +59,7 @@
   "watch.page.brief": "Resumo",
   "watch.page.inbox": "Caixa de entrada",
   "watch.paused_still_answers": "Em pausa: o agendamento está parado. Ainda assim responde ao que envia.",
+  "watch.phone_could_not_reach_cloud": "O telemóvel não conseguiu contactar o tafs cloud. Tente novamente.",
   "watch.phone_link_failed": "Não foi possível comunicar com o telemóvel. Tente novamente.",
   "watch.phone_no_answer": "O telemóvel não respondeu a tempo. Tente novamente.",
   "watch.phone_no_app": "A app tafs não está no telemóvel. Instale-a e tente novamente.",
