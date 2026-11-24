@@ -76,5 +76,6 @@
   "hand_show_no_field": {"message": "Това е страницата. Taf не е посочил поле или бутон.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "Предадено на вас", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Вие го направихте", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "Казахте „Не сега“", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "Казахте „Не сега“", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$ работи по тази страница", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }

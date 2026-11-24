@@ -76,5 +76,6 @@
   "hand_show_no_field": {"message": "이 페이지입니다. taf가 가리킬 입력란이나 버튼을 지정하지 않았습니다.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "나에게 넘겨짐", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "내가 완료함", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "'지금은 안 함'을 선택함", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "'지금은 안 함'을 선택함", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$이(가) 이 페이지에서 작업 중", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }

@@ -76,5 +76,6 @@
   "hand_show_no_field": {"message": "Tohle je ta stránka. Taf neuvedl žádné pole ani tlačítko, na které by se dalo ukázat.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "Předáno vám", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Udělali jste to", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "Řekli jste „Teď ne“", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "Řekli jste „Teď ne“", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$ pracuje na této stránce", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }
