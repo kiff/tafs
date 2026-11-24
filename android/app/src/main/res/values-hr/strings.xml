@@ -2652,6 +2652,7 @@
     <string name="usage_pack_named">%1$s · paket kredita</string>
     <string name="usage_packs_keep">Nikad ne istječe</string>
     <string name="usage_period">razdoblje</string>
+    <string name="usage_raise_limit_from">Ograničenje potrošnje sada je %1$s.</string>
     <string name="usage_raise_limit_not_raised">Ograničenje nije podignuto. %1$s</string>
     <string name="usage_raise_limit_prompt">Podignite ograničenje potrošnje</string>
     <string name="usage_raise_limit_sign_in_first">Prijavite se KIFF-om da podignete ograničenje.</string>

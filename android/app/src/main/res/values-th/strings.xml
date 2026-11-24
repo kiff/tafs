@@ -2512,6 +2512,7 @@
     <string name="usage_pack_named">%1$s · แพ็กเครดิต</string>
     <string name="usage_packs_keep">ไม่มีวันหมดอายุ</string>
     <string name="usage_period">รอบ</string>
+    <string name="usage_raise_limit_from">ขีดจำกัดการใช้จ่ายตอนนี้คือ %1$s</string>
     <string name="usage_raise_limit_not_raised">ยังไม่ได้เพิ่มขีดจำกัด %1$s</string>
     <string name="usage_raise_limit_prompt">เพิ่มขีดจำกัดการใช้จ่าย</string>
     <string name="usage_raise_limit_sign_in_first">เข้าสู่ระบบด้วย KIFF เพื่อเพิ่มขีดจำกัด</string>

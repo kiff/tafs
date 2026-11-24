@@ -2652,6 +2652,7 @@
     <string name="usage_pack_named">%1$s · kreditų paketas</string>
     <string name="usage_packs_keep">Nenustoja galioti</string>
     <string name="usage_period">laikotarpį</string>
+    <string name="usage_raise_limit_from">Išlaidų limitas dabar yra %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limitas nepadidintas. %1$s</string>
     <string name="usage_raise_limit_prompt">Padidinti išlaidų limitą</string>
     <string name="usage_raise_limit_sign_in_first">Prisijunkite su KIFF, kad galėtumėte padidinti limitą.</string>

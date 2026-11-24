@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · bir kredi paketi</string>
     <string name="usage_packs_keep">Asla sona ermez</string>
     <string name="usage_period">dönem</string>
+    <string name="usage_raise_limit_from">Harcama limiti şu anda %1$s.</string>
     <string name="usage_raise_limit_not_raised">Limit yükseltilmedi. %1$s</string>
     <string name="usage_raise_limit_prompt">Harcama limitini yükselt</string>
     <string name="usage_raise_limit_sign_in_first">Limiti yükseltmek için KIFF ile oturum açın.</string>

@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · kredit paketi",
   "usage.packs_keep": "Heç vaxt bitmir",
   "usage.period": "dövr",
+  "usage.raise_limit.from": "Xərc limiti indi {amount}-dir.",
   "usage.raise_limit.not_raised": "Limit artırılmadı. {why}",
   "usage.raise_limit.prompt": "Xərc limitini artırın",
   "usage.raise_limit.sign_in_first": "Limiti artırmaq üçün KIFF ilə daxil olun.",

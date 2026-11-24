@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · একটি ক্রেডিট প্যাক</string>
     <string name="usage_packs_keep">মেয়াদ কখনও শেষ হয় না</string>
     <string name="usage_period">মেয়াদ</string>
+    <string name="usage_raise_limit_from">খরচের সীমা এখন %1$s।</string>
     <string name="usage_raise_limit_not_raised">সীমা বাড়ানো হয়নি। %1$s</string>
     <string name="usage_raise_limit_prompt">খরচের সীমা বাড়ান</string>
     <string name="usage_raise_limit_sign_in_first">সীমা বাড়াতে KIFF দিয়ে সাইন ইন করুন।</string>

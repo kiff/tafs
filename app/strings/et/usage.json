@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · krediidipakett",
   "usage.packs_keep": "Ei aegu kunagi",
   "usage.period": "periood",
+  "usage.raise_limit.from": "Kululimiit on praegu {amount}.",
   "usage.raise_limit.not_raised": "Limiiti ei suurendatud. {why}",
   "usage.raise_limit.prompt": "Suurenda kululimiiti",
   "usage.raise_limit.sign_in_first": "Limiidi suurendamiseks logi sisse KIFFiga.",

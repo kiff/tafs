@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · bir kredi paketi",
   "usage.packs_keep": "Asla sona ermez",
   "usage.period": "dönem",
+  "usage.raise_limit.from": "Harcama limiti şu anda {amount}.",
   "usage.raise_limit.not_raised": "Limit yükseltilmedi. {why}",
   "usage.raise_limit.prompt": "Harcama limitini yükselt",
   "usage.raise_limit.sign_in_first": "Limiti yükseltmek için KIFF ile oturum açın.",

@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · un pack de crédits",
   "usage.packs_keep": "N'expire jamais",
   "usage.period": "période",
+  "usage.raise_limit.from": "Le plafond de dépenses est actuellement de {amount}.",
   "usage.raise_limit.not_raised": "La limite n'a pas été relevée. {why}",
   "usage.raise_limit.prompt": "Relever le plafond de dépenses",
   "usage.raise_limit.sign_in_first": "Connectez-vous avec KIFF pour relever la limite.",

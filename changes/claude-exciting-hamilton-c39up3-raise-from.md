@@ -1,0 +1,1 @@
+- **Raising the spend limit:** the sheet can show the limit as it is before the raise ("The spend limit is {amount} now."), in every language.

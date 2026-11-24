@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · ein Credit-Paket</string>
     <string name="usage_packs_keep">Verfällt nie</string>
     <string name="usage_period">Zeitraum</string>
+    <string name="usage_raise_limit_from">Das Ausgabenlimit liegt jetzt bei %1$s.</string>
     <string name="usage_raise_limit_not_raised">Das Limit wurde nicht erhöht. %1$s</string>
     <string name="usage_raise_limit_prompt">Ausgabenlimit erhöhen</string>
     <string name="usage_raise_limit_sign_in_first">Melde dich mit KIFF an, um das Limit zu erhöhen.</string>

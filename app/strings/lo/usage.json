@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · ຊຸດເຄຣດິດ",
   "usage.packs_keep": "ບໍ່ເຄີຍໝົດອາຍຸ",
   "usage.period": "ໄລຍະ",
+  "usage.raise_limit.from": "ຂີດຈຳກັດການໃຊ້ຈ່າຍຕອນນີ້ແມ່ນ {amount}.",
   "usage.raise_limit.not_raised": "ຂີດຈຳກັດບໍ່ໄດ້ຖືກເພີ່ມ. {why}",
   "usage.raise_limit.prompt": "ເພີ່ມຂີດຈຳກັດການໃຊ້ຈ່າຍ",
   "usage.raise_limit.sign_in_first": "ເຂົ້າສູ່ລະບົບດ້ວຍ KIFF ເພື່ອເພີ່ມຂີດຈຳກັດ.",

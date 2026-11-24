@@ -5144,6 +5144,8 @@ enum Words {
         /// period
         static var period: String { Words.line("usage.period") }
         enum RaiseLimit {
+            /// The spend limit is {amount} now.
+            static func from(amount: String) -> String { Words.line("usage.raise_limit.from", amount) }
             /// The limit wasn't raised. {why}
             static func notRaised(why: String) -> String { Words.line("usage.raise_limit.not_raised", why) }
             /// Raise the spend limit

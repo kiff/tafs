@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · կրեդիտների փաթեթ</string>
     <string name="usage_packs_keep">Երբեք չի սպառվում</string>
     <string name="usage_period">ժամանակահատված</string>
+    <string name="usage_raise_limit_from">Ծախսի սահմանաչափը հիմա %1$s է։</string>
     <string name="usage_raise_limit_not_raised">Սահմանաչափը չբարձրացվեց։ %1$s</string>
     <string name="usage_raise_limit_prompt">Բարձրացրեք ծախսի սահմանաչափը</string>
     <string name="usage_raise_limit_sign_in_first">Մուտք գործեք KIFF-ով՝ սահմանաչափը բարձրացնելու համար։</string>

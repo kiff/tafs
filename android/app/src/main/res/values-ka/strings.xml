@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · კრედიტების პაკეტი</string>
     <string name="usage_packs_keep">არასოდეს იწურება</string>
     <string name="usage_period">პერიოდი</string>
+    <string name="usage_raise_limit_from">ხარჯვის ლიმიტი ახლა %1$s-ია.</string>
     <string name="usage_raise_limit_not_raised">ლიმიტი არ გაიზარდა. %1$s</string>
     <string name="usage_raise_limit_prompt">გაზარდეთ ხარჯვის ლიმიტი</string>
     <string name="usage_raise_limit_sign_in_first">შედით KIFF-ით ლიმიტის გასაზრდელად.</string>

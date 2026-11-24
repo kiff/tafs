@@ -24,6 +24,7 @@
   "usage.pack_named": "{name} · paket kredita",
   "usage.packs_keep": "Nikad ne istječe",
   "usage.period": "razdoblje",
+  "usage.raise_limit.from": "Ograničenje potrošnje sada je {amount}.",
   "usage.raise_limit.not_raised": "Ograničenje nije podignuto. {why}",
   "usage.raise_limit.prompt": "Podignite ograničenje potrošnje",
   "usage.raise_limit.sign_in_first": "Prijavite se KIFF-om da podignete ograničenje.",

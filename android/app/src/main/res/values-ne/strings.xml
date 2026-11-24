@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · क्रेडिटको प्याक</string>
     <string name="usage_packs_keep">कहिल्यै सकिँदैन</string>
     <string name="usage_period">अवधि</string>
+    <string name="usage_raise_limit_from">खर्च सीमा अहिले %1$s छ।</string>
     <string name="usage_raise_limit_not_raised">सीमा बढाइएन। %1$s</string>
     <string name="usage_raise_limit_prompt">खर्च सीमा बढाउनुहोस्</string>
     <string name="usage_raise_limit_sign_in_first">सीमा बढाउन KIFF बाट साइन इन गर्नुहोस्।</string>

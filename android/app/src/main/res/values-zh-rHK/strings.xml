@@ -2512,6 +2512,7 @@
     <string name="usage_pack_named">%1$s · 一個點數包</string>
     <string name="usage_packs_keep">永不過期</string>
     <string name="usage_period">期</string>
+    <string name="usage_raise_limit_from">目前的支出上限為 %1$s。</string>
     <string name="usage_raise_limit_not_raised">上限尚未提高。%1$s</string>
     <string name="usage_raise_limit_prompt">提高支出上限</string>
     <string name="usage_raise_limit_sign_in_first">請先以 KIFF 登入，才能提高上限。</string>

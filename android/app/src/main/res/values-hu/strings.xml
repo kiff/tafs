@@ -2582,6 +2582,7 @@
     <string name="usage_pack_named">%1$s · egy kreditcsomag</string>
     <string name="usage_packs_keep">Soha nem jár le</string>
     <string name="usage_period">időszak</string>
+    <string name="usage_raise_limit_from">A költési limit most %1$s.</string>
     <string name="usage_raise_limit_not_raised">A limit nem lett megemelve. %1$s</string>
     <string name="usage_raise_limit_prompt">A költési limit emelése</string>
     <string name="usage_raise_limit_sign_in_first">A limit emeléséhez jelentkezz be a KIFF-fel.</string>
