@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
 import { refuseURL, bareURL, sensitive, siteOK } from "../src/sites.js";
-import { refuse, PAY_WORDS } from "../src/guard.js";
+import { refuse, PAY_WORDS, KINDS } from "../src/guard.js";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { parseCode } from "../src/pairing.js";
@@ -196,7 +196,17 @@ test("press, scroll and back (gap 7) are held to the same rules: Enter submits n
   assert.equal(refuse(plain, { kind: "scroll", value: "up" }), null);
   assert.equal(refuse(plain, { kind: "scroll", value: "sideways" }).code, "bad_step");
   assert.equal(refuse(page, { kind: "back" }), null, "back from a payment page clicks nothing");
+  // Enter on a control or link is a click: a link or button whose words pay is refused, as clicking it is.
+  const shop = { url: "https://shop.example/cart", fields: [], controls: [{ ref: "c1", label: "Buy now" }, { ref: "c2", label: "Save" }], links: [{ ref: "l1", label: "Buy now", url: "https://shop.example/buy" }] };
+  assert.equal(refuse(shop, { kind: "press", ref: "l1", value: "Enter" }).code, "payment_step");
+  assert.equal(refuse(shop, { kind: "press", ref: "c1", value: "Enter" }).code, "payment_step");
+  assert.equal(refuse({ ...shop, controls: [shop.controls[1]], links: [] }, { kind: "press", ref: "c2", value: "Enter" }), null);
   assert.equal(refuse(plain, { kind: "back", ref: "c1" }).code, "bad_step");
+});
+
+test("every kind of act has its words in the side panel's step list", () => {
+  const en = JSON.parse(readFileSync(new URL("../_locales/en/messages.json", import.meta.url), "utf8"));
+  for (const kind of KINDS) assert.ok(en["step_act_" + kind] && en["step_act_" + kind].message, "step_act_" + kind);
 });
 
 test("every shipped language has an extension locale with English's keys and placeholders, and no English left in it", async () => {

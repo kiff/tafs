@@ -44,14 +44,14 @@ export function payment(page) {
   return (page.controls || []).some(pays);
 }
 
-const KINDS = new Set(["click", "fill", "select", "check", "press", "scroll", "back"]);
+export const KINDS = Object.freeze(["click", "fill", "select", "check", "press", "scroll", "back"]);
 
 /** The keys a taf may press on a ref (page.js `KEYS`): no Tab, no shortcuts. */
 export const KEYS = Object.freeze(["Enter", "Escape", "ArrowDown", "ArrowUp"]);
 
 /** Why `act` may not run on `page`: `{code, why}`, or null when it may. */
 export function refuse(page, act) {
-  if (!act || !KINDS.has(act.kind)) {
+  if (!act || !KINDS.includes(act.kind)) {
     return { code: CODE.badStep, why: "an act is a click, fill, select, check, press or scroll of one ref, a scroll of the page, or back" };
   }
   // Back and a scroll of the page name no ref. Back goes where the tab was, and the page there is read and fenced as any.
@@ -75,6 +75,10 @@ export function refuse(page, act) {
     if (field && secret(field)) return { code: CODE.secretField, why: "a sign-in, card or code is the person's" };
     const known = field || ["controls", "links"].some((k) => (page[k] || []).some((x) => x.ref === act.ref));
     return known ? null : { code: CODE.refUnknown, why: "the page has no ref " + act.ref };
+  }
+  // Enter on a control or a link presses it as a click does (the page's own key handlers act on it): the same refusals.
+  if (act.kind === "press" && act.value === "Enter" && ["controls", "links"].some((k) => (page[k] || []).some((x) => x.ref === act.ref))) {
+    return refuse(page, { kind: "click", ref: act.ref });
   }
   if (act.kind === "click") {
     const control = (page.controls || []).find((c) => c.ref === act.ref);
