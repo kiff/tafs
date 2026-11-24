@@ -487,6 +487,10 @@ What a read sends never carries:
 - a card number in the text (cut to its last four digits, by the Luhn check);
 - a secret by its shape: private keys, JWTs, Stripe, model-provider, GitHub, Slack, AWS, Google and GitLab keys;
 - a labelled secret (`password: …`, `api_key=…`, `Bearer …`);
+- a one-time code written in the text, named as one in English, French, Spanish or German ("Your verification code is
+  482913", "123456 is your login code", "votre code est 4821"): its 4 to 8 digits go, its words stay. A postal, order or
+  promo code stays. tafs cloud masks the same in a page Coach reads, and `runtime/test/fixtures/one-time-codes.json` holds
+  both to the same cases;
 - a link's user info or credential parameters (`token`, `code`, `signature`, …);
 - the page URL's query and fragment.
 

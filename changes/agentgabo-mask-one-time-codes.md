@@ -1,0 +1,1 @@
+- **One-time codes in a page never reach Coach.** A code written in the page and named as one ("Your verification code is 482913", "123456 is your login code", in English, French, Spanish or German) loses its digits in the Chrome extension's read and its pictures, and again at tafs cloud; a postal, order or promo code stays ([chrome.md](docs/chrome.md), [chat.md](docs/chat.md)).

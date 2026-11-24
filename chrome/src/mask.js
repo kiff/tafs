@@ -1,4 +1,4 @@
-// What never leaves the page as read (docs/chrome.md, "Masking"): card numbers, secrets written in the page's text, and
+// What never leaves the page as read (docs/chrome.md, "Masking"): card numbers, secrets and one-time codes written in the page's text, and
 // credential parameters in its links. planque masks again whatever the extension sends (internal/browser Mask).
 //
 // No import or export here: the content script loads this file as a classic script before page.js, and the service worker
@@ -43,6 +43,33 @@
   const LABELLED = /\b(password|passwd|pwd|passcode|pin|secret|client[_ -]?secret|api[_ -]?key|access[_ -]?key|access[_ -]?token|refresh[_ -]?token|auth[_ -]?token|token|cookie|session[_ -]?id)(\s*[:=]\s*)("[^"\n]{4,}"|'[^'\n]{4,}'|[^\s"',;<>]{4,})/gi;
   const BEARER = /\b(Bearer\s+)[A-Za-z0-9._~+/-]{10,}=*/g;
 
+  // A one-time code written in the page's text ("Your verification code is 482913", "123456 is your login code", "votre
+  // code est 4821", "tu código es 4821", "Ihr Code lautet 4821"): the digits go, the words stay. A code is 4 to 8 digits, or
+  // two groups of 3 or 4 joined by a space (a non-breaking or thin one too) or a dash. A postal, order or promo code stays. tafs cloud masks the same in a
+  // page Coach reads (runtime/src/cloud/page-codes.ts): the cases in runtime/test/fixtures/one-time-codes.json hold both.
+  const CODE_DIGITS = "(?<!\\d)(\\d{3,4}[ \\u00a0\\u2009\\u202f-]\\d{3,4}|\\d{4,8})(?!\\d)";
+  const CODE_NAMED = "(?:verification|security|confirmation|authentication|login|log-in|sign-in|signin|one-time|one time|access|2fa|mfa|otp)\\s+code" +
+    "|one-time\\s+password|otp|passcode|code\\s+(?:de\\s+(?:vérification|verification|confirmation|sécurité|securite|connexion|validation)|à\\s+usage\\s+unique)" +
+    "|código\\s+de\\s+(?:verificación|verificacion|confirmación|confirmacion|seguridad|acceso|validación|validacion|un\\s+solo\\s+uso)" +
+    "|(?:bestätigungs|verifizierungs|sicherheits|anmelde|einmal|authentifizierungs)code";
+  const CODE_OTHER = "(?<!\\b(?:postal|zip|post|area|country|promo|discount|coupon|gift|tracking|product|error|status|order|source|tax|reference|ref)\\s)";
+  const CODE_WORD = "(?:code|código|codigo)";
+  const CODES = [
+    // A code named for what it is, then the digits within a few words, on its line or the next: "verification code for Acme: 482913".
+    new RegExp(`(\\b(?:${CODE_NAMED})\\b[^\\d]{0,40}?)${CODE_DIGITS}`, "giu"),
+    // A bare "code" only with "is" or ":" right after it: "your code is 4821", "code: 4821".
+    new RegExp(`(\\b(?:(?:your|votre|ton|tu|su|ihr|dein)\\s+)?${CODE_OTHER}${CODE_WORD}\\s*(?:(?:is|est|es|ist|lautet)\\s*:?|[:=])\\s*)${CODE_DIGITS}`, "giu"),
+  ];
+  // The digits first: "482913 is your Acme verification code", "G-482913 est votre code".
+  const CODE_FIRST = new RegExp(`${CODE_DIGITS}(?=\\s+(?:is|est|es|ist)\\s+(?:your|votre|ton|tu|su|ihr|dein)\\b[^\\n]{0,40}?(?:code|código|codigo|otp|passcode|password)\\b)`, "giu");
+
+  /** Text with each one-time code's digits replaced, its words kept. */
+  function maskCodes(text) {
+    let out = String(text);
+    for (const re of CODES) out = out.replace(re, (all, lead) => lead + MASK);
+    return out.replace(CODE_FIRST, MASK);
+  }
+
   /** Text with card numbers cut to their last four digits and secrets by shape or label replaced. */
   function maskText(text) {
     if (!text) return text || "";
@@ -54,7 +81,7 @@
     for (const shape of SHAPES) out = out.replace(shape, MASK);
     out = out.replace(LABELLED, (all, label, sep, value) => (value === MASK ? all : label + sep + MASK));
     out = out.replace(BEARER, (all, lead) => lead + MASK);
-    return out;
+    return maskCodes(out);
   }
 
   // A long run that is probably a key: 32 or more hex digits, or base64 characters with at least one digit in them.
@@ -64,7 +91,7 @@
 
   /**
    * Where in `text` something that must not show in a picture is: `[start, end]` pairs, in order, merged. It is what `maskText`
-   * would replace (card numbers that pass the Luhn check, secrets by shape, labelled values, bearer tokens) and, for a picture
+   * would replace (card numbers that pass the Luhn check, secrets by shape, labelled values, bearer tokens, one-time codes) and, for a picture
    * only, long hex or base64 runs of 32 characters or more.
    */
   function secretSpans(text) {
@@ -85,6 +112,8 @@
     for (const shape of SHAPES) add(shape, null);
     add(LABELLED, (m) => [m.index + m[1].length + m[2].length, m.index + m[0].length]);
     add(BEARER, (m) => [m.index + m[1].length, m.index + m[0].length]);
+    for (const re of CODES) add(re, (m) => [m.index + m[1].length, m.index + m[0].length]);
+    add(CODE_FIRST, null);
     add(LONG_HEX, null);
     add(LONG_BASE64, (m) => (/[0-9]/.test(m[0]) && !UUID.test(m[0]) ? [m.index, m.index + m[0].length] : [0, 0]));
     found.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
@@ -119,5 +148,5 @@
     return u.href;
   }
 
-  root.TafsMask = { maskText, maskURL, secretSpans, luhn, MASK };
+  root.TafsMask = { maskText, maskCodes, maskURL, secretSpans, luhn, MASK };
 })(globalThis);
