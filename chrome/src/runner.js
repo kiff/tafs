@@ -29,6 +29,12 @@ const FAILURES_TO_PAUSE = 3;
 // this is a little over that: the bar, the badge and the group stop saying the taf works soon after its turn. One the owner paused
 // isn't idle, it's waiting for the owner.
 export const RUN_IDLE_MS = 150_000;
+/**
+ * A paused run that gets no step for this long ends as Stop does: nothing will resume it (the taf's turn is over), so the bar
+ * and the group stop saying it works or is paused. Above the 10 minutes a taf holds a step for the owner's Resume, re-sending it,
+ * so a held run is never ended under it.
+ */
+export const PAUSED_IDLE_MS = 15 * 60_000;
 // A finished run's group turns grey ("· done") this long after it ends, unless the taf's next run starts first (greyLater).
 const DONE_GRACE_MS = 15_000;
 // Why Show me pointed to no field, as the panel says it: the page changed, the field isn't on screen, the page didn't answer.
@@ -306,6 +312,7 @@ export class Runner {
     // Done or Not now pauses as before.
     if (this.handOpen(run)) return;
     run.paused = "owner";
+    run.at = this.now();
     this.record(run, { op: "pause", by: "owner" });
   }
 
@@ -327,6 +334,7 @@ export class Runner {
     const run = this.runs.get(runId);
     if (run && !run.stopped) {
       run.paused = "owner";
+      run.at = this.now();
       this.record(run, { op: "pause", by: "owner" });
     }
   }
@@ -337,6 +345,7 @@ export class Runner {
       run.paused = null;
       run.failures = 0;
       run.last = null;
+      run.at = this.now();
       this.record(run, { op: "resume" });
     }
   }
@@ -508,11 +517,14 @@ export class Runner {
     return out;
   }
 
-  /** Closes the windows of runs nobody sent a step to for RUN_IDLE_MS, as Stop does. Called by the service worker's alarm. */
+  /**
+   * Ends, as Stop does, the runs nobody sent a step to for RUN_IDLE_MS, or for PAUSED_IDLE_MS since a paused one's last step,
+   * pause or Resume. Called by the service worker's alarm.
+   */
   async sweep() {
     for (const run of [...this.runs.values()]) {
-      if (run.stopped || run.paused || this.tails.has(run.id) || this.handOpen(run)) continue; // a person takes longer than the idle limit
-      if (this.now() - run.at > RUN_IDLE_MS) {
+      if (run.stopped || this.tails.has(run.id) || this.handOpen(run)) continue; // a person takes longer than the idle limit
+      if (this.now() - run.at > (run.paused ? PAUSED_IDLE_MS : RUN_IDLE_MS)) {
         run.stopped = true;
         this.record(run, { op: "stop", by: "idle" });
         await this.closeRun(run, false);
