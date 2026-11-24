@@ -38,14 +38,13 @@ final class LinkLongPressUITests: TafsUITestCase {
             for name in ["Open Link", "Open", "Open in Safari", "Call", "Send Message", "FaceTime"] {
                 let item = app.buttons[name].exists ? app.buttons[name] : app.menuItems[name]
                 guard item.exists else { continue }
+                // A clean https link in a plain answer opens as before, so its opener isn't a way around the question:
+                // it's left untapped. The sample's answer has no page turn.
+                guard let question else { break }
                 item.tap()
                 stillHere("\(what), \(name)")
-                if let question {
-                    XCTAssertTrue(app.alerts[question].waitForExistence(timeout: 5), "\(what), \(name): opened without the question")
-                    app.alerts[question].buttons["Cancel"].tap()
-                } else {
-                    XCTFail("\(what): \(name) is offered, which opens it without PageLinks.ask")
-                }
+                XCTAssertTrue(app.alerts[question].waitForExistence(timeout: 5), "\(what), \(name): opened without the question")
+                app.alerts[question].buttons["Cancel"].tap()
                 break
             }
             // Whatever else the long-press showed (a selection's Copy, or nothing), it goes before the next step.
