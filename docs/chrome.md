@@ -750,7 +750,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
     Yahoo, Tuta, HEY, GMX and the like by name, and any host labelled `mail.`, `webmail.`, `owa.`, `email.`, `correo.`,
     `correio.`, `posta.`, `poczta.`, `messagerie.` or `levelezes.`, which takes in Proton's `mail.proton.me`). Every host is
     taken as `hostOf` normalises it, so a trailing dot (`paypal.com.`) gets past no list: the panel says why, and Coach gets
-    the words alone. Runs aren't changed by the mail list. **Never a site the person switched off** with
+    the words alone. Runs aren't changed by the mail list. tafs cloud refuses such a page too (`page_refused`, from the same
+    lists in `runtime/src/cloud/page-sites.ts`, held equal to these by a test), so a change to `SENSITIVE` or `MAIL` here
+    is a change there. **Never a site the person switched off** with
     **Not on this site**, kept in this Chrome (`chrome.storage.local`, `aside_off`) and checked before any read; **Read this
     site** turns it back on.
   - **Masked as a run's read is:** the page's text with every editable region (a textarea, `contenteditable`, a
