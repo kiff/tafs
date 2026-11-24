@@ -259,7 +259,7 @@ describe("the watch's conversation", () => {
   });
 
   it("refuses a hand-over that names no chat while the person's watch request chooses its taf, never sending it the ordinary way", async () => {
-    // The owner's 17:33 ask: KIFF kept taf_task's schema from before it asked for the chat, so the call came with none,
+    // KIFF once kept taf_task's schema from before it asked for the chat, so the call came with none,
     // went to the taf's own chat, and the watch never heard its answer.
     const { w, id, session } = await asked();
     await expect(w.tool("taf_task", { taf: CAL, text: ASK.text })).rejects.toThrow(/which chat/);
@@ -330,7 +330,7 @@ describe("the line the watch shows and says", () => {
   });
 });
 
-describe("a watch request's words (W2, legal-i18n's 8 languages)", () => {
+describe("a watch request's words (W2)", () => {
   const base = { id: "wa_1", client_id: "w_1", person: "ana", at: "2026-11-19T10:00:00Z", updated: "2026-11-19T10:00:00Z" } as const;
   it("name who holds it: Coach until a taf has it, then the taf, in the person's language", () => {
     expect(shownAsk({ ...base, state: "accepted" } as Ask, "en").words).toBe("Sent · Coach has it");

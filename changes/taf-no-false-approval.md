@@ -1,0 +1,1 @@
+- A taf no longer says a call needs or waits for the owner's approval before KIFF holds it: a write its Card allows simply runs.

@@ -441,7 +441,7 @@ enum KIFFMapping {
         }
     }
 
-    /// A line from KIFF, a vendor or a taf as the approval and the record draw it (qa-kiff, 16:12): no direction
+    /// A line from KIFF, a vendor or a taf as the approval and the record draw it: no direction
     /// character (U+202A–U+202E, U+2066–U+2069, U+200E, U+200F, U+061C, `FileText.isDirection`), so a payee name
     /// can't reorder how an amount or an IBAN beside it looks; any other control character becomes a space.
     static func visible(_ text: String) -> String {

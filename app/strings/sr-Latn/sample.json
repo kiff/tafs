@@ -148,6 +148,7 @@
   "sample.memory.ask_first": "Pitajte pre svega neobičnog, čak i kad odgovara Cardu.",
   "sample.memory.explain": "Radije da odluku objasnim u jednom retku nego u odlomku.",
   "sample.memory.regulars": "Kupci koji pišu svaki nedelja dobivaju odgovor isto jutro.",
+  "sample.not_in_sample": "Ovo nije u primeru. Prijavite se KIFF-om da biste to uradili.",
   "sample.parcels.change_address": "Promenite adresu dostave za porudžbinu #5141",
   "sample.parcels.change_address_why": "Tražila je e-pošta s nove adrese",
   "sample.parcels.job": "Obavestite kupce kad pošiljka kasni, pre nego šta pitaju. Ponovna slanja čekaju vas. Nikad ne menjajte adresu dostave na temelju e-pošte.",

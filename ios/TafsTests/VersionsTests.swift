@@ -610,8 +610,8 @@ final class VersionsTests: XCTestCase {
     }
 
     /// A Card's total names no tool ("20 calls a day"): two new Cards with the same total each
-    /// show it after their own tool, so the second tool never reads as unlimited before Face ID
-    /// (qa-kiff, 23 Nov). A Card exactly like an earlier one shows once.
+    /// show it after their own tool, so the second tool never reads as unlimited before Face ID.
+    /// A Card exactly like an earlier one shows once.
     func testANewCardsTotalIsShownForEachCardThatHasIt() throws {
         let d = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
         {"id":"d","agent_id":"a1","status":"draft","version":"v1","cards":[

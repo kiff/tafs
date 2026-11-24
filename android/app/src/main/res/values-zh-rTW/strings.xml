@@ -475,6 +475,7 @@
     <string name="chat_file_choose_file">選擇檔案</string>
     <string name="chat_file_choose_photos">選擇照片</string>
     <string name="chat_file_could_not_open">無法開啟該檔案。</string>
+    <string name="chat_file_mac_camera_off">相機已對 tafs 關閉。請在「系統設定」›「隱私權與安全性」›「相機」中開啟（macOS 12：「系統偏好設定」›「安全性與隱私權」›「隱私權」›「相機」）。</string>
     <string name="chat_file_no_app_opens">這部手機上沒有可開啟 %1$s 的 App。</string>
     <string name="chat_file_no_camera">這部手機上沒有可拍照的相機 App。</string>
     <string name="chat_file_not_opened">無法開啟 %1$s。%2$s</string>
@@ -2028,6 +2029,7 @@
     <string name="sample_memory_ask_first">遇到任何不尋常的事，即使符合 Card，也要先詢問。</string>
     <string name="sample_memory_explain">您希望我用一行話解釋決定，而不是一整段。</string>
     <string name="sample_memory_regulars">每週來信的客戶，當天早上就會收到回覆。</string>
+    <string name="sample_not_in_sample">範例中沒有這項功能。請以 KIFF 登入後再進行。</string>
     <string name="sample_parcels_change_address">變更訂單 #5141 的送貨地址</string>
     <string name="sample_parcels_change_address_why">來自新地址的電子郵件要求這麼做</string>
     <string name="sample_parcels_job">在客戶詢問之前，就告知他們包裹延誤。補寄要等您決定。絕不依據電子郵件變更送貨地址。</string>

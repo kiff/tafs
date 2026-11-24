@@ -35,6 +35,7 @@
   "chat.file.choose_file": "اختيار ملف",
   "chat.file.choose_photos": "اختيار صور",
   "chat.file.could_not_open": "تعذّر فتح الملف.",
+  "chat.file.mac_camera_off": "الكاميرا متوقفة لـ tafs. شغّلها من إعدادات النظام › الخصوصية والأمن › الكاميرا (في macOS 12: تفضيلات النظام › الأمن والخصوصية › الخصوصية › الكاميرا).",
   "chat.file.no_app_opens": "لا يوجد تطبيق على هذا الهاتف يفتح {name}.",
   "chat.file.no_camera": "لا يوجد تطبيق كاميرا على هذا الهاتف لالتقاط صورة.",
   "chat.file.not_opened": "تعذّر فتح {file}. {why}",

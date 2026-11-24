@@ -1016,7 +1016,7 @@ describe("tafs cloud", () => {
     expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.card_unit_exceptions).toBeUndefined();
   });
 
-  // The owner, 13 Nov: "Connect again" sent them to every connected app, "abstract and bad UX". One job per view: the
+  // "Connect again" once sent them to every connected app, "abstract and bad UX". One job per view: the
   // taf names its own signed-out connection, and the app signs that same grant in again.
   it("carries the taf's own Connect again, naming its signed-out connection, in the reader's language", async () => {
     const w = world();
@@ -1034,7 +1034,7 @@ describe("tafs cloud", () => {
     expect((await setup("needs_reconnect")).connect_again).toEqual({ grant: "grt_gmail", app: "Gmail", title: "Connect again",
       words: "Gmail was signed out, so Rae can't use it. Connect again to sign in.", done_words: "Gmail is connected again. Rae can use it." });
     expect((await setup("needs_reconnect", "fr")).connect_again?.title).toBe("Se reconnecter");
-    // The words follow the cause planque kept (kiff/work#17, 21 Nov 2026: a Drive sign-in revoked by another connection's
+    // The words follow the cause planque kept (a Drive sign-in revoked by another connection's
     // removal read "expired"): "expired" only for a sign-in that really ran out, never for a revoke, a removed shared
     // sign-in, an unknown cause, or none (an older planque).
     const says = async (cause: string | undefined, lang = "en") => (await setup("needs_reconnect", lang, undefined, cause)).connect_again?.words;
@@ -1073,7 +1073,7 @@ describe("tafs cloud", () => {
   });
 
   // After a fresh sign-in the owner sees which account it went to and which tafs use it now, as planque names them, so a
-  // sign-in to the wrong mailbox shows at once (PM, 20 Nov). Without the account's name, nothing: the app keeps the done words.
+  // sign-in to the wrong mailbox shows at once. Without the account's name, nothing: the app keeps the done words.
   it("says which account a fresh sign-in went to, and which tafs use it now, when asked after it", async () => {
     const w = world();
     // failAccessRead: the nth read of the person's access in the request fails (KIFF down then).
@@ -1490,7 +1490,7 @@ describe("the home list", () => {
   };
   const demoCard: Mandate = { id: "card_demo", subject: "support-demo", active: true, grants: [{ action: "lookup" }], aggregates: [] };
 
-  // The owner, 14 Nov: one approval of a Gmail taf read "2 Cards", and Follow-up leads "4 Cards".
+  // One approval of a Gmail taf once read "2 Cards", and Follow-up leads "4 Cards".
   it("shows the Cards a draft issued as one Card, its lines together, and keeps every id to revoke", async () => {
     const w = world();
     const read = (id: string, action: string, limit: number): Mandate => ({ id, subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
@@ -2189,7 +2189,7 @@ describe("removing a taf", () => {
     expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
   });
 
-  // The apps no longer end a removed taf's connections themselves (build-qa on #833): a server without the route
+  // The apps no longer end a removed taf's connections themselves: a server without the route
   // can't be left out of the answer, or the removal reads as clean with its connections still live.
   it("stops, naming the connections, at a connection server that doesn't end them, and calls it for no other agent", async () => {
     const w = world();
@@ -5284,7 +5284,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     }
   });
 
-  // kiff-qa on the guard: a long list read is cut at 32 KB and no longer parses, and a small profile read beside it has
+  // A long list read is cut at 32 KB and no longer parses, and a small profile read beside it has
   // no list. The check isn't judged by the profile alone: a cut read may be the one with the list.
   it("hands over a result when one of Coach's reads was cut, whatever the others answered", async () => {
     const { w, run, note, answer } = await paused();
@@ -5895,7 +5895,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect((await home(deps)).coach_waiting).toBeUndefined();
   });
 
-  // The owner, 14 Nov: five rows that read the same, "why can't I remove them, or clear them all?"
+  // Five rows that read the same, "why can't I remove them, or clear them all?"
   it("names each waiting chat as Coach's history does, with what it waits for and since when", async () => {
     const { w, run, deps } = await paused({ id: "approve-card-2", type: "approval", grant: "g1" });
     w.account.unsure = 0;
@@ -7583,7 +7583,7 @@ describe("Connect apps: which taf a connection goes to", () => {
     return w;
   }
 
-  // kiff-qa's 1: an app no taf needs (here, Stripe for a taf with no recipe or Card using it) is refused.
+  // An app no taf needs (here, Stripe for a taf with no recipe or Card using it) is refused.
   it("refuses a taf that doesn't use the app (not_needed), and starts nothing", async () => {
     const w = tafs();
     const r = await post(w, "typeform@1", NEW);
@@ -7593,7 +7593,7 @@ describe("Connect apps: which taf a connection goes to", () => {
     expect((await post(w, "typeform@1", NEW, { lang: "es" })).body.words).toBe("Refunds no usa esta app. Coach puede configurarla para Refunds.");
   });
 
-  // kiff-qa's 3 on the review: the POST reads the app's vendor from the catalog, not its entry's slug alone.
+  // The POST reads the app's vendor from the catalog, not its entry's slug alone.
   it("reads the app's vendor from the catalog: an entry whose slug isn't the recipe's vendor still goes to the taf whose recipe names it", async () => {
     const w = tafs();
     expect((await post(w, "acme-pay@2", NEW)).started).toEqual(["acme-pay@2 for chargebacks"]);
@@ -7611,7 +7611,7 @@ describe("Connect apps: which taf a connection goes to", () => {
     }
   });
 
-  // kiff-qa's 2 on the review: the tafs unread, nothing starts, and the person hears to try again, not "doesn't use it".
+  // The tafs unread, nothing starts, and the person hears to try again, not "doesn't use it".
   it("fails closed with try-again words when the tafs can't be read (tafs_unread)", async () => {
     const w = tafs();
     w.tafs.list = async () => { throw new Error("store down"); };
@@ -7633,7 +7633,7 @@ describe("Connect apps: which taf a connection goes to", () => {
     expect(stripe?.needed_by?.map((n) => n.taf)).toEqual([NEW]);
   });
 
-  // kiff-qa's 4: an app two tafs need is accepted for each.
+  // An app two tafs need is accepted for each.
   it("starts it for a taf whose recipe needs the app, and for one whose Card uses it", async () => {
     const w = tafs();
     expect((await post(w, "stripe@3", NEW)).started).toEqual(["stripe@3 for chargebacks"]);
@@ -7643,7 +7643,7 @@ describe("Connect apps: which taf a connection goes to", () => {
     expect(card.started).toEqual(["stripe@3 for desk"]);
   });
 
-  // kiff-qa's 5, at the start, and the review's blocking change: holding the wrong connection never makes it needed, with
+  // Holding the wrong connection never makes it needed, with
   // the grants and Cards read, without the proof (every app today), or with a proof planque refused (the GET's resent).
   it("refuses a taf that only holds a connection, whether the phone's grants are read, missing, or refused", async () => {
     const w = tafs();
@@ -7658,7 +7658,7 @@ describe("Connect apps: which taf a connection goes to", () => {
     expect(refused.started).toEqual([]);
   });
 
-  // kiff-qa's 2 and 3: another account's taf, or one this person can't manage, is refused before need is asked.
+  // Another account's taf, or one this person can't manage, is refused before need is asked.
   it("refuses another account's taf, and a taf for someone who can't manage Cards", async () => {
     const w = tafs();
     w.tafs.held.set(`t_other#taf-oooo0000000000000000`, { id: "taf-oooo0000000000000000", name: "Theirs", job: "refunds", kiffAgent: "theirs", nameClaim: "o", created: "2026-10-14T09:00:00Z", recipe: "refunds-within-a-limit" });

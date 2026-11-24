@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Fájl kiválasztása</string>
     <string name="chat_file_choose_photos">Fotók kiválasztása</string>
     <string name="chat_file_could_not_open">A fájlt nem sikerült megnyitni.</string>
+    <string name="chat_file_mac_camera_off">A kamera ki van kapcsolva a tafs számára. Kapcsold be itt: Rendszerbeállítások › Adatvédelem és biztonság › Kamera (macOS 12-n: Rendszerbeállítások › Biztonság és adatvédelem › Adatvédelem › Kamera).</string>
     <string name="chat_file_no_app_opens">Ezen a telefonon egyetlen alkalmazás sem nyitja meg ezt: %1$s.</string>
     <string name="chat_file_no_camera">Ezen a telefonon nincs kameraalkalmazás, amellyel fotót készíthetnél.</string>
     <string name="chat_file_not_opened">%1$s nem nyitható meg. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Kérdezz, mielőtt bármi szokatlant tennél, akkor is, ha belefér a Cardba.</string>
     <string name="sample_memory_explain">Inkább egy sorban magyarázzam el a döntéseimet, mint egy bekezdésben.</string>
     <string name="sample_memory_regulars">A hetente író vásárlók még aznap délelőtt választ kapnak.</string>
+    <string name="sample_not_in_sample">Ez nincs benne a mintában. Ehhez jelentkezz be a KIFF-fel.</string>
     <string name="sample_parcels_change_address">A szállítási cím módosítása az 5141-es rendelésen</string>
     <string name="sample_parcels_change_address_why">Egy új címről érkezett e-mail kérte</string>
     <string name="sample_parcels_job">Szólj a vásárlóknak, ha egy csomag késik, mielőtt rákérdeznének. Az újraküldések rád várnak. Soha ne módosíts szállítási címet e-mail alapján.</string>

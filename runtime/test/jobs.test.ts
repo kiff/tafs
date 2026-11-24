@@ -228,6 +228,8 @@ describe("jobs", () => {
       // A hold pauses the run where it is: what the Card allows goes first, and
       // the report names each item and what became of it (kiff/agents#78).
       expect(prompt).toContain("leave any write that may need the owner's approval");
+      // A click the Card allowed was narrated as "a click, which needs approval" while nothing was held (the 0.2.2 try).
+      expect(prompt.replace(/\s+/g, " ")).toContain("Before KIFF answers, never say a call needs or waits for the owner's approval, in the chat or as you work: a write your Card allows simply runs. A call waits for approval only once KIFF holds it.");
       // An item left behind a hold was explained with a limit no read gave (Chargebacks, 20 Nov, 2 runs of 3).
       expect(prompt.replace(/\s+/g, " ")).toContain("An item you didn't reach because your run paused on a hold is said as just that (\"A-1048: not done, since my run paused on the hold first\"), with no limit named for it: you never made its call, so you can't know what KIFF would have done with it.");
       // Tools' descriptions carry the Card's line, so "no limit was read" was untrue (Eval 44732158037).
@@ -315,7 +317,7 @@ describe("jobs", () => {
       expect(flat).toContain("an amount the tool or record says is in its currency's smallest unit (as Stripe's are: an integer in cents) is said in the currency's own unit, by that currency's decimals: 700 in eur is €7.00, 700 in jpy is ¥700, 700 in kwd is KWD 0.700.");
       expect(flat).toContain("Where the record gives it in that unit too (a field ending _major, \"7.00 EUR\"), say that one, never your own sum.");
       // Only an amount declared in the smallest unit is: a vendor's decimal ("150.00", a Card's decimal_string) is said
-      // as given, never divided, so the fix can't understate by 100 the other way (kiff-qa, review of this rule).
+      // as given, never divided, so the fix can't understate by 100 the other way.
       expect(flat).toContain("Any other amount is said as the record gives it (\"150.00\" in eur is €150.00), never divided");
       expect(flat).not.toContain("an API's amount is in its currency's smallest unit");
       // The owner's own smallest unit is said back as they wrote it, never converted, until a record carries it.

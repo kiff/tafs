@@ -49,7 +49,7 @@ struct FilePreviewText: Equatable, Sendable {
     var truncated: Bool
 }
 
-/// A file's name and its preview as the app draws them (qa-kiff's musts, as Android's `FilesModel`): plain text only, never
+/// A file's name and its preview as the app draws them: plain text only, never
 /// a path, and no control or direction character, even if tafs cloud's own cleaning ever let one through.
 enum FileText {
     /// U+202A–U+202E (embeddings and overrides), U+2066–U+2069 (isolates), and the marks U+200E, U+200F and U+061C.
@@ -238,8 +238,8 @@ final class FilesModel: ObservableObject {
         }
         if let start { return .text(start) }
         // A text type always has a start from tafs cloud: one answered without it (a malformed or older answer) reads no
-        // bytes either, so its raw file is never drawn in the cleaned start's place (agentgabo's read). tafs cloud was
-        // reached, so no line says otherwise: there's simply no preview, as on Android (dev-android's read).
+        // bytes either, so its raw file is never drawn in the cleaned start's place. tafs cloud was
+        // reached, so no line says otherwise: there's simply no preview, as on Android.
         guard !text else { return .noPreview }
         do { return .copy(try await localCopy(of: file)) } catch { return .unreachable }
     }
