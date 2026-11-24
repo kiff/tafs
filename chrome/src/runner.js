@@ -721,6 +721,13 @@ export class Runner {
     if (refused) return { error: { code: refused.code } };
     // The extension keeps no saved sign-in and never types one: a step naming one is refused, as a secret field is.
     if (step.act.sealed) return { error: { code: "secret_field" } };
+    // Back (gap 7): where the tab was before, read and fenced as any page is; nothing is clicked or typed.
+    if (step.act.kind === "back") {
+      const from = await this.chrome.tabs.get(run.tab).catch(() => null);
+      await Promise.resolve(this.chrome.tabs.goBack(run.tab)).catch(() => {});
+      await this.loaded(run.tab, from ? from.url || "" : undefined);
+      return this.read(run);
+    }
     await this.pictureOf(run, step, page);
     const before = await this.chrome.tabs.get(run.tab).catch(() => null);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);

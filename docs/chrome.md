@@ -220,7 +220,15 @@ a dead connection), and the apps (the replace choice at pairing, the Chrome on e
 - **The relay's limits:**
   - A connection is dropped after 10 minutes idle and after 2 hours in all. One dropped during a run is opened again at
     once, then after 2, 4, 8, 16 and 30 seconds. Idle, the next alarm opens it.
-  - A message carries at most 128 KB. A result over 120 KB is answered `page_too_large` instead, signed as any result.
+  - A message carries at most 128 KB. A result over 120 KB has its page cut until it fits (`relay.js` `cutPages`), and the
+    page says what was cut (`truncated`: `text`, `options`, `links`). The text goes first, to 4,000 characters, with `more`
+    and `next_offset` as a window has, since planque's fingerprint of a read doesn't count text; then a select's options past
+    10, links past 50, the rest of the text, and every link. The fingerprint does count options and links, so a page cut
+    there is another read than the same page uncut: steady while the page stays over the limit, but a page near it can go
+    from one to the other and give `page_changed`, and the taf reads again. Fields and controls are never cut: an act names
+    them. **An act
+    that ran is never answered as failed for its size** (a taf told its click failed may click Submit again). Only a page
+    whose fields and controls alone are over the limit is answered `page_too_large`, signed as any result.
 - **Keepalive:** `{type: "ping"}` / `{type: "pong"}` every 20 s while a run is on. MV3 keeps the service worker alive
   while messages flow. **Until planque can wake the worker by push** (no `pushKey` in the build, or planque hasn't said `push_kept`), an idle connection pings too, every 20 s, because traffic under 30 s is what keeps an MV3 worker, and so the socket, alive (an idle one is otherwise down about half of each minute). **Once planque has the subscription (it answers `{type: "push_kept"}`; a `push_refused` keeps the ping going), an idle one doesn't ping** (a ping each 20 s for every idle Chrome would cost a message each, about $2 to 3 thousand a month at 10,000 installs): the push wakes it.
 - **The allowlist of released builds** is planque's `deploy/chrome-builds.txt`, one released build per line
@@ -258,7 +266,7 @@ step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run,
         offset?,                       // read: a later window of the page's text (a whole number, 0 or more; default 0)
         read_id?,                      // act, hand: the read it was planned from
         hand?: {words, ref?},          // hand: what the person is asked to do in the page (a step handed to the person, below)
-        act?: {kind: "click" | "fill" | "select" | "check", ref, value?, sealed?},
+        act?: {kind: "click" | "fill" | "select" | "check" | "press" | "scroll" | "back", ref?, value?, keys?, sealed?},
         release?}                      // only with act.sealed: the phone's release
 ```
 
@@ -317,13 +325,28 @@ error = {code, detail?}      // detail never carries page text
   checked: planque refuses `page_changed` before sending, and the extension refuses it again in the tab.
 - **`open.url` is never one the taf wrote:** the taf names a link ref or a start URL, and planque resolves and checks it.
   The tab keeps the full URL. Only the query-less URL goes up.
-- **A page's text comes in windows.** A read answers the first 20,000 characters of the page's masked text. When the page
+- **A page's text comes in windows.** A read answers the first 20,000 characters of the page's masked text, and at most
+  20,000 bytes of it in UTF-8 (20,000 characters of Japanese are three times that). When the page
   goes on, `more` is `true` and `next_offset` is where the next window starts; a read with `offset: next_offset` answers
   that window, with `offset` set to where it starts. The text is masked before it is cut, so a secret is never split
   across a window. Fields, controls and links are the page's whole in every window, and a read at an offset is a read like
-  any other: it has its own `read_id` and fresh refs, so an act names the latest read. An open and an act read the page
+  any other: it has its own `read_id`, and an act names the latest read. An open and an act read the page
   back at the start. An `offset` that isn't a whole number, 0 or more, is `bad_step` and never reaches the page.
-- **Refs restart with each read** (`f1`, `c1`, `l1`), and an act names the read it was planned from.
+- **A ref names one element for the life of the document** (`f`, `c`, `l` and a number; `page.js` `bind`). A read never
+  renumbers what an earlier read named: an element keeps its ref while it's on the page and still what it was (its print:
+  tag, type, name, label, words, target and row). One that goes leaves its number unused, one that changes gets a new number,
+  and a node a page draws again in the same place, exactly as it was (a framework re-rendering a list), keeps the old node's
+  ref. A new document starts again from 1. An act still names the read it was planned from.
+- **The acts** (the guard, `guard.js`, then `page.js` `act`):
+  - `click`, `fill`, `select` and `check` of a ref, as before. A `fill` with `keys: true` types one character at a time with
+    key events, for a field that opens its list as you type (a city, an airport); a fill never submits.
+  - `press` of one key on a ref: `Enter`, `Escape`, `ArrowDown` or `ArrowUp`, and nothing else (no Tab, no shortcuts). The
+    keys reach the page as key events; `Enter` on a field in a form then submits the form as the browser would
+    (`requestSubmit`), unless the page cancelled the key. `Enter` on a checkout or payment page, in a form that takes a card
+    or whose button places an order, and any key on a password, card or code field, are refused, as a click there is.
+  - `scroll` of a ref (into view) or of the page (`value` `down`, the default, or `up`, by most of a screen).
+  - `back`, with no ref: the tab goes back, and the page there is read and fenced as any page is; nothing is clicked.
+  - planque sends these only once its `browse_act` takes them; until then the extension simply has them.
 - **A link that acts is a control,** never a link to follow: one with a script handler (`onclick`), a button's role, or a
   URL that is this page plus a fragment. A link whose words pay is refused as a control would be, and on a checkout or
   payment page no link is followed at all: neither a URL nor its words can prove a link places no order. planque's
@@ -352,7 +375,7 @@ error = {code, detail?}      // detail never carries page text
 | `dialog_open` | the page raised a dialog since the read |
 | `paused_by_owner`, `paused_failures`, `paused_no_progress`, `stopped` | the run is paused or stopped |
 | `page_unresponsive`, `browser_unavailable` | the page didn't answer in 20 s, or Chrome failed |
-| `page_too_large` | the answer is over 120 KB, the relay's limit with room to spare |
+| `page_too_large` | the answer is over 120 KB even with its page cut (its fields and controls alone are over), the relay's limit with room to spare |
 
 planque uses the same codes. It adds `chrome_offline` for a step that found no connection within 60 s, and then nothing
 was done.

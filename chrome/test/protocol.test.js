@@ -6,7 +6,7 @@ import { profileId } from "../src/store.js";
 import { Nonces, checkStep, clockOffset, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS, MAX_OFFSET_MS, SKEW_MS, SKEW_KNOWN_MS } from "../src/protocol.js";
 import { parseCode, offer, checkConfirmation, extensionProof, oneTouchProof, postOffer, readCarried, ALPHABET, hex } from "../src/pairing.js";
 import { checkSites } from "../src/protocol.js";
-import { Relay, readConnections, MAX_RESULT_BYTES } from "../src/relay.js";
+import { Relay, readConnections, MAX_RESULT_BYTES, cutPages } from "../src/relay.js";
 
 const pub = async (k) => b64u(await publicSPKI(k.publicKey));
 
@@ -568,20 +568,65 @@ test("planque's close message counts as its close code: 4410 wipes once, 4401 an
   }
 });
 
-test("an answer over the relay's limit is page_too_large, signed", async () => {
+test("an answer over the relay's limit is cut to fit and says what was cut; an act that ran is never answered as failed", async () => {
   const p = await planque();
-  const big = { active: false, handle: async () => ({ page: { read_id: "rd_1", url: "https://shop.example/", text: "x".repeat(MAX_RESULT_BYTES) } }), stop: async () => {} };
+  const links = Array.from({ length: 200 }, (_, i) => ({ ref: "l" + (i + 1), label: "Link " + i, url: "https://shop.example/p/" + i }));
+  const big = { active: false, handle: async () => ({ page: { read_id: "rd_1", url: "https://shop.example/", text: "x".repeat(MAX_RESULT_BYTES), links } }), stop: async () => {} };
   const { relay, ext, ws } = await relayWith(p, { runner: big });
   await handshake(p, ws);
   const s = step();
   await ws.deliver({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) });
   const answer = ws.sent.at(-1);
   assert.equal(answer.type, "result");
+  assert.equal(answer.error, null);
+  assert.deepEqual(answer.page.truncated, ["text"], "the text first: planque's fingerprint of the read doesn't count it");
+  assert.equal(answer.page.links.length, 200, "links are kept while the text alone makes it fit");
+  assert.equal(answer.page.more, true);
+  assert.equal(answer.page.next_offset, answer.page.text.length);
+  assert.equal(answer.page.read_id, "rd_1");
+  assert.ok(new TextEncoder().encode(JSON.stringify(answer)).length <= MAX_RESULT_BYTES);
+  const { sig, type, ...body } = answer;
+  assert.equal(await verify(await pub(ext), LABEL.result, body, sig), true);
+  relay.close();
+});
+
+test("a page that fits no way is page_too_large, signed", async () => {
+  const p = await planque();
+  // Fields are never cut (an act names them): a page whose fields alone are over the limit can't be sent.
+  const fields = Array.from({ length: 200 }, (_, i) => ({ ref: "f" + (i + 1), label: "y".repeat(800), kind: "text" }));
+  const big = { active: false, handle: async () => ({ page: { read_id: "rd_1", url: "https://shop.example/", text: "x", fields } }), stop: async () => {} };
+  const { relay, ext, ws } = await relayWith(p, { runner: big });
+  await handshake(p, ws);
+  const s = step();
+  await ws.deliver({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) });
+  const answer = ws.sent.at(-1);
   assert.equal(answer.error.code, "page_too_large");
   assert.ok(JSON.stringify(answer).length < MAX_RESULT_BYTES);
   const { sig, type, ...body } = answer;
   assert.equal(await verify(await pub(ext), LABEL.result, body, sig), true);
   relay.close();
+});
+
+test("a page is cut in order: text to 4,000, options past 10, links past 50, then the rest of the text and the links", () => {
+  const page = {
+    read_id: "rd_1",
+    offset: 20000,
+    text: "a".repeat(3999) + "\u{1F600}" + "b".repeat(100),
+    fields: [{ ref: "f1", kind: "select", options: Array.from({ length: 30 }, (_, i) => "o" + i) }, { ref: "f2", kind: "text" }],
+    controls: [{ ref: "c1", label: "Go" }],
+    links: Array.from({ length: 80 }, (_, i) => ({ ref: "l" + i, label: "L", url: "https://x.example/" + i })),
+  };
+  const cuts = cutPages(page);
+  assert.deepEqual(cuts.map((c) => c.truncated), [["text"], ["text", "options"], ["text", "options", "links"], ["text", "options", "links"], ["text", "options", "links"]]);
+  assert.equal(cuts[0].text.length, 3999, "never inside an emoji");
+  assert.equal(cuts[0].next_offset, 20000 + 3999);
+  assert.equal(cuts[1].fields[0].options.length, 10);
+  assert.equal(cuts[2].links.length, 50);
+  assert.equal(cuts[3].text, "");
+  assert.deepEqual(cuts[4].links, []);
+  for (const c of cuts) assert.deepEqual(c.controls, page.controls, "controls are never cut");
+  assert.equal(page.links.length, 80, "the page itself is left as it was");
+  assert.deepEqual(cutPages({ read_id: "rd_2", text: "short" }).map((c) => c.truncated), [["text"]]);
 });
 
 test("a signed hand-over step reaches the runner over the relay and is answered handed, signed", async () => {

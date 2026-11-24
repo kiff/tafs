@@ -19,7 +19,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Windows | done 50, not for it 8 | the 58 iPad view files |
 | Linux | done 52, not started 1, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
-| Wear OS | done 24, partial 3, not started 1, not for it 4 | the [Watches](#watches) table |
+| Wear OS | done 25, partial 3, not for it 4 | the [Watches](#watches) table |
 | Apple Watch | done 19, partial 6, not started 2, not for it 5 | the [Watches](#watches) table |
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
@@ -262,7 +262,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | 18 | Sign out on this watch alone | done | done | |
 | 19 | Sign in, pair a device, add a passkey, change a Card | not for it | not for it | no sign-in of its own; the keys stay on the phone |
 | 20 | The inbox kept on the watch | done | done | |
-| 21 | The inbox's read and dismissed, in step with the phone | done (`InboxModel.sync`, `inbox_marks` / `inbox_mark`) | not started | tafs cloud's piece is in (`/v1/watch/inbox`); Wear OS's side and its phone's relay are next |
+| 21 | The inbox's read and dismissed, in step with the phone | done (`InboxModel.sync`, `inbox_marks` / `inbox_mark`) | done (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud keeps them (`/v1/watch/inbox`), by id alone |
 | 22 | Your brief | partial | partial | built; off (`briefOnWatch`, `BRIEF_ON_WATCH`) until the owner's yes |
 | 23 | "From your watch" on the phone | done | done | |
 | 24 | A complication or tile (count, Ask tafs) | not started | done | Apple Watch: planned only |

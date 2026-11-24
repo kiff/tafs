@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.withLock
+import bot.tafs.watchlink.InboxMarkIds
 import bot.tafs.watchlink.Amounts
 
 /**
@@ -848,25 +850,86 @@ class WatchModel(
     saveInbox(next)
   }
 
-  /** Opened: read. */
+  /** Opened: read, and read on the person's other watches once [sendMarks] sends it (row 21). */
   fun markRead(id: String) {
-    if (_inbox.value.none { it.id == id && !it.read }) return
+    val line = _inbox.value.firstOrNull { it.id == id && !it.read } ?: return
     saveInbox(_inbox.value.map { if (it.id == id) it.copy(read = true) else it })
+    unsent.mark(read = listOf(line.ref))
   }
 
-  /** Dismiss: gone from the Inbox, and it stays gone while the phone still lists it. */
+  /** Dismiss: gone from the Inbox, and it stays gone while the phone still lists it; gone on the person's other watches too. */
   fun dismiss(id: String) {
-    if (_inbox.value.none { it.id == id }) return
+    val line = _inbox.value.firstOrNull { it.id == id } ?: return
     setDismissed(dismissed + id)
     saveInbox(_inbox.value.filterNot { it.id == id })
+    unsent.mark(dismissed = listOf(line.ref))
   }
 
   /** Clear read: every line read is gone, and stays gone; unread ones stay. */
   fun clearRead() {
-    val read = _inbox.value.filter { it.read }.map { it.id }
+    val read = _inbox.value.filter { it.read }
     if (read.isEmpty()) return
-    setDismissed(dismissed + read)
+    setDismissed(dismissed + read.map { it.id })
     saveInbox(_inbox.value.filterNot { it.read })
+    unsent.mark(dismissed = read.map { it.ref })
+  }
+
+  // MARK: In step across the person's watches (row 21, docs/watch-wear.md): tafs cloud keeps the lines' ids read and dismissed.
+
+  /** Marks made on this watch, not yet sent: in memory only, so one that doesn't arrive changes nothing here. */
+  private class Unsent {
+    private val read = mutableListOf<String>()
+    private val dismissed = mutableListOf<String>()
+
+    @Synchronized fun mark(read: List<String> = emptyList(), dismissed: List<String> = emptyList()) {
+      this.read += read
+      this.dismissed += dismissed
+    }
+
+    @Synchronized fun take(): Pair<List<String>, List<String>> = (read.toList() to dismissed.toList()).also { read.clear(); dismissed.clear() }
+  }
+
+  private val unsent = Unsent()
+  private val marking = kotlinx.coroutines.sync.Mutex()
+
+  /** The Inbox is kept here now (v2, unlocked, a screen lock): only then are marks read or sent. */
+  private fun inboxHere(): Boolean = (inboxStore != null || reviewFirst) && unlocked() && !_signedOutHere.value
+
+  /**
+   * Sends the marks made here (opened, Dismiss, Clear read) through the phone, by id alone, in chunks of at most
+   * [InboxMarkIds.LIMIT], one after another. One that doesn't arrive (no answer, an older phone) changes nothing on this watch,
+   * which keeps its own; it isn't sent again.
+   */
+  suspend fun sendMarks() = marking.withLock {
+    val (read, gone) = unsent.take()
+    if (!inboxHere()) return@withLock
+    for (chunk in InboxMarkIds.checked(read).chunked(InboxMarkIds.LIMIT)) phone.ask(WatchRequest.InboxMark(now(), read = chunk))
+    for (chunk in InboxMarkIds.checked(gone).chunked(InboxMarkIds.LIMIT)) phone.ask(WatchRequest.InboxMark(now(), dismissed = chunk))
+  }
+
+  /**
+   * After Needs you and the asks are read: sends this watch's marks, then reads the marks tafs cloud keeps, through the phone, and
+   * takes them in. With no Inbox kept here nothing is read; a phone from before the marks, or no answer, leaves the lines as they are.
+   */
+  suspend fun syncInbox() {
+    if (!inboxHere()) return
+    sendMarks()
+    val marks = (phone.ask(WatchRequest.InboxMarks(now())) as? Asked.Answered)?.reply as? WatchReply.InboxMarks ?: return
+    if (!inboxHere()) return
+    takeMarks(marks)
+  }
+
+  /**
+   * The marks from tafs cloud: a line dismissed on any watch goes, and stays away while the phone lists it (its id kept with the
+   * ids taken away, pruned as theirs are); a line read on any watch is read here. Nothing is ever brought back.
+   */
+  private fun takeMarks(marks: WatchReply.InboxMarks) {
+    val gone = marks.dismissed.toSet()
+    val read = marks.read.toSet()
+    val away = _inbox.value.filter { it.ref in gone }
+    if (away.isNotEmpty()) setDismissed(dismissed + away.map { it.id })
+    val next = _inbox.value.filterNot { it.ref in gone }.map { if (!it.read && it.ref in read) it.copy(read = true) else it }
+    if (next != _inbox.value) saveInbox(next)
   }
 
   /** The phone's list of [kind] now: a line taken away that it no longer lists can't come back, so its id goes. */
