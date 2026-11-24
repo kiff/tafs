@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach và trang bạn đang mở", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach đọc trang phía trước khi bạn gửi tin nhắn cho nó.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Chrome này", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Thêm cho “$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Thêm cho “$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Đính kèm tệp" },
+  "attach_remove": { "message": "Gỡ $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Đang tải lên…" },
+  "attach_too_big": { "message": "Quá lớn: tối đa $SIZE$ cho loại tệp này", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Không thể đính kèm loại tệp này. Chỉ ảnh, PDF, văn bản, CSV, Markdown, Word hoặc Excel." },
+  "attach_too_many": { "message": "Tối đa 5 tệp mỗi tin nhắn." },
+  "attach_failed": { "message": "Chưa tải lên được. Hãy gỡ tệp và thử lại." }
 }

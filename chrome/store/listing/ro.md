@@ -19,6 +19,7 @@ tafs pentru Chrome lasă tafs-urile dvs. să lucreze în propriul Chrome, doar p
 • Site-urile băncilor, portofelelor, managerilor de parole, plăților, sănătății și autorităților nu sunt folosite niciodată, decât dacă permiteți unul, pentru o sarcină, pe telefon.
 • Nu vă păstrează niciodată parolele. Pe o pagină de autentificare, taf-ul se oprește și vă cere să vă autentificați singur, în propria filă.
 • Panoul lateral arată taf-ul care lucrează în acest Chrome, iar dumneavoastră vorbiți cu el acolo, ca în aplicația tafs. „Configurați un taf nou pentru acest site” deschide Coach, în propria vizualizare. Când îi trimiteți un mesaj lui Coach, citește pagina din față cu aceleași câmpuri eliminate, cu excepția site-urilor de bancă, plăți, e-mail sau sănătate și a celor pe care le dezactivați, și afișează „Citește:” și site-ul sub mesajul dumneavoastră.
+• Fișierele pe care le alegeți ajung la tafs cloud și la Claude, ca atașamentele din aplicațiile tafs.
 
 Ce citește un taf merge la AI-ul care execută sarcina dvs. și este păstrat cu acea sarcină. KIFF păstrează pagina dinainte și de după o modificare cel mult 30 de zile. După ce capturile de ecran sunt activate, fiecare pas care acționează păstrează și o captură a paginii, făcută chiar înainte de acțiune cu câmpurile de parolă, card și cod ascunse, cel mult 30 de zile. O vedeți doar în aplicația tafs și nu ajunge niciodată la AI. Dezasocierea sau dezinstalarea șterge ce păstrează extensia pe computerul dvs.
 

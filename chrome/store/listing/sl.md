@@ -19,6 +19,7 @@ tafs za Chrome pusti vašim tafom delati v vašem lastnem Chromu, samo na strane
 • Strani bank, denarnic, upraviteljev gesel, plačil, zdravja in oblasti se nikoli ne obdelujejo, razen če eno dovolite za eno nalogo v telefonu.
 • Nikoli ne hrani vaših gesel. Na strani za prijavo se taf ustavi in vas prosi, da se prijavite sami, v svojem zavihku.
 • Stranska vrstica prikazuje taf, ki dela v tem Chrome, in se tam pogovarjate z njim, kot v aplikaciji tafs. „Nastavi nov taf za to spletno mesto“ odpre Coacha, v lastnem pogledu. Ko Coachu pošljete sporočilo, prebere sprednjo stran z enakimi odstranjenimi polji, razen na spletnih mestih bank, plačil, pošte ali zdravja in na tistih, ki jih izklopite, ter pod vašim sporočilom pokaže „Bere:“ in spletno mesto.
+• Datoteke, ki jih izberete, prejmeta tafs cloud in Claude, kot priloge v aplikacijah tafs.
 
 Kar taf prebere, gre umetni inteligenci, ki izvaja vašo nalogo, in se hrani s to nalogo. KIFF hrani stran pred spremembo in po njej največ 30 dni. Ko so posnetki zaslona vklopljeni, vsak korak, ki deluje, shrani tudi en posnetek strani, narejen tik pred dejanjem s skritimi polji za geslo, kartico in kodo, največ 30 dni. Vidite ga samo v aplikaciji tafs in nikoli ne gre umetni inteligenci. Z odstranitvijo povezave ali namestitve se izbriše, kar razširitev hrani v vašem računalniku.
 

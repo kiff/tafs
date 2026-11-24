@@ -15,6 +15,10 @@ On Android: `views/AttachViews.kt` (the paperclip, `FileTray`, `MessageFiles`),
 photo), the Photos and files section of `AppModel`, and `TafsCloud.attach`, `upload` and
 `attachment`. It works as below, with the differences noted.
 
+In the Chrome extension's side panel (from 0.2.10): `chrome/src/attach.js` and the composer's tray in
+`sidepanel/panel.js`, with the same types, limits and redraw, Chrome's file picker only, and no reopening a file
+([chrome.md](chrome.md#files-on-a-message)).
+
 ## What can be attached
 
 At most 5 files a message (`FilePrep`):

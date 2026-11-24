@@ -1,6 +1,6 @@
 // Coach in the side panel (docs/chrome.md, "Coach in the side panel"): the same Coach chat the apps use, through tafs
 // cloud's own routes, signed in as a view-only KIFF device of the account. It can read and send, never approve: KIFF
-// refuses anything else for a view-only session. The panel sends the owner's words alone: no page goes with them. When Coach
+// refuses anything else for a view-only session. The panel sends the owner's words and the files they picked (attach.js). When Coach
 // or a taf works on a page, its first step there is to read it itself, through planque.
 
 export const CLOUD = "https://cloud.tafs.kiff.dev";
@@ -85,11 +85,23 @@ export class Coach {
     };
   }
 
-  /** Sends the owner's words to a taf's own chat. */
-  async sendToTaf(id, words, clientID) {
+  /** Sends the owner's words, and the files they attached (ids, at most 5), to a taf's own chat. */
+  async sendToTaf(id, words, clientID, attachments = []) {
     const text = String(words || "").trim().slice(0, MAX_TEXT);
-    if (!text) throw Object.assign(new Error("nothing to send"), { code: "empty" });
-    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", { text, client_message_id: clientID });
+    const files = fileIDs(attachments);
+    if (!text && !files.length) throw Object.assign(new Error("nothing to send"), { code: "empty" });
+    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", { text, client_message_id: clientID, ...(files.length ? { attachments: files } : {}) });
+  }
+
+  /**
+   * Declares a file the person will attach to a message to taf `id` (Coach's when `id` is null): `{media_type, name, size,
+   * sha256}`. tafs cloud answers its id and where to upload its bytes, which the panel does itself (attach.js).
+   */
+  async attach(id, file) {
+    const taf = id || (await this.coach());
+    if (!taf) throw Object.assign(new Error("Coach isn't started"), { code: "no_coach" });
+    const body = { media_type: String(file.media_type || ""), name: String(file.name || "").slice(0, 200), size: Number(file.size), sha256: String(file.sha256 || "") };
+    return this.call("POST", "/v1/tafs/" + encodeURIComponent(taf) + "/attachments", body);
   }
 
   /**
@@ -149,16 +161,19 @@ export class Coach {
    * Sends the owner's words: into the live chat, into the chat `session` names, or,
    * with `newChat`, into a new one (the answer says its `session`).
    */
-  async send(words, { clientID, session = null, newChat = false, page = null } = {}) {
+  async send(words, { clientID, session = null, newChat = false, page = null, attachments = [] } = {}) {
     const id = await this.coach();
     if (!id) throw Object.assign(new Error("Coach isn't started"), { code: "no_coach" });
     const text = String(words || "").trim().slice(0, MAX_TEXT);
-    if (!text) throw Object.assign(new Error("nothing to send"), { code: "empty" });
+    const files = fileIDs(attachments);
+    if (!text && !files.length) throw Object.assign(new Error("nothing to send"), { code: "empty" });
     const body = { text, client_message_id: clientID };
+    if (files.length) body.attachments = files;
     if (newChat) body.new_chat = true;
     else if (session) body.session = session;
     // The page in front, read on this send (aside.js), as data for this turn only: tafs cloud keeps its host, never its text.
-    if (page && typeof page.url === "string" && typeof page.text === "string") {
+    // A page goes only with words (tafs cloud's rule): files alone go without it.
+    if (text && page && typeof page.url === "string" && typeof page.text === "string") {
       body.page = { url: page.url, title: String(page.title || ""), text: page.text, truncated: page.truncated === true };
     }
     const path = "/v1/tafs/" + encodeURIComponent(id) + "/messages";
@@ -173,6 +188,11 @@ export class Coach {
       return { ...sent, page_refused: true };
     }
   }
+}
+
+/** The file ids a message names: strings, each once, at most 5. Anything else is left out. */
+export function fileIDs(ids) {
+  return [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && /^att_[0-9a-f]{32}$/.test(x)))].slice(0, 5);
 }
 
 /**

@@ -387,6 +387,61 @@ form.composer button.send {
   font-size: 18px;
   line-height: 1;
 }
+/* The attach button, on the left inside the box, and the files picked for the next message, as chips above it. */
+form.composer button.attach {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  background: transparent;
+  color: var(--soft);
+  border: 1px solid var(--line);
+}
+ul.files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+ul.files li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px 4px 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  font-size: 12px;
+}
+ul.files li .fileName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+ul.files li .fileState {
+  color: var(--soft);
+}
+ul.files li.refused .fileState,
+ul.files li.failed .fileState {
+  color: var(--amber);
+}
+ul.files li button.remove {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--soft);
+  font-size: 14px;
+  line-height: 1;
+}
 form.composer #coachSendAlone {
   justify-self: start;
 }

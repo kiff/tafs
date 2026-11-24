@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach და გვერდი, რომელზეც ხართ", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach კითხულობს წინა გვერდს, როცა მას შეტყობინებას უგზავნით.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "ეს Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "მეტი: „$TITLE$“", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "მეტი: „$TITLE$“", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "ფაილების მიმაგრება" },
+  "attach_remove": { "message": "ამოღება: $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "იტვირთება…" },
+  "attach_too_big": { "message": "ძალიან დიდია: ამ ტიპის ფაილისთვის მაქსიმუმ $SIZE$", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "ამ ტიპის ფაილის მიმაგრება შეუძლებელია. მხოლოდ ფოტოები, PDF, ტექსტი, CSV, Markdown, Word ან Excel." },
+  "attach_too_many": { "message": "ერთ შეტყობინებაში მაქსიმუმ 5 ფაილი." },
+  "attach_failed": { "message": "არ აიტვირთა. ამოიღეთ და სცადეთ ხელახლა." }
 }

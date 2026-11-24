@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "O Coach e a página em que está", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "O Coach lê a página da frente quando lhe envia uma mensagem.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Este Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Mais para «$TITLE$»", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Mais para «$TITLE$»", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Anexar ficheiros" },
+  "attach_remove": { "message": "Remover $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "A carregar…" },
+  "attach_too_big": { "message": "Demasiado grande: no máximo $SIZE$ para este tipo de ficheiro", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Não é possível anexar este tipo de ficheiro. Só fotos, PDF, texto, CSV, Markdown, Word ou Excel." },
+  "attach_too_many": { "message": "No máximo 5 ficheiros por mensagem." },
+  "attach_failed": { "message": "Não foi carregado. Remova-o e tente de novo." }
 }

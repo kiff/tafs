@@ -19,6 +19,7 @@ A tafs Chrome-hoz azt teszi lehetővé, hogy a tafjaid a saját Chrome-odban dol
 • Bankok, pénztárcák, jelszókezelők, fizetések, egészségügyi és hatósági oldalak soha nincsenek feldolgozva, kivéve ha egyet engedélyezel egy feladatra a telefonodon.
 • A jelszavaidat soha nem tárolja. Egy bejelentkezési oldalon a taf megáll, és megkér, hogy jelentkezz be te magad, a saját lapodon.
 • Az oldalsó panel az ebben a Chrome-ban dolgozó tafot mutatja, és ott beszélgetsz vele, mint a tafs alkalmazásban. A „Új taf beállítása ehhez az oldalhoz” gomb megnyitja a Coachot, a saját nézetében. Ha üzenetet küldesz a Coachnak, elolvassa az elöl lévő oldalt ugyanazokkal az eltávolított mezőkkel, kivéve a banki, fizetési, levelezési vagy egészségügyi webhelyeket és az általad kikapcsoltakat, és az üzeneted alatt megjeleníti az „Olvasva:” szót és a webhelyet.
+• A kiválasztott fájlokat megkapja a tafs cloud és a Claude, mint a mellékleteket a tafs alkalmazásokban.
 
 Amit a taf elolvas, az a feladatodat végző MI-hez kerül, és a feladattal együtt marad meg. A KIFF a módosítás előtti és utáni oldalt legfeljebb 30 napig őrzi. A képernyőképek bekapcsolása után minden cselekvő lépés egy képernyőképet is megőriz az oldalról, közvetlenül a cselekvés előtt, elrejtett jelszó-, kártya- és kódmezőkkel, legfeljebb 30 napig. Csak a tafs alkalmazásban látod, és soha nem kerül az MI-hez. A párosítás megszüntetése vagy az eltávolítás törli, amit a bővítmény a számítógépeden tárol.
 

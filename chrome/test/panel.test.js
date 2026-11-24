@@ -39,7 +39,8 @@ test("the composers are the app's: Send inside the box on its right, named by it
   for (const id of ["coachForm", "tafForm"]) {
     const form = new RegExp(`<form id="${id}" class="composer"[^>]*>[\\s\\S]*?</form>`).exec(html);
     assert.ok(form, id);
-    assert.match(form[0], /<div class="box">\s*<textarea[^>]*>\s*<\/textarea>\s*<button type="submit" class="send" data-m-label="coach_send">/, `${id}: Send right after the words, inside the box`);
+    // The + on the left, then the words, then Send on the right, all inside the box (Chrome 0.2.10: files).
+    assert.match(form[0], /<div class="box">\s*<button type="button" id="\w+Attach" class="attach" data-m-label="attach_files">\+<\/button>\s*<input type="file" id="\w+File" multiple hidden>\s*<textarea[^>]*>\s*<\/textarea>\s*<button type="submit" class="send" data-m-label="coach_send">/, `${id}: Send right after the words, inside the box`);
   }
   assert.match(js, /el\.setAttribute\("aria-label", t\(el\.dataset\.mLabel\)\)/, "the sign has a name");
   assert.match(js, /if \(e\.key !== "Enter" \|\| e\.shiftKey \|\| e\.isComposing \|\| e\.keyCode === 229\) return;/, "Shift+Enter and an input method's Enter don't send");
@@ -70,4 +71,27 @@ test("a message shows at once with the working line, stays until the chat has it
     assert.match(js, new RegExp(`${pending} = [^\\n]*\\{ \\.\\.\\.${pending}, id[^\\n]*\\} : null;`), `${pending}: matched by the id tafs cloud gave it`);
   }
   assert.doesNotMatch(js, /note\.textContent = t\("coach_working"\)/, "the working line is in the chat, not a note under it");
+});
+
+// Chrome 0.2.10: files on a message, as in the apps.
+test("files are picked with Chrome's own file picker only, shown as chips until Send, and Send waits while one goes up", () => {
+  for (const [form, tray, button, input] of [["coachForm", "coachFiles", "coachAttach", "coachFile"], ["tafForm", "tafFiles", "tafAttach", "tafFile"]]) {
+    const f = new RegExp(`<form id="${form}" class="composer"[^>]*>[\\s\\S]*?</form>`).exec(html)[0];
+    assert.match(f, new RegExp(`<ul id="${tray}" class="files" hidden></ul>\\s*<div class="box">`), `${form}: the chips above the box`);
+    assert.match(f, new RegExp(`<input type="file" id="${input}" multiple hidden>`), `${form}: a file input, and only that`);
+    assert.doesNotMatch(f, /capture=/, `${form}: no camera or page capture`);
+    assert.match(js, new RegExp(`\\["${button}", "${input}",`), `${form}: the + opens it`);
+  }
+  // Nothing in the panel reads a page, a tab or the screen for a file, nor any microphone.
+  assert.doesNotMatch(js, /getUserMedia|getDisplayMedia|captureVisibleTab|showDirectoryPicker|webkitSpeech|SpeechRecognition/);
+  assert.match(js, /\$\(input\)\.accept = ACCEPT;/);
+  // Send waits while a file goes up; a message may be words, files, or both; the files go by id with it.
+  assert.match(js, /if \(uploading\(trayOf\(COACH_TRAY\)\)\) return;/);
+  assert.match(js, /if \(!to \|\| uploading\(trayOf\(to\)\)\) return;/);
+  assert.match(js, /type: "coach_send", words, alone, attachments: files,/);
+  assert.match(js, /type: "taf_send", taf: to, words, attachments: files,/);
+  // Each chip can be removed, by a button named for its file.
+  assert.match(js, /remove\.setAttribute\("aria-label", t\("attach_remove", f\.name\)\);/);
+  // A file declared on one taf never goes to another: each chat has its own tray, Coach's by itself.
+  assert.match(js, /type: "attach", taf: target === COACH_TRAY \? null : target, file: f/);
 });

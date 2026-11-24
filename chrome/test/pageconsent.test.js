@@ -50,7 +50,9 @@ test("the allow kept here holds only for this pairing's person and the current w
 test("the worker reads the tab for Coach only through the page consent, and keeps the allow with the pairing", () => {
   const sw = readFileSync(new URL("../src/sw.js", import.meta.url), "utf8");
   const send = sw.slice(sw.indexOf("coach_send:"), sw.indexOf("aside_status:"));
-  assert.match(send, /pageForSend\(\{ alone: m\.alone === true, consent: pageConsentReady, read: \(\) => asideRead\(/);
+  // "Send without the page", or files with no words (a page goes only with words): the page is never read.
+  assert.match(send, /const alone = m\.alone === true \|\| !String\(m\.words \|\| ""\)\.trim\(\);/);
+  assert.match(send, /pageForSend\(\{ alone, consent: pageConsentReady, read: \(\) => asideRead\(/);
   assert.equal((sw.match(/asideRead\(/g) || []).length, 2, "asideRead is defined once and called only through pageForSend");
   // The allow is in the pairing's own store, which an unpair (also the sign-out) wipes whole; a withdrawal clears it first.
   assert.match(sw, /indexedStore\.set\(PAGE_CONSENT, \{ tenant: session\.tenant, subject: session\.subject, version: PAGE_CONSENT_VERSION/);

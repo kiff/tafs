@@ -374,14 +374,22 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     },
     taf_send: async () => {
       await onlyHere(m.taf);
-      return { sent: await (await coach()).sendToTaf(m.taf, m.words, m.clientID) };
+      return { sent: await (await coach()).sendToTaf(m.taf, m.words, m.clientID, m.attachments) };
+    },
+    // A file the person picked in the panel, declared as the session (Coach's when no taf is named): the answer says where the
+    // panel uploads its bytes itself (attach.js). Only a taf of this Chrome, as for its chat.
+    attach: async () => {
+      if (m.taf) await onlyHere(m.taf);
+      return await (await coach()).attach(m.taf || null, m.file || {});
     },
     coach_send: async () => {
       // The page goes only with the person's page consent, here and at tafs cloud, checked before the tab is touched; and
       // never when they chose to send the words alone.
-      const page = await pageForSend({ alone: m.alone === true, consent: pageConsentReady, read: () => asideRead(m.tabId, m.windowId) });
+      // Files alone go without the page: a page goes only with words.
+      const alone = m.alone === true || !String(m.words || "").trim();
+      const page = await pageForSend({ alone, consent: pageConsentReady, read: () => asideRead(m.tabId, m.windowId) });
       return {
-        sent: await (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page }),
+        sent: await (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page, attachments: m.attachments }),
         reading: page.page ? page.host : null,
         notReading: page.why || null,
       };

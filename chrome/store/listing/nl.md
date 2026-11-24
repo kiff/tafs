@@ -19,6 +19,7 @@ tafs voor Chrome laat je tafs werken in je eigen Chrome, alleen op de sites die 
 • Sites van banken, wallets, wachtwoordmanagers, betalingen, gezondheid en overheid worden nooit bewerkt, tenzij je er een toestaat, voor één taak, op je telefoon.
 • Hij bewaart nooit je wachtwoorden. Op een inlogpagina stopt de taf en vraagt je zelf in te loggen, in je eigen tabblad.
 • Het zijpaneel toont de taf die in deze Chrome werkt, en je praat er daar mee, zoals in de tafs-app. „Een nieuwe taf instellen voor deze site” opent Coach, in een eigen weergave. Als je Coach een bericht stuurt, leest hij de voorste pagina met dezelfde velden verwijderd, behalve op bank-, betaal-, mail- of gezondheidssites en sites die je uitzet, en toont hij „Gelezen:” en de site onder je bericht.
+• Bestanden die je kiest gaan naar tafs cloud en Claude, zoals bijlagen in de tafs-apps.
 
 Wat een taf leest gaat naar de AI die je taak uitvoert en wordt met die taak bewaard. KIFF bewaart de pagina voor en na een wijziging maximaal 30 dagen. Zodra schermafbeeldingen zijn ingeschakeld, bewaart elke stap die iets doet ook één schermafbeelding van de pagina, vlak voor de handeling gemaakt met verborgen wachtwoord-, kaart- en codevelden, maximaal 30 dagen. Je ziet die alleen in de tafs-app, en ze gaat nooit naar de AI. Ontkoppelen of verwijderen wist wat de extensie op je computer bewaart.
 

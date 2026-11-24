@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "A Coach és az oldal, amelyen vagy", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "A Coach elolvassa az elöl lévő oldalt, amikor üzenetet küldesz neki.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Ez a Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Továbbiak: „$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Továbbiak: „$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Fájlok csatolása" },
+  "attach_remove": { "message": "$NAME$ eltávolítása", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Feltöltés…" },
+  "attach_too_big": { "message": "Túl nagy: ennél a fájltípusnál legfeljebb $SIZE$", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Ilyen fájlt nem lehet csatolni. Csak fotó, PDF, szöveg, CSV, Markdown, Word vagy Excel." },
+  "attach_too_many": { "message": "Üzenetenként legfeljebb 5 fájl." },
+  "attach_failed": { "message": "Nem töltődött fel. Távolítsd el, és próbáld újra." }
 }

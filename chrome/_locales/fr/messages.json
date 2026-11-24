@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach et la page sur laquelle vous êtes", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach lit la page au premier plan quand vous lui envoyez un message.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Ce Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Plus pour « $TITLE$ »", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Plus pour « $TITLE$ »", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Joindre des fichiers" },
+  "attach_remove": { "message": "Retirer $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Envoi du fichier…" },
+  "attach_too_big": { "message": "Trop volumineux : $SIZE$ au maximum pour ce type de fichier", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Impossible de joindre ce type de fichier. Uniquement photos, PDF, texte, CSV, Markdown, Word ou Excel." },
+  "attach_too_many": { "message": "5 fichiers au maximum par message." },
+  "attach_failed": { "message": "Échec de l'envoi. Retirez-le et réessayez." }
 }

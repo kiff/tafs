@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach והדף שאתם נמצאים בו", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach קורא את הדף שבחזית כשאתם שולחים לו הודעה.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "ה-Chrome הזה", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "עוד עבור „$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "עוד עבור „$TITLE$”", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "צירוף קבצים" },
+  "attach_remove": { "message": "הסרת $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "מעלה…" },
+  "attach_too_big": { "message": "גדול מדי: עד $SIZE$ לסוג קובץ זה", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "אי אפשר לצרף סוג קובץ זה. רק תמונות, PDF, טקסט, CSV, Markdown, Word או Excel." },
+  "attach_too_many": { "message": "עד 5 קבצים בהודעה." },
+  "attach_failed": { "message": "ההעלאה נכשלה. הסר אותו ונסה שוב." }
 }

@@ -19,6 +19,7 @@ tafs per Chrome fa lavorare i tuoi taf nel tuo Chrome, solo sui siti che consent
 • I siti di banche, portafogli, gestori di password, pagamenti, salute e pubblica amministrazione non vengono mai usati, a meno che tu ne consenta uno, per un compito, sul telefono.
 • Non conserva mai le tue password. Su una pagina di accesso, il taf si ferma e ti chiede di accedere tu, nella tua scheda.
 • Il pannello laterale mostra il taf che lavora in questo Chrome, e ci parli lì, come nell'app tafs. «Configura un nuovo taf per questo sito» apre Coach, nella sua vista. Quando invii un messaggio a Coach, legge la pagina in primo piano con gli stessi campi rimossi, tranne sui siti di banca, pagamenti, posta o salute e su quelli che disattivi, e mostra «Letta:» e il sito sotto il tuo messaggio.
+• I file che scegli vanno a tafs cloud e a Claude, come gli allegati nelle app tafs.
 
 Quello che un taf legge va all'IA che esegue il tuo compito e viene conservato con quel compito. KIFF conserva la pagina prima e dopo una modifica per al massimo 30 giorni. Una volta attivati gli screenshot, ogni passaggio che agisce conserva anche uno screenshot della pagina, scattato subito prima dell'azione con i campi di password, carta e codice nascosti, per al massimo 30 giorni. Lo vedi solo nell'app tafs e non va mai all'IA. Scollegare o disinstallare cancella quello che l'estensione conserva sul tuo computer.
 

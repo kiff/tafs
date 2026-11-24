@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach i la pàgina on sou", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach llegeix la pàgina de davant quan li envieu un missatge.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Aquest Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Més per a «$TITLE$»", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Més per a «$TITLE$»", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Adjunta fitxers" },
+  "attach_remove": { "message": "Treu $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Pujant…" },
+  "attach_too_big": { "message": "Massa gran: com a màxim $SIZE$ per a aquest tipus de fitxer", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "No es pot adjuntar aquest tipus de fitxer. Només fotos, PDF, text, CSV, Markdown, Word o Excel." },
+  "attach_too_many": { "message": "Com a màxim 5 fitxers per missatge." },
+  "attach_failed": { "message": "No s'ha pujat. Treu-lo i torna-ho a provar." }
 }

@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach in stran, na kateri ste", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach prebere stran spredaj, ko mu pošljete sporočilo.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Ta Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Več za »$TITLE$«", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Več za »$TITLE$«", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Priloži datoteke" },
+  "attach_remove": { "message": "Odstrani $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Nalagam…" },
+  "attach_too_big": { "message": "Prevelika: največ $SIZE$ za to vrsto datoteke", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Te vrste datoteke ni mogoče priložiti. Samo fotografije, PDF, besedilo, CSV, Markdown, Word ali Excel." },
+  "attach_too_many": { "message": "Največ 5 datotek na sporočilo." },
+  "attach_failed": { "message": "Ni naloženo. Odstranite jo in poskusite znova." }
 }

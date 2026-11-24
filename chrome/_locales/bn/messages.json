@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach এবং আপনি যে পেজে আছেন", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "আপনি Coach-কে মেসেজ পাঠালে এটি সামনের পেজটি পড়ে।", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "এই Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "“$TITLE$”-এর জন্য আরও", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "“$TITLE$”-এর জন্য আরও", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "ফাইল সংযুক্ত করুন" },
+  "attach_remove": { "message": "$NAME$ সরান", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "আপলোড হচ্ছে…" },
+  "attach_too_big": { "message": "খুব বড়: এই ধরনের ফাইলের জন্য সর্বোচ্চ $SIZE$", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "এই ধরনের ফাইল সংযুক্ত করা যায় না। শুধু ছবি, PDF, টেক্সট, CSV, Markdown, Word বা Excel।" },
+  "attach_too_many": { "message": "একটি বার্তায় সর্বোচ্চ 5টি ফাইল।" },
+  "attach_failed": { "message": "আপলোড হয়নি। এটি সরিয়ে আবার চেষ্টা করুন।" }
 }

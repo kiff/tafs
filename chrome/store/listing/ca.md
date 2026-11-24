@@ -19,6 +19,7 @@ tafs per a Chrome deixa que els teus tafs treballin al teu propi Chrome, només 
 • Els llocs de bancs, carteres, gestors de contrasenyes, pagaments, salut i administració pública mai no es tracten, tret que en permetis un, per a una tasca, al telèfon.
 • Mai no desa les teves contrasenyes. En una pàgina d'inici de sessió, el taf s'atura i et demana que hi entris tu mateix, a la teva pestanya.
 • El tauler lateral mostra el taf que treballa en aquest Chrome, i hi parles, com a l'app tafs. «Configura un taf nou per a aquest lloc» obre Coach, en la seva pròpia vista. Quan envies un missatge a Coach, llegeix la pàgina de davant amb els mateixos camps eliminats, excepte en llocs de banc, pagaments, correu o salut i en els llocs que desactivis, i mostra «Llegint:» i el lloc sota el teu missatge.
+• Els fitxers que tries van a tafs cloud i a Claude, com els adjunts a les apps tafs.
 
 El que llegeix un taf va a la IA que executa la teva tasca i es guarda amb aquesta tasca. KIFF guarda la pàgina abans i després d'un canvi 30 dies com a màxim. Quan les captures de pantalla s'activin, cada pas que actua també guarda una captura de la pàgina, feta just abans de l'acció amb els camps de contrasenya, targeta i codi amagats, 30 dies com a màxim. Només la veus a l'app tafs i no va mai a la IA. Desvincular o desinstal·lar esborra el que l'extensió guarda al teu ordinador.
 

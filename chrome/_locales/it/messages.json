@@ -118,5 +118,12 @@
   "settings_reads_title": { "message": "Coach e la pagina in cui sei", "description": "Settings: the heading of the section about Coach reading the page in front." },
   "settings_reads_on": { "message": "Coach legge la pagina in primo piano quando gli invii un messaggio.", "description": "Settings: the state line while the page consent is given (page_consent_off says the other state)." },
   "settings_chrome_title": { "message": "Questo Chrome", "description": "Settings: the heading of the section about this Chrome, above Unpair." },
-  "coach_row_menu": { "message": "Altro per «$TITLE$»", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } }
+  "coach_row_menu": { "message": "Altro per «$TITLE$»", "description": "Accessible name of a conversation row's ⋯ button, which holds Archive or Put back.", "placeholders": { "title": { "content": "$1" } } },
+  "attach_files": { "message": "Allega file" },
+  "attach_remove": { "message": "Rimuovi $NAME$", "placeholders": { "name": { "content": "$1" } } },
+  "attach_uploading": { "message": "Caricamento…" },
+  "attach_too_big": { "message": "Troppo grande: al massimo $SIZE$ per questo tipo di file", "placeholders": { "size": { "content": "$1" } } },
+  "attach_type": { "message": "Non puoi allegare questo tipo di file. Solo foto, PDF, testo, CSV, Markdown, Word o Excel." },
+  "attach_too_many": { "message": "Al massimo 5 file per messaggio." },
+  "attach_failed": { "message": "Non caricato. Rimuovilo e riprova." }
 }
