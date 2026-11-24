@@ -2,7 +2,7 @@
 
 One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why); a watch row reads **built** while its code has merged but the owner hasn't seen it work ([Watches](#watches)). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A PR that moves a row updates this page, and the desktop columns follow each repo's `docs/port-checklist.md`.
 
-**Read from:** kiff/tafs main `ab36368` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `3ef6521`, kiff/tafs-windows `e5441d8` and kiff/tafs-linux `7475d27`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
+**Read from:** kiff/tafs main `ab36368` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `56da6cf`, kiff/tafs-windows `e5441d8` and kiff/tafs-linux `7475d27`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
 
 - **Mac 13+** is the iPad app built with Mac Catalyst ([mac-app.md](mac-app.md)): it follows the iPad unless that page says it differs.
 - **macOS 12, Windows, Linux** are native ports ([kiff/tafs-macos](https://github.com/kiff/tafs-macos), [kiff/tafs-windows](https://github.com/kiff/tafs-windows), [kiff/tafs-linux](https://github.com/kiff/tafs-linux)).
@@ -15,7 +15,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | :- | :- | :- |
 | iPhone/iPad | done 58 | the 58 iPad view files |
 | Mac 13+ | done 56, partial 2 | the 58 iPad view files |
-| macOS 12 | done 47, partial 3, not for it 8 | the 58 iPad view files |
+| macOS 12 | done 50, not for it 8 | the 58 iPad view files |
 | Windows | done 50, not for it 8 | the 58 iPad view files |
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
@@ -24,8 +24,8 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
-1. **macOS 12** is furthest behind: 3 screens partial and 8 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 3 are alerts that wait on the signed build (push): their code is built behind `PUSH=1`, and they count as done once a signed build has shown an alert with tafs closed.
-2. **Linux** is level with the iPad: 53 screens done, and 5 not for it, each with its reason. "Allow this from now on" landed last (tafs-linux#120).
+1. **The desktop ports are level with the iPad.** macOS 12 has 50 screens done and 8 not for it: its last three, the alerts, count as done since a signed `PUSH=1` build showed a held call's alert with tafs closed (tafs-macos#262). Windows has 50 done and 8 not for it, Linux 53 done and 5 not for it, each with its reason.
+2. **Mac 13+ and the Chrome extension** are what's partial on a computer: Mac 13+'s 2 wait on the owner's check on a signed Mac ([mac-app.md](mac-app.md#the-owners-check-on-a-signed-mac)), and the extension's 3 are named in its [table](#chrome-extension).
 3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): the complication's count, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
 ## The iPad's screens
@@ -41,7 +41,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | AppEventApprovalSheet | An app event's filters before signing a subscription | done | done | done | done | done | done |
 | ApprovalSetupView | This device's approval readiness, and the gate in place of an approval's button | done | partial | done | done | done | done |
 | AttachViews | Attaching photos and files in a chat | done | done | done | done | done | done |
-| BriefView | "Your brief": decisions first with Coach's recommendation, the next move, what got done | done | done | partial | done | done | done |
+| BriefView | "Your brief": decisions first with Coach's recommendation, the next move, what got done | done | done | done | done | done | done |
 | CalendarView | Calendar: Day, Week, Month | done | done | done | done | done | done |
 | ChromeShotView | Screenshots of a run's acts in the owner's Chrome | done | done | done | done | done | done |
 | ChromeViews | Account › Chrome: paired Chromes, Pair a Chrome, Unpair, once planque offers it | done | done | done | done | done | done |
@@ -61,8 +61,8 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | HomeSplitView | The sidebar for the whole app and what it opens | done | done | done | done | done | done |
 | HomeView | The phone's Home. A wide window uses HomeSplitView. Its first Home (lines 137–152: Ask Coach and How tafs work… | done | done | not for it | not for it | not for it | done |
 | MicButton | The iPad's promise is that recognition runs on the device only… | done | done | done | not for it | not for it | done |
-| NeedsYouView | Needs you: held calls, "Did this happen?", steps, Coach's waits, knocks, alerts | done | done | partial | done | done | done |
-| NotificationSettingsView | Account › Alerts | done | done | partial | done | done | done |
+| NeedsYouView | Needs you: held calls, "Did this happen?", steps, Coach's waits, knocks, alerts | done | done | done | done | done | done |
+| NotificationSettingsView | Account › Alerts | done | done | done | done | done | done |
 | OnboardingCards | The three cards on how tafs works, after sign-in and from How tafs works | done | done | done | done | done | done |
 | OnboardingView | The welcome: what tafs is, the tick for both Terms with the privacy links and the age line… | done | done | done | done | done | done |
 | PairComputerView | The phone's side of pairing: the camera reads a computer's code. | done | done | not for it | not for it | not for it | done |
@@ -99,8 +99,6 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 
 - **ApprovalSetupView**
   - **Mac 13+** (partial): Touch ID approval not yet checked on a real signed Mac (CI only); a Mac signed in through the browser is view-only. The owner's check, steps 2 to 4 ([mac-app.md](mac-app.md#the-owners-check-on-a-signed-mac))
-- **BriefView**
-  - **macOS 12** (partial): Alert routing by `brief_kind`, which comes with tafs cloud's push: built behind `PUSH=1` (`MacPush.destination`, `Notifier`: a brief's or an urgent alert opens the brief in Needs you's place…
 - **DeleteAccountView**
   - **macOS 12** (not for it): KIFF takes a deletion only when its intent (`tafs.delete-account.v2`) is signed by the session's approval key (`acceptDeletion`), with no security-key path…
 - **DriveViews**
@@ -115,10 +113,6 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 - **MicButton**
   - **Windows** (not for it): The iPad's promise is that recognition runs on the device only, so no audio leaves it (`Dictation.swift`: "no audio leaves the phone"; `voice.voice_becomes_text_device_not`)…
   - **Linux** (not for it): The iPad's dictation is on the device only (`requiresOnDeviceRecognition`), and a Linux desktop has no on-device speech recognition: no mic, as the iPad draws none where no on-device locale exists…
-- **NeedsYouView**
-  - **macOS 12** (partial): `AlertsCard`, which turns on alerts that reach a closed app through push: built behind `PUSH=1` (`approvals/NeedsYou.swift`'s `AlertsCard`, with `AlertsModel.turnOn`)…
-- **NotificationSettingsView**
-  - **macOS 12** (partial): Alerts with tafs closed, with "What alerts you" and `AlertingTafsView`: built behind `PUSH=1` (`MacPush`, `AlertsModel`: the token, KIFF's alert target pointed at tafs cloud, the kinds…
 - **PairComputerView**
   - **macOS 12** (not for it): The phone's side of pairing: its camera reads a computer's code. This Mac is the computer being added.
   - **Windows** (not for it): The phone's side of pairing: the camera reads a computer's code.
