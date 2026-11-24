@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo เป็นการสมัครใช้งาน %2$s / %1$s เรียกเก็บจากบัญชี Apple ของคุณ ต่ออายุอัตโนมัติเมื่อสิ้นสุดแต่ละรอบ (%3$s) จนกว่าคุณจะยกเลิก</string>
     <string name="billing_starts_free">เริ่มต้นฟรี %1$s</string>
     <string name="billing_tafs_kiff_one_person_every">tafs สำหรับหนึ่งคน ทุกเดือน</string>
-    <string name="billing_team_on_web">รับ Team ที่ kiff.dev</string>
+    <string name="billing_team_on_web">รับ Company ที่ kiff.dev</string>
     <string name="billing_terms_use">ข้อกำหนดการใช้งาน</string>
     <string name="billing_test_purchase_credits">การซื้อทดสอบไม่เพิ่มเครดิตให้บัญชีนี้</string>
     <string name="billing_try_free">ลองใช้ฟรี %1$s</string>

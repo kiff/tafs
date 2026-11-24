@@ -88,5 +88,12 @@
   "hand_show": { "message": "Montrez-moi", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Terminé", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Pas maintenant", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Ne tapez que là où vous faites confiance à cette page.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Ne tapez que là où vous faites confiance à cette page.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "La page a changé depuis que le taf l'a lue : il n'y a rien à montrer. Cherchez-le comme le dit le taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Ce champ ou ce bouton n'est pas à l'écran pour le moment. Une fenêtre plus large peut l'afficher, ou cherchez-le comme le dit le taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "La page n'a pas répondu. Cherchez-le comme le dit le taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Voici la page. Le taf n'a indiqué aucun champ ni bouton à montrer.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Vous a été confié", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Vous l'avez fait", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Vous avez dit « Pas maintenant »", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

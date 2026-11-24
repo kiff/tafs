@@ -88,5 +88,12 @@
   "hand_show": { "message": "Tunjukkan", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Selesai", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Nanti saja", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Ketik hanya di tempat Anda memercayai halaman ini.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Ketik hanya di tempat Anda memercayai halaman ini.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Halaman sudah berubah sejak taf membacanya, jadi tidak ada yang bisa ditunjukkan. Cari sesuai kata taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Kolom atau tombol itu tidak ada di layar saat ini. Jendela yang lebih lebar mungkin menampilkannya, atau cari sesuai kata taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Halaman tidak merespons. Cari sesuai kata taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Inilah halamannya. Taf tidak menyebut kolom atau tombol untuk ditunjukkan.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Diserahkan kepada Anda", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Anda sudah melakukannya", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Anda memilih “Nanti saja”", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

@@ -259,7 +259,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo اشتراك بسعر %2$s / %1$s، يُخصم من حساب Apple الخاص بك. يتجدد في نهاية كل فترة (%3$s) حتى تلغيه.</string>
     <string name="billing_starts_free">يبدأ بفترة مجانية: %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs لشخص واحد، كل شهر.</string>
-    <string name="billing_team_on_web">احصل على Team من kiff.dev</string>
+    <string name="billing_team_on_web">احصل على Company من kiff.dev</string>
     <string name="billing_terms_use">شروط الاستخدام</string>
     <string name="billing_test_purchase_credits">لا تضيف عمليات الشراء التجريبية أرصدة إلى هذا الحساب.</string>
     <string name="billing_try_free">جرّب مجانًا: %1$s</string>

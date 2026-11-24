@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo е абонамент за един %1$s на цена %2$s, таксуван в акаунта ви в Apple. Подновява се всеки %3$s, докато не го анулирате.</string>
     <string name="billing_starts_free">Започва с %1$s безплатно.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs за един човек, всеки месец.</string>
-    <string name="billing_team_on_web">Вземете Team в kiff.dev</string>
+    <string name="billing_team_on_web">Вземете Company в kiff.dev</string>
     <string name="billing_terms_use">Условия за ползване</string>
     <string name="billing_test_purchase_credits">Тестовите покупки не добавят кредити към този акаунт.</string>
     <string name="billing_try_free">Опитайте %1$s безплатно</string>

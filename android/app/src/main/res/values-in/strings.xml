@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo adalah langganan seharga %2$s / %1$s, ditagihkan ke akun Apple Anda. Diperpanjang di akhir setiap periode (%3$s) sampai Anda membatalkan.</string>
     <string name="billing_starts_free">Dimulai dengan %1$s gratis.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs untuk satu orang, setiap bulan.</string>
-    <string name="billing_team_on_web">Dapatkan Team di kiff.dev</string>
+    <string name="billing_team_on_web">Dapatkan Company di kiff.dev</string>
     <string name="billing_terms_use">Ketentuan Penggunaan</string>
     <string name="billing_test_purchase_credits">Pembelian uji coba tidak menambahkan kredit ke akun ini.</string>
     <string name="billing_try_free">Coba gratis %1$s</string>

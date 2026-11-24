@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo 為 %2$s / %1$s 的訂閱，費用會從您的 Apple 帳號扣款。每期結束時（%3$s）自動續訂，直到您取消為止。</string>
     <string name="billing_starts_free">從免費%1$s開始。</string>
     <string name="billing_tafs_kiff_one_person_every">供一個人使用的 tafs，每個月。</string>
-    <string name="billing_team_on_web">在 kiff.dev 取得 Team</string>
+    <string name="billing_team_on_web">在 kiff.dev 取得 Company</string>
     <string name="billing_terms_use">使用條款</string>
     <string name="billing_test_purchase_credits">測試購買不會為此帳號增加點數。</string>
     <string name="billing_try_free">免費試用%1$s</string>

@@ -71,7 +71,7 @@
   "billing.solo_subscription_one_charged_your": "Solo është një abonim për një periudhë ({period}) me {price}, i ngarkuar në llogarinë tuaj Apple. Rinovohet çdo periudhë ({period_2}) derisa ta anuloni.",
   "billing.starts_free": "Fillon me: {trial} falas.",
   "billing.tafs_kiff_one_person_every": "Tafs për një person, çdo muaj.",
-  "billing.team_on_web": "Merrni Team në kiff.dev",
+  "billing.team_on_web": "Merrni Company në kiff.dev",
   "billing.terms_use": "Kushtet e përdorimit",
   "billing.test_purchase_credits": "Blerjet provë nuk shtojnë kredite në këtë llogari.",
   "billing.try_free": "Provoni falas: {trial}",

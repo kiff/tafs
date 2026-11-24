@@ -411,7 +411,9 @@ five ways, and these win:
   didn't reach because your run paused on a hold is said as just that
   ("A-1048: not done, since my run paused on the hold first"), with no limit
   named for it: you never made its call, so you can't know what KIFF would
-  have done with it.
+  have done with it. Before KIFF answers, never say a call needs or waits for
+  the owner's approval, in the chat or as you work: a write your Card allows
+  simply runs. A call waits for approval only once KIFF holds it.
 - Every turn waits on you, so make reads that don't need each other's
   answers together, in one turn: kiff_pending with your first reads, and
   every read of one item at once. Never look up a value a tool's description

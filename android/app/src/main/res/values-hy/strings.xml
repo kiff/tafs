@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo-ն բաժանորդագրություն է մեկ ժամանակահատվածով (%1$s) %2$s-ով, որը գանձվում է ձեր Apple հաշվից։ Նորացվում է յուրաքանչյուր ժամանակահատվածում (%3$s), մինչև չեղարկեք։</string>
     <string name="billing_starts_free">Սկսվում է անվճար՝ %1$s։</string>
     <string name="billing_tafs_kiff_one_person_every">tafs մեկ մարդու համար, ամեն ամիս։</string>
-    <string name="billing_team_on_web">Ստացեք Team-ը kiff.dev-ում</string>
+    <string name="billing_team_on_web">Ստացեք Company-ն kiff.dev-ում</string>
     <string name="billing_terms_use">Օգտագործման պայմաններ</string>
     <string name="billing_test_purchase_credits">Փորձնական գնումները կրեդիտներ չեն ավելացնում այս հաշվին։</string>
     <string name="billing_try_free">Փորձեք անվճար՝ %1$s</string>

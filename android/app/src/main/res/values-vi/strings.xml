@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo là gói đăng ký %2$s / %1$s, tính vào tài khoản Apple của bạn. Tự gia hạn vào cuối mỗi kỳ (%3$s) cho đến khi bạn hủy.</string>
     <string name="billing_starts_free">Bắt đầu với %1$s miễn phí.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs cho một người, mỗi tháng.</string>
-    <string name="billing_team_on_web">Đăng ký Team trên kiff.dev</string>
+    <string name="billing_team_on_web">Đăng ký Company trên kiff.dev</string>
     <string name="billing_terms_use">Điều khoản sử dụng</string>
     <string name="billing_test_purchase_credits">Giao dịch mua thử không cộng tín dụng vào tài khoản này.</string>
     <string name="billing_try_free">Dùng thử miễn phí %1$s</string>

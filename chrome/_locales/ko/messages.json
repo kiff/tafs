@@ -88,5 +88,12 @@
   "hand_show": { "message": "보여 주세요", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "완료", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "지금은 안 함", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "이 페이지를 신뢰할 때만 입력하세요.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "이 페이지를 신뢰할 때만 입력하세요.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "taf가 읽은 뒤 페이지가 바뀌어 가리킬 것이 없습니다. taf의 말대로 찾아 보세요.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "그 입력란이나 버튼이 지금 화면에 없습니다. 창을 넓히면 보일 수 있으니, 아니면 taf의 말대로 찾아 보세요.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "페이지가 응답하지 않았습니다. taf의 말대로 찾아 보세요.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "이 페이지입니다. taf가 가리킬 입력란이나 버튼을 지정하지 않았습니다.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "나에게 넘겨짐", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "내가 완료함", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "'지금은 안 함'을 선택함", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

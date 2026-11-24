@@ -39,7 +39,7 @@ it over and carries on after.
 - **The taf's words are the taf's,** never KIFF's or the extension's: plain text, at most 280 characters, shown under "The
   taf says", never as a line the extension or KIFF would write.
 - **The panel shows "Your turn"** with those words. **Show me** brings the run's tab to the front and only outlines the field
-  or button. The toolbar badge says the taf waits.
+  or button. When it can't (the page changed, the field isn't on screen, or the taf named none), the card says so. The toolbar badge says the taf waits.
 - **The extension never acts for the person here.** It types nothing, clicks nothing and fills nothing. A sealed value is
   never offered.
 - **A hand-over isn't an ordinary step.** planque waits for a step's signed result inside one call, far shorter than a

@@ -238,7 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo je pretplata po cijeni %2$s / %1$s, naplaćena na vaš Apple račun. Obnavlja se na kraju svakog razdoblja (%3$s) dok je ne otkažete.</string>
     <string name="billing_starts_free">Počinje s besplatnim razdobljem: %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafovi za jednu osobu, svaki mjesec.</string>
-    <string name="billing_team_on_web">Nabavite Team na kiff.dev</string>
+    <string name="billing_team_on_web">Nabavite Company na kiff.dev</string>
     <string name="billing_terms_use">Uvjeti korištenja</string>
     <string name="billing_test_purchase_credits">Probne kupnje ne dodaju kredite ovom računu.</string>
     <string name="billing_try_free">Isprobajte besplatno: %1$s</string>

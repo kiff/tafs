@@ -365,7 +365,7 @@ was done.
   taf's close step, planque's `stop`, the person's Stop, the idle sweep): the person sees the page where the taf stopped and
   nothing opens and closes under them. **Each taf keeps only its latest finished run's tabs:** when that taf's next run opens, it closes the
   previous "· done" tabs (and a window of its own) first, so a taf's calls never pile up. **Only a tab still where the run left it, and not in front of the window the person is using, closes then;** one they moved on or are using stays, is dropped from the list, leaves the run's "· done" group if it's still in it, never a group of the person's own (Chrome ends a group once it's empty, so a person who watches each run doesn't collect one done group per run), and keeps a window of its own open with it. Unpairing closes them all. Which tabs are kept is held in `chrome.storage.session`
-  (`doneTabs`), so a stopped worker still finds them; a taf is told apart by the name its steps carry. The group is renamed "tafs · Rae · done" and turns grey, its fence goes, and the tabs are no longer the
+  (`doneTabs`), so a stopped worker still finds them; a taf is told apart by the name its steps carry. The group is renamed "tafs · Rae · done" and turns grey **15 s after the run ends** (`DONE_GRACE_MS`), unless the taf's next run starts first: a taf works in a few calls, each its own run, so its group stays amber while it works and waits instead of blinking grey between calls (a worker that stopped in those 15 s greys it when it starts again). Its fence goes, and the tabs are no longer the
   run's: a touch in one pauses nothing and a step can't reach it. **Unpairing closes them all** (the tabs the run opened, wherever they are
   by then, and a window of its own); so does a run that never loaded a page (a Stop while the tab is still being opened, or a window that
   couldn't be set up), since a blank tab is nothing to keep. When the window last used is private or a pop-up, or there is no normal window (the run
@@ -638,7 +638,9 @@ step over: `op: "hand"`, `hand: {words, ref?}`, `read_id`, signed like every ste
   sensitive site is refused); and **one hand-over is open per run**: a new one ends the old as declined.
 - **The card:** "Your turn", under "The taf says" the taf's words as plain text (never as a KIFF or extension line), a fixed line "Only type
   where you trust this page.", and three buttons. **Show me** brings the run's tab to the front and outlines the named field or button
-  (`TafsPage.outline`: an outline that lets every pointer through, never a scroll, a focus or a click, gone after 8 s). **Done** and **Not
+  (`TafsPage.outline`: an outline that lets every pointer through, never a scroll, a focus or a click, gone after 8 s). **When it can't
+  point to one, the card says why** under its buttons: the page changed since the taf read it, the field isn't on screen (a narrow
+  window can hide a search box), the page didn't answer, or the taf named no field. A press never goes unanswered. **Done** and **Not
   now** answer. The toolbar badge says "!" while one waits.
 - **A hand-over doesn't stop its run.** While one is open the run isn't swept as idle (a person takes longer than 5 minutes), and **the
   person's own typing in the page doesn't pause it** (it is what was asked); both end with the answer or at its 30 minutes (`HAND_MAX_MS`,

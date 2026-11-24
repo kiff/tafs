@@ -238,7 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo je predplatné na jeden %1$s za %2$s, účtované na váš účet Apple. Obnovuje sa každý %3$s, kým ho nezrušíte.</string>
     <string name="billing_starts_free">Začína %1$s zadarmo.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs pre jedného človeka, každý mesiac.</string>
-    <string name="billing_team_on_web">Získať Team na kiff.dev</string>
+    <string name="billing_team_on_web">Získať Company na kiff.dev</string>
     <string name="billing_terms_use">Podmienky používania</string>
     <string name="billing_test_purchase_credits">Testovacie nákupy k tomuto účtu nepridávajú kredity.</string>
     <string name="billing_try_free">Vyskúšať %1$s zadarmo</string>

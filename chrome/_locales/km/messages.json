@@ -88,5 +88,12 @@
   "hand_show": { "message": "បង្ហាញខ្ញុំ", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "រួចរាល់", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "មិនមែនឥឡូវនេះ", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "វាយតែនៅកន្លែងដែលអ្នកទុកចិត្តទំព័រនេះប៉ុណ្ណោះ។", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "វាយតែនៅកន្លែងដែលអ្នកទុកចិត្តទំព័រនេះប៉ុណ្ណោះ។", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "ទំព័របានផ្លាស់ប្តូរតាំងពី taf បានអានវា ដូច្នេះគ្មានអ្វីត្រូវចង្អុលទេ។ ស្វែងរកវាដូចដែល taf និយាយ។", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "វាល ឬប៊ូតុងនោះមិននៅលើអេក្រង់ទេឥឡូវនេះ។ បង្អួចធំជាងនេះអាចបង្ហាញវា ឬស្វែងរកវាដូចដែល taf និយាយ។", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "ទំព័រមិនបានឆ្លើយតបទេ។ ស្វែងរកវាដូចដែល taf និយាយ។", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "នេះជាទំព័រនោះ។ taf មិនបានដាក់ឈ្មោះវាល ឬប៊ូតុងដែលត្រូវចង្អុលទេ។", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "បានប្រគល់ឱ្យអ្នក", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "អ្នកបានធ្វើរួច", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "អ្នកបាននិយាយថា «មិនមែនឥឡូវនេះ»", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

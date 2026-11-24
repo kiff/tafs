@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo는 %2$s의 %1$s 단위 구독이며 Apple 계정에 청구됩니다. 취소할 때까지 매%3$s 갱신됩니다.</string>
     <string name="billing_starts_free">%1$s 무료로 시작합니다.</string>
     <string name="billing_tafs_kiff_one_person_every">한 사람을 위한 tafs, 매월.</string>
-    <string name="billing_team_on_web">kiff.dev에서 Team 시작하기</string>
+    <string name="billing_team_on_web">kiff.dev에서 Company 시작하기</string>
     <string name="billing_terms_use">이용 약관</string>
     <string name="billing_test_purchase_credits">테스트 구매는 이 계정에 크레딧을 추가하지 않습니다.</string>
     <string name="billing_try_free">%1$s 무료 체험</string>

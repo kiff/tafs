@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo on tellimus, üks %1$s hinnaga %2$s, mis võetakse sinu Apple\'i kontolt. See uueneb iga %3$s, kuni tühistad.</string>
     <string name="billing_starts_free">Alguses %1$s tasuta.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafid ühele inimesele, iga kuu.</string>
-    <string name="billing_team_on_web">Võta Team kiff.dev-is</string>
+    <string name="billing_team_on_web">Võta Company kiff.dev-is</string>
     <string name="billing_terms_use">Kasutustingimused</string>
     <string name="billing_test_purchase_credits">Testostud ei lisa sellele kontole krediite.</string>
     <string name="billing_try_free">Proovi %1$s tasuta</string>

@@ -455,7 +455,7 @@ enum Words {
         static func startsFree(trial: String) -> String { Words.line("billing.starts_free", trial) }
         /// Tafs for one person, every month.
         static var tafsKiffOnePersonEvery: String { Words.line("billing.tafs_kiff_one_person_every") }
-        /// Get Team on kiff.dev
+        /// Get Company on kiff.dev
         static var teamOnWeb: String { Words.line("billing.team_on_web") }
         /// Terms of Use
         static var termsUse: String { Words.line("billing.terms_use") }

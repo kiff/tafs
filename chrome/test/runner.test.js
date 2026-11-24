@@ -716,11 +716,75 @@ test("Show me brings the run's tab to the front and outlines the field the taf n
   c.scripting.executeScript = async (o) => (String(o.func).includes("TafsPage.outline") ? (outlined.push(o.args), [{ result: { ok: true } }]) : run(o));
   c.windows.update = async (id, props) => c.calls.push(["windows.update", id, props]);
   await r.handle(step(hand()));
-  assert.deepEqual(await r.showHand("run_1"), { ok: true });
+  assert.deepEqual(await r.showHand("run_1"), { ok: true, shown: "field" });
   assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab() && x[2].active === true), "the tab comes to the front");
   assert.deepEqual(outlined, [["f1", "rd_h"]], "only the field named, from the read the hand-over was planned from");
   assert.ok(!c.calls.some((x) => x[0] === "page" && x[1].startsWith("act")), "nothing was clicked or typed");
   assert.equal((await r.showHand("run_x")).error.code, "no_hand");
+});
+
+// Show me pressed with nothing drawn read as "it does nothing": it says what it did instead, and the panel says why.
+test("Show me says when it couldn't point to the field: the page changed, the field isn't on screen, the page didn't answer, or none was named", async () => {
+  for (const [answer, why] of [[{ ok: false, code: "page_changed" }, "page_changed"], [{ ok: false, code: "ref_unknown" }, "ref_unknown"],
+    [null, "page_unresponsive"], [{ ok: false, code: "something_else" }, "page_unresponsive"], ["throws", "page_unresponsive"]]) {
+    const { c, r, hand, tab } = await handing();
+    const run = c.scripting.executeScript;
+    c.scripting.executeScript = async (o) => {
+      if (!String(o.func).includes("TafsPage.outline")) return run(o);
+      if (answer === "throws") throw new Error("Cannot access contents of the page");
+      return [{ result: answer }];
+    };
+    await r.handle(step(hand()));
+    assert.deepEqual(await r.showHand("run_1"), { ok: true, shown: "tab", why }, JSON.stringify(answer));
+    assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab() && x[2].active === true), "the tab still comes to the front");
+  }
+  const { c, r, hand } = await handing();
+  const outlined = [];
+  const run = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => (String(o.func).includes("TafsPage.outline") ? (outlined.push(o.args), [{ result: { ok: true } }]) : run(o));
+  await r.handle(step(hand({ hand: { words: "Type your search, then tap Done" } })));
+  assert.deepEqual(await r.showHand("run_1"), { ok: true, shown: "tab", why: "no_ref" }, "no field named: the tab, and it says so");
+  assert.deepEqual(outlined, [], "nothing to outline");
+});
+
+test("Done is recorded as done, Not now as declined, so the step list says each once", async () => {
+  const { r, hand } = await handing();
+  await r.handle(step(hand()));
+  await r.answerHand("run_1", "done");
+  await r.handle(step(hand({ id: "h2" })));
+  await r.answerHand("run_1", "declined");
+  assert.deepEqual(r.state()[0].steps.filter((s) => s.op === "hand").map((s) => s.kind ?? null), [null, "done", null, "declined"]);
+});
+
+// A taf works in a few calls, each its own run: the group stays amber between them, and says done only when the taf has stopped.
+test("a finished run's group turns grey only after a grace, and the taf's next run in that time keeps it from ever turning grey", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const graces = [];
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms === 15_000 ? new Promise((go) => graces.push(go)) : Promise.resolve()), paired: () => paired });
+  const greyed = () => c.calls.filter((x) => x[0] === "tabGroups.update" && x[2].color === "grey");
+  await r.handle(step());
+  await r.stop("run_1");
+  assert.equal(graces.length, 1, "the grace started");
+  assert.deepEqual(greyed(), [], "not grey at once");
+  await r.handle(step({ run: "run_2" }));
+  graces[0]();
+  await new Promise((go) => setImmediate(go));
+  assert.deepEqual(greyed(), [], "the taf's next run started within the grace: never grey");
+  assert.equal(c.calls.filter((x) => x[0] === "tabGroups.update").pop()[2].color, "orange", "the taf's group is amber");
+  await r.stop("run_2");
+  graces[1]();
+  await new Promise((go) => setImmediate(go));
+  assert.equal(greyed().length, 1, "the taf stopped: its group says done");
+  assert.equal(greyed()[0][2].title, "tafs · Rae · done");
+});
+
+test("after the worker restarts, a finished run's group that never turned grey says done", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const stored = { done: { Rae: { tabs: [{ id: 41, url: "https://shop.example/" }], window: null, group: 7 } } };
+  const doneStore = { get: async () => JSON.parse(JSON.stringify(stored.done)), set: async (d) => (stored.done = JSON.parse(JSON.stringify(d))) };
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, doneStore });
+  await r.doneTabs();
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabGroups.update").map((x) => [x[1], x[2]]), [[7, { title: "tafs · Rae · done", color: "grey" }]]);
 });
 
 // The read after an act waits for the navigation the act starts (the owner's run 2: "The page still showed the start page afterwards").
