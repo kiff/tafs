@@ -1171,3 +1171,35 @@ test("a group whose run is over says so in the extension's words, as it said the
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabGroups.update").pop()[2], { title: "tafs · Rae is done", color: "grey" });
   assert.equal(new Runner({ chrome: c, sleep, paired: () => paired }).doneTitle("Rae"), "tafs · Rae · done", "with no words, as before");
 });
+
+test("each Pause, Resume and Stop, whoever made it, is said to planque as the run's state, and a stopped run says nothing more", async () => {
+  let clock = Date.parse("2026-11-24T15:20:00Z");
+  const said = [];
+  const c = fakeChrome();
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock, onRunState: (s) => said.push(s) });
+  await r.handle(step());
+  assert.deepEqual(said, [], "a step is no change of state");
+  r.pause("run_1");
+  clock += 1_000;
+  r.resume("run_1");
+  clock += 1_000;
+  await r.stop("run_1", false, "person");
+  assert.deepEqual(said, [
+    { run: "run_1", state: "paused", at: "2026-11-24T15:20:00.000Z" },
+    { run: "run_1", state: "working", at: "2026-11-24T15:20:01.000Z" },
+    { run: "run_1", state: "stopped", at: "2026-11-24T15:20:02.000Z" },
+  ]);
+  r.resume("run_1");
+  r.pause("run_1");
+  assert.equal(said.length, 3, "nothing after the stop");
+  // The person's touch pauses too, and the idle sweep stops.
+  const said2 = [];
+  const d = fakeChrome();
+  const r2 = new Runner({ chrome: d, sleep, paired: () => paired, now: () => clock, onRunState: (s) => said2.push(s) });
+  await r2.handle(step());
+  await new Promise((done) => setTimeout(done, 0));
+  r2.ownerInput(r2.runs.get("run_1").tab);
+  clock += PAUSED_IDLE_MS + 1_000;
+  await r2.sweep();
+  assert.deepEqual(said2.map((s) => s.state), ["paused", "stopped"]);
+});

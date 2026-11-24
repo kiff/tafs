@@ -14,6 +14,7 @@ import { tafsHere } from "./coachchat.js";
 import { Coach, reusing } from "./coach.js";
 import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { HandAnswers, handMessage } from "./hand.js";
+import { RunStates, runStateMessage } from "./runstate.js";
 import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
 
@@ -43,11 +44,27 @@ async function sendHands(only) {
   }
 }
 
+// Each run's newest Pause, Resume or Stop, kept until planque says it has it, and sent again on each welcome: the taf waits on
+// it (runstate.js).
+const runStates = new RunStates({
+  get: async () => (await chrome.storage.session.get("runStates")).runStates,
+  set: (runStates) => chrome.storage.session.set({ runStates }),
+});
+
+async function sendRunStates(only) {
+  if (!relay || !relay.connected || !kept.keys) return;
+  for (const s of await runStates.all()) {
+    if (typeof only === "string" && s.run !== only) continue;
+    runStates.sending(s);
+    relay.send(await runStateMessage(kept.keys.privateKey, s));
+  }
+}
+
 const doneStore = {
   get: async () => (await chrome.storage.session.get("doneTabs")).doneTabs || {},
   set: (done) => chrome.storage.session.set({ doneTabs: done }),
 };
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}) });
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}), onRunState: (s) => runStates.add(s).then((added) => added && sendRunStates(s.run)).catch(() => {}) });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
@@ -114,7 +131,7 @@ async function connect() {
       get: async () => (await chrome.storage.session.get("nonces")).nonces || [],
       set: (entries) => chrome.storage.session.set({ nonces: entries }),
     };
-    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: async () => { await announcePush(); await sendHands(); }, onHandMessage: (m) => handAnswers.heard(m).then((again) => again && sendHands(again)), nonceStore });
+    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: async () => { await announcePush(); await sendHands(); await sendRunStates(); }, onHandMessage: (m) => handAnswers.heard(m).then((again) => again && sendHands(again)), onRunStateMessage: (m) => runStates.heard(m), nonceStore });
   }
   relay.connect();
 }

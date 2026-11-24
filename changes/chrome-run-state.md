@@ -1,0 +1,1 @@
+- **Chrome: Pause holds a taf's run until Resume.** Pause, Resume and Stop are now said to planque, signed by the Chrome, so a paused taf waits and goes on after Resume instead of ending its turn ([chrome.md](docs/chrome.md)).

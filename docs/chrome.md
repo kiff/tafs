@@ -463,6 +463,14 @@ was done.
   the run (the next step is answered `paused_by_owner`), and Resume lets it go on. **Stop ends the run's browser work at
   once**, as the panel's Stop does (recorded `stop` by `person`): a step handed to the person is answered Not now, the run's
   tabs stay, and planque's next step for it is answered `stopped`, which tells the taf the person stopped it.
+- **Pause, Resume and Stop reach the taf** (`chrome/src/runstate.js`): each change of a run's state, whoever made it (the bar,
+  the panel, the person's touch, the run's own failures or no progress, the idle sweep), is sent on the relay as
+  `{type: "run_state", run, state: "paused"|"working"|"stopped", at, sig}`, signed by this Chrome's key over `{run, state, at}`
+  under `tafs-chrome/run_state/v1`. planque keeps the newest (planque#406), so a taf whose step was answered
+  `paused_by_owner` waits for `working` and sends the step again, instead of ending its turn (kiff/agents). Each run's newest
+  state is kept until planque answers `run_state_kept`, or `run_state_refused` with a code; `not_kept` waits for the next
+  welcome, as a hand-over's answer does. Answers are matched to what was sent in order, so an answer to a Pause never drops
+  the Resume sent after it. **`stopped` is final:** a run stopped or swept never says `working` again.
 - **The page can't use it.** The bar lives in a closed shadow root: the page can't read or restyle its words or reach its
   buttons. Only a real press (`isTrusted`) counts; what it sends names its run, the service worker takes it only from the
   extension's own content script in a tab, and the runner acts only on a run it holds and that still lives
