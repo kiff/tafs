@@ -104,7 +104,8 @@ final class NeedsYouModel: ObservableObject {
         answers[hold] = .sending
         let reached = await phone.reach(WatchRequest(.refuse, made: clock(), hold: hold))
         if reached.reply?.outcome == .signedOut { state = .signedOut; answers = [:]; return }
-        answers[hold] = WatchAnswer.from(reached, notDone: Words.Alert.notRefused)
+        // A refusal goes to KIFF: a failure the phone gives no words for says so.
+        answers[hold] = WatchAnswer.from(reached, notDone: Words.Alert.notRefused, unreached: Words.Alert.tafsCouldNotReachKiff)
     }
 
     /// The app left the screen: what was read goes.

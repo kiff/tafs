@@ -9,13 +9,15 @@ enum WatchAnswer: Equatable {
     /// Not done: why, in the phone's words, or that the phone wasn't in reach.
     case failed(String)
 
-    /// What a reply means for the answer. `notDone` titles a failure ("Not refused").
-    static func from(_ reply: WatchReply?, notDone: String? = nil) -> WatchAnswer {
-        from(reply.map(PhoneReach.reply) ?? .failed(.notReachable), notDone: notDone)
+    /// What a reply means for the answer. `notDone` titles a failure ("Not refused"). `unreached` is what a failure the
+    /// phone sent no line for says: a Halt goes to tafs cloud (the default), a Refuse to KIFF.
+    static func from(_ reply: WatchReply?, notDone: String? = nil, unreached: String = Words.Watch.phoneCouldNotReachCloud) -> WatchAnswer {
+        from(reply.map(PhoneReach.reply) ?? .failed(.notReachable), notDone: notDone, unreached: unreached)
     }
 
     /// The same, with why the phone didn't answer in its own words (row 44, D).
-    static func from(_ reached: PhoneReach, notDone: String? = nil) -> WatchAnswer {
+    static func from(_ reached: PhoneReach, notDone: String? = nil,
+                     unreached: String = Words.Watch.phoneCouldNotReachCloud) -> WatchAnswer {
         let titled = { (line: String) in [notDone, line].compactMap { $0 }.joined(separator: "\n") }
         // Out of reach is a failure like any other: titled too, so the wrist says what didn't happen.
         let reply: WatchReply
@@ -27,7 +29,7 @@ enum WatchAnswer: Equatable {
         case .ok, .answered:
             return .done(reply.line ?? "")
         case .failed:
-            return .failed(titled(reply.line ?? Words.Alert.tafsCouldNotReachKiff))
+            return .failed(titled(reply.line ?? unreached))
         case .signedOut:
             return .failed(titled(Words.Watch.signInOnPhone))
         case .refused, .stale, .notYet:
