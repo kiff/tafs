@@ -598,6 +598,8 @@ struct ChatBubble: View {
     var fullWidth = false
     /// Words streaming in: shown at an even pace, with formatting still open closed (kiff/tafs#285).
     var steady = false
+    /// Coach's answer still arriving: a clean https link in it asks before opening, with the live line (`PageLinks.Ask.live`).
+    var live = false
 
     var body: some View {
         Group {
@@ -612,8 +614,9 @@ struct ChatBubble: View {
                 bubble
             }
         }
-        // A link in words from a page turn may have come from that page: its whole address first, then Open or Cancel.
-        .modifier(PageLinkGuard(on: message.pageTurn))
+        // An answer's link that won't open says so; one from a page turn, or in Coach's answer still arriving, shows its
+        // whole address first, then Open or Cancel (`PageLinks`). The owner's own words open their links as before.
+        .modifier(PageLinkGuard(answer: message.from != .owner, pageTurn: message.pageTurn, live: live))
     }
 
     @ViewBuilder

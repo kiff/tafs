@@ -1,8 +1,9 @@
 import XCTest
 @testable import Tafs
 
-/// Links in a taf's words from a page turn ask before opening (`page_turn`, `PageLinkGuard`): the flag as tafs cloud sends
-/// it, on the thread's messages and on the stream, and the address as the confirm shows it.
+/// Links in an answer (`PageLinks`, `PageLinkGuard`): one that isn't a clean https address won't open in any answer; a clean
+/// one asks first from a page turn (`page_turn`) or in Coach's answer still arriving. The flag as tafs cloud sends it, on the
+/// thread's messages and on the stream, and the address as each question shows it.
 @MainActor
 final class PageLinksTests: XCTestCase {
     private let suite = "PageLinksTests"
@@ -65,5 +66,44 @@ final class PageLinksTests: XCTestCase {
                    "https://shop.example/%E2%81%A6x%E2%81%A9", "https://shop.example/%0Anext"] {
             if let url = URL(string: no) { XCTAssertFalse(PageLinks.opens(url), no) }
         }
+    }
+
+    /// What a tap asks: a link that won't open says so in any answer; a clean https one asks only from a page turn or in an
+    /// answer still arriving, and otherwise opens as before.
+    func testWhatATapAsks() throws {
+        let clean = try XCTUnwrap(URL(string: "https://shop.example/a"))
+        XCTAssertNil(PageLinks.ask(clean, pageTurn: false, live: false), "a clean https link in a plain answer opens as before")
+        XCTAssertEqual(PageLinks.ask(clean, pageTurn: true, live: false), .pageTurn)
+        XCTAssertEqual(PageLinks.ask(clean, pageTurn: false, live: true), .live)
+        XCTAssertEqual(PageLinks.ask(clean, pageTurn: true, live: true), .pageTurn, "a page turn's line wins")
+        for no in ["http://shop.example", "tel:+15551234", "bank://pay?to=x", "mailto:a@b.c", "https://shop.example/%E2%80%AEx"] {
+            let url = try XCTUnwrap(URL(string: no))
+            for (page, live) in [(false, false), (true, false), (false, true)] {
+                XCTAssertEqual(PageLinks.ask(url, pageTurn: page, live: live), .blocked, "\(no) won't open, page \(page), live \(live)")
+            }
+        }
+    }
+
+    /// Each question's title and line, in English, with the address whole and left to right in each.
+    func testEachQuestionsWords() throws {
+        let url = try XCTUnwrap(URL(string: "tel:+15551234"))
+        let shown = PageLinks.shown(url)
+        XCTAssertEqual(PageLinks.title(.blocked), "This link won't open")
+        XCTAssertEqual(PageLinks.title(.pageTurn), "Open this link?")
+        XCTAssertEqual(PageLinks.title(.live), "Open this link?")
+        XCTAssertEqual(PageLinks.body(.blocked, url), "tafs opens only secure web pages from a chat. This link goes to: \(shown)")
+        XCTAssertEqual(PageLinks.body(.pageTurn, url), "It came from a page Coach read. It goes to: \(shown)")
+        XCTAssertEqual(PageLinks.body(.live, url), "This answer is still being written. This link goes to: \(shown)")
+        XCTAssertEqual(PageLinks.confirmBody(url), PageLinks.body(.pageTurn, url))
+    }
+
+    /// In Arabic, the line that won't open keeps the address whole and in order too.
+    func testInArabicTheBlockedAddressKeepsItsOrder() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        AppLanguage.choose("ar", defaults: defaults)
+        let url = try XCTUnwrap(URL(string: "sms:+15551234?body=pay"))
+        let line = PageLinks.body(.blocked, url)
+        XCTAssertFalse(line.hasPrefix("tafs opens only"), "the Arabic line")
+        XCTAssertTrue(line.contains("\u{2066}sms:+15551234?body=pay\u{2069}"))
     }
 }

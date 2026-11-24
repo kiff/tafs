@@ -1,0 +1,1 @@
+- **iPhone, iPad:** a link in an answer that isn't a secure web address (another app's link, a phone number, plain http) no longer opens: "This link won't open" shows its whole address, with Cancel. A link in Coach's answer still being written asks first, with its own line. ([chat.md](docs/chat.md))
