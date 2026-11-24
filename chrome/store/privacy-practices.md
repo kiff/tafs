@@ -64,7 +64,7 @@ Tick all three; each is true.
 
 (Dashboard wording changes: use the three Limited Use statements as the dashboard words them.)
 
-## Judgment calls for the reviewers (mac12, agentgabo)
+## Judgment calls for the reviewers
 
 1. **Web history.** The extension has no `history` permission and never reads the person's own browsing, but the
    sites a taf opens in its own tabs are recorded. The conservative answer is Yes, and this draft says Yes. It is
