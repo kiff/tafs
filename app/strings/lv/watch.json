@@ -63,6 +63,7 @@
   "watch.page.brief": "Kopsavilkums",
   "watch.page.inbox": "Iesūtne",
   "watch.paused_still_answers": "Iepauzēts: tā grafiks ir izslēgts. Tas joprojām atbild uz to, ko tu sūti.",
+  "watch.phone_could_not_reach_cloud": "Tālrunis nevarēja sasniegt tafs cloud. Mēģini vēlreiz.",
   "watch.phone_link_failed": "Neizdevās sazināties ar tālruni. Mēģini vēlreiz.",
   "watch.phone_no_answer": "Tālrunis laikus neatbildēja. Mēģini vēlreiz.",
   "watch.phone_no_app": "Tavā tālrunī nav tafs. Instalē to tur, tad mēģini vēlreiz.",

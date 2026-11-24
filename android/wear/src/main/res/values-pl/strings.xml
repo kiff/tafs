@@ -119,6 +119,7 @@
     <string name="watch_page_brief">Podsumowanie</string>
     <string name="watch_page_inbox">Skrzynka</string>
     <string name="watch_paused_still_answers">Wstrzymane: harmonogram jest wyłączony. Taf nadal odpowiada na to, co wysyłasz.</string>
+    <string name="watch_phone_could_not_reach_cloud">Telefon nie mógł połączyć się z tafs cloud. Spróbuj ponownie.</string>
     <string name="watch_phone_link_failed">Nie udało się połączyć z telefonem. Spróbuj ponownie.</string>
     <string name="watch_phone_no_answer">Telefon nie odpowiedział na czas. Spróbuj ponownie.</string>
     <string name="watch_phone_no_app">Na telefonie nie ma aplikacji tafs. Zainstaluj ją, a potem spróbuj ponownie.</string>

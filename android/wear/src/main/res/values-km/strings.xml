@@ -104,6 +104,7 @@
     <string name="watch_page_brief">សេចក្តីសង្ខេប</string>
     <string name="watch_page_inbox">ប្រអប់សារចូល</string>
     <string name="watch_paused_still_answers">បានផ្អាក៖ កាលវិភាគរបស់វាបិទ។ វានៅតែឆ្លើយអ្វីដែលអ្នកផ្ញើ។</string>
+    <string name="watch_phone_could_not_reach_cloud">ទូរសព្ទរបស់អ្នកមិនអាចភ្ជាប់ទៅ tafs cloud បានទេ។ សូមព្យាយាមម្តងទៀត។</string>
     <string name="watch_phone_link_failed">មិនអាចនិយាយជាមួយទូរសព្ទរបស់អ្នកបានទេ។ សូមព្យាយាមម្តងទៀត។</string>
     <string name="watch_phone_no_answer">ទូរសព្ទរបស់អ្នកមិនបានឆ្លើយទាន់ពេលទេ។ សូមព្យាយាមម្តងទៀត។</string>
     <string name="watch_phone_no_app">tafs មិននៅលើទូរសព្ទរបស់អ្នកទេ។ ដំឡើងវានៅទីនោះ រួចព្យាយាមម្តងទៀត។</string>

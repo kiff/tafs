@@ -63,6 +63,7 @@
   "watch.page.brief": "Přehled",
   "watch.page.inbox": "Doručené",
   "watch.paused_still_answers": "Pozastaveno: jeho plán je vypnutý. Na to, co pošlete, pořád odpovídá.",
+  "watch.phone_could_not_reach_cloud": "Telefon se nemohl spojit s tafs cloud. Zkuste to znovu.",
   "watch.phone_link_failed": "Nepodařilo se spojit s telefonem. Zkuste to znovu.",
   "watch.phone_no_answer": "Telefon neodpověděl včas. Zkuste to znovu.",
   "watch.phone_no_app": "tafs v telefonu není. Nainstalujte ho tam a zkuste to znovu.",

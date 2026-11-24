@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">Overzicht</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.</string>
+    <string name="watch_phone_could_not_reach_cloud">Je telefoon kon tafs cloud niet bereiken. Probeer het opnieuw.</string>
     <string name="watch_phone_link_failed">De verbinding met je telefoon is mislukt. Probeer het opnieuw.</string>
     <string name="watch_phone_no_answer">Je telefoon antwoordde niet op tijd. Probeer het opnieuw.</string>
     <string name="watch_phone_no_app">tafs staat niet op je telefoon. Installeer het daar en probeer het opnieuw.</string>

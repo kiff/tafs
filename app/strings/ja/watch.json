@@ -55,6 +55,7 @@
   "watch.page.brief": "ブリーフィング",
   "watch.page.inbox": "受信トレイ",
   "watch.paused_still_answers": "一時停止中：スケジュールはオフです。送ったメッセージには引き続き答えます。",
+  "watch.phone_could_not_reach_cloud": "スマートフォンが tafs cloud に接続できませんでした。もう一度お試しください。",
   "watch.phone_link_failed": "スマートフォンと通信できませんでした。もう一度お試しください。",
   "watch.phone_no_answer": "スマートフォンから時間内に応答がありませんでした。もう一度お試しください。",
   "watch.phone_no_app": "スマートフォンにtafsがインストールされていません。インストールしてから、もう一度お試しください。",

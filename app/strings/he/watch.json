@@ -63,6 +63,7 @@
   "watch.page.brief": "סיכום",
   "watch.page.inbox": "דואר נכנס",
   "watch.paused_still_answers": "מושהה: התזמון שלו כבוי. הוא עדיין עונה למה שאתה שולח.",
+  "watch.phone_could_not_reach_cloud": "הטלפון שלך לא הצליח להתחבר ל-tafs cloud. יש לנסות שוב.",
   "watch.phone_link_failed": "לא ניתן היה לתקשר עם הטלפון שלך. יש לנסות שוב.",
   "watch.phone_no_answer": "הטלפון שלך לא ענה בזמן. יש לנסות שוב.",
   "watch.phone_no_app": "tafs לא מותקן בטלפון שלך. יש להתקין אותו שם ולנסות שוב.",

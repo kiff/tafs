@@ -59,6 +59,7 @@
   "watch.page.brief": "ब्रीफ़",
   "watch.page.inbox": "Inbox",
   "watch.paused_still_answers": "थमा हुआ: इसका निर्धारित समय बंद है। यह अब भी आपके भेजे का उत्तर देता है।",
+  "watch.phone_could_not_reach_cloud": "आपका फ़ोन tafs cloud तक नहीं पहुँच सका। फिर कोशिश करें।",
   "watch.phone_link_failed": "आपके फ़ोन से बात नहीं हो सकी। फिर कोशिश करें।",
   "watch.phone_no_answer": "आपके फ़ोन ने समय पर उत्तर नहीं दिया। फिर कोशिश करें।",
   "watch.phone_no_app": "tafs आपके फ़ोन पर नहीं है। उसे वहाँ इंस्टॉल करें, फिर फिर कोशिश करें।",

@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">Összefoglaló</string>
     <string name="watch_page_inbox">Bejövő</string>
     <string name="watch_paused_still_answers">Szüneteltetve: az ütemezése ki van kapcsolva. Arra, amit küldesz, továbbra is válaszol.</string>
+    <string name="watch_phone_could_not_reach_cloud">A telefonod nem érte el a tafs cloudot. Próbáld újra.</string>
     <string name="watch_phone_link_failed">Nem sikerült kapcsolódni a telefonodhoz. Próbáld újra.</string>
     <string name="watch_phone_no_answer">A telefonod nem válaszolt időben. Próbáld újra.</string>
     <string name="watch_phone_no_app">A tafs nincs a telefonodon. Telepítsd ott, majd próbáld újra.</string>

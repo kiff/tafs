@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">Brief</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Paused: its schedule is off. It still answers what you send.</string>
+    <string name="watch_phone_could_not_reach_cloud">Your phone couldn\'t reach tafs cloud. Try again.</string>
     <string name="watch_phone_link_failed">Couldn\'t talk to your phone. Try again.</string>
     <string name="watch_phone_no_answer">Your phone didn\'t answer in time. Try again.</string>
     <string name="watch_phone_no_app">tafs isn\'t on your phone. Install it there, then try again.</string>

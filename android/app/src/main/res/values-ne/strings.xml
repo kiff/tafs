@@ -2820,6 +2820,7 @@
     <string name="watch_page_brief">सारांश</string>
     <string name="watch_page_inbox">इनबक्स</string>
     <string name="watch_paused_still_answers">पज गरिएको: यसको तालिका बन्द छ। तपाईंले पठाएकालाई यसले अझै जवाफ दिन्छ।</string>
+    <string name="watch_phone_could_not_reach_cloud">तपाईंको फोनले tafs cloud मा पुग्न सकेन। फेरि प्रयास गर्नुहोस्।</string>
     <string name="watch_phone_link_failed">तपाईंको फोनसँग कुरा गर्न सकिएन। फेरि प्रयास गर्नुहोस्।</string>
     <string name="watch_phone_no_answer">तपाईंको फोनले समयमै जवाफ दिएन। फेरि प्रयास गर्नुहोस्।</string>
     <string name="watch_phone_no_app">तपाईंको फोनमा tafs छैन। त्यहाँ स्थापना गरेर फेरि प्रयास गर्नुहोस्।</string>

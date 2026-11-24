@@ -109,6 +109,7 @@
     <string name="watch_page_brief">Briefing</string>
     <string name="watch_page_inbox">Eingang</string>
     <string name="watch_paused_still_answers">Pausiert: Sein Zeitplan ist aus. Was du sendest, beantwortet er trotzdem.</string>
+    <string name="watch_phone_could_not_reach_cloud">Dein Handy hat tafs cloud nicht erreicht. Versuch es erneut.</string>
     <string name="watch_phone_link_failed">Die Verbindung zu deinem Handy hat nicht geklappt. Versuch es erneut.</string>
     <string name="watch_phone_no_answer">Dein Handy hat nicht rechtzeitig geantwortet. Versuch es erneut.</string>
     <string name="watch_phone_no_app">tafs ist nicht auf deinem Handy. Installier es dort und versuch es dann erneut.</string>

@@ -1,0 +1,1 @@
+- **On an Apple Watch:** when the phone can't reach tafs cloud, the watch says so ("Your phone couldn't reach tafs cloud. Try again."), in every language. Before, it borrowed a line about refusing a held call.

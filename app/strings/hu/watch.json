@@ -59,6 +59,7 @@
   "watch.page.brief": "Összefoglaló",
   "watch.page.inbox": "Bejövő",
   "watch.paused_still_answers": "Szüneteltetve: az ütemezése ki van kapcsolva. Arra, amit küldesz, továbbra is válaszol.",
+  "watch.phone_could_not_reach_cloud": "A telefonod nem érte el a tafs cloudot. Próbáld újra.",
   "watch.phone_link_failed": "Nem sikerült kapcsolódni a telefonodhoz. Próbáld újra.",
   "watch.phone_no_answer": "A telefonod nem válaszolt időben. Próbáld újra.",
   "watch.phone_no_app": "A tafs nincs a telefonodon. Telepítsd ott, majd próbáld újra.",

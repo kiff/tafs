@@ -104,6 +104,7 @@
     <string name="watch_page_brief">ブリーフィング</string>
     <string name="watch_page_inbox">受信トレイ</string>
     <string name="watch_paused_still_answers">一時停止中：スケジュールはオフです。送ったメッセージには引き続き答えます。</string>
+    <string name="watch_phone_could_not_reach_cloud">スマートフォンが tafs cloud に接続できませんでした。もう一度お試しください。</string>
     <string name="watch_phone_link_failed">スマートフォンと通信できませんでした。もう一度お試しください。</string>
     <string name="watch_phone_no_answer">スマートフォンから時間内に応答がありませんでした。もう一度お試しください。</string>
     <string name="watch_phone_no_app">スマートフォンにtafsがインストールされていません。インストールしてから、もう一度お試しください。</string>

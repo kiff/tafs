@@ -109,6 +109,7 @@
     <string name="watch_page_brief">Товчлол</string>
     <string name="watch_page_inbox">Ирсэн</string>
     <string name="watch_paused_still_answers">Түр зогссон: хуваарь нь унтраастай. Таны илгээснийг одоо ч хариулна.</string>
+    <string name="watch_phone_could_not_reach_cloud">Таны утас tafs cloud-тай холбогдож чадсангүй. Дахин оролдоно уу.</string>
     <string name="watch_phone_link_failed">Утастай чинь холбогдож чадсангүй. Дахин оролдоно уу.</string>
     <string name="watch_phone_no_answer">Таны утас цагтаа хариулсангүй. Дахин оролдоно уу.</string>
     <string name="watch_phone_no_app">tafs таны утсанд алга. Тэнд суулгаад дахин оролдоно уу.</string>

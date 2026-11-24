@@ -114,6 +114,7 @@
     <string name="watch_page_brief">Rezumat</string>
     <string name="watch_page_inbox">Mesajele primite</string>
     <string name="watch_paused_still_answers">Întrerupt: programul său este dezactivat. Totuși răspunde la ce îi trimiteți.</string>
+    <string name="watch_phone_could_not_reach_cloud">Telefonul nu a putut contacta tafs cloud. Încercați din nou.</string>
     <string name="watch_phone_link_failed">Nu s-a putut comunica cu telefonul. Încercați din nou.</string>
     <string name="watch_phone_no_answer">Telefonul nu a răspuns la timp. Încercați din nou.</string>
     <string name="watch_phone_no_app">tafs nu este pe telefon. Instalați-l acolo, apoi încercați din nou.</string>
