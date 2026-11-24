@@ -388,7 +388,7 @@ the spend limit, which the samples here leave out:
     "words": "Company · 4 seats · 80% of the spend limit used",
     "detail": "The plan's included credits are used. Beyond them, credits go on this period's invoice.",
     "warning": "80% of the spend limit is used. At the limit, your tafs wait until an admin raises it.",
-    "raise": { "words": "Raise the spend limit by one step", "from_cents": 12345 },
+    "raise": { "words": "Raise the spend limit by one step", "from_cents": 12345, "currency": "EUR" },
     "buy": null
   },
   "plan_line": "Company · 4 seats · 80% of the spend limit used",
@@ -409,8 +409,11 @@ the spend limit, which the samples here leave out:
   period's invoice.
 - `warning` is `null` below 80%. From 80%, and while waiting, it says what happens next and who can
   change it.
-- `raise` is `{words, from_cents}` only for someone who may raise the spend limit (Company,
-  `billing.manage`), else `null`. `from_cents` is the limit now, which the raise sends back.
+- `raise` is `{words, from_cents, currency}` only for someone who may raise the spend limit (Company,
+  `billing.manage`), else `null`. `from_cents` is the limit now, which the raise sends back, in `currency`'s
+  smallest unit; `currency` is ISO 4217, the one tafs cloud words every amount in. An app that shows the limit
+  now formats `from_cents` in `currency` with its own formatter, in the app's language: never a currency it
+  assumes, and never words of tafs cloud's for that figure.
 - `buy` is `null`, or `{solo, packs, first_month, coach}`: what the app may offer this person
   (`billing.manage`) in the store. `solo` is set on an account with no plan billed, and `packs`
   while Solo runs. The products and their store ids come from KIFF's usage read (`store`).

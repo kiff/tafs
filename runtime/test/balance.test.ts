@@ -67,7 +67,7 @@ describe("the balance, in words", () => {
     expect(balanceView(co({ used: 1500, left: 500, meter_pct: 75 }))).toEqual({
       balance: { state: "ok", why: null, meter_pct: 75, words: "Company · 4 seats · 1,500 of 2,000 credits included used",
         detail: "Then up to the spend limit, €80, on this period's invoice", warning: null,
-        raise: { words: "Raise the spend limit to €120", from_cents: 8000 }, buy: null, credits_panel: true },
+        raise: { words: "Raise the spend limit to €120", from_cents: 8000, currency: "EUR" }, buy: null, credits_panel: true },
       plan_line: "Company · 4 seats · 1,500 credits used", plan_tone: "ok", home_line: null,
     });
     const beyond = balanceView(co({ state: "warning", used: 2640, left: 0, beyond: 640, beyond_cents: 6450, meter_pct: 80 }));

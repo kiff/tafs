@@ -1,0 +1,1 @@
+- The balance's raise offer names its currency (`currency`, ISO 4217) beside `from_cents`, so an app formats the limit it signs in that unit, never one it assumes.
