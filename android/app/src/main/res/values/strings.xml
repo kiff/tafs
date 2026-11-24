@@ -522,6 +522,9 @@
     <string name="chat_it_lower">it</string>
     <string name="chat_jump_latest_something_new">Jump to the latest, something new</string>
     <string name="chat_jump_to_latest">Jump to the latest</string>
+    <string name="chat_link_confirm_body">It came from a page Coach read. It goes to: %1$s</string>
+    <string name="chat_link_confirm_open">Open</string>
+    <string name="chat_link_confirm_title">Open this link?</string>
     <string name="chat_message_carries_most_files">A message carries at most %1$s files.</string>
     <string name="chat_message_taf">Message %1$s</string>
     <string name="chat_message_your_taf">Message your taf</string>

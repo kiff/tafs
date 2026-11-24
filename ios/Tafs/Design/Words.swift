@@ -955,6 +955,12 @@ enum Words {
         static var jumpLatestSomethingNew: String { Words.line("chat.jump_latest_something_new") }
         /// Jump to the latest
         static var jumpToLatest: String { Words.line("chat.jump_to_latest") }
+        /// It came from a page Coach read. It goes to: {address}
+        static func linkConfirmBody(address: String) -> String { Words.line("chat.link_confirm_body", address) }
+        /// Open
+        static var linkConfirmOpen: String { Words.line("chat.link_confirm_open") }
+        /// Open this link?
+        static var linkConfirmTitle: String { Words.line("chat.link_confirm_title") }
         /// A message carries at most {per_message} files.
         static func messageCarriesMostFiles(perMessage: String) -> String { Words.line("chat.message_carries_most_files", perMessage) }
         /// Message {taf}

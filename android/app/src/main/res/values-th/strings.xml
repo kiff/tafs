@@ -494,6 +494,9 @@
     <string name="chat_it_lower">มัน</string>
     <string name="chat_jump_latest_something_new">ไปที่ล่าสุด มีสิ่งใหม่</string>
     <string name="chat_jump_to_latest">ไปที่ล่าสุด</string>
+    <string name="chat_link_confirm_body">ลิงก์นี้มาจากหน้าที่ Coach อ่าน ไปที่: %1$s</string>
+    <string name="chat_link_confirm_open">เปิด</string>
+    <string name="chat_link_confirm_title">เปิดลิงก์นี้ไหม</string>
     <string name="chat_message_carries_most_files">ข้อความหนึ่งแนบได้สูงสุด %1$s ไฟล์</string>
     <string name="chat_message_taf">ส่งข้อความถึง %1$s</string>
     <string name="chat_message_your_taf">ส่งข้อความถึง taf ของคุณ</string>

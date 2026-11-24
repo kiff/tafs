@@ -87,6 +87,11 @@ class WatchModel(
    * (`KeyguardManager`). The phone signs what the watch asks, with no prompt of its own, so the watch's unlock is the confirmation.
    */
   private val unlocked: () -> Boolean = { false },
+  /**
+   * Whether the watch has a screen lock at all (locked or not): a message kept for later stays only on one that does, as the
+   * Inbox does (row 8, as the Apple Watch's). True in a test that doesn't look at it.
+   */
+  private val secure: () -> Boolean = { true },
   /** Needs you's count for the tile, the only thing written to disk; none in a test that doesn't look at it. */
   private val tile: TileCount? = null,
   /** The watch's own id for a new ask: random, so tafs cloud can tell a retry from a new ask. */
@@ -962,6 +967,16 @@ class WatchModel(
   /** Put away while locked (or with no screen lock): the Inbox's lines are cleared now, not at the next start. */
   fun clearInboxIfLocked() {
     if (!unlocked()) clearInboxLines()
+    checkLock()
+  }
+
+  /**
+   * The app opened or was put away: on a watch with no screen lock, a message kept for later is deleted, unsent, as the Inbox's
+   * lines are, so the watch keeps nothing without one. A watch that's only locked keeps it, since the person asked for it to
+   * be sent.
+   */
+  fun checkLock() {
+    if (_kept.value != null && !secure()) deleteKept()
   }
 
   private fun saveInbox(items: List<InboxItem>) {
@@ -1004,6 +1019,8 @@ class WatchModel(
       clearInboxLines()
       cache?.clear()
     }
+    // Nor, with no screen lock at all, a message kept for later.
+    checkLock()
     _inboxKept.value = kept && (inboxStore != null || reviewFirst)
     // Opens at once on what was kept, marked as updating, while the phone is asked (row 44, D).
     if (_shown.value !is Shown.Read) {
@@ -1075,7 +1092,7 @@ class WatchModel(
   /** A message kept on the watch to send when the phone is back: its words, its ask id and the chat it continues. Text only. */
   data class Draft(val text: String, val clientId: String, val replyTo: String?)
 
-  private val _kept = MutableStateFlow(drafts?.read())
+  private val _kept = MutableStateFlow(drafts?.read()?.takeIf { secure() } ?: run { if (!secure()) drafts?.clear(); null })
 
   /** The message kept for later, or none. Kept on disk ([DraftStore]) until it's sent, deleted, or the phone signs out. */
   val kept: StateFlow<Draft?> = _kept.asStateFlow()

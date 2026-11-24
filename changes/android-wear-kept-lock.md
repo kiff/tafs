@@ -1,0 +1,1 @@
+- **Wear OS: a message kept for later goes when the screen lock does.** On a watch whose screen lock is turned off, the kept message is deleted, unsent, when the app starts, opens or is put away, as the Inbox is, so the watch keeps nothing without one ([watch-wear.md](docs/watch-wear.md)).
