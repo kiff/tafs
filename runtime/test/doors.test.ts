@@ -1294,7 +1294,7 @@ describe("a connected app's event, through planque", () => {
     expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
   });
 
-  it("two late deliveries take a stale claim over once, and a slow first delivery's answer is the retry's answer too (a review's probe on #523)", async () => {
+  it("two late deliveries take a stale claim over once, and a slow first delivery's answer is the retry's answer too", async () => {
     const w = world();
     const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
     w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });

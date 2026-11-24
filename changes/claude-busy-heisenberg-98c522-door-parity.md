@@ -1,0 +1,1 @@
+- **iPhone and iPad:** an API door's example is safe to paste into a shell: where to send work keeps only a plain path on tafs cloud's own host, and the example quotes it, as Android and the desktops do ([docs/doors.md](../docs/doors.md)).

@@ -413,6 +413,11 @@ foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" 
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
 to production only **after 0.4.0's review passes**, so the review isn't restarted.
 
+**400,000,011 (0.4.6)** brings the watch to main's code for the owner's second Galaxy Watch pass: the Inbox's read and
+dismissed in step across the person's watches (row 21, #1892), Hindi, Urdu and Turkmen (#1842, #1843, #1841), and the line
+for a phone that can't reach tafs cloud (#1896). No timing readout, no recording kept. To `wear:internal` on merge, with its
+notes in the listing's 11 languages; production waits on 0.4.0's review, as before.
+
 **400,000,010 (0.4.5)** is a production build again: no timing readout, no recording kept. It carries every language the
 phone ships (Japanese, Brazilian Portuguese and the Baltic and batch 2 languages, #1688; Turkish, Indonesian, Vietnamese,
 Thai and Traditional Chinese, #1700), values set apart in a right-to-left

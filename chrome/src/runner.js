@@ -181,6 +181,10 @@ export class Runner {
     return [...this.runs.values()].map((r) => ({
       id: r.id,
       taf: r.taf,
+      // Whose run it is, by the grant its steps came under, and its tabs: the panel follows the tab (coachchat.js, tafOfTab).
+      grant: r.grant,
+      tab: r.tab,
+      tabs: [...r.tabs],
       site: r.site,
       paused: r.paused,
       stopped: r.stopped,
@@ -228,6 +232,20 @@ export class Runner {
     if (this.handOpen(run)) return;
     run.paused = "owner";
     this.record(run, { op: "pause", by: "owner" });
+  }
+
+  /**
+   * The panel's head (D2): brings a live run's tab to the front, in its window. Nothing else: no act, no read. A run this
+   * Chrome doesn't hold, or one stopped or with no tab yet, is `no_run`.
+   */
+  async goTo(runId) {
+    const run = this.runs.get(runId);
+    if (!run || run.stopped || run.tab == null) return { error: "no_run" };
+    await this.chrome.tabs.update(run.tab, { active: true });
+    if (run.windowId != null && this.chrome.windows && this.chrome.windows.update) {
+      await Promise.resolve(this.chrome.windows.update(run.windowId, { focused: true })).catch(() => {});
+    }
+    return {};
   }
 
   pause(runId) {
@@ -422,6 +440,7 @@ export class Runner {
       run = {
         id: step.run,
         taf: String(step.taf || "").slice(0, 60),
+        grant: typeof step.grant === "string" ? step.grant : "",
         sites: step.sites,
         // A sensitive site opens only on the paired phone's own signed allowance for this grant, never planque's word.
         allowed: await checkAllowances(step.sensitive_allowed, { ...(this.paired() || {}), grant: step.grant }),

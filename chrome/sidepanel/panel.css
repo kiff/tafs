@@ -139,3 +139,33 @@ textarea {
   background: var(--card);
   color: var(--ink);
 }
+/* D2: the tafs at work in this Chrome, one chip each; amber when one waits on the person. */
+.atwork {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.atwork #atWorkList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.chip.here {
+  outline: 2px solid var(--soft);
+}
+.chip.waiting::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-inline-end: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+}

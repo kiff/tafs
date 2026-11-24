@@ -68,7 +68,7 @@ struct CoachPanel: View {
                         CoachView(fullScreen: $full)
                             // A swipe of the conversation to the right closes it; a scroll is
                             // left alone. Not on the handle: a drag there only resizes, and
-                            // closes only past the narrowest (review on #148).
+                            // closes only past the narrowest.
                             .simultaneousGesture(DragGesture(minimumDistance: 30).onEnded { v in
                                 if v.translation.width > 140, abs(v.translation.height) < 60 { model.coachOpen = false }
                             })
