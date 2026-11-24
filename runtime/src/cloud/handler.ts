@@ -38,7 +38,7 @@ import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./cal
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine } from "./connections.js";
-import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
@@ -2845,6 +2845,8 @@ export interface ThreadMessage {
   attachments?: AttachmentRef[];
   /** The card the owner's message answered, by id: they wrote while it waited, and their words were its answer. */
   answers?: string;
+  /** On a person's message to Coach that carried the page they had open: that page's host, as tafs cloud kept it (PAGE). */
+  reading?: string;
   /** On a run's report: where its result went, in tafs cloud's words, above the taf's own (delivery.ts). */
   delivered?: string;
   /** On a job run's report: its count from the record, in tafs cloud's words (`countedLine`), never the model's numbers. */
@@ -3163,7 +3165,15 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   const shown = components.slice(-CHAT.maxThread);
   await markConnected(me.tenantID, shown, deps, lang);
   await markPlanNeeded(me.tenantID, shown, deps, lang);
-  return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, agreements, ...(usage ? { usage } : {}) };
+  const last = messages.slice(-CHAT.maxThread);
+  // The site each of the person's messages to Coach went with (PAGE): tafs cloud's record of its host, never the page.
+  if (taf.job === SETUP_JOB && deps.coach) {
+    await Promise.all(last.filter((m) => m.from === "owner" && m.id.endsWith(".in")).map(async (m) => {
+      const host = await deps.coach!.get(pageReadKey(me.tenantID, m.id.slice(0, -".in".length))).catch(() => undefined);
+      if (typeof host === "string" && host) m.reading = host;
+    }));
+  }
+  return { messages: last, components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, agreements, ...(usage ? { usage } : {}) };
 }
 
 /** The owner's message already in the thread with these words, in this chat, at this time: one send, recorded twice. */
@@ -3864,6 +3874,8 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps,
   // Before a message answers a card the old way, too.
   await requireAIConsent(event, me, deps);
   const owner = chatText(event, files(event).length > 0);
+  // Refused before anything else: a page that can't go never leaves a message that went without it.
+  pageOf(event, taf);
   // The app's id for this message: sent again (its fallback after a stream that failed), it's answered from
   // what the first send did, never acted on twice.
   const key = clientMessageKey(event, me);
@@ -4937,10 +4949,16 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   const attached = files(event);
   if (attached.length) at.attachments = attached;
   if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
+  const page = pageOf(event, taf);
+  withPage(at, page);
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const input = await withCoachSkills(me, taf, at, text, event, deps);
+  const began = deps.now?.() ?? new Date();
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, input, at, ai, notify));
-  return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created } };
+  // Only a run this send started read the page: a card's answer went on in its own run, without it.
+  const read = page && startedBy(run, began) ? page.host : undefined;
+  if (read) await keepPageRead(me, run.id, read, deps);
+  return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created, ...(read ? { reading: read } : {}) } };
 }
 
 /**
@@ -6312,6 +6330,82 @@ function files(event: HTTPEvent): string[] {
 export const ATTACHMENTS = { perMessage: 5 };
 
 /**
+ * A page Coach reads with one message (docs/chat.md, "Coach reads the page you're on"): at most `bytes` as the run
+ * reads it, kiff/agents' bound (`server.MaxAside`), and a title of at most `title` characters. Its host is kept
+ * `keptMs`, as long as the chat's messages, so each message says which site went with it; its text never is.
+ */
+export const PAGE = { bytes: 24_000, title: 300, keptMs: 30 * 24 * 3600_000 } as const;
+
+/** Where a run's page host is kept: by run, as the message that carried it is named. */
+export function pageReadKey(tenant: string, run: string): string {
+  return `${tenant}#page-read#${run}`;
+}
+
+/**
+ * The page the person had open, sent beside their words to Coach as `page: {url, title, text, truncated}` (the
+ * Chrome side panel): what the run reads, and the host each message shows (`reading`). Only Coach reads one, only an
+ * https page with no credentials in its address, kept to its address with no query or fragment. Anything else is a
+ * 400, and nothing starts. A message that answers a card waiting in the chat goes on with the person's words alone,
+ * and says no `reading`: only a message whose run read the page says which site went with it.
+ */
+function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | undefined {
+  const raw = parseBody(event).page;
+  if (raw === undefined || raw === null) return undefined;
+  const bad = (why: string) => new HTTPError(400, why, { code: "page_refused" });
+  if (taf.job !== SETUP_JOB) throw bad("only Coach reads the page you have open");
+  // A page goes with the person's words, never alone (kiff/agents takes an aside only with an input).
+  if (!withoutTafsLines(str(parseBody(event).text)).trim()) throw bad("a page goes with your words");
+  if (typeof raw !== "object" || Array.isArray(raw)) throw bad("page is {url, title, text, truncated}");
+  const p = raw as Record<string, unknown>;
+  if (typeof p.url !== "string" || typeof p.text !== "string" || (p.title !== undefined && typeof p.title !== "string") ||
+      (p.truncated !== undefined && typeof p.truncated !== "boolean")) {
+    throw bad("page is {url, title, text, truncated}");
+  }
+  let u: URL;
+  try {
+    u = new URL(p.url);
+  } catch {
+    throw bad("page.url isn't an address");
+  }
+  if (u.protocol !== "https:" || !u.hostname || u.username || u.password) throw bad("Coach reads only an https page, with nothing signed in its address");
+  const title = (p.title ?? "").replace(/\s+/g, " ").trim().slice(0, PAGE.title);
+  const aside = `Address: ${u.origin}${u.pathname}\n` + (title ? `Title: ${title}\n` : "") +
+    (p.truncated ? "Only the start of the page is here: it goes on past it.\n" : "") + "\n" + p.text;
+  if (Buffer.byteLength(aside, "utf8") > PAGE.bytes) throw bad(`a page goes with a message at most ${PAGE.bytes} bytes`);
+  return { host: u.hostname, aside };
+}
+
+/**
+ * Sends a run that reads a page with only the tools a page may lead to (PAGE_TOOLS), and keeps its host, never its
+ * text, for the message's `reading`. The log says the host, never the page.
+ */
+function withPage(at: RunAt, page: { host: string; aside: string } | undefined): void {
+  if (!page) return;
+  at.aside = page.aside;
+  at.asideTools = PAGE_TOOLS;
+}
+
+/** How far kiff/agents' clock may be behind tafs cloud's for a run to still count as this send's (startedBy). */
+export const PAGE_RUN_MARGIN_MS = 1000;
+
+/**
+ * Whether kiff/agents started `run` for this send, so it read the page: a run created once the send began. A message
+ * that answers a card waiting in the chat goes on in that card's run instead (kiff/agents' wroteInstead), which reads
+ * no page, and was created before the card it waits on was shown, a model turn earlier at least.
+ */
+function startedBy(run: { created?: unknown }, began: Date): boolean {
+  const created = typeof run.created === "string" ? Date.parse(run.created) : NaN;
+  return !Number.isNaN(created) && created >= began.getTime() - PAGE_RUN_MARGIN_MS;
+}
+
+async function keepPageRead(me: KIFFIdentity, run: string, host: string, deps: Deps): Promise<void> {
+  console.log(JSON.stringify({ event: "coach_page_read", tenant: me.tenantID, run, host }));
+  if (!deps.coach) return;
+  const now = deps.now?.() ?? new Date();
+  await deps.coach.put(pageReadKey(me.tenantID, run), host, new Date(now.getTime() + PAGE.keptMs)).catch(() => undefined);
+}
+
+/**
  * POST /v1/tafs/{id}/attachments: a file the person will attach to a message in their own
  * chat (kiff/tafs#209). kiff/agents checks its type and size, keeps it for them alone, and
  * answers where to upload its bytes: the phone sends them there, never through tafs cloud.
@@ -6748,6 +6842,7 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
     await requireAIConsent(event, me, deps);
     const attached = files(event);
     const owner = chatText(event, attached.length > 0);
+    const page = pageOf(event, taf);
     // The app's id for this message: sent again, it gets what the first send did, never a second run.
     const key = clientMessageKey(event, me);
     const again = key ? await sentBefore(event, me, taf, key, owner, deps) : undefined;
@@ -6785,15 +6880,20 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
       titles = known;
       if (attached.length) at.attachments = attached;
       if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
+      withPage(at, page);
       try {
         // Coach's runs are announced when they pause, so a result it shows is
         // handed over by tafs cloud with no phone needed (handOver).
         const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
         const input = await withCoachSkills(me, taf, at, text, event, deps);
         timing.mark("skills");
+        const began = deps.now?.() ?? new Date();
         run = deps.agents.streamRun(me.tenantID, taf.id, input, at, ai, notify);
         first = await run.next();
         timing.mark("first_event");
+        // Only a run this send started read the page (startedBy): a card's answer goes on in its own run, without it.
+        const started = first.done || first.value.event !== "run" ? undefined : first.value.data as { id?: unknown; created?: unknown } | undefined;
+        if (page && started && typeof started.id === "string" && startedBy(started, began)) await keepPageRead(me, started.id, page.host, deps);
       } catch (err) {
         throw agentsFailure(err);
       }

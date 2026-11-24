@@ -1,0 +1,1 @@
+- **Coach reads the page you're on.** A message to Coach may carry `page` (https, at most 24,000 bytes): the run reads it fenced as data for that message alone, with read-only tools, and tafs cloud keeps only its host, which the thread shows as `reading`. ([chat.md](docs/chat.md))
