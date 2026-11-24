@@ -1961,19 +1961,52 @@ final class AppModel: ObservableObject {
 
     /// Why the last sign-out didn't happen: KIFF didn't end this session.
     @Published var signOutError: String?
+    /// Sign-out stopped: this device's push token couldn't be taken back from tafs cloud, even after trying again, so it
+    /// may still get this account's alerts. Why, in the error's words; the person then tries again or signs out anyway
+    /// (`askingAlertsStillOn`, `alert.still_on_after_sign_out.*`). The session is still there meanwhile.
+    @Published var alertsStillOn: String?
+
+    /// Takes this device's push token back from tafs cloud (`DELETE /v1/push/{token}`), tried three times, `wait(n)`
+    /// before the n-th try again (1 s, then 2 s). A token tafs cloud doesn't hold is answered `{"removed": false}`, which
+    /// counts as taken back: nothing is left on. Any error (offline, 5xx, a 401) is a failed try. Nil when taken back;
+    /// else why the last try failed, so sign-out can ask before it goes on.
+    static func takeBackPush(_ unregister: () async throws -> Void,
+                             wait: (Int) async -> Void = { try? await Task.sleep(nanoseconds: UInt64($0) * 1_000_000_000) }) async -> String? {
+        var why = ""
+        for attempt in 0..<3 {
+            if attempt > 0 { await wait(attempt) }
+            do {
+                try await unregister()
+                return nil
+            } catch {
+                why = error.localizedDescription
+            }
+        }
+        return why
+    }
 
     /// Signs this device out: the session ends at KIFF first, so a device shown as signed out never
     /// holds a session KIFF still accepts. When KIFF doesn't confirm, nothing changes here and
     /// `signOutError` says so; false then. A session KIFF already ended (401) counts as ended.
+    /// `anyway`: the person chose to sign out although this device's alerts couldn't be taken back (`alertsStillOn`).
     @discardableResult
-    func signOut() async -> Bool {
+    func signOut(anyway: Bool = false) async -> Bool {
         signOutError = nil
+        alertsStillOn = nil
         await DriveSession.shared.stopAndWait("signed_out")
         if mode == .kiff {
             if alertsReady == true { UserDefaults.standard.set(true, forKey: alertsEnabledKey) }
             // Alerts are unregistered with the session, so before KIFF ends it; registered again
-            // at once when KIFF doesn't, so a device still signed in never goes without them.
-            if let pushToken { try? await cloud.unregisterPush(deviceToken: pushToken) }
+            // at once when KIFF doesn't, so a device still signed in never goes without them. A take-back that fails
+            // is tried again; if it still fails, sign-out stops and asks (Try again, or Sign out anyway), before KIFF is
+            // asked, so the session is still there: never dropped silently.
+            if !anyway, let pushToken {
+                let client = self.cloud
+                if let why = await Self.takeBackPush({ try await client.unregisterPush(deviceToken: pushToken) }) {
+                    alertsStillOn = why
+                    return false
+                }
+            }
             do {
                 try await kiff.signOut()
             } catch KIFFClient.KIFFError.unauthorized {
@@ -6958,6 +6991,7 @@ final class AppModel: ObservableObject {
         lines.append(done.isEmpty ? Words.Sample.Reply.nothingDone : Words.Sample.Reply.lately(done: done.joined(separator: "\n")))
         if waiting > 0 { lines.append(Words.Sample.Reply.waiting(count: waiting)) }
         lines.append(Words.Sample.Reply.note)
+        if Screenshots.sampleReplyLinks { lines.append(Screenshots.sampleLinks) }
         return lines.joined(separator: "\n\n")
     }
 
@@ -10715,6 +10749,11 @@ enum Screenshots {
     /// `-sampleSendFails YES`: the sample taf's chat keeps each message as not sent, for a UI test that a
     /// message that couldn't go lets the pin go and the chat goes to its end, as on Android.
     static var sampleSendFails: Bool { enabled && UserDefaults.standard.bool(forKey: "sampleSendFails") }
+    /// `-sampleReplyLinks YES`: the sample taf's answer ends with a `tel:` link and an https link, each labelled with its own
+    /// address, for a UI test that a link in an answer opens only through `PageLinks.ask` (no long-press Open Link).
+    static var sampleReplyLinks: Bool { enabled && UserDefaults.standard.bool(forKey: "sampleReplyLinks") }
+    /// The two links `sampleReplyLinks` adds, as Markdown.
+    static let sampleLinks = "[tel:+15551234](tel:+15551234) [https://shop.example/orders/5098](https://shop.example/orders/5098)"
     /// `-listSettlesOnReturn YES`: the list opens on its first taf, as for a person, and each
     /// time the app comes back its last taf moves to the top, as when another was used
     /// meanwhile: for a UI test that a pick stays open when the list settles (the 901 test).

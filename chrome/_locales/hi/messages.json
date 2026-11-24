@@ -270,5 +270,16 @@
   "aside_off": {"message": "इस साइट पर नहीं"},
   "aside_on": {"message": "यह साइट पढ़ें"},
   "aside_off_line": {"message": "Coach $HOST$ नहीं पढ़ता: आपने इसे बंद किया है", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach $HOST$ नहीं पढ़ता: यह बैंक, भुगतान, मेल या स्वास्थ्य साइट है", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach $HOST$ नहीं पढ़ता: यह बैंक, भुगतान, मेल या स्वास्थ्य साइट है", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach वह पेज नहीं पढ़ता जिस पर आप हैं।" },
+  "page_consent_turn_on": { "message": "Coach को पेज पढ़ने दें…" },
+  "page_consent_title": { "message": "भेजते समय Coach सामने का पेज पढ़े?" },
+  "page_consent_what": { "message": "जब आप यहाँ Coach को संदेश भेजते हैं, तो इस विंडो के सामने वाले टैब का टेक्स्ट साथ जाता है: उसका पता (? या # के बाद का कुछ भी नहीं), उसका शीर्षक और उसके शब्द। फ़ील्ड के मान और पासवर्ड नहीं पढ़े जाते; कार्ड नंबर उनके आख़िरी चार अंकों तक काट दिए जाते हैं; कुंजियाँ और लेबल वाले गुप्त मान छिपा दिए जाते हैं।" },
+  "page_consent_when": { "message": "सिर्फ़ भेजते समय, सिर्फ़ वही टैब, और कभी कोई बैंक, भुगतान, मेल या स्वास्थ्य साइट नहीं, न ही वह साइट जिसे आपने बंद किया हो।" },
+  "page_consent_never": { "message": "यह tafs को जाता है, जो आपको जवाब देने के लिए इसे Anthropic के Claude को भेजता है, जैसे आपका संदेश। tafs सिर्फ़ साइट का नाम रखता है, पेज कभी नहीं; Coach के जवाब में उसका उद्धरण हो सकता है।" },
+  "page_consent_change": { "message": "आप किसी भी समय पेज के बिना संदेश भेज सकते हैं, और जब चाहें इसे यहाँ बंद कर सकते हैं।" },
+  "page_consent_allow": { "message": "अनुमति दें" },
+  "page_consent_not_now": { "message": "अभी नहीं" },
+  "page_consent_withdraw": { "message": "पेज पढ़ना बंद करें" },
+  "coach_send_alone": { "message": "पेज के बिना भेजें" }
 }

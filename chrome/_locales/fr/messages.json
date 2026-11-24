@@ -101,5 +101,16 @@
   "aside_off": {"message": "Pas sur ce site"},
   "aside_on": {"message": "Lire ce site"},
   "aside_off_line": {"message": "Coach ne lit pas $HOST$ : vous l'avez désactivé", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach ne lit pas $HOST$ : site de banque, de paiement, de messagerie ou de santé", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach ne lit pas $HOST$ : site de banque, de paiement, de messagerie ou de santé", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach ne lit pas la page sur laquelle vous êtes." },
+  "page_consent_turn_on": { "message": "Laisser Coach lire la page…" },
+  "page_consent_title": { "message": "Laisser Coach lire la page au premier plan quand vous envoyez ?" },
+  "page_consent_what": { "message": "Quand vous envoyez ici un message à Coach, le texte de l'onglet au premier plan de cette fenêtre part avec lui : son adresse (sans ce qui suit ? ou #), son titre et ses mots. Les valeurs des champs et les mots de passe ne sont pas lus ; les numéros de carte sont réduits à leurs quatre derniers chiffres ; les clés et les secrets signalés comme tels sont masqués." },
+  "page_consent_when": { "message": "Seulement quand vous envoyez, seulement cet onglet, et jamais un site de banque, de paiement, de messagerie ou de santé, ni un site que vous avez désactivé." },
+  "page_consent_never": { "message": "Il va à tafs, qui l'envoie à Claude d'Anthropic pour vous répondre, comme votre message. tafs ne garde que le nom du site, jamais la page ; la réponse de Coach peut en citer des passages." },
+  "page_consent_change": { "message": "Vous pouvez envoyer un message sans la page à tout moment, et arrêter ceci ici quand vous voulez." },
+  "page_consent_allow": { "message": "Autoriser" },
+  "page_consent_not_now": { "message": "Pas maintenant" },
+  "page_consent_withdraw": { "message": "Arrêter de lire les pages" },
+  "coach_send_alone": { "message": "Envoyer sans la page" }
 }

@@ -101,5 +101,16 @@
   "aside_off": {"message": "Bu saytda yox"},
   "aside_on": {"message": "Bu saytı oxu"},
   "aside_off_line": {"message": "Coach $HOST$ saytını oxumur: siz bunu söndürdünüz", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach $HOST$ saytını oxumur: bank, ödəniş, poçt və ya sağlamlıq saytı", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach $HOST$ saytını oxumur: bank, ödəniş, poçt və ya sağlamlıq saytı", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach olduğunuz səhifəni oxumur." },
+  "page_consent_turn_on": { "message": "Coach-a səhifəni oxumağa icazə verin…" },
+  "page_consent_title": { "message": "Göndərəndə Coach öndəki səhifəni oxusun?" },
+  "page_consent_what": { "message": "Burada Coach-a mesaj göndərəndə, bu pəncərədə öndə olan tabın mətni onunla gedir: ünvanı (? və ya # işarəsindən sonrakı hissə olmadan), başlığı və sözləri. Sahələrin dəyərləri və parollar oxunmur; kart nömrələri son dörd rəqəminə qədər qısaldılır; açarlar və adı göstərilmiş gizli məlumatlar maskalanır." },
+  "page_consent_when": { "message": "Yalnız göndərəndə, yalnız həmin tab, və heç vaxt bank, ödəniş, poçt və ya sağlamlıq saytı, ya da söndürdüyünüz sayt deyil." },
+  "page_consent_never": { "message": "O, tafs-a gedir, tafs da sizə cavab vermək üçün onu Anthropic-in Claude-una göndərir, mesajınız kimi. tafs yalnız saytın adını saxlayır, səhifəni heç vaxt; Coach-un cavabı ondan sitat gətirə bilər." },
+  "page_consent_change": { "message": "İstənilən vaxt səhifəsiz mesaj göndərə və bunu burada istədiyiniz zaman dayandıra bilərsiniz." },
+  "page_consent_allow": { "message": "İcazə ver" },
+  "page_consent_not_now": { "message": "İndi yox" },
+  "page_consent_withdraw": { "message": "Səhifələri oxumağı dayandır" },
+  "coach_send_alone": { "message": "Səhifəsiz göndər" }
 }

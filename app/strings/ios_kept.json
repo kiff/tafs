@@ -15,7 +15,8 @@
     "failed: \\(e)": "an answer sent to tafs cloud",
     "Greenwich": "a time zone id the system knows, never shown: zones fixed by definition (AppModel.sameTime)",
     "Universal": "a time zone id the system knows, never shown: zones fixed by definition (AppModel.sameTime)",
-    "Zulu": "a time zone id the system knows, never shown: zones fixed by definition (AppModel.sameTime)"
+    "Zulu": "a time zone id the system knows, never shown: zones fixed by definition (AppModel.sameTime)",
+    "[tel:+15551234](tel:+15551234) [https://shop.example/orders/5098](https://shop.example/orders/5098)": "a UI test's links in the sample's answer, each labelled with its own address, shown only with -sampleReplyLinks (LinkLongPressUITests)"
   },
   "App/DoorsModel.swift": {
     "Ana": "the sample's people",

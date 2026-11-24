@@ -3,6 +3,7 @@
 // and nothing outside the run's group is ever read or sent. A navigation off the run's sites is stopped in the tab itself,
 // whatever started it. The owner's own input in a run's tab pauses the run.
 
+import { RUN_STATES } from "./runstate.js";
 import { refuseURL, bareURL } from "./sites.js";
 import { HAND_MAX_MS, validWords, withoutValues } from "./hand.js";
 
@@ -56,13 +57,14 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), say = (key, sub) => (globalThis.chrome && globalThis.chrome.i18n ? globalThis.chrome.i18n.getMessage(key, sub) : ""), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, doneStore = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), say = (key, sub) => (globalThis.chrome && globalThis.chrome.i18n ? globalThis.chrome.i18n.getMessage(key, sub) : ""), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, onRunState = () => {}, doneStore = null }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
     this.say = say; // the extension's own words (chrome.i18n), for the bar a run shows in its tab
     this.shots = shots; // the picture kept of each act (shot.js); null: none is taken
+    this.onRunState = onRunState; // a run's Pause, Resume or Stop ({run, state, at}), for planque (runstate.js); the service worker signs and keeps it
     this.onHandAnswer = onHandAnswer; // the person's answer to a hand-over, to give planque ({hand, outcome, page}); the service worker signs and keeps it
     this.now = now;
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, ownWindow, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
@@ -218,6 +220,10 @@ export class Runner {
     }
     this.onChange(this.state());
     this.queueBars();
+    // Every Pause, Resume and Stop goes through here, whoever made it: planque hears the run's new state.
+    if (RUN_STATES[entry.op]) {
+      Promise.resolve(this.onRunState({ run: run.id, state: RUN_STATES[entry.op], at: new Date(this.now()).toISOString() })).catch(() => {});
+    }
   }
 
   /**

@@ -36,6 +36,23 @@ jobs:
         with:
           persist-credentials: false
 
+      # The Mac App Store build is made with the newest released Xcode 27 on the image (the macOS 27 SDK for Mac
+      # Catalyst), not the image's default, as the iOS upload is. A runner without one stops here and lists the Xcodes it
+      # has, before any key or certificate is touched, rather than uploading a build made with an older SDK.
+      - name: Use the newest Xcode 27
+        run: |
+          echo "Xcodes on this runner:"; ls -d /Applications/Xcode*.app || true
+          xcode=$({ ls -d /Applications/Xcode_27*.app 2>/dev/null || true; } | python3 -c '
+          import re, sys
+          found = [l.strip() for l in sys.stdin if l.strip() and not re.search(r"beta|rc|candidate", l, re.I)]
+          version = lambda p: [int(n) for n in re.findall(r"\d+", p.rsplit("/", 1)[-1])]
+          print(max(found, key=version) if found else "")
+          ')
+          [ -n "$xcode" ] || { echo "::error::No released Xcode 27 on this runner image: the Mac App Store build needs the macOS 27 SDK"; exit 1; }
+          sudo xcode-select -s "$xcode/Contents/Developer"
+          xcodebuild -version
+          echo "macOS SDK $(xcrun --sdk macosx --show-sdk-version) ($(xcrun --sdk macosx --show-sdk-build-version)), iOS SDK $(xcrun --sdk iphoneos --show-sdk-version)"
+
       - name: Check the installer certificate is stored
         env:
           MAC_INSTALLER_P12: ${{ secrets.MAC_INSTALLER_P12 }}

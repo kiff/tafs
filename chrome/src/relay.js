@@ -75,8 +75,8 @@ export class Relay {
    * `config` {relayURL, planqueKey, version, manifestHash}; `kept` {keys, pairing}; `runner` handles steps; `onUnpaired()`
    * wipes the extension; `WebSocket` is the browser's (a fake in tests).
    */
-  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, onReady = () => {}, onHandMessage = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
-    Object.assign(this, { config, kept, runner, onUnpaired, onChange, onReady, onHandMessage, WebSocket, now });
+  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, onReady = () => {}, onHandMessage = () => {}, onRunStateMessage = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
+    Object.assign(this, { config, kept, runner, onUnpaired, onChange, onReady, onHandMessage, onRunStateMessage, WebSocket, now });
     this.nonces = new Nonces(now, nonceStore);
     this.ws = null;
     this.ready = false;
@@ -207,6 +207,11 @@ export class Relay {
     // planque has the person's answer to a hand-over (or says it never will): the extension stops keeping it (hand.js).
     if (m.type === "hand_kept" || m.type === "hand_refused") {
       Promise.resolve(this.onHandMessage(m)).catch(() => {});
+      return;
+    }
+    // planque has a run's state (or says it never will): the extension stops keeping it (runstate.js).
+    if (m.type === "run_state_kept" || m.type === "run_state_refused") {
+      Promise.resolve(this.onRunStateMessage(m)).catch(() => {});
       return;
     }
     if (m.type === "step") {

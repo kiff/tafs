@@ -101,5 +101,16 @@
   "aside_off": {"message": "Nie na tomto webe"},
   "aside_on": {"message": "Čítať tento web"},
   "aside_off_line": {"message": "Coach nečíta $HOST$: vypli ste to", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach nečíta $HOST$: web banky, platieb, pošty alebo zdravia", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach nečíta $HOST$: web banky, platieb, pošty alebo zdravia", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach nečíta stránku, na ktorej ste." },
+  "page_consent_turn_on": { "message": "Povoliť Coachovi čítať stránku…" },
+  "page_consent_title": { "message": "Má Coach pri odoslaní čítať stránku vpredu?" },
+  "page_consent_what": { "message": "Keď tu pošlete správu Coachovi, pôjde s ňou text karty vpredu v tomto okne: jej adresa (bez všetkého za ? alebo #), názov a slová. Hodnoty polí a heslá sa nečítajú; čísla kariet sa skracujú na posledné štyri číslice; kľúče a označené tajomstvá sa maskujú." },
+  "page_consent_when": { "message": "Len pri odoslaní, len tá karta a nikdy stránka banky, platieb, pošty alebo zdravia, ani tá, ktorú ste vypli." },
+  "page_consent_never": { "message": "Ide do tafs, ktorý ho pošle Claudovi od Anthropic, aby vám odpovedal, rovnako ako vašu správu. tafs si ponechá len názov webu, nikdy stránku; odpoveď Coacha ju môže citovať." },
+  "page_consent_change": { "message": "Správu bez stránky môžete poslať kedykoľvek a tu to môžete kedykoľvek vypnúť." },
+  "page_consent_allow": { "message": "Povoliť" },
+  "page_consent_not_now": { "message": "Teraz nie" },
+  "page_consent_withdraw": { "message": "Prestať čítať stránky" },
+  "coach_send_alone": { "message": "Odoslať bez stránky" }
 }

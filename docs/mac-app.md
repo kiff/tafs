@@ -39,7 +39,7 @@ That build is unsigned. The signed one goes to TestFlight (below).
 
 ## Signing and TestFlight
 
-**Mac TestFlight** (`.github/workflows/mac-testflight.yml`, by hand only) uploads a signed Mac build for the team's testers: no review submission and no external group.
+**Mac TestFlight** (`.github/workflows/mac-testflight.yml`, by hand only) uploads a signed Mac build for the team's testers: no review submission and no external group. It's archived with the newest released Xcode 27 on the runner (the macOS 27 SDK), not the image's default: a runner without one stops before any key or certificate is touched, listing the Xcodes it has.
 
 - **The app and its notification extension** are signed with the same Apple Distribution certificate as the iOS upload (`DIST_P12`). They use the iPhone's and iPad's bundle IDs, so it's universal purchase: the same products, and restore across devices.
 - **Their profiles** are Mac Catalyst App Store profiles (`MAC_CATALYST_APP_STORE`), made and installed through the App Store Connect API: `asc-profiles.rb --mac`, "tafs Mac App Store CI" and "tafs notify Mac App Store CI". On a Mac, push is named `com.apple.developer.aps-environment`, and the script checks the profile carries it.

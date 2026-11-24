@@ -1,0 +1,1 @@
+- **iPhone and iPad: signing out never leaves the account's alerts on silently.** If taking this device's alerts back from tafs cloud fails, it's tried twice more; if it still fails, sign-out stops and asks, with Try again or Sign out anyway ([accounts.md](docs/accounts.md)).

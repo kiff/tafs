@@ -2,6 +2,7 @@
 // through the runner. It wakes on an alarm while it sleeps, connects, and lets the connection drop when no run is on.
 
 import { asideTab, readForCoach } from "./asideread.js";
+import { allowedHere, pageForSend, PAGE_CONSENT_VERSION } from "./pageconsent.js";
 import { config } from "./config.js";
 import { indexedStore, profileId, forgetSavedSignIns } from "./store.js";
 import { actionBadge, actionTitle } from "./coachchat.js";
@@ -13,6 +14,7 @@ import { tafsHere } from "./coachchat.js";
 import { Coach, reusing } from "./coach.js";
 import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { HandAnswers, handMessage } from "./hand.js";
+import { RunStates, runStateMessage } from "./runstate.js";
 import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
 
@@ -42,11 +44,27 @@ async function sendHands(only) {
   }
 }
 
+// Each run's newest Pause, Resume or Stop, kept until planque says it has it, and sent again on each welcome: the taf waits on
+// it (runstate.js).
+const runStates = new RunStates({
+  get: async () => (await chrome.storage.session.get("runStates")).runStates,
+  set: (runStates) => chrome.storage.session.set({ runStates }),
+});
+
+async function sendRunStates(only) {
+  if (!relay || !relay.connected || !kept.keys) return;
+  for (const s of await runStates.all()) {
+    if (typeof only === "string" && s.run !== only) continue;
+    runStates.sending(s);
+    relay.send(await runStateMessage(kept.keys.privateKey, s));
+  }
+}
+
 const doneStore = {
   get: async () => (await chrome.storage.session.get("doneTabs")).doneTabs || {},
   set: (done) => chrome.storage.session.set({ doneTabs: done }),
 };
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}) });
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}), onRunState: (s) => runStates.add(s).then((added) => added && sendRunStates(s.run)).catch(() => {}) });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
@@ -113,7 +131,7 @@ async function connect() {
       get: async () => (await chrome.storage.session.get("nonces")).nonces || [],
       set: (entries) => chrome.storage.session.set({ nonces: entries }),
     };
-    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: async () => { await announcePush(); await sendHands(); }, onHandMessage: (m) => handAnswers.heard(m).then((again) => again && sendHands(again)), nonceStore });
+    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), onReady: async () => { await announcePush(); await sendHands(); await sendRunStates(); }, onHandMessage: (m) => handAnswers.heard(m).then((again) => again && sendHands(again)), onRunStateMessage: (m) => runStates.heard(m), nonceStore });
   }
   relay.connect();
 }
@@ -269,6 +287,36 @@ async function asideRead(tabId, windowId) {
   return readForCoach(chrome, tabId, windowId, await asideOff());
 }
 
+// Coach reads the page in front only with the person's page consent (pageconsent.js), checked before the tab is touched.
+const PAGE_CONSENT = "page_consent";
+
+async function pageConsentReady() {
+  const session = await indexedStore.get("kiff_session").catch(() => null);
+  if (!allowedHere(session, await indexedStore.get(PAGE_CONSENT).catch(() => null))) return false;
+  try {
+    const c = await (await coach()).pageConsent();
+    return c.given === true && c.version === PAGE_CONSENT_VERSION;
+  } catch {
+    return false;
+  }
+}
+
+async function pageAllow() {
+  const session = await indexedStore.get("kiff_session");
+  if (!session || !session.token) throw Object.assign(new Error("no session"), { code: "no_session" });
+  const c = await (await coach()).allowPage(PAGE_CONSENT_VERSION);
+  if (c.given !== true) return { allowed: false };
+  await indexedStore.set(PAGE_CONSENT, { tenant: session.tenant, subject: session.subject, version: PAGE_CONSENT_VERSION, at: Date.now() });
+  return { allowed: true };
+}
+
+/** Withdrawn: off here at once, whatever tafs cloud answers, then at tafs cloud. */
+async function pageWithdraw() {
+  await indexedStore.set(PAGE_CONSENT, null);
+  await (await coach()).withdrawPage().catch(() => {});
+  return { allowed: false };
+}
+
 /** "Not on this site": the person's own list of hosts Coach never reads, kept in this Chrome only. */
 async function asideSwitch(host, off) {
   if (!host) return { error: "no_host" };
@@ -326,14 +374,18 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       return { sent: await (await coach()).sendToTaf(m.taf, m.words, m.clientID) };
     },
     coach_send: async () => {
-      const page = await asideRead(m.tabId, m.windowId);
+      // The page goes only with the person's page consent, here and at tafs cloud, checked before the tab is touched; and
+      // never when they chose to send the words alone.
+      const page = await pageForSend({ alone: m.alone === true, consent: pageConsentReady, read: () => asideRead(m.tabId, m.windowId) });
       return {
         sent: await (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page }),
         reading: page.page ? page.host : null,
         notReading: page.why || null,
       };
     },
-    aside_status: async () => asideStatus(m.tabId, m.windowId),
+    aside_status: async () => ({ ...(await asideStatus(m.tabId, m.windowId)), consent: await pageConsentReady() }),
+    page_allow: async () => pageAllow(),
+    page_withdraw: async () => pageWithdraw(),
     aside_site: async () => asideSwitch(String(m.host || ""), m.off === true),
     state: async () => {
       await load();

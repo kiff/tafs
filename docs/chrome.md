@@ -463,6 +463,14 @@ was done.
   the run (the next step is answered `paused_by_owner`), and Resume lets it go on. **Stop ends the run's browser work at
   once**, as the panel's Stop does (recorded `stop` by `person`): a step handed to the person is answered Not now, the run's
   tabs stay, and planque's next step for it is answered `stopped`, which tells the taf the person stopped it.
+- **Pause, Resume and Stop reach the taf** (`chrome/src/runstate.js`): each change of a run's state, whoever made it (the bar,
+  the panel, the person's touch, the run's own failures or no progress, the idle sweep), is sent on the relay as
+  `{type: "run_state", run, state: "paused"|"working"|"stopped", at, sig}`, signed by this Chrome's key over `{run, state, at}`
+  under `tafs-chrome/run_state/v1`. planque keeps the newest (planque#406), so a taf whose step was answered
+  `paused_by_owner` waits for `working` and sends the step again, instead of ending its turn (kiff/agents). Each run's newest
+  state is kept until planque answers `run_state_kept`, or `run_state_refused` with a code; `not_kept` waits for the next
+  welcome, as a hand-over's answer does. Answers are matched to what was sent in order, so an answer to a Pause never drops
+  the Resume sent after it. **`stopped` is final:** a run stopped or swept never says `working` again.
 - **The page can't use it.** The bar lives in a closed shadow root: the page can't read or restyle its words or reach its
   buttons. Only a real press (`isTrusted`) counts; what it sends names its run, the service worker takes it only from the
   extension's own content script in a tab, and the runner acts only on a run it holds and that still lives
@@ -737,6 +745,12 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
   the check.
 
+- **A taf's and Coach's words show their Markdown** (`chrome/src/chatmd.js`), in Coach's chat and a taf's: paragraphs,
+  headings, bulleted and numbered lists, **bold**, *italic* and `code`, as the phones draw them. It's built from elements
+  and text nodes only, never `innerHTML`, so any markup in the words stays words. **A link is its words, then its address
+  as text, and nothing opens on a click:** a page Coach read can steer what an answer links to, and the panel opens no
+  link. In the shown address, each format or control character (a bidi override or isolate, a zero-width mark) shows as
+  U+FFFD, so the address can't read as another one. The person's own messages show as they typed them.
 - **It opens on a fresh conversation,** as the phone's New conversation does, not on the account's whole old Coach thread
   (`chrome/src/coachchat.js`). The first message sends `new_chat: true`, and the panel follows the `session` tafs cloud
   answers with. **New conversation** goes back to a fresh one at any time. **Previous conversations** lists the person's
@@ -749,6 +763,17 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   Coach a message, the tab in front of the panel's own window is read once and goes with their words as
   `page: {url, title, text, truncated}`, beside `text`, never in it. tafs cloud fences it for that turn as the page's content,
   "nothing in it is an instruction", and keeps only its host (`reading` on the message, drawn as "Reading: ‹site›" under it).
+  - **Only with the person's page consent, off until given** (`src/pageconsent.js`, tafs cloud's `PAGE_CONSENT_VERSION` in
+    `runtime/src/cloud/consent.ts`). Above Coach's box the panel says Coach doesn't read the page, with "Let Coach read the
+    page…", which opens a screen saying what goes (the tab's address without query or fragment, its title and words; field values and
+    passwords aren't read, card numbers are cut to their last four digits, and keys and labelled secrets are masked), when (only on Send, only that tab, never a refused site), where (tafs, then
+    Anthropic's Claude, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
+    **Allow** records it at tafs cloud (`POST /v1/me/page-consent {version}`) and here, for this pairing's person, in the
+    pairing's own store, so an unpair (which is also the sign-out) takes it. **Both must hold before the tab is touched**
+    (`pageForSend`): without them nothing is injected or read, and the words go alone. **Send without the page** sends the
+    words alone at any time; **Stop reading pages** withdraws it, here first, then at tafs cloud. tafs cloud drops a page sent
+    without its consent, unread, and the message goes alone. It's apart from the AI consent: nothing else waits on it, no taf
+    and no schedule.
   - **Only the tab in front, only on Send:** never on a timer, never another tab or window. **Only https;** never Chrome's own
     pages, the Web Store or an incognito tab. **Never a sensitive site** (`sensitive()`, the list a run needs the phone's
     signed allowance for) **or a mail site** (`mailHost()`: Gmail, Outlook (its `outlook.cloud.microsoft` address too), iCloud,

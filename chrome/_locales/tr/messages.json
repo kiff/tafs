@@ -101,5 +101,16 @@
   "aside_off": {"message": "Bu sitede değil"},
   "aside_on": {"message": "Bu siteyi oku"},
   "aside_off_line": {"message": "Coach $HOST$ sitesini okumaz: siz kapattınız", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach $HOST$ sitesini okumaz: banka, ödeme, e-posta veya sağlık sitesi", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach $HOST$ sitesini okumaz: banka, ödeme, e-posta veya sağlık sitesi", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach bulunduğunuz sayfayı okumaz." },
+  "page_consent_turn_on": { "message": "Coach'un sayfayı okumasına izin ver…" },
+  "page_consent_title": { "message": "Gönderdiğinizde Coach öndeki sayfayı okusun mu?" },
+  "page_consent_what": { "message": "Burada Coach'a mesaj gönderdiğinizde, bu penceredeki öndeki sekmenin metni de onunla gider: adresi (? veya # sonrası olmadan), başlığı ve sözcükleri. Alan değerleri ve parolalar okunmaz; kart numaraları son dört hanesine kadar kısaltılır; anahtarlar ve etiketli gizli bilgiler maskelenir." },
+  "page_consent_when": { "message": "Yalnızca gönderdiğinizde, yalnızca o sekme ve asla bir banka, ödeme, e-posta veya sağlık sitesi ya da kapattığınız bir site değil." },
+  "page_consent_never": { "message": "tafs'a gider; tafs da size yanıt vermek için onu Anthropic'in Claude'una gönderir, mesajınız gibi. tafs yalnızca sitenin adını saklar, sayfayı asla; Coach'un yanıtı ondan alıntı yapabilir." },
+  "page_consent_change": { "message": "İstediğiniz zaman sayfa olmadan mesaj gönderebilir ve bunu istediğinizde buradan durdurabilirsiniz." },
+  "page_consent_allow": { "message": "İzin ver" },
+  "page_consent_not_now": { "message": "Şimdi değil" },
+  "page_consent_withdraw": { "message": "Sayfa okumayı durdur" },
+  "coach_send_alone": { "message": "Sayfa olmadan gönder" }
 }

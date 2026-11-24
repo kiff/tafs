@@ -2,6 +2,13 @@
 // shows only what the service worker reports; it decides nothing.
 
 import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork, switchDraft } from "../src/coachchat.js";
+import { render as renderWords } from "../src/chatmd.js";
+
+/** A message's words: the person's as they typed them; a taf's or Coach's with their Markdown drawn, opening no link. */
+function words(li, m) {
+  if (m.from === "taf") li.append(renderWords(document, m.text));
+  else li.textContent = m.text;
+}
 
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
@@ -283,7 +290,7 @@ async function renderCoach() {
   for (const m of r.thread.messages.slice(-20)) {
     const li = document.createElement("li");
     li.className = m.from;
-    li.textContent = m.text;
+    words(li, m);
     // The page that went with this message, by its host alone, as tafs cloud recorded it: never silent.
     if (m.reading) {
       const line = document.createElement("small");
@@ -400,12 +407,12 @@ $("coachNew").onclick = () => {
   drawPast();
 };
 
-$("coachForm").onsubmit = async (e) => {
-  e.preventDefault();
+async function sendCoach(alone) {
   const words = $("coachWords").value.trim();
   if (!words) return;
-  // The page in front of this panel's window goes with the words, if the gate lets it (sw.js asideRead): only on this send.
-  const r = await send({ type: "coach_send", words, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow, ...sendOptions(view) });
+  // The page in front of this panel's window goes with the words only with the person's page consent and if the gate lets
+  // it (sw.js, pageconsent.js): only on this send. "Send without the page" sends the words alone, whatever the consent.
+  const r = await send({ type: "coach_send", words, alone, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow, ...sendOptions(view) });
   if (r.error) {
     $("coachNote").textContent = t("coach_error");
     return;
@@ -414,7 +421,13 @@ $("coachForm").onsubmit = async (e) => {
   sentAt = Date.now();
   $("coachWords").value = "";
   drawCoach();
+}
+
+$("coachForm").onsubmit = (e) => {
+  e.preventDefault();
+  sendCoach(false);
 };
+$("coachSendAlone").onclick = () => sendCoach(true);
 
 // The taf in this Chrome (docs/chrome-panel.md): the panel is for watching it work and talking to it. Which tafs come from
 // planque's list of this Chrome's connections (display only); the chat is the taf's own, as on the phone. It's read at once on
@@ -474,7 +487,7 @@ async function readTaf() {
     for (const m of r.thread.messages.slice(-20)) {
       const li = document.createElement("li");
       li.className = m.from;
-      li.textContent = m.text;
+      words(li, m);
       list.append(li);
     }
     $("tafPhone").hidden = !r.thread.waitsOnPhone;
@@ -556,6 +569,16 @@ async function drawReads() {
   const r = await send({ type: "aside_status", tabId: activeTab, windowId: panelWindow }).catch(() => null);
   const sw = $("coachReadsSwitch");
   readsHost = (r && r.host) || "";
+  // Off until the person allows it (pageconsent.js): the line says so and offers the screen; nothing of a tab is read.
+  const consent = Boolean(r && r.consent);
+  $("pageConsentOff").hidden = consent;
+  $("pageConsentStop").hidden = !consent;
+  $("coachSendAlone").hidden = !consent || !readsHost || Boolean(r && r.why);
+  if (!consent) {
+    line.hidden = true;
+    return;
+  }
+  $("pageConsent").hidden = true;
   if (!r || !readsHost || (r.why && !READ_WHY[r.why])) {
     // Chrome's own pages, an incognito tab, a page with no https address: nothing to read, nothing to say.
     line.hidden = true;
@@ -568,6 +591,24 @@ async function drawReads() {
   sw.textContent = t(r.why === "off" ? "aside_on" : "aside_off");
   sw.dataset.off = r.why === "off" ? "0" : "1";
 }
+
+// The page consent's own screen: what goes to Anthropic, when, and what never does; Allow, or Not now. Withdrawn from the
+// line above Coach's box at any time.
+$("pageConsentOpen").onclick = () => {
+  $("pageConsent").hidden = false;
+};
+$("pageConsentNotNow").onclick = () => {
+  $("pageConsent").hidden = true;
+};
+$("pageConsentAllow").onclick = async () => {
+  const r = await send({ type: "page_allow" }).catch(() => null);
+  if (!r || r.error || !r.allowed) $("coachNote").textContent = t("coach_error");
+  drawReads();
+};
+$("pageConsentStop").onclick = async () => {
+  await send({ type: "page_withdraw" }).catch(() => null);
+  drawReads();
+};
 
 $("coachReadsSwitch").onclick = async () => {
   if (!readsHost) return;

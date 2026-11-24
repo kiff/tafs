@@ -101,5 +101,16 @@
   "aside_off": {"message": "Non su questo sito"},
   "aside_on": {"message": "Leggi questo sito"},
   "aside_off_line": {"message": "Coach non legge $HOST$: l'hai disattivato", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach non legge $HOST$: è un sito di banca, pagamenti, posta o salute", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach non legge $HOST$: è un sito di banca, pagamenti, posta o salute", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach non legge la pagina in cui sei." },
+  "page_consent_turn_on": { "message": "Lascia che Coach legga la pagina…" },
+  "page_consent_title": { "message": "Lasciare che Coach legga la pagina in primo piano quando invii?" },
+  "page_consent_what": { "message": "Quando qui invii un messaggio a Coach, con esso va il testo della scheda in primo piano di questa finestra: il suo indirizzo (senza ciò che segue ? o #), il titolo e le parole. I valori dei campi e le password non vengono letti; i numeri di carta vengono ridotti alle ultime quattro cifre; le chiavi e i segreti etichettati vengono mascherati." },
+  "page_consent_when": { "message": "Solo quando invii, solo quella scheda, e mai un sito di banca, pagamenti, posta o salute, né uno che hai disattivato." },
+  "page_consent_never": { "message": "Va a tafs, che lo invia a Claude di Anthropic per risponderti, come il tuo messaggio. tafs conserva solo il nome del sito, mai la pagina; la risposta di Coach può citarla." },
+  "page_consent_change": { "message": "Puoi inviare un messaggio senza la pagina in qualsiasi momento, e interrompere tutto questo qui quando vuoi." },
+  "page_consent_allow": { "message": "Consenti" },
+  "page_consent_not_now": { "message": "Non ora" },
+  "page_consent_withdraw": { "message": "Smetti di leggere le pagine" },
+  "coach_send_alone": { "message": "Invia senza la pagina" }
 }

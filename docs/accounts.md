@@ -38,7 +38,14 @@ earlier session on the phone, including files opened from a chat. The session en
 first: when KIFF doesn't confirm, the phone stays signed in and says so ("Not signed out at
 KIFF yet…"), so a device shown as signed out never holds a session KIFF still accepts.
 Its alerts are unregistered just before the logout (the call needs the session) and
-registered again at once when KIFF doesn't end it, so a device still signed in keeps them. A
+registered again at once when KIFF doesn't end it, so a device still signed in keeps them.
+An unregister that fails is tried twice more, 1 s and then 2 s later. A token tafs cloud
+doesn't hold is answered `{"removed": false}`, which counts as done, since nothing is left on;
+any error, a 401 included, is a failed try. If every try fails, sign-out stops before KIFF is asked,
+so the session is still there, and asks: "This {device} may still get this account's alerts",
+why, then **Try again**, **Sign out anyway** (which skips the take-back and ends the session)
+or Cancel (`alert.still_on_after_sign_out.*`, `alert.sign_out_anyway`; iOS
+`AppModel.takeBackPush`, `alertsStillOn`, `askingAlertsStillOn`). It's never dropped silently. A
 session KIFF already ended (a 401, or the account deleted) is cleared on the phone at once. Work still running for
 the old session is dropped when it finishes (`accountGeneration`).
 
