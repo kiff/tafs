@@ -115,6 +115,20 @@ final class ApprovalWindowTests: XCTestCase {
         XCTAssertTrue(sent("PUT", "/v1/me/time-zone").first?.value(forHTTPHeaderField: "KIFF-Device-Signature")?.contains(",v1=dev") ?? false)
     }
 
+    /// Adding someone to a group is the approval key's even inside a held window (group changes B): KIFF
+    /// would take a window-named signature on that route as the device key's.
+    func testAddingSomeoneToAGroupIsNeverATapInTheWindow() async throws {
+        let signed = WindowBox<[String]>([])
+        let kiff = client(signed)
+        kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
+        kiff.signsInWindow = true
+        StubProtocol.responses["PUT /v1/groups/grp_support/members/user_ana"] = (200, #"{"subject":"user_ana","role":"member"}"#)
+        try await kiff.setGroupMember("grp_support", subject: "user_ana", role: "member")
+        XCTAssertEqual(signed.value, ["approval:kiff.request.v1"])
+        let header = try XCTUnwrap(sent("PUT", "/v1/groups/grp_support/members/user_ana").first?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertFalse(header.contains(",w="), header)
+    }
+
     /// Only the approval step that took the window signs in it: outside that step, a held window
     /// changes nothing, and the approval key signs as before.
     func testOutsideTheStepThatTookItTheApprovalKeySignsAsBefore() async throws {
