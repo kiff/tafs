@@ -456,4 +456,193 @@ final class CoachModelTests: XCTestCase {
         XCTAssertEqual(Set(CoachModel.quickReplies).count, 4)
         XCTAssertFalse(CoachModel.quickReplies.contains(where: \.isEmpty))
     }
+
+    // MARK: Keep for later (row 8, as Wear OS's)
+
+    /// A phone that answers each request in turn from a script: a failure (no reply) or a reply. The last answers again.
+    private final class ScriptedPhone: PhoneAsking {
+        var asked: [WatchRequest] = []
+        var sends: [PhoneReach]
+        var reads: [WatchReply?]
+        init(sends: [PhoneReach], reads: [WatchReply?] = [WatchReply(.ok, coach: CoachModelTests.rae)]) {
+            self.sends = sends
+            self.reads = reads
+        }
+        func ask(_ request: WatchRequest) async -> WatchReply? { await reach(request).reply }
+        func reach(_ request: WatchRequest) async -> PhoneReach {
+            asked.append(request)
+            if request.kind == .coachRead {
+                return (reads.count > 1 ? reads.removeFirst() : reads.first ?? nil).map(PhoneReach.reply) ?? .failed(.noAnswer)
+            }
+            return sends.count > 1 ? sends.removeFirst() : sends.first ?? .failed(.notReachable)
+        }
+    }
+
+    /// The watch's file, in memory.
+    private final class Drafts: DraftStore {
+        var kept: CoachModel.Kept?
+        init(_ kept: CoachModel.Kept? = nil) { self.kept = kept }
+        func read() -> CoachModel.Kept? { kept }
+        func write(_ kept: CoachModel.Kept) { self.kept = kept }
+        func clear() { kept = nil }
+    }
+
+    private static let loaded = NeedsYouModel.State.loaded(WatchNeedsYou(count: 0, calls: [], at: Date(timeIntervalSinceReferenceDate: 0)))
+    private static let firstMessage = "6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90"
+
+    /// A Send the phone didn't answer offers Keep for later beside Send. Kept, the review closes and the words, their id and
+    /// the chat they continue are on the watch; the next read that reaches the phone sends them under that same id, so tafs
+    /// cloud starts them at most once, and they're a turn at work, gone from the watch.
+    func testANotSureSendIsKeptAndGoesUnderItsOwnIdAtTheNextRead() async {
+        let phone = ScriptedPhone(sends: [.failed(.noAnswer), .reply(WatchReply(.ok, ticket: Self.ticket))])
+        let drafts = Drafts()
+        var told: [String] = []
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, drafts: drafts, pause: {})
+        model.onAnswer = { _, id in told.append(id) }
+        model.review("Pause Rae")
+        await model.sendReviewed()
+        XCTAssertEqual(model.state, .failed(Words.Watch.phoneNoAnswer))
+        XCTAssertTrue(model.offersKeep)
+        XCTAssertTrue(model.reviewing, "Send stays, to try now")
+
+        model.keepForLater()
+        let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
+        XCTAssertEqual(model.kept, kept)
+        XCTAssertEqual(drafts.kept, kept, "on the watch, to outlive the app")
+        XCTAssertFalse(model.reviewing)
+        XCTAssertEqual(model.state, .writing)
+        XCTAssertFalse(model.offersKeep)
+
+        await model.afterRead(Self.loaded)
+        XCTAssertEqual(phone.asked.filter { $0.kind == .coachSend }.map(\.message), [Self.firstMessage, Self.firstMessage],
+                       "one message, one id")
+        XCTAssertNil(model.kept)
+        XCTAssertNil(drafts.kept, "gone from the watch once taken")
+        XCTAssertEqual(model.turns.map(\.said), ["Pause Rae"])
+        XCTAssertEqual(model.turns.first?.answer, .answered(Self.rae))
+        XCTAssertEqual(model.state, .writing, "a turn of the conversation, never the ask on screen")
+        XCTAssertEqual(told, [Self.firstMessage], "Coach's answer goes to the Inbox, as any")
+    }
+
+    /// The chat a kept message continues goes with it: a second Send in the same visit replies to the first's ticket.
+    func testAKeptMessageContinuesItsChat() async {
+        let phone = ScriptedPhone(sends: [.reply(WatchReply(.ok, ticket: Self.ticket)), .failed(.noAnswer)])
+        let drafts = Drafts()
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, drafts: drafts, pause: {})
+        model.review("Pause Rae")
+        await model.sendReviewed()
+        model.review("And Ana")
+        await model.sendReviewed()
+        model.keepForLater()
+        XCTAssertEqual(drafts.kept?.text, "And Ana")
+        XCTAssertEqual(drafts.kept?.ticket, Self.ticket)
+    }
+
+    /// Kept, and the phone doesn't take it (no answer, an older phone, a failure): it stays for the next read, and goes
+    /// again under the same id.
+    func testAKeptMessageStaysUntilThePhoneTakesIt() async {
+        let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
+        let drafts = Drafts(kept)
+        let phone = ScriptedPhone(sends: [.failed(.noAnswer), .reply(WatchReply(.notYet)), .reply(WatchReply(.failed))])
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: drafts, pause: {})
+        XCTAssertEqual(model.kept, kept, "read from the watch when the app opens")
+        await model.afterRead(Self.loaded)
+        await model.afterRead(.failed("KIFF"))
+        await model.afterRead(Self.loaded)
+        XCTAssertEqual(phone.asked.map(\.message), [Self.firstMessage, Self.firstMessage, Self.firstMessage])
+        XCTAssertEqual(model.kept, kept)
+        XCTAssertEqual(drafts.kept, kept)
+        XCTAssertTrue(model.turns.isEmpty)
+    }
+
+    /// No read reached the phone, or the watch has no passcode: nothing is sent, and it stays.
+    func testAKeptMessageWaitsForThePhoneAndAPasscode() async {
+        let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
+        let phone = ScriptedPhone(sends: [.reply(WatchReply(.ok, ticket: Self.ticket))])
+        let open = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: Drafts(kept), pause: {})
+        await open.afterRead(.unreachable(.notReachable))
+        await open.afterRead(.loading)
+        let noPasscode = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode(), drafts: Drafts(kept), pause: {})
+        await noPasscode.afterRead(Self.loaded)
+        XCTAssertTrue(phone.asked.isEmpty)
+        XCTAssertEqual(open.kept, kept)
+        XCTAssertEqual(noPasscode.kept, kept)
+    }
+
+    /// Delete sends nothing; a phone that says it's signed out deletes it too, and so does one that answers the kept Send so.
+    func testAKeptMessageIsDeletedOnDeleteAndWhenThePhoneIsSignedOut() async {
+        let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
+        let phone = ScriptedPhone(sends: [.reply(WatchReply(.signedOut))])
+        for way in 0..<3 {
+            let drafts = Drafts(kept)
+            let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: drafts, pause: {})
+            switch way {
+            case 0: model.deleteKept()
+            case 1: await model.afterRead(.signedOut)
+            default: await model.afterRead(Self.loaded)
+            }
+            XCTAssertNil(model.kept, "way \(way)")
+            XCTAssertNil(drafts.kept, "way \(way)")
+        }
+        XCTAssertEqual(phone.asked.count, 1, "only the last way sent it")
+    }
+
+    /// Putting the app away keeps it: the person asked for it to be sent.
+    func testPuttingTheAppAwayKeepsIt() {
+        let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
+        let model = CoachModel(phone: ScriptedPhone(sends: []), lock: Unlocked(), drafts: Drafts(kept), pause: {})
+        model.leave()
+        XCTAssertEqual(model.kept, kept)
+    }
+
+    /// A taf's message is never kept (nothing of a taf's chat is kept on the watch), nor is anything in v1 (no store), nor
+    /// words the phone answered: Retry or Cancel only.
+    func testOnlyCoachsUnansweredSendOffersKeep() async {
+        let taf = CoachModel(phone: ScriptedPhone(sends: [.failed(.noAnswer)]), taf: "taf-0a1b2c3d4e5f60718293", clock: { self.now },
+                             lock: Unlocked(), drafts: Drafts(), pause: {})
+        taf.review("Refund A-1052")
+        await taf.sendReviewed()
+        XCTAssertFalse(taf.offersKeep)
+        taf.keepForLater()
+        XCTAssertNil(taf.kept)
+
+        let v1 = CoachModel(phone: ScriptedPhone(sends: [.failed(.noAnswer)]), clock: { self.now }, lock: Unlocked(), pause: {})
+        v1.review("Pause Rae")
+        await v1.sendReviewed()
+        XCTAssertFalse(v1.offersKeep, "v1 keeps nothing on the watch")
+
+        let answered = CoachModel(phone: ScriptedPhone(sends: [.reply(WatchReply(.failed))]), clock: { self.now }, lock: Unlocked(),
+                                  drafts: Drafts(), pause: {})
+        answered.review("Pause Rae")
+        await answered.sendReviewed()
+        XCTAssertFalse(answered.offersKeep, "the phone answered: it has the words' fate")
+
+        let changed = CoachModel(phone: ScriptedPhone(sends: [.failed(.notReachable)]), clock: { self.now }, lock: Unlocked(),
+                                 drafts: Drafts(), pause: {})
+        changed.review("Pause Rae")
+        await changed.sendReviewed()
+        XCTAssertTrue(changed.offersKeep, "not reachable is not sure too, as on Wear OS")
+        changed.review("Pause Ana")
+        XCTAssertFalse(changed.offersKeep, "new words aren't what was sent")
+    }
+
+    /// The file: what's written is read back whole, a newer message replaces it, and clear leaves nothing.
+    func testTheFileKeepsOneMessage() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("tafs.draft.json")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let file = FileDraftStore(url: url)
+        XCTAssertNil(file.read())
+        file.write(CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: Self.ticket))
+        file.write(CoachModel.Kept(text: "Pause Ana", message: "m2", ticket: nil))
+        XCTAssertEqual(FileDraftStore(url: url).read(), CoachModel.Kept(text: "Pause Ana", message: "m2", ticket: nil))
+        file.clear()
+        XCTAssertNil(file.read())
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        XCTAssertEqual(FileDraftStore.storeKey, "tafs.draft", "Wear OS's name")
+    }
+
+    /// Off until the privacy page's Apple Watch paragraph says the watch keeps it, and the owner's yes.
+    func testKeepForLaterIsOff() {
+        XCTAssertFalse(CoachModel.keepForLaterOn)
+    }
 }

@@ -43,6 +43,10 @@ protocol WatchReading {
     func account() async throws -> WatchAccount
     /// The watch's own recording, by its id: its text, from this phone's on-device recognizer (`WatchVoiceInbox`).
     func transcribe(_ id: String) async -> WatchReply
+    /// The Inbox's lines read and dismissed, as tafs cloud keeps them for this person (row 21).
+    func inboxMarks() async -> WatchReply
+    /// Marks Inbox lines read or dismissed at tafs cloud, by id alone, and answers the marks as they stand.
+    func inboxMark(_ marks: WatchInboxMarks) async -> WatchReply
 }
 
 extension WatchReading {
@@ -61,6 +65,9 @@ extension WatchReading {
     func tafSend(taf: String, text: String, messageID: UUID, after: WatchCoachTicket?) async -> WatchReply { WatchReply(.notYet) }
     /// A reader without the watch's recording: the watch keeps the system's dictation.
     func transcribe(_ id: String) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader from before the Inbox's marks: the watch keeps its own.
+    func inboxMarks() async -> WatchReply { WatchReply(.notYet) }
+    func inboxMark(_ marks: WatchInboxMarks) async -> WatchReply { WatchReply(.notYet) }
 }
 
 /// Answers the watch's requests (docs/watch-app.md, "The relay"). It answers only the kinds
@@ -173,6 +180,12 @@ enum WatchRelay {
         case .transcribe:
             // The watch's own recording, turned into text on this phone only; nothing goes to a server (`WatchVoiceInbox`).
             return await reading.transcribe(request.message?.lowercased() ?? "")
+        case .inboxMarks:
+            // Ids only, the person's own: what they read and dismissed on any of their watches.
+            return await reading.inboxMarks()
+        case .inboxMark:
+            guard let marks = request.marks else { return WatchReply(.refused) }
+            return await reading.inboxMark(marks)
         case .tafChat:
             // Read only: the person's own chat with a taf the phone lists.
             do {
@@ -638,6 +651,22 @@ struct KeptWatchReading: WatchReading {
 
     func transcribe(_ id: String) async -> WatchReply {
         await WatchVoiceInbox.shared.transcribe(id)
+    }
+
+    func inboxMarks() async -> WatchReply {
+        do {
+            return WatchReply(.ok, marks: try await cloud.watchInbox())
+        } catch {
+            return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+        }
+    }
+
+    func inboxMark(_ marks: WatchInboxMarks) async -> WatchReply {
+        do {
+            return WatchReply(.ok, marks: try await cloud.markWatchInbox(marks))
+        } catch {
+            return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+        }
     }
 }
 

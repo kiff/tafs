@@ -20,13 +20,13 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | built 25, partial 3, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | built 18, partial 5, not started 4, not for it 5 | the [Watches](#watches) table |
+| Apple Watch | built 19, partial 6, not started 2, not for it 5 | the [Watches](#watches) table |
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
 1. **macOS 12** is furthest behind: 15 screens partial and 7 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 15 are real work: approvals on this Mac's security key, a key shown once, alerts that wait on the signed build, and a few reads.
 2. **Linux** is level with the iPad: 53 screens done, and 5 not for it, each with its reason. "Allow this from now on" landed last (tafs-linux#120).
-3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): Keep for later, a complication, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
+3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): a complication, and four switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
 ## The iPad's screens
 
@@ -236,7 +236,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 5 | Resume a halted taf | not for it | not for it | it gives power back: phone only |
 | 6 | Ask by voice or text | built | built | |
 | 7 | Check before sending (Re-record, Delete, Type, Quick reply) | built | built | |
-| 8 | Keep for later | not started | built | Apple Watch keeps no draft yet |
+| 8 | Keep for later | partial | built | Apple Watch: built, off (`CoachModel.keepForLaterOn`) until the privacy page says so and the owner says yes |
 | 9 | Send, then "Coach is answering" | built | built | |
 | 10 | The answer: Hear it, and Reply | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | built | |
 | 11 | An answer you can't miss, with the app put away | partial | built | Apple Watch: iOS doesn't promise the background time; tafs cloud now pushes watch asks to the iPhone, which doesn't read them yet |
@@ -249,7 +249,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 18 | Sign out on this watch alone | built | built | |
 | 19 | Sign in, pair a device, add a passkey, change a Card | not for it | not for it | no sign-in of its own; the keys stay on the phone |
 | 20 | The inbox kept on the watch | built | built | |
-| 21 | The inbox's read and dismissed, in step with the phone | not started | built (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud's piece is in (`/v1/watch/inbox`); the Apple Watch's side and its phone's relay are next |
+| 21 | The inbox's read and dismissed, in step with the phone | built (`InboxModel.sync`, `inbox_marks` / `inbox_mark`) | built (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud keeps them (`/v1/watch/inbox`), by id alone |
 | 22 | Your brief | partial | partial | built; off (`briefOnWatch`, `BRIEF_ON_WATCH`) until the owner's yes |
 | 23 | "From your watch" on the phone | built | built | |
 | 24 | A complication or tile (count, Ask tafs) | not started | built | Apple Watch: planned only |

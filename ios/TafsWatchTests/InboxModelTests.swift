@@ -237,4 +237,90 @@ final class InboxModelTests: XCTestCase {
         store.write([])
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path), "nothing kept: no file written")
     }
+
+    // MARK: In step across the person's watches (row 21)
+
+    /// The phone, answering the marks as told and keeping what it was asked to mark.
+    private final class MarksPhone: PhoneAsking {
+        var marks: WatchReply? = WatchReply(.ok, marks: WatchInboxMarks())
+        var asked: [WatchRequest] = []
+        func ask(_ request: WatchRequest) async -> WatchReply? {
+            asked.append(request)
+            return request.kind == .inboxMarks ? marks : WatchReply(.ok, marks: WatchInboxMarks())
+        }
+        var sent: [WatchInboxMarks] { asked.filter { $0.kind == .inboxMark }.compactMap(\.marks) }
+    }
+
+    private func model(_ store: Kept, phone: MarksPhone, lock: WristLock = Unlocked()) -> InboxModel {
+        InboxModel(store: store, lock: lock, clock: { self.now }, phone: phone)
+    }
+
+    /// Lines dismissed on another watch go, and a held call's stays away while the phone lists it; lines read there are read.
+    func testMarksFromTheOtherWatchesAreTakenIn() async {
+        let store = Kept()
+        let phone = MarksPhone()
+        let inbox = model(store, phone: phone)
+        inbox.heard(heard([call("h_1"), call("h_2"), call("h_3")]))
+        inbox.answered(WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false), message: "m-1")
+        phone.marks = WatchReply(.ok, marks: WatchInboxMarks(read: ["h_2"], dismissed: ["h_1", "m-1", "h_9"]))
+        await inbox.sync()
+        XCTAssertEqual(Set(inbox.lines.map(\.id)), ["held:h_2", "held:h_3"])
+        XCTAssertEqual(inbox.lines.first { $0.id == "held:h_2" }?.read, true)
+        XCTAssertEqual(inbox.lines.first { $0.id == "held:h_3" }?.read, false)
+        XCTAssertEqual(store.kept, inbox.lines, "kept as taken in")
+        // Read again while the phone still lists h_1: it stays away; h_9, which the phone doesn't list, a call to come.
+        inbox.heard(heard([call("h_1"), call("h_2"), call("h_3")]))
+        XCTAssertFalse(inbox.lines.contains { $0.id == "held:h_1" })
+        XCTAssertEqual(store.gone, ["held:h_1"], "ids the phone doesn't list go, so the list never grows")
+        XCTAssertTrue(phone.sent.isEmpty, "taking marks in sends none")
+    }
+
+    /// Open, Dismiss and Clear read send their ids, by a held call's own id or the message an answer is to; never words.
+    func testWhatThisWatchDoesIsMarked() async {
+        let phone = MarksPhone()
+        let inbox = model(Kept(), phone: phone)
+        inbox.heard(heard([call("h_1"), call("h_2")]))
+        inbox.answered(WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false), message: "m-1")
+        inbox.markRead("held:h_1")
+        inbox.markRead("held:h_1")
+        inbox.markRead("answer:m-1")
+        inbox.dismiss("held:h_2")
+        inbox.clearRead()
+        await inbox.marking?.value
+        XCTAssertEqual(phone.sent, [WatchInboxMarks(read: ["h_1"]), WatchInboxMarks(dismissed: ["h_2"]),
+                                    WatchInboxMarks(dismissed: ["m-1", "h_1"])],
+                       "once each, in order; Coach's answer comes in read, so opening it marks nothing")
+        XCTAssertTrue(inbox.lines.isEmpty)
+    }
+
+    /// Clear read of more lines than tafs cloud takes at once goes in chunks of 100.
+    func testClearReadGoesInChunks() async {
+        let phone = MarksPhone()
+        let inbox = model(Kept(), phone: phone)
+        inbox.heard(heard((0..<150).map { call("h_\($0)") }))
+        let marks = WatchInboxMarks(read: (0..<150).map { "h_\($0)" })
+        inbox.take(marks)
+        inbox.clearRead()
+        await inbox.marking?.value
+        XCTAssertEqual(phone.sent.map(\.dismissed.count), [100, 50])
+        XCTAssertTrue(phone.sent.allSatisfy(\.isComplete))
+    }
+
+    /// No passcode: nothing is kept, so nothing is read or marked. A phone from before the marks, or none, leaves the lines.
+    func testNoPasscodeOrAnOlderPhoneChangesNothing() async {
+        let phone = MarksPhone()
+        let open = model(Kept(), phone: phone, lock: NoPasscode())
+        await open.sync()
+        XCTAssertTrue(phone.asked.isEmpty)
+
+        let store = Kept()
+        let inbox = model(store, phone: phone)
+        inbox.heard(heard([call("h_1")]))
+        for answer in [WatchReply(.notYet), WatchReply(.refused), WatchReply(.failed, line: "down"), nil] {
+            phone.marks = answer
+            await inbox.sync()
+        }
+        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_1"])
+        XCTAssertEqual(inbox.lines.first?.read, false)
+    }
 }

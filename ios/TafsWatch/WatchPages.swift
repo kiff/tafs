@@ -72,7 +72,11 @@ struct WatchPagesView: View {
         }
         .tabViewStyle(.verticalPage)
         // What Needs you reads, and each answer Coach gives this watch, are lines of the Inbox (step iv).
-        .onChange(of: needsYou.state, initial: true) { _, state in inbox.heard(state) }
+        .onChange(of: needsYou.state, initial: true) { _, state in
+            inbox.heard(state)
+            // Once the phone has answered, the lines read and dismissed on the person's other watches (row 21).
+            if case .loaded = state { Task { await inbox.sync() } }
+        }
         .onAppear { coach.onAnswer = { answer, message in inbox.answered(answer, message: message) } }
         .sheet(isPresented: $menu) {
             WatchMenu(pages: WatchPage.pages(), tafs: tafs) { chosen in
@@ -122,6 +126,10 @@ struct CoachHome: View {
                     if ChatTime.startsDay(days, at: i, calendar: coach.calendar) { WatchChatDay(date: turn.at, calendar: coach.calendar) }
                     CoachTurnRow(turn: turn, zone: coach.zone)
                 }
+                // Keep for later (row 8): the message kept on this watch, sent when the phone is in reach again, and Delete.
+                if let kept = coach.kept {
+                    KeptRow(kept: kept) { coach.deleteKept() }
+                }
                 Button {
                     // The watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
                     if WatchVoice.on, coach.listensFirst {
@@ -152,7 +160,35 @@ struct CoachHome: View {
         .sheet(isPresented: $recording, onDismiss: { if coach.reviewing { asking = true } }) {
             VoiceRecordScreen(model: VoiceModel { words in coach.review(words) })
         }
-        .task { await needsYou.load() }
+        .task {
+            await needsYou.load()
+            await coach.afterRead(needsYou.state)
+        }
+    }
+}
+
+/// The message kept for later (row 8, as Wear OS's): its words, that it's kept on this watch and goes when the phone is back,
+/// and Delete, which sends nothing.
+struct KeptRow: View {
+    let kept: CoachModel.Kept
+    let delete: () -> Void
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 4) {
+            Text(verbatim: kept.text)
+                .font(.footnote)
+                .lineLimit(4)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .multilineTextAlignment(.trailing)
+            Text(Words.Watch.keptToSend)
+                .font(.footnote)
+                .foregroundStyle(WatchLook.held)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(role: .destructive, action: delete) {
+                Label(Words.Chat.delete, systemImage: "xmark")
+            }
+            .tint(WatchLook.danger)
+        }
     }
 }
 

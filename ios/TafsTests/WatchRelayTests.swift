@@ -456,6 +456,25 @@ final class WatchRelayTests: XCTestCase {
         StubProtocol.sent.filter { $0.httpMethod == method && $0.url?.path == path }
     }
 
+    /// Row 21, the phone's own reader: `GET /v1/watch/inbox` for the marks, and `POST` with only the lists that have ids, with
+    /// the person's session and nothing signed. A tafs cloud that can't answer is the phone's words, never a mark.
+    func testTheInboxMarksAreReadAndPostedWithTheSession() async throws {
+        let reading = kept(CurrentKeyOnly())
+        StubProtocol.responses["GET /v1/watch/inbox"] = (200, #"{"read":["ce_1"],"dismissed":[]}"#)
+        StubProtocol.responses["POST /v1/watch/inbox"] = (200, #"{"read":["ce_1"],"dismissed":["ce_2"]}"#)
+        let read = await reading.inboxMarks()
+        XCTAssertEqual(read, WatchReply(.ok, marks: WatchInboxMarks(read: ["ce_1"])))
+        let marked = await reading.inboxMark(WatchInboxMarks(dismissed: ["ce_2"]))
+        XCTAssertEqual(marked, WatchReply(.ok, marks: WatchInboxMarks(read: ["ce_1"], dismissed: ["ce_2"])))
+        let post = try XCTUnwrap(sent("POST", "/v1/watch/inbox").first)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: post.httpBody ?? Data()) as? [String: [String]])
+        XCTAssertEqual(body, ["dismissed": ["ce_2"]], "only the list with ids; no words, no taf, no amount")
+        XCTAssertEqual(post.value(forHTTPHeaderField: "Authorization"), "Bearer dev_token")
+        StubProtocol.responses["GET /v1/watch/inbox"] = (503, #"{"error":"down"}"#)
+        let down = await reading.inboxMarks()
+        XCTAssertEqual(down, WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff))
+    }
+
     func testRefuseFromTheWristIsTheNotificationsSignedRefusalWithTheCurrentKey() async {
         let signer = CurrentKeyOnly()
         let outcome = await kept(signer).refuse(hold: "ce_1", now: now)
