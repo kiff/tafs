@@ -25,8 +25,13 @@ export interface APNsConfig {
   keyPEM: () => Promise<string>;
   keyID: string;
   teamID: string;
-  /** The app's bundle id. */
+  /** The app's bundle id: the iPhone app's, which the iPad and the Mac 13+ app share. */
   topic: string;
+  /**
+   * macOS 12's own app's bundle id, for a device registered as `macos`. Unset, such a device is never sent to ("failed"):
+   * a Mac's token on the iPhone's topic is `DeviceTokenNotForTopic`, which would drop the Mac as gone.
+   */
+  macTopic?: string;
   /** Apple's host for each environment; a test points both at its own server. */
   host?: string;
 }
@@ -62,6 +67,8 @@ export function apnsSender(config: APNsConfig): Sender {
 
   return {
     async send(device, n) {
+      const topic = device.platform === "macos" ? config.macTopic : config.topic;
+      if (!topic) return "failed";
       let auth: string;
       try { auth = await bearer(); } catch (err) {
         console.error(`APNs key: ${(err as Error).message}`);
@@ -71,7 +78,7 @@ export function apnsSender(config: APNsConfig): Sender {
         ":method": "POST",
         ":path": `/3/device/${device.token}`,
         authorization: `bearer ${auth}`,
-        "apns-topic": config.topic,
+        "apns-topic": topic,
         "apns-push-type": n.kind,
         // A background push must go at priority 5.
         "apns-priority": n.kind === "alert" ? "10" : "5",

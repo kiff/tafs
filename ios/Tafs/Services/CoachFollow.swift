@@ -39,11 +39,15 @@ enum CoachFollow {
         defer { if task != .invalid { UIApplication.shared.endBackgroundTask(task) } }
         #endif
         await follow(ticket, read: read, wait: { try? await Task.sleep(nanoseconds: 1_500_000_000) }, now: Date.init,
-                     phoneInUse: { Self.phoneActive }, post: { answer in await notify(answer, ticket: ticket) })
+                     phoneInUse: { Self.phoneActive }, post: { answer in
+                         // A watch request's answer is posted once, by this follow or by tafs cloud's push (`WatchAskPush`).
+                         if let id = ticket.askID, !WatchAskPushes().claimPost(id) { return }
+                         await notify(answer, ticket: ticket)
+                     })
     }
 
     /// The iPhone is open in front of the person: tafs on screen, where Coach's chat shows the answer as it lands.
-    private static var phoneActive: Bool {
+    static var phoneActive: Bool {
         #if canImport(UIKit)
         UIApplication.shared.applicationState == .active
         #else
@@ -101,7 +105,8 @@ enum CoachFollow {
         return content
     }
 
-    private static func notify(_ answer: WatchCoachAnswer, ticket: WatchCoachTicket) async {
+    /// Posted under the ticket's own identifier: a second post of the same answer replaces the first.
+    static func notify(_ answer: WatchCoachAnswer, ticket: WatchCoachTicket) async {
         let request = UNNotificationRequest(identifier: "coach-reply-" + key(ticket), content: content(answer), trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }

@@ -23,12 +23,15 @@ import { briefTimes } from "./brief.js";
  * reads the held call itself from KIFF, with its own session.
  */
 
-/** Which push service a phone's token belongs to. */
-export type Platform = "ios" | "android";
+/**
+ * Which push service a device's token belongs to: Apple's for an iPhone, an iPad or the Mac 13+ app (`ios`, the iPhone
+ * app's topic), and for macOS 12's own app (`macos`, its own topic, `bot.tafs.macos`); Google's for an Android phone.
+ */
+export type Platform = "ios" | "android" | "macos";
 
 /** A phone that gets an account's alerts. */
 export interface Device {
-  /** The push token: APNs's, hex, for an iPhone; Firebase Cloud Messaging's registration token for an Android phone. */
+  /** The push token: APNs's, hex, for an iPhone or a Mac; Firebase Cloud Messaging's registration token for an Android phone. */
   token: string;
   /** Which push service the token belongs to. A phone registered before Android is an iPhone. */
   platform?: Platform;
@@ -111,8 +114,9 @@ export function quietFor(device: Device, n: Notification): Notification {
 }
 
 /**
- * A sender that sends each phone's alert through its own push service: Apple's, or Google's for an Android phone. An
- * Android phone with no Google sender is never alerted ("failed", so KIFF tries again): registration refuses one there.
+ * A sender that sends each phone's alert through its own push service: Apple's (an iPhone's or a Mac's, each on its own
+ * topic: `apnsSender`), or Google's for an Android phone. An Android phone with no Google sender is never alerted
+ * ("failed", so KIFF tries again): registration refuses one there.
  */
 export function routing(senders: { ios: Sender; android?: Sender }): Sender {
   return {
@@ -562,8 +566,9 @@ function capitalize(s: string): string {
 
 /**
  * Validates a phone's registration: `{device_token, platform?, environment, sound?, alert_target?: {id, signing_secret}}`.
- * `platform` is "ios" (the default) or "android". An iPhone's token is APNs's, in hex, with its environment; an Android
- * phone's is Firebase's registration token, case kept, and its environment is production (or left out).
+ * `platform` is "ios" (the default), "macos" (macOS 12's own app) or "android". An iPhone's or a Mac's token is APNs's, in
+ * hex, with its environment; an Android phone's is Firebase's registration token, case kept, and its environment is
+ * production (or left out).
  * `sound: false` is the phone's Sound for alerts turned off; left out, alerts sound as before.
  */
 export function registration(body: Record<string, unknown>): {
@@ -575,7 +580,7 @@ export function registration(body: Record<string, unknown>): {
   target?: { id: string; secret: string };
 } {
   const platform = body.platform === undefined ? "ios" : body.platform;
-  if (platform !== "ios" && platform !== "android") throw new PushError(400, "platform is ios or android");
+  if (platform !== "ios" && platform !== "android" && platform !== "macos") throw new PushError(400, "platform is ios, macos or android");
   let token: string;
   let environment: Device["environment"];
   if (platform === "android") {

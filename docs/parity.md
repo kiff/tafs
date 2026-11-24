@@ -20,7 +20,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | built 25, partial 3, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | built 19, partial 7, not started 1, not for it 5 | the [Watches](#watches) table |
+| Apple Watch | built 20, partial 6, not started 1, not for it 5 | the [Watches](#watches) table |
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
@@ -216,7 +216,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 8 | Keep for later | partial | built | Apple Watch: built, off (`CoachModel.keepForLaterOn`) until the privacy page says so and the owner says yes |
 | 9 | Send, then "Coach is answering" | built | built | |
 | 10 | The answer: Hear it, and Reply | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | built | |
-| 11 | An answer you can't miss, with the app put away | partial | built | Apple Watch: iOS doesn't promise the background time; tafs cloud now pushes watch asks to the iPhone, which doesn't read them yet |
+| 11 | An answer you can't miss, with the app put away | built | built | Apple Watch: tafs cloud's push for a watch request wakes the iPhone, which posts the answer as W3 does (`WatchAskPush`), for a request it sent |
 | 12 | Coach as one conversation | built | built | |
 | 13 | Chat with one taf | built | built | tafs cloud's switch still decides per account |
 | 14 | A taf's page and its settings | built | built | |
