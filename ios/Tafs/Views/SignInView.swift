@@ -434,6 +434,8 @@ struct SettingsView: View {
             .confirmingSignOut($confirming) { _ in
                 Task { if await model.signOut() { dismiss() } }
             }
+            // Alerts that couldn't be taken back: ask before signing out (Try again, Sign out anyway).
+            .askingAlertsStillOn(model) { dismiss() }
         }
     }
 
