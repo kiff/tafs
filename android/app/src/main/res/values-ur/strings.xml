@@ -522,6 +522,9 @@
     <string name="chat_it_lower">یہ</string>
     <string name="chat_jump_latest_something_new">تازہ ترین پر جائیں، کچھ نیا ہے</string>
     <string name="chat_jump_to_latest">تازہ ترین پر جائیں</string>
+    <string name="chat_link_confirm_body">یہ اس صفحے سے آیا ہے جو Coach نے پڑھا۔ یہ یہاں جاتا ہے: %1$s</string>
+    <string name="chat_link_confirm_open">کھولیں</string>
+    <string name="chat_link_confirm_title">یہ لنک کھولیں؟</string>
     <string name="chat_message_carries_most_files">ایک پیغام زیادہ سے زیادہ %1$s فائلیں لے جاتا ہے۔</string>
     <string name="chat_message_taf">%1$s کو پیغام بھیجیں</string>
     <string name="chat_message_your_taf">اپنے taf کو پیغام بھیجیں</string>
