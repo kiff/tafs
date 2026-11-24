@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Khóa bảo mật không thể ký nên không có gì được phê duyệt. Yêu cầu vẫn được giữ: hãy phê duyệt lại khi bạn sẵn sàng.",
   "approval.security_key.locked": "Khóa bảo mật này bị khóa sau quá nhiều PIN sai nên không thể phê duyệt. Hãy phê duyệt trên điện thoại của bạn. Đặt lại khóa sẽ xóa nó, vì vậy để phê duyệt bằng khóa lần nữa, hãy ghép đôi lại máy tính này.",
   "approval.security_key.no_key": "Hãy cắm khóa bảo mật của bạn, rồi thử lại.",
+  "approval.security_key.no_library": "Máy tính này không thể dùng khóa bảo mật cho đến khi cài libfido2 1.14 trở lên (trên Ubuntu là gói libfido2-1), nên chưa có gì được phê duyệt. Hãy cài đặt rồi phê duyệt lại. Yêu cầu vẫn được giữ.",
+  "approval.security_key.no_library_pairing": "Máy tính này không thể dùng khóa bảo mật cho đến khi cài libfido2 1.14 trở lên (trên Ubuntu là gói libfido2-1). Để thêm khóa, hãy hủy, cài đặt rồi ghép nối lại. Hoặc ghép nối ngay mà không có khóa.",
   "approval.security_key.no_pin_set": "Khóa bảo mật này chưa có PIN nên không thể phê duyệt. Hãy cắm khóa đi cùng máy tính này. Nếu nó đã bị đặt lại, hãy phê duyệt trên điện thoại và ghép đôi lại máy tính này để phê duyệt bằng khóa.",
   "approval.security_key.none_paired": "Máy tính này chưa có khóa bảo mật nào. Khóa bảo mật là một khóa USB nhỏ bạn chạm vào để phê duyệt; USB thông thường không dùng được.",
   "approval.security_key.not_allowed": "Khóa bảo mật không cho phép nên không có gì được phê duyệt. Yêu cầu vẫn được giữ: hãy phê duyệt lại khi bạn sẵn sàng.",

@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Sigurnosni ključ nije mogao potpisati pa ništa nije odobreno. Zahtjev je sačuvan: odobrite ponovno kad budete spremni.",
   "approval.security_key.locked": "Ovaj je sigurnosni ključ zaključan zbog previše pogrešnih PIN-ova pa ne može odobravati. Odobrite na telefonu. Resetiranje ključa briše ga, pa da biste ponovno odobravali ključem, ponovno uparite ovo računalo.",
   "approval.security_key.no_key": "Priključite svoj sigurnosni ključ, pa pokušajte ponovno.",
+  "approval.security_key.no_library": "Ovo računalo ne može koristiti sigurnosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1), pa ništa nije odobreno. Instalirajte ga, a zatim ponovno odobrite. Zahtjev ostaje.",
+  "approval.security_key.no_library_pairing": "Ovo računalo ne može koristiti sigurnosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1). Za dodavanje ključa odustanite, instalirajte ga i ponovno uparite. Ili sada uparite bez ključa.",
   "approval.security_key.no_pin_set": "Ovaj sigurnosni ključ nema PIN pa ne može odobravati. Priključite onaj koji pripada ovom računalu. Ako je resetiran, odobrite na telefonu i ponovno uparite ovo računalo da biste odobravali ključem.",
   "approval.security_key.none_paired": "Ovo računalo još nema sigurnosni ključ. Sigurnosni ključ je mali USB ključ koji dodirnete za odobrenje; obični USB stick ne radi.",
   "approval.security_key.not_allowed": "Sigurnosni ključ to nije dopustio pa ništa nije odobreno. Zahtjev je sačuvan: odobrite ponovno kad budete spremni.",

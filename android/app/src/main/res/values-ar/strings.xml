@@ -109,6 +109,8 @@
     <string name="approval_security_key_failed">تعذّر على مفتاح الأمان التوقيع، فلم تتم الموافقة على شيء. الطلب محفوظ: وافق مرة أخرى عندما تكون مستعدًا.</string>
     <string name="approval_security_key_locked">تم قفل مفتاح الأمان هذا بعد إدخال رموز PIN خاطئة كثيرة، فلا يستطيع الموافقة. وافق على هاتفك. إعادة ضبط المفتاح تمسحه، ولتوافق بمفتاح مرة أخرى أعد إقران هذا الكمبيوتر.</string>
     <string name="approval_security_key_no_key">وصّل مفتاح الأمان ثم حاول مرة أخرى.</string>
+    <string name="approval_security_key_no_library">لا يمكن لهذا الكمبيوتر استخدام مفتاح أمان حتى يُثبَّت libfido2 1.14 أو أحدث (على Ubuntu، الحزمة libfido2-1)، لذا لم تتم الموافقة على أي شيء. ثبّته ثم وافق مرة أخرى. يبقى الطلب محفوظًا.</string>
+    <string name="approval_security_key_no_library_pairing">لا يمكن لهذا الكمبيوتر استخدام مفتاح أمان حتى يُثبَّت libfido2 1.14 أو أحدث (على Ubuntu، الحزمة libfido2-1). لإضافة مفتاحك، ألغِ ثم ثبّته ثم اقرن مرة أخرى. أو اقرن الآن بلا مفتاح.</string>
     <string name="approval_security_key_no_pin_set">ليس لمفتاح الأمان هذا رمز PIN فلا يستطيع الموافقة. وصّل المفتاح الذي يخص هذا الكمبيوتر. وإذا أُعيد ضبطه فوافق على هاتفك وأعد إقران هذا الكمبيوتر لتوافق بمفتاح.</string>
     <string name="approval_security_key_none_paired">ليس لدى هذا الكمبيوتر مفتاح أمان بعد. مفتاح الأمان مفتاح USB صغير تلمسه للموافقة؛ ذاكرة USB العادية لا تعمل.</string>
     <string name="approval_security_key_not_allowed">لم يسمح مفتاح الأمان بذلك، فلم تتم الموافقة على شيء. الطلب محفوظ: وافق مرة أخرى عندما تكون مستعدًا.</string>

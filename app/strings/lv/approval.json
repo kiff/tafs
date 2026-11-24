@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Drošības atslēga nevarēja parakstīt, tāpēc nekas netika apstiprināts. Pieprasījums ir saglabāts: apstiprini vēlreiz, kad esi gatavs.",
   "approval.security_key.locked": "Šī drošības atslēga ir bloķēta pēc pārāk daudziem nepareiziem PIN, tāpēc tā nevar apstiprināt. Apstiprini savā tālrunī. Atslēgas atiestatīšana to izdzēš, tāpēc, lai atkal apstiprinātu ar atslēgu, vēlreiz savieno šo datoru pārī.",
   "approval.security_key.no_key": "Pievieno savu drošības atslēgu, tad mēģini vēlreiz.",
+  "approval.security_key.no_library": "Šis dators nevar izmantot drošības atslēgu, kamēr nav instalēta libfido2 1.14 vai jaunāka (Ubuntu – pakotne libfido2-1), tāpēc nekas netika apstiprināts. Instalē to un apstiprini vēlreiz. Pieprasījums tiek saglabāts.",
+  "approval.security_key.no_library_pairing": "Šis dators nevar izmantot drošības atslēgu, kamēr nav instalēta libfido2 1.14 vai jaunāka (Ubuntu – pakotne libfido2-1). Lai pievienotu atslēgu, atcel, instalē to un savieno pārī vēlreiz. Vai savieno pārī tagad bez atslēgas.",
   "approval.security_key.no_pin_set": "Šai drošības atslēgai nav PIN, tāpēc tā nevar apstiprināt. Pievieno to, kas pieder šim datoram. Ja tā tika atiestatīta, apstiprini savā tālrunī un vēlreiz savieno šo datoru pārī, lai apstiprinātu ar atslēgu.",
   "approval.security_key.none_paired": "Šim datoram vēl nav drošības atslēgas. Drošības atslēga ir maza USB atslēga, kurai pieskaries, lai apstiprinātu; parasta USB zibatmiņa nederēs.",
   "approval.security_key.not_allowed": "Drošības atslēga to neatļāva, tāpēc nekas netika apstiprināts. Pieprasījums ir saglabāts: apstiprini vēlreiz, kad esi gatavs.",

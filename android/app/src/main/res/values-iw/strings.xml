@@ -106,6 +106,8 @@
     <string name="approval_security_key_failed">מפתח האבטחה לא הצליח לחתום, ולכן שום דבר לא אושר. הבקשה נשמרה: אפשר לאשר שוב כשתהיה מוכן.</string>
     <string name="approval_security_key_locked">מפתח האבטחה הזה ננעל אחרי יותר מדי PIN שגויים, ולכן הוא לא יכול לאשר. יש לאשר בטלפון. איפוס המפתח מוחק אותו, ולכן כדי לאשר שוב עם מפתח יש לצמד את המחשב הזה מחדש.</string>
     <string name="approval_security_key_no_key">יש לחבר את מפתח האבטחה ולנסות שוב.</string>
+    <string name="approval_security_key_no_library">המחשב הזה לא יכול להשתמש במפתח אבטחה עד שתותקן libfido2 1.14 ומעלה (ב-Ubuntu, החבילה libfido2-1), ולכן שום דבר לא אושר. התקן אותה ואשר שוב. הבקשה נשמרת.</string>
+    <string name="approval_security_key_no_library_pairing">המחשב הזה לא יכול להשתמש במפתח אבטחה עד שתותקן libfido2 1.14 ומעלה (ב-Ubuntu, החבילה libfido2-1). כדי להוסיף את המפתח, בטל, התקן אותה ואז צמד שוב. או צמד עכשיו בלי מפתח.</string>
     <string name="approval_security_key_no_pin_set">למפתח האבטחה הזה אין PIN, ולכן הוא לא יכול לאשר. יש לחבר את המפתח שמתאים למחשב הזה. אם הוא אופס, יש לאשר בטלפון ולצמד את המחשב הזה מחדש כדי לאשר עם מפתח.</string>
     <string name="approval_security_key_none_paired">במחשב הזה עדיין אין מפתח אבטחה. מפתח אבטחה הוא מפתח USB קטן שנוגעים בו כדי לאשר; כונן USB רגיל לא יעבוד.</string>
     <string name="approval_security_key_not_allowed">מפתח האבטחה לא אישר זאת, ולכן שום דבר לא אושר. הבקשה נשמרה: אפשר לאשר שוב כשתהיה מוכן.</string>

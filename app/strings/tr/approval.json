@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Güvenlik anahtarı imzalayamadı, bu yüzden hiçbir şey onaylanmadı. İstek korunuyor: hazır olduğunuzda tekrar onaylayın.",
   "approval.security_key.locked": "Bu güvenlik anahtarı çok fazla yanlış PIN'den sonra kilitlendi, bu yüzden onay veremez. Telefonunuzdan onaylayın. Anahtarı sıfırlamak onu siler; bu yüzden bir anahtarla tekrar onaylamak için bu bilgisayarı yeniden eşleştirin.",
   "approval.security_key.no_key": "Güvenlik anahtarınızı takın, sonra tekrar deneyin.",
+  "approval.security_key.no_library": "libfido2 1.14 veya üstü yüklenene kadar (Ubuntu'da libfido2-1 paketi) bu bilgisayar güvenlik anahtarı kullanamaz, bu yüzden hiçbir şey onaylanmadı. Yükleyin, ardından yeniden onaylayın. İstek korunur.",
+  "approval.security_key.no_library_pairing": "libfido2 1.14 veya üstü yüklenene kadar (Ubuntu'da libfido2-1 paketi) bu bilgisayar güvenlik anahtarı kullanamaz. Anahtarınızı eklemek için iptal edin, yükleyin ve yeniden eşleştirin. Ya da şimdi anahtarsız eşleştirin.",
   "approval.security_key.no_pin_set": "Bu güvenlik anahtarının PIN'i yok, bu yüzden onay veremez. Bu bilgisayara ait olanı takın. Sıfırlandıysa telefonunuzdan onaylayın ve anahtarla onaylamak için bu bilgisayarı yeniden eşleştirin.",
   "approval.security_key.none_paired": "Bu bilgisayarda henüz güvenlik anahtarı yok. Güvenlik anahtarı, onaylamak için dokunduğunuz küçük bir USB anahtarıdır; sıradan bir USB bellek çalışmaz.",
   "approval.security_key.not_allowed": "Güvenlik anahtarı buna izin vermedi, bu yüzden hiçbir şey onaylanmadı. İstek korunuyor: hazır olduğunuzda tekrar onaylayın.",
