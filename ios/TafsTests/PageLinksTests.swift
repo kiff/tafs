@@ -3,6 +3,7 @@ import XCTest
 
 /// Links in a taf's words from a page turn ask before opening (`page_turn`, `PageLinkGuard`): the flag as tafs cloud sends
 /// it, on the thread's messages and on the stream, and the address as the confirm shows it.
+@MainActor
 final class PageLinksTests: XCTestCase {
     private let suite = "PageLinksTests"
 
