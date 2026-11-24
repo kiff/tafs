@@ -197,7 +197,7 @@ describe("Coach reads the page the person has open, with their message", () => {
     get.mockRestore();
 
     // Already PAGE.kept kept: the next page message's host goes in, and the oldest goes out.
-    const full = Array.from({ length: PAGE.kept }, (_, i) => ({ run: `run_old${i}`, host: "old.example" }));
+    const full = Array.from({ length: PAGE.kept }, (_, i) => ({ run: `run_old${i}`, host: "old.example", at: NOW.toISOString() }));
     await w.coach.put(pageReadsKey("t_acme", "u_ana"), { reads: full }, new Date(NOW.getTime() + PAGE.keptMs));
     const last = await send(w, COACH, { text: "And this one?", session: first.body.session, page: PAGE_SENT });
     expect(last.status).toBe(200);
@@ -205,6 +205,21 @@ describe("Coach reads the page the person has open, with their message", () => {
     expect(kept.reads).toHaveLength(PAGE.kept);
     expect(kept.reads[0]!.run).toBe("run_old1");
     expect(await keptHost(w, last.body.run as string)).toBe("shop.example");
+  });
+
+  // Invariant: a page's host is kept PAGE.keptMs from its own message, however often the person sends pages since
+  it("a host older than PAGE.keptMs is neither shown nor kept by the next page message, whenever the item was last written", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const first = await send(w, COACH, { text: "What's this?", page: PAGE_SENT });
+    const old = new Date(NOW.getTime() - PAGE.keptMs - 86_400_000).toISOString();
+    // That message's host, as if it had gone 31 days ago, beside one from today; the item itself written just now.
+    await w.coach.put(pageReadsKey("t_acme", "u_ana"), { reads: [{ run: first.body.run, host: "shop.example", at: old },
+      { run: "run_today", host: "news.example", at: NOW.toISOString() }] }, new Date(NOW.getTime() + PAGE.keptMs));
+    expect((await thread(w)).find((m) => m.id === `${first.body.run}.in`)?.reading).toBeUndefined();
+    const next = await send(w, COACH, { text: "And this?", session: first.body.session, page: PAGE_SENT });
+    const kept = (await w.coach.get(pageReadsKey("t_acme", "u_ana"))) as { reads: Array<{ run: string }> };
+    expect(kept.reads.map((r) => r.run)).toEqual(["run_today", next.body.run]);
   });
 
   it("a page just inside the bound goes, its title kept to one line", async () => {

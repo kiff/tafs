@@ -3170,7 +3170,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   // read for the whole thread, and none when no message in view is a run's own input.
   const inputs = taf.job === SETUP_JOB && deps.coach ? last.filter((m) => m.from === "owner" && m.id.endsWith(".in")) : [];
   if (inputs.length) {
-    const hosts = new Map((await pageReads(deps.coach!, me.tenantID, me.subject)).map((r) => [r.run, r.host]));
+    const hosts = new Map((await pageReads(deps.coach!, me.tenantID, me.subject, deps.now?.() ?? new Date())).map((r) => [r.run, r.host]));
     for (const m of inputs) {
       const host = hosts.get(m.id.slice(0, -".in".length));
       if (host) m.reading = host;
@@ -6335,25 +6335,32 @@ export const ATTACHMENTS = { perMessage: 5 };
 /**
  * A page Coach reads with one message (docs/chat.md, "Coach reads the page you're on"): at most `bytes` as the run
  * reads it, kiff/agents' bound (`server.MaxAside`), and a title of at most `title` characters. Its host is kept
- * `keptMs`, as long as the chat's messages, so each message says which site went with it; its text never is. Each
- * person's last `kept` page messages are kept, more than a thread shows (`CHAT.maxThread`).
+ * `keptMs` from that message, as long as the chat's messages, so each message says which site went with it; its text
+ * never is. Each person's last `kept` page messages are kept, more than a thread shows (`CHAT.maxThread`).
  */
 export const PAGE = { bytes: 24_000, title: 300, keptMs: 30 * 24 * 3600_000, kept: 200 } as const;
 
 /**
- * Where a person's page hosts are kept: one item for all their messages to Coach that carried a page, `{run, host}` each,
- * newest last. A thread read reads it once, whatever its length.
+ * Where a person's page hosts are kept: one item for all their messages to Coach that carried a page, `{run, host, at}`
+ * each, newest last. A thread read reads it once, whatever its length.
  */
 export function pageReadsKey(tenant: string, person: string): string {
   return `${tenant}#page-reads#${person}`;
 }
 
-/** A person's kept page hosts, by the run whose message carried each: none when nothing is kept. */
-async function pageReads(store: CoachStore, tenant: string, person: string): Promise<Array<{ run: string; host: string }>> {
+type PageRead = { run: string; host: string; at: string };
+
+/**
+ * A person's kept page hosts, by the run whose message carried each: only those from the last `PAGE.keptMs`, each kept
+ * for its own message's time, however recently the item was written. None when nothing is kept.
+ */
+async function pageReads(store: CoachStore, tenant: string, person: string, now: Date): Promise<PageRead[]> {
   const kept = await store.get(pageReadsKey(tenant, person)).catch(() => undefined);
   const reads = (kept as { reads?: unknown } | undefined)?.reads;
+  const since = now.getTime() - PAGE.keptMs;
   return Array.isArray(reads)
-    ? reads.filter((r): r is { run: string; host: string } => typeof r?.run === "string" && typeof r?.host === "string")
+    ? reads.filter((r): r is PageRead => typeof r?.run === "string" && typeof r?.host === "string" && typeof r?.at === "string" &&
+      Date.parse(r.at) > since)
     : [];
 }
 
@@ -6423,9 +6430,10 @@ async function keepPageRead(me: KIFFIdentity, run: string, host: string, deps: D
   if (!deps.coach) return;
   const now = deps.now?.() ?? new Date();
   const store = deps.coach;
-  await pageReads(store, me.tenantID, me.subject)
-    .then((reads) => store.put(pageReadsKey(me.tenantID, me.subject), { reads: [...reads, { run, host }].slice(-PAGE.kept) },
-      new Date(now.getTime() + PAGE.keptMs)))
+  // Those past their own time are dropped as this one goes in.
+  await pageReads(store, me.tenantID, me.subject, now)
+    .then((reads) => store.put(pageReadsKey(me.tenantID, me.subject),
+      { reads: [...reads, { run, host, at: now.toISOString() }].slice(-PAGE.kept) }, new Date(now.getTime() + PAGE.keptMs)))
     .catch(() => undefined);
 }
 
