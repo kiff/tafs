@@ -60,8 +60,10 @@ final class PageLinksTests: XCTestCase {
     /// Open is offered for an https address alone: another app's deep link, a phone number or plain http gets Cancel only.
     func testOnlyAnHttpsAddressCanBeOpened() throws {
         for ok in ["https://shop.example/a", "HTTPS://shop.example"] { XCTAssertTrue(PageLinks.opens(try XCTUnwrap(URL(string: ok))), ok) }
-        for no in ["http://shop.example", "tel:+15551234", "sms:+15551234", "bank://pay?to=x", "market://details?id=x", "mailto:a@b.c"] {
-            XCTAssertFalse(PageLinks.opens(try XCTUnwrap(URL(string: no))), no)
+        for no in ["http://shop.example", "tel:+15551234", "sms:+15551234", "bank://pay?to=x", "market://details?id=x", "mailto:a@b.c",
+                   "javascript:alert(1)", "https:no-host", "https://shop.example/%E2%80%AEgpj.exe", "https://shop.example/a%20b",
+                   "https://shop.example/%E2%81%A6x%E2%81%A9", "https://shop.example/%0Anext"] {
+            if let url = URL(string: no) { XCTAssertFalse(PageLinks.opens(url), no) }
         }
     }
 }

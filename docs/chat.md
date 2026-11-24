@@ -137,9 +137,10 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   arriving (a stream picked back up or sent again has no `session` event to say it, so it asks until the thread's
   read settles it), opens nothing. It shows "Open this link?", "It came from a page Coach read. It
   goes to: {address}" with the whole address, never shortened and always left to right, then **Open** or **Cancel**
-  (`chat.link_confirm_*`, `PageLinkGuard`). Open is offered for an `https` address alone: another app's deep link,
-  `tel:`, `sms:` or plain `http` shows its address with Cancel only, so a page can't steer Coach into another app's
-  action. A message without it, and the owner's own words, open links as before.
+  (`chat.link_confirm_*`, `PageLinkGuard`). Open is offered for an `https` address with a host and no space, control or
+  direction character in it (`PageLinks.opens`): another app's deep link, `tel:`, `sms:`, plain `http`, or an address
+  with an override in it shows its address with Cancel only, so a page can't steer Coach into another app's action, or
+  show one address and open another. A message without it, and the owner's own words, open links as before.
 
 ## The answer as it comes
 

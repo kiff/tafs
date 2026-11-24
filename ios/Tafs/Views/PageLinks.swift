@@ -7,8 +7,22 @@ import SwiftUI
 /// Cancel only, so a page can't steer Coach into starting another app's action. Cancel opens nothing. Any other message's
 /// links open as before.
 enum PageLinks {
-    /// Whether Open is offered: an `https` address only.
-    static func opens(_ url: URL) -> Bool { url.scheme?.lowercased() == "https" }
+    /// Whether Open is offered: an `https` address with a host, and nothing in it, as written or percent-decoded, that
+    /// could make what's read differ from what opens: no space, no control and no format character (a direction mark, an
+    /// override such as RLO, an isolate). As Android's `linkOpens`.
+    static func opens(_ url: URL) -> Bool {
+        guard url.scheme?.lowercased() == "https", let host = url.host, !host.isEmpty else { return false }
+        let address = url.absoluteString
+        for text in [address, address.removingPercentEncoding ?? address] {
+            for scalar in text.unicodeScalars {
+                switch scalar.properties.generalCategory {
+                case .control, .format, .spaceSeparator, .lineSeparator, .paragraphSeparator: return false
+                default: continue
+                }
+            }
+        }
+        return true
+    }
 
     /// The address as the confirm shows it: whole, as the link has it, in a left-to-right isolate so an Arabic, Hebrew or
     /// Urdu line around it never reorders its parts.
