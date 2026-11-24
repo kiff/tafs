@@ -44,14 +44,44 @@ export function payment(page) {
   return (page.controls || []).some(pays);
 }
 
-const KINDS = new Set(["click", "fill", "select", "check"]);
+export const KINDS = Object.freeze(["click", "fill", "select", "check", "press", "scroll", "back"]);
+
+/** The keys a taf may press on a ref (page.js `KEYS`): no Tab, no shortcuts. */
+export const KEYS = Object.freeze(["Enter", "Escape", "ArrowDown", "ArrowUp"]);
 
 /** Why `act` may not run on `page`: `{code, why}`, or null when it may. */
 export function refuse(page, act) {
   // The extension keeps no saved sign-in: a step naming one is refused first, whatever its kind or field.
   if (act && act.sealed !== undefined) return { code: CODE.secretField, why: "the extension keeps no saved sign-in and never types one" };
-  if (!act || !KINDS.has(act.kind) || typeof act.ref !== "string" || !act.ref) {
-    return { code: CODE.badStep, why: "an act is a click, fill, select or check of one ref" };
+  if (!act || !KINDS.includes(act.kind)) {
+    return { code: CODE.badStep, why: "an act is a click, fill, select, check, press or scroll of one ref, a scroll of the page, or back" };
+  }
+  // Back and a scroll of the page name no ref. Back goes where the tab was, and the page there is read and fenced as any.
+  if (act.kind === "back") return act.ref === undefined ? null : { code: CODE.badStep, why: "back names no ref" };
+  if (act.kind === "scroll" && act.ref === undefined) {
+    return act.value === undefined || act.value === "up" || act.value === "down" ? null : { code: CODE.badStep, why: "a page scrolls up or down" };
+  }
+  if (typeof act.ref !== "string" || !act.ref) return { code: CODE.badStep, why: "that act names one ref" };
+  if (act.kind === "scroll") {
+    const known = ["fields", "controls", "links"].some((k) => (page[k] || []).some((x) => x.ref === act.ref));
+    return known ? null : { code: CODE.refUnknown, why: "the page has no ref " + act.ref };
+  }
+  if (act.kind === "press") {
+    // Enter on a control or a link presses it as a click does (the page's own key handlers act on it): the same refusals,
+    // before anything else here can let it through.
+    if (act.value === "Enter" && ["controls", "links"].some((k) => (page[k] || []).some((x) => x.ref === act.ref))) {
+      return refuse(page, { kind: "click", ref: act.ref });
+    }
+    if (!KEYS.includes(act.value)) return { code: CODE.badStep, why: "a press is one of " + KEYS.join(", ") };
+    // Enter submits: on a checkout or payment page it's refused, as any click there is.
+    if (act.value === "Enter" && (page.checkout || payment(page))) {
+      return { code: CODE.paymentStep, why: "on a checkout or payment page a taf submits nothing" };
+    }
+    const field = (page.fields || []).find((f) => f.ref === act.ref);
+    if (field && field.kind === "card") return { code: CODE.paymentStep, why: "a taf never types card details" };
+    if (field && secret(field)) return { code: CODE.secretField, why: "a sign-in, card or code is the person's" };
+    const known = field || ["controls", "links"].some((k) => (page[k] || []).some((x) => x.ref === act.ref));
+    return known ? null : { code: CODE.refUnknown, why: "the page has no ref " + act.ref };
   }
   if (act.kind === "click") {
     const control = (page.controls || []).find((c) => c.ref === act.ref);
@@ -75,6 +105,7 @@ export function refuse(page, act) {
   if (field.kind === "card") return { code: CODE.paymentStep, why: "a taf never types card details" };
   if (secret(field)) return { code: CODE.secretField, why: "a taf never types a password or a code" };
   if (act.kind === "fill" && typeof act.value !== "string") return { code: CODE.badStep, why: "a fill has a value" };
+  if (act.kind === "fill" && act.keys !== undefined && act.keys !== true) return { code: CODE.badStep, why: "keys is true or absent" };
   if (act.kind === "select" && typeof act.value !== "string") return { code: CODE.badStep, why: "a select names its option" };
   return null;
 }

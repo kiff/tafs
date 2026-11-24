@@ -122,6 +122,9 @@
   "step_act_check": {
     "message": "Gutujyk bellendi"
   },
+  "step_act_press": {"message": "Düwme basyldy", "description": "A step in the side panel's list: the taf pressed Enter, Escape or an arrow key in the page."},
+  "step_act_scroll": {"message": "Aýlandyryldy", "description": "A step in the side panel's list: the taf scrolled the page."},
+  "step_act_back": {"message": "Yza gaýdyldy", "description": "A step in the side panel's list: the taf went back to the page before."},
   "step_navigate": {
     "message": "$SITE$ sahypasyna geçmek saklandy",
     "placeholders": {

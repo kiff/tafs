@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
 import { refuseURL, bareURL, sensitive, siteOK } from "../src/sites.js";
-import { refuse, PAY_WORDS } from "../src/guard.js";
+import { refuse, PAY_WORDS, KINDS } from "../src/guard.js";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { parseCode } from "../src/pairing.js";
@@ -173,6 +173,51 @@ test("the extension's guard refuses what planque's does", () => {
   for (const words of ["Pay now", "Commander", "Jetzt kaufen", "Finalizar compra", "Acquista ora", "Afrekenen", "Fazer pedido"]) {
     assert.ok(PAY_WORDS.test(words), words);
   }
+});
+
+test("press, scroll and back (gap 7) are held to the same rules: Enter submits nothing on a pay page, a key never goes into a secret", () => {
+  const plain = { ...page, fields: [page.fields[0]], controls: [page.controls[0]] };
+  assert.equal(refuse(plain, { kind: "press", ref: "f1", value: "Enter" }), null);
+  assert.equal(refuse(plain, { kind: "press", ref: "f1", value: "ArrowDown" }), null);
+  assert.equal(refuse(plain, { kind: "press", ref: "c1", value: "Escape" }), null);
+  assert.equal(refuse(plain, { kind: "press", ref: "f1", value: "Tab" }).code, "bad_step", "a closed set of keys");
+  assert.equal(refuse(plain, { kind: "press", ref: "f1", value: "Control+a" }).code, "bad_step");
+  assert.equal(refuse(plain, { kind: "press", ref: "f9", value: "Enter" }).code, "ref_unknown");
+  assert.equal(refuse(plain, { kind: "press", value: "Enter" }).code, "bad_step", "a press names its ref");
+  // Enter submits: on a payment or checkout page it's refused, as any click there is; a key never goes into a secret field.
+  assert.equal(refuse(page, { kind: "press", ref: "f1", value: "Enter" }).code, "payment_step");
+  assert.equal(refuse({ ...plain, checkout: { lines: [] } }, { kind: "press", ref: "f1", value: "Enter" }).code, "payment_step");
+  const signIn = { url: "https://shop.example/login", fields: [page.fields[0], page.fields[1]], controls: [], links: [] };
+  assert.equal(refuse(signIn, { kind: "press", ref: "f2", value: "Enter" }).code, "secret_field");
+  assert.equal(refuse(signIn, { kind: "press", ref: "f1", value: "Enter" }), null, "Enter in the email field of a sign-in page");
+  // A fill may type key by key, and says so only as true.
+  assert.equal(refuse(plain, { kind: "fill", ref: "f1", value: "Lyon", keys: true }), null);
+  assert.equal(refuse(plain, { kind: "fill", ref: "f1", value: "Lyon", keys: "yes" }).code, "bad_step");
+  // Scroll: a ref the page has, or the page itself up or down. Back names no ref.
+  assert.equal(refuse(plain, { kind: "scroll", ref: "l1" }), null);
+  assert.equal(refuse(plain, { kind: "scroll", ref: "x9" }).code, "ref_unknown");
+  assert.equal(refuse(plain, { kind: "scroll" }), null);
+  assert.equal(refuse(plain, { kind: "scroll", value: "up" }), null);
+  assert.equal(refuse(plain, { kind: "scroll", value: "sideways" }).code, "bad_step");
+  assert.equal(refuse(page, { kind: "back" }), null, "back from a payment page clicks nothing");
+  // Enter on a control or link is a click: a link or button whose words pay is refused, as clicking it is.
+  const shop = { url: "https://shop.example/cart", fields: [], controls: [{ ref: "c1", label: "Buy now" }, { ref: "c2", label: "Save" }], links: [{ ref: "l1", label: "Buy now", url: "https://shop.example/buy" }] };
+  // A page whose only paying words are on a link: no paying control makes the page a payment page, so only the link's own
+  // words refuse it, as a click on it is refused.
+  const linkOnly = { url: "https://shop.example/item", fields: [{ ref: "f1", label: "Search", kind: "search" }], controls: [], links: [shop.links[0], { ref: "l2", label: "Help", url: "https://shop.example/help" }] };
+  assert.equal(refuse(linkOnly, { kind: "click", ref: "l1" }).code, "payment_step");
+  assert.equal(refuse(linkOnly, { kind: "press", ref: "l1", value: "Enter" }).code, "payment_step", "Enter on the paying link");
+  assert.equal(refuse(linkOnly, { kind: "press", ref: "l2", value: "Enter" }), null, "Enter on a neutral link");
+  assert.equal(refuse(linkOnly, { kind: "press", ref: "f1", value: "Enter" }), null, "Enter in a field of a page that isn't a payment page");
+  assert.equal(refuse(shop, { kind: "press", ref: "l1", value: "Enter" }).code, "payment_step");
+  assert.equal(refuse(shop, { kind: "press", ref: "c1", value: "Enter" }).code, "payment_step");
+  assert.equal(refuse({ ...shop, controls: [shop.controls[1]], links: [] }, { kind: "press", ref: "c2", value: "Enter" }), null);
+  assert.equal(refuse(plain, { kind: "back", ref: "c1" }).code, "bad_step");
+});
+
+test("every kind of act has its words in the side panel's step list", () => {
+  const en = JSON.parse(readFileSync(new URL("../_locales/en/messages.json", import.meta.url), "utf8"));
+  for (const kind of KINDS) assert.ok(en["step_act_" + kind] && en["step_act_" + kind].message, "step_act_" + kind);
 });
 
 test("every shipped language has an extension locale with English's keys and placeholders, and no English left in it", async () => {

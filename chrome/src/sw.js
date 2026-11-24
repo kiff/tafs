@@ -34,7 +34,8 @@ async function sendHands(only) {
   for (const a of await handAnswers.all()) {
     if (typeof only === "string" && a.hand !== only) continue; // one answer sent again at once, not every one that waits
     // A page over the relay's cap goes as Done with no page: the taf reads again.
-    const answer = a.page && JSON.stringify(a.page).length > MAX_RESULT_BYTES ? { ...a, page: null } : a;
+    // Bytes, as the relay counts them (gap 4): a page's length in UTF-16 units undercounts Japanese three times over.
+    const answer = a.page && new TextEncoder().encode(JSON.stringify(a.page)).length > MAX_RESULT_BYTES ? { ...a, page: null } : a;
     relay.send(await handMessage(kept.keys.privateKey, answer));
   }
 }

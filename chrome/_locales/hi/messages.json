@@ -122,6 +122,9 @@
   "step_act_check": {
     "message": "एक बॉक्स पर निशान लगाया गया"
   },
+  "step_act_press": {"message": "एक कुंजी दबाई गई", "description": "A step in the side panel's list: the taf pressed Enter, Escape or an arrow key in the page."},
+  "step_act_scroll": {"message": "स्क्रॉल किया गया", "description": "A step in the side panel's list: the taf scrolled the page."},
+  "step_act_back": {"message": "पीछे गया", "description": "A step in the side panel's list: the taf went back to the page before."},
   "step_navigate": {
     "message": "$SITE$ पर जाना रोका गया",
     "placeholders": {
