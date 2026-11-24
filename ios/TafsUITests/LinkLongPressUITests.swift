@@ -33,7 +33,7 @@ final class LinkLongPressUITests: TafsUITestCase {
             link.press(forDuration: 1.2)
             attach(app, what)
             stillHere(what)
-            // A system opener the long-press offers must go through the question, never around it (mac12's check): one that
+            // A system opener the long-press offers must go through the question, never around it: one that
             // isn't offered at all is the expected case.
             for name in ["Open Link", "Open", "Open in Safari", "Call", "Send Message", "FaceTime"] {
                 let item = app.buttons[name].exists ? app.buttons[name] : app.menuItems[name]
