@@ -70,6 +70,9 @@ final class CoachModel: ObservableObject {
     /// v2: the words wait in Check before sending, and nothing leaves the watch before Send.
     @Published private(set) var reviewing = false
     @Published private(set) var state: State = .writing
+    /// Watch row 24: each tap on the complication (`ComplicationLink.ask`), counted, so Coach's home starts listening once
+    /// per tap, as its microphone does.
+    @Published private(set) var askRequests = 0
     /// v2: the last Send got no reply from the phone, which may have it: Keep for later is offered beside Send.
     @Published private(set) var unsure = false
     /// v2's Keep for later: the message kept on this watch, or none. On disk (`DraftStore`) until it's sent, deleted, or the
@@ -139,6 +142,11 @@ final class CoachModel: ObservableObject {
         self.drafts = drafts
         self.pause = pause
         kept = taf == nil ? drafts?.read() : nil
+    }
+
+    /// The complication was tapped: Coach's home listens, as its microphone does. Nothing is sent before the person's Send.
+    func askFromComplication() {
+        askRequests += 1
     }
 
     /// The words are on their way, or Coach is at them: nothing else is sent, re-recorded or deleted.

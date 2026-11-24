@@ -78,6 +78,8 @@ struct WatchPagesView: View {
             if case .loaded = state { Task { await inbox.sync() } }
         }
         .onAppear { coach.onAnswer = { answer, message in inbox.answered(answer, message: message) } }
+        // The complication was tapped (row 24): Coach's home, which then listens.
+        .onChange(of: coach.askRequests) { _, _ in page = .coach }
         .sheet(isPresented: $menu) {
             WatchMenu(pages: WatchPage.pages(), tafs: tafs) { chosen in
                 menu = false
@@ -131,12 +133,7 @@ struct CoachHome: View {
                     KeptRow(kept: kept) { coach.deleteKept() }
                 }
                 Button {
-                    // The watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
-                    if WatchVoice.on, coach.listensFirst {
-                        recording = true
-                    } else {
-                        Task { if await WatchDictation.talk(to: coach) { asking = true } }
-                    }
+                    listen()
                 } label: {
                     Label(Words.Coach.ask, systemImage: "mic.fill")
                         .font(.headline)
@@ -163,6 +160,17 @@ struct CoachHome: View {
         .task {
             await needsYou.load()
             await coach.afterRead(needsYou.state)
+        }
+        // The complication (row 24): the same as a tap on the microphone, once per tap.
+        .onChange(of: coach.askRequests) { _, _ in listen() }
+    }
+
+    /// The microphone: the watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
+    private func listen() {
+        if WatchVoice.on, coach.listensFirst {
+            recording = true
+        } else {
+            Task { if await WatchDictation.talk(to: coach) { asking = true } }
         }
     }
 }

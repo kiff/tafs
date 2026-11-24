@@ -235,6 +235,10 @@ targets:
         # A watch app with a single target, installed with the iPhone app it belongs to.
         WKApplication: true
         WKCompanionAppBundleIdentifier: bot.tafs.app
+        # The complication's link (row 24, `ComplicationLink.ask`): Coach's home, listening.
+        CFBundleURLTypes:
+          - CFBundleURLName: bot.tafs.app.watchkitapp.complication
+            CFBundleURLSchemes: [tafs-watch]
         # Asked only with WatchVoice.on (off): the watch's own recording, turned into text on the iPhone (row 44, A).
         NSMicrophoneUsageDescription: tafs records what you say to Coach and sends it to your iPhone, which turns it into text on the phone itself and then deletes it.
     settings:
@@ -244,6 +248,35 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SUPPORTS_MACCATALYST: NO
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WATCH)
+    # The complication and Smart Stack widget (row 24), embedded in the watch app.
+    dependencies:
+      - target: TafsWatchWidgets
+  # tafs on the watch face (row 24, step 1): "Ask tafs", which opens the app listening. It shows nothing of the account
+  # and never asks the phone. Its bundle id and provisioning profile are the owner's to create on developer.apple.com
+  # (`TAFS_PROFILE_WATCH_WIDGETS` for CI's testflight job) before this merges.
+  TafsWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - TafsWatchWidgets
+      - TafsWatch/ComplicationLink.swift
+      - Tafs/Design/Words.swift
+      - Tafs/Localizable.xcstrings
+    info:
+      path: TafsWatchWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: tafs
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.watchkitapp.widgets
+        TARGETED_DEVICE_FAMILY: "4"
+        SUPPORTS_MACCATALYST: NO
+        PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WATCH_WIDGETS)
   TafsWatchTests:
     type: bundle.unit-test
     platform: watchOS
@@ -288,6 +321,7 @@ schemes:
     build:
       targets:
         TafsWatch: all
+        TafsWatchWidgets: all
         TafsWatchTests: [test]
     test:
       targets: [TafsWatchTests]

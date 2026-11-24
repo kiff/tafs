@@ -43,6 +43,11 @@ struct TafsWatchApp: App {
             }
             // v2 (W7): Send and the microphone in the app's orange; everything else the system's grey.
             .tint(WatchV2.on ? WatchLook.send : nil)
+            // The complication (row 24): Coach's home, listening. Signed out on this watch, nothing opens.
+            .onOpenURL { url in
+                guard ComplicationLink.isAsk(url), WatchV2.on, !signIn.signedOutHere else { return }
+                coach.askFromComplication()
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             // Signed out on this watch: nothing is read, and there's nothing to forget.

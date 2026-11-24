@@ -555,6 +555,20 @@ circle above "Nothing waiting". It's drawn in code with shapes and one symbol, a
 number or word. VoiceOver skips it, since the line under it says the same. It shows only once the
 phone has answered, never in place of loading. A locked watch doesn't show the app at all.
 
+## The complication (row 24, step 1)
+
+"Ask tafs" on the watch face and in the Smart Stack (`TafsWatchWidgets`, a WidgetKit extension inside the watch app): the
+microphone, with "Ask Coach" where the family has room, in the circular, corner, rectangular and inline families.
+- **A tap opens the app listening** (`ComplicationLink.ask`, `tafs-watch://ask`): Coach's home, then the system's dictation
+  as its microphone starts it, once per tap. Nothing is sent before the person's Send. Signed out on this watch, it opens
+  nothing.
+- **It shows nothing of the account**: no count, no taf, no words. So there's nothing to hide while the watch is locked,
+  and it never asks the phone or refreshes (one entry, `.never`).
+- **Signing:** its own bundle id, `bot.tafs.app.watchkitapp.widgets`, and CI's profile "tafs watch widgets App Store CI",
+  made by `asc-profiles.rb` in the `testflight` job. Creating that App ID is the owner's call, so this waits for their yes.
+- **Step 2, later:** the count of what waits, which needs an App Group shared by the watch app and the widget, and the
+  count kept on disk only while the watch has a passcode, cleared on sign-out.
+
 ## What the watch keeps
 
 - **In memory only:** the list, the amounts and Coach's answers. They go when the app leaves the
