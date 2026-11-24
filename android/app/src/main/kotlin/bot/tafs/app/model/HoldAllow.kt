@@ -31,7 +31,8 @@ object HoldAllow {
    * offer's window, when it names one), or, for a `resource` change, the held action's scope with exactly the offered value added.
    * Every other term is the same: each action, its caps, the states and resources it's limited to and its next steps; each total,
    * its window, what it counts and whether it's per item; what happens past a limit; the Card's holders and when it's valid. A
-   * Card marked unchanged must read as in force too. Anything else isn't what was offered, and nothing is signed.
+   * Card marked unchanged must read as in force too. The Card in force a draft quotes is the one it revises: when KIFF names it
+   * (`current.id`), it must be `revises`. Anything else isn't what was offered, and nothing is signed.
    */
   fun matches(draft: AgentDraft, offer: AllowOffer, agent: String, hold: String?, action: String): Boolean {
     if (agent.isEmpty() || draft.agentId != agent) return false
@@ -44,6 +45,8 @@ object HoldAllow {
     for (card in cards) {
       val revises = card.revises ?: return false
       val current = card.current ?: return false
+      // The Card in force quoted must be the one revised: one naming another Card is never what was offered.
+      if (current.id != null && current.id != revises) return false
       val inForce = Terms.of(current)
       val terms = Terms.of(card, inForce)
       if (card.unchanged == true) {

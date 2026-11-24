@@ -13,12 +13,12 @@ Chrome üçün tafs sizin tafs-larınızın öz Chrome-unuzda, yalnız icazə ve
 • Bu Chrome-u telefonunuzla cütləşdirin: tafs tətbiqində Hesab › Chrome › Chrome cütləşdirin bölməsini açın və göstərilən kodu yazın.
 • Taf öz sekmelərində, sizin görə biləcəyiniz sekme qrupunda işləyir. İstənilən vaxt dayandıra və ya saxlaya bilərsiniz, sekmələrindən birinə toxunduqda isə dayanır.
 • Chrome quraşdırma zamanı bir dəfə bütün saytlara giriş istəyir. tafs yalnız hər tapşırığın göstərdiyi saytlarda işləyir və bunları telefonunuzda təsdiq edirsiniz.
-• Ödəniş, sifariş vermək və yadda saxlanmış girişi doldurmaq həmişə telefonunuzda təsdiqinizi gözləyir.
+• Ödəniş və sifariş vermək həmişə telefonunuzda təsdiqinizi gözləyir.
 • Səhifəni mətn və forma sahələri kimi oxuyur, parol, kart və kod sahələri çıxarılır. Digər sekmələrinizi və ya tarixçənizi heç vaxt oxumur.
 • Taf səhifədə bir addımı sizə verə bilər, məsələn, axtarış və ya kart nömrəsi yazmaq. Onu özünüz edirsiniz, səhifəni yenidən oxuyanda isə sahələrə yazdıqlarınız çıxarılır.
 • Bank, pul kisəsi, parol meneceri, ödəniş, səhiyyə və dövlət saytları heç vaxt işlənmir, yalnız telefonunuzda bir tapşırıq üçün birinə icazə verdiyiniz halda.
-• Yadda saxlanmış girişlər könüllüdür və bu kompüterdə möhürlənir. tafs və KIFF onları heç vaxt görmür.
-• Yan panel bu Chrome-da işləyən taf-ı göstərir və siz orada onunla tafs tətbiqindəki kimi danışırsınız. “Bu sayt üçün yeni taf qurun” Coach-u açır; Coach səhifəni yalnız “Bu səhifəni paylaş” düyməsini kliklədiyiniz zaman görür və onda yalnız həmin səhifəni, eyni sahələr çıxarılmış şəkildə.
+• O, parollarınızı heç vaxt saxlamır. Giriş səhifəsində taf dayanır və sizdən öz vərəqinizdə özünüz daxil olmağı xahiş edir.
+• Yan panel bu Chrome-da işləyən taf-ı göstərir və siz orada onunla tafs tətbiqindəki kimi danışırsınız. “Bu sayt üçün yeni taf qurun” Coach-u açır; Coach başladığı səhifəni oxuyur, eyni sahələr çıxarılmış şəkildə.
 
 Taf-ın oxuduğu tapşırığınızı yerinə yetirən süni intellektə gedir və həmin tapşırıqla saxlanır. KIFF dəyişiklikdən əvvəlki və sonrakı səhifəni ən çox 30 gün saxlayır. Ekran görüntüləri aktiv edildikdən sonra əməliyyat edən hər addım səhifənin bir ekran görüntüsünü saxlayır: əməliyyatdan dərhal əvvəl, parol, kart və kod sahələri gizlədilmiş halda, ən çox 30 gün. Onu yalnız tafs tətbiqində görürsünüz və o, heç vaxt süni intellektə getmir. Cütləşməni ləğv etmək və ya silmək genişlənmənin kompüterinizdə saxladığını silir.
 

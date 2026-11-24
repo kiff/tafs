@@ -53,7 +53,7 @@ final class ReportAnswerUITests: TafsUITestCase {
         let item = app.buttons["Report this answer"]
         let send = app.buttons["report-send"]
         // No assertion inside the loop: with continueAfterFailure off, a failed attempt would end
-        // the test before the next one (agentgabo on #1600). Each check is asserted after it.
+        // the test before the next one. Each check is asserted after it.
         var menuShown = false
         var sheet = false
         for _ in 0..<3 where !sheet {

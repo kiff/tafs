@@ -161,7 +161,7 @@ test("an act needs the read it was planned from, and the guard holds before the 
   const before = c.calls.filter((x) => x[0] === "executeScript").length;
   assert.equal((await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "click", ref: "c2" } }))).error.code, "payment_step");
   assert.equal(c.calls.filter((x) => x[0] === "executeScript").length, before, "nothing ran in the page");
-  assert.equal((await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "fill", ref: "f1", sealed: "sec_1" } }))).error.code, "secret_field", "no sealed values in this build");
+  assert.equal((await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "fill", ref: "f1", sealed: "sec_1" } }))).error.code, "secret_field", "the extension keeps no saved sign-in to fill");
 });
 
 test("back goes where the tab was and reads the page there; nothing runs in the page before it", async () => {

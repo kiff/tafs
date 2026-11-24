@@ -475,6 +475,7 @@
     <string name="chat_file_choose_file">เลือกไฟล์</string>
     <string name="chat_file_choose_photos">เลือกรูปภาพ</string>
     <string name="chat_file_could_not_open">เปิดไฟล์ไม่ได้</string>
+    <string name="chat_file_mac_camera_off">กล้องปิดอยู่สำหรับ tafs เปิดได้ที่การตั้งค่าระบบ › ความเป็นส่วนตัวและความปลอดภัย › กล้อง (บน macOS 12: ค่ากำหนดระบบ › ความปลอดภัยและความเป็นส่วนตัว › ความเป็นส่วนตัว › กล้อง).</string>
     <string name="chat_file_no_app_opens">ไม่มีแอปบนโทรศัพท์เครื่องนี้ที่เปิด %1$s ได้</string>
     <string name="chat_file_no_camera">โทรศัพท์เครื่องนี้ไม่มีแอปกล้องสำหรับถ่ายรูป</string>
     <string name="chat_file_not_opened">เปิด %1$s ไม่ได้ %2$s</string>
@@ -2028,6 +2029,7 @@
     <string name="sample_memory_ask_first">ถามก่อนทำสิ่งผิดปกติ แม้จะอยู่ใน Card</string>
     <string name="sample_memory_explain">คุณอยากให้ฉันอธิบายการตัดสินใจในบรรทัดเดียวมากกว่าทั้งย่อหน้า</string>
     <string name="sample_memory_regulars">ลูกค้าที่เขียนมาทุกสัปดาห์จะได้รับคำตอบภายในเช้าวันเดียวกัน</string>
+    <string name="sample_not_in_sample">สิ่งนี้ไม่มีในข้อมูลตัวอย่าง เข้าสู่ระบบด้วย KIFF เพื่อทำรายการนี้</string>
     <string name="sample_parcels_change_address">เปลี่ยนที่อยู่จัดส่งของออเดอร์ #5141</string>
     <string name="sample_parcels_change_address_why">อีเมลจากที่อยู่ใหม่ขอให้ทำ</string>
     <string name="sample_parcels_job">แจ้งลูกค้าเมื่อพัสดุล่าช้า ก่อนที่พวกเขาจะถาม การส่งซ้ำรอคุณ ห้ามเปลี่ยนที่อยู่จัดส่งตามอีเมล</string>

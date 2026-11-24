@@ -2,29 +2,22 @@
 // through the runner. It wakes on an alarm while it sleeps, connects, and lets the connection drop when no run is on.
 
 import { config } from "./config.js";
-import { indexedStore, profileId } from "./store.js";
+import { indexedStore, profileId, forgetSavedSignIns } from "./store.js";
 import { newKeyPair, sha256, b64u, sign, LABEL, manifestHashOf } from "./crypto.js";
 import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay, MAX_RESULT_BYTES } from "./relay.js";
-import { Vault } from "./vault.js";
 import { tafsHere } from "./coachchat.js";
 import { Coach, reusing } from "./coach.js";
 import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { HandAnswers, handMessage } from "./hand.js";
 import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
-import { refuseURL, hostOf } from "./sites.js";
 
 const WAKE = "tafs-wake";
 
 let relay = null;
 
-const vault = new Vault(indexedStore);
-const releaseStore = {
-  get: async () => (await chrome.storage.session.get("releases")).releases || [],
-  set: (entries) => chrome.storage.session.set({ releases: entries }),
-};
 // The picture kept of each act: only in a build that has it on (config.js), never by default.
 const shots = config().screenshots
   ? new Shots({ chrome, inTab: (tabId, func, args) => chrome.scripting.executeScript({ target: { tabId }, func, args, world: "ISOLATED" }).then((r) => r && r[0] && r[0].result), keys: () => kept.keys, pairing: () => kept.pairing, base: config().api })
@@ -51,7 +44,7 @@ const doneStore = {
   get: async () => (await chrome.storage.session.get("doneTabs")).doneTabs || {},
   set: (done) => chrome.storage.session.set({ doneTabs: done }),
 };
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}) });
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}) });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
@@ -66,6 +59,10 @@ function publish(extra = {}) {
 const kept = { keys: null, pairing: null };
 
 async function load() {
+  // The extension keeps no sign-in (docs/chrome.md, "What's kept"): what an earlier version saved is deleted on every start.
+  // A delete that fails (the database busy) is tried again on the next load(), which every entry into the worker goes
+  // through; nothing reads those keys meanwhile.
+  await forgetSavedSignIns(indexedStore).catch(() => {});
   kept.keys = (await indexedStore.get("keys")) || null;
   kept.pairing = (await indexedStore.get("pairing")) || null;
 }
@@ -244,30 +241,6 @@ async function onlyHere(taf) {
   if (!(await tafsOfThisChrome()).some((t) => t.id === taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
 }
 
-/** The tab the owner is looking at, for "Share this page" only: one tab, on the owner's tap, never listed otherwise. */
-async function shareTarget() {
-  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  if (!tab || !tab.url) return { error: "no_page" };
-  const host = hostOf(tab.url);
-  // The same rules as a run's: https, a site by name, never Chrome's own pages or a sensitive site.
-  const refused = refuseURL(tab.url, [host], []);
-  if (refused) return { error: refused.code };
-  return { tabId: tab.id, origin: new URL(tab.url).origin };
-}
-
-/** Reads the page in front, masked as a run's read is, for this share only (the owner's tap). */
-async function shareRead(tabId) {
-  const tab = await chrome.tabs.get(tabId);
-  // The tab may have moved since the owner's tap: the site rules are read again for where it is now.
-  const refused = refuseURL(tab.url, [hostOf(tab.url)], []);
-  if (refused) return { error: refused.code };
-  await chrome.scripting.executeScript({ target: { tabId }, files: ["src/mask.js", "src/page.js"] });
-  const [res] = await chrome.scripting.executeScript({ target: { tabId }, func: () => globalThis.TafsPage.read() });
-  const page = res && res.result;
-  if (!page) return { error: "page_unresponsive" };
-  return { page: { url: page.url, title: page.title, text: page.text } };
-}
-
 chrome.runtime.onMessage.addListener((m, sender, reply) => {
   if (!m || typeof m.type !== "string") return;
   // Only the extension's own pages speak to it, apart from a content script's "owner_input".
@@ -283,10 +256,6 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     pause: async () => runner.pause(m.run),
     resume: async () => runner.resume(m.run),
     stop: async () => runner.stop(m.run),
-    // Sealed sign-ins: the side panel lists them (never a value), saves one, and removes one.
-    vault_list: async () => ({ entries: await vault.list() }),
-    vault_save: async () => ({ id: await vault.save(m.origin, m.username, m.password) }),
-    vault_remove: async () => vault.remove(m.id),
     coach_thread: async () => {
       claimKiff().catch(() => {});
       return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
@@ -311,10 +280,8 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       return { sent: await (await coach()).sendToTaf(m.taf, m.words, m.clientID) };
     },
     coach_send: async () => ({
-      sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true }),
+      sent: await (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true }),
     }),
-    share_target: () => shareTarget(),
-    share_read: () => shareRead(m.tabId),
     state: async () => {
       await load();
       publish();

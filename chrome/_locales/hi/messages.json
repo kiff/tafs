@@ -185,81 +185,11 @@
     "message": "अपने फ़ोन पर मंज़ूर करें",
     "description": "Where an approval waits"
   },
-  "share_button": {
-    "message": "यह पेज साझा करें",
-    "description": "Share toggle"
-  },
-  "share_preview": {
-    "message": "आपके संदेश के साथ जाता है:",
-    "description": "Label above the page preview (URL and title) before sending"
-  },
-  "share_remove": {
-    "message": "हटाएँ",
-    "description": "Remove the shared page from the message"
-  },
-  "share_chars": {
-    "message": "$N$ अक्षर",
-    "placeholders": {
-      "n": {
-        "content": "$1"
-      }
-    }
-  },
-  "share_unavailable": {
-    "message": "यह पेज साझा नहीं किया जा सकता।",
-    "description": "chrome:// pages, the Web Store, PDFs and other pages that can't be read"
-  },
-  "share_error_site_blocked": {
-    "message": "ऐसे पेज कभी साझा नहीं होते: बैंक, वॉलेट, पासवर्ड, भुगतान, स्वास्थ्य और सरकारी साइटें।"
-  },
-  "share_error_bad_url": {
-    "message": "केवल https पेज साझा किए जा सकते हैं।"
-  },
   "coach_empty_title": {
     "message": "Coach से बात करें",
     "description": "Empty chat: heading"
   },
-  "coach_empty_body": {
-    "message": "यह वही चैट है जो tafs ऐप में है। Coach यह पेज तभी देखता है जब आप इसे साझा करें।",
-    "description": "Empty chat: body"
-  },
-  "share_note": {
-    "message": "यह एक पेज Coach को भेजता है, पासवर्ड, कार्ड और कोड वाले फ़ील्ड हटाकर।",
-    "description": "Note under Share this page"
-  },
-  "vault_title": {
-    "message": "सहेजे गए साइन इन"
-  },
-  "vault_body": {
-    "message": "यहाँ सहेजे गए, इस कंप्यूटर पर सील किए हुए। कोई taf उसी सटीक साइट पर इनमें से एक उपयोग करने को कह सकता है, और वह तभी टाइप होता है जब आप अपने फ़ोन पर वही एक भराई मंज़ूर करें। tafs और KIFF इसे कभी नहीं देखते।"
-  },
-  "vault_site": {
-    "message": "साइट"
-  },
-  "vault_username": {
-    "message": "उपयोगकर्ता नाम या ईमेल (वैकल्पिक)"
-  },
-  "vault_password": {
-    "message": "पासवर्ड"
-  },
-  "vault_save": {
-    "message": "सील करके सहेजें"
-  },
-  "vault_saved": {
-    "message": "सहेज लिया। यह इस कंप्यूटर पर सील है।"
-  },
-  "vault_error": {
-    "message": "सहेजा नहीं गया: साइट के लिए https और पासवर्ड चाहिए।"
-  },
-  "vault_remove": {
-    "message": "हटाएँ"
-  },
-  "vault_with_username": {
-    "message": "उपयोगकर्ता नाम के साथ"
-  },
-  "vault_one_per_site": {
-    "message": "हर साइट के लिए एक साइन इन: उसी साइट के लिए दूसरा सहेजने पर वह बदल जाता है।"
-  },
+  "coach_empty_body_reads": {"message": "यह वही चैट है जो tafs ऐप में है। जब Coach किसी पेज पर काम करता है, तो पहले उसे पढ़ता है।", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": {
     "message": "नई बातचीत"
   },

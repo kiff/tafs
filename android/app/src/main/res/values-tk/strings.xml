@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Faýl saýlaň</string>
     <string name="chat_file_choose_photos">Suratlary saýlaň</string>
     <string name="chat_file_could_not_open">Faýl açylyp bilinmedi.</string>
+    <string name="chat_file_mac_camera_off">Kamera tafs üçin öçük. Ony System Settings › Privacy &amp; Security › Camera bölüminde açyň (macOS 12-de: System Preferences › Security &amp; Privacy › Privacy › Camera).</string>
     <string name="chat_file_no_app_opens">Bu telefonda %1$s açýan programma ýok.</string>
     <string name="chat_file_no_camera">Bu telefonda surat düşürmek üçin kamera programmasy ýok.</string>
     <string name="chat_file_not_opened">%1$s açylyp bilinmedi. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Adaty bolmadyk zatdan öň, Card-a gabat gelse-de, soraň.</string>
     <string name="sample_memory_explain">Kararyň düşündirişini abzasda däl-de, bir setirde bermegimi has gowy görýärsiňiz.</string>
     <string name="sample_memory_regulars">Her hepde ýazýan müşderiler şol bir irden jogap alýar.</string>
+    <string name="sample_not_in_sample">Bu nusgada ýok. Muny etmek üçin KIFF bilen giriň.</string>
     <string name="sample_parcels_change_address">#5141 sargyt üçin eltip bermek salgysyny üýtgediň</string>
     <string name="sample_parcels_change_address_why">Täze salgydan email muny sorady</string>
     <string name="sample_parcels_job">Paket giç galanda müşderilere olar soramanka aýdyň. Täzeden iberişler size garaşýar. Eltip bermek salgysyny hiç haçan emaile görä üýtgetmäň.</string>

@@ -488,7 +488,7 @@ export function usedShare(c: CardView): number {
  * around the window's words, so they read it in English, never one language inside another.
  */
 /**
- * A draft's Cards shown as one (the owner, 14 Nov: "2 Cards" for one approval): its lines together, the first total and count
+ * A draft's Cards shown as one (not "2 Cards" for one approval): its lines together, the first total and count
  * among them (each line keeps its own limits), the earliest end, and every KIFF Card it is in `ids`.
  */
 export function oneCard(views: CardView[]): CardView {

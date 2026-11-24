@@ -526,7 +526,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect((await w.tool("taf_dial", { taf: RAE, wakes, check: { ...check, grant: g1, tool: "list_invoices_3ojw" } })).isError).toBeFalsy();
   });
 
-  // The same switch when the taf keeps only the old connection's tools (qa-kiff's review): its tools end in the old
+  // The same switch when the taf keeps only the old connection's tools: its tools end in the old
   // connection's suffix, so naming the new connection refuses them, and a check with no connection beside the new
   // connection's place or event is asked which it reads on. A tool named without a suffix is left to its connection.
   it("taf_dial refuses another connection's tool even when the taf keeps none of the named connection's tools", async () => {
@@ -1021,7 +1021,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
 
   it("tells a raw result from words", () => {
     for (const t of ['{"items":[]}', '[{"id":1}]', ' {"accessRole":"owner","items":[{"crea', '[1, 2', '["a"', "[]",
-      // Fenced, or after a few words: how a model pastes a result most often (qa-kiff's rows).
+      // Fenced, or after a few words: how a model pastes a result most often.
       '```json\n{"items":[{"creator":{"email":"ana@example.com"}}]}\n```', '```\n[{"id":1}]\n```',
       'Here is the result: {"items":[{"htmlLink":"https://calendar.example/e/1"}]}', 'Result:\n{"a":1}',
       // A fenced block of anything, a table of rows included.

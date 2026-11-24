@@ -30,6 +30,7 @@
   "chat.file.choose_file": "ເລືອກໄຟລ໌",
   "chat.file.choose_photos": "ເລືອກຮູບ",
   "chat.file.could_not_open": "ເປີດໄຟລ໌ບໍ່ໄດ້.",
+  "chat.file.mac_camera_off": "ກ້ອງປິດສຳລັບ tafs. ເປີດມັນໃນການຕັ້ງຄ່າລະບົບ › ຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ › ກ້ອງ (ໃນ macOS 12: ການຕັ້ງຄ່າລະບົບ › ຄວາມປອດໄພ ແລະ ຄວາມເປັນສ່ວນຕົວ › ຄວາມເປັນສ່ວນຕົວ › ກ້ອງ).",
   "chat.file.no_app_opens": "ບໍ່ມີແອັບໃນໂທລະສັບນີ້ທີ່ເປີດ {name} ໄດ້.",
   "chat.file.no_camera": "ບໍ່ມີແອັບກ້ອງໃນໂທລະສັບນີ້ເພື່ອຖ່າຍຮູບ.",
   "chat.file.not_opened": "ເປີດ {file} ບໍ່ໄດ້. {why}",

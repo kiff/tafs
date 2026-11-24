@@ -40,7 +40,7 @@ actor WatchVoiceInbox {
         do {
             try FileManager.default.moveItem(at: file, to: kept)
             // Readable while the iPhone is locked, as it usually is in a pocket while the watch is talked to; it lives for
-            // seconds, and goes once read (dev-android on #1635).
+            // seconds, and goes once read.
             try? (kept as NSURL).setResourceValue(URLFileProtection.completeUntilFirstUserAuthentication, forKey: .fileProtectionKey)
             return id
         } catch {

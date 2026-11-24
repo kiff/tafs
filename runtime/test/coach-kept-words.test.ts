@@ -15,7 +15,7 @@ describe("Coach's rules-notice endings", () => {
         expect(w, lang).not.toMatch(/[\n\r]/u);
       }
     }
-    // legal-i18n's English, as show writes it.
+    // The English, as show writes it.
     expect(COACH_KEPT_WORDS.en).toEqual({ connection: "(the connection keeps it)", kiff: "(KIFF adds it)", instructions: "(in its instructions)" });
   });
 

@@ -920,6 +920,8 @@ enum Words {
             static var choosePhotos: String { Words.line("chat.file.choose_photos") }
             /// The file couldn't be opened.
             static var couldNotOpen: String { Words.line("chat.file.could_not_open") }
+            /// The camera is off for tafs. Turn it on in System Settings › Privacy & Security › Camera (on macOS 12: System Preferences › Security & Privacy › Privacy › Camera).
+            static var macCameraOff: String { Words.line("chat.file.mac_camera_off") }
             /// No app on this phone opens {name}.
             static func noAppOpens(name: String) -> String { Words.line("chat.file.no_app_opens", name) }
             /// There's no camera app on this phone to take a photo with.
@@ -4115,6 +4117,8 @@ enum Words {
             /// Customers who write every week get a reply the same morning.
             static var regulars: String { Words.line("sample.memory.regulars") }
         }
+        /// This isn't in the sample. Sign in with KIFF to do it.
+        static var notInSample: String { Words.line("sample.not_in_sample") }
         enum Parcels {
             /// Change the delivery address on order #5141
             static var changeAddress: String { Words.line("sample.parcels.change_address") }
@@ -5847,7 +5851,7 @@ enum Words {
     /// In a right-to-left language each value is set apart (U+2068 FIRST STRONG ISOLATE … U+2069 POP DIRECTIONAL
     /// ISOLATE), so a taf's or person's name in Latin letters takes its own direction without turning the sentence
     /// around it. Left to right, values are as they are. Inside the isolate a value carries no direction character of
-    /// its own (qa-kiff, #1557), so none can close it early, whoever calls.
+    /// its own, so none can close it early, whoever calls.
     static func isolated(_ values: [String], in locale: Locale) -> [String] {
         guard Locale.characterDirection(forLanguage: locale.language.languageCode?.identifier ?? locale.identifier) == .rightToLeft else { return values }
         return values.map { "\u{2068}\(withoutDirection($0))\u{2069}" }

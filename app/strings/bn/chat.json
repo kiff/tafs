@@ -31,6 +31,7 @@
   "chat.file.choose_file": "ফাইল বেছে নিন",
   "chat.file.choose_photos": "ছবি বেছে নিন",
   "chat.file.could_not_open": "ফাইলটি খোলা যায়নি।",
+  "chat.file.mac_camera_off": "ক্যামেরা tafs-এর জন্য বন্ধ। সিস্টেম সেটিংস › গোপনীয়তা ও নিরাপত্তা › ক্যামেরায় এটি চালু করুন (macOS 12-এ: সিস্টেম পছন্দসমূহ › নিরাপত্তা ও গোপনীয়তা › গোপনীয়তা › ক্যামেরা)।",
   "chat.file.no_app_opens": "এই ফোনে কোনো অ্যাপ {name} খুলতে পারে না।",
   "chat.file.no_camera": "এই ফোনে ছবি তোলার মতো কোনো ক্যামেরা অ্যাপ নেই।",
   "chat.file.not_opened": "{file} খোলা যায়নি। {why}",

@@ -146,6 +146,7 @@
   "sample.memory.ask_first": "遇到任何不尋常的事，即使符合 Card，也要先詢問。",
   "sample.memory.explain": "您希望我用一行話解釋決定，而不是一整段。",
   "sample.memory.regulars": "每週來信的客戶，當天早上就會收到回覆。",
+  "sample.not_in_sample": "範例中沒有這項功能。請以 KIFF 登入後再進行。",
   "sample.parcels.change_address": "變更訂單 #5141 的送貨地址",
   "sample.parcels.change_address_why": "來自新地址的電子郵件要求這麼做",
   "sample.parcels.job": "在客戶詢問之前，就告知他們包裹延誤。補寄要等您決定。絕不依據電子郵件變更送貨地址。",

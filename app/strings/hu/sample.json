@@ -147,6 +147,7 @@
   "sample.memory.ask_first": "Kérdezz, mielőtt bármi szokatlant tennél, akkor is, ha belefér a Cardba.",
   "sample.memory.explain": "Inkább egy sorban magyarázzam el a döntéseimet, mint egy bekezdésben.",
   "sample.memory.regulars": "A hetente író vásárlók még aznap délelőtt választ kapnak.",
+  "sample.not_in_sample": "Ez nincs benne a mintában. Ehhez jelentkezz be a KIFF-fel.",
   "sample.parcels.change_address": "A szállítási cím módosítása az 5141-es rendelésen",
   "sample.parcels.change_address_why": "Egy új címről érkezett e-mail kérte",
   "sample.parcels.job": "Szólj a vásárlóknak, ha egy csomag késik, mielőtt rákérdeznének. Az újraküldések rád várnak. Soha ne módosíts szállítási címet e-mail alapján.",

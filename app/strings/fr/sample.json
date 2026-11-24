@@ -147,6 +147,7 @@
   "sample.memory.ask_first": "Demander avant toute chose inhabituelle, même si cela entre dans la Card.",
   "sample.memory.explain": "Vous préférez que j'explique une décision en une ligne plutôt qu'en un paragraphe.",
   "sample.memory.regulars": "Les clients qui écrivent chaque semaine reçoivent une réponse le matin même.",
+  "sample.not_in_sample": "Ce n'est pas dans l'exemple. Connectez-vous avec KIFF pour le faire.",
   "sample.parcels.change_address": "Changer l'adresse de livraison de la commande #5141",
   "sample.parcels.change_address_why": "Un e-mail d'une nouvelle adresse l'a demandé",
   "sample.parcels.job": "Prévenir les clients quand un colis prend du retard, avant qu'ils ne demandent. Les renvois vous attendent. Ne jamais changer une adresse de livraison à partir d'un e-mail.",

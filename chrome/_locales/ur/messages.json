@@ -185,81 +185,11 @@
     "message": "اپنے فون پر منظور کریں",
     "description": "Where an approval waits"
   },
-  "share_button": {
-    "message": "یہ صفحہ شیئر کریں",
-    "description": "Share toggle"
-  },
-  "share_preview": {
-    "message": "آپ کے پیغام کے ساتھ جاتا ہے:",
-    "description": "Label above the page preview (URL and title) before sending"
-  },
-  "share_remove": {
-    "message": "ہٹائیں",
-    "description": "Remove the shared page from the message"
-  },
-  "share_chars": {
-    "message": "$N$ حروف",
-    "placeholders": {
-      "n": {
-        "content": "$1"
-      }
-    }
-  },
-  "share_unavailable": {
-    "message": "یہ صفحہ شیئر نہیں کیا جا سکتا۔",
-    "description": "chrome:// pages, the Web Store, PDFs and other pages that can't be read"
-  },
-  "share_error_site_blocked": {
-    "message": "ایسے صفحات کبھی شیئر نہیں ہوتے: بینک، والٹس، پاس ورڈز، ادائیگیاں، صحت اور سرکاری سائٹس۔"
-  },
-  "share_error_bad_url": {
-    "message": "صرف https صفحات شیئر کیے جا سکتے ہیں۔"
-  },
   "coach_empty_title": {
     "message": "Coach سے بات کریں",
     "description": "Empty chat: heading"
   },
-  "coach_empty_body": {
-    "message": "یہ وہی چیٹ ہے جو tafs ایپ میں ہے۔ Coach یہ صفحہ تبھی دیکھتا ہے جب آپ اسے شیئر کریں۔",
-    "description": "Empty chat: body"
-  },
-  "share_note": {
-    "message": "یہ ایک صفحہ Coach کو بھیجتا ہے، پاس ورڈ، کارڈ اور کوڈ کی فیلڈز ہٹا کر۔",
-    "description": "Note under Share this page"
-  },
-  "vault_title": {
-    "message": "محفوظ شدہ سائن اِنز"
-  },
-  "vault_body": {
-    "message": "یہاں محفوظ، اس کمپیوٹر پر سیل شدہ۔ کوئی taf اسی عین سائٹ پر ان میں سے ایک استعمال کرنے کو کہہ سکتا ہے، اور وہ تبھی ٹائپ ہوتا ہے جب آپ اپنے فون پر وہی ایک بھرائی منظور کریں۔ tafs اور KIFF اسے کبھی نہیں دیکھتے۔"
-  },
-  "vault_site": {
-    "message": "سائٹ"
-  },
-  "vault_username": {
-    "message": "صارف نام یا ای میل (اختیاری)"
-  },
-  "vault_password": {
-    "message": "پاس ورڈ"
-  },
-  "vault_save": {
-    "message": "سیل کر کے محفوظ کریں"
-  },
-  "vault_saved": {
-    "message": "محفوظ ہو گیا۔ یہ اس کمپیوٹر پر سیل ہے۔"
-  },
-  "vault_error": {
-    "message": "محفوظ نہیں ہوا: سائٹ کے لیے https اور پاس ورڈ چاہیے۔"
-  },
-  "vault_remove": {
-    "message": "ہٹائیں"
-  },
-  "vault_with_username": {
-    "message": "صارف نام کے ساتھ"
-  },
-  "vault_one_per_site": {
-    "message": "ہر سائٹ کے لیے ایک سائن اِن: اسی سائٹ کے لیے دوسرا محفوظ کرنے پر وہ بدل جاتا ہے۔"
-  },
+  "coach_empty_body_reads": {"message": "یہ وہی چیٹ ہے جو tafs ایپ میں ہے۔ جب Coach کسی صفحے پر کام کرتا ہے تو پہلے اسے پڑھتا ہے۔", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": {
     "message": "نئی گفتگو"
   },

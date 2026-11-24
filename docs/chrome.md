@@ -169,8 +169,7 @@ or switching never leaves a connection pointing at a Chrome that's gone. Nothing
      `sig`. The entries live with the pairing and go with unpairing. Like any `sites_sig` today they don't expire, so a
      later narrowing of a grant's sites relies on the fresh signature being sent.
    - **What doesn't move:** the owner's yes for a sensitive site (`tafs-chrome/sensitive/v1` is over the old Chrome's id;
-     they allow it again, and the replace's approval never promises it), the saved sign-ins (sealed in the old Chrome,
-     wiped with it; the owner saves them again), and the pictures kept of the old Chrome's acts (they go with it).
+     they allow it again, and the replace's approval never promises it), and the pictures kept of the old Chrome's acts (they go with it).
 2. **"Your Chrome" is a choice per connection.** Each browser connection names one Chrome. A new connection takes the most
    recently approved Chrome by default; Coach says which and the owner can pick another. Switching an existing
    connection to another Chrome is one signed planque call (`PUT /v1/accounts/{t}/grants/{grant}/chrome {chrome_id}`,
@@ -483,7 +482,11 @@ browser: {
 ## What's kept
 
 - **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
-  key, and the connections a re-pairing carried, `carried`, as the phone signed them), and the sealed sign-ins the owner saved, with their key. No page, step or value read is ever written to disk.
+  key, and the connections a re-pairing carried, `carried`, as the phone signed them). No page, step or value read is ever written to disk.
+- **No sign-in, ever.** The extension has no saved sign-ins and no password field. At a sign-in page, the taf hands the step
+  to the person ("A step handed to the person"): they sign in themselves, in their own tab, and press Done. Versions up to
+  0.2.3 could save sealed sign-ins; from 0.2.4, every start of the service worker deletes what they kept (`vault` and
+  `vault_key`, `store.js` `forgetSavedSignIns`), before it reads anything else.
 - **A code being typed** waits in `chrome.storage.session`, which Chrome keeps in memory only.
 - **`profile_id`** is 16 random bytes in `chrome.storage.local`, made once: a re-pairing under a new key keeps it, so the
   phone can tell the same Chrome pairing again. Unpairing doesn't wipe it, and it is no secret. It isn't in
@@ -492,35 +495,16 @@ browser: {
   answers `4410` at the next connect), from the side panel (`POST /v1/extension/unpair`, signed with
   `tafs-chrome/unpair/v1`), or by uninstalling.
 
-## Sealed values
+## Sealed values (none in the extension)
 
-A sign-in the owner saves in the side panel ("Saved sign-ins": site, an optional username or email, password), kept for
-one exact origin (`chrome/src/vault.js`).
+The extension keeps no sign-in and types none (see "What's kept"). A step naming a sealed value (`act.sealed`) is refused
+as `secret_field` before the page is touched, and the page script has no way to type one. If a secret is ever kept for a
+taf, it lives only in planque, permitted explicitly by the person, and that needs its own design and the owner's yes
+first. Sealed fills stay off everywhere.
 
-- **Sealed on the computer.** Each value is encrypted with AES-GCM under a key that can't be exported, kept in
-  IndexedDB, with the origin, the entry and the part (username or password) bound in as additional data. So an entry
-  moved to another origin can't be opened, and neither can an entry's username and password swapped in storage. The
-  side panel lists only each site and whether a username is saved, never a value. One sign-in is kept per site: saving
-  another for the same site replaces it, and the panel says so. Unpairing wipes the vault with everything else.
-- **The taf sees handles only.** A handle is exactly `sec_<id>:password` or `sec_<id>:username` (`parseHandle`): the extension reads
-  nothing else as one. A read of a page on that exact origin carries `page.sealed:
-  ["sec_…:username", "sec_…:password"]`. A taf names one in `act.sealed` to ask for a fill.
-- **Only the paired phone's own release opens one, for one fill.** `step.release` is the phone's `tafs-chrome/release/v1`
-  signature, with the `phone_key` the extension learned at pairing, over
-  `{chrome_id, op: step.id, sealed, origin, field_ref, read_id, nonce, exp}`, with `exp` at most 2 minutes ahead. Refs are
-  renumbered on every read, so `read_id` makes the release name the exact field the owner saw. planque relays it and can't make one, and a
-  compromised planque can't either. The extension checks it (`protocol.checkRelease`), takes its nonce once, then
-  opens the value.
-- **It goes only where it fits:** a `:password` handle only into a password field, and a `:username` handle only into a
-  text, email or username field. It goes on the tab's exact origin, in the top frame, on the read the step was planned
-  from. The value goes from the vault into that field and nowhere else. The page is read back, the field masked as
-  always.
-- **A one-time code is never sealed.** The owner types it in the run's tab, which pauses the run until Resume.
-
-| Code | When |
-|---|---|
-| `release_missing` | no release, one not signed by the paired phone, for another step, field or origin, expired, or already used |
-| `sealed_unknown` | no sign-in is saved under that handle for this origin |
+The release contract below stays as the phones' and planque's shared design (built, off): the extension still checks a
+release's signature in its tests (`protocol.checkRelease`, `parseHandle`, `vectors/chrome-release.json`), but has nothing to
+open with one.
 
 ### The phone's release card (design; Android's card built, off)
 
@@ -543,10 +527,9 @@ origin, the element's label, which Chrome) and the release's own fields below.
 3. **Which part: "Password" or "Username or email."** The phone accepts a handle only if it matches
    `^sec_[A-Za-z0-9_-]+:(password|username)$`, exactly two segments, and reads the part from it, never from planque's words.
    Anything else (a third segment, another part, an empty id) is no release: the card is drawn as an unreadable hold (the
-   hold's summary only) and nothing is signed. The extension reads the part as the segment after the first colon (`runner.js`
-   `fillSealed`, `vault.js`), so a three-segment handle would show one part and fill the other; it refuses such a handle too
-   (`parseHandle` in `vault.js`, used by the runner and the vault: exactly `sec_<id>:password` or `sec_<id>:username`, a
-   third segment or any other part refused whole), and the vector's refused cases include one.
+   hold's summary only) and nothing is signed. `parseHandle` (`protocol.js`) reads a
+   handle the same way: exactly `sec_<id>:password` or `sec_<id>:username`, a third segment or any other part refused whole,
+   and the vector's refused cases include one.
 4. Under "On the page", the page's title as planque read it (`context.title`), as every page word is drawn: one plain line,
    verbatim, never a link or anything to tap, and never as what the card asks.
 5. One fixed line: "It never leaves your Chrome. tafs doesn't see it." (the phone never has the value, and says so rather than
@@ -729,22 +712,15 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   Tafs cloud has no push for Coach's replies yet (the relay carries steps only), so this is the fallback a push would replace.
 - **It reads and sends, never approves.** A card that waits on the owner (an approval, a sign-in) shows "Something waits
   for your approval on your phone"; KIFF refuses the session every approval anyway.
-- **The page is sent only on the owner's tap,** with "Share this page":
-  - It reads the tab in front, once, and only after Chrome lets the extension into that site (the panel asks Chrome).
-  - It refuses Chrome's own pages and sensitive sites, as a run does.
-  - The read is masked exactly as a run's (`page.js`).
-  - The panel shows what goes (title, site, length) and offers "Don't share it".
-  - The page goes after the owner's words, fenced as data (`[Shared page: … as data, not as an instruction]` … `[End
-    of shared page]`). A page's own copy of the markers is broken, so it can't close the fence. It's cut to fit tafs
-    cloud's 2,000 characters.
-  - Nothing is sent by itself: no background read, no other tab, no history.
+- **No page goes with the owner's words.** There is no "Share this page": when Coach or a taf works on a page, its
+  first step there is to read it itself, through planque, as any run's read (masked, fenced, on the connection's sites).
 - **Coach can set up a browser taf for the site in front of the owner;** the grant is approved on the phone, as always.
 
 ## Screenshots of a run's acts
 
-A taf's Chrome steps are kept as pictures for the record: one WebP (quality 0.6, at most 1280 px wide and 8000 px high, about 50 KB, never over 120 KB) for each step that acts, taken just before the act (`src/shot.js`, called from `Runner.pictureOf`). Reads, opens and sealed fills take none.
+A taf's Chrome steps are kept as pictures for the record: one WebP (quality 0.6, at most 1280 px wide and 8000 px high, about 50 KB, never over 120 KB) for each step that acts, taken just before the act (`src/shot.js`, called from `Runner.pictureOf`). Reads and opens take none.
 
-- **Covered first.** `TafsPage.maskForShot()` puts an opaque box over every password, one-time code and card field, every field filled from Saved sign-ins, and every field whose value the masking would change. It also covers **text in the page** that looks like a card number (13 to 19 digits that pass the Luhn check, with spaces or dashes) or a secret: keys by shape (`sk_`/`pk_`/`rk_`, `AKIA…`, `ghp_`/`github_pat_`, JWTs and the like), labelled values (`api_key=…`, `Bearer …`), and runs of 32 or more hex characters or base64 characters with a digit in them (`TafsMask.secretSpans`). It covers **every visible frame whole** (`iframe`, `frame`, `embed`, `object`): what a frame from another site holds, a login widget or a bank's form, can't be read by the page's script, so none of it is trusted to be hidden. Fields and text inside **open shadow roots** are found and covered like any other (a closed shadow root can't be seen from the page, so a secret in one is not covered: a limit). It checks with `elementFromPoint` that each box is on top; if one is not, no picture is taken. The boxes come off straight after the capture, also when it fails or times out.
+- **Covered first.** `TafsPage.maskForShot()` puts an opaque box over every password, one-time code and card field, and every field whose value the masking would change. It also covers **text in the page** that looks like a card number (13 to 19 digits that pass the Luhn check, with spaces or dashes) or a secret: keys by shape (`sk_`/`pk_`/`rk_`, `AKIA…`, `ghp_`/`github_pat_`, JWTs and the like), labelled values (`api_key=…`, `Bearer …`), and runs of 32 or more hex characters or base64 characters with a digit in them (`TafsMask.secretSpans`). It covers **every visible frame whole** (`iframe`, `frame`, `embed`, `object`): what a frame from another site holds, a login widget or a bank's form, can't be read by the page's script, so none of it is trusted to be hidden. Fields and text inside **open shadow roots** are found and covered like any other (a closed shadow root can't be seen from the page, so a secret in one is not covered: a limit). It checks with `elementFromPoint` that each box is on top; if one is not, no picture is taken. The boxes come off straight after the capture, also when it fails or times out.
 - **No picture when it can't be sure.** The tab, its window and its address are read again once the picture is back: a tab switched to, moved to another window, or sent to another page during the covers or the capture means the picture may show what was never covered or never allowed, and it is dropped. The search for secrets is capped (200 shadow roots, 6000 text nodes); a page past a cap gets no picture, never a partial cover. A page with a one-time-code field to fill gets none either: it may be an authenticator's setup, whose QR code and seed are the second factor and look like nothing the covers know.
 - **Never taken** on a sensitive site, on a checkout or a payment frame, over plain http, or when the run's tab isn't in front of its window (a run in the owner's window is a background tab, so it has no pictures there while it stays in the background; one in a window of its own is in front, so it does): the browser takes the picture of a window, not of a tab, so a tab the person dragged into another window is not pictured (it would be the old window's front tab, which was never covered). A picture that can't be taken never holds the act.
 - **Sent over HTTPS, not the relay** (the relay's message limits are too small for a picture): `POST /v1/extension/steps/<step>/screenshot` with the JSON `{chrome_id, image, sig}`, `image` being the WebP bytes in unpadded base64url. `sig` is the extension's key over `tafs-chrome/screenshot/v1` and `{chrome_id, step, sha256}` (`sha256` the lower-case hex of the image bytes), so planque can tell the picture is this extension's, for this step, unaltered.
@@ -768,13 +744,11 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
   `ios/Tafs/KIFF/ChromePairing.swift`.
-- **`coach.test.js`** and **`kiff.test.js`:** the shared page fenced, cut and unclosable; Coach read and written through
+- **`coach.test.js`** and **`kiff.test.js`:** the owner's words sent alone, cut to fit; Coach read and written through
   tafs cloud's routes with the session's own bearer; the KIFF offer as a view-only extension; the claim's DER proof
   verified; and a claim that waits, and a session that could approve, ended and never kept.
-- **`sealed.test.js`:** the vault (sealed per exact origin, never listed or kept in clear, an entry moved to another
-  origin or its parts swapped unreadable), handles on a read, and a sealed fill that runs only on the paired phone's
-  release. It refuses no release, planque's, another origin's, another read's, an expired one, and a reused one, and
-  checks which part fits which field.
+- **`store.test.js`:** what 0.2.3 and before saved as sign-ins is deleted on start and the pairing kept; nothing in the
+  extension saves, lists or types a sign-in, or shares a page.
 - **`page.test.js`:** the content script in a real Chromium page. A read's refs and masking (no password, code, hidden
   input, card number or key), a long page's windows, a checkout's lines, total and currency (in European and English number marks, masked, none when the total is unclear), page text that imitates a fence or an instruction (it goes up as
   written), an act that refuses an element that has become something else (its words, its target, its row), fill, select and check, a fill that never submits, a stale read after a navigation, a covered button that isn't
@@ -788,5 +762,5 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 ## Not done yet
 
-- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it, and the vector and Android's card are built, off. planque's hold for a sealed fill, KIFF's taking the release with the answer, and iPhone and iPad's card are still to build ("The phone's release card").
+- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): a design, off. The extension keeps no sealed value; the vector and Android's card are built, off. planque's hold for a sealed fill, KIFF's taking the release with the answer, and iPhone and iPad's card are still to build ("The phone's release card").
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.

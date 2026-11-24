@@ -12,10 +12,9 @@ import { HAND_MAX_MS, validWords, withoutValues } from "./hand.js";
  */
 const isBlank = (url) => String(url || "").trim().toLowerCase() === "about:blank";
 import { refuse } from "./guard.js";
-import { parseHandle } from "./vault.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
-import { checkRelease, checkAllowances, checkSites, Nonces } from "./protocol.js";
+import { checkAllowances, checkSites } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
@@ -46,16 +45,14 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null, onHandAnswer = () => {}, doneStore = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, doneStore = null }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
     this.shots = shots; // the picture kept of each act (shot.js); null: none is taken
     this.onHandAnswer = onHandAnswer; // the person's answer to a hand-over, to give planque ({hand, outcome, page}); the service worker signs and keeps it
-    this.vault = vault; // sealed sign-ins (vault.js); none, and a sealed fill is refused
     this.now = now;
-    this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, ownWindow, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
     this.doneStore = doneStore; // {get(), set(obj)}: the tabs each taf's last finished run left, kept where a stopped worker finds them again
@@ -697,40 +694,9 @@ export class Runner {
     await this.inject(run.tab, run);
     const page = await this.inTab(run.tab, (o, p) => globalThis.TafsPage.read(o, p), [offset, opts]);
     if (!page) return { error: { code: "page_unresponsive" } };
-    // The handles of sign-ins saved for this exact origin, never their values: a taf names one to ask for a sealed fill.
-    if (this.vault) {
-      const handles = await this.vault.handlesFor(new URL(tab.url).origin);
-      if (handles.length) page.sealed = handles;
-    }
     run.pages.set(page.read_id, page);
     if (run.pages.size > 20) run.pages.delete(run.pages.keys().next().value);
     return { page };
-  }
-
-  /**
-   * A sealed fill (docs/chrome.md, "Sealed values"): only with the paired phone's own release of this handle, for this
-   * step, field and exact origin, unexpired and never used before. The value goes from the vault into the field and nowhere
-   * else, then the page is read back with the field masked.
-   */
-  async fillSealed(run, step, page) {
-    const pairing = this.paired();
-    if (!this.vault || !pairing || !pairing.phoneKey) return { error: { code: "secret_field" } };
-    const named = parseHandle(step.act.sealed);
-    const part = named && named.part;
-    const field = (page.fields || []).find((f) => f.ref === step.act.ref);
-    if (!named || !field || (part === "password" ? field.kind !== "password" : !["text", "email"].includes(field.kind))) {
-      return { error: { code: "secret_field" } };
-    }
-    const tab = await this.chrome.tabs.get(run.tab);
-    const origin = new URL(tab.url).origin;
-    const released = await checkRelease(step.release, { phoneKey: pairing.phoneKey, chromeId: pairing.chromeId, step, origin, now: this.now() });
-    if (!released || !(await this.releases.take(step.release.nonce))) return { error: { code: "release_missing" } };
-    const value = await this.vault.open(step.act.sealed, origin);
-    if (value == null) return { error: { code: "sealed_unknown" } };
-    const done = await this.inTab(run.tab, (ref, id, o, v, p) => globalThis.TafsPage.fillSealed(ref, id, o, v, p), [step.act.ref, step.read_id, origin, value, part]);
-    if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
-    await this.loaded(run.tab);
-    return this.read(run);
   }
 
   /**
@@ -753,7 +719,8 @@ export class Runner {
     if (!page) return { error: { code: "page_changed" } };
     const refused = refuse(page, step.act);
     if (refused) return { error: { code: refused.code } };
-    if (step.act.sealed) return this.fillSealed(run, step, page);
+    // The extension keeps no saved sign-in and never types one: a step naming one is refused, as a secret field is.
+    if (step.act.sealed) return { error: { code: "secret_field" } };
     // Back (gap 7): where the tab was before, read and fenced as any page is; nothing is clicked or typed.
     if (step.act.kind === "back") {
       const from = await this.chrome.tabs.get(run.tab).catch(() => null);

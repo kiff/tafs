@@ -157,7 +157,7 @@ extension PhoneLink: PhoneAsking {
                 return answer ?? .failure(.noAnswer)
             })
         let reached = await route.reach(request)
-        // Whatever was asked, a signed-out phone drops the account's zone (agentgabo on #1590).
+        // Whatever was asked, a signed-out phone drops the account's zone.
         WatchAccountZone.heard(reached.reply)
         // And what the watch kept so it opens at once (row 44, D).
         if reached.reply?.outcome == .signedOut { WatchCache.shared.clear() }

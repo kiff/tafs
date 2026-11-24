@@ -53,6 +53,37 @@ class WatchLinkTest {
     for (reply in replies) assertEquals(reply, WatchLink.decodeReply(WatchLink.encodeReply(reply)))
   }
 
+  /** Row 21: the Inbox's marks are ids only, 1 to 100 that tafs cloud takes, checked before the phone reads anything. */
+  @Test fun theInboxMarksAreIdsOnlyCheckedOnBothEnds() {
+    val requests = listOf(
+      WatchRequest.InboxMarks(now),
+      WatchRequest.InboxMark(now, read = listOf("hold_1")),
+      WatchRequest.InboxMark(now, dismissed = listOf("hold_2", "wa-01")),
+      WatchRequest.InboxMark(now, read = listOf("hold_1"), dismissed = listOf("hold_2")),
+      WatchRequest.InboxMark(now, dismissed = List(100) { "h$it" }),
+    )
+    for (request in requests) {
+      val (path, data) = WatchLink.encode(request)
+      assertEquals(WatchLink.Accepted.Yes(request), WatchLink.accept(path, data, now))
+    }
+    assertEquals("/tafs/watch/v1/inbox-mark", WatchLink.INBOX_MARK)
+    // An empty list isn't written at all.
+    assertEquals("""{"made_at":$now,"read":["hold_1"]}""", WatchLink.encode(WatchRequest.InboxMark(now, read = listOf("hold_1"))).second.decodeToString())
+    refused(NotAccepted.MALFORMED, WatchLink.INBOX_MARK, """{"made_at":$now}""")
+    refused(NotAccepted.MALFORMED, WatchLink.INBOX_MARK, """{"made_at":$now,"read":[]}""")
+    refused(NotAccepted.MALFORMED, WatchLink.INBOX_MARK, """{"made_at":$now,"read":["held:hold_1"]}""")
+    refused(NotAccepted.MALFORMED, WatchLink.INBOX_MARK, """{"made_at":$now,"read":["${"a".repeat(101)}"]}""")
+    refused(NotAccepted.MALFORMED, WatchLink.INBOX_MARK, """{"made_at":$now,"dismissed":[${List(101) { "\"h$it\"" }.joinToString(",")}]}""")
+    refused(NotAccepted.MALFORMED, WatchLink.INBOX_MARK, """{"made_at":$now,"read":["a"],"dismissed":[${List(100) { "\"h$it\"" }.joinToString(",")}]}""")
+    refused(NotAccepted.MALFORMED, WatchLink.INBOX_MARK, """{"made_at":$now,"read":["a"],"title":"Refund"}""")
+    refused(NotAccepted.MALFORMED, WatchLink.INBOX_MARKS, """{"made_at":$now,"read":["a"]}""")
+    refused(NotAccepted.TOO_OLD, WatchLink.INBOX_MARK, """{"made_at":${now - 31_000},"read":["a"]}""")
+    val reply = WatchReply.InboxMarks(read = listOf("hold_1"), dismissed = listOf("wa_01"))
+    assertEquals(reply, WatchLink.decodeReply(WatchLink.encodeReply(reply)))
+    assertEquals(WatchReply.InboxMarks(), WatchLink.decodeReply("""{"kind":"inbox_marks"}""".encodeToByteArray()))
+    assertEquals(listOf("a", "b"), InboxMarkIds.checked(listOf("a", "held:x", "b", "a", "")))
+  }
+
   @Test fun anApprovalIsNeverAWatchRequest() {
     refused(NotAccepted.UNKNOWN_PATH, WatchLink.PREFIX + "approve", """{"made_at":$now,"hold_id":"hold_1"}""")
     refused(NotAccepted.UNKNOWN_PATH, WatchLink.PREFIX + "extra-room", """{"made_at":$now,"hold_id":"hold_1"}""")

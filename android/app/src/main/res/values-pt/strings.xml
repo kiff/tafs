@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Escolher ficheiro</string>
     <string name="chat_file_choose_photos">Escolher fotografias</string>
     <string name="chat_file_could_not_open">Não foi possível abrir o ficheiro.</string>
+    <string name="chat_file_mac_camera_off">A câmara está desativada para o tafs. Ative-a em Definições do Sistema › Privacidade e segurança › Câmara (no macOS 12: Preferências do Sistema › Segurança e privacidade › Privacidade › Câmara).</string>
     <string name="chat_file_no_app_opens">Nenhuma app neste telefone abre %1$s.</string>
     <string name="chat_file_no_camera">Não há nenhuma app de câmara neste telefone para tirar uma fotografia.</string>
     <string name="chat_file_not_opened">Não foi possível abrir %1$s. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Perguntar antes de qualquer coisa invulgar, mesmo quando cabe no Card.</string>
     <string name="sample_memory_explain">Prefere que explique uma decisão numa linha em vez de num parágrafo.</string>
     <string name="sample_memory_regulars">Os clientes que escrevem todas as semanas recebem resposta na mesma manhã.</string>
+    <string name="sample_not_in_sample">Isto não está no exemplo. Inicie sessão com o KIFF para o fazer.</string>
     <string name="sample_parcels_change_address">Mudar a morada de entrega da encomenda #5141</string>
     <string name="sample_parcels_change_address_why">Um email de um novo endereço pediu-o</string>
     <string name="sample_parcels_job">Avisar os clientes quando uma encomenda se atrasa, antes de perguntarem. Os reenvios esperam por si. Nunca mudar uma morada de entrega a partir de um email.</string>

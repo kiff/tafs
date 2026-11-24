@@ -663,10 +663,10 @@ Privacidade: https://kiff.dev/pt/tafs/privacy
 ## Spanish, Latin America (es-MX)
 
 **Wave 1 (Latin America), App Store only, repo only:** a new localization, Spanish (Mexico), which App Store Connect doesn't have
-yet (mac-local's read, 21 Nov). Adapted from es (es-ES), above, with the same claims and limits, in Mexican usage ("celular",
+yet. Adapted from es (es-ES), above, with the same claims and limits, in Mexican usage ("celular",
 "envío", "molesto", "vencen"). The names it quotes are the app's own, as a phone in Mexico shows them in Spanish (Te necesita,
 Registro, ¿Ocurrió esto?, Cuenta, Bloquear). Its words are read by the language reviewer before it's
-applied. Applying it waits for the owner's Wave 1 yes. Play's Latin American listing is es-419, dev-android's.
+applied. Applying it waits for the owner's Wave 1 yes. Play's Latin American listing is es-419.
 
 ### App Store
 
@@ -726,11 +726,11 @@ Privacidad: https://kiff.dev/es/privacy
 ## Portuguese, Brazil (pt-BR)
 
 **Wave 1 (Brazil), App Store only, repo only:** a new localization, Portuguese (Brazil), which App Store Connect doesn't have
-yet (mac-local's read, 21 Nov). Adapted from pt (pt-PT), above, with the same claims and limits, in Brazilian usage ("você",
+yet. Adapted from pt (pt-PT), above, with the same claims and limits, in Brazilian usage ("você",
 "celular", "contato", "controle", "senhas", "app" masculine). The names it quotes are the app's own, as a phone in Brazil shows
 them in the app's Brazilian Portuguese (Precisa de você, Registro, Isto aconteceu?, Conta, Bloquear; tafs#1629), so the listing and the screens match.
 Its words are read by the language reviewer before it's applied. Applying it waits for the owner's
-Wave 1 yes. Play's pt-BR listing is dev-android's.
+Wave 1 yes. Play's listing is pt-BR.
 
 ### App Store
 
@@ -989,7 +989,7 @@ Prywatność: https://kiff.dev/pl/tafs/privacy
 
 ## Korean (ko)
 
-**App Store (new, PM 21 Nov 15:1x):** a new localization, Korean, for Korea's store-ready launch. Its legal lines link
+**App Store (new):** a new localization, Korean, for Korea's store-ready launch. Its legal lines link
 kiff.dev's Korean pages, so it's pasted only once those pages are served (the ko/ja legal pages PR in kiff/cloud).
 Availability in South Korea stays the owner's call. **Google Play:** for Korean testers; its legal lines stay marked
 as in English until the Korean pages are served, then move to `kiff.dev/ko/tafs/terms` and `kiff.dev/ko/tafs/privacy`.
@@ -1094,7 +1094,7 @@ tafs 서비스 약관(영어): https://kiff.dev/tafs/terms
 
 ## Japanese (ja)
 
-**New (PM 21 Nov 15:1x),** for Japan's store-ready launch: the App Store and Google Play. The app ships Japanese with
+**New,** for Japan's store-ready launch: the App Store and Google Play. The app ships Japanese with
 tafs#1668. The legal lines link kiff.dev's Japanese pages, so each listing is pasted only once those pages are served
 (the ko/ja legal pages PR in kiff/cloud). Availability in Japan stays the owner's call. The glossary's Japanese terms
 (docs/languages.md) are used throughout: 要確認, 記録, 遮断, クレジット, the screen アカウント.

@@ -32,6 +32,7 @@
   "chat.file.choose_file": "Alegeți fișierul",
   "chat.file.choose_photos": "Alegeți fotografii",
   "chat.file.could_not_open": "Fișierul nu a putut fi deschis.",
+  "chat.file.mac_camera_off": "Camera este dezactivată pentru tafs. Activați-o în Configurări sistem › Confidențialitate și securitate › Cameră (pe macOS 12: Preferințe sistem › Securitate și confidențialitate › Confidențialitate › Cameră).",
   "chat.file.no_app_opens": "Nicio aplicație de pe acest telefon nu deschide {name}.",
   "chat.file.no_camera": "Nu există pe acest telefon o aplicație de cameră cu care să faceți o fotografie.",
   "chat.file.not_opened": "{file} nu a putut fi deschis. {why}",

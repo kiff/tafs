@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Файл сонгох</string>
     <string name="chat_file_choose_photos">Зураг сонгох</string>
     <string name="chat_file_could_not_open">Файлыг нээж чадсангүй.</string>
+    <string name="chat_file_mac_camera_off">Камер tafs-д унтраастай байна. Системийн тохиргоо › Нууцлал ба аюулгүй байдал › Камер хэсгээс асаана уу (macOS 12 дээр: Системийн сонголт › Аюулгүй байдал ба нууцлал › Нууцлал › Камер).</string>
     <string name="chat_file_no_app_opens">Энэ утсан дээр %1$s-ийг нээх апп алга.</string>
     <string name="chat_file_no_camera">Энэ утсан дээр зураг авах камерын апп алга.</string>
     <string name="chat_file_not_opened">%1$s-ийг нээж чадсангүй. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Заншаагүй зүйлийн өмнө асуу, Card-д таарч байсан ч гэсэн.</string>
     <string name="sample_memory_explain">Та шийдвэрийг догол мөр биш нэг мөрөөр тайлбарлахыг илүү хүсдэг.</string>
     <string name="sample_memory_regulars">Долоо хоног бүр бичдэг үйлчлүүлэгчид тэр өглөө нь хариу авна.</string>
+    <string name="sample_not_in_sample">Энэ жишээнд байхгүй. Үүнийг хийхийн тулд KIFF-ээр нэвтэрнэ үү.</string>
     <string name="sample_parcels_change_address">#5141 захиалгын хүргэлтийн хаягийг өөрчлөх</string>
     <string name="sample_parcels_change_address_why">Шинэ хаягнаас ирсэн имэйл үүнийг хүссэн</string>
     <string name="sample_parcels_job">Илгээмж хоцрох үед үйлчлүүлэгчид асуухаас өмнө нь хэл. Дахин илгээлт таныг хүлээнэ. Имэйлээр ирсэн хүсэлтээр хүргэлтийн хаягийг хэзээ ч бүү өөрчил.</string>

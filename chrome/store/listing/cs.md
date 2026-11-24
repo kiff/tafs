@@ -13,12 +13,12 @@ tafs pro Chrome nechá vaše tafy pracovat ve vašem vlastním Chromu, jen na st
 • Spárujte tento Chrome s telefonem: v aplikaci tafs otevřete Účet › Chrome › Spárovat Chrome a zadejte zobrazený kód.
 • Taf pracuje ve vlastních kartách, ve skupině karet, kterou vidíte. Můžete ho kdykoli pozastavit nebo zastavit a on se pozastaví, když se dotknete jedné z jeho karet.
 • Chrome se při instalaci jednou zeptá na přístup ke všem webům. tafs pracuje jen na webech, které uvádí každý úkol a které schvalujete v telefonu.
-• Platba, odeslání objednávky a vyplnění uloženého přihlášení vždy čekají na vaše schválení v telefonu.
+• Platba a odeslání objednávky vždy čekají na vaše schválení v telefonu.
 • Čte stránku jako text a pole formuláře, bez polí pro heslo, kartu a kód. Nikdy nečte vaše další karty ani historii.
 • Taf vám může předat jeden krok na stránce, třeba napsat vyhledávání nebo číslo karty. Uděláte ho sami, a když stránku znovu čte, to, co jste napsali do polí, vynechá.
 • Stránky bank, peněženek, správců hesel, plateb, zdraví a úřadů se nikdy nezpracovávají, pokud jednu z nich nepovolíte pro jeden úkol v telefonu.
-• Uložená přihlášení jsou volitelná a na tomto počítači zapečetěná. tafs a KIFF je nikdy nevidí.
-• Boční panel ukazuje taf, který pracuje v tomto Chrome, a mluvíte s ním tam, jako v aplikaci tafs. „Nastavit nový taf pro tento web“ otevře Coacha, který vidí stránku, jen když kliknete na „Sdílet tuto stránku“, a pak jen tu stránku, se stejnými odstraněnými poli.
+• Nikdy neuchovává vaše hesla. Na přihlašovací stránce se taf zastaví a požádá vás, abyste se přihlásili sami, ve své kartě.
+• Boční panel ukazuje taf, který pracuje v tomto Chrome, a mluvíte s ním tam, jako v aplikaci tafs. „Nastavit nový taf pro tento web“ otevře Coacha, který přečte stránku, na které začíná, se stejnými odstraněnými poli.
 
 Co taf přečte, jde umělé inteligenci, která váš úkol provádí, a ukládá se s tímto úkolem. KIFF ukládá stránku před změnou a po ní nejvýše 30 dní. Po zapnutí snímků obrazovky si každý krok, který něco provede, uloží také jeden snímek stránky pořízený těsně před akcí se skrytými poli pro heslo, kartu a kód, nejvýše 30 dní. Vidíte ho jen v aplikaci tafs a nikdy nejde umělé inteligenci. Zrušení spárování nebo odinstalace smaže to, co si rozšíření uchovává ve vašem počítači.
 

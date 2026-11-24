@@ -151,40 +151,8 @@ $("unpair").onclick = async () => {
 chrome.storage.session.get("state").then(({ state }) => state && draw(state));
 send({ type: "state" });
 
-// Saved sign-ins (sealed): the panel shows each site and whether a username is saved, never a value. A saved sign-in is
-// only ever typed into that exact site, and only after you approve that fill on your phone.
-async function drawVault() {
-  const { entries = [] } = await send({ type: "vault_list" });
-  const list = $("vaultList");
-  list.textContent = "";
-  for (const e of entries) {
-    const li = document.createElement("li");
-    li.textContent = new URL(e.origin).hostname + (e.hasUsername ? " · " + t("vault_with_username") : "");
-    const b = document.createElement("button");
-    b.className = "quiet";
-    b.textContent = t("vault_remove");
-    b.onclick = async () => {
-      await send({ type: "vault_remove", id: e.id });
-      drawVault();
-    };
-    li.append(" ", b);
-    list.append(li);
-  }
-}
-
-$("vaultForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const r = await send({ type: "vault_save", origin: $("vaultSite").value, username: $("vaultUser").value, password: $("vaultPass").value });
-  $("vaultPass").value = "";
-  $("vaultStatus").textContent = r.error ? t("vault_error") : t("vault_saved");
-  drawVault();
-};
-
-$("vault").addEventListener("toggle", () => $("vault").open && drawVault());
-
 // Coach (docs/chrome.md, "Coach in the side panel"): the same chat as the apps. Approvals stay on the phone. The panel opens on
 // a fresh conversation, as the phone's New conversation does; the earlier ones are under Previous conversations.
-let shared = null;
 let view = FRESH;
 
 // The chat is read while the panel is seen: often while Coach is at work or the owner just wrote, seldom otherwise, never on a
@@ -295,40 +263,17 @@ $("coachPast").addEventListener("toggle", () => $("coachPast").open && drawPast(
 
 $("coachNew").onclick = () => {
   view = FRESH;
-  shared = null;
-  $("sharePreview").hidden = true;
   $("coachWords").value = "";
   $("coachPast").open = false;
   $("coachThread").textContent = "";
   drawCoach();
 };
 
-$("share").onclick = async () => {
-  const target = await send({ type: "share_target" });
-  if (target.error) {
-    $("coachNote").textContent = chrome.i18n.getMessage("share_error_" + target.error) || t("share_unavailable");
-    return;
-  }
-  const read = await send({ type: "share_read", tabId: target.tabId });
-  if (read.error) {
-    $("coachNote").textContent = t("share_unavailable");
-    return;
-  }
-  shared = read.page;
-  $("shareWhat").textContent = shared.title + " · " + new URL(shared.url).hostname + " · " + t("share_chars", String(shared.text.length));
-  $("sharePreview").hidden = false;
-};
-
-$("shareRemove").onclick = () => {
-  shared = null;
-  $("sharePreview").hidden = true;
-};
-
 $("coachForm").onsubmit = async (e) => {
   e.preventDefault();
   const words = $("coachWords").value.trim();
   if (!words) return;
-  const r = await send({ type: "coach_send", words, page: shared, clientID: crypto.randomUUID(), ...sendOptions(view) });
+  const r = await send({ type: "coach_send", words, clientID: crypto.randomUUID(), ...sendOptions(view) });
   if (r.error) {
     $("coachNote").textContent = t("coach_error");
     return;
@@ -336,8 +281,6 @@ $("coachForm").onsubmit = async (e) => {
   view = afterSend(view, r.sent);
   sentAt = Date.now();
   $("coachWords").value = "";
-  shared = null;
-  $("sharePreview").hidden = true;
   drawCoach();
 };
 

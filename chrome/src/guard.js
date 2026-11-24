@@ -101,11 +101,10 @@ export function refuse(page, act) {
   const field = (page.fields || []).find((f) => f.ref === act.ref);
   if (!field) return { code: CODE.refUnknown, why: "the page has no field " + act.ref };
   if (field.kind === "card") return { code: CODE.paymentStep, why: "a taf never types card details" };
-  if (secret(field) && !act.sealed) return { code: CODE.secretField, why: "a taf never types a password or a code" };
-  if (act.sealed && !["password", "code", "text", "email"].includes(field.kind)) {
-    return { code: CODE.secretField, why: "a sealed value goes only into a password, username or one-time-code field" };
-  }
-  if (act.kind === "fill" && !act.sealed && typeof act.value !== "string") return { code: CODE.badStep, why: "a fill has a value" };
+  // The extension keeps no saved sign-in: a step naming one is refused here too, whatever field it names.
+  if (act.sealed !== undefined) return { code: CODE.secretField, why: "the extension keeps no saved sign-in and never types one" };
+  if (secret(field)) return { code: CODE.secretField, why: "a taf never types a password or a code" };
+  if (act.kind === "fill" && typeof act.value !== "string") return { code: CODE.badStep, why: "a fill has a value" };
   if (act.kind === "fill" && act.keys !== undefined && act.keys !== true) return { code: CODE.badStep, why: "keys is true or absent" };
   if (act.kind === "select" && typeof act.value !== "string") return { code: CODE.badStep, why: "a select names its option" };
   return null;

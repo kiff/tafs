@@ -146,6 +146,7 @@
   "sample.memory.ask_first": "Card에 맞더라도 평소와 다른 일은 먼저 물어봅니다.",
   "sample.memory.explain": "결정은 한 문단보다 한 줄로 설명하는 것을 선호합니다.",
   "sample.memory.regulars": "매주 연락하는 고객에게는 같은 날 아침에 답장합니다.",
+  "sample.not_in_sample": "샘플에는 없는 기능입니다. 하려면 KIFF로 로그인하세요.",
   "sample.parcels.change_address": "주문 #5141의 배송 주소 변경",
   "sample.parcels.change_address_why": "새 주소에서 온 이메일이 요청함",
   "sample.parcels.job": "고객이 묻기 전에 소포가 늦어지면 알립니다. 재발송은 내 승인을 기다립니다. 이메일만 보고 배송 주소를 바꾸지 않습니다.",
