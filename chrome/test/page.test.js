@@ -240,14 +240,17 @@ test("a long page's text comes in windows: each says where the next starts, the 
     document.body.append(p);
   });
   const first = await page.evaluate(() => TafsPage.read());
-  assert.equal(first.text.length, 20000);
+  // 20,000 characters and 20,000 bytes at most: the page's few non-ASCII marks (→, ·) take a handful of characters off.
+  assert.ok(first.text.length <= 20000 && first.text.length > 19900, String(first.text.length));
+  assert.ok(new TextEncoder().encode(first.text).length <= 20000);
   assert.equal(first.more, true);
-  assert.equal(first.next_offset, 20000);
+  assert.equal(first.next_offset, first.text.length);
   assert.equal(first.offset, undefined, "the first window has no offset");
   assert.ok(!first.text.includes("(cut)"), "no cut marker: the answer says there is more");
   const second = await page.evaluate((o) => TafsPage.read(o), first.next_offset);
-  assert.equal(second.offset, 20000);
-  assert.notEqual(second.read_id, first.read_id, "a read at an offset is a read: new id, fresh refs");
+  assert.equal(second.offset, first.next_offset);
+  assert.notEqual(second.read_id, first.read_id, "a read at an offset is a read: a new id");
+  assert.deepEqual(second.fields.map((f) => f.ref), first.fields.map((f) => f.ref), "the same elements keep their refs");
   assert.equal(second.fields.length, first.fields.length, "fields, controls and links are the page's whole in every window");
   let rest = second;
   let all = first.text;
@@ -506,5 +509,129 @@ test("Show me outlines one field and nothing else: no click, no focus, every poi
   await page.evaluate(([ref, id]) => TafsPage.outline(ref, id), [email.ref, read.read_id]);
   await page.evaluate(() => TafsPage.unoutline());
   assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-outline]").length), 0, "asked to go, it goes");
+  await page.close();
+});
+
+// Gap 1: one ref per element for the life of the document.
+
+test("a ref names the same element from read to read; one that goes or changes is never given to another", { skip: !playwright }, async () => {
+  const page = await openHTML(`<!doctype html><html><body>
+<ul id="list"><li><button>Add</button> Pens</li><li><button>Add</button> Paper</li><li><button>Add</button> Ink</li></ul>
+<label>Search <input id="q"></label></body></html>`);
+  const first = await page.evaluate(() => TafsPage.read());
+  const refOf = (read, row) => read.controls[row].ref;
+  // The first row goes: the others keep their refs, and nothing takes the gone one's.
+  await page.evaluate(() => document.querySelector("#list li").remove());
+  const second = await page.evaluate(() => TafsPage.read());
+  assert.deepEqual(second.controls.map((c) => c.ref), [refOf(first, 1), refOf(first, 2)]);
+  assert.equal(second.fields[0].ref, first.fields[0].ref);
+  // A framework draws a row again, the same: the new node keeps the ref.
+  await page.evaluate(() => {
+    const li = document.querySelectorAll("#list li")[0];
+    li.replaceWith(li.cloneNode(true));
+  });
+  const third = await page.evaluate(() => TafsPage.read());
+  assert.deepEqual(third.controls.map((c) => c.ref), second.controls.map((c) => c.ref));
+  // A row that becomes another (its words change) gets a new ref, never the old one.
+  await page.evaluate(() => (document.querySelectorAll("#list li")[0].lastChild.textContent = " Glue"));
+  const fourth = await page.evaluate(() => TafsPage.read());
+  assert.notEqual(fourth.controls[0].ref, third.controls[0].ref);
+  assert.ok(![first, second, third].some((r) => r.controls.some((c) => c.ref === fourth.controls[0].ref)), "a new number");
+  // An act on this read's refs works as before.
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "fill", ref: r, value: "pens" }, id), [fourth.fields[0].ref, fourth.read_id]), { ok: true });
+  await page.close();
+});
+
+// Gap 4: a window's text is budgeted in UTF-8 bytes, as the relay counts.
+
+test("a window of Japanese text keeps to its bytes, and the whole text is still reachable", { skip: !playwright }, async () => {
+  const page = await openHTML(`<!doctype html><html><body><pre id="t"></pre></body></html>`);
+  await page.evaluate(() => (document.querySelector("#t").textContent = "日本語のテキスト。".repeat(4000) + "おわり"));
+  const first = await page.evaluate(() => TafsPage.read());
+  assert.ok(new TextEncoder().encode(first.text).length <= 20000, "at most 20,000 bytes");
+  assert.equal(first.more, true);
+  let all = first.text;
+  let rest = first;
+  while (rest.more) {
+    rest = await page.evaluate((o) => TafsPage.read(o), rest.next_offset);
+    assert.ok(new TextEncoder().encode(rest.text).length <= 20000);
+    all += rest.text;
+  }
+  assert.ok(all.endsWith("おわり"));
+  await page.close();
+});
+
+// Gap 7: press, typing key by key, and scroll.
+
+test("Enter submits a field's form as the browser would; on a form that takes a card it's refused and nothing is sent", { skip: !playwright }, async () => {
+  const page = await openHTML(`<!doctype html><html><body>
+<form id="s"><input id="q" aria-label="Search"></form>
+<form id="p"><input id="name" aria-label="Name on card"><input autocomplete="cc-number" aria-label="Card number"><button type="submit">Continue</button></form>
+</body></html>`);
+  await page.evaluate(() => {
+    for (const f of document.forms) f.addEventListener("submit", (e) => (e.preventDefault(), (window.__sent = (window.__sent || []).concat(f.id))));
+  });
+  let read = await page.evaluate(() => TafsPage.read());
+  const ref = (label) => read.fields.find((f) => f.label === label).ref;
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "press", ref: r, value: "Enter" }, id), [ref("Search"), read.read_id]), { ok: true });
+  read = await page.evaluate(() => TafsPage.read());
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "press", ref: r, value: "Enter" }, id), [ref("Name on card"), read.read_id]), { ok: false, code: "payment_step" });
+  read = await page.evaluate(() => TafsPage.read());
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "press", ref: r, value: "Tab" }, id), [ref("Search"), read.read_id]), { ok: false, code: "bad_step" });
+  assert.deepEqual(await page.evaluate(() => window.__sent), ["s"]);
+  await page.close();
+});
+
+test("a page that handles Enter itself is left to it; ArrowDown and Escape reach the field as keys", { skip: !playwright }, async () => {
+  const page = await openHTML(`<!doctype html><html><body><form id="s"><input id="q" aria-label="City"></form></body></html>`);
+  await page.evaluate(() => {
+    window.__keys = [];
+    const q = document.querySelector("#q");
+    q.addEventListener("keydown", (e) => {
+      window.__keys.push(e.key);
+      if (e.key === "Enter") e.preventDefault(); // a combobox picks its option on Enter, and submits nothing
+    });
+    document.forms[0].addEventListener("submit", (e) => (e.preventDefault(), (window.__sent = true)));
+  });
+  for (const key of ["ArrowDown", "Escape", "Enter"]) {
+    const read = await page.evaluate(() => TafsPage.read());
+    assert.deepEqual(await page.evaluate(([k, id]) => TafsPage.act({ kind: "press", ref: "f1", value: k }, id), [key, read.read_id]), { ok: true });
+  }
+  assert.deepEqual(await page.evaluate(() => window.__keys), ["ArrowDown", "Escape", "Enter"]);
+  assert.equal(await page.evaluate(() => !!window.__sent), false, "the page cancelled Enter: nothing is submitted");
+  await page.close();
+});
+
+test("a fill with keys types one character at a time, with key events, and submits nothing", { skip: !playwright }, async () => {
+  const page = await openHTML(`<!doctype html><html><body><form><input id="q" aria-label="City"></form></body></html>`);
+  await page.evaluate(() => {
+    window.__seen = [];
+    document.querySelector("#q").addEventListener("input", (e) => window.__seen.push(e.target.value));
+    document.forms[0].addEventListener("submit", (e) => (e.preventDefault(), (window.__sent = true)));
+  });
+  const read = await page.evaluate(() => TafsPage.read());
+  assert.deepEqual(await page.evaluate((id) => TafsPage.act({ kind: "fill", ref: "f1", value: "Lyon", keys: true }, id), read.read_id), { ok: true });
+  assert.equal(await page.inputValue("#q"), "Lyon");
+  assert.deepEqual(await page.evaluate(() => window.__seen), ["", "L", "Ly", "Lyo", "Lyon"]);
+  assert.equal(await page.evaluate(() => !!window.__sent), false);
+  await page.close();
+});
+
+test("scroll moves the page by most of a screen, or brings a ref into view", { skip: !playwright }, async () => {
+  const page = await openHTML(`<!doctype html><html><body><div style="height:5000px">top</div><button id="far">Far</button></body></html>`);
+  let read = await page.evaluate(() => TafsPage.read());
+  assert.deepEqual(await page.evaluate((id) => TafsPage.act({ kind: "scroll" }, id), read.read_id), { ok: true });
+  const down = await page.evaluate(() => window.scrollY);
+  assert.ok(down > 0);
+  read = await page.evaluate(() => TafsPage.read());
+  assert.deepEqual(await page.evaluate((id) => TafsPage.act({ kind: "scroll", value: "up" }, id), read.read_id), { ok: true });
+  assert.ok((await page.evaluate(() => window.scrollY)) < down);
+  read = await page.evaluate(() => TafsPage.read());
+  const far = read.controls.find((c) => c.label === "Far").ref;
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "scroll", ref: r }, id), [far, read.read_id]), { ok: true });
+  assert.ok(await page.evaluate(() => {
+    const r = document.querySelector("#far").getBoundingClientRect();
+    return r.top >= 0 && r.bottom <= window.innerHeight;
+  }));
   await page.close();
 });

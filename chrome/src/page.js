@@ -11,6 +11,8 @@
   const M = root.TafsMask;
 
   const MAX_TEXT = 20000;
+  // A text window's budget in UTF-8 bytes, as the relay counts an answer: 20,000 characters of Japanese are 60 KB.
+  const MAX_TEXT_BYTES = 20000;
   const MAX_LINKS = 200;
   const MAX_FIELDS = 200;
   const MAX_CONTROLS = 200;
@@ -44,10 +46,37 @@
     return h.toString(16);
   }
 
-  /** Names `el` in this read. */
-  function bind(ref, el) {
+  // One ref per element for the life of this document (gap 1): a read never renumbers what an earlier read named, so a ref
+  // the taf holds names the same element until it goes or becomes something else. Counters never go back within a document;
+  // a new document is a new script, which starts again from 1.
+  const named = new WeakMap(); // element → {ref, print}
+  let previous = new Map(); // the last read's refs, while the next read names
+  let previousPrints = new Map();
+  const counters = { f: 0, c: 0, l: 0 };
+
+  /** Names `el` in this read, as `kind` ("f", "c" or "l"): its ref from an earlier read if it's still what it was, else a new one. */
+  function bind(kind, el) {
+    const print = printOf(el);
+    const had = named.get(el);
+    let ref;
+    if (had && had.print === print && had.ref[0] === kind && !refs.has(had.ref)) ref = had.ref;
+    else {
+      // A page that draws an element again (a framework re-rendering a list) puts a new node where the old one was: the
+      // ref of a node the last read named, now gone from the page, that was exactly this, is this one's.
+      ref = null;
+      for (const [r, old] of previous) {
+        if (r[0] === kind && !refs.has(r) && !old.isConnected && previousPrints.get(r) === print) {
+          ref = r;
+          previous.delete(r);
+          break;
+        }
+      }
+      if (!ref) ref = kind + ++counters[kind];
+      named.set(el, { ref, print });
+    }
     refs.set(ref, el);
-    prints.set(ref, printOf(el));
+    prints.set(ref, print);
+    return ref;
   }
 
   function newId() {
@@ -120,8 +149,7 @@
       if (el.tagName === "INPUT" && FIELD_SKIP.has(type)) continue;
       if (!visible(el)) continue;
       const kind = kindOf(el);
-      const ref = "f" + (out.length + 1);
-      bind(ref, el);
+      const ref = bind("f", el);
       const field = { ref, label: labelOf(el), kind: wireKind(kind) };
       if (kind === "password" || kind === "card" || kind === "code") {
         field.masked = true;
@@ -162,8 +190,7 @@
     for (const el of document.querySelectorAll(CONTROLS)) {
       if (out.length >= MAX_CONTROLS) break;
       if (!visible(el)) continue;
-      const ref = "c" + (out.length + 1);
-      bind(ref, el);
+      const ref = bind("c", el);
       const label = clean(el.getAttribute("aria-label") || el.innerText || el.value || el.title || "");
       const submits = (el.tagName === "BUTTON" && (el.type || "submit") === "submit" && !!el.form) || (el.tagName === "INPUT" && el.type === "submit");
       const control = { ref, label: M.maskText(label), submits };
@@ -196,8 +223,7 @@
       if (el.matches(CONTROLS)) continue; // already a control
       if (actsAsControl(el)) {
         if (controls.length >= MAX_CONTROLS) continue;
-        const ref = "c" + (controls.length + 1);
-        bind(ref, el);
+        const ref = bind("c", el);
         const control = { ref, label: M.maskText(clean(el.innerText || el.getAttribute("aria-label") || el.title || "")), submits: false };
         if (placesOrder(el, false)) control.places_order = true;
         controls.push(control);
@@ -205,8 +231,7 @@
       }
       const url = M.maskURL(el.href);
       if (!url) continue;
-      const ref = "l" + (out.length + 1);
-      bind(ref, el);
+      const ref = bind("l", el);
       out.push({ ref, label: M.maskText(clean(el.innerText || el.getAttribute("aria-label") || el.title || "")), url });
     }
     return out;
@@ -302,9 +327,11 @@
   }
 
   /**
-   * The page as the taf reads it, with fresh refs and a new read id. Earlier refs stop working. A page's text comes in
-   * windows of MAX_TEXT characters of its masked text: `offset` asks for a later one, and a page that goes on says so
-   * (`more`, and the `next_offset` to ask for). Fields, controls and links are the page's whole, in every window.
+   * The page as the taf reads it, with a new read id. An element keeps the ref an earlier read gave it while it's the same
+   * element and still what it was; one that's gone or changed gets none of its old ref. A page's text comes in windows of
+   * at most MAX_TEXT characters and MAX_TEXT_BYTES of UTF-8 of its masked text: `offset` asks for a later one, and a page
+   * that goes on says so (`more`, and the `next_offset` to ask for). Fields, controls and links are the page's whole, in
+   * every window.
    */
   /**
    * The page's text. With `withoutEditable` (the read after a hand-over), what is inside an editable region (`contenteditable`, a
@@ -330,12 +357,20 @@
   }
 
   function read(offset, opts) {
+    previous = refs;
+    previousPrints = prints;
     refs = new Map();
     prints = new Map();
     const text = M.maskText(bodyText(!!(opts && opts.withoutEditable)).replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim());
     const start = Number.isSafeInteger(offset) && offset > 0 ? Math.min(offset, text.length) : 0;
     // A window never ends inside a surrogate pair (an emoji): it stops one short, and the next starts with the whole character.
     let end = Math.min(start + MAX_TEXT, text.length);
+    // Nor goes over its bytes: 20,000 characters of Japanese or Chinese are three times that in UTF-8.
+    const utf8 = new TextEncoder();
+    // Each UTF-16 unit is 1 to 3 bytes: dropping a third of the excess in units each time ends just under the budget.
+    for (let over = utf8.encode(text.slice(start, end)).length - MAX_TEXT_BYTES; over > 0 && end > start; over = utf8.encode(text.slice(start, end)).length - MAX_TEXT_BYTES) {
+      end -= Math.max(1, Math.ceil(over / 3));
+    }
     if (end < text.length) {
       const last = text.charCodeAt(end - 1);
       if (last >= 0xd800 && last <= 0xdbff) end -= 1;
@@ -383,6 +418,35 @@
     el.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
+  /** The keys a taf may press on a ref, and nothing else: no Tab (a key event moves no focus), no shortcuts. */
+  const KEYS = new Set(["Enter", "Escape", "ArrowDown", "ArrowUp"]);
+  const KEY_CODES = { Enter: 13, Escape: 27, ArrowDown: 40, ArrowUp: 38 };
+
+  /** Presses `name` on `el` as key events; whether the page let it through (none of its handlers cancelled the keydown). */
+  function key(el, name) {
+    const at = { key: name, code: name, keyCode: KEY_CODES[name], which: KEY_CODES[name], bubbles: true, cancelable: true, composed: true };
+    const through = el.dispatchEvent(new KeyboardEvent("keydown", at));
+    if (name === "Enter") el.dispatchEvent(new KeyboardEvent("keypress", at));
+    el.dispatchEvent(new KeyboardEvent("keyup", at));
+    return through;
+  }
+
+  /** Types `value` into `el` one character at a time, each with its key events, as a person typing it would. */
+  function typeInto(el, value) {
+    const proto = el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(proto, "value").set;
+    setter.call(el, "");
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    for (const ch of value) {
+      const at = { key: ch, bubbles: true, cancelable: true, composed: true };
+      el.dispatchEvent(new KeyboardEvent("keydown", at));
+      setter.call(el, el.value + ch);
+      el.dispatchEvent(new InputEvent("input", { bubbles: true, data: ch, inputType: "insertText" }));
+      el.dispatchEvent(new KeyboardEvent("keyup", at));
+    }
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
   function press(el) {
     const r = el.getBoundingClientRect();
     const at = { bubbles: true, cancelable: true, composed: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, button: 0 };
@@ -400,6 +464,12 @@
   function act(a, readId) {
     if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
     if (dialog) return { ok: false, code: "dialog_open" };
+    // A scroll of the page itself names no ref (gap 7): by most of a screen, so what was at the bottom stays in view.
+    if (a.kind === "scroll" && !a.ref) {
+      window.scrollBy(0, Math.round(window.innerHeight * 0.8) * (a.value === "up" ? -1 : 1));
+      current = null;
+      return { ok: true };
+    }
     const el = refs.get(a.ref);
     if (!el || !el.isConnected || prints.get(a.ref) !== printOf(el)) return { ok: false, code: "ref_unknown" };
     if (!visible(el) || !onTop(el)) return { ok: false, code: "not_visible" };
@@ -415,7 +485,28 @@
         break;
       case "fill":
         if (!el.matches("input, textarea") || kind === "checkbox" || kind === "radio") return { ok: false, code: "bad_step" };
-        setValue(el, String(a.value));
+        // `keys`: typed one character at a time, with key events, for a field that opens its list as you type (a city, an
+        // airport). Never a submit: Enter is a `press` of its own.
+        if (a.keys === true) typeInto(el, String(a.value));
+        else setValue(el, String(a.value));
+        break;
+      case "press": {
+        if (!KEYS.has(a.value)) return { ok: false, code: "bad_step" };
+        // Enter on a field submits its form as the browser would (an untrusted key event submits nothing): a form whose
+        // button places an order or that takes a card is refused, as a click on that button is.
+        if (a.value === "Enter" && el.matches("input") && el.form) {
+          const button = el.form.querySelector('button[type=submit], button:not([type]), input[type=submit]');
+          if (placesOrder(button || el, true)) return { ok: false, code: "payment_step" };
+        }
+        const pressed = key(el, a.value);
+        if (a.value === "Enter" && pressed && el.matches("input") && el.form) {
+          if (el.form.target) el.form.target = "_self";
+          el.form.requestSubmit();
+        }
+        break;
+      }
+      case "scroll":
+        el.scrollIntoView({ block: "center" });
         break;
       case "select": {
         if (el.tagName !== "SELECT") return { ok: false, code: "bad_step" };
