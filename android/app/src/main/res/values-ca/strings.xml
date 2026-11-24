@@ -30,6 +30,7 @@
     <string name="alert_prompt">Rep una alerta quan un taf et necessiti</string>
     <string name="alert_role_cant">El teu rol en aquest compte de KIFF no pot activar les alertes.</string>
     <string name="alert_sign_in_again">Inicia la sessió amb KIFF de nou per activar les alertes: aquest inici de sessió no pot signar pel telèfon.</string>
+    <string name="alert_sign_out_anyway">Tanca la sessió igualment</string>
     <string name="alert_silent">Silenci</string>
     <string name="alert_silent_example">Respostes de suport ha respost maria@… · Per correu electrònic</string>
     <string name="alert_sound">So</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">No disponible</string>
     <string name="alert_status_off">Desactivat</string>
     <string name="alert_status_on">Activat</string>
+    <string name="alert_still_on_after_sign_out_body">tafs no les ha pogut desactivar (%1$s). Torna-ho a provar, o tanca la sessió igualment i desactiva les notificacions de tafs als Ajustos.</string>
+    <string name="alert_still_on_after_sign_out_title">Aquest dispositiu (%1$s) encara pot rebre les alertes d\'aquest compte</string>
     <string name="alert_taf_needs_you">%1$s et necessita</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">La clau de seguretat no ha pogut signar, així que no s\'ha aprovat res. La sol·licitud es conserva: torna a aprovar quan estiguis a punt.</string>
     <string name="approval_security_key_locked">Aquesta clau de seguretat s\'ha bloquejat després de massa PIN incorrectes, així que no pot aprovar. Aprova al telèfon. Restablir la clau l\'esborra, per això, per tornar a aprovar amb una clau, cal que vinculis aquest ordinador de nou.</string>
     <string name="approval_security_key_no_key">Connecta la teva clau de seguretat i torna-ho a provar.</string>
+    <string name="approval_security_key_no_library">Aquest ordinador no pot fer servir una clau de seguretat fins que s\'instal·li libfido2 1.14 o posterior (a Ubuntu, el paquet libfido2-1), així que no s\'ha aprovat res. Instal·la-ho i torna a aprovar. La sol·licitud es conserva.</string>
+    <string name="approval_security_key_no_library_pairing">Aquest ordinador no pot fer servir una clau de seguretat fins que s\'instal·li libfido2 1.14 o posterior (a Ubuntu, el paquet libfido2-1). Per afegir la teva clau, cancel·la, instal·la-ho i torna a aparellar. O aparella ara sense clau.</string>
     <string name="approval_security_key_no_pin_set">Aquesta clau de seguretat no té PIN, així que no pot aprovar. Connecta la que va amb aquest ordinador. Si s\'ha restablert, aprova al telèfon i aparella aquest ordinador de nou per aprovar amb una clau.</string>
     <string name="approval_security_key_none_paired">Aquest ordinador encara no té cap clau de seguretat. Una clau de seguretat és una petita clau USB que toques per aprovar; una memòria USB corrent no serveix.</string>
     <string name="approval_security_key_not_allowed">La clau de seguretat no ho ha permès, així que no s\'ha aprovat res. La sol·licitud es conserva: torna a aprovar quan estiguis a punt.</string>

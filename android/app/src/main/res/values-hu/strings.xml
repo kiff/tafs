@@ -30,6 +30,7 @@
     <string name="alert_prompt">Kapj értesítést, ha egy tafnak szüksége van rád</string>
     <string name="alert_role_cant">A szerepköröd ebben a KIFF-fiókban nem kapcsolhatja be az értesítéseket.</string>
     <string name="alert_sign_in_again">Az értesítések bekapcsolásához jelentkezz be újra a KIFF-fel: ez a bejelentkezés nem tud aláírni a telefon nevében.</string>
+    <string name="alert_sign_out_anyway">Kijelentkezés mégis</string>
     <string name="alert_silent">Néma</string>
     <string name="alert_silent_example">Az Ügyfélszolgálati válaszok válaszolt neki: maria@… · E-mailben</string>
     <string name="alert_sound">Hang</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Nem érhető el</string>
     <string name="alert_status_off">Ki</string>
     <string name="alert_status_on">Be</string>
+    <string name="alert_still_on_after_sign_out_body">A tafs nem tudta kikapcsolni őket (%1$s). Próbáld újra, vagy jelentkezz ki mégis, és kapcsold ki a tafs értesítéseit a Beállításokban.</string>
+    <string name="alert_still_on_after_sign_out_title">Ez az eszköz (%1$s) talán továbbra is megkapja ennek a fióknak az értesítéseit</string>
     <string name="alert_taf_needs_you">%1$s rád vár</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">A biztonsági kulcs nem tudott aláírni, így semmi sem lett jóváhagyva. A kérés megmarad: hagyd jóvá újra, ha készen állsz.</string>
     <string name="approval_security_key_locked">Ez a biztonsági kulcs túl sok hibás PIN-kód után zárolva van, ezért nem tud jóváhagyni. Hagyd jóvá a telefonodon. A kulcs alaphelyzetbe állítása törli, ezért ha újra kulccsal akarsz jóváhagyni, párosítsd újra ezt a számítógépet.</string>
     <string name="approval_security_key_no_key">Csatlakoztasd a biztonsági kulcsodat, majd próbáld újra.</string>
+    <string name="approval_security_key_no_library">Ez a számítógép nem tud biztonsági kulcsot használni, amíg nincs telepítve a libfido2 1.14 vagy újabb (Ubuntun a libfido2-1 csomag), ezért semmi sem lett jóváhagyva. Telepítsd, majd hagyd jóvá újra. A kérés megmarad.</string>
+    <string name="approval_security_key_no_library_pairing">Ez a számítógép nem tud biztonsági kulcsot használni, amíg nincs telepítve a libfido2 1.14 vagy újabb (Ubuntun a libfido2-1 csomag). A kulcs hozzáadásához szakítsd meg, telepítsd, majd párosíts újra. Vagy párosíts most kulcs nélkül.</string>
     <string name="approval_security_key_no_pin_set">Ennek a biztonsági kulcsnak nincs PIN-kódja, ezért nem tud jóváhagyni. Csatlakoztasd azt, amelyik ehhez a számítógéphez tartozik. Ha alaphelyzetbe lett állítva, hagyd jóvá a telefonodon, és párosítsd újra ezt a számítógépet, hogy kulccsal hagyhass jóvá.</string>
     <string name="approval_security_key_none_paired">Ennek a számítógépnek még nincs biztonsági kulcsa. A biztonsági kulcs egy kis USB-kulcs, amelyet jóváhagyáskor megérintesz; a sima USB-pendrive nem működik.</string>
     <string name="approval_security_key_not_allowed">A biztonsági kulcs nem engedélyezte, így semmi sem lett jóváhagyva. A kérés megmarad: hagyd jóvá újra, ha készen állsz.</string>

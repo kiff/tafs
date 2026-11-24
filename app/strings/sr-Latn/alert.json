@@ -27,6 +27,7 @@
   "alert.prompt": "Primite obaveštenje kad taf treba vas",
   "alert.role_cant": "Vaša uloga na ovom KIFF nalogu ne može da uključi obaveštenja.",
   "alert.sign_in_again": "Prijavite se ponovo KIFF-om da uključite obaveštenja: ova prijava ne može da potpisuje za telefon.",
+  "alert.sign_out_anyway": "Ipak se odjavi",
   "alert.silent": "Bez zvuka",
   "alert.silent_example": "Odgovori podrške: odgovoreno maria@… · E-poštom",
   "alert.sound": "Zvuk",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Nedostupno",
   "alert.status.off": "Isključeno",
   "alert.status.on": "Uključeno",
+  "alert.still_on_after_sign_out.body": "tafs nije mogao da ih isključi ({why}). Pokušajte ponovo ili se ipak odjavite i isključite obaveštenja za tafs u Podešavanjima.",
+  "alert.still_on_after_sign_out.title": "Ovaj uređaj ({device}) možda i dalje prima obaveštenja ovog naloga",
   "alert.taf_needs_you": "Taf {taf} čeka vas",
   "alert.tafs": {
     "one": "{count} taf ›",

@@ -27,6 +27,7 @@
   "alert.prompt": "Dapatkan peringatan saat sebuah taf membutuhkan Anda",
   "alert.role_cant": "Peran Anda di akun KIFF ini tidak dapat mengaktifkan peringatan.",
   "alert.sign_in_again": "Masuk dengan KIFF lagi untuk mengaktifkan peringatan: proses masuk ini tidak dapat menandatangani untuk ponsel.",
+  "alert.sign_out_anyway": "Tetap keluar",
   "alert.silent": "Senyap",
   "alert.silent_example": "Balasan dukungan dijawab maria@… · Lewat email",
   "alert.sound": "Suara",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Tidak tersedia",
   "alert.status.off": "Nonaktif",
   "alert.status.on": "Aktif",
+  "alert.still_on_after_sign_out.body": "tafs tidak dapat menonaktifkannya ({why}). Coba lagi, atau tetap keluar dan nonaktifkan notifikasi untuk tafs di Pengaturan.",
+  "alert.still_on_after_sign_out.title": "{device} ini mungkin masih menerima peringatan akun ini",
   "alert.taf_needs_you": "{taf} membutuhkan Anda",
   "alert.tafs": {
     "other": "{count} taf ›"

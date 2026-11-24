@@ -27,6 +27,7 @@
   "alert.prompt": "Recevoir une alerte quand un taf vous attend",
   "alert.role_cant": "Votre rôle sur ce compte KIFF ne permet pas d'activer les alertes.",
   "alert.sign_in_again": "Reconnectez-vous avec KIFF pour activer les alertes : cette connexion ne peut pas signer pour le téléphone.",
+  "alert.sign_out_anyway": "Se déconnecter quand même",
   "alert.silent": "Silencieux",
   "alert.silent_example": "Réponses au support a répondu à maria@… · Par e-mail",
   "alert.sound": "Son",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Non disponible",
   "alert.status.off": "Désactivé",
   "alert.status.on": "Activé",
+  "alert.still_on_after_sign_out.body": "tafs n'a pas pu les désactiver ({why}). Réessayez, ou déconnectez-vous quand même et désactivez les notifications pour tafs dans Réglages.",
+  "alert.still_on_after_sign_out.title": "{device|This} peut encore recevoir les alertes de ce compte",
   "alert.taf_needs_you": "{taf} vous attend",
   "alert.tafs": {
     "one": "{count} taf ›",

@@ -30,6 +30,7 @@
     <string name="alert_prompt">Nhận thông báo khi một taf cần bạn</string>
     <string name="alert_role_cant">Vai trò của bạn trong tài khoản KIFF này không thể bật thông báo.</string>
     <string name="alert_sign_in_again">Hãy đăng nhập lại bằng KIFF để bật thông báo: lần đăng nhập này không thể ký cho điện thoại.</string>
+    <string name="alert_sign_out_anyway">Vẫn đăng xuất</string>
     <string name="alert_silent">Im lặng</string>
     <string name="alert_silent_example">Hỗ trợ đã trả lời maria@… · Qua email</string>
     <string name="alert_sound">Âm thanh</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Không khả dụng</string>
     <string name="alert_status_off">Tắt</string>
     <string name="alert_status_on">Bật</string>
+    <string name="alert_still_on_after_sign_out_body">tafs không tắt được chúng (%1$s). Hãy thử lại, hoặc vẫn đăng xuất rồi tắt thông báo cho tafs trong Cài đặt.</string>
+    <string name="alert_still_on_after_sign_out_title">%1$s này có thể vẫn nhận cảnh báo của tài khoản này</string>
     <string name="alert_taf_needs_you">%1$s cần bạn</string>
     <plurals name="alert_tafs">
         <item quantity="other">%1$s tafs ›</item>
@@ -104,6 +107,8 @@
     <string name="approval_security_key_failed">Khóa bảo mật không thể ký nên không có gì được phê duyệt. Yêu cầu vẫn được giữ: hãy phê duyệt lại khi bạn sẵn sàng.</string>
     <string name="approval_security_key_locked">Khóa bảo mật này bị khóa sau quá nhiều PIN sai nên không thể phê duyệt. Hãy phê duyệt trên điện thoại của bạn. Đặt lại khóa sẽ xóa nó, vì vậy để phê duyệt bằng khóa lần nữa, hãy ghép đôi lại máy tính này.</string>
     <string name="approval_security_key_no_key">Hãy cắm khóa bảo mật của bạn, rồi thử lại.</string>
+    <string name="approval_security_key_no_library">Máy tính này không thể dùng khóa bảo mật cho đến khi cài libfido2 1.14 trở lên (trên Ubuntu là gói libfido2-1), nên chưa có gì được phê duyệt. Hãy cài đặt rồi phê duyệt lại. Yêu cầu vẫn được giữ.</string>
+    <string name="approval_security_key_no_library_pairing">Máy tính này không thể dùng khóa bảo mật cho đến khi cài libfido2 1.14 trở lên (trên Ubuntu là gói libfido2-1). Để thêm khóa, hãy hủy, cài đặt rồi ghép nối lại. Hoặc ghép nối ngay mà không có khóa.</string>
     <string name="approval_security_key_no_pin_set">Khóa bảo mật này chưa có PIN nên không thể phê duyệt. Hãy cắm khóa đi cùng máy tính này. Nếu nó đã bị đặt lại, hãy phê duyệt trên điện thoại và ghép đôi lại máy tính này để phê duyệt bằng khóa.</string>
     <string name="approval_security_key_none_paired">Máy tính này chưa có khóa bảo mật nào. Khóa bảo mật là một khóa USB nhỏ bạn chạm vào để phê duyệt; USB thông thường không dùng được.</string>
     <string name="approval_security_key_not_allowed">Khóa bảo mật không cho phép nên không có gì được phê duyệt. Yêu cầu vẫn được giữ: hãy phê duyệt lại khi bạn sẵn sàng.</string>

@@ -27,6 +27,7 @@
   "alert.prompt": "Nhận thông báo khi một taf cần bạn",
   "alert.role_cant": "Vai trò của bạn trong tài khoản KIFF này không thể bật thông báo.",
   "alert.sign_in_again": "Hãy đăng nhập lại bằng KIFF để bật thông báo: lần đăng nhập này không thể ký cho điện thoại.",
+  "alert.sign_out_anyway": "Vẫn đăng xuất",
   "alert.silent": "Im lặng",
   "alert.silent_example": "Hỗ trợ đã trả lời maria@… · Qua email",
   "alert.sound": "Âm thanh",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Không khả dụng",
   "alert.status.off": "Tắt",
   "alert.status.on": "Bật",
+  "alert.still_on_after_sign_out.body": "tafs không tắt được chúng ({why}). Hãy thử lại, hoặc vẫn đăng xuất rồi tắt thông báo cho tafs trong Cài đặt.",
+  "alert.still_on_after_sign_out.title": "{device} này có thể vẫn nhận cảnh báo của tài khoản này",
   "alert.taf_needs_you": "{taf} cần bạn",
   "alert.tafs": {
     "other": "{count} tafs ›"

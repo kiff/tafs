@@ -415,6 +415,11 @@ foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" 
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
 to production only **after 0.4.0's review passes**, so the review isn't restarted.
 
+**400,000,012 (0.4.7)** closes a gap found live in 0.4.6: a message kept for later is deleted, unsent, once the watch has no
+screen lock, checked when the app starts, opens or is put away (`WatchModel.checkLock`, #1943), as the Inbox's lines are. A
+watch that's only locked keeps it. To `wear:internal` on merge, with its notes in the listing's 11 languages; the Privacy
+page's Wear OS item says the same from this version on.
+
 **400,000,011 (0.4.6)** brings the watch to main's code for the owner's second Galaxy Watch pass: the Inbox's read and
 dismissed in step across the person's watches (row 21, #1892), Hindi, Urdu and Turkmen (#1842, #1843, #1841), and the line
 for a phone that can't reach tafs cloud (#1896). No timing readout, no recording kept. To `wear:internal` on merge, with its

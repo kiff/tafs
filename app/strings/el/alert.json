@@ -27,6 +27,7 @@
   "alert.prompt": "Λάβε ειδοποίηση όταν ένα taf σε χρειάζεται",
   "alert.role_cant": "Ο ρόλος σου σε αυτόν τον λογαριασμό KIFF δεν μπορεί να ενεργοποιήσει ειδοποιήσεις.",
   "alert.sign_in_again": "Συνδέσου ξανά με την KIFF για να ενεργοποιήσεις τις ειδοποιήσεις: αυτή η σύνδεση δεν μπορεί να υπογράψει για το τηλέφωνο.",
+  "alert.sign_out_anyway": "Αποσύνδεση έτσι κι αλλιώς",
   "alert.silent": "Σίγαση",
   "alert.silent_example": "Το «Απαντήσεις υποστήριξης» απάντησε στη maria@… · Με email",
   "alert.sound": "Ήχος",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Μη διαθέσιμο",
   "alert.status.off": "Ανενεργό",
   "alert.status.on": "Ενεργό",
+  "alert.still_on_after_sign_out.body": "Το tafs δεν μπόρεσε να τις απενεργοποιήσει ({why}). Δοκίμασε ξανά ή αποσυνδέσου έτσι κι αλλιώς και απενεργοποίησε τις ειδοποιήσεις για το tafs στις Ρυθμίσεις.",
+  "alert.still_on_after_sign_out.title": "Αυτό το {device} ίσως λαμβάνει ακόμη τις ειδοποιήσεις αυτού του λογαριασμού",
   "alert.taf_needs_you": "Το {taf} σε χρειάζεται",
   "alert.tafs": {
     "one": "{count} taf ›",

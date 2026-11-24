@@ -1,0 +1,1 @@
+- **tafs cloud sends alerts to the macOS 12 app.** `POST /v1/push` takes `platform: "macos"`, an APNs token as an iPhone's, and tafs cloud sends it on the Mac app's own topic, so a Mac's token is never dropped as one for another app ([api.md](docs/api.md)).

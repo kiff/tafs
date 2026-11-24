@@ -5966,7 +5966,7 @@ final class AppModel: ObservableObject {
             for try await e in events {
                 guard gen == accountGeneration else { return }
                 switch e {
-                case .session(let session, _, let run, let message):
+                case .session(let session, _, let run, let message, _):
                     chatStates[tafID]?.live?.session = session
                     chatStates[tafID]?.live?.run = run
                     if let sent, let message { markSent(sent, serverID: message, in: tafID) }
@@ -9441,7 +9441,7 @@ final class AppModel: ObservableObject {
             for try await e in events {
                 guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                 switch e {
-                case .session(let session, let newSession, let run, let message):
+                case .session(let session, let newSession, let run, let message, _):
                     if followNewSetupChat(session, newSession: newSession, sent: sent) { conversation = setupConversationGeneration }
                     setupLive?.session = session
                     if let run { setupLive?.run = run }

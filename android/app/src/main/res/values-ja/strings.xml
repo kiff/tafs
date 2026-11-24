@@ -30,6 +30,7 @@
     <string name="alert_prompt">tafがあなたを必要としたときに通知を受け取る</string>
     <string name="alert_role_cant">このKIFFアカウントでのあなたの役割では、通知をオンにできません。</string>
     <string name="alert_sign_in_again">通知をオンにするには、もう一度KIFFでサインインしてください：このサインインではスマートフォンで署名できません。</string>
+    <string name="alert_sign_out_anyway">このままサインアウト</string>
     <string name="alert_silent">サイレント</string>
     <string name="alert_silent_example">サポート返信がmaria@…に回答しました・メールで</string>
     <string name="alert_sound">サウンド</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">利用不可</string>
     <string name="alert_status_off">オフ</string>
     <string name="alert_status_on">オン</string>
+    <string name="alert_still_on_after_sign_out_body">tafsは通知をオフにできませんでした（%1$s）。もう一度試すか、このままサインアウトして、設定でtafsの通知をオフにしてください。</string>
+    <string name="alert_still_on_after_sign_out_title">この%1$sには、まだこのアカウントの通知が届く可能性があります</string>
     <string name="alert_taf_needs_you">%1$sがあなたを必要としています</string>
     <plurals name="alert_tafs">
         <item quantity="other">taf %1$s個 ›</item>
@@ -104,6 +107,8 @@
     <string name="approval_security_key_failed">セキュリティキーで署名できなかったため、何も承認されていません。リクエストは保持されています。準備ができたらもう一度承認してください。</string>
     <string name="approval_security_key_locked">PINの誤入力が多すぎるため、このセキュリティキーはロックされ、承認できません。スマートフォンで承認してください。キーをリセットすると内容が消去されるため、再びキーで承認するには、このコンピュータをもう一度ペアリングしてください。</string>
     <string name="approval_security_key_no_key">セキュリティキーを差し込んでから、もう一度お試しください。</string>
+    <string name="approval_security_key_no_library">libfido2 1.14 以降(Ubuntu では libfido2-1 パッケージ)がインストールされるまで、このコンピュータではセキュリティキーを使えないため、何も承認されませんでした。インストールしてから、もう一度承認してください。リクエストは保持されます。</string>
+    <string name="approval_security_key_no_library_pairing">libfido2 1.14 以降(Ubuntu では libfido2-1 パッケージ)がインストールされるまで、このコンピュータではセキュリティキーを使えません。キーを追加するには、キャンセルしてインストールし、もう一度ペアリングしてください。または、今はキーなしでペアリングします。</string>
     <string name="approval_security_key_no_pin_set">このセキュリティキーにはPINがないため、承認できません。このコンピュータ用のキーを差し込んでください。リセットした場合は、スマートフォンで承認し、キーで承認するにはこのコンピュータをもう一度ペアリングしてください。</string>
     <string name="approval_security_key_none_paired">このコンピュータにはまだセキュリティキーがありません。セキュリティキーは、承認するときにタッチする小さな USB キーで、ふつうの USB メモリは使えません。</string>
     <string name="approval_security_key_not_allowed">セキュリティキーが許可しなかったため、何も承認されていません。リクエストは保持されています。準備ができたらもう一度承認してください。</string>

@@ -63,6 +63,8 @@ enum Words {
         static var roleCant: String { Words.line("alert.role_cant") }
         /// Sign in with KIFF again to turn on alerts: this sign-in can't sign for the phone.
         static var signInAgain: String { Words.line("alert.sign_in_again") }
+        /// Sign out anyway
+        static var signOutAnyway: String { Words.line("alert.sign_out_anyway") }
         /// Silent
         static var silent: String { Words.line("alert.silent") }
         /// Support replies answered maria@… · By email
@@ -78,6 +80,12 @@ enum Words {
             static var off: String { Words.line("alert.status.off") }
             /// On
             static var on: String { Words.line("alert.status.on") }
+        }
+        enum StillOnAfterSignOut {
+            /// tafs couldn't turn them off ({why}). Try again, or sign out anyway and turn off notifications for tafs in Settings.
+            static func body(why: String) -> String { Words.line("alert.still_on_after_sign_out.body", why) }
+            /// This {device} may still get this account's alerts
+            static func title(device: String) -> String { Words.line("alert.still_on_after_sign_out.title", device, Words.demonstrative(device, capital: true)) }
         }
         /// {taf} needs you
         static func tafNeedsYou(taf: String) -> String { Words.line("alert.taf_needs_you", taf) }
@@ -222,6 +230,10 @@ enum Words {
             static var locked: String { Words.line("approval.security_key.locked") }
             /// Plug in your security key, then try again.
             static var noKey: String { Words.line("approval.security_key.no_key") }
+            /// This computer can't use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package), so nothing was approved. Install it, then approve again. The request is kept.
+            static var noLibrary: String { Words.line("approval.security_key.no_library") }
+            /// This computer can't use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package). To add your key, cancel, install it, then pair again. Or pair without a key now.
+            static var noLibraryPairing: String { Words.line("approval.security_key.no_library_pairing") }
             /// This security key has no PIN, so it can't approve. Plug in the one that goes with this computer. If it was reset, approve on your phone, and pair this computer again to approve with a key.
             static var noPinSet: String { Words.line("approval.security_key.no_pin_set") }
             /// This computer has no security key yet. A security key is a small USB key you touch to approve; an ordinary USB stick won't work.

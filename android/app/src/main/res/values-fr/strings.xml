@@ -30,6 +30,7 @@
     <string name="alert_prompt">Recevoir une alerte quand un taf vous attend</string>
     <string name="alert_role_cant">Votre rôle sur ce compte KIFF ne permet pas d\'activer les alertes.</string>
     <string name="alert_sign_in_again">Reconnectez-vous avec KIFF pour activer les alertes : cette connexion ne peut pas signer pour le téléphone.</string>
+    <string name="alert_sign_out_anyway">Se déconnecter quand même</string>
     <string name="alert_silent">Silencieux</string>
     <string name="alert_silent_example">Réponses au support a répondu à maria@… · Par e-mail</string>
     <string name="alert_sound">Son</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Non disponible</string>
     <string name="alert_status_off">Désactivé</string>
     <string name="alert_status_on">Activé</string>
+    <string name="alert_still_on_after_sign_out_body">tafs n\'a pas pu les désactiver (%1$s). Réessayez, ou déconnectez-vous quand même et désactivez les notifications pour tafs dans Réglages.</string>
+    <string name="alert_still_on_after_sign_out_title">%2$s peut encore recevoir les alertes de ce compte</string>
     <string name="alert_taf_needs_you">%1$s vous attend</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">La clé de sécurité n\'a pas pu signer : rien n\'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt.</string>
     <string name="approval_security_key_locked">Cette clé de sécurité est verrouillée après trop de codes PIN incorrects : elle ne peut pas approuver. Approuvez sur votre téléphone. Réinitialiser la clé l\'efface : pour approuver de nouveau avec une clé, associez de nouveau cet ordinateur.</string>
     <string name="approval_security_key_no_key">Branchez votre clé de sécurité, puis réessayez.</string>
+    <string name="approval_security_key_no_library">Cet ordinateur ne peut pas utiliser de clé de sécurité tant que libfido2 1.14 ou plus récent n\'est pas installé (sous Ubuntu, le paquet libfido2-1) : rien n\'a donc été approuvé. Installez-le, puis approuvez à nouveau. La demande est conservée.</string>
+    <string name="approval_security_key_no_library_pairing">Cet ordinateur ne peut pas utiliser de clé de sécurité tant que libfido2 1.14 ou plus récent n\'est pas installé (sous Ubuntu, le paquet libfido2-1). Pour ajouter votre clé, annulez, installez-le, puis associez à nouveau. Ou associez maintenant sans clé.</string>
     <string name="approval_security_key_no_pin_set">Cette clé de sécurité n\'a pas de code PIN : elle ne peut pas approuver. Branchez celle liée à cet ordinateur. Si elle a été réinitialisée, approuvez sur votre téléphone, et associez de nouveau cet ordinateur pour approuver avec une clé.</string>
     <string name="approval_security_key_none_paired">Cet ordinateur n\'a pas encore de clé de sécurité. Une clé de sécurité est une petite clé USB que vous touchez pour approuver ; une clé USB ordinaire ne fonctionne pas.</string>
     <string name="approval_security_key_not_allowed">La clé de sécurité ne l\'a pas autorisé : rien n\'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt.</string>

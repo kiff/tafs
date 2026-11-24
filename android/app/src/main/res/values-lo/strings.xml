@@ -30,6 +30,7 @@
     <string name="alert_prompt">ຮັບການແຈ້ງເຕືອນເມື່ອ taf ຕ້ອງການທ່ານ</string>
     <string name="alert_role_cant">ບົດບາດຂອງທ່ານໃນບັນຊີ KIFF ນີ້ເປີດການແຈ້ງເຕືອນບໍ່ໄດ້.</string>
     <string name="alert_sign_in_again">ເຂົ້າສູ່ລະບົບດ້ວຍ KIFF ອີກເພື່ອເປີດການແຈ້ງເຕືອນ: ການເຂົ້າສູ່ລະບົບນີ້ລົງລາຍເຊັນສຳລັບໂທລະສັບບໍ່ໄດ້.</string>
+    <string name="alert_sign_out_anyway">ອອກຈາກລະບົບເລີຍ</string>
     <string name="alert_silent">ງຽບ</string>
     <string name="alert_silent_example">ການຕອບສະໜັບສະໜູນຕອບ maria@… · ທາງອີເມວ</string>
     <string name="alert_sound">ສຽງ</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">ບໍ່ມີ</string>
     <string name="alert_status_off">ປິດ</string>
     <string name="alert_status_on">ເປີດ</string>
+    <string name="alert_still_on_after_sign_out_body">tafs ປິດມັນບໍ່ໄດ້ (%1$s). ລອງໃໝ່ ຫຼື ອອກຈາກລະບົບເລີຍ ແລ້ວປິດການແຈ້ງເຕືອນສຳລັບ tafs ໃນການຕັ້ງຄ່າ.</string>
+    <string name="alert_still_on_after_sign_out_title">%1$s ນີ້ອາດຍັງໄດ້ຮັບການແຈ້ງເຕືອນຂອງບັນຊີນີ້</string>
     <string name="alert_taf_needs_you">%1$s ຕ້ອງການທ່ານ</string>
     <plurals name="alert_tafs">
         <item quantity="other">taf %1$s ›</item>
@@ -104,6 +107,8 @@
     <string name="approval_security_key_failed">ກຸນແຈຄວາມປອດໄພລົງລາຍເຊັນບໍ່ໄດ້ ສະນັ້ນບໍ່ມີຫຍັງຖືກອະນຸມັດ. ຄຳຂໍຖືກເກັບໄວ້: ອະນຸມັດອີກເມື່ອທ່ານພ້ອມ.</string>
     <string name="approval_security_key_locked">ກຸນແຈຄວາມປອດໄພນີ້ຖືກລັອກຫຼັງໃສ່ PIN ຜິດຫຼາຍເທື່ອ ສະນັ້ນມັນອະນຸມັດບໍ່ໄດ້. ອະນຸມັດໃນໂທລະສັບຂອງທ່ານ. ການຣີເຊັດກຸນແຈຈະລຶບມັນ ສະນັ້ນເພື່ອອະນຸມັດດ້ວຍກຸນແຈອີກ ໃຫ້ຈັບຄູ່ຄອມພິວເຕີນີ້ອີກ.</string>
     <string name="approval_security_key_no_key">ສຽບກຸນແຈຄວາມປອດໄພຂອງທ່ານ ແລ້ວລອງໃໝ່.</string>
+    <string name="approval_security_key_no_library">ຄອມພິວເຕີນີ້ໃຊ້ກະແຈຄວາມປອດໄພບໍ່ໄດ້ ຈົນກວ່າຈະຕິດຕັ້ງ libfido2 1.14 ຫຼື ໃໝ່ກວ່າ (ໃນ Ubuntu ແມ່ນແພັກເກດ libfido2-1) ດັ່ງນັ້ນບໍ່ມີຫຍັງຖືກອະນຸມັດ. ຕິດຕັ້ງມັນ ແລ້ວອະນຸມັດອີກຄັ້ງ. ຄຳຂໍຍັງຖືກເກັບໄວ້.</string>
+    <string name="approval_security_key_no_library_pairing">ຄອມພິວເຕີນີ້ໃຊ້ກະແຈຄວາມປອດໄພບໍ່ໄດ້ ຈົນກວ່າຈະຕິດຕັ້ງ libfido2 1.14 ຫຼື ໃໝ່ກວ່າ (ໃນ Ubuntu ແມ່ນແພັກເກດ libfido2-1). ເພື່ອເພີ່ມກະແຈຂອງທ່ານ ໃຫ້ຍົກເລີກ ຕິດຕັ້ງມັນ ແລ້ວຈັບຄູ່ອີກຄັ້ງ. ຫຼື ຈັບຄູ່ດຽວນີ້ໂດຍບໍ່ມີກະແຈ.</string>
     <string name="approval_security_key_no_pin_set">ກຸນແຈຄວາມປອດໄພນີ້ບໍ່ມີ PIN ສະນັ້ນມັນອະນຸມັດບໍ່ໄດ້. ສຽບອັນທີ່ໃຊ້ກັບຄອມພິວເຕີນີ້. ຖ້າມັນຖືກຣີເຊັດ ໃຫ້ອະນຸມັດໃນໂທລະສັບຂອງທ່ານ ແລະ ຈັບຄູ່ຄອມພິວເຕີນີ້ອີກເພື່ອອະນຸມັດດ້ວຍກຸນແຈ.</string>
     <string name="approval_security_key_none_paired">ຄອມພິວເຕີເຄື່ອງນີ້ຍັງບໍ່ມີກຸນແຈຄວາມປອດໄພ. ກຸນແຈຄວາມປອດໄພແມ່ນກຸນແຈ USB ນ້ອຍທີ່ທ່ານແຕະເພື່ອອະນຸມັດ; USB ທຳມະດາໃຊ້ບໍ່ໄດ້.</string>
     <string name="approval_security_key_not_allowed">ກຸນແຈຄວາມປອດໄພບໍ່ອະນຸຍາດ ສະນັ້ນບໍ່ມີຫຍັງຖືກອະນຸມັດ. ຄຳຂໍຖືກເກັບໄວ້: ອະນຸມັດອີກເມື່ອທ່ານພ້ອມ.</string>

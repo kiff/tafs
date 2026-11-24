@@ -30,6 +30,7 @@
     <string name="alert_prompt">Primiți o alertă când un taf are nevoie de dvs.</string>
     <string name="alert_role_cant">Rolul dvs. în acest cont KIFF nu poate activa alertele.</string>
     <string name="alert_sign_in_again">Conectați-vă din nou cu KIFF pentru a activa alertele: această conectare nu poate semna pentru telefon.</string>
+    <string name="alert_sign_out_anyway">Deconectați-vă oricum</string>
     <string name="alert_silent">Silențios</string>
     <string name="alert_silent_example">Răspunsuri la suport i-a răspuns lui maria@… · Prin e-mail</string>
     <string name="alert_sound">Sunet</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Indisponibil</string>
     <string name="alert_status_off">Dezactivat</string>
     <string name="alert_status_on">Activat</string>
+    <string name="alert_still_on_after_sign_out_body">tafs nu le-a putut dezactiva (%1$s). Încercați din nou sau deconectați-vă oricum și dezactivați notificările pentru tafs în Configurări.</string>
+    <string name="alert_still_on_after_sign_out_title">Acest dispozitiv (%1$s) poate primi în continuare alertele acestui cont</string>
     <string name="alert_taf_needs_you">%1$s vă așteaptă</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -106,6 +109,8 @@
     <string name="approval_security_key_failed">Cheia de securitate nu a putut semna, așa că nu s-a aprobat nimic. Solicitarea se păstrează: aprobați din nou când sunteți gata.</string>
     <string name="approval_security_key_locked">Această cheie de securitate este blocată după prea multe PIN-uri greșite, așa că nu poate aproba. Aprobați pe telefon. Resetarea cheii o șterge, așa că, pentru a aproba din nou cu o cheie, asociați din nou acest computer.</string>
     <string name="approval_security_key_no_key">Conectați cheia de securitate, apoi încercați din nou.</string>
+    <string name="approval_security_key_no_library">Acest computer nu poate folosi o cheie de securitate până nu este instalat libfido2 1.14 sau mai nou (pe Ubuntu, pachetul libfido2-1), așa că nu s-a aprobat nimic. Instalați-l, apoi aprobați din nou. Solicitarea se păstrează.</string>
+    <string name="approval_security_key_no_library_pairing">Acest computer nu poate folosi o cheie de securitate până nu este instalat libfido2 1.14 sau mai nou (pe Ubuntu, pachetul libfido2-1). Pentru a adăuga cheia, anulați, instalați-l, apoi asociați din nou. Sau asociați acum fără cheie.</string>
     <string name="approval_security_key_no_pin_set">Această cheie de securitate nu are PIN, așa că nu poate aproba. Conectați-o pe cea care merge cu acest computer. Dacă a fost resetată, aprobați pe telefon și asociați din nou acest computer pentru a aproba cu o cheie.</string>
     <string name="approval_security_key_none_paired">Acest computer nu are încă nicio cheie de securitate. O cheie de securitate este o mică cheie USB pe care o atingeți pentru a aproba; un stick USB obișnuit nu funcționează.</string>
     <string name="approval_security_key_not_allowed">Cheia de securitate nu a permis, așa că nu s-a aprobat nimic. Solicitarea se păstrează: aprobați din nou când sunteți gata.</string>

@@ -1,0 +1,1 @@
+Un mensaje guardado con «Guardar para luego» ahora se borra sin enviarse si tu reloj ya no tiene bloqueo de pantalla, para que nada quede en un reloj sin él.

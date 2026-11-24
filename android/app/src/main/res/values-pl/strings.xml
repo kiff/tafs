@@ -30,6 +30,7 @@
     <string name="alert_prompt">Otrzymuj alert, gdy taf czeka na Ciebie</string>
     <string name="alert_role_cant">Twoja rola na tym koncie KIFF nie pozwala włączyć alertów.</string>
     <string name="alert_sign_in_again">Zaloguj się ponownie przez KIFF, aby włączyć alerty: to logowanie nie może podpisywać za ten telefon.</string>
+    <string name="alert_sign_out_anyway">Wyloguj mimo to</string>
     <string name="alert_silent">Bez dźwięku</string>
     <string name="alert_silent_example">Odpowiedzi wsparcia odpowiedział maria@… · Przez e-mail</string>
     <string name="alert_sound">Dźwięk</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Niedostępne</string>
     <string name="alert_status_off">Wyłączone</string>
     <string name="alert_status_on">Włączone</string>
+    <string name="alert_still_on_after_sign_out_body">tafs nie mógł ich wyłączyć (%1$s). Spróbuj ponownie albo mimo to wyloguj się i wyłącz powiadomienia tafs w Ustawieniach.</string>
+    <string name="alert_still_on_after_sign_out_title">Ten %1$s może nadal dostawać alerty tego konta</string>
     <string name="alert_taf_needs_you">%1$s czeka na Ciebie</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -107,6 +110,8 @@
     <string name="approval_security_key_failed">Klucz bezpieczeństwa nie mógł podpisać, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz.</string>
     <string name="approval_security_key_locked">Ten klucz bezpieczeństwa jest zablokowany po zbyt wielu złych PIN-ach, więc nie może zatwierdzać. Zatwierdź na telefonie. Zresetowanie klucza go wymazuje, więc aby znów zatwierdzać kluczem, sparuj ten komputer ponownie.</string>
     <string name="approval_security_key_no_key">Podłącz swój klucz bezpieczeństwa i spróbuj ponownie.</string>
+    <string name="approval_security_key_no_library">Ten komputer nie może używać klucza bezpieczeństwa, dopóki nie zostanie zainstalowany libfido2 1.14 lub nowszy (w Ubuntu pakiet libfido2-1), więc nic nie zostało zatwierdzone. Zainstaluj go, a potem zatwierdź ponownie. Prośba zostaje zachowana.</string>
+    <string name="approval_security_key_no_library_pairing">Ten komputer nie może używać klucza bezpieczeństwa, dopóki nie zostanie zainstalowany libfido2 1.14 lub nowszy (w Ubuntu pakiet libfido2-1). Aby dodać klucz, anuluj, zainstaluj go i powiąż ponownie. Albo powiąż teraz bez klucza.</string>
     <string name="approval_security_key_no_pin_set">Ten klucz bezpieczeństwa nie ma PIN-u, więc nie może zatwierdzać. Podłącz klucz powiązany z tym komputerem. Jeśli został zresetowany, zatwierdź na telefonie i sparuj ten komputer ponownie, aby zatwierdzać kluczem.</string>
     <string name="approval_security_key_none_paired">Ten komputer nie ma jeszcze klucza bezpieczeństwa. Klucz bezpieczeństwa to mały klucz USB, którego dotykasz, aby zatwierdzić; zwykły pendrive nie zadziała.</string>
     <string name="approval_security_key_not_allowed">Klucz bezpieczeństwa na to nie pozwolił, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz.</string>

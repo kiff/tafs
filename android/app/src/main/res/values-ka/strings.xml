@@ -30,6 +30,7 @@
     <string name="alert_prompt">მიიღეთ შეტყობინება, როცა taf-ს თქვენი დახმარება სჭირდება</string>
     <string name="alert_role_cant">ამ KIFF ანგარიშზე თქვენს როლს შეტყობინებების ჩართვა არ შეუძლია.</string>
     <string name="alert_sign_in_again">კვლავ შედით KIFF-ით შეტყობინებების ჩასართავად: ამ შესვლას ტელეფონისთვის ხელმოწერა არ შეუძლია.</string>
+    <string name="alert_sign_out_anyway">მაინც გასვლა</string>
     <string name="alert_silent">უხმოდ</string>
     <string name="alert_silent_example">მხარდაჭერის პასუხები გაეცა maria@… · ელფოსტით</string>
     <string name="alert_sound">ხმა</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">მიუწვდომელია</string>
     <string name="alert_status_off">გამორთულია</string>
     <string name="alert_status_on">ჩართულია</string>
+    <string name="alert_still_on_after_sign_out_body">tafs-მა ვერ გამორთო ისინი (%1$s). სცადეთ ხელახლა, ან მაინც გადით და პარამეტრებში გამორთეთ tafs-ის შეტყობინებები.</string>
+    <string name="alert_still_on_after_sign_out_title">ამ მოწყობილობას (%1$s) შეიძლება კვლავ მოუვიდეს ამ ანგარიშის შეტყობინებები</string>
     <string name="alert_taf_needs_you">%1$s-ს თქვენი დახმარება სჭირდება</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">უსაფრთხოების გასაღებმა ხელმოწერა ვერ შეძლო, ამიტომ არაფერი დამტკიცებულა. მოთხოვნა შენახულია: დაამტკიცეთ ხელახლა, როცა მზად იქნებით.</string>
     <string name="approval_security_key_locked">ეს უსაფრთხოების გასაღები ჩაიკეტა ზედმეტი არასწორი PIN-ის შემდეგ, ამიტომ დამტკიცება არ შეუძლია. დაამტკიცეთ ტელეფონზე. გასაღების გადატვირთვა მას წაშლის, ამიტომ გასაღებით ხელახლა დასამტკიცებლად ისევ დააწყვილეთ ეს კომპიუტერი.</string>
     <string name="approval_security_key_no_key">ჩართეთ თქვენი უსაფრთხოების გასაღები, შემდეგ სცადეთ ხელახლა.</string>
+    <string name="approval_security_key_no_library">ეს კომპიუტერი ვერ გამოიყენებს უსაფრთხოების გასაღებს, სანამ არ დაინსტალირდება libfido2 1.14 ან უფრო ახალი (Ubuntu-ზე libfido2-1 პაკეტი), ამიტომ არაფერი დამტკიცებულა. დააინსტალირეთ და ხელახლა დაამტკიცეთ. მოთხოვნა შენახულია.</string>
+    <string name="approval_security_key_no_library_pairing">ეს კომპიუტერი ვერ გამოიყენებს უსაფრთხოების გასაღებს, სანამ არ დაინსტალირდება libfido2 1.14 ან უფრო ახალი (Ubuntu-ზე libfido2-1 პაკეტი). გასაღების დასამატებლად გააუქმეთ, დააინსტალირეთ და ხელახლა დააწყვილეთ. ან ახლავე დააწყვილეთ გასაღების გარეშე.</string>
     <string name="approval_security_key_no_pin_set">ამ უსაფრთხოების გასაღებს PIN არ აქვს, ამიტომ დამტკიცება არ შეუძლია. ჩართეთ ის, რომელიც ამ კომპიუტერს შეესაბამება. თუ გადატვირთულია, დაამტკიცეთ ტელეფონზე და ისევ დააწყვილეთ ეს კომპიუტერი გასაღებით დასამტკიცებლად.</string>
     <string name="approval_security_key_none_paired">ამ კომპიუტერს ჯერ არ აქვს უსაფრთხოების გასაღები. უსაფრთხოების გასაღები არის პატარა USB გასაღები, რომელსაც დასამტკიცებლად ეხებით; ჩვეულებრივი USB ფლეშკა არ გამოდგება.</string>
     <string name="approval_security_key_not_allowed">უსაფრთხოების გასაღებმა ეს არ დაუშვა, ამიტომ არაფერი დამტკიცებულა. მოთხოვნა შენახულია: დაამტკიცეთ ხელახლა, როცა მზად იქნებით.</string>

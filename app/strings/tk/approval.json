@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Howpsuzlyk açary gol çekip bilmedi, şonuň üçin hiç zat tassyklanmady. Haýyş saklanýar: taýýar bolanyňyzda täzeden tassyklaň.",
   "approval.security_key.locked": "Bu howpsuzlyk açary gaty köp ýalňyş PIN-den soň gulplandy, şonuň üçin tassyklap bilmeýär. Telefonyňyzda tassyklaň. Açary täzeden bellemek ony pozýar, şonuň üçin açar bilen täzeden tassyklamak üçin bu kompýuteri täzeden goşalaň.",
   "approval.security_key.no_key": "Howpsuzlyk açaryňyzy dakyň, soňra täzeden synanyşyň.",
+  "approval.security_key.no_library": "libfido2 1.14 ýa-da täzesi gurnalýança (Ubuntu-da libfido2-1 bukjasy) bu kompýuter howpsuzlyk açaryny ulanyp bilmeýär, şonuň üçin hiç zat tassyklanmady. Ony guruň, soň täzeden tassyklaň. Haýyş saklanýar.",
+  "approval.security_key.no_library_pairing": "libfido2 1.14 ýa-da täzesi gurnalýança (Ubuntu-da libfido2-1 bukjasy) bu kompýuter howpsuzlyk açaryny ulanyp bilmeýär. Açaryňyzy goşmak üçin ýatyryň, ony guruň, soň täzeden goşalaň. Ýa-da häzir açarsyz goşalaň.",
   "approval.security_key.no_pin_set": "Bu howpsuzlyk açarynda PIN ýok, şonuň üçin tassyklap bilmeýär. Bu kompýuter bilen gidýän açary dakyň. Eger ol täzeden bellenen bolsa, telefonyňyzda tassyklaň we açar bilen tassyklamak üçin bu kompýuteri täzeden goşalaň.",
   "approval.security_key.none_paired": "Bu kompýuterde heniz howpsuzlyk açary ýok. Howpsuzlyk açary tassyklamak üçin degýän kiçijik USB açarydyr; adaty USB fleş işlemeýär.",
   "approval.security_key.not_allowed": "Howpsuzlyk açary oňa rugsat bermedi, şonuň üçin hiç zat tassyklanmady. Haýyş saklanýar: taýýar bolanyňyzda täzeden tassyklaň.",

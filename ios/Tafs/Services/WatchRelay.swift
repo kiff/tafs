@@ -525,6 +525,8 @@ struct KeptWatchReading: WatchReading {
         do {
             let asked = try await cloud.watchAsk(body: body, signature: "t=\(signedAt),v1=\(signature)")
             let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: asked.id, sent: nil)
+            // Row 11: tafs cloud's push for this request is read only because this iPhone sent it (`WatchAskPush`).
+            if follows { WatchAskPushes().sent(asked.id) }
             // W3: if the watch is put away before the request ends, the iPhone posts how it went (`CoachFollow`).
             if follows {
                 let reading = self
@@ -570,7 +572,11 @@ struct KeptWatchReading: WatchReading {
         }
         CoachFollow.watchReading(ticket)
         let reply = await readCoach(ticket)
-        if reply.outcome == .ok, reply.answering == false, reply.coach != nil { CoachFollow.watchHas(ticket) }
+        if reply.outcome == .ok, reply.answering == false, reply.coach != nil {
+            CoachFollow.watchHas(ticket)
+            // Kept past the follow, so tafs cloud's later push for the request posts nothing the watch showed.
+            if follows, let id = ticket.askID { WatchAskPushes().seen(id) }
+        }
         return reply
     }
 

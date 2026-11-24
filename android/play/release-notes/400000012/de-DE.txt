@@ -1,0 +1,1 @@
+Eine mit „Für später behalten“ gespeicherte Nachricht wird jetzt ungesendet gelöscht, wenn deine Uhr keine Displaysperre mehr hat. So bleibt auf einer Uhr ohne Sperre nichts zurück.

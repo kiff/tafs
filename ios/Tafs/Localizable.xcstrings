@@ -8455,6 +8455,269 @@
         }
       }
     },
+    "alert.sign_out_anyway": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الخروج على أي حال"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hər halda çıxış et"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изход въпреки това"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "তবুও সাইন আউট"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanca la sessió igualment"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přesto se odhlásit"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trotzdem abmelden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out anyway"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar sesión de todos modos"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logi siiski välja"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se déconnecter quand même"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יציאה בכל זאת"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "फिर भी साइन आउट करें"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Svejedno se odjavi"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijelentkezés mégis"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Միևնույն է ելք"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tetap keluar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esci comunque"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このままサインアウト"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "მაინც გასვლა"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ចាកចេញទោះយ៉ាងណាក៏ដោយ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그래도 로그아웃"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ອອກຈາກລະບົບເລີຍ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vis tiek atsijungti"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomēr izrakstīties"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сепак одјави се"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ямар ч байсан гарах"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जे भए पनि साइन आउट गर्नुहोस्"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toch uitloggen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyloguj mimo to"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminar sessão na mesma"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sair mesmo assim"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deconectați-vă oricum"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aj tak sa odhlásiť"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vseeno se odjavi"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dil gjithsesi"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ipak se odjavi"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ออกจากระบบต่อไป"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her niçik hem çyk"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yine de oturumu kapat"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پھر بھی سائن آؤٹ کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vẫn đăng xuất"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仍然登出"
+          }
+        }
+      }
+    },
     "alert.silent": {
       "extractionState": "manual",
       "localizations": {
@@ -10292,6 +10555,532 @@
           "stringUnit": {
             "state": "translated",
             "value": "開啟"
+          }
+        }
+      }
+    },
+    "alert.still_on_after_sign_out.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتمكن tafs من إيقافها (%1$@). حاول مرة أخرى، أو سجّل الخروج على أي حال وأوقف إشعارات tafs من الإعدادات."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs onları söndürə bilmədi (%1$@). Yenidən cəhd edin və ya hər halda çıxış edin və Parametrlərdə tafs üçün bildirişləri söndürün."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs не успя да ги изключи (%1$@). Опитайте отново или излезте въпреки това и изключете известията за tafs в Настройки."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs সেগুলো বন্ধ করতে পারেনি (%1$@)। আবার চেষ্টা করুন, অথবা তবুও সাইন আউট করে সেটিংসে tafs-এর নোটিফিকেশন বন্ধ করুন।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs no les ha pogut desactivar (%1$@). Torna-ho a provar, o tanca la sessió igualment i desactiva les notificacions de tafs als Ajustos."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs je nedokázal vypnout (%1$@). Zkuste to znovu, nebo se přesto odhlaste a vypněte oznámení pro tafs v Nastavení."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs konnte sie nicht ausschalten (%1$@). Versuch es erneut oder melde dich trotzdem ab und schalte die Benachrichtigungen für tafs in den Einstellungen aus."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs couldn't turn them off (%1$@). Try again, or sign out anyway and turn off notifications for tafs in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs no pudo desactivarlas (%1$@). Vuelve a intentarlo, o cierra sesión de todos modos y desactiva las notificaciones de tafs en Ajustes."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ei saanud neid välja lülitada (%1$@). Proovi uuesti või logi siiski välja ja lülita seadetes tafsi teavitused välja."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs n'a pas pu les désactiver (%1$@). Réessayez, ou déconnectez-vous quand même et désactivez les notifications pour tafs dans Réglages."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs לא הצליח לכבות אותן (%1$@). יש לנסות שוב, או לצאת בכל זאת ולכבות את ההתראות של tafs בהגדרות."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs उन्हें बंद नहीं कर सका (%1$@)। दोबारा कोशिश करें, या फिर भी साइन आउट करें और सेटिंग में tafs की सूचनाएँ बंद करें।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ih nije mogao isključiti (%1$@). Pokušajte ponovno ili se svejedno odjavite i isključite obavijesti za tafs u Postavkama."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tafs nem tudta kikapcsolni őket (%1$@). Próbáld újra, vagy jelentkezz ki mégis, és kapcsold ki a tafs értesítéseit a Beállításokban."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs-ը չկարողացավ անջատել դրանք (%1$@). Նորից փորձեք կամ, միևնույն է, դուրս եկեք և անջատեք tafs-ի ծանուցումները Կարգավորումներում։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs tidak dapat menonaktifkannya (%1$@). Coba lagi, atau tetap keluar dan nonaktifkan notifikasi untuk tafs di Pengaturan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs non è riuscito a disattivarli (%1$@). Riprova, oppure esci comunque e disattiva le notifiche per tafs in Impostazioni."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafsは通知をオフにできませんでした（%1$@）。もう一度試すか、このままサインアウトして、設定でtafsの通知をオフにしてください。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs-მა ვერ გამორთო ისინი (%1$@). სცადეთ ხელახლა, ან მაინც გადით და პარამეტრებში გამორთეთ tafs-ის შეტყობინებები."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs មិនអាចបិទវាបានទេ (%1$@)។ សូមព្យាយាមម្តងទៀត ឬចាកចេញទោះយ៉ាងណាក៏ដោយ ហើយបិទការជូនដំណឹងសម្រាប់ tafs ក្នុងការកំណត់។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs가 알림을 끄지 못했습니다(%1$@). 다시 시도하거나, 그래도 로그아웃한 뒤 설정에서 tafs의 알림을 끄세요."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ປິດມັນບໍ່ໄດ້ (%1$@). ລອງໃໝ່ ຫຼື ອອກຈາກລະບົບເລີຍ ແລ້ວປິດການແຈ້ງເຕືອນສຳລັບ tafs ໃນການຕັ້ງຄ່າ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs nepavyko jų išjungti (%1$@). Bandykite dar kartą arba vis tiek atsijunkite ir išjunkite tafs pranešimus nustatymuose."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs nevarēja tos izslēgt (%1$@). Mēģini vēlreiz vai tomēr izrakstieties un iestatījumos izslēdz paziņojumus no tafs."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs не можеше да ги исклучи (%1$@). Обиди се повторно или сепак одјави се и исклучи ги известувањата за tafs во Поставки."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs тэдгээрийг унтрааж чадсангүй (%1$@). Дахин оролдох эсвэл ямар ч байсан гараад, Тохиргоонд tafs-ийн мэдэгдлийг унтраана уу."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ले तिनलाई बन्द गर्न सकेन (%1$@)। फेरि प्रयास गर्नुहोस्, वा जे भए पनि साइन आउट गरेर सेटिङमा tafs का सूचनाहरू बन्द गर्नुहोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs kon ze niet uitzetten (%1$@). Probeer het opnieuw, of log toch uit en zet meldingen voor tafs uit in Instellingen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs nie mógł ich wyłączyć (%1$@). Spróbuj ponownie albo mimo to wyloguj się i wyłącz powiadomienia tafs w Ustawieniach."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O tafs não conseguiu desativá-los (%1$@). Tente novamente, ou termine sessão na mesma e desative as notificações do tafs nas Definições."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O tafs não conseguiu desativá-los (%1$@). Tente novamente, ou saia mesmo assim e desative as notificações do tafs nas Configurações."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs nu le-a putut dezactiva (%1$@). Încercați din nou sau deconectați-vă oricum și dezactivați notificările pentru tafs în Configurări."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ich nedokázal vypnúť (%1$@). Skúste to znova, alebo sa aj tak odhláste a vypnite upozornenia pre tafs v Nastaveniach."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs jih ni mogel izklopiti (%1$@). Poskusite znova ali se vseeno odjavite in v Nastavitvah izklopite obvestila za tafs."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs nuk arriti t'i çaktivizojë (%1$@). Provoni sërish, ose dilni gjithsesi dhe çaktivizoni njoftimet për tafs te Cilësimet."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs nije mogao da ih isključi (%1$@). Pokušajte ponovo ili se ipak odjavite i isključite obaveštenja za tafs u Podešavanjima."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ปิดการแจ้งเตือนไม่ได้ (%1$@) ลองอีกครั้ง หรือออกจากระบบต่อไป แล้วปิดการแจ้งเตือนสำหรับ tafs ในการตั้งค่า"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs olary öçürip bilmedi (%1$@). Täzeden synanyşyň ýa-da her niçik hem çykyň we Sazlamalarda tafs üçin habarnamalary öçüriň."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs bunları kapatamadı (%1$@). Tekrar deneyin ya da yine de oturumu kapatıp Ayarlar'dan tafs bildirimlerini kapatın."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs انہیں بند نہیں کر سکا (%1$@)۔ دوبارہ کوشش کریں، یا پھر بھی سائن آؤٹ کریں اور سیٹنگز میں tafs کی اطلاعات بند کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs không tắt được chúng (%1$@). Hãy thử lại, hoặc vẫn đăng xuất rồi tắt thông báo cho tafs trong Cài đặt."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs 無法關閉通知（%1$@）。請再試一次，或仍然登出，然後在「設定」中關閉 tafs 的通知。"
+          }
+        }
+      }
+    },
+    "alert.still_on_after_sign_out.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قد يظل هذا الجهاز (%1$@) يتلقى تنبيهات هذا الحساب"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihaz (%1$@) bu hesabın bildirişlərini hələ də ala bilər"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Този %1$@ може още да получава известията на този акаунт"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই %1$@ হয়তো এখনও এই অ্যাকাউন্টের অ্যালার্ট পাবে"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquest dispositiu (%1$@) encara pot rebre les alertes d'aquest compte"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento %1$@ může dál dostávat upozornění tohoto účtu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses %1$@ bekommt vielleicht weiter die Benachrichtigungen dieses Kontos"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ may still get this account's alerts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ podría seguir recibiendo las alertas de esta cuenta"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See %1$@ võib endiselt saada selle konto teavitusi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ peut encore recevoir les alertes de ce compte"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ייתכן שההתקן הזה (%1$@) עדיין יקבל את ההתראות של החשבון הזה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस %1$@ पर अब भी इस खाते के अलर्ट आ सकते हैं"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovaj uređaj (%1$@) možda i dalje prima obavijesti ovog računa"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez az eszköz (%1$@) talán továbbra is megkapja ennek a fióknak az értesítéseit"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Այս սարքը (%1$@) կարող է դեռ ստանալ այս հաշվի ծանուցումները"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ini mungkin masih menerima peringatan akun ini"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo %1$@ potrebbe ancora ricevere gli avvisi di questo account"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この%1$@には、まだこのアカウントの通知が届く可能性があります"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ამ მოწყობილობას (%1$@) შეიძლება კვლავ მოუვიდეს ამ ანგარიშის შეტყობინებები"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ នេះប្រហែលនៅតែទទួលការជូនដំណឹងរបស់គណនីនេះ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 %1$@에서 이 계정의 알림을 계속 받을 수 있습니다"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ນີ້ອາດຍັງໄດ້ຮັບການແຈ້ງເຕືອນຂອງບັນຊີນີ້"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šis įrenginys (%1$@) gali ir toliau gauti šios paskyros pranešimus"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šis %1$@ joprojām var saņemt šī konta paziņojumus"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Овој %1$@ можеби сè уште ќе ги добива известувањата на оваа сметка"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ %1$@ энэ бүртгэлийн мэдэгдлийг үргэлжлүүлэн авч магадгүй"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो %1$@ मा अझै यस खाताका सूचनाहरू आउन सक्छन्"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze %1$@ krijgt misschien nog meldingen van dit account"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten %1$@ może nadal dostawać alerty tego konta"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ pode continuar a receber os alertas desta conta"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ pode continuar a receber os alertas desta conta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest dispozitiv (%1$@) poate primi în continuare alertele acestui cont"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento %1$@ môže naďalej dostávať upozornenia tohto účtu"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta %1$@ morda še vedno prejema opozorila tega računa"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjo pajisje (%1$@) mund të vazhdojë të marrë njoftimet e kësaj llogarie"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovaj uređaj (%1$@) možda i dalje prima obaveštenja ovog naloga"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@เครื่องนี้อาจยังได้รับการแจ้งเตือนของบัญชีนี้"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu %1$@ bu hasabyň duýduryşlaryny entek alyp biler"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu %1$@ bu hesabın uyarılarını almaya devam edebilir"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس %1$@ پر اب بھی اس اکاؤنٹ کے الرٹس آ سکتے ہیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ này có thể vẫn nhận cảnh báo của tài khoản này"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這部%1$@可能仍會收到此帳號的通知"
           }
         }
       }
@@ -27718,6 +28507,532 @@
           "stringUnit": {
             "state": "translated",
             "value": "請插入您的安全金鑰，然後再試一次。"
+          }
+        }
+      }
+    },
+    "approval.security_key.no_library": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن لهذا الكمبيوتر استخدام مفتاح أمان حتى يُثبَّت libfido2 1.14 أو أحدث (على Ubuntu، الحزمة libfido2-1)، لذا لم تتم الموافقة على أي شيء. ثبّته ثم وافق مرة أخرى. يبقى الطلب محفوظًا."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 və ya daha yeni versiya quraşdırılana qədər (Ubuntu-da libfido2-1 paketi) bu kompüter təhlükəsizlik açarından istifadə edə bilməz, ona görə heç nə təsdiqlənmədi. Onu quraşdırın, sonra yenidən təsdiqləyin. Sorğu saxlanılır."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Този компютър не може да използва ключ за сигурност, докато не бъде инсталиран libfido2 1.14 или по-нов (в Ubuntu – пакетът libfido2-1), затова нищо не беше одобрено. Инсталирайте го и одобрете отново. Заявката се запазва."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 বা তার পরের সংস্করণ ইনস্টল না হওয়া পর্যন্ত (Ubuntu-তে libfido2-1 প্যাকেজ) এই কম্পিউটার নিরাপত্তা কী ব্যবহার করতে পারবে না, তাই কিছুই অনুমোদিত হয়নি। এটি ইনস্টল করুন, তারপর আবার অনুমোদন করুন। অনুরোধটি রাখা আছে।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquest ordinador no pot fer servir una clau de seguretat fins que s'instal·li libfido2 1.14 o posterior (a Ubuntu, el paquet libfido2-1), així que no s'ha aprovat res. Instal·la-ho i torna a aprovar. La sol·licitud es conserva."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento počítač nemůže používat bezpečnostní klíč, dokud nebude nainstalována knihovna libfido2 1.14 nebo novější (v Ubuntu balíček libfido2-1), takže nic nebylo schváleno. Nainstalujte ji a schvalte znovu. Žádost zůstává."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Computer kann keinen Sicherheitsschlüssel nutzen, bis libfido2 1.14 oder neuer installiert ist (unter Ubuntu das Paket libfido2-1), daher wurde nichts genehmigt. Installiere es und genehmige dann erneut. Die Anfrage bleibt erhalten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This computer can't use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package), so nothing was approved. Install it, then approve again. The request is kept."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este ordenador no puede usar una llave de seguridad hasta que se instale libfido2 1.14 o posterior (en Ubuntu, el paquete libfido2-1), así que no se aprobó nada. Instálalo y vuelve a aprobar. La solicitud se conserva."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See arvuti ei saa turvavõtit kasutada enne, kui libfido2 1.14 või uuem on installitud (Ubuntus pakett libfido2-1), seega midagi ei kinnitatud. Installi see ja kinnita uuesti. Taotlus jääb alles."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet ordinateur ne peut pas utiliser de clé de sécurité tant que libfido2 1.14 ou plus récent n'est pas installé (sous Ubuntu, le paquet libfido2-1) : rien n'a donc été approuvé. Installez-le, puis approuvez à nouveau. La demande est conservée."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המחשב הזה לא יכול להשתמש במפתח אבטחה עד שתותקן libfido2 1.14 ומעלה (ב-Ubuntu, החבילה libfido2-1), ולכן שום דבר לא אושר. התקן אותה ואשר שוב. הבקשה נשמרת."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जब तक libfido2 1.14 या नया संस्करण इंस्टॉल न हो (Ubuntu पर libfido2-1 पैकेज), यह कंप्यूटर सुरक्षा कुंजी इस्तेमाल नहीं कर सकता, इसलिए कुछ भी स्वीकृत नहीं हुआ। इसे इंस्टॉल करें, फिर दोबारा स्वीकृत करें। अनुरोध रखा गया है।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovo računalo ne može koristiti sigurnosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1), pa ništa nije odobreno. Instalirajte ga, a zatim ponovno odobrite. Zahtjev ostaje."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a számítógép nem tud biztonsági kulcsot használni, amíg nincs telepítve a libfido2 1.14 vagy újabb (Ubuntun a libfido2-1 csomag), ezért semmi sem lett jóváhagyva. Telepítsd, majd hagyd jóvá újra. A kérés megmarad."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Այս համակարգիչը չի կարող օգտագործել անվտանգության բանալի, քանի դեռ տեղադրված չէ libfido2 1.14 կամ ավելի նոր տարբերակը (Ubuntu-ում՝ libfido2-1 փաթեթը), ուստի ոչինչ չհաստատվեց։ Տեղադրեք այն, ապա կրկին հաստատեք։ Հարցումը պահպանվում է։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komputer ini tidak dapat memakai kunci keamanan sampai libfido2 1.14 atau yang lebih baru terpasang (di Ubuntu, paket libfido2-1), jadi tidak ada yang disetujui. Pasang, lalu setujui lagi. Permintaan tetap disimpan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo computer non può usare una chiave di sicurezza finché non è installato libfido2 1.14 o successivo (su Ubuntu, il pacchetto libfido2-1), quindi non è stato approvato nulla. Installalo, poi approva di nuovo. La richiesta resta."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 以降(Ubuntu では libfido2-1 パッケージ)がインストールされるまで、このコンピュータではセキュリティキーを使えないため、何も承認されませんでした。インストールしてから、もう一度承認してください。リクエストは保持されます。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ეს კომპიუტერი ვერ გამოიყენებს უსაფრთხოების გასაღებს, სანამ არ დაინსტალირდება libfido2 1.14 ან უფრო ახალი (Ubuntu-ზე libfido2-1 პაკეტი), ამიტომ არაფერი დამტკიცებულა. დააინსტალირეთ და ხელახლა დაამტკიცეთ. მოთხოვნა შენახულია."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "កុំព្យូទ័រនេះមិនអាចប្រើកូនសោសុវត្ថិភាពបានទេ រហូតដល់ដំឡើង libfido2 1.14 ឬថ្មីជាងនេះ (នៅលើ Ubuntu គឺកញ្ចប់ libfido2-1) ដូច្នេះគ្មានអ្វីត្រូវបានយល់ព្រមទេ។ សូមដំឡើងវា រួចយល់ព្រមម្ដងទៀត។ សំណើនៅតែរក្សាទុក។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 이상(Ubuntu에서는 libfido2-1 패키지)이 설치될 때까지 이 컴퓨터에서는 보안 키를 사용할 수 없어 아무것도 승인되지 않았습니다. 설치한 뒤 다시 승인하세요. 요청은 유지됩니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ຄອມພິວເຕີນີ້ໃຊ້ກະແຈຄວາມປອດໄພບໍ່ໄດ້ ຈົນກວ່າຈະຕິດຕັ້ງ libfido2 1.14 ຫຼື ໃໝ່ກວ່າ (ໃນ Ubuntu ແມ່ນແພັກເກດ libfido2-1) ດັ່ງນັ້ນບໍ່ມີຫຍັງຖືກອະນຸມັດ. ຕິດຕັ້ງມັນ ແລ້ວອະນຸມັດອີກຄັ້ງ. ຄຳຂໍຍັງຖືກເກັບໄວ້."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šis kompiuteris negali naudoti saugos rakto, kol neįdiegta libfido2 1.14 ar naujesnė versija (Ubuntu – paketas libfido2-1), todėl niekas nepatvirtinta. Įdiekite ją ir patvirtinkite dar kartą. Užklausa išsaugoma."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šis dators nevar izmantot drošības atslēgu, kamēr nav instalēta libfido2 1.14 vai jaunāka (Ubuntu – pakotne libfido2-1), tāpēc nekas netika apstiprināts. Instalē to un apstiprini vēlreiz. Pieprasījums tiek saglabāts."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Овој компјутер не може да користи безбедносен клуч додека не се инсталира libfido2 1.14 или понов (на Ubuntu, пакетот libfido2-1), па ништо не е одобрено. Инсталирајте го, па одобрете повторно. Барањето се чува."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 буюу түүнээс шинэ хувилбар (Ubuntu дээр libfido2-1 багц) суулгагдах хүртэл энэ компьютер аюулгүйн түлхүүр ашиглах боломжгүй тул юу ч зөвшөөрөгдсөнгүй. Үүнийг суулгаад дахин зөвшөөрнө үү. Хүсэлт хадгалагдсан хэвээр байна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 वा त्यसपछिको संस्करण (Ubuntu मा libfido2-1 प्याकेज) इन्स्टल नभएसम्म यो कम्प्युटरले सुरक्षा कुञ्जी प्रयोग गर्न सक्दैन, त्यसैले केही पनि स्वीकृत भएन। यसलाई इन्स्टल गर्नुहोस्, अनि फेरि स्वीकृत गर्नुहोस्। अनुरोध राखिएको छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze computer kan geen beveiligingssleutel gebruiken tot libfido2 1.14 of nieuwer is geïnstalleerd (op Ubuntu het pakket libfido2-1), dus er is niets goedgekeurd. Installeer het en keur daarna opnieuw goed. Het verzoek blijft bewaard."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten komputer nie może używać klucza bezpieczeństwa, dopóki nie zostanie zainstalowany libfido2 1.14 lub nowszy (w Ubuntu pakiet libfido2-1), więc nic nie zostało zatwierdzone. Zainstaluj go, a potem zatwierdź ponownie. Prośba zostaje zachowana."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este computador não pode usar uma chave de segurança até estar instalado o libfido2 1.14 ou posterior (no Ubuntu, o pacote libfido2-1), por isso nada foi aprovado. Instale-o e volte a aprovar. O pedido é mantido."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este computador não pode usar uma chave de segurança até que o libfido2 1.14 ou posterior esteja instalado (no Ubuntu, o pacote libfido2-1), então nada foi aprovado. Instale-o e aprove de novo. A solicitação é mantida."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest computer nu poate folosi o cheie de securitate până nu este instalat libfido2 1.14 sau mai nou (pe Ubuntu, pachetul libfido2-1), așa că nu s-a aprobat nimic. Instalați-l, apoi aprobați din nou. Solicitarea se păstrează."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento počítač nemôže používať bezpečnostný kľúč, kým nebude nainštalovaná knižnica libfido2 1.14 alebo novšia (v Ubuntu balík libfido2-1), takže nič nebolo schválené. Nainštalujte ju a schváľte znova. Žiadosť zostáva."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta računalnik ne more uporabljati varnostnega ključa, dokler ni nameščena knjižnica libfido2 1.14 ali novejša (v Ubuntuju paket libfido2-1), zato ni bilo nič odobreno. Namestite jo in znova odobrite. Zahteva ostane."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ky kompjuter nuk mund të përdorë çelës sigurie derisa të instalohet libfido2 1.14 ose më i ri (në Ubuntu, paketa libfido2-1), prandaj nuk u miratua asgjë. Instalojeni, pastaj miratoni përsëri. Kërkesa ruhet."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovaj računar ne može da koristi bezbednosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1), pa ništa nije odobreno. Instalirajte ga, pa ponovo odobrite. Zahtev ostaje."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "คอมพิวเตอร์นี้ใช้คีย์ความปลอดภัยไม่ได้จนกว่าจะติดตั้ง libfido2 1.14 ขึ้นไป (บน Ubuntu คือแพ็กเกจ libfido2-1) จึงไม่มีการอนุมัติใดๆ โปรดติดตั้งแล้วอนุมัติอีกครั้ง คำขอยังคงอยู่"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 ýa-da täzesi gurnalýança (Ubuntu-da libfido2-1 bukjasy) bu kompýuter howpsuzlyk açaryny ulanyp bilmeýär, şonuň üçin hiç zat tassyklanmady. Ony guruň, soň täzeden tassyklaň. Haýyş saklanýar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 veya üstü yüklenene kadar (Ubuntu'da libfido2-1 paketi) bu bilgisayar güvenlik anahtarı kullanamaz, bu yüzden hiçbir şey onaylanmadı. Yükleyin, ardından yeniden onaylayın. İstek korunur."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جب تک libfido2 1.14 یا نیا ورژن انسٹال نہ ہو (Ubuntu پر libfido2-1 پیکیج)، یہ کمپیوٹر سیکیورٹی کی استعمال نہیں کر سکتا، اس لیے کچھ بھی منظور نہیں ہوا۔ اسے انسٹال کریں، پھر دوبارہ منظور کریں۔ درخواست محفوظ ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Máy tính này không thể dùng khóa bảo mật cho đến khi cài libfido2 1.14 trở lên (trên Ubuntu là gói libfido2-1), nên chưa có gì được phê duyệt. Hãy cài đặt rồi phê duyệt lại. Yêu cầu vẫn được giữ."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在安裝 libfido2 1.14 或更新版本(Ubuntu 上為 libfido2-1 套件)之前，這台電腦無法使用安全金鑰，因此沒有核准任何項目。請安裝後再核准一次。請求會保留。"
+          }
+        }
+      }
+    },
+    "approval.security_key.no_library_pairing": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن لهذا الكمبيوتر استخدام مفتاح أمان حتى يُثبَّت libfido2 1.14 أو أحدث (على Ubuntu، الحزمة libfido2-1). لإضافة مفتاحك، ألغِ ثم ثبّته ثم اقرن مرة أخرى. أو اقرن الآن بلا مفتاح."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 və ya daha yeni versiya quraşdırılana qədər (Ubuntu-da libfido2-1 paketi) bu kompüter təhlükəsizlik açarından istifadə edə bilməz. Açarınızı əlavə etmək üçün ləğv edin, onu quraşdırın, sonra yenidən cütləşdirin. Və ya indi açarsız cütləşdirin."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Този компютър не може да използва ключ за сигурност, докато не бъде инсталиран libfido2 1.14 или по-нов (в Ubuntu – пакетът libfido2-1). За да добавите ключа си, откажете, инсталирайте го и сдвоете отново. Или сдвоете сега без ключ."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 বা তার পরের সংস্করণ ইনস্টল না হওয়া পর্যন্ত (Ubuntu-তে libfido2-1 প্যাকেজ) এই কম্পিউটার নিরাপত্তা কী ব্যবহার করতে পারবে না। আপনার কী যোগ করতে বাতিল করুন, এটি ইনস্টল করুন, তারপর আবার জোড়া লাগান। অথবা এখনই কী ছাড়া জোড়া লাগান।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquest ordinador no pot fer servir una clau de seguretat fins que s'instal·li libfido2 1.14 o posterior (a Ubuntu, el paquet libfido2-1). Per afegir la teva clau, cancel·la, instal·la-ho i torna a aparellar. O aparella ara sense clau."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento počítač nemůže používat bezpečnostní klíč, dokud nebude nainstalována knihovna libfido2 1.14 nebo novější (v Ubuntu balíček libfido2-1). Chcete-li přidat klíč, zrušte to, nainstalujte ji a spárujte znovu. Nebo teď spárujte bez klíče."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Computer kann keinen Sicherheitsschlüssel nutzen, bis libfido2 1.14 oder neuer installiert ist (unter Ubuntu das Paket libfido2-1). Um deinen Schlüssel hinzuzufügen, brich ab, installiere es und kopple dann erneut. Oder kopple jetzt ohne Schlüssel."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This computer can't use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package). To add your key, cancel, install it, then pair again. Or pair without a key now."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este ordenador no puede usar una llave de seguridad hasta que se instale libfido2 1.14 o posterior (en Ubuntu, el paquete libfido2-1). Para añadir tu llave, cancela, instálalo y vuelve a vincular. O vincula ahora sin llave."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See arvuti ei saa turvavõtit kasutada enne, kui libfido2 1.14 või uuem on installitud (Ubuntus pakett libfido2-1). Võtme lisamiseks tühista, installi see ja seo uuesti. Või seo kohe ilma võtmeta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet ordinateur ne peut pas utiliser de clé de sécurité tant que libfido2 1.14 ou plus récent n'est pas installé (sous Ubuntu, le paquet libfido2-1). Pour ajouter votre clé, annulez, installez-le, puis associez à nouveau. Ou associez maintenant sans clé."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המחשב הזה לא יכול להשתמש במפתח אבטחה עד שתותקן libfido2 1.14 ומעלה (ב-Ubuntu, החבילה libfido2-1). כדי להוסיף את המפתח, בטל, התקן אותה ואז צמד שוב. או צמד עכשיו בלי מפתח."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जब तक libfido2 1.14 या नया संस्करण इंस्टॉल न हो (Ubuntu पर libfido2-1 पैकेज), यह कंप्यूटर सुरक्षा कुंजी इस्तेमाल नहीं कर सकता। अपनी कुंजी जोड़ने के लिए रद्द करें, इसे इंस्टॉल करें, फिर दोबारा जोड़ें। या अभी बिना कुंजी के जोड़ें।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovo računalo ne može koristiti sigurnosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1). Za dodavanje ključa odustanite, instalirajte ga i ponovno uparite. Ili sada uparite bez ključa."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a számítógép nem tud biztonsági kulcsot használni, amíg nincs telepítve a libfido2 1.14 vagy újabb (Ubuntun a libfido2-1 csomag). A kulcs hozzáadásához szakítsd meg, telepítsd, majd párosíts újra. Vagy párosíts most kulcs nélkül."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Այս համակարգիչը չի կարող օգտագործել անվտանգության բանալի, քանի դեռ տեղադրված չէ libfido2 1.14 կամ ավելի նոր տարբերակը (Ubuntu-ում՝ libfido2-1 փաթեթը)։ Բանալին ավելացնելու համար չեղարկեք, տեղադրեք այն և նորից զուգակցեք։ Կամ զուգակցեք հիմա՝ առանց բանալու։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komputer ini tidak dapat memakai kunci keamanan sampai libfido2 1.14 atau yang lebih baru terpasang (di Ubuntu, paket libfido2-1). Untuk menambahkan kunci Anda, batalkan, pasang, lalu pasangkan lagi. Atau pasangkan sekarang tanpa kunci."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo computer non può usare una chiave di sicurezza finché non è installato libfido2 1.14 o successivo (su Ubuntu, il pacchetto libfido2-1). Per aggiungere la tua chiave, annulla, installalo, poi associa di nuovo. Oppure associa ora senza chiave."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 以降(Ubuntu では libfido2-1 パッケージ)がインストールされるまで、このコンピュータではセキュリティキーを使えません。キーを追加するには、キャンセルしてインストールし、もう一度ペアリングしてください。または、今はキーなしでペアリングします。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ეს კომპიუტერი ვერ გამოიყენებს უსაფრთხოების გასაღებს, სანამ არ დაინსტალირდება libfido2 1.14 ან უფრო ახალი (Ubuntu-ზე libfido2-1 პაკეტი). გასაღების დასამატებლად გააუქმეთ, დააინსტალირეთ და ხელახლა დააწყვილეთ. ან ახლავე დააწყვილეთ გასაღების გარეშე."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "កុំព្យូទ័រនេះមិនអាចប្រើកូនសោសុវត្ថិភាពបានទេ រហូតដល់ដំឡើង libfido2 1.14 ឬថ្មីជាងនេះ (នៅលើ Ubuntu គឺកញ្ចប់ libfido2-1)។ ដើម្បីបន្ថែមកូនសោរបស់អ្នក សូមបោះបង់ ដំឡើងវា រួចផ្គូផ្គងម្ដងទៀត។ ឬផ្គូផ្គងឥឡូវនេះដោយគ្មានកូនសោ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 이상(Ubuntu에서는 libfido2-1 패키지)이 설치될 때까지 이 컴퓨터에서는 보안 키를 사용할 수 없습니다. 키를 추가하려면 취소하고 설치한 뒤 다시 페어링하세요. 또는 지금 키 없이 페어링하세요."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ຄອມພິວເຕີນີ້ໃຊ້ກະແຈຄວາມປອດໄພບໍ່ໄດ້ ຈົນກວ່າຈະຕິດຕັ້ງ libfido2 1.14 ຫຼື ໃໝ່ກວ່າ (ໃນ Ubuntu ແມ່ນແພັກເກດ libfido2-1). ເພື່ອເພີ່ມກະແຈຂອງທ່ານ ໃຫ້ຍົກເລີກ ຕິດຕັ້ງມັນ ແລ້ວຈັບຄູ່ອີກຄັ້ງ. ຫຼື ຈັບຄູ່ດຽວນີ້ໂດຍບໍ່ມີກະແຈ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šis kompiuteris negali naudoti saugos rakto, kol neįdiegta libfido2 1.14 ar naujesnė versija (Ubuntu – paketas libfido2-1). Norėdami pridėti raktą, atšaukite, įdiekite ją ir susiekite iš naujo. Arba susiekite dabar be rakto."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šis dators nevar izmantot drošības atslēgu, kamēr nav instalēta libfido2 1.14 vai jaunāka (Ubuntu – pakotne libfido2-1). Lai pievienotu atslēgu, atcel, instalē to un savieno pārī vēlreiz. Vai savieno pārī tagad bez atslēgas."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Овој компјутер не може да користи безбедносен клуч додека не се инсталира libfido2 1.14 или понов (на Ubuntu, пакетот libfido2-1). За да го додадете клучот, откажете, инсталирајте го и спарете повторно. Или спарете сега без клуч."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 буюу түүнээс шинэ хувилбар (Ubuntu дээр libfido2-1 багц) суулгагдах хүртэл энэ компьютер аюулгүйн түлхүүр ашиглах боломжгүй. Түлхүүрээ нэмэхийн тулд цуцлаад, суулгаж, дахин хослуулна уу. Эсвэл одоо түлхүүргүйгээр хослуулна уу."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 वा त्यसपछिको संस्करण (Ubuntu मा libfido2-1 प्याकेज) इन्स्टल नभएसम्म यो कम्प्युटरले सुरक्षा कुञ्जी प्रयोग गर्न सक्दैन। आफ्नो कुञ्जी थप्न रद्द गर्नुहोस्, यसलाई इन्स्टल गर्नुहोस्, अनि फेरि जोड्नुहोस्। वा अहिले कुञ्जीबिना जोड्नुहोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze computer kan geen beveiligingssleutel gebruiken tot libfido2 1.14 of nieuwer is geïnstalleerd (op Ubuntu het pakket libfido2-1). Om je sleutel toe te voegen: annuleer, installeer het en koppel opnieuw. Of koppel nu zonder sleutel."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten komputer nie może używać klucza bezpieczeństwa, dopóki nie zostanie zainstalowany libfido2 1.14 lub nowszy (w Ubuntu pakiet libfido2-1). Aby dodać klucz, anuluj, zainstaluj go i powiąż ponownie. Albo powiąż teraz bez klucza."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este computador não pode usar uma chave de segurança até estar instalado o libfido2 1.14 ou posterior (no Ubuntu, o pacote libfido2-1). Para adicionar a sua chave, cancele, instale-o e volte a associar. Ou associe agora sem chave."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este computador não pode usar uma chave de segurança até que o libfido2 1.14 ou posterior esteja instalado (no Ubuntu, o pacote libfido2-1). Para adicionar sua chave, cancele, instale-o e associe de novo. Ou associe agora sem chave."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest computer nu poate folosi o cheie de securitate până nu este instalat libfido2 1.14 sau mai nou (pe Ubuntu, pachetul libfido2-1). Pentru a adăuga cheia, anulați, instalați-l, apoi asociați din nou. Sau asociați acum fără cheie."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento počítač nemôže používať bezpečnostný kľúč, kým nebude nainštalovaná knižnica libfido2 1.14 alebo novšia (v Ubuntu balík libfido2-1). Ak chcete pridať kľúč, zrušte to, nainštalujte ju a spárujte znova. Alebo teraz spárujte bez kľúča."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta računalnik ne more uporabljati varnostnega ključa, dokler ni nameščena knjižnica libfido2 1.14 ali novejša (v Ubuntuju paket libfido2-1). Če želite dodati ključ, prekličite, jo namestite in znova seznanite. Ali pa zdaj seznanite brez ključa."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ky kompjuter nuk mund të përdorë çelës sigurie derisa të instalohet libfido2 1.14 ose më i ri (në Ubuntu, paketa libfido2-1). Për të shtuar çelësin, anulojeni, instalojeni, pastaj çiftojeni përsëri. Ose çiftojeni tani pa çelës."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovaj računar ne može da koristi bezbednosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1). Da biste dodali ključ, otkažite, instalirajte ga i ponovo uparite. Ili sada uparite bez ključa."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "คอมพิวเตอร์นี้ใช้คีย์ความปลอดภัยไม่ได้จนกว่าจะติดตั้ง libfido2 1.14 ขึ้นไป (บน Ubuntu คือแพ็กเกจ libfido2-1) หากต้องการเพิ่มคีย์ ให้ยกเลิก ติดตั้ง แล้วจับคู่อีกครั้ง หรือจับคู่ตอนนี้โดยไม่ใช้คีย์"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 ýa-da täzesi gurnalýança (Ubuntu-da libfido2-1 bukjasy) bu kompýuter howpsuzlyk açaryny ulanyp bilmeýär. Açaryňyzy goşmak üçin ýatyryň, ony guruň, soň täzeden goşalaň. Ýa-da häzir açarsyz goşalaň."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libfido2 1.14 veya üstü yüklenene kadar (Ubuntu'da libfido2-1 paketi) bu bilgisayar güvenlik anahtarı kullanamaz. Anahtarınızı eklemek için iptal edin, yükleyin ve yeniden eşleştirin. Ya da şimdi anahtarsız eşleştirin."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جب تک libfido2 1.14 یا نیا ورژن انسٹال نہ ہو (Ubuntu پر libfido2-1 پیکیج)، یہ کمپیوٹر سیکیورٹی کی استعمال نہیں کر سکتا۔ اپنی کی شامل کرنے کے لیے منسوخ کریں، اسے انسٹال کریں، پھر دوبارہ جوڑیں۔ یا ابھی کی کے بغیر جوڑیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Máy tính này không thể dùng khóa bảo mật cho đến khi cài libfido2 1.14 trở lên (trên Ubuntu là gói libfido2-1). Để thêm khóa, hãy hủy, cài đặt rồi ghép nối lại. Hoặc ghép nối ngay mà không có khóa."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在安裝 libfido2 1.14 或更新版本(Ubuntu 上為 libfido2-1 套件)之前，這台電腦無法使用安全金鑰。若要新增金鑰，請取消、安裝後再配對一次。或現在不使用金鑰進行配對。"
           }
         }
       }

@@ -27,6 +27,7 @@
   "alert.prompt": "Saa teavitus, kui taf vajab sind",
   "alert.role_cant": "Sinu roll sellel KIFFi kontol ei saa teavitusi sisse lülitada.",
   "alert.sign_in_again": "Teavituste sisselülitamiseks logi uuesti KIFFiga sisse: see sisselogimine ei saa telefoni eest allkirjastada.",
+  "alert.sign_out_anyway": "Logi siiski välja",
   "alert.silent": "Hääletu",
   "alert.silent_example": "Klienditoe vastused vastas maria@… · E-posti teel",
   "alert.sound": "Heli",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Pole saadaval",
   "alert.status.off": "Väljas",
   "alert.status.on": "Sees",
+  "alert.still_on_after_sign_out.body": "tafs ei saanud neid välja lülitada ({why}). Proovi uuesti või logi siiski välja ja lülita seadetes tafsi teavitused välja.",
+  "alert.still_on_after_sign_out.title": "See {device} võib endiselt saada selle konto teavitusi",
   "alert.taf_needs_you": "{taf} vajab sind",
   "alert.tafs": {
     "one": "{count} taf ›",

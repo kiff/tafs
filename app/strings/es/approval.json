@@ -58,6 +58,8 @@
   "approval.security_key.failed": "La llave de seguridad no pudo firmar, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.",
   "approval.security_key.locked": "Esta llave de seguridad está bloqueada tras demasiados PIN incorrectos, así que no puede aprobar. Aprueba en tu teléfono. Restablecer la llave la borra, así que para volver a aprobar con una llave, vuelve a vincular este ordenador.",
   "approval.security_key.no_key": "Conecta tu llave de seguridad y vuelve a intentarlo.",
+  "approval.security_key.no_library": "Este ordenador no puede usar una llave de seguridad hasta que se instale libfido2 1.14 o posterior (en Ubuntu, el paquete libfido2-1), así que no se aprobó nada. Instálalo y vuelve a aprobar. La solicitud se conserva.",
+  "approval.security_key.no_library_pairing": "Este ordenador no puede usar una llave de seguridad hasta que se instale libfido2 1.14 o posterior (en Ubuntu, el paquete libfido2-1). Para añadir tu llave, cancela, instálalo y vuelve a vincular. O vincula ahora sin llave.",
   "approval.security_key.no_pin_set": "Esta llave de seguridad no tiene PIN, así que no puede aprobar. Conecta la que va con este ordenador. Si se restableció, aprueba en tu teléfono y vuelve a vincular este ordenador para aprobar con una llave.",
   "approval.security_key.none_paired": "Este ordenador aún no tiene ninguna llave de seguridad. Una llave de seguridad es una pequeña llave USB que tocas para aprobar; una memoria USB normal no sirve.",
   "approval.security_key.not_allowed": "La llave de seguridad no lo permitió, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.",

@@ -1,0 +1,1 @@
+Een bericht dat je met ‘Bewaren voor later’ hebt bewaard, wordt nu onverzonden verwijderd als je horloge geen schermvergrendeling meer heeft, zodat er niets achterblijft op een horloge zonder.

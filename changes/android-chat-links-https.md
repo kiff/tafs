@@ -1,0 +1,1 @@
+- **Android: a chat link that isn't https never opens on a tap.** A link to a phone number, another app or a plain http page in any answer shows its whole address with Cancel alone; https links open as before ([chat.md](docs/chat.md)).

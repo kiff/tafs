@@ -1,0 +1,1 @@
+• Um link em uma resposta do Coach sobre uma página do seu Chrome agora mostra o endereço completo e pergunta antes de abrir. Links que não são páginas da web seguras nunca abrem a partir de um chat.

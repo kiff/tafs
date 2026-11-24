@@ -27,6 +27,7 @@
   "alert.prompt": "Saņem paziņojumu, kad taf gaida tevi",
   "alert.role_cant": "Tava loma šajā KIFF kontā neļauj ieslēgt paziņojumus.",
   "alert.sign_in_again": "Lai ieslēgtu paziņojumus, vēlreiz pieraksties ar KIFF: šī pierakstīšanās nevar parakstīt tālruņa vārdā.",
+  "alert.sign_out_anyway": "Tomēr izrakstīties",
   "alert.silent": "Bez skaņas",
   "alert.silent_example": "Atbildes atbalstam atbildēja maria@… · Pa e-pastu",
   "alert.sound": "Skaņa",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Nav pieejams",
   "alert.status.off": "Izslēgts",
   "alert.status.on": "Ieslēgts",
+  "alert.still_on_after_sign_out.body": "tafs nevarēja tos izslēgt ({why}). Mēģini vēlreiz vai tomēr izrakstieties un iestatījumos izslēdz paziņojumus no tafs.",
+  "alert.still_on_after_sign_out.title": "Šis {device} joprojām var saņemt šī konta paziņojumus",
   "alert.taf_needs_you": "{taf} gaida tevi",
   "alert.tafs": {
     "zero": "{count} taf ›",

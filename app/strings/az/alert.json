@@ -27,6 +27,7 @@
   "alert.prompt": "Taf-a sizin köməyiniz lazım olanda bildiriş alın",
   "alert.role_cant": "Bu KIFF hesabında sizin rolunuz bildirişləri aktiv edə bilməz.",
   "alert.sign_in_again": "Bildirişləri aktiv etmək üçün KIFF ilə yenidən daxil olun: bu giriş telefon üçün imzalaya bilməz.",
+  "alert.sign_out_anyway": "Hər halda çıxış et",
   "alert.silent": "Səssiz",
   "alert.silent_example": "Dəstək cavabları cavablandırıldı maria@… · E-poçtla",
   "alert.sound": "Səs",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Mövcud deyil",
   "alert.status.off": "Söndürülüb",
   "alert.status.on": "Aktivdir",
+  "alert.still_on_after_sign_out.body": "tafs onları söndürə bilmədi ({why}). Yenidən cəhd edin və ya hər halda çıxış edin və Parametrlərdə tafs üçün bildirişləri söndürün.",
+  "alert.still_on_after_sign_out.title": "Bu cihaz ({device}) bu hesabın bildirişlərini hələ də ala bilər",
   "alert.taf_needs_you": "{taf}-a sizin köməyiniz lazımdır",
   "alert.tafs": {
     "one": "{count} taf ›",

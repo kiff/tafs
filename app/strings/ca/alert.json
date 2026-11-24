@@ -27,6 +27,7 @@
   "alert.prompt": "Rep una alerta quan un taf et necessiti",
   "alert.role_cant": "El teu rol en aquest compte de KIFF no pot activar les alertes.",
   "alert.sign_in_again": "Inicia la sessió amb KIFF de nou per activar les alertes: aquest inici de sessió no pot signar pel telèfon.",
+  "alert.sign_out_anyway": "Tanca la sessió igualment",
   "alert.silent": "Silenci",
   "alert.silent_example": "Respostes de suport ha respost maria@… · Per correu electrònic",
   "alert.sound": "So",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "No disponible",
   "alert.status.off": "Desactivat",
   "alert.status.on": "Activat",
+  "alert.still_on_after_sign_out.body": "tafs no les ha pogut desactivar ({why}). Torna-ho a provar, o tanca la sessió igualment i desactiva les notificacions de tafs als Ajustos.",
+  "alert.still_on_after_sign_out.title": "Aquest dispositiu ({device}) encara pot rebre les alertes d'aquest compte",
   "alert.taf_needs_you": "{taf} et necessita",
   "alert.tafs": {
     "one": "{count} taf ›",

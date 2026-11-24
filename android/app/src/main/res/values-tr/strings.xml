@@ -30,6 +30,7 @@
     <string name="alert_prompt">Bir taf\'ın size ihtiyacı olduğunda uyarı alın</string>
     <string name="alert_role_cant">Bu KIFF hesabındaki rolünüz uyarıları açamaz.</string>
     <string name="alert_sign_in_again">Uyarıları açmak için KIFF ile tekrar oturum açın: bu oturum telefon adına imzalayamıyor.</string>
+    <string name="alert_sign_out_anyway">Yine de oturumu kapat</string>
     <string name="alert_silent">Sessiz</string>
     <string name="alert_silent_example">Destek yanıtları yanıtlandı maria@… · E-postayla</string>
     <string name="alert_sound">Ses</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Kullanılamıyor</string>
     <string name="alert_status_off">Kapalı</string>
     <string name="alert_status_on">Açık</string>
+    <string name="alert_still_on_after_sign_out_body">tafs bunları kapatamadı (%1$s). Tekrar deneyin ya da yine de oturumu kapatıp Ayarlar\'dan tafs bildirimlerini kapatın.</string>
+    <string name="alert_still_on_after_sign_out_title">Bu %1$s bu hesabın uyarılarını almaya devam edebilir</string>
     <string name="alert_taf_needs_you">%1$s sizi bekliyor</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">Güvenlik anahtarı imzalayamadı, bu yüzden hiçbir şey onaylanmadı. İstek korunuyor: hazır olduğunuzda tekrar onaylayın.</string>
     <string name="approval_security_key_locked">Bu güvenlik anahtarı çok fazla yanlış PIN\'den sonra kilitlendi, bu yüzden onay veremez. Telefonunuzdan onaylayın. Anahtarı sıfırlamak onu siler; bu yüzden bir anahtarla tekrar onaylamak için bu bilgisayarı yeniden eşleştirin.</string>
     <string name="approval_security_key_no_key">Güvenlik anahtarınızı takın, sonra tekrar deneyin.</string>
+    <string name="approval_security_key_no_library">libfido2 1.14 veya üstü yüklenene kadar (Ubuntu\'da libfido2-1 paketi) bu bilgisayar güvenlik anahtarı kullanamaz, bu yüzden hiçbir şey onaylanmadı. Yükleyin, ardından yeniden onaylayın. İstek korunur.</string>
+    <string name="approval_security_key_no_library_pairing">libfido2 1.14 veya üstü yüklenene kadar (Ubuntu\'da libfido2-1 paketi) bu bilgisayar güvenlik anahtarı kullanamaz. Anahtarınızı eklemek için iptal edin, yükleyin ve yeniden eşleştirin. Ya da şimdi anahtarsız eşleştirin.</string>
     <string name="approval_security_key_no_pin_set">Bu güvenlik anahtarının PIN\'i yok, bu yüzden onay veremez. Bu bilgisayara ait olanı takın. Sıfırlandıysa telefonunuzdan onaylayın ve anahtarla onaylamak için bu bilgisayarı yeniden eşleştirin.</string>
     <string name="approval_security_key_none_paired">Bu bilgisayarda henüz güvenlik anahtarı yok. Güvenlik anahtarı, onaylamak için dokunduğunuz küçük bir USB anahtarıdır; sıradan bir USB bellek çalışmaz.</string>
     <string name="approval_security_key_not_allowed">Güvenlik anahtarı buna izin vermedi, bu yüzden hiçbir şey onaylanmadı. İstek korunuyor: hazır olduğunuzda tekrar onaylayın.</string>

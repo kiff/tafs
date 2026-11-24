@@ -27,6 +27,7 @@
   "alert.prompt": "कुनै taf लाई तपाईं चाहिँदा सूचना पाउनुहोस्",
   "alert.role_cant": "यस KIFF खातामा तपाईंको भूमिकाले सूचना खोल्न सक्दैन।",
   "alert.sign_in_again": "सूचना खोल्न KIFF बाट फेरि साइन इन गर्नुहोस्: यो साइन इनले फोनका लागि हस्ताक्षर गर्न सक्दैन।",
+  "alert.sign_out_anyway": "जे भए पनि साइन आउट गर्नुहोस्",
   "alert.silent": "मौन",
   "alert.silent_example": "सहायता जवाफ maria@… लाई जवाफ दिइयो · इमेलबाट",
   "alert.sound": "आवाज",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "उपलब्ध छैन",
   "alert.status.off": "बन्द",
   "alert.status.on": "खुला",
+  "alert.still_on_after_sign_out.body": "tafs ले तिनलाई बन्द गर्न सकेन ({why})। फेरि प्रयास गर्नुहोस्, वा जे भए पनि साइन आउट गरेर सेटिङमा tafs का सूचनाहरू बन्द गर्नुहोस्।",
+  "alert.still_on_after_sign_out.title": "यो {device} मा अझै यस खाताका सूचनाहरू आउन सक्छन्",
   "alert.taf_needs_you": "{taf} ले तपाईंलाई पर्खिरहेको छ",
   "alert.tafs": {
     "one": "{count} taf ›",
