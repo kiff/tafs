@@ -125,6 +125,8 @@ object Words {
       val failed: String get() = Res.s(R.string.approval_security_key_failed)
       val locked: String get() = Res.s(R.string.approval_security_key_locked)
       val noKey: String get() = Res.s(R.string.approval_security_key_no_key)
+      val noLibrary: String get() = Res.s(R.string.approval_security_key_no_library)
+      val noLibraryPairing: String get() = Res.s(R.string.approval_security_key_no_library_pairing)
       val noPinSet: String get() = Res.s(R.string.approval_security_key_no_pin_set)
       val nonePaired: String get() = Res.s(R.string.approval_security_key_none_paired)
       val notAllowed: String get() = Res.s(R.string.approval_security_key_not_allowed)

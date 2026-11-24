@@ -222,6 +222,10 @@ enum Words {
             static var locked: String { Words.line("approval.security_key.locked") }
             /// Plug in your security key, then try again.
             static var noKey: String { Words.line("approval.security_key.no_key") }
+            /// This computer can't use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package), so nothing was approved. Install it, then approve again. The request is kept.
+            static var noLibrary: String { Words.line("approval.security_key.no_library") }
+            /// This computer can't use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package). To add your key, cancel, install it, then pair again. Or pair without a key now.
+            static var noLibraryPairing: String { Words.line("approval.security_key.no_library_pairing") }
             /// This security key has no PIN, so it can't approve. Plug in the one that goes with this computer. If it was reset, approve on your phone, and pair this computer again to approve with a key.
             static var noPinSet: String { Words.line("approval.security_key.no_pin_set") }
             /// This computer has no security key yet. A security key is a small USB key you touch to approve; an ordinary USB stick won't work.

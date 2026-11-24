@@ -105,6 +105,8 @@
     <string name="approval_security_key_failed">Turvavõti ei saanud allkirjastada, seega midagi ei kinnitatud. Päring jääb alles: kinnita uuesti, kui oled valmis.</string>
     <string name="approval_security_key_locked">See turvavõti on liiga paljude valede PIN-koodide tõttu lukus, seega ei saa see kinnitada. Kinnita telefonis. Võtme lähtestamine kustutab selle, seega võtmega uuesti kinnitamiseks seo see arvuti uuesti.</string>
     <string name="approval_security_key_no_key">Ühenda oma turvavõti ja proovi uuesti.</string>
+    <string name="approval_security_key_no_library">See arvuti ei saa turvavõtit kasutada enne, kui libfido2 1.14 või uuem on installitud (Ubuntus pakett libfido2-1), seega midagi ei kinnitatud. Installi see ja kinnita uuesti. Taotlus jääb alles.</string>
+    <string name="approval_security_key_no_library_pairing">See arvuti ei saa turvavõtit kasutada enne, kui libfido2 1.14 või uuem on installitud (Ubuntus pakett libfido2-1). Võtme lisamiseks tühista, installi see ja seo uuesti. Või seo kohe ilma võtmeta.</string>
     <string name="approval_security_key_no_pin_set">Sellel turvavõtmel pole PIN-koodi, seega ei saa see kinnitada. Ühenda see, mis kuulub selle arvuti juurde. Kui see lähtestati, kinnita telefonis ja võtmega kinnitamiseks seo see arvuti uuesti.</string>
     <string name="approval_security_key_none_paired">Sellel arvutil pole veel turvavõtit. Turvavõti on väike USB-võti, mida kinnitamiseks puudutad; tavaline USB-mälupulk ei tööta.</string>
     <string name="approval_security_key_not_allowed">Turvavõti ei lubanud seda, seega midagi ei kinnitatud. Päring jääb alles: kinnita uuesti, kui oled valmis.</string>

@@ -104,6 +104,8 @@
     <string name="approval_security_key_failed">安全金鑰無法簽署，因此未核准任何項目。請求仍保留：準備好時再次核准。</string>
     <string name="approval_security_key_locked">這把安全金鑰因 PIN 輸入錯誤次數過多而鎖定，因此無法核准。請在您的手機上核准。重設金鑰會清除它，所以若要再次以金鑰核准，請重新配對這部電腦。</string>
     <string name="approval_security_key_no_key">請插入您的安全金鑰，然後再試一次。</string>
+    <string name="approval_security_key_no_library">在安裝 libfido2 1.14 或更新版本(Ubuntu 上為 libfido2-1 套件)之前，這台電腦無法使用安全金鑰，因此沒有核准任何項目。請安裝後再核准一次。請求會保留。</string>
+    <string name="approval_security_key_no_library_pairing">在安裝 libfido2 1.14 或更新版本(Ubuntu 上為 libfido2-1 套件)之前，這台電腦無法使用安全金鑰。若要新增金鑰，請取消、安裝後再配對一次。或現在不使用金鑰進行配對。</string>
     <string name="approval_security_key_no_pin_set">這把安全金鑰沒有 PIN，因此無法核准。請插入與這部電腦搭配的那一把。若它曾被重設，請在您的手機上核准，並重新配對這部電腦，以便用金鑰核准。</string>
     <string name="approval_security_key_none_paired">這台電腦還沒有安全金鑰。安全金鑰是一支小型 USB 金鑰，您觸碰它即可核准；一般的 USB 隨身碟無法使用。</string>
     <string name="approval_security_key_not_allowed">安全金鑰未允許，因此未核准任何項目。請求仍保留：準備好時再次核准。</string>

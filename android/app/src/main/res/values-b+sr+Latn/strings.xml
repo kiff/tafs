@@ -106,6 +106,8 @@
     <string name="approval_security_key_failed">Sigurnosni ključ nije mogao da potpiše, pa ništa nije odobreno. Zahtev je sačuvan: odobrite ponovo kad budete spremni.</string>
     <string name="approval_security_key_locked">Ovaj sigurnosni ključ je zaključan posle previše pogrešnih PIN-ova, pa ne može da odobrava. Odobrite na telefonu. Resetovanje ključa ga briše, pa da biste ponovo odobravali ključem, ponovo uparite ovaj računar.</string>
     <string name="approval_security_key_no_key">Priključite svoj sigurnosni ključ, pa pokušajte ponovo.</string>
+    <string name="approval_security_key_no_library">Ovaj računar ne može da koristi bezbednosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1), pa ništa nije odobreno. Instalirajte ga, pa ponovo odobrite. Zahtev ostaje.</string>
+    <string name="approval_security_key_no_library_pairing">Ovaj računar ne može da koristi bezbednosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1). Da biste dodali ključ, otkažite, instalirajte ga i ponovo uparite. Ili sada uparite bez ključa.</string>
     <string name="approval_security_key_no_pin_set">Ovaj sigurnosni ključ nema PIN, pa ne može da odobrava. Priključite onaj koji pripada ovom računaru. Ako je resetovan, odobrite na telefonu i ponovo uparite ovaj računar da biste odobravali ključem.</string>
     <string name="approval_security_key_none_paired">Ovaj računar još nema sigurnosni ključ. Sigurnosni ključ je mali USB ključ koji dodirnete radi odobrenja; običan USB fleš ne radi.</string>
     <string name="approval_security_key_not_allowed">Sigurnosni ključ to nije dozvolio, pa ništa nije odobreno. Zahtev je sačuvan: odobrite ponovo kad budete spremni.</string>

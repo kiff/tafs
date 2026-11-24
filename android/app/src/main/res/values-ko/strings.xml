@@ -104,6 +104,8 @@
     <string name="approval_security_key_failed">보안 키로 서명하지 못해 승인된 것은 없습니다. 요청은 남아 있으니 준비되면 다시 승인하세요.</string>
     <string name="approval_security_key_locked">PIN을 너무 많이 틀려 이 보안 키가 잠겼으므로 승인할 수 없습니다. 휴대폰에서 승인하세요. 키를 재설정하면 키가 초기화되므로, 다시 키로 승인하려면 이 컴퓨터를 다시 페어링하세요.</string>
     <string name="approval_security_key_no_key">보안 키를 꽂은 뒤 다시 시도하세요.</string>
+    <string name="approval_security_key_no_library">libfido2 1.14 이상(Ubuntu에서는 libfido2-1 패키지)이 설치될 때까지 이 컴퓨터에서는 보안 키를 사용할 수 없어 아무것도 승인되지 않았습니다. 설치한 뒤 다시 승인하세요. 요청은 유지됩니다.</string>
+    <string name="approval_security_key_no_library_pairing">libfido2 1.14 이상(Ubuntu에서는 libfido2-1 패키지)이 설치될 때까지 이 컴퓨터에서는 보안 키를 사용할 수 없습니다. 키를 추가하려면 취소하고 설치한 뒤 다시 페어링하세요. 또는 지금 키 없이 페어링하세요.</string>
     <string name="approval_security_key_no_pin_set">이 보안 키에는 PIN이 없어 승인할 수 없습니다. 이 컴퓨터와 짝을 이룬 키를 꽂으세요. 키를 재설정했다면 휴대폰에서 승인하고, 키로 승인하려면 이 컴퓨터를 다시 페어링하세요.</string>
     <string name="approval_security_key_none_paired">이 컴퓨터에는 아직 보안 키가 없습니다. 보안 키는 승인할 때 터치하는 작은 USB 키이며, 일반 USB 메모리는 사용할 수 없습니다.</string>
     <string name="approval_security_key_not_allowed">보안 키가 허용하지 않아 승인된 것은 없습니다. 요청은 남아 있으니 준비되면 다시 승인하세요.</string>

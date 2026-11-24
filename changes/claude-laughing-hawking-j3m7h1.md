@@ -1,0 +1,1 @@
+- **Words (Linux):** two lines for a computer without libfido2 1.14 or later: the security key's PIN sheet says to install it instead of "couldn't sign", and pairing says so instead of quietly pairing without the key. ([docs/approvals.md](../docs/approvals.md))
