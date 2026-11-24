@@ -396,7 +396,7 @@ class FakeSocket {
   }
 }
 
-async function relayWith(p, { runner, onReady } = {}) {
+async function relayWith(p, { runner, onReady, onRunStateMessage } = {}) {
   const ext = await newKeyPair();
   const handled = [];
   let wiped = false;
@@ -406,6 +406,7 @@ async function relayWith(p, { runner, onReady } = {}) {
     runner: runner || { active: false, handle: async (s) => (handled.push(s), { page: { read_id: "rd_1", url: "https://shop.example/" } }), stop: async () => {} },
     onUnpaired: () => (wiped = true),
     ...(onReady ? { onReady } : {}),
+    ...(onRunStateMessage ? { onRunStateMessage } : {}),
     WebSocket: FakeSocket,
     now: () => NOW,
   });
@@ -773,4 +774,17 @@ test("the relay keeps this Chrome's live connections from the welcome and each c
   assert.deepEqual(readConnections("x"), []);
   assert.deepEqual(readConnections([{ ...one, sites: ["a.example", 7] }])[0].sites, ["a.example"]);
   relay.close();
+});
+
+test("planque's answer to a run's state goes to the run states, and is never taken for a step", async () => {
+  const p = await planque();
+  const heard = [];
+  const { relay, ws, handled } = await relayWith(p, { onRunStateMessage: (m) => heard.push(m) });
+  await handshake(p, ws);
+  await ws.deliver({ type: "run_state_kept", run: "run_1" });
+  await ws.deliver({ type: "run_state_refused", run: "run_1", code: "run_stopped" });
+  await new Promise((done) => setTimeout(done, 0));
+  assert.deepEqual(heard.map((m) => [m.type, m.code]), [["run_state_kept", undefined], ["run_state_refused", "run_stopped"]]);
+  assert.equal(handled.length, 0);
+  relay.close(); // its keepalive timer would hold the test process open
 });
