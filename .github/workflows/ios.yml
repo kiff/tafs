@@ -113,7 +113,7 @@ jobs:
           uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
           # What the watch app is built from: its own folders, the relay's contract (WatchShared), the phone's words it
           # compiles, the project file. And this workflow.
-          watch='^(ios/(TafsWatch|TafsWatchTests|Shared|WatchShared)/|ios/(project|watch-embed)\.yml$|ios/Tafs/Design/Words\.swift$|ios/Tafs/Localizable\.xcstrings$|\.github/workflows/ios\.yml$)'
+          watch='^(ios/(TafsWatch|TafsWatchTests|TafsWatchWidgets|Shared|WatchShared)/|ios/(project|watch-embed)\.yml$|ios/Tafs/Design/Words\.swift$|ios/Tafs/Localizable\.xcstrings$|\.github/workflows/ios\.yml$)'
           # What the route walk (RouteWalkUITests) depends on besides the screens: AppModel's
           # open(route:) and its hook, the routes and the map. With the UI tests it always runs;
           # otherwise it runs beside the unit tests when one of these changes.
