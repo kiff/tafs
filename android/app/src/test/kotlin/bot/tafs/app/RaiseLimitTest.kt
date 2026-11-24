@@ -194,4 +194,19 @@ class RaiseLimitTest {
     assertEquals("The limit wasn't raised. Your role on this account doesn't allow this.", m.state.value.raiseError)
     assertTrue(m.state.value.balance!!.balance.waiting)
   }
+
+  /** The limit now (`usage.raise_limit.from`), from `from_cents` in tafs cloud's `currency`: none without both, never assumed. */
+  @Test fun theLimitNowIsInTafsCloudsCurrencyWithItsOwnDecimalsAndNoneWithoutOne() {
+    fun offer(json: String) = KiffClient.json.decodeFromString(bot.tafs.app.kiff.BalanceRaise.serializer(), json)
+    assertEquals(bot.tafs.app.model.Money(120000, "EUR", 2), offer("""{"words":"Raise","from_cents":120000,"currency":"EUR"}""").limitNow)
+    assertEquals(0, offer("""{"words":"Raise","from_cents":5000,"currency":"JPY"}""").limitNow?.scale)
+    assertEquals(3, offer("""{"words":"Raise","from_cents":5000,"currency":"KWD"}""").limitNow?.scale)
+    for (json in listOf(
+      """{"words":"Raise","from_cents":120000}""",
+      """{"words":"Raise","from_cents":120000,"currency":"euro"}""",
+      """{"words":"Raise","from_cents":120000,"currency":"ZZZ"}""",
+      """{"words":"Raise","currency":"EUR"}""",
+      """{"words":"Raise","from_cents":-1,"currency":"EUR"}""",
+    )) assertNull(json, offer(json).limitNow)
+  }
 }
