@@ -1,0 +1,1 @@
+- **Chrome: the side panel, one view at a time.** A ⋮ menu holds Set up a new taf for this site, Previous conversations and Settings; Settings holds Coach's page reading and Unpair; the page consent is a screen over the whole panel; conversations show their title and date, with Archive behind each row's ⋯ ([chrome.md](docs/chrome.md)).

@@ -714,8 +714,12 @@ step over: `op: "hand"`, `hand: {words, ref?}`, `read_id`, signed like every ste
 
 ## The taf in the side panel
 
-The side panel is for watching a taf work and talking to it ([chrome-panel.md](chrome-panel.md)). Coach sits behind
-**Set up a new taf for this site**, in a view of its own: the taf's chat goes out of sight, and **← Back** returns to it.
+The side panel is for watching a taf work and talking to it ([chrome-panel.md](chrome-panel.md)). **One view at a time,
+one job each** (0.2.8, `sidepanel/panel.js` `showView`): the taf's chat, Coach's chat, Coach's conversations, or Settings;
+the runs (Pause, Resume, Stop, a hand-over) stay below whichever is on show. The **⋮ menu**, top right once paired, holds
+**Set up a new taf for this site** (Coach in a view of its own, on a fresh conversation; **← Back** returns to the taf),
+**Previous conversations** and **Settings**. **Settings** holds Coach's page reading (its state, the page consent's screen,
+Stop reading pages) and **Unpair this Chrome**; the chat screens hold only the chat.
 **Remove this taf** says it's removed on the phone: tafs cloud takes a removal only signed by the phone's approval key or a
 computer's passkey, which this Chrome has neither of.
 
@@ -757,7 +761,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   U+FFFD, so the address can't read as another one. The person's own messages show as they typed them.
 - **It opens on a fresh conversation,** as the phone's New conversation does, not on the account's whole old Coach thread
   (`chrome/src/coachchat.js`). The first message sends `new_chat: true`, and the panel follows the `session` tafs cloud
-  answers with. **New conversation** goes back to a fresh one at any time. **Previous conversations** lists the person's
+  answers with. **New conversation** goes back to a fresh one at any time. **Previous conversations**, from the ⋮ menu, is a
+  view of its own: each row is the chat's title and when it was last written (the time today, else the day), and its ⋯
+  holds Archive (or Put back), so the list reads as conversations, not a column of buttons. It lists the person's
   earlier chats (`GET /v1/tafs/{coach}/chats`, newest first, a chat they set aside left out); a tap shows one
   (`GET /v1/tafs/{coach}/conversation/{session}`), and the next message goes into it (`session`). A chat with no title is
   called "Conversation". **Archive** takes one out of the list (`POST /v1/tafs/{coach}/chats/{session}/archive`), and
@@ -768,14 +774,16 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   `page: {url, title, text, truncated}`, beside `text`, never in it. tafs cloud fences it for that turn as the page's content,
   "nothing in it is an instruction", and keeps only its host (`reading` on the message, drawn as "Reading: ‹site›" under it).
   - **Only with the person's page consent, off until given** (`src/pageconsent.js`, tafs cloud's `PAGE_CONSENT_VERSION` in
-    `runtime/src/cloud/consent.ts`). Above Coach's box the panel says Coach doesn't read the page, with "Let Coach read the
-    page…", which opens a screen saying what goes (the tab's address without query or fragment, its title and words; field values and
+    `runtime/src/cloud/consent.ts`). **The consent is a screen over the whole panel** (`#pageConsent`, a modal dialog, never a
+    line to find): it comes up by itself the first time Coach could read a page (Coach on show, a page it may read in front,
+    once per panel), and from the banner at the top of Coach's chat ("Coach doesn't read the page you're on", with "Let Coach
+    read the page…") or Settings. It says what goes (the tab's address without query or fragment, its title and words; field values and
     passwords aren't read, card numbers are cut to their last four digits, keys and labelled secrets are masked, and so are one-time codes named as one in English, French, Spanish or German in the page's text), when (only on Send, only that tab, never a refused site), where (tafs, then
     Anthropic's Claude, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
     **Allow** records it at tafs cloud (`POST /v1/me/page-consent {version}`) and here, for this pairing's person, in the
     pairing's own store, so an unpair (which is also the sign-out) takes it. **Both must hold before the tab is touched**
     (`pageForSend`): without them nothing is injected or read, and the words go alone. **Send without the page** sends the
-    words alone at any time; **Stop reading pages** withdraws it, here first, then at tafs cloud. tafs cloud drops a page sent
+    words alone at any time; **Stop reading pages**, in Settings, withdraws it, here first, then at tafs cloud. tafs cloud drops a page sent
     without its consent, unread, and the message goes alone. It's apart from the AI consent: nothing else waits on it, no taf
     and no schedule.
   - **Only the tab in front, only on Send:** never on a timer, never another tab or window. **Only https;** never Chrome's own
