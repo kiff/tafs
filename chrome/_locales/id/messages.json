@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Tidak ada percakapan yang diarsipkan."},
   "coach_archive_error": {"message": "Tidak berhasil. Coba lagi."},
   "taf_remove": {"message": "Hapus taf ini"},
-  "taf_remove_on_phone": {"message": "Taf dihapus di ponsel Anda: buka di aplikasi tafs, lalu Hapus. Penghapusannya disetujui di sana."}
+  "taf_remove_on_phone": {"message": "Taf dihapus di ponsel Anda: buka di aplikasi tafs, lalu Hapus. Penghapusannya disetujui di sana."},
+  "bar_go": {"message": "Buka tabnya"},
+  "bar_paused": {"message": "$TAF$ sedang dijeda", "placeholders": {"taf": {"content": "$1"}}}
 }

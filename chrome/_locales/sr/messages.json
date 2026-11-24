@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Nema arhiviranih razgovora."},
   "coach_archive_error": {"message": "Nije uspelo. Pokušajte ponovo."},
   "taf_remove": {"message": "Uklonite ovaj taf"},
-  "taf_remove_on_phone": {"message": "Taf se uklanja na telefonu: otvorite ga u aplikaciji tafs, zatim Uklonite. Uklanjanje se tamo odobrava."}
+  "taf_remove_on_phone": {"message": "Taf se uklanja na telefonu: otvorite ga u aplikaciji tafs, zatim Uklonite. Uklanjanje se tamo odobrava."},
+  "bar_go": {"message": "Idi na njegovu karticu"},
+  "bar_paused": {"message": "Pauzirano: $TAF$", "placeholders": {"taf": {"content": "$1"}}}
 }

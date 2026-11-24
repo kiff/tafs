@@ -39,6 +39,8 @@
   "pause": { "message": "Pause" },
   "resume": { "message": "Resume" },
   "stop": { "message": "Stop" },
+  "bar_go": { "message": "Go to its tab", "description": "Button on the floating bar shown on the page in front while a taf works in this Chrome: brings the tab the taf is working in to the front." },
+  "bar_paused": { "message": "$TAF$ is paused", "description": "The floating bar's words while the person has paused the taf's work in this Chrome.", "placeholders": { "taf": { "content": "$1" } } },
   "bar_working": { "message": "$TAF$ is working on this page", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": { "taf": { "content": "$1" } } },
   "step_open": { "message": "Opened $SITE$", "placeholders": { "site": { "content": "$1" } } },
   "step_read": { "message": "Read the page" },

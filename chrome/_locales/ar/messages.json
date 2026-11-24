@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "لا توجد محادثات مؤرشفة."},
   "coach_archive_error": {"message": "لم يتم ذلك. حاول مرة أخرى."},
   "taf_remove": {"message": "إزالة هذا الـ taf"},
-  "taf_remove_on_phone": {"message": "يُزال الـ taf من هاتفك: افتحه في تطبيق tafs، ثم إزالة. تتم الموافقة على إزالته هناك."}
+  "taf_remove_on_phone": {"message": "يُزال الـ taf من هاتفك: افتحه في تطبيق tafs، ثم إزالة. تتم الموافقة على إزالته هناك."},
+  "bar_go": {"message": "الانتقال إلى علامة تبويبه"},
+  "bar_paused": {"message": "$TAF$ متوقف مؤقتًا", "placeholders": {"taf": {"content": "$1"}}}
 }

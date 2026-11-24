@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "沒有已封存的對話。"},
   "coach_archive_error": {"message": "未能完成。請再試一次。"},
   "taf_remove": {"message": "移除這個 taf"},
-  "taf_remove_on_phone": {"message": "taf 要在手機上移除：在 tafs 應用程式中開啟它，然後點「移除」。移除會在那裡核准。"}
+  "taf_remove_on_phone": {"message": "taf 要在手機上移除：在 tafs 應用程式中開啟它，然後點「移除」。移除會在那裡核准。"},
+  "bar_go": {"message": "前往它的分頁"},
+  "bar_paused": {"message": "$TAF$ 已暫停", "placeholders": {"taf": {"content": "$1"}}}
 }

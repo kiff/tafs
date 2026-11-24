@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Žádné archivované rozhovory."},
   "coach_archive_error": {"message": "Nepovedlo se. Zkuste to znovu."},
   "taf_remove": {"message": "Odstranit tento taf"},
-  "taf_remove_on_phone": {"message": "Taf se odstraňuje v telefonu: otevřete ho v aplikaci tafs a pak Odstranit. Odstranění se schvaluje tam."}
+  "taf_remove_on_phone": {"message": "Taf se odstraňuje v telefonu: otevřete ho v aplikaci tafs a pak Odstranit. Odstranění se schvaluje tam."},
+  "bar_go": {"message": "Přejít na jeho kartu"},
+  "bar_paused": {"message": "$TAF$ je pozastaven", "placeholders": {"taf": {"content": "$1"}}}
 }

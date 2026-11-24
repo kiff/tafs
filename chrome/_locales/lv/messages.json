@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Nav arhivētu sarunu."},
   "coach_archive_error": {"message": "Neizdevās. Pamēģini vēlreiz."},
   "taf_remove": {"message": "Noņemt šo taf"},
-  "taf_remove_on_phone": {"message": "Taf noņem tālrunī: atver to tafs lietotnē, tad Noņemt. Noņemšanu apstiprina tur."}
+  "taf_remove_on_phone": {"message": "Taf noņem tālrunī: atver to tafs lietotnē, tad Noņemt. Noņemšanu apstiprina tur."},
+  "bar_go": {"message": "Pāriet uz tā cilni"},
+  "bar_paused": {"message": "$TAF$ ir iepauzēts", "placeholders": {"taf": {"content": "$1"}}}
 }

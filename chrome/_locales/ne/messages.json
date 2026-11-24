@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "अभिलेखमा कुनै कुराकानी छैन।"},
   "coach_archive_error": {"message": "भएन। फेरि प्रयास गर्नुहोस्।"},
   "taf_remove": {"message": "यो taf हटाउनुहोस्"},
-  "taf_remove_on_phone": {"message": "taf तपाईंको फोनमा हटाइन्छ: यसलाई tafs एपमा खोल्नुहोस्, त्यसपछि हटाउनुहोस्। हटाउने स्वीकृति त्यहीँ दिइन्छ।"}
+  "taf_remove_on_phone": {"message": "taf तपाईंको फोनमा हटाइन्छ: यसलाई tafs एपमा खोल्नुहोस्, त्यसपछि हटाउनुहोस्। हटाउने स्वीकृति त्यहीँ दिइन्छ।"},
+  "bar_go": {"message": "यसको ट्याबमा जानुहोस्"},
+  "bar_paused": {"message": "$TAF$ पज गरिएको छ", "placeholders": {"taf": {"content": "$1"}}}
 }

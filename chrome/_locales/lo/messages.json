@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "ບໍ່ມີການສົນທະນາທີ່ເກັບໄວ້."},
   "coach_archive_error": {"message": "ບໍ່ສຳເລັດ. ລອງໃໝ່ອີກຄັ້ງ."},
   "taf_remove": {"message": "ເອົາ taf ນີ້ອອກ"},
-  "taf_remove_on_phone": {"message": "taf ຖືກເອົາອອກໃນໂທລະສັບຂອງທ່ານ: ເປີດມັນໃນແອັບ tafs, ແລ້ວ ເອົາອອກ. ການເອົາອອກຖືກອະນຸມັດຢູ່ທີ່ນັ້ນ."}
+  "taf_remove_on_phone": {"message": "taf ຖືກເອົາອອກໃນໂທລະສັບຂອງທ່ານ: ເປີດມັນໃນແອັບ tafs, ແລ້ວ ເອົາອອກ. ການເອົາອອກຖືກອະນຸມັດຢູ່ທີ່ນັ້ນ."},
+  "bar_go": {"message": "ໄປທີ່ແທັບຂອງມັນ"},
+  "bar_paused": {"message": "$TAF$ ຢຸດຊົ່ວຄາວແລ້ວ", "placeholders": {"taf": {"content": "$1"}}}
 }

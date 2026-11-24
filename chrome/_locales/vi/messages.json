@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Không có cuộc trò chuyện nào đã lưu trữ."},
   "coach_archive_error": {"message": "Không thành công. Hãy thử lại."},
   "taf_remove": {"message": "Gỡ taf này"},
-  "taf_remove_on_phone": {"message": "Taf được gỡ trên điện thoại: mở nó trong ứng dụng tafs, rồi chọn Gỡ. Việc gỡ được phê duyệt ở đó."}
+  "taf_remove_on_phone": {"message": "Taf được gỡ trên điện thoại: mở nó trong ứng dụng tafs, rồi chọn Gỡ. Việc gỡ được phê duyệt ở đó."},
+  "bar_go": {"message": "Đi tới thẻ của nó"},
+  "bar_paused": {"message": "$TAF$ đã tạm dừng", "placeholders": {"taf": {"content": "$1"}}}
 }

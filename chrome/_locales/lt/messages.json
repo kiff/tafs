@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Archyvuotų pokalbių nėra."},
   "coach_archive_error": {"message": "Nepavyko. Bandykite dar kartą."},
   "taf_remove": {"message": "Pašalinti šį taf"},
-  "taf_remove_on_phone": {"message": "Taf šalinamas telefone: atidarykite jį „tafs“ programėlėje, tada Pašalinti. Pašalinimas patvirtinamas ten."}
+  "taf_remove_on_phone": {"message": "Taf šalinamas telefone: atidarykite jį „tafs“ programėlėje, tada Pašalinti. Pašalinimas patvirtinamas ten."},
+  "bar_go": {"message": "Eiti į jo skirtuką"},
+  "bar_paused": {"message": "$TAF$ pristabdytas", "placeholders": {"taf": {"content": "$1"}}}
 }

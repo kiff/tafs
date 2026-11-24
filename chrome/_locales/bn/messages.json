@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "কোনো আর্কাইভ করা কথোপকথন নেই।"},
   "coach_archive_error": {"message": "হয়নি। আবার চেষ্টা করুন।"},
   "taf_remove": {"message": "এই taf সরান"},
-  "taf_remove_on_phone": {"message": "taf সরানো হয় আপনার ফোনে: tafs অ্যাপে এটি খুলুন, তারপর সরান। সরানোর অনুমোদন সেখানেই হয়।"}
+  "taf_remove_on_phone": {"message": "taf সরানো হয় আপনার ফোনে: tafs অ্যাপে এটি খুলুন, তারপর সরান। সরানোর অনুমোদন সেখানেই হয়।"},
+  "bar_go": {"message": "এর ট্যাবে যান"},
+  "bar_paused": {"message": "$TAF$ বিরতিতে আছে", "placeholders": {"taf": {"content": "$1"}}}
 }
