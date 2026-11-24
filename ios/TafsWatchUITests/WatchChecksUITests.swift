@@ -21,19 +21,14 @@ final class WatchChecksUITests: XCTestCase {
         return app
     }
 
-    /// Brings `element` into view: a watch's list only shows what's on screen, so it's scrolled up a few times until the
-    /// element is there (and on screen, when it's to be tapped). A swipe scrolls a page's list but doesn't turn a vertical
-    /// page (a taf's chat, then its page below), so then the crown is turned, as the person does: down first, then back.
+    /// Brings `element` into view, as the crown does: a watch's list only shows what's on screen, so it's scrolled up a
+    /// few times until the element is there (and on screen, when it's to be tapped).
     @discardableResult
     private func reach(_ element: XCUIElement, in app: XCUIApplication, tappable: Bool = false) -> Bool {
         func there() -> Bool { element.exists && (!tappable || element.isHittable) }
         if element.waitForExistence(timeout: wait), there() { return true }
         for _ in 0..<6 {
             app.swipeUp()
-            if element.waitForExistence(timeout: 2), there() { return true }
-        }
-        for delta: CGFloat in [1, 1, 1, -1, -1, -1, -1, -1, -1] {
-            XCUIDevice.shared.rotateDigitalCrown(delta: delta, velocity: .default)
             if element.waitForExistence(timeout: 2), there() { return true }
         }
         return there()
@@ -144,10 +139,11 @@ final class WatchChecksUITests: XCTestCase {
     /// Rows 14 and 3: a taf's page, What it does, then Its settings › Halt this taf › Halt now, and it's halted, with
     /// Resume left to the phone.
     func testATafsPageAndHaltThisTaf() {
-        let app = launch()
+        // A taf opens on its chat, with its page one vertical page below, which neither a swipe nor the crown turns
+        // reliably here: `-watch-demo-taf-page` opens it on its page, as with taf chat off.
+        let app = launch("-watch-demo-taf-page")
         open("Tafs", in: app)
         openLine("Refunds", in: app)
-        // A taf opens on its chat, with its page one page below: `reach` turns the crown there.
         shows("What it does", in: app)
         tap("Its settings", in: app)
         let asked = tap("Halt this taf", in: app)
@@ -157,7 +153,7 @@ final class WatchChecksUITests: XCTestCase {
 
     /// Row 3 without a passcode: Halt asks nothing of the phone and says to set a screen lock.
     func testWithoutAPasscodeHaltSaysToSetOne() {
-        let app = launch("-watch-demo-no-passcode")
+        let app = launch("-watch-demo-no-passcode", "-watch-demo-taf-page")
         open("Tafs", in: app)
         openLine("Refunds", in: app)
         tap("Its settings", in: app)

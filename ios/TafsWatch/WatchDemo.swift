@@ -17,8 +17,12 @@ enum WatchDemo {
     static let cloudDown = on && ProcessInfo.processInfo.arguments.contains("-watch-demo-cloud-down")
     /// The demo watch has no passcode: Refuse and Halt say to set one, and the Inbox isn't kept.
     static let noPasscode = on && ProcessInfo.processInfo.arguments.contains("-watch-demo-no-passcode")
+    /// A taf in Your tafs opens on its page, as it does with taf chat off, rather than on its chat with the page one
+    /// vertical page below: a UI test can't turn that page reliably, so it reaches What it does and Halt this way.
+    static let tafPage = on && ProcessInfo.processInfo.arguments.contains("-watch-demo-taf-page")
     #else
     static let on = false
+    static let tafPage = false
     #endif
 
     /// The phone the app asks: the demo's, or the real one.

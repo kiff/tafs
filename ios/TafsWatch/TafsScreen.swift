@@ -33,7 +33,7 @@ struct TafsScreen: View {
         case .loaded(let tafs):
             List {
                 ForEach(tafs) { taf in
-                    if opensPages && WatchTafChat.on {
+                    if opensPages && WatchTafChat.on && !WatchDemo.tafPage {
                         // 1A: a taf opens its chat, with its page one swipe below.
                         NavigationLink {
                             TafChatScreen(taf: taf, chat: model.chat(taf), page: { model.page(taf) }, openInbox: openInbox)
