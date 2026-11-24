@@ -24,7 +24,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
-1. **macOS 12** is furthest behind: 6 screens partial and 8 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 6 are real work: approvals on this Mac's security key, a key shown once, alerts that wait on the signed build, and a few reads.
+1. **macOS 12** is furthest behind: 6 screens partial and 8 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 6 are real work: alerts that wait on the signed build, the sample's own parts, a few reads (a held call's page, each Chrome's connections), and planque's own words on a connection's request.
 2. **Linux** is level with the iPad: 53 screens done, and 5 not for it, each with its reason. "Allow this from now on" landed last (tafs-linux#120).
 3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): a complication, and four switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
