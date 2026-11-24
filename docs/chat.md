@@ -118,8 +118,9 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
 - **Coach's history says which turns read a page.** kiff/agents keeps the person's message, never the page beside
   it, so a later turn used to see Coach's answers about a page with nothing behind them, and Coach said it had never
   read one. Now the message kiff/agents keeps carries a line of tafs cloud's own, in its envelope before "The owner
-  says:": `[tafs page read] <host>`, saying that message came with the page on that host, that its text isn't kept
-  after the turn, and never to say it wasn't read (`withPageRead`). The host alone, which page consent "1" already
+  says:": `[tafs page read] <host>`, saying the person sent that message with the page on that host, that a page given
+  in that turn was read, that its text isn't kept after the turn, and never to deny a page it was given
+  (`withPageRead`). It stays true for a message that answers a waiting card, whose run reads no page. The host alone, which page consent "1" already
   keeps for the chat's life; never the path, title or text. The thread shows the person's words without it, and a
   line of the person's own that starts `[tafs page read]` is dropped from their words, as the language and time-zone
   lines are.

@@ -228,7 +228,7 @@ export const PAGE_LINE = "[tafs page read]";
  * what page consent "1" keeps for the chat's life (consent.ts); the address's path, the title and the text are kept nowhere.
  */
 export function withPageRead(text: string, host: string): string {
-  return withLine(text, `${PAGE_LINE} ${host} This message came with the page the owner had open on ${host}, and you read it in this turn. Its text isn't kept after this turn: later, say you read it then, and if you need what it said, ask for the page again. Never say you didn't read it.`);
+  return withLine(text, `${PAGE_LINE} ${host} The owner sent this message with the page they had open on ${host}. If that page is given to you in this turn, you read it. Its text isn't kept after this turn: later, say you read it then, and if you need what it said, ask for the page again. Never say you didn't read a page you were given.`);
 }
 
 /** A person's text without any line that starts as one of tafs' own (the language, time-zone and page lines), which only tafs cloud writes. */

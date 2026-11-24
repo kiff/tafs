@@ -147,7 +147,8 @@ describe("Coach reads the page the person has open, with their message", () => {
     const kept = inputOf(first.body.run as string);
     expect(kept).toContain("[tafs page read] shop.example ");
     expect(kept).not.toContain("orders/42");
-    expect(kept).toContain("Never say you didn't read it.");
+    expect(kept).toContain("If that page is given to you in this turn, you read it.");
+    expect(kept).toContain("Never say you didn't read a page you were given.");
     expect(kept).not.toContain("token=abc");
     expect(kept).not.toContain("Refund policy");
     expect(kept).not.toContain("evil.example");
