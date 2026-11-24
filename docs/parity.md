@@ -98,7 +98,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 Per file, each device that isn't done. The desktop lines are short forms of the checklist's own; the checklist has the whole line.
 
 - **ApprovalSetupView**
-  - **Mac 13+** (partial): Touch ID approval not yet checked on a real signed Mac (CI only); a Mac signed in through the browser is view-only (docs/mac-app.md)
+  - **Mac 13+** (partial): Touch ID approval not yet checked on a real signed Mac (CI only); a Mac signed in through the browser is view-only. The owner's check, steps 2 to 4 ([mac-app.md](mac-app.md#the-owners-check-on-a-signed-mac))
 - **BriefView**
   - **macOS 12** (partial): Alert routing by `brief_kind`, which comes with tafs cloud's push: it waits on the signed Mac build. (The iPad's brief has no held call's page of its own, an answer opens Needs you as here…
 - **DeleteAccountView**
@@ -126,7 +126,7 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **Windows** (not for it): The phone's side of pairing: the camera reads a computer's code.
   - **Linux** (not for it): The phone's side of pairing: the camera reads a computer's code. The computer's side is tafs-macos's, ported in tafs-linux's `docs/pairing.md` (`pairing.rs`, `tafs-core/pairing.rs`).
 - **PairSignInView**
-  - **Mac 13+** (partial): built (the iPad's "from another phone"); not yet tried on a real Mac (docs/mac-app.md)
+  - **Mac 13+** (partial): built (the iPad's "from another phone"); not yet tried on a real Mac. The owner's check, step 2 ([mac-app.md](mac-app.md#the-owners-check-on-a-signed-mac))
 - **TafDialPanel**
   - **Android** (not for it): not reachable on the iPad at the pin (it opens `DoorsView` only as `.only(door.id)`)
   - **macOS 12** (not for it): Not reachable on the iPad at the pin: it opens `DoorsView` only as `.only(door.id)`, so the remote never shows. To reopen if the iPad turns it on. As Windows (tafs-windows#242).
