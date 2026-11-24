@@ -461,7 +461,7 @@ extension View {
     /// Try again, Sign out anyway, or Cancel, which leaves the person signed in. `then` runs once signed out.
     @MainActor
     func askingAlertsStillOn(_ model: AppModel, then: @escaping () -> Void = {}) -> some View {
-        alert(Words.Alert.StillOnAfterSignOut.title(device: "\(ThisDevice.kind)"),
+        self.alert(Words.Alert.StillOnAfterSignOut.title(device: "\(ThisDevice.kind)"),
               isPresented: Binding(get: { model.alertsStillOn != nil }, set: { if !$0 { model.alertsStillOn = nil } }),
               presenting: model.alertsStillOn) { _ in
             Button(Words.Common.tryAgain) { Task { if await model.signOut() { then() } } }
