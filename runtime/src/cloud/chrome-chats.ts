@@ -21,12 +21,13 @@ export const CHROME_CHAT_KEPT_MS = 400 * 24 * 3600_000;
 
 /**
  * The Chrome asking, or undefined for anyone else. `device` is "" when the request is taken as a Chrome's but KIFF named
- * no device: it then has no chats at all (fail closed). That's a device's view-only session without a platform, as KIFF
- * answered before it named platforms; desktop apps' view-only sessions have their own platform once it does.
+ * no device: it then has no chats at all (fail closed). That's a device's view-only session with neither a device nor a
+ * platform, as KIFF answered before it named them. Once KIFF names the device, only its platform says Chrome: a view-only
+ * computer paired with no platform stored keeps its whole list, as every device but a Chrome does.
  */
 export function chromeOf(me: KIFFIdentity): { device: string } | undefined {
   if (me.devicePlatform === CHROME_PLATFORM) return { device: me.deviceID ?? "" };
-  if (!me.devicePlatform && me.deviceSession === true && me.approvalMode === "view") return { device: "" };
+  if (!me.devicePlatform && !me.deviceID && me.deviceSession === true && me.approvalMode === "view") return { device: "" };
   return undefined;
 }
 

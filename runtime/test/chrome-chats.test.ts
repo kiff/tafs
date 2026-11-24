@@ -18,6 +18,8 @@ const WHO: Record<string, Record<string, unknown>> = {
   chromeB: { ...PERSON, device_session: true, approval_mode: "view", device_id: "dev_b", device_platform: "chrome" },
   unnamed: { ...PERSON, device_session: true, approval_mode: "view" },
   desktop: { ...PERSON, device_session: true, approval_mode: "view", device_id: "dev_pc", device_platform: "windows" },
+  // A view-only computer paired before platforms were stored: KIFF names its device, and no platform.
+  noPlatform: { ...PERSON, device_session: true, approval_mode: "view", device_id: "dev_old" },
 };
 
 async function world() {
@@ -87,6 +89,8 @@ describe("which Chrome is asking comes from KIFF alone", () => {
     expect(chromeOf(await asked("chromeA"))).toEqual({ device: "dev_a" });
     expect(chromeOf(await asked("phone"))).toBeUndefined();
     expect(chromeOf(await asked("desktop"))).toBeUndefined();
+    // Once KIFF names the device, only its platform says Chrome: a view-only device with no platform stored isn't one.
+    expect(chromeOf(await asked("noPlatform"))).toBeUndefined();
     // Before KIFF names platforms, a device's view-only session is taken as a Chrome with no chats (fail closed).
     expect(chromeOf(await asked("unnamed"))).toEqual({ device: "" });
   });
@@ -199,6 +203,7 @@ describe("a Chrome sees only the chats begun in it", () => {
     const fromPhone = await say(w, "phone", "From the phone");
     const fromA = await say(w, "chromeA", "From Chrome A", { new_chat: true });
     expect((await listed(w, "desktop")).sort()).toEqual([fromPhone, fromA].sort());
+    expect((await listed(w, "noPlatform")).sort()).toEqual([fromPhone, fromA].sort());
     expect((await threadOf(w, "desktop", fromPhone)).status).toBe(200);
   });
 });

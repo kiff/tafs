@@ -748,7 +748,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   never from the request. Each chat a Chrome begins is kept as one item by its id. Its lists (`…/chats`, `…/chats/archived`)
   hold only those. A chat it didn't begin is 404 by its id (its thread, a message into it, archiving it). Its live thread,
   and where a message with no chat goes, are its own newest chat or a new one. A re-pair is a new KIFF device, so it starts
-  empty. A view-only device session KIFF names no platform for is taken as a Chrome with no chats (fail closed).
+  empty. A view-only device session KIFF names neither a device nor a platform for is taken as a Chrome with no chats (fail closed); once KIFF names the device, only its platform says Chrome.
 - **A Chrome calls only the side panel's routes:** the Coach and tafs reads, a taf's thread, chats, messages and archiving,
   and the page consent. Every other tafs cloud route answers it 404 (export included), so a route added later is closed to
   it until it's listed.
