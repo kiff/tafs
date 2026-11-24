@@ -228,6 +228,8 @@ describe("jobs", () => {
       // A hold pauses the run where it is: what the Card allows goes first, and
       // the report names each item and what became of it (kiff/agents#78).
       expect(prompt).toContain("leave any write that may need the owner's approval");
+      // A click the Card allowed was narrated as "a click, which needs approval" while nothing was held (the 0.2.2 try).
+      expect(prompt.replace(/\s+/g, " ")).toContain("Before KIFF answers, never say a call needs or waits for the owner's approval, in the chat or as you work: a write your Card allows simply runs. A call waits for approval only once KIFF holds it.");
       // An item left behind a hold was explained with a limit no read gave (Chargebacks, 20 Nov, 2 runs of 3).
       expect(prompt.replace(/\s+/g, " ")).toContain("An item you didn't reach because your run paused on a hold is said as just that (\"A-1048: not done, since my run paused on the hold first\"), with no limit named for it: you never made its call, so you can't know what KIFF would have done with it.");
       // Tools' descriptions carry the Card's line, so "no limit was read" was untrue (Eval 44732158037).
