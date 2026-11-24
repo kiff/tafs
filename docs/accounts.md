@@ -40,10 +40,11 @@ KIFF yet…"), so a device shown as signed out never holds a session KIFF still 
 Its alerts are unregistered just before the logout (the call needs the session) and
 registered again at once when KIFF doesn't end it, so a device still signed in keeps them.
 An unregister that fails is tried twice more, 1 s and then 2 s later (a 404 counts as done:
-tafs cloud holds nothing for it). If every try fails, sign-out still goes on, since the
-session must end, and the signed-out screen says once that this device may still get that
-account's alerts, and how to stop them (`settings.alerts_left_on`, iOS `AppModel.takeBackPush`,
-`alertsLeftOn`). It's never dropped silently. A
+tafs cloud holds nothing for it). If every try fails, sign-out stops before KIFF is asked,
+so the session is still there, and asks: "This {device} may still get this account's alerts",
+why, then **Try again**, **Sign out anyway** (which skips the take-back and ends the session)
+or Cancel (`alert.still_on_after_sign_out.*`, `alert.sign_out_anyway`; iOS
+`AppModel.takeBackPush`, `alertsStillOn`, `askingAlertsStillOn`). It's never dropped silently. A
 session KIFF already ended (a 401, or the account deleted) is cleared on the phone at once. Work still running for
 the old session is dropped when it finishes (`accountGeneration`).
 

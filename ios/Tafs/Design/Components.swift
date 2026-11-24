@@ -457,6 +457,21 @@ enum SignOutWay {
 }
 
 extension View {
+    /// Sign-out stopped because this device's alerts couldn't be taken back (`AppModel.alertsStillOn`): it says so, with
+    /// Try again, Sign out anyway, or Cancel, which leaves the person signed in. `then` runs once signed out.
+    @MainActor
+    func askingAlertsStillOn(_ model: AppModel, then: @escaping () -> Void = {}) -> some View {
+        alert(Words.Alert.StillOnAfterSignOut.title(device: "\(ThisDevice.kind)"),
+              isPresented: Binding(get: { model.alertsStillOn != nil }, set: { if !$0 { model.alertsStillOn = nil } }),
+              presenting: model.alertsStillOn) { _ in
+            Button(Words.Common.tryAgain) { Task { if await model.signOut() { then() } } }
+            Button(Words.Alert.signOutAnyway, role: .destructive) { Task { if await model.signOut(anyway: true) { then() } } }
+            Button(Words.Common.cancel, role: .cancel) {}
+        } message: { why in
+            Text(Words.Alert.StillOnAfterSignOut.body(why: why))
+        }
+    }
+
     /// Asks before `way` goes ahead; `go` runs only on its confirm.
     @MainActor
     func confirmingSignOut(_ way: Binding<SignOutWay?>, go: @escaping (SignOutWay) -> Void) -> some View {
@@ -559,5 +574,7 @@ struct ApprovalKeyLostLine: View {
             // sign-in screen follows, and the next sign-in registers the new key.
             Task { _ = await model.signOut(); signingOut = false }
         }
+        // Alerts that couldn't be taken back: ask before signing out.
+        .askingAlertsStillOn(model)
     }
 }

@@ -1,20 +1,20 @@
 import XCTest
 @testable import Tafs
 
-/// Sign-out takes this device's push token back from tafs cloud, tried three times; when every try fails it says so
-/// (`AppModel.takeBackPush`, `alertsLeftOn`), so the device never goes on getting a signed-out account's alerts silently.
+/// Sign-out takes this device's push token back from tafs cloud, tried three times; when every try fails it stops and asks
+/// (`AppModel.takeBackPush`, `alertsStillOn`), so the device never goes on getting a signed-out account's alerts silently.
 @MainActor
 final class PushTakeBackTests: XCTestCase {
-    private struct Down: Error {}
+    private struct Down: LocalizedError { var errorDescription: String? { "The network is down." } }
 
-    private func takeBack(failures: Int, error: Error = Down()) async -> (taken: Bool, tries: Int, waits: [Int]) {
+    private func takeBack(failures: Int, error: Error = Down()) async -> (taken: Bool, why: String?, tries: Int, waits: [Int]) {
         var tries = 0
         var waits: [Int] = []
-        let taken = await AppModel.takeBackPush({
+        let why = await AppModel.takeBackPush({
             tries += 1
             if tries <= failures { throw error }
         }, wait: { waits.append($0) })
-        return (taken, tries, waits)
+        return (why == nil, why, tries, waits)
     }
 
     func testTakenBackAtOnceTriesOnce() async {
@@ -33,7 +33,8 @@ final class PushTakeBackTests: XCTestCase {
 
     func testThreeFailedTriesAreSaid() async {
         let r = await takeBack(failures: 5)
-        XCTAssertFalse(r.taken, "sign-out then says this device may still get the account's alerts")
+        XCTAssertFalse(r.taken, "sign-out then stops and asks: Try again, or Sign out anyway")
+        XCTAssertEqual(r.why, "The network is down.", "why, for the question's {why}")
         XCTAssertEqual(r.tries, 3, "never more than three")
     }
 

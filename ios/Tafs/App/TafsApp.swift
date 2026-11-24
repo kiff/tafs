@@ -28,10 +28,6 @@ struct TafsApp: App {
                 .modifier(NarrowForScreenshots())
                 .environmentObject(model)
                 .tint(Theme.amber)
-                // A sign-out that couldn't take this device's alerts back from tafs cloud says so, once.
-                .alert(Words.Settings.alertsLeftOn(device: "\(ThisDevice.kind)"), isPresented: $model.alertsLeftOn) {
-                    Button(Words.Common.ok, role: .cancel) {}
-                }
                 // The Mac's window never goes narrower than the sidebar and a screen (docs/mac-app.md).
                 .onAppear { MacWindow.apply() }
                 // The screen locked: the approval window this phone holds closes at once.

@@ -1961,45 +1961,52 @@ final class AppModel: ObservableObject {
 
     /// Why the last sign-out didn't happen: KIFF didn't end this session.
     @Published var signOutError: String?
-    /// The last sign-out couldn't take this device's push token back from tafs cloud, even after trying again: it may
-    /// still get that account's alerts. Said once on the signed-out screen (`settings.alerts_left_on`), then cleared.
-    @Published var alertsLeftOn = false
+    /// Sign-out stopped: this device's push token couldn't be taken back from tafs cloud, even after trying again, so it
+    /// may still get this account's alerts. Why, in the error's words; the person then tries again or signs out anyway
+    /// (`askingAlertsStillOn`, `alert.still_on_after_sign_out.*`). The session is still there meanwhile.
+    @Published var alertsStillOn: String?
 
     /// Takes this device's push token back from tafs cloud (`DELETE /v1/push/{token}`), tried three times, `wait(n)`
-    /// before the n-th try again (1 s, then 2 s). A 404 is taken back already: tafs cloud holds nothing for it. False when
-    /// every try failed, so sign-out can say this device may still get the account's alerts.
+    /// before the n-th try again (1 s, then 2 s). A 404 is taken back already: tafs cloud holds nothing for it. Nil when
+    /// taken back; else why the last try failed, so sign-out can ask before it goes on.
     static func takeBackPush(_ unregister: () async throws -> Void,
-                             wait: (Int) async -> Void = { try? await Task.sleep(nanoseconds: UInt64($0) * 1_000_000_000) }) async -> Bool {
+                             wait: (Int) async -> Void = { try? await Task.sleep(nanoseconds: UInt64($0) * 1_000_000_000) }) async -> String? {
+        var why = ""
         for attempt in 0..<3 {
             if attempt > 0 { await wait(attempt) }
             do {
                 try await unregister()
-                return true
+                return nil
             } catch let error as TafsCloud.CloudError where error.status == 404 {
-                return true
+                return nil
             } catch {
-                continue
+                why = error.localizedDescription
             }
         }
-        return false
+        return why
     }
 
     /// Signs this device out: the session ends at KIFF first, so a device shown as signed out never
     /// holds a session KIFF still accepts. When KIFF doesn't confirm, nothing changes here and
     /// `signOutError` says so; false then. A session KIFF already ended (401) counts as ended.
+    /// `anyway`: the person chose to sign out although this device's alerts couldn't be taken back (`alertsStillOn`).
     @discardableResult
-    func signOut() async -> Bool {
+    func signOut(anyway: Bool = false) async -> Bool {
         signOutError = nil
+        alertsStillOn = nil
         await DriveSession.shared.stopAndWait("signed_out")
         if mode == .kiff {
             if alertsReady == true { UserDefaults.standard.set(true, forKey: alertsEnabledKey) }
             // Alerts are unregistered with the session, so before KIFF ends it; registered again
             // at once when KIFF doesn't, so a device still signed in never goes without them. A take-back that fails
-            // is tried again, and if it still fails, the signed-out screen says so: never dropped silently.
-            var takenBack = true
-            if let pushToken {
+            // is tried again; if it still fails, sign-out stops and asks (Try again, or Sign out anyway), before KIFF is
+            // asked, so the session is still there: never dropped silently.
+            if !anyway, let pushToken {
                 let client = self.cloud
-                takenBack = await Self.takeBackPush { try await client.unregisterPush(deviceToken: pushToken) }
+                if let why = await Self.takeBackPush({ try await client.unregisterPush(deviceToken: pushToken) }) {
+                    alertsStillOn = why
+                    return false
+                }
             }
             do {
                 try await kiff.signOut()
@@ -2010,9 +2017,6 @@ final class AppModel: ObservableObject {
                 await syncPush()
                 return false
             }
-            forgetSession()
-            if !takenBack { alertsLeftOn = true }
-            return true
         }
         forgetSession()
         return true
