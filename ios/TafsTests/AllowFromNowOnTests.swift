@@ -116,6 +116,8 @@ final class AllowFromNowOnTests: XCTestCase {
         XCTAssertTrue(try signs(Self.card(after, inForce)), "none named: as before")
         let unchanged = #",{"revises":"c2","unchanged":true,"current":{"id":"c3","grants":[{"action":"list_charges"}]},"grants":[{"action":"list_charges"}]}"#
         XCTAssertFalse(try signs(Self.draft(extra: unchanged)), "a Card marked unchanged names another Card in force")
+        let own = #",{"revises":"c2","unchanged":true,"current":{"id":"c2","grants":[{"action":"list_charges"}]},"grants":[{"action":"list_charges"}]}"#
+        XCTAssertTrue(try signs(Self.draft(extra: own)), "a Card marked unchanged that names itself in force")
     }
 
     func testAChangeOfAKindTheContractDoesntNameIsNeverSigned() throws {
