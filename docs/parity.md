@@ -15,7 +15,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | :- | :- | :- |
 | iPhone/iPad | done 58 | the 58 iPad view files |
 | Mac 13+ | done 56, partial 2 | the 58 iPad view files |
-| macOS 12 | done 44, partial 7, not for it 7 | the 58 iPad view files |
+| macOS 12 | done 43, partial 7, not for it 8 | the 58 iPad view files |
 | Windows | done 50, not for it 8 | the 58 iPad view files |
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
@@ -24,7 +24,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
-1. **macOS 12** is furthest behind: 7 screens partial and 7 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 7 are real work: approvals on this Mac's security key, a key shown once, alerts that wait on the signed build, and a few reads.
+1. **macOS 12** is furthest behind: 7 screens partial and 8 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 7 are real work: approvals on this Mac's security key, a key shown once, alerts that wait on the signed build, and a few reads.
 2. **Linux** is level with the iPad: 53 screens done, and 5 not for it, each with its reason. "Allow this from now on" landed last (tafs-linux#120).
 3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): a complication, and four switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
@@ -49,7 +49,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | CoachToolsStep | Coach's tools still to give, and what's given as Start's screen draws it | done | done | done | done | done | done |
 | ConnectAppsView | Connect apps, a connected app's detail, connecting's approval | done | done | done | done | done | done |
 | CreditsViews | The credits the account's tafs used, and one taf's runs | done | done | done | done | done | done |
-| DeleteAccountView | Deleting the account | done | done | done | done | done | done |
+| DeleteAccountView | Deleting the account | done | done | not for it | done | done | done |
 | DevicesView | Account › Devices | done | done | done | done | done | done |
 | DiscardSettingUp | Discard a taf being set up | done | done | done | done | done | done |
 | DoorsView | A taf's Doors tab | done | done | done | done | done | done |
@@ -106,7 +106,7 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 - **ChromeViews**
   - **macOS 12** (partial): Each Chrome's own connections, and Unpair naming them (waiting on tafs' words)
 - **DeleteAccountView**
-  - **macOS 12** (done): The sheet is drawn (what goes, Delete account, Cancel); deleting itself is signed by the phone's approval key, which KIFF requires. Counted as ported by the counting rule, as Linux counts it.
+  - **macOS 12** (not for it): KIFF takes a deletion only when its intent (`tafs.delete-account.v2`) is signed by the session's approval key (`acceptDeletion`), with no security-key path…
 - **DriveViews**
   - **macOS 12** (not for it): The phone's: Coach drives the phone's own screen (tafs docs/drive.md is the iOS and Android contract). As Windows (tafs-windows#242).
   - **Windows** (not for it): The phone's: Coach drives the phone's own screen (docs/drive.md is the iOS and Android contract), so there's nothing on Windows for it to drive.
@@ -267,9 +267,10 @@ The desktops count a row as ported when the only things missing are this device'
 hardware, the act signed only by the phone's key); "not built yet" is never one. Read against the checklists on 23 Nov:
 - **Linux, AllowSheetView** was counted not started, not "not for Linux", while Linux answered held calls in KIFF. It's
   done now (tafs-linux#120): the sheet, KIFF's draft checked as the iPad's `HoldAllow.matches`, one security-key signature.
-- **macOS 12, DeleteAccountView** says "not for macOS 12" because KIFF takes a deletion only signed by the phone's approval
-  key. Linux draws the same sheet and counts it ported with that line; by the rule it's **ported** on both, counted here as
-  done.
+- **macOS 12, DeleteAccountView** is "not for macOS 12", as its checklist says. KIFF takes a deletion only signed by
+  the session's approval key, with no security-key path, so the Mac draws Account's Delete row saying to approve on
+  another device and sends nothing. Linux draws the whole sheet (the warning, what goes) with that line and counts it
+  ported. Earlier versions of this page counted the Mac's as done too, but the Mac has no sheet.
 - **Linux's five rows moved to Ported by tafs-linux#112** (APIDoorViews, HomeSplitView, AppEventApprovalSheet, DriveViews,
   CoachToolsStep): each item left out is a real limit. A key is shown once and Linux can't hide a window from screen
   recording; Discard and Approve are signed, and Linux signs only with a security key; no drive runs on a computer; access
