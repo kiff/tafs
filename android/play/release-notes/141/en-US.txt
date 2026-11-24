@@ -1,0 +1,1 @@
+• A link in Coach's answer about a page from your Chrome now shows its full address and asks before it opens. Links that aren't secure web pages never open from a chat.
