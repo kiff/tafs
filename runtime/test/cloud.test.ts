@@ -1,4 +1,6 @@
+import { readFileSync } from "node:fs";
 import { fcmMessage } from "../src/cloud/fcm.js";
+import { membersOf } from "../src/cloud/kiff.js";
 import { balanceView } from "../src/cloud/credits.js";
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { FULL_LANGUAGES, LANGUAGES, withLanguage, wordsIn } from "../src/cloud/words/index.js";
@@ -351,10 +353,63 @@ describe("tafs cloud", () => {
     // Ana's row didn't say she manages Cards; her role does, but a device is never widened.
     expect(rows.get("t_ana")).toMatchObject({ answers: true });
     expect(rows.get("t_ana")?.manages).not.toBe(true);
-    expect(log.mock.calls.map((c) => String(c[0])).filter((l) => l.includes("alert_devices_synced"))).toEqual([JSON.stringify({ event: "alert_devices_synced", tenant: "t_acme", removed: 1, updated: 1 })]);
+    expect(log.mock.calls.map((c) => String(c[0])).filter((l) => l.includes("alert_devices_synced"))).toEqual([JSON.stringify({ event: "alert_devices_synced", tenant: "t_acme", removed: 1, updated: 1, skipped: 0 })]);
     // Within the hour, no read of KIFF's people.
     await read();
     expect(reads).toBe(5);
+    log.mockRestore();
+  });
+
+  // KIFF's member list as it's sent (test/fixtures/tenant-members.json), read by an admin whose session carries more than
+  // their row (holds.allow); a list whose rows don't carry capabilities, or leave out an alert capability the reader's
+  // session holds; and a device registered again while KIFF was being read.
+  it("checks alert devices against KIFF's member list as sent, and changes nothing on a list it can't trust", async () => {
+    const fixture = JSON.parse(readFileSync(new URL("./fixtures/tenant-members.json", import.meta.url), "utf8")) as { answer: { members: Array<Record<string, unknown>> } };
+    const ok = (body: unknown) => (async () => new Response(JSON.stringify(body), { status: 200 })) as unknown as typeof fetch;
+    // Every row KIFF sends carries subject, status and capabilities.
+    const read = await membersOf("ana", ok(fixture.answer), "https://kiff.test");
+    expect(read.map((m) => [m.subject, m.status, m.capabilities?.length])).toEqual([["u_ana", "active", 14], ["u_bo", "active", 2], ["u_cy", "removed", 3], ["u_dee", "suspended", 7]]);
+    expect(read.every((m) => Array.isArray(m.capabilities))).toBe(true);
+
+    const w = world();
+    const rows = new Map<string, Device>();
+    const dev = (token: string, subject: string, at = "2026-11-20T09:00:00Z"): Device => ({ token, environment: "production", subject, answers: true, at });
+    for (const d of [dev("t_ana", "u_ana"), dev("t_bo", "u_bo"), dev("t_cy", "u_cy"), dev("t_dee", "u_dee")]) rows.set(d.token, d);
+    let answer: unknown = fixture.answer;
+    let meanwhile = () => undefined as void;
+    const inner = depsOf(w).fetch!;
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now),
+      push: { get: async () => ({ devices: [...rows.values()], secrets: [] }), addDevice: async (_t: string, d: Device) => { rows.set(d.token, d); },
+        removeDevice: async (_t: string, token: string) => { rows.delete(token); }, addSecret: async () => undefined },
+      fetch: (async (url: string, init?: RequestInit) => {
+        if (new URL(String(url)).pathname === "/v1/tenant/members") { meanwhile(); return new Response(JSON.stringify(answer), { status: 200 }); }
+        // Ana's session as /v1/me sends an admin's: with holds.allow, which member rows never carry.
+        if (new URL(String(url)).pathname === "/v1/me") return new Response(JSON.stringify({ ...ME, capabilities: [...fixture.answer.members[0]!.capabilities as string[], "holds.allow"] }), { status: 200 });
+        return inner(url as never, init);
+      }) as typeof fetch };
+    const list = () => handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const strip = (drop: (m: Record<string, unknown>) => Record<string, unknown>) => ({ members: fixture.answer.members.map(drop) });
+    // Rows with a role and no capabilities; the reader listed without cards.manage or holds.answer, which their session holds.
+    for (const wrong of [strip(({ capabilities: _c, ...m }) => m), strip((m) => m.subject === "u_ana" ? { ...m, capabilities: ["read"] } : m)]) {
+      answer = wrong;
+      expect((await list()).statusCode).toBe(200);
+      expect([...rows.keys()].sort()).toEqual(["t_ana", "t_bo", "t_cy", "t_dee"]);
+      expect(rows.get("t_bo")).toMatchObject({ answers: true });
+    }
+    expect(warn.mock.calls.map((c) => String(c[0])).filter((l) => l.includes("alert_devices_unsure")))
+      .toEqual([1, 2].map(() => JSON.stringify({ event: "alert_devices_unsure", tenant: "t_acme", listed: 4, reason: "capabilities" })));
+    warn.mockRestore();
+    // As sent: Cy and Dee aren't active and their devices go, Bo is a viewer and loses held calls. But Dee's phone
+    // registered again while KIFF answered: its row is left for the next check.
+    answer = fixture.answer;
+    meanwhile = () => { rows.set("t_dee", { ...rows.get("t_dee")!, at: "2026-11-24T10:00:00Z" }); };
+    expect((await list()).statusCode).toBe(200);
+    expect([...rows.keys()].sort()).toEqual(["t_ana", "t_bo", "t_dee"]);
+    expect(rows.get("t_bo")).toMatchObject({ answers: false });
+    expect(rows.get("t_ana")).toMatchObject({ answers: true });
+    expect(log.mock.calls.map((c) => String(c[0])).filter((l) => l.includes("alert_devices_synced"))).toEqual([JSON.stringify({ event: "alert_devices_synced", tenant: "t_acme", removed: 1, updated: 1, skipped: 1 })]);
     log.mockRestore();
   });
 
