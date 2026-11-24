@@ -40,7 +40,7 @@ final class NotificationService: UNNotificationServiceExtension, @unchecked Send
         lock.unlock()
         guard let deliver, let content else { return }
         // A push sits on the lock screen beside an amount: no direction character from tafs cloud or KIFF reaches it,
-        // filled in or as it came (qa-kiff/agentgabo, 20 Nov; KIFFMapping.visible's set).
+        // filled in or as it came (KIFFMapping.visible's set).
         content.title = FileText.withoutDirection(content.title)
         content.subtitle = FileText.withoutDirection(content.subtitle)
         content.body = FileText.withoutDirection(content.body)

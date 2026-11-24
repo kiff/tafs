@@ -8,7 +8,7 @@ import type { SessionEvent } from "./agents.js";
  *
  * Undefined when the check fits, when no read in the conversation answered JSON (nothing to judge by), or when any read
  * answered text that isn't whole JSON: kiff/agents cuts a long answer (32 KB), and a cut list read may be the very one
- * that has the list, so nothing is judged by the reads left (kiff-qa on this guard). The first check still tells then.
+ * that has the list, so nothing is judged by the reads left. The first check still tells then.
  * Otherwise the words for Coach.
  */
 export function checkMisfitSeen(events: SessionEvent[], check: unknown): string | undefined {

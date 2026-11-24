@@ -64,7 +64,7 @@ Tick all three; each is true.
 
 (Dashboard wording changes: use the three Limited Use statements as the dashboard words them.)
 
-## Judgment calls for the reviewers (mac12, agentgabo)
+## Judgment calls for the reviewers
 
 1. **Web history.** The extension has no `history` permission and never reads the person's own browsing, but the
    sites a taf opens in its own tabs are recorded. The conservative answer is Yes, and this draft says Yes. It is
@@ -73,7 +73,7 @@ Tick all three; each is true.
    the browser and system version. Neither is a real name or an address, so this draft says No. If a reviewer reads
    "the Chrome's name is the person's data" the other way, tick it.
 3. **Authentication information.** Yes, because of the extension's own KIFF device session token (a credential that
-   identifies this Chrome to KIFF's API), found by mac12's read of `sw.js`. The saved sign-ins are the part that never
+   identifies this Chrome to KIFF's API), found by a read of `sw.js`. The saved sign-ins are the part that never
    leaves the computer: say that in the dashboard's explanation if it asks, so a reader doesn't take "Yes" to mean
    KIFF holds the person's passwords (`docs/chrome.md`, Sealed values).
 4. **A page can show other people's details,** such as a taf's customers'. The tafs Privacy page says KIFF

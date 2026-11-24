@@ -114,7 +114,7 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   - **"From your watch" on the phone (W11)** leaves out a message to a taf (`kind: "taf"`): it's already in
     that taf's own chat on the phone.
   - **The words:** `watch.paused_still_answers` ("Paused: its schedule is off. It still answers what you send.", true to
-    what `message()` does: only the schedule is paused) and `watch.read_more`, legal-i18n's, in 8 languages.
+    what `message()` does: only the schedule is paused) and `watch.read_more`, in 8 languages.
 
 ## Coach
 
@@ -284,7 +284,7 @@ Nothing leaves the watch before Send:
   `tafs.signed_out_here` in its Application Support, and shows only "Signed out on this watch. Your phone stays signed in."
   with **Sign in with your phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing. Sign in
   takes the flag away and reads the phone again. The privacy text names the flag ("…and whether you signed out on the
-  watch", legal-i18n's clause), which ships with the switch.
+  watch"), which ships with the switch.
 - **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`,
   `watch.sign_out_q`, `watch.sign_out_sub`, `watch.signed_out_here`; the phone's `calendar.today`, `calendar.previous_day`,
   `calendar.next_day`, `calendar.reading`, `calendar.times`, `settings.plan`, `settings.language_title`, `settings.version`,
@@ -325,8 +325,7 @@ option A (19 Nov):
   own (the privacy text: its only notifications are the iPhone's). So after a watch Send, the iPhone follows Coach's answer
   itself, inside the background time iOS gives it: 10 reads, stepped as the watch's (24 s). Once Coach has answered, if
   the watch hasn't read for 5 s (it reads at most 3 s apart while open), the iPhone posts a local notification: "Coach", then the answer
-  with no amount in it (the Inbox's rule, `WatchAmount.strip`, at legal-i18n's ask: iOS keeps a notification until it's
-  dismissed), then "Approve on your phone", or "The rest is on your phone." where it was cut or something was taken out. watchOS shows it on the
+  with no amount in it (the Inbox's rule, `WatchAmount.strip`), then "Approve on your phone", or "The rest is on your phone." where it was cut or something was taken out. watchOS shows it on the
   wrist while the iPhone is locked; a tap opens Coach's chat on the iPhone.
 - **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing; nor does an iPhone with tafs
   open on screen, where Coach's chat already shows the answer.
@@ -367,8 +366,8 @@ with no app switch since row 35 (tafs cloud's own switch still decides):
 - **In Coach's Previous conversations,** a section "From your watch": the days the person asked from a watch, newest first,
   each with how many (`GET /v1/watch/days`), apart from the chats started on the phone. One a day, as the owner chose.
   "Today" is the account's today as tafs cloud gives it (`today`), so someone on another time zone than the account's sees
-  it on the right day; a tafs cloud that doesn't give it leaves the account's zone's day, else the phone's (agentgabo's read).
-  A turn's time is in the account's zone too, as the day is and as Android shows it (qa-kiff's read).
+  it on the right day; a tafs cloud that doesn't give it leaves the account's zone's day, else the phone's.
+  A turn's time is in the account's zone too, as the day is and as Android shows it.
 - **A day** (`GET /v1/watch/days/{date}`) lists its turns oldest first: "⌚ Sent from your watch" and when, the person's
   words, then the taf that took it and its line, or tafs cloud's words for where it is. A reply sits under what it replies
   to. Read only: a reply from the phone goes on in a Coach chat, as any other.
@@ -378,7 +377,7 @@ with no app switch since row 35 (tafs cloud's own switch still decides):
   never an error.
 - **Apple Watch days** come with the iPhone sending the Apple Watch's words through `POST /v1/watch/asks` (19 Nov, below), as
   Android's relay does; what was asked before then went to Coach's chat and isn't listed.
-- **Words:** `coach.chats.from_your_watch` and `coach.chats.sent_from_your_watch` (legal-i18n's, in all 8). The rest are
+- **Words:** `coach.chats.from_your_watch` and `coach.chats.sent_from_your_watch`. The rest are
   `calendar.today` and tafs cloud's own.
 
 **Row 44, A on Apple Watch: not cut off by a pause, and the phone turns it into text (built, behind `WatchVoice.on`, off;
@@ -405,7 +404,7 @@ as Wear OS's tafs#1587 and #1596).** W12's path below, without Play and Pause. `
   locked in a pocket; only a recording's id (a UUID) names a file, and the recognizer gets 20 s at most, then its task is
   cancelled.
 - **Switched on only** with the privacy page's Apple Watch paragraph saying so (today: "It makes no recording"), its
-  microphone prompt (`NSMicrophoneUsageDescription`, in English as the phone's) read by legal-i18n, the owner's yes, and the
+  microphone prompt (`NSMicrophoneUsageDescription`, in English as the phone's) read for its wording, the owner's yes, and the
   real-device checks: that iOS runs the on-device recognizer while tafs on the phone is in the background, and that a
   `transferFile` reaches a backgrounded phone app within the 20 s the phone waits for it. Both decide whether it works with
   the phone in a pocket.
@@ -425,7 +424,7 @@ can't be one capture on the watch as they are on Wear OS (docs/watch-wear.md, Pl
   own file. Send sends the words only, through the relay, as today.
 - **The watch's file is erased** when the review is left (Send, Delete, Re-record, Cancel, put away, signed out), after
   any transfer of it still queued to the phone is cancelled (`WCSessionFileTransfer.cancel()`), so the phone never gets a
-  recording the person already threw away (dev-android's read); and any
+  recording the person already threw away; and any
   file no screen holds is swept when the app starts and when it's put away.
 - **When it can't, nothing is sent anywhere, and the watch says why:** the phone out of reach (the file waits on the watch
   only until the review is left); no on-device model for the person's language on the phone; speech recognition never
@@ -435,7 +434,7 @@ can't be one capture on the watch as they are on Wear OS (docs/watch-wear.md, Pl
   is in the background, and how long 30 s takes there and back. If iOS refuses it in the background, the plan stops there
   and the watch keeps the system's dictation, with no Play.
 - **Privacy:** the watch now makes a recording, and it goes to the person's own iPhone; no new recipient. The Apple Watch
-  sentence ("It makes no recording") changes with it, legal-i18n's, held for the owner's yes with the build. New words:
+  sentence ("It makes no recording") changes with it, held for the owner's yes with the build. New words:
   the watch app's microphone prompt (`NSMicrophoneUsageDescription`) and the three "can't" lines.
 - **Switches:** behind `WatchV2.on` (off); v1 and the system's dictation are unchanged.
 

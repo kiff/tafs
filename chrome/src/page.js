@@ -114,7 +114,7 @@
   const FIELD_SKIP = new Set(["hidden", "submit", "button", "image", "reset", "file"]);
 
   // The fields a sealed value went into: read as masked from then on, whatever their kind, so a username filled into a
-  // text or email field never goes back up in a read (qa-kiff's gate on sealed sign-ins).
+  // text or email field never goes back up in a read.
   const sealedFilled = new WeakSet();
 
   function fieldsOf() {

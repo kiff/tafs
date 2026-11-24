@@ -49,7 +49,7 @@ final class AccountPageModelTests: XCTestCase {
         }
     }
 
-    /// An answer that lands after the page left is never drawn (agentgabo's read).
+    /// An answer that lands after the page left is never drawn.
     func testALateAnswerIsNeverDrawn() async {
         let phone = HeldPhone()
         let model = AccountPageModel(phone: phone, clock: { self.now })

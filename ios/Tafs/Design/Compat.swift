@@ -54,7 +54,7 @@ struct NavStack<Content: View>: View {
 }
 
 /// What's copied is the text alone: no direction character, so a code, a key or an IBAN copied from a right-to-left
-/// screen (whose values are set apart by FSI … PDI, `Words.isolated`) pastes as its own characters (qa-kiff, #1557).
+/// screen (whose values are set apart by FSI … PDI, `Words.isolated`) pastes as its own characters.
 enum Clipboard {
     static func copy(_ text: String) {
         UIPasteboard.general.string = Words.withoutDirection(text)
