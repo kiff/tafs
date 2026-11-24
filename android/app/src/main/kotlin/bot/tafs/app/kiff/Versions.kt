@@ -149,6 +149,8 @@ data class DraftAggregate(
 /** A Card's terms alone: what `current` holds. */
 @Serializable
 data class DraftTerms(
+  /** The Card in force's own id, when KIFF sends it: it must be the Card `revises` names (HoldAllow.matches). */
+  val id: String? = null,
   val grants: List<DraftGrant>? = null,
   val aggregates: List<DraftAggregate>? = null,
   @SerialName("on_exceed") val onExceed: String? = null,
