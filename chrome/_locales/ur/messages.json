@@ -122,6 +122,9 @@
   "step_act_check": {
     "message": "ایک خانے پر نشان لگایا گیا"
   },
+  "step_act_press": {"message": "ایک کلید دبائی گئی", "description": "A step in the side panel's list: the taf pressed Enter, Escape or an arrow key in the page."},
+  "step_act_scroll": {"message": "اسکرول کیا گیا", "description": "A step in the side panel's list: the taf scrolled the page."},
+  "step_act_back": {"message": "واپس گیا", "description": "A step in the side panel's list: the taf went back to the page before."},
   "step_navigate": {
     "message": "$SITE$ پر جانا روکا گیا",
     "placeholders": {
