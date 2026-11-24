@@ -410,4 +410,52 @@ final class AllowFromNowOnTests: XCTestCase {
         XCTAssertEqual(hold["id"] as? String, "ce_9")
         XCTAssertEqual(hold["accounting_version"] as? Int, 3)
     }
+
+    // MARK: Its second half: a Card key the check doesn't read is never signed
+
+    private static var repo: URL {
+        URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    }
+
+    /// Sets one RFC 6901 pointer's value in a JSON document, creating its last key.
+    private static func set(_ doc: Any, _ path: ArraySlice<String>, _ value: Any) -> Any {
+        guard let key = path.first else { return value }
+        if var list = doc as? [Any], let i = Int(key) {
+            list[i] = set(list[i], path.dropFirst(), value)
+            return list
+        }
+        var object = doc as? [String: Any] ?? [:]
+        object[key] = set(object[key] ?? NSNull(), path.dropFirst(), value)
+        return object
+    }
+
+    /// The shared vector (vectors/agent-draft-keys.json, which Android and tafs cloud's tests read too), over KIFF's own
+    /// draft pinned in contracts/: this app's keys are the vector's, and each case passes or is refused as it says.
+    func testADraftCardKeyTheCheckDoesntReadIsNeverSigned() throws {
+        let vector = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: Self.repo.appendingPathComponent("vectors/agent-draft-keys.json"))) as? [String: Any])
+        let keys = try XCTUnwrap(vector["keys"] as? [String: [String]])
+        XCTAssertEqual(keys.mapValues { Set($0) }, HoldAllow.keys)
+        let path = try XCTUnwrap(vector["contract"] as? String)
+        let contract = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: Self.repo.appendingPathComponent(path))) as? [String: Any])
+        let cases = try XCTUnwrap(vector["cases"] as? [[String: Any]])
+        XCTAssertGreaterThan(cases.count, 10)
+        for c in cases {
+            var draft: Any = try XCTUnwrap(contract["answer"])
+            for (pointer, value) in try XCTUnwrap(c["set"] as? [String: Any]) {
+                draft = Self.set(draft, pointer.split(separator: "/", omittingEmptySubsequences: false).dropFirst().map(String.init)[...], value)
+            }
+            let raw = try JSONSerialization.data(withJSONObject: draft)
+            XCTAssertEqual(HoldAllow.keysKnown(raw), try XCTUnwrap(c["ok"] as? Bool), c["name"] as? String ?? "")
+        }
+    }
+
+    /// KIFF's draft as pinned (Rae's €150 refund cap raised to €320) is what its offer says, keys and all.
+    func testKIFFsPinnedDraftIsWhatItsOfferSays() throws {
+        let contract = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: Self.repo.appendingPathComponent("contracts/kiff-agent-draft-from-hold.json"))) as? [String: Any])
+        let raw = try JSONSerialization.data(withJSONObject: try XCTUnwrap(contract["answer"]))
+        let draft = try KIFFClient.decoder.decode(KIFFClient.AgentDraft.self, from: raw)
+        let offerJSON = #"{"offer":{"changes":[{"mandate_id":"rae-refund","kind":"per_action","before":15000,"after":32000,"unit":"EUR","words_before":"up to €150 each","words_after":"up to €320 each","rounded":false}],"draft":"drf_fixed","confirm_key":"critical","send_held":true}}"#
+        XCTAssertTrue(HoldAllow.keysKnown(raw))
+        XCTAssertTrue(HoldAllow.matches(draft, try offer(offerJSON), agent: "rae", hold: "exc_fixed", action: "refund"))
+    }
 }

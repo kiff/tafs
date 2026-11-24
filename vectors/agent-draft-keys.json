@@ -1,0 +1,44 @@
+{
+  "about": "\"Allow this from now on\", its second half (docs/allow-from-now-on.md): before a phone signs KIFF's draft, every key on each of the draft's Cards is one the apps' check reads. `keys` lists them by object. A key whose value is null sets nothing and passes. On a Card, `id` must be the Card it revises. A `quantity_of` must say what its `quantity` says: \"sum(amount_cents)\" is {kind: sum, parameter: amount_cents}, and \"count\" is {kind: count}. Anything else is not what was offered, and nothing is signed. Each case sets JSON pointers (RFC 6901) on contracts/kiff-agent-draft-from-hold.json, KIFF's own answer, then says whether the keys pass. Keys of the draft itself (its id, version, widens…) aren't a Card's and aren't checked here.",
+  "contract": "contracts/kiff-agent-draft-from-hold.json",
+  "keys": {
+    "card": ["id", "revises", "current", "unchanged", "grants", "aggregates", "on_exceed", "lines", "subject", "subjects", "domain", "environment", "location", "valid_from", "valid_until", "hold_expiry", "revoked_at"],
+    "current": ["id", "grants", "aggregates", "on_exceed", "lines", "subject", "subjects", "domain", "environment", "location", "valid_from", "valid_until", "active", "domain_id", "hold_expiry_seconds"],
+    "grant": ["action", "title", "per_action_max", "resources", "entity_states", "next_steps"],
+    "cap": ["quantity", "quantity_of", "max", "unit", "scale"],
+    "total": ["quantity", "quantity_of", "limit", "window", "unit", "scale", "measure", "per"],
+    "resources": ["parameter", "values"],
+    "quantity_of": ["kind", "parameter"]
+  },
+  "read_not_compared": {
+    "lines": "KIFF's words for the Card, shown to the person: never a term",
+    "title": "a grant's words, shown: never a term",
+    "current.active": "the Card in force is live: a draft revises only a live Card",
+    "current.domain_id": "the Card in force's domain, as KIFF stores it beside `domain`, which is compared",
+    "current.hold_expiry_seconds": "how long a held call waits under the Card in force; a draft that sets `hold_expiry` is refused, so it stays"
+  },
+  "cases": [
+    { "name": "KIFF's draft as it is", "set": {}, "ok": true },
+    { "name": "a key a Card doesn't have", "set": { "/cards/0/room_grants": ["rae"] }, "ok": false },
+    { "name": "the same key, null: it sets nothing", "set": { "/cards/0/room_grants": null }, "ok": true },
+    { "name": "a key the Card in force doesn't have", "set": { "/cards/0/current/budget": 5 }, "ok": false },
+    { "name": "a key a grant doesn't have", "set": { "/cards/0/grants/0/max_calls": 3 }, "ok": false },
+    { "name": "a total's key on a per-call cap", "set": { "/cards/0/grants/0/per_action_max/0/per": "customer" }, "ok": false },
+    { "name": "a key a total doesn't have", "set": { "/cards/0/aggregates/0/room_grants": ["rae"] }, "ok": false },
+    { "name": "a key a total of the Card in force doesn't have", "set": { "/cards/0/current/aggregates/0/reset": "monday" }, "ok": false },
+    { "name": "a key a grant of the Card in force doesn't have", "set": { "/cards/0/current/grants/0/except": ["vip"] }, "ok": false },
+    { "name": "a key a quantity_of doesn't have", "set": { "/cards/0/aggregates/0/quantity_of/scale": 2 }, "ok": false },
+    { "name": "a quantity_of on another parameter than its quantity", "set": { "/cards/0/grants/0/per_action_max/0/quantity_of/parameter": "fee_cents" }, "ok": false },
+    { "name": "a quantity_of of another kind than its quantity", "set": { "/cards/0/aggregates/0/quantity_of": { "kind": "count" } }, "ok": false },
+    { "name": "a count and its quantity_of", "set": { "/cards/0/aggregates/0/quantity": "count", "/cards/0/aggregates/0/quantity_of": { "kind": "count" } }, "ok": true },
+    { "name": "a count's quantity_of naming a parameter", "set": { "/cards/0/aggregates/0/quantity": "count", "/cards/0/aggregates/0/quantity_of": { "kind": "count", "parameter": "amount_cents" } }, "ok": false },
+    { "name": "a quantity_of that isn't an object", "set": { "/cards/0/aggregates/0/quantity_of": "sum(amount_cents)" }, "ok": false },
+    { "name": "a Card whose id isn't the Card it revises", "set": { "/cards/0/id": "rae-other" }, "ok": false },
+    { "name": "a scope with its two keys", "set": { "/cards/0/grants/0/resources": { "parameter": "currency", "values": ["EUR"] } }, "ok": true },
+    { "name": "a scope with a key of its own", "set": { "/cards/0/grants/0/resources": { "parameter": "currency", "values": ["EUR"], "except": ["USD"] } }, "ok": false },
+    { "name": "grants that aren't a list", "set": { "/cards/0/grants": { "action": "refund" } }, "ok": false },
+    { "name": "a Card that isn't an object", "set": { "/cards/0": "rae-refund" }, "ok": false },
+    { "name": "a key of the draft itself, not a Card's", "set": { "/review_hint": "new" }, "ok": true },
+    { "name": "a Card in force no longer live: read, not compared", "set": { "/cards/0/current/active": false }, "ok": true }
+  ]
+}

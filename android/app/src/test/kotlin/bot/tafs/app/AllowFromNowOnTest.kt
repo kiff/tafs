@@ -6,11 +6,18 @@ import bot.tafs.app.kiff.AllowOffer
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.model.HoldAllow
+import java.io.File
 import java.net.URI
 import java.time.Instant
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
@@ -394,4 +401,48 @@ class AllowFromNowOnTest {
 
   @Suppress("unused")
   private fun order() = transport.requests.map { it.method + " " + URI(it.url).path }
+
+  // Its second half: a Card key the check doesn't read is never signed.
+
+  /** Sets one RFC 6901 pointer's value in a JSON document, creating its last key. */
+  private fun set(doc: JsonElement, path: List<String>, value: JsonElement): JsonElement {
+    if (path.isEmpty()) return value
+    val key = path.first()
+    if (doc is JsonArray) {
+      val i = key.toInt()
+      return JsonArray(doc.mapIndexed { n, v -> if (n == i) set(v, path.drop(1), value) else v })
+    }
+    val o = (doc as? JsonObject).orEmpty().toMutableMap()
+    o[key] = set(o[key] ?: JsonNull, path.drop(1), value)
+    return JsonObject(o)
+  }
+
+  /**
+   * The shared vector (vectors/agent-draft-keys.json, which iOS and tafs cloud's tests read too), over KIFF's own draft pinned in
+   * contracts/: this app's keys are the vector's, and each case passes or is refused as it says.
+   */
+  @Test fun aDraftCardKeyTheCheckDoesntReadIsNeverSigned() {
+    val vector = KiffClient.json.parseToJsonElement(File("../../vectors/agent-draft-keys.json").readText()).jsonObject
+    val keys = vector.getValue("keys").jsonObject.mapValues { (_, v) -> v.jsonArray.map { it.jsonPrimitive.content }.toSet() }
+    assertEquals(keys, HoldAllow.KEYS)
+    val contract = KiffClient.json.parseToJsonElement(File("../../" + vector.getValue("contract").jsonPrimitive.content).readText()).jsonObject
+    val cases = vector.getValue("cases").jsonArray
+    assertTrue(cases.size > 10)
+    for (c in cases.map { it.jsonObject }) {
+      var draft: JsonElement = contract.getValue("answer")
+      for ((pointer, value) in c.getValue("set").jsonObject) draft = set(draft, pointer.split("/").drop(1), value)
+      assertEquals(c.getValue("name").jsonPrimitive.content, c.getValue("ok").jsonPrimitive.boolean, HoldAllow.keysKnown(draft.toString()))
+    }
+  }
+
+  /** KIFF's draft as pinned (Rae's €150 refund cap raised to €320) is what its offer says, keys and all. */
+  @Test fun kiffsPinnedDraftIsWhatItsOfferSays() {
+    val raw = KiffClient.json.parseToJsonElement(File("../../contracts/kiff-agent-draft-from-hold.json").readText()).jsonObject.getValue("answer").toString()
+    val o = parsedOffer(
+      """{"offer":{"changes":[{"mandate_id":"rae-refund","kind":"per_action","before":15000,"after":32000,"unit":"EUR",
+         "words_before":"up to €150 each","words_after":"up to €320 each","rounded":false}],"draft":"drf_fixed","confirm_key":"critical","send_held":true}}""",
+    )
+    assertTrue(HoldAllow.keysKnown(raw))
+    assertTrue(HoldAllow.matches(parsedDraft(raw), o, "rae", "exc_fixed", "refund"))
+  }
 }

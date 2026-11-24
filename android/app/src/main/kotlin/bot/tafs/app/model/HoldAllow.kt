@@ -9,6 +9,12 @@ import bot.tafs.app.kiff.DraftCard
 import bot.tafs.app.kiff.DraftGrant
 import bot.tafs.app.kiff.DraftResources
 import bot.tafs.app.kiff.DraftTerms
+import bot.tafs.app.kiff.KiffClient
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * "Allow this from now on" on a held call (docs/allow-from-now-on.md). Whether to offer it is the app's own rule, from the held
@@ -234,6 +240,76 @@ object HoldAllow {
         }
       }
       else -> emptyList()
+    }
+  }
+
+  /**
+   * The keys each object of a draft's Cards may carry: those [matches] compares, and the few it reads as words or knows to be
+   * unchanged. The shared vector (vectors/agent-draft-keys.json) lists the same, and its cases are this app's tests, iOS's and
+   * tafs cloud's.
+   */
+  val KEYS: Map<String, Set<String>> = mapOf(
+    "card" to setOf(
+      "id", "revises", "current", "unchanged", "grants", "aggregates", "on_exceed", "lines", "subject", "subjects", "domain",
+      "environment", "location", "valid_from", "valid_until", "hold_expiry", "revoked_at",
+    ),
+    "current" to setOf(
+      "id", "grants", "aggregates", "on_exceed", "lines", "subject", "subjects", "domain", "environment", "location",
+      "valid_from", "valid_until", "active", "domain_id", "hold_expiry_seconds",
+    ),
+    "grant" to setOf("action", "title", "per_action_max", "resources", "entity_states", "next_steps"),
+    "cap" to setOf("quantity", "quantity_of", "max", "unit", "scale"),
+    "total" to setOf("quantity", "quantity_of", "limit", "window", "unit", "scale", "measure", "per"),
+    "resources" to setOf("parameter", "values"),
+    "quantity_of" to setOf("kind", "parameter"),
+  )
+
+  private val QUANTITY = Regex("""^([A-Za-z0-9_]+)\((.+)\)$""")
+
+  /**
+   * "Allow this from now on", its second half: every key of each of the draft's Cards, as KIFF sent them ([raw]), is one this
+   * check reads ([KEYS]), so a term KIFF adds later is never signed unseen. A key whose value is null sets nothing. A Card's
+   * `id`, when sent, is the Card it revises. A `quantity_of` says what its `quantity` says: "sum(amount_cents)" is
+   * {kind: sum, parameter: amount_cents}, "count" is {kind: count}. The draft's own keys aren't a Card's.
+   */
+  fun keysKnown(raw: String): Boolean {
+    val root = runCatching { KiffClient.json.parseToJsonElement(raw) }.getOrNull() as? JsonObject ?: return false
+    fun absent(v: JsonElement?) = v == null || v is JsonNull
+    fun text(v: JsonElement?): String? = (v as? JsonPrimitive)?.takeIf { it.isString }?.content
+    fun only(v: JsonElement?, kind: String): JsonObject? {
+      val o = v as? JsonObject ?: return null
+      val allowed = KEYS.getValue(kind)
+      return if (o.all { (k, value) -> value is JsonNull || k in allowed }) o else null
+    }
+    fun list(v: JsonElement?, each: (JsonElement) -> Boolean): Boolean =
+      absent(v) || (v is JsonArray && v.all(each))
+    fun quantityOf(o: JsonObject): Boolean {
+      if (absent(o["quantity_of"])) return true
+      val of = only(o["quantity_of"], "quantity_of") ?: return false
+      val quantity = text(o["quantity"]) ?: return false
+      val kind = text(of["kind"]) ?: return false
+      if (!absent(of["parameter"]) && text(of["parameter"]) == null) return false
+      val parameter = text(of["parameter"])
+      val m = QUANTITY.matchEntire(quantity)
+      return if (m != null) kind == m.groupValues[1] && parameter == m.groupValues[2] else kind == quantity && parameter == null
+    }
+    fun cap(v: JsonElement) = only(v, "cap")?.let(::quantityOf) ?: false
+    fun total(v: JsonElement) = only(v, "total")?.let(::quantityOf) ?: false
+    fun grant(v: JsonElement): Boolean {
+      val g = only(v, "grant") ?: return false
+      return list(g["per_action_max"], ::cap) && (absent(g["resources"]) || only(g["resources"], "resources") != null)
+    }
+    fun terms(t: JsonObject) = list(t["grants"], ::grant) && list(t["aggregates"], ::total)
+    return list(root["cards"]) { v ->
+      val card = only(v, "card") ?: return@list false
+      if (!absent(card["id"])) {
+        val id = text(card["id"]) ?: return@list false
+        if (id != text(card["revises"])) return@list false
+      }
+      if (!terms(card)) return@list false
+      if (absent(card["current"])) return@list true
+      val current = only(card["current"], "current") ?: return@list false
+      terms(current)
     }
   }
 }

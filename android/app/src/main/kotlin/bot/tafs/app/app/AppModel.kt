@@ -5242,9 +5242,12 @@ class AppModel(
     try {
       val answer = cloud.allowOffer(cloudId, exception, round)
       val offer = answer.offer
-      val draft = offer?.draft?.takeIf { it.isNotEmpty() }?.let { kiff.draft(it) }
+      val read = offer?.draft?.takeIf { it.isNotEmpty() }?.let { kiff.draftRaw(it) }
+      val draft = read?.first
       if (generation != accountGeneration) return false
-      val matches = offer != null && draft != null && bot.tafs.app.model.HoldAllow.matches(draft, offer, call.tafId, call.kiffId, call.proposed.action)
+      // Signed only when it's what was offered and every key of its Cards is one the check reads.
+      val matches = offer != null && read != null && bot.tafs.app.model.HoldAllow.keysKnown(read.second) &&
+        bot.tafs.app.model.HoldAllow.matches(read.first, offer, call.tafId, call.kiffId, call.proposed.action)
       // A late answer for a call whose sheet is no longer open changes nothing. Rounding up keeps the person's switch.
       _state.update { s ->
         val now = s.allow

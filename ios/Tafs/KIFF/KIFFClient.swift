@@ -1458,6 +1458,13 @@ final class KIFFClient {
         try await send("GET", "/v1/me/agent-drafts/\(escaped(id))")
     }
 
+    /// A draft and its bytes as KIFF sent them, for the check that reads every key of its Cards before the phone signs it
+    /// (`HoldAllow.keysKnown`, docs/allow-from-now-on.md).
+    func draftRaw(id: String) async throws -> (draft: AgentDraft, raw: Data) {
+        let raw: RawBody = try await send("GET", "/v1/me/agent-drafts/\(escaped(id))")
+        return (try Self.decoder.decode(AgentDraft.self, from: raw.data), raw.data)
+    }
+
     /// Confirms a draft another agent submitted, exactly the version the owner was shown:
     /// KIFF issues its Cards. A signed setup call.
     func confirmDraft(id: String, version: String) async throws -> AgentDraft {
