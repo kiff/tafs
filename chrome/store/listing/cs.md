@@ -19,7 +19,7 @@ tafs pro Chrome nechá vaše tafy pracovat ve vašem vlastním Chromu, jen na st
 • Stránky bank, peněženek, správců hesel, plateb, zdraví a úřadů se nikdy nezpracovávají, pokud jednu z nich nepovolíte pro jeden úkol v telefonu.
 • Nikdy neuchovává vaše hesla. Na přihlašovací stránce se taf zastaví a požádá vás, abyste se přihlásili sami, ve své kartě.
 • Boční panel ukazuje taf, který pracuje v tomto Chrome, a mluvíte s ním tam, jako v aplikaci tafs. „Nastavit nový taf pro tento web“ otevře Coacha, v jeho vlastním zobrazení. Když Coachovi pošlete zprávu, přečte stránku vpředu se stejnými odstraněnými poli, kromě webů bank, plateb, pošty nebo zdraví a webů, které vypnete, a pod vaší zprávou ukáže „Čte:“ a web.
-• Soubory, které vyberete, dostane tafs cloud a Claude, jako přílohy v aplikacích tafs.
+• Soubory, které vyberete, dostanou tafs cloud a Claude, jako přílohy v aplikacích tafs.
 
 Co taf přečte, jde umělé inteligenci, která váš úkol provádí, a ukládá se s tímto úkolem. KIFF ukládá stránku před změnou a po ní nejvýše 30 dní. Po zapnutí snímků obrazovky si každý krok, který něco provede, uloží také jeden snímek stránky pořízený těsně před akcí se skrytými poli pro heslo, kartu a kód, nejvýše 30 dní. Vidíte ho jen v aplikaci tafs a nikdy nejde umělé inteligenci. Zrušení spárování nebo odinstalace smaže to, co si rozšíření uchovává ve vašem počítači.
 
