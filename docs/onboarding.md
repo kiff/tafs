@@ -42,7 +42,7 @@ back (`AppSignIn.Failure.refused("unsupported_client")`). The sign-up's email co
 
 ## Words
 
-`onboarding.*` in `app/strings/<lang>/onboarding.json`, 19 lines in 8 languages, written by legal-i18n. The two
+`onboarding.*` in `app/strings/<lang>/onboarding.json`, 19 lines in 8 languages. The two
 lines with links (`consent_tick`, `privacy_links`) take their link words as placeholders, the `sign_in.agree` shape,
 and each link's words are the title of the page it opens in that language. `Legal.linked` puts each link wherever the
 language puts it. KIFF's own pages are `Legal.kiffTerms` and `Legal.kiffPrivacy`; tafs's are `Legal.terms` and

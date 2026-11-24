@@ -31,6 +31,7 @@
   "chat.file.choose_file": "Bestand kiezen",
   "chat.file.choose_photos": "Foto's kiezen",
   "chat.file.could_not_open": "Het bestand kon niet worden geopend.",
+  "chat.file.mac_camera_off": "De camera staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Camera (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Camera).",
   "chat.file.no_app_opens": "Geen app op deze telefoon opent {name}.",
   "chat.file.no_camera": "Er is geen camera-app op deze telefoon om een foto mee te maken.",
   "chat.file.not_opened": "{file} kon niet worden geopend. {why}",

@@ -187,8 +187,8 @@ have gone out on its own").
     Card in the draft that revises none in force: this offer never makes either. The draft as
     KIFF returns it says which Card each of its Cards revises, that Card's terms in force, and
     whether it's unchanged, so the phone can compare from the draft alone. When KIFF names the
-    Card in force (`current.id`), it must be the Card revised, or nothing is signed; a draft
-    that names none is checked as before (iPhone and iPad: `HoldAllow.matches`);
+    Card in force it quotes (`current.id`), it must be the Card `revises` names, or nothing is
+    signed; without it, the check is as before (Android and iOS: `HoldAllow.matches`);
   - it signs the `version` it read.
 - One signature: the draft's confirm with the approval key KIFF names, with
   `hold: {id, accounting_version}` when the switch is on.

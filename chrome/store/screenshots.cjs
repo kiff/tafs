@@ -57,7 +57,6 @@ function stub({ scene, messages }) {
       case "state": return { ok: true };
       case "taf_list": return { tafs: scene.tafs || [] };
       case "taf_thread": return { thread: { ...(scene.thread || { messages: [] }), working: false, waitsOnPhone: false } };
-      case "vault_list": return { entries: [] };
       case "coach_chats": return { chats: [] };
       default: return {};
     }

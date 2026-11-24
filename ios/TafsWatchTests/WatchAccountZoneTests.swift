@@ -2,7 +2,7 @@ import XCTest
 @testable import TafsWatch
 
 /// The account's zone on the wrist (row 44, C): learned from the phone's replies, and dropped when the phone says it's
-/// signed out, so a second account never reads in the first one's zone (agentgabo on #1590; Wear OS's `use(null)`).
+/// signed out, so a second account never reads in the first one's zone (as Wear OS's `use(null)`).
 final class WatchAccountZoneTests: XCTestCase {
     private let own = TimeZone(identifier: "Asia/Tokyo")!
 

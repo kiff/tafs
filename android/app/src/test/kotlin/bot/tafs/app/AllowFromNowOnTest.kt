@@ -256,6 +256,17 @@ class AllowFromNowOnTest {
     assertFalse("over a revoked Card", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\""), "$inForce,\"revoked_at\":\"2026-11-12T00:00:00Z\"")))
   }
 
+  /** The Card in force quoted is the Card revised: with KIFF's `current.id`, it must be `revises`; without it, as before. */
+  @Test fun theCardInForceQuotedMustBeTheCardRevised() {
+    val g = "\"grants\":"
+    assertFalse("current names another Card", signs(card("$g[${refund(raised)}]", "\"id\":\"c2\",$g[${refund(cap)}]")))
+    assertTrue("current names the Card revised", signs(card("$g[${refund(raised)}]", "\"id\":\"c1\",$g[${refund(cap)}]")))
+    assertTrue("no current.id: as today", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)}]")))
+    val unchanged = """,{"revises":"c2","unchanged":true,"current":{"id":"c9","grants":[{"action":"list_charges"}]},"grants":[{"action":"list_charges"}]}"""
+    assertFalse("a Card left as it is quotes another", signs(draft(extra = unchanged)))
+    assertTrue("a Card left as it is quotes itself", signs(draft(extra = unchanged.replace("\"id\":\"c9\"", "\"id\":\"c2\""))))
+  }
+
   @Test fun aCardMarkedUnchangedMustReadAsInForce() {
     val sneaky = """,{"revises":"c2","unchanged":true,"current":{"grants":[{"action":"list_charges"}]},"grants":[{"action":"list_charges"},{"action":"delete_customer"}]}"""
     assertFalse(signs(draft(extra = sneaky)))

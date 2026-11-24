@@ -1,0 +1,1 @@
+- **Android: Allow this from now on checks the Card it quotes.** When KIFF names the Card in force a draft quotes, it must be the Card the draft revises, or nothing is signed. KIFF doesn't send that name yet, so nothing changes until it does. ([allow-from-now-on.md](docs/allow-from-now-on.md))

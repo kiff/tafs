@@ -529,6 +529,7 @@
     <string name="chat_file_choose_file">Odaberite datoteku</string>
     <string name="chat_file_choose_photos">Odaberite fotografije</string>
     <string name="chat_file_could_not_open">Datoteku nije bilo moguće otvoriti.</string>
+    <string name="chat_file_mac_camera_off">Kamera je isključena za tafs. Uključite je u Postavke sustava › Privatnost i sigurnost › Kamera (macOS 12: Postavke sustava › Sigurnost i privatnost › Privatnost › Kamera).</string>
     <string name="chat_file_no_app_opens">Nijedna aplikacija na ovom telefonu ne otvara %1$s.</string>
     <string name="chat_file_no_camera">Na ovom telefonu nema aplikacije kamere za snimanje fotografije.</string>
     <string name="chat_file_not_opened">%1$s nije bilo moguće otvoriti. %2$s</string>
@@ -2160,6 +2161,7 @@
     <string name="sample_memory_ask_first">Pitajte prije svega neobičnog, čak i kad odgovara Cardu.</string>
     <string name="sample_memory_explain">Radije da odluku objasnim u jednom retku nego u odlomku.</string>
     <string name="sample_memory_regulars">Kupci koji pišu svaki tjedan dobivaju odgovor isto jutro.</string>
+    <string name="sample_not_in_sample">Ovo nije u primjeru. Prijavite se KIFF-om da biste to učinili.</string>
     <string name="sample_parcels_change_address">Promijenite adresu dostave za narudžbu #5141</string>
     <string name="sample_parcels_change_address_why">Tražila je e-pošta s nove adrese</string>
     <string name="sample_parcels_job">Obavijestite kupce kad pošiljka kasni, prije nego što pitaju. Ponovna slanja čekaju vas. Nikad ne mijenjajte adresu dostave na temelju e-pošte.</string>

@@ -31,6 +31,7 @@
   "chat.file.choose_file": "फाइल छान्नुहोस्",
   "chat.file.choose_photos": "फोटो छान्नुहोस्",
   "chat.file.could_not_open": "फाइल खोल्न सकिएन।",
+  "chat.file.mac_camera_off": "क्यामेरा tafs का लागि बन्द छ। सिस्टम सेटिङ › गोपनीयता र सुरक्षा › क्यामेरामा खोल्नुहोस् (macOS 12 मा: सिस्टम प्राथमिकताहरू › सुरक्षा र गोपनीयता › गोपनीयता › क्यामेरा)।",
   "chat.file.no_app_opens": "यो फोनमा {name} खोल्ने कुनै एप छैन।",
   "chat.file.no_camera": "यो फोनमा फोटो खिच्ने क्यामेरा एप छैन।",
   "chat.file.not_opened": "{file} खोल्न सकिएन। {why}",

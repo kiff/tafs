@@ -149,7 +149,7 @@ export function tafLine(raw: unknown): { line?: string; more: boolean } {
 export const FULL_MAX_BYTES = 16 * 1024;
 
 /**
- * A taf's whole answer, for the watch's "Read more" (the owner's 20 Nov pick: never trimmed, shown partly, then expanded).
+ * A taf's whole answer, for the watch's "Read more" (never trimmed, shown partly, then expanded).
  * Each paragraph is checked as the line is (no markdown, links' targets or control characters) and none is cut; paragraphs
  * are kept apart by a blank line. Past FULL_MAX_BYTES of UTF-8 it's cut at a word, with an ellipsis. Undefined when nothing is left.
  */

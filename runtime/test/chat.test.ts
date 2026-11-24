@@ -1216,7 +1216,7 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect((await thread("fr")).failed.words).toBe(wordsIn("fr").code_ai_unavailable);
     // A run that ends ERROR uses no credits, whatever it did before the card (KIFF's meter: a failed run is free).
     // But one that already sent a write did act, so it gets the partway words, which say it stopped partway and
-    // make no claim about credits. A run with only refusals or reads keeps code_ai_unavailable (PM, 18 Nov 11:56).
+    // make no claim about credits. A run with only refusals or reads keeps code_ai_unavailable.
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { refund: { sent: 1 } } });
     const partway = await thread();
     expect(partway.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable_partway });

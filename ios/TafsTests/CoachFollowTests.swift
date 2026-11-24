@@ -39,7 +39,7 @@ final class CoachFollowTests: XCTestCase {
         XCTAssertTrue(CoachFollow.watchLastRead.isEmpty, "nothing kept once it's done")
     }
 
-    /// With tafs open on the iPhone, Coach's chat already shows the answer: no banner over it (dev-android's read of #1444).
+    /// With tafs open on the iPhone, Coach's chat already shows the answer: no banner over it.
     func testAnIPhoneInUseGetsNoBanner() async {
         let thread = Thread([WatchReply(.ok, answering: true), WatchReply(.ok, answering: true), WatchReply(.ok, answering: true),
                              WatchReply(.ok, coach: rae, answering: false)])
@@ -91,7 +91,7 @@ final class CoachFollowTests: XCTestCase {
         XCTAssertEqual(card.body, Words.Watch.approveOnPhone, "a card is only approved on the phone")
     }
 
-    /// No amount in the notification (legal-i18n, 19 Nov): the Inbox's rule, and the rest is on the phone.
+    /// No amount in the notification: the Inbox's rule, and the rest is on the phone.
     func testTheNotificationHoldsNoAmount() {
         let refund = CoachFollow.content(WatchCoachAnswer(text: "Refunded €84 for order A-1039.", more: false, approveOnPhone: false))
         XCTAssertFalse(refund.body.contains("84"), refund.body)

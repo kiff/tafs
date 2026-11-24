@@ -91,7 +91,7 @@ class SharedWords(unittest.TestCase):
         self.lines = generate.load_lines()
 
     def test_the_age_table_is_a_default_and_countries_that_ask_more(self):
-        # legal-i18n's table: 16 by default (the GDPR's ceiling), and a country only where its law asks for more.
+        # 16 by default (the GDPR's ceiling), and a country only where its law asks for more.
         table = generate.ages()
         self.assertEqual(table["default"], 16)
         for country, age in table.items():
@@ -103,7 +103,7 @@ class SharedWords(unittest.TestCase):
             self.assertLessEqual(age, 21, country)
 
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
-        # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
+        # The eight ship, and Korean (complete) and Japanese (complete) with them. A language
         # ships only once every key is there, so no app shows half a language.
         self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "tk", "hi", "ur"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.

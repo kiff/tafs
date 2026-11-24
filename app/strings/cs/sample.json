@@ -148,6 +148,7 @@
   "sample.memory.ask_first": "Zeptat se před čímkoli neobvyklým, i když to odpovídá Card.",
   "sample.memory.explain": "Raději vysvětlím rozhodnutí jedním řádkem než odstavcem.",
   "sample.memory.regulars": "Zákazníci, kteří píšou každý týden, dostanou odpověď ještě to ráno.",
+  "sample.not_in_sample": "Tohle v ukázce není. Pokud to chcete udělat, přihlaste se přes KIFF.",
   "sample.parcels.change_address": "Změnit doručovací adresu u objednávky č. 5141",
   "sample.parcels.change_address_why": "Požádal o to e-mail z nové adresy",
   "sample.parcels.job": "Dát zákazníkům vědět, že se zásilka zpožďuje, dřív než se zeptají. Nová odeslání čekají na vás. Nikdy neměnit doručovací adresu na základě e-mailu.",

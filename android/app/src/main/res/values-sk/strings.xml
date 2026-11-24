@@ -529,6 +529,7 @@
     <string name="chat_file_choose_file">Vybrať súbor</string>
     <string name="chat_file_choose_photos">Vybrať fotky</string>
     <string name="chat_file_could_not_open">Súbor sa nedal otvoriť.</string>
+    <string name="chat_file_mac_camera_off">Kamera je pre tafs vypnutá. Zapnite ju v Nastaveniach systému › Súkromie a bezpečnosť › Kamera (v macOS 12: Systémové nastavenia › Bezpečnosť a súkromie › Súkromie › Kamera).</string>
     <string name="chat_file_no_app_opens">Žiadna aplikácia v tomto telefóne neotvorí %1$s.</string>
     <string name="chat_file_no_camera">V tomto telefóne nie je aplikácia fotoaparátu, ktorou by sa dalo odfotiť.</string>
     <string name="chat_file_not_opened">%1$s sa nedal otvoriť. %2$s</string>
@@ -2160,6 +2161,7 @@
     <string name="sample_memory_ask_first">Opýtať sa pred čímkoľvek nezvyčajným, aj keď to zodpovedá Card.</string>
     <string name="sample_memory_explain">Radšej vysvetlím rozhodnutie jedným riadkom než odsekom.</string>
     <string name="sample_memory_regulars">Zákazníci, ktorí píšu každý týždeň, dostanú odpoveď ešte v to ráno.</string>
+    <string name="sample_not_in_sample">Toto v ukážke nie je. Ak to chcete urobiť, prihláste sa cez KIFF.</string>
     <string name="sample_parcels_change_address">Zmeniť doručovaciu adresu pri objednávke č. 5141</string>
     <string name="sample_parcels_change_address_why">Požiadal o to e-mail z novej adresy</string>
     <string name="sample_parcels_job">Dať zákazníkom vedieť, že zásielka mešká, skôr než sa opýtajú. Nové odoslania čakajú na vás. Nikdy nemeniť doručovaciu adresu na základe e-mailu.</string>

@@ -4,6 +4,8 @@ import SwiftUI
 /// then Coach's answer, short. A card or anything to approve is on the phone.
 struct CoachScreen: View {
     @ObservedObject var model: CoachModel
+    /// Hear: the answer read aloud on the watch.
+    @StateObject private var hear = WatchHear()
 
     var body: some View {
         NavigationStack {
@@ -29,6 +31,7 @@ struct CoachScreen: View {
         case .answered(let answer):
             if let answer, !answer.text.isEmpty {
                 Text(answer.text)
+                HearButton(text: answer.text, hear: hear)
             }
             if answer?.approveOnPhone == true {
                 Label(Words.Watch.approveOnPhone, systemImage: "iphone")

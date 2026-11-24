@@ -529,6 +529,7 @@
     <string name="chat_file_choose_file">בחירת קובץ</string>
     <string name="chat_file_choose_photos">בחירת תמונות</string>
     <string name="chat_file_could_not_open">לא ניתן היה לפתוח את הקובץ.</string>
+    <string name="chat_file_mac_camera_off">המצלמה כבויה עבור tafs. יש להפעיל אותה בהגדרות המערכת › פרטיות ואבטחה › מצלמה (ב-macOS 12: העדפות המערכת › אבטחה ופרטיות › פרטיות › מצלמה).</string>
     <string name="chat_file_no_app_opens">אין בטלפון הזה אפליקציה שפותחת את %1$s.</string>
     <string name="chat_file_no_camera">אין בטלפון הזה אפליקציית מצלמה לצילום תמונה.</string>
     <string name="chat_file_not_opened">לא ניתן היה לפתוח את %1$s. %2$s</string>
@@ -2160,6 +2161,7 @@
     <string name="sample_memory_ask_first">לשאול לפני כל דבר חריג, גם כשהוא מתאים ל-Card.</string>
     <string name="sample_memory_explain">אתה מעדיף שאסביר החלטה בשורה אחת ולא בפסקה.</string>
     <string name="sample_memory_regulars">לקוחות שכותבים כל שבוע מקבלים תשובה באותו בוקר.</string>
+    <string name="sample_not_in_sample">זה לא קיים בדוגמה. יש להיכנס עם KIFF כדי לעשות זאת.</string>
     <string name="sample_parcels_change_address">שינוי כתובת המשלוח בהזמנה ⁦#5141⁩</string>
     <string name="sample_parcels_change_address_why">אימייל מכתובת חדשה ביקש זאת</string>
     <string name="sample_parcels_job">להודיע ללקוחות כשחבילה מאחרת, לפני שהם שואלים. משלוחים חוזרים ממתינים לך. לעולם לא לשנות כתובת משלוח לפי אימייל.</string>
