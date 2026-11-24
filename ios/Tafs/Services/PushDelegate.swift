@@ -131,8 +131,11 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         if let change = userInfo["change"] as? String {
             let taf = userInfo["taf_id"] as? String
+            // A watch request changed (row 11): its id alone. It's read with the session the app keeps, so it works with
+            // tafs not open, and only for a request this iPhone sent for its watch (`WatchAskPush`).
+            let ask = change == "watch_ask" ? userInfo["ask_id"] as? String : nil
             Task {
-                await onChange?(change, taf)
+                if let ask { await WatchAskPush.run(ask) } else { await onChange?(change, taf) }
                 completionHandler(.newData)
             }
             return
