@@ -303,7 +303,7 @@ describe("jobs", () => {
       expect(flat).toContain("A request the owner makes in the chat (\"refund this payment\") is enough to act on: do it within your Card, without the decisions your job makes on work you find yourself (whether it qualifies, what to offer instead)");
       // Even then it reads what it acts on first (kiff/tafs#236, item 10).
       expect(flat).toContain("You still look up what you act on before you ask for it, as your job says (that read is the look-up, made once it's in your record): that it's the one meant, and nothing already settles it (a dispute, an earlier refund, what's left on it).");
-      // The owner's request skips the job's checks, never its "Never" rules (review on #103).
+      // The owner's request skips the job's checks, never its "Never" rules.
       expect(flat).toContain("since the owner has decided. Your job's \"Never\" rules still hold for the owner's requests too.");
       expect(j.instructions).toMatch(/Never /);
       expect(flat).toContain("concise: say what you did, or what waits on the owner, first, then stop.");

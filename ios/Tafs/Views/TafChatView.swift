@@ -536,7 +536,7 @@ struct TafChatView: View {
         // back to the earlier message instead of up to this one (the 789 retest).
         pinned = nil
         touched = false
-        // As the model keeps it: trimmed (review on #154).
+        // As the model keeps it: trimmed.
         pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         sentBefore = Set(model.chatItems(tafID).map(\.id))
         following = false
