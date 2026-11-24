@@ -280,7 +280,8 @@ that needs the person is never hidden behind "Nothing new". Coach's home counts 
 (`tafs.inbox`, one JSON list), and like the tile's count its lines are cleared, and nothing is added to it, whenever the watch is locked or
 has no screen lock (Wear OS locks a watch taken off the wrist): checked when the app is opened and when it's put away. It's
 also cleared, with the ids taken away, when the phone says it's signed out, and with everything else when the person signs out on this watch (step vi). Read and dismissed stay
-on this watch until tafs cloud keeps them in step with the phone (server piece c).
+on this watch until its side of tafs cloud's marks is built (server piece c): tafs cloud keeps them at `/v1/watch/inbox`
+(docs/api.md), and a mark sends the person's phones `change: watch_inbox`.
 
 **Step (v): Tafs, a taf's page, its settings, and choosing which to halt** (`TafScreens.kt`, `WatchModel.openTaf` and
 `haltPick`, `TafScreensTest`, `TafModelTest`). Halt is never on the main screens:

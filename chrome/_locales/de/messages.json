@@ -88,5 +88,12 @@
   "hand_show": { "message": "Zeig es mir", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Erledigt", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Nicht jetzt", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Gib nur dort etwas ein, wo du dieser Seite vertraust.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Gib nur dort etwas ein, wo du dieser Seite vertraust.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Die Seite hat sich geändert, seit der taf sie gelesen hat, daher gibt es nichts zu zeigen. Such es so, wie der taf sagt.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Dieses Feld oder dieser Button ist gerade nicht zu sehen. Ein breiteres Fenster zeigt es vielleicht, oder such es so, wie der taf sagt.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Die Seite hat nicht geantwortet. Such es so, wie der taf sagt.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Das ist die Seite. Der taf hat kein Feld und keinen Button genannt, auf den gezeigt werden kann.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "An dich übergeben", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Du hast es erledigt", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Du hast „Nicht jetzt“ gesagt", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

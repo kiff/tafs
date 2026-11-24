@@ -88,5 +88,12 @@
   "hand_show": { "message": "Pokažite mi", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Končano", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Ne zdaj", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Vnašajte le tam, kjer tej strani zaupate.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Vnašajte le tam, kjer tej strani zaupate.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Stran se je spremenila, odkar jo je taf prebral, zato ni na kaj pokazati. Poiščite to, kot pravi taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "To polje ali gumb trenutno ni na zaslonu. Širše okno ga morda pokaže, ali pa ga poiščite, kot pravi taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Stran se ni odzvala. Poiščite to, kot pravi taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "To je ta stran. Taf ni navedel polja ali gumba, na katerega bi pokazal.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Predano vam", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "To ste naredili", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Rekli ste »Ne zdaj«", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo হলো এক %1$s-এর %2$s দামের সাবস্ক্রিপশন, আপনার Apple অ্যাকাউন্ট থেকে কাটা হয়। আপনি বাতিল না করা পর্যন্ত প্রতি %3$s নবায়ন হয়।</string>
     <string name="billing_starts_free">%1$s বিনামূল্যে দিয়ে শুরু।</string>
     <string name="billing_tafs_kiff_one_person_every">একজন ব্যক্তির জন্য tafs, প্রতি মাসে।</string>
-    <string name="billing_team_on_web">kiff.dev-এ Team নিন</string>
+    <string name="billing_team_on_web">kiff.dev-এ Company নিন</string>
     <string name="billing_terms_use">ব্যবহারের শর্তাবলী</string>
     <string name="billing_test_purchase_credits">পরীক্ষামূলক কেনাকাটা এই অ্যাকাউন্টে ক্রেডিট যোগ করে না।</string>
     <string name="billing_try_free">%1$s বিনামূল্যে চেষ্টা করুন</string>

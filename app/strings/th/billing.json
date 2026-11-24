@@ -67,7 +67,7 @@
   "billing.solo_subscription_one_charged_your": "Solo เป็นการสมัครใช้งาน {price} / {period} เรียกเก็บจากบัญชี Apple ของคุณ ต่ออายุอัตโนมัติเมื่อสิ้นสุดแต่ละรอบ ({period_2}) จนกว่าคุณจะยกเลิก",
   "billing.starts_free": "เริ่มต้นฟรี {trial}",
   "billing.tafs_kiff_one_person_every": "tafs สำหรับหนึ่งคน ทุกเดือน",
-  "billing.team_on_web": "รับ Team ที่ kiff.dev",
+  "billing.team_on_web": "รับ Company ที่ kiff.dev",
   "billing.terms_use": "ข้อกำหนดการใช้งาน",
   "billing.test_purchase_credits": "การซื้อทดสอบไม่เพิ่มเครดิตให้บัญชีนี้",
   "billing.try_free": "ลองใช้ฟรี {trial}",

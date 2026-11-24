@@ -67,7 +67,7 @@
   "billing.solo_subscription_one_charged_your": "Solo adalah langganan seharga {price} / {period}, ditagihkan ke akun Apple Anda. Diperpanjang di akhir setiap periode ({period_2}) sampai Anda membatalkan.",
   "billing.starts_free": "Dimulai dengan {trial} gratis.",
   "billing.tafs_kiff_one_person_every": "tafs untuk satu orang, setiap bulan.",
-  "billing.team_on_web": "Dapatkan Team di kiff.dev",
+  "billing.team_on_web": "Dapatkan Company di kiff.dev",
   "billing.terms_use": "Ketentuan Penggunaan",
   "billing.test_purchase_credits": "Pembelian uji coba tidak menambahkan kredit ke akun ini.",
   "billing.try_free": "Coba gratis {trial}",

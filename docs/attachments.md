@@ -68,7 +68,9 @@ goes up as soon as it's picked (`AppModel.attach`):
 A sent message shows its files; each opens full size in Quick Look. The app asks tafs
 cloud for a download link (`GET /v1/tafs/{id}/attachments/{att}`), which works for a
 minute, only for the person who attached it. The copy goes into the app's temporary
-folder (`tmp/attachments`) and is removed on sign-out and on an account switch.
+folder (`tmp/attachments/<id>`, under its own name only) and is removed on sign-out and on an account switch. As on
+Android, the id keeps only its ASCII letters, digits, `_` and `-` (`AppModel.openedFolder`), and a name that is only a path
+step (`.`, `..`) is `file` (`FileText.name`), so neither reaches outside that folder.
 
 On Android a sent file opens in the phone's own app for its kind (Photos, a PDF viewer),
 handed over read-only through the app's FileProvider. The copy goes into the app's cache

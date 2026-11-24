@@ -88,5 +88,12 @@
   "hand_show": { "message": "আমাকে দেখান", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "সম্পন্ন", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "এখন নয়", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "শুধু যেখানে আপনি এই পৃষ্ঠাকে বিশ্বাস করেন সেখানেই লিখুন।", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "শুধু যেখানে আপনি এই পৃষ্ঠাকে বিশ্বাস করেন সেখানেই লিখুন।", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "taf পড়ার পর থেকে পৃষ্ঠাটি বদলে গেছে, তাই দেখানোর মতো কিছু নেই। taf যেমন বলছে, সেভাবে খুঁজুন।", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "সেই ঘর বা বোতামটি এখন স্ক্রিনে নেই। একটি চওড়া উইন্ডোতে দেখা যেতে পারে, অথবা taf যেমন বলছে, সেভাবে খুঁজুন।", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "পৃষ্ঠাটি সাড়া দেয়নি। taf যেমন বলছে, সেভাবে খুঁজুন।", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "এটাই সেই পৃষ্ঠা। taf দেখানোর জন্য কোনো ঘর বা বোতামের নাম বলেনি।", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "আপনাকে দেওয়া হয়েছে", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "আপনি করেছেন", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "আপনি বলেছেন “এখন নয়”", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

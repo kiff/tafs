@@ -228,7 +228,10 @@ Nothing leaves the watch before Send:
   is Needs you as the phone answered now, with the home counting those calls: a call that needs the person is never hidden
   behind "Nothing new". A locked Apple Watch doesn't show the app, so the passcode is what's checked.
 - **Signed out** on the phone: nothing of the Inbox stays, the ids taken away included.
-- **Read and dismissed stay on this watch** until tafs cloud keeps them in step with the phone (server piece c).
+- **Read and dismissed stay on this watch** until its side of tafs cloud's marks is built (server piece c). tafs cloud's
+  side is in: `GET`/`POST /v1/watch/inbox` (docs/api.md) keeps the lines' ids read and dismissed per person, and a
+  mark sends the person's phones `change: watch_inbox`. Still to build: the relay's read and mark, and the watch merging
+  the marks with its own ids taken away.
 - **Words:** all already shared (`watch.dismiss`, `watch.clear_read`, `watch.already_answered`, `watch.inbox_empty`,
   `watch.inbox_unread`).
 
@@ -471,10 +474,10 @@ Apple Watch before the iOS PR.
   notification ("A result is ready" while locked; the taf and its line otherwise).
 
 **Two gaps on the service's side, before iOS can match:**
-1. **The result push reaches Android only.** `watch-ask.md` sends each change to the person's **Android** phone
-   (`change: watch_ask`, `ask_id`). iOS needs the same as a silent push to the iPhone (`content-available`, the ask's
-   id alone). iOS throttles silent pushes, so the watch also reads `asks` whenever it opens, and a missed push costs
-   only time. This is one tafs cloud change, and the phone's side in `AppDelegate`'s remote notification handler.
+1. **The result push reaches the iPhone too** (done in tafs cloud): each change goes to the person's phones, Android
+   and iPhone, as a silent push (`content-available`, `change: watch_ask`, the ask's id alone). iOS throttles silent
+   pushes, so the watch also reads `asks` whenever it opens, and a missed push costs only time. Left: the phone's side,
+   in `AppModel.liveChange` (today an unknown `change` is ignored, so a build from before reads nothing).
 2. **Nothing new in KIFF or planque.**
 
 **Where watchOS differs:**

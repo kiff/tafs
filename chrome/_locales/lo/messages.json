@@ -88,5 +88,12 @@
   "hand_show": { "message": "ສະແດງໃຫ້ເບິ່ງ", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "ສຳເລັດ", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "ບໍ່ແມ່ນດຽວນີ້", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "ພິມສະເພາະບ່ອນທີ່ທ່ານເຊື່ອໃຈໜ້ານີ້ເທົ່ານັ້ນ.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "ພິມສະເພາະບ່ອນທີ່ທ່ານເຊື່ອໃຈໜ້ານີ້ເທົ່ານັ້ນ.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "ໜ້າໄດ້ປ່ຽນໄປແລ້ວຕັ້ງແຕ່ taf ອ່ານມັນ, ສະນັ້ນບໍ່ມີຫຍັງໃຫ້ຊີ້. ຊອກຫາມັນຕາມທີ່ taf ເວົ້າ.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "ຊ່ອງ ຫຼື ປຸ່ມນັ້ນບໍ່ຢູ່ໃນໜ້າຈໍຕອນນີ້. ໜ້າຕ່າງທີ່ກວ້າງກວ່າອາດສະແດງມັນ, ຫຼື ຊອກຫາມັນຕາມທີ່ taf ເວົ້າ.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "ໜ້າບໍ່ໄດ້ຕອບ. ຊອກຫາມັນຕາມທີ່ taf ເວົ້າ.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "ນີ້ແມ່ນໜ້ານັ້ນ. taf ບໍ່ໄດ້ລະບຸຊ່ອງ ຫຼື ປຸ່ມໃຫ້ຊີ້.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "ມອບໃຫ້ທ່ານແລ້ວ", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "ທ່ານເຮັດແລ້ວ", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "ທ່ານເລືອກ “ບໍ່ແມ່ນດຽວນີ້”", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

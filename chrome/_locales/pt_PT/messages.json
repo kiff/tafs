@@ -88,5 +88,12 @@
   "hand_show": { "message": "Mostre-me", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Concluído", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Agora não", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Escreva apenas onde confia nesta página.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Escreva apenas onde confia nesta página.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "A página mudou desde que o taf a leu, por isso não há nada para apontar. Procure como o taf diz.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Esse campo ou botão não está no ecrã agora. Uma janela mais larga pode mostrá-lo, ou procure como o taf diz.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "A página não respondeu. Procure como o taf diz.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Esta é a página. O taf não indicou um campo ou botão para apontar.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Passou para si", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Fê-lo", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Disse «Agora não»", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

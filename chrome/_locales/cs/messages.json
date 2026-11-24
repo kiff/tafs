@@ -88,5 +88,12 @@
   "hand_show": { "message": "Ukažte mi to", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Hotovo", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Teď ne", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Pište jen tam, kde této stránce důvěřujete.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Pište jen tam, kde této stránce důvěřujete.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Stránka se od chvíle, kdy ji taf přečetl, změnila, takže není na co ukázat. Hledejte to podle toho, co říká taf.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "To pole nebo tlačítko teď není na obrazovce. Širší okno ho možná ukáže, nebo ho hledejte podle toho, co říká taf.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Stránka neodpověděla. Hledejte to podle toho, co říká taf.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Tohle je ta stránka. Taf neuvedl žádné pole ani tlačítko, na které by se dalo ukázat.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Předáno vám", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Udělali jste to", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Řekli jste „Teď ne“", "description": "Step list: the person pressed Not now on the Your turn card."}
 }
