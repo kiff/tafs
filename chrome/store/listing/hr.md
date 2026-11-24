@@ -18,7 +18,7 @@ tafs za Chrome pušta vaše tafove da rade u vašem vlastitom Chromeu, samo na s
 • Taf vam može prepustiti jedan korak na stranici, poput upisa pretraživanja ili broja kartice. Napravite ga sami, a kad ponovno čita stranicu, ono što ste upisali u polja izostavlja se.
 • Stranice banaka, novčanika, upravitelja zaporki, plaćanja, zdravlja i državnih tijela nikad se ne obrađuju, osim ako jednu dopustite za jedan zadatak na telefonu.
 • Nikad ne čuva vaše zaporke. Na stranici za prijavu taf se zaustavi i zamoli vas da se sami prijavite, u svojoj kartici.
-• Bočna traka prikazuje taf koji radi u ovom Chromeu, a s njim razgovarate ondje, kao u aplikaciji tafs. „Postavite novi taf za ovu stranicu“ otvara Coach, koji čita stranicu na kojoj počinje, s istim uklonjenim poljima.
+• Bočna traka prikazuje taf koji radi u ovom Chromeu, a s njim razgovarate ondje, kao u aplikaciji tafs. „Postavite novi taf za ovu stranicu“ otvara Coach, u vlastitom prikazu. Kad Coachu pošaljete poruku, on čita stranicu sprijeda s istim uklonjenim poljima, osim na web-lokacijama banaka, plaćanja, pošte ili zdravlja i onima koje isključite, te ispod vaše poruke prikazuje „Čita:” i web-lokaciju.
 
 Što taf pročita, ide umjetnoj inteligenciji koja izvršava vaš zadatak i čuva se s tim zadatkom. KIFF čuva stranicu prije i poslije promjene najviše 30 dana. Kad se snimke zaslona uključe, svaki korak koji nešto izvršava čuva i jednu snimku stranice, snimljenu neposredno prije radnje sa skrivenim poljima za zaporku, karticu i kod, najviše 30 dana. Vidite je samo u aplikaciji tafs i nikad ne ide umjetnoj inteligenciji. Prekid povezivanja ili deinstalacija briše ono što proširenje čuva na vašem računalu.
 
