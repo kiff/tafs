@@ -7,6 +7,9 @@ import SwiftUI
 /// in front, from the Chrome extension, so the link may have come from that page) or in Coach's answer still arriving (a
 /// stream picked back up says nothing of `page_turn`). Those show the whole address, never shortened and always left to
 /// right, and open only on Open. The owner's own words open their links as before.
+///
+/// Only a tap reaches this, through `openURL`. A way to open a link that doesn't go through `openURL` (a long-press menu
+/// with Open Link, a link preview) would skip it: anything that adds one to a chat bubble routes it through `PageLinks.ask`.
 enum PageLinks {
     /// Whether Open is offered: an `https` address with a host, and nothing in it, as written or percent-decoded, that
     /// could make what's read differ from what opens: no space, no control and no format character (a direction mark, an
