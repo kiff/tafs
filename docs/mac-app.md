@@ -258,6 +258,22 @@ After the unit tests, the Mac workflow runs the app in sample mode and takes the
 - **Dark** is the runner's own appearance, switched for the dark half, as a person's Mac switches it.
 - **A shot is taken** once two frames a second apart are within 0.5% of each other's size, or after 30 s with a warning. A launch with no window stops the step at once, with the windows on screen in the log.
 
+## The owner's check on a signed Mac
+
+What CI can't check, in one place: each step needs Mac TestFlight's signed build, installed on a Mac with Touch ID, by someone signed in with a real account. Each says what it proves and what a failure means. Until a step is done, its row in "Not done yet" stays **owed**, and parity.md keeps the screen partial.
+
+| # | Do | It proves | If it fails |
+|-:|:-|:-|:-|
+| 1 | Open the app for the first time. | The sandbox lets it run, reach KIFF and tafs cloud, and keep its Keychain items: the first signed build is the sandbox's first run. | A blank or stuck first screen, or a sign-in that doesn't stick, is an entitlement missing from `TafsMac.entitlements` ("Signing and the sandbox", above). |
+| 2 | Sign out. On the phone, Account › Devices › Add a device. On the Mac, sign in "from another phone": scan its QR code, then match the check code. | Adding a Mac from a phone (PairSignInView), shown on the phone as a computer (`macos`, no `device_kind`). Only a Mac added this way approves ("A Mac signed in through the browser is view-only"). | A Mac that stays view-only after it was paired: KIFF enrolled no approval key for it. |
+| 3 | With the lid open and Touch ID set up, approve a Card with Touch ID: a held call in Needs you, or Coach's Approve. | The approval key, made in the Secure Enclave, signs on a Mac, and KIFF and Setup accept it (ApprovalSetupView, "Approvals with Touch ID"). | "Touch ID can't be used right now" with the lid open: the build's signing or entitlements are wrong. "Didn't sign that answer": the Mac is view-only, so go back to step 2. |
+| 4 | Close the lid on an external display, and try to approve. | The Mac says Touch ID can't be used right now, with no Open Settings, and approving moves to another device (`ApprovalReadiness.from`, `mac:`). | An Open Settings button, or the iPhone's "Settings → Touch ID & Passcode". |
+| 5 | Open each menu: tafs, File, View. Try ⌘N, ⌘, and ⌘1 to ⌘3, signed in and signed out. | The menus as "The menu bar" lists them, each item off when its shortcut is. | An item twice, a document item in File, or one that works while signed out. |
+| 6 | Make the window as small as it goes. | It stops at 820 × 600 (`MacWindow.minimumSize`), with the sidebar and the screen beside it. | It goes smaller, or the sidebar covers the screen. |
+| 7 | Move the pointer over the main button, an outlined button and a row. | Each lightens, washes or fades a little, less than a press ("The pointer"). | No change under the pointer. |
+
+Steps 2 and 3 make the two partial Mac rows in parity.md done: PairSignInView and ApprovalSetupView. The rest close rows in "Not done yet".
+
 ## Not done yet
 
 | What | State |
