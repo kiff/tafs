@@ -133,7 +133,8 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   `PageTurnText(asks = true)`: a tap on a link opens no browser but asks "Open this link?" (`chat.link_confirm_title`),
   with the link's whole address in the body (`chat.link_confirm_body`, kept left to right), Open and Cancel. Open opens
   it; Cancel, or a tap outside, opens nothing. An answer still being written asks too, whatever its turn: a resumed or
-  repeated stream sends no `session` event, so it can't yet say, and the thread read that follows settles it.
+  repeated stream sends no `session` event, so it can't yet say, and the thread read that follows settles it. The
+  question is held once per chat (`LinkConfirm`), so an answer that finishes while it's up doesn't take it away.
   `MarkdownText(onLink = ...)` hands a link's address to the caller instead of opening it; with none, links open as
   before.
 - **A message that answers a card waiting in the chat** goes on in that card's run with the person's words alone

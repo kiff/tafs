@@ -129,6 +129,12 @@ private val RowGap = 8.dp
  */
 @Composable
 fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: Modifier = Modifier) {
+  // One "Open this link?" for the whole chat, so it stays up when the answer it was asked from finishes and is drawn anew.
+  LinkConfirm { TafChatScreen(tafId, state, actions, modifier) }
+}
+
+@Composable
+private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, modifier: Modifier) {
   val taf = state.taf(tafId)
   LaunchedEffect(tafId) { actions.loadChat(tafId) }
   // What the owner wrote and hasn't sent, kept by the app, not the screen: leaving the chat and coming back keeps it, as iOS does.
@@ -929,16 +935,18 @@ private fun AskCoachCard(text: String, ask: ((String) -> Unit)?) {
 /** Whether a message in the thread is the one the owner sent with [sent]: the same words, or them after its files' lines. */
 internal fun sentWords(stored: String, sent: String): Boolean = stored == sent || stored.endsWith("\n\n" + sent)
 
+/** Where a link that asks first goes: the chat's one [LinkConfirm]. */
+internal val LocalAskLink = androidx.compose.runtime.staticCompositionLocalOf<((String) -> Unit)?> { null }
+
 /**
- * A taf's words, as the chat draws them. When [asks] (an answer from a turn that read a page in the person's Chrome, or one still
- * being written), a link doesn't open on the tap: "Open this link?" shows its whole address first (docs/chat.md), with Open and
- * Cancel. Otherwise a link opens as before.
+ * Holds the chat's "Open this link?" (docs/chat.md): the whole address, Open and Cancel. It's kept here, above the messages,
+ * so a live answer that finishes while it's up (drawn again as a message) doesn't take it away under the person's finger.
  */
 @Composable
-internal fun PageTurnText(text: String, asks: Boolean) {
-  var confirming by remember { mutableStateOf<String?>(null) }
+internal fun LinkConfirm(content: @Composable () -> Unit) {
+  var confirming by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
   val uri = androidx.compose.ui.platform.LocalUriHandler.current
-  MarkdownText(text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), onLink = if (asks) { url -> confirming = url } else null)
+  androidx.compose.runtime.CompositionLocalProvider(LocalAskLink provides { url: String -> confirming = url }) { content() }
   confirming?.let { url ->
     bot.tafs.app.drive.DriveAlert(
       onDismissRequest = { confirming = null },
@@ -954,4 +962,14 @@ internal fun PageTurnText(text: String, asks: Boolean) {
       containerColor = Theme.panel,
     )
   }
+}
+
+/**
+ * A taf's words, as the chat draws them. When [asks] (an answer from a turn that read a page in the person's Chrome, or one still
+ * being written), a link doesn't open on the tap: it goes to the chat's [LinkConfirm]. Otherwise a link opens as before.
+ */
+@Composable
+internal fun PageTurnText(text: String, asks: Boolean) {
+  val ask = LocalAskLink.current
+  MarkdownText(text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), onLink = if (asks) (ask ?: {}) else null)
 }
