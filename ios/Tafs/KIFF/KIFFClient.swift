@@ -213,11 +213,7 @@ final class KIFFClient {
     /// (group changes B: KIFF takes the member `PUT` signed by either key, and records which).
     /// Ending a trial, and taking someone out of a group, take authority away: the current key.
     static func grantsAuthority(_ method: String, _ path: String) -> Bool {
-        if method == "PUT" {
-            // /v1/groups/{group}/members/{subject}: exactly six parts, both ids set.
-            let parts = path.split(separator: "/", omittingEmptySubsequences: false)
-            return parts.count == 6 && path.hasPrefix("/v1/groups/") && parts[4] == "members" && !parts[3].isEmpty && !parts[5].isEmpty
-        }
+        if addsGroupMember(method, path) { return true }
         guard method == "POST" else { return false }
         // Opening an approval window stands for a Face ID: only the approval key opens one (kiff/tafs#494).
         if path == windowPath { return true }
@@ -227,6 +223,16 @@ final class KIFFClient {
         if parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "grants" && !parts[3].isEmpty { return true }
         if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
         return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
+    }
+
+    /// Adding someone to a group, or changing their role in it: `PUT /v1/groups/{group}/members/{subject}`,
+    /// exactly six parts with both ids set. Always the approval key's, never a tap in an approval window: KIFF
+    /// takes a window-named signature on this route as the device key's, so in a window it would count as a
+    /// device-key add (group changes B).
+    static func addsGroupMember(_ method: String, _ path: String) -> Bool {
+        guard method == "PUT" else { return false }
+        let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+        return parts.count == 6 && path.hasPrefix("/v1/groups/") && parts[4] == "members" && !parts[3].isEmpty && !parts[5].isEmpty
     }
 
     init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
@@ -1827,7 +1833,8 @@ final class KIFFClient {
         // Inside a held approval window, for the approval step that took it, what the approval key would
         // sign goes with the device key and the window's id: a tap (kiff/tafs#494). Opening a window is
         // never signed in one.
-        let held = inWindow && signsInWindow && authority && presigned == nil && path != Self.windowPath ? window?.id : nil
+        let held = inWindow && signsInWindow && authority && presigned == nil && path != Self.windowPath
+            && !Self.addsGroupMember(method, path) ? window?.id : nil
         let signer = signedBy ?? setupSigner.map { current in
             authority && held == nil ? (approvalSigner ?? current) : current
         }
