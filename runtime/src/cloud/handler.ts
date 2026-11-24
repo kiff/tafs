@@ -19,7 +19,7 @@ import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
-import { baseLanguage, type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withoutTafsLines, withReplyLanguage, withZone, wordsIn } from "./words/index.js";
+import { baseLanguage, type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withoutTafsLines, withPageRead, withReplyLanguage, withZone, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { handedByOf, requestDetail } from "./request.js";
@@ -5056,7 +5056,9 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   const page = await pageFor(event, me, taf, deps);
   withPage(at, page);
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
-  const input = await withCoachSkills(me, taf, at, text, event, deps);
+  const said = await withCoachSkills(me, taf, at, text, event, deps);
+  // The page's host goes in the message kiff/agents keeps, so a later turn knows this one read it (withPageRead).
+  const input = page ? withPageRead(said, page.host) : said;
   const began = deps.now?.() ?? new Date();
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, input, at, ai, notify));
   // Only a run this send started read the page: a card's answer went on in its own run, without it.
@@ -7038,7 +7040,9 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
         // Coach's runs are announced when they pause, so a result it shows is
         // handed over by tafs cloud with no phone needed (handOver).
         const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
-        const input = await withCoachSkills(me, taf, at, text, event, deps);
+        const said = await withCoachSkills(me, taf, at, text, event, deps);
+        // The page's host goes in the message kiff/agents keeps, so a later turn knows this one read it (withPageRead).
+        const input = page ? withPageRead(said, page.host) : said;
         timing.mark("skills");
         const began = deps.now?.() ?? new Date();
         run = deps.agents.streamRun(me.tenantID, taf.id, input, at, ai, notify);

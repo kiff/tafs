@@ -196,7 +196,7 @@ export function ownerWords(text: string): string {
     const m = text.match(/^\[door knock [^\]\n]*\] The owner says:[ \t]*([\s\S]*?)(?:\n\n|$)/);
     return m?.[1]?.trim() ?? "";
   }
-  if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]") && !text.startsWith("[did this happen ") && !text.startsWith("[tafs connections]") && !text.startsWith("[tafs language]") && !text.startsWith("[tafs time zone]")) return withoutChatNotes(text);
+  if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]") && !text.startsWith("[did this happen ") && !text.startsWith("[tafs connections]") && !text.startsWith("[tafs language]") && !text.startsWith("[tafs time zone]") && !text.startsWith("[tafs page read]")) return withoutChatNotes(text);
   const at = text.lastIndexOf("\nThe owner says:");
   return at < 0 ? "" : withoutChatNotes(text.slice(at + "\nThe owner says:".length).trim());
 }
