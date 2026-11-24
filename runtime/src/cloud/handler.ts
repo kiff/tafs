@@ -928,6 +928,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     }
     if (action === "messages" && parts.length === 4 && method === "POST") {
       const body = parseBody(event);
+      // The side panel uploads nothing, so any file a Chrome's message names is another chat's: none goes.
+      if (Array.isArray(body.attachments) && body.attachments.length) throw new HTTPError(400, "a message from Chrome carries no files");
       const chosen = str(body.session).trim();
       if (chosen && !await began(chosen)) throw new HTTPError(404, "no such chat");
       // The live chat is this Chrome's newest, never the person's newest elsewhere: none, a new one.

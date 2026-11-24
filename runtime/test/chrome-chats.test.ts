@@ -144,6 +144,17 @@ describe("a Chrome sees only the chats begun in it", () => {
     expect(JSON.stringify(mine.body)).not.toContain("My secret plan");
   });
 
+  // Invariant: the side panel uploads nothing, so a file a Chrome's message names is never sent, and nothing starts
+  it("refuses a message that names a file", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const runs = w.agents.runs.length;
+    const r = await call(w, "chromeA", "POST", `/v1/tafs/${COACH}/messages`, { text: "look", new_chat: true, attachments: ["att_someone_elses"] });
+    expect(r.status).toBe(400);
+    expect(w.agents.runs.length).toBe(runs);
+    expect(await listed(w, "chromeA")).toEqual([]);
+  });
+
   // Invariant: its live thread, and where a message with no chat goes, are its newest own chat, never the person's newest elsewhere
   it("reads and goes on in its own newest chat, or starts one, never the phone's", async () => {
     const w = await world();
