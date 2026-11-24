@@ -1,0 +1,1 @@
+• „Podnieś limit” pokazuje teraz obecny limit wydatków, zanim go podniesiesz, w walucie Twojego konta.

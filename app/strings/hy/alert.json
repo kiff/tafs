@@ -27,6 +27,7 @@
   "alert.prompt": "Ստացեք ծանուցում, երբ taf-ին ձեր օգնությունն է պետք",
   "alert.role_cant": "KIFF-ի այս հաշվում ձեր դերը չի կարող միացնել ծանուցումները։",
   "alert.sign_in_again": "Նորից մուտք գործեք KIFF-ով՝ ծանուցումները միացնելու համար․ այս մուտքը չի կարող ստորագրել հեռախոսի համար։",
+  "alert.sign_out_anyway": "Միևնույն է ելք",
   "alert.silent": "Անձայն",
   "alert.silent_example": "Աջակցության պատասխանները պատասխանվեցին maria@… · Էլ. փոստով",
   "alert.sound": "Ձայն",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Հասանելի չէ",
   "alert.status.off": "Անջատված է",
   "alert.status.on": "Միացված է",
+  "alert.still_on_after_sign_out.body": "tafs-ը չկարողացավ անջատել դրանք ({why}). Նորից փորձեք կամ, միևնույն է, դուրս եկեք և անջատեք tafs-ի ծանուցումները Կարգավորումներում։",
+  "alert.still_on_after_sign_out.title": "Այս սարքը ({device}) կարող է դեռ ստանալ այս հաշվի ծանուցումները",
   "alert.taf_needs_you": "{taf}-ին ձեր օգնությունն է պետք",
   "alert.tafs": {
     "one": "{count} taf ›",

@@ -27,6 +27,7 @@
   "alert.prompt": "Kapj értesítést, ha egy tafnak szüksége van rád",
   "alert.role_cant": "A szerepköröd ebben a KIFF-fiókban nem kapcsolhatja be az értesítéseket.",
   "alert.sign_in_again": "Az értesítések bekapcsolásához jelentkezz be újra a KIFF-fel: ez a bejelentkezés nem tud aláírni a telefon nevében.",
+  "alert.sign_out_anyway": "Kijelentkezés mégis",
   "alert.silent": "Néma",
   "alert.silent_example": "Az Ügyfélszolgálati válaszok válaszolt neki: maria@… · E-mailben",
   "alert.sound": "Hang",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Nem érhető el",
   "alert.status.off": "Ki",
   "alert.status.on": "Be",
+  "alert.still_on_after_sign_out.body": "A tafs nem tudta kikapcsolni őket ({why}). Próbáld újra, vagy jelentkezz ki mégis, és kapcsold ki a tafs értesítéseit a Beállításokban.",
+  "alert.still_on_after_sign_out.title": "Ez az eszköz ({device}) talán továbbra is megkapja ennek a fióknak az értesítéseit",
   "alert.taf_needs_you": "{taf} rád vár",
   "alert.tafs": {
     "one": "{count} taf ›",

@@ -30,6 +30,7 @@
     <string name="alert_prompt">Получавайте известие, когато taf има нужда от вас</string>
     <string name="alert_role_cant">Ролята ви в този акаунт в KIFF не може да включва известия.</string>
     <string name="alert_sign_in_again">Влезте отново с KIFF, за да включите известията: този вход не може да подписва за телефона.</string>
+    <string name="alert_sign_out_anyway">Изход въпреки това</string>
     <string name="alert_silent">Безшумно</string>
     <string name="alert_silent_example">Отговори на поддръжката отговори на maria@… · По имейл</string>
     <string name="alert_sound">Звук</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Не е налично</string>
     <string name="alert_status_off">Изключено</string>
     <string name="alert_status_on">Включено</string>
+    <string name="alert_still_on_after_sign_out_body">tafs не успя да ги изключи (%1$s). Опитайте отново или излезте въпреки това и изключете известията за tafs в Настройки.</string>
+    <string name="alert_still_on_after_sign_out_title">Този %1$s може още да получава известията на този акаунт</string>
     <string name="alert_taf_needs_you">%1$s ви чака</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">Ключът за сигурност не можа да подпише, така че нищо не беше одобрено. Заявката се запазва: одобрете отново, когато сте готови.</string>
     <string name="approval_security_key_locked">Този ключ за сигурност е заключен след твърде много грешни ПИН кодове, така че не може да одобрява. Одобрявайте на телефона си. Нулирането на ключа го изтрива, така че, за да одобрявате отново с ключ, сдвоете този компютър отново.</string>
     <string name="approval_security_key_no_key">Включете ключа за сигурност и опитайте отново.</string>
+    <string name="approval_security_key_no_library">Този компютър не може да използва ключ за сигурност, докато не бъде инсталиран libfido2 1.14 или по-нов (в Ubuntu – пакетът libfido2-1), затова нищо не беше одобрено. Инсталирайте го и одобрете отново. Заявката се запазва.</string>
+    <string name="approval_security_key_no_library_pairing">Този компютър не може да използва ключ за сигурност, докато не бъде инсталиран libfido2 1.14 или по-нов (в Ubuntu – пакетът libfido2-1). За да добавите ключа си, откажете, инсталирайте го и сдвоете отново. Или сдвоете сега без ключ.</string>
     <string name="approval_security_key_no_pin_set">Този ключ за сигурност няма ПИН код, така че не може да одобрява. Включете ключа, който е за този компютър. Ако е бил нулиран, одобрявайте на телефона си и сдвоете този компютър отново, за да одобрявате с ключ.</string>
     <string name="approval_security_key_none_paired">Този компютър още няма ключ за сигурност. Ключът за сигурност е малък USB ключ, който докосвате, за да одобрите; обикновена USB флашка не върши работа.</string>
     <string name="approval_security_key_not_allowed">Ключът за сигурност не го разреши, така че нищо не беше одобрено. Заявката се запазва: одобрете отново, когато сте готови.</string>

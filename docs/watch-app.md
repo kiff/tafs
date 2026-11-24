@@ -214,9 +214,9 @@ Nothing leaves the watch before Send:
 - **Not in this step:** Ask tafs (`ask` instead of `coach`, below), which waits on the Wear OS slice and tafs cloud's
   iPhone push. Keep for later came later, behind its own switch (below).
 - **Keep for later** (row 8, as Wear OS's `keepForLater`; `CoachModel.keepForLater`, `FileDraftStore`; tested in
-  `CoachModelTests`), **built and off** (`CoachModel.keepForLaterOn`): it keeps the person's words on the watch, so it's
-  switched on only with its sentence in the privacy page's Apple Watch paragraph and the owner's yes. Off, no store is
-  given, and nothing is offered or kept.
+  `CoachModelTests`), **on** (`CoachModel.keepForLaterOn`): it keeps the person's words on the watch, so it was switched on
+  with its sentence in the privacy page's Apple Watch paragraph and the owner's yes. Off, no store is given, and nothing is
+  offered or kept.
   - **Offered** in the review, beside Send, when a Send to Coach got no reply from the phone (no answer, the link failed, or
     not in reach, as Wear OS's "Not sure it arrived"), with the words still the ones sent. Never for a taf's message: nothing
     of a taf's chat is kept on the watch, so that's Send again or close.
@@ -373,7 +373,25 @@ option A (19 Nov):
 - **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing; nor does an iPhone with tafs
   open on screen, where Coach's chat already shows the answer.
 - **Its limit:** iOS doesn't promise the background time, and an answer past the follow is only in Coach's chat. tafs
-  cloud's push to the iPhone (piece d, step (vii)) lifts it.
+  cloud's push to the iPhone lifts it for a watch request (below).
+
+**Row 11, an answer you can't miss, with the app put away** (`WatchAskPush`, tested in `WatchAskPushTests`): W3 past its
+follow, for a watch request (`coach_send` and a taf's chat).
+- **tafs cloud's push wakes the iPhone** each time a watch request changes: a silent push, `change: watch_ask` and the
+  request's id alone (`PushDelegate`). However long the answer takes, the iPhone reads that one request
+  (`GET /v1/watch/asks/{id}`) with the session it keeps, so it works with tafs not open and the iPhone locked.
+- **Only a request this iPhone sent for its watch.** The relay keeps the ids it sent (`WatchAskPushes`, ids only, never
+  words, each a day, at most 50): a push for any other request (an Android's watch, an iPad) reads nothing.
+- **Posted as W3 posts it,** once the request has ended or a call of it waits for the owner: "Coach", the answer with no
+  amount in it, then "Approve on your phone" or "The rest is on your phone.", under W3's identifier for the request.
+- **Once at most, and never twice:**
+  - a request is posted once, by W3's follow or by the push, whichever has it first;
+  - nothing is posted for an answer the watch read itself (kept past the follow), while the watch is reading (5 s), or
+    with tafs open on the iPhone;
+  - a request still at work posts nothing: the next push says when it changes.
+- **What it can't promise:** iOS may hold back silent pushes (Low Power Mode, a phone that's been closed by hand), so a
+  request is posted only once the iPhone is woken. Nothing new reaches the watch: it shows the iPhone's notification.
+- **Words:** none new. No change to the privacy text: the watch posts nothing of its own, and only ids are kept.
 - **Words:** none new (`coach.title`, `watch.approve_on_phone`, `watch.more_on_phone`). No change to the privacy text.
 
 **W4, Ask Coach as one conversation** (`CoachModel.turns`, `CoachHome`, `CoachTurnRow`; tested in `CoachModelTests`), the
@@ -518,8 +536,8 @@ Apple Watch before the iOS PR.
 **Two gaps on the service's side, before iOS can match:**
 1. **The result push reaches the iPhone too** (done in tafs cloud): each change goes to the person's phones, Android
    and iPhone, as a silent push (`content-available`, `change: watch_ask`, the ask's id alone). iOS throttles silent
-   pushes, so the watch also reads `asks` whenever it opens, and a missed push costs only time. Left: the phone's side,
-   in `AppModel.liveChange` (today an unknown `change` is ignored, so a build from before reads nothing).
+   pushes, so the watch also reads `asks` whenever it opens, and a missed push costs only time. The phone's side is
+   row 11's (`WatchAskPush`, above): it reads the request and posts it as W3 does. A build from before ignores the push.
 2. **Nothing new in KIFF or planque.**
 
 **Where watchOS differs:**
@@ -559,6 +577,21 @@ circle above "Nothing waiting". It's drawn in code with shapes and one symbol, a
 number or word. VoiceOver skips it, since the line under it says the same. It shows only once the
 phone has answered, never in place of loading. A locked watch doesn't show the app at all.
 
+## The complication (row 24, step 1)
+
+"Ask tafs" on the watch face and in the Smart Stack (`TafsWatchWidgets`, a WidgetKit extension inside the watch app): the
+microphone, with "Ask Coach" where the family has room, in the circular, corner, rectangular and inline families.
+- **A tap opens the app listening** (`ComplicationLink.ask`, `tafs-watch://ask`): Coach's home, then the system's dictation
+  as its microphone starts it, once per tap. Nothing is sent before the person's Send. Signed out on this watch, it opens
+  nothing. A tap that opens the app cold (the usual case) is kept until Coach's home appears (`CoachModel.askPending`),
+  which takes it once and listens; so does a tap from another page, or with Coach's home already on screen.
+- **It shows nothing of the account**: no count, no taf, no words. So there's nothing to hide while the watch is locked,
+  and it never asks the phone or refreshes (one entry, `.never`).
+- **Signing:** its own bundle id, `bot.tafs.app.watchkitapp.widgets`, and CI's profile "tafs watch widgets App Store CI",
+  made by `asc-profiles.rb` in the `testflight` job. Creating that App ID is the owner's call, so this waits for their yes.
+- **Step 2, later:** the count of what waits, which needs an App Group shared by the watch app and the widget, and the
+  count kept on disk only while the watch has a passcode, cleared on sign-out.
+
 ## What the watch keeps
 
 - **In memory only:** the list, the amounts and Coach's answers. They go when the app leaves the
@@ -568,10 +601,10 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
   protection, and cleared on sign-out.
 - **v2, behind its switch:** after Sign out on this watch, one empty file, `tafs.signed_out_here`, until Sign in with your
   phone.
-- **Keep for later, behind `CoachModel.keepForLaterOn` (off; row 8, as Wear OS's):** `tafs.draft.json`, one message to
+- **Keep for later, behind `CoachModel.keepForLaterOn` (on; row 8, as Wear OS's):** `tafs.draft.json`, one message to
   Coach the phone didn't answer: its words, its message id and the chat it continues. Complete file protection; gone once
-  the phone takes it, on Delete, on either sign-out, and, as the Inbox, when the app opens or is put away without a passcode. **Switched on only with its sentence on the privacy page** and the
-  owner's yes.
+  the phone takes it, on Delete, on either sign-out, and, as the Inbox, when the app opens or is put away without a passcode. **On with its sentence on the privacy page** and the owner's
+  yes.
 - **So it opens at once, behind `WatchCache.on` (off; row 44, D, as Wear OS's tafs#1594):** `tafs.watch_cache`, Your
   tafs as last read: each taf's id, name, and whether it's halted or paused. Never a taf's state line (it can name what a
   held call wants), a held call's details, an amount, or a chat. Needs you isn't kept: with a passcode the Inbox already

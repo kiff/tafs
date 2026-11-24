@@ -30,6 +30,7 @@
     <string name="alert_prompt">Taf-a sizin köməyiniz lazım olanda bildiriş alın</string>
     <string name="alert_role_cant">Bu KIFF hesabında sizin rolunuz bildirişləri aktiv edə bilməz.</string>
     <string name="alert_sign_in_again">Bildirişləri aktiv etmək üçün KIFF ilə yenidən daxil olun: bu giriş telefon üçün imzalaya bilməz.</string>
+    <string name="alert_sign_out_anyway">Hər halda çıxış et</string>
     <string name="alert_silent">Səssiz</string>
     <string name="alert_silent_example">Dəstək cavabları cavablandırıldı maria@… · E-poçtla</string>
     <string name="alert_sound">Səs</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Mövcud deyil</string>
     <string name="alert_status_off">Söndürülüb</string>
     <string name="alert_status_on">Aktivdir</string>
+    <string name="alert_still_on_after_sign_out_body">tafs onları söndürə bilmədi (%1$s). Yenidən cəhd edin və ya hər halda çıxış edin və Parametrlərdə tafs üçün bildirişləri söndürün.</string>
+    <string name="alert_still_on_after_sign_out_title">Bu cihaz (%1$s) bu hesabın bildirişlərini hələ də ala bilər</string>
     <string name="alert_taf_needs_you">%1$s-a sizin köməyiniz lazımdır</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">Təhlükəsizlik açarı imzalaya bilmədi, ona görə heç nə təsdiqlənmədi. Sorğu saxlanılıb: hazır olanda yenidən təsdiq edin.</string>
     <string name="approval_security_key_locked">Bu təhlükəsizlik açarı çox yanlış PIN-dən sonra kilidlənib, ona görə təsdiq edə bilmir. Telefonunuzda təsdiq edin. Açarı sıfırlamaq onu silir, ona görə açarla yenidən təsdiq etmək üçün bu kompüteri yenidən cütləşdirin.</string>
     <string name="approval_security_key_no_key">Təhlükəsizlik açarınızı qoşun, sonra yenidən cəhd edin.</string>
+    <string name="approval_security_key_no_library">libfido2 1.14 və ya daha yeni versiya quraşdırılana qədər (Ubuntu-da libfido2-1 paketi) bu kompüter təhlükəsizlik açarından istifadə edə bilməz, ona görə heç nə təsdiqlənmədi. Onu quraşdırın, sonra yenidən təsdiqləyin. Sorğu saxlanılır.</string>
+    <string name="approval_security_key_no_library_pairing">libfido2 1.14 və ya daha yeni versiya quraşdırılana qədər (Ubuntu-da libfido2-1 paketi) bu kompüter təhlükəsizlik açarından istifadə edə bilməz. Açarınızı əlavə etmək üçün ləğv edin, onu quraşdırın, sonra yenidən cütləşdirin. Və ya indi açarsız cütləşdirin.</string>
     <string name="approval_security_key_no_pin_set">Bu təhlükəsizlik açarında PIN yoxdur, ona görə təsdiq edə bilmir. Bu kompüterə uyğun olanı qoşun. Sıfırlanıbsa, telefonda təsdiq edin və açarla təsdiq etmək üçün bu kompüteri yenidən cütləşdirin.</string>
     <string name="approval_security_key_none_paired">Bu kompüterin hələ təhlükəsizlik açarı yoxdur. Təhlükəsizlik açarı təsdiq etmək üçün toxunduğunuz kiçik USB açardır; adi USB fləş işləməyəcək.</string>
     <string name="approval_security_key_not_allowed">Təhlükəsizlik açarı buna icazə vermədi, ona görə heç nə təsdiqlənmədi. Sorğu saxlanılıb: hazır olanda yenidən təsdiq edin.</string>

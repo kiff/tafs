@@ -1,0 +1,1 @@
+• Een link in een antwoord van Coach over een pagina uit je Chrome toont nu het volledige adres en vraagt het eerst voordat hij opent. Links die geen beveiligde webpagina zijn, openen nooit vanuit een chat.

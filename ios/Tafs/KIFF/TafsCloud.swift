@@ -1031,11 +1031,16 @@ final class TafsCloud {
         /// A connection its work asked for that the connection server refused, not connected
         /// since (docs/chat.md): tafs cloud's lines, drawn under the taf's words, never folded.
         var refused: Refused? = nil
+        /// A taf's message from a run that read the page in front, from the Chrome extension (`page_turn`): a link in it may
+        /// have come from that page, so the app shows its whole address and asks before opening it (`PageLinkGuard`). Never
+        /// on an owner's message; false from an older tafs cloud.
+        var pageTurn = false
 
         init(at: Date, from: From, kind: Kind = .message, text: String, session: String, door: DoorMark? = nil, work: Work? = nil,
              attachments: [AttachmentRef] = [], serverID: String? = nil, answers: String? = nil, delivered: String? = nil, counted: String? = nil,
-             refused: Refused? = nil) {
+             refused: Refused? = nil, pageTurn: Bool = false) {
             self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session; self.door = door; self.work = work
+            self.pageTurn = from == .taf && pageTurn
             self.attachments = attachments; self.serverID = serverID; self.answers = answers
             self.delivered = Self.line(delivered); self.counted = Self.line(counted)
             self.refused = refused.flatMap { $0.lines.isEmpty ? nil : $0 }
@@ -1079,7 +1084,10 @@ final class TafsCloud {
             return (delivered, counted)
         }
 
-        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work, attachments, answers, delivered, counted, refused, serverID = "id" }
+        enum CodingKeys: String, CodingKey {
+            case at, from, kind, text, session, door, work, attachments, answers, delivered, counted, refused, serverID = "id"
+            case pageTurn = "page_turn"
+        }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             at = try c.decode(Date.self, forKey: .at)
@@ -1097,6 +1105,8 @@ final class TafsCloud {
             delivered = Self.line(try? c.decodeIfPresent(String.self, forKey: .delivered))
             counted = Self.line(try? c.decodeIfPresent(String.self, forKey: .counted))
             refused = (try? c.decodeIfPresent(Refused.self, forKey: .refused)).flatMap { $0.lines.isEmpty ? nil : $0 }
+            // Only `true` asks first; anything else, or none, is a plain message. Never on the owner's own words.
+            pageTurn = from == .taf && ((try? c.decodeIfPresent(Bool.self, forKey: .pageTurn)) ?? nil) == true
         }
     }
 
@@ -1763,8 +1773,9 @@ final class TafsCloud {
     enum StreamEvent: Equatable {
         /// The chat the message went into, first, and the run that answers it.
         /// `message`: tafs cloud's id for the owner's message this stream answers (as
-        /// `POST …/messages` gives it); none on a steer, or from an older tafs cloud.
-        case session(String, newSession: Bool, run: String? = nil, message: String? = nil)
+        /// `POST …/messages` gives it); none on a steer, or from an older tafs cloud. `pageTurn`:
+        /// the run read the page in front (`page_turn`), so its words' links ask before opening.
+        case session(String, newSession: Bool, run: String? = nil, message: String? = nil, pageTurn: Bool = false)
         /// More of the answer, as it is written.
         case text(String)
         /// A tool the agent calls, by name, with what it's doing in a few words when tafs
@@ -1868,6 +1879,13 @@ final class TafsCloud {
         }
     }
 
+    /// Whether a JSON value is the literal `true`. JSONSerialization gives a number and a boolean as the same NSNumber, so
+    /// `as? Bool` would take `1` as `true`: only a JSON boolean counts, as the thread's `page_turn` decodes it.
+    nonisolated static func isTrue(_ value: Any?) -> Bool {
+        guard let n = value as? NSNumber, CFGetTypeID(n) == CFBooleanGetTypeID() else { return false }
+        return n.boolValue
+    }
+
     /// One event of tafs cloud's stream, from its name and its line of JSON; nil when unknown.
     nonisolated static func streamEvent(_ name: String, data: Data) -> StreamEvent? {
         let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
@@ -1875,7 +1893,7 @@ final class TafsCloud {
         case "session":
             return (o["session"] as? String).map {
                 .session($0, newSession: o["new_session"] as? Bool ?? false, run: o["run"] as? String,
-                         message: (o["message"] as? [String: Any])?["id"] as? String)
+                         message: (o["message"] as? [String: Any])?["id"] as? String, pageTurn: isTrue(o["page_turn"]))
             }
         case "taken": return .taken
         case "text": return (o["text"] as? String).map(StreamEvent.text)

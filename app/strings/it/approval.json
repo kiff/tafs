@@ -58,6 +58,8 @@
   "approval.security_key.failed": "La chiave di sicurezza non è riuscita a firmare, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.",
   "approval.security_key.locked": "Questa chiave di sicurezza è bloccata dopo troppi PIN errati, quindi non può approvare. Approva sul telefono. Ripristinare la chiave la cancella, quindi per approvare di nuovo con una chiave, associa di nuovo questo computer.",
   "approval.security_key.no_key": "Collega la tua chiave di sicurezza, poi riprova.",
+  "approval.security_key.no_library": "Questo computer non può usare una chiave di sicurezza finché non è installato libfido2 1.14 o successivo (su Ubuntu, il pacchetto libfido2-1), quindi non è stato approvato nulla. Installalo, poi approva di nuovo. La richiesta resta.",
+  "approval.security_key.no_library_pairing": "Questo computer non può usare una chiave di sicurezza finché non è installato libfido2 1.14 o successivo (su Ubuntu, il pacchetto libfido2-1). Per aggiungere la tua chiave, annulla, installalo, poi associa di nuovo. Oppure associa ora senza chiave.",
   "approval.security_key.no_pin_set": "Questa chiave di sicurezza non ha un PIN, quindi non può approvare. Collega quella che va con questo computer. Se è stata ripristinata, approva sul telefono e associa di nuovo questo computer per approvare con una chiave.",
   "approval.security_key.none_paired": "Questo computer non ha ancora una chiave di sicurezza. Una chiave di sicurezza è una piccola chiave USB che tocchi per approvare; una normale chiavetta USB non funziona.",
   "approval.security_key.not_allowed": "La chiave di sicurezza non l'ha consentito, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.",

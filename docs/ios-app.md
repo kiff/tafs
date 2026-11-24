@@ -1237,7 +1237,10 @@ word stays the screen's own shared key. Every drawing is hidden from VoiceOver (
   (`ios/WhatToTest.txt`) for the Team, with nothing else touched (`WHAT_TO_TEST_ONLY` in `asc-beta.rb`). A manual run skips each kind of test main
   already passed at an earlier commit with nothing changed since that it tests (the app for
   the unit tests, the screens for the UI tests, the iPad's layout for the iPad's), so an
-  upload can go straight to the archive; a tag runs everything.
+  upload can go straight to the archive; a tag runs everything. The upload is archived with the
+  newest released Xcode 27 on the runner (the iOS 27 and watchOS 27 SDKs), not the image's
+  default: a runner without one stops before signing, listing the Xcodes it has. The tests still
+  run on the image's default Xcode.
 - **The upload's profiles** (`ios/scripts/asc-profiles.rb`, through the App Store Connect API):
   `bot.tafs.app` with Push, Time Sensitive Notifications (turned on once in the developer
   portal, since the API can't) and Associated Domains, turned on by the script the first time,

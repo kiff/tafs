@@ -27,6 +27,7 @@
   "alert.prompt": "Bir taf'ın size ihtiyacı olduğunda uyarı alın",
   "alert.role_cant": "Bu KIFF hesabındaki rolünüz uyarıları açamaz.",
   "alert.sign_in_again": "Uyarıları açmak için KIFF ile tekrar oturum açın: bu oturum telefon adına imzalayamıyor.",
+  "alert.sign_out_anyway": "Yine de oturumu kapat",
   "alert.silent": "Sessiz",
   "alert.silent_example": "Destek yanıtları yanıtlandı maria@… · E-postayla",
   "alert.sound": "Ses",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Kullanılamıyor",
   "alert.status.off": "Kapalı",
   "alert.status.on": "Açık",
+  "alert.still_on_after_sign_out.body": "tafs bunları kapatamadı ({why}). Tekrar deneyin ya da yine de oturumu kapatıp Ayarlar'dan tafs bildirimlerini kapatın.",
+  "alert.still_on_after_sign_out.title": "Bu {device} bu hesabın uyarılarını almaya devam edebilir",
   "alert.taf_needs_you": "{taf} sizi bekliyor",
   "alert.tafs": {
     "one": "{count} taf ›",

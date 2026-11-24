@@ -409,12 +409,17 @@ was done.
 - **The same act on the same page that answers with the same page twice in a row pauses the run** (`paused_no_progress`), with
   what it read: a click that did nothing, done again, would do nothing a third time. A different act, a different page or
   a different answer starts the count again, and so does Resume. The read's own id and the sealed handles don't count as a
-  change. A run paused this way is not swept, like one the owner paused: its tabs stay open until the owner acts.
+  change. A run paused this way waits for the owner like one the owner paused (below): its tabs stay open.
 - **A run nobody sends a step to for 150 s ends** as Stop does (its tabs stay, as at any end), recorded as `stop` by `idle`.
   planque keeps a taf's run for the turn's next call only within 2 minutes of the last one, and sends no `close` when a turn
   ends, so this is what ends a turn's run: soon after, the bar, the badge and the group stop saying the taf works. A call that
   timed out or a lost `close` doesn't leave a run fenced and counting as active either. The service worker's minute alarm does
-  the sweeping. A run the owner paused isn't idle, and neither is one with a step running or a step handed to the person.
+  the sweeping. A run with a step running or a step handed to the person isn't idle.
+- **A paused run gets 15 minutes** (`PAUSED_IDLE_MS`), counted from its last step, its pause or its Resume, whichever is
+  last: a taf holds its step for the owner's Resume for up to 10 minutes, so a held run is never ended under it (a step sent
+  meanwhile is answered `paused_by_owner` and keeps the run, like any step). One no step follows (the taf's turn ended on the pause, or
+  it paused on failures or no progress) ends then as Stop does, recorded as `stop` by `idle`, so the bar and the group stop
+  saying it works or is paused when nothing will resume it. Resume starts the 150 s count again.
 - **The person closing a run's last tab is their Stop:** the run ends then, recorded as `stop` by `person` (a hand-over open is
   answered not now), and planque's next step on it is told `stopped`. Closing one of its tabs while another is left changes nothing.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a

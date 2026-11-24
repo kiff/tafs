@@ -27,6 +27,7 @@
   "alert.prompt": "Otrzymuj alert, gdy taf czeka na Ciebie",
   "alert.role_cant": "Twoja rola na tym koncie KIFF nie pozwala włączyć alertów.",
   "alert.sign_in_again": "Zaloguj się ponownie przez KIFF, aby włączyć alerty: to logowanie nie może podpisywać za ten telefon.",
+  "alert.sign_out_anyway": "Wyloguj mimo to",
   "alert.silent": "Bez dźwięku",
   "alert.silent_example": "Odpowiedzi wsparcia odpowiedział maria@… · Przez e-mail",
   "alert.sound": "Dźwięk",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Niedostępne",
   "alert.status.off": "Wyłączone",
   "alert.status.on": "Włączone",
+  "alert.still_on_after_sign_out.body": "tafs nie mógł ich wyłączyć ({why}). Spróbuj ponownie albo mimo to wyloguj się i wyłącz powiadomienia tafs w Ustawieniach.",
+  "alert.still_on_after_sign_out.title": "Ten {device} może nadal dostawać alerty tego konta",
   "alert.taf_needs_you": "{taf} czeka na Ciebie",
   "alert.tafs": {
     "one": "{count} taf ›",

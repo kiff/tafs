@@ -27,6 +27,7 @@
   "alert.prompt": "Gaukite pranešimą, kai taf jūsų laukia",
   "alert.role_cant": "Jūsų vaidmuo šioje KIFF paskyroje neleidžia įjungti pranešimų.",
   "alert.sign_in_again": "Norėdami įjungti pranešimus, dar kartą prisijunkite su KIFF: šis prisijungimas negali pasirašyti už telefoną.",
+  "alert.sign_out_anyway": "Vis tiek atsijungti",
   "alert.silent": "Be garso",
   "alert.silent_example": "Pagalbos atsakymai atsakė maria@… · El. paštu",
   "alert.sound": "Garsas",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Nepasiekiama",
   "alert.status.off": "Išjungta",
   "alert.status.on": "Įjungta",
+  "alert.still_on_after_sign_out.body": "tafs nepavyko jų išjungti ({why}). Bandykite dar kartą arba vis tiek atsijunkite ir išjunkite tafs pranešimus nustatymuose.",
+  "alert.still_on_after_sign_out.title": "Šis įrenginys ({device}) gali ir toliau gauti šios paskyros pranešimus",
   "alert.taf_needs_you": "{taf} laukia jūsų",
   "alert.tafs": {
     "one": "{count} taf ›",

@@ -27,6 +27,7 @@
   "alert.prompt": "მიიღეთ შეტყობინება, როცა taf-ს თქვენი დახმარება სჭირდება",
   "alert.role_cant": "ამ KIFF ანგარიშზე თქვენს როლს შეტყობინებების ჩართვა არ შეუძლია.",
   "alert.sign_in_again": "კვლავ შედით KIFF-ით შეტყობინებების ჩასართავად: ამ შესვლას ტელეფონისთვის ხელმოწერა არ შეუძლია.",
+  "alert.sign_out_anyway": "მაინც გასვლა",
   "alert.silent": "უხმოდ",
   "alert.silent_example": "მხარდაჭერის პასუხები გაეცა maria@… · ელფოსტით",
   "alert.sound": "ხმა",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "მიუწვდომელია",
   "alert.status.off": "გამორთულია",
   "alert.status.on": "ჩართულია",
+  "alert.still_on_after_sign_out.body": "tafs-მა ვერ გამორთო ისინი ({why}). სცადეთ ხელახლა, ან მაინც გადით და პარამეტრებში გამორთეთ tafs-ის შეტყობინებები.",
+  "alert.still_on_after_sign_out.title": "ამ მოწყობილობას ({device}) შეიძლება კვლავ მოუვიდეს ამ ანგარიშის შეტყობინებები",
   "alert.taf_needs_you": "{taf}-ს თქვენი დახმარება სჭირდება",
   "alert.tafs": {
     "one": "{count} taf ›",

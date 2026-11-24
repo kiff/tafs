@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Təhlükəsizlik açarı imzalaya bilmədi, ona görə heç nə təsdiqlənmədi. Sorğu saxlanılıb: hazır olanda yenidən təsdiq edin.",
   "approval.security_key.locked": "Bu təhlükəsizlik açarı çox yanlış PIN-dən sonra kilidlənib, ona görə təsdiq edə bilmir. Telefonunuzda təsdiq edin. Açarı sıfırlamaq onu silir, ona görə açarla yenidən təsdiq etmək üçün bu kompüteri yenidən cütləşdirin.",
   "approval.security_key.no_key": "Təhlükəsizlik açarınızı qoşun, sonra yenidən cəhd edin.",
+  "approval.security_key.no_library": "libfido2 1.14 və ya daha yeni versiya quraşdırılana qədər (Ubuntu-da libfido2-1 paketi) bu kompüter təhlükəsizlik açarından istifadə edə bilməz, ona görə heç nə təsdiqlənmədi. Onu quraşdırın, sonra yenidən təsdiqləyin. Sorğu saxlanılır.",
+  "approval.security_key.no_library_pairing": "libfido2 1.14 və ya daha yeni versiya quraşdırılana qədər (Ubuntu-da libfido2-1 paketi) bu kompüter təhlükəsizlik açarından istifadə edə bilməz. Açarınızı əlavə etmək üçün ləğv edin, onu quraşdırın, sonra yenidən cütləşdirin. Və ya indi açarsız cütləşdirin.",
   "approval.security_key.no_pin_set": "Bu təhlükəsizlik açarında PIN yoxdur, ona görə təsdiq edə bilmir. Bu kompüterə uyğun olanı qoşun. Sıfırlanıbsa, telefonda təsdiq edin və açarla təsdiq etmək üçün bu kompüteri yenidən cütləşdirin.",
   "approval.security_key.none_paired": "Bu kompüterin hələ təhlükəsizlik açarı yoxdur. Təhlükəsizlik açarı təsdiq etmək üçün toxunduğunuz kiçik USB açardır; adi USB fləş işləməyəcək.",
   "approval.security_key.not_allowed": "Təhlükəsizlik açarı buna icazə vermədi, ona görə heç nə təsdiqlənmədi. Sorğu saxlanılıb: hazır olanda yenidən təsdiq edin.",

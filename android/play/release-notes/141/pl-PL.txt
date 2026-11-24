@@ -1,0 +1,1 @@
+• Link w odpowiedzi Coacha dotyczącej strony z Twojego Chrome pokazuje teraz pełny adres i pyta, zanim się otworzy. Linki, które nie są bezpiecznymi stronami internetowymi, nigdy nie otwierają się z czatu.

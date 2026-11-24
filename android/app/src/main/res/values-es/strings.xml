@@ -30,6 +30,7 @@
     <string name="alert_prompt">Recibe una alerta cuando un taf te necesite</string>
     <string name="alert_role_cant">Tu rol en esta cuenta de KIFF no puede activar alertas.</string>
     <string name="alert_sign_in_again">Vuelve a iniciar sesión con KIFF para activar las alertas: este inicio de sesión no puede firmar por el teléfono.</string>
+    <string name="alert_sign_out_anyway">Cerrar sesión de todos modos</string>
     <string name="alert_silent">Sin sonido</string>
     <string name="alert_silent_example">Respuestas de soporte respondió a maria@… · Por correo</string>
     <string name="alert_sound">Sonido</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">No disponible</string>
     <string name="alert_status_off">Desactivado</string>
     <string name="alert_status_on">Activado</string>
+    <string name="alert_still_on_after_sign_out_body">tafs no pudo desactivarlas (%1$s). Vuelve a intentarlo, o cierra sesión de todos modos y desactiva las notificaciones de tafs en Ajustes.</string>
+    <string name="alert_still_on_after_sign_out_title">Este %1$s podría seguir recibiendo las alertas de esta cuenta</string>
     <string name="alert_taf_needs_you">%1$s te necesita</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">La llave de seguridad no pudo firmar, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.</string>
     <string name="approval_security_key_locked">Esta llave de seguridad está bloqueada tras demasiados PIN incorrectos, así que no puede aprobar. Aprueba en tu teléfono. Restablecer la llave la borra, así que para volver a aprobar con una llave, vuelve a vincular este ordenador.</string>
     <string name="approval_security_key_no_key">Conecta tu llave de seguridad y vuelve a intentarlo.</string>
+    <string name="approval_security_key_no_library">Este ordenador no puede usar una llave de seguridad hasta que se instale libfido2 1.14 o posterior (en Ubuntu, el paquete libfido2-1), así que no se aprobó nada. Instálalo y vuelve a aprobar. La solicitud se conserva.</string>
+    <string name="approval_security_key_no_library_pairing">Este ordenador no puede usar una llave de seguridad hasta que se instale libfido2 1.14 o posterior (en Ubuntu, el paquete libfido2-1). Para añadir tu llave, cancela, instálalo y vuelve a vincular. O vincula ahora sin llave.</string>
     <string name="approval_security_key_no_pin_set">Esta llave de seguridad no tiene PIN, así que no puede aprobar. Conecta la que va con este ordenador. Si se restableció, aprueba en tu teléfono y vuelve a vincular este ordenador para aprobar con una llave.</string>
     <string name="approval_security_key_none_paired">Este ordenador aún no tiene ninguna llave de seguridad. Una llave de seguridad es una pequeña llave USB que tocas para aprobar; una memoria USB normal no sirve.</string>
     <string name="approval_security_key_not_allowed">La llave de seguridad no lo permitió, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.</string>

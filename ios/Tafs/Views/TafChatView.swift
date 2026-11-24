@@ -598,18 +598,25 @@ struct ChatBubble: View {
     var fullWidth = false
     /// Words streaming in: shown at an even pace, with formatting still open closed (kiff/tafs#285).
     var steady = false
+    /// Coach's answer still arriving: a clean https link in it asks before opening, with the live line (`PageLinks.Ask.live`).
+    var live = false
 
     var body: some View {
-        if let door = message.door, message.kind != .kickoff {
-            // A door's message, or its answer: marked with where it came from and how it went back.
-            VStack(alignment: message.from == .owner ? .trailing : .leading, spacing: 4) {
-                if message.from == .owner { DoorStamp(mark: door, fromOwner: true) }
+        Group {
+            if let door = message.door, message.kind != .kickoff {
+                // A door's message, or its answer: marked with where it came from and how it went back.
+                VStack(alignment: message.from == .owner ? .trailing : .leading, spacing: 4) {
+                    if message.from == .owner { DoorStamp(mark: door, fromOwner: true) }
+                    bubble
+                    if message.from == .taf { DoorStamp(mark: door, fromOwner: false) }
+                }
+            } else {
                 bubble
-                if message.from == .taf { DoorStamp(mark: door, fromOwner: false) }
             }
-        } else {
-            bubble
         }
+        // An answer's link that won't open says so; one from a page turn, or in Coach's answer still arriving, shows its
+        // whole address first, then Open or Cancel (`PageLinks`). The owner's own words open their links as before.
+        .modifier(PageLinkGuard(answer: message.from != .owner, pageTurn: message.pageTurn, live: live))
     }
 
     @ViewBuilder

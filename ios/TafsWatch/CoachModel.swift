@@ -55,10 +55,9 @@ final class CoachModel: ObservableObject {
         case onPhone
     }
 
-    /// Keep for later (row 8), built and off: it keeps the person's words on the watch, and the privacy page's Apple Watch
-    /// paragraph says the watch keeps nothing apart from the Inbox. On with that sentence there and the owner's yes; off, no
-    /// store is given and it's never offered.
-    nonisolated static let keepForLaterOn = false
+    /// Keep for later (row 8), on: it keeps the person's words on the watch, which the privacy page's Apple Watch paragraph
+    /// says, with the owner's yes. Off, no store is given and it's never offered.
+    nonisolated static let keepForLaterOn = true
 
     /// v2's Quick reply (docs/watch-app.md, "Step (iii)"): four ready-made lines, each to Check before sending, in Wear OS's
     /// order.
@@ -70,6 +69,13 @@ final class CoachModel: ObservableObject {
     /// v2: the words wait in Check before sending, and nothing leaves the watch before Send.
     @Published private(set) var reviewing = false
     @Published private(set) var state: State = .writing
+    /// Watch row 24: each tap on the complication (`ComplicationLink.ask`), counted, so a view on screen sees the tap
+    /// (`onChange`).
+    @Published private(set) var askRequests = 0
+    /// A complication tap not yet acted on. `onChange` sees only a change while a view is on screen, never the value it
+    /// first appears with, and a complication most often opens the app cold, so the pages and Coach's home also look at
+    /// this when they appear. Coach's home takes it once (`takeAskPending`), and listens.
+    @Published private(set) var askPending = false
     /// v2: the last Send got no reply from the phone, which may have it: Keep for later is offered beside Send.
     @Published private(set) var unsure = false
     /// v2's Keep for later: the message kept on this watch, or none. On disk (`DraftStore`) until it's sent, deleted, or the
@@ -148,6 +154,19 @@ final class CoachModel: ObservableObject {
     func checkLock() {
         guard taf == nil, drafts != nil, !lock.isSecure else { return }
         deleteKept()
+    }
+
+    /// The complication was tapped: Coach's home listens, as its microphone does. Nothing is sent before the person's Send.
+    func askFromComplication() {
+        askPending = true
+        askRequests += 1
+    }
+
+    /// Takes the complication's pending tap, once: true the first time after a tap, then false until the next.
+    func takeAskPending() -> Bool {
+        guard askPending else { return false }
+        askPending = false
+        return true
     }
 
     /// The words are on their way, or Coach is at them: nothing else is sent, re-recorded or deleted.

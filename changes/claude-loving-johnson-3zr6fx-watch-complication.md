@@ -1,0 +1,1 @@
+- **Apple Watch: tafs on the watch face.** A complication and a Smart Stack widget, "Ask Coach", open the app on Coach's home, listening. It shows nothing of the account, and never asks the phone ([watch-app.md](docs/watch-app.md)).

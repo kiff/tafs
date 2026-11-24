@@ -23,12 +23,15 @@ import { briefTimes } from "./brief.js";
  * reads the held call itself from KIFF, with its own session.
  */
 
-/** Which push service a phone's token belongs to. */
-export type Platform = "ios" | "android";
+/**
+ * Which push service a device's token belongs to: Apple's for an iPhone, an iPad or the Mac 13+ app (`ios`, the iPhone
+ * app's topic), and for macOS 12's own app (`macos`, its own topic, `bot.tafs.macos`); Google's for an Android phone.
+ */
+export type Platform = "ios" | "android" | "macos";
 
 /** A phone that gets an account's alerts. */
 export interface Device {
-  /** The push token: APNs's, hex, for an iPhone; Firebase Cloud Messaging's registration token for an Android phone. */
+  /** The push token: APNs's, hex, for an iPhone or a Mac; Firebase Cloud Messaging's registration token for an Android phone. */
   token: string;
   /** Which push service the token belongs to. A phone registered before Android is an iPhone. */
   platform?: Platform;
@@ -111,8 +114,9 @@ export function quietFor(device: Device, n: Notification): Notification {
 }
 
 /**
- * A sender that sends each phone's alert through its own push service: Apple's, or Google's for an Android phone. An
- * Android phone with no Google sender is never alerted ("failed", so KIFF tries again): registration refuses one there.
+ * A sender that sends each phone's alert through its own push service: Apple's (an iPhone's or a Mac's, each on its own
+ * topic: `apnsSender`), or Google's for an Android phone. An Android phone with no Google sender is never alerted
+ * ("failed", so KIFF tries again): registration refuses one there.
  */
 export function routing(senders: { ios: Sender; android?: Sender }): Sender {
   return {
@@ -120,6 +124,43 @@ export function routing(senders: { ios: Sender; android?: Sender }): Sender {
       ? (senders.android ? senders.android.send(device, n) : Promise.resolve("failed" as const))
       : senders.ios.send(device, n),
   };
+}
+
+/** How long a device row registered without a person is kept: its app registers again at launch, which gives it one. */
+export const UNOWNED_DEVICE_DAYS = 30;
+
+/** The capabilities a device's alerts follow: `answers`, `addsTasks` and `manages`. */
+export const ALERT_CAPABILITIES = ["holds.answer", "billing.manage", "cards.manage"] as const;
+
+/**
+ * The account's alert devices against its people as KIFF lists them now. A device whose person isn't an active member
+ * (removed, suspended, or not listed) is dropped. The others keep only what their person's role still allows
+ * (`answers`: holds.answer, `addsTasks`: billing.manage, `manages`: cards.manage): this only narrows a device, never
+ * widens it, since a registration may have been given less than the role, and a member listed without capabilities
+ * isn't narrowed at all. A row registered without a person is dropped once it's older than `UNOWNED_DEVICE_DAYS` (or
+ * carries no date, as only the oldest rows do), and left as it is until then.
+ */
+export function reconcileDevices(devices: Device[], members: Array<{ subject: string; status: string; capabilities?: string[] }>, now = new Date()): { remove: string[]; update: Device[] } {
+  const active = new Map(members.filter((m) => m.status === "active").map((m) => [m.subject, m.capabilities ? new Set(m.capabilities) : undefined]));
+  const remove: string[] = [];
+  const update: Device[] = [];
+  for (const d of devices) {
+    if (!d.subject) {
+      const at = Date.parse(d.at);
+      if (!Number.isFinite(at) || now.getTime() - at > UNOWNED_DEVICE_DAYS * 86_400_000) remove.push(d.token);
+      continue;
+    }
+    if (!active.has(d.subject)) { remove.push(d.token); continue; }
+    const caps = active.get(d.subject);
+    if (!caps) continue;
+    const answers = d.answers && caps.has("holds.answer");
+    const addsTasks = d.addsTasks === true && caps.has("billing.manage");
+    const manages = d.manages === true && caps.has("cards.manage");
+    if (d.answers !== answers || (d.addsTasks === true) !== addsTasks || (d.manages === true) !== manages) {
+      update.push({ ...d, answers, addsTasks, manages });
+    }
+  }
+  return { remove, update };
 }
 
 export class PushError extends Error {
@@ -562,8 +603,9 @@ function capitalize(s: string): string {
 
 /**
  * Validates a phone's registration: `{device_token, platform?, environment, sound?, alert_target?: {id, signing_secret}}`.
- * `platform` is "ios" (the default) or "android". An iPhone's token is APNs's, in hex, with its environment; an Android
- * phone's is Firebase's registration token, case kept, and its environment is production (or left out).
+ * `platform` is "ios" (the default), "macos" (macOS 12's own app) or "android". An iPhone's or a Mac's token is APNs's, in
+ * hex, with its environment; an Android phone's is Firebase's registration token, case kept, and its environment is
+ * production (or left out).
  * `sound: false` is the phone's Sound for alerts turned off; left out, alerts sound as before.
  */
 export function registration(body: Record<string, unknown>): {
@@ -575,7 +617,7 @@ export function registration(body: Record<string, unknown>): {
   target?: { id: string; secret: string };
 } {
   const platform = body.platform === undefined ? "ios" : body.platform;
-  if (platform !== "ios" && platform !== "android") throw new PushError(400, "platform is ios or android");
+  if (platform !== "ios" && platform !== "android" && platform !== "macos") throw new PushError(400, "platform is ios, macos or android");
   let token: string;
   let environment: Device["environment"];
   if (platform === "android") {

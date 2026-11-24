@@ -30,6 +30,7 @@
     <string name="alert_prompt">Ricevi un avviso quando un taf ti aspetta</string>
     <string name="alert_role_cant">Il tuo ruolo in questo account KIFF non può attivare gli avvisi.</string>
     <string name="alert_sign_in_again">Accedi di nuovo con KIFF per attivare gli avvisi: questo accesso non può firmare per il telefono.</string>
+    <string name="alert_sign_out_anyway">Esci comunque</string>
     <string name="alert_silent">Silenzioso</string>
     <string name="alert_silent_example">Risposte al supporto ha risposto a maria@… · Via email</string>
     <string name="alert_sound">Suono</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Non disponibile</string>
     <string name="alert_status_off">Disattivo</string>
     <string name="alert_status_on">Attivo</string>
+    <string name="alert_still_on_after_sign_out_body">tafs non è riuscito a disattivarli (%1$s). Riprova, oppure esci comunque e disattiva le notifiche per tafs in Impostazioni.</string>
+    <string name="alert_still_on_after_sign_out_title">Questo %1$s potrebbe ancora ricevere gli avvisi di questo account</string>
     <string name="alert_taf_needs_you">%1$s ti aspetta</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">La chiave di sicurezza non è riuscita a firmare, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>
     <string name="approval_security_key_locked">Questa chiave di sicurezza è bloccata dopo troppi PIN errati, quindi non può approvare. Approva sul telefono. Ripristinare la chiave la cancella, quindi per approvare di nuovo con una chiave, associa di nuovo questo computer.</string>
     <string name="approval_security_key_no_key">Collega la tua chiave di sicurezza, poi riprova.</string>
+    <string name="approval_security_key_no_library">Questo computer non può usare una chiave di sicurezza finché non è installato libfido2 1.14 o successivo (su Ubuntu, il pacchetto libfido2-1), quindi non è stato approvato nulla. Installalo, poi approva di nuovo. La richiesta resta.</string>
+    <string name="approval_security_key_no_library_pairing">Questo computer non può usare una chiave di sicurezza finché non è installato libfido2 1.14 o successivo (su Ubuntu, il pacchetto libfido2-1). Per aggiungere la tua chiave, annulla, installalo, poi associa di nuovo. Oppure associa ora senza chiave.</string>
     <string name="approval_security_key_no_pin_set">Questa chiave di sicurezza non ha un PIN, quindi non può approvare. Collega quella che va con questo computer. Se è stata ripristinata, approva sul telefono e associa di nuovo questo computer per approvare con una chiave.</string>
     <string name="approval_security_key_none_paired">Questo computer non ha ancora una chiave di sicurezza. Una chiave di sicurezza è una piccola chiave USB che tocchi per approvare; una normale chiavetta USB non funziona.</string>
     <string name="approval_security_key_not_allowed">La chiave di sicurezza non l\'ha consentito, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>

@@ -27,6 +27,7 @@
   "alert.prompt": "جب کسی taf کو آپ کی ضرورت ہو تو الرٹ پائیں",
   "alert.role_cant": "اس KIFF اکاؤنٹ میں آپ کا کردار الرٹس آن نہیں کر سکتا۔",
   "alert.sign_in_again": "الرٹس آن کرنے کے لیے KIFF سے دوبارہ سائن اِن کریں: یہ سائن اِن فون کے لیے دستخط نہیں کر سکتا۔",
+  "alert.sign_out_anyway": "پھر بھی سائن آؤٹ کریں",
   "alert.silent": "خاموش",
   "alert.silent_example": "سپورٹ جوابات نے maria@… کو جواب دیا · ای میل سے",
   "alert.sound": "آواز",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "دستیاب نہیں",
   "alert.status.off": "بند",
   "alert.status.on": "آن",
+  "alert.still_on_after_sign_out.body": "tafs انہیں بند نہیں کر سکا ({why})۔ دوبارہ کوشش کریں، یا پھر بھی سائن آؤٹ کریں اور سیٹنگز میں tafs کی اطلاعات بند کریں۔",
+  "alert.still_on_after_sign_out.title": "اس {device} پر اب بھی اس اکاؤنٹ کے الرٹس آ سکتے ہیں",
   "alert.taf_needs_you": "{taf} کو آپ کی ضرورت ہے",
   "alert.tafs": {
     "one": "{count} taf ›",

@@ -1,0 +1,1 @@
+Uma mensagem guardada com “Guardar para mais tarde” agora é apagada, sem ser enviada, se o seu relógio não tiver mais bloqueio de tela, para que nada fique num relógio sem ele.

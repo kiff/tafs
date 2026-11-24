@@ -1,0 +1,1 @@
+- **Apple Watch: an answer you can't miss, however long it takes.** When a request from the watch ends, tafs cloud's push wakes the iPhone, which posts the answer on the wrist as it does right after a Send, once, and never for an answer the watch already showed ([watch-app.md](docs/watch-app.md)).

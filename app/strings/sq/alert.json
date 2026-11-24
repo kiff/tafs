@@ -27,6 +27,7 @@
   "alert.prompt": "Merrni një njoftim kur një taf ka nevojë për ju",
   "alert.role_cant": "Roli juaj në këtë llogari KIFF nuk mund të aktivizojë njoftimet.",
   "alert.sign_in_again": "Hyni sërish me KIFF për të aktivizuar njoftimet: kjo hyrje nuk mund të nënshkruajë për telefonin.",
+  "alert.sign_out_anyway": "Dil gjithsesi",
   "alert.silent": "Pa zë",
   "alert.silent_example": "Përgjigjet e mbështetjes u përgjigjën maria@… · Me email",
   "alert.sound": "Zë",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Nuk ofrohet",
   "alert.status.off": "Joaktiv",
   "alert.status.on": "Aktiv",
+  "alert.still_on_after_sign_out.body": "tafs nuk arriti t'i çaktivizojë ({why}). Provoni sërish, ose dilni gjithsesi dhe çaktivizoni njoftimet për tafs te Cilësimet.",
+  "alert.still_on_after_sign_out.title": "Kjo pajisje ({device}) mund të vazhdojë të marrë njoftimet e kësaj llogarie",
   "alert.taf_needs_you": "{taf} ka nevojë për ju",
   "alert.tafs": {
     "one": "{count} taf ›",

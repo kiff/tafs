@@ -30,6 +30,7 @@
     <string name="alert_prompt">Primite obavijest kad taf treba vas</string>
     <string name="alert_role_cant">Vaša uloga na ovom KIFF računu ne može uključiti obavijesti.</string>
     <string name="alert_sign_in_again">Prijavite se ponovno KIFF-om da uključite obavijesti: ova prijava ne može potpisivati za telefon.</string>
+    <string name="alert_sign_out_anyway">Svejedno se odjavi</string>
     <string name="alert_silent">Bez zvuka</string>
     <string name="alert_silent_example">Odgovori podrške: odgovoreno maria@… · E-poštom</string>
     <string name="alert_sound">Zvuk</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Nedostupno</string>
     <string name="alert_status_off">Isključeno</string>
     <string name="alert_status_on">Uključeno</string>
+    <string name="alert_still_on_after_sign_out_body">tafs ih nije mogao isključiti (%1$s). Pokušajte ponovno ili se svejedno odjavite i isključite obavijesti za tafs u Postavkama.</string>
+    <string name="alert_still_on_after_sign_out_title">Ovaj uređaj (%1$s) možda i dalje prima obavijesti ovog računa</string>
     <string name="alert_taf_needs_you">Taf %1$s čeka vas</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -106,6 +109,8 @@
     <string name="approval_security_key_failed">Sigurnosni ključ nije mogao potpisati pa ništa nije odobreno. Zahtjev je sačuvan: odobrite ponovno kad budete spremni.</string>
     <string name="approval_security_key_locked">Ovaj je sigurnosni ključ zaključan zbog previše pogrešnih PIN-ova pa ne može odobravati. Odobrite na telefonu. Resetiranje ključa briše ga, pa da biste ponovno odobravali ključem, ponovno uparite ovo računalo.</string>
     <string name="approval_security_key_no_key">Priključite svoj sigurnosni ključ, pa pokušajte ponovno.</string>
+    <string name="approval_security_key_no_library">Ovo računalo ne može koristiti sigurnosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1), pa ništa nije odobreno. Instalirajte ga, a zatim ponovno odobrite. Zahtjev ostaje.</string>
+    <string name="approval_security_key_no_library_pairing">Ovo računalo ne može koristiti sigurnosni ključ dok se ne instalira libfido2 1.14 ili noviji (na Ubuntuu paket libfido2-1). Za dodavanje ključa odustanite, instalirajte ga i ponovno uparite. Ili sada uparite bez ključa.</string>
     <string name="approval_security_key_no_pin_set">Ovaj sigurnosni ključ nema PIN pa ne može odobravati. Priključite onaj koji pripada ovom računalu. Ako je resetiran, odobrite na telefonu i ponovno uparite ovo računalo da biste odobravali ključem.</string>
     <string name="approval_security_key_none_paired">Ovo računalo još nema sigurnosni ključ. Sigurnosni ključ je mali USB ključ koji dodirnete za odobrenje; obični USB stick ne radi.</string>
     <string name="approval_security_key_not_allowed">Sigurnosni ključ to nije dopustio pa ništa nije odobreno. Zahtjev je sačuvan: odobrite ponovno kad budete spremni.</string>

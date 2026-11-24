@@ -38,6 +38,7 @@ object Words {
     val prompt: String get() = Res.s(R.string.alert_prompt)
     val roleCant: String get() = Res.s(R.string.alert_role_cant)
     val signInAgain: String get() = Res.s(R.string.alert_sign_in_again)
+    val signOutAnyway: String get() = Res.s(R.string.alert_sign_out_anyway)
     val silent: String get() = Res.s(R.string.alert_silent)
     val silentExample: String get() = Res.s(R.string.alert_silent_example)
     val sound: String get() = Res.s(R.string.alert_sound)
@@ -46,6 +47,10 @@ object Words {
       val notAvailable: String get() = Res.s(R.string.alert_status_not_available)
       val off: String get() = Res.s(R.string.alert_status_off)
       val on: String get() = Res.s(R.string.alert_status_on)
+    }
+    object StillOnAfterSignOut {
+      fun body(why: String): String = Res.s(R.string.alert_still_on_after_sign_out_body, why)
+      fun title(device: String): String = Res.s(R.string.alert_still_on_after_sign_out_title, device, Words.demonstrative(device, capital = true))
     }
     fun tafNeedsYou(taf: String): String = Res.s(R.string.alert_taf_needs_you, taf)
     fun tafs(count: Int): String = Res.p(R.plurals.alert_tafs, count, Res.number(count))
@@ -125,6 +130,8 @@ object Words {
       val failed: String get() = Res.s(R.string.approval_security_key_failed)
       val locked: String get() = Res.s(R.string.approval_security_key_locked)
       val noKey: String get() = Res.s(R.string.approval_security_key_no_key)
+      val noLibrary: String get() = Res.s(R.string.approval_security_key_no_library)
+      val noLibraryPairing: String get() = Res.s(R.string.approval_security_key_no_library_pairing)
       val noPinSet: String get() = Res.s(R.string.approval_security_key_no_pin_set)
       val nonePaired: String get() = Res.s(R.string.approval_security_key_none_paired)
       val notAllowed: String get() = Res.s(R.string.approval_security_key_not_allowed)

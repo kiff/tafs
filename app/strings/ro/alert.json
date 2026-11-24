@@ -27,6 +27,7 @@
   "alert.prompt": "Primiți o alertă când un taf are nevoie de dvs.",
   "alert.role_cant": "Rolul dvs. în acest cont KIFF nu poate activa alertele.",
   "alert.sign_in_again": "Conectați-vă din nou cu KIFF pentru a activa alertele: această conectare nu poate semna pentru telefon.",
+  "alert.sign_out_anyway": "Deconectați-vă oricum",
   "alert.silent": "Silențios",
   "alert.silent_example": "Răspunsuri la suport i-a răspuns lui maria@… · Prin e-mail",
   "alert.sound": "Sunet",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Indisponibil",
   "alert.status.off": "Dezactivat",
   "alert.status.on": "Activat",
+  "alert.still_on_after_sign_out.body": "tafs nu le-a putut dezactiva ({why}). Încercați din nou sau deconectați-vă oricum și dezactivați notificările pentru tafs în Configurări.",
+  "alert.still_on_after_sign_out.title": "Acest dispozitiv ({device}) poate primi în continuare alertele acestui cont",
   "alert.taf_needs_you": "{taf} vă așteaptă",
   "alert.tafs": {
     "one": "{count} taf ›",

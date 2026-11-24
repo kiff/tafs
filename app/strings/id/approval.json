@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Kunci keamanan tidak dapat menandatangani, jadi tidak ada yang disetujui. Permintaan tetap disimpan: setujui lagi saat Anda siap.",
   "approval.security_key.locked": "Kunci keamanan ini terkunci setelah terlalu banyak PIN yang salah, jadi tidak dapat menyetujui. Setujui di ponsel Anda. Mengatur ulang kunci akan menghapusnya, jadi untuk menyetujui dengan kunci lagi, pasangkan komputer ini lagi.",
   "approval.security_key.no_key": "Colokkan kunci keamanan Anda, lalu coba lagi.",
+  "approval.security_key.no_library": "Komputer ini tidak dapat memakai kunci keamanan sampai libfido2 1.14 atau yang lebih baru terpasang (di Ubuntu, paket libfido2-1), jadi tidak ada yang disetujui. Pasang, lalu setujui lagi. Permintaan tetap disimpan.",
+  "approval.security_key.no_library_pairing": "Komputer ini tidak dapat memakai kunci keamanan sampai libfido2 1.14 atau yang lebih baru terpasang (di Ubuntu, paket libfido2-1). Untuk menambahkan kunci Anda, batalkan, pasang, lalu pasangkan lagi. Atau pasangkan sekarang tanpa kunci.",
   "approval.security_key.no_pin_set": "Kunci keamanan ini tidak memiliki PIN, jadi tidak dapat menyetujui. Colokkan yang cocok dengan komputer ini. Jika sudah diatur ulang, setujui di ponsel Anda dan pasangkan komputer ini lagi untuk menyetujui dengan kunci.",
   "approval.security_key.none_paired": "Komputer ini belum punya kunci keamanan. Kunci keamanan adalah kunci USB kecil yang Anda sentuh untuk menyetujui; flashdisk USB biasa tidak bisa dipakai.",
   "approval.security_key.not_allowed": "Kunci keamanan tidak mengizinkannya, jadi tidak ada yang disetujui. Permintaan tetap disimpan: setujui lagi saat Anda siap.",
