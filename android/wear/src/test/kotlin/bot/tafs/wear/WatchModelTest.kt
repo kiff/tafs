@@ -931,6 +931,99 @@ class WatchModelTest {
     assertTrue("pruned: nothing kept of a call that's gone", store.gone.isEmpty())
   }
 
+  // Row 21: read and dismissed, in step across the person's watches, by id alone.
+
+  @Test fun marksMadeHereGoToThePhoneByIdAloneInChunks() = runTest {
+    val phone = Phone { r ->
+      when (r) {
+        is WatchRequest.Asks -> Asked.Answered(WatchReply.AskList(listOf(answered)))
+        is WatchRequest.InboxMark -> Asked.Answered(WatchReply.InboxMarks())
+        else -> reads(r)
+      }
+    }
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, inboxStore = Inbox())
+    model.refresh()
+    model.readAsks()
+    model.markRead(InboxItem.heldId("hold_1"))
+    model.open(model.askOf(model.inbox.value.first { it.kind == InboxItem.Kind.ASK }))
+    model.sendMarks()
+    assertEquals(listOf(WatchRequest.InboxMark(t, read = listOf("hold_1", "wa_02"))), phone.asked.filterIsInstance<WatchRequest.InboxMark>())
+    phone.asked.clear()
+    model.clearRead()
+    model.sendMarks()
+    assertEquals("in the Inbox's order, newest first", listOf(WatchRequest.InboxMark(t, dismissed = listOf("wa_02", "hold_1"))), phone.asked)
+    // Sent once: nothing new, nothing sent.
+    phone.asked.clear()
+    model.sendMarks()
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  @Test fun moreThanAHundredGoInChunksAndAnIdTafsCloudCantTakeIsLeftHere() = runTest {
+    val calls = List(150) { HeldLine("h$it", "Refunds", "Refund $it", null, "Over", refusable = true) } + HeldLine("hold:x", "Refunds", "Odd", null, "Over", refusable = false)
+    val phone = Phone { r -> if (r is WatchRequest.NeedsYou) Asked.Answered(WatchReply.NeedsYou(calls.size, "x", calls)) else if (r is WatchRequest.InboxMark) Asked.Answered(WatchReply.InboxMarks()) else reads(r) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, inboxStore = Inbox())
+    model.refresh()
+    for (item in model.inbox.value) model.dismiss(item.id)
+    model.sendMarks()
+    val sent = phone.asked.filterIsInstance<WatchRequest.InboxMark>()
+    assertEquals(listOf(100, 50), sent.map { it.dismissed.size })
+    assertTrue(sent.flatMap { it.dismissed }.none { it == "hold:x" })
+  }
+
+  @Test fun marksFromTheOtherWatchesReadAndDismissHereAndNothingComesBack() = runTest {
+    val second = HeldLine("hold_2", "Bills", "Pay bill 0412", "€120.00", "Over €100", refusable = true)
+    val listed = WatchReply.NeedsYou(2, "2 need you", listOf(call, second))
+    val store = Inbox()
+    val phone = Phone { r ->
+      when (r) {
+        is WatchRequest.NeedsYou -> Asked.Answered(listed)
+        is WatchRequest.Asks -> Asked.Answered(WatchReply.AskList(listOf(answered)))
+        is WatchRequest.InboxMarks -> Asked.Answered(WatchReply.InboxMarks(read = listOf("wa_02"), dismissed = listOf("hold_1", "gone_long_ago")))
+        else -> reads(r)
+      }
+    }
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, inboxStore = store)
+    model.refresh()
+    model.readAsks()
+    model.syncInbox()
+    assertEquals(listOf(InboxItem.askId("wa_02"), InboxItem.heldId("hold_2")), model.inbox.value.map { it.id })
+    assertTrue("read on another watch", model.inbox.value.first().read)
+    assertFalse(model.inbox.value[1].read)
+    assertEquals("only a line this watch had is kept away", setOf(InboxItem.heldId("hold_1")), store.gone)
+    // The phone still lists hold_1: it stays away.
+    model.refresh()
+    assertEquals(listOf(InboxItem.askId("wa_02"), InboxItem.heldId("hold_2")), model.inbox.value.map { it.id })
+  }
+
+  @Test fun aPhoneFromBeforeTheMarksOrNoAnswerLeavesTheLines() = runTest {
+    for (answer in listOf<Asked>(Asked.Answered(WatchReply.Refused(NotAccepted.UNKNOWN_PATH)), Asked.Unreachable(), Asked.NotUnderstood)) {
+      val phone = Phone { r -> if (r is WatchRequest.InboxMarks || r is WatchRequest.InboxMark) answer else reads(r) }
+      val model = WatchModel(phone, now = { t }, unlocked = { true }, inboxStore = Inbox())
+      model.refresh()
+      model.markRead(InboxItem.heldId("hold_1"))
+      model.syncInbox()
+      assertEquals(listOf(InboxItem.heldId("hold_1")), model.inbox.value.map { it.id })
+      assertTrue("this watch keeps its own", model.inbox.value.single().read)
+    }
+  }
+
+  @Test fun noInboxKeptHereReadsOrSendsNoMarks() = runTest {
+    var unlocked = true
+    val phone = Phone(::reads)
+    val model = WatchModel(phone, now = { t }, unlocked = { unlocked }, inboxStore = Inbox())
+    model.refresh()
+    model.dismiss(InboxItem.heldId("hold_1"))
+    unlocked = false
+    phone.asked.clear()
+    model.syncInbox()
+    model.sendMarks()
+    assertTrue(phone.asked.isEmpty())
+    // v1, with no Inbox: nothing either.
+    val v1 = Phone(::reads)
+    WatchModel(v1, now = { t }, unlocked = { true }).apply { refresh(); syncInbox() }
+    assertTrue(v1.asked.none { it is WatchRequest.InboxMarks || it is WatchRequest.InboxMark })
+  }
+
   @Test fun putAwayLockedClearsTheInboxThen() = runTest {
     var unlocked = true
     val store = Inbox()

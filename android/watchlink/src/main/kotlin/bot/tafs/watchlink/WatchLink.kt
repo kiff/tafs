@@ -80,6 +80,36 @@ sealed interface WatchRequest {
    * phone deletes the recording whatever the outcome, and never sends it anywhere: with no on-device model, it says so.
    */
   data class Transcribe(override val madeAt: Long, val voiceId: String, val language: String) : WatchRequest
+
+  /**
+   * The Inbox's lines the person read and dismissed on any of their watches (row 21), by id alone, as tafs cloud keeps them
+   * (`GET /v1/watch/inbox`). A read.
+   */
+  data class InboxMarks(override val madeAt: Long) : WatchRequest
+
+  /**
+   * Marks Inbox lines [read] or [dismissed] (`POST /v1/watch/inbox`), by id alone: a held call's KIFF id, or the id of the message
+   * whose answer the line is. 1 to [InboxMarkIds.LIMIT] ids in all, each one tafs cloud takes. It changes no one's power.
+   */
+  data class InboxMark(override val madeAt: Long, val read: List<String> = emptyList(), val dismissed: List<String> = emptyList()) : WatchRequest
+}
+
+/** The ids an Inbox mark takes (row 21), checked on both ends as tafs cloud checks them. */
+object InboxMarkIds {
+  /** The most ids one mark takes, as tafs cloud does. */
+  const val LIMIT = 100
+
+  private val ID = Regex("^[A-Za-z0-9_-]{1,100}$")
+
+  /** An id tafs cloud takes: 1 to 100 letters, digits, `_` or `-`. */
+  fun isId(value: String): Boolean = ID.matches(value)
+
+  /** Only the ids tafs cloud takes, each once, in order. */
+  fun checked(ids: List<String>): List<String> = ids.filter(::isId).distinct()
+
+  /** A mark to send: 1 to [LIMIT] ids in all, each one tafs cloud takes. */
+  fun complete(read: List<String>, dismissed: List<String>): Boolean =
+    (read + dismissed).let { all -> all.isNotEmpty() && all.size <= LIMIT && all.all(::isId) }
 }
 
 /** Why the phone refused a message before reading or signing anything. */
@@ -226,6 +256,10 @@ sealed interface WatchReply {
     val account: String? = null,
     val plan: String? = null,
   ) : WatchReply
+
+  /** The Inbox's lines read and dismissed, as tafs cloud keeps them now (row 21): ids only, a dismissed one never also read. */
+  @Serializable @SerialName("inbox_marks")
+  data class InboxMarks(val read: List<String> = emptyList(), val dismissed: List<String> = emptyList()) : WatchReply
 }
 
 /** One of a taf's Cards, as the phone's Card tab draws it: its title, the face's figure and line, and its rules in one line each. */
@@ -362,6 +396,8 @@ object WatchLink {
   const val CALENDAR = PREFIX + "calendar"
   const val ACCOUNT = PREFIX + "account"
   const val TRANSCRIBE = PREFIX + "transcribe"
+  const val INBOX_MARKS = PREFIX + "inbox-marks"
+  const val INBOX_MARK = PREFIX + "inbox-mark"
 
   /** A recording's channel (`ChannelClient`), by its id: the only audio that ever leaves the watch, and only to the phone. */
   const val VOICE = PREFIX + "voice/"
@@ -435,6 +471,9 @@ object WatchLink {
   @Serializable
   private data class TranscribeBody(@SerialName("made_at") val madeAt: Long, @SerialName("voice_id") val voiceId: String, val language: String)
 
+  @Serializable
+  private data class MarkBody(@SerialName("made_at") val madeAt: Long, val read: List<String>? = null, val dismissed: List<String>? = null)
+
   /** An app language's tag: "en", "pt", "zh-Hant". */
   private val LANGUAGE = Regex("^[a-z]{2,3}(-[A-Za-z0-9]{2,8}){0,2}$")
 
@@ -462,6 +501,11 @@ object WatchLink {
       is WatchRequest.Calendar -> CALENDAR to json.encodeToString(CalendarBody.serializer(), CalendarBody(request.madeAt, request.day))
       is WatchRequest.Account -> ACCOUNT to json.encodeToString(Read.serializer(), Read(request.madeAt))
       is WatchRequest.Transcribe -> TRANSCRIBE to json.encodeToString(TranscribeBody.serializer(), TranscribeBody(request.madeAt, request.voiceId, request.language))
+      is WatchRequest.InboxMarks -> INBOX_MARKS to json.encodeToString(Read.serializer(), Read(request.madeAt))
+      is WatchRequest.InboxMark -> INBOX_MARK to json.encodeToString(
+        MarkBody.serializer(),
+        MarkBody(request.madeAt, request.read.ifEmpty { null }, request.dismissed.ifEmpty { null }),
+      )
     }
     return path to body.encodeToByteArray()
   }
@@ -500,6 +544,10 @@ object WatchLink {
         CALENDAR -> json.decodeFromString(CalendarBody.serializer(), text).let { WatchRequest.Calendar(it.madeAt, it.day) }
         ACCOUNT -> WatchRequest.Account(json.decodeFromString(Read.serializer(), text).madeAt)
         TRANSCRIBE -> json.decodeFromString(TranscribeBody.serializer(), text).let { WatchRequest.Transcribe(it.madeAt, it.voiceId, it.language) }
+        INBOX_MARKS -> WatchRequest.InboxMarks(json.decodeFromString(Read.serializer(), text).madeAt)
+        INBOX_MARK -> json.decodeFromString(MarkBody.serializer(), text).let {
+          WatchRequest.InboxMark(it.madeAt, it.read.orEmpty(), it.dismissed.orEmpty())
+        }
         else -> return Accepted.No(NotAccepted.UNKNOWN_PATH)
       }
     } catch (_: IllegalArgumentException) {
@@ -524,7 +572,8 @@ object WatchLink {
     is WatchRequest.AskFull -> ID.matches(request.askId)
     is WatchRequest.Calendar -> request.day == null || DAY.matches(request.day)
     is WatchRequest.Transcribe -> CLIENT_ID.matches(request.voiceId) && LANGUAGE.matches(request.language)
-    is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief, is WatchRequest.Account -> true
+    is WatchRequest.InboxMark -> InboxMarkIds.complete(request.read, request.dismissed)
+    is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief, is WatchRequest.Account, is WatchRequest.InboxMarks -> true
   }
 
   /** The phone's answer, as bytes for the Data Layer. */

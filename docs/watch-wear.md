@@ -279,9 +279,22 @@ phone answered now, Needs you's calls and the results ready, with Coach's home c
 that needs the person is never hidden behind "Nothing new". Coach's home counts only the unread lines. It's kept in the watch's private preferences
 (`tafs.inbox`, one JSON list), and like the tile's count its lines are cleared, and nothing is added to it, whenever the watch is locked or
 has no screen lock (Wear OS locks a watch taken off the wrist): checked when the app is opened and when it's put away. It's
-also cleared, with the ids taken away, when the phone says it's signed out, and with everything else when the person signs out on this watch (step vi). Read and dismissed stay
-on this watch until its side of tafs cloud's marks is built (server piece c): tafs cloud keeps them at `/v1/watch/inbox`
-(docs/api.md), and a mark sends the person's phones `change: watch_inbox`.
+also cleared, with the ids taken away, when the phone says it's signed out, and with everything else when the person signs out on this watch (step vi).
+
+**Read and dismissed, in step across the person's watches** (row 21, as the Apple Watch's; `WatchModel.syncInbox`,
+`sendMarks`; tested in `WatchModelTest`, `WatchLinkTest` and `WatchAskTest`). tafs cloud keeps the lines' ids read and
+dismissed per person (`GET`/`POST /v1/watch/inbox`, docs/api.md), by id alone: a held call's KIFF id, or an ask's id. Never a
+line's words, its taf or an amount.
+- **Read** after each Needs you and asks read that reaches the phone (the app opened, signed in again here), only while the
+  Inbox is kept (v2, unlocked, a screen lock). A line dismissed on any watch goes, and its id is kept with the ids taken away,
+  so it stays away while the phone lists it and goes once it doesn't; a line read on any watch is read here. Nothing is ever
+  brought back.
+- **Sent:** opening a line (a held call's, or an answer's, which comes in unread on Wear OS), Dismiss, and Clear read, by
+  their ids, in chunks of 100, one after another and once (`PhoneRoute` sends a mark once). Only ids tafs cloud takes
+  (1 to 100 of `A-Za-z0-9_-`, `InboxMarkIds`) are sent; one it wouldn't take stays marked on this watch alone. A mark that
+  doesn't arrive changes nothing here, which keeps its own, and isn't sent again.
+- **A phone from before the marks** refuses them as an unknown path, and the lines stay as this watch has them.
+- **Not here:** the push `change: watch_inbox`. The watch reads the marks when it opens.
 
 **Step (v): Tafs, a taf's page, its settings, and choosing which to halt** (`TafScreens.kt`, `WatchModel.openTaf` and
 `haltPick`, `TafScreensTest`, `TafModelTest`). Halt is never on the main screens:
@@ -509,7 +522,7 @@ The watch holds **no keys, no session and no KIFF client**. It sends the phone a
 reads or signs with its own session and keys, and the watch draws the answer in the phone's words. A lost watch can read
 and stop things, never approve.
 
-The watch may ask twelve things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
+The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
 
 | Path | What the phone does |
 | --- | --- |
@@ -525,6 +538,8 @@ The watch may ask twelve things (`WatchRequest`), each a path under `/tafs/watch
 | `calendar` | A calendar day (Wear v2), `day` as `YYYY-MM-DD` or today in the account's zone: tafs cloud's `GET /v1/calendar` for that day alone, its line and that day's events in time order with each taf's name (`calendar`); the phone's own calendar screen keeps its read |
 | `account` | Who is signed in, the account's name and the plan's line as Account shows it (`account`) |
 | `transcribe` | Turns the recording the watch just sent over its channel (`voice/{id}`) into text with the phone's **on-device** recognizer, in the app's language, and deletes it: `transcribed` with the text, or `no_offline_speech` (below, "When the watch's recognizer gives up") |
+| `inbox-marks` | The Inbox's lines read and dismissed on any of the person's watches (row 21), by id alone: tafs cloud's `GET /v1/watch/inbox` with the phone's session (`inbox_marks`, a dismissed id never also read) |
+| `inbox-mark` | Marks Inbox lines `read` or `dismissed`, 1 to 100 ids in all of `A-Za-z0-9_-`, checked on both ends as tafs cloud checks them: `POST /v1/watch/inbox`, answering the marks as they stand. Ids only and nothing signed: a mark changes no one's power |
 
 **Chatting with a taf, the phone's half** (behind tafs cloud's `TAFS_WATCH_TAF_CHAT`, off; the wrist's screens follow the
 owner's picks; docs/watch-ask.md). An `ask` with `taf_id` names the phone's taf: the phone sends that taf's tafs cloud id as
@@ -568,7 +583,7 @@ the phone's approval key behind its fingerprint, so on the watch each says **App
 
 **What the phone refuses before reading or signing anything** (`WatchLink.accept`, `NotAccepted`):
 
-- a path that isn't one of the twelve (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
+- a path that isn't one of the fourteen (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
 - a body that isn't exactly what its path takes, a field missing, extra (`"answer": "approve_once"` on a refusal) or blank,
   or a Coach message or an ask that's empty or over 2,000 characters, or an ask whose id isn't 8 to 64 letters, digits, `_`
   or `-`, a taf's page with no `taf_id`, or a calendar day that isn't `YYYY-MM-DD`: `MALFORMED`. An ask can't name its taf or mark itself: a field it doesn't take is refused;
@@ -597,7 +612,8 @@ watch doesn't know is shown as Open on phone, never guessed at.
   - `tafs.draft`: one message kept for later, its text, ask id and the ask it continues; gone on Delete, once it's sent and
     taken, and on either sign-out; not on a lock or put-away, since the person asked for it to be sent.
   - `tafs.inbox`: the Inbox's lines (`ask:`/`held:` id, kind, the taf's name, the result's line or what a held call wants, the
-    time first seen, read) and the bare ids taken away. No amount and no reason: the phone takes any amount out of what a call wants before it goes, even where KIFF's title writes one in (`WatchRelay.withoutAmount`): first the call's own amount however it's written, then any figure with a currency beside it (a sign, a code or a word, such as €, zł, kr, PLN or euros); a number with no currency, such as an order's, stays. An answer's line, or its state in tafs cloud's words (`AskLine.words`, e.g. "No taf took it") where there's no line, is kept the same way (`Amounts.strip`, in `watchlink`, the one rule both share); opened while the app holds the answer, it shows whole. An answer that was only an amount is kept blank, and its line reads "The rest is on your phone." (`watch.more_on_phone`), as on the Apple Watch. The lines go when the app is opened or put away
+    time first seen, read) and the bare ids taken away. Its read and dismissed ids, and only those, also go to tafs cloud
+    through the phone (row 21, above), so the person's other watches show the same. No amount and no reason: the phone takes any amount out of what a call wants before it goes, even where KIFF's title writes one in (`WatchRelay.withoutAmount`): first the call's own amount however it's written, then any figure with a currency beside it (a sign, a code or a word, such as €, zł, kr, PLN or euros); a number with no currency, such as an order's, stays. An answer's line, or its state in tafs cloud's words (`AskLine.words`, e.g. "No taf took it") where there's no line, is kept the same way (`Amounts.strip`, in `watchlink`, the one rule both share); opened while the app holds the answer, it shows whole. An answer that was only an amount is kept blank, and its line reads "The rest is on your phone." (`watch.more_on_phone`), as on the Apple Watch. The lines go when the app is opened or put away
     while locked or with no screen lock (a lock while the app is closed leaves them until the next open), and everything goes on
     either sign-out.
   - `tafs.sign_in`: one flag, signed out on this watch.

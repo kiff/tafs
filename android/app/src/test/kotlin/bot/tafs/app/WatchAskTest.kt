@@ -119,6 +119,45 @@ class WatchAskTest {
     assertTrue(transport.requests.last { it.method == "GET" && it.url.contains("/v1/watch/asks") }.url.endsWith("/v1/watch/asks?since=2026-11-16T19%3A00%3A00Z"))
   }
 
+  // MARK: The Inbox's marks (row 21)
+
+  /** Read with the phone's session, by id alone: a dismissed id is never also read, and an id the watch can't use is passed over. */
+  @Test fun theInboxMarksAreReadAsTafsCloudKeepsThem() = runTest {
+    reads()
+    val m = model()
+    transport.answer("GET /v1/watch/inbox", 200, """{"read":["hold_1","wa_01","bad id",7],"dismissed":["wa_01","hold_9"],"newer":true}""")
+    val reply = WatchRelay(model = { m }, now = { now }).ask(WatchRequest.InboxMarks(now))
+    assertEquals(WatchReply.InboxMarks(read = listOf("hold_1"), dismissed = listOf("wa_01", "hold_9")), reply)
+  }
+
+  /** A mark sends only the lists it has, ids only, and answers the marks as they stand; nothing is signed. */
+  @Test fun aMarkSendsIdsOnlyAndAnswersTheMarks() = runTest {
+    reads()
+    val m = model()
+    transport.answer("POST /v1/watch/inbox", 200, """{"read":["hold_1"],"dismissed":["hold_2"]}""")
+    val reply = WatchRelay(model = { m }, now = { now }).ask(WatchRequest.InboxMark(now, dismissed = listOf("hold_2")))
+    assertEquals(WatchReply.InboxMarks(read = listOf("hold_1"), dismissed = listOf("hold_2")), reply)
+    val sent = transport.requests.last { it.method == "POST" && it.url.endsWith("/v1/watch/inbox") }
+    assertEquals("""{"dismissed":["hold_2"]}""", String(sent.body!!))
+    assertFalse("nothing signed", sent.headers.keys.any { it.equals("KIFF-Device-Signature", ignoreCase = true) })
+  }
+
+  /** tafs cloud not answering is a failure the watch shows nothing for; signed out, the watch is told; the sample reads nothing. */
+  @Test fun aFailedMarkFailsAndTheSampleMarksNothing() = runTest {
+    reads()
+    val m = model()
+    transport.answer("GET /v1/watch/inbox", 503, """{"error":"busy"}""")
+    assertTrue(WatchRelay(model = { m }, now = { now }).ask(WatchRequest.InboxMarks(now)) is WatchReply.Failed)
+    assertEquals(WatchReply.SignedOut, WatchRelay(model = { testModel() }, now = { now }).ask(WatchRequest.InboxMark(now, read = listOf("hold_1"))))
+    // An id tafs cloud doesn't take never reaches the phone's code.
+    val (path, _) = WatchLink.encode(WatchRequest.InboxMark(now, read = listOf("hold_1")))
+    assertEquals(
+      WatchReply.Refused(NotAccepted.MALFORMED),
+      WatchRelay(model = { m }, now = { now }).answer(path, """{"made_at":$now,"read":["held:hold_1"]}""".encodeToByteArray()),
+    )
+    assertTrue(transport.requests.none { it.method == "POST" && it.url.endsWith("/v1/watch/inbox") })
+  }
+
   /** tafs cloud checks the AI consent and says so by its code: the watch gets its own words for it, as for asking not being on. */
   // MARK: Chatting with a taf (TAFS_WATCH_TAF_CHAT)
 

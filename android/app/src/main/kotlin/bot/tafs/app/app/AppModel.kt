@@ -2712,6 +2712,13 @@ class AppModel(
   suspend fun watchAskById(id: String): bot.tafs.app.kiff.WatchAsk? =
     if (_state.value.mode != Mode.kiff) null else cloud.watchAskById(id)
 
+  /** Row 21: the watch Inbox's lines read and dismissed, as tafs cloud keeps them; null when the phone isn't signed in. */
+  suspend fun watchInbox(): bot.tafs.app.kiff.WatchInboxMarks? = if (_state.value.mode != Mode.kiff) null else cloud.watchInbox()
+
+  /** Marks watch Inbox lines read or dismissed, by id alone, and answers the marks as they stand; null when not signed in. */
+  suspend fun markWatchInbox(read: List<String>, dismissed: List<String>): bot.tafs.app.kiff.WatchInboxMarks? =
+    if (_state.value.mode != Mode.kiff) null else cloud.markWatchInbox(read, dismissed)
+
   /** The watch's asks, as tafs cloud has them, updated after [since]; null when the phone isn't signed in. */
   suspend fun watchAsks(since: String?): List<bot.tafs.app.kiff.WatchAsk>? =
     if (_state.value.mode != Mode.kiff) null else cloud.watchAsks(since)

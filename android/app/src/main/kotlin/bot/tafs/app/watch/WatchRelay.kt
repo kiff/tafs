@@ -85,6 +85,24 @@ class WatchRelay(
         val model = signedIn() ?: return WatchReply.SignedOut
         account(model.state.value)
       }
+      is WatchRequest.InboxMarks -> inboxMarks { it.watchInbox() }
+      is WatchRequest.InboxMark -> inboxMarks { it.markWatchInbox(request.read, request.dismissed) }
+    }
+  }
+
+  /**
+   * Row 21: the Inbox's lines read and dismissed on any of the person's watches, read or marked at tafs cloud with this phone's
+   * session, by id alone (WatchLink checked them). Nothing is signed: a mark changes no one's power.
+   */
+  private suspend fun inboxMarks(read: suspend (AppModel) -> bot.tafs.app.kiff.WatchInboxMarks?): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    return try {
+      val marks = read(model) ?: return WatchReply.SignedOut
+      WatchReply.InboxMarks(marks.read, marks.dismissed)
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (_: Exception) {
+      WatchReply.Failed(Words.Watch.openOnPhone)
     }
   }
 
