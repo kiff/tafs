@@ -463,6 +463,10 @@ above. The app shows the words. Builds from before this show `words` as for any 
     read since." and offers **Read it again**, which signs nothing. No other raise is offered until
     the balance has been read.
   - A `limit_changed` refusal reads the balance again too, and offers the raise from the new limit.
+  - **The limit now** shows above the button, "The spend limit is €1,200 now." (`usage.raise_limit.from`), formatted by the
+    app in its own language from `from_cents` in `raise.currency`, at that currency's own decimals (2 for EUR, 0 for JPY).
+    With no `currency` (a tafs cloud from before it) or one that isn't a known ISO 4217 code, there's no line, never an
+    assumed currency (Android: `BalanceRaise.limitNow`).
 - **Settings' Plan card** shows `plan_line` in `plan_tone`'s colour, and opens Plan & usage.
   **Home** shows `home_line` when it's set. Both are read with each refresh.
 - **A chat or Run now refused** for credits shows its `words`, with no button.

@@ -116,6 +116,8 @@ internal fun BalancePanel(state: AppState, actions: AccountActions) {
       Text(UsageWords.RAISED_UNREAD, style = scaled(15, color = Theme.ink))
       OutlineButton(if (state.readingBalance) Words.Usage.reading else Words.Usage.readAgain, { scope.launch { actions.readBalance() } }, Modifier.fillMaxWidth(), enabled = !state.readingBalance)
     } else b?.raise?.let { raise ->
+      // The limit now, before the tap, formatted by the app from tafs cloud's figure and currency; none when either is missing.
+      raise.limitNow?.let { Text(Words.Usage.RaiseLimit.from(it.figure), style = scaled(13, color = Theme.dim)) }
       // Raising lets the tafs spend more, so it waits on the phone being able to approve, as Go on did. KIFF takes it signed by
       // the device key, once the person confirms.
       ApprovalGate {
