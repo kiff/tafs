@@ -297,6 +297,15 @@ class KiffClientTest {
     assertFalse(KiffClient.grantsAuthority("DELETE", "/v1/agents/a1/grants"))
     assertFalse(KiffClient.grantsAuthority("POST", "/v1/me/time-zone"))
     assertFalse(KiffClient.grantsAuthority("GET", "/v1/me/agent-drafts"))
+    // A group's people: adding someone or changing their role grants; taking them out, or the group itself, doesn't.
+    assertTrue(KiffClient.grantsAuthority("PUT", "/v1/groups/g1/members/s1"))
+    assertFalse(KiffClient.grantsAuthority("DELETE", "/v1/groups/g1/members/s1"))
+    assertFalse(KiffClient.grantsAuthority("PUT", "/v1/groups/g1"))
+    assertFalse(KiffClient.grantsAuthority("PUT", "/v1/groups/g1/members"))
+    assertFalse(KiffClient.grantsAuthority("PUT", "/v1/groups//members/s1"))
+    assertFalse(KiffClient.grantsAuthority("PUT", "/v1/groups/g1/members/"))
+    assertFalse(KiffClient.grantsAuthority("PUT", "/v1/groups/g1/members/s1/extra"))
+    assertFalse(KiffClient.grantsAuthority("PUT", "/v1/me/time-zone"))
   }
 
   // MARK: The approval key

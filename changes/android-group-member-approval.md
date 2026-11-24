@@ -1,0 +1,1 @@
+- **Android: adding someone to a group, or changing their role, is approved with your fingerprint.** It's signed with the approval key, as sharing a taf is; taking someone out is unchanged ([approvals.md](docs/approvals.md)).
