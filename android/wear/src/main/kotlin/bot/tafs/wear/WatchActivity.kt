@@ -183,9 +183,10 @@ class WatchActivity : ComponentActivity() {
           playback = if (WATCH_V2) playback else null,
           openItem = { item ->
             if (item.kind == InboxItem.Kind.ASK) model.open(model.askOf(item)) else model.markRead(item.id)
+            lifecycleScope.launch { model.sendMarks() }
           },
-          dismissItem = model::dismiss,
-          clearRead = model::clearRead,
+          dismissItem = { id -> model.dismiss(id); lifecycleScope.launch { model.sendMarks() } },
+          clearRead = { model.clearRead(); lifecycleScope.launch { model.sendMarks() } },
           openTaf = { taf -> lifecycleScope.launch { model.openTaf(taf) } },
           closeTaf = model::closeTaf,
           pickToHalt = model::pickToHalt,
@@ -203,6 +204,7 @@ class WatchActivity : ComponentActivity() {
             lifecycleScope.launch {
               model.refresh()
               model.readAsks()
+              model.syncInbox()
               NeedsYouTileService.update(this@WatchActivity)
             }
           },
@@ -274,6 +276,8 @@ class WatchActivity : ComponentActivity() {
     lifecycleScope.launch {
       model.refresh()
       model.readAsks()
+      // Row 21: the Inbox's read and dismissed, in step with the person's other watches.
+      model.syncInbox()
       // The tile shows the count just read, or forgets it if the phone signed out.
       NeedsYouTileService.update(this@WatchActivity)
     }

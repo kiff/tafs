@@ -788,6 +788,28 @@ class TafsCloud(
     KiffClient.json.decodeFromString(WatchAskList.serializer(), String(send("GET", "/v1/watch/asks" + (since?.let { "?since=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: "")))).asks
 
   /**
+   * Row 21 (docs/watch-wear.md): the watch Inbox's lines the person read and dismissed, by id alone (`GET /v1/watch/inbox`), so
+   * each of their watches shows the same. A held call's KIFF id, or the id of the message an answer is to; never a line's words.
+   */
+  suspend fun watchInbox(): WatchInboxMarks = watchInboxMarks(send("GET", WATCH_INBOX))
+
+  /**
+   * Marks watch Inbox lines read or dismissed (`POST /v1/watch/inbox`, `{read?, dismissed?}`), and answers the marks as they
+   * stand. Only ids tafs cloud takes are sent, and an empty list isn't sent at all; a mark with none, or more than 100, is
+   * refused here, before tafs cloud is asked.
+   */
+  suspend fun markWatchInbox(read: List<String>, dismissed: List<String>): WatchInboxMarks {
+    val r = bot.tafs.watchlink.InboxMarkIds.checked(read)
+    val d = bot.tafs.watchlink.InboxMarkIds.checked(dismissed)
+    require(bot.tafs.watchlink.InboxMarkIds.complete(r, d)) { "bad_marks" }
+    val body = kotlinx.serialization.json.buildJsonObject {
+      if (r.isNotEmpty()) put("read", kotlinx.serialization.json.JsonArray(r.map(::JsonPrimitive)))
+      if (d.isNotEmpty()) put("dismissed", kotlinx.serialization.json.JsonArray(d.map(::JsonPrimitive)))
+    }
+    return watchInboxMarks(sendJson("POST", WATCH_INBOX, body))
+  }
+
+  /**
    * From your watch (docs/android-app.md): the days the person asked from their watch, newest first, under the same switch and
    * session as the asks. Null when tafs cloud's switch is off (404 `watch_off`).
    */
@@ -1240,6 +1262,28 @@ private data class WatchAskFull(val text: String? = null)
 
 @kotlinx.serialization.Serializable
 private data class WatchAskList(val asks: List<WatchAsk>)
+
+/** Row 21: the watch Inbox's lines read and dismissed, by id alone, as tafs cloud keeps them. A dismissed id is never also read. */
+data class WatchInboxMarks(val read: List<String> = emptyList(), val dismissed: List<String> = emptyList())
+
+internal const val WATCH_INBOX = "/v1/watch/inbox"
+
+/**
+ * The marks from tafs cloud's answer, read leniently: only ids the watch can use, each once, and a dismissed line never also
+ * read. Anything else in the answer (a newer field, an id it doesn't take) is passed over, never a failed read.
+ */
+internal fun watchInboxMarks(data: ByteArray): WatchInboxMarks {
+  val root = runCatching { KiffClient.json.parseToJsonElement(String(data)) as? kotlinx.serialization.json.JsonObject }.getOrNull()
+  fun ids(key: String): List<String> =
+    bot.tafs.watchlink.InboxMarkIds.checked(
+      (root?.get(key) as? kotlinx.serialization.json.JsonArray).orEmpty().mapNotNull {
+        (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content
+      },
+    )
+  val dismissed = ids("dismissed")
+  val gone = dismissed.toSet()
+  return WatchInboxMarks(read = ids("read").filterNot(gone::contains), dismissed = dismissed)
+}
 
 /** New key's body, exactly as signed and sent. */
 fun newApiKeyBody(name: String): ByteArray =

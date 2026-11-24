@@ -267,7 +267,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | 18 | Sign out on this watch alone | done | done | |
 | 19 | Sign in, pair a device, add a passkey, change a Card | not for it | not for it | no sign-in of its own; the keys stay on the phone |
 | 20 | The inbox kept on the watch | done | done | |
-| 21 | The inbox's read and dismissed, in step with the phone | not started | not started | tafs cloud's piece is in (`/v1/watch/inbox`); each watch's side and its phone's relay are next |
+| 21 | The inbox's read and dismissed, in step with the phone | not started | done (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud's piece is in (`/v1/watch/inbox`); the Apple Watch's side and its phone's relay are next |
 | 22 | Your brief | partial | partial | built; off (`briefOnWatch`, `BRIEF_ON_WATCH`) until the owner's yes |
 | 23 | "From your watch" on the phone | done | done | |
 | 24 | A complication or tile (count, Ask tafs) | not started | done | Apple Watch: planned only |

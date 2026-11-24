@@ -72,9 +72,11 @@ internal class PhoneRoute(
      */
     fun isRead(request: WatchRequest): Boolean = when (request) {
       // Transcribe too: the phone deletes the recording once it's read, so a second send finds none.
-      is WatchRequest.Refuse, is WatchRequest.Halt, is WatchRequest.Ask, is WatchRequest.Coach, is WatchRequest.Transcribe -> false
+      // An Inbox mark changes what tafs cloud keeps, so it is sent once, as on the Apple Watch.
+      is WatchRequest.Refuse, is WatchRequest.Halt, is WatchRequest.Ask, is WatchRequest.Coach, is WatchRequest.Transcribe,
+      is WatchRequest.InboxMark -> false
       is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Asks, is WatchRequest.Brief, is WatchRequest.Taf,
-      is WatchRequest.TafChat, is WatchRequest.AskFull, is WatchRequest.Calendar, is WatchRequest.Account -> true
+      is WatchRequest.TafChat, is WatchRequest.AskFull, is WatchRequest.Calendar, is WatchRequest.Account, is WatchRequest.InboxMarks -> true
     }
   }
 }
