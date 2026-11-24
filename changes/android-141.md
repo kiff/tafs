@@ -1,0 +1,1 @@
+- **Android 141 (1.48.4) for Play's internal track:** a link in Coach's answer about a page from Chrome shows its full address and asks before it opens, and a chat link that isn't https never opens on a tap (#1946, #1950).
