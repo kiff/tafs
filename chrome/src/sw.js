@@ -247,6 +247,11 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     if (sender.tab) runner.ownerInput(sender.tab.id);
     return;
   }
+  // Stop on the bar in a run's tab (page.js showBar): only from that tab's own content script, and only for its run.
+  if (m.type === "bar_stop") {
+    if (sender.tab && sender.id === chrome.runtime.id) runner.stopByPerson(sender.tab.id);
+    return;
+  }
   if (sender.id !== chrome.runtime.id || sender.tab) return;
   const handle = {
     pair: () => pairWith(m.code),

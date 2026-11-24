@@ -412,6 +412,21 @@ was done.
 - **The toolbar badge shows "ON" while a run is on.** The side panel shows the taf, the site, the last steps, and Pause,
   Resume and Stop.
 
+## While a taf works on a page
+
+- **The page says so.** While a run works in a tab, a thin bar across the top of the page (`TafsPage.showBar`) says which
+  taf is working ("Rae is working on this page", `bar_working`), with **Stop**. It is shown on every read of the run's tab,
+  so a new page gets it again, and the run's end takes it away. The tab's group stays amber, as before.
+- **Stop ends the run's browser work at once**, as the panel's Stop does (`runner.stopByPerson`, recorded `stop` by
+  `person`): a step handed to the person is answered Not now, the run's tabs stay, and planque's next step for it is
+  answered `stopped`, which tells the taf the person stopped it.
+- **The page can't use it.** The bar lives in a closed shadow root: the page can't read or restyle its words or reach its
+  button. A read never includes it (its words aren't the page's, and Stop is no control a taf can click), and an act's
+  "is it on top" check looks through it, so it never blocks the taf's click on what's under it. Only a real press
+  (`isTrusted`) stops the run, and that press is not the person's input that pauses a run. A page that removes the bar's
+  element gets it back while the run works. It can still hide it, as it can any page content: the panel and the tab's
+  group still show the run.
+
 ## Masking
 
 What a read sends never carries:

@@ -932,3 +932,35 @@ test("unpairing closes a kept tab the person has moved too", async () => {
   await r.stopAll();
   assert.ok(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).includes(tab));
 });
+
+// While a taf works in a tab, the page says so, with Stop (docs/chrome.md, "While a taf works on a page").
+test("every read shows the bar with the taf's name and Stop; the run's end takes it away", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const shown = [];
+  const run = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    const src = String(o.func || "");
+    if (src.includes("TafsPage.showBar")) shown.push(["show", o.target.tabId, ...o.args]);
+    if (src.includes("hideBar")) shown.push(["hide", o.target.tabId]);
+    return run(o);
+  };
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired, say: (key, sub) => (key === "bar_working" ? sub[0] + " is working on this page" : key === "stop" ? "Stop" : "") });
+  assert.ok((await r.handle(step())).page);
+  const tab = [...c.tabsMap.keys()][0];
+  assert.deepEqual(shown, [["show", tab, "Rae is working on this page", "Stop"]]);
+  await r.stop("run_1");
+  assert.deepEqual(shown.at(-1), ["hide", tab]);
+});
+
+test("Stop on the bar ends the run at once, for that tab's run only; a hand-over open is told Not now", async () => {
+  const { c, r, answers, hand, tab } = await handing();
+  await r.handle(step(hand()));
+  await r.stopByPerson(999); // no run's tab
+  assert.equal(r.runs.get("run_1").stopped, false);
+  await r.stopByPerson(tab());
+  assert.equal(r.runs.get("run_1").stopped, true);
+  assert.deepEqual(r.state()[0].steps.filter((s) => s.op === "stop"), [{ at: r.state()[0].steps.find((s) => s.op === "stop").at, op: "stop", by: "person" }]);
+  assert.deepEqual(answers.at(-1), { hand: "h1", outcome: "declined", page: null });
+  assert.equal((await r.handle(step({ op: "read" }))).error.code, "stopped", "planque's next step is told the person stopped it");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.remove"), "its tabs stay, as with Stop");
+});

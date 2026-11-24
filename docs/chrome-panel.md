@@ -26,7 +26,9 @@ The panel is mainly for **watching a taf work**, with the person beside it. Coac
   (`GET /v1/tafs/{id}/conversation`, `POST …/messages`), read on each event: the panel shown, a send, a step seen on the
   relay. Then it's read every 4 s while it works or for a minute after a send. Idle, it backs off from 60 s to 5 minutes, each
   wait jittered, and nothing is read while the panel is hidden.
-- **Coach is a button:** "Set up a new taf for this site" opens Coach, with the site in front named.
+- **Coach is a button:** "Set up a new taf for this site" opens Coach on **a new conversation**, every time (`startFresh`), in
+  the panel's own view: a new taf's setup never goes under the conversation open before. The earlier ones stay under
+  Previous conversations.
 
 ## A step handed to the person
 
