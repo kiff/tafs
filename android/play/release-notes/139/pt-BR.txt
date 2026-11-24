@@ -1,0 +1,2 @@
+• “Permitir a partir de agora” agora verifica se a Card em vigor que cita é a Card que está sendo revisada e recusa caso contrário.
+• O botão do plano web agora diz “Assinar o Company em kiff.dev”.

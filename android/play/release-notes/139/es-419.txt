@@ -1,0 +1,2 @@
+• «Permitir a partir de ahora» ahora comprueba que la Card vigente que cita es la Card que se revisa, y lo rechaza si no.
+• El botón del plan web ahora dice «Conseguir Company en kiff.dev».

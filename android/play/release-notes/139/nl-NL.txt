@@ -1,0 +1,2 @@
+• „Voortaan toestaan” controleert nu of de geldende Card die het noemt de Card is die wordt herzien, en weigert anders.
+• De knop voor het webabonnement heet nu „Company nemen op kiff.dev”.
