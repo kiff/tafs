@@ -30,6 +30,7 @@
     <string name="alert_prompt">Taf size zerur bolanda duýduryş alyň</string>
     <string name="alert_role_cant">Bu KIFF hasabyndaky roluňyz duýduryşlary açyp bilmeýär.</string>
     <string name="alert_sign_in_again">Duýduryşlary açmak üçin KIFF bilen täzeden giriň: bu giriş telefon üçin gol çekip bilmeýär.</string>
+    <string name="alert_sign_out_anyway">Her niçik hem çyk</string>
     <string name="alert_silent">Sessiz</string>
     <string name="alert_silent_example">Goldaw jogaplary maria@… jogap berdi · Email bilen</string>
     <string name="alert_sound">Ses</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Elýeterli däl</string>
     <string name="alert_status_off">Öçük</string>
     <string name="alert_status_on">Açyk</string>
+    <string name="alert_still_on_after_sign_out_body">tafs olary öçürip bilmedi (%1$s). Täzeden synanyşyň ýa-da her niçik hem çykyň we Sazlamalarda tafs üçin habarnamalary öçüriň.</string>
+    <string name="alert_still_on_after_sign_out_title">Bu %1$s bu hasabyň duýduryşlaryny entek alyp biler</string>
     <string name="alert_taf_needs_you">%1$s size zerur</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

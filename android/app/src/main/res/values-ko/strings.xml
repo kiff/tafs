@@ -30,6 +30,7 @@
     <string name="alert_prompt">taf에 내가 필요할 때 알림 받기</string>
     <string name="alert_role_cant">이 KIFF 계정에서 내 역할로는 알림을 켤 수 없습니다.</string>
     <string name="alert_sign_in_again">알림을 켜려면 KIFF로 다시 로그인하세요. 이 로그인으로는 휴대폰에서 서명할 수 없습니다.</string>
+    <string name="alert_sign_out_anyway">그래도 로그아웃</string>
     <string name="alert_silent">무음</string>
     <string name="alert_silent_example">고객 지원 답장이 maria@…에게 답했습니다 · 이메일로</string>
     <string name="alert_sound">소리</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">사용할 수 없음</string>
     <string name="alert_status_off">꺼짐</string>
     <string name="alert_status_on">켜짐</string>
+    <string name="alert_still_on_after_sign_out_body">tafs가 알림을 끄지 못했습니다(%1$s). 다시 시도하거나, 그래도 로그아웃한 뒤 설정에서 tafs의 알림을 끄세요.</string>
+    <string name="alert_still_on_after_sign_out_title">이 %1$s에서 이 계정의 알림을 계속 받을 수 있습니다</string>
     <string name="alert_taf_needs_you">%1$s에 내가 필요합니다</string>
     <plurals name="alert_tafs">
         <item quantity="other">taf %1$s개 ›</item>

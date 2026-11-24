@@ -27,6 +27,7 @@
   "alert.prompt": "รับการแจ้งเตือนเมื่อ taf ต้องการคุณ",
   "alert.role_cant": "บทบาทของคุณในบัญชี KIFF นี้เปิดการแจ้งเตือนไม่ได้",
   "alert.sign_in_again": "เข้าสู่ระบบด้วย KIFF อีกครั้งเพื่อเปิดการแจ้งเตือน: การเข้าสู่ระบบนี้ลงนามให้โทรศัพท์ไม่ได้",
+  "alert.sign_out_anyway": "ออกจากระบบต่อไป",
   "alert.silent": "เงียบ",
   "alert.silent_example": "ฝ่ายสนับสนุนตอบ maria@… แล้ว · ทางอีเมล",
   "alert.sound": "เสียง",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "ไม่พร้อมใช้งาน",
   "alert.status.off": "ปิด",
   "alert.status.on": "เปิด",
+  "alert.still_on_after_sign_out.body": "tafs ปิดการแจ้งเตือนไม่ได้ ({why}) ลองอีกครั้ง หรือออกจากระบบต่อไป แล้วปิดการแจ้งเตือนสำหรับ tafs ในการตั้งค่า",
+  "alert.still_on_after_sign_out.title": "{device}เครื่องนี้อาจยังได้รับการแจ้งเตือนของบัญชีนี้",
   "alert.taf_needs_you": "{taf} ต้องการคุณ",
   "alert.tafs": {
     "other": "{count} taf ›"

@@ -30,6 +30,7 @@
     <string name="alert_prompt">Gaukite pranešimą, kai taf jūsų laukia</string>
     <string name="alert_role_cant">Jūsų vaidmuo šioje KIFF paskyroje neleidžia įjungti pranešimų.</string>
     <string name="alert_sign_in_again">Norėdami įjungti pranešimus, dar kartą prisijunkite su KIFF: šis prisijungimas negali pasirašyti už telefoną.</string>
+    <string name="alert_sign_out_anyway">Vis tiek atsijungti</string>
     <string name="alert_silent">Be garso</string>
     <string name="alert_silent_example">Pagalbos atsakymai atsakė maria@… · El. paštu</string>
     <string name="alert_sound">Garsas</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Nepasiekiama</string>
     <string name="alert_status_off">Išjungta</string>
     <string name="alert_status_on">Įjungta</string>
+    <string name="alert_still_on_after_sign_out_body">tafs nepavyko jų išjungti (%1$s). Bandykite dar kartą arba vis tiek atsijunkite ir išjunkite tafs pranešimus nustatymuose.</string>
+    <string name="alert_still_on_after_sign_out_title">Šis įrenginys (%1$s) gali ir toliau gauti šios paskyros pranešimus</string>
     <string name="alert_taf_needs_you">%1$s laukia jūsų</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

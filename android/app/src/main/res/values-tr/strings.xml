@@ -30,6 +30,7 @@
     <string name="alert_prompt">Bir taf\'ın size ihtiyacı olduğunda uyarı alın</string>
     <string name="alert_role_cant">Bu KIFF hesabındaki rolünüz uyarıları açamaz.</string>
     <string name="alert_sign_in_again">Uyarıları açmak için KIFF ile tekrar oturum açın: bu oturum telefon adına imzalayamıyor.</string>
+    <string name="alert_sign_out_anyway">Yine de oturumu kapat</string>
     <string name="alert_silent">Sessiz</string>
     <string name="alert_silent_example">Destek yanıtları yanıtlandı maria@… · E-postayla</string>
     <string name="alert_sound">Ses</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Kullanılamıyor</string>
     <string name="alert_status_off">Kapalı</string>
     <string name="alert_status_on">Açık</string>
+    <string name="alert_still_on_after_sign_out_body">tafs bunları kapatamadı (%1$s). Tekrar deneyin ya da yine de oturumu kapatıp Ayarlar\'dan tafs bildirimlerini kapatın.</string>
+    <string name="alert_still_on_after_sign_out_title">Bu %1$s bu hesabın uyarılarını almaya devam edebilir</string>
     <string name="alert_taf_needs_you">%1$s sizi bekliyor</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

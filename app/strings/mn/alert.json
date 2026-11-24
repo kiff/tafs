@@ -27,6 +27,7 @@
   "alert.prompt": "Taf таныг хэрэгтэй үед мэдэгдэл авах",
   "alert.role_cant": "KIFF-ийн энэ бүртгэл дэх таны үүрэг мэдэгдлийг асааж чадахгүй.",
   "alert.sign_in_again": "Мэдэгдлийг асаахын тулд KIFF-ээр дахин нэвтэрнэ үү: энэ нэвтрэлт утасны өмнөөс гарын үсэг зурж чадахгүй.",
+  "alert.sign_out_anyway": "Ямар ч байсан гарах",
   "alert.silent": "Дуугүй",
   "alert.silent_example": "Дэмжлэгийн хариу maria@… руу хариулсан · Имэйлээр",
   "alert.sound": "Дуу",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Боломжгүй",
   "alert.status.off": "Унтраасан",
   "alert.status.on": "Асаасан",
+  "alert.still_on_after_sign_out.body": "tafs тэдгээрийг унтрааж чадсангүй ({why}). Дахин оролдох эсвэл ямар ч байсан гараад, Тохиргоонд tafs-ийн мэдэгдлийг унтраана уу.",
+  "alert.still_on_after_sign_out.title": "Энэ {device} энэ бүртгэлийн мэдэгдлийг үргэлжлүүлэн авч магадгүй",
   "alert.taf_needs_you": "{taf} таныг хүлээж байна",
   "alert.tafs": {
     "one": "{count} taf ›",

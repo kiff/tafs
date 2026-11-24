@@ -27,6 +27,7 @@
   "alert.prompt": "ទទួលការជូនដំណឹងនៅពេល taf ត្រូវការអ្នក",
   "alert.role_cant": "តួនាទីរបស់អ្នកលើគណនី KIFF នេះមិនអាចបើកការជូនដំណឹងបានទេ។",
   "alert.sign_in_again": "ចូលដោយ KIFF ម្តងទៀតដើម្បីបើកការជូនដំណឹង៖ ការចូលនេះមិនអាចចុះហត្ថលេខាសម្រាប់ទូរសព្ទបានទេ។",
+  "alert.sign_out_anyway": "ចាកចេញទោះយ៉ាងណាក៏ដោយ",
   "alert.silent": "ស្ងាត់",
   "alert.silent_example": "ការឆ្លើយតបផ្នែកជំនួយបានឆ្លើយទៅ maria@… · តាមអ៊ីមែល",
   "alert.sound": "សំឡេង",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "មិនមាន",
   "alert.status.off": "បិទ",
   "alert.status.on": "បើក",
+  "alert.still_on_after_sign_out.body": "tafs មិនអាចបិទវាបានទេ ({why})។ សូមព្យាយាមម្តងទៀត ឬចាកចេញទោះយ៉ាងណាក៏ដោយ ហើយបិទការជូនដំណឹងសម្រាប់ tafs ក្នុងការកំណត់។",
+  "alert.still_on_after_sign_out.title": "{device} នេះប្រហែលនៅតែទទួលការជូនដំណឹងរបស់គណនីនេះ",
   "alert.taf_needs_you": "{taf} ត្រូវការអ្នក",
   "alert.tafs": {
     "other": "taf {count} ›"

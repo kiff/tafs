@@ -27,6 +27,7 @@
   "alert.prompt": "קבלת התראה כש-taf זקוק לך",
   "alert.role_cant": "התפקיד שלך בחשבון KIFF הזה לא יכול להפעיל התראות.",
   "alert.sign_in_again": "יש להיכנס שוב עם KIFF כדי להפעיל התראות: הכניסה הזו לא יכולה לחתום עבור הטלפון.",
+  "alert.sign_out_anyway": "יציאה בכל זאת",
   "alert.silent": "שקט",
   "alert.silent_example": "מענה לתמיכה השיב ל-maria@… · בדוא״ל",
   "alert.sound": "צליל",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "לא זמין",
   "alert.status.off": "כבוי",
   "alert.status.on": "פעיל",
+  "alert.still_on_after_sign_out.body": "tafs לא הצליח לכבות אותן ({why}). יש לנסות שוב, או לצאת בכל זאת ולכבות את ההתראות של tafs בהגדרות.",
+  "alert.still_on_after_sign_out.title": "ייתכן שההתקן הזה ({device}) עדיין יקבל את ההתראות של החשבון הזה",
   "alert.taf_needs_you": "{taf} זקוק לך",
   "alert.tafs": {
     "one": "taf אחד ›",

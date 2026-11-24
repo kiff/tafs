@@ -30,6 +30,7 @@
     <string name="alert_prompt">Dapatkan peringatan saat sebuah taf membutuhkan Anda</string>
     <string name="alert_role_cant">Peran Anda di akun KIFF ini tidak dapat mengaktifkan peringatan.</string>
     <string name="alert_sign_in_again">Masuk dengan KIFF lagi untuk mengaktifkan peringatan: proses masuk ini tidak dapat menandatangani untuk ponsel.</string>
+    <string name="alert_sign_out_anyway">Tetap keluar</string>
     <string name="alert_silent">Senyap</string>
     <string name="alert_silent_example">Balasan dukungan dijawab maria@… · Lewat email</string>
     <string name="alert_sound">Suara</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Tidak tersedia</string>
     <string name="alert_status_off">Nonaktif</string>
     <string name="alert_status_on">Aktif</string>
+    <string name="alert_still_on_after_sign_out_body">tafs tidak dapat menonaktifkannya (%1$s). Coba lagi, atau tetap keluar dan nonaktifkan notifikasi untuk tafs di Pengaturan.</string>
+    <string name="alert_still_on_after_sign_out_title">%1$s ini mungkin masih menerima peringatan akun ini</string>
     <string name="alert_taf_needs_you">%1$s membutuhkan Anda</string>
     <plurals name="alert_tafs">
         <item quantity="other">%1$s taf ›</item>

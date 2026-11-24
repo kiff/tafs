@@ -63,6 +63,8 @@ enum Words {
         static var roleCant: String { Words.line("alert.role_cant") }
         /// Sign in with KIFF again to turn on alerts: this sign-in can't sign for the phone.
         static var signInAgain: String { Words.line("alert.sign_in_again") }
+        /// Sign out anyway
+        static var signOutAnyway: String { Words.line("alert.sign_out_anyway") }
         /// Silent
         static var silent: String { Words.line("alert.silent") }
         /// Support replies answered maria@… · By email
@@ -78,6 +80,12 @@ enum Words {
             static var off: String { Words.line("alert.status.off") }
             /// On
             static var on: String { Words.line("alert.status.on") }
+        }
+        enum StillOnAfterSignOut {
+            /// tafs couldn't turn them off ({why}). Try again, or sign out anyway and turn off notifications for tafs in Settings.
+            static func body(why: String) -> String { Words.line("alert.still_on_after_sign_out.body", why) }
+            /// This {device} may still get this account's alerts
+            static func title(device: String) -> String { Words.line("alert.still_on_after_sign_out.title", device, Words.demonstrative(device, capital: true)) }
         }
         /// {taf} needs you
         static func tafNeedsYou(taf: String) -> String { Words.line("alert.taf_needs_you", taf) }

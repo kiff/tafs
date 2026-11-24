@@ -27,6 +27,7 @@
   "alert.prompt": "احصل على تنبيه عندما يحتاجك taf",
   "alert.role_cant": "دورك في حساب KIFF هذا لا يتيح تشغيل التنبيهات.",
   "alert.sign_in_again": "سجّل الدخول عبر KIFF مرة أخرى لتشغيل التنبيهات: لا يستطيع تسجيل الدخول هذا التوقيع عن الهاتف.",
+  "alert.sign_out_anyway": "تسجيل الخروج على أي حال",
   "alert.silent": "صامت",
   "alert.silent_example": "ردود الدعم أُجيب عنها maria@… · بالبريد الإلكتروني",
   "alert.sound": "صوت",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "غير متاح",
   "alert.status.off": "متوقف",
   "alert.status.on": "قيد التشغيل",
+  "alert.still_on_after_sign_out.body": "لم يتمكن tafs من إيقافها ({why}). حاول مرة أخرى، أو سجّل الخروج على أي حال وأوقف إشعارات tafs من الإعدادات.",
+  "alert.still_on_after_sign_out.title": "قد يظل هذا الجهاز ({device}) يتلقى تنبيهات هذا الحساب",
   "alert.taf_needs_you": "{taf} بانتظارك",
   "alert.tafs": {
     "zero": "لا tafs ›",

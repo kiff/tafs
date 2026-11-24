@@ -30,6 +30,7 @@
     <string name="alert_prompt">Saa teavitus, kui taf vajab sind</string>
     <string name="alert_role_cant">Sinu roll sellel KIFFi kontol ei saa teavitusi sisse lülitada.</string>
     <string name="alert_sign_in_again">Teavituste sisselülitamiseks logi uuesti KIFFiga sisse: see sisselogimine ei saa telefoni eest allkirjastada.</string>
+    <string name="alert_sign_out_anyway">Logi siiski välja</string>
     <string name="alert_silent">Hääletu</string>
     <string name="alert_silent_example">Klienditoe vastused vastas maria@… · E-posti teel</string>
     <string name="alert_sound">Heli</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Pole saadaval</string>
     <string name="alert_status_off">Väljas</string>
     <string name="alert_status_on">Sees</string>
+    <string name="alert_still_on_after_sign_out_body">tafs ei saanud neid välja lülitada (%1$s). Proovi uuesti või logi siiski välja ja lülita seadetes tafsi teavitused välja.</string>
+    <string name="alert_still_on_after_sign_out_title">See %1$s võib endiselt saada selle konto teavitusi</string>
     <string name="alert_taf_needs_you">%1$s vajab sind</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

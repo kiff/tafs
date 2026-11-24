@@ -30,6 +30,7 @@
     <string name="alert_prompt">Primite obavijest kad taf treba vas</string>
     <string name="alert_role_cant">Vaša uloga na ovom KIFF računu ne može uključiti obavijesti.</string>
     <string name="alert_sign_in_again">Prijavite se ponovno KIFF-om da uključite obavijesti: ova prijava ne može potpisivati za telefon.</string>
+    <string name="alert_sign_out_anyway">Svejedno se odjavi</string>
     <string name="alert_silent">Bez zvuka</string>
     <string name="alert_silent_example">Odgovori podrške: odgovoreno maria@… · E-poštom</string>
     <string name="alert_sound">Zvuk</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Nedostupno</string>
     <string name="alert_status_off">Isključeno</string>
     <string name="alert_status_on">Uključeno</string>
+    <string name="alert_still_on_after_sign_out_body">tafs ih nije mogao isključiti (%1$s). Pokušajte ponovno ili se svejedno odjavite i isključite obavijesti za tafs u Postavkama.</string>
+    <string name="alert_still_on_after_sign_out_title">Ovaj uređaj (%1$s) možda i dalje prima obavijesti ovog računa</string>
     <string name="alert_taf_needs_you">Taf %1$s čeka vas</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

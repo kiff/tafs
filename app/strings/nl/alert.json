@@ -27,6 +27,7 @@
   "alert.prompt": "Krijg een melding als een taf op jou wacht",
   "alert.role_cant": "Jouw rol in dit KIFF-account kan geen meldingen aanzetten.",
   "alert.sign_in_again": "Log opnieuw in met KIFF om meldingen aan te zetten: deze login kan niet voor de telefoon ondertekenen.",
+  "alert.sign_out_anyway": "Toch uitloggen",
   "alert.silent": "Stil",
   "alert.silent_example": "Supportantwoorden heeft maria@… geantwoord · Via e-mail",
   "alert.sound": "Geluid",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Niet beschikbaar",
   "alert.status.off": "Uit",
   "alert.status.on": "Aan",
+  "alert.still_on_after_sign_out.body": "tafs kon ze niet uitzetten ({why}). Probeer het opnieuw, of log toch uit en zet meldingen voor tafs uit in Instellingen.",
+  "alert.still_on_after_sign_out.title": "Deze {device} krijgt misschien nog meldingen van dit account",
   "alert.taf_needs_you": "{taf} wacht op jou",
   "alert.tafs": {
     "one": "{count} taf ›",

@@ -30,6 +30,7 @@
     <string name="alert_prompt">當 taf 需要您時收到通知</string>
     <string name="alert_role_cant">您在此 KIFF 帳號中的角色無法開啟通知。</string>
     <string name="alert_sign_in_again">請重新以 KIFF 登入以開啟通知：這次登入無法為手機簽署。</string>
+    <string name="alert_sign_out_anyway">仍然登出</string>
     <string name="alert_silent">靜音</string>
     <string name="alert_silent_example">客服回覆已回覆 maria@… · 透過電子郵件</string>
     <string name="alert_sound">聲音</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">無法使用</string>
     <string name="alert_status_off">關閉</string>
     <string name="alert_status_on">開啟</string>
+    <string name="alert_still_on_after_sign_out_body">tafs 無法關閉通知（%1$s）。請再試一次，或仍然登出，然後在「設定」中關閉 tafs 的通知。</string>
+    <string name="alert_still_on_after_sign_out_title">這部%1$s可能仍會收到此帳號的通知</string>
     <string name="alert_taf_needs_you">%1$s 需要您</string>
     <plurals name="alert_tafs">
         <item quantity="other">%1$s 個 taf ›</item>

@@ -30,6 +30,7 @@
     <string name="alert_prompt">Ստացեք ծանուցում, երբ taf-ին ձեր օգնությունն է պետք</string>
     <string name="alert_role_cant">KIFF-ի այս հաշվում ձեր դերը չի կարող միացնել ծանուցումները։</string>
     <string name="alert_sign_in_again">Նորից մուտք գործեք KIFF-ով՝ ծանուցումները միացնելու համար․ այս մուտքը չի կարող ստորագրել հեռախոսի համար։</string>
+    <string name="alert_sign_out_anyway">Միևնույն է ելք</string>
     <string name="alert_silent">Անձայն</string>
     <string name="alert_silent_example">Աջակցության պատասխանները պատասխանվեցին maria@… · Էլ. փոստով</string>
     <string name="alert_sound">Ձայն</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Հասանելի չէ</string>
     <string name="alert_status_off">Անջատված է</string>
     <string name="alert_status_on">Միացված է</string>
+    <string name="alert_still_on_after_sign_out_body">tafs-ը չկարողացավ անջատել դրանք (%1$s). Նորից փորձեք կամ, միևնույն է, դուրս եկեք և անջատեք tafs-ի ծանուցումները Կարգավորումներում։</string>
+    <string name="alert_still_on_after_sign_out_title">Այս սարքը (%1$s) կարող է դեռ ստանալ այս հաշվի ծանուցումները</string>
     <string name="alert_taf_needs_you">%1$s-ին ձեր օգնությունն է պետք</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

@@ -30,6 +30,7 @@
     <string name="alert_prompt">Get an alert when a taf needs you</string>
     <string name="alert_role_cant">Your role on this KIFF account can\'t turn on alerts.</string>
     <string name="alert_sign_in_again">Sign in with KIFF again to turn on alerts: this sign-in can\'t sign for the phone.</string>
+    <string name="alert_sign_out_anyway">Sign out anyway</string>
     <string name="alert_silent">Silent</string>
     <string name="alert_silent_example">Support replies answered maria@… · By email</string>
     <string name="alert_sound">Sound</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Not available</string>
     <string name="alert_status_off">Off</string>
     <string name="alert_status_on">On</string>
+    <string name="alert_still_on_after_sign_out_body">tafs couldn\'t turn them off (%1$s). Try again, or sign out anyway and turn off notifications for tafs in Settings.</string>
+    <string name="alert_still_on_after_sign_out_title">This %1$s may still get this account\'s alerts</string>
     <string name="alert_taf_needs_you">%1$s needs you</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

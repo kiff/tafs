@@ -30,6 +30,7 @@
     <string name="alert_prompt">Taf-a sizin köməyiniz lazım olanda bildiriş alın</string>
     <string name="alert_role_cant">Bu KIFF hesabında sizin rolunuz bildirişləri aktiv edə bilməz.</string>
     <string name="alert_sign_in_again">Bildirişləri aktiv etmək üçün KIFF ilə yenidən daxil olun: bu giriş telefon üçün imzalaya bilməz.</string>
+    <string name="alert_sign_out_anyway">Hər halda çıxış et</string>
     <string name="alert_silent">Səssiz</string>
     <string name="alert_silent_example">Dəstək cavabları cavablandırıldı maria@… · E-poçtla</string>
     <string name="alert_sound">Səs</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Mövcud deyil</string>
     <string name="alert_status_off">Söndürülüb</string>
     <string name="alert_status_on">Aktivdir</string>
+    <string name="alert_still_on_after_sign_out_body">tafs onları söndürə bilmədi (%1$s). Yenidən cəhd edin və ya hər halda çıxış edin və Parametrlərdə tafs üçün bildirişləri söndürün.</string>
+    <string name="alert_still_on_after_sign_out_title">Bu cihaz (%1$s) bu hesabın bildirişlərini hələ də ala bilər</string>
     <string name="alert_taf_needs_you">%1$s-a sizin köməyiniz lazımdır</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

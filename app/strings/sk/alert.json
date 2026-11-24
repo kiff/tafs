@@ -27,6 +27,7 @@
   "alert.prompt": "Dostávajte upozornenie, keď vás taf potrebuje",
   "alert.role_cant": "Vaša rola v tomto účte KIFF nemôže zapnúť upozornenia.",
   "alert.sign_in_again": "Na zapnutie upozornení sa znova prihláste cez KIFF: toto prihlásenie nemôže podpisovať za telefón.",
+  "alert.sign_out_anyway": "Aj tak sa odhlásiť",
   "alert.silent": "Ticho",
   "alert.silent_example": "Odpovede zákazníkom odpovedal maria@… · E-mailom",
   "alert.sound": "Zvuk",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Nie je dostupné",
   "alert.status.off": "Vypnuté",
   "alert.status.on": "Zapnuté",
+  "alert.still_on_after_sign_out.body": "tafs ich nedokázal vypnúť ({why}). Skúste to znova, alebo sa aj tak odhláste a vypnite upozornenia pre tafs v Nastaveniach.",
+  "alert.still_on_after_sign_out.title": "Tento {device} môže naďalej dostávať upozornenia tohto účtu",
   "alert.taf_needs_you": "{taf} vás potrebuje",
   "alert.tafs": {
     "one": "{count} taf ›",

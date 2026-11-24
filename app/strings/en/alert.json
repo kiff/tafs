@@ -27,6 +27,7 @@
   "alert.prompt": "Get an alert when a taf needs you",
   "alert.role_cant": "Your role on this KIFF account can't turn on alerts.",
   "alert.sign_in_again": "Sign in with KIFF again to turn on alerts: this sign-in can't sign for the phone.",
+  "alert.sign_out_anyway": "Sign out anyway",
   "alert.silent": "Silent",
   "alert.silent_example": "Support replies answered maria@… · By email",
   "alert.sound": "Sound",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Not available",
   "alert.status.off": "Off",
   "alert.status.on": "On",
+  "alert.still_on_after_sign_out.body": "tafs couldn't turn them off ({why}). Try again, or sign out anyway and turn off notifications for tafs in Settings.",
+  "alert.still_on_after_sign_out.title": "This {device} may still get this account's alerts",
   "alert.taf_needs_you": "{taf} needs you",
   "alert.tafs": {
     "one": "{count} taf ›",

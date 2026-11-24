@@ -30,6 +30,7 @@
     <string name="alert_prompt">Nhận thông báo khi một taf cần bạn</string>
     <string name="alert_role_cant">Vai trò của bạn trong tài khoản KIFF này không thể bật thông báo.</string>
     <string name="alert_sign_in_again">Hãy đăng nhập lại bằng KIFF để bật thông báo: lần đăng nhập này không thể ký cho điện thoại.</string>
+    <string name="alert_sign_out_anyway">Vẫn đăng xuất</string>
     <string name="alert_silent">Im lặng</string>
     <string name="alert_silent_example">Hỗ trợ đã trả lời maria@… · Qua email</string>
     <string name="alert_sound">Âm thanh</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Không khả dụng</string>
     <string name="alert_status_off">Tắt</string>
     <string name="alert_status_on">Bật</string>
+    <string name="alert_still_on_after_sign_out_body">tafs không tắt được chúng (%1$s). Hãy thử lại, hoặc vẫn đăng xuất rồi tắt thông báo cho tafs trong Cài đặt.</string>
+    <string name="alert_still_on_after_sign_out_title">%1$s này có thể vẫn nhận cảnh báo của tài khoản này</string>
     <string name="alert_taf_needs_you">%1$s cần bạn</string>
     <plurals name="alert_tafs">
         <item quantity="other">%1$s tafs ›</item>

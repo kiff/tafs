@@ -30,6 +30,7 @@
     <string name="alert_prompt">Добивај известување кога на некој taf му си потребен</string>
     <string name="alert_role_cant">Твојата улога на оваа сметка на KIFF не може да вклучува известувања.</string>
     <string name="alert_sign_in_again">Најави се повторно со KIFF за да вклучиш известувања: оваа најава не може да потпишува за телефонот.</string>
+    <string name="alert_sign_out_anyway">Сепак одјави се</string>
     <string name="alert_silent">Тивко</string>
     <string name="alert_silent_example">Одговорите на поддршка одговорени maria@… · По е-пошта</string>
     <string name="alert_sound">Звук</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Недостапно</string>
     <string name="alert_status_off">Исклучено</string>
     <string name="alert_status_on">Вклучено</string>
+    <string name="alert_still_on_after_sign_out_body">tafs не можеше да ги исклучи (%1$s). Обиди се повторно или сепак одјави се и исклучи ги известувањата за tafs во Поставки.</string>
+    <string name="alert_still_on_after_sign_out_title">Овој %1$s можеби сè уште ќе ги добива известувањата на оваа сметка</string>
     <string name="alert_taf_needs_you">%1$s те чека</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>

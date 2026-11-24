@@ -30,6 +30,7 @@
     <string name="alert_prompt">Получавайте известие, когато taf има нужда от вас</string>
     <string name="alert_role_cant">Ролята ви в този акаунт в KIFF не може да включва известия.</string>
     <string name="alert_sign_in_again">Влезте отново с KIFF, за да включите известията: този вход не може да подписва за телефона.</string>
+    <string name="alert_sign_out_anyway">Изход въпреки това</string>
     <string name="alert_silent">Безшумно</string>
     <string name="alert_silent_example">Отговори на поддръжката отговори на maria@… · По имейл</string>
     <string name="alert_sound">Звук</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Не е налично</string>
     <string name="alert_status_off">Изключено</string>
     <string name="alert_status_on">Включено</string>
+    <string name="alert_still_on_after_sign_out_body">tafs не успя да ги изключи (%1$s). Опитайте отново или излезте въпреки това и изключете известията за tafs в Настройки.</string>
+    <string name="alert_still_on_after_sign_out_title">Този %1$s може още да получава известията на този акаунт</string>
     <string name="alert_taf_needs_you">%1$s ви чака</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
