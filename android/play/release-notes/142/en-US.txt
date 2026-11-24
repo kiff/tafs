@@ -1,0 +1,1 @@
+• Adding someone to a group, or changing their role there, now asks for your fingerprint, as sharing a taf does.
