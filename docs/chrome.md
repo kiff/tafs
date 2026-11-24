@@ -745,6 +745,12 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
   the check.
 
+- **A taf's and Coach's words show their Markdown** (`chrome/src/chatmd.js`), in Coach's chat and a taf's: paragraphs,
+  headings, bulleted and numbered lists, **bold**, *italic* and `code`, as the phones draw them. It's built from elements
+  and text nodes only, never `innerHTML`, so any markup in the words stays words. **A link is its words, then its address
+  as text, and nothing opens on a click:** a page Coach read can steer what an answer links to, and the panel opens no
+  link. In the shown address, each format or control character (a bidi override or isolate, a zero-width mark) shows as
+  U+FFFD, so the address can't read as another one. The person's own messages show as they typed them.
 - **It opens on a fresh conversation,** as the phone's New conversation does, not on the account's whole old Coach thread
   (`chrome/src/coachchat.js`). The first message sends `new_chat: true`, and the panel follows the `session` tafs cloud
   answers with. **New conversation** goes back to a fresh one at any time. **Previous conversations** lists the person's

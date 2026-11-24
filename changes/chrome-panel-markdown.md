@@ -1,0 +1,1 @@
+- **Chrome: the side panel shows a taf's and Coach's answers formatted.** Bold, lists and the like show as on the phones, instead of their asterisks; a link shows its words and address and opens nothing ([chrome.md](docs/chrome.md)).

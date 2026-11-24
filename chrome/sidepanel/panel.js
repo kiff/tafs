@@ -2,6 +2,13 @@
 // shows only what the service worker reports; it decides nothing.
 
 import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork, switchDraft } from "../src/coachchat.js";
+import { render as renderWords } from "../src/chatmd.js";
+
+/** A message's words: the person's as they typed them; a taf's or Coach's with their Markdown drawn, opening no link. */
+function words(li, m) {
+  if (m.from === "taf") li.append(renderWords(document, m.text));
+  else li.textContent = m.text;
+}
 
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
@@ -283,7 +290,7 @@ async function renderCoach() {
   for (const m of r.thread.messages.slice(-20)) {
     const li = document.createElement("li");
     li.className = m.from;
-    li.textContent = m.text;
+    words(li, m);
     // The page that went with this message, by its host alone, as tafs cloud recorded it: never silent.
     if (m.reading) {
       const line = document.createElement("small");
@@ -480,7 +487,7 @@ async function readTaf() {
     for (const m of r.thread.messages.slice(-20)) {
       const li = document.createElement("li");
       li.className = m.from;
-      li.textContent = m.text;
+      words(li, m);
       list.append(li);
     }
     $("tafPhone").hidden = !r.thread.waitsOnPhone;
