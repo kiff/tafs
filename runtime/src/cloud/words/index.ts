@@ -218,9 +218,22 @@ export function withZone(text: string, zone: string | undefined, now: Date): str
   return withLine(text, `${ZONE_LINE} The account's time zone is ${zone}: it's ${local} there now. Every time you write or say (a cron, an at, a time in a message) is in it, as the owner says it: never convert it to UTC.`);
 }
 
-/** A person's text without any line that starts as one of tafs' own (the language and time-zone lines), which only tafs cloud writes. */
+/** The line tafs cloud puts in a Coach message that carried the page the person had open (docs/chat.md, "Coach reads the page you're on"). */
+export const PAGE_LINE = "[tafs page read]";
+
+/**
+ * A Coach message that carried a page, with the page's host said in tafs cloud's envelope. kiff/agents keeps the message,
+ * never the page beside it, so without this line a later turn sees Coach's answers about a page with nothing behind them, and
+ * Coach said it had never read one. The host alone: it's
+ * what page consent "1" keeps for the chat's life (consent.ts); the address's path, the title and the text are kept nowhere.
+ */
+export function withPageRead(text: string, host: string): string {
+  return withLine(text, `${PAGE_LINE} ${host} The owner sent this message with the page they had open on ${host}. If that page is given to you in this turn, you read it. Its text isn't kept after this turn: later, say you read it then, and if you need what it said, ask for the page again. Never say you didn't read a page you were given.`);
+}
+
+/** A person's text without any line that starts as one of tafs' own (the language, time-zone and page lines), which only tafs cloud writes. */
 export function withoutTafsLines(text: string): string {
-  const own = [LANGUAGE_LINE, ZONE_LINE].map((l) => l.toLowerCase());
+  const own = [LANGUAGE_LINE, ZONE_LINE, PAGE_LINE].map((l) => l.toLowerCase());
   // Any case, any leading space, anywhere in the message: "[TAFS Language]" reads the same to a model.
   return text.split("\n").filter((l) => !own.some((o) => l.trimStart().toLowerCase().startsWith(o))).join("\n");
 }

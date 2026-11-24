@@ -115,6 +115,15 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   lautet 4821") loses its digits to `[masked]` and keeps its words (`maskedCodes`, `page-codes.ts`), as the extension
   masks it before sending; a postal, order or promo code stays. The title goes on one line. The
   chat's next message doesn't read it.
+- **Coach's history says which turns read a page.** kiff/agents keeps the person's message, never the page beside
+  it, so a later turn used to see Coach's answers about a page with nothing behind them, and Coach said it had never
+  read one. Now the message kiff/agents keeps carries a line of tafs cloud's own, in its envelope before "The owner
+  says:": `[tafs page read] <host>`, saying the person sent that message with the page on that host, that a page given
+  in that turn was read, that its text isn't kept after the turn, and never to deny a page it was given
+  (`withPageRead`). It stays true for a message that answers a waiting card, whose run reads no page. The host alone, which page consent "1" already
+  keeps for the chat's life; never the path, title or text. The thread shows the person's words without it, and a
+  line of the person's own that starts `[tafs page read]` is dropped from their words, as the language and time-zone
+  lines are.
 - **A page turn's tools are read-only** (`PAGE_TOOLS`): Coach sees the person's tafs, a run, a taf's check, an
   estimate and its skills. No `web_read`, no `taf_task`, and nothing that drafts, changes or drives. A page can
   steer a call as any input can, so it can't lead to a host it names or to a taf with tools of its own. kiff/agents
