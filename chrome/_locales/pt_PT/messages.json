@@ -80,5 +80,7 @@
   "step_handed": {"message": "Passou para si", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Fê-lo", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Disse «Agora não»", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ está a trabalhar nesta página", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_working": {"message": "$TAF$ está a trabalhar nesta página", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
+  "at_work": {"message": "A trabalhar neste Chrome", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
+  "go_to_taf": {"message": "Ir para o separador de $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}}
 }
