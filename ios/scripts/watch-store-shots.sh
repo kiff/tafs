@@ -3,11 +3,15 @@
 #   ios/scripts/watch-store-shots.sh [output folder]
 # It makes a watch simulator of an App Store size (the largest the newest watchOS runtime has: an Ultra, else a 46 or
 # 45 mm), runs WatchChecksUITests/testStoreScreenshots on it against the demo phone (`-watch-demo`, Debug only), and
-# writes each screen as watch-N-name.png, then prints each one's size. Nothing is uploaded.
+# writes each screen as watch-N-name.png into a new or empty folder (one holding files is refused, never cleared), then prints each one's size. Nothing is uploaded.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT=${1:-$PWD/build/watch-store-shots}
 RESULT=$(mktemp -d)/shots.xcresult
+if [ -e "$OUT" ] && [ -n "$(ls -A "$OUT" 2>/dev/null)" ]; then
+  echo "::error::$OUT isn't empty: give a new or empty folder" >&2
+  exit 2
+fi
 [ -d Tafs.xcodeproj ] || xcodegen generate
 
 read -r runtime type name < <(python3 -c '
@@ -38,7 +42,12 @@ TEST_RUNNER_TAFS_STORE_SHOTS=1 xcodebuild test -project Tafs.xcodeproj -scheme T
   -only-testing:TafsWatchUITests/WatchChecksUITests/testStoreScreenshots -resultBundlePath "$RESULT" \
   CODE_SIGNING_ALLOWED=NO -quiet
 
-rm -rf "$OUT" && mkdir -p "$OUT"
+# Never removes anything it's given: a folder that already holds files is refused.
+if [ -e "$OUT" ] && [ -n "$(ls -A "$OUT" 2>/dev/null)" ]; then
+  echo "::error::$OUT isn't empty: give a new or empty folder" >&2
+  exit 2
+fi
+mkdir -p "$OUT"
 EXPORT=$(mktemp -d)
 xcrun xcresulttool export attachments --path "$RESULT" --output-path "$EXPORT"
 python3 - "$EXPORT" "$OUT" <<'PY'
