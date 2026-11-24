@@ -24,9 +24,11 @@ const NAV_WAIT_MS = 1000;
 const NAV_LOOK_MS = 100;
 const STEP_TIMEOUT_MS = 20_000;
 const FAILURES_TO_PAUSE = 3;
-// A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its tabs close (and its window, when it has its own). One
-// the owner paused isn't idle, it's waiting for the owner.
-const RUN_IDLE_MS = 5 * 60_000;
+// A run nobody has sent a step to for this long has ended (its turn is over, a lost close, a call that timed out): it ends as Stop
+// does, its tabs kept. planque keeps a taf's run for the turn's next call only within 2 minutes of the last one (chromeRunIdle), so
+// this is a little over that: the bar, the badge and the group stop saying the taf works soon after its turn. One the owner paused
+// isn't idle, it's waiting for the owner.
+export const RUN_IDLE_MS = 150_000;
 // A finished run's group turns grey ("· done") this long after it ends, unless the taf's next run starts first (greyLater).
 const DONE_GRACE_MS = 15_000;
 // Why Show me pointed to no field, as the panel says it: the page changed, the field isn't on screen, the page didn't answer.
@@ -115,6 +117,9 @@ export class Runner {
       run.tabs.delete(tabId);
       this.tabRun.delete(tabId);
       if (run.tab === tabId) run.tab = [...run.tabs][0] ?? null;
+      // The person closed the run's last tab: that's their Stop. The run ends now (a hand-over open answers not now), rather than
+      // saying the taf works until the idle sweep. A run still setting its first tab up has none yet and isn't touched.
+      if (!run.tabs.size && run.opened && !run.stopped) this.stop(run.id, false, "person").catch(() => {});
     });
   }
 
