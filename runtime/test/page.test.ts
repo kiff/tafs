@@ -135,16 +135,45 @@ describe("Coach reads the page the person has open, with their message", () => {
       ["no text", COACH, { url: PAGE_SENT.url }],
       ["a title that isn't text", COACH, { ...PAGE_SENT, title: 5 }],
       ["past the bound", COACH, { ...PAGE_SENT, text: "x".repeat(PAGE.bytes) }],
+      ["no words", COACH, PAGE_SENT],
     ];
     for (const [name, taf, page] of cases) {
       for (const via of [send, stream]) {
-        const r = await via(w, taf, { text: "What's this?", page });
+        // A page with files and no words: the files would go, but a page needs words.
+        const words = name === "no words" ? { text: "", attachments: [`att_${"0".repeat(32)}`] } : { text: "What's this?" };
+        const r = await via(w, taf, { ...words, page });
         expect(r.status, `${name} (${via.name})`).toBe(400);
         expect(r.body.code, name).toBe("page_refused");
       }
     }
     expect(w.agents.runs.filter((x) => x.agent === COACH || x.agent === RAE)).toHaveLength(0);
     expect(w.agents.asides.size).toBe(0);
+  });
+
+  // Invariant: only a message whose run read the page says which site went with it: a message that answers a card waiting in the chat reads none, and marks no message
+  it("a page sent while a card waits: the words answer the card, and no message says it went with the page, on both routes", async () => {
+    const w = await world();
+    const logged: string[] = [];
+    vi.spyOn(console, "log").mockImplementation((line: unknown) => void logged.push(String(line)));
+    const first = await send(w, COACH, { text: "Set up refunds" });
+    expect(first.status).toBe(200);
+    const waiting = w.agents.runs.find((x) => x.id === first.body.run)!;
+    // Its card was shown a model turn after the run began.
+    waiting.created = new Date(NOW.getTime() - 60_000).toISOString();
+    for (const via of ["send", "stream"] as const) {
+      w.agents.cardWaits.run = waiting;
+      const r = via === "send"
+        ? await send(w, COACH, { text: "Yes, go on", session: first.body.session, page: PAGE_SENT })
+        : await stream(w, COACH, { text: "Yes, go on", session: first.body.session, page: PAGE_SENT });
+      expect(r.status, via).toBe(200);
+      if (via === "send") {
+        expect(r.body.run).toBe(waiting.id);
+        expect((r.body.message as { reading?: string }).reading).toBeUndefined();
+      }
+    }
+    expect(await w.coach.get(pageReadKey("t_acme", waiting.id))).toBeUndefined();
+    expect(logged.filter((l) => l.includes("coach_page_read"))).toHaveLength(0);
+    expect((await thread(w)).find((m) => m.id === `${waiting.id}.in`)?.reading).toBeUndefined();
   });
 
   it("a page just inside the bound goes, its title kept to one line", async () => {

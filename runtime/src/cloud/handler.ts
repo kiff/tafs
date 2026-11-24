@@ -4953,9 +4953,12 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   withPage(at, page);
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const input = await withCoachSkills(me, taf, at, text, event, deps);
+  const began = deps.now?.() ?? new Date();
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, input, at, ai, notify));
-  if (page) await keepPageRead(me, run.id, page.host, deps);
-  return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created, ...(page ? { reading: page.host } : {}) } };
+  // Only a run this send started read the page: a card's answer went on in its own run, without it.
+  const read = page && startedBy(run, began) ? page.host : undefined;
+  if (read) await keepPageRead(me, run.id, read, deps);
+  return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created, ...(read ? { reading: read } : {}) } };
 }
 
 /**
@@ -6350,6 +6353,8 @@ function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | u
   if (raw === undefined || raw === null) return undefined;
   const bad = (why: string) => new HTTPError(400, why, { code: "page_refused" });
   if (taf.job !== SETUP_JOB) throw bad("only Coach reads the page you have open");
+  // A page goes with the person's words, never alone (kiff/agents takes an aside only with an input).
+  if (!withoutTafsLines(str(parseBody(event).text)).trim()) throw bad("a page goes with your words");
   if (typeof raw !== "object" || Array.isArray(raw)) throw bad("page is {url, title, text, truncated}");
   const p = raw as Record<string, unknown>;
   if (typeof p.url !== "string" || typeof p.text !== "string" || (p.title !== undefined && typeof p.title !== "string") ||
@@ -6378,6 +6383,19 @@ function withPage(at: RunAt, page: { host: string; aside: string } | undefined):
   if (!page) return;
   at.aside = page.aside;
   at.asideTools = PAGE_TOOLS;
+}
+
+/** How far kiff/agents' clock may be behind tafs cloud's for a run to still count as this send's (startedBy). */
+export const PAGE_RUN_MARGIN_MS = 1000;
+
+/**
+ * Whether kiff/agents started `run` for this send, so it read the page: a run created once the send began. A message
+ * that answers a card waiting in the chat goes on in that card's run instead (kiff/agents' wroteInstead), which reads
+ * no page, and was created before the card it waits on was shown, a model turn earlier at least.
+ */
+function startedBy(run: { created?: unknown }, began: Date): boolean {
+  const created = typeof run.created === "string" ? Date.parse(run.created) : NaN;
+  return !Number.isNaN(created) && created >= began.getTime() - PAGE_RUN_MARGIN_MS;
 }
 
 async function keepPageRead(me: KIFFIdentity, run: string, host: string, deps: Deps): Promise<void> {
@@ -6869,11 +6887,13 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
         const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
         const input = await withCoachSkills(me, taf, at, text, event, deps);
         timing.mark("skills");
+        const began = deps.now?.() ?? new Date();
         run = deps.agents.streamRun(me.tenantID, taf.id, input, at, ai, notify);
         first = await run.next();
         timing.mark("first_event");
-        const started = first.done ? undefined : (first.value.data as { id?: unknown } | undefined)?.id;
-        if (page && first.value?.event === "run" && typeof started === "string") await keepPageRead(me, started, page.host, deps);
+        // Only a run this send started read the page (startedBy): a card's answer goes on in its own run, without it.
+        const started = first.done || first.value.event !== "run" ? undefined : first.value.data as { id?: unknown; created?: unknown } | undefined;
+        if (page && started && typeof started.id === "string" && startedBy(started, began)) await keepPageRead(me, started.id, page.host, deps);
       } catch (err) {
         throw agentsFailure(err);
       }

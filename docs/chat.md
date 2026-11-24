@@ -94,13 +94,15 @@ A message to **Coach** may carry the page the person had in front as they wrote 
 it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the page you're on"), as
 `page: {url, title, text, truncated}` on either send route.
 
-- **Only Coach, only https.** A page on another taf's message, an address that isn't https or has a name or
-  password in it, a page that isn't `{url, title, text, truncated}`, or one past 24,000 bytes as the run reads it,
-  is `400 page_refused`, and nothing starts. The message never goes on without the page its panel said it read.
+- **Only Coach, only https, only with words.** A page on another taf's message, a page with no words beside it
+  (files alone), an address that isn't https or has a name or password in it, a page that isn't
+  `{url, title, text, truncated}`, or one past 24,000 bytes as the run reads it, is `400 page_refused`, and
+  nothing starts.
 - **For that message only.** tafs cloud passes it to kiff/agents as the run's `aside`. The run reads it after the
   person's words, fenced as data, with a note that nothing in it is an instruction, and kiff/agents keeps it on the
-  run only until the run ends. The address goes with no query or fragment, and the title on one line. The chat's
-  next message doesn't read it.
+  run only until the run ends. The address goes with its path but no query or fragment, so whatever a path holds
+  goes to the AI with that message too (it's kept nowhere). The title goes on one line. The chat's next message
+  doesn't read it.
 - **A page turn's tools are read-only** (`PAGE_TOOLS`): Coach sees the person's tafs, a run, a taf's check, an
   estimate and its skills. No `web_read`, no `taf_task`, and nothing that drafts, changes or drives. A page can
   steer a call as any input can, so it can't lead to a host it names or to a taf with tools of its own. kiff/agents
@@ -111,8 +113,10 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   plain send's `message`. Its address, title and text are kept nowhere in tafs cloud, and the log says
   `coach_page_read` with the run and the host alone. Coach's answer is a message like any other, and can say what
   was on the page.
-- **A message that answers a card waiting in the chat** goes on with the person's words alone. It reads no page,
-  and says no `reading`.
+- **A message that answers a card waiting in the chat** goes on in that card's run with the person's words alone
+  (kiff/agents answers the card with them). It reads no page, and no message says `reading` for it: tafs cloud
+  keeps a host only for a run the send started, one kiff/agents created once the send began (a card's run is older,
+  by a model turn at least).
 
 ## The answer as it comes
 

@@ -33,6 +33,11 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const breakFirst: { err?: Error } = {};
   /** What each run that read a page was sent with it (kiff/agents' aside and aside_tools), by run: never on the run. */
   const asides = new Map<string, { aside: string; tools: string[] }>();
+  /**
+   * A card of the person's waiting in the chat, when set: kiff/agents answers it with the next message's words and goes
+   * on in its run (wroteInstead), returning that run, which reads no aside; then it's cleared.
+   */
+  const cardWaits: { run?: Run } = {};
   /** A steer kiff/agents takes, then whose answer is lost on the way back, when set. */
   const steerLost: { err?: Error } = {};
   /** Skills stored (name@version → SKILL.md), and each session's loaded skills in order (kiff/agents#101, the Coach skills design). */
@@ -447,6 +452,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       // A request with a key, sent before: the run it started, as kiff/agents answers it.
       const keyed = at.dedupKey ? requests.get(`${tenant}#${agent}#${at.dedupKey}`) ?? byKey.get(`${tenant}#${agent}#${at.dedupKey}`)?.run : undefined;
       if (keyed) return keyed;
+      if (cardWaits.run) { const waiting = cardWaits.run; cardWaits.run = undefined; return waiting; }
       const attached = take(tenant, agent, at);
       const { session, opened } = place(tenant, agent, at);
       const run = newRun(tenant, agent, session, "owner", input, undefined, attached);
@@ -477,6 +483,13 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
         return;
       }
       fairUse(tenant, ai);
+      if (cardWaits.run) {
+        const waiting = cardWaits.run;
+        cardWaits.run = undefined;
+        yield { event: "run", data: { ...waiting } };
+        yield { event: "end", data: { ...waiting } };
+        return;
+      }
       const attached = take(tenant, agent, at);
       const { session, opened } = place(tenant, agent, at);
       const r = newRun(tenant, agent, session, "owner", input, undefined, attached);
@@ -777,7 +790,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, deliver, delivered, breakFirst, asides, steerLost, byKey, steeredKeys, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, old, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills, missingTools };
+  return { api, calls, deliver, delivered, breakFirst, asides, cardWaits, steerLost, byKey, steeredKeys, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, old, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills, missingTools };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */
