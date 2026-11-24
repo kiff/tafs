@@ -599,8 +599,8 @@ The iPhone's notifications show on the watch by themselves. On a held call's not
 
 The watch app launched with `-watch-demo` asks a phone of fixed answers (`WatchDemo`, `DemoPhone`) instead of the paired
 iPhone, with a passcode set (`DemoLock`), and keeps its Inbox and Sign out on this watch in a folder emptied at each
-launch. Everything else is the app as shipped. The shipped app never takes this path: the argument is only ever given by
-the UI tests. The demo phone answers with three tafs (Refunds; Late parcels, paused; Lead follow-up, halted), two held calls,
+launch. Everything else is the app as shipped. It's compiled into Debug builds only (`#if DEBUG`, checked by the `watch` job),
+so a release build has no demo phone and no way to take the passcode away. The demo phone answers with three tafs (Refunds; Late parcels, paused; Lead follow-up, halted), two held calls,
 today's calendar, the account and Coach, and Refuse and Halt change what it answers next, as the phone's relay does.
 `-watch-demo-no-passcode` takes the passcode away, `-watch-demo-unreachable` puts the phone out of reach, and
 `-watch-demo-cloud-down` has the phone fail to reach tafs cloud.

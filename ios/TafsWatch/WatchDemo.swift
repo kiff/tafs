@@ -4,20 +4,38 @@ import Foundation
 /// simulator can show (docs/watch-app.md, "The demo phone"), and for anyone checking the watch's screens in the simulator without a signed-in iPhone. On only when the
 /// app is launched with `-watch-demo`: the shipped app never takes this path, asks no real phone in it and keeps nothing
 /// of it. The watch's own code is all as shipped; only the phone and the lock are the demo's.
+///
+/// Debug builds only: a release build compiles none of it, so `on` is always false there, and no launch argument can swap
+/// the phone or take the passcode away.
 enum WatchDemo {
+    #if DEBUG
     /// The app was launched for the demo.
     static let on = ProcessInfo.processInfo.arguments.contains("-watch-demo")
     /// The demo phone is out of reach: each ask says the phone isn't in reach (row 30).
-    static let unreachable = ProcessInfo.processInfo.arguments.contains("-watch-demo-unreachable")
+    static let unreachable = on && ProcessInfo.processInfo.arguments.contains("-watch-demo-unreachable")
     /// The demo phone is in reach but can't reach tafs cloud: each read fails in the phone's words.
-    static let cloudDown = ProcessInfo.processInfo.arguments.contains("-watch-demo-cloud-down")
+    static let cloudDown = on && ProcessInfo.processInfo.arguments.contains("-watch-demo-cloud-down")
     /// The demo watch has no passcode: Refuse and Halt say to set one, and the Inbox isn't kept.
-    static let noPasscode = ProcessInfo.processInfo.arguments.contains("-watch-demo-no-passcode")
+    static let noPasscode = on && ProcessInfo.processInfo.arguments.contains("-watch-demo-no-passcode")
+    #else
+    static let on = false
+    #endif
 
     /// The phone the app asks: the demo's, or the real one.
-    @MainActor static var phone: PhoneAsking { on ? DemoPhone.shared : PhoneLink.shared }
+    @MainActor static var phone: PhoneAsking {
+        #if DEBUG
+        if on { return DemoPhone.shared }
+        #endif
+        return PhoneLink.shared
+    }
+
     /// The watch's lock: the demo's (a passcode, unless `-watch-demo-no-passcode`), or the watch's own.
-    static var lock: WristLock { on ? DemoLock(secure: !noPasscode) : DeviceWristLock() }
+    static var lock: WristLock {
+        #if DEBUG
+        if on { return DemoLock(secure: !noPasscode) }
+        #endif
+        return DeviceWristLock()
+    }
 
     /// The demo's own folder, emptied at each demo launch, so every run starts as a watch just installed.
     static let folder: URL = {
@@ -30,6 +48,7 @@ enum WatchDemo {
     }()
 }
 
+#if DEBUG
 /// The demo watch's lock: a passcode set, or none.
 struct DemoLock: WristLock {
     let secure: Bool
@@ -149,3 +168,4 @@ final class DemoPhone: PhoneAsking {
 
     private static func iso(_ date: Date) -> String { ISO8601DateFormatter().string(from: date) }
 }
+#endif

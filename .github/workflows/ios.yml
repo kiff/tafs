@@ -345,6 +345,30 @@ jobs:
             -destination "id=$WATCH_ID" \
             CODE_SIGNING_ALLOWED=NO
 
+      # The watch's demo phone (`-watch-demo`, for the UI tests) is compiled into Debug builds only: every line that
+      # reads a `-watch-demo` argument sits inside `#if DEBUG`, so a release build can't swap the phone or the lock.
+      - name: The watch's demo is Debug only
+        run: |
+          python3 - <<'PY'
+          import pathlib, sys
+          bad = []
+          for path in pathlib.Path("ios/TafsWatch").rglob("*.swift"):
+              depth, debug = 0, []
+              for n, line in enumerate(path.read_text().splitlines(), 1):
+                  s = line.strip()
+                  if s.startswith("#if"):
+                      debug.append(s == "#if DEBUG")
+                  elif s.startswith("#else") and debug:
+                      debug[-1] = False
+                  elif s.startswith("#endif") and debug:
+                      debug.pop()
+                  elif '"-watch-demo' in line and not any(debug):
+                      bad.append(f"{path}:{n}")
+          if bad:
+              print("::error::-watch-demo read outside #if DEBUG: " + ", ".join(bad)); sys.exit(1)
+          print("The demo is Debug only.")
+          PY
+
       # The TestFlight build embeds the watch app (ios/watch-embed.yml), and no other build
       # does: checked in the generated project, without building the phone app here.
       - name: The watch app is embedded only for TestFlight
