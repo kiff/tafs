@@ -1,1 +1,1 @@
-• Adding someone to a group, or changing their role there, now asks for your fingerprint, as sharing a taf does.
+• Adding someone to a group, or changing their role there, is now approved as sharing a taf is.
