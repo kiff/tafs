@@ -198,6 +198,13 @@ test("press, scroll and back (gap 7) are held to the same rules: Enter submits n
   assert.equal(refuse(page, { kind: "back" }), null, "back from a payment page clicks nothing");
   // Enter on a control or link is a click: a link or button whose words pay is refused, as clicking it is.
   const shop = { url: "https://shop.example/cart", fields: [], controls: [{ ref: "c1", label: "Buy now" }, { ref: "c2", label: "Save" }], links: [{ ref: "l1", label: "Buy now", url: "https://shop.example/buy" }] };
+  // A page whose only paying words are on a link: no paying control makes the page a payment page, so only the link's own
+  // words refuse it, as a click on it is refused.
+  const linkOnly = { url: "https://shop.example/item", fields: [{ ref: "f1", label: "Search", kind: "search" }], controls: [], links: [shop.links[0], { ref: "l2", label: "Help", url: "https://shop.example/help" }] };
+  assert.equal(refuse(linkOnly, { kind: "click", ref: "l1" }).code, "payment_step");
+  assert.equal(refuse(linkOnly, { kind: "press", ref: "l1", value: "Enter" }).code, "payment_step", "Enter on the paying link");
+  assert.equal(refuse(linkOnly, { kind: "press", ref: "l2", value: "Enter" }), null, "Enter on a neutral link");
+  assert.equal(refuse(linkOnly, { kind: "press", ref: "f1", value: "Enter" }), null, "Enter in a field of a page that isn't a payment page");
   assert.equal(refuse(shop, { kind: "press", ref: "l1", value: "Enter" }).code, "payment_step");
   assert.equal(refuse(shop, { kind: "press", ref: "c1", value: "Enter" }).code, "payment_step");
   assert.equal(refuse({ ...shop, controls: [shop.controls[1]], links: [] }, { kind: "press", ref: "c2", value: "Enter" }), null);

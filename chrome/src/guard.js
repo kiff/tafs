@@ -65,6 +65,11 @@ export function refuse(page, act) {
     return known ? null : { code: CODE.refUnknown, why: "the page has no ref " + act.ref };
   }
   if (act.kind === "press") {
+    // Enter on a control or a link presses it as a click does (the page's own key handlers act on it): the same refusals,
+    // before anything else here can let it through.
+    if (act.value === "Enter" && ["controls", "links"].some((k) => (page[k] || []).some((x) => x.ref === act.ref))) {
+      return refuse(page, { kind: "click", ref: act.ref });
+    }
     if (!KEYS.includes(act.value)) return { code: CODE.badStep, why: "a press is one of " + KEYS.join(", ") };
     // Enter submits: on a checkout or payment page it's refused, as any click there is.
     if (act.value === "Enter" && (page.checkout || payment(page))) {
@@ -75,10 +80,6 @@ export function refuse(page, act) {
     if (field && secret(field)) return { code: CODE.secretField, why: "a sign-in, card or code is the person's" };
     const known = field || ["controls", "links"].some((k) => (page[k] || []).some((x) => x.ref === act.ref));
     return known ? null : { code: CODE.refUnknown, why: "the page has no ref " + act.ref };
-  }
-  // Enter on a control or a link presses it as a click does (the page's own key handlers act on it): the same refusals.
-  if (act.kind === "press" && act.value === "Enter" && ["controls", "links"].some((k) => (page[k] || []).some((x) => x.ref === act.ref))) {
-    return refuse(page, { kind: "click", ref: act.ref });
   }
   if (act.kind === "click") {
     const control = (page.controls || []).find((c) => c.ref === act.ref);
