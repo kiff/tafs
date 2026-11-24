@@ -583,7 +583,8 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
 microphone, with "Ask Coach" where the family has room, in the circular, corner, rectangular and inline families.
 - **A tap opens the app listening** (`ComplicationLink.ask`, `tafs-watch://ask`): Coach's home, then the system's dictation
   as its microphone starts it, once per tap. Nothing is sent before the person's Send. Signed out on this watch, it opens
-  nothing.
+  nothing. A tap that opens the app cold (the usual case) is kept until Coach's home appears (`CoachModel.askPending`),
+  which takes it once and listens; so does a tap from another page, or with Coach's home already on screen.
 - **It shows nothing of the account**: no count, no taf, no words. So there's nothing to hide while the watch is locked,
   and it never asks the phone or refreshes (one entry, `.never`).
 - **Signing:** its own bundle id, `bot.tafs.app.watchkitapp.widgets`, and CI's profile "tafs watch widgets App Store CI",

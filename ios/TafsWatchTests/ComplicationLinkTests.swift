@@ -26,4 +26,21 @@ final class ComplicationLinkTests: XCTestCase {
         XCTAssertTrue(phone.asked.isEmpty)
         XCTAssertEqual(coach.state, .writing)
     }
+
+    /// A tap that opens the app cold is kept until Coach's home appears, and is taken once: listening starts once per tap,
+    /// never again on the next appearance.
+    func testAPendingTapIsTakenOnce() {
+        final class Phone: PhoneAsking {
+            func ask(_ request: WatchRequest) async -> WatchReply? { nil }
+        }
+        let coach = CoachModel(phone: Phone(), lock: Unlocked())
+        XCTAssertFalse(coach.takeAskPending(), "no tap, nothing to take")
+        coach.askFromComplication()
+        XCTAssertTrue(coach.askPending)
+        XCTAssertTrue(coach.takeAskPending())
+        XCTAssertFalse(coach.askPending)
+        XCTAssertFalse(coach.takeAskPending(), "taken once")
+        coach.askFromComplication()
+        XCTAssertTrue(coach.takeAskPending(), "the next tap is its own")
+    }
 }

@@ -252,8 +252,8 @@ targets:
     dependencies:
       - target: TafsWatchWidgets
   # tafs on the watch face (row 24, step 1): "Ask tafs", which opens the app listening. It shows nothing of the account
-  # and never asks the phone. Its bundle id and provisioning profile are the owner's to create on developer.apple.com
-  # (`TAFS_PROFILE_WATCH_WIDGETS` for CI's testflight job) before this merges.
+  # and never asks the phone. Its bundle id and provisioning profile are registered by CI's testflight job (`asc-profiles`,
+  # `TAFS_PROFILE_WATCH_WIDGETS`) on its first run with this target.
   TafsWatchWidgets:
     type: app-extension
     platform: watchOS

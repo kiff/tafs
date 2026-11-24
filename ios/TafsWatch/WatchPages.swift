@@ -77,8 +77,12 @@ struct WatchPagesView: View {
             // Once the phone has answered, the lines read and dismissed on the person's other watches (row 21).
             if case .loaded = state { Task { await inbox.sync() } }
         }
-        .onAppear { coach.onAnswer = { answer, message in inbox.answered(answer, message: message) } }
-        // The complication was tapped (row 24): Coach's home, which then listens.
+        .onAppear {
+            coach.onAnswer = { answer, message in inbox.answered(answer, message: message) }
+            // Opened cold by the complication (row 24): Coach's home, which then listens.
+            if coach.askPending { page = .coach }
+        }
+        // The complication was tapped with the app open (row 24): Coach's home, which then listens.
         .onChange(of: coach.askRequests) { _, _ in page = .coach }
         .sheet(isPresented: $menu) {
             WatchMenu(pages: WatchPage.pages(), tafs: tafs) { chosen in
@@ -161,8 +165,10 @@ struct CoachHome: View {
             await needsYou.load()
             await coach.afterRead(needsYou.state)
         }
-        // The complication (row 24): the same as a tap on the microphone, once per tap.
-        .onChange(of: coach.askRequests) { _, _ in listen() }
+        // The complication (row 24): the same as a tap on the microphone, once per tap, whether Coach's home was already on
+        // screen (`onChange`) or appears for it, opened cold or from another page (`onAppear`).
+        .onAppear { if coach.takeAskPending() { listen() } }
+        .onChange(of: coach.askRequests) { _, _ in if coach.takeAskPending() { listen() } }
     }
 
     /// The microphone: the watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
