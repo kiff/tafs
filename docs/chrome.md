@@ -416,8 +416,8 @@ was done.
   timed out or a lost `close` doesn't leave a run fenced and counting as active either. The service worker's minute alarm does
   the sweeping. A run with a step running or a step handed to the person isn't idle.
 - **A paused run gets 15 minutes** (`PAUSED_IDLE_MS`), counted from its last step, its pause or its Resume, whichever is
-  last: a taf holds a step for the owner's Resume by sending it again (each answered `paused_by_owner` and keeping the run),
-  for up to 10 minutes, so a held run is never ended under it. One no step follows (the taf's turn ended on the pause, or
+  last: a taf holds its step for the owner's Resume for up to 10 minutes, so a held run is never ended under it (a step sent
+  meanwhile is answered `paused_by_owner` and keeps the run, like any step). One no step follows (the taf's turn ended on the pause, or
   it paused on failures or no progress) ends then as Stop does, recorded as `stop` by `idle`, so the bar and the group stop
   saying it works or is paused when nothing will resume it. Resume starts the 150 s count again.
 - **The person closing a run's last tab is their Stop:** the run ends then, recorded as `stop` by `person` (a hand-over open is

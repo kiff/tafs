@@ -31,8 +31,8 @@ const FAILURES_TO_PAUSE = 3;
 export const RUN_IDLE_MS = 150_000;
 /**
  * A paused run that gets no step for this long ends as Stop does: nothing will resume it (the taf's turn is over), so the bar
- * and the group stop saying it works or is paused. Above the 10 minutes a taf holds a step for the owner's Resume, re-sending it,
- * so a held run is never ended under it.
+ * and the group stop saying it works or is paused. Above the 10 minutes a taf holds its step for the owner's Resume, so a held
+ * run is never ended under it.
  */
 export const PAUSED_IDLE_MS = 15 * 60_000;
 // A finished run's group turns grey ("· done") this long after it ends, unless the taf's next run starts first (greyLater).
