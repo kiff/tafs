@@ -360,8 +360,9 @@ describe("tafs cloud", () => {
     log.mockRestore();
   });
 
-  // KIFF's member list as it's sent (test/fixtures/tenant-members.json); a list whose rows don't carry capabilities, or
-  // carry fewer for the reader than their own session holds; and a device registered again while KIFF was being read.
+  // KIFF's member list as it's sent (test/fixtures/tenant-members.json), read by an admin whose session carries more than
+  // their row (holds.allow); a list whose rows don't carry capabilities, or leave out an alert capability the reader's
+  // session holds; and a device registered again while KIFF was being read.
   it("checks alert devices against KIFF's member list as sent, and changes nothing on a list it can't trust", async () => {
     const fixture = JSON.parse(readFileSync(new URL("./fixtures/tenant-members.json", import.meta.url), "utf8")) as { answer: { members: Array<Record<string, unknown>> } };
     const ok = (body: unknown) => (async () => new Response(JSON.stringify(body), { status: 200 })) as unknown as typeof fetch;
@@ -382,13 +383,15 @@ describe("tafs cloud", () => {
         removeDevice: async (_t: string, token: string) => { rows.delete(token); }, addSecret: async () => undefined },
       fetch: (async (url: string, init?: RequestInit) => {
         if (new URL(String(url)).pathname === "/v1/tenant/members") { meanwhile(); return new Response(JSON.stringify(answer), { status: 200 }); }
+        // Ana's session as /v1/me sends an admin's: with holds.allow, which member rows never carry.
+        if (new URL(String(url)).pathname === "/v1/me") return new Response(JSON.stringify({ ...ME, capabilities: [...fixture.answer.members[0]!.capabilities as string[], "holds.allow"] }), { status: 200 });
         return inner(url as never, init);
       }) as typeof fetch };
     const list = () => handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const strip = (drop: (m: Record<string, unknown>) => Record<string, unknown>) => ({ members: fixture.answer.members.map(drop) });
-    // Rows with a role and no capabilities; the reader listed without cards.manage, which their session holds.
+    // Rows with a role and no capabilities; the reader listed without cards.manage or holds.answer, which their session holds.
     for (const wrong of [strip(({ capabilities: _c, ...m }) => m), strip((m) => m.subject === "u_ana" ? { ...m, capabilities: ["read"] } : m)]) {
       answer = wrong;
       expect((await list()).statusCode).toBe(200);

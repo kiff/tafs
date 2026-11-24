@@ -7,7 +7,7 @@ import { type BalanceView, balanceView, type CreditRun, CreditsError, runCredits
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers, membersOf } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification, watchInboxNotification, reconcileDevices } from "./push.js";
+import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification, watchInboxNotification, reconcileDevices, ALERT_CAPABILITIES } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -2489,8 +2489,8 @@ const ALERT_DEVICES_EVERY_MS = 3600_000;
  * longer an active member is removed, and the others keep only what their person's role still allows. With the person's
  * own session (any member may read the account's people), on their read of the tafs list, at most once an hour per
  * account. Fail closed: when KIFF can't be read, or its list looks wrong (empty; without the reader as an active member,
- * whose own session just read it; an active member without capabilities; or the reader listed with less than their
- * session holds), nothing changes and the hour isn't taken. The devices are read again just before the writes, and a row
+ * whose own session just read it; an active member without capabilities; or the reader listed without one of the alert
+ * capabilities their session holds), nothing changes and the hour isn't taken. The devices are read again just before the writes, and a row
  * registered again since the first read is left for the next check. Logged with counts only.
  */
 async function syncAlertDevices(me: { tenantID: string; subject: string; capabilities: string[] }, token: string, deps: Deps): Promise<void> {
@@ -2504,7 +2504,7 @@ async function syncAlertDevices(me: { tenantID: string; subject: string; capabil
   const people = await membersOf(token, deps.fetch, deps.kiffBase);
   const reader = people.find((p) => p.subject === me.subject && p.status === "active");
   const unsure = !reader ? "reader"
-    : people.some((p) => p.status === "active" && !p.capabilities) || !me.capabilities.every((c) => reader.capabilities?.includes(c)) ? "capabilities"
+    : people.some((p) => p.status === "active" && !p.capabilities) || ALERT_CAPABILITIES.some((c) => me.capabilities.includes(c) && !reader.capabilities?.includes(c)) ? "capabilities"
     : undefined;
   if (unsure) {
     console.warn(JSON.stringify({ event: "alert_devices_unsure", tenant: me.tenantID, listed: people.length, reason: unsure }));

@@ -129,13 +129,16 @@ export function routing(senders: { ios: Sender; android?: Sender }): Sender {
 /** How long a device row registered without a person is kept: its app registers again at launch, which gives it one. */
 export const UNOWNED_DEVICE_DAYS = 30;
 
+/** The capabilities a device's alerts follow: `answers`, `addsTasks` and `manages`. */
+export const ALERT_CAPABILITIES = ["holds.answer", "billing.manage", "cards.manage"] as const;
+
 /**
  * The account's alert devices against its people as KIFF lists them now. A device whose person isn't an active member
  * (removed, suspended, or not listed) is dropped. The others keep only what their person's role still allows
  * (`answers`: holds.answer, `addsTasks`: billing.manage, `manages`: cards.manage): this only narrows a device, never
  * widens it, since a registration may have been given less than the role, and a member listed without capabilities
- * isn't narrowed at all. A row registered without a person is dropped once it's older than `UNOWNED_DEVICE_DAYS`, and
- * left as it is until then.
+ * isn't narrowed at all. A row registered without a person is dropped once it's older than `UNOWNED_DEVICE_DAYS` (or
+ * carries no date, as only the oldest rows do), and left as it is until then.
  */
 export function reconcileDevices(devices: Device[], members: Array<{ subject: string; status: string; capabilities?: string[] }>, now = new Date()): { remove: string[]; update: Device[] } {
   const active = new Map(members.filter((m) => m.status === "active").map((m) => [m.subject, m.capabilities ? new Set(m.capabilities) : undefined]));
@@ -144,7 +147,7 @@ export function reconcileDevices(devices: Device[], members: Array<{ subject: st
   for (const d of devices) {
     if (!d.subject) {
       const at = Date.parse(d.at);
-      if (Number.isFinite(at) && now.getTime() - at > UNOWNED_DEVICE_DAYS * 86_400_000) remove.push(d.token);
+      if (!Number.isFinite(at) || now.getTime() - at > UNOWNED_DEVICE_DAYS * 86_400_000) remove.push(d.token);
       continue;
     }
     if (!active.has(d.subject)) { remove.push(d.token); continue; }
