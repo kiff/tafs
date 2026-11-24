@@ -124,6 +124,14 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
 - **Out:** Coach's words, cut at about 300 characters with "The rest is on your phone". If the
   answer shows any card or step, the wrist says "Approve on your phone" and nothing of the card:
   nothing started from the wrist can grant anything.
+- **Hear** (`HearButton`, `WatchHear`, as Wear OS's `Speaker`): under Coach's answer, on Coach's screen and on an opened
+  Inbox line, it reads the words aloud with the watch's own speech (`AVSpeechSynthesizer`), by a voice of the app's own
+  language, on its speaker or the headphones it's connected to. Nothing is sent or kept. The voice is looked for by the
+  catalog's full tag first (pt-BR; zh-Hant as zh-TW, then zh-HK; pt as pt-PT, since Brazil has its own), then the bare
+  language (`WatchHear.candidates`). **A language the watch has no voice for isn't spoken, and Hear isn't shown**: never
+  another language's voice reading it. The synthesizer keeps its own audio session, so it never takes the recorder's. It
+  stops when its screen goes, and a speech that fails leaves the words on screen. `WatchHearTests`. **To verify on a
+  watch:** the speaker with no headphones, silent mode and Low Power Mode.
 - **At most 2,000 characters,** as on Wear OS: longer is refused before anything is sent.
 - **Refused:** without the AI-use consent, "allow AI use in tafs on your phone"; past the
   credits, the app's own words; anything else, "Not sent" and why.
