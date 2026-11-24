@@ -136,6 +136,11 @@ data class ChatMessage(
   val counted: String? = null,
   /** A connection its work asked for that was refused and not connected since: tafs cloud's lines, under the taf's words, never folded. */
   val refused: Refused? = null,
+  /**
+   * Coach's answer from a turn that read a page in the person's Chrome (tafs cloud's `page_turn`): a link in it may be the page's
+   * own doing, so it asks before it opens, with the whole address shown.
+   */
+  val pageTurn: Boolean = false,
 ) {
   enum class From { owner, taf }
   enum class Kind { kickoff, message }

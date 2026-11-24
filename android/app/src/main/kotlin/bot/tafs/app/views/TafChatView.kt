@@ -704,7 +704,7 @@ private fun MessageBody(
       message.work?.let { WorkSummary(it) }
       // Full width, with no bubble, as the taf writes (#58). Copy under it; Report under More actions, once tafs cloud has an id for it.
       AnswerWithActions(message.text, onReport?.takeIf { message.serverId != null }) {
-        MarkdownText(message.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
+        PageTurnText(message.text, asks = message.pageTurn)
       }
       MessageTime(message)
     }
@@ -774,7 +774,9 @@ private fun LiveWork(live: LiveAnswer) {
         Text(line, style = scaled(13, color = if (waiting) Theme.amberText else Theme.dim))
       }
     }
-    if (writing) MarkdownText(live.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
+    // An answer still being written can't yet say whether its turn read a page (a resumed stream carries no flag): its links
+    // ask first, until the thread read says.
+    if (writing) PageTurnText(live.text, asks = true)
   }
 }
 
@@ -926,3 +928,30 @@ private fun AskCoachCard(text: String, ask: ((String) -> Unit)?) {
 
 /** Whether a message in the thread is the one the owner sent with [sent]: the same words, or them after its files' lines. */
 internal fun sentWords(stored: String, sent: String): Boolean = stored == sent || stored.endsWith("\n\n" + sent)
+
+/**
+ * A taf's words, as the chat draws them. When [asks] (an answer from a turn that read a page in the person's Chrome, or one still
+ * being written), a link doesn't open on the tap: "Open this link?" shows its whole address first (docs/chat.md), with Open and
+ * Cancel. Otherwise a link opens as before.
+ */
+@Composable
+internal fun PageTurnText(text: String, asks: Boolean) {
+  var confirming by remember { mutableStateOf<String?>(null) }
+  val uri = androidx.compose.ui.platform.LocalUriHandler.current
+  MarkdownText(text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), onLink = if (asks) { url -> confirming = url } else null)
+  confirming?.let { url ->
+    bot.tafs.app.drive.DriveAlert(
+      onDismissRequest = { confirming = null },
+      title = { Text(Words.Chat.linkConfirmTitle) },
+      text = { Text(Words.Chat.linkConfirmBody(url), modifier = Modifier.testTag("link-confirm-body")) },
+      confirmButton = {
+        androidx.compose.material3.TextButton({
+          confirming = null
+          runCatching { uri.openUri(url) }
+        }, Modifier.confirms()) { Text(Words.Chat.linkConfirmOpen) }
+      },
+      dismissButton = { androidx.compose.material3.TextButton({ confirming = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
+}

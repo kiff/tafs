@@ -93,6 +93,17 @@ class ChatKiffTest {
     assertEquals("Bearer at_1", request.headers["Authorization"])
   }
 
+  /** Coach's answer from a turn that read a page in Chrome carries `page_turn`: its links ask before they open (docs/chat.md). */
+  @Test fun anAnswerFromAPageTurnIsMarkedAndNoOtherIs() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("what is this?", "2026-10-28T08:00:00Z"),
+      taf("See [this](https://shop.example/x).", "2026-10-28T08:00:05Z", work = ",\"page_turn\":true"),
+      taf("Hi!", "2026-10-28T08:00:06Z")))
+    val m = model()
+    m.loadChat("refunds-1")
+    assertEquals(listOf(false, true, false), m.messages().map { it.pageTurn })
+  }
+
   /** A taf hands a setting to Coach with an `ask_coach` card (kiff/tafs#476, gap 15): it's in its chat at its time, and no other card is. */
   @Test fun aTafsAskCoachCardIsInItsChatAndNoOtherCardIs() = runTest {
     readsOf()
