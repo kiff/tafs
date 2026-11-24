@@ -65,7 +65,7 @@ final class ReportAnswerUITests: TafsUITestCase {
             // (#1614's first run) though the press itself works.
             _ = gone(send, within: 10)
             for _ in 0..<3 where !shown {
-                answer.press(forDuration: 1.2)
+                pressOnScreen(app, answer)
                 shown = item.waitForExistence(timeout: 5) && hittable(item, within: 5)
             }
             if !shown { continue }   // this attempt didn't get the menu: try again
@@ -107,6 +107,19 @@ final class ReportAnswerUITests: TafsUITestCase {
     private func done(_ app: XCUIApplication, _ words: String) -> Bool {
         let shown = app.staticTexts["report-done"]
         return shown.waitForExistence(timeout: 10) && shown.label == words
+    }
+
+    /// A long press on the part of `element` that's on screen, clear of the bars: a press at the centre of an answer that
+    /// runs under the navigation bar or the compose bar lands on the bar, and the menu never opens (on iOS 27.2 the test
+    /// failed there twice in three runs at one head, and passed on the third). With no such part, the element's own press.
+    @MainActor
+    private func pressOnScreen(_ app: XCUIApplication, _ element: XCUIElement) {
+        let window = app.windows.firstMatch.frame
+        let visible = element.frame.intersection(window.insetBy(dx: 0, dy: 120))
+        guard !visible.isNull, visible.height >= 12, visible.width >= 12 else { return element.press(forDuration: 1.2) }
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: visible.midX - window.minX, dy: visible.midY - window.minY))
+            .press(forDuration: 1.2)
     }
 
     /// Whether `element` is gone within `seconds`: no longer in the app's tree.
