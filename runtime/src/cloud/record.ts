@@ -118,7 +118,7 @@ export async function recordPage(input: { token: string; scope: string; tafs: Re
   const lang = input.lang ?? "en";
   const w = wordsIn(lang);
   const q = (input.query.get("q") ?? "").trim();
-  if (q.length > MAX_Q) throw new ActivityError(400, `a search is at most ${MAX_Q} characters`);
+  if (q.length > MAX_Q) throw new ActivityError(400, `a search is at most ${MAX_Q} characters`, "query_too_long", w.record_query_too_long(MAX_Q));
   const from = input.query.get("from"), to = input.query.get("to");
   if ((from && !dateOf(from)) || (to && !dateOf(to))) throw new ActivityError(400, "from and to are dates, such as 2026-11-05");
   const take = Number(input.query.get("limit") ?? 20);
@@ -140,7 +140,7 @@ export async function recordPage(input: { token: string; scope: string; tafs: Re
     const page = await read(input.token, offset, net, base);
     // How many calls KIFF shows in all: a call made since moves every offset, so a cursor from before is refused.
     const head = String(page.shown);
-    if (scan === 0 && revision && revision !== head) throw new ActivityError(409, "The Record changed; search again to see the newest");
+    if (scan === 0 && revision && revision !== head) throw new ActivityError(409, "The Record changed; search again to see the newest", "record_changed", w.record_changed);
     revision ??= head;
     if (!page.calls.length) { more = false; break; }
     for (const call of page.calls) {
@@ -234,19 +234,20 @@ export interface ReceiptsExport {
  * The receipts of every call of the person's tafs on the days `from` to `to` (at most EXPORT_MAX_DAYS, in the
  * account's zone), for an accountant: KIFF's signed receipts passed through, and a CSV that lists each call.
  */
-export async function receiptsExport(input: { token: string; from: string | null; to: string | null; tafs: RecordTaf[]; zone: string },
+export async function receiptsExport(input: { token: string; from: string | null; to: string | null; tafs: RecordTaf[]; zone: string; lang?: Lang },
   net: Fetch = fetch, base = KIFF_API): Promise<ReceiptsExport> {
+  const w = wordsIn(input.lang ?? "en");
   const from = dateOf(input.from), to = dateOf(input.to);
   if (!from || !to) throw new ActivityError(400, "from and to are dates, such as 2026-11-05");
-  if (to < from) throw new ActivityError(400, "to is on or after from");
-  if ((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000 >= EXPORT_MAX_DAYS) throw new ActivityError(400, `an export covers at most ${EXPORT_MAX_DAYS} days`);
+  if (to < from) throw new ActivityError(400, "to is on or after from", "export_range", w.record_export_order);
+  if ((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000 >= EXPORT_MAX_DAYS) throw new ActivityError(400, `an export covers at most ${EXPORT_MAX_DAYS} days`, "export_range", w.record_export_days(EXPORT_MAX_DAYS));
   const byAgent = new Map(input.tafs.map((t) => [t.kiffAgent, t]));
   const found = await scan(input.token, net, base, (c) => dayIn(c.created_at, input.zone) >= from);
   // An export is whole or refused: one cut short at MAX_SCAN would read as complete to an accountant.
-  if (found.cut) throw new ActivityError(400, `more than ${MAX_SCAN * PAGE} calls on those days; export fewer days at a time`);
+  if (found.cut) throw new ActivityError(400, `more than ${MAX_SCAN * PAGE} calls on those days; export fewer days at a time`, "export_too_big", w.record_export_too_big);
   const calls = found.calls.filter((c) => dayIn(c.created_at, input.zone) <= to && byAgent.has(c.actor_id ?? ""));
   const traced = calls.filter((c) => typeof (c.receipt as { trace_id?: unknown } | null)?.trace_id === "string");
-  if (traced.length > EXPORT_MAX_RECEIPTS) throw new ActivityError(400, `more than ${EXPORT_MAX_RECEIPTS} receipts on those days; export fewer days at a time`);
+  if (traced.length > EXPORT_MAX_RECEIPTS) throw new ActivityError(400, `more than ${EXPORT_MAX_RECEIPTS} receipts on those days; export fewer days at a time`, "export_too_big", w.record_export_too_big);
   const receipts = new Map<string, unknown>();
   for (let i = 0; i < traced.length; i += 8) {
     await Promise.all(traced.slice(i, i + 8).map(async (c) => {
