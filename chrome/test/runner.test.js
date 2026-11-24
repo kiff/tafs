@@ -1119,3 +1119,12 @@ test("the person closing a run's last tab ends the run as their Stop; closing on
   assert.ok(!r.state().some((x) => !x.stopped), "nothing says a taf works");
   assert.equal((await r.handle(step({ op: "read" }))).error.code, "stopped", "and planque's next step on it is told");
 });
+
+test("a group whose run is over says so in the extension's words, as it said the taf was working", async () => {
+  const c = fakeChrome();
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, say: (key, sub) => (key === "group_done" ? sub[0] + " is done" : key === "working" ? sub[0] + " is working" : "") });
+  await r.handle(step());
+  await r.greyGroup("Rae", 7);
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabGroups.update").pop()[2], { title: "tafs · Rae is done", color: "grey" });
+  assert.equal(new Runner({ chrome: c, sleep, paired: () => paired }).doneTitle("Rae"), "tafs · Rae · done", "with no words, as before");
+});

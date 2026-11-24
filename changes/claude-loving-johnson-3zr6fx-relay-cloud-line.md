@@ -1,0 +1,1 @@
+- **Apple Watch: when the phone can't reach tafs cloud, the watch says so.** "Your phone couldn't reach tafs cloud. Try again." replaces a line that spoke of refusing on KIFF ([watch-app.md](docs/watch-app.md)).

@@ -449,7 +449,13 @@ export class Runner {
   }
 
   greyGroup(taf, groupId) {
-    return Promise.resolve(this.chrome.tabGroups.update(groupId, { title: "tafs · " + taf + " · done", color: "grey" })).catch(() => {});
+    return Promise.resolve(this.chrome.tabGroups.update(groupId, { title: this.doneTitle(taf), color: "grey" })).catch(() => {});
+  }
+
+  /** A group whose run is over, in the extension's words ("Rae is done"), as `workingTitle` is while it works. */
+  doneTitle(taf) {
+    const name = taf || "taf";
+    return "tafs · " + (this.say("group_done", [name]) || name + " · done");
   }
 
   async closeRun(run, close = true) {

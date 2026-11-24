@@ -212,7 +212,7 @@ final class WatchRelayTests: XCTestCase {
         let reading = Reading(at: now)
         reading.fails = true
         let reply = await send(WatchRequest(.needsYou, made: now), reading: reading)
-        XCTAssertEqual(reply, WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff))
+        XCTAssertEqual(reply, WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud))
     }
 
     func testCoachGetsTheWordsAsTheWatchWroteThem() async {
@@ -323,7 +323,7 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(reply, WatchReply(.ok, account: WatchAccount(email: "owner@example.com", account: "Shop", plan: "Starter")))
         reading.fails = true
         let failed = await send(WatchRequest(.account, made: now), reading: reading)
-        XCTAssertEqual(failed, WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff))
+        XCTAssertEqual(failed, WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud))
         reading.signedIn = false
         let out = await send(WatchRequest(.account, made: now), reading: reading)
         XCTAssertEqual(out, WatchReply(.signedOut))
@@ -472,7 +472,7 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(post.value(forHTTPHeaderField: "Authorization"), "Bearer dev_token")
         StubProtocol.responses["GET /v1/watch/inbox"] = (503, #"{"error":"down"}"#)
         let down = await reading.inboxMarks()
-        XCTAssertEqual(down, WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff))
+        XCTAssertEqual(down, WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud))
     }
 
     func testRefuseFromTheWristIsTheNotificationsSignedRefusalWithTheCurrentKey() async {
@@ -804,7 +804,7 @@ final class WatchRelayTests: XCTestCase {
         // tafs cloud out of reach is said as such, not refused, and nothing is read.
         StubProtocol.responses["GET /v1/setup"] = (503, #"{"error":"unavailable"}"#)
         let unreached = await reading.coachRead(WatchCoachTicket(chat: "taf-setup", session: "s1", sent: nil))
-        XCTAssertEqual(unreached, WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff))
+        XCTAssertEqual(unreached, WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud))
         XCTAssertTrue(sent("GET", "/v1/tafs/taf-setup/conversation/s1").isEmpty)
     }
 

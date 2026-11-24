@@ -249,7 +249,6 @@
   "step_handed": {"message": "आपको सौंपा गया", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "आपने कर दिया", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "आपने “अभी नहीं” कहा", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ इस पेज पर काम कर रहा है", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "इस Chrome में काम कर रहे हैं", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "$TAF$ के टैब पर जाएँ", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← वापस"},
@@ -264,5 +263,6 @@
   "taf_remove": {"message": "यह taf हटाएँ"},
   "taf_remove_on_phone": {"message": "taf आपके फ़ोन पर हटाया जाता है: इसे tafs ऐप में खोलें, फिर हटाएँ। हटाने की मंज़ूरी वहीं दी जाती है।"},
   "bar_go": {"message": "इसके टैब पर जाएँ"},
-  "bar_paused": {"message": "$TAF$ थमा हुआ है", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ थमा हुआ है", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ का काम पूरा हुआ", "placeholders": {"taf": {"content": "$1"}}}
 }

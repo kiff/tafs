@@ -80,7 +80,6 @@
   "step_handed": {"message": "已交給您", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "您已完成", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "您選了「暫時不要」", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ 正在這個頁面上作業", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "在這個 Chrome 中作業", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "前往 $TAF$ 的分頁", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← 返回"},
@@ -95,5 +94,6 @@
   "taf_remove": {"message": "移除這個 taf"},
   "taf_remove_on_phone": {"message": "taf 要在手機上移除：在 tafs 應用程式中開啟它，然後點「移除」。移除會在那裡核准。"},
   "bar_go": {"message": "前往它的分頁"},
-  "bar_paused": {"message": "$TAF$ 已暫停", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ 已暫停", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ 已完成", "placeholders": {"taf": {"content": "$1"}}}
 }

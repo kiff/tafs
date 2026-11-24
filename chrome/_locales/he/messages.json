@@ -80,7 +80,6 @@
   "step_handed": {"message": "הועבר אליך", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "עשית את זה", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "אמרת „לא עכשיו”", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ עובד על הדף הזה", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "עובדים ב-Chrome הזה", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "מעבר ללשונית של $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "→ חזרה"},
@@ -95,5 +94,6 @@
   "taf_remove": {"message": "הסרת ה-taf הזה"},
   "taf_remove_on_phone": {"message": "taf מוסר בטלפון: פתח אותו באפליקציית tafs ואז הסרה. ההסרה מאושרת שם."},
   "bar_go": {"message": "מעבר ללשונית שלו"},
-  "bar_paused": {"message": "$TAF$ מושהה", "placeholders": {"taf": {"content": "$1"}}}
+  "bar_paused": {"message": "$TAF$ מושהה", "placeholders": {"taf": {"content": "$1"}}},
+  "group_done": {"message": "$TAF$ סיים", "placeholders": {"taf": {"content": "$1"}}}
 }
