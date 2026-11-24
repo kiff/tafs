@@ -9,6 +9,46 @@ import { randomId } from "./crypto.js";
 const PING_MS = 20_000;
 /** The relay carries at most 128 KB a message: a result above this is answered `page_too_large` instead. */
 export const MAX_RESULT_BYTES = 120 * 1024;
+
+/** The text kept of a page cut to fit: enough to read where the taf is, with the rest a `browse_read` away. */
+const CUT_TEXT = 4000;
+const CUT_OPTIONS = 10;
+const CUT_LINKS = 50;
+
+/**
+ * Gap 4: smaller and smaller copies of a page too large to send, each saying what it cut (`truncated`), to try in turn. The
+ * text goes first, since planque's fingerprint of a read (its refs, labels and options) doesn't count it: a page cut there
+ * is still the read the taf acts on. Then a select's options past 10, then links past 50, then the rest of the text and the
+ * links. A cut text says where it goes on (`more`, `next_offset`), as a window does. Fields and controls are never cut: they
+ * are what an act names.
+ */
+export function cutPages(page) {
+  const out = [];
+  let p = page;
+  const cut = (what, change) => {
+    p = { ...p, ...change, truncated: [...new Set([...(p.truncated || []), what])] };
+    out.push(p);
+  };
+  const text = (n) => {
+    let end = Math.min(n, p.text.length);
+    if (end > 0 && end < p.text.length) {
+      const last = p.text.charCodeAt(end - 1);
+      if (last >= 0xd800 && last <= 0xdbff) end -= 1;
+    }
+    return { text: p.text.slice(0, end), more: true, next_offset: (p.offset || 0) + end };
+  };
+  if (!page || typeof page !== "object") return out;
+  if (typeof p.text === "string" && p.text.length > CUT_TEXT) cut("text", text(CUT_TEXT));
+  if ((p.fields || []).some((f) => Array.isArray(f.options) && f.options.length > CUT_OPTIONS)) {
+    cut("options", { fields: p.fields.map((f) => (Array.isArray(f.options) && f.options.length > CUT_OPTIONS ? { ...f, options: f.options.slice(0, CUT_OPTIONS) } : f)) });
+  }
+  if ((p.links || []).length > CUT_LINKS) cut("links", { links: p.links.slice(0, CUT_LINKS) });
+  if (typeof p.text === "string" && p.text.length > 0) cut("text", text(0));
+  if ((p.links || []).length > 0) cut("links", { links: [] });
+  return out;
+}
+
+const bytesOf = (answer) => new TextEncoder().encode(JSON.stringify(answer)).length;
 /** A connection dropped during a run is opened again at once, then after 2, 4, … seconds, up to 30. */
 const RETRY_MS = [1_000, 2_000, 4_000, 8_000, 16_000, 30_000];
 
@@ -178,7 +218,15 @@ export class Relay {
       }
       const out = await this.runner.handle(checked.step);
       let answer = await result(keys.privateKey, checked.step, pairing.chromeId, out);
-      if (new TextEncoder().encode(JSON.stringify(answer)).length > MAX_RESULT_BYTES) {
+      // Too large: the page is cut until it fits, and says what was cut. An act that ran is never answered as a failure
+      // (a taf told its click failed may click Submit again); only a page that fits no way is `page_too_large`.
+      if (bytesOf(answer) > MAX_RESULT_BYTES && out && out.page) {
+        for (const page of cutPages(out.page)) {
+          answer = await result(keys.privateKey, checked.step, pairing.chromeId, { ...out, page });
+          if (bytesOf(answer) <= MAX_RESULT_BYTES) break;
+        }
+      }
+      if (bytesOf(answer) > MAX_RESULT_BYTES) {
         answer = await result(keys.privateKey, checked.step, pairing.chromeId, { error: { code: "page_too_large", detail: "the answer is over " + MAX_RESULT_BYTES + " bytes" } });
       }
       this.send(answer);

@@ -46,6 +46,7 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
         return o.groupId ?? 7;
       },
       remove: async (id) => calls.push(["tabs.remove", id]),
+      goBack: async (id) => calls.push(["tabs.goBack", id]),
       ungroup: async (ids) => {
         calls.push(["tabs.ungroup", ids]);
         for (const t of [].concat(ids)) groups.delete(t);
@@ -161,6 +162,20 @@ test("an act needs the read it was planned from, and the guard holds before the 
   assert.equal((await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "click", ref: "c2" } }))).error.code, "payment_step");
   assert.equal(c.calls.filter((x) => x[0] === "executeScript").length, before, "nothing ran in the page");
   assert.equal((await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "fill", ref: "f1", sealed: "sec_1" } }))).error.code, "secret_field", "no sealed values in this build");
+});
+
+test("back goes where the tab was and reads the page there; nothing runs in the page before it", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  const opened = await r.handle(step());
+  const scripts = c.calls.filter((x) => x[0] === "executeScript").length;
+  const out = await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "back" } }));
+  assert.ok(out.page, "the page after is read");
+  const tab = [...c.tabsMap.keys()][0];
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.goBack"), [["tabs.goBack", tab]]);
+  const ran = c.calls.slice(c.calls.findIndex((x) => x[0] === "tabs.goBack")).filter((x) => x[0] === "executeScript").length;
+  assert.equal(c.calls.filter((x) => x[0] === "executeScript").length - scripts, ran, "only the read after, no act in the page");
+  assert.equal((await r.handle(step({ op: "act", read_id: out.page.read_id, act: { kind: "back", ref: "c1" } }))).error.code, "bad_step");
 });
 
 test("three failed acts in a row pause the run; Resume goes on", async () => {

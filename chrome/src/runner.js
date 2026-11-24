@@ -754,6 +754,13 @@ export class Runner {
     const refused = refuse(page, step.act);
     if (refused) return { error: { code: refused.code } };
     if (step.act.sealed) return this.fillSealed(run, step, page);
+    // Back (gap 7): where the tab was before, read and fenced as any page is; nothing is clicked or typed.
+    if (step.act.kind === "back") {
+      const from = await this.chrome.tabs.get(run.tab).catch(() => null);
+      await Promise.resolve(this.chrome.tabs.goBack(run.tab)).catch(() => {});
+      await this.loaded(run.tab, from ? from.url || "" : undefined);
+      return this.read(run);
+    }
     await this.pictureOf(run, step, page);
     const before = await this.chrome.tabs.get(run.tab).catch(() => null);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);

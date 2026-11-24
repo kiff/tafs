@@ -171,6 +171,34 @@ test("the extension's guard refuses what planque's does", () => {
   }
 });
 
+test("press, scroll and back (gap 7) are held to the same rules: Enter submits nothing on a pay page, a key never goes into a secret", () => {
+  const plain = { ...page, fields: [page.fields[0]], controls: [page.controls[0]] };
+  assert.equal(refuse(plain, { kind: "press", ref: "f1", value: "Enter" }), null);
+  assert.equal(refuse(plain, { kind: "press", ref: "f1", value: "ArrowDown" }), null);
+  assert.equal(refuse(plain, { kind: "press", ref: "c1", value: "Escape" }), null);
+  assert.equal(refuse(plain, { kind: "press", ref: "f1", value: "Tab" }).code, "bad_step", "a closed set of keys");
+  assert.equal(refuse(plain, { kind: "press", ref: "f1", value: "Control+a" }).code, "bad_step");
+  assert.equal(refuse(plain, { kind: "press", ref: "f9", value: "Enter" }).code, "ref_unknown");
+  assert.equal(refuse(plain, { kind: "press", value: "Enter" }).code, "bad_step", "a press names its ref");
+  // Enter submits: on a payment or checkout page it's refused, as any click there is; a key never goes into a secret field.
+  assert.equal(refuse(page, { kind: "press", ref: "f1", value: "Enter" }).code, "payment_step");
+  assert.equal(refuse({ ...plain, checkout: { lines: [] } }, { kind: "press", ref: "f1", value: "Enter" }).code, "payment_step");
+  const signIn = { url: "https://shop.example/login", fields: [page.fields[0], page.fields[1]], controls: [], links: [] };
+  assert.equal(refuse(signIn, { kind: "press", ref: "f2", value: "Enter" }).code, "secret_field");
+  assert.equal(refuse(signIn, { kind: "press", ref: "f1", value: "Enter" }), null, "Enter in the email field of a sign-in page");
+  // A fill may type key by key, and says so only as true.
+  assert.equal(refuse(plain, { kind: "fill", ref: "f1", value: "Lyon", keys: true }), null);
+  assert.equal(refuse(plain, { kind: "fill", ref: "f1", value: "Lyon", keys: "yes" }).code, "bad_step");
+  // Scroll: a ref the page has, or the page itself up or down. Back names no ref.
+  assert.equal(refuse(plain, { kind: "scroll", ref: "l1" }), null);
+  assert.equal(refuse(plain, { kind: "scroll", ref: "x9" }).code, "ref_unknown");
+  assert.equal(refuse(plain, { kind: "scroll" }), null);
+  assert.equal(refuse(plain, { kind: "scroll", value: "up" }), null);
+  assert.equal(refuse(plain, { kind: "scroll", value: "sideways" }).code, "bad_step");
+  assert.equal(refuse(page, { kind: "back" }), null, "back from a payment page clicks nothing");
+  assert.equal(refuse(plain, { kind: "back", ref: "c1" }).code, "bad_step");
+});
+
 test("every shipped language has an extension locale with English's keys and placeholders, and no English left in it", async () => {
   const { readdirSync, readFileSync } = await import("node:fs");
   const dir = new URL("../_locales/", import.meta.url);
