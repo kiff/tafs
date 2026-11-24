@@ -247,3 +247,107 @@ button.small {
   font-size: 11px;
   opacity: 0.75;
 }
+
+/* The header's end: the connection, then the ⋮ menu (0.2.8). */
+header {
+  position: relative;
+}
+.headend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+button.iconbtn {
+  min-width: 32px;
+  padding: 2px 8px;
+  font-size: 18px;
+  line-height: 1;
+}
+.menu {
+  position: absolute;
+  top: 100%;
+  inset-inline-end: 0;
+  z-index: 10;
+  display: grid;
+  min-width: 220px;
+  padding: 4px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+.menu button {
+  text-align: start;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.menu button:hover,
+.menu button:focus-visible {
+  background: var(--line);
+}
+.viewhead .push {
+  margin-inline-start: auto;
+}
+/* Settings: a card per subject. */
+.card h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+button.danger {
+  color: var(--no);
+}
+/* Coach doesn't read the page: a banner at the top of its chat, with a real button. */
+.banner {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--amber);
+  border-radius: 10px;
+  background: var(--card);
+}
+.banner p {
+  margin: 0 0 8px;
+}
+/* The page consent: a screen over the whole panel, never a line to find. */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow: auto;
+  padding: 16px;
+  background: var(--bg);
+}
+.sheetbody {
+  max-width: 560px;
+  margin: 0 auto;
+}
+.sheetbody h2 {
+  font-size: 18px;
+  margin: 8px 0 12px;
+}
+.sheetbody ul {
+  padding-inline-start: 20px;
+}
+.sheetbody li {
+  margin-bottom: 8px;
+}
+/* A conversation: its title, and when it was last written, under it. */
+ul.chats li {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+ul.chats .chat {
+  display: grid;
+  min-width: 0;
+}
+ul.chats .chatTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+ul.chats .chatWhen {
+  color: var(--soft);
+  font-size: 12px;
+}
