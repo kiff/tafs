@@ -5,9 +5,9 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers, membersOf } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification, watchInboxNotification } from "./push.js";
+import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification, watchInboxNotification, reconcileDevices } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -860,6 +860,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       .sort((a, b) => b.created.localeCompare(a.created) || b.id.localeCompare(a.id));
     // Leftover connections of tafs gone end here, on the read of a person who may manage tafs (their session), at most hourly.
     if (me.capabilities.includes("cards.manage")) await within(sweepLeftovers(me, bearer(event), deps), 2000).catch((err) => console.warn(`connections sweep: ${(err as Error)?.message ?? "timed out"}`));
+    // The account's alert devices against its people now: those of a member who left lose their alerts, at most hourly.
+    await within(syncAlertDevices(me, bearer(event), deps), 1500).catch((err) => console.warn(`alert devices: ${(err as Error)?.message ?? "timed out"}`));
     return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps, undefined, undefined, langOf(event)))), removing: await deps.removals.list(me.tenantID) };
   }
   if (parts.length === 2 && method === "POST") {
@@ -2477,6 +2479,37 @@ async function endTafConnections(taf: Taf, me: { tenantID: string }, token: stri
     out.kept.push(...r.kept);
   }
   return out;
+}
+
+/** How often an account's alert devices are checked against its people, at most. */
+const ALERT_DEVICES_EVERY_MS = 3600_000;
+
+/**
+ * The account's alert devices against its people as KIFF lists them now (`reconcileDevices`): a device whose person is no
+ * longer an active member is removed, and one whose person's role changed takes what it may do now. With the person's own
+ * session (any member may read the account's people), on their read of the tafs list, at most once an hour per account.
+ * Fail closed: when KIFF can't be read, or its list looks wrong (empty, or without the reader as an active member, whose
+ * own session just read it), nothing changes and the hour isn't taken, so one bad answer never removes the account's
+ * devices. Logged with counts only.
+ */
+async function syncAlertDevices(me: { tenantID: string; subject: string }, token: string, deps: Deps): Promise<void> {
+  if (!deps.coach || !token) return;
+  const now = deps.now?.() ?? new Date();
+  const key = `alert_devices#${me.tenantID}`;
+  if (await deps.coach.get(key).catch(() => undefined)) return;
+  const { devices } = await deps.push.get(me.tenantID);
+  if (devices.length === 0) return;
+  // Read first: the hour is claimed only once KIFF has answered.
+  const people = await membersOf(token, deps.fetch, deps.kiffBase);
+  if (!people.some((p) => p.subject === me.subject && p.status === "active")) {
+    console.warn(JSON.stringify({ event: "alert_devices_unsure", tenant: me.tenantID, listed: people.length }));
+    return;
+  }
+  if (!await deps.coach.once(key, new Date(now.getTime() + ALERT_DEVICES_EVERY_MS))) return;
+  const { remove, update } = reconcileDevices(devices, people);
+  for (const token of remove) await deps.push.removeDevice(me.tenantID, token);
+  for (const d of update) await deps.push.addDevice(me.tenantID, d);
+  if (remove.length || update.length) console.log(JSON.stringify({ event: "alert_devices_synced", tenant: me.tenantID, removed: remove.length, updated: update.length }));
 }
 
 /** How often an account's leftover connections are looked for, at most. */

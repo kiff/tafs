@@ -4,7 +4,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { providerToken } from "../src/cloud/apns.js";
 import { NotPausedYet, type ReadyRun } from "../src/cloud/forward.js";
 import { FORWARD_TRIES, handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
-import { type Device, heldWaitsForBrief, type Notification, type PushStore, quietFor, receiveAlert, registration, routing, signedByKIFF, silencing } from "../src/cloud/push.js";
+import { type Device, heldWaitsForBrief, reconcileDevices, type Notification, type PushStore, quietFor, receiveAlert, registration, routing, signedByKIFF, silencing } from "../src/cloud/push.js";
 
 const NOW = new Date("2026-10-15T09:00:00Z");
 const T = Math.floor(NOW.getTime() / 1000);
@@ -814,6 +814,27 @@ describe("an Android phone's alerts", () => {
   it("validates a registration the way the handler does", () => {
     expect(registration({ device_token: FCM_TOKEN, platform: "android" })).toEqual({ token: FCM_TOKEN, platform: "android", environment: "production", silent: false });
     expect(registration({ device_token: TOKEN_A.toUpperCase(), environment: "sandbox" })).toEqual({ token: TOKEN_A, platform: "ios", environment: "sandbox", silent: false });
+  });
+
+  // A member who left, or whose role dropped, kept their device's alert rights from registration: checked against KIFF's
+  // people now, their device goes, or takes what their role may do now.
+  it("reconciles the account's devices with its people as KIFF lists them now", () => {
+    const d = (token: string, subject: string, answers: boolean, addsTasks = false, manages = false): Device =>
+      ({ token, environment: "production", subject, answers, addsTasks, manages, at: "" });
+    const devices = [d("t_ana", "u_ana", true, true, true), d("t_bo", "u_bo", true), d("t_cy", "u_cy", true), d("t_dee", "u_dee", false), d("t_eve", "u_eve", true)];
+    const { remove, update } = reconcileDevices(devices, [
+      { subject: "u_ana", status: "active", capabilities: ["holds.answer", "billing.manage", "cards.manage"] },
+      // Bo is now a viewer: no more held calls.
+      { subject: "u_bo", status: "active", capabilities: ["read"] },
+      // Cy was suspended; Eve isn't listed at all (removed).
+      { subject: "u_cy", status: "suspended", capabilities: ["holds.answer"] },
+      // Dee became an approver.
+      { subject: "u_dee", status: "active", capabilities: ["holds.answer"] },
+    ]);
+    expect(remove.sort()).toEqual(["t_cy", "t_eve"]);
+    expect(update).toEqual([{ ...devices[1], answers: false, addsTasks: false, manages: false }, { ...devices[3], answers: true, addsTasks: false, manages: false }]);
+    // Nothing changes for an account whose people are as its devices say.
+    expect(reconcileDevices([devices[0]!], [{ subject: "u_ana", status: "active", capabilities: ["holds.answer", "billing.manage", "cards.manage"] }])).toEqual({ remove: [], update: [] });
   });
 
   // macOS 12's own app (kiff/tafs-macos): an APNs token as an iPhone's, kept as `macos` so it's sent on the Mac's topic.
