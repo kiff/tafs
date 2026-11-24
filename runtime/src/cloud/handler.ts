@@ -860,7 +860,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       .sort((a, b) => b.created.localeCompare(a.created) || b.id.localeCompare(a.id));
     // Leftover connections of tafs gone end here, on the read of a person who may manage tafs (their session), at most hourly.
     if (me.capabilities.includes("cards.manage")) await within(sweepLeftovers(me, bearer(event), deps), 2000).catch((err) => console.warn(`connections sweep: ${(err as Error)?.message ?? "timed out"}`));
-    // The account's alert devices against its people now: those of a member who left lose their alerts, at most hourly.
+    // The account's alert devices against its people now, at most hourly.
     await within(syncAlertDevices(me, bearer(event), deps), 1500).catch((err) => console.warn(`alert devices: ${(err as Error)?.message ?? "timed out"}`));
     return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps, undefined, undefined, langOf(event)))), removing: await deps.removals.list(me.tenantID) };
   }
@@ -2486,13 +2486,14 @@ const ALERT_DEVICES_EVERY_MS = 3600_000;
 
 /**
  * The account's alert devices against its people as KIFF lists them now (`reconcileDevices`): a device whose person is no
- * longer an active member is removed, and one whose person's role changed takes what it may do now. With the person's own
- * session (any member may read the account's people), on their read of the tafs list, at most once an hour per account.
- * Fail closed: when KIFF can't be read, or its list looks wrong (empty, or without the reader as an active member, whose
- * own session just read it), nothing changes and the hour isn't taken, so one bad answer never removes the account's
- * devices. Logged with counts only.
+ * longer an active member is removed, and the others keep only what their person's role still allows. With the person's
+ * own session (any member may read the account's people), on their read of the tafs list, at most once an hour per
+ * account. Fail closed: when KIFF can't be read, or its list looks wrong (empty; without the reader as an active member,
+ * whose own session just read it; an active member without capabilities; or the reader listed with less than their
+ * session holds), nothing changes and the hour isn't taken. The devices are read again just before the writes, and a row
+ * registered again since the first read is left for the next check. Logged with counts only.
  */
-async function syncAlertDevices(me: { tenantID: string; subject: string }, token: string, deps: Deps): Promise<void> {
+async function syncAlertDevices(me: { tenantID: string; subject: string; capabilities: string[] }, token: string, deps: Deps): Promise<void> {
   if (!deps.coach || !token) return;
   const now = deps.now?.() ?? new Date();
   const key = `alert_devices#${me.tenantID}`;
@@ -2501,15 +2502,24 @@ async function syncAlertDevices(me: { tenantID: string; subject: string }, token
   if (devices.length === 0) return;
   // Read first: the hour is claimed only once KIFF has answered.
   const people = await membersOf(token, deps.fetch, deps.kiffBase);
-  if (!people.some((p) => p.subject === me.subject && p.status === "active")) {
-    console.warn(JSON.stringify({ event: "alert_devices_unsure", tenant: me.tenantID, listed: people.length }));
+  const reader = people.find((p) => p.subject === me.subject && p.status === "active");
+  const unsure = !reader ? "reader"
+    : people.some((p) => p.status === "active" && !p.capabilities) || !me.capabilities.every((c) => reader.capabilities?.includes(c)) ? "capabilities"
+    : undefined;
+  if (unsure) {
+    console.warn(JSON.stringify({ event: "alert_devices_unsure", tenant: me.tenantID, listed: people.length, reason: unsure }));
     return;
   }
   if (!await deps.coach.once(key, new Date(now.getTime() + ALERT_DEVICES_EVERY_MS))) return;
-  const { remove, update } = reconcileDevices(devices, people);
-  for (const token of remove) await deps.push.removeDevice(me.tenantID, token);
-  for (const d of update) await deps.push.addDevice(me.tenantID, d);
-  if (remove.length || update.length) console.log(JSON.stringify({ event: "alert_devices_synced", tenant: me.tenantID, removed: remove.length, updated: update.length }));
+  const { remove, update } = reconcileDevices(devices, people, now);
+  if (remove.length === 0 && update.length === 0) return;
+  const before = new Map(devices.map((d) => [d.token, d.at]));
+  const current = new Map((await deps.push.get(me.tenantID)).devices.map((d) => [d.token, d.at]));
+  const unchanged = (token: string) => current.has(token) && current.get(token) === before.get(token);
+  let removed = 0, updated = 0;
+  for (const token of remove) if (unchanged(token)) { await deps.push.removeDevice(me.tenantID, token); removed++; }
+  for (const d of update) if (unchanged(d.token)) { await deps.push.addDevice(me.tenantID, d); updated++; }
+  console.log(JSON.stringify({ event: "alert_devices_synced", tenant: me.tenantID, removed, updated, skipped: remove.length + update.length - removed - updated }));
 }
 
 /** How often an account's leftover connections are looked for, at most. */

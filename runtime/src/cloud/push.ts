@@ -126,20 +126,30 @@ export function routing(senders: { ios: Sender; android?: Sender }): Sender {
   };
 }
 
+/** How long a device row registered without a person is kept: its app registers again at launch, which gives it one. */
+export const UNOWNED_DEVICE_DAYS = 30;
+
 /**
  * The account's alert devices against its people as KIFF lists them now. A device whose person isn't an active member
  * (removed, suspended, or not listed) is dropped. The others keep only what their person's role still allows
  * (`answers`: holds.answer, `addsTasks`: billing.manage, `manages`: cards.manage): this only narrows a device, never
- * widens it, since a registration may have been given less than the role. A row registered without a person is left as it is.
+ * widens it, since a registration may have been given less than the role, and a member listed without capabilities
+ * isn't narrowed at all. A row registered without a person is dropped once it's older than `UNOWNED_DEVICE_DAYS`, and
+ * left as it is until then.
  */
-export function reconcileDevices(devices: Device[], members: Array<{ subject: string; status: string; capabilities: string[] }>): { remove: string[]; update: Device[] } {
-  const now = new Map(members.filter((m) => m.status === "active").map((m) => [m.subject, new Set(m.capabilities)]));
+export function reconcileDevices(devices: Device[], members: Array<{ subject: string; status: string; capabilities?: string[] }>, now = new Date()): { remove: string[]; update: Device[] } {
+  const active = new Map(members.filter((m) => m.status === "active").map((m) => [m.subject, m.capabilities ? new Set(m.capabilities) : undefined]));
   const remove: string[] = [];
   const update: Device[] = [];
   for (const d of devices) {
-    if (!d.subject) continue;
-    const caps = now.get(d.subject);
-    if (!caps) { remove.push(d.token); continue; }
+    if (!d.subject) {
+      const at = Date.parse(d.at);
+      if (Number.isFinite(at) && now.getTime() - at > UNOWNED_DEVICE_DAYS * 86_400_000) remove.push(d.token);
+      continue;
+    }
+    if (!active.has(d.subject)) { remove.push(d.token); continue; }
+    const caps = active.get(d.subject);
+    if (!caps) continue;
     const answers = d.answers && caps.has("holds.answer");
     const addsTasks = d.addsTasks === true && caps.has("billing.manage");
     const manages = d.manages === true && caps.has("cards.manage");

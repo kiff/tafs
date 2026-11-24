@@ -416,7 +416,8 @@ export interface Member {
   subject: string;
   /** "active", or another status (suspended, removed): only an active member acts on the account. */
   status: string;
-  capabilities: string[];
+  /** What their role may do; left out when KIFF's row carries no list of them. */
+  capabilities?: string[];
 }
 
 /**
@@ -429,7 +430,7 @@ export async function membersOf(token: string, doFetch: Fetch = fetch, base = KI
   return out.members.flatMap((m) => typeof m.subject === "string" && m.subject ? [{
     subject: m.subject,
     status: typeof m.status === "string" ? m.status : "",
-    capabilities: Array.isArray(m.capabilities) ? m.capabilities.filter((c): c is string => typeof c === "string") : [],
+    ...(Array.isArray(m.capabilities) ? { capabilities: m.capabilities.filter((c): c is string => typeof c === "string") } : {}),
   }] : []);
 }
 

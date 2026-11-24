@@ -1,0 +1,1 @@
+- **Alert devices: tighter checks.** A device registered without a person goes after 30 days; the check against the account's people changes nothing when KIFF's list doesn't carry capabilities or gives the reader less than their own session holds; and a device registered again during the check is left for the next one ([api.md](docs/api.md)).
