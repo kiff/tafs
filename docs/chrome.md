@@ -740,7 +740,18 @@ computer's passkey, which this Chrome has neither of.
 
 The side panel talks to Coach: the same chat the apps use, through tafs cloud's own routes (`GET /v1/setup`,
 `GET /v1/tafs/{coach}/conversation`, `POST /v1/tafs/{coach}/messages`), as the extension's view-only KIFF device
-(`chrome/src/coach.js`). A conversation started in Chrome goes on on the phone, and back.
+(`chrome/src/coach.js`). A conversation started in Chrome goes on on the phone.
+
+- **The side panel's chats are only this Chrome's** (`runtime/src/cloud/chrome-chats.ts`): the chats begun in it since it
+  was paired, never the person's other chats, which stay on their phone and other devices, which list them all. tafs cloud
+  knows the Chrome from KIFF alone: `/v1/me`'s `device_id` and `device_platform` ("chrome"), from the session KIFF paired,
+  never from the request. Each chat a Chrome begins is kept as one item by its id. Its lists (`…/chats`, `…/chats/archived`)
+  hold only those. A chat it didn't begin is 404 by its id (its thread, a message into it, archiving it). Its live thread,
+  and where a message with no chat goes, are its own newest chat or a new one. A re-pair is a new KIFF device, so it starts
+  empty. A view-only device session KIFF names no platform for is taken as a Chrome with no chats (fail closed).
+- **A Chrome calls only the side panel's routes:** the Coach and tafs reads, a taf's thread, chats, messages and archiving,
+  and the page consent. Every other tafs cloud route answers it 404 (export included), so a route added later is closed to
+  it until it's listed.
 
 - **Chrome treats those calls as the extension's own** (it holds every https site, tafs cloud's included), so they need no CORS
   answer; tafs cloud still answers the preflight as it did, for a build that doesn't hold the permission. tafs cloud

@@ -77,6 +77,7 @@ import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./bus
 import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
 import { briefDue, briefLaterKey, briefZoneKey, buildBrief, checkDecision, connectionDecision, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
 import { logDelivered, logPage, readLog } from "./missionlog.js";
+import { chromeBegan, chromeMayCall, chromeOf, markChromeChat } from "./chrome-chats.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -146,7 +147,8 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/me/ai-consent              whether this person allowed AI use, with the consent screen's words
  *   POST /v1/me/ai-consent              {version}: they allow it; DELETE withdraws it (docs/accounts.md)
  *   GET  /v1/me/page-consent            whether this person lets Coach read the page in front with a message (docs/chrome.md)
- *   POST /v1/me/page-consent            {version}: they allow it, from the extension's own screen; DELETE withdraws it
+ *   POST /v1/me/page-consent            {version}: they allow it, from the extension's own screen
+ *   DELETE /v1/me/page-consent          they withdraw it
  *   PUT  /v1/me/suggestions             {show}: a manager turns suggestions off for good, or on again
  *   GET  /v1/me/business                what tafs know about the business, read-only: Coach changes it on the person's confirmed draft (docs/labels.md)
  *   GET  /v1/missions/{id}/log          ?before=: a mission's log, newest first, a page at a time, read-only (docs/missions.md)
@@ -910,6 +912,33 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   const taf = await owned(me, parts[2] ?? "", deps);
   const action = parts[3];
+  // A Chrome sees only the chats begun in it (chrome-chats.ts): its lists, its live thread, a chat by its id, and where its
+  // messages go. A chat it didn't begin is 404, as one that isn't there.
+  const chrome = chromeOf(me);
+  if (chrome) {
+    const began = (session: string) => chromeBegan(deps.coach, me, chrome, session);
+    const latest = async () => (await chats(me, taf, deps, false, began)).find((c) => !c.set_aside)?.session;
+    if (action === "chats" && method === "GET") return { chats: await chats(me, taf, deps, parts.length === 5, began) };
+    if (action === "chats" && parts.length === 6 && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
+    if (action === "conversation" && parts.length === 5 && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
+    if (action === "conversation" && parts.length === 4) {
+      const own = await latest();
+      if (!own) return { messages: [], components: [], items: [], working: null };
+      parts.push(own); // read as that chat
+    }
+    if (action === "messages" && parts.length === 4 && method === "POST") {
+      const body = parseBody(event);
+      const chosen = str(body.session).trim();
+      if (chosen && !await began(chosen)) throw new HTTPError(404, "no such chat");
+      // The live chat is this Chrome's newest, never the person's newest elsewhere: none, a new one.
+      const own = chosen || body.new_chat === true ? undefined : await latest();
+      const sent = chosen || body.new_chat === true ? event : withBody(event, own ? { ...body, session: own } : { ...body, new_chat: true });
+      const out = await message(sent, me, taf, deps);
+      const session = (out as { session?: unknown } | undefined)?.session;
+      if (typeof session === "string") await markChromeChat(deps.coach, me, chrome, session, deps.now?.() ?? new Date());
+      return out;
+    }
+  }
   if (method === "GET" && ((parts.length === 4 && (action === "activity" || action === "setup")) || (parts.length === 5 && action === "work" && parts[4] === "runs"))) {
     const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase);
     if (!listable(access, taf.kiffAgent)) throw new HTTPError(404, "no such taf");
@@ -1355,6 +1384,8 @@ function bearer(event: HTTPEvent): string {
 async function person(event: HTTPEvent, deps: Deps, deleting = false): Promise<KIFFIdentity> {
   const me = await whoIs(bearer(event), deps.fetch, deps.kiffBase);
   if (me.apiKey) throw new HTTPError(403, "sign in as a person, not with a key");
+  // A Chrome's side panel calls only its own routes (chrome-chats.ts): any other is closed to it, here, for every route.
+  if (chromeOf(me) && !chromeMayCall(event.requestContext.http.method.toUpperCase(), event.rawPath)) throw new HTTPError(404, "not found");
   // From a deletion's acceptance on, the account can't be used: only the deletion itself goes on.
   if (!deleting && deps.deletions && await deps.deletions.get(me.tenantID)) throw new HTTPError(410, "this account is being deleted");
   return me;
@@ -6728,10 +6759,13 @@ function phoneChat(s: Session): boolean {
  * ones are left out, or, with `archivedOnly`, are the only ones (kiff/tafs#97).
  * A Coach chat its person set aside says so (`set_aside: true`): the apps never open it as the newest, on any device.
  */
-async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
+async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false, only?: (session: string) => Promise<boolean>): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
   await moveArchived(me, taf, deps);
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
-  const listed = all.filter((s) => phoneChat(s) && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
+  const shown = all.filter((s) => phoneChat(s) && (s.archived === true) === archivedOnly);
+  // `only`: those it says yes to (a Chrome's own), chosen before the list is cut, so others never crowd them out.
+  const kept = only ? await Promise.all(shown.map((s) => only(s.id))) : [];
+  const listed = (only ? shown.filter((_, i) => kept[i]) : shown).slice(0, CHAT.chatsListed);
   const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined)));
   // Coach's chats set aside (setAsideCoach keeps each by its session for 30 days); a read that fails marks none.
   const setAside = taf.job === SETUP_JOB && deps.coach
@@ -9060,6 +9094,11 @@ function parseBody(event: HTTPEvent): Record<string, unknown> {
     if (v && typeof v === "object" && !Array.isArray(v)) return v as Record<string, unknown>;
   } catch { /* fall through */ }
   throw new HTTPError(400, "send a JSON object");
+}
+
+/** The event with `body` as its JSON body. */
+function withBody(event: HTTPEvent, body: Record<string, unknown>): HTTPEvent {
+  return { ...event, body: JSON.stringify(body), isBase64Encoded: false };
 }
 
 function str(v: unknown): string {
