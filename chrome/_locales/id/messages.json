@@ -105,7 +105,7 @@
   "page_consent_off": { "message": "Coach tidak membaca halaman yang sedang Anda buka." },
   "page_consent_turn_on": { "message": "Izinkan Coach membaca halaman…" },
   "page_consent_title": { "message": "Izinkan Coach membaca halaman di depan saat Anda mengirim?" },
-  "page_consent_what": { "message": "Saat Anda mengirim pesan ke Coach di sini, teks tab di depan jendela ini ikut terkirim: alamatnya (tanpa apa pun setelah ? atau #), judulnya, dan kata-katanya. Nilai kolom dan kata sandi tidak dibaca; nomor kartu dipotong hingga empat digit terakhirnya; kunci dan rahasia yang berlabel disamarkan." },
+  "page_consent_what": { "message": "Saat Anda mengirim pesan ke Coach di sini, teks tab di depan jendela ini ikut terkirim: alamatnya (tanpa apa pun setelah ? atau #), judulnya, dan kata-katanya. Nilai kolom dan kata sandi tidak dibaca; nomor kartu dipotong hingga empat digit terakhirnya; kunci dan rahasia yang berlabel disamarkan. Kode sekali pakai yang disebut demikian dalam bahasa Inggris, Prancis, Spanyol, atau Jerman dalam teks halaman juga disamarkan." },
   "page_consent_when": { "message": "Hanya saat Anda mengirim, hanya tab itu, dan tidak pernah situs bank, pembayaran, email, atau kesehatan, atau situs yang Anda nonaktifkan." },
   "page_consent_never": { "message": "Teks itu dikirim ke tafs, yang mengirimkannya ke Claude dari Anthropic untuk menjawab Anda, sama seperti pesan Anda. tafs hanya menyimpan nama situsnya, tidak pernah halamannya; jawaban Coach bisa mengutipnya." },
   "page_consent_change": { "message": "Anda dapat mengirim pesan tanpa halaman kapan saja, dan menghentikan ini di sini kapan pun Anda mau." },

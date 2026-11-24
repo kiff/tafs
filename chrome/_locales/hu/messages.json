@@ -105,7 +105,7 @@
   "page_consent_off": { "message": "Coach nem olvassa el az oldalt, amelyen vagy." },
   "page_consent_turn_on": { "message": "Coach elolvashatja az oldalt…" },
   "page_consent_title": { "message": "Elolvashatja Coach küldéskor az elöl lévő oldalt?" },
-  "page_consent_what": { "message": "Amikor itt üzenetet küldesz Coachnak, ennek az ablaknak az elöl lévő lapjának szövege is vele megy: a címe (a ? vagy # utáni rész nélkül), a címe és a szavai. A mezők értékei és a jelszavak nem kerülnek beolvasásra; a kártyaszámokból csak az utolsó négy számjegy marad meg; a kulcsok és a megjelölt titkos adatok ki vannak takarva." },
+  "page_consent_what": { "message": "Amikor itt üzenetet küldesz Coachnak, ennek az ablaknak az elöl lévő lapjának szövege is vele megy: a címe (a ? vagy # utáni rész nélkül), a címe és a szavai. A mezők értékei és a jelszavak nem kerülnek beolvasásra; a kártyaszámokból csak az utolsó négy számjegy marad meg; a kulcsok és a megjelölt titkos adatok ki vannak takarva. Az oldal szövegében angolul, franciául, spanyolul vagy németül egyszer használatos kódként megnevezett kódok is ki vannak takarva." },
   "page_consent_when": { "message": "Csak küldéskor, csak az a lap, és soha nem bank, fizetési, levelező vagy egészségügyi oldal, sem olyan, amelyet kikapcsoltál." },
   "page_consent_never": { "message": "A tafs-hez kerül, amely elküldi az Anthropic Claude-jának, hogy válaszoljon neked, ahogy az üzenetedet is. A tafs csak az oldal nevét őrzi meg, magát az oldalt soha; Coach válasza idézhet belőle." },
   "page_consent_change": { "message": "Bármikor küldhetsz üzenetet az oldal nélkül, és ezt itt bármikor leállíthatod." },

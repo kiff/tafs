@@ -487,6 +487,10 @@ What a read sends never carries:
 - a card number in the text (cut to its last four digits, by the Luhn check);
 - a secret by its shape: private keys, JWTs, Stripe, model-provider, GitHub, Slack, AWS, Google and GitLab keys;
 - a labelled secret (`password: …`, `api_key=…`, `Bearer …`);
+- a one-time code written in the text, named as one in English, French, Spanish or German ("Your verification code is
+  482913", "123456 is your login code", "votre code est 4821"): its 4 to 8 digits go, its words stay. A postal, order or
+  promo code stays. tafs cloud masks the same in a page Coach reads, and `runtime/test/fixtures/one-time-codes.json` holds
+  both to the same cases;
 - a link's user info or credential parameters (`token`, `code`, `signature`, …);
 - the page URL's query and fragment.
 
@@ -766,7 +770,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   - **Only with the person's page consent, off until given** (`src/pageconsent.js`, tafs cloud's `PAGE_CONSENT_VERSION` in
     `runtime/src/cloud/consent.ts`). Above Coach's box the panel says Coach doesn't read the page, with "Let Coach read the
     page…", which opens a screen saying what goes (the tab's address without query or fragment, its title and words; field values and
-    passwords aren't read, card numbers are cut to their last four digits, and keys and labelled secrets are masked), when (only on Send, only that tab, never a refused site), where (tafs, then
+    passwords aren't read, card numbers are cut to their last four digits, keys and labelled secrets are masked, and so are one-time codes named as one in English, French, Spanish or German in the page's text), when (only on Send, only that tab, never a refused site), where (tafs, then
     Anthropic's Claude, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
     **Allow** records it at tafs cloud (`POST /v1/me/page-consent {version}`) and here, for this pairing's person, in the
     pairing's own store, so an unpair (which is also the sign-out) takes it. **Both must hold before the tab is touched**

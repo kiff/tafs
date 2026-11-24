@@ -105,7 +105,7 @@
   "page_consent_off": { "message": "Coach 不會讀取您正在看的頁面。" },
   "page_consent_turn_on": { "message": "讓 Coach 讀取頁面…" },
   "page_consent_title": { "message": "傳送時讓 Coach 讀取最前面的頁面嗎？" },
-  "page_consent_what": { "message": "當您在這裡傳訊息給 Coach 時，這個視窗最前面分頁的文字會一起送出：它的網址（不含 ? 或 # 之後的內容）、標題和文字。欄位中的值和密碼不會被讀取；卡號只保留最後四碼；金鑰和已標示的機密會被遮蔽。" },
+  "page_consent_what": { "message": "當您在這裡傳訊息給 Coach 時，這個視窗最前面分頁的文字會一起送出：它的網址（不含 ? 或 # 之後的內容）、標題和文字。欄位中的值和密碼不會被讀取；卡號只保留最後四碼；金鑰和已標示的機密會被遮蔽。頁面文字中以英文、法文、西班牙文或德文標明為一次性驗證碼的代碼也會被遮蔽。" },
   "page_consent_when": { "message": "只在您傳送時、只限那個分頁，而且絕不是銀行、付款、郵件或健康網站，或您關閉的網站。" },
   "page_consent_never": { "message": "它會送到 tafs，由 tafs 傳給 Anthropic 的 Claude 來回覆您，就像您的訊息一樣。tafs 只保留網站名稱，絕不保留頁面；Coach 的回覆可能引用其中內容。" },
   "page_consent_change": { "message": "您隨時可以不附頁面傳送訊息，也可以隨時在這裡停止。" },
