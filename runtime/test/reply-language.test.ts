@@ -6,7 +6,7 @@ import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, 
 
 // A taf answers in the language of the person's message; if that isn't clear, in their app's language; never in a
 // data source's (18 Nov: an English message to "Order rows" on a phone and Google account in French came back in
-// French). Every message to a taf says so, English included (docs/languages.md, PM 18 Nov 23:35).
+// French). Every message to a taf says so, English included (docs/languages.md).
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const NOW = new Date("2026-11-19T01:00:00Z");

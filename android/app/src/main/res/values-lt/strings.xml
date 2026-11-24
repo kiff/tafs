@@ -238,7 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo – %2$s per %1$s prenumerata, mokama iš jūsų Apple paskyros. Ji atnaujinama kas %3$s, kol jos neatšauksite.</string>
     <string name="billing_starts_free">Pradžioje nemokamai: %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs vienam asmeniui, kas mėnesį.</string>
-    <string name="billing_team_on_web">Gauti Team svetainėje kiff.dev</string>
+    <string name="billing_team_on_web">Gauti Company svetainėje kiff.dev</string>
     <string name="billing_terms_use">Naudojimo sąlygos</string>
     <string name="billing_test_purchase_credits">Bandomieji pirkiniai neprideda kreditų prie šios paskyros.</string>
     <string name="billing_try_free">Išbandyti nemokamai: %1$s</string>
@@ -529,6 +529,7 @@
     <string name="chat_file_choose_file">Pasirinkti failą</string>
     <string name="chat_file_choose_photos">Pasirinkti nuotraukas</string>
     <string name="chat_file_could_not_open">Nepavyko atidaryti failo.</string>
+    <string name="chat_file_mac_camera_off">Kamera programėlei tafs išjungta. Įjunkite ją skiltyje Sistemos nustatymai › Privatumas ir sauga › Kamera (macOS 12: Sistemos nuostatos › Sauga ir privatumas › Privatumas › Kamera).</string>
     <string name="chat_file_no_app_opens">Šiame telefone nėra programėlės, kuri atidarytų %1$s.</string>
     <string name="chat_file_no_camera">Šiame telefone nėra fotoaparato programėlės nuotraukai padaryti.</string>
     <string name="chat_file_not_opened">Nepavyko atidaryti %1$s. %2$s</string>
@@ -2160,6 +2161,7 @@
     <string name="sample_memory_ask_first">Klausti prieš bet ką neįprasta, net jei tai atitinka Card.</string>
     <string name="sample_memory_explain">Jums labiau patinka, kai sprendimą paaiškinu viena eilute, o ne pastraipa.</string>
     <string name="sample_memory_regulars">Kas savaitę rašantys klientai gauna atsakymą tą patį rytą.</string>
+    <string name="sample_not_in_sample">To pavyzdyje nėra. Prisijunkite su KIFF, kad galėtumėte tai padaryti.</string>
     <string name="sample_parcels_change_address">Pakeisti užsakymo #5141 pristatymo adresą</string>
     <string name="sample_parcels_change_address_why">To paprašė laiškas iš naujo adreso</string>
     <string name="sample_parcels_job">Pranešti klientams, kai siuntinys vėluoja, dar jiems nepaklausus. Pakartotinis siuntimas laukia jūsų. Niekada nekeisti pristatymo adreso pagal el. laišką.</string>

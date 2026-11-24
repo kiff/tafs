@@ -2,7 +2,7 @@ import XCTest
 @testable import Tafs
 
 /// A payee name, an IBAN or a reason from KIFF, a vendor or a taf never carries a direction character onto the approval
-/// or the record (qa-kiff, 20 Nov): U+202E or an isolate could make "DE89 3704 … €150.00" look like other digits or
+/// or the record: U+202E or an isolate could make "DE89 3704 … €150.00" look like other digits or
 /// another amount right beside where the owner approves. They're taken out; any other control character is a space.
 @MainActor
 final class DirectionCharacterTests: XCTestCase {
@@ -61,7 +61,7 @@ final class DirectionCharacterTests: XCTestCase {
         XCTAssertTrue(labels.contains("Refund a payment"))
     }
 
-    /// agentgabo's read of #1547: a vendor's own message quoted into the record, a tool's or vendor's name in words, and a
+    /// A vendor's own message quoted into the record, a tool's or vendor's name in words, and a
     /// taf's name and job from tafs cloud carry none either, so every line `KIFFMapping` builds from a server value is clean.
     func testQuotedMessagesNamesAndTafsCarryNone() throws {
         XCTAssertEqual(KIFFMapping.quotable("Card\u{202E} declined"), "Card declined")
@@ -78,7 +78,7 @@ final class DirectionCharacterTests: XCTestCase {
         XCTAssertFalse(hasDirection(taf.job), taf.job)
     }
 
-    /// agentgabo's 17:00: a push on the lock screen and the watch's messages carry none either. The push's text goes
+    /// A push on the lock screen and the watch's messages carry none either. The push's text goes
     /// through `FileText.withoutDirection` (lines kept), and every phone–watch message through `WatchMessage.encode`,
     /// whose set is the phone's own.
     func testAPushAndTheWatchsMessagesCarryNone() throws {

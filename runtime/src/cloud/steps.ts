@@ -76,7 +76,7 @@ export class Steps {
         const grant = ofGrant(i.grant);
         const api = i.api && typeof i.api === "object" ? (i.api as { url?: unknown }).url : undefined;
         // An app from search (`entry`, such as connector:composio:gmail): named by its app and keyed by its entry, so a refused
-        // connect of it is cleared once a connect of the same entry goes through (kiff-qa, 14 Nov: entry was never read).
+        // connect of it is cleared once a connect of the same entry goes through.
         const entry = i.action === "request" && typeof i.entry === "string" && i.entry ? i.entry : undefined;
         const asked = reuse ? ofGrant(reuse) : entry ? this.entryNames.get(entrySlug(entry)) ?? "" : vendorName(i.server ?? api);
         if (callID) this.connections.set(callID, i.action === "request" ? asked : grant);

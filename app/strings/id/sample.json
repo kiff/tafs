@@ -146,6 +146,7 @@
   "sample.memory.ask_first": "Bertanya sebelum hal yang tidak biasa, bahkan saat sesuai Card.",
   "sample.memory.explain": "Anda lebih suka saya menjelaskan keputusan dalam satu baris, bukan satu paragraf.",
   "sample.memory.regulars": "Pelanggan yang menulis setiap minggu mendapat balasan di pagi yang sama.",
+  "sample.not_in_sample": "Ini tidak ada di contoh. Masuk dengan KIFF untuk melakukannya.",
   "sample.parcels.change_address": "Ubah alamat pengiriman pesanan #5141",
   "sample.parcels.change_address_why": "Email dari alamat baru memintanya",
   "sample.parcels.job": "Beri tahu pelanggan saat paket terlambat, sebelum mereka bertanya. Pengiriman ulang menunggu Anda. Jangan pernah mengubah alamat pengiriman dari sebuah email.",

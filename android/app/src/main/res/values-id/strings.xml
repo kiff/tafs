@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo adalah langganan seharga %2$s / %1$s, ditagihkan ke akun Apple Anda. Diperpanjang di akhir setiap periode (%3$s) sampai Anda membatalkan.</string>
     <string name="billing_starts_free">Dimulai dengan %1$s gratis.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs untuk satu orang, setiap bulan.</string>
-    <string name="billing_team_on_web">Dapatkan Team di kiff.dev</string>
+    <string name="billing_team_on_web">Dapatkan Company di kiff.dev</string>
     <string name="billing_terms_use">Ketentuan Penggunaan</string>
     <string name="billing_test_purchase_credits">Pembelian uji coba tidak menambahkan kredit ke akun ini.</string>
     <string name="billing_try_free">Coba gratis %1$s</string>
@@ -475,6 +475,7 @@
     <string name="chat_file_choose_file">Pilih file</string>
     <string name="chat_file_choose_photos">Pilih foto</string>
     <string name="chat_file_could_not_open">File tidak dapat dibuka.</string>
+    <string name="chat_file_mac_camera_off">Kamera nonaktif untuk tafs. Aktifkan di Pengaturan Sistem › Privasi &amp; Keamanan › Kamera (di macOS 12: Preferensi Sistem › Keamanan &amp; Privasi › Privasi › Kamera).</string>
     <string name="chat_file_no_app_opens">Tidak ada aplikasi di ponsel ini yang membuka %1$s.</string>
     <string name="chat_file_no_camera">Tidak ada aplikasi kamera di ponsel ini untuk mengambil foto.</string>
     <string name="chat_file_not_opened">%1$s tidak dapat dibuka. %2$s</string>
@@ -2028,6 +2029,7 @@
     <string name="sample_memory_ask_first">Bertanya sebelum hal yang tidak biasa, bahkan saat sesuai Card.</string>
     <string name="sample_memory_explain">Anda lebih suka saya menjelaskan keputusan dalam satu baris, bukan satu paragraf.</string>
     <string name="sample_memory_regulars">Pelanggan yang menulis setiap minggu mendapat balasan di pagi yang sama.</string>
+    <string name="sample_not_in_sample">Ini tidak ada di contoh. Masuk dengan KIFF untuk melakukannya.</string>
     <string name="sample_parcels_change_address">Ubah alamat pengiriman pesanan #5141</string>
     <string name="sample_parcels_change_address_why">Email dari alamat baru memintanya</string>
     <string name="sample_parcels_job">Beri tahu pelanggan saat paket terlambat, sebelum mereka bertanya. Pengiriman ulang menunggu Anda. Jangan pernah mengubah alamat pengiriman dari sebuah email.</string>

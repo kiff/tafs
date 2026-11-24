@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo és una subscripció d\'un %1$s a %2$s, que es carrega al teu compte d\'Apple. Es renova cada %3$s fins que la cancel·lis.</string>
     <string name="billing_starts_free">Comença amb %1$s gratis.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs per a una persona, cada mes.</string>
-    <string name="billing_team_on_web">Aconsegueix Team a kiff.dev</string>
+    <string name="billing_team_on_web">Aconsegueix Company a kiff.dev</string>
     <string name="billing_terms_use">Condicions d\'ús</string>
     <string name="billing_test_purchase_credits">Les compres de prova no afegeixen crèdits a aquest compte.</string>
     <string name="billing_try_free">Prova %1$s gratis</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Tria un fitxer</string>
     <string name="chat_file_choose_photos">Tria fotos</string>
     <string name="chat_file_could_not_open">No s\'ha pogut obrir el fitxer.</string>
+    <string name="chat_file_mac_camera_off">La càmera està desactivada per a tafs. Activa-la a Ajustos del sistema › Privadesa i seguretat › Càmera (a macOS 12: Preferències del Sistema › Seguretat i privadesa › Privadesa › Càmera).</string>
     <string name="chat_file_no_app_opens">Cap aplicació d\'aquest telèfon obre %1$s.</string>
     <string name="chat_file_no_camera">Aquest telèfon no té cap aplicació de càmera per fer una foto.</string>
     <string name="chat_file_not_opened">No s\'ha pogut obrir %1$s. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Pregunta abans de qualsevol cosa inusual, fins i tot quan encaixi amb el Card.</string>
     <string name="sample_memory_explain">Prefereixes que t\'expliqui una decisió en una línia que en un paràgraf.</string>
     <string name="sample_memory_regulars">Els clients que escriuen cada setmana reben resposta el mateix matí.</string>
+    <string name="sample_not_in_sample">Això no és a l\'exemple. Inicia la sessió amb KIFF per fer-ho.</string>
     <string name="sample_parcels_change_address">Canvia l\'adreça de lliurament de la comanda #5141</string>
     <string name="sample_parcels_change_address_why">Un correu d\'una adreça nova ho demanava</string>
     <string name="sample_parcels_job">Avisa els clients quan un paquet va amb retard, abans que ho preguntin. Els reenviaments t\'esperen a tu. Mai no canviïs una adreça de lliurament a partir d\'un correu.</string>

@@ -139,9 +139,3 @@ textarea {
   background: var(--card);
   color: var(--ink);
 }
-.share {
-  border: 1px dashed var(--line);
-  border-radius: 10px;
-  padding: 8px;
-  margin: 8px 0;
-}

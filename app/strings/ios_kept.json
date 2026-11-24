@@ -12,7 +12,10 @@
     "Rayo": "the sample's pack names",
     "Forte": "the sample's pack names",
     "Maxi": "the sample's pack names",
-    "failed: \\(e)": "an answer sent to tafs cloud"
+    "failed: \\(e)": "an answer sent to tafs cloud",
+    "Greenwich": "a time zone id the system knows, never shown: zones fixed by definition (AppModel.sameTime)",
+    "Universal": "a time zone id the system knows, never shown: zones fixed by definition (AppModel.sameTime)",
+    "Zulu": "a time zone id the system knows, never shown: zones fixed by definition (AppModel.sameTime)"
   },
   "App/DoorsModel.swift": {
     "Ana": "the sample's people",

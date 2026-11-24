@@ -604,7 +604,7 @@ Card", with every new Card's lines under it, in the draft's order, where the fir
 is (`DraftCardsView.shown`). **Each Card's lines stay together, and only a whole Card exactly like an
 earlier one is shown once.** A single line is never dropped for being on an earlier Card: a Card's
 total names no tool ("20 calls a day"), so two Cards with the same total each show it after their own
-tool, and the owner never reads less than they sign (qa-kiff, 23 Nov). A Card the draft changes, or
+tool, and the owner never reads less than they sign. A Card the draft changes, or
 keeps unchanged, keeps its own panel and place, and the Cards it removes follow, as before. Tests:
 `VersionsTests.testADraftsNewCardsShowAsOneAndAChangedCardAlone`,
 `VersionsTests.testANewCardsTotalIsShownForEachCardThatHasIt`.
@@ -1155,7 +1155,14 @@ keeps the session and says it couldn't load, as before.
 - **Either way ends on the celebration** (`AppModel.justConnected`, shown over the home screen by the root view):
   the computer and the phone joined by a check, "You're connected. Let's build great things together.", and
   **Let's go** (`sign_in.connected`, `sign_in.connected_line`, `sign_in.lets_go`). Never in sample mode or the
-  screenshots.
+  screenshots. **Nothing opens under it** (`RootView.celebrating`, as Android's): the AI-data consent waits until the
+  celebration and its cards are gone, and the time-zone question until the consent is answered too. So the order is
+  the celebration, the consent, then the zone. The zone is asked only when the phone's and the account's keep different
+  times: GMT, UTC, Etc/UTC and Z are one (`AppModel.sameTime`), but only zones fixed by definition are joined, as Android's
+  `ZoneId.normalized()`: Europe/London isn't GMT, and Asia/Tokyo isn't Asia/Seoul, though they share an offset today.
+- **A phone with no Face ID or fingerprint** holds no approval key, so KIFF signs it in view-only. Its line says to add
+  one (`approval.add_face_id_first`, `AppModel.noApprovalKeyHere`), not only to sign in again, which changes nothing until
+  one is added. A view-only phone that holds a key keeps KIFF's line, and a Mac its own.
 
 ### Signing in with your phone
 
@@ -1441,7 +1448,7 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
 
 ## Help: Chrome and the emailed code, in How tafs works
 
-Two short sections in How tafs works (the screen Account and Home open, `HowTafsWorksView`), words in `help.json` in every language (legal-i18n's drafts, pinned by key): **Chrome** ("tafs can work in your Chrome": what it does, only on the sites you allow, in its own tabs; where Account › Chrome lists each Chrome and what it is used for; unpairing ends its connections), shown only where planque offers Chrome (`model.chromes != nil`); and **Sign in with an emailed code** (turn it on in Account › Sign-in; KIFF emails a code that works once for 10 minutes; never give it to anyone), shown only where KIFF can send codes (`codeSignIn.available`). The screens are named with the app's own titles (`{account}`, `{chrome}`, `{sign_in}`, `{needs_you}`), so each language writes them as the app does. The app says nothing about what the person can't use.
+Two short sections in How tafs works (the screen Account and Home open, `HowTafsWorksView`), words in `help.json` in every language: **Chrome** ("tafs can work in your Chrome": what it does, only on the sites you allow, in its own tabs; where Account › Chrome lists each Chrome and what it is used for; unpairing ends its connections), shown only where planque offers Chrome (`model.chromes != nil`); and **Sign in with an emailed code** (turn it on in Account › Sign-in; KIFF emails a code that works once for 10 minutes; never give it to anyone), shown only where KIFF can send codes (`codeSignIn.available`). The screens are named with the app's own titles (`{account}`, `{chrome}`, `{sign_in}`, `{needs_you}`), so each language writes them as the app does. The app says nothing about what the person can't use.
 
 ## Account › Chrome: what each Chrome is used for
 

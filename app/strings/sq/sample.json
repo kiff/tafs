@@ -147,6 +147,7 @@
   "sample.memory.ask_first": "Pyet para çdo gjëje të pazakontë, edhe kur përshtatet me Card-in.",
   "sample.memory.explain": "Preferoni që ta shpjegoj një vendim me një rresht dhe jo me një paragraf.",
   "sample.memory.regulars": "Klientët që shkruajnë çdo javë marrin përgjigje të njëjtin mëngjes.",
+  "sample.not_in_sample": "Kjo nuk është në shembull. Hyni me KIFF për ta bërë.",
   "sample.parcels.change_address": "Ndryshoni adresën e dorëzimit për porosinë #5141",
   "sample.parcels.change_address_why": "Një email nga një adresë e re e kërkoi",
   "sample.parcels.job": "Tregojini klientëve kur një pako vonohet, para se të pyesin. Ridërgimet presin ju. Mos ndryshoni kurrë një adresë dorëzimi nga një email.",

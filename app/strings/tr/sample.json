@@ -147,6 +147,7 @@
   "sample.memory.ask_first": "Card'a uysa bile olağandışı her şeyden önce sor.",
   "sample.memory.explain": "Bir kararı paragrafla değil, tek satırda açıklamamı tercih edersiniz.",
   "sample.memory.regulars": "Her hafta yazan müşteriler aynı sabah yanıt alır.",
+  "sample.not_in_sample": "Bu örnekte yok. Bunu yapmak için KIFF ile oturum açın.",
   "sample.parcels.change_address": "#5141 numaralı siparişin teslimat adresini değiştir",
   "sample.parcels.change_address_why": "Yeni bir adresten gelen e-posta istedi",
   "sample.parcels.job": "Bir paket geciktiğinde, müşteriler sormadan önce haber ver. Yeniden gönderimler sizi bekler. Asla bir e-postayla teslimat adresini değiştirme.",

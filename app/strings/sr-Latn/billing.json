@@ -75,7 +75,7 @@
   "billing.solo_subscription_one_charged_your": "Solo je pretplata na jedan period ({period}) po ceni od {price}, koja se naplaćuje vašem Apple nalogu. Obnavlja se na svaki period ({period_2}) dok je ne otkažete.",
   "billing.starts_free": "Počinje sa: {trial} besplatno.",
   "billing.tafs_kiff_one_person_every": "Tafs za jednu osobu, svakog meseca.",
-  "billing.team_on_web": "Nabavite Team na kiff.dev",
+  "billing.team_on_web": "Nabavite Company na kiff.dev",
   "billing.terms_use": "Uslovi korišćenja",
   "billing.test_purchase_credits": "Probne kupovine ne dodaju kredite na ovaj nalog.",
   "billing.try_free": "Probajte besplatno: {trial}",

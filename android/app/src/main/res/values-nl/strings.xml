@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo is een abonnement van één %1$s voor %2$s, in rekening gebracht bij je Apple-account. Het wordt elke %3$s verlengd tot je opzegt.</string>
     <string name="billing_starts_free">Begint met %1$s gratis.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs voor één persoon, elke maand.</string>
-    <string name="billing_team_on_web">Team nemen op kiff.dev</string>
+    <string name="billing_team_on_web">Company nemen op kiff.dev</string>
     <string name="billing_terms_use">Gebruiksvoorwaarden</string>
     <string name="billing_test_purchase_credits">Testaankopen voegen geen credits toe aan dit account.</string>
     <string name="billing_try_free">Probeer %1$s gratis</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Bestand kiezen</string>
     <string name="chat_file_choose_photos">Foto\'s kiezen</string>
     <string name="chat_file_could_not_open">Het bestand kon niet worden geopend.</string>
+    <string name="chat_file_mac_camera_off">De camera staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Camera (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Camera).</string>
     <string name="chat_file_no_app_opens">Geen app op deze telefoon opent %1$s.</string>
     <string name="chat_file_no_camera">Er is geen camera-app op deze telefoon om een foto mee te maken.</string>
     <string name="chat_file_not_opened">%1$s kon niet worden geopend. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Vraag het eerst bij alles wat ongewoon is, ook als het binnen de Card past.</string>
     <string name="sample_memory_explain">Je wilt liever dat ik een beslissing in één regel uitleg dan in een alinea.</string>
     <string name="sample_memory_regulars">Klanten die elke week schrijven, krijgen dezelfde ochtend antwoord.</string>
+    <string name="sample_not_in_sample">Dit zit niet in het voorbeeld. Log in met KIFF om het te doen.</string>
     <string name="sample_parcels_change_address">Het afleveradres van bestelling #5141 wijzigen</string>
     <string name="sample_parcels_change_address_why">Een e-mail van een nieuw adres vroeg erom</string>
     <string name="sample_parcels_job">Laat klanten weten dat een pakket vertraagd is, voordat ze het vragen. Herzendingen wachten op jou. Wijzig nooit een afleveradres op basis van een e-mail.</string>

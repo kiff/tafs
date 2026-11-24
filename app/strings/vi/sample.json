@@ -146,6 +146,7 @@
   "sample.memory.ask_first": "Hỏi trước mọi việc bất thường, kể cả khi nó nằm trong Card.",
   "sample.memory.explain": "Bạn muốn tôi giải thích một quyết định trong một dòng thay vì một đoạn.",
   "sample.memory.regulars": "Khách hàng viết mỗi tuần sẽ được trả lời ngay trong sáng hôm đó.",
+  "sample.not_in_sample": "Việc này không có trong dữ liệu mẫu. Hãy đăng nhập bằng KIFF để thực hiện.",
   "sample.parcels.change_address": "Đổi địa chỉ giao hàng của đơn #5141",
   "sample.parcels.change_address_why": "Một email từ địa chỉ mới yêu cầu việc này",
   "sample.parcels.job": "Báo cho khách hàng khi một bưu kiện bị trễ, trước khi họ hỏi. Việc gửi lại chờ bạn. Không bao giờ đổi địa chỉ giao hàng theo một email.",

@@ -223,11 +223,14 @@ describe("the watch's conversation", () => {
     expect(await w.askOf(id)).toMatchObject({ state: "done", taf: { name: "Calendar" } });
   });
 
-  it("tells only the person's Android phone, with the request's id alone", async () => {
+  it("tells only the person's phones, Android and iPhone, with the request's id alone", async () => {
     const { w, session } = await asked();
     await w.tool("taf_task", { taf: CAL, text: ASK.text }, session);
-    expect(w.pushed.map((p) => p.token)).toEqual(["fcm-ana"]);
-    expect(Object.keys(w.pushed[0]!.payload).sort()).toEqual(["aps", "ask_id", "change"]);
+    expect(w.pushed.map((p) => p.token)).toEqual(["fcm-ana", "a".repeat(64)]);
+    for (const p of w.pushed) {
+      expect(Object.keys(p.payload).sort()).toEqual(["aps", "ask_id", "change"]);
+      expect(p.payload.aps).toEqual({ "content-available": 1 });
+    }
   });
 
   it("is someone else's to nobody: another person can't hand it over", async () => {
@@ -256,7 +259,7 @@ describe("the watch's conversation", () => {
   });
 
   it("refuses a hand-over that names no chat while the person's watch request chooses its taf, never sending it the ordinary way", async () => {
-    // The owner's 17:33 ask: KIFF kept taf_task's schema from before it asked for the chat, so the call came with none,
+    // KIFF once kept taf_task's schema from before it asked for the chat, so the call came with none,
     // went to the taf's own chat, and the watch never heard its answer.
     const { w, id, session } = await asked();
     await expect(w.tool("taf_task", { taf: CAL, text: ASK.text })).rejects.toThrow(/which chat/);
@@ -311,7 +314,7 @@ describe("the watch's conversation", () => {
     Object.assign(lineRun, { status: "COMPLETED", output: "Moved your call to 18:00." });
     await w.ended(w.agents.notified.get(lineRun.id)!.ref, lineRun.id, COACH, "COMPLETED");
     expect(await w.askOf(id)).toMatchObject({ state: "done", line: "Moved your call to 18:00." });
-    expect(w.pushed.map((p) => p.token)).toEqual(["fcm-ana"]);
+    expect(w.pushed.map((p) => p.token)).toEqual(["fcm-ana", "a".repeat(64)]);
   });
 });
 
@@ -327,7 +330,7 @@ describe("the line the watch shows and says", () => {
   });
 });
 
-describe("a watch request's words (W2, legal-i18n's 8 languages)", () => {
+describe("a watch request's words (W2)", () => {
   const base = { id: "wa_1", client_id: "w_1", person: "ana", at: "2026-11-19T10:00:00Z", updated: "2026-11-19T10:00:00Z" } as const;
   it("name who holds it: Coach until a taf has it, then the taf, in the person's language", () => {
     expect(shownAsk({ ...base, state: "accepted" } as Ask, "en").words).toBe("Sent · Coach has it");

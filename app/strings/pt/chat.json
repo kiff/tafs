@@ -31,6 +31,7 @@
   "chat.file.choose_file": "Escolher ficheiro",
   "chat.file.choose_photos": "Escolher fotografias",
   "chat.file.could_not_open": "Não foi possível abrir o ficheiro.",
+  "chat.file.mac_camera_off": "A câmara está desativada para o tafs. Ative-a em Definições do Sistema › Privacidade e segurança › Câmara (no macOS 12: Preferências do Sistema › Segurança e privacidade › Privacidade › Câmara).",
   "chat.file.no_app_opens": "Nenhuma app neste telefone abre {name}.",
   "chat.file.no_camera": "Não há nenhuma app de câmara neste telefone para tirar uma fotografia.",
   "chat.file.not_opened": "Não foi possível abrir {file}. {why}",

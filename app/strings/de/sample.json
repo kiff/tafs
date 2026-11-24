@@ -147,6 +147,7 @@
   "sample.memory.ask_first": "Vor allem Ungewöhnlichen fragen, auch wenn es zur Card passt.",
   "sample.memory.explain": "Du möchtest Entscheidungen lieber in einer Zeile erklärt bekommen als in einem Absatz.",
   "sample.memory.regulars": "Kunden, die jede Woche schreiben, bekommen am selben Morgen eine Antwort.",
+  "sample.not_in_sample": "Das ist nicht im Beispiel enthalten. Melde dich mit KIFF an, um es zu tun.",
   "sample.parcels.change_address": "Die Lieferadresse von Bestellung #5141 ändern",
   "sample.parcels.change_address_why": "Eine E-Mail von einer neuen Adresse hat darum gebeten",
   "sample.parcels.job": "Sag Kunden Bescheid, wenn ein Paket sich verspätet, bevor sie fragen. Neuversand wartet auf dich. Ändere nie eine Lieferadresse aufgrund einer E-Mail.",

@@ -31,7 +31,7 @@ final class WatchDaysModel: ObservableObject {
     private let reading: WatchDaysReading
     private var asked = 0
     /// The account's time zone (the phone's when it has none): the days are the account's, so a turn's time is too, as
-    /// Android shows it (qa-kiff's read).
+    /// Android shows it.
     let zone: TimeZone
 
     init(reading: WatchDaysReading, zone: TimeZone = .current) {
@@ -57,7 +57,7 @@ final class WatchDaysModel: ObservableObject {
             day = .loaded(turns)
         } catch {
             guard this == asked else { return }
-            // The conversation couldn't be loaded, with the error's own words (dev-android's read).
+            // The conversation couldn't be loaded, with the error's own words.
             day = .failed(Words.Coach.conversationNotLoaded(why: error.localizedDescription))
         }
     }

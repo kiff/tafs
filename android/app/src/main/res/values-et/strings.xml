@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo on tellimus, üks %1$s hinnaga %2$s, mis võetakse sinu Apple\'i kontolt. See uueneb iga %3$s, kuni tühistad.</string>
     <string name="billing_starts_free">Alguses %1$s tasuta.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafid ühele inimesele, iga kuu.</string>
-    <string name="billing_team_on_web">Võta Team kiff.dev-is</string>
+    <string name="billing_team_on_web">Võta Company kiff.dev-is</string>
     <string name="billing_terms_use">Kasutustingimused</string>
     <string name="billing_test_purchase_credits">Testostud ei lisa sellele kontole krediite.</string>
     <string name="billing_try_free">Proovi %1$s tasuta</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Vali fail</string>
     <string name="chat_file_choose_photos">Vali fotod</string>
     <string name="chat_file_could_not_open">Faili ei õnnestunud avada.</string>
+    <string name="chat_file_mac_camera_off">Kaamera on tafsi jaoks välja lülitatud. Lülita see sisse menüüs System Settings › Privacy &amp; Security › Camera (macOS 12-s: System Preferences › Security &amp; Privacy › Privacy › Camera).</string>
     <string name="chat_file_no_app_opens">Ükski selle telefoni rakendus ei ava faili %1$s.</string>
     <string name="chat_file_no_camera">Selles telefonis pole kaamerarakendust, millega fotot teha.</string>
     <string name="chat_file_not_opened">Faili %1$s ei õnnestunud avada. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Küsi enne kõike ebatavalist, isegi kui see mahub Cardi piiresse.</string>
     <string name="sample_memory_explain">Eelistad, et selgitan otsust ühe rea, mitte lõiguga.</string>
     <string name="sample_memory_regulars">Kliendid, kes kirjutavad iga nädal, saavad vastuse samal hommikul.</string>
+    <string name="sample_not_in_sample">Seda näidises ei ole. Selle tegemiseks logi sisse KIFFiga.</string>
     <string name="sample_parcels_change_address">Muuda tellimuse #5141 tarneaadressi</string>
     <string name="sample_parcels_change_address_why">Seda palus e-kiri uuelt aadressilt</string>
     <string name="sample_parcels_job">Teata klientidele, kui pakk hilineb, enne kui nad küsivad. Uuesti saatmised ootavad sind. Ära kunagi muuda tarneaadressi e-kirja põhjal.</string>

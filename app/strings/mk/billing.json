@@ -71,7 +71,7 @@
   "billing.solo_subscription_one_charged_your": "Solo е претплата од еден {period} по {price}, наплатена од твојата Apple сметка. Се обновува секој {period_2} додека не откажеш.",
   "billing.starts_free": "Започнува со {trial} бесплатно.",
   "billing.tafs_kiff_one_person_every": "Tafови за едно лице, секој месец.",
-  "billing.team_on_web": "Земи Team на kiff.dev",
+  "billing.team_on_web": "Земи Company на kiff.dev",
   "billing.terms_use": "Услови за користење",
   "billing.test_purchase_credits": "Пробните купувања не додаваат кредити на оваа сметка.",
   "billing.try_free": "Пробај {trial} бесплатно",

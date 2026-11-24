@@ -40,7 +40,7 @@ final class ChatTimeTests: XCTestCase {
         XCTAssertEqual(starts, [0, 2, 4])
     }
 
-    /// agentgabo's read: the wrist reads the account's zone, as the phone and Wear OS do, not its own. A message at
+    /// The wrist reads the account's zone, as the phone and Wear OS do, not its own. A message at
     /// 23:30 in Paris is a new day there while it's still the same day in New York, and both its time and its day
     /// header follow the calendar given.
     func testTimesAndDaysFollowTheAccountsZoneNotTheDevices() {
@@ -56,7 +56,7 @@ final class ChatTimeTests: XCTestCase {
         XCTAssertEqual(read.zone, "Europe/Paris", "the phone sends the account's zone with a taf's chat")
     }
 
-    /// dev-android's parity point 2: an ended request carries when its answer came (tafs cloud's `updated`), and the
+    /// An ended request carries when its answer came (tafs cloud's `updated`), and the
     /// answer the watch gets keeps it, so the wrist shows it under the answer as Wear OS does.
     func testAnAnswerCarriesWhenItCame() throws {
         let json = #"{"id":"a1","state":"done","words":"Done","updated":"2026-11-20T13:05:00.123Z"}"#

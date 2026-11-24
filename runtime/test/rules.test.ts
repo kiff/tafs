@@ -20,7 +20,7 @@ describe("the rules the owner agreed, from the conversation (rules.ts)", () => {
     expect(rulesAgreement([{ kind: "component", run: "r1", body: { type: "notice", id: "n1", text: "hi" } }, confirm("c1"), answered("c1", "agree")])).toEqual({ state: "none" });
   });
 
-  it("only the person's own tap of agree counts (kiff-qa's negatives)", () => {
+  it("only the person's own tap of agree counts", () => {
     const base = [notice("n1", RULES), confirm("c1", "n1")];
     // Change something; tafs cloud's own answer; words written while it waited; stopped waiting unanswered.
     for (const a of [answered("c1", "change"), answered("c1", "agree", { answered_by: "tafs cloud" }), answered("c1", "agree", { wrote: "ok fine" }), answered("c1", "agree", { unanswered: true })]) {
@@ -37,7 +37,7 @@ describe("the rules the owner agreed, from the conversation (rules.ts)", () => {
     expect(rulesAgreement([confirm("c1", "n-elsewhere"), answered("c1", "agree")])).toEqual({ state: "none" });
   });
 
-  it("a rules notice newer than the agreement blocks it until agreed (kiff-qa's gap 2)", () => {
+  it("a rules notice newer than the agreement blocks it until agreed", () => {
     const agreed = [notice("n1", RULES), confirm("c1", "n1"), answered("c1", "agree")];
     const changed = [{ tool: "refund_charge", over: "ask" }];
     expect(rulesAgreement([...agreed, notice("n2", changed)])).toEqual({ state: "unagreed", notice: "n2" });
@@ -48,7 +48,7 @@ describe("the rules the owner agreed, from the conversation (rules.ts)", () => {
     expect(rulesAgreement([...agreed, notice("n2", changed), confirm("c2", "n2"), answered("c2", "agree")])).toEqual({ state: "agreed", notice: "n2", rules: changed, text: "The rules", connection: [] });
   });
 
-  it("the same notice shown again with other lines is unagreed: the owner reads another claim (kiff-qa's lines gap)", () => {
+  it("the same notice shown again with other lines is unagreed: the owner reads another claim", () => {
     const withLines = (lines: unknown[]) => ({ kind: "component", run: "r1", body: { type: "notice", id: "n1", tone: "info", lang: "en", rules: RULES, lines } });
     const card = { text: "Refunds at most $50 a call", kept: "card", tools: ["refund_charge"] };
     const original = { text: "Refunds only to the original card", kept: "instructions" };
@@ -191,7 +191,7 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     // The refund's Cards with the owner's figures and no 10,000 count match.
     expect(rulesMismatch([stripe], [refund(500, [day(5000)])], rules)).toBeUndefined();
     // Only exactly KIFF's count goes: 9,999, a per total, or another window is the owner's figure as before.
-    // Each near miss differs from KIFF's count in one way only (qa-kiff's mutants): the limit, the quantity, the window
+    // Each near miss differs from KIFF's count in one way only: the limit, the quantity, the window
     // (each call's), or a per (a day's, a week's, a lifetime's total for each charge).
     // So is one that itself says it's refused past (the owner's "refuse past 10,000 a day"): KIFF's count only holds.
     for (const other of [{ ...KIFFS, limit: 9_999 }, { ...KIFFS, quantity: "sum(amount)" }, { ...KIFFS, window: "call" as const },
@@ -205,7 +205,7 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(asked.state === "agreed" && asked.rules[0]!.limits).toEqual([EACH]);
   });
 
-  // kiff-qa's 3 to 6: a rule's figures are read whole or not at all, so a notice with one it can't read carries no rules.
+  // A rule's figures are read whole or not at all, so a notice with one it can't read carries no rules.
   it("figures that can't be read whole leave the notice with no rules", () => {
     const bad: unknown[] = [
       [], // given but empty: never "figures agreed"
@@ -241,19 +241,19 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(rulesMismatch([stripe], [refund(0, [day(5000)])], rule([{ ...EACH, limit: 0 }, DAY]))).toBeUndefined();
   });
 
-  // kiff-qa's 1: a total for each customer at the agreed figure isn't the day's total.
+  // A total for each customer at the agreed figure isn't the day's total.
   it("an aggregate with per set doesn't stand for the day's total", () => {
     expect(rulesMismatch([stripe], [refund(500, [day(5000, { per: "customer" })])], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "calendar_day", agreed: 5000 });
   });
 
-  // kiff-qa's 2: one matching Card doesn't excuse a looser one beside it.
+  // One matching Card doesn't excuse a looser one beside it.
   it("two Cards over the tool, one matching and one looser, is refused", () => {
     expect(rulesMismatch([stripe], [refund(500, [day(5000)]), refund(500, [day(9000)])], rule())?.kind).toBe("figure");
     // The figure on one Card and the day's total on another is the agreed rules, kept as two Cards.
     expect(rulesMismatch([stripe], [refund(500, []), refund(undefined, [day(5000)])], rule())).toBeUndefined();
   });
 
-  // kiff-qa's 6: the quantity matches as written.
+  // The quantity matches as written.
   it("a quantity spelled another way on the Card isn't the agreed figure", () => {
     const spaced = { id: "c", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum( amount )", max: 500 }] }], aggregates: [day(5000)] };
     expect(rulesMismatch([stripe], [spaced], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "call", agreed: 500 });
@@ -349,7 +349,7 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     for (const text of ["A draft invoice for each order.", "An invoice per order.", "A draft invoice for each one.", "Makes one draft invoice.",
       "One draft invoice from the shop and so on per run.", "Un rapport que je relis.", "Uno entwurf pro Bestellung.", "Every order gets its invoice.",
       "Une facture par commande.", "Eine Rechnung pro Bestellung.", "Ein Entwurf pro Bestellung.", "Eins je nach Bedarf.", "Una factura por cada pedido.", "Uma fatura por encomenda.", "Een factuur per bestelling.",
-      // mac-local's five: the article and a preposition ("by", "for", "on", "depending on").
+      // The article and a preposition ("by", "for", "on", "depending on").
       "Una factura borrador enviada por correo, hasta 10 al día.", "Una bozza di fattura per il cliente, fino a 10 al giorno.",
       "Jedna wersja robocza na koncie, do 10 dziennie.", "Ein Entwurf je nach Bedarf, bis zu 10 am Tag.", "Een conceptfactuur per e-mail, tot 10 per dag."]) {
       expect(rulesUnsaid(once, text), text).toEqual(unsaid);

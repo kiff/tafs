@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo is a subscription of one %1$s at %2$s, charged to your Apple account. It renews every %3$s until you cancel.</string>
     <string name="billing_starts_free">Starts with %1$s free.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs for one person, every month.</string>
-    <string name="billing_team_on_web">Get Team on kiff.dev</string>
+    <string name="billing_team_on_web">Get Company on kiff.dev</string>
     <string name="billing_terms_use">Terms of Use</string>
     <string name="billing_test_purchase_credits">Test purchases don\'t add credits to this account.</string>
     <string name="billing_try_free">Try %1$s free</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Choose file</string>
     <string name="chat_file_choose_photos">Choose photos</string>
     <string name="chat_file_could_not_open">The file couldn\'t be opened.</string>
+    <string name="chat_file_mac_camera_off">The camera is off for tafs. Turn it on in System Settings › Privacy &amp; Security › Camera (on macOS 12: System Preferences › Security &amp; Privacy › Privacy › Camera).</string>
     <string name="chat_file_no_app_opens">No app on this phone opens %1$s.</string>
     <string name="chat_file_no_camera">There\'s no camera app on this phone to take a photo with.</string>
     <string name="chat_file_not_opened">%1$s couldn\'t be opened. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Ask before anything unusual, even when it fits the Card.</string>
     <string name="sample_memory_explain">You\'d rather I explain a decision in one line than in a paragraph.</string>
     <string name="sample_memory_regulars">Customers who write every week get a reply the same morning.</string>
+    <string name="sample_not_in_sample">This isn\'t in the sample. Sign in with KIFF to do it.</string>
     <string name="sample_parcels_change_address">Change the delivery address on order #5141</string>
     <string name="sample_parcels_change_address_why">An email from a new address asked for it</string>
     <string name="sample_parcels_job">Tell customers when a parcel runs late, before they ask. Reships wait for you. Never change a delivery address from an email.</string>

@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo는 %2$s의 %1$s 단위 구독이며 Apple 계정에 청구됩니다. 취소할 때까지 매%3$s 갱신됩니다.</string>
     <string name="billing_starts_free">%1$s 무료로 시작합니다.</string>
     <string name="billing_tafs_kiff_one_person_every">한 사람을 위한 tafs, 매월.</string>
-    <string name="billing_team_on_web">kiff.dev에서 Team 시작하기</string>
+    <string name="billing_team_on_web">kiff.dev에서 Company 시작하기</string>
     <string name="billing_terms_use">이용 약관</string>
     <string name="billing_test_purchase_credits">테스트 구매는 이 계정에 크레딧을 추가하지 않습니다.</string>
     <string name="billing_try_free">%1$s 무료 체험</string>
@@ -475,6 +475,7 @@
     <string name="chat_file_choose_file">파일 선택</string>
     <string name="chat_file_choose_photos">사진 선택</string>
     <string name="chat_file_could_not_open">파일을 열지 못했습니다.</string>
+    <string name="chat_file_mac_camera_off">Mac에서 tafs의 카메라가 꺼져 있습니다. 시스템 설정 › 개인정보 보호 및 보안 › 카메라에서 켜세요(macOS 12: 시스템 환경설정 › 보안 및 개인 정보 보호 › 개인 정보 보호 › 카메라).</string>
     <string name="chat_file_no_app_opens">이 휴대폰에는 %1$s을(를) 여는 앱이 없습니다.</string>
     <string name="chat_file_no_camera">이 휴대폰에는 사진을 찍을 카메라 앱이 없습니다.</string>
     <string name="chat_file_not_opened">%1$s을(를) 열지 못했습니다. %2$s</string>
@@ -2028,6 +2029,7 @@
     <string name="sample_memory_ask_first">Card에 맞더라도 평소와 다른 일은 먼저 물어봅니다.</string>
     <string name="sample_memory_explain">결정은 한 문단보다 한 줄로 설명하는 것을 선호합니다.</string>
     <string name="sample_memory_regulars">매주 연락하는 고객에게는 같은 날 아침에 답장합니다.</string>
+    <string name="sample_not_in_sample">샘플에는 없는 기능입니다. 하려면 KIFF로 로그인하세요.</string>
     <string name="sample_parcels_change_address">주문 #5141의 배송 주소 변경</string>
     <string name="sample_parcels_change_address_why">새 주소에서 온 이메일이 요청함</string>
     <string name="sample_parcels_job">고객이 묻기 전에 소포가 늦어지면 알립니다. 재발송은 내 승인을 기다립니다. 이메일만 보고 배송 주소를 바꾸지 않습니다.</string>

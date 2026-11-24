@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo %2$s پر ایک %1$s کی سبسکرپشن ہے، جو آپ کے Apple اکاؤنٹ سے لی جاتی ہے۔ یہ آپ کے منسوخ کرنے تک ہر %3$s تجدید ہوتی ہے۔</string>
     <string name="billing_starts_free">%1$s مفت سے شروع ہوتی ہے۔</string>
     <string name="billing_tafs_kiff_one_person_every">ایک شخص کے لیے tafs، ہر ماہ۔</string>
-    <string name="billing_team_on_web">kiff.dev پر Team حاصل کریں</string>
+    <string name="billing_team_on_web">kiff.dev پر Company حاصل کریں</string>
     <string name="billing_terms_use">استعمال کی شرائط</string>
     <string name="billing_test_purchase_credits">ٹیسٹ خریداریاں اس اکاؤنٹ میں کریڈٹس شامل نہیں کرتیں۔</string>
     <string name="billing_try_free">%1$s مفت آزمائیں</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">فائل چنیں</string>
     <string name="chat_file_choose_photos">تصاویر چنیں</string>
     <string name="chat_file_could_not_open">فائل کھل نہیں سکی۔</string>
+    <string name="chat_file_mac_camera_off">ایپ tafs کے لیے کیمرا بند ہے۔ اسے سسٹم سیٹنگز › پرائیویسی اور سیکیورٹی › کیمرا میں چالو کریں (macOS 12 پر: سسٹم پریفرنسز › سیکیورٹی اور پرائیویسی › پرائیویسی › کیمرا)۔</string>
     <string name="chat_file_no_app_opens">اس فون میں %1$s کھولنے والی کوئی ایپ نہیں ہے۔</string>
     <string name="chat_file_no_camera">اس فون میں تصویر لینے کے لیے کیمرا ایپ نہیں ہے۔</string>
     <string name="chat_file_not_opened">%1$s کھل نہیں سکی۔ %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">کسی بھی غیر معمولی چیز سے پہلے پوچھیں، چاہے وہ Card میں فٹ ہو۔</string>
     <string name="sample_memory_explain">آپ چاہتے ہیں کہ میں فیصلے کی وضاحت پیراگراف کے بجائے ایک سطر میں کروں۔</string>
     <string name="sample_memory_regulars">جو گاہک ہر ہفتے لکھتے ہیں انہیں اسی صبح جواب ملتا ہے۔</string>
+    <string name="sample_not_in_sample">یہ نمونے میں نہیں ہے۔ اسے کرنے کے لیے KIFF سے سائن اِن کریں۔</string>
     <string name="sample_parcels_change_address">آرڈر #5141 کا ترسیل کا پتہ بدلیں</string>
     <string name="sample_parcels_change_address_why">ایک نئے پتے سے ای میل میں مانگا گیا</string>
     <string name="sample_parcels_job">گاہکوں کو پوچھنے سے پہلے بتائیں کہ پارسل دیر سے آ رہا ہے۔ دوبارہ ترسیل آپ کا انتظار کرتی ہے۔ ای میل کی بنیاد پر ترسیل کا پتہ کبھی نہ بدلیں۔</string>

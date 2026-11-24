@@ -13,12 +13,12 @@ Leiskite savo tafs dirbti jūsų Chrome, tik leidžiamose svetainėse. Rizikingi
 • Susiekite šį „Chrome“ su telefonu: „tafs“ programėlėje atidarykite Paskyra › Chrome › Susieti Chrome ir įveskite rodomą kodą.
 • Taf dirba savo skirtukuose, jūsų matomoje skirtukų grupėje. Galite jį bet kada pristabdyti ar sustabdyti, o jis pristabdomas, kai paliečiate vieną jo skirtukų.
 • „Chrome“ diegimo metu vieną kartą paprašo prieigos prie visų svetainių. „tafs“ dirba tik svetainėse, kurias nurodo kiekviena užduotis ir kurias jūs patvirtinate telefone.
-• Mokėjimas, užsakymo pateikimas ir išsaugoto prisijungimo pildymas visada laukia jūsų patvirtinimo telefone.
+• Mokėjimas ir užsakymo pateikimas visada laukia jūsų patvirtinimo telefone.
 • Jis skaito puslapį kaip tekstą ir formos laukus, be slaptažodžio, kortelės ir kodo laukų. Niekada neskaito kitų jūsų skirtukų ar istorijos.
 • Taf gali perduoti jums vieną žingsnį puslapyje, pavyzdžiui, įvesti paiešką ar kortelės numerį. Jį atliekate patys, o kai jis vėl skaito puslapį, tai, ką įvedėte į laukus, praleidžiama.
 • Bankų, piniginių, slaptažodžių tvarkyklių, mokėjimų, sveikatos ir valdžios svetainės niekada nenaudojamos, nebent leidžiate vieną jų vienai užduočiai telefone.
-• Išsaugoti prisijungimai yra neprivalomi ir užantspauduoti šiame kompiuteryje. „tafs“ ir KIFF jų niekada nemato.
-• Šoninė juosta rodo taf, kuris dirba šiame „Chrome“, ir jūs su juo kalbatės čia, kaip „tafs“ programėlėje. „Nustatyti naują taf šiai svetainei“ atidaro „Coach“, kuris mato puslapį tik tada, kai spustelite „Bendrinti šį puslapį“, ir tada tik tą puslapį, su tais pačiais pašalintais laukais.
+• Jis niekada nelaiko jūsų slaptažodžių. Prisijungimo puslapyje taf sustoja ir paprašo jūsų prisijungti patiems, savo skirtuke.
+• Šoninė juosta rodo taf, kuris dirba šiame „Chrome“, ir jūs su juo kalbatės čia, kaip „tafs“ programėlėje. „Nustatyti naują taf šiai svetainei“ atidaro „Coach“, kuris perskaito puslapį, nuo kurio pradeda, su tais pačiais pašalintais laukais.
 
 Tai, ką taf perskaito, keliauja dirbtiniam intelektui, vykdančiam jūsų užduotį, ir saugoma kartu su ta užduotimi. KIFF saugo puslapį prieš pakeitimą ir po jo ne ilgiau kaip 30 dienų. Įjungus ekrano kopijas, kiekvienas veiksmą atliekantis žingsnis taip pat saugo vieną puslapio ekrano kopiją, padarytą prieš pat veiksmą, paslėpus slaptažodžio, kortelės ir kodo laukus, ne ilgiau kaip 30 dienų. Matote ją tik tafs programėlėje, ir ji niekada nekeliauja dirbtiniam intelektui. Atsiejus ar pašalinus ištrinama tai, ką plėtinys saugo jūsų kompiuteryje.
 

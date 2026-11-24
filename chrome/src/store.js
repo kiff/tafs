@@ -33,6 +33,7 @@ async function run(mode, fn) {
 export const indexedStore = {
   get: (key) => run("readonly", (s) => s.get(key)),
   set: (key, value) => run("readwrite", (s) => s.put(value, key)),
+  forget: (key) => run("readwrite", (s) => s.delete(key)),
   wipe: async () => {
     await run("readwrite", (s) => s.clear());
   },
@@ -44,6 +45,7 @@ export function memoryStore() {
     map,
     get: async (key) => map.get(key),
     set: async (key, value) => void map.set(key, value),
+    forget: async (key) => void map.delete(key),
     wipe: async () => map.clear(),
   };
 }
@@ -60,4 +62,14 @@ export async function profileId(area, random = (n) => crypto.getRandomValues(new
   const id = Array.from(random(16), (b) => b.toString(16).padStart(2, "0")).join("");
   await area.set({ profile_id: id });
   return id;
+}
+
+/**
+ * What earlier versions kept as saved sign-ins (0.2.3 and before: the sealed entries and the key that sealed them), deleted.
+ * The extension keeps no sign-in: at a sign-in page the taf hands the step to the person (docs/chrome.md, "What's kept"). Run
+ * on every start, so an update deletes them before anything else, and a start with nothing to delete changes nothing.
+ */
+export const SAVED_SIGN_INS = ["vault", "vault_key"];
+export async function forgetSavedSignIns(store) {
+  for (const key of SAVED_SIGN_INS) await store.forget(key);
 }

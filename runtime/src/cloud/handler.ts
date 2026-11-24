@@ -7,7 +7,7 @@ import { type BalanceView, balanceView, type CreditRun, CreditsError, runCredits
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification } from "./push.js";
+import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification, watchInboxNotification } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -63,6 +63,7 @@ import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, 
 import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
+import { inboxMarks, inboxState, markInbox } from "./watch-inbox.js";
 import { type Ask, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, askDay, askOfSession, type AskState, checkedLine, CLIENT_ID, dayTurns, fullAnswer, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, ROUTING_MS, shownAsk, SINCE_DEFAULT_MS, tafLine, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, unagreedRefusal, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
@@ -104,6 +105,8 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/watch/asks/{id}            one of them
  *   GET  /v1/watch/days                 the days the person asked from a watch, newest first, in the account's zone, and its today (W11): read only
  *   GET  /v1/watch/days/{yyyy-mm-dd}    one of those days: what they said and where each went, oldest first, a reply under its request
+ *   GET  /v1/watch/inbox                the ids of the watch Inbox's lines the person read and dismissed (docs/watch-app.md, step iv)
+ *   POST /v1/watch/inbox                mark lines read or dismissed, by id alone; the person's phones are told to read again
  *   POST /v1/coach/drive/pause          the person touched the app: pause it, so Coach sends nothing (docs/drive.md)
  *   POST /v1/coach/drive/resume         the person tapped Continue: go on, with a look first
  *   POST /v1/coach/drive/stop           end it: the owner took over, left the app, stopped it, locked or signed out
@@ -738,6 +741,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   // A request from the watch, through the paired phone (docs/watch-ask.md).
   if (parts[1] === "watch" && parts[2] === "asks") return watchRoute(event, method, parts, deps);
   if (parts[1] === "watch" && parts[2] === "days") return watchDaysRoute(event, method, parts, deps);
+  if (parts[1] === "watch" && parts[2] === "inbox" && parts.length === 3) return watchInboxRoute(event, method, deps);
   // Halts, resumes and door events, newest first, for Activity (kiff/tafs#236, items 15 and 19).
   if (parts[1] === "events" && parts.length === 2 && method === "GET") {
     const me = await person(event, deps);
@@ -5384,7 +5388,7 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const again = againID ? grants.grants.find((g) => g.id === againID && g.status === "connected") : undefined;
   const againAccount = again?.account_name?.trim();
   const againTafs = (again?.used_by ?? []).filter((n): n is string => typeof n === "string" && n.trim() !== "").map((n) => n.trim());
-  // Only the tafs this person may see are named; the others on the account are counted, never named (PM, 20 Nov).
+  // Only the tafs this person may see are named; the others on the account are counted, never named.
   const seen = again && againAccount && againTafs.length ? await Promise.all([deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase)])
     .then(([records, access]) => new Set(records.filter((t) => !t.removing && listable(access, t.kiffAgent)).map((t) => t.name)), () => new Set<string>()) : new Set<string>();
   const shownTafs = againTafs.filter((n) => seen.has(n));
@@ -11543,22 +11547,48 @@ function watchTafs(tafs: Taf[]): ToolAnswer {
   };
 }
 
-/** A watch request's state changed: kept, then the person's Android phones are told its id alone. */
+/** A watch request's state changed: kept, then the person's phones, iPhone and Android, are told its id alone. */
 async function watchChanged(tenant: string, ask: Ask, deps: Deps): Promise<void> {
   if (!deps.coach) return;
   const now = deps.now?.() ?? new Date();
   ask.updated = now.toISOString();
   await keepAsk(deps.coach, tenant, ask, now);
   try {
-    const { devices } = await deps.push.get(tenant);
-    const n = watchAskNotification(ask.id);
-    await Promise.all(devices.filter((d) => d.subject === ask.person && d.platform === "android").map(async (d) => {
-      const r = await sendNotification(deps.apns, d, n).catch(() => "failed" as const);
-      if (r === "gone") await deps.push.removeDevice(tenant, d.token);
-    }));
+    await tellPersonsPhones(tenant, ask.person, watchAskNotification(ask.id), deps);
   } catch (err) {
     console.error(`watch ask ${ask.id} not told: ${(err as Error).message}`);
   }
+}
+
+/** A silent push to one person's phones alone, never the account's others; a phone its push service has forgotten is forgotten here. */
+async function tellPersonsPhones(tenant: string, subject: string, n: Notification, deps: Deps): Promise<void> {
+  const { devices } = await deps.push.get(tenant);
+  await Promise.all(devices.filter((d) => d.subject === subject).map(async (d) => {
+    const r = await sendNotification(deps.apns, d, n).catch(() => "failed" as const);
+    if (r === "gone") await deps.push.removeDevice(tenant, d.token);
+  }));
+}
+
+/**
+ * The watch Inbox's read and dismissed, in step across the person's phones and watches (docs/watch-app.md, step iv):
+ * ids alone, the person's own, kept 30 days after their last mark. It isn't behind TAFS_WATCH_ASK: the Inbox lists
+ * held calls whether or not the watch may ask. A mark changes no one's power, only what this person has seen, so the
+ * phone's session is enough, with no signature. After a mark, the person's phones are told to read the marks again.
+ */
+async function watchInboxRoute(event: HTTPEvent, method: string, deps: Deps): Promise<unknown> {
+  if (!deps.coach) throw new HTTPError(404, "not found");
+  const me = await person(event, deps);
+  if (method === "GET") return inboxState(deps.coach, me.tenantID, me.subject);
+  if (method !== "POST") throw new HTTPError(404, "not found");
+  const marks = inboxMarks(parseBody(event));
+  if (typeof marks === "string") throw new HTTPError(400, marks, { code: "bad_marks" });
+  const state = await markInbox(deps.coach, me.tenantID, me.subject, marks, deps.now?.() ?? new Date());
+  try {
+    await tellPersonsPhones(me.tenantID, me.subject, watchInboxNotification(), deps);
+  } catch (err) {
+    console.error(`watch inbox not told: ${(err as Error).message}`);
+  }
+  return state;
 }
 
 /**

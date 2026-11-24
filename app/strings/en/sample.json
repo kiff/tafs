@@ -147,6 +147,7 @@
   "sample.memory.ask_first": "Ask before anything unusual, even when it fits the Card.",
   "sample.memory.explain": "You'd rather I explain a decision in one line than in a paragraph.",
   "sample.memory.regulars": "Customers who write every week get a reply the same morning.",
+  "sample.not_in_sample": "This isn't in the sample. Sign in with KIFF to do it.",
   "sample.parcels.change_address": "Change the delivery address on order #5141",
   "sample.parcels.change_address_why": "An email from a new address asked for it",
   "sample.parcels.job": "Tell customers when a parcel runs late, before they ask. Reships wait for you. Never change a delivery address from an email.",

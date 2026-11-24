@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo គឺជាការជាវរយៈពេលមួយ%1$s តម្លៃ %2$s គិតលើគណនី Apple របស់អ្នក។ វាបន្តរាល់%3$s រហូតដល់អ្នកបោះបង់។</string>
     <string name="billing_starts_free">ចាប់ផ្តើមដោយឥតគិតថ្លៃ %1$s។</string>
     <string name="billing_tafs_kiff_one_person_every">taf សម្រាប់មនុស្សម្នាក់ រាល់ខែ។</string>
-    <string name="billing_team_on_web">យក Team នៅ kiff.dev</string>
+    <string name="billing_team_on_web">យក Company នៅ kiff.dev</string>
     <string name="billing_terms_use">លក្ខខណ្ឌប្រើប្រាស់</string>
     <string name="billing_test_purchase_credits">ការទិញសាកល្បងមិនបន្ថែមក្រេឌីតទៅគណនីនេះទេ។</string>
     <string name="billing_try_free">សាកល្បងឥតគិតថ្លៃ %1$s</string>
@@ -475,6 +475,7 @@
     <string name="chat_file_choose_file">ជ្រើសរើសឯកសារ</string>
     <string name="chat_file_choose_photos">ជ្រើសរើសរូបថត</string>
     <string name="chat_file_could_not_open">មិនអាចបើកឯកសារបានទេ។</string>
+    <string name="chat_file_mac_camera_off">កាមេរ៉ាត្រូវបានបិទសម្រាប់ tafs។ បើកវាក្នុងការកំណត់ប្រព័ន្ធ › ឯកជនភាព និងសុវត្ថិភាព › កាមេរ៉ា (នៅលើ macOS 12៖ ចំណូលចិត្តប្រព័ន្ធ › សុវត្ថិភាព និងឯកជនភាព › ឯកជនភាព › កាមេរ៉ា)។</string>
     <string name="chat_file_no_app_opens">គ្មានកម្មវិធីណានៅលើទូរសព្ទនេះបើក %1$s បានទេ។</string>
     <string name="chat_file_no_camera">គ្មានកម្មវិធីកាមេរ៉ានៅលើទូរសព្ទនេះសម្រាប់ថតរូបទេ។</string>
     <string name="chat_file_not_opened">មិនអាចបើក %1$s បានទេ។ %2$s</string>
@@ -2028,6 +2029,7 @@
     <string name="sample_memory_ask_first">សួរមុនពេលធ្វើអ្វីដែលមិនធម្មតា ទោះបីវាសមនឹង Card ក៏ដោយ។</string>
     <string name="sample_memory_explain">អ្នកចូលចិត្តឱ្យខ្ញុំពន្យល់ការសម្រេចចិត្តក្នុងមួយបន្ទាត់ ជាជាងក្នុងកថាខណ្ឌមួយ។</string>
     <string name="sample_memory_regulars">អតិថិជនដែលសរសេរមករាល់សប្តាហ៍ទទួលបានចម្លើយនៅព្រឹកដដែល។</string>
+    <string name="sample_not_in_sample">នេះមិនមានក្នុងគំរូទេ។ ចូលដោយ KIFF ដើម្បីធ្វើវា។</string>
     <string name="sample_parcels_change_address">ផ្លាស់ប្តូរអាសយដ្ឋានដឹកជញ្ជូនលើការបញ្ជាទិញ #5141</string>
     <string name="sample_parcels_change_address_why">អ៊ីមែលពីអាសយដ្ឋានថ្មីបានសុំវា</string>
     <string name="sample_parcels_job">ប្រាប់អតិថិជននៅពេលកញ្ចប់យឺត មុនពេលពួកគេសួរ។ ការផ្ញើឡើងវិញរង់ចាំអ្នក។ កុំផ្លាស់ប្តូរអាសយដ្ឋានដឹកជញ្ជូនពីអ៊ីមែលឱ្យសោះ។</string>

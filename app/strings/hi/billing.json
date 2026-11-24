@@ -71,7 +71,7 @@
   "billing.solo_subscription_one_charged_your": "Solo {price} पर एक {period} की सदस्यता है, जो आपके Apple खाते से ली जाती है। यह आपके रद्द करने तक हर {period_2} नवीनीकृत होती है।",
   "billing.starts_free": "{trial} मुफ़्त से शुरू होती है।",
   "billing.tafs_kiff_one_person_every": "एक व्यक्ति के लिए tafs, हर महीने।",
-  "billing.team_on_web": "kiff.dev पर Team लें",
+  "billing.team_on_web": "kiff.dev पर Company लें",
   "billing.terms_use": "उपयोग की शर्तें",
   "billing.test_purchase_credits": "टेस्ट खरीद इस खाते में क्रेडिट नहीं जोड़ती।",
   "billing.try_free": "{trial} मुफ़्त आज़माएँ",

@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo bir dövr (%1$s) üçün %2$s məbləğində abunəlikdir, Apple hesabınızdan tutulur. Siz ləğv edənə qədər hər dövr (%3$s) yenilənir.</string>
     <string name="billing_starts_free">Pulsuz başlayır: %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">Bir nəfər üçün tafs, hər ay.</string>
-    <string name="billing_team_on_web">Team-i kiff.dev-də əldə edin</string>
+    <string name="billing_team_on_web">Company-ni kiff.dev-də əldə edin</string>
     <string name="billing_terms_use">İstifadə şərtləri</string>
     <string name="billing_test_purchase_credits">Sınaq alışları bu hesaba kredit əlavə etmir.</string>
     <string name="billing_try_free">Pulsuz sınayın: %1$s</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Fayl seçin</string>
     <string name="chat_file_choose_photos">Fotoları seçin</string>
     <string name="chat_file_could_not_open">Fayl açıla bilmədi.</string>
+    <string name="chat_file_mac_camera_off">Kamera tafs üçün söndürülüb. Onu Sistem parametrləri › Məxfilik və təhlükəsizlik › Kamera bölməsində aktiv edin (macOS 12-də: Sistem tərcihləri › Təhlükəsizlik və məxfilik › Məxfilik › Kamera).</string>
     <string name="chat_file_no_app_opens">Bu telefonda %1$s faylını açan tətbiq yoxdur.</string>
     <string name="chat_file_no_camera">Bu telefonda foto çəkmək üçün kamera tətbiqi yoxdur.</string>
     <string name="chat_file_not_opened">%1$s açıla bilmədi. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Qeyri-adi hər şeydən əvvəl, Card-a uyğun olsa belə, soruşun.</string>
     <string name="sample_memory_explain">Qərarı paraqrafla yox, bir cümlə ilə izah etməyimi üstün tutursunuz.</string>
     <string name="sample_memory_regulars">Hər həftə yazan müştərilər eyni səhər cavab alır.</string>
+    <string name="sample_not_in_sample">Bu nümunədə yoxdur. Bunu etmək üçün KIFF ilə daxil olun.</string>
     <string name="sample_parcels_change_address">#5141 sifarişinin çatdırılma ünvanını dəyişin</string>
     <string name="sample_parcels_change_address_why">Yeni ünvandan gələn e-poçt bunu xahiş etdi</string>
     <string name="sample_parcels_job">Bağlama gecikəndə müştərilərə onlar soruşmadan xəbər verin. Təkrar göndərişlər sizi gözləyir. Çatdırılma ünvanını heç vaxt e-poçta əsasən dəyişməyin.</string>

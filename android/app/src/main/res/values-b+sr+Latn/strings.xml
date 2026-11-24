@@ -238,7 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo je pretplata na jedan period (%1$s) po ceni od %2$s, koja se naplaćuje vašem Apple nalogu. Obnavlja se na svaki period (%3$s) dok je ne otkažete.</string>
     <string name="billing_starts_free">Počinje sa: %1$s besplatno.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs za jednu osobu, svakog meseca.</string>
-    <string name="billing_team_on_web">Nabavite Team na kiff.dev</string>
+    <string name="billing_team_on_web">Nabavite Company na kiff.dev</string>
     <string name="billing_terms_use">Uslovi korišćenja</string>
     <string name="billing_test_purchase_credits">Probne kupovine ne dodaju kredite na ovaj nalog.</string>
     <string name="billing_try_free">Probajte besplatno: %1$s</string>
@@ -529,6 +529,7 @@
     <string name="chat_file_choose_file">Odaberite datoteku</string>
     <string name="chat_file_choose_photos">Odaberite fotografije</string>
     <string name="chat_file_could_not_open">Datoteku nije bilo moguće otvoriti.</string>
+    <string name="chat_file_mac_camera_off">Kamera je isključena za tafs. Uključite je u Podešavanja sistema › Privatnost i sigurnost › Kamera (macOS 12: Podešavanja sistema › Sigurnost i privatnost › Privatnost › Kamera).</string>
     <string name="chat_file_no_app_opens">Nijedna aplikacija na ovom telefonu ne otvara %1$s.</string>
     <string name="chat_file_no_camera">Na ovom telefonu nema aplikacije kamere za snimanje fotografije.</string>
     <string name="chat_file_not_opened">%1$s nije bilo moguće otvoriti. %2$s</string>
@@ -2160,6 +2161,7 @@
     <string name="sample_memory_ask_first">Pitajte pre svega neobičnog, čak i kad odgovara Cardu.</string>
     <string name="sample_memory_explain">Radije da odluku objasnim u jednom retku nego u odlomku.</string>
     <string name="sample_memory_regulars">Kupci koji pišu svaki nedelja dobivaju odgovor isto jutro.</string>
+    <string name="sample_not_in_sample">Ovo nije u primeru. Prijavite se KIFF-om da biste to uradili.</string>
     <string name="sample_parcels_change_address">Promenite adresu dostave za porudžbinu #5141</string>
     <string name="sample_parcels_change_address_why">Tražila je e-pošta s nove adrese</string>
     <string name="sample_parcels_job">Obavestite kupce kad pošiljka kasni, pre nego šta pitaju. Ponovna slanja čekaju vas. Nikad ne menjajte adresu dostave na temelju e-pošte.</string>

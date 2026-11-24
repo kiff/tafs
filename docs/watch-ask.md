@@ -21,7 +21,7 @@ relay are in [watch-wear.md](watch-wear.md).
 5. **The taf's run** pauses (a call held for the owner) or ends, and Coach's watch conversation gets one more turn to say how
    it went in one line.
 6. **tafs cloud checks the line** and keeps it on the request. Each change of state is a background push to the person's
-   Android phone with the request's id alone; the relay reads the request and passes it to the watch.
+   phones, Android and iPhone, with the request's id alone; the relay reads the request and passes it to the watch.
 
 ## The watch mark
 
@@ -123,7 +123,7 @@ It's the same route, signature and receipt, with `taf_id` added: `{client_id, te
 - **The answer** is the taf's own, checked as Coach's line is (one line, no markdown, links' targets or control
   characters), at most **400** characters (`tafLine`). `more: true` says it went on, and the rest is on the phone. The watch
   may show an amount on screen and never stores it, as the watch's rule already is. A run that failed or was stopped is
-  `failed`. Each change is pushed to the person's Android phones by the request's id alone, as before.
+  `failed`. Each change is pushed to the person's phones, Android and iPhone, by the request's id alone, as before.
 - **`kind: "taf"`** marks such a request wherever it's read (`{ask}` and the list), so the watches
   tell it from a Coach request a taf handled. They keep nothing of it: never their Inbox, Coach's thread or a cache.
 - **Read more** (the owner's pick, 20 Nov: a long answer is never trimmed, shown partly, then expanded):

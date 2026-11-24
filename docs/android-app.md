@@ -268,8 +268,8 @@ guardrails. Promoting a release beyond internal (Play review) is the owner's, in
 console for review and restarted production's. Play's managed publishing is on since then, and with it on Play refuses that
 parameter (400, "Changes are sent for review automatically. The query parameter changesNotSentForReview must not be set.",
 21 Nov): on those words alone, and no others, the script commits the edit plainly (`commit`), and the release waits in
-"Changes ready to publish" until mac-local presses Publish. Any other refusal commits nothing. While a production review is in
-flight, no internal upload runs: mac-local says when (row 44's 0.4.4-timing waited for 128). **Before merging a pull
+"Changes ready to publish" until Publish is pressed in the Play Console. Any other refusal commits nothing. While a production review is in
+flight, no internal upload runs until the review ends (row 44's 0.4.4-timing waited for 128). **Before merging a pull
 request that raises either `versionCode`**, Play Console's Publishing overview must list nothing saved and not yet sent for
 review: with managed publishing on, the plain commit sends every saved change for review with the release (on 22 Nov,
 132's commit sent a saved country expansion along with it). Managed publishing holds only the publishing, and Publish then
@@ -1679,7 +1679,7 @@ afresh. A tap opens the taf. Read-only; no new dependency. Tests:
 ## Files
 
 What the account's tafs make in their runs (a report, a sheet, a document), kept 30 days from the run for everyone on the
-account, as mockup v2.1 draws it (kiff/work `files-v2/`). It reads tafs cloud's Files routes. **On since Android 125
+account, as mockup v2.1 draws it. It reads tafs cloud's Files routes. **On since Android 125
 (1.41.0)**, on the owner's yes of 19 Nov; its switch (`FilesFeature`) was removed on 21 Nov, so `MainActivity` always makes the
 model. Where `LocalFiles` is null (a preview, a test), Account, a taf's page and its chat draw nothing of it
 (`withNoModelNothingOfFilesIsDrawn`).
