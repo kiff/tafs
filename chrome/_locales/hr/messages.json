@@ -80,7 +80,6 @@
   "step_handed": {"message": "Predano vama", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Učinili ste to", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "Rekli ste „Ne sada”", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ radi na ovoj stranici", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "Rade u ovom Chromeu", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "Idi na karticu: $TAF$", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← Natrag"},

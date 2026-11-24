@@ -80,7 +80,6 @@
   "step_handed": {"message": "あなたに任されました", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "あなたが行いました", "description": "Step list: the person pressed Done on the Your turn card."},
   "step_hand_declined": {"message": "「今はしない」を選びました", "description": "Step list: the person pressed Not now on the Your turn card."},
-  "bar_working": {"message": "$TAF$ がこのページで作業中", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}},
   "at_work": {"message": "この Chrome で作業中", "description": "Label before the side panel's row of tafs at work, one button each; a button brings that taf's tab to the front."},
   "go_to_taf": {"message": "$TAF$ のタブへ移動", "description": "Accessible name of a taf's button in that row.", "placeholders": {"taf": {"content": "$1"}}},
   "coach_back": {"message": "← 戻る"},
