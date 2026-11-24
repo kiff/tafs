@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Taf се премахва от телефона: отворете го в приложението tafs, после Премахване. Премахването се одобрява там."},
   "bar_go": {"message": "Към раздела му"},
   "bar_paused": {"message": "$TAF$ е на пауза", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ приключи", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ приключи", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach чете тази страница, когато изпратите: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Чете: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Не на този сайт"},
+  "aside_on": {"message": "Чети този сайт"},
+  "aside_off_line": {"message": "Coach не чете $HOST$: изключихте го", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach не чете $HOST$: сайт на банка, плащания, поща или здраве", "placeholders": {"host": {"content": "$1"}}}
 }

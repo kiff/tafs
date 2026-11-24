@@ -207,3 +207,11 @@ button.small {
   font-size: 12px;
   padding: 2px 8px;
 }
+
+/* The page that went with a message to Coach, by its host: a quiet line under the person's words. */
+.thread li small.reading {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.75;
+}

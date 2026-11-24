@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Taf eemaldatakse telefonis: ava see tafsi rakenduses ja vali Eemalda. Eemaldamine kinnitatakse seal."},
   "bar_go": {"message": "Mine selle vahekaardile"},
   "bar_paused": {"message": "$TAF$ on pausil", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ on valmis", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ on valmis", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach loeb saatmisel seda lehte: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Loeb: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Mitte sellel saidil"},
+  "aside_on": {"message": "Loe seda saiti"},
+  "aside_off_line": {"message": "Coach ei loe saiti $HOST$: lülitasid selle välja", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach ei loe saiti $HOST$: panga, maksete, posti või tervise sait", "placeholders": {"host": {"content": "$1"}}}
 }

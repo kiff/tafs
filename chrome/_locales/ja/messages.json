@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "tafの削除はスマートフォンで行います。tafsアプリで開いて「削除」を選んでください。削除はそこで承認します。"},
   "bar_go": {"message": "そのタブへ移動"},
   "bar_paused": {"message": "$TAF$は一時停止中", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$の作業が完了", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$の作業が完了", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "送信すると Coach がこのページを読みます: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "読み取り: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "このサイトでは読まない"},
+  "aside_on": {"message": "このサイトを読む"},
+  "aside_off_line": {"message": "Coach は $HOST$ を読みません: オフにしています", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach は $HOST$ を読みません: 銀行、決済、メール、健康のサイトです", "placeholders": {"host": {"content": "$1"}}}
 }

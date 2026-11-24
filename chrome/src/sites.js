@@ -126,3 +126,29 @@ export function bareURL(raw) {
     return "";
   }
 }
+
+/** Chrome's own store: never read for Coach, whatever its address says. */
+const WEB_STORE = (u) => u.hostname === "chromewebstore.google.com" || (u.hostname === "chrome.google.com" && u.pathname.startsWith("/webstore"));
+
+/**
+ * Whether Coach may read [tab] with the person's message (docs/chrome.md, "Coach reads the page you're on"): `null` when it
+ * may, else why not ("not_front", "not_https", "store", "incognito", "sensitive", "off"). Only the tab in front of the panel's
+ * own window ([windowId]); only https; never Chrome's store or an incognito tab; never a sensitive site (the same list a run
+ * needs the phone's signed allowance for); never a host the person switched off ([off]).
+ */
+export function asideRefusal(tab, { windowId, off = [] } = {}) {
+  if (!tab || !tab.active || typeof windowId !== "number" || tab.windowId !== windowId) return "not_front";
+  if (tab.incognito) return "incognito";
+  let u;
+  try {
+    u = new URL(String(tab.url || ""));
+  } catch {
+    return "not_https";
+  }
+  if (u.protocol !== "https:" || u.username || u.password) return "not_https";
+  if (WEB_STORE(u)) return "store";
+  const host = u.hostname.toLowerCase();
+  if (sensitive(host)) return "sensitive";
+  if ((off || []).includes(host)) return "off";
+  return null;
+}

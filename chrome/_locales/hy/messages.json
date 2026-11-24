@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Taf-ը հեռացվում է հեռախոսում. բացեք այն tafs հավելվածում, ապա Հեռացնել։ Հեռացումը հաստատվում է այնտեղ։"},
   "bar_go": {"message": "Անցնել նրա ներդիրին"},
   "bar_paused": {"message": "$TAF$-ը դադարեցված է", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$-ն ավարտեց", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$-ն ավարտեց", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Ուղարկելիս Coach-ը կարդում է այս էջը՝ $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Կարդում է՝ $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Ոչ այս կայքում"},
+  "aside_on": {"message": "Կարդալ այս կայքը"},
+  "aside_off_line": {"message": "Coach-ը չի կարդում $HOST$-ը․ դուք անջատել եք", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach-ը չի կարդում $HOST$-ը․ բանկի, վճարման, փոստի կամ առողջության կայք է", "placeholders": {"host": {"content": "$1"}}}
 }

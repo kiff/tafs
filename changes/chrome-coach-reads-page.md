@@ -1,0 +1,1 @@
+- **Chrome: Coach reads the page you're on, when you send it a message.** Only the tab in front, masked, never what you typed or a sensitive site, and never a site you switch off with "Not on this site". Each message says which site went with it. ([chrome.md](docs/chrome.md))

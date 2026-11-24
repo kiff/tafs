@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Ein taf wird auf deinem Handy entfernt: Öffne ihn in der tafs-App, dann Entfernen. Dort wird das Entfernen genehmigt."},
   "bar_go": {"message": "Zu seinem Tab"},
   "bar_paused": {"message": "$TAF$ pausiert", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ ist fertig", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ ist fertig", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach liest diese Seite beim Senden: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Gelesen: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Nicht auf dieser Website"},
+  "aside_on": {"message": "Diese Website lesen"},
+  "aside_off_line": {"message": "Coach liest $HOST$ nicht: du hast es ausgeschaltet", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach liest $HOST$ nicht: eine Bank-, Zahlungs-, Mail- oder Gesundheitsseite", "placeholders": {"host": {"content": "$1"}}}
 }

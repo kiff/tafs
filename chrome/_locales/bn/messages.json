@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "taf সরানো হয় আপনার ফোনে: tafs অ্যাপে এটি খুলুন, তারপর সরান। সরানোর অনুমোদন সেখানেই হয়।"},
   "bar_go": {"message": "এর ট্যাবে যান"},
   "bar_paused": {"message": "$TAF$ বিরতিতে আছে", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$-এর কাজ শেষ", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$-এর কাজ শেষ", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "পাঠালে Coach এই পেজটি পড়ে: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "পড়ছে: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "এই সাইটে নয়"},
+  "aside_on": {"message": "এই সাইট পড়ুন"},
+  "aside_off_line": {"message": "Coach $HOST$ পড়ে না: আপনি এটি বন্ধ করেছেন", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach $HOST$ পড়ে না: এটি ব্যাংক, পেমেন্ট, মেইল বা স্বাস্থ্য সাইট", "placeholders": {"host": {"content": "$1"}}}
 }

@@ -95,5 +95,11 @@
   "taf_remove_on_phone": {"message": "Un taf si rimuove dal telefono: aprilo nell'app tafs, poi Rimuovi. La rimozione si approva lì."},
   "bar_go": {"message": "Vai alla sua scheda"},
   "bar_paused": {"message": "$TAF$ è in pausa", "placeholders": {"taf": {"content": "$1"}}},
-  "group_done": {"message": "$TAF$ ha finito", "placeholders": {"taf": {"content": "$1"}}}
+  "group_done": {"message": "$TAF$ ha finito", "placeholders": {"taf": {"content": "$1"}}},
+  "aside_will": {"message": "Coach legge questa pagina quando invii: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_reading": {"message": "Letta: $HOST$", "placeholders": {"host": {"content": "$1"}}},
+  "aside_off": {"message": "Non su questo sito"},
+  "aside_on": {"message": "Leggi questo sito"},
+  "aside_off_line": {"message": "Coach non legge $HOST$: l'hai disattivato", "placeholders": {"host": {"content": "$1"}}},
+  "aside_sensitive": {"message": "Coach non legge $HOST$: è un sito di banca, pagamenti, posta o salute", "placeholders": {"host": {"content": "$1"}}}
 }
