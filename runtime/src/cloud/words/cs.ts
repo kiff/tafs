@@ -571,6 +571,7 @@ export const cs: Words = {
   record_removed: (name: string) => `${name} (odebráno)`,
   record_none: (q: string) => `Ve Záznamu nic neodpovídá „${q}“`,
   record_case_failed: (step: string, detail: string) => `${step} neprošlo: ${detail}`,
+  record_query_too_long: (max) => `Hledání může mít nejvýše ${max} znaků. Zkraťte ho.`,
   next_reconnect: "Připojit znovu",
   next_try_later: "Zkus to později: aplikace byla vytížená nebo nedostupná",
   next_ask_coach: "Požádej Coache, aby taf změnil",

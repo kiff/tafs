@@ -571,6 +571,7 @@ export const sl: Words = {
   record_removed: (name: string) => `${name} (odstranjeno)`,
   record_none: (q: string) => `V Zapisu ni ničesar, kar bi ustrezalo »${q}«`,
   record_case_failed: (step: string, detail: string) => `${step} ni uspelo: ${detail}`,
+  record_query_too_long: (max) => `Iskanje ima lahko največ ${max} znakov. Skrajšajte ga.`,
   next_reconnect: "Poveži znova",
   next_try_later: "Poskusi pozneje: aplikacija je bila zasedena ali nedosegljiva",
   next_ask_coach: "Prosi Coacha, naj spremeni taf",

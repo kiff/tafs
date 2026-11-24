@@ -571,6 +571,7 @@ export const tr: Words = {
   record_removed: (name: string) => `${name} (kaldırıldı)`,
   record_none: (q: string) => `Kayıtta "${q}" ile eşleşen bir şey yok`,
   record_case_failed: (step: string, detail: string) => `${step} gerçekleşmedi: ${detail}`,
+  record_query_too_long: (max) => `Bir arama en fazla ${max} karakter olabilir. Kısaltın.`,
   next_reconnect: "Yeniden bağlayın",
   next_try_later: "Daha sonra yeniden deneyin: uygulama meşguldü veya kapalıydı",
   next_ask_coach: "Coach'tan taf'ı değiştirmesini isteyin",

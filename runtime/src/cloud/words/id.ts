@@ -571,6 +571,7 @@ export const id: Words = {
   record_removed: (name: string) => `${name} (dihapus)`,
   record_none: (q: string) => `Tidak ada di Catatan yang cocok dengan "${q}"`,
   record_case_failed: (step: string, detail: string) => `${step} tidak berhasil: ${detail}`,
+  record_query_too_long: (max) => `Pencarian paling panjang ${max} karakter. Persingkat.`,
   next_reconnect: "Hubungkan lagi",
   next_try_later: "Coba lagi nanti: aplikasi sedang sibuk atau mati",
   next_ask_coach: "Minta Coach mengubah taf",

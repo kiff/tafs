@@ -571,6 +571,7 @@ export const hu: Words = {
   record_removed: (name: string) => `${name} (eltávolítva)`,
   record_none: (q: string) => `A Feljegyzésben semmi sem felel meg ennek: „${q}”`,
   record_case_failed: (step: string, detail: string) => `${step} nem ment át: ${detail}`,
+  record_query_too_long: (max) => `Egy keresés legfeljebb ${max} karakter lehet. Rövidítsd le.`,
   next_reconnect: "Csatlakoztatás újra",
   next_try_later: "Próbáld újra később: az alkalmazás foglalt volt vagy nem működött",
   next_ask_coach: "Kérd meg a Coachot, hogy módosítsa a tafot",

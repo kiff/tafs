@@ -571,6 +571,7 @@ export const th: Words = {
   record_removed: (name: string) => `${name} (ลบแล้ว)`,
   record_none: (q: string) => `ไม่มีอะไรในบันทึกที่ตรงกับ "${q}"`,
   record_case_failed: (step: string, detail: string) => `${step} ไม่สำเร็จ: ${detail}`,
+  record_query_too_long: (max) => `การค้นหายาวได้ไม่เกิน ${max} ตัวอักษร โปรดทำให้สั้นลง`,
   next_reconnect: "เชื่อมต่ออีกครั้ง",
   next_try_later: "ลองใหม่ภายหลัง: แอปไม่ว่างหรือล่ม",
   next_ask_coach: "ขอให้ Coach เปลี่ยน taf",

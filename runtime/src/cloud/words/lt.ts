@@ -571,6 +571,7 @@ export const lt: Words = {
   record_removed: (name: string) => `${name} (pašalinta)`,
   record_none: (q: string) => `Įraše nėra nieko, kas atitiktų „${q}“`,
   record_case_failed: (step: string, detail: string) => `${step} nepavyko: ${detail}`,
+  record_query_too_long: (max) => `Paieška gali būti ne ilgesnė nei ${max} simbolių. Sutrumpinkite ją.`,
   next_reconnect: "Prijungti iš naujo",
   next_try_later: "Pabandyk vėliau: programa buvo užimta arba neveikė",
   next_ask_coach: "Paprašyk Coach pakeisti taf",

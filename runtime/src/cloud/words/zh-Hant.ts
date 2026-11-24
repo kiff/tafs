@@ -571,6 +571,7 @@ export const zhHant: Words = {
   record_removed: (name: string) => `${name}（已移除）`,
   record_none: (q: string) => `紀錄中沒有符合「${q}」的內容`,
   record_case_failed: (step: string, detail: string) => `${step} 沒有成功：${detail}`,
+  record_query_too_long: (max) => `搜尋最多 ${max} 個字元。請縮短。`,
   next_reconnect: "重新連接",
   next_try_later: "請稍後再試：應用程式忙碌或停擺",
   next_ask_coach: "請 Coach 修改這個 taf",

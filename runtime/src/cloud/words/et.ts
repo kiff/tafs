@@ -571,6 +571,7 @@ export const et: Words = {
   record_removed: (name: string) => `${name} (eemaldatud)`,
   record_none: (q: string) => `Kirjes pole midagi, mis vastaks „${q}”`,
   record_case_failed: (step: string, detail: string) => `${step} ei läinud läbi: ${detail}`,
+  record_query_too_long: (max) => `Otsing võib olla kuni ${max} märki pikk. Lühenda seda.`,
   next_reconnect: "Ühenda uuesti",
   next_try_later: "Proovi hiljem uuesti: rakendus oli hõivatud või maas",
   next_ask_coach: "Palu Coachil tafi muuta",

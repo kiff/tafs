@@ -571,6 +571,7 @@ export const hr: Words = {
   record_removed: (name: string) => `${name} (uklonjeno)`,
   record_none: (q: string) => `Ništa u Zapisu ne odgovara izrazu „${q}”`,
   record_case_failed: (step: string, detail: string) => `${step} nije prošlo: ${detail}`,
+  record_query_too_long: (max) => `Pretraživanje može imati najviše ${max} znakova. Skratite ga.`,
   next_reconnect: "Poveži ponovno",
   next_try_later: "Pokušajte ponovno kasnije: aplikacija je bila zauzeta ili nedostupna",
   next_ask_coach: "Zamolite Coacha da promijeni taf",

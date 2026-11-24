@@ -576,6 +576,7 @@ export const nl: Words = {
   record_removed: (name) => `${name} (verwijderd)`,
   record_none: (q) => `Niets in het logboek komt overeen met "${q}"`,
   record_case_failed: (step, detail) => `${step} is niet gelukt: ${detail}`,
+  record_query_too_long: (max) => `Een zoekopdracht mag hoogstens ${max} tekens lang zijn. Maak hem korter.`,
   next_reconnect: "Opnieuw koppelen",
   next_try_later: "Probeer het later opnieuw: de app was bezet of onbereikbaar",
   next_ask_coach: "Coach vragen het taf te wijzigen",

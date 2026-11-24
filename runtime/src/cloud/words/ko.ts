@@ -574,6 +574,7 @@ export const ko: Words = {
   record_removed: (name: string) => `${name} (삭제됨)`,
   record_none: (q: string) => `기록에 "${q}"과(와) 일치하는 항목이 없습니다`,
   record_case_failed: (step: string, detail: string) => `${step}이(가) 처리되지 않았습니다: ${detail}`,
+  record_query_too_long: (max) => `검색어는 최대 ${max}자까지 입력할 수 있습니다. 더 짧게 입력하세요.`,
   next_reconnect: "다시 연결하세요",
   next_try_later: "나중에 다시 시도하세요: 앱이 바쁘거나 중단되었습니다",
   next_ask_coach: "Coach에게 taf 변경 요청하기",

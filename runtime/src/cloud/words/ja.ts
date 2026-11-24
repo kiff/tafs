@@ -577,6 +577,7 @@ export const ja: Words = {
   record_removed: (name: string) => `${name}（削除済み）`,
   record_none: (q: string) => `「${q}」に一致するものは記録にありません`,
   record_case_failed: (step: string, detail: string) => `${step}は完了しませんでした：${detail}`,
+  record_query_too_long: (max) => `検索は${max}文字までです。短くしてください。`,
   next_reconnect: "もう一度接続",
   next_try_later: "後でもう一度お試しください：アプリが混雑しているか停止していました",
   next_ask_coach: "Coachにtafの変更を依頼",

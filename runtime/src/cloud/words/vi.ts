@@ -571,6 +571,7 @@ export const vi: Words = {
   record_removed: (name: string) => `${name} (đã gỡ)`,
   record_none: (q: string) => `Không có gì trong Bản ghi khớp với "${q}"`,
   record_case_failed: (step: string, detail: string) => `${step} không thành công: ${detail}`,
+  record_query_too_long: (max) => `Tìm kiếm tối đa ${max} ký tự. Hãy rút ngắn.`,
   next_reconnect: "Kết nối lại",
   next_try_later: "Hãy thử lại sau: ứng dụng đang bận hoặc ngừng hoạt động",
   next_ask_coach: "Nhờ Coach thay đổi taf",

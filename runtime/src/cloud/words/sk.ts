@@ -571,6 +571,7 @@ export const sk: Words = {
   record_removed: (name: string) => `${name} (odstránené)`,
   record_none: (q: string) => `V Zázname nič nezodpovedá „${q}“`,
   record_case_failed: (step: string, detail: string) => `${step} neprešlo: ${detail}`,
+  record_query_too_long: (max) => `Vyhľadávanie môže mať najviac ${max} znakov. Skráťte ho.`,
   next_reconnect: "Pripojiť znova",
   next_try_later: "Skús to neskôr: aplikácia bola vyťažená alebo nedostupná",
   next_ask_coach: "Požiadaj Coacha, aby taf zmenil",

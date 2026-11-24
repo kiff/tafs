@@ -576,6 +576,7 @@ export const pt: Words = {
   record_removed: (name) => `${name} (removido)`,
   record_none: (q) => `Nada no registo corresponde a «${q}»`,
   record_case_failed: (step, detail) => `${step} não foi concluído: ${detail}`,
+  record_query_too_long: (max) => `Uma pesquisa pode ter no máximo ${max} caracteres. Encurte-a.`,
   next_reconnect: "Ligar novamente",
   next_try_later: "Tente mais tarde: a app estava ocupada ou em baixo",
   next_ask_coach: "Pedir ao Coach para alterar o taf",

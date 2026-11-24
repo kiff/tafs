@@ -571,6 +571,7 @@ export const bg: Words = {
   record_removed: (name: string) => `${name} (премахнат)`,
   record_none: (q: string) => `Нищо в Записа не отговаря на „${q}“`,
   record_case_failed: (step: string, detail: string) => `${step} не мина: ${detail}`,
+  record_query_too_long: (max) => `Търсенето може да е най-много ${max} знака. Съкратете го.`,
   next_reconnect: "Свържете отново",
   next_try_later: "Опитайте по-късно: приложението беше заето или недостъпно",
   next_ask_coach: "Помолете Coach да промени taf",

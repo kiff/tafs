@@ -571,6 +571,7 @@ export const ro: Words = {
   record_removed: (name: string) => `${name} (eliminat)`,
   record_none: (q: string) => `Nimic din Registru nu se potrivește cu „${q}”`,
   record_case_failed: (step: string, detail: string) => `${step} nu a trecut: ${detail}`,
+  record_query_too_long: (max) => `O căutare poate avea cel mult ${max} de caractere. Scurtați-o.`,
   next_reconnect: "Conectați din nou",
   next_try_later: "Încercați din nou mai târziu: aplicația era ocupată sau indisponibilă",
   next_ask_coach: "Rugați-l pe Coach să schimbe taful",

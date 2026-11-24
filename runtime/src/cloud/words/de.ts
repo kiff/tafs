@@ -576,6 +576,7 @@ export const de: Words = {
   record_removed: (name) => `${name} (entfernt)`,
   record_none: (q) => `Nichts im Protokoll passt zu „${q}“`,
   record_case_failed: (step, detail) => `${step} hat nicht geklappt: ${detail}`,
+  record_query_too_long: (max) => `Eine Suche darf höchstens ${max} Zeichen lang sein. Kürze sie.`,
   next_reconnect: "Erneut verbinden",
   next_try_later: "Später erneut versuchen: die App war ausgelastet oder nicht erreichbar",
   next_ask_coach: "Coach bitten, den taf zu ändern",

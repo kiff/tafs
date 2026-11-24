@@ -576,6 +576,7 @@ export const es: Words = {
   record_removed: (name) => `${name} (eliminado)`,
   record_none: (q) => `Nada en el registro coincide con «${q}»`,
   record_case_failed: (step, detail) => `${step} no se completó: ${detail}`,
+  record_query_too_long: (max) => `Una búsqueda puede tener como máximo ${max} caracteres. Acórtala.`,
   next_reconnect: "Volver a conectar",
   next_try_later: "Reintentar más tarde: la app estaba ocupada o caída",
   next_ask_coach: "Pedir a Coach que cambie el taf",

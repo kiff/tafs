@@ -271,6 +271,7 @@ export const ptBR: Words = {
   act_sending: "Enviado; aguardando a resposta do app",
   act_unknown: "A resposta do app não ficou registrada; verifique os registros dele",
   record_none: (q) => `Nada no registro corresponde a «${q}»`,
+  record_query_too_long: (max) => `Uma busca pode ter no máximo ${max} caracteres. Encurte-a.`,
   next_reconnect: "Conectar novamente",
   next_try_later: "Tente mais tarde: o app estava ocupado ou fora do ar",
   next_ask_message: (taf, what, said) => `${taf ? `Altera ${taf}: ` : ""}${what} falhou.${said ? ` O app disse: «${said}»` : ""}`,

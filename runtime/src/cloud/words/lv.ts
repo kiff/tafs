@@ -571,6 +571,7 @@ export const lv: Words = {
   record_removed: (name: string) => `${name} (noņemts)`,
   record_none: (q: string) => `Ierakstā nekas neatbilst “${q}”`,
   record_case_failed: (step: string, detail: string) => `${step} neizdevās: ${detail}`,
+  record_query_too_long: (max) => `Meklējums var būt ne garāks par ${max} rakstzīmēm. Saīsini to.`,
   next_reconnect: "Pievienot vēlreiz",
   next_try_later: "Mēģini vēlāk: lietotne bija aizņemta vai nedarbojās",
   next_ask_coach: "Palūdz Coach mainīt taf",

@@ -620,6 +620,7 @@ export const en = {
   record_removed: (name: string) => `${name} (removed)`,
   record_none: (q: string) => `Nothing in the Record matches "${q}"`,
   record_case_failed: (step: string, detail: string) => `${step} didn't go through: ${detail}`,
+  record_query_too_long: (max: number) => `A search can be up to ${max} characters. Make it shorter.`,
   next_reconnect: "Connect it again",
   next_try_later: "Try again later: the app was busy or down",
   next_ask_coach: "Ask Coach to change the taf",
