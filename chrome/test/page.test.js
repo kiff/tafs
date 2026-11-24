@@ -678,8 +678,11 @@ test("the floating bar says who works; Go to its tab shows only on another tab; 
   assert.ok(!read.text.includes("Rae is working"), "its words aren't the page's");
   assert.ok(!read.controls.some((c) => ["Stop", "Pause", "Go to its tab"].includes(c.label)), "its buttons are no controls a taf can click");
   await page.close();
+  page = await openWithBar({ run: "run_1", words: "Rae is paused", here: true, paused: true, labels: LABELS });
+  assert.deepEqual((await barButtons(page)).map((b) => [b.act, b.text, b.hidden]), [["go", "Go to its tab", true], ["resume", "Resume", false], ["stop", "Stop", false]], "Resume on the run's own tab");
+  await page.close();
   page = await openWithBar({ run: "run_1", words: "Rae is paused", here: false, paused: true, labels: LABELS });
-  assert.deepEqual((await barButtons(page)).map((b) => [b.act, b.text, b.hidden]), [["go", "Go to its tab", false], ["resume", "Resume", false], ["stop", "Stop", false]]);
+  assert.deepEqual((await barButtons(page)).map((b) => [b.act, b.hidden]), [["go", false], ["resume", true], ["stop", false]], "no Resume on another page, which could lay a lure over it");
   assert.deepEqual(await page.evaluate(() => TafsBar.show({ run: 5, words: "x", labels: {} })), { ok: false }, "anything else isn't a bar");
   await page.close();
 });
@@ -723,6 +726,36 @@ test("only a real press counts, naming its run; it's no owner input; the page ca
   await page.evaluate(() => TafsBar.hide());
   await page.evaluate(() => new Promise((r) => setTimeout(r, 50)));
   assert.equal(await page.evaluate(() => document.querySelector("tafs-working-bar")), null, "once the run ends it goes, and stays gone");
+  await page.close();
+});
+
+test("an element the page names tafs-working-bar is the page's: a click inside it still pauses the run, and laid over a button it still blocks an act", { skip: !playwright }, async () => {
+  const page = await openWithBar();
+  await page.evaluate(() => {
+    globalThis.__owner = 0;
+    globalThis.chrome.runtime.sendMessage = (m) => (m.type === "owner_input" ? globalThis.__owner++ : globalThis.__sent.push(m));
+    const fake = document.createElement("tafs-working-bar");
+    fake.id = "fake";
+    fake.style.cssText = "position:fixed;left:8px;top:120px;width:300px;height:60px;display:block;background:transparent;z-index:20";
+    const inner = document.createElement("button");
+    inner.id = "inner";
+    inner.textContent = "Accept";
+    inner.style.cssText = "width:100%;height:100%";
+    fake.appendChild(inner);
+    document.body.appendChild(fake);
+    const under = document.createElement("button");
+    under.id = "under";
+    under.textContent = "Under";
+    under.style.cssText = "position:fixed;left:20px;top:130px;width:120px;height:30px;z-index:10";
+    document.body.appendChild(under);
+  });
+  await page.evaluate(() => TafsPage.listen("t".repeat(16)));
+  const read = await page.evaluate(() => TafsPage.read());
+  const under = read.controls.find((c) => c.label === "Under");
+  assert.ok(under, "the button under the page's overlay is read");
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [under.ref, read.read_id]), { ok: false, code: "not_visible" }, "the page's own tafs-working-bar covers it");
+  await page.click("#inner");
+  assert.equal(await page.evaluate(() => globalThis.__owner), 1, "a real click inside the page's element is the person's input");
   await page.close();
 });
 

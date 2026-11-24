@@ -223,9 +223,11 @@ export class Runner {
    * A press on the floating bar (bar.js), for run [runId]: Go to its tab, Pause, Resume or Stop, as the panel's own buttons do.
    * Only a run this Chrome holds and that still lives; anything else does nothing.
    */
-  async barPress(runId, act) {
+  async barPress(runId, act, tabId = null) {
     const run = this.runs.get(runId);
     if (!run || run.stopped) return { error: "no_run" };
+    // Resume gives power back: only from the run's own tab, never from a bar drawn on another page (bar.js shows it only there).
+    if (act === "resume" && !run.tabs.has(tabId)) return { error: "not_here" };
     if (act === "go") return this.goTo(runId);
     if (act === "pause") return this.pause(runId);
     if (act === "resume") return this.resume(runId);

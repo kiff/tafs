@@ -407,7 +407,7 @@
     const y = r.top + r.height / 2;
     if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false;
     // The extension's own bar (bar.js) is looked through: it's ours, and the person's buttons, not the page's.
-    const hit = document.elementsFromPoint(x, y).find((h) => h.localName !== BAR_TAG);
+    const hit = document.elementsFromPoint(x, y).find((h) => !ourBar(h));
     return !!hit && (hit === el || el.contains(hit) || (el.labels && Array.from(el.labels).some((l) => l.contains(hit))));
   }
 
@@ -536,7 +536,7 @@
   function ownerInput(e) {
     if (!e.isTrusted || told) return;
     // A press on the floating bar is the person answering the run, not using the page: its buttons say so themselves.
-    if (e.composedPath().some((n) => n && n.localName === BAR_TAG)) return;
+    if (e.composedPath().some(ourBar)) return;
     told = true;
     try {
       chrome.runtime.sendMessage({ type: "owner_input" });
@@ -547,8 +547,10 @@
   }
   for (const type of ["keydown", "pointerdown", "wheel"]) addEventListener(type, ownerInput, { capture: true, passive: true });
 
-  // The floating bar is bar.js's own element (docs/chrome.md, "While a taf works"): looked through, never the page's.
-  const BAR_TAG = "tafs-working-bar";
+  // The floating bar is bar.js's own element (docs/chrome.md, "While a taf works"): looked through, and a press on it isn't
+  // the person using the page. Known by identity (bar.js holds it in this isolated world), never by its name: a page can make
+  // an element of that name, and it's then the page's, which pauses the run and blocks an act as any element does.
+  const ourBar = (node) => !!(root.TafsBar && root.TafsBar.isOurs(node));
 
   // Dialogs the page raised (alert, confirm, prompt), reported by dialogs.js from the page's world under this tab's token.
   // None blocks: confirm answers no, prompt answers nothing. A read reports the last one; an act after one is refused.

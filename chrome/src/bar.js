@@ -87,6 +87,9 @@
     parts.go.hidden = !!s.here;
     parts.toggle.textContent = s.paused ? l.resume : l.pause;
     parts.toggle.dataset.act = s.paused ? "resume" : "pause";
+    // Resume gives power back, so it's offered only on the run's own tab: on another page, which could lay a lure over it,
+    // the bar says the taf is paused, with Go to its tab (the runner refuses a Resume from elsewhere too).
+    parts.toggle.hidden = !!s.paused && !s.here;
     parts.stop.textContent = l.stop;
     if (!host.isConnected) document.documentElement.appendChild(host);
     if (!watch) {
@@ -106,5 +109,10 @@
     return true;
   }
 
-  root.TafsBar = { show, hide, TAG };
+  /** Whether [node] is this bar's own element: by identity, never by its name, which any page can give an element of its own. */
+  function isOurs(node) {
+    return !!host && node === host;
+  }
+
+  root.TafsBar = { show, hide, isOurs, TAG };
 })(globalThis);

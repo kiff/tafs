@@ -1007,9 +1007,11 @@ test("a press on the bar acts only on a run this Chrome holds, as the panel's bu
   await r.handle(step());
   assert.deepEqual(await r.barPress("run_9", "stop"), { error: "no_run" });
   assert.deepEqual(await r.barPress("run_1", "explode"), { error: "bad_act" });
-  await r.barPress("run_1", "pause");
+  await r.barPress("run_1", "pause", 501);
   assert.equal(r.runs.get("run_1").paused, "owner");
-  await r.barPress("run_1", "resume");
+  assert.deepEqual(await r.barPress("run_1", "resume", 501), { error: "not_here" }, "Resume gives power back: never from another page's bar");
+  assert.equal(r.runs.get("run_1").paused, "owner");
+  await r.barPress("run_1", "resume", [...c.tabsMap.keys()][0]);
   assert.equal(r.runs.get("run_1").paused, null);
   await r.barPress("run_1", "stop");
   assert.equal(r.runs.get("run_1").stopped, true);

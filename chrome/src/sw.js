@@ -260,7 +260,7 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
   }
   // A press on the floating bar (bar.js): only from the extension's own content script in a tab, and only for a run it holds.
   if (m.type === "bar") {
-    if (sender.tab && sender.id === chrome.runtime.id && typeof m.run === "string") runner.barPress(m.run, String(m.act || "")).catch(() => {});
+    if (sender.tab && sender.id === chrome.runtime.id && typeof m.run === "string") runner.barPress(m.run, String(m.act || ""), sender.tab.id).catch(() => {});
     return;
   }
   if (sender.id !== chrome.runtime.id || sender.tab) return;
