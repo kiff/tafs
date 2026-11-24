@@ -2,7 +2,7 @@
 
 One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why); a watch row reads **built** while its code has merged but the owner hasn't seen it work ([Watches](#watches)). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A PR that moves a row updates this page, and the desktop columns follow each repo's `docs/port-checklist.md`.
 
-**Read from:** kiff/tafs main `0f15ddf` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `4e70855`, kiff/tafs-windows `9ec91ef` and kiff/tafs-linux `ceec200`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
+**Read from:** kiff/tafs main `d62e1d6` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `d5d7755`, kiff/tafs-windows `9ec91ef` and kiff/tafs-linux `ceec200`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
 
 - **Mac 13+** is the iPad app built with Mac Catalyst ([mac-app.md](mac-app.md)): it follows the iPad unless that page says it differs.
 - **macOS 12, Windows, Linux** are native ports ([kiff/tafs-macos](https://github.com/kiff/tafs-macos), [kiff/tafs-windows](https://github.com/kiff/tafs-windows), [kiff/tafs-linux](https://github.com/kiff/tafs-linux)).
@@ -15,7 +15,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | :- | :- | :- |
 | iPhone/iPad | done 58 | the 58 iPad view files |
 | Mac 13+ | done 56, partial 2 | the 58 iPad view files |
-| macOS 12 | done 35, partial 16, not for it 7 | the 58 iPad view files |
+| macOS 12 | done 36, partial 15, not for it 7 | the 58 iPad view files |
 | Windows | done 50, not for it 8 | the 58 iPad view files |
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
@@ -24,7 +24,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
-1. **macOS 12** is furthest behind: 16 screens partial and 7 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 16 are real work: approvals on this Mac's security key, a key shown once, alerts that wait on the signed build, and a few reads.
+1. **macOS 12** is furthest behind: 15 screens partial and 7 not for it, after its recount (tafs-macos#225) counted each step a service takes from the phone alone as done, with that service named. The 16 are real work: approvals on this Mac's security key, a key shown once, alerts that wait on the signed build, and a few reads.
 2. **Linux** is level with the iPad: 53 screens done, and 5 not for it, each with its reason. "Allow this from now on" landed last (tafs-linux#120).
 3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): Keep for later, a complication, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
@@ -50,7 +50,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | ConnectAppsView | Connect apps, a connected app's detail, connecting's approval | done | done | partial | done | done | done |
 | CreditsViews | The credits the account's tafs used, and one taf's runs | done | done | partial | done | done | done |
 | DeleteAccountView | Deleting the account | done | done | done | done | done | done |
-| DevicesView | Account › Devices | done | done | partial | done | done | done |
+| DevicesView | Account › Devices | done | done | done | done | done | done |
 | DiscardSettingUp | Discard a taf being set up | done | done | done | done | done | done |
 | DoorsView | A taf's Doors tab | done | done | partial | done | done | done |
 | DriveViews | The phone's: Coach drives the phone's own screen (docs/drive.md is the iOS and Android contract)… | done | done | not for it | not for it | done | done |
@@ -113,7 +113,7 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 - **DeleteAccountView**
   - **macOS 12** (done): The sheet is drawn (what goes, Delete account, Cancel); deleting itself is signed by the phone's approval key, which KIFF requires. Counted as ported by the counting rule, as Linux counts it.
 - **DevicesView**
-  - **macOS 12** (partial): Not for macOS 12: Add a passkey (macOS 12 makes no platform passkey; a second security key is paired from the phone) and Add a device (`PairComputerView`), each the phone's…
+  - **macOS 12** (done): Add a device and Add a security key are the phone's: KIFF registers a passkey or pairs a device only when a phone's approval key signs it (approval_key_required). Counted done by the counting rule, as Windows and Linux count it.
 - **DoorsView**
   - **macOS 12** (partial): the Slack door's approval and its subscription's removal; `DoorDial` and `DoorRim`, not reachable at the pin (as Windows found)…
 - **DriveViews**
@@ -137,7 +137,7 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 - **NotificationSettingsView**
   - **macOS 12** (partial): Alerts with tafs closed, which need a signed build; with them `AlertingTafsView` (which tafs alert the account's phones), which the iPad reads with the device's push token…
 - **OnboardingView**
-  - **macOS 12** (partial): The sample's later demo rounds and its chat's live replies, its devices and alerts, and keeping it between launches
+  - **macOS 12** (partial): The sample chat's live replies, its alerts, and keeping it between launches
 - **PairComputerView**
   - **macOS 12** (not for it): The phone's side of pairing: its camera reads a computer's code. This Mac is the computer being added.
   - **Windows** (not for it): The phone's side of pairing: the camera reads a computer's code.
@@ -272,7 +272,7 @@ What landed or is in review on 23 Nov, device by device (read again at 22:50 Par
 | Sign in again and Replace the key on a connection | done | done | not for it: made on the phone (planque takes no security key) | done (tafs-windows#268) | partial: drawn up to planque's signature, signed on the phone | — |
 | Sign in again shows the connection's approval sheet first, and signs only the request it showed | done (tafs#1878) | done (tafs#1826) | as the row above | as the row above | as the row above | — |
 | A sealed sign-in fill's release card | held: no passwords go through the extension (the owner's decision) | merged and off, stays off (tafs#1882) | — | — | — | — |
-| "Allow this from now on" checks its own `matches`: a revision Card's `current.id`, when sent, must equal `revises` (now); a Card key the check doesn't compare is refused (once KIFF's draft schema is pinned in `contracts`) | first half in review: tafs#1891 | first half done (tafs#1893) | first half done (tafs-macos#222) | first half done (tafs-windows#330) | first half in review: tafs-linux#121 | — |
+| "Allow this from now on" checks its own `matches`: a revision Card's `current.id`, when sent, must equal `revises` (now); a Card key the check doesn't compare is refused (once KIFF's draft schema is pinned in `contracts`) | first half done (tafs#1891) | first half done (tafs#1893) | first half done (tafs-macos#222) | first half done (tafs-windows#330) | first half in review: tafs-linux#121 | — |
 | A connection's own page from planque's row, with its actions | done | done | partial | done (tafs-windows#269) | partial | — |
 | An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | not started | done (tafs-windows#271: said on Needs you, not in the chat) | done (tafs-linux#99) | — |
 | An API door's example safe to paste into a shell (a plain path only, quoted; `vectors/api-door-endpoint.json`, tafs#1877) | in review: tafs#1875 | done (tafs#1874) | done (tafs-macos#205) | done (tafs-windows#323) | done (tafs-linux#111) | — |
@@ -293,6 +293,9 @@ hardware, the act signed only by the phone's key); "not built yet" is never one.
   is never granted from a computer.
 - Every other "not for it" (the phone's Home and bar, pairing from the phone's camera, Coach driving the phone, the
   unreachable dial, on-device dictation on Linux and Windows) is a real limit of the device.
+- **DevicesView, on every computer:** Add a device and Add a security key are the phone's. KIFF pairs a device or registers a
+  passkey only when a phone's approval key signs it (`approval_key_required`): each grants approval authority, and that starts
+  on the phone. A service refusal, so DevicesView counts ported on macOS 12, Windows and Linux alike.
 
 ## Docs that say otherwise
 
