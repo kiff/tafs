@@ -53,7 +53,7 @@
   "chat.link_blocked_body": "Το tafs ανοίγει από μια συνομιλία μόνο ασφαλείς ιστοσελίδες. Αυτός ο σύνδεσμος οδηγεί σε: {address}",
   "chat.link_blocked_title": "Αυτός ο σύνδεσμος δεν θα ανοίξει",
   "chat.link_confirm_body": "Προέρχεται από μια σελίδα που διάβασε ο Coach. Οδηγεί σε: {address}",
-  "chat.link_confirm_body_live": "Ο Coach απαντά ακόμη. Αυτός ο σύνδεσμος οδηγεί σε: {address}",
+  "chat.link_confirm_body_live": "Αυτή η απάντηση γράφεται ακόμη. Αυτός ο σύνδεσμος οδηγεί σε: {address}",
   "chat.link_confirm_open": "Άνοιγμα",
   "chat.link_confirm_title": "Άνοιγμα αυτού του συνδέσμου;",
   "chat.message_carries_most_files": "Ένα μήνυμα μεταφέρει έως {per_message} αρχεία.",

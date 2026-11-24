@@ -525,7 +525,7 @@
     <string name="chat_link_blocked_body">tafs bir sohbetten yalnızca güvenli web sayfalarını açar. Bu bağlantı şuraya gider: %1$s</string>
     <string name="chat_link_blocked_title">Bu bağlantı açılmayacak</string>
     <string name="chat_link_confirm_body">Coach\'un okuduğu bir sayfadan geldi. Şuraya gider: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach hâlâ yanıtlıyor. Bu bağlantı şuraya gider: %1$s</string>
+    <string name="chat_link_confirm_body_live">Bu yanıt hâlâ yazılıyor. Bu bağlantı şuraya gider: %1$s</string>
     <string name="chat_link_confirm_open">Aç</string>
     <string name="chat_link_confirm_title">Bu bağlantı açılsın mı?</string>
     <string name="chat_message_carries_most_files">Bir mesaj en fazla %1$s dosya taşır.</string>

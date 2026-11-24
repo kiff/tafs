@@ -525,7 +525,7 @@
     <string name="chat_link_blocked_body">tafs söhbətdən yalnız təhlükəsiz veb səhifələri açır. Bu keçid gedir: %1$s</string>
     <string name="chat_link_blocked_title">Bu keçid açılmayacaq</string>
     <string name="chat_link_confirm_body">O, Coach-un oxuduğu səhifədən gəlib. Gedir: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach hələ cavab verir. Bu keçid gedir: %1$s</string>
+    <string name="chat_link_confirm_body_live">Bu cavab hələ yazılır. Bu keçid gedir: %1$s</string>
     <string name="chat_link_confirm_open">Aç</string>
     <string name="chat_link_confirm_title">Bu keçid açılsın?</string>
     <string name="chat_message_carries_most_files">Bir mesaj ən çox %1$s fayl daşıyır.</string>

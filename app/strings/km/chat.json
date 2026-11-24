@@ -52,7 +52,7 @@
   "chat.link_blocked_body": "tafs បើកតែទំព័របណ្ដាញដែលមានសុវត្ថិភាពពីការជជែកប៉ុណ្ណោះ។ តំណនេះនាំទៅ៖ {address}",
   "chat.link_blocked_title": "តំណនេះនឹងមិនបើកទេ",
   "chat.link_confirm_body": "វាមកពីទំព័រដែល Coach បានអាន។ វានាំទៅ៖ {address}",
-  "chat.link_confirm_body_live": "Coach នៅតែកំពុងឆ្លើយ។ តំណនេះនាំទៅ៖ {address}",
+  "chat.link_confirm_body_live": "ចម្លើយនេះនៅតែកំពុងសរសេរ។ តំណនេះនាំទៅ៖ {address}",
   "chat.link_confirm_open": "បើក",
   "chat.link_confirm_title": "បើកតំណនេះ?",
   "chat.message_carries_most_files": "សារមួយផ្ទុកឯកសារបានអតិបរមា {per_message}។",

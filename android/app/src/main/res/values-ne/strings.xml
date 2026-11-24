@@ -525,7 +525,7 @@
     <string name="chat_link_blocked_body">tafs ले च्याटबाट सुरक्षित वेब पृष्ठहरू मात्र खोल्छ। यो लिङ्क जान्छ: %1$s</string>
     <string name="chat_link_blocked_title">यो लिङ्क खुल्दैन</string>
     <string name="chat_link_confirm_body">यो Coach ले पढेको पृष्ठबाट आएको हो। यो जान्छ: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach अझै जवाफ दिँदै छ। यो लिङ्क जान्छ: %1$s</string>
+    <string name="chat_link_confirm_body_live">यो जवाफ अझै लेखिँदै छ। यो लिङ्क जान्छ: %1$s</string>
     <string name="chat_link_confirm_open">खोल्नुहोस्</string>
     <string name="chat_link_confirm_title">यो लिङ्क खोल्ने?</string>
     <string name="chat_message_carries_most_files">एउटा सन्देशले बढीमा %1$s फाइल बोक्छ।</string>

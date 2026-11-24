@@ -525,7 +525,7 @@
     <string name="chat_link_blocked_body">tafs ჩატიდან მხოლოდ დაცულ ვებგვერდებს ხსნის. ეს ბმული მიდის: %1$s</string>
     <string name="chat_link_blocked_title">ეს ბმული არ გაიხსნება</string>
     <string name="chat_link_confirm_body">ის მოვიდა გვერდიდან, რომელიც Coach-მა წაიკითხა. მიდის: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach ჯერ კიდევ პასუხობს. ეს ბმული მიდის: %1$s</string>
+    <string name="chat_link_confirm_body_live">ეს პასუხი ჯერ კიდევ იწერება. ეს ბმული მიდის: %1$s</string>
     <string name="chat_link_confirm_open">გახსნა</string>
     <string name="chat_link_confirm_title">გავხსნათ ეს ბმული?</string>
     <string name="chat_message_carries_most_files">შეტყობინება მაქსიმუმ %1$s ფაილს იტევს.</string>

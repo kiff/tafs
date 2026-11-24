@@ -525,7 +525,7 @@
     <string name="chat_link_blocked_body">tafs চ্যাট থেকে কেবল সুরক্ষিত ওয়েব পৃষ্ঠা খোলে। এই লিঙ্কটি যায়: %1$s</string>
     <string name="chat_link_blocked_title">এই লিঙ্কটি খুলবে না</string>
     <string name="chat_link_confirm_body">এটি Coach-এর পড়া একটি পৃষ্ঠা থেকে এসেছে। এটি যায়: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach এখনও উত্তর দিচ্ছে। এই লিঙ্কটি যায়: %1$s</string>
+    <string name="chat_link_confirm_body_live">এই উত্তরটি এখনও লেখা হচ্ছে। এই লিঙ্কটি যায়: %1$s</string>
     <string name="chat_link_confirm_open">খুলুন</string>
     <string name="chat_link_confirm_title">এই লিঙ্কটি খুলবেন?</string>
     <string name="chat_message_carries_most_files">একটি বার্তায় সর্বোচ্চ %1$sটি ফাইল যায়।</string>

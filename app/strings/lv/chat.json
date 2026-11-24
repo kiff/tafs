@@ -56,7 +56,7 @@
   "chat.link_blocked_body": "tafs no tērzēšanas atver tikai drošas tīmekļa lapas. Šī saite ved uz: {address}",
   "chat.link_blocked_title": "Šī saite netiks atvērta",
   "chat.link_confirm_body": "Tā nāk no lapas, ko Coach izlasīja. Tā ved uz: {address}",
-  "chat.link_confirm_body_live": "Coach vēl atbild. Šī saite ved uz: {address}",
+  "chat.link_confirm_body_live": "Šī atbilde vēl tiek rakstīta. Šī saite ved uz: {address}",
   "chat.link_confirm_open": "Atvērt",
   "chat.link_confirm_title": "Vai atvērt šo saiti?",
   "chat.message_carries_most_files": "Ziņā var būt ne vairāk kā {per_message} faili.",

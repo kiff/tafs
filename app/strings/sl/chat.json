@@ -58,7 +58,7 @@
   "chat.link_blocked_body": "tafs iz klepeta odpira le varne spletne strani. Ta povezava vodi na: {address}",
   "chat.link_blocked_title": "Ta povezava se ne bo odprla",
   "chat.link_confirm_body": "Prihaja s strani, ki jo je prebral Coach. Vodi na: {address}",
-  "chat.link_confirm_body_live": "Coach še odgovarja. Ta povezava vodi na: {address}",
+  "chat.link_confirm_body_live": "Ta odgovor se še piše. Ta povezava vodi na: {address}",
   "chat.link_confirm_open": "Odpri",
   "chat.link_confirm_title": "Odprem to povezavo?",
   "chat.message_carries_most_files": "Sporočilo nese največ {per_message} datotek.",

@@ -52,7 +52,7 @@
   "chat.link_blocked_body": "tafs는 채팅에서 안전한 웹 페이지만 엽니다. 이 링크의 주소: {address}",
   "chat.link_blocked_title": "이 링크는 열리지 않습니다",
   "chat.link_confirm_body": "Coach가 읽은 페이지에서 온 링크입니다. 이동할 주소: {address}",
-  "chat.link_confirm_body_live": "Coach가 아직 답변 중입니다. 이 링크의 주소: {address}",
+  "chat.link_confirm_body_live": "이 답변은 아직 작성 중입니다. 이 링크의 주소: {address}",
   "chat.link_confirm_open": "열기",
   "chat.link_confirm_title": "이 링크를 열까요?",
   "chat.message_carries_most_files": "메시지 하나에 파일은 최대 {per_message}개입니다.",

@@ -24,7 +24,7 @@
   "chat.file.uploading": "Enviando",
   "chat.link_blocked_body": "A partir de um chat, o tafs só abre páginas web seguras. Este link leva a: {address}",
   "chat.link_blocked_title": "Este link não vai abrir",
-  "chat.link_confirm_body_live": "O Coach ainda está respondendo. Este link leva a: {address}",
+  "chat.link_confirm_body_live": "Esta resposta ainda está sendo escrita. Este link leva a: {address}",
   "chat.link_confirm_title": "Abrir este link?",
   "chat.message_carries_most_files": "Uma mensagem leva no máximo {per_message} arquivos.",
   "chat.needs_you": "Precisa de você · ",

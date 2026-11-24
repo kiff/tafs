@@ -961,7 +961,7 @@ enum Words {
         static var linkBlockedTitle: String { Words.line("chat.link_blocked_title") }
         /// It came from a page Coach read. It goes to: {address}
         static func linkConfirmBody(address: String) -> String { Words.line("chat.link_confirm_body", address) }
-        /// Coach is still answering. This link goes to: {address}
+        /// This answer is still being written. This link goes to: {address}
         static func linkConfirmBodyLive(address: String) -> String { Words.line("chat.link_confirm_body_live", address) }
         /// Open
         static var linkConfirmOpen: String { Words.line("chat.link_confirm_open") }

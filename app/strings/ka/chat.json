@@ -54,7 +54,7 @@
   "chat.link_blocked_body": "tafs ჩატიდან მხოლოდ დაცულ ვებგვერდებს ხსნის. ეს ბმული მიდის: {address}",
   "chat.link_blocked_title": "ეს ბმული არ გაიხსნება",
   "chat.link_confirm_body": "ის მოვიდა გვერდიდან, რომელიც Coach-მა წაიკითხა. მიდის: {address}",
-  "chat.link_confirm_body_live": "Coach ჯერ კიდევ პასუხობს. ეს ბმული მიდის: {address}",
+  "chat.link_confirm_body_live": "ეს პასუხი ჯერ კიდევ იწერება. ეს ბმული მიდის: {address}",
   "chat.link_confirm_open": "გახსნა",
   "chat.link_confirm_title": "გავხსნათ ეს ბმული?",
   "chat.message_carries_most_files": "შეტყობინება მაქსიმუმ {per_message} ფაილს იტევს.",

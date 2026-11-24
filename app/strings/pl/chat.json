@@ -58,7 +58,7 @@
   "chat.link_blocked_body": "tafs otwiera z czatu tylko bezpieczne strony internetowe. Ten link prowadzi do: {address}",
   "chat.link_blocked_title": "Ten link się nie otworzy",
   "chat.link_confirm_body": "Pochodzi ze strony, którą przeczytał Coach. Prowadzi do: {address}",
-  "chat.link_confirm_body_live": "Coach wciąż odpowiada. Ten link prowadzi do: {address}",
+  "chat.link_confirm_body_live": "Ta odpowiedź jest jeszcze pisana. Ten link prowadzi do: {address}",
   "chat.link_confirm_open": "Otwórz",
   "chat.link_confirm_title": "Otworzyć ten link?",
   "chat.message_carries_most_files": "Wiadomość mieści najwyżej {per_message} plików.",

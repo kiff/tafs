@@ -54,7 +54,7 @@
   "chat.link_blocked_body": "tafs چیٹ سے صرف محفوظ ویب صفحات کھولتا ہے۔ یہ لنک یہاں جاتا ہے: {address}",
   "chat.link_blocked_title": "یہ لنک نہیں کھلے گا",
   "chat.link_confirm_body": "یہ اس صفحے سے آیا ہے جو Coach نے پڑھا۔ یہ یہاں جاتا ہے: {address}",
-  "chat.link_confirm_body_live": "Coach ابھی جواب دے رہا ہے۔ یہ لنک یہاں جاتا ہے: {address}",
+  "chat.link_confirm_body_live": "یہ جواب ابھی لکھا جا رہا ہے۔ یہ لنک یہاں جاتا ہے: {address}",
   "chat.link_confirm_open": "کھولیں",
   "chat.link_confirm_title": "یہ لنک کھولیں؟",
   "chat.message_carries_most_files": "ایک پیغام زیادہ سے زیادہ {per_message} فائلیں لے جاتا ہے۔",

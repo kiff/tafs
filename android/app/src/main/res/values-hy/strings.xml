@@ -525,7 +525,7 @@
     <string name="chat_link_blocked_body">tafs-ը զրույցից բացում է միայն անվտանգ վեբ էջեր։ Այս հղումը տանում է՝ %1$s</string>
     <string name="chat_link_blocked_title">Այս հղումը չի բացվի</string>
     <string name="chat_link_confirm_body">Այն եկել է մի էջից, որը Coach-ը կարդացել է։ Տանում է՝ %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach-ը դեռ պատասխանում է։ Այս հղումը տանում է՝ %1$s</string>
+    <string name="chat_link_confirm_body_live">Այս պատասխանը դեռ գրվում է։ Այս հղումը տանում է՝ %1$s</string>
     <string name="chat_link_confirm_open">Բացել</string>
     <string name="chat_link_confirm_title">Բացե՞լ այս հղումը</string>
     <string name="chat_message_carries_most_files">Հաղորդագրությունը տեղավորում է առավելագույնը %1$s ֆայլ։</string>

@@ -525,7 +525,7 @@
     <string name="chat_link_blocked_body">tafs чатаас зөвхөн аюулгүй вэб хуудас нээдэг. Энэ холбоосын хаяг: %1$s</string>
     <string name="chat_link_blocked_title">Энэ холбоос нээгдэхгүй</string>
     <string name="chat_link_confirm_body">Энэ нь Coach-ийн уншсан хуудаснаас ирсэн. Хүрэх хаяг: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach хариулсаар байна. Энэ холбоосын хаяг: %1$s</string>
+    <string name="chat_link_confirm_body_live">Энэ хариултыг бичсээр байна. Энэ холбоосын хаяг: %1$s</string>
     <string name="chat_link_confirm_open">Нээх</string>
     <string name="chat_link_confirm_title">Энэ холбоосыг нээх үү?</string>
     <string name="chat_message_carries_most_files">Нэг мессеж хамгийн ихдээ %1$s файл авч явна.</string>

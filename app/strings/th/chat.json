@@ -52,7 +52,7 @@
   "chat.link_blocked_body": "tafs เปิดจากแชตได้เฉพาะหน้าเว็บที่ปลอดภัย ลิงก์นี้ไปที่: {address}",
   "chat.link_blocked_title": "ลิงก์นี้จะไม่เปิด",
   "chat.link_confirm_body": "ลิงก์นี้มาจากหน้าที่ Coach อ่าน ไปที่: {address}",
-  "chat.link_confirm_body_live": "Coach ยังตอบอยู่ ลิงก์นี้ไปที่: {address}",
+  "chat.link_confirm_body_live": "คำตอบนี้ยังเขียนอยู่ ลิงก์นี้ไปที่: {address}",
   "chat.link_confirm_open": "เปิด",
   "chat.link_confirm_title": "เปิดลิงก์นี้ไหม",
   "chat.message_carries_most_files": "ข้อความหนึ่งแนบได้สูงสุด {per_message} ไฟล์",

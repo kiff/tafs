@@ -56,7 +56,7 @@
   "chat.link_blocked_body": "„tafs“ iš pokalbio atidaro tik saugius tinklalapius. Ši nuoroda veda į: {address}",
   "chat.link_blocked_title": "Ši nuoroda nebus atidaryta",
   "chat.link_confirm_body": "Ji gauta iš puslapio, kurį perskaitė „Coach“. Ji veda į: {address}",
-  "chat.link_confirm_body_live": "„Coach“ dar atsakinėja. Ši nuoroda veda į: {address}",
+  "chat.link_confirm_body_live": "Šis atsakymas dar rašomas. Ši nuoroda veda į: {address}",
   "chat.link_confirm_open": "Atidaryti",
   "chat.link_confirm_title": "Atidaryti šią nuorodą?",
   "chat.message_carries_most_files": "Žinutėje gali būti ne daugiau kaip {per_message} failų.",

@@ -56,7 +56,7 @@
   "chat.link_blocked_body": "tafs פותח מצ'אט רק דפי אינטרנט מאובטחים. הקישור הזה מוביל אל: {address}",
   "chat.link_blocked_title": "הקישור הזה לא ייפתח",
   "chat.link_confirm_body": "הוא הגיע מדף ש-Coach קרא. הוא מוביל אל: {address}",
-  "chat.link_confirm_body_live": "Coach עדיין עונה. הקישור הזה מוביל אל: {address}",
+  "chat.link_confirm_body_live": "התשובה הזו עדיין נכתבת. הקישור הזה מוביל אל: {address}",
   "chat.link_confirm_open": "פתיחה",
   "chat.link_confirm_title": "לפתוח את הקישור הזה?",
   "chat.message_carries_most_files": "הודעה נושאת לכל היותר {per_message} קבצים.",

@@ -581,7 +581,7 @@
     <string name="chat_link_blocked_body">tafs iz klepeta odpira le varne spletne strani. Ta povezava vodi na: %1$s</string>
     <string name="chat_link_blocked_title">Ta povezava se ne bo odprla</string>
     <string name="chat_link_confirm_body">Prihaja s strani, ki jo je prebral Coach. Vodi na: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach še odgovarja. Ta povezava vodi na: %1$s</string>
+    <string name="chat_link_confirm_body_live">Ta odgovor se še piše. Ta povezava vodi na: %1$s</string>
     <string name="chat_link_confirm_open">Odpri</string>
     <string name="chat_link_confirm_title">Odprem to povezavo?</string>
     <string name="chat_message_carries_most_files">Sporočilo nese največ %1$s datotek.</string>

@@ -62,7 +62,7 @@
   "chat.link_blocked_body": "لا يفتح tafs من المحادثة إلا صفحات الويب الآمنة. يؤدي هذا الرابط إلى: {address}",
   "chat.link_blocked_title": "لن يُفتح هذا الرابط",
   "chat.link_confirm_body": "جاء من صفحة قرأها Coach. يؤدي إلى: {address}",
-  "chat.link_confirm_body_live": "ما زال Coach يجيب. يؤدي هذا الرابط إلى: {address}",
+  "chat.link_confirm_body_live": "ما زالت هذه الإجابة قيد الكتابة. يؤدي هذا الرابط إلى: {address}",
   "chat.link_confirm_open": "فتح",
   "chat.link_confirm_title": "هل تريد فتح هذا الرابط؟",
   "chat.message_carries_most_files": "تحمل الرسالة {per_message} ملفات على الأكثر.",

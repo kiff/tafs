@@ -525,7 +525,7 @@
     <string name="chat_link_blocked_body">Desde un chat, tafs solo abre páginas web seguras. Este enlace lleva a: %1$s</string>
     <string name="chat_link_blocked_title">Este enlace no se abrirá</string>
     <string name="chat_link_confirm_body">Viene de una página que leyó Coach. Lleva a: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach aún está respondiendo. Este enlace lleva a: %1$s</string>
+    <string name="chat_link_confirm_body_live">Esta respuesta aún se está escribiendo. Este enlace lleva a: %1$s</string>
     <string name="chat_link_confirm_open">Abrir</string>
     <string name="chat_link_confirm_title">¿Abrir este enlace?</string>
     <string name="chat_message_carries_most_files">Un mensaje lleva como máximo %1$s archivos.</string>

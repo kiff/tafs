@@ -553,7 +553,7 @@
     <string name="chat_link_blocked_body">tafs פותח מצ\'אט רק דפי אינטרנט מאובטחים. הקישור הזה מוביל אל: %1$s</string>
     <string name="chat_link_blocked_title">הקישור הזה לא ייפתח</string>
     <string name="chat_link_confirm_body">הוא הגיע מדף ש-Coach קרא. הוא מוביל אל: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach עדיין עונה. הקישור הזה מוביל אל: %1$s</string>
+    <string name="chat_link_confirm_body_live">התשובה הזו עדיין נכתבת. הקישור הזה מוביל אל: %1$s</string>
     <string name="chat_link_confirm_open">פתיחה</string>
     <string name="chat_link_confirm_title">לפתוח את הקישור הזה?</string>
     <string name="chat_message_carries_most_files">הודעה נושאת לכל היותר %1$s קבצים.</string>

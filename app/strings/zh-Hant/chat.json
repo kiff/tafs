@@ -52,7 +52,7 @@
   "chat.link_blocked_body": "tafs 只會從對話開啟安全的網頁。這個連結前往：{address}",
   "chat.link_blocked_title": "這個連結不會開啟",
   "chat.link_confirm_body": "這個連結來自 Coach 讀過的頁面。前往：{address}",
-  "chat.link_confirm_body_live": "Coach 仍在回答。這個連結前往：{address}",
+  "chat.link_confirm_body_live": "這則回答仍在撰寫中。這個連結前往：{address}",
   "chat.link_confirm_open": "開啟",
   "chat.link_confirm_title": "要開啟這個連結嗎？",
   "chat.message_carries_most_files": "一則訊息最多可附加 {per_message} 個檔案。",

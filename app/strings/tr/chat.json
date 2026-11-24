@@ -54,7 +54,7 @@
   "chat.link_blocked_body": "tafs bir sohbetten yalnızca güvenli web sayfalarını açar. Bu bağlantı şuraya gider: {address}",
   "chat.link_blocked_title": "Bu bağlantı açılmayacak",
   "chat.link_confirm_body": "Coach'un okuduğu bir sayfadan geldi. Şuraya gider: {address}",
-  "chat.link_confirm_body_live": "Coach hâlâ yanıtlıyor. Bu bağlantı şuraya gider: {address}",
+  "chat.link_confirm_body_live": "Bu yanıt hâlâ yazılıyor. Bu bağlantı şuraya gider: {address}",
   "chat.link_confirm_open": "Aç",
   "chat.link_confirm_title": "Bu bağlantı açılsın mı?",
   "chat.message_carries_most_files": "Bir mesaj en fazla {per_message} dosya taşır.",

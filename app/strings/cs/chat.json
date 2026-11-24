@@ -56,7 +56,7 @@
   "chat.link_blocked_body": "tafs z chatu otevírá jen zabezpečené webové stránky. Tento odkaz vede na: {address}",
   "chat.link_blocked_title": "Tento odkaz se neotevře",
   "chat.link_confirm_body": "Pochází ze stránky, kterou Coach přečetl. Vede na: {address}",
-  "chat.link_confirm_body_live": "Coach ještě odpovídá. Tento odkaz vede na: {address}",
+  "chat.link_confirm_body_live": "Tato odpověď se ještě píše. Tento odkaz vede na: {address}",
   "chat.link_confirm_open": "Otevřít",
   "chat.link_confirm_title": "Otevřít tento odkaz?",
   "chat.message_carries_most_files": "Zpráva unese nejvýš {per_message} souborů.",

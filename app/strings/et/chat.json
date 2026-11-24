@@ -54,7 +54,7 @@
   "chat.link_blocked_body": "tafs avab vestlusest ainult turvalisi veebilehti. See link viib aadressile: {address}",
   "chat.link_blocked_title": "Seda linki ei avata",
   "chat.link_confirm_body": "See pärineb lehelt, mille Coach luges. See viib aadressile: {address}",
-  "chat.link_confirm_body_live": "Coach alles vastab. See link viib aadressile: {address}",
+  "chat.link_confirm_body_live": "Seda vastust alles kirjutatakse. See link viib aadressile: {address}",
   "chat.link_confirm_open": "Ava",
   "chat.link_confirm_title": "Kas avada see link?",
   "chat.message_carries_most_files": "Sõnum mahutab kuni {per_message} faili.",

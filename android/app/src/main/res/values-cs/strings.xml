@@ -553,7 +553,7 @@
     <string name="chat_link_blocked_body">tafs z chatu otevírá jen zabezpečené webové stránky. Tento odkaz vede na: %1$s</string>
     <string name="chat_link_blocked_title">Tento odkaz se neotevře</string>
     <string name="chat_link_confirm_body">Pochází ze stránky, kterou Coach přečetl. Vede na: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach ještě odpovídá. Tento odkaz vede na: %1$s</string>
+    <string name="chat_link_confirm_body_live">Tato odpověď se ještě píše. Tento odkaz vede na: %1$s</string>
     <string name="chat_link_confirm_open">Otevřít</string>
     <string name="chat_link_confirm_title">Otevřít tento odkaz?</string>
     <string name="chat_message_carries_most_files">Zpráva unese nejvýš %1$s souborů.</string>

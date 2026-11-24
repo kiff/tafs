@@ -525,7 +525,7 @@
     <string name="chat_link_blocked_body">tafs söhbetdeşlikden diňe howpsuz web sahypalaryny açýar. Bu baglanyşyk şu ýere alyp barýar: %1$s</string>
     <string name="chat_link_blocked_title">Bu baglanyşyk açylmaz</string>
     <string name="chat_link_confirm_body">Ol Coach-yň okan sahypasyndan geldi. Ol şu ýere alyp barýar: %1$s</string>
-    <string name="chat_link_confirm_body_live">Coach entek jogap berýär. Bu baglanyşyk şu ýere alyp barýar: %1$s</string>
+    <string name="chat_link_confirm_body_live">Bu jogap entek ýazylýar. Bu baglanyşyk şu ýere alyp barýar: %1$s</string>
     <string name="chat_link_confirm_open">Aç</string>
     <string name="chat_link_confirm_title">Bu baglanyşyk açylsynmy?</string>
     <string name="chat_message_carries_most_files">Bir habar iň köp %1$s faýl göterýär.</string>

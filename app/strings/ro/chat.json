@@ -56,7 +56,7 @@
   "chat.link_blocked_body": "Dintr-o conversație, tafs deschide doar pagini web securizate. Acest link duce la: {address}",
   "chat.link_blocked_title": "Acest link nu se va deschide",
   "chat.link_confirm_body": "Provine dintr-o pagină citită de Coach. Duce la: {address}",
-  "chat.link_confirm_body_live": "Coach încă răspunde. Acest link duce la: {address}",
+  "chat.link_confirm_body_live": "Acest răspuns încă se scrie. Acest link duce la: {address}",
   "chat.link_confirm_open": "Deschideți",
   "chat.link_confirm_title": "Deschideți acest link?",
   "chat.message_carries_most_files": "Un mesaj poartă cel mult {per_message} fișiere.",
