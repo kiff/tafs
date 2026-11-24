@@ -1,0 +1,29 @@
+{
+  "masked": [
+    ["Your verification code is 482913", "Your verification code is [masked]"],
+    ["Your Acme verification code: 482 913. It expires in 10 minutes.", "Your Acme verification code: [masked]. It expires in 10 minutes."],
+    ["123456 is your login code", "[masked] is your login code"],
+    ["G-482913 is your Google verification code.", "G-[masked] is your Google verification code."],
+    ["Enter OTP 48291366 to continue", "Enter OTP [masked] to continue"],
+    ["Your code is 4821", "Your code is [masked]"],
+    ["code: 4821-9930", "code: [masked]"],
+    ["Passcode 7731 for your meeting", "Passcode [masked] for your meeting"],
+    ["Votre code de vérification est 482913.", "Votre code de vérification est [masked]."],
+    ["Votre code est 4821", "Votre code est [masked]"],
+    ["482913 est votre code Acme", "[masked] est votre code Acme"],
+    ["Tu código de verificación es 482913", "Tu código de verificación es [masked]"],
+    ["Tu código es 4821", "Tu código es [masked]"],
+    ["Ihr Bestätigungscode lautet 482913", "Ihr Bestätigungscode lautet [masked]"],
+    ["Ihr Code lautet 4821", "Ihr Code lautet [masked]"]
+  ],
+  "kept": [
+    "Postal code: 75001",
+    "Promo code: 2024",
+    "Error code: 4040",
+    "Order 48291366 shipped",
+    "Your verification code expires in 10 minutes",
+    "Call 0612345678 to verify",
+    "The year 2024 is your best year yet",
+    "Your code is ready"
+  ]
+}

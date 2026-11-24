@@ -254,6 +254,21 @@ describe("Coach reads the page the person has open, with their message", () => {
     }
   });
 
+  // Invariant: a one-time code written in the page (a sign-in mail, an SMS shown on screen) never reaches the AI, whatever build sent it
+  it("a one-time code in the page's text or title is masked in the run's aside, on both routes", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    for (const via of [send, stream]) {
+      const r = await via(w, COACH, { text: "What do I do here?",
+        page: { ...PAGE_SENT, title: "Your code is 4821", text: "Your verification code is 482913.\nTu código es 771204." } });
+      expect(r.status).toBe(200);
+      const sent = w.agents.asides.get(w.agents.runs.at(-1)!.id)!;
+      expect(sent.aside).toContain("Title: Your code is [masked]\n");
+      expect(sent.aside).toContain("Your verification code is [masked].\nTu código es [masked].");
+      for (const code of ["4821", "482913", "771204"]) expect(sent.aside).not.toContain(code);
+    }
+  });
+
   // Invariant: Coach's answers from a turn that read a page carry page_turn, so the apps ask before opening a link in them; no other answer does
   it("marks Coach's answers from a page turn with page_turn, in the thread and on the stream, and no other", async () => {
     const w = await world();

@@ -120,6 +120,16 @@ test("card numbers, keys and labelled secrets are masked; prose and order number
   assert.equal(maskText("-----BEGIN PRIVATE KEY-----\nMIIE\n-----END PRIVATE KEY-----"), "[masked]");
 });
 
+test("one-time codes lose their digits, in English, French, Spanish and German; postal, order and promo numbers stay", () => {
+  // The cases tafs cloud's page check answers too (runtime/test/page-codes.test.ts): one rule on both sides.
+  const cases = JSON.parse(readFileSync(new URL("../../runtime/test/fixtures/one-time-codes.json", import.meta.url), "utf8"));
+  for (const [text, masked] of cases.masked) assert.equal(maskText(text), masked, text);
+  for (const text of cases.kept) assert.equal(maskText(text), text, text);
+  const { secretSpans } = globalThis.TafsMask;
+  const t = "123456 is your login code. Your verification code is 482 913.";
+  assert.deepEqual(secretSpans(t).map(([a, b]) => t.slice(a, b)), ["123456", "482 913"], "a picture covers the digits");
+});
+
 test("a link keeps its address but not its credentials", () => {
   assert.equal(maskURL("https://shop.example/reset?token=abc&page=2"), "https://shop.example/reset?token=%5Bmasked%5D&page=2");
   assert.equal(maskURL("https://u:p@shop.example/"), "https://shop.example/");
