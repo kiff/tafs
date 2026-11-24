@@ -1,0 +1,1 @@
+- **iPhone and iPad: a chat link that isn't a clean `https` address never opens.** In any answer, Coach's or a taf's, it shows "This link won't open", why and its address, with Cancel alone; an answer still being written asks before opening any link, with its own line ([chat.md](docs/chat.md)).

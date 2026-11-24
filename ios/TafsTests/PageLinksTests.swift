@@ -1,8 +1,8 @@
 import XCTest
 @testable import Tafs
 
-/// Links in a taf's words from a page turn ask before opening (`page_turn`, `PageLinkGuard`): the flag as tafs cloud sends
-/// it, on the thread's messages and on the stream, and the address as the confirm shows it.
+/// Links in a chat's answers (`PageLinks`, `PageLinkGuard`): a page turn's (`page_turn`, on the thread and on the stream) and
+/// a live answer's ask first, any address that isn't clean https never opens, and the dialog shows the address whole.
 @MainActor
 final class PageLinksTests: XCTestCase {
     private let suite = "PageLinksTests"
@@ -63,7 +63,30 @@ final class PageLinksTests: XCTestCase {
         for no in ["http://shop.example", "tel:+15551234", "sms:+15551234", "bank://pay?to=x", "market://details?id=x", "mailto:a@b.c",
                    "javascript:alert(1)", "https:no-host", "https://shop.example/%E2%80%AEgpj.exe", "https://shop.example/a%20b",
                    "https://shop.example/%E2%81%A6x%E2%81%A9", "https://shop.example/%0Anext"] {
-            if let url = URL(string: no) { XCTAssertFalse(PageLinks.opens(url), no) }
+            XCTAssertFalse(PageLinks.opens(try XCTUnwrap(URL(string: no), no)), no)
+        }
+    }
+
+    /// What a tap does, by the message: a clean https link opens at once in any other answer, asks in a page turn's or a
+    /// live one, and any other address never opens, in any answer.
+    func testATapOpensAsksOrIsBlockedByTheMessage() throws {
+        let https = try XCTUnwrap(URL(string: "https://shop.example/a"))
+        let tel = try XCTUnwrap(URL(string: "tel:+15551234"))
+        XCTAssertEqual(PageLinks.tap(https, in: .plain), .open)
+        XCTAssertEqual(PageLinks.tap(https, in: .pageTurn), .ask(live: false))
+        XCTAssertEqual(PageLinks.tap(https, in: .live), .ask(live: true))
+        for mode in [PageLinks.Mode.plain, .pageTurn, .live] { XCTAssertEqual(PageLinks.tap(tel, in: mode), .blocked, "\(mode)") }
+    }
+
+    /// The dialog's line: why it won't open, or where it goes, for a page turn or a live answer, each with the address whole.
+    func testTheDialogSaysWhyOrWhere() throws {
+        let url = try XCTUnwrap(URL(string: "http://shop.example/a?b=1"))
+        let shown = PageLinks.shown(url)
+        XCTAssertEqual(PageLinks.body(url, .blocked), Words.Chat.linkBlockedBody(address: shown))
+        XCTAssertEqual(PageLinks.body(url, .ask(live: false)), Words.Chat.linkConfirmBody(address: shown))
+        XCTAssertEqual(PageLinks.body(url, .ask(live: true)), Words.Chat.linkConfirmBodyLive(address: shown))
+        for tap in [PageLinks.Tap.blocked, .ask(live: false), .ask(live: true)] {
+            XCTAssertTrue(PageLinks.body(url, tap).contains(shown), "\(tap)")
         }
     }
 }

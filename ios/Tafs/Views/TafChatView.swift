@@ -612,8 +612,9 @@ struct ChatBubble: View {
                 bubble
             }
         }
-        // A link in words from a page turn may have come from that page: its whole address first, then Open or Cancel.
-        .modifier(PageLinkGuard(on: message.pageTurn))
+        // A link opens as `PageLinks` says: a page turn's or a live answer's asks first, and one that isn't clean https
+        // never opens from a chat.
+        .modifier(PageLinkGuard(mode: steady ? .live : message.pageTurn ? .pageTurn : .plain))
     }
 
     @ViewBuilder
