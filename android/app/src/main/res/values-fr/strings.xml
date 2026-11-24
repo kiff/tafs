@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Choisir un fichier</string>
     <string name="chat_file_choose_photos">Choisir des photos</string>
     <string name="chat_file_could_not_open">Le fichier n\'a pas pu être ouvert.</string>
+    <string name="chat_file_mac_camera_off">La caméra est désactivée pour tafs. Activez-la dans Réglages Système › Confidentialité et sécurité › Caméra (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Caméra).</string>
     <string name="chat_file_no_app_opens">Aucune app sur ce téléphone n\'ouvre %1$s.</string>
     <string name="chat_file_no_camera">Aucune app d\'appareil photo sur ce téléphone pour prendre une photo.</string>
     <string name="chat_file_not_opened">%1$s n\'a pas pu être ouvert. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Demander avant toute chose inhabituelle, même si cela entre dans la Card.</string>
     <string name="sample_memory_explain">Vous préférez que j\'explique une décision en une ligne plutôt qu\'en un paragraphe.</string>
     <string name="sample_memory_regulars">Les clients qui écrivent chaque semaine reçoivent une réponse le matin même.</string>
+    <string name="sample_not_in_sample">Ce n\'est pas dans l\'exemple. Connectez-vous avec KIFF pour le faire.</string>
     <string name="sample_parcels_change_address">Changer l\'adresse de livraison de la commande #5141</string>
     <string name="sample_parcels_change_address_why">Un e-mail d\'une nouvelle adresse l\'a demandé</string>
     <string name="sample_parcels_job">Prévenir les clients quand un colis prend du retard, avant qu\'ils ne demandent. Les renvois vous attendent. Ne jamais changer une adresse de livraison à partir d\'un e-mail.</string>

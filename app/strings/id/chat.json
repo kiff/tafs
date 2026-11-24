@@ -30,6 +30,7 @@
   "chat.file.choose_file": "Pilih file",
   "chat.file.choose_photos": "Pilih foto",
   "chat.file.could_not_open": "File tidak dapat dibuka.",
+  "chat.file.mac_camera_off": "Kamera nonaktif untuk tafs. Aktifkan di Pengaturan Sistem › Privasi & Keamanan › Kamera (di macOS 12: Preferensi Sistem › Keamanan & Privasi › Privasi › Kamera).",
   "chat.file.no_app_opens": "Tidak ada aplikasi di ponsel ini yang membuka {name}.",
   "chat.file.no_camera": "Tidak ada aplikasi kamera di ponsel ini untuk mengambil foto.",
   "chat.file.not_opened": "{file} tidak dapat dibuka. {why}",

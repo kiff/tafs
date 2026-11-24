@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Dosya seç</string>
     <string name="chat_file_choose_photos">Fotoğraf seç</string>
     <string name="chat_file_could_not_open">Dosya açılamadı.</string>
+    <string name="chat_file_mac_camera_off">Kamera, tafs için kapalı. Sistem Ayarları › Gizlilik ve Güvenlik › Kamera\'dan açın (macOS 12\'de: Sistem Tercihleri › Güvenlik ve Gizlilik › Gizlilik › Kamera).</string>
     <string name="chat_file_no_app_opens">Bu telefonda %1$s dosyasını açan bir uygulama yok.</string>
     <string name="chat_file_no_camera">Bu telefonda fotoğraf çekecek bir kamera uygulaması yok.</string>
     <string name="chat_file_not_opened">%1$s açılamadı. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Card\'a uysa bile olağandışı her şeyden önce sor.</string>
     <string name="sample_memory_explain">Bir kararı paragrafla değil, tek satırda açıklamamı tercih edersiniz.</string>
     <string name="sample_memory_regulars">Her hafta yazan müşteriler aynı sabah yanıt alır.</string>
+    <string name="sample_not_in_sample">Bu örnekte yok. Bunu yapmak için KIFF ile oturum açın.</string>
     <string name="sample_parcels_change_address">#5141 numaralı siparişin teslimat adresini değiştir</string>
     <string name="sample_parcels_change_address_why">Yeni bir adresten gelen e-posta istedi</string>
     <string name="sample_parcels_job">Bir paket geciktiğinde, müşteriler sormadan önce haber ver. Yeniden gönderimler sizi bekler. Asla bir e-postayla teslimat adresini değiştirme.</string>

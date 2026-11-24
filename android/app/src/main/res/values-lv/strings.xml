@@ -529,6 +529,7 @@
     <string name="chat_file_choose_file">Izvēlēties failu</string>
     <string name="chat_file_choose_photos">Izvēlēties fotoattēlus</string>
     <string name="chat_file_could_not_open">Failu nevarēja atvērt.</string>
+    <string name="chat_file_mac_camera_off">Kamera lietotnei tafs ir izslēgta. Ieslēdz to sadaļā Sistēmas iestatījumi › Privātums un drošība › Kamera (macOS 12: Sistēmas preferences › Drošība un privātums › Privātums › Kamera).</string>
     <string name="chat_file_no_app_opens">Šajā tālrunī nav lietotnes, kas atver %1$s.</string>
     <string name="chat_file_no_camera">Šajā tālrunī nav kameras lietotnes, ar ko uzņemt foto.</string>
     <string name="chat_file_not_opened">%1$s nevarēja atvērt. %2$s</string>
@@ -2160,6 +2161,7 @@
     <string name="sample_memory_ask_first">Jautāt pirms jebkā neparasta, pat ja tas atbilst Card.</string>
     <string name="sample_memory_explain">Tu dod priekšroku tam, lai lēmumu izskaidroju vienā rindā, nevis rindkopā.</string>
     <string name="sample_memory_regulars">Klienti, kas raksta katru nedēļu, saņem atbildi tajā pašā rītā.</string>
+    <string name="sample_not_in_sample">Tā paraugā nav. Pieraksties ar KIFF, lai to izdarītu.</string>
     <string name="sample_parcels_change_address">Mainīt piegādes adresi pasūtījumam #5141</string>
     <string name="sample_parcels_change_address_why">To lūdza e-pasts no jaunas adreses</string>
     <string name="sample_parcels_job">Pastāstīt klientiem, kad paka kavējas, pirms viņi jautā. Atkārtota nosūtīšana gaida tevi. Nekad nemainīt piegādes adresi pēc e-pasta.</string>

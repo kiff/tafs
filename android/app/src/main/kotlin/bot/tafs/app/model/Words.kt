@@ -504,6 +504,7 @@ object Words {
       val chooseFile: String get() = Res.s(R.string.chat_file_choose_file)
       val choosePhotos: String get() = Res.s(R.string.chat_file_choose_photos)
       val couldNotOpen: String get() = Res.s(R.string.chat_file_could_not_open)
+      val macCameraOff: String get() = Res.s(R.string.chat_file_mac_camera_off)
       fun noAppOpens(name: String): String = Res.s(R.string.chat_file_no_app_opens, name)
       val noCamera: String get() = Res.s(R.string.chat_file_no_camera)
       fun notOpened(file: String, why: String): String = Res.s(R.string.chat_file_not_opened, file, why)
@@ -2224,6 +2225,7 @@ object Words {
       val explain: String get() = Res.s(R.string.sample_memory_explain)
       val regulars: String get() = Res.s(R.string.sample_memory_regulars)
     }
+    val notInSample: String get() = Res.s(R.string.sample_not_in_sample)
     object Parcels {
       val changeAddress: String get() = Res.s(R.string.sample_parcels_change_address)
       val changeAddressWhy: String get() = Res.s(R.string.sample_parcels_change_address_why)

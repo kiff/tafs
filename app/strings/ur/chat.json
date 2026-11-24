@@ -31,6 +31,7 @@
   "chat.file.choose_file": "فائل چنیں",
   "chat.file.choose_photos": "تصاویر چنیں",
   "chat.file.could_not_open": "فائل کھل نہیں سکی۔",
+  "chat.file.mac_camera_off": "ایپ tafs کے لیے کیمرا بند ہے۔ اسے سسٹم سیٹنگز › پرائیویسی اور سیکیورٹی › کیمرا میں چالو کریں (macOS 12 پر: سسٹم پریفرنسز › سیکیورٹی اور پرائیویسی › پرائیویسی › کیمرا)۔",
   "chat.file.no_app_opens": "اس فون میں {name} کھولنے والی کوئی ایپ نہیں ہے۔",
   "chat.file.no_camera": "اس فون میں تصویر لینے کے لیے کیمرا ایپ نہیں ہے۔",
   "chat.file.not_opened": "{file} کھل نہیں سکی۔ {why}",

@@ -31,6 +31,7 @@
   "chat.file.choose_file": "Tria un fitxer",
   "chat.file.choose_photos": "Tria fotos",
   "chat.file.could_not_open": "No s'ha pogut obrir el fitxer.",
+  "chat.file.mac_camera_off": "La càmera està desactivada per a tafs. Activa-la a Ajustos del sistema › Privadesa i seguretat › Càmera (a macOS 12: Preferències del Sistema › Seguretat i privadesa › Privadesa › Càmera).",
   "chat.file.no_app_opens": "Cap aplicació d'aquest telèfon obre {name}.",
   "chat.file.no_camera": "Aquest telèfon no té cap aplicació de càmera per fer una foto.",
   "chat.file.not_opened": "No s'ha pogut obrir {file}. {why}",

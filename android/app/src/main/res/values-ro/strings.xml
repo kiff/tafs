@@ -529,6 +529,7 @@
     <string name="chat_file_choose_file">Alegeți fișierul</string>
     <string name="chat_file_choose_photos">Alegeți fotografii</string>
     <string name="chat_file_could_not_open">Fișierul nu a putut fi deschis.</string>
+    <string name="chat_file_mac_camera_off">Camera este dezactivată pentru tafs. Activați-o în Configurări sistem › Confidențialitate și securitate › Cameră (pe macOS 12: Preferințe sistem › Securitate și confidențialitate › Confidențialitate › Cameră).</string>
     <string name="chat_file_no_app_opens">Nicio aplicație de pe acest telefon nu deschide %1$s.</string>
     <string name="chat_file_no_camera">Nu există pe acest telefon o aplicație de cameră cu care să faceți o fotografie.</string>
     <string name="chat_file_not_opened">%1$s nu a putut fi deschis. %2$s</string>
@@ -2160,6 +2161,7 @@
     <string name="sample_memory_ask_first">Întreabă înainte de orice neobișnuit, chiar dacă se încadrează în Card.</string>
     <string name="sample_memory_explain">Preferați să explic o decizie într-un rând, nu într-un paragraf.</string>
     <string name="sample_memory_regulars">Clienții care scriu săptămânal primesc răspuns în aceeași dimineață.</string>
+    <string name="sample_not_in_sample">Acest lucru nu este în exemplu. Conectați-vă cu KIFF pentru a-l face.</string>
     <string name="sample_parcels_change_address">Schimbați adresa de livrare a comenzii nr. 5141</string>
     <string name="sample_parcels_change_address_why">Cerut printr-un e-mail de la o adresă nouă</string>
     <string name="sample_parcels_job">Anunțați clienții când un colet întârzie, înainte să întrebe. Retrimiterile vă așteaptă. Nu schimbați niciodată o adresă de livrare pe baza unui e-mail.</string>

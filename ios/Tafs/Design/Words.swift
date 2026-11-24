@@ -920,6 +920,8 @@ enum Words {
             static var choosePhotos: String { Words.line("chat.file.choose_photos") }
             /// The file couldn't be opened.
             static var couldNotOpen: String { Words.line("chat.file.could_not_open") }
+            /// The camera is off for tafs. Turn it on in System Settings › Privacy & Security › Camera (on macOS 12: System Preferences › Security & Privacy › Privacy › Camera).
+            static var macCameraOff: String { Words.line("chat.file.mac_camera_off") }
             /// No app on this phone opens {name}.
             static func noAppOpens(name: String) -> String { Words.line("chat.file.no_app_opens", name) }
             /// There's no camera app on this phone to take a photo with.
@@ -4115,6 +4117,8 @@ enum Words {
             /// Customers who write every week get a reply the same morning.
             static var regulars: String { Words.line("sample.memory.regulars") }
         }
+        /// This isn't in the sample. Sign in with KIFF to do it.
+        static var notInSample: String { Words.line("sample.not_in_sample") }
         enum Parcels {
             /// Change the delivery address on order #5141
             static var changeAddress: String { Words.line("sample.parcels.change_address") }

@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Избор на файл</string>
     <string name="chat_file_choose_photos">Избор на снимки</string>
     <string name="chat_file_could_not_open">Файлът не можа да бъде отворен.</string>
+    <string name="chat_file_mac_camera_off">Камерата е изключена за tafs. Включете я в Системни настройки › Поверителност и сигурност › Камера (на macOS 12: Системни предпочитания › Защита и поверителност › Поверителност › Камера).</string>
     <string name="chat_file_no_app_opens">Никое приложение на този телефон не отваря %1$s.</string>
     <string name="chat_file_no_camera">На този телефон няма приложение за камера, с което да направите снимка.</string>
     <string name="chat_file_not_opened">%1$s не можа да бъде отворен. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Питай, преди да направиш нещо необичайно, дори ако се вписва в Card.</string>
     <string name="sample_memory_explain">Предпочитате да обяснявам решение с един ред, а не с абзац.</string>
     <string name="sample_memory_regulars">Клиентите, които пишат всяка седмица, получават отговор същата сутрин.</string>
+    <string name="sample_not_in_sample">Това го няма в примера. Влезте с KIFF, за да го направите.</string>
     <string name="sample_parcels_change_address">Промяна на адреса за доставка на поръчка № 5141</string>
     <string name="sample_parcels_change_address_why">Поискано с имейл от нов адрес</string>
     <string name="sample_parcels_job">Уведомявайте клиентите, когато пратка закъснява, преди да попитат. Повторните изпращания ви чакат. Никога не променяйте адрес за доставка по имейл.</string>
