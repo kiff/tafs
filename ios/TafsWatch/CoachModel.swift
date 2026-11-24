@@ -55,10 +55,9 @@ final class CoachModel: ObservableObject {
         case onPhone
     }
 
-    /// Keep for later (row 8), built and off: it keeps the person's words on the watch, and the privacy page's Apple Watch
-    /// paragraph says the watch keeps nothing apart from the Inbox. On with that sentence there and the owner's yes; off, no
-    /// store is given and it's never offered.
-    nonisolated static let keepForLaterOn = false
+    /// Keep for later (row 8), on: it keeps the person's words on the watch, which the privacy page's Apple Watch paragraph
+    /// says, with the owner's yes. Off, no store is given and it's never offered.
+    nonisolated static let keepForLaterOn = true
 
     /// v2's Quick reply (docs/watch-app.md, "Step (iii)"): four ready-made lines, each to Check before sending, in Wear OS's
     /// order.
