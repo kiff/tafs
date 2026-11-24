@@ -166,8 +166,7 @@ final class HomeSidebarTests: XCTestCase {
     func testTheDetailPaneIsCreamEdgeToEdge() throws {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let overview = try String(contentsOf: views.appendingPathComponent("ShareViews.swift"), encoding: .utf8)
-        XCTAssertTrue(overview.contains(".frame(maxWidth: 980, alignment: .leading)\n            // The column stretches"), "the column, then the stretch")
-        XCTAssertTrue(overview.contains("            .frame(maxWidth: .infinity)\n        }\n        .screenBackground()"))
+        XCTAssertTrue(overview.contains("            .pageColumn(PageWidth.list)\n        }\n        .screenBackground()"), "the column, centred and stretched")
         let connect = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
         XCTAssertEqual(connect.components(separatedBy: "        List {").count - 1,
                        connect.components(separatedBy: ".scrollContentBackground(.hidden)").count - 1, "every list in Connect apps")
@@ -187,5 +186,66 @@ final class HomeSidebarTests: XCTestCase {
         let overview = try String(contentsOf: views.appendingPathComponent("ShareViews.swift"), encoding: .utf8)
         XCTAssertTrue(overview.contains("if model.needsYouCount > 0 { needsYou }"))
         XCTAssertTrue(overview.contains("Button { open(.needsYou) } label:"))
+    }
+
+    /// The owner's layout (docs/parity.md, "One layout on every app"): every page is one column, centred, at most its named
+    /// width, with text aligned left inside it. Each page takes its width from `PageWidth` through `pageColumn`, before its
+    /// cream, so no page sets its own number and the cream still reaches both edges.
+    func testEveryPageIsACentredColumnOfItsNamedWidth() throws {
+        XCTAssertEqual(PageWidth.reading, 720)
+        XCTAssertEqual(PageWidth.list, 980)
+        XCTAssertEqual(PageWidth.gallery, 640)
+        XCTAssertEqual(PageWidth.brief, 1100)
+        XCTAssertEqual(PageWidth.calendar, 1180)
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let pages: [(file: String, page: String, width: String)] = [
+            ("SignInView.swift", "struct SettingsView: View {", "reading"),
+            ("SignInView.swift", "struct AccountView: View {", "reading"),
+            ("DevicesView.swift", "struct DevicesView: View {", "reading"),
+            ("PeopleViews.swift", "struct PeopleGroupsView: View {", "reading"),
+            ("NotificationSettingsView.swift", "struct NotificationSettingsView: View {", "reading"),
+            ("ChromeViews.swift", "struct ChromesView: View {", "reading"),
+            ("NeedsYouView.swift", "struct NeedsYouView: View {", "reading"),
+            ("ConnectAppsView.swift", "struct ConnectAppsView: View {", "reading"),
+            ("UsageView.swift", "struct UsageView: View {", "reading"),
+            ("ShareViews.swift", "struct OverviewView: View {", "list"),
+            ("ShareViews.swift", "struct ShareTafSheet: View {", "list"),
+            ("ConnectAppsView.swift", "struct AppConnectionsView: View {", "list"),
+            ("RecipeGallery.swift", "", "gallery"),
+            ("HomeRecipes.swift", "", "gallery"),
+            ("BriefView.swift", "struct BriefView: View {", "brief"),
+            ("CalendarView.swift", "struct CalendarView: View {", "calendar"),
+        ]
+        for p in pages {
+            let file = try String(contentsOf: views.appendingPathComponent(p.file), encoding: .utf8)
+            let from = p.page.isEmpty ? file.startIndex : try XCTUnwrap(file.range(of: p.page), p.page).upperBound
+            // The page's own code: up to the next top-level type.
+            let rest = file[from...]
+            let body = rest.range(of: "\nstruct ").map { rest[..<$0.lowerBound] } ?? rest
+            XCTAssertTrue(body.contains(".pageColumn(PageWidth.\(p.width))"), "\(p.file) \(p.page): \(p.width)")
+        }
+        // No page sets one of these widths itself.
+        for name in try FileManager.default.contentsOfDirectory(atPath: views.path) where name.hasSuffix(".swift") {
+            let file = try String(contentsOf: views.appendingPathComponent(name), encoding: .utf8)
+            for n in ["720", "980", "640", "1100", "1180"] {
+                XCTAssertFalse(file.contains("maxWidth: \(n),"), "\(name) sets \(n) itself")
+                XCTAssertFalse(file.contains("maxWidth: \(n))"), "\(name) sets \(n) itself")
+            }
+        }
+        // Centred, its content left inside it.
+        let components = try String(contentsOf: views.deletingLastPathComponent().appendingPathComponent("Design/Components.swift"), encoding: .utf8)
+        XCTAssertTrue(components.contains("frame(maxWidth: cap, alignment: .leading).frame(maxWidth: .infinity)"))
+    }
+
+    /// On Account, an explanation sits beside its action: how signing in keeps a taf's actions checked is in the sign-in
+    /// section (or beside Sign in with KIFF), and How tafs works is one entry, never a section that only explains.
+    func testAccountsExplanationsSitBesideTheirActions() throws {
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let file = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
+        let settings = String(file[try XCTUnwrap(file.range(of: "struct SettingsView: View {")).upperBound...])
+        XCTAssertFalse(settings.contains("Section(Words.SignIn.howWorks)"), "no section that only explains")
+        XCTAssertTrue(settings.contains("Section(Words.Settings.SignInCode.title) {\n                        CodeSignInRow()\n                        signInExplained\n                    }"))
+        XCTAssertTrue(settings.contains("Button(Words.SignIn.withKiff) { signingIn = true }\n                        signInExplained"))
+        XCTAssertEqual(settings.components(separatedBy: "NavigationLink(Words.Onboarding.howItWorks)").count - 1, 1, "How tafs works, once")
     }
 }

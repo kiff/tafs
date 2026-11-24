@@ -241,6 +241,28 @@ extension View {
     func screenBackground() -> some View {
         background(Theme.background.ignoresSafeArea())
     }
+
+    /// The page's content as one column (docs/parity.md, "One layout on every app"): at most `cap` points wide, centred
+    /// in the window, its text and rows aligned left inside it. On a window narrower than the cap nothing changes. Put
+    /// it before `screenBackground()`, so the cream still reaches both edges.
+    func pageColumn(_ cap: CGFloat) -> some View {
+        frame(maxWidth: cap, alignment: .leading).frame(maxWidth: .infinity)
+    }
+}
+
+/// How wide a page's column grows on a wide window, the same on every app (docs/parity.md, "One layout on every app"). No
+/// page sets its own number: each takes one of these with `pageColumn`.
+enum PageWidth {
+    /// Reading pages: Account, Devices, People, Alerts, Chrome, Needs you, Connect apps, Plan & usage.
+    static let reading: CGFloat = 720
+    /// List pages: Overview, sharing, an app's connections.
+    static let list: CGFloat = 980
+    /// The recipe gallery.
+    static let gallery: CGFloat = 640
+    /// The Brief.
+    static let brief: CGFloat = 1100
+    /// Calendar.
+    static let calendar: CGFloat = 1180
 }
 
 /// The time zone every time the app shows is in (kiff/tafs#211, 6.11): the KIFF account's,

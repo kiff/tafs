@@ -42,8 +42,7 @@ struct RecipeGallerySheet: View {
                     HomeRecipes(recipes: recipes, logo: logo) { open = $0 }
                 }
                 .padding(.horizontal, 20).padding(.vertical, 16)
-                .frame(maxWidth: 640, alignment: .leading)
-                .frame(maxWidth: .infinity)
+                .pageColumn(PageWidth.gallery)
             }
             .screenBackground()
             .navigationTitle(gallery.title(browse: mode == .browse))

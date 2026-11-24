@@ -380,17 +380,20 @@ struct SettingsView: View {
                     Section { AIConsentRow() }
                 }
                 if model.mode == .kiff {
-                    Section(Words.Settings.SignInCode.title) { CodeSignInRow() }
+                    // How signing in keeps the taf's actions checked sits with sign-in itself (docs/parity.md, "One layout
+                    // on every app"): an explanation beside its action, never a section of its own.
+                    Section(Words.Settings.SignInCode.title) {
+                        CodeSignInRow()
+                        signInExplained
+                    }
                     Section {
                         NavigationLink { TimeZonePicker() } label: { LabeledContent(Words.Settings.timeZoneTitle, value: model.kiffAccount?.timeZone ?? "UTC") }
                     }
                     ExportChatsSection()
                 }
-                Section(Words.SignIn.howWorks) {
-                    Text(Words.SignIn.everyActionTafTakesGoes(device: "\(ThisDevice.kind)"))
-                        .scaledFont(14).foregroundColor(Theme.soft)
-                    // The three cards again, with the privacy and terms pages (docs/onboarding.md).
-                    if Onboarding.on {
+                // How tafs works: one entry, the three cards again with the privacy and terms pages (docs/onboarding.md).
+                if Onboarding.on {
+                    Section {
                         NavigationLink(Words.Onboarding.howItWorks) { HowTafsWorksView() }
                             .accessibilityIdentifier("howItWorks")
                     }
@@ -405,7 +408,10 @@ struct SettingsView: View {
                     Text(Words.Home.tagline).foregroundColor(Theme.dim)
                 }
                 Section(Words.Settings.accountActions) {
-                    if model.mode == .sample { Button(Words.SignIn.withKiff) { signingIn = true } }
+                    if model.mode == .sample {
+                        Button(Words.SignIn.withKiff) { signingIn = true }
+                        signInExplained
+                    }
                     Button(model.mode == .kiff ? Words.Settings.signOut : Words.Settings.clearSample, role: .destructive) {
                         if model.mode == .kiff { confirming = .signOut }
                         else { Task { if await model.signOut() { dismiss() } } }
@@ -416,6 +422,7 @@ struct SettingsView: View {
                 Color.clear.frame(height: 1).listRowBackground(Color.clear).onAppear { atEnd = true }.onDisappear { atEnd = false }
             }
             .scrollContentBackground(.hidden)
+            .pageColumn(PageWidth.reading)
             .screenBackground()
             .overlay(alignment: .bottom) {
                 if !atEnd { Image(systemName: "chevron.down").foregroundColor(Theme.dim).padding(8).frame(maxWidth: .infinity).background(LinearGradient(colors: [.clear, Theme.background], startPoint: .top, endPoint: .bottom)).allowsHitTesting(false) }
@@ -437,6 +444,13 @@ struct SettingsView: View {
             // Alerts that couldn't be taken back: ask before signing out (Try again, Sign out anyway).
             .askingAlertsStillOn(model) { dismiss() }
         }
+    }
+
+    /// How a signed-in account's actions are checked, beside signing in: the sign-in section, or Sign in with KIFF.
+    private var signInExplained: some View {
+        Text(Words.SignIn.everyActionTafTakesGoes(device: "\(ThisDevice.kind)"))
+            .scaledFont(14).foregroundColor(Theme.soft)
+            .accessibilityIdentifier("settings.sign-in-explained")
     }
 
     @ViewBuilder private var requestedPage: some View {
@@ -536,6 +550,7 @@ struct AccountView: View {
             } }
         }
         .scrollContentBackground(.hidden)
+        .pageColumn(PageWidth.reading)
         .screenBackground()
         .navigationTitle(Words.Settings.kiffAccount)
         .sheet(isPresented: $deletingAccount, onDismiss: { if model.mode != .kiff { done() } }) {

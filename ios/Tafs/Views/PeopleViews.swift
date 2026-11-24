@@ -48,6 +48,7 @@ struct PeopleGroupsView: View {
             }
         }
         .scrollContentBackground(.hidden)
+        .pageColumn(PageWidth.reading)
         .screenBackground()
         .navigationTitle(Self.title)
         .toolbar {

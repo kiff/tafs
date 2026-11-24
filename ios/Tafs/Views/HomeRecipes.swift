@@ -233,8 +233,7 @@ struct RecipeSheet: View {
                 }
             }
             .padding(.horizontal, 20).padding(.vertical, 16)
-            .frame(maxWidth: 640, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            .pageColumn(PageWidth.gallery)
         }
         .screenBackground()
         .presentationDetents([.large]).presentationDragIndicator(.visible)
