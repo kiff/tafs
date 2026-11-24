@@ -1,0 +1,1 @@
+- **Apple Watch: the App Store's watch screenshots, from the demo phone.** `ios/scripts/watch-store-shots.sh` runs a skipped-by-default UI test on a watch of an App Store size and writes Coach's home, the Inbox, a held call, Your tafs and a taf's page as PNGs, for the listing ([screenshots.md](docs/screenshots.md)).
