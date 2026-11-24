@@ -1,0 +1,1 @@
+- An API door approved from a draft that was already used, or has lapsed, is refused as reading the draft refuses it: `410 draft_used` with its door and the person's words, or `404 draft_lapsed` with the person's words.

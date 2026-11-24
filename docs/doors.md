@@ -155,7 +155,8 @@ taf, `contracts/doors-api-draft.json`), and on the owner's yes sign and send `bo
 is made from it, the draft keeps only which door and when, until it would have lapsed: read again (the card, when the
 chat is opened again), it answers **410** `{code: "draft_used", words, door_id}`, "Door made from this draft." in
 the person's language; once lapsed, **404** `{code: "draft_lapsed", words}`, "This draft lapsed: ask Coach again." The
-apps show `words` as sent. A used draft makes nothing if sent again (404).
+apps show `words` as sent. A used draft makes nothing if sent again: approving it answers the same **410**
+`draft_used`, with its door and the words.
 
 **Making one and its keys** (`TAFS_API_DOORS` on: `on` for every account, or a comma-separated list of the accounts it's on for, a test account first; off for the account, `POST …/doors` with `kind: "api"` is 400, Coach's `taf_door_api` drafts nothing, and the caller's routes answer 404): each step is checked
 with KIFF as a taf's removal is (`POST /v1/me/device-signature`, the approval key behind the fingerprint, each signature
@@ -163,9 +164,10 @@ taken once), and is 403 unsigned (`signature_missing`) or signed with the device
 door's own words):
 
 - `POST /v1/tafs/{id}/doors` `{kind: "api", draft_id, draft: {name, fields, job, outcomes, text}}` approves Coach's draft:
-  only the draft tafs cloud keeps, by its `draft_id` and byte for byte (canonical), and only once. An unknown, lapsed or
-  used `draft_id` is 404, and a `draft` that isn't the kept one is 409, so the owner's signature makes only what Coach
-  drafted and they read. The kept draft is removed once its door is made. A field
+  only the draft tafs cloud keeps, by its `draft_id` and byte for byte (canonical), and only once. An unknown or lapsed
+  `draft_id` is **404** `{code: "draft_lapsed", words}` and a used one **410** `{code: "draft_used", words, door_id}`,
+  both as the draft's read answers them; a `draft` that isn't the kept one is 409. So the owner's signature makes only
+  what Coach drafted and they read. Once its door is made, the kept draft keeps only which door and when. A field
   is `{name, type: string (with max ≤ 4000) | number | boolean | enum (with values)}`, 1 to 20 of them, never named like an
   instruction (any `_` part such as `instructions`, `prompt`, `system` or `rules`, so `system_prompt` too); outcomes are 1 to 10 names. Anything else is 400. It answers the door
   and its first key, `{id, name, key, last4, made_at}`, in this answer only. One `api` door a taf (409).
