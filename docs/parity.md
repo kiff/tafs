@@ -243,13 +243,12 @@ What landed on 23 Nov, device by device, read again against each repo's main on 
 | A sealed sign-in fill's release card | held: no passwords go through the extension (the owner's decision) | merged and off, stays off (tafs#1882) | — | — | — | — |
 | "Allow this from now on" checks its own `matches`: a revision Card's `current.id`, when sent, must equal `revises` (now); a Card key the check doesn't compare is refused (once KIFF's draft schema is pinned in `contracts`) | first half done (tafs#1891) | first half done (tafs#1893) | first half done (tafs-macos#222) | first half done (tafs-windows#330) | first half done (tafs-linux#121) | — |
 | A connection's own page from planque's row, with its actions | done | done | done: its approvals are the phone's, since planque takes no security key (its checklist's ConnectAppsView) | done (tafs-windows#269) | done: Remove access with the security key, Sign in again drawn up to the phone's signature | — |
-| An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | not started | done (tafs-windows#271: said on Needs you, not in the chat) | done (tafs-linux#99) | — |
+| An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | done (tafs-macos#263: said on Needs you, not in the chat) | done (tafs-windows#271: said on Needs you, not in the chat) | done (tafs-linux#99) | — |
 | An API door's example safe to paste into a shell (a plain path only, quoted; `vectors/api-door-endpoint.json`, tafs#1877) | done (tafs#1875) | done (tafs#1874) | done (tafs-macos#205) | done (tafs-windows#323) | done (tafs-linux#111) | — |
 | The side panel is the taf in this Chrome (tafs#1799), no client named (tafs#1810), the read after an act waits for its navigation (tafs#1811) | — | — | — | — | — | done |
 
 **Still open:**
-1. **macOS 12: an approval that lands after its run ended.** The Mac never calls tafs cloud's `POST /v1/tafs/{id}/holds/{exception}/continue`, so its 404 `run_ended` (with `hold_run_ended`'s words) is never shown. The iPhone, Android and Linux say it in the chat with Retry, and Windows on Needs you.
-2. **"Allow this from now on", its second half, on every app:** a Card key the `matches` check doesn't compare is refused, once KIFF's draft schema is pinned in `contracts/`. It isn't there yet.
+1. **"Allow this from now on", its second half, on every app:** a Card key the `matches` check doesn't compare is refused, once KIFF's draft schema is pinned in `contracts/`. It isn't there yet.
 
 ## Counting checks
 
