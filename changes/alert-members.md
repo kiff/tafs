@@ -1,1 +1,1 @@
-- **Alerts follow the account's people.** tafs cloud keeps each device's alerts in step with what its person's role on the account allows now, and a device whose person is no longer on the account stops getting them ([api.md](docs/api.md)).
+- **Alerts follow the account's people.** tafs cloud narrows each device's alerts to what its person's role on the account still allows, and a device whose person is no longer on the account stops getting them ([api.md](docs/api.md)).

@@ -821,18 +821,23 @@ describe("an Android phone's alerts", () => {
   it("reconciles the account's devices with its people as KIFF lists them now", () => {
     const d = (token: string, subject: string, answers: boolean, addsTasks = false, manages = false): Device =>
       ({ token, environment: "production", subject, answers, addsTasks, manages, at: "" });
-    const devices = [d("t_ana", "u_ana", true, true, true), d("t_bo", "u_bo", true), d("t_cy", "u_cy", true), d("t_dee", "u_dee", false), d("t_eve", "u_eve", true)];
+    const devices = [d("t_ana", "u_ana", true, true, true), d("t_bo", "u_bo", true), d("t_cy", "u_cy", true), d("t_dee", "u_dee", false), d("t_eve", "u_eve", true),
+      // A row stored before devices kept their person: left as it is.
+      { token: "t_old", environment: "production", answers: true, at: "" } as unknown as Device];
     const { remove, update } = reconcileDevices(devices, [
       { subject: "u_ana", status: "active", capabilities: ["holds.answer", "billing.manage", "cards.manage"] },
       // Bo is now a viewer: no more held calls.
       { subject: "u_bo", status: "active", capabilities: ["read"] },
       // Cy was suspended; Eve isn't listed at all (removed).
       { subject: "u_cy", status: "suspended", capabilities: ["holds.answer"] },
-      // Dee became an approver.
+      // Dee became an approver: their device was registered without held calls, and isn't widened.
       { subject: "u_dee", status: "active", capabilities: ["holds.answer"] },
     ]);
     expect(remove.sort()).toEqual(["t_cy", "t_eve"]);
-    expect(update).toEqual([{ ...devices[1], answers: false, addsTasks: false, manages: false }, { ...devices[3], answers: true, addsTasks: false, manages: false }]);
+    expect(update).toEqual([{ ...devices[1], answers: false, addsTasks: false, manages: false }]);
+    // Ana's role lost Cards: her device keeps the rest.
+    expect(reconcileDevices([devices[0]!], [{ subject: "u_ana", status: "active", capabilities: ["holds.answer", "billing.manage"] }]))
+      .toEqual({ remove: [], update: [{ ...devices[0], manages: false }] });
     // Nothing changes for an account whose people are as its devices say.
     expect(reconcileDevices([devices[0]!], [{ subject: "u_ana", status: "active", capabilities: ["holds.answer", "billing.manage", "cards.manage"] }])).toEqual({ remove: [], update: [] });
   });

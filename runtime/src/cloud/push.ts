@@ -127,20 +127,22 @@ export function routing(senders: { ios: Sender; android?: Sender }): Sender {
 }
 
 /**
- * The account's alert devices against its people as KIFF lists them now: a device whose person is no longer an active
- * member (removed, suspended, or not listed) is dropped, and one whose person's role changed takes what it may do now
- * (`answers`: holds.answer, `addsTasks`: billing.manage, `manages`: cards.manage), as a registration would set them.
- * A device row keeps what it was given at registration, so without this a member who left, or whose role dropped, would
- * go on hearing the account's alerts until they registered again or someone removed the device.
+ * The account's alert devices against its people as KIFF lists them now. A device whose person isn't an active member
+ * (removed, suspended, or not listed) is dropped. The others keep only what their person's role still allows
+ * (`answers`: holds.answer, `addsTasks`: billing.manage, `manages`: cards.manage): this only narrows a device, never
+ * widens it, since a registration may have been given less than the role. A row registered without a person is left as it is.
  */
 export function reconcileDevices(devices: Device[], members: Array<{ subject: string; status: string; capabilities: string[] }>): { remove: string[]; update: Device[] } {
   const now = new Map(members.filter((m) => m.status === "active").map((m) => [m.subject, new Set(m.capabilities)]));
   const remove: string[] = [];
   const update: Device[] = [];
   for (const d of devices) {
+    if (!d.subject) continue;
     const caps = now.get(d.subject);
     if (!caps) { remove.push(d.token); continue; }
-    const answers = caps.has("holds.answer"), addsTasks = caps.has("billing.manage"), manages = caps.has("cards.manage");
+    const answers = d.answers && caps.has("holds.answer");
+    const addsTasks = d.addsTasks === true && caps.has("billing.manage");
+    const manages = d.manages === true && caps.has("cards.manage");
     if (d.answers !== answers || (d.addsTasks === true) !== addsTasks || (d.manages === true) !== manages) {
       update.push({ ...d, answers, addsTasks, manages });
     }

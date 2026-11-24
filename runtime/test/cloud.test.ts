@@ -308,8 +308,7 @@ describe("tafs cloud", () => {
     expect(r.body.jobs.map((j: { id: string }) => j.id)).toContain("refunds");
   });
 
-  // A device row keeps what its person could do at registration: on a person's read of the tafs list, at most hourly, the
-  // account's devices are checked against KIFF's people, so a member who left stops hearing the account's alerts.
+  // On a person's read of the tafs list, at most hourly, the account's devices are checked against KIFF's people.
   it("drops a departed member's alert devices and narrows a demoted one's, on a tafs read, at most hourly", async () => {
     const w = world();
     const rows = new Map<string, Device>();
@@ -349,9 +348,10 @@ describe("tafs cloud", () => {
     // Cy left: their device goes. Bo is a viewer now: theirs stays, with no held calls.
     expect([...rows.keys()].sort()).toEqual(["t_ana", "t_bo"]);
     expect(rows.get("t_bo")).toMatchObject({ answers: false, addsTasks: false, manages: false });
-    // Ana's row didn't say she manages Cards; her role does, so it does now.
-    expect(rows.get("t_ana")).toMatchObject({ answers: true, manages: true });
-    expect(log.mock.calls.map((c) => String(c[0])).filter((l) => l.includes("alert_devices_synced"))).toEqual([JSON.stringify({ event: "alert_devices_synced", tenant: "t_acme", removed: 1, updated: 2 })]);
+    // Ana's row didn't say she manages Cards; her role does, but a device is never widened.
+    expect(rows.get("t_ana")).toMatchObject({ answers: true });
+    expect(rows.get("t_ana")?.manages).not.toBe(true);
+    expect(log.mock.calls.map((c) => String(c[0])).filter((l) => l.includes("alert_devices_synced"))).toEqual([JSON.stringify({ event: "alert_devices_synced", tenant: "t_acme", removed: 1, updated: 1 })]);
     // Within the hour, no read of KIFF's people.
     await read();
     expect(reads).toBe(5);
