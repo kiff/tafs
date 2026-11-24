@@ -555,18 +555,45 @@ final class CoachModelTests: XCTestCase {
         XCTAssertTrue(model.turns.isEmpty)
     }
 
-    /// No read reached the phone, or the watch has no passcode: nothing is sent, and it stays.
-    func testAKeptMessageWaitsForThePhoneAndAPasscode() async {
+    /// No read reached the phone: nothing is sent, and it stays. On a watch without a passcode it doesn't stay at all: it's
+    /// deleted, unsent, as the Inbox's lines are.
+    func testAKeptMessageWaitsForThePhoneAndGoesWithoutAPasscode() async {
         let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
         let phone = ScriptedPhone(sends: [.reply(WatchReply(.ok, ticket: Self.ticket))])
         let open = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: Drafts(kept), pause: {})
         await open.afterRead(.unreachable(.notReachable))
         await open.afterRead(.loading)
-        let noPasscode = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode(), drafts: Drafts(kept), pause: {})
+        let noPasscodeFile = Drafts(kept)
+        let noPasscode = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode(), drafts: noPasscodeFile, pause: {})
         await noPasscode.afterRead(Self.loaded)
         XCTAssertTrue(phone.asked.isEmpty)
         XCTAssertEqual(open.kept, kept)
-        XCTAssertEqual(noPasscode.kept, kept)
+        XCTAssertNil(noPasscode.kept)
+        XCTAssertNil(noPasscodeFile.kept)
+    }
+
+    /// A watch whose passcode is turned off after a message was kept: the next open or put-away deletes it, unsent, as the
+    /// Inbox's `checkLock` does its lines. While the passcode stays, the check keeps it.
+    func testAKeptMessageIsDeletedWhenThePasscodeIsTurnedOff() async {
+        let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
+        let phone = ScriptedPhone(sends: [])
+        let drafts = Drafts(kept)
+        let lock = SwitchedLock()
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: lock, drafts: drafts, pause: {})
+        model.checkLock()
+        XCTAssertEqual(model.kept, kept)
+        XCTAssertEqual(drafts.kept, kept)
+        lock.on = false
+        model.checkLock()
+        XCTAssertNil(model.kept)
+        XCTAssertNil(drafts.kept)
+        XCTAssertTrue(phone.asked.isEmpty)
+    }
+
+    /// A passcode that can be turned off mid-test.
+    private final class SwitchedLock: WristLock {
+        var on = true
+        var isSecure: Bool { on }
     }
 
     /// Delete sends nothing; a phone that says it's signed out deletes it too, and so does one that answers the kept Send so.
