@@ -1183,6 +1183,8 @@ final class TafsCloud {
         /// The taf's `ask_coach` cards, the settings it hands to Coach (kiff/tafs#476, gap 15):
         /// the only cards of a taf's own thread the app draws.
         var askCoach: [AskCoachCard] = []
+        /// The loop cards a run waits on in the taf's own chat ("Still reading": Read on / Stop here), in tafs cloud's words.
+        var loopCards: [LoopCard] = []
         /// The latest run ended without an answer (`ai_unavailable`, or an uncoded `ERROR`): tafs
         /// cloud's words for it, drawn as the chat's last line. As Android's `Thread.failed`.
         var failed: RunFailed? = nil
@@ -1225,6 +1227,56 @@ final class TafsCloud {
                       let text = shown.component.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { card = nil; return }
                 card = AskCoachCard(id: shown.component.id, at: shown.at, session: shown.session ?? "", text: text)
             }
+        }
+    }
+
+    /// The loop card (docs/chat.md): kiff/agents' `confirm` with id `tafs-loop-N` and `loop: {tool, pages}`, shown when a run
+    /// read page after page of one list. Its title, line and two answers are tafs cloud's words ("Still reading", Read on /
+    /// Stop here); the app keeps their values (`tafs_loop_continue`, `tafs_loop_summarise`) and sends the one tapped.
+    struct LoopCard: Equatable, Identifiable {
+        struct Option: Equatable { let label: String; let value: String }
+        let id: String
+        let at: Date
+        let session: String
+        let title: String
+        let text: String
+        let options: [Option]
+        /// tafs cloud's words for how it was answered, once it was; nil while it waits.
+        var answered: String?
+
+        /// One card of a thread's `components`: a `confirm` that carries `loop`, with its words and at least one option, else
+        /// nil. One the app can't read is nil too, never the thread with it.
+        struct Lenient: Decodable {
+            let card: LoopCard?
+            init(from decoder: Decoder) throws {
+                struct Opt: Decodable { let label: String?; let value: String? }
+                struct Loop: Decodable {}
+                struct Component: Decodable { let type: String; let id: String; let loop: Loop?; let title: String?; let text: String?; let options: [Opt]? }
+                struct Answer: Decodable { let state: String?; let words: String? }
+                struct Shown: Decodable { let at: Date; let session: String?; let component: Component; let answer: Answer? }
+                guard let shown = try? Shown(from: decoder), shown.component.type == "confirm", shown.component.loop != nil,
+                      shown.component.id.hasPrefix("tafs-loop-") else { card = nil; return }
+                let options = (shown.component.options ?? []).compactMap { o -> Option? in
+                    guard let label = o.label?.trimmingCharacters(in: .whitespacesAndNewlines), !label.isEmpty,
+                          let value = o.value, !value.isEmpty else { return nil }
+                    return Option(label: label, value: value)
+                }
+                guard !options.isEmpty else { card = nil; return }
+                let answered = shown.answer.map { a in (a.words ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
+                card = LoopCard(id: shown.component.id, at: shown.at, session: shown.session ?? "",
+                                title: shown.component.title ?? "", text: shown.component.text ?? "", options: options,
+                                answered: answered)
+            }
+        }
+    }
+
+    /// One of a thread's `components`, read as each card the app draws in a taf's chat.
+    struct ThreadCard: Decodable {
+        let askCoach: AskCoachCard?
+        let loop: LoopCard?
+        init(from decoder: Decoder) throws {
+            askCoach = (try? AskCoachCard.Lenient(from: decoder))?.card
+            loop = (try? LoopCard.Lenient(from: decoder))?.card
         }
     }
 
@@ -1305,13 +1357,13 @@ final class TafsCloud {
             /// Where the latest run stopped without finishing, any stop tafs cloud names (`turn_cap`,
             /// `cost_cap`, `max_token`, `refused`); `capped` carries the two caps alone, for older apps.
             var stopped: LenientCap? = nil
-            var components: [AskCoachCard.Lenient]? = nil
+            var components: [ThreadCard]? = nil
             var failed: RunFailed.Lenient? = nil
         }
         let r: Response = try await send("GET", path)
         return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run, steering: r.steering?.steering,
-                      capped: r.stopped?.capped ?? r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.card),
-                      failed: r.failed?.failed)
+                      capped: r.stopped?.capped ?? r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.askCoach),
+                      loopCards: (r.components ?? []).compactMap(\.loop), failed: r.failed?.failed)
     }
 
     /// What tafs cloud did with a message written to the run at work.
