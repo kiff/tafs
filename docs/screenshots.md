@@ -103,6 +103,8 @@ demo phone (`-watch-demo`, Debug builds only), and writes five screens: `watch-1
 line), `watch-2-inbox`, `watch-3-held-call` (Approve on your phone, and Refuse), `watch-4-tafs` and `watch-5-taf` (a
 taf's page). It prints each one's size and warns if it isn't one App Store Connect takes. The test is skipped in the
 `watch` job. Nothing is uploaded: they go into the listing by hand, in the Apple Watch tab of the iOS version.
+Without a Mac, a manual run of the iOS workflow with `watch_shots` on (and `upload` off) makes them on a runner, as the
+`watch-store-shots` artifact.
 
 ## Android
 
