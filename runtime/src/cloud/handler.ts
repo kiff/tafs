@@ -3166,12 +3166,15 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   await markConnected(me.tenantID, shown, deps, lang);
   await markPlanNeeded(me.tenantID, shown, deps, lang);
   const last = messages.slice(-CHAT.maxThread);
-  // The site each of the person's messages to Coach went with (PAGE): tafs cloud's record of its host, never the page.
-  if (taf.job === SETUP_JOB && deps.coach) {
-    await Promise.all(last.filter((m) => m.from === "owner" && m.id.endsWith(".in")).map(async (m) => {
-      const host = await deps.coach!.get(pageReadKey(me.tenantID, m.id.slice(0, -".in".length))).catch(() => undefined);
-      if (typeof host === "string" && host) m.reading = host;
-    }));
+  // The site each of the person's messages to Coach went with (PAGE): tafs cloud's record of its host, never the page. One
+  // read for the whole thread, and none when no message in view is a run's own input.
+  const inputs = taf.job === SETUP_JOB && deps.coach ? last.filter((m) => m.from === "owner" && m.id.endsWith(".in")) : [];
+  if (inputs.length) {
+    const hosts = new Map((await pageReads(deps.coach!, me.tenantID, me.subject)).map((r) => [r.run, r.host]));
+    for (const m of inputs) {
+      const host = hosts.get(m.id.slice(0, -".in".length));
+      if (host) m.reading = host;
+    }
   }
   return { messages: last, components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, agreements, ...(usage ? { usage } : {}) };
 }
@@ -6332,13 +6335,26 @@ export const ATTACHMENTS = { perMessage: 5 };
 /**
  * A page Coach reads with one message (docs/chat.md, "Coach reads the page you're on"): at most `bytes` as the run
  * reads it, kiff/agents' bound (`server.MaxAside`), and a title of at most `title` characters. Its host is kept
- * `keptMs`, as long as the chat's messages, so each message says which site went with it; its text never is.
+ * `keptMs`, as long as the chat's messages, so each message says which site went with it; its text never is. Each
+ * person's last `kept` page messages are kept, more than a thread shows (`CHAT.maxThread`).
  */
-export const PAGE = { bytes: 24_000, title: 300, keptMs: 30 * 24 * 3600_000 } as const;
+export const PAGE = { bytes: 24_000, title: 300, keptMs: 30 * 24 * 3600_000, kept: 200 } as const;
 
-/** Where a run's page host is kept: by run, as the message that carried it is named. */
-export function pageReadKey(tenant: string, run: string): string {
-  return `${tenant}#page-read#${run}`;
+/**
+ * Where a person's page hosts are kept: one item for all their messages to Coach that carried a page, `{run, host}` each,
+ * newest last. A thread read reads it once, whatever its length.
+ */
+export function pageReadsKey(tenant: string, person: string): string {
+  return `${tenant}#page-reads#${person}`;
+}
+
+/** A person's kept page hosts, by the run whose message carried each: none when nothing is kept. */
+async function pageReads(store: CoachStore, tenant: string, person: string): Promise<Array<{ run: string; host: string }>> {
+  const kept = await store.get(pageReadsKey(tenant, person)).catch(() => undefined);
+  const reads = (kept as { reads?: unknown } | undefined)?.reads;
+  return Array.isArray(reads)
+    ? reads.filter((r): r is { run: string; host: string } => typeof r?.run === "string" && typeof r?.host === "string")
+    : [];
 }
 
 /**
@@ -6398,11 +6414,19 @@ function startedBy(run: { created?: unknown }, began: Date): boolean {
   return !Number.isNaN(created) && created >= began.getTime() - PAGE_RUN_MARGIN_MS;
 }
 
+/**
+ * Keeps the host of the page `run` read, beside the person's others: one read and one write, on a send that carried a page
+ * (one at a time from a person's panel). Two at once could keep one host fewer: the one message would say no `reading`.
+ */
 async function keepPageRead(me: KIFFIdentity, run: string, host: string, deps: Deps): Promise<void> {
   console.log(JSON.stringify({ event: "coach_page_read", tenant: me.tenantID, run, host }));
   if (!deps.coach) return;
   const now = deps.now?.() ?? new Date();
-  await deps.coach.put(pageReadKey(me.tenantID, run), host, new Date(now.getTime() + PAGE.keptMs)).catch(() => undefined);
+  const store = deps.coach;
+  await pageReads(store, me.tenantID, me.subject)
+    .then((reads) => store.put(pageReadsKey(me.tenantID, me.subject), { reads: [...reads, { run, host }].slice(-PAGE.kept) },
+      new Date(now.getTime() + PAGE.keptMs)))
+    .catch(() => undefined);
 }
 
 /**

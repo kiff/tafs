@@ -1,0 +1,1 @@
+- **Coach's thread reads the page hosts once.** The site each message to Coach went with is kept in one item per person, so a thread read costs one store read, not one per message. ([chat.md](docs/chat.md))
