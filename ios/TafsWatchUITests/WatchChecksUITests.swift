@@ -4,6 +4,7 @@ import XCTest
 /// app as shipped, launched with `-watch-demo`, so it asks a phone of fixed answers (`WatchDemo`) instead of a signed-in iPhone.
 /// Each test is one row of docs/parity.md's Watches table, read in the app's English words. What only a real watch can show (dictation, Hear's
 /// speaker, the system's passcode prompt) stays the owner's check on a real watch.
+@MainActor
 final class WatchChecksUITests: XCTestCase {
     private let wait: TimeInterval = 15
 
@@ -20,34 +21,67 @@ final class WatchChecksUITests: XCTestCase {
         return app
     }
 
+    /// Brings `element` into view, as the crown does: a watch's list only shows what's on screen, so it's scrolled up a
+    /// few times until the element is there (and on screen, when it's to be tapped).
+    @discardableResult
+    private func reach(_ element: XCUIElement, in app: XCUIApplication, tappable: Bool = false) -> Bool {
+        func there() -> Bool { element.exists && (!tappable || element.isHittable) }
+        if element.waitForExistence(timeout: wait), there() { return true }
+        for _ in 0..<6 {
+            app.swipeUp()
+            if element.waitForExistence(timeout: 2), there() { return true }
+        }
+        return there()
+    }
+
+    /// Taps the button with this label, brought into view first; returns where it was, so a confirmation's own button can
+    /// be told from it.
+    @discardableResult
+    private func tap(_ label: String, in app: XCUIApplication) -> CGRect {
+        let button = app.buttons[label]
+        XCTAssertTrue(reach(button, in: app, tappable: true), "\(label) on screen")
+        let frame = button.frame
+        button.tap()
+        return frame
+    }
+
     /// Opens a page from Coach's home's Menu, as the person does: Coach, Inbox, Tafs or Account.
     private func open(_ page: String, in app: XCUIApplication) {
-        let menu = app.buttons["Menu"]
-        if !menu.waitForExistence(timeout: wait) { app.swipeUp() }
-        XCTAssertTrue(menu.waitForExistence(timeout: wait), "Menu on Coach's home")
-        menu.tap()
-        let item = app.buttons[page]
-        XCTAssertTrue(item.waitForExistence(timeout: wait), "\(page) in the Menu")
-        item.tap()
+        tap("Menu", in: app)
+        tap(page, in: app)
     }
 
-    /// The last of the buttons with this label: a confirmation's own button, over the screen that asked.
-    private func confirm(_ label: String, in app: XCUIApplication) {
+    /// A confirmation's own button: the one with this label that's on screen and isn't the button that asked.
+    private func confirm(_ label: String, after asked: CGRect = .zero, in app: XCUIApplication) {
         let all = app.buttons.matching(NSPredicate(format: "label == %@", label))
-        XCTAssertTrue(all.firstMatch.waitForExistence(timeout: wait), "\(label) to confirm")
-        all.element(boundBy: max(all.count - 1, 0)).tap()
+        let end = Date().addingTimeInterval(wait)
+        while Date() < end {
+            let shown = (0..<all.count).map { all.element(boundBy: $0) }.filter { $0.exists && $0.isHittable }
+            if let own = shown.first(where: { $0.frame != asked }) {
+                own.tap()
+                return
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        }
+        XCTFail("\(label) to confirm, over the screen that asked")
     }
 
+    /// Opens a line of a list (an Inbox line, a taf) by its first words, brought into view first.
+    private func openLine(_ words: String, in app: XCUIApplication) {
+        let line = app.staticTexts[words]
+        XCTAssertTrue(reach(line, in: app, tappable: true), "\(words) in the list")
+        line.tap()
+    }
+
+    /// The screen shows these words, as a line or a button's label, scrolled into view if need be.
     private func shows(_ text: String, in app: XCUIApplication, _ why: String = "") {
-        let found = app.staticTexts[text].waitForExistence(timeout: wait) || app.buttons[text].waitForExistence(timeout: 1)
-        XCTAssertTrue(found, why.isEmpty ? "shows \"\(text)\"" : why)
+        let element = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", text)).firstMatch
+        XCTAssertTrue(reach(element, in: app), why.isEmpty ? "shows \"\(text)\"" : why)
     }
 
     private func showsText(containing text: String, in app: XCUIApplication) {
-        let match = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-        let found = match.waitForExistence(timeout: wait)
-            || app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch.waitForExistence(timeout: 1)
-        XCTAssertTrue(found, "shows a line with \"\(text)\"")
+        let element = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+        XCTAssertTrue(reach(element, in: app), "shows a line with \"\(text)\"")
     }
 
     /// Coach's home with Ask Coach, never an error or an endless wait, and the unread line under it.
@@ -62,10 +96,9 @@ final class WatchChecksUITests: XCTestCase {
     /// The Menu lists the pages in order, with Halt now apart at the bottom.
     func testTheMenuListsThePages() {
         let app = launch()
-        XCTAssertTrue(app.buttons["Menu"].waitForExistence(timeout: wait))
-        app.buttons["Menu"].tap()
+        tap("Menu", in: app)
         for page in ["Coach", "Inbox", "Tafs", "Account"] {
-            XCTAssertTrue(app.buttons[page].waitForExistence(timeout: wait), "\(page) in the Menu")
+            XCTAssertTrue(reach(app.buttons[page], in: app), "\(page) in the Menu")
         }
         shows("Halt now", in: app)
     }
@@ -77,7 +110,7 @@ final class WatchChecksUITests: XCTestCase {
         open("Inbox", in: app)
         shows("Refunds", in: app)
         shows("Late parcels", in: app)
-        app.staticTexts["Refunds"].tap()
+        openLine("Refunds", in: app)
         shows("Approve on your phone", in: app)
         XCTAssertFalse(app.buttons["Approve"].exists, "never an Approve on the watch")
         shows("Refuse", in: app)
@@ -87,11 +120,9 @@ final class WatchChecksUITests: XCTestCase {
     func testRefuseSaysRefusedNothingWasSent() {
         let app = launch()
         open("Inbox", in: app)
-        XCTAssertTrue(app.staticTexts["Refunds"].waitForExistence(timeout: wait))
-        app.staticTexts["Refunds"].tap()
-        XCTAssertTrue(app.buttons["Refuse"].waitForExistence(timeout: wait))
-        app.buttons["Refuse"].tap()
-        confirm("Refuse", in: app)
+        openLine("Refunds", in: app)
+        let asked = tap("Refuse", in: app)
+        confirm("Refuse", after: asked, in: app)
         shows("Refused. Nothing was sent.", in: app)
     }
 
@@ -110,16 +141,12 @@ final class WatchChecksUITests: XCTestCase {
     func testATafsPageAndHaltThisTaf() {
         let app = launch()
         open("Tafs", in: app)
-        XCTAssertTrue(app.staticTexts["Refunds"].waitForExistence(timeout: wait))
-        app.staticTexts["Refunds"].tap()
+        openLine("Refunds", in: app)
+        // A taf opens on its chat, with its page one swipe below: `reach` scrolls there.
         shows("What it does", in: app)
-        let settings = app.buttons["Its settings"]
-        if !settings.waitForExistence(timeout: wait) { app.swipeUp() }
-        XCTAssertTrue(settings.waitForExistence(timeout: wait), "Its settings on the taf's page")
-        settings.tap()
-        XCTAssertTrue(app.buttons["Halt this taf"].waitForExistence(timeout: wait))
-        app.buttons["Halt this taf"].tap()
-        confirm("Halt now", in: app)
+        tap("Its settings", in: app)
+        let asked = tap("Halt this taf", in: app)
+        confirm("Halt now", after: asked, in: app)
         shows("Halted Refunds.", in: app)
     }
 
@@ -127,14 +154,10 @@ final class WatchChecksUITests: XCTestCase {
     func testWithoutAPasscodeHaltSaysToSetOne() {
         let app = launch("-watch-demo-no-passcode")
         open("Tafs", in: app)
-        XCTAssertTrue(app.staticTexts["Refunds"].waitForExistence(timeout: wait))
-        app.staticTexts["Refunds"].tap()
-        let settings = app.buttons["Its settings"]
-        if !settings.waitForExistence(timeout: wait) { app.swipeUp() }
-        settings.tap()
-        XCTAssertTrue(app.buttons["Halt this taf"].waitForExistence(timeout: wait))
-        app.buttons["Halt this taf"].tap()
-        confirm("Halt now", in: app)
+        openLine("Refunds", in: app)
+        tap("Its settings", in: app)
+        let asked = tap("Halt this taf", in: app)
+        confirm("Halt now", after: asked, in: app)
         shows("To refuse or halt from this watch, set a screen lock on it and unlock it.", in: app)
     }
 
@@ -144,12 +167,9 @@ final class WatchChecksUITests: XCTestCase {
         open("Account", in: app)
         shows("Signed in", in: app)
         shows("owner@example.com", in: app)
-        let signOut = app.buttons["Sign out"]
-        if !signOut.waitForExistence(timeout: wait) { app.swipeUp() }
-        XCTAssertTrue(signOut.waitForExistence(timeout: wait), "Sign out on Account")
-        signOut.tap()
+        let asked = tap("Sign out", in: app)
         shows("Sign out on this watch?", in: app)
-        confirm("Sign out", in: app)
+        confirm("Sign out", after: asked, in: app)
         shows("Signed out on this watch. Your phone stays signed in.", in: app)
     }
 
