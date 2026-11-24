@@ -209,8 +209,15 @@ final class KIFFClient {
     /// Whether KIFF takes `method` on `path` only signed by the approval key, once the
     /// session has one (kiff/tafs#233): submitting a draft (from a phone it is confirmed at
     /// once, so it issues Cards: Coach's, and Setup's with none), confirming one, plain or as
-    /// a trial, and resuming a halt. Ending a trial takes authority away: the current key.
+    /// a trial, and resuming a halt; and adding someone to a group, or changing their role in it
+    /// (group changes B: KIFF takes the member `PUT` signed by either key, and records which).
+    /// Ending a trial, and taking someone out of a group, take authority away: the current key.
     static func grantsAuthority(_ method: String, _ path: String) -> Bool {
+        if method == "PUT" {
+            // /v1/groups/{group}/members/{subject}: exactly six parts, both ids set.
+            let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+            return parts.count == 6 && path.hasPrefix("/v1/groups/") && parts[4] == "members" && !parts[3].isEmpty && !parts[5].isEmpty
+        }
         guard method == "POST" else { return false }
         // Opening an approval window stands for a Face ID: only the approval key opens one (kiff/tafs#494).
         if path == windowPath { return true }

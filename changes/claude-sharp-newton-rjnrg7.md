@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac:** adding someone to a group, or changing their role in it, is now signed by the approval key, as sharing a taf is; taking someone out stays with the current key ([accounts.md](docs/accounts.md)).

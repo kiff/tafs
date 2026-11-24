@@ -378,7 +378,8 @@ final class ApprovalKeyTests: XCTestCase {
     }
 
     /// Sharing a taf gives people its use: signed by the approval key, under one Face ID for
-    /// the whole share. Taking a share away, and a group's changes, are the current key's.
+    /// the whole share, as adding someone to a group is (group changes B). Taking a share away
+    /// is the current key's.
     func testSharingIsSignedByTheApprovalKeyAndUnsharingIsNot() async throws {
         let signer = TwoKeySigner()
         let model = await signedIn(signer)
@@ -406,7 +407,8 @@ final class ApprovalKeyTests: XCTestCase {
         let added = await model.changePeople("Add ana@acme.test to Support") { try await $0.setGroupMember("grp_support", subject: "user_ana", role: "member") }
         XCTAssertTrue(added, model.peopleError ?? "")
         let put = try XCTUnwrap(sent("PUT", "/v1/groups/grp_support/members/user_ana").first)
-        XCTAssertTrue(put.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=current") == true)
+        XCTAssertTrue(put.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=approval") == true,
+                      "adding someone to a group gives them its tafs: the approval key (group changes B)")
         // What KIFF says, read again after the change.
         XCTAssertEqual(model.groups.map(\.name), ["Support"])
         XCTAssertEqual(model.me?.label, "ana@acme.test")
@@ -455,6 +457,18 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/agents/rae-k3f9/grants"), "sharing a taf gives its use")
         XCTAssertFalse(KIFFClient.grantsAuthority("DELETE", "/v1/agents/rae-k3f9/grants?group=grp_1"), "unsharing takes it away")
         XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/groups"))
+        // Group changes B: adding someone to a group, or changing their role, is the approval key's;
+        // taking them out, and the group itself, stay the current key's.
+        XCTAssertTrue(KIFFClient.grantsAuthority("PUT", "/v1/groups/grp_1/members/user_ana"), "adding someone gives them the group's tafs")
+        XCTAssertFalse(KIFFClient.grantsAuthority("DELETE", "/v1/groups/grp_1/members/user_ana"), "taking someone out takes use away")
+        XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/groups/grp_1/members/user_ana"))
+        XCTAssertFalse(KIFFClient.grantsAuthority("PUT", "/v1/groups/grp_1"), "renaming a group")
+        XCTAssertFalse(KIFFClient.grantsAuthority("PUT", "/v1/groups/grp_1/members"))
+        XCTAssertFalse(KIFFClient.grantsAuthority("PUT", "/v1/groups//members/user_ana"))
+        XCTAssertFalse(KIFFClient.grantsAuthority("PUT", "/v1/groups/grp_1/members/"))
+        XCTAssertFalse(KIFFClient.grantsAuthority("PUT", "/v1/groups/grp_1/people/user_ana"))
+        XCTAssertFalse(KIFFClient.grantsAuthority("PUT", "/v1/groups/grp_1/members/user_ana/role"))
+        XCTAssertFalse(KIFFClient.grantsAuthority("PUT", "/v1/agents/rae-k3f9/members/user_ana"))
     }
 
     /// Groups and sharing are each the person's act behind Face ID, as KIFF asks of a phone.

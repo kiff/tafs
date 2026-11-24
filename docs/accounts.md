@@ -168,7 +168,9 @@ the account's owner.
 **People and groups**, in Settings (`PeopleGroupsView`): the account's groups, each with
 its people and the tafs it uses. A group's manager sees the group's work on those tafs;
 its members use them. Making a group, renaming it, adding or removing someone, and
-making them its manager are each signed behind Face ID.
+making them its manager are each signed behind Face ID. Adding someone, or changing their
+role, gives them the group's tafs, so the approval key signs it, as sharing a taf; taking
+someone out, and the group itself, are the current key's.
 
 **Share** on a taf's page (`ShareTafSheet`), for whoever manages it, is two steps: who
 uses it (a group, or one person), then what that means for them, then one Face ID for
