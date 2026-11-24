@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Runner } from "../src/runner.js";
+import { Runner, RUN_IDLE_MS } from "../src/runner.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 
 // The paired phone: it signs each grant's sites (tafs-chrome/sites/v1) and sensitive allowances.
@@ -534,19 +534,20 @@ test("on a checkout page a taf clicks nothing, and a dialog the page raised stop
   assert.equal(r2.runs.get("run_1").failures, 1);
 });
 
-test("a run nobody sends a step to for five minutes ends, as Stop does (its tabs stay); a paused one, or one with a step running, is not", async () => {
+test("a run nobody sends a step to for 150 s ends, as Stop does (its tabs stay); a paused one, or one with a step running, is not", async () => {
+  assert.equal(RUN_IDLE_MS, 150_000, "a little over planque's 2 minutes between a turn's calls");
   let clock = 1_000_000;
   const c = fakeChrome();
   const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock });
   await r.handle(step());
-  clock += 4 * 60_000;
+  clock += 2 * 60_000;
   await r.sweep();
-  assert.equal(r.runs.get("run_1").stopped, false, "four minutes is not idle");
+  assert.equal(r.runs.get("run_1").stopped, false, "two minutes, planque's wait for the turn's next call, is not idle");
   assert.ok((await r.handle(step({ op: "read" }))).page, "a step starts the count again");
-  clock += 4 * 60_000;
+  clock += 2 * 60_000;
   await r.sweep();
   assert.equal(r.runs.get("run_1").stopped, false);
-  clock += 2 * 60_000;
+  clock += 31_000;
   await r.sweep();
   assert.equal(r.runs.get("run_1").stopped, true);
   assert.ok(!c.calls.some((x) => x[0] === "windows.remove" || x[0] === "tabs.remove"), "its tabs stay for the person");
@@ -994,4 +995,26 @@ test("Stop on the bar ends the run at once, for that tab's run only; a hand-over
   assert.deepEqual(answers.at(-1), { hand: "h1", outcome: "declined", page: null });
   assert.equal((await r.handle(step({ op: "read" }))).error.code, "stopped", "planque's next step is told the person stopped it");
   assert.ok(!c.calls.some((x) => x[0] === "tabs.remove"), "its tabs stay, as with Stop");
+});
+
+test("the person closing a run's last tab ends the run as their Stop; closing one of two, or a tab of no run, doesn't", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const [first] = [...r.runs.get("run_1").tabs];
+  // A pop-up of the run's page joins it: closing it leaves the run working in its first tab.
+  c.listeners.created({ sourceTabId: first, tabId: 555, url: "https://shop.example/help" });
+  c.listeners.removed(555);
+  await new Promise((done) => setTimeout(done, 0));
+  assert.equal(r.runs.get("run_1").stopped, false, "one of two closed: the run goes on");
+  c.listeners.removed(999);
+  await new Promise((done) => setTimeout(done, 0));
+  assert.equal(r.runs.get("run_1").stopped, false, "a tab of no run changes nothing");
+  c.listeners.removed(first);
+  await new Promise((done) => setTimeout(done, 0));
+  assert.equal(r.runs.get("run_1").stopped, true, "its last tab closed: the run ends");
+  const last = r.state()[0].steps.at(-1);
+  assert.deepEqual([last.op, last.by], ["stop", "person"]);
+  assert.ok(!r.state().some((x) => !x.stopped), "nothing says a taf works");
+  assert.equal((await r.handle(step({ op: "read" }))).error.code, "stopped", "and planque's next step on it is told");
 });
