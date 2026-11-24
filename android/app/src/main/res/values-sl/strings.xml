@@ -578,6 +578,9 @@
     <string name="chat_it_lower">on</string>
     <string name="chat_jump_latest_something_new">Skoči na najnovejše, nekaj novega</string>
     <string name="chat_jump_to_latest">Skoči na najnovejše</string>
+    <string name="chat_link_confirm_body">Prihaja s strani, ki jo je prebral Coach. Vodi na: %1$s</string>
+    <string name="chat_link_confirm_open">Odpri</string>
+    <string name="chat_link_confirm_title">Odprem to povezavo?</string>
     <string name="chat_message_carries_most_files">Sporočilo nese največ %1$s datotek.</string>
     <string name="chat_message_taf">Piši %1$s</string>
     <string name="chat_message_your_taf">Piši svojemu tafu</string>

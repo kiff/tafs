@@ -578,6 +578,9 @@
     <string name="chat_it_lower">on</string>
     <string name="chat_jump_latest_something_new">Przejdź do najnowszych, jest coś nowego</string>
     <string name="chat_jump_to_latest">Przejdź do najnowszych</string>
+    <string name="chat_link_confirm_body">Pochodzi ze strony, którą przeczytał Coach. Prowadzi do: %1$s</string>
+    <string name="chat_link_confirm_open">Otwórz</string>
+    <string name="chat_link_confirm_title">Otworzyć ten link?</string>
     <string name="chat_message_carries_most_files">Wiadomość mieści najwyżej %1$s plików.</string>
     <string name="chat_message_taf">Napisz do %1$s</string>
     <string name="chat_message_your_taf">Napisz do swojego tafa</string>

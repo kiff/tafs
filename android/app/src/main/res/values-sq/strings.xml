@@ -522,6 +522,9 @@
     <string name="chat_it_lower">ai</string>
     <string name="chat_jump_latest_something_new">Shkoni te e fundit, ka diçka të re</string>
     <string name="chat_jump_to_latest">Shkoni te e fundit</string>
+    <string name="chat_link_confirm_body">Vjen nga një faqe që lexoi Coach. Të çon te: %1$s</string>
+    <string name="chat_link_confirm_open">Hap</string>
+    <string name="chat_link_confirm_title">Të hapet kjo lidhje?</string>
     <string name="chat_message_carries_most_files">Një mesazh mban më së shumti %1$s skedarë.</string>
     <string name="chat_message_taf">Mesazh për %1$s</string>
     <string name="chat_message_your_taf">Mesazh për taf-in tuaj</string>

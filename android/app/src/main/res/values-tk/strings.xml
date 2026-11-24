@@ -522,6 +522,9 @@
     <string name="chat_it_lower">ol</string>
     <string name="chat_jump_latest_something_new">Iň soňkusyna geçiň, täze bir zat bar</string>
     <string name="chat_jump_to_latest">Iň soňkusyna geçiň</string>
+    <string name="chat_link_confirm_body">Ol Coach-yň okan sahypasyndan geldi. Ol şu ýere alyp barýar: %1$s</string>
+    <string name="chat_link_confirm_open">Aç</string>
+    <string name="chat_link_confirm_title">Bu baglanyşyk açylsynmy?</string>
     <string name="chat_message_carries_most_files">Bir habar iň köp %1$s faýl göterýär.</string>
     <string name="chat_message_taf">%1$s-a habar iberiň</string>
     <string name="chat_message_your_taf">taf-yňyza habar iberiň</string>

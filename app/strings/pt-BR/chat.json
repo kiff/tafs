@@ -22,6 +22,7 @@
   },
   "chat.file.unreadable": "Não foi possível ler esse arquivo.",
   "chat.file.uploading": "Enviando",
+  "chat.link_confirm_title": "Abrir este link?",
   "chat.message_carries_most_files": "Uma mensagem leva no máximo {per_message} arquivos.",
   "chat.needs_you": "Precisa de você · ",
   "chat.not_on_cloud": "Este taf não está funcionando no tafs cloud, por isso não pode receber mensagens.",

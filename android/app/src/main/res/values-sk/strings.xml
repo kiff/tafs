@@ -550,6 +550,9 @@
     <string name="chat_it_lower">on</string>
     <string name="chat_jump_latest_something_new">Prejsť na najnovšie, je tu niečo nové</string>
     <string name="chat_jump_to_latest">Prejsť na najnovšie</string>
+    <string name="chat_link_confirm_body">Pochádza zo stránky, ktorú Coach prečítal. Vedie na: %1$s</string>
+    <string name="chat_link_confirm_open">Otvoriť</string>
+    <string name="chat_link_confirm_title">Otvoriť tento odkaz?</string>
     <string name="chat_message_carries_most_files">Správa unesie najviac %1$s súborov.</string>
     <string name="chat_message_taf">Napísať %1$s</string>
     <string name="chat_message_your_taf">Napísať svojmu tafu</string>

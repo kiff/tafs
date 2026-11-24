@@ -1,0 +1,1 @@
+- **Words for the link confirm** (iPhone, iPad, Android): "Open this link?", saying it came from a page Coach read and where it goes, in all 44 languages, ready for the apps to ask before opening a link from a page turn ([chat.md](docs/chat.md)).
