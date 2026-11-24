@@ -1,0 +1,1 @@
+• ‘Limiet verhogen’ toont nu de huidige uitgavenlimiet voordat je die verhoogt, in de valuta van je account.
