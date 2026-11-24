@@ -101,5 +101,16 @@
   "aside_off": {"message": "Không ở trang web này"},
   "aside_on": {"message": "Đọc trang web này"},
   "aside_off_line": {"message": "Coach không đọc $HOST$: bạn đã tắt", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach không đọc $HOST$: trang ngân hàng, thanh toán, thư hoặc sức khỏe", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach không đọc $HOST$: trang ngân hàng, thanh toán, thư hoặc sức khỏe", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach không đọc trang bạn đang mở." },
+  "page_consent_turn_on": { "message": "Cho Coach đọc trang…" },
+  "page_consent_title": { "message": "Cho Coach đọc trang phía trước khi bạn gửi?" },
+  "page_consent_what": { "message": "Khi bạn gửi tin nhắn cho Coach tại đây, văn bản của thẻ phía trước trong cửa sổ này sẽ đi kèm: địa chỉ của nó (không có phần sau ? hoặc #), tiêu đề và các từ. Mật khẩu, số thẻ và mã trên trang được bỏ ra." },
+  "page_consent_when": { "message": "Chỉ khi bạn gửi, chỉ thẻ đó, và không bao giờ là trang ngân hàng, thanh toán, thư hay sức khỏe, hoặc trang bạn đã tắt." },
+  "page_consent_never": { "message": "Nó đến tafs, nơi gửi nó đến Claude của Anthropic để trả lời bạn, như tin nhắn của bạn. tafs chỉ giữ tên trang web, không bao giờ giữ trang; câu trả lời của Coach có thể trích dẫn nó." },
+  "page_consent_change": { "message": "Bạn có thể gửi tin nhắn không kèm trang bất cứ lúc nào, và dừng việc này tại đây khi bạn muốn." },
+  "page_consent_allow": { "message": "Cho phép" },
+  "page_consent_not_now": { "message": "Để sau" },
+  "page_consent_withdraw": { "message": "Ngừng đọc trang" },
+  "coach_send_alone": { "message": "Gửi không kèm trang" }
 }

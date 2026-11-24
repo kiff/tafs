@@ -42,7 +42,7 @@ import { maskedPath, normalHost, pageSiteRefused } from "./page-sites.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
+import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone, givePageConsent, pageConsentOf, pageConsentView, withdrawPageConsent } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
@@ -144,6 +144,8 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/me/suggestions             the account's "Show suggestions" setting, with its words
  *   GET  /v1/me/ai-consent              whether this person allowed AI use, with the consent screen's words
  *   POST /v1/me/ai-consent              {version}: they allow it; DELETE withdraws it (docs/accounts.md)
+ *   GET  /v1/me/page-consent            whether this person lets Coach read the page in front with a message (docs/chrome.md)
+ *   POST /v1/me/page-consent            {version}: they allow it, from the extension's own screen; DELETE withdraws it
  *   PUT  /v1/me/suggestions             {show}: a manager turns suggestions off for good, or on again
  *   GET  /v1/me/business                what tafs know about the business, read-only: Coach changes it on the person's confirmed draft (docs/labels.md)
  *   GET  /v1/missions/{id}/log          ?before=: a mission's log, newest first, a page at a time, read-only (docs/missions.md)
@@ -825,6 +827,19 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       if (deps.aiConsent) await settleConsent(deps, me.tenantID).catch((err) => console.error(`consent: settle: ${(err as Error).message}`));
     }
     return { consent: aiConsentView(await aiConsentOf(deps.coach, me.tenantID, me.subject), lang) };
+  }
+  if (parts.length === 3 && parts[1] === "me" && parts[2] === "page-consent" && (method === "GET" || method === "POST" || method === "DELETE")) {
+    // Coach reading the page in front (consent.ts): each person's own, given and withdrawn in the extension. It grants no
+    // authority and waits on nothing: without it, a page sent with a message is dropped and the message goes alone.
+    const me = await person(event, deps);
+    if (method !== "GET") {
+      if (!deps.coach) throw new HTTPError(503, "the consent can't be kept here");
+      if (method === "DELETE") await withdrawPageConsent(deps.coach, me.tenantID, me.subject, deps.now?.() ?? new Date());
+      else if (await givePageConsent(deps.coach, me.tenantID, me.subject, parseBody(event).version, deps.now?.() ?? new Date()) === "stale") {
+        throw new HTTPError(409, "the page consent's words changed: read them again", { consent: pageConsentView(undefined) });
+      }
+    }
+    return { consent: pageConsentView(await pageConsentOf(deps.coach, me.tenantID, me.subject)) };
   }
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
@@ -3930,7 +3945,7 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps,
   await requireAIConsent(event, me, deps);
   const owner = chatText(event, files(event).length > 0);
   // Refused before anything else: a page that can't go never leaves a message that went without it.
-  pageOf(event, taf);
+  await pageFor(event, me, taf, deps);
   // The app's id for this message: sent again (its fallback after a stream that failed), it's answered from
   // what the first send did, never acted on twice.
   const key = clientMessageKey(event, me);
@@ -5004,7 +5019,7 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   const attached = files(event);
   if (attached.length) at.attachments = attached;
   if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
-  const page = pageOf(event, taf);
+  const page = await pageFor(event, me, taf, deps);
   withPage(at, page);
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const input = await withCoachSkills(me, taf, at, text, event, deps);
@@ -6423,6 +6438,15 @@ async function pageReads(store: CoachStore, tenant: string, person: string, now:
  * 400, and nothing starts. A message that answers a card waiting in the chat goes on with the person's words alone,
  * and says no `reading`: only a message whose run read the page says which site went with it.
  */
+async function pageFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ host: string; aside: string } | undefined> {
+  const raw = parseBody(event).page;
+  if (raw === undefined || raw === null) return undefined;
+  // Without the person's page consent the page is dropped here: never checked, read, kept or logged, and the message
+  // goes alone, on their AI consent as ever (consent.ts).
+  if (!await pageConsentOf(deps.coach, me.tenantID, me.subject)) return undefined;
+  return pageOf(event, taf);
+}
+
 function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | undefined {
   const raw = parseBody(event).page;
   if (raw === undefined || raw === null) return undefined;
@@ -6931,7 +6955,7 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
     await requireAIConsent(event, me, deps);
     const attached = files(event);
     const owner = chatText(event, attached.length > 0);
-    const page = pageOf(event, taf);
+    const page = await pageFor(event, me, taf, deps);
     // The app's id for this message: sent again, it gets what the first send did, never a second run.
     const key = clientMessageKey(event, me);
     const again = key ? await sentBefore(event, me, taf, key, owner, deps) : undefined;

@@ -74,11 +74,26 @@
         <ol id="coachThread" class="thread"></ol>
         <p id="coachPhone" class="note" data-m="approve_on_phone" hidden></p>
         <p id="coachNote" class="note"></p>
-        <p id="coachReads" class="note" hidden><span id="coachReadsWords"></span> <button type="button" id="coachReadsSwitch" class="quiet small" hidden></button></p>
+        <p id="coachReads" class="note" hidden><span id="coachReadsWords"></span> <button type="button" id="coachReadsSwitch" class="quiet small" hidden></button> <button type="button" id="pageConsentStop" class="quiet small" data-m="page_consent_withdraw" hidden></button></p>
+        <p id="pageConsentOff" class="note" hidden><span data-m="page_consent_off"></span> <button type="button" id="pageConsentOpen" class="quiet small" data-m="page_consent_turn_on"></button></p>
+        <section id="pageConsent" class="card" hidden>
+          <p><strong data-m="page_consent_title"></strong></p>
+          <ul>
+            <li data-m="page_consent_what"></li>
+            <li data-m="page_consent_when"></li>
+            <li data-m="page_consent_never"></li>
+            <li data-m="page_consent_change"></li>
+          </ul>
+          <div class="buttons">
+            <button type="button" id="pageConsentAllow" data-m="page_consent_allow"></button>
+            <button type="button" id="pageConsentNotNow" class="quiet" data-m="page_consent_not_now"></button>
+          </div>
+        </section>
         <form id="coachForm">
           <textarea id="coachWords" rows="3" maxlength="2000" data-m-placeholder="coach_placeholder"></textarea>
           <div class="buttons">
             <button type="submit" data-m="coach_send"></button>
+            <button type="button" id="coachSendAlone" class="quiet" data-m="coach_send_alone" hidden></button>
           </div>
         </form>
       </section>

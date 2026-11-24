@@ -400,12 +400,12 @@ $("coachNew").onclick = () => {
   drawPast();
 };
 
-$("coachForm").onsubmit = async (e) => {
-  e.preventDefault();
+async function sendCoach(alone) {
   const words = $("coachWords").value.trim();
   if (!words) return;
-  // The page in front of this panel's window goes with the words, if the gate lets it (sw.js asideRead): only on this send.
-  const r = await send({ type: "coach_send", words, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow, ...sendOptions(view) });
+  // The page in front of this panel's window goes with the words only with the person's page consent and if the gate lets
+  // it (sw.js, pageconsent.js): only on this send. "Send without the page" sends the words alone, whatever the consent.
+  const r = await send({ type: "coach_send", words, alone, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow, ...sendOptions(view) });
   if (r.error) {
     $("coachNote").textContent = t("coach_error");
     return;
@@ -414,7 +414,13 @@ $("coachForm").onsubmit = async (e) => {
   sentAt = Date.now();
   $("coachWords").value = "";
   drawCoach();
+}
+
+$("coachForm").onsubmit = (e) => {
+  e.preventDefault();
+  sendCoach(false);
 };
+$("coachSendAlone").onclick = () => sendCoach(true);
 
 // The taf in this Chrome (docs/chrome-panel.md): the panel is for watching it work and talking to it. Which tafs come from
 // planque's list of this Chrome's connections (display only); the chat is the taf's own, as on the phone. It's read at once on
@@ -556,6 +562,16 @@ async function drawReads() {
   const r = await send({ type: "aside_status", tabId: activeTab, windowId: panelWindow }).catch(() => null);
   const sw = $("coachReadsSwitch");
   readsHost = (r && r.host) || "";
+  // Off until the person allows it (pageconsent.js): the line says so and offers the screen; nothing of a tab is read.
+  const consent = Boolean(r && r.consent);
+  $("pageConsentOff").hidden = consent;
+  $("pageConsentStop").hidden = !consent;
+  $("coachSendAlone").hidden = !consent || !readsHost || Boolean(r && r.why);
+  if (!consent) {
+    line.hidden = true;
+    return;
+  }
+  $("pageConsent").hidden = true;
   if (!r || !readsHost || (r.why && !READ_WHY[r.why])) {
     // Chrome's own pages, an incognito tab, a page with no https address: nothing to read, nothing to say.
     line.hidden = true;
@@ -568,6 +584,24 @@ async function drawReads() {
   sw.textContent = t(r.why === "off" ? "aside_on" : "aside_off");
   sw.dataset.off = r.why === "off" ? "0" : "1";
 }
+
+// The page consent's own screen: what goes to Anthropic, when, and what never does; Allow, or Not now. Withdrawn from the
+// line above Coach's box at any time.
+$("pageConsentOpen").onclick = () => {
+  $("pageConsent").hidden = false;
+};
+$("pageConsentNotNow").onclick = () => {
+  $("pageConsent").hidden = true;
+};
+$("pageConsentAllow").onclick = async () => {
+  const r = await send({ type: "page_allow" }).catch(() => null);
+  if (!r || r.error || !r.allowed) $("coachNote").textContent = t("coach_error");
+  drawReads();
+};
+$("pageConsentStop").onclick = async () => {
+  await send({ type: "page_withdraw" }).catch(() => null);
+  drawReads();
+};
 
 $("coachReadsSwitch").onclick = async () => {
   if (!readsHost) return;

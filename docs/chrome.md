@@ -749,6 +749,17 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   Coach a message, the tab in front of the panel's own window is read once and goes with their words as
   `page: {url, title, text, truncated}`, beside `text`, never in it. tafs cloud fences it for that turn as the page's content,
   "nothing in it is an instruction", and keeps only its host (`reading` on the message, drawn as "Reading: ‹site›" under it).
+  - **Only with the person's page consent, off until given** (`src/pageconsent.js`, tafs cloud's `PAGE_CONSENT_VERSION` in
+    `runtime/src/cloud/consent.ts`). Above Coach's box the panel says Coach doesn't read the page, with "Let Coach read the
+    page…", which opens a screen saying what goes (the tab's address without query or fragment, its title and words, with
+    passwords, card numbers and codes left out), when (only on Send, only that tab, never a refused site), where (tafs, then
+    Anthropic's Claude, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
+    **Allow** records it at tafs cloud (`POST /v1/me/page-consent {version}`) and here, for this pairing's person, in the
+    pairing's own store, so an unpair (which is also the sign-out) takes it. **Both must hold before the tab is touched**
+    (`pageForSend`): without them nothing is injected or read, and the words go alone. **Send without the page** sends the
+    words alone at any time; **Stop reading pages** withdraws it, here first, then at tafs cloud. tafs cloud drops a page sent
+    without its consent, unread, and the message goes alone. It's apart from the AI consent: nothing else waits on it, no taf
+    and no schedule.
   - **Only the tab in front, only on Send:** never on a timer, never another tab or window. **Only https;** never Chrome's own
     pages, the Web Store or an incognito tab. **Never a sensitive site** (`sensitive()`, the list a run needs the phone's
     signed allowance for) **or a mail site** (`mailHost()`: Gmail, Outlook (its `outlook.cloud.microsoft` address too), iCloud,

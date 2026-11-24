@@ -101,5 +101,16 @@
   "aside_off": {"message": "Ոչ այս կայքում"},
   "aside_on": {"message": "Կարդալ այս կայքը"},
   "aside_off_line": {"message": "Coach-ը չի կարդում $HOST$-ը․ դուք անջատել եք", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach-ը չի կարդում $HOST$-ը․ բանկի, վճարման, փոստի կամ առողջության կայք է", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach-ը չի կարդում $HOST$-ը․ բանկի, վճարման, փոստի կամ առողջության կայք է", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach-ը չի կարդում այն էջը, որում եք։" },
+  "page_consent_turn_on": { "message": "Թույլ տալ Coach-ին կարդալ էջը…" },
+  "page_consent_title": { "message": "Թույլ տա՞լ Coach-ին ուղարկելիս կարդալ առջևի էջը։" },
+  "page_consent_what": { "message": "Երբ այստեղ հաղորդագրություն եք ուղարկում Coach-ին, դրա հետ գնում է այս պատուհանի առջևի ներդիրի տեքստը՝ հասցեն (առանց ? կամ #-ից հետո եղածի), վերնագիրը և բառերը։ Էջի գաղտնաբառերը, քարտի համարները և կոդերը դուրս են մնում։" },
+  "page_consent_when": { "message": "Միայն ուղարկելիս, միայն այդ ներդիրը, և երբեք բանկի, վճարման, փոստի կամ առողջության կայք կամ ձեր անջատած կայք։" },
+  "page_consent_never": { "message": "Այն գնում է tafs, որն այն ուղարկում է Anthropic-ի Claude-ին՝ ձեզ պատասխանելու համար, ինչպես ձեր հաղորդագրությունը։ tafs-ը պահում է միայն կայքի անունը, երբեք՝ էջը. Coach-ի պատասխանը կարող է մեջբերել դրանից։" },
+  "page_consent_change": { "message": "Ցանկացած պահի կարող եք հաղորդագրություն ուղարկել առանց էջի և այստեղ դադարեցնել սա, երբ ուզեք։" },
+  "page_consent_allow": { "message": "Թույլ տալ" },
+  "page_consent_not_now": { "message": "Ոչ հիմա" },
+  "page_consent_withdraw": { "message": "Դադարեցնել էջերի կարդալը" },
+  "coach_send_alone": { "message": "Ուղարկել առանց էջի" }
 }

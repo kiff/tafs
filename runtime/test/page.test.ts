@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { readEvents } from "../src/cloud/agents.js";
 import { PAGE_TOOLS, TOOLS } from "../src/cloud/coach.js";
 import { handle, handleStream, type HTTPEvent, PAGE, pageReadsKey, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { givePageConsent, PAGE_CONSENT_VERSION, pageConsentKey } from "../src/cloud/consent.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -26,6 +27,8 @@ async function world() {
   await agents.api.putAgent("t_acme", RAE, {} as never);
   await agents.api.putAgent("t_acme", COACH, {} as never);
   agents.calls.length = 0;
+  // Ana let Coach read the page in front, from the extension (consent.ts): every page test but the consent's own.
+  await givePageConsent(coach, "t_acme", "u_ana", PAGE_CONSENT_VERSION, NOW);
   return { agents, tafs, coach };
 }
 type World = Awaited<ReturnType<typeof world>>;
@@ -308,5 +311,48 @@ describe("Coach reads the page the person has open, with their message", () => {
       expect(byName.get(name)?.read, name).toBe(true);
     }
     expect(PAGE_TOOLS).not.toContain("web_read");
+  });
+});
+
+describe("Coach reads the page only with the person's page consent, given in the extension", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("without it, or withdrawn, or to older words, the page is dropped unread and the message goes alone, on both routes", async () => {
+    const w = await world();
+    const logs: string[] = [];
+    for (const m of ["log", "warn", "error", "info"] as const) vi.spyOn(console, m).mockImplementation((...a: unknown[]) => { logs.push(a.map(String).join(" ")); });
+    const pageRuns = () => [...w.agents.asides.values()].filter((a) => a.aside);
+    const consent = (method: string, body?: unknown) => handle(event(method, "/v1/me/page-consent", body), deps(w)).then((r) => ({ status: r.statusCode, body: JSON.parse(r.body) }));
+
+    // Given: the page goes.
+    expect((await consent("GET")).body).toEqual({ consent: { given: true, at: NOW.toISOString(), version: PAGE_CONSENT_VERSION } });
+    expect((await send(w, COACH, { text: "What's their refund policy?", page: PAGE_SENT })).status).toBe(200);
+    expect(pageRuns()).toHaveLength(1);
+
+    // Withdrawn: the message goes alone, with no reading and no page in the run.
+    expect((await consent("DELETE")).body.consent.given).toBe(false);
+    w.agents.asides.clear();
+    const alone = await send(w, COACH, { text: "What's their refund policy?", page: PAGE_SENT });
+    expect(alone.status).toBe(200);
+    expect(alone.body.run).toBeTruthy();
+    expect((alone.body.message as { reading?: string }).reading).toBeUndefined();
+    expect(pageRuns()).toHaveLength(0);
+    // Not even checked: a page that would be refused goes unread too, and the message still goes.
+    expect((await send(w, COACH, { text: "And this one?", page: { url: "http://bank.example/", text: "x" } })).status).toBe(200);
+
+    // A yes to older words is refused, and changes nothing; the current one turns it back on.
+    expect((await consent("POST", { version: "0" })).status).toBe(409);
+    expect((await consent("GET")).body.consent.given).toBe(false);
+    expect((await consent("POST", { version: PAGE_CONSENT_VERSION })).body.consent.given).toBe(true);
+
+    // An older version kept, as after a raise: dropped again.
+    await w.coach.put(pageConsentKey("t_acme", "u_ana"), { at: NOW.toISOString(), version: "0" }, new Date(NOW.getTime() + 86_400_000));
+    w.agents.asides.clear();
+    expect((await send(w, COACH, { text: "Refunds?", page: PAGE_SENT })).status).toBe(200);
+    expect(pageRuns()).toHaveLength(0);
+
+    // The page's words are never in a log line, and nothing of it is kept but a host, which needs the consent.
+    expect(logs.join("\n")).not.toContain("Ignore the person");
+    expect(JSON.stringify([...w.coach.held.values()])).not.toContain("Ignore the person");
   });
 });

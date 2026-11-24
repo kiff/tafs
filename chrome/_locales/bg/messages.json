@@ -101,5 +101,16 @@
   "aside_off": {"message": "Не на този сайт"},
   "aside_on": {"message": "Чети този сайт"},
   "aside_off_line": {"message": "Coach не чете $HOST$: изключихте го", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach не чете $HOST$: сайт на банка, плащания, поща или здраве", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach не чете $HOST$: сайт на банка, плащания, поща или здраве", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach не чете страницата, на която сте." },
+  "page_consent_turn_on": { "message": "Разрешете на Coach да чете страницата…" },
+  "page_consent_title": { "message": "Да чете ли Coach страницата отпред, когато изпращате?" },
+  "page_consent_what": { "message": "Когато изпратите съобщение до Coach тук, с него отива текстът на раздела отпред в този прозорец: адресът му (без нищо след ? или #), заглавието и думите му. Паролите, номерата на карти и кодовете на страницата се пропускат." },
+  "page_consent_when": { "message": "Само когато изпращате, само този раздел и никога сайт на банка, плащания, поща или здраве, или сайт, който сте изключили." },
+  "page_consent_never": { "message": "Отива до tafs, който го изпраща до Claude на Anthropic, за да ви отговори, както и съобщението ви. tafs пази само името на сайта, никога страницата; отговорът на Coach може да я цитира." },
+  "page_consent_change": { "message": "Можете по всяко време да изпратите съобщение без страницата и да спрете това оттук, когато пожелаете." },
+  "page_consent_allow": { "message": "Разреши" },
+  "page_consent_not_now": { "message": "Не сега" },
+  "page_consent_withdraw": { "message": "Спри четенето на страници" },
+  "coach_send_alone": { "message": "Изпрати без страницата" }
 }
