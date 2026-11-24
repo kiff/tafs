@@ -109,7 +109,8 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   goes to the AI with that message too (it's kept nowhere), except a path segment shaped like a key or a one-time
   token (a password reset's or a sign-in link's): 32 or more hex digits, a long run mixing letters and digits, a
   JWT, or one of those between dots or after a prefix (`tok_…`), is `[masked]` whole first (`maskedPath`), while
-  names, slugs, numbers, file names, versions and ids stay. The title goes on one line. The
+  names, slugs, numbers, file names, versions and ids stay. A short numeric code (`/verify/482913`) isn't masked:
+  it can't be told from an order number. The title goes on one line. The
   chat's next message doesn't read it.
 - **A page turn's tools are read-only** (`PAGE_TOOLS`): Coach sees the person's tafs, a run, a taf's check, an
   estimate and its skills. No `web_read`, no `taf_task`, and nothing that drafts, changes or drives. A page can

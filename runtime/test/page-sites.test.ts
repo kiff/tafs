@@ -51,7 +51,8 @@ describe("the sites Coach never reads a page from, at tafs cloud", () => {
   // Invariant: a token with dots or tildes in it (a JWT, an id and its signature) or after a prefix is masked whole
   it("mask a JWT, an id with its signature and a prefixed token; keep file names and versions", () => {
     const jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxNzY0MDAwMDAwfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-    for (const t of [jwt, "12345.Xk3pQz9LmN2rT8vW5yB7cD1e", "tok_" + "a1b2c3d4e5".repeat(4), "x~9f86d081884c7d659a2feaa0c55ad015a3bf4f1b"]) {
+    for (const t of [jwt, "12345.Xk3pQz9LmN2rT8vW5yB7cD1e", "tok_" + "a1b2c3d4e5".repeat(4), "x~9f86d081884c7d659a2feaa0c55ad015a3bf4f1b",
+      "reset-9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", "t_Xk3pQz9LmN2rT8vW5yB7cD1e"]) {
       expect(tokenSegment(t), t).toBe(true);
     }
     for (const k of ["report.2024.pdf", "v1.2.3", "index.html", "late-parcels-2024.html", "my_order_history"]) {
@@ -59,6 +60,8 @@ describe("the sites Coach never reads a page from, at tafs cloud", () => {
     }
     expect(maskedPath(`/verify/${jwt}`)).toBe(`/verify/${PATH_MASK}`);
     expect(maskedPath("/files/report.2024.pdf")).toBe("/files/report.2024.pdf");
+    // A short numeric code is kept: it can't be told from an order number (docs/chat.md says so).
+    expect(maskedPath("/verify/482913")).toBe("/verify/482913");
   });
 });
 
