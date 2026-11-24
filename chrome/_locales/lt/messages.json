@@ -101,5 +101,16 @@
   "aside_off": {"message": "Ne šioje svetainėje"},
   "aside_on": {"message": "Skaityti šią svetainę"},
   "aside_off_line": {"message": "Coach neskaito $HOST$: jūs tai išjungėte", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach neskaito $HOST$: banko, mokėjimų, pašto ar sveikatos svetainė", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach neskaito $HOST$: banko, mokėjimų, pašto ar sveikatos svetainė", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach neskaito puslapio, kuriame esate." },
+  "page_consent_turn_on": { "message": "Leisti Coach skaityti puslapį…" },
+  "page_consent_title": { "message": "Ar leisti Coach siunčiant skaityti priekyje esantį puslapį?" },
+  "page_consent_what": { "message": "Kai čia siunčiate žinutę Coach, kartu su ja keliauja šio lango priekyje esančio skirtuko tekstas: jo adresas (be to, kas po ? ar #), pavadinimas ir žodžiai. Puslapyje esantys slaptažodžiai, kortelių numeriai ir kodai praleidžiami." },
+  "page_consent_when": { "message": "Tik siunčiant, tik tas skirtukas ir niekada ne banko, mokėjimų, pašto ar sveikatos svetainė ar svetainė, kurią išjungėte." },
+  "page_consent_never": { "message": "Jis siunčiamas į tafs, kuri jį perduoda Anthropic Claude, kad šis jums atsakytų, kaip ir jūsų žinutę. tafs išsaugo tik svetainės pavadinimą, niekada puslapio; Coach atsakyme gali būti iš jo citatų." },
+  "page_consent_change": { "message": "Bet kada galite išsiųsti žinutę be puslapio ir čia tai sustabdyti, kai tik norite." },
+  "page_consent_allow": { "message": "Leisti" },
+  "page_consent_not_now": { "message": "Ne dabar" },
+  "page_consent_withdraw": { "message": "Nebeskaityti puslapių" },
+  "coach_send_alone": { "message": "Siųsti be puslapio" }
 }

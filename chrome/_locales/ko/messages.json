@@ -101,5 +101,16 @@
   "aside_off": {"message": "이 사이트에서는 안 함"},
   "aside_on": {"message": "이 사이트 읽기"},
   "aside_off_line": {"message": "Coach가 $HOST$을(를) 읽지 않습니다: 꺼 두셨습니다", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach가 $HOST$을(를) 읽지 않습니다: 은행, 결제, 메일 또는 건강 사이트입니다", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach가 $HOST$을(를) 읽지 않습니다: 은행, 결제, 메일 또는 건강 사이트입니다", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach는 지금 보고 있는 페이지를 읽지 않습니다." },
+  "page_consent_turn_on": { "message": "Coach가 페이지를 읽도록 허용…" },
+  "page_consent_title": { "message": "보낼 때 Coach가 앞에 있는 페이지를 읽도록 할까요?" },
+  "page_consent_what": { "message": "여기에서 Coach에게 메시지를 보내면, 이 창의 앞에 있는 탭의 텍스트가 함께 갑니다. 주소(? 또는 # 뒤는 제외), 제목, 본문의 단어입니다. 페이지의 비밀번호, 카드 번호, 코드는 빠집니다." },
+  "page_consent_when": { "message": "보낼 때만, 그 탭만이며, 은행, 결제, 메일, 건강 사이트나 사용자가 끈 사이트는 절대 아닙니다." },
+  "page_consent_never": { "message": "텍스트는 tafs로 가고, tafs는 답변을 위해 이를 Anthropic의 Claude에 보냅니다. 메시지와 같습니다. tafs는 사이트 이름만 보관하고 페이지는 보관하지 않으며, Coach의 답변이 페이지를 인용할 수 있습니다." },
+  "page_consent_change": { "message": "언제든 페이지 없이 메시지를 보낼 수 있고, 원할 때 여기에서 중단할 수 있습니다." },
+  "page_consent_allow": { "message": "허용" },
+  "page_consent_not_now": { "message": "나중에" },
+  "page_consent_withdraw": { "message": "페이지 읽기 중지" },
+  "coach_send_alone": { "message": "페이지 없이 보내기" }
 }

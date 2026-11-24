@@ -101,5 +101,16 @@
   "aside_off": {"message": "Ne na ovoj web-lokaciji"},
   "aside_on": {"message": "Čitaj ovu web-lokaciju"},
   "aside_off_line": {"message": "Coach ne čita $HOST$: isključili ste to", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach ne čita $HOST$: web-lokacija banke, plaćanja, pošte ili zdravlja", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach ne čita $HOST$: web-lokacija banke, plaćanja, pošte ili zdravlja", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach ne čita stranicu na kojoj ste." },
+  "page_consent_turn_on": { "message": "Dopustite Coachu da čita stranicu…" },
+  "page_consent_title": { "message": "Da Coach pri slanju čita stranicu sprijeda?" },
+  "page_consent_what": { "message": "Kad ovdje pošaljete poruku Coachu, s njom ide tekst kartice sprijeda u ovom prozoru: njezina adresa (bez ičega nakon ? ili #), naslov i riječi. Lozinke, brojevi kartica i kodovi na stranici izostavljaju se." },
+  "page_consent_when": { "message": "Samo kad šaljete, samo ta kartica i nikad stranica banke, plaćanja, pošte ili zdravlja, ni ona koju ste isključili." },
+  "page_consent_never": { "message": "Ide u tafs, koji ga šalje Claudeu tvrtke Anthropic da vam odgovori, kao i vašu poruku. tafs zadržava samo ime web-mjesta, nikad stranicu; Coachov odgovor može je citirati." },
+  "page_consent_change": { "message": "Poruku bez stranice možete poslati u bilo kojem trenutku i ovdje to zaustaviti kad god želite." },
+  "page_consent_allow": { "message": "Dopusti" },
+  "page_consent_not_now": { "message": "Ne sada" },
+  "page_consent_withdraw": { "message": "Prestani čitati stranice" },
+  "coach_send_alone": { "message": "Pošalji bez stranice" }
 }

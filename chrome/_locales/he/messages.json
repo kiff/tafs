@@ -101,5 +101,16 @@
   "aside_off": {"message": "לא באתר הזה"},
   "aside_on": {"message": "לקרוא את האתר הזה"},
   "aside_off_line": {"message": "Coach לא קורא את $HOST$: כיבית את זה", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach לא קורא את $HOST$: אתר של בנק, תשלומים, דואר או בריאות", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach לא קורא את $HOST$: אתר של בנק, תשלומים, דואר או בריאות", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach לא קורא את הדף שאתם נמצאים בו." },
+  "page_consent_turn_on": { "message": "לאפשר ל-Coach לקרוא את הדף…" },
+  "page_consent_title": { "message": "לאפשר ל-Coach לקרוא את הדף שבחזית כשאתם שולחים?" },
+  "page_consent_what": { "message": "כשאתם שולחים כאן הודעה ל-Coach, הטקסט של הכרטיסייה שבחזית החלון הזה נשלח איתה: הכתובת שלה (בלי מה שאחרי ? או #), הכותרת והמילים שלה. סיסמאות, מספרי כרטיסים וקודים בדף מושמטים." },
+  "page_consent_when": { "message": "רק כשאתם שולחים, רק הכרטיסייה הזו, ואף פעם לא אתר של בנק, תשלומים, דואר או בריאות, או אתר שכיביתם." },
+  "page_consent_never": { "message": "הוא עובר אל tafs, ששולחת אותו ל-Claude של Anthropic כדי לענות לכם, כמו ההודעה שלכם. tafs שומרת רק את שם האתר, אף פעם לא את הדף; התשובה של Coach עשויה לצטט ממנו." },
+  "page_consent_change": { "message": "אפשר לשלוח הודעה בלי הדף בכל עת, ולהפסיק את זה כאן מתי שתרצו." },
+  "page_consent_allow": { "message": "לאפשר" },
+  "page_consent_not_now": { "message": "לא עכשיו" },
+  "page_consent_withdraw": { "message": "להפסיק לקרוא דפים" },
+  "coach_send_alone": { "message": "לשלוח בלי הדף" }
 }

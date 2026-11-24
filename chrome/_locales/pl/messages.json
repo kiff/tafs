@@ -101,5 +101,16 @@
   "aside_off": {"message": "Nie w tej witrynie"},
   "aside_on": {"message": "Czytaj tę witrynę"},
   "aside_off_line": {"message": "Coach nie czyta $HOST$: ta witryna jest wyłączona", "placeholders": {"host": {"content": "$1"}}},
-  "aside_sensitive": {"message": "Coach nie czyta $HOST$: to witryna banku, płatności, poczty lub zdrowia", "placeholders": {"host": {"content": "$1"}}}
+  "aside_sensitive": {"message": "Coach nie czyta $HOST$: to witryna banku, płatności, poczty lub zdrowia", "placeholders": {"host": {"content": "$1"}}},
+  "page_consent_off": { "message": "Coach nie czyta strony, na której jesteś." },
+  "page_consent_turn_on": { "message": "Pozwól Coachowi czytać stronę…" },
+  "page_consent_title": { "message": "Pozwolić Coachowi czytać stronę na pierwszym planie przy wysyłaniu?" },
+  "page_consent_what": { "message": "Gdy wysyłasz tu wiadomość do Coacha, idzie z nią tekst karty na pierwszym planie w tym oknie: jej adres (bez tego, co po ? lub #), tytuł i słowa. Hasła, numery kart i kody ze strony są pomijane." },
+  "page_consent_when": { "message": "Tylko przy wysyłaniu, tylko ta karta i nigdy strona banku, płatności, poczty lub zdrowia ani taka, którą wyłączyłeś." },
+  "page_consent_never": { "message": "Trafia do tafs, który wysyła go do Claude od Anthropic, żeby Ci odpowiedział, tak jak Twoją wiadomość. tafs zachowuje tylko nazwę witryny, nigdy stronę; odpowiedź Coacha może ją cytować." },
+  "page_consent_change": { "message": "W każdej chwili możesz wysłać wiadomość bez strony i wyłączyć to tutaj, kiedy chcesz." },
+  "page_consent_allow": { "message": "Zezwól" },
+  "page_consent_not_now": { "message": "Nie teraz" },
+  "page_consent_withdraw": { "message": "Przestań czytać strony" },
+  "coach_send_alone": { "message": "Wyślij bez strony" }
 }
