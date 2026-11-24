@@ -142,6 +142,13 @@ describe("Coach reads the page the person has open, with their message", () => {
       ["a title that isn't text", COACH, { ...PAGE_SENT, title: 5 }],
       ["past the bound", COACH, { ...PAGE_SENT, text: "x".repeat(PAGE.bytes) }],
       ["no words", COACH, PAGE_SENT],
+      ["a mail site", COACH, { ...PAGE_SENT, url: "https://mail.google.com/mail/u/0/" }],
+      ["a mail site with a trailing dot", COACH, { ...PAGE_SENT, url: "https://MAIL.GOOGLE.COM./mail/" }],
+      ["Outlook's new address", COACH, { ...PAGE_SENT, url: "https://outlook.cloud.microsoft/mail/" }],
+      ["a payment site", COACH, { ...PAGE_SENT, url: "https://www.paypal.com./myaccount" }],
+      ["a bank by its label", COACH, { ...PAGE_SENT, url: "https://online.bank.example/" }],
+      ["a health site", COACH, { ...PAGE_SENT, url: "https://www.nhs.uk/" }],
+      ["the Web Store", COACH, { ...PAGE_SENT, url: "https://chromewebstore.google.com/detail/x" }],
     ];
     for (const [name, taf, page] of cases) {
       for (const via of [send, stream]) {
@@ -220,6 +227,14 @@ describe("Coach reads the page the person has open, with their message", () => {
     const next = await send(w, COACH, { text: "And this?", session: first.body.session, page: PAGE_SENT });
     const kept = (await w.coach.get(pageReadsKey("t_acme", "u_ana"))) as { reads: Array<{ run: string }> };
     expect(kept.reads.map((r) => r.run)).toEqual(["run_today", next.body.run]);
+  });
+
+  it("an ordinary host's other forms are read, and kept as the extension reads it", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const r = await send(w, COACH, { text: "What's this?", page: { ...PAGE_SENT, url: "https://SHOP.Example./orders/42" } });
+    expect(r.status).toBe(200);
+    expect((r.body.message as { reading?: string }).reading).toBe("shop.example");
   });
 
   it("a page just inside the bound goes, its title kept to one line", async () => {

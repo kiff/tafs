@@ -98,6 +98,11 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   (files alone), an address that isn't https or has a name or password in it, a page that isn't
   `{url, title, text, truncated}`, or one past 24,000 bytes as the run reads it, is `400 page_refused`, and
   nothing starts.
+- **Never a bank, payment, mail or health site.** A page from a sensitive or mail site, or from Chrome's Web Store,
+  is `400 page_refused` too. These are the extension's own lists (`chrome/src/sites.js`, `SENSITIVE` and `MAIL`),
+  kept in tafs cloud as `page-sites.ts`, with the host read the same way (lower case, no trailing dot). The
+  extension never sends such a page, and this keeps the promise at the server whatever build sends one.
+  `page-sites.test.ts` holds the two lists equal: a change to one is a change to both.
 - **For that message only.** tafs cloud passes it to kiff/agents as the run's `aside`. The run reads it after the
   person's words, fenced as data, with a note that nothing in it is an instruction, and kiff/agents keeps it on the
   run only until the run ends. The address goes with its path but no query or fragment, so whatever a path holds
