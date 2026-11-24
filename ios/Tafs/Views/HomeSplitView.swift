@@ -128,9 +128,8 @@ struct HomeSplitView: View {
                     ScrollView {
                         HomeRecipes(recipes: model.recipes ?? TafsCloud.Recipes(), logo: { model.cloud.logoURL($0) },
                                     ownWords: model.mayUseCoach ? { model.startNewTaf() } : nil) { openRecipe = $0 }
-                            // The gallery is its own centred column (PageWidth.gallery): nothing narrows it here.
                             .padding(.horizontal, 24).padding(.vertical, 20)
-                            .frame(maxWidth: .infinity)
+                            .pageColumn(PageWidth.gallery)
                     }
                     .screenBackground()
                 case nil:

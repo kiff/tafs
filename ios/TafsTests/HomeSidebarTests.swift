@@ -211,14 +211,15 @@ final class HomeSidebarTests: XCTestCase {
             ("ShareViews.swift", "struct OverviewView: View {", "list"),
             ("ShareViews.swift", "struct ShareTafSheet: View {", "list"),
             ("ConnectAppsView.swift", "struct AppConnectionsView: View {", "list"),
-            ("RecipeGallery.swift", "", "gallery"),
-            ("HomeRecipes.swift", "", "gallery"),
+            ("RecipeGallery.swift", "struct RecipeGallerySheet: View {", "gallery"),
+            ("HomeRecipes.swift", "struct RecipeSheet: View {", "gallery"),
+            ("HomeSplitView.swift", "// No taf yet: the recipes take the pane", "gallery"),
             ("BriefView.swift", "struct BriefView: View {", "brief"),
             ("CalendarView.swift", "struct CalendarView: View {", "calendar"),
         ]
         for p in pages {
             let file = try String(contentsOf: views.appendingPathComponent(p.file), encoding: .utf8)
-            let from = p.page.isEmpty ? file.startIndex : try XCTUnwrap(file.range(of: p.page), p.page).upperBound
+            let from = try XCTUnwrap(file.range(of: p.page), p.page).upperBound
             // The page's own code: up to the next top-level type.
             let rest = file[from...]
             let body = rest.range(of: "\nstruct ").map { rest[..<$0.lowerBound] } ?? rest
