@@ -2044,7 +2044,10 @@ describe("an api door's keys and signed steps", () => {
       // The same signature again is refused before the draft is read (signature_taken); a new signature over the same
       // body is refused by the draft, which is used up.
       expect((await s.call("POST", doorsPath, { body, headers: SIG })).body.code).toBe("signature_taken");
-      expect((await s.call("POST", doorsPath, { body, headers: { "kiff-device-signature": "t=2026-10-24T09:05:00Z,v1=again" } })).status).toBe(404);
+      // Refused as the read refuses it: used, with its door and the person's words.
+      const again = await s.call("POST", doorsPath, { body, headers: { "kiff-device-signature": "t=2026-10-24T09:05:00Z,v1=again" } });
+      expect(again.status).toBe(410);
+      expect(again.body).toMatchObject({ code: "draft_used", words: "Door made from this draft.", door_id: made.body.door.id });
       expect((await s.call("GET", doorsPath)).body.doors).toEqual([]);
     }));
 
@@ -2054,7 +2057,10 @@ describe("an api door's keys and signed steps", () => {
       const drafted = await draftOf(w, DRAFT);
       const body = (await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`)).body.body as Record<string, any>;
       w.at(new Date(NOW.getTime() + 8 * 24 * 3600_000));
-      expect((await s.call("POST", doorsPath, { body, headers: SIG })).status).toBe(404);
+      // Approved after it lapsed: refused as the read refuses it, with the person's words.
+      const late = await s.call("POST", doorsPath, { body, headers: SIG });
+      expect(late.status).toBe(404);
+      expect(late.body).toMatchObject({ code: "draft_lapsed", words: "This draft lapsed: ask Coach again." });
       // Read after it lapsed: it says so, and to ask Coach again.
       const lapsed = await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`);
       expect(lapsed.status).toBe(404);

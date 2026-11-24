@@ -10842,7 +10842,11 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
     const draftID = typeof body.draft_id === "string" ? body.draft_id : "";
     const draftKey = doorKeys.apiDraft(me.tenantID, taf.id, draftID);
     const kept = draftID ? (await ctx.doors.store.get(draftKey)) as KeptAPIDraft | undefined : undefined;
-    if (!kept || kept.used || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed or was used: ask Coach again");
+    // Refused as the draft's read refuses it, in the person's words: a used draft names its door, so an app whose card
+    // was open while the door was made elsewhere says it's made; a lapsed or unknown one says to ask Coach again.
+    const w = wordsIn(langOf(event));
+    if (kept?.used) throw new HTTPError(410, "a door was made from this draft", { code: "draft_used", words: w.door_draft_used, door_id: kept.used.door });
+    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed: ask Coach again", { code: "draft_lapsed", words: w.door_draft_lapsed });
     if (canonical(draft) !== canonical(apiDraftOf(kept.draft))) throw new HTTPError(409, "this isn't the draft Coach made: ask Coach again");
     const added = await addAPIDoor(ctx, owner, taf, body);
     // Used once: what's kept now says a door was made from it (no draft), until the draft would have lapsed.
