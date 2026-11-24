@@ -24,6 +24,7 @@
     <section id="paired" hidden>
       <h1 id="pairedName"></h1>
       <p data-m="paired_body"></p>
+      <div id="tafView">
       <nav id="atWork" class="atwork" hidden>
         <span class="note" data-m="at_work"></span>
         <span id="atWorkList"></span>
@@ -41,18 +42,31 @@
           </div>
         </form>
         <p id="noTaf" class="note" data-m="no_taf_here" hidden></p>
+        <div id="tafRemove" hidden>
+          <button type="button" id="tafRemoveBtn" class="quiet" data-m="taf_remove"></button>
+          <p id="tafRemoveWhy" class="note" data-m="taf_remove_on_phone" hidden></p>
+        </div>
       </section>
       <button type="button" id="setupTaf" class="quiet" data-m="setup_taf"></button>
+      </div>
       <section id="coach" hidden>
-        <h2 data-m="coach_title"></h2>
-        <div class="buttons">
-          <button type="button" id="coachNew" class="quiet" data-m="coach_new"></button>
+        <div class="viewhead">
+          <button type="button" id="coachBack" class="quiet" data-m="coach_back"></button>
+          <h2 data-m="coach_title"></h2>
         </div>
-        <details id="coachPast">
-          <summary data-m="coach_previous"></summary>
-          <p id="coachPastNote" class="note" hidden></p>
-          <ul id="coachChats"></ul>
+        <div class="buttons">
+          <button type="button" id="coachNew" data-m="coach_new"></button>
+        </div>
+        <h3 data-m="coach_previous"></h3>
+        <p id="coachPastNote" class="note" hidden></p>
+        <ul id="coachChats" class="chats"></ul>
+        <details id="coachArchived">
+          <summary data-m="coach_archived"></summary>
+          <p class="note" data-m="coach_archived_body"></p>
+          <p id="coachArchivedNote" class="note" hidden></p>
+          <ul id="coachArchivedChats" class="chats"></ul>
         </details>
+        <h3 id="coachOpen" hidden></h3>
         <div id="coachEmpty" hidden>
           <p><strong data-m="coach_empty_title"></strong></p>
           <p class="note" data-m="coach_empty_body_reads"></p>

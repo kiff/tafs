@@ -251,6 +251,9 @@ async function drawCoach() {
 async function renderCoach() {
   const note = $("coachNote");
   note.textContent = "";
+  // Which conversation is on show: a new one says so, an earlier one its title.
+  $("coachOpen").textContent = view.fresh ? t("coach_new") : openTitle || t("coach_untitled");
+  $("coachOpen").hidden = false;
   const list = $("coachThread");
   if (view.fresh) {
     // Nothing to read: a fresh conversation has no chat until its first message. Whether Coach can be reached at all is
@@ -287,50 +290,107 @@ async function renderCoach() {
   if (working) note.textContent = t("coach_working");
 }
 
-/** The earlier chats, newest first; a tap shows one. */
-async function drawPast() {
-  const note = $("coachPastNote");
-  const list = $("coachChats");
+/**
+ * One list of the person's chats with Coach: each opens on a tap, and has its own Archive (or, in the archived list, Put
+ * back). `archived` says which list; `none` and `failed` are its words for an empty list and for one that couldn't be read.
+ */
+async function drawChats({ archived, list, note, none, failed }) {
   list.textContent = "";
   note.hidden = true;
-  const r = await send({ type: "coach_chats" });
+  const r = await send({ type: archived ? "coach_archived" : "coach_chats" });
   if (r.error || !Array.isArray(r.chats)) {
-    note.textContent = t("coach_previous_error");
+    note.textContent = t(failed);
     note.hidden = false;
     return;
   }
   if (!r.chats.length) {
-    note.textContent = t("coach_previous_none");
+    note.textContent = t(none);
     note.hidden = false;
     return;
   }
   for (const c of r.chats) {
+    const title = chatTitle(c, t("coach_untitled"));
     const li = document.createElement("li");
+    if (!view.fresh && view.session === c.session) li.className = "open";
     const b = document.createElement("button");
-    b.className = "quiet";
-    b.textContent = chatTitle(c, t("coach_untitled"));
+    b.className = "quiet chat";
+    b.textContent = title;
     b.onclick = () => {
       view = chosen(c.session);
-      $("coachPast").open = false;
+      openTitle = title;
+      $("coachArchived").open = false;
       drawCoach();
+      drawPast();
     };
-    li.append(b);
+    // Archive takes it out of the list (kept, never deleted); Put back returns it. Neither is signed: they give nothing.
+    const a = document.createElement("button");
+    a.className = "quiet small";
+    a.textContent = t(archived ? "coach_unarchive" : "coach_archive");
+    a.setAttribute("aria-label", t(archived ? "coach_unarchive_named" : "coach_archive_named", title));
+    a.onclick = async () => {
+      a.disabled = true;
+      const done = await send({ type: "coach_archive", session: c.session, archived: !archived });
+      if (done.error) {
+        a.disabled = false;
+        note.textContent = t("coach_archive_error");
+        note.hidden = false;
+        return;
+      }
+      // The chat on show was archived: a new conversation takes its place, so nothing goes on in an archived one.
+      if (!archived && !view.fresh && view.session === c.session) startFresh();
+      drawPast();
+      if ($("coachArchived").open) drawArchived();
+    };
+    li.append(b, a);
     list.append(li);
   }
 }
 
-$("coachPast").addEventListener("toggle", () => $("coachPast").open && drawPast());
+/** The person's conversations with Coach, newest first, always on show in Coach's view. */
+function drawPast() {
+  return drawChats({ archived: false, list: $("coachChats"), note: $("coachPastNote"), none: "coach_previous_none", failed: "coach_previous_error" });
+}
+
+/** The ones they archived, read when that list is opened. */
+function drawArchived() {
+  return drawChats({ archived: true, list: $("coachArchivedChats"), note: $("coachArchivedNote"), none: "coach_archived_none", failed: "coach_previous_error" });
+}
+
+$("coachArchived").addEventListener("toggle", () => $("coachArchived").open && drawArchived());
+
+// The title of the conversation on show, above its messages; a new one says so.
+let openTitle = "";
 
 /** A new conversation with Coach: nothing of the one before is shown or sent into. */
 function startFresh() {
   view = FRESH;
+  openTitle = "";
   $("coachWords").value = "";
-  $("coachPast").open = false;
+  $("coachArchived").open = false;
   $("coachThread").textContent = "";
   drawCoach();
 }
 
-$("coachNew").onclick = startFresh;
+/**
+ * Coach in its own view: the taf's chat goes out of sight (not under it), and the runs stay, since Pause, Stop and a
+ * hand-over must never be hidden. Back returns to the taf.
+ */
+function showCoach(on) {
+  $("coach").hidden = !on;
+  $("tafView").hidden = on;
+  if (!on) {
+    clearTimeout(pollTimer);
+    readTaf();
+    return;
+  }
+  clearTimeout(tafTimer);
+  drawPast();
+}
+
+$("coachNew").onclick = () => {
+  startFresh();
+  drawPast();
+};
 
 $("coachForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -376,6 +436,8 @@ async function loadTafs() {
   $("tafPickRow").hidden = tafs.length < 2;
   $("noTaf").hidden = tafs.length > 0 || !!r.error;
   $("tafForm").hidden = !tafId;
+  $("tafRemove").hidden = !tafId;
+  $("tafRemoveWhy").hidden = true;
   $("tafName").textContent = tafName();
   $("tafWords").placeholder = tafId ? t("taf_placeholder", tafName()) : "";
   $("tafNote").textContent = r.error ? t(r.error === "no_session" ? "unpaired" : "tafs_not_read") : "";
@@ -460,13 +522,16 @@ $("tafForm").onsubmit = async (e) => {
 };
 
 // Coach sets up a new taf; it's a button now, not the panel's chat.
-// "Set up a new taf for this site" always opens a new conversation with Coach, in the panel's own view: never the one
-// already open, so a new taf's setup is never appended under another chat. Tapped again, it closes Coach.
+// "Set up a new taf for this site" always opens a new conversation with Coach, in Coach's own view: never the one already
+// open, and never under the taf's chat. Back returns to the taf.
 $("setupTaf").onclick = () => {
-  $("coach").hidden = !$("coach").hidden;
-  if ($("coach").hidden) {
-    clearTimeout(pollTimer);
-    return;
-  }
+  showCoach(true);
   startFresh();
+};
+$("coachBack").onclick = () => showCoach(false);
+
+// A taf is removed on the phone (tafs cloud takes a removal only with the phone's approval key or a computer's passkey,
+// which this Chrome has neither of): the button says where, and removes nothing.
+$("tafRemoveBtn").onclick = () => {
+  $("tafRemoveWhy").hidden = !$("tafRemoveWhy").hidden;
 };

@@ -105,6 +105,28 @@ export class Coach {
       .map((c) => ({ session: c.session, title: typeof c.title === "string" ? c.title : "", updated: c.updated }));
   }
 
+  /** The chats the person archived, newest first, in the same shape: the list to put one back from. */
+  async archivedChats() {
+    const id = await this.coach();
+    if (!id) return [];
+    const r = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/chats/archived");
+    return (r.chats || [])
+      .filter((c) => c && typeof c.session === "string" && c.session)
+      .map((c) => ({ session: c.session, title: typeof c.title === "string" ? c.title : "", updated: c.updated }));
+  }
+
+  /**
+   * Archives one of the person's chats with Coach (`POST …/chats/{session}/archive`), or puts it back (`…/unarchive`): it
+   * leaves their list and is kept, never deleted, so `archived: false` undoes it. It gives nothing, so it's not signed, as on
+   * the phone.
+   */
+  async archive(session, archived = true) {
+    const id = await this.coach();
+    if (!id) throw Object.assign(new Error("Coach isn't started"), { code: "no_coach" });
+    if (typeof session !== "string" || !session) throw Object.assign(new Error("no such chat"), { code: "bad_chat" });
+    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/chats/" + encodeURIComponent(session) + "/" + (archived ? "archive" : "unarchive"));
+  }
+
   /**
    * Sends the owner's words: into the live chat, into the chat `session` names, or,
    * with `newChat`, into a new one (the answer says its `session`).
