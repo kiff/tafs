@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Visszaállítás"},
   "coach_unarchive_named": {"message": "„$TITLE$” visszaállítása", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Archivált"},
-  "coach_archived_body": {"message": "Az archivált beszélgetéseket 30 napig őrizzük, aztán töröljük."},
+  "coach_archived_body": {"message": "Minden üzenetet a megírásától számítva 30 napig őrzünk, akár archiválva van, akár nem."},
   "coach_archived_none": {"message": "Nincsenek archivált beszélgetések."},
   "coach_archive_error": {"message": "Ez nem sikerült. Próbáld újra."},
   "taf_remove": {"message": "A taf eltávolítása"},

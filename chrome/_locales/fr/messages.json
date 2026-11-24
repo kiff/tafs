@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Restaurer"},
   "coach_unarchive_named": {"message": "Restaurer « $TITLE$ »", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Archivées"},
-  "coach_archived_body": {"message": "Les conversations archivées sont conservées 30 jours, puis supprimées."},
+  "coach_archived_body": {"message": "Chaque message est conservé 30 jours à partir de son écriture, archivé ou non."},
   "coach_archived_none": {"message": "Aucune conversation archivée."},
   "coach_archive_error": {"message": "Cela n'a pas abouti. Réessayez."},
   "taf_remove": {"message": "Supprimer ce taf"},

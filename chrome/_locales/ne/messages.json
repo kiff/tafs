@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "फिर्ता ल्याउनुहोस्"},
   "coach_unarchive_named": {"message": "“$TITLE$” फिर्ता ल्याउनुहोस्", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "अभिलेखमा"},
-  "coach_archived_body": {"message": "अभिलेखमा राखिएका कुराकानी 30 दिन राखिन्छन्, त्यसपछि मेटिन्छन्।"},
+  "coach_archived_body": {"message": "हरेक सन्देश लेखिएदेखि 30 दिन राखिन्छ, अभिलेखमा राखिएको होस् वा नहोस्।"},
   "coach_archived_none": {"message": "अभिलेखमा कुनै कुराकानी छैन।"},
   "coach_archive_error": {"message": "भएन। फेरि प्रयास गर्नुहोस्।"},
   "taf_remove": {"message": "यो taf हटाउनुहोस्"},

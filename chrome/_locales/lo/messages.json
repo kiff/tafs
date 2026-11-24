@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "ເອົາຄືນ"},
   "coach_unarchive_named": {"message": "ເອົາ “$TITLE$” ຄືນ", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "ທີ່ເກັບໄວ້"},
-  "coach_archived_body": {"message": "ການສົນທະນາທີ່ເກັບໄວ້ຈະຖືກຮັກສາ 30 ມື້, ແລ້ວຖືກລຶບ."},
+  "coach_archived_body": {"message": "ແຕ່ລະຂໍ້ຄວາມຖືກຮັກສາ 30 ມື້ ນັບແຕ່ຕອນທີ່ຂຽນ, ເກັບໄວ້ຫຼືບໍ່ກໍຕາມ."},
   "coach_archived_none": {"message": "ບໍ່ມີການສົນທະນາທີ່ເກັບໄວ້."},
   "coach_archive_error": {"message": "ບໍ່ສຳເລັດ. ລອງໃໝ່ອີກຄັ້ງ."},
   "taf_remove": {"message": "ເອົາ taf ນີ້ອອກ"},

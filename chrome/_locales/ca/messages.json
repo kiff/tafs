@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Recupera"},
   "coach_unarchive_named": {"message": "Recupera «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Arxivades"},
-  "coach_archived_body": {"message": "Les converses arxivades es guarden 30 dies i després s'eliminen."},
+  "coach_archived_body": {"message": "Cada missatge es guarda 30 dies des que es va escriure, arxivat o no."},
   "coach_archived_none": {"message": "No hi ha converses arxivades."},
   "coach_archive_error": {"message": "No s'ha pogut fer. Torna-ho a provar."},
   "taf_remove": {"message": "Treu aquest taf"},

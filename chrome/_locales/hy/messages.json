@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Վերադարձնել"},
   "coach_unarchive_named": {"message": "Վերադարձնել «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Արխիվացված"},
-  "coach_archived_body": {"message": "Արխիվացված զրույցները պահվում են 30 օր, հետո ջնջվում են։"},
+  "coach_archived_body": {"message": "Յուրաքանչյուր հաղորդագրություն պահվում է գրվելուց 30 օր՝ արխիվացված լինի, թե ոչ։"},
   "coach_archived_none": {"message": "Արխիվացված զրույցներ չկան։"},
   "coach_archive_error": {"message": "Չստացվեց։ Փորձեք նորից։"},
   "taf_remove": {"message": "Հեռացնել այս taf-ը"},

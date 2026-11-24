@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "นำกลับมา"},
   "coach_unarchive_named": {"message": "นำ “$TITLE$” กลับมา", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "ที่เก็บถาวร"},
-  "coach_archived_body": {"message": "การสนทนาที่เก็บถาวรจะเก็บไว้ 30 วัน แล้วถูกลบ"},
+  "coach_archived_body": {"message": "แต่ละข้อความจะเก็บไว้ 30 วันนับจากเวลาที่เขียน ไม่ว่าจะเก็บถาวรหรือไม่"},
   "coach_archived_none": {"message": "ไม่มีการสนทนาที่เก็บถาวร"},
   "coach_archive_error": {"message": "ไม่สำเร็จ ลองใหม่อีกครั้ง"},
   "taf_remove": {"message": "นำ taf นี้ออก"},

@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Grąžinti"},
   "coach_unarchive_named": {"message": "Grąžinti „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Archyvuoti"},
-  "coach_archived_body": {"message": "Archyvuoti pokalbiai saugomi 30 dienų, tada ištrinami."},
+  "coach_archived_body": {"message": "Kiekviena žinutė saugoma 30 dienų nuo parašymo, archyvuota ar ne."},
   "coach_archived_none": {"message": "Archyvuotų pokalbių nėra."},
   "coach_archive_error": {"message": "Nepavyko. Bandykite dar kartą."},
   "taf_remove": {"message": "Pašalinti šį taf"},

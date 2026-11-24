@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Vrátiť"},
   "coach_unarchive_named": {"message": "Vrátiť „$TITLE$“", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Archivované"},
-  "coach_archived_body": {"message": "Archivované rozhovory sa uchovávajú 30 dní, potom sa vymažú."},
+  "coach_archived_body": {"message": "Každá správa sa uchováva 30 dní od napísania, archivovaná aj nearchivovaná."},
   "coach_archived_none": {"message": "Žiadne archivované rozhovory."},
   "coach_archive_error": {"message": "Nepodarilo sa. Skúste to znova."},
   "taf_remove": {"message": "Odstrániť tento taf"},

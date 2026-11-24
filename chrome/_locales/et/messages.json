@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Too tagasi"},
   "coach_unarchive_named": {"message": "Too „$TITLE$“ tagasi", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Arhiveeritud"},
-  "coach_archived_body": {"message": "Arhiveeritud vestlusi hoitakse 30 päeva, siis need kustutatakse."},
+  "coach_archived_body": {"message": "Iga sõnumit hoitakse 30 päeva selle kirjutamisest, olgu arhiveeritud või mitte."},
   "coach_archived_none": {"message": "Arhiveeritud vestlusi pole."},
   "coach_archive_error": {"message": "See ei õnnestunud. Proovi uuesti."},
   "taf_remove": {"message": "Eemalda see taf"},

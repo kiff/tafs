@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Restaurați"},
   "coach_unarchive_named": {"message": "Restaurați „$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Arhivate"},
-  "coach_archived_body": {"message": "Conversațiile arhivate se păstrează 30 de zile, apoi se șterg."},
+  "coach_archived_body": {"message": "Fiecare mesaj se păstrează 30 de zile de când a fost scris, arhivat sau nu."},
   "coach_archived_none": {"message": "Nicio conversație arhivată."},
   "coach_archive_error": {"message": "Nu a reușit. Încercați din nou."},
   "taf_remove": {"message": "Eliminați acest taf"},

@@ -258,7 +258,7 @@
   "coach_unarchive": {"message": "واپس لائیں"},
   "coach_unarchive_named": {"message": "“$TITLE$” واپس لائیں", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "آرکائیو شدہ"},
-  "coach_archived_body": {"message": "آرکائیو شدہ گفتگو 30 دن رکھی جاتی ہے، پھر حذف ہو جاتی ہے۔"},
+  "coach_archived_body": {"message": "ہر پیغام لکھے جانے سے 30 دن تک رکھا جاتا ہے، آرکائیو ہو یا نہ ہو۔"},
   "coach_archived_none": {"message": "کوئی آرکائیو شدہ گفتگو نہیں۔"},
   "coach_archive_error": {"message": "یہ نہیں ہو سکا۔ دوبارہ کوشش کریں۔"},
   "taf_remove": {"message": "یہ taf ہٹائیں"},

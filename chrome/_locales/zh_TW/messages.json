@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "放回"},
   "coach_unarchive_named": {"message": "放回「$TITLE$」", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "已封存"},
-  "coach_archived_body": {"message": "已封存的對話會保留 30 天，之後刪除。"},
+  "coach_archived_body": {"message": "每則訊息自寫下起保留 30 天，無論是否封存。"},
   "coach_archived_none": {"message": "沒有已封存的對話。"},
   "coach_archive_error": {"message": "未能完成。請再試一次。"},
   "taf_remove": {"message": "移除這個 taf"},

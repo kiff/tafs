@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "되돌리기"},
   "coach_unarchive_named": {"message": "“$TITLE$” 되돌리기", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "보관됨"},
-  "coach_archived_body": {"message": "보관한 대화는 30일 동안 보관된 후 삭제됩니다."},
+  "coach_archived_body": {"message": "각 메시지는 보관 여부와 관계없이 작성된 때부터 30일 동안 보관됩니다."},
   "coach_archived_none": {"message": "보관한 대화가 없습니다."},
   "coach_archive_error": {"message": "처리되지 않았습니다. 다시 시도하세요."},
   "taf_remove": {"message": "이 taf 삭제"},

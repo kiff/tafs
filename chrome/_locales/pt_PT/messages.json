@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Repor"},
   "coach_unarchive_named": {"message": "Repor «$TITLE$»", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Arquivadas"},
-  "coach_archived_body": {"message": "As conversas arquivadas são guardadas durante 30 dias e depois apagadas."},
+  "coach_archived_body": {"message": "Cada mensagem é guardada durante 30 dias a partir de quando foi escrita, arquivada ou não."},
   "coach_archived_none": {"message": "Nenhuma conversa arquivada."},
   "coach_archive_error": {"message": "Não foi possível. Tente de novo."},
   "taf_remove": {"message": "Remover este taf"},

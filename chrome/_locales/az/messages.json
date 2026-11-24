@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Geri qaytar"},
   "coach_unarchive_named": {"message": "“$TITLE$” geri qaytar", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Arxiv"},
-  "coach_archived_body": {"message": "Arxivlənmiş söhbətlər 30 gün saxlanılır, sonra silinir."},
+  "coach_archived_body": {"message": "Hər mesaj yazıldığı vaxtdan 30 gün saxlanılır, arxivlənib-arxivlənməməsindən asılı olmayaraq."},
   "coach_archived_none": {"message": "Arxivlənmiş söhbət yoxdur."},
   "coach_archive_error": {"message": "Alınmadı. Yenidən cəhd edin."},
   "taf_remove": {"message": "Bu taf-ı silin"},

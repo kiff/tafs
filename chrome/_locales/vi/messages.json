@@ -89,7 +89,7 @@
   "coach_unarchive": {"message": "Khôi phục"},
   "coach_unarchive_named": {"message": "Khôi phục “$TITLE$”", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "Đã lưu trữ"},
-  "coach_archived_body": {"message": "Cuộc trò chuyện đã lưu trữ được giữ 30 ngày, sau đó bị xóa."},
+  "coach_archived_body": {"message": "Mỗi tin nhắn được giữ 30 ngày kể từ khi được viết, dù có lưu trữ hay không."},
   "coach_archived_none": {"message": "Không có cuộc trò chuyện nào đã lưu trữ."},
   "coach_archive_error": {"message": "Không thành công. Hãy thử lại."},
   "taf_remove": {"message": "Gỡ taf này"},

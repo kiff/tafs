@@ -258,7 +258,7 @@
   "coach_unarchive": {"message": "वापस लाएँ"},
   "coach_unarchive_named": {"message": "“$TITLE$” वापस लाएँ", "placeholders": {"title": {"content": "$1"}}},
   "coach_archived": {"message": "संग्रहित"},
-  "coach_archived_body": {"message": "संग्रहित बातचीत 30 दिन रखी जाती है, फिर हटा दी जाती है।"},
+  "coach_archived_body": {"message": "हर संदेश लिखे जाने से 30 दिन तक रखा जाता है, चाहे संग्रहित हो या नहीं।"},
   "coach_archived_none": {"message": "कोई संग्रहित बातचीत नहीं।"},
   "coach_archive_error": {"message": "यह नहीं हो पाया। फिर कोशिश करें।"},
   "taf_remove": {"message": "यह taf हटाएँ"},
