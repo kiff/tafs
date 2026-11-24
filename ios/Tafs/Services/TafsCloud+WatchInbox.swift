@@ -1,5 +1,7 @@
 import Foundation
 
+/// Here, beside the relay, not in `Tafs/KIFF`: the notification extension (TafsNotify) compiles all of `Tafs/KIFF` and not
+/// `WatchShared`, where `WatchInboxMarks` is.
 extension TafsCloud {
     /// Row 21: the watch Inbox's lines the person read and dismissed, by id alone (`/v1/watch/inbox`), so each of their
     /// watches shows the same. A held call's id or the id of the message an answer is to; never a line's words.
