@@ -14,6 +14,20 @@ const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
 for (const el of document.querySelectorAll("[data-m]")) el.textContent = t(el.dataset.m);
 for (const el of document.querySelectorAll("[data-m-placeholder]")) el.placeholder = t(el.dataset.mPlaceholder);
+// A button drawn as a sign (the composer's ↑): its words are its accessible name and its tooltip.
+for (const el of document.querySelectorAll("[data-m-label]")) {
+  el.setAttribute("aria-label", t(el.dataset.mLabel));
+  el.title = t(el.dataset.mLabel);
+}
+// The composers, as the app's chat: Enter sends, Shift+Enter is a new line, and nothing sends while an input method is
+// still composing a word.
+for (const form of document.querySelectorAll("form.composer")) {
+  form.querySelector("textarea").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || e.shiftKey || e.isComposing || e.keyCode === 229) return;
+    e.preventDefault();
+    form.requestSubmit();
+  });
+}
 
 const $ = (id) => document.getElementById(id);
 
@@ -59,6 +73,8 @@ let lastRuns = null;
 function draw(state) {
   lastState = state;
   $("conn").textContent = state.paired ? t(state.connected ? "connected" : "waiting") : "";
+  $("menuBtn").hidden = !state.paired;
+  if (!state.paired) closeMenu();
   const connections = JSON.stringify(state.connections || []);
   if (state.paired && connections !== lastConnections) {
     lastConnections = connections;
@@ -329,19 +345,42 @@ async function drawChats({ archived, list, note, none, failed }) {
     if (!view.fresh && view.session === c.session) li.className = "open";
     const b = document.createElement("button");
     b.className = "quiet chat";
-    b.textContent = title;
+    const name = document.createElement("span");
+    name.className = "chatTitle";
+    name.textContent = title;
+    b.append(name);
+    const when = whenShown(c.updated);
+    if (when) {
+      const date = document.createElement("span");
+      date.className = "chatWhen";
+      date.textContent = when;
+      b.append(date);
+    }
     b.onclick = () => {
       view = chosen(c.session);
       openTitle = title;
       $("coachArchived").open = false;
+      showView("coach");
       drawCoach();
-      drawPast();
     };
     // Archive takes it out of the list (kept, never deleted); Put back returns it. Neither is signed: they give nothing.
+    // It sits behind the row's ⋯, so the list reads as conversations, not as a column of buttons.
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "quiet iconbtn small";
+    more.textContent = "⋯";
+    more.setAttribute("aria-label", t("coach_row_menu", title));
+    more.setAttribute("aria-expanded", "false");
     const a = document.createElement("button");
+    a.hidden = true;
     a.className = "quiet small";
     a.textContent = t(archived ? "coach_unarchive" : "coach_archive");
     a.setAttribute("aria-label", t(archived ? "coach_unarchive_named" : "coach_archive_named", title));
+    more.onclick = () => {
+      a.hidden = !a.hidden;
+      more.setAttribute("aria-expanded", String(!a.hidden));
+      if (!a.hidden) a.focus();
+    };
     a.onclick = async () => {
       a.disabled = true;
       const done = await send({ type: "coach_archive", session: c.session, archived: !archived });
@@ -356,7 +395,7 @@ async function drawChats({ archived, list, note, none, failed }) {
       drawPast();
       if ($("coachArchived").open) drawArchived();
     };
-    li.append(b, a);
+    li.append(b, more, a);
     list.append(li);
   }
 }
@@ -387,19 +426,84 @@ function startFresh() {
 }
 
 /**
- * Coach in its own view: the taf's chat goes out of sight (not under it), and the runs stay, since Pause, Stop and a
- * hand-over must never be hidden. Back returns to the taf.
+ * One view at a time (docs/chrome.md, "The side panel"): the taf's chat, Coach's chat, the conversations with Coach, or
+ * Settings. The runs stay below whichever is on show, since Pause, Stop and a hand-over must never be hidden.
  */
+const VIEWS = ["tafView", "coach", "chats", "settings"];
+let current = "tafView";
+let backTo = "tafView"; // where Back goes from the conversations or Settings: the chat it was opened from
+
+function showView(name) {
+  if (current === "coach" && name !== "coach") clearTimeout(pollTimer);
+  if (current === "tafView" && name !== "tafView") clearTimeout(tafTimer);
+  for (const v of VIEWS) $(v).hidden = v !== name;
+  current = name;
+  closeMenu();
+  if (name === "tafView") readTaf();
+  if (name === "coach") drawReads();
+  if (name === "chats") drawPast();
+  if (name === "settings") drawSettings();
+}
+
+/** Coach in its own view, or back to the taf. */
 function showCoach(on) {
-  $("coach").hidden = !on;
-  $("tafView").hidden = on;
-  if (!on) {
-    clearTimeout(pollTimer);
-    readTaf();
-    return;
+  showView(on ? "coach" : "tafView");
+}
+
+/** A chat to come back to from the conversations or Settings. */
+function opensFrom() {
+  return current === "coach" || current === "tafView" ? current : backTo;
+}
+
+// The ⋮ menu (top right): set up a new taf for this site, the conversations with Coach, and Settings. The chat screens
+// hold only the chat.
+function closeMenu() {
+  $("menu").hidden = true;
+  $("menuBtn").setAttribute("aria-expanded", "false");
+}
+$("menuBtn").setAttribute("aria-label", t("menu_label"));
+$("menuBtn").onclick = (e) => {
+  e.stopPropagation();
+  const open = $("menu").hidden;
+  $("menu").hidden = !open;
+  $("menuBtn").setAttribute("aria-expanded", String(open));
+  if (open) $("menu").querySelector("button").focus();
+};
+document.addEventListener("click", (e) => {
+  if (!$("menu").hidden && !$("menu").contains(e.target)) closeMenu();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (!$("pageConsent").hidden) return closeConsent();
+  if (!$("menu").hidden) {
+    closeMenu();
+    $("menuBtn").focus();
   }
-  clearTimeout(tafTimer);
-  drawPast();
+});
+// "Set up a new taf for this site" always opens a new conversation with Coach, in Coach's own view: never the one already
+// open, and never under the taf's chat. Back returns to the taf.
+$("menuSetup").onclick = () => {
+  showView("coach");
+  startFresh();
+};
+$("menuChats").onclick = () => {
+  backTo = opensFrom();
+  showView("chats");
+};
+$("menuSettings").onclick = () => {
+  backTo = opensFrom();
+  showView("settings");
+};
+$("chatsBack").onclick = () => showView(backTo);
+$("settingsBack").onclick = () => showView(backTo);
+
+/** When a conversation was last written, in the panel's language: the time today, else the day. */
+function whenShown(at) {
+  const d = new Date(at);
+  if (!at || Number.isNaN(d.getTime())) return "";
+  const lang = chrome.i18n.getUILanguage();
+  const today = new Date().toDateString() === d.toDateString();
+  return today ? d.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" }) : d.toLocaleDateString(lang, { day: "numeric", month: "short" });
 }
 
 $("coachNew").onclick = () => {
@@ -543,13 +647,6 @@ $("tafForm").onsubmit = async (e) => {
   readTaf();
 };
 
-// Coach sets up a new taf; it's a button now, not the panel's chat.
-// "Set up a new taf for this site" always opens a new conversation with Coach, in Coach's own view: never the one already
-// open, and never under the taf's chat. Back returns to the taf.
-$("setupTaf").onclick = () => {
-  showCoach(true);
-  startFresh();
-};
 $("coachBack").onclick = () => showCoach(false);
 
 // A taf is removed on the phone (tafs cloud takes a removal only with the phone's approval key or a computer's passkey,
@@ -572,13 +669,15 @@ async function drawReads() {
   // Off until the person allows it (pageconsent.js): the line says so and offers the screen; nothing of a tab is read.
   const consent = Boolean(r && r.consent);
   $("pageConsentOff").hidden = consent;
-  $("pageConsentStop").hidden = !consent;
   $("coachSendAlone").hidden = !consent || !readsHost || Boolean(r && r.why);
   if (!consent) {
     line.hidden = true;
+    // The first time Coach could read a page (a page it may read is in front, and Coach is on show), the consent screen
+    // comes up by itself, once per panel; Not now keeps the banner above the chat for later.
+    if (current === "coach" && readsHost && !(r && r.why) && !askedOnce()) openConsent();
     return;
   }
-  $("pageConsent").hidden = true;
+  closeConsent(false);
   if (!r || !readsHost || (r.why && !READ_WHY[r.why])) {
     // Chrome's own pages, an incognito tab, a page with no https address: nothing to read, nothing to say.
     line.hidden = true;
@@ -592,23 +691,64 @@ async function drawReads() {
   sw.dataset.off = r.why === "off" ? "0" : "1";
 }
 
-// The page consent's own screen: what goes to Anthropic, when, and what never does; Allow, or Not now. Withdrawn from the
-// line above Coach's box at any time.
-$("pageConsentOpen").onclick = () => {
+// The page consent's own screen, over the whole panel: what goes to Anthropic, when, and what never does; Allow, or Not now.
+// It opens by itself once, and from the banner above Coach's chat or Settings; it's withdrawn in Settings.
+let consentFrom = null; // what had the focus when it opened, to give it back
+
+function askedOnce() {
+  try {
+    if (sessionStorage.getItem("pageConsentAsked")) return true;
+    sessionStorage.setItem("pageConsentAsked", "1");
+  } catch {
+    // no storage: it may come up again, which asks, never reads
+  }
+  return false;
+}
+
+function openConsent() {
+  if (!$("pageConsent").hidden) return;
+  consentFrom = document.activeElement;
+  closeMenu();
   $("pageConsent").hidden = false;
-};
-$("pageConsentNotNow").onclick = () => {
+  // The screen's heading takes the focus, never Allow: it may open by itself while the person types in Coach's box, and an
+  // Enter or a space there must not give consent. Allowing is a deliberate press.
+  $("pageConsentTitle").focus();
+}
+
+function closeConsent(giveFocus = true) {
+  if ($("pageConsent").hidden) return;
   $("pageConsent").hidden = true;
-};
+  if (giveFocus && consentFrom && consentFrom.isConnected) consentFrom.focus();
+  consentFrom = null;
+}
+
+/** Settings: whether Coach reads the page in front, with its switch; and this Chrome, with Unpair. */
+async function drawSettings() {
+  const r = await send({ type: "aside_status", tabId: activeTab, windowId: panelWindow }).catch(() => null);
+  const consent = Boolean(r && r.consent);
+  $("settingsReadsState").textContent = t(consent ? "settings_reads_on" : "page_consent_off");
+  $("settingsReadsAllow").hidden = consent;
+  $("pageConsentStop").hidden = !consent;
+}
+
+$("pageConsentOpen").onclick = () => openConsent();
+$("settingsReadsAllow").onclick = () => openConsent();
+$("pageConsentNotNow").onclick = () => closeConsent();
 $("pageConsentAllow").onclick = async () => {
   const r = await send({ type: "page_allow" }).catch(() => null);
   if (!r || r.error || !r.allowed) $("coachNote").textContent = t("coach_error");
+  closeConsent();
   drawReads();
+  if (current === "settings") drawSettings();
 };
-$("pageConsentStop").onclick = async () => {
+/** Withdrawing, as easy as allowing: one tap from the chat (beside what a send reads), and in Settings. */
+async function withdrawPage() {
   await send({ type: "page_withdraw" }).catch(() => null);
   drawReads();
-};
+  if (current === "settings") drawSettings();
+}
+$("pageConsentStop").onclick = withdrawPage;
+$("coachReadsStop").onclick = withdrawPage;
 
 $("coachReadsSwitch").onclick = async () => {
   if (!readsHost) return;

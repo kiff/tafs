@@ -7,7 +7,18 @@
     <link rel="stylesheet" href="panel.css" />
   </head>
   <body>
-    <header><span class="mark">tafs</span><span id="conn" class="conn"></span></header>
+    <header>
+      <span class="mark">tafs</span>
+      <span class="headend">
+        <span id="conn" class="conn"></span>
+        <button type="button" id="menuBtn" class="iconbtn quiet" aria-haspopup="menu" aria-expanded="false" aria-controls="menu" hidden>⋮</button>
+      </span>
+      <div id="menu" class="menu" role="menu" hidden>
+        <button type="button" role="menuitem" id="menuSetup" data-m="setup_taf"></button>
+        <button type="button" role="menuitem" id="menuChats" data-m="coach_previous"></button>
+        <button type="button" role="menuitem" id="menuSettings" data-m="settings_title"></button>
+      </div>
+    </header>
 
     <section id="pair" hidden>
       <h1 data-m="pair_title"></h1>
@@ -35,10 +46,10 @@
         <ol id="tafThread" class="thread"></ol>
         <p id="tafPhone" class="note" data-m="approve_on_phone" hidden></p>
         <p id="tafNote" class="note"></p>
-        <form id="tafForm" hidden>
-          <textarea id="tafWords" rows="3" maxlength="2000"></textarea>
-          <div class="buttons">
-            <button type="submit" data-m="coach_send"></button>
+        <form id="tafForm" class="composer" hidden>
+          <div class="box">
+            <textarea id="tafWords" rows="2" maxlength="2000"></textarea>
+            <button type="submit" class="send" data-m-label="coach_send">↑</button>
           </div>
         </form>
         <p id="noTaf" class="note" data-m="no_taf_here" hidden></p>
@@ -47,25 +58,17 @@
           <p id="tafRemoveWhy" class="note" data-m="taf_remove_on_phone" hidden></p>
         </div>
       </section>
-      <button type="button" id="setupTaf" class="quiet" data-m="setup_taf"></button>
       </div>
       <section id="coach" hidden>
         <div class="viewhead">
           <button type="button" id="coachBack" class="quiet" data-m="coach_back"></button>
           <h2 data-m="coach_title"></h2>
+          <button type="button" id="coachNew" class="quiet small push" data-m="coach_new"></button>
         </div>
-        <div class="buttons">
-          <button type="button" id="coachNew" data-m="coach_new"></button>
+        <div id="pageConsentOff" class="banner" hidden>
+          <p data-m="page_consent_off"></p>
+          <button type="button" id="pageConsentOpen" data-m="page_consent_turn_on"></button>
         </div>
-        <h3 data-m="coach_previous"></h3>
-        <p id="coachPastNote" class="note" hidden></p>
-        <ul id="coachChats" class="chats"></ul>
-        <details id="coachArchived">
-          <summary data-m="coach_archived"></summary>
-          <p class="note" data-m="coach_archived_body"></p>
-          <p id="coachArchivedNote" class="note" hidden></p>
-          <ul id="coachArchivedChats" class="chats"></ul>
-        </details>
         <h3 id="coachOpen" hidden></h3>
         <div id="coachEmpty" hidden>
           <p><strong data-m="coach_empty_title"></strong></p>
@@ -74,32 +77,66 @@
         <ol id="coachThread" class="thread"></ol>
         <p id="coachPhone" class="note" data-m="approve_on_phone" hidden></p>
         <p id="coachNote" class="note"></p>
-        <p id="coachReads" class="note" hidden><span id="coachReadsWords"></span> <button type="button" id="coachReadsSwitch" class="quiet small" hidden></button> <button type="button" id="pageConsentStop" class="quiet small" data-m="page_consent_withdraw" hidden></button></p>
-        <p id="pageConsentOff" class="note" hidden><span data-m="page_consent_off"></span> <button type="button" id="pageConsentOpen" class="quiet small" data-m="page_consent_turn_on"></button></p>
-        <section id="pageConsent" class="card" hidden>
-          <p><strong data-m="page_consent_title"></strong></p>
-          <ul>
-            <li data-m="page_consent_what"></li>
-            <li data-m="page_consent_when"></li>
-            <li data-m="page_consent_never"></li>
-            <li data-m="page_consent_change"></li>
-          </ul>
+        <p id="coachReads" class="note" hidden><span id="coachReadsWords"></span> <button type="button" id="coachReadsSwitch" class="quiet small" hidden></button> <button type="button" id="coachReadsStop" class="quiet small" data-m="page_consent_withdraw"></button></p>
+        <form id="coachForm" class="composer">
+          <div class="box">
+            <textarea id="coachWords" rows="2" maxlength="2000" data-m-placeholder="coach_placeholder"></textarea>
+            <button type="submit" class="send" data-m-label="coach_send">↑</button>
+          </div>
+          <button type="button" id="coachSendAlone" class="quiet small" data-m="coach_send_alone" hidden></button>
+        </form>
+      </section>
+      <section id="chats" hidden>
+        <div class="viewhead">
+          <button type="button" id="chatsBack" class="quiet" data-m="coach_back"></button>
+          <h2 data-m="coach_previous"></h2>
+        </div>
+        <p id="coachPastNote" class="note" hidden></p>
+        <ul id="coachChats" class="chats"></ul>
+        <details id="coachArchived">
+          <summary data-m="coach_archived"></summary>
+          <p class="note" data-m="coach_archived_body"></p>
+          <p id="coachArchivedNote" class="note" hidden></p>
+          <ul id="coachArchivedChats" class="chats"></ul>
+        </details>
+      </section>
+      <section id="settings" hidden>
+        <div class="viewhead">
+          <button type="button" id="settingsBack" class="quiet" data-m="coach_back"></button>
+          <h2 data-m="settings_title"></h2>
+        </div>
+        <section class="card">
+          <h3 data-m="settings_reads_title"></h3>
+          <p id="settingsReadsState" class="note"></p>
           <div class="buttons">
-            <button type="button" id="pageConsentAllow" data-m="page_consent_allow"></button>
-            <button type="button" id="pageConsentNotNow" class="quiet" data-m="page_consent_not_now"></button>
+            <button type="button" id="settingsReadsAllow" data-m="page_consent_turn_on" hidden></button>
+            <button type="button" id="pageConsentStop" class="quiet" data-m="page_consent_withdraw" hidden></button>
           </div>
         </section>
-        <form id="coachForm">
-          <textarea id="coachWords" rows="3" maxlength="2000" data-m-placeholder="coach_placeholder"></textarea>
-          <div class="buttons">
-            <button type="submit" data-m="coach_send"></button>
-            <button type="button" id="coachSendAlone" class="quiet" data-m="coach_send_alone" hidden></button>
-          </div>
-        </form>
+        <section class="card">
+          <h3 data-m="settings_chrome_title"></h3>
+          <p class="note" data-m="paired_body"></p>
+          <button type="button" id="unpair" class="quiet danger" data-m="unpair"></button>
+        </section>
       </section>
       <div id="runs"></div>
       <p id="idle" class="note" data-m="idle"></p>
-      <button id="unpair" class="quiet" data-m="unpair"></button>
+    </section>
+
+    <section id="pageConsent" class="sheet" role="dialog" aria-modal="true" aria-labelledby="pageConsentTitle" hidden>
+      <div class="sheetbody">
+        <h2 id="pageConsentTitle" tabindex="-1" data-m="page_consent_title"></h2>
+        <ul>
+          <li data-m="page_consent_what"></li>
+          <li data-m="page_consent_when"></li>
+          <li data-m="page_consent_never"></li>
+          <li data-m="page_consent_change"></li>
+        </ul>
+        <div class="buttons">
+          <button type="button" id="pageConsentAllow" data-m="page_consent_allow"></button>
+          <button type="button" id="pageConsentNotNow" class="quiet" data-m="page_consent_not_now"></button>
+        </div>
+      </div>
     </section>
 
     <template id="runTemplate">

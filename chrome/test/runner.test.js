@@ -1203,3 +1203,34 @@ test("each Pause, Resume and Stop, whoever made it, is said to planque as the ru
   await r2.sweep();
   assert.deepEqual(said2.map((s) => s.state), ["paused", "stopped"]);
 });
+
+test("Pause, a long wait, then Resume: the held act never touches the page, planque hears one paused and one working, the bar works again, and the act runs once", async () => {
+  let clock = Date.parse("2026-11-24T17:00:00Z");
+  const said = [];
+  const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/", title: "t", text: "", fields: [{ ref: "f1", label: "Email", kind: "email" }], controls: [{ ref: "c1", label: "Save" }], links: [] } });
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock, onRunState: (s) => said.push(s) });
+  await r.handle(step());
+  const read = await r.handle(step({ id: "rd", op: "read" }));
+  const act = () => r.handle(step({ id: "a1", op: "act", read_id: read.page.read_id, act: { kind: "click", ref: "c1" } }));
+  const acts = () => c.calls.filter((x) => x[0] === "page" && x[1] === "act start").length;
+  r.pause("run_1");
+  const run = r.runs.get("run_1");
+  assert.equal(r.barState(run, true).paused, true, "the bar says paused");
+  // The taf holds its act through a ten-minute pause, sending it again every 10 s, as kiff/agents' planque tool does.
+  for (let i = 0; i < 60; i++) {
+    clock += 10_000;
+    assert.equal((await act()).error.code, "paused_by_owner");
+    await r.sweep();
+  }
+  assert.equal(acts(), 0, "nothing reached the page while paused");
+  assert.equal(run.stopped, false, "ten minutes held: still waiting for Resume");
+  r.resume("run_1");
+  assert.equal(r.barState(run, true).paused, false, "the bar says working again");
+  assert.equal(r.state()[0].paused, null);
+  const out = await act();
+  assert.ok(out.page && !out.error, "the held act goes on after Resume");
+  assert.equal(acts(), 1, "and runs exactly once");
+  assert.deepEqual(said.map((s) => s.state), ["paused", "working"], "one paused and one working, not one per held step");
+  assert.equal(said[0].at, "2026-11-24T17:00:00.000Z");
+  assert.equal(said[1].at, "2026-11-24T17:10:00.000Z");
+});

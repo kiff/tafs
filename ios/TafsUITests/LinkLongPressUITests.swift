@@ -25,14 +25,30 @@ final class LinkLongPressUITests: TafsUITestCase {
             XCTAssertEqual(app.state, .runningForeground, "\(what): tafs left the front")
             XCTAssertNotEqual(safari.state, .runningForeground, "\(what): Safari opened")
         }
-        /// Away from any message: near the top, under the navigation bar, so it can't land on a link or a row.
-        func dismiss() { app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.05)).tap() }
+        /// Away from any message: near the top, under the navigation bar, so it can't land on a link or a row. A long-press
+        /// on the answer shows the app's own menu (Report this answer) over a dimmed screen; on iOS 26 a tap that high can land
+        /// in the status bar and leave it up, and the next link has no point to press. So the menu must be gone: if it isn't,
+        /// the dimmed screen is tapped lower, over the thread, which only dismisses it while it's shown.
+        func menuShown() -> Bool { app.buttons["Report this answer"].exists || app.menuItems["Report this answer"].exists }
+        /// Whether the answer's menu has gone, within 3 s.
+        func menuGone() -> Bool {
+            let end = Date().addingTimeInterval(3)
+            while menuShown() && Date() < end { RunLoop.current.run(until: Date().addingTimeInterval(0.25)) }
+            return !menuShown()
+        }
+        func dismiss() {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.05)).tap()
+            if !menuGone() { app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap() }
+            XCTAssertTrue(menuGone(), "the answer's menu closed")
+        }
 
         // Every element the tree has for a link is pressed: if iOS exposes one link twice, each copy must still go through
         // the question.
         for (links, what, question) in [(tels, "long-press on tel:", "This link won't open"), (webs, "long-press on https", nil)] {
             for (index, link) in links.allElementsBoundByIndex.enumerated() {
                 let step = "\(what) (\(index + 1) of \(links.count))"
+                if !link.isHittable { attach(app, "\(step): not hittable") }
+                XCTAssertTrue(link.isHittable, "\(step): the link has a point to press")
                 link.press(forDuration: 1.2)
                 attach(app, step)
                 stillHere(step)

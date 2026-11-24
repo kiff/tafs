@@ -273,6 +273,7 @@ jobs:
           xcodebuild test-without-building \
             -project Tafs.xcodeproj -scheme Tafs \
             -destination "id=$DEVICE_ID" \
+            -resultBundlePath "$RUNNER_TEMP/test-all.xcresult" \
             CODE_SIGNING_ALLOWED=NO
 
       # With the route walk (RouteWalkUITests, one launch of the app: about two minutes)
@@ -299,7 +300,16 @@ jobs:
             -project Tafs.xcodeproj -scheme Tafs \
             -destination "id=$DEVICE_ID" \
             -only-testing:TafsUITests \
+            -resultBundlePath "$RUNNER_TEMP/test-ui.xcresult" \
             CODE_SIGNING_ALLOWED=NO
+
+      # What the screen showed, when a UI test fails: the run's screenshots and attachments.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: test-xcresult
+          path: ${{ runner.temp }}/test-*.xcresult
+          if-no-files-found: ignore
 
   # The Apple Watch app (docs/watch-app.md): built and its unit tests run on a watch
   # simulator, in one xcodebuild, only when what it's built from changes (changes.watch);
