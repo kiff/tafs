@@ -1967,8 +1967,9 @@ final class AppModel: ObservableObject {
     @Published var alertsStillOn: String?
 
     /// Takes this device's push token back from tafs cloud (`DELETE /v1/push/{token}`), tried three times, `wait(n)`
-    /// before the n-th try again (1 s, then 2 s). A 404 is taken back already: tafs cloud holds nothing for it. Nil when
-    /// taken back; else why the last try failed, so sign-out can ask before it goes on.
+    /// before the n-th try again (1 s, then 2 s). A token tafs cloud doesn't hold is answered `{"removed": false}`, which
+    /// counts as taken back: nothing is left on. Any error (offline, 5xx, a 401) is a failed try. Nil when taken back;
+    /// else why the last try failed, so sign-out can ask before it goes on.
     static func takeBackPush(_ unregister: () async throws -> Void,
                              wait: (Int) async -> Void = { try? await Task.sleep(nanoseconds: UInt64($0) * 1_000_000_000) }) async -> String? {
         var why = ""
@@ -1976,8 +1977,6 @@ final class AppModel: ObservableObject {
             if attempt > 0 { await wait(attempt) }
             do {
                 try await unregister()
-                return nil
-            } catch let error as TafsCloud.CloudError where error.status == 404 {
                 return nil
             } catch {
                 why = error.localizedDescription

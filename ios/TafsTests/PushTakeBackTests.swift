@@ -38,9 +38,10 @@ final class PushTakeBackTests: XCTestCase {
         XCTAssertEqual(r.tries, 3, "never more than three")
     }
 
-    func testA404IsTakenBackAlready() async {
-        let r = await takeBack(failures: 5, error: TafsCloud.CloudError(status: 404, message: "not found"))
-        XCTAssertTrue(r.taken, "tafs cloud holds nothing for this token")
-        XCTAssertEqual(r.tries, 1)
+    /// A session KIFF already ended (401) is a failed try like any other: nothing was taken back, so sign-out asks.
+    func testA401IsNotTakenBack() async {
+        let r = await takeBack(failures: 5, error: TafsCloud.CloudError(status: 401, message: "unauthorized"))
+        XCTAssertFalse(r.taken)
+        XCTAssertEqual(r.tries, 3)
     }
 }
