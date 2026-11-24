@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { readEvents } from "../src/cloud/agents.js";
 import { PAGE_TOOLS, TOOLS } from "../src/cloud/coach.js";
-import { handle, handleStream, type HTTPEvent, PAGE, pageReadKey, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { handle, handleStream, type HTTPEvent, PAGE, pageReadsKey, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -67,6 +67,12 @@ async function thread(w: World) {
 
 afterEach(() => vi.restoreAllMocks());
 
+/** The host tafs cloud keeps for `run`'s page, from the person's one item: none when it keeps none. */
+async function keptHost(w: World, run: string): Promise<string | undefined> {
+  const kept = (await w.coach.get(pageReadsKey("t_acme", "u_ana"))) as { reads?: Array<{ run: string; host: string }> } | undefined;
+  return kept?.reads?.find((r) => r.run === run)?.host;
+}
+
 describe("Coach reads the page the person has open, with their message", () => {
   // Invariant: a page goes to kiff/agents beside the person's words, never in them, with only the tools a page may lead to, and tafs cloud keeps its host alone
   // Category: privacy
@@ -95,7 +101,7 @@ describe("Coach reads the page the person has open, with their message", () => {
     expect(JSON.stringify(started)).not.toContain("Refund policy");
 
     // Kept: the host, and nothing else of the page.
-    expect(await w.coach.get(pageReadKey("t_acme", run))).toBe("shop.example");
+    expect(await keptHost(w, run)).toBe("shop.example");
     const said = logged.filter((l) => l.includes("coach_page_read"));
     expect(said).toHaveLength(1);
     expect(JSON.parse(said[0]!)).toEqual({ event: "coach_page_read", tenant: "t_acme", run, host: "shop.example" });
@@ -119,7 +125,7 @@ describe("Coach reads the page the person has open, with their message", () => {
     const sent = w.agents.asides.get(run)!;
     expect(sent.tools).toEqual([...PAGE_TOOLS]);
     expect(sent.aside).toBe("Address: https://shop.example/orders/42\nTitle: Order 42 · Refund policy\n\n" + PAGE_SENT.text);
-    expect(await w.coach.get(pageReadKey("t_acme", run))).toBe("shop.example");
+    expect(await keptHost(w, run)).toBe("shop.example");
   });
 
   // Invariant: a page that can't go is refused with its message, and nothing starts: never a message that went without the page its panel said it read
@@ -171,9 +177,49 @@ describe("Coach reads the page the person has open, with their message", () => {
         expect((r.body.message as { reading?: string }).reading).toBeUndefined();
       }
     }
-    expect(await w.coach.get(pageReadKey("t_acme", waiting.id))).toBeUndefined();
+    expect(await keptHost(w, waiting.id)).toBeUndefined();
     expect(logged.filter((l) => l.includes("coach_page_read"))).toHaveLength(0);
     expect((await thread(w)).find((m) => m.id === `${waiting.id}.in`)?.reading).toBeUndefined();
+  });
+
+  // Invariant: a Coach thread read costs one read of the page hosts, however many messages it shows, and the kept hosts stay bounded
+  it("a thread of many messages reads the page hosts once, and a person keeps at most PAGE.kept of them", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const first = await send(w, COACH, { text: "What's this?", page: PAGE_SENT });
+    // Nine messages, under the ten in ten minutes a person may send.
+    for (let i = 0; i < 8; i++) await send(w, COACH, { text: `And ${i}?`, session: first.body.session });
+    const get = vi.spyOn(w.coach, "get");
+    const messages = await thread(w);
+    expect(messages.filter((m) => m.from === "owner")).toHaveLength(9);
+    expect(get.mock.calls.filter(([key]) => String(key).includes("#page-reads#"))).toHaveLength(1);
+    expect(messages.find((m) => m.id === `${first.body.run}.in`)?.reading).toBe("shop.example");
+    get.mockRestore();
+
+    // Already PAGE.kept kept: the next page message's host goes in, and the oldest goes out.
+    const full = Array.from({ length: PAGE.kept }, (_, i) => ({ run: `run_old${i}`, host: "old.example", at: NOW.toISOString() }));
+    await w.coach.put(pageReadsKey("t_acme", "u_ana"), { reads: full }, new Date(NOW.getTime() + PAGE.keptMs));
+    const last = await send(w, COACH, { text: "And this one?", session: first.body.session, page: PAGE_SENT });
+    expect(last.status).toBe(200);
+    const kept = (await w.coach.get(pageReadsKey("t_acme", "u_ana"))) as { reads: Array<{ run: string }> };
+    expect(kept.reads).toHaveLength(PAGE.kept);
+    expect(kept.reads[0]!.run).toBe("run_old1");
+    expect(await keptHost(w, last.body.run as string)).toBe("shop.example");
+  });
+
+  // Invariant: a page's host is kept PAGE.keptMs from its own message, however often the person sends pages since
+  it("a host older than PAGE.keptMs is neither shown nor kept by the next page message, whenever the item was last written", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const first = await send(w, COACH, { text: "What's this?", page: PAGE_SENT });
+    const old = new Date(NOW.getTime() - PAGE.keptMs - 86_400_000).toISOString();
+    // That message's host, as if it had gone 31 days ago, beside one from today; the item itself written just now.
+    await w.coach.put(pageReadsKey("t_acme", "u_ana"), { reads: [{ run: first.body.run, host: "shop.example", at: old },
+      { run: "run_today", host: "news.example", at: NOW.toISOString() }] }, new Date(NOW.getTime() + PAGE.keptMs));
+    expect((await thread(w)).find((m) => m.id === `${first.body.run}.in`)?.reading).toBeUndefined();
+    const next = await send(w, COACH, { text: "And this?", session: first.body.session, page: PAGE_SENT });
+    const kept = (await w.coach.get(pageReadsKey("t_acme", "u_ana"))) as { reads: Array<{ run: string }> };
+    expect(kept.reads.map((r) => r.run)).toEqual(["run_today", next.body.run]);
   });
 
   it("a page just inside the bound goes, its title kept to one line", async () => {

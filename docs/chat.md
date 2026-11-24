@@ -112,7 +112,10 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   so the thread says which site went with it: `reading` on the person's message (`"shop.example"`), and on the
   plain send's `message`. Its address, title and text are kept nowhere in tafs cloud, and the log says
   `coach_page_read` with the run and the host alone. Coach's answer is a message like any other, and can say what
-  was on the page.
+  was on the page. The hosts are one item per person (`pageReadsKey`), their last 200 page messages, each with its
+  own time: a host is shown and kept only for 30 days from its own message, however often pages are sent since. A
+  page send reads and writes it once, dropping hosts past their 30 days, and a thread read reads it once, whatever
+  the thread's length (none when no message in view started a run).
 - **A message that answers a card waiting in the chat** goes on in that card's run with the person's words alone
   (kiff/agents answers the card with them). It reads no page, and no message says `reading` for it: tafs cloud
   keeps a host only for a run the send started, one kiff/agents created once the send began (a card's run is older,
