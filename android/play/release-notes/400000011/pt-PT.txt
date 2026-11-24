@@ -1,0 +1,1 @@
+Cada um dos seus relógios mostra agora a mesma caixa de entrada: o que lê ou dispensa num fica lido ou desaparece nos outros. O tafs no Wear OS também fala hindi, urdu e turcomano.

@@ -1,0 +1,1 @@
+- **Wear OS 0.4.6 (400,000,011) for Play's internal track:** the Inbox's read and dismissed in step across your watches, Hindi, Urdu and Turkmen, and the line for a phone that can't reach tafs cloud ([watch-wear.md](docs/watch-wear.md)).
