@@ -79,5 +79,6 @@
   "hand_show_no_field": {"message": "To je ta stran. Taf ni navedel polja ali gumba, na katerega bi pokazal.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "Predano vam", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "To ste naredili", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "Rekli ste »Ne zdaj«", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "Rekli ste »Ne zdaj«", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$ dela na tej strani", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }

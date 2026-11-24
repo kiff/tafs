@@ -79,5 +79,6 @@
   "hand_show_no_field": {"message": "এটাই সেই পৃষ্ঠা। taf দেখানোর জন্য কোনো ঘর বা বোতামের নাম বলেনি।", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "আপনাকে দেওয়া হয়েছে", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "আপনি করেছেন", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "আপনি বলেছেন “এখন নয়”", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "আপনি বলেছেন “এখন নয়”", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$ এই পৃষ্ঠায় কাজ করছে", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }

@@ -79,5 +79,6 @@
   "hand_show_no_field": {"message": "Aquesta és la pàgina. El taf no ha indicat cap camp ni botó.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "Te l'ha passat", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Ho has fet", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "Has dit «Ara no»", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "Has dit «Ara no»", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$ treballa en aquesta pàgina", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }

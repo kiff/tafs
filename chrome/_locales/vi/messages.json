@@ -79,5 +79,6 @@
   "hand_show_no_field": {"message": "Đây là trang đó. Taf không nêu ô hay nút nào để chỉ.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
   "step_handed": {"message": "Đã giao cho bạn", "description": "Step list: the taf handed the person one thing to do in the page."},
   "step_hand_done": {"message": "Bạn đã làm xong", "description": "Step list: the person pressed Done on the Your turn card."},
-  "step_hand_declined": {"message": "Bạn đã chọn “Không phải bây giờ”", "description": "Step list: the person pressed Not now on the Your turn card."}
+  "step_hand_declined": {"message": "Bạn đã chọn “Không phải bây giờ”", "description": "Step list: the person pressed Not now on the Your turn card."},
+  "bar_working": {"message": "$TAF$ đang làm việc trên trang này", "description": "The bar at the top of a page while a taf acts in it, beside Stop. Shown on the website itself.", "placeholders": {"taf": {"content": "$1"}}}
 }

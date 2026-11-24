@@ -51,6 +51,8 @@ export const KEYS = Object.freeze(["Enter", "Escape", "ArrowDown", "ArrowUp"]);
 
 /** Why `act` may not run on `page`: `{code, why}`, or null when it may. */
 export function refuse(page, act) {
+  // The extension keeps no saved sign-in: a step naming one is refused first, whatever its kind or field.
+  if (act && act.sealed !== undefined) return { code: CODE.secretField, why: "the extension keeps no saved sign-in and never types one" };
   if (!act || !KINDS.includes(act.kind)) {
     return { code: CODE.badStep, why: "an act is a click, fill, select, check, press or scroll of one ref, a scroll of the page, or back" };
   }
@@ -101,8 +103,6 @@ export function refuse(page, act) {
   const field = (page.fields || []).find((f) => f.ref === act.ref);
   if (!field) return { code: CODE.refUnknown, why: "the page has no field " + act.ref };
   if (field.kind === "card") return { code: CODE.paymentStep, why: "a taf never types card details" };
-  // The extension keeps no saved sign-in: a step naming one is refused here too, whatever field it names.
-  if (act.sealed !== undefined) return { code: CODE.secretField, why: "the extension keeps no saved sign-in and never types one" };
   if (secret(field)) return { code: CODE.secretField, why: "a taf never types a password or a code" };
   if (act.kind === "fill" && typeof act.value !== "string") return { code: CODE.badStep, why: "a fill has a value" };
   if (act.kind === "fill" && act.keys !== undefined && act.keys !== true) return { code: CODE.badStep, why: "keys is true or absent" };
