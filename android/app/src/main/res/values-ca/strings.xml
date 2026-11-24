@@ -522,6 +522,9 @@
     <string name="chat_it_lower">ell</string>
     <string name="chat_jump_latest_something_new">Salta a l\'últim, hi ha alguna cosa nova</string>
     <string name="chat_jump_to_latest">Salta a l\'últim</string>
+    <string name="chat_link_confirm_body">Ve d\'una pàgina que Coach ha llegit. Porta a: %1$s</string>
+    <string name="chat_link_confirm_open">Obre</string>
+    <string name="chat_link_confirm_title">Vols obrir aquest enllaç?</string>
     <string name="chat_message_carries_most_files">Un missatge porta com a màxim %1$s fitxers.</string>
     <string name="chat_message_taf">Escriu a %1$s</string>
     <string name="chat_message_your_taf">Escriu al teu taf</string>

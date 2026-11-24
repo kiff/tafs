@@ -550,6 +550,9 @@
     <string name="chat_it_lower">tas</string>
     <string name="chat_jump_latest_something_new">Pāriet uz jaunāko, ir kas jauns</string>
     <string name="chat_jump_to_latest">Pāriet uz jaunāko</string>
+    <string name="chat_link_confirm_body">Tā nāk no lapas, ko Coach izlasīja. Tā ved uz: %1$s</string>
+    <string name="chat_link_confirm_open">Atvērt</string>
+    <string name="chat_link_confirm_title">Vai atvērt šo saiti?</string>
     <string name="chat_message_carries_most_files">Ziņā var būt ne vairāk kā %1$s faili.</string>
     <string name="chat_message_taf">Ziņa: %1$s</string>
     <string name="chat_message_your_taf">Raksti savam taf</string>

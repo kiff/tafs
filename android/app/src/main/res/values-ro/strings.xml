@@ -550,6 +550,9 @@
     <string name="chat_it_lower">el</string>
     <string name="chat_jump_latest_something_new">Salt la cele mai noi, e ceva nou</string>
     <string name="chat_jump_to_latest">Salt la cele mai noi</string>
+    <string name="chat_link_confirm_body">Provine dintr-o pagină citită de Coach. Duce la: %1$s</string>
+    <string name="chat_link_confirm_open">Deschideți</string>
+    <string name="chat_link_confirm_title">Deschideți acest link?</string>
     <string name="chat_message_carries_most_files">Un mesaj poartă cel mult %1$s fișiere.</string>
     <string name="chat_message_taf">Mesaj către %1$s</string>
     <string name="chat_message_your_taf">Mesaj către taful dvs.</string>

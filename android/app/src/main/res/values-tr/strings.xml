@@ -522,6 +522,9 @@
     <string name="chat_it_lower">o</string>
     <string name="chat_jump_latest_something_new">En yeniye git, yeni bir şey var</string>
     <string name="chat_jump_to_latest">En yeniye git</string>
+    <string name="chat_link_confirm_body">Coach\'un okuduğu bir sayfadan geldi. Şuraya gider: %1$s</string>
+    <string name="chat_link_confirm_open">Aç</string>
+    <string name="chat_link_confirm_title">Bu bağlantı açılsın mı?</string>
     <string name="chat_message_carries_most_files">Bir mesaj en fazla %1$s dosya taşır.</string>
     <string name="chat_message_taf">%1$s taf\'ına mesaj</string>
     <string name="chat_message_your_taf">Taf\'ınıza mesaj</string>

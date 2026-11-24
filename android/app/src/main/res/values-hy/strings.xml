@@ -522,6 +522,9 @@
     <string name="chat_it_lower">այն</string>
     <string name="chat_jump_latest_something_new">Անցեք վերջինին, ինչ-որ նոր բան կա</string>
     <string name="chat_jump_to_latest">Անցեք վերջինին</string>
+    <string name="chat_link_confirm_body">Այն եկել է մի էջից, որը Coach-ը կարդացել է։ Տանում է՝ %1$s</string>
+    <string name="chat_link_confirm_open">Բացել</string>
+    <string name="chat_link_confirm_title">Բացե՞լ այս հղումը</string>
     <string name="chat_message_carries_most_files">Հաղորդագրությունը տեղավորում է առավելագույնը %1$s ֆայլ։</string>
     <string name="chat_message_taf">Հաղորդագրություն՝ %1$s</string>
     <string name="chat_message_your_taf">Գրեք ձեր taf-ին</string>

@@ -494,6 +494,9 @@
     <string name="chat_it_lower">ມັນ</string>
     <string name="chat_jump_latest_something_new">ໄປຫາອັນຫຼ້າສຸດ, ມີສິ່ງໃໝ່</string>
     <string name="chat_jump_to_latest">ໄປຫາອັນຫຼ້າສຸດ</string>
+    <string name="chat_link_confirm_body">ມັນມາຈາກໜ້າທີ່ Coach ອ່ານ. ມັນໄປຫາ: %1$s</string>
+    <string name="chat_link_confirm_open">ເປີດ</string>
+    <string name="chat_link_confirm_title">ເປີດລິ້ງນີ້ບໍ?</string>
     <string name="chat_message_carries_most_files">ຂໍ້ຄວາມໜຶ່ງມີໄດ້ສູງສຸດ %1$s ໄຟລ໌.</string>
     <string name="chat_message_taf">ສົ່ງຂໍ້ຄວາມຫາ %1$s</string>
     <string name="chat_message_your_taf">ສົ່ງຂໍ້ຄວາມຫາ taf ຂອງທ່ານ</string>

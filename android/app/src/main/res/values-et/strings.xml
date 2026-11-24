@@ -522,6 +522,9 @@
     <string name="chat_it_lower">see</string>
     <string name="chat_jump_latest_something_new">Mine uusimale, on midagi uut</string>
     <string name="chat_jump_to_latest">Mine uusimale</string>
+    <string name="chat_link_confirm_body">See pärineb lehelt, mille Coach luges. See viib aadressile: %1$s</string>
+    <string name="chat_link_confirm_open">Ava</string>
+    <string name="chat_link_confirm_title">Kas avada see link?</string>
     <string name="chat_message_carries_most_files">Sõnum mahutab kuni %1$s faili.</string>
     <string name="chat_message_taf">Kirjuta tafile %1$s</string>
     <string name="chat_message_your_taf">Kirjuta oma tafile</string>

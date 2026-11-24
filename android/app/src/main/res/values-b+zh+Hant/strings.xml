@@ -494,6 +494,9 @@
     <string name="chat_it_lower">它</string>
     <string name="chat_jump_latest_something_new">跳到最新，有新內容</string>
     <string name="chat_jump_to_latest">跳到最新</string>
+    <string name="chat_link_confirm_body">這個連結來自 Coach 讀過的頁面。前往：%1$s</string>
+    <string name="chat_link_confirm_open">開啟</string>
+    <string name="chat_link_confirm_title">要開啟這個連結嗎？</string>
     <string name="chat_message_carries_most_files">一則訊息最多可附加 %1$s 個檔案。</string>
     <string name="chat_message_taf">傳訊息給 %1$s</string>
     <string name="chat_message_your_taf">傳訊息給您的 taf</string>

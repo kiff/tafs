@@ -522,6 +522,9 @@
     <string name="chat_it_lower">tu taf</string>
     <string name="chat_jump_latest_something_new">Ir a lo más reciente, hay algo nuevo</string>
     <string name="chat_jump_to_latest">Ir a lo más reciente</string>
+    <string name="chat_link_confirm_body">Viene de una página que leyó Coach. Lleva a: %1$s</string>
+    <string name="chat_link_confirm_open">Abrir</string>
+    <string name="chat_link_confirm_title">¿Abrir este enlace?</string>
     <string name="chat_message_carries_most_files">Un mensaje lleva como máximo %1$s archivos.</string>
     <string name="chat_message_taf">Mensaje a %1$s</string>
     <string name="chat_message_your_taf">Mensaje a tu taf</string>

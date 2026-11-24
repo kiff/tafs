@@ -494,6 +494,9 @@
     <string name="chat_it_lower">ia</string>
     <string name="chat_jump_latest_something_new">Lompat ke yang terbaru, ada yang baru</string>
     <string name="chat_jump_to_latest">Lompat ke yang terbaru</string>
+    <string name="chat_link_confirm_body">Tautan ini berasal dari halaman yang dibaca Coach. Tujuannya: %1$s</string>
+    <string name="chat_link_confirm_open">Buka</string>
+    <string name="chat_link_confirm_title">Buka tautan ini?</string>
     <string name="chat_message_carries_most_files">Satu pesan membawa paling banyak %1$s file.</string>
     <string name="chat_message_taf">Pesan untuk %1$s</string>
     <string name="chat_message_your_taf">Kirim pesan ke taf Anda</string>

@@ -522,6 +522,9 @@
     <string name="chat_it_lower">той</string>
     <string name="chat_jump_latest_something_new">Към най-новото, има нещо ново</string>
     <string name="chat_jump_to_latest">Към най-новото</string>
+    <string name="chat_link_confirm_body">Тя идва от страница, която Coach прочете. Води към: %1$s</string>
+    <string name="chat_link_confirm_open">Отваряне</string>
+    <string name="chat_link_confirm_title">Да се отвори ли тази връзка?</string>
     <string name="chat_message_carries_most_files">Едно съобщение носи най-много %1$s файла.</string>
     <string name="chat_message_taf">Съобщение до %1$s</string>
     <string name="chat_message_your_taf">Съобщение до вашия taf</string>

@@ -522,6 +522,9 @@
     <string name="chat_it_lower">тэр</string>
     <string name="chat_jump_latest_something_new">Хамгийн сүүлийнх рүү үсрэх, шинэ зүйл байна</string>
     <string name="chat_jump_to_latest">Хамгийн сүүлийнх рүү үсрэх</string>
+    <string name="chat_link_confirm_body">Энэ нь Coach-ийн уншсан хуудаснаас ирсэн. Хүрэх хаяг: %1$s</string>
+    <string name="chat_link_confirm_open">Нээх</string>
+    <string name="chat_link_confirm_title">Энэ холбоосыг нээх үү?</string>
     <string name="chat_message_carries_most_files">Нэг мессеж хамгийн ихдээ %1$s файл авч явна.</string>
     <string name="chat_message_taf">%1$s-д бичих</string>
     <string name="chat_message_your_taf">Өөрийн taf-д бичих</string>

@@ -522,6 +522,9 @@
     <string name="chat_it_lower">het</string>
     <string name="chat_jump_latest_something_new">Naar het nieuwste, er is iets nieuws</string>
     <string name="chat_jump_to_latest">Naar het nieuwste</string>
+    <string name="chat_link_confirm_body">Hij komt van een pagina die Coach heeft gelezen. Hij gaat naar: %1$s</string>
+    <string name="chat_link_confirm_open">Openen</string>
+    <string name="chat_link_confirm_title">Deze link openen?</string>
     <string name="chat_message_carries_most_files">Een bericht bevat maximaal %1$s bestanden.</string>
     <string name="chat_message_taf">Bericht aan %1$s</string>
     <string name="chat_message_your_taf">Bericht aan je taf</string>
