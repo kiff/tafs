@@ -82,7 +82,7 @@ final class CalendarDayModelTests: XCTestCase {
             (WatchReply(.signedOut), .signedOut),
             (WatchReply(.notYet), .updatePhone),
             (WatchReply(.failed, line: "tafs couldn't read it."), .failed("tafs couldn't read it.")),
-            (WatchReply(.ok), .failed(Words.Alert.tafsCouldNotReachKiff)),
+            (WatchReply(.ok), .failed(Words.Watch.phoneCouldNotReachCloud)),
         ]
         for (reply, state) in cases {
             let model = CalendarDayModel(phone: Phone { _ in reply }, clock: { self.now })
