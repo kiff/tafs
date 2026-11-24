@@ -30,8 +30,9 @@ final class ChatPinUITests: TafsUITestCase {
         func seen() -> String { "\(Int(fromTop())) pt down; message \(sent.frame), thread \(thread.frame); \(thread.value ?? "")" }
         let atTop: CGFloat = 90
         /// How far one thing may reach over the one it sits under and still count as under it: rounding and spacing differ
-        /// by a point or two between iOS versions and devices (iOS 27.2 drew the streaming answer 2 points up).
-        let slack: CGFloat = 2
+        /// by a point or two between iOS versions and devices. iOS 27.2 draws the streaming answer exactly 2 points into
+        /// the work block, and 2 points of slack then misses by a floating-point hair (386.99999999999994 against 387), so 3.
+        let slack: CGFloat = 3
 
         // At the top within a moment of Send, before any answer: never at the end of the run.
         XCTAssertTrue(within(1.0) { fromTop() < atTop }, "the sent message reached the top at once: \(seen())")
