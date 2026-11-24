@@ -118,7 +118,7 @@ final class InboxModelTests: XCTestCase {
         for line in store.kept { XCTAssertFalse(line.line.contains("€") || line.line.contains("zł"), line.line) }
     }
 
-    /// An answer taken away keeps no id: it's put once, by its message's id, so nothing would bring it back (dev-android's read).
+    /// An answer taken away keeps no id: it's put once, by its message's id, so nothing would bring it back.
     func testADismissedAnswerKeepsNoID() {
         let store = Kept()
         let inbox = model(store)
@@ -158,7 +158,7 @@ final class InboxModelTests: XCTestCase {
     }
 
     /// A model made while the file can't be read starts empty; once the watch is unlocked it takes in what the file kept, so
-    /// its next write leaves nothing out (agentgabo's read).
+    /// its next write leaves nothing out.
     func testAModelMadeWhileLockedTakesInTheFileOnceItCan() {
         let store = Kept()
         store.kept = [InboxLine(id: "held:h_1", kind: .held, title: "Rae", line: "Refund order 4502", at: now)]
@@ -187,8 +187,8 @@ final class InboxModelTests: XCTestCase {
         XCTAssertEqual(store.gone, [])
     }
 
-    /// A file there that can't be read now (as while the watch is locked) is never written over, so neither half is lost
-    /// (agentgabo's read). A folder in the file's place stands for it: it's there, and reading it fails.
+    /// A file there that can't be read now (as while the watch is locked) is never written over, so neither half is lost.
+    /// A folder in the file's place stands for it: it's there, and reading it fails.
     func testAFileThatCantBeReadIsNeverWrittenOver() throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("InboxModelTests-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: folder) }

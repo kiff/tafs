@@ -146,6 +146,7 @@
   "sample.memory.ask_first": "Cardに合っていても、いつもと違うことは先に確認します。",
   "sample.memory.explain": "判断の説明は段落より1行がよいとのことです。",
   "sample.memory.regulars": "毎週連絡をくれる顧客には、同じ日の朝に返信します。",
+  "sample.not_in_sample": "これはサンプルにはありません。行うには、KIFFでサインインしてください。",
   "sample.parcels.change_address": "注文 #5141の配送先住所を変更",
   "sample.parcels.change_address_why": "新しいアドレスからのメールで依頼あり",
   "sample.parcels.job": "顧客に聞かれる前に、荷物の遅延を知らせます。再発送はあなたの承認を待ちます。メールだけで配送先住所を変えることはしません。",

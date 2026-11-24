@@ -71,7 +71,7 @@
   "billing.solo_subscription_one_charged_your": "Solo бол {period}-ийн захиалга, үнэ {price}, таны Apple бүртгэлээс төлөгдөнө. Та цуцлах хүртэл {period_2} бүр сунгагдана.",
   "billing.starts_free": "{trial} үнэгүй эхэлнэ.",
   "billing.tafs_kiff_one_person_every": "Нэг хүнд зориулсан taf-ууд, сар бүр.",
-  "billing.team_on_web": "kiff.dev дээр Team авах",
+  "billing.team_on_web": "kiff.dev дээр Company авах",
   "billing.terms_use": "Ашиглалтын нөхцөл",
   "billing.test_purchase_credits": "Туршилтын худалдан авалт энэ бүртгэлд кредит нэмэхгүй.",
   "billing.try_free": "{trial} үнэгүй туршаад үзэх",

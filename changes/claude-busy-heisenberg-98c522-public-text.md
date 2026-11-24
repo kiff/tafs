@@ -1,0 +1,1 @@
+- **Docs and comments:** the public text names the rule itself, with no internal thread, reviewer or date. No code changes.

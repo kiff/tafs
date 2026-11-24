@@ -377,7 +377,7 @@ describe("Coach's core", () => {
   it("reads a new operation's fields before naming them when it improves a taf", () => {
     const body = COACH_SKILLS.find((k) => k.name === "improve-a-taf")!.body.replace(/\s+/g, " ");
     expect(body).toContain("A tool it lacks: ask before you add it. Before you name any field of a new operation, read its fields with the vendor's read-only tool that lists them (such as api_details): it's on the taf's connection from setup; else add it first, read_only with setup_reads: true. Name each field only as it gives it (such as parameters.id), never from memory: a server's may differ.");
-    // Read first, then ask (kiff-qa on #1000): never the field-listing tool and the new tool in one request.
+    // Read first, then ask: never the field-listing tool and the new tool in one request.
     expect(body).not.toContain("to the taf's connection with the new tool");
   });
 

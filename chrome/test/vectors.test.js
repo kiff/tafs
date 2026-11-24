@@ -52,7 +52,7 @@ const r = JSON.parse(readFileSync(new URL("../../vectors/chrome-release.json", i
 
 test("a release signs the vector's bytes, takes only the vector's handles, and holds only as the extension checks it", async () => {
   const { checkRelease } = await import("../src/protocol.js");
-  const { parseHandle } = await import("../src/vault.js");
+  const { parseHandle } = await import("../src/protocol.js");
   const { sign, newKeyPair, publicSPKI } = await import("../src/crypto.js");
   const body = { chrome_id: r.chrome_id, op: r.op, sealed: r.sealed, origin: r.origin, field_ref: r.field_ref, read_id: r.read_id, nonce: r.nonce, exp: r.exp };
   assert.equal(b64u(signingBytes(LABEL.release, body)), r.signed_bytes);

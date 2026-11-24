@@ -224,7 +224,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo là gói đăng ký %2$s / %1$s, tính vào tài khoản Apple của bạn. Tự gia hạn vào cuối mỗi kỳ (%3$s) cho đến khi bạn hủy.</string>
     <string name="billing_starts_free">Bắt đầu với %1$s miễn phí.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs cho một người, mỗi tháng.</string>
-    <string name="billing_team_on_web">Đăng ký Team trên kiff.dev</string>
+    <string name="billing_team_on_web">Đăng ký Company trên kiff.dev</string>
     <string name="billing_terms_use">Điều khoản sử dụng</string>
     <string name="billing_test_purchase_credits">Giao dịch mua thử không cộng tín dụng vào tài khoản này.</string>
     <string name="billing_try_free">Dùng thử miễn phí %1$s</string>
@@ -475,6 +475,7 @@
     <string name="chat_file_choose_file">Chọn tệp</string>
     <string name="chat_file_choose_photos">Chọn ảnh</string>
     <string name="chat_file_could_not_open">Không thể mở tệp.</string>
+    <string name="chat_file_mac_camera_off">Camera đang tắt đối với tafs. Hãy bật trong Cài đặt Hệ thống › Quyền riêng tư &amp; Bảo mật › Camera (trên macOS 12: Tùy chọn Hệ thống › Bảo mật &amp; Quyền riêng tư › Quyền riêng tư › Camera).</string>
     <string name="chat_file_no_app_opens">Không có ứng dụng nào trên điện thoại này mở được %1$s.</string>
     <string name="chat_file_no_camera">Điện thoại này không có ứng dụng máy ảnh để chụp ảnh.</string>
     <string name="chat_file_not_opened">Không thể mở %1$s. %2$s</string>
@@ -2028,6 +2029,7 @@
     <string name="sample_memory_ask_first">Hỏi trước mọi việc bất thường, kể cả khi nó nằm trong Card.</string>
     <string name="sample_memory_explain">Bạn muốn tôi giải thích một quyết định trong một dòng thay vì một đoạn.</string>
     <string name="sample_memory_regulars">Khách hàng viết mỗi tuần sẽ được trả lời ngay trong sáng hôm đó.</string>
+    <string name="sample_not_in_sample">Việc này không có trong dữ liệu mẫu. Hãy đăng nhập bằng KIFF để thực hiện.</string>
     <string name="sample_parcels_change_address">Đổi địa chỉ giao hàng của đơn #5141</string>
     <string name="sample_parcels_change_address_why">Một email từ địa chỉ mới yêu cầu việc này</string>
     <string name="sample_parcels_job">Báo cho khách hàng khi một bưu kiện bị trễ, trước khi họ hỏi. Việc gửi lại chờ bạn. Không bao giờ đổi địa chỉ giao hàng theo một email.</string>

@@ -75,7 +75,7 @@
   "billing.solo_subscription_one_charged_your": "Solo je předplatné na jeden {period} za {price}, účtované na váš účet Apple. Obnovuje se každý {period_2}, dokud ho nezrušíte.",
   "billing.starts_free": "Začíná {trial} zdarma.",
   "billing.tafs_kiff_one_person_every": "Tafs pro jednoho člověka, každý měsíc.",
-  "billing.team_on_web": "Získat Team na kiff.dev",
+  "billing.team_on_web": "Získat Company na kiff.dev",
   "billing.terms_use": "Podmínky použití",
   "billing.test_purchase_credits": "Testovací nákupy k tomuto účtu nepřidávají kredity.",
   "billing.try_free": "Vyzkoušet {trial} zdarma",

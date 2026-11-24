@@ -238,7 +238,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo je předplatné na jeden %1$s za %2$s, účtované na váš účet Apple. Obnovuje se každý %3$s, dokud ho nezrušíte.</string>
     <string name="billing_starts_free">Začíná %1$s zdarma.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs pro jednoho člověka, každý měsíc.</string>
-    <string name="billing_team_on_web">Získat Team na kiff.dev</string>
+    <string name="billing_team_on_web">Získat Company na kiff.dev</string>
     <string name="billing_terms_use">Podmínky použití</string>
     <string name="billing_test_purchase_credits">Testovací nákupy k tomuto účtu nepřidávají kredity.</string>
     <string name="billing_try_free">Vyzkoušet %1$s zdarma</string>
@@ -529,6 +529,7 @@
     <string name="chat_file_choose_file">Vybrat soubor</string>
     <string name="chat_file_choose_photos">Vybrat fotky</string>
     <string name="chat_file_could_not_open">Soubor nešlo otevřít.</string>
+    <string name="chat_file_mac_camera_off">Kamera je pro tafs vypnutá. Zapněte ji v Nastavení systému › Soukromí a zabezpečení › Kamera (v macOS 12: Předvolby systému › Zabezpečení a soukromí › Soukromí › Kamera).</string>
     <string name="chat_file_no_app_opens">Žádná aplikace v tomto telefonu neotevře %1$s.</string>
     <string name="chat_file_no_camera">V tomto telefonu není aplikace fotoaparátu, kterou by šlo vyfotit.</string>
     <string name="chat_file_not_opened">%1$s nešlo otevřít. %2$s</string>
@@ -2160,6 +2161,7 @@
     <string name="sample_memory_ask_first">Zeptat se před čímkoli neobvyklým, i když to odpovídá Card.</string>
     <string name="sample_memory_explain">Raději vysvětlím rozhodnutí jedním řádkem než odstavcem.</string>
     <string name="sample_memory_regulars">Zákazníci, kteří píšou každý týden, dostanou odpověď ještě to ráno.</string>
+    <string name="sample_not_in_sample">Tohle v ukázce není. Pokud to chcete udělat, přihlaste se přes KIFF.</string>
     <string name="sample_parcels_change_address">Změnit doručovací adresu u objednávky č. 5141</string>
     <string name="sample_parcels_change_address_why">Požádal o to e-mail z nové adresy</string>
     <string name="sample_parcels_job">Dát zákazníkům vědět, že se zásilka zpožďuje, dřív než se zeptají. Nová odeslání čekají na vás. Nikdy neměnit doručovací adresu na základě e-mailu.</string>

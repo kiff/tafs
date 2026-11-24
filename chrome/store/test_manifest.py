@@ -1,6 +1,6 @@
 """python3 -m unittest chrome/store/test_manifest.py
 
-The manifest as the owner chose it (kiff/work#20, 23 Nov): the extension asks Chrome once, at install, for every https site, as
+The manifest as the owner chose it: the extension asks Chrome once, at install, for every https site, as
 Claude in Chrome does, and never per site. What stops a taf reaching a site its connection doesn't list is then the extension's own
 checks (docs/chrome.md, "Runs"), not Chrome's permission, so the manifest must say exactly this and nothing wider.
 """

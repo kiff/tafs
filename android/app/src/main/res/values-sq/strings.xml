@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo është një abonim për një periudhë (%1$s) me %2$s, i ngarkuar në llogarinë tuaj Apple. Rinovohet çdo periudhë (%3$s) derisa ta anuloni.</string>
     <string name="billing_starts_free">Fillon me: %1$s falas.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs për një person, çdo muaj.</string>
-    <string name="billing_team_on_web">Merrni Team në kiff.dev</string>
+    <string name="billing_team_on_web">Merrni Company në kiff.dev</string>
     <string name="billing_terms_use">Kushtet e përdorimit</string>
     <string name="billing_test_purchase_credits">Blerjet provë nuk shtojnë kredite në këtë llogari.</string>
     <string name="billing_try_free">Provoni falas: %1$s</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Zgjidhni skedar</string>
     <string name="chat_file_choose_photos">Zgjidhni foto</string>
     <string name="chat_file_could_not_open">Skedari nuk u hap dot.</string>
+    <string name="chat_file_mac_camera_off">Kamera është joaktive për tafs. Aktivizojeni te Cilësimet e Sistemit › Privatësia dhe Siguria › Kamera (në macOS 12: Preferencat e Sistemit › Siguria dhe Privatësia › Privatësia › Kamera).</string>
     <string name="chat_file_no_app_opens">Asnjë aplikacion në këtë telefon nuk e hap %1$s.</string>
     <string name="chat_file_no_camera">Në këtë telefon nuk ka aplikacion kamere për të bërë një foto.</string>
     <string name="chat_file_not_opened">%1$s nuk u hap dot. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Pyet para çdo gjëje të pazakontë, edhe kur përshtatet me Card-in.</string>
     <string name="sample_memory_explain">Preferoni që ta shpjegoj një vendim me një rresht dhe jo me një paragraf.</string>
     <string name="sample_memory_regulars">Klientët që shkruajnë çdo javë marrin përgjigje të njëjtin mëngjes.</string>
+    <string name="sample_not_in_sample">Kjo nuk është në shembull. Hyni me KIFF për ta bërë.</string>
     <string name="sample_parcels_change_address">Ndryshoni adresën e dorëzimit për porosinë #5141</string>
     <string name="sample_parcels_change_address_why">Një email nga një adresë e re e kërkoi</string>
     <string name="sample_parcels_job">Tregojini klientëve kur një pako vonohet, para se të pyesin. Ridërgimet presin ju. Mos ndryshoni kurrë një adresë dorëzimi nga një email.</string>

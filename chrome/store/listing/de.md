@@ -13,12 +13,12 @@ tafs für Chrome lässt deine tafs in deinem eigenen Chrome arbeiten, nur auf de
 • Verbinde dieses Chrome mit deinem Handy: Öffne in der tafs-App Konto › Chrome › Chrome koppeln und gib den angezeigten Code ein.
 • Ein taf arbeitet in eigenen Tabs, in einer Tab-Gruppe, die du sehen kannst. Du kannst ihn jederzeit pausieren oder stoppen, und er pausiert, wenn du einen seiner Tabs berührst.
 • Chrome fragt bei der Installation einmal nach dem Zugriff auf alle Seiten. tafs arbeitet nur auf den Seiten, die eine Aufgabe nennt und die du auf deinem Handy genehmigst.
-• Bezahlen, eine Bestellung aufgeben und eine gespeicherte Anmeldung ausfüllen warten immer auf deine Genehmigung auf deinem Handy.
+• Bezahlen und eine Bestellung aufgeben warten immer auf deine Genehmigung auf deinem Handy.
 • Es liest eine Seite als Text und Formularfelder, ohne Passwort-, Karten- und Code-Felder. Es liest nie deine anderen Tabs oder deinen Verlauf.
 • Ein taf kann dir einen Schritt auf einer Seite übergeben, etwa eine Suche oder eine Kartennummer einzugeben. Du machst ihn selbst, und wenn er die Seite wieder liest, bleibt weg, was du in die Felder getippt hast.
 • Banken, Wallets, Passwortmanager, Zahlungen, Gesundheits- und Behördenseiten werden nie bearbeitet, es sei denn, du erlaubst eine für eine Aufgabe auf deinem Handy.
-• Gespeicherte Anmeldungen sind optional und auf diesem Computer versiegelt. tafs und KIFF sehen sie nie.
-• Die Seitenleiste zeigt den taf, der in diesem Chrome arbeitet, und du sprichst dort mit ihm, wie in der tafs-App. „Neuen taf für diese Website einrichten“ öffnet Coach, der eine Seite nur sieht, wenn du auf „Diese Seite teilen“ klickst, und dann nur diese Seite, mit denselben entfernten Feldern.
+• Deine Passwörter bewahrt sie nie auf. Auf einer Anmeldeseite hält der taf an und bittet dich, dich selbst anzumelden, in deinem eigenen Tab.
+• Die Seitenleiste zeigt den taf, der in diesem Chrome arbeitet, und du sprichst dort mit ihm, wie in der tafs-App. „Neuen taf für diese Website einrichten“ öffnet Coach, der die Seite liest, auf der er beginnt, mit denselben entfernten Feldern.
 
 Was ein taf liest, geht an die KI, die deine Aufgabe ausführt, und wird mit dieser Aufgabe aufbewahrt. KIFF bewahrt die Seite vor und nach einer Änderung höchstens 30 Tage auf. Sobald Screenshots eingeschaltet sind, bewahrt jeder Schritt, der etwas ausführt, auch einen Screenshot der Seite auf, kurz vor der Aktion aufgenommen, mit ausgeblendeten Passwort-, Karten- und Code-Feldern, höchstens 30 Tage. Du siehst ihn nur in der tafs-App, und er geht nie an die KI. Beim Trennen oder Deinstallieren wird gelöscht, was die Erweiterung auf deinem Computer aufbewahrt.
 

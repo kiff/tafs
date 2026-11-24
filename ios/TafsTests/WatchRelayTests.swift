@@ -911,7 +911,7 @@ final class WatchRelayTests: XCTestCase {
     }
 
     /// The summary the watch may keep holds no amount, even where KIFF's words write one in, in the ways tafs' languages
-    /// write money (qa-kiff's table); an order's own number stays.
+    /// write money; an order's own number stays.
     func testTheSummaryForTheWatchHoldsNoAmount() {
         let cases: [(String, Money?, String)] = [
             ("Refund order 4502", nil, "Refund order 4502"),
@@ -937,7 +937,7 @@ final class WatchRelayTests: XCTestCase {
             ("Refund 300 XYZ to Ana", Money(minor: 300, currency: "XYZ", scale: 0), "Refund to Ana"),
             ("Order 4150 refund", Money(minor: 15_000, currency: "EUR", scale: 2), "Order 4150 refund"),
             ("Order 4150 refund", .bare(150), "Order 4150 refund"),
-            // The Swiss apostrophe, a bare amount, and a fraction written without its trailing zeros (dev-android's read).
+            // The Swiss apostrophe, a bare amount, and a fraction written without its trailing zeros.
             ("Rückerstattung CHF 1'234.50", nil, "Rückerstattung"),
             ("Rückerstattung CHF 1’234.50", nil, "Rückerstattung"),
             ("Rückerstattung 1'234.50", Money(minor: 123_450, currency: "CHF", scale: 2), "Rückerstattung"),
@@ -945,7 +945,7 @@ final class WatchRelayTests: XCTestCase {
             ("Refund 1234.5 now", Money(minor: 123_450, currency: "EUR", scale: 2), "Refund now"),
             ("Refund 150.5 to Ana", Money(minor: 15_000, currency: "EUR", scale: 2), "Refund 150.5 to Ana"),
             ("Refund 150, then more", .bare(150), "Refund, then more"),
-            // A unit right after its figure, and more words (qa-kiff's 07:36); a code inside a word stays.
+            // A unit right after its figure, and more words; a code inside a word stays.
             ("Zwrot 150zł", nil, "Zwrot"),
             ("Refund 150EUR", nil, "Refund"),
             ("Rückerstattung 80 Franken", nil, "Rückerstattung"),

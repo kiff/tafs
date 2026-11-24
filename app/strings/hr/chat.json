@@ -32,6 +32,7 @@
   "chat.file.choose_file": "Odaberite datoteku",
   "chat.file.choose_photos": "Odaberite fotografije",
   "chat.file.could_not_open": "Datoteku nije bilo moguće otvoriti.",
+  "chat.file.mac_camera_off": "Kamera je isključena za tafs. Uključite je u Postavke sustava › Privatnost i sigurnost › Kamera (macOS 12: Postavke sustava › Sigurnost i privatnost › Privatnost › Kamera).",
   "chat.file.no_app_opens": "Nijedna aplikacija na ovom telefonu ne otvara {name}.",
   "chat.file.no_camera": "Na ovom telefonu nema aplikacije kamere za snimanje fotografije.",
   "chat.file.not_opened": "{file} nije bilo moguće otvoriti. {why}",

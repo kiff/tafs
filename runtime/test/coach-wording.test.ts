@@ -65,16 +65,16 @@ describe("Coach's wording rules", () => {
       "Conecto Google Sheets en modo lectura de celdas solamente.", "Collego Google Sheets in lettura delle celle soltanto.",
       "Ik koppel Google Sheets alleen om te lezen.", "Ligo o Google Sheets em leitura das células apenas.",
       "Je connecte Google Sheets, lecture uniquement.",
-      // Said of the connection, adverbially (legal-i18n, after Eval 44099835231): es "sólo para leer", pt "apenas para leitura".
+      // Said of the connection, adverbially: es "sólo para leer", pt "apenas para leitura".
       "Conecto Gmail, sólo para leer.", "Conecto Google Sheets solo para lectura.", "A ligar o Gmail, apenas para leitura.", "Ligo o Google Sheets só para ler.",
       // Still the connection, after Eval 44128040350's unless_next words: no job object follows "read only".
       "Connecting Gmail, read only.", "It uses a read only connection.",
-      // kiff-qa: "from", "mail" and "whatever" can follow the label, so they stay caught.
+      // "from", "mail" and "whatever" can follow the label, so they stay caught.
       "Gmail stays read only from now on.", "It uses a read only mail connection.", "It's read only whatever you approve.",
-      // kiff-qa: "what" can follow an access claim too, so Eval 44128040350's Gmail EN run-2 line stays caught: Coach says what the taf reads instead.
+      // "what" can follow an access claim too, so Eval 44128040350's Gmail EN run-2 line stays caught: Coach says what the taf reads instead.
       "I'll set Accountant emails to read only what accounts@example.com sends you.", "The sign-in can read only what the taf needs.",
       // The prompt audit: an app or its data said to be left unchanged, which Setup's core bans, now caught by the
-      // contract rather than the model alone. legal-i18n's lines, one claim form each: is not changed, stays, is left.
+      // contract rather than the model alone. The lines, one claim form each: is not changed, stays, is left.
       "Your inbox isn't changed.", "Your Gmail stays as it is.", "The sheet is left untouched.", "It leaves your invoices unchanged.",
       "Dein Postfach wird nicht geändert.", "Deine Tabelle bleibt unverändert.", "Es lässt deine Rechnungen unangetastet.",
       "Tu bandeja no se modifica.", "Tu hoja queda intacta.", "Tus facturas siguen sin cambios.",
@@ -88,11 +88,11 @@ describe("Coach's wording rules", () => {
     }
     for (const good of ["It will read only the rows added since its last run.", "Reading only the new rows from your sheet.",
       "Total de la semaine lit les nouvelles lignes, sans rien écrire.", "El taf solo lee los correos nuevos.", "O taf só lê as linhas novas da folha.", "Connecting your Gmail…", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card.", "The taf reads your full inbox history once.",
-      // "read" as the job's verb, with "unread" or "incoming" after "only" (legal-i18n, kiff-qa).
+      // "read" as the job's verb, with "unread" or "incoming" after "only".
       "It will read only the Leads sheet.", "The taf will read only incoming replies.", "It will read only unread replies.",
-      // "Unchanged" as the job's own word (legal-i18n): a taf that forwards something as it came is no claim about the app.
+      // "Unchanged" as the job's own word: a taf that forwards something as it came is no claim about the app.
       "Nothing is sent until you approve.",
-      // A held write said as it is (agentgabo): "nothing is changed until you approve" is true of a gated write, so the
+      // A held write said as it is: "nothing is changed until you approve" is true of a gated write, so the
       // "nothing is changed" and "without changing anything" forms aren't rules in any language.
       "Nothing is changed in Stripe until you approve each refund.", "Nothing is changed before you approve.",
       "Rien n'est modifié tant que vous n'avez pas approuvé.", "Nichts wird geändert, bevor du zustimmst.",

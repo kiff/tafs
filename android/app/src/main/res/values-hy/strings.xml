@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo-ն բաժանորդագրություն է մեկ ժամանակահատվածով (%1$s) %2$s-ով, որը գանձվում է ձեր Apple հաշվից։ Նորացվում է յուրաքանչյուր ժամանակահատվածում (%3$s), մինչև չեղարկեք։</string>
     <string name="billing_starts_free">Սկսվում է անվճար՝ %1$s։</string>
     <string name="billing_tafs_kiff_one_person_every">tafs մեկ մարդու համար, ամեն ամիս։</string>
-    <string name="billing_team_on_web">Ստացեք Team-ը kiff.dev-ում</string>
+    <string name="billing_team_on_web">Ստացեք Company-ն kiff.dev-ում</string>
     <string name="billing_terms_use">Օգտագործման պայմաններ</string>
     <string name="billing_test_purchase_credits">Փորձնական գնումները կրեդիտներ չեն ավելացնում այս հաշվին։</string>
     <string name="billing_try_free">Փորձեք անվճար՝ %1$s</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Ընտրեք ֆայլ</string>
     <string name="chat_file_choose_photos">Ընտրեք լուսանկարներ</string>
     <string name="chat_file_could_not_open">Ֆայլը չկարողացավ բացվել։</string>
+    <string name="chat_file_mac_camera_off">Տեսախցիկը անջատված է tafs-ի համար։ Միացրեք՝ Համակարգի կարգավորումներ › Գաղտնիություն և անվտանգություն › Տեսախցիկ (macOS 12-ում՝ Համակարգի նախապատվություններ › Անվտանգություն և գաղտնիություն › Գաղտնիություն › Տեսախցիկ)։</string>
     <string name="chat_file_no_app_opens">Այս հեռախոսում ոչ մի հավելված չի բացում՝ %1$s։</string>
     <string name="chat_file_no_camera">Այս հեռախոսում լուսանկարելու համար տեսախցիկի հավելված չկա։</string>
     <string name="chat_file_not_opened">%1$s-ը չկարողացավ բացվել։ %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Հարցրեք ցանկացած անսովոր բանից առաջ, նույնիսկ երբ այն համապատասխանում է Card-ին։</string>
     <string name="sample_memory_explain">Նախընտրում եք, որ որոշումը բացատրեմ մեկ տողով, ոչ թե պարբերությամբ։</string>
     <string name="sample_memory_regulars">Հաճախորդները, ովքեր ամեն շաբաթ գրում են, պատասխան են ստանում նույն առավոտ։</string>
+    <string name="sample_not_in_sample">Սա օրինակում չկա։ Մուտք գործեք KIFF-ով՝ դա անելու համար։</string>
     <string name="sample_parcels_change_address">Փոխեք առաքման հասցեն #5141 պատվերի համար</string>
     <string name="sample_parcels_change_address_why">Նոր հասցեից նամակը դա խնդրեց</string>
     <string name="sample_parcels_job">Ասեք հաճախորդներին, երբ ծանրոցը ուշանում է, նախքան նրանք հարցնեն։ Կրկին ուղարկումները սպասում են ձեզ։ Երբեք մի փոխեք առաքման հասցեն նամակի հիման վրա։</string>

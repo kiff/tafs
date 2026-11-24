@@ -12,10 +12,9 @@ import { HAND_MAX_MS, validWords, withoutValues } from "./hand.js";
  */
 const isBlank = (url) => String(url || "").trim().toLowerCase() === "about:blank";
 import { refuse } from "./guard.js";
-import { parseHandle } from "./vault.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
-import { checkRelease, checkAllowances, checkSites, Nonces } from "./protocol.js";
+import { checkAllowances, checkSites } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
@@ -28,6 +27,10 @@ const FAILURES_TO_PAUSE = 3;
 // A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its tabs close (and its window, when it has its own). One
 // the owner paused isn't idle, it's waiting for the owner.
 const RUN_IDLE_MS = 5 * 60_000;
+// A finished run's group turns grey ("· done") this long after it ends, unless the taf's next run starts first (greyLater).
+const DONE_GRACE_MS = 15_000;
+// Why Show me pointed to no field, as the panel says it: the page changed, the field isn't on screen, the page didn't answer.
+const SHOW_WHY = new Set(["page_changed", "ref_unknown", "page_unresponsive"]);
 const PAUSE_CODES = { failures: "paused_failures", no_progress: "paused_no_progress", owner: "paused_by_owner" };
 
 /** A page as the repeat check compares it: everything the taf sees, without the read's own id. */
@@ -42,16 +45,14 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null, onHandAnswer = () => {}, doneStore = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, doneStore = null }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
     this.shots = shots; // the picture kept of each act (shot.js); null: none is taken
     this.onHandAnswer = onHandAnswer; // the person's answer to a hand-over, to give planque ({hand, outcome, page}); the service worker signs and keeps it
-    this.vault = vault; // sealed sign-ins (vault.js); none, and a sealed fill is refused
     this.now = now;
-    this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, ownWindow, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
     this.doneStore = doneStore; // {get(), set(obj)}: the tabs each taf's last finished run left, kept where a stopped worker finds them again
@@ -59,6 +60,7 @@ export class Runner {
     this.fenceIds = new Map(); // tab id → the first of its three fence rule ids
     this.nextFence = 1;
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
+    this.greying = new Map(); // taf → the mark of its finished run whose group turns grey after DONE_GRACE_MS (greyLater)
     this.listen();
   }
 
@@ -247,7 +249,11 @@ export class Runner {
   }
 
   async doneTabs() {
-    if (!this.done) this.done = (this.doneStore && (await this.doneStore.get())) || {};
+    if (!this.done) {
+      this.done = (this.doneStore && (await this.doneStore.get())) || {};
+      // A worker that stopped during a finished run's grace never greyed its group: every kept one says done now.
+      for (const [taf, left] of Object.entries(this.done)) if (left && left.group != null) await this.greyGroup(taf, left.group);
+    }
     return this.done;
   }
 
@@ -306,6 +312,24 @@ export class Runner {
     if (this.doneStore) await this.doneStore.set(done);
   }
 
+  /**
+   * A finished run's group says done (grey) only after DONE_GRACE_MS: a taf works in a few calls, each its own run, and its next run
+   * in that time cancels it, so the person sees the group stay amber while the taf works and waits, not blink grey between calls.
+   */
+  greyLater(taf, groupId) {
+    const mark = {};
+    this.greying.set(taf, mark);
+    Promise.resolve(this.sleep(DONE_GRACE_MS)).then(() => {
+      if (this.greying.get(taf) !== mark) return; // the taf's next run started: its group is the one that counts
+      this.greying.delete(taf);
+      return this.greyGroup(taf, groupId);
+    }).catch(() => {});
+  }
+
+  greyGroup(taf, groupId) {
+    return Promise.resolve(this.chrome.tabGroups.update(groupId, { title: "tafs · " + taf + " · done", color: "grey" })).catch(() => {});
+  }
+
   async closeRun(run, close = true) {
     // A step still handed to the person ends with the run: planque is told "not now", not left to its 30 minutes.
     if (run.hand) this.endHand(run, "declined");
@@ -315,9 +339,7 @@ export class Runner {
     }
     if (!close) {
       // The run's tabs are the person's now: no longer the run's, in a group that says it is done. Nothing of the run's closes.
-      if (run.groupId != null) {
-        await this.chrome.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf") + " · done", color: "grey" }).catch(() => {});
-      }
+      if (run.groupId != null) this.greyLater(run.taf || "taf", run.groupId);
       await this.leaveDone(run);
       run.tabs.clear();
       run.tab = null;
@@ -517,19 +539,31 @@ export class Runner {
       // The page couldn't be read back: Done still goes to the taf, with no page, and it reads again.
     }
     this.endHand(run, "done", page);
-    this.record(run, { op: "hand" });
+    this.record(run, { op: "hand", kind: "done" });
     this.onChange(this.state());
     return { ok: true };
   }
 
-  /** "Show me": the run's tab to the front, and the field or button the taf named outlined (nothing else, nothing scrolled or clicked). */
+  /**
+   * "Show me": the run's tab to the front, and the field or button the taf named outlined (nothing else, nothing scrolled or clicked).
+   * It says what it did, so the panel never leaves a press unanswered: `shown` is "field" when the outline is drawn, else "tab", with
+   * `why` when a field was named and couldn't be pointed to (`page_changed`, `ref_unknown`, `page_unresponsive`) or "no_ref" when none was.
+   */
   async showHand(runId) {
     const run = this.runs.get(runId);
     if (!run || !this.handOpen(run) || run.tab == null) return { error: { code: "no_hand" } };
     await this.chrome.tabs.update(run.tab, { active: true });
     if (run.windowId != null && this.chrome.windows.update) await this.chrome.windows.update(run.windowId, { focused: true }).catch(() => {});
-    if (run.hand.ref !== undefined) await this.inTab(run.tab, (ref, id) => globalThis.TafsPage.outline(ref, id), [run.hand.ref, run.hand.readId]).catch(() => {});
-    return { ok: true };
+    if (run.hand.ref === undefined) return { ok: true, shown: "tab", why: "no_ref" };
+    let out = null;
+    try {
+      out = await this.inTab(run.tab, (ref, id) => (globalThis.TafsPage ? globalThis.TafsPage.outline(ref, id) : { ok: false, code: "page_changed" }), [run.hand.ref, run.hand.readId]);
+    } catch (e) {
+      out = { ok: false, code: (e && e.code) || "page_unresponsive" };
+    }
+    if (out && out.ok) return { ok: true, shown: "field" };
+    const why = out && SHOW_WHY.has(out.code) ? out.code : "page_unresponsive";
+    return { ok: true, shown: "tab", why };
   }
 
   async open(run, url) {
@@ -540,6 +574,7 @@ export class Runner {
       // A tab of its own in the window the owner is using, in the background: their active tab and their other tabs are
       // never touched, and the run's group sits beside them. With no such window, a window of its own, not focused.
       // The taf's last finished run's tabs close now, so the calls of one taf never pile up; the person saw the page where it stopped.
+      this.greying.delete(run.taf || "taf");
       await this.closeDone(run.taf || "taf", true);
       const made = await this.runTab();
       // Stop or close landed while the tab was being made: nothing of the run's is left open, least of all among the owner's tabs.
@@ -659,40 +694,9 @@ export class Runner {
     await this.inject(run.tab, run);
     const page = await this.inTab(run.tab, (o, p) => globalThis.TafsPage.read(o, p), [offset, opts]);
     if (!page) return { error: { code: "page_unresponsive" } };
-    // The handles of sign-ins saved for this exact origin, never their values: a taf names one to ask for a sealed fill.
-    if (this.vault) {
-      const handles = await this.vault.handlesFor(new URL(tab.url).origin);
-      if (handles.length) page.sealed = handles;
-    }
     run.pages.set(page.read_id, page);
     if (run.pages.size > 20) run.pages.delete(run.pages.keys().next().value);
     return { page };
-  }
-
-  /**
-   * A sealed fill (docs/chrome.md, "Sealed values"): only with the paired phone's own release of this handle, for this
-   * step, field and exact origin, unexpired and never used before. The value goes from the vault into the field and nowhere
-   * else, then the page is read back with the field masked.
-   */
-  async fillSealed(run, step, page) {
-    const pairing = this.paired();
-    if (!this.vault || !pairing || !pairing.phoneKey) return { error: { code: "secret_field" } };
-    const named = parseHandle(step.act.sealed);
-    const part = named && named.part;
-    const field = (page.fields || []).find((f) => f.ref === step.act.ref);
-    if (!named || !field || (part === "password" ? field.kind !== "password" : !["text", "email"].includes(field.kind))) {
-      return { error: { code: "secret_field" } };
-    }
-    const tab = await this.chrome.tabs.get(run.tab);
-    const origin = new URL(tab.url).origin;
-    const released = await checkRelease(step.release, { phoneKey: pairing.phoneKey, chromeId: pairing.chromeId, step, origin, now: this.now() });
-    if (!released || !(await this.releases.take(step.release.nonce))) return { error: { code: "release_missing" } };
-    const value = await this.vault.open(step.act.sealed, origin);
-    if (value == null) return { error: { code: "sealed_unknown" } };
-    const done = await this.inTab(run.tab, (ref, id, o, v, p) => globalThis.TafsPage.fillSealed(ref, id, o, v, p), [step.act.ref, step.read_id, origin, value, part]);
-    if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
-    await this.loaded(run.tab);
-    return this.read(run);
   }
 
   /**
@@ -715,7 +719,8 @@ export class Runner {
     if (!page) return { error: { code: "page_changed" } };
     const refused = refuse(page, step.act);
     if (refused) return { error: { code: refused.code } };
-    if (step.act.sealed) return this.fillSealed(run, step, page);
+    // The extension keeps no saved sign-in and never types one: a step naming one is refused, as a secret field is.
+    if (step.act.sealed) return { error: { code: "secret_field" } };
     await this.pictureOf(run, step, page);
     const before = await this.chrome.tabs.get(run.tab).catch(() => null);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);

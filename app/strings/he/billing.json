@@ -75,7 +75,7 @@
   "billing.solo_subscription_one_charged_your": "Solo הוא מנוי של {period} אחד ב-{price}, המחויב בחשבון Apple שלך. הוא מתחדש כל {period_2} עד שתבטל.",
   "billing.starts_free": "מתחיל עם {trial} חינם.",
   "billing.tafs_kiff_one_person_every": "tafs לאדם אחד, כל חודש.",
-  "billing.team_on_web": "מעבר ל-Team ב-kiff.dev",
+  "billing.team_on_web": "מעבר ל-Company ב-kiff.dev",
   "billing.terms_use": "תנאי שימוש",
   "billing.test_purchase_credits": "רכישות בדיקה לא מוסיפות קרדיטים לחשבון הזה.",
   "billing.try_free": "{trial} בחינם",

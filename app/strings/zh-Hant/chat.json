@@ -30,6 +30,7 @@
   "chat.file.choose_file": "選擇檔案",
   "chat.file.choose_photos": "選擇照片",
   "chat.file.could_not_open": "無法開啟該檔案。",
+  "chat.file.mac_camera_off": "相機已對 tafs 關閉。請在「系統設定」›「隱私權與安全性」›「相機」中開啟（macOS 12：「系統偏好設定」›「安全性與隱私權」›「隱私權」›「相機」）。",
   "chat.file.no_app_opens": "這部手機上沒有可開啟 {name} 的 App。",
   "chat.file.no_camera": "這部手機上沒有可拍照的相機 App。",
   "chat.file.not_opened": "無法開啟 {file}。{why}",

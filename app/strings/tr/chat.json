@@ -31,6 +31,7 @@
   "chat.file.choose_file": "Dosya seç",
   "chat.file.choose_photos": "Fotoğraf seç",
   "chat.file.could_not_open": "Dosya açılamadı.",
+  "chat.file.mac_camera_off": "Kamera, tafs için kapalı. Sistem Ayarları › Gizlilik ve Güvenlik › Kamera'dan açın (macOS 12'de: Sistem Tercihleri › Güvenlik ve Gizlilik › Gizlilik › Kamera).",
   "chat.file.no_app_opens": "Bu telefonda {name} dosyasını açan bir uygulama yok.",
   "chat.file.no_camera": "Bu telefonda fotoğraf çekecek bir kamera uygulaması yok.",
   "chat.file.not_opened": "{file} açılamadı. {why}",

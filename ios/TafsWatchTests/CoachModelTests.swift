@@ -222,7 +222,7 @@ final class CoachModelTests: XCTestCase {
     }
 
     /// While a Send is in flight, Delete and Re-record do nothing: the words shown are the words on their way, never
-    /// "Deleted. Nothing was sent." (agentgabo's read).
+    /// "Deleted. Nothing was sent."
     func testDeleteAndReRecordWaitWhileASendIsInFlight() async {
         let phone = HeldPhone()
         let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
@@ -393,7 +393,7 @@ final class CoachModelTests: XCTestCase {
         XCTAssertEqual(CoachTurnRow.line(WatchCoachAnswer(text: "", more: false, approveOnPhone: true)), Words.Watch.approveOnPhone)
     }
 
-    /// VoiceOver hears Coach's side with when the answer came, in the account's zone (dev-android on #1590, point 2), and
+    /// VoiceOver hears Coach's side with when the answer came, in the account's zone, and
     /// without a time from a phone too old to send one.
     func testCoachsSideIsHeardWithWhenItCame() {
         let paris = TimeZone(identifier: "Europe/Paris")!

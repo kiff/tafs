@@ -305,7 +305,7 @@ struct WatchMenu: View {
     let go: (WatchPage) -> Void
 
     var body: some View {
-        // Its own stack, so its title shows over the sheet (qa-kiff's read).
+        // Its own stack, so its title shows over the sheet.
         NavigationStack {
             List {
                 ForEach(pages) { shown in

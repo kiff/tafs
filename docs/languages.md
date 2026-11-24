@@ -608,7 +608,7 @@ Every count line in `ar/` writes all six. A line may leave the number out in `ze
 - **A reference number** ("#5098") written in a line is wrapped in U+2066 … U+2069 (a left-to-right isolate). After an
   Arabic letter the digits become Arabic-script digits (the bidi rule W2), which leaves the "#" outside their run and shows
   "5098#". `test_strings` checks it.
-- **Figures are Western digits (0–9), and dates are Gregorian** (legal-i18n, 22 Nov): the legal pages write "30 days" and
+- **Figures are Western digits (0–9), and dates are Gregorian**: the legal pages write "30 days" and
   "16" so, and their tests require every figure to match the English page. The iOS app formats with the locale
   `ar-u-ca-gregory-nu-latn` for Arabic (`IOS_LOCALE` in `generate.py`, `Words.locale(for:)`), so a time, a count and a date
   don't turn into Arabic-script digits or the Hijri calendar.
@@ -1351,7 +1351,7 @@ plural after a number ("3 taf", "2 çagyryş"), so a count uses the bare noun in
 "çagyryş", a receipt "kwitansiýa", the Record "Ýazgy", a run "işleme". Numbers are Western digits; quotes are “ ”. The weekdays are
 Duş, Siş, Çar, Pen, Anna, Şen, Ýek and the months Ýanwar, Fewral, Mart, Aprel, Maý, Iýun, Iýul, Awgust, Sentýabr, Oktýabr, Noýabr,
 Dekabr. Menu paths of the phone's own settings stay in English, as iOS, macOS and Android have no Turkmen. Plural forms: one, other.
-First draft, from legal-i18n; a native read fixes it forward.
+A first draft; a native read fixes it forward.
 
 | English | Turkmen |
 |---|---|
@@ -1388,7 +1388,7 @@ The English possessive "{owner}'s Card" is "{owner} का Card". A door is "द
 Record "रिकॉर्ड", a run "रन". Numbers are Western digits; quotes are “ ”; sentences end with the danda "।". The weekdays are
 सोम, मंगल, बुध, गुरु, शुक्र, शनि, रवि and the months जनवरी, फ़रवरी, मार्च, अप्रैल, मई, जून, जुलाई, अगस्त, सितंबर, अक्टूबर, नवंबर,
 दिसंबर. Menu paths of the phone's own settings that the phone shows in English stay in English. Plural forms: one, other. First draft,
-from legal-i18n; a native read fixes it forward.
+a native read fixes it forward.
 
 | English | Hindi |
 |---|---|
@@ -1421,7 +1421,7 @@ Urdu in Nastaliq-style Arabic script, written right to left, addressed as **آپ
 "s" is never added to taf in a count ("3 taf"), while "tafs" stays the product's name. Plural forms are written out where Urdu marks them
 ("1 کال", "2 کالیں"). The English possessive "{owner}'s Card" is
 "{owner} کا Card". A door is "دروازہ", a knock "دستک", a call "کال", a receipt "رسید", the Record "ریکارڈ", a run "رن". Numbers are Western
-digits; quotes are « »; sentences end with the Urdu full stop "۔". Menu paths of the phone's own settings are written as the phone shows them in Urdu; macOS and iOS names stay in English. Plural forms: one, other. First draft, from legal-i18n; a native read fixes it forward.
+digits; quotes are « »; sentences end with the Urdu full stop "۔". Menu paths of the phone's own settings are written as the phone shows them in Urdu; macOS and iOS names stay in English. Plural forms: one, other. A first draft; a native read fixes it forward.
 
 | English | Urdu |
 |---|---|
@@ -1451,7 +1451,7 @@ digits; quotes are « »; sentences end with the Urdu full stop "۔". Menu paths
 What a taf sends outside the company starts with its disclosure line, in the message's language
 (`disclosureLines` in `runtime/src/jobs.ts`, mirrored by kiff/agents). It's in English and in every other
 language the apps speak: 42 lines, each saying "written by an AI agent" and, with a name, "on behalf of
-<writes_for>" ("Geschreven door een AI-agent namens <writes_for>."), written by legal-i18n as first drafts that
+<writes_for>" ("Geschreven door een AI-agent namens <writes_for>."), written as first drafts that
 native reads fix forward, keyed by the two-letter code (`zh` is Traditional Chinese, `sr` Serbian). A message's
 language is told by `languageOf` (`runtime/src/jobs.ts`, `agent/language.go` in kiff/agents, the same word lists
 and the same sentences in both tests): a script one language owns says it, a script several share (Latin,
@@ -1487,7 +1487,7 @@ Both apps send `Accept-Language: pt-BR, pt;q=0.9, en;q=0.8` from a pt-BR phone: 
 today (their words stay `pt`'s), and can tell Brazil apart once they hold pt-BR words of their own.
 No "a + infinitive" ("A verificar…" is "Verificando…") and no enclitics where Brazil puts the pronoun first or says
 "você" ("pede-lhe" is "pede que você"). Card is masculine ("o Card", "pelo seu Card"). Its glossary, where it
-differs from Portuguese's (legal-i18n's read of tafs#1629):
+differs from Portuguese's:
 
 | English | pt-BR |
 |---|---|
@@ -1526,7 +1526,7 @@ screen is **"Conta"**.
   worded from the catalog; one it doesn't know passes kiff/agents' words through. `error` fields stay
   English, for developers; the `words` beside them are the person's. A vendor's or provider's own words
   (why a reply wasn't sent, KIFF's tool titles) pass as they came.
-- **A language tafs cloud adds before every line is written may be partial** (PM, 22 Nov): it goes in `PARTIAL_LANGUAGES`,
+- **A language tafs cloud adds before every line is written may be partial**: it goes in `PARTIAL_LANGUAGES`,
   each line written replaces English's, every other reads English, key by key, and at 100% it moves to `FULL_LANGUAGES`,
   where the type requires every key. Batch 2's ten and batch 3's five went that way: partial in tafs#1702, every line by
   tafs#1706, full since (a draft no native speaker has read yet). None is partial today; batch 4's languages would be next.

@@ -185,81 +185,11 @@
     "message": "Telefonyňyzda tassyklaň",
     "description": "Where an approval waits"
   },
-  "share_button": {
-    "message": "Bu sahypany paýlaşyň",
-    "description": "Share toggle"
-  },
-  "share_preview": {
-    "message": "Habaryňyz bilen gidýär:",
-    "description": "Label above the page preview (URL and title) before sending"
-  },
-  "share_remove": {
-    "message": "Aýyryň",
-    "description": "Remove the shared page from the message"
-  },
-  "share_chars": {
-    "message": "$N$ belgi",
-    "placeholders": {
-      "n": {
-        "content": "$1"
-      }
-    }
-  },
-  "share_unavailable": {
-    "message": "Bu sahypa paýlaşylyp bilinmeýär.",
-    "description": "chrome:// pages, the Web Store, PDFs and other pages that can't be read"
-  },
-  "share_error_site_blocked": {
-    "message": "Muňa meňzeş sahypalar hiç haçan paýlaşylmaýar: banklar, gapjyklar, parollar, tölegler, saglyk we döwlet."
-  },
-  "share_error_bad_url": {
-    "message": "Diňe https sahypalary paýlaşylyp bilner."
-  },
   "coach_empty_title": {
     "message": "Coach bilen gürleşiň",
     "description": "Empty chat: heading"
   },
-  "coach_empty_body": {
-    "message": "Bu tafs programmasyndaky bilen deň gürrüň. Coach bu sahypany diňe siz paýlaşsaňyz görýär.",
-    "description": "Empty chat: body"
-  },
-  "share_note": {
-    "message": "Bu bir sahypany Coach-a iberýär, parol, kart we kod meýdanlary aýrylan görnüşde.",
-    "description": "Note under Share this page"
-  },
-  "vault_title": {
-    "message": "Ýatda saklanan girişler"
-  },
-  "vault_body": {
-    "message": "Şu ýerde saklanýar, bu kompýuterde möhürlenýär. Taf diňe şol anyk sahypada birini ulanmagy sorap biler, ol diňe şol bir dolduryşy telefonyňyzda tassyklanyňyzdan soň ýazylýar. tafs we KIFF muny hiç haçan görmeýär."
-  },
-  "vault_site": {
-    "message": "Sahypa"
-  },
-  "vault_username": {
-    "message": "Ulanyjy ady ýa-da e-poçta (islege görä)"
-  },
-  "vault_password": {
-    "message": "Parol"
-  },
-  "vault_save": {
-    "message": "Möhürläp saklaň"
-  },
-  "vault_saved": {
-    "message": "Saklandy. Bu kompýuterde möhürlendi."
-  },
-  "vault_error": {
-    "message": "Saklanmady: sahypa https talap edýär, we parol hem gerek."
-  },
-  "vault_remove": {
-    "message": "Aýyryň"
-  },
-  "vault_with_username": {
-    "message": "ulanyjy ady bilen"
-  },
-  "vault_one_per_site": {
-    "message": "Her sahypa üçin bir giriş: şol sahypa üçin başga birini saklasaňyz, ol çalşylýar."
-  },
+  "coach_empty_body_reads": {"message": "Bu tafs programmasyndaky bilen deň gürrüň. Coach bir sahypada işlände, ilki şol sahypany okaýar.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": {
     "message": "Täze gürrüň"
   },
@@ -308,5 +238,12 @@
   "hand_show": { "message": "Maňa görkeziň", "description": "Button on that card: brings the page to the front and outlines the field" },
   "hand_done": { "message": "Taýýar", "description": "Button on that card: the person did it" },
   "hand_declined": { "message": "Häzir däl", "description": "Button on that card: the person won't do it now" },
-  "hand_careful": { "message": "Diňe bu sahypa ynanýan ýeriňizde ýazyň.", "description": "Fixed line on that card under the taf's words" }
+  "hand_careful": { "message": "Diňe bu sahypa ynanýan ýeriňizde ýazyň.", "description": "Fixed line on that card under the taf's words" },
+  "hand_show_changed": {"message": "Taf okandan bäri sahypa üýtgedi, şonuň üçin görkezere zat ýok. Ony taf aýdyşy ýaly gözläň.", "description": "Under the Your turn card's buttons, after Show me: the page is no longer the one the taf read."},
+  "hand_show_hidden": {"message": "Ol meýdança ýa-da düwme häzir ekranda ýok. Has giň penjire ony görkezip biler, ýa-da ony taf aýdyşy ýaly gözläň.", "description": "Under the Your turn card's buttons, after Show me: the field the taf named is hidden or gone (a narrow window can hide a search box)."},
+  "hand_show_unanswered": {"message": "Sahypa jogap bermedi. Ony taf aýdyşy ýaly gözläň.", "description": "Under the Your turn card's buttons, after Show me: the page couldn't be asked to outline the field."},
+  "hand_show_no_field": {"message": "Bu şol sahypa. Taf görkezmek üçin meýdança ýa-da düwme atlandyrmady.", "description": "Under the Your turn card's buttons, after Show me: the page came to the front; the taf's words say what to do."},
+  "step_handed": {"message": "Size tabşyryldy", "description": "Step list: the taf handed the person one thing to do in the page."},
+  "step_hand_done": {"message": "Siz etdiňiz", "description": "Step list: the person pressed Done on the Your turn card."},
+  "step_hand_declined": {"message": "Siz «Häzir däl» diýdiňiz", "description": "Step list: the person pressed Not now on the Your turn card."}
 }

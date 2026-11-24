@@ -148,6 +148,7 @@
   "sample.memory.ask_first": "Jautāt pirms jebkā neparasta, pat ja tas atbilst Card.",
   "sample.memory.explain": "Tu dod priekšroku tam, lai lēmumu izskaidroju vienā rindā, nevis rindkopā.",
   "sample.memory.regulars": "Klienti, kas raksta katru nedēļu, saņem atbildi tajā pašā rītā.",
+  "sample.not_in_sample": "Tā paraugā nav. Pieraksties ar KIFF, lai to izdarītu.",
   "sample.parcels.change_address": "Mainīt piegādes adresi pasūtījumam #5141",
   "sample.parcels.change_address_why": "To lūdza e-pasts no jaunas adreses",
   "sample.parcels.job": "Pastāstīt klientiem, kad paka kavējas, pirms viņi jautā. Atkārtota nosūtīšana gaida tevi. Nekad nemainīt piegādes adresi pēc e-pasta.",

@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo ist ein Abonnement für %2$s pro %1$s, abgerechnet über deinen Apple-Account. Es verlängert sich nach jedem Abrechnungszeitraum (%3$s), bis du kündigst.</string>
     <string name="billing_starts_free">Beginnt mit %1$s kostenlos.</string>
     <string name="billing_tafs_kiff_one_person_every">tafs für eine Person, jeden Monat.</string>
-    <string name="billing_team_on_web">Team auf kiff.dev holen</string>
+    <string name="billing_team_on_web">Company auf kiff.dev holen</string>
     <string name="billing_terms_use">Nutzungsbedingungen</string>
     <string name="billing_test_purchase_credits">Testkäufe fügen diesem Konto keine Credits hinzu.</string>
     <string name="billing_try_free">%1$s kostenlos testen</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Datei wählen</string>
     <string name="chat_file_choose_photos">Fotos wählen</string>
     <string name="chat_file_could_not_open">Die Datei konnte nicht geöffnet werden.</string>
+    <string name="chat_file_mac_camera_off">Die Kamera ist für tafs ausgeschaltet. Schalte sie unter Systemeinstellungen › Datenschutz &amp; Sicherheit › Kamera ein (unter macOS 12: Systemeinstellungen › Sicherheit › Datenschutz › Kamera).</string>
     <string name="chat_file_no_app_opens">Keine App auf diesem Telefon öffnet %1$s.</string>
     <string name="chat_file_no_camera">Auf diesem Telefon gibt es keine Kamera-App, um ein Foto aufzunehmen.</string>
     <string name="chat_file_not_opened">%1$s konnte nicht geöffnet werden. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Vor allem Ungewöhnlichen fragen, auch wenn es zur Card passt.</string>
     <string name="sample_memory_explain">Du möchtest Entscheidungen lieber in einer Zeile erklärt bekommen als in einem Absatz.</string>
     <string name="sample_memory_regulars">Kunden, die jede Woche schreiben, bekommen am selben Morgen eine Antwort.</string>
+    <string name="sample_not_in_sample">Das ist nicht im Beispiel enthalten. Melde dich mit KIFF an, um es zu tun.</string>
     <string name="sample_parcels_change_address">Die Lieferadresse von Bestellung #5141 ändern</string>
     <string name="sample_parcels_change_address_why">Eine E-Mail von einer neuen Adresse hat darum gebeten</string>
     <string name="sample_parcels_job">Sag Kunden Bescheid, wenn ein Paket sich verspätet, bevor sie fragen. Neuversand wartet auf dich. Ändere nie eine Lieferadresse aufgrund einer E-Mail.</string>

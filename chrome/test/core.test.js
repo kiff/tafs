@@ -155,6 +155,9 @@ test("the extension's guard refuses what planque's does", () => {
   assert.equal(refuse(plain, { kind: "fill", ref: "f9", value: "x" }).code, "ref_unknown");
   assert.equal(refuse(plain, { kind: "submit", ref: "c1" }).code, "bad_step");
   assert.equal(refuse(plain, { kind: "fill", ref: "f1" }).code, "bad_step", "a fill has a value");
+  // No saved sign-in: a step naming one is refused, into a password field or a plain one alike.
+  assert.equal(refuse(page, { kind: "fill", ref: "f2", sealed: "sec_1:password" }).code, "secret_field");
+  assert.equal(refuse(plain, { kind: "fill", ref: "f1", sealed: "sec_1:username" }).code, "secret_field");
   // A link whose words pay is refused like a control; on a checkout or payment page no link is followed at all.
   const shop = { url: "https://shop.example/cart", fields: [], controls: [], links: [{ ref: "l1", label: "Buy now", url: "https://shop.example/buy" }, { ref: "l2", label: "Help", url: "https://shop.example/help" }] };
   assert.equal(refuse(shop, { kind: "click", ref: "l1" }).code, "payment_step");
@@ -187,7 +190,7 @@ test("every shipped language has an extension locale with English's keys and pla
   const sameAsEnglish = new Set(["name", "coach_title"]); // Coach is a name, the same in every language
   // A word the language shares with English, on purpose: "Site" in French, Dutch, Portuguese, Romanian and Turkish,
   // "Password" in Italian, "Conversation" in French. Anything else equal to English is English left in.
-  const sharedWords = { vault_site: ["fr", "nl", "pt_BR", "pt_PT", "ro", "tr"], vault_password: ["it"], coach_untitled: ["fr"] };
+  const sharedWords = { coach_untitled: ["fr"] };
   for (const loc of ["en", ...locales]) {
     const m = read(loc);
     assert.deepEqual(Object.keys(m).sort(), Object.keys(en).sort(), loc);

@@ -91,7 +91,7 @@ final class OnboardingTests: XCTestCase {
         XCTAssertEqual(card.title, Words.Sample.Card.refundsStripe)
     }
 
-    /// The welcome's age line reads the person's country: India, Indonesia and Brazil say 18 (legal-i18n's table);
+    /// The welcome's age line reads the person's country: India, Indonesia and Brazil say 18;
     /// anywhere else, or no region known, reads the line every country reads (16, or the country's age if higher).
     func testTheAgeLineIsTheCountrys() {
         XCTAssertEqual(MinimumAge.standard, 16)

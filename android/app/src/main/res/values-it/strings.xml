@@ -231,7 +231,7 @@
     <string name="billing_solo_subscription_one_charged_your">Solo è un abbonamento a %2$s ogni %1$s, addebitato sul tuo account Apple. Si rinnova ogni %3$s finché non lo annulli.</string>
     <string name="billing_starts_free">Inizia con %1$s gratis.</string>
     <string name="billing_tafs_kiff_one_person_every">Tafs per una persona, ogni mese.</string>
-    <string name="billing_team_on_web">Passa a Team su kiff.dev</string>
+    <string name="billing_team_on_web">Passa a Company su kiff.dev</string>
     <string name="billing_terms_use">Condizioni d\'uso</string>
     <string name="billing_test_purchase_credits">Gli acquisti di prova non aggiungono crediti a questo account.</string>
     <string name="billing_try_free">Prova %1$s gratis</string>
@@ -502,6 +502,7 @@
     <string name="chat_file_choose_file">Scegli file</string>
     <string name="chat_file_choose_photos">Scegli foto</string>
     <string name="chat_file_could_not_open">Non è stato possibile aprire il file.</string>
+    <string name="chat_file_mac_camera_off">La fotocamera è disattivata per tafs. Attivala in Impostazioni di Sistema › Privacy e sicurezza › Fotocamera (su macOS 12: Preferenze di Sistema › Sicurezza e privacy › Privacy › Fotocamera).</string>
     <string name="chat_file_no_app_opens">Nessuna app su questo telefono apre %1$s.</string>
     <string name="chat_file_no_camera">Su questo telefono non c\'è un\'app fotocamera per scattare una foto.</string>
     <string name="chat_file_not_opened">Non è stato possibile aprire %1$s. %2$s</string>
@@ -2094,6 +2095,7 @@
     <string name="sample_memory_ask_first">Chiedi prima di qualsiasi cosa insolita, anche quando rientra nella Card.</string>
     <string name="sample_memory_explain">Preferisci che spieghi una decisione in una riga piuttosto che in un paragrafo.</string>
     <string name="sample_memory_regulars">I clienti che scrivono ogni settimana ricevono una risposta la mattina stessa.</string>
+    <string name="sample_not_in_sample">Questo non è nell\'esempio. Accedi con KIFF per farlo.</string>
     <string name="sample_parcels_change_address">Cambiare l\'indirizzo di consegna dell\'ordine #5141</string>
     <string name="sample_parcels_change_address_why">L\'ha chiesto un\'email da un indirizzo nuovo</string>
     <string name="sample_parcels_job">Avvisare i clienti quando un pacco è in ritardo, prima che chiedano. Le rispedizioni aspettano te. Non cambiare mai un indirizzo di consegna per un\'email.</string>

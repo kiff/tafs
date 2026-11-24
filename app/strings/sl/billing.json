@@ -79,7 +79,7 @@
   "billing.solo_subscription_one_charged_your": "Solo je naročnina za en {period} po {price}, ki se zaračuna vašemu računu Apple. Podaljša se vsak {period_2}, dokler je ne prekličete.",
   "billing.starts_free": "Začne se z {trial} brezplačno.",
   "billing.tafs_kiff_one_person_every": "Tafs za eno osebo, vsak mesec.",
-  "billing.team_on_web": "Pridobi Team na kiff.dev",
+  "billing.team_on_web": "Pridobi Company na kiff.dev",
   "billing.terms_use": "Pogoji uporabe",
   "billing.test_purchase_credits": "Testni nakupi temu računu ne dodajo kreditov.",
   "billing.try_free": "Preizkusi {trial} brezplačno",

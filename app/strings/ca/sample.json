@@ -147,6 +147,7 @@
   "sample.memory.ask_first": "Pregunta abans de qualsevol cosa inusual, fins i tot quan encaixi amb el Card.",
   "sample.memory.explain": "Prefereixes que t'expliqui una decisió en una línia que en un paràgraf.",
   "sample.memory.regulars": "Els clients que escriuen cada setmana reben resposta el mateix matí.",
+  "sample.not_in_sample": "Això no és a l'exemple. Inicia la sessió amb KIFF per fer-ho.",
   "sample.parcels.change_address": "Canvia l'adreça de lliurament de la comanda #5141",
   "sample.parcels.change_address_why": "Un correu d'una adreça nova ho demanava",
   "sample.parcels.job": "Avisa els clients quan un paquet va amb retard, abans que ho preguntin. Els reenviaments t'esperen a tu. Mai no canviïs una adreça de lliurament a partir d'un correu.",

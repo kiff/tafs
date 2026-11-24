@@ -23,6 +23,11 @@ function hostOf(url) {
   }
 }
 
+// Why Show me pointed to no field, in the panel's words (runner.showHand's `why`).
+const SHOW_LINE = { page_changed: "hand_show_changed", ref_unknown: "hand_show_hidden", page_unresponsive: "hand_show_unanswered", no_ref: "hand_show_no_field" };
+const showSaid = new Map(); // run id → {hand, why}: the last Show me's line for that run's open hand-over
+let lastState = {};
+
 const STEP_WORDS = {
   open: (s) => t("step_open", hostOf(s.url)),
   read: () => t("step_read"),
@@ -31,7 +36,8 @@ const STEP_WORDS = {
   pause: (s) => t(s.by === "failures" ? "step_paused_failures" : s.by === "no_progress" ? "step_paused_no_progress" : "step_paused"),
   resume: () => t("step_resumed"),
   stop: () => t("step_stopped"),
-  hand: (s) => t("hand_title") + (s.kind === "declined" ? " · " + t("hand_declined") : ""),
+  // Handed, then the person's answer: each its own line, so Done never reads as a second "Your turn".
+  hand: (s) => t(s.kind === "done" ? "step_hand_done" : s.kind === "declined" ? "step_hand_declined" : "step_handed"),
   close: () => t("step_closed"),
 };
 
@@ -44,6 +50,7 @@ let lastConnections = null;
 let lastRuns = null;
 
 function draw(state) {
+  lastState = state;
   $("conn").textContent = state.paired ? t(state.connected ? "connected" : "waiting") : "";
   const connections = JSON.stringify(state.connections || []);
   if (state.paired && connections !== lastConnections) {
@@ -77,7 +84,17 @@ function draw(state) {
     if (run.hand) {
       hand.hidden = false;
       node.querySelector(".handWords").textContent = run.hand.words;
-      node.querySelector(".handShow").onclick = () => send({ type: "hand_show", run: run.id });
+      // Show me says what it did when it couldn't point to the field: kept per hand-over, so a redraw keeps the line.
+      const shown = node.querySelector(".handShown");
+      const said = showSaid.get(run.id);
+      shown.hidden = !(said && said.hand === run.hand.id);
+      if (!shown.hidden) shown.textContent = t(SHOW_LINE[said.why]);
+      node.querySelector(".handShow").onclick = async () => {
+        const out = await send({ type: "hand_show", run: run.id }).catch(() => null);
+        if (out && out.why && SHOW_LINE[out.why]) showSaid.set(run.id, { hand: run.hand.id, why: out.why });
+        else showSaid.delete(run.id);
+        draw(lastState);
+      };
       node.querySelector(".handDone").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "done" });
       node.querySelector(".handNo").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "declined" });
     }
@@ -134,40 +151,8 @@ $("unpair").onclick = async () => {
 chrome.storage.session.get("state").then(({ state }) => state && draw(state));
 send({ type: "state" });
 
-// Saved sign-ins (sealed): the panel shows each site and whether a username is saved, never a value. A saved sign-in is
-// only ever typed into that exact site, and only after you approve that fill on your phone.
-async function drawVault() {
-  const { entries = [] } = await send({ type: "vault_list" });
-  const list = $("vaultList");
-  list.textContent = "";
-  for (const e of entries) {
-    const li = document.createElement("li");
-    li.textContent = new URL(e.origin).hostname + (e.hasUsername ? " · " + t("vault_with_username") : "");
-    const b = document.createElement("button");
-    b.className = "quiet";
-    b.textContent = t("vault_remove");
-    b.onclick = async () => {
-      await send({ type: "vault_remove", id: e.id });
-      drawVault();
-    };
-    li.append(" ", b);
-    list.append(li);
-  }
-}
-
-$("vaultForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const r = await send({ type: "vault_save", origin: $("vaultSite").value, username: $("vaultUser").value, password: $("vaultPass").value });
-  $("vaultPass").value = "";
-  $("vaultStatus").textContent = r.error ? t("vault_error") : t("vault_saved");
-  drawVault();
-};
-
-$("vault").addEventListener("toggle", () => $("vault").open && drawVault());
-
 // Coach (docs/chrome.md, "Coach in the side panel"): the same chat as the apps. Approvals stay on the phone. The panel opens on
 // a fresh conversation, as the phone's New conversation does; the earlier ones are under Previous conversations.
-let shared = null;
 let view = FRESH;
 
 // The chat is read while the panel is seen: often while Coach is at work or the owner just wrote, seldom otherwise, never on a
@@ -278,40 +263,17 @@ $("coachPast").addEventListener("toggle", () => $("coachPast").open && drawPast(
 
 $("coachNew").onclick = () => {
   view = FRESH;
-  shared = null;
-  $("sharePreview").hidden = true;
   $("coachWords").value = "";
   $("coachPast").open = false;
   $("coachThread").textContent = "";
   drawCoach();
 };
 
-$("share").onclick = async () => {
-  const target = await send({ type: "share_target" });
-  if (target.error) {
-    $("coachNote").textContent = chrome.i18n.getMessage("share_error_" + target.error) || t("share_unavailable");
-    return;
-  }
-  const read = await send({ type: "share_read", tabId: target.tabId });
-  if (read.error) {
-    $("coachNote").textContent = t("share_unavailable");
-    return;
-  }
-  shared = read.page;
-  $("shareWhat").textContent = shared.title + " · " + new URL(shared.url).hostname + " · " + t("share_chars", String(shared.text.length));
-  $("sharePreview").hidden = false;
-};
-
-$("shareRemove").onclick = () => {
-  shared = null;
-  $("sharePreview").hidden = true;
-};
-
 $("coachForm").onsubmit = async (e) => {
   e.preventDefault();
   const words = $("coachWords").value.trim();
   if (!words) return;
-  const r = await send({ type: "coach_send", words, page: shared, clientID: crypto.randomUUID(), ...sendOptions(view) });
+  const r = await send({ type: "coach_send", words, clientID: crypto.randomUUID(), ...sendOptions(view) });
   if (r.error) {
     $("coachNote").textContent = t("coach_error");
     return;
@@ -319,8 +281,6 @@ $("coachForm").onsubmit = async (e) => {
   view = afterSend(view, r.sent);
   sentAt = Date.now();
   $("coachWords").value = "";
-  shared = null;
-  $("sharePreview").hidden = true;
   drawCoach();
 };
 

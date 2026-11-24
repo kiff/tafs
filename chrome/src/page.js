@@ -84,8 +84,7 @@
   const SECRET_NAMES = /(otp|one.?time|2fa|mfa|totp|verification.?code|security.?code|auth.?code|passcode|pin\b)/i;
   const CARD_NAMES = /(card.?number|cardnum|cc.?num|cc-?number|cvc|cvv|csc|card.?code|expir|exp.?date|cc-?exp)/i;
 
-  /** A field's kind, as the extension tells fields apart: planque's set (`wireKind`), plus `username` and `radio`, which a
-   * sealed value and a check need. */
+  /** A field's kind, as the extension tells fields apart: planque's set (`wireKind`), plus `username` and `radio`. */
   function kindOf(el) {
     const tag = el.tagName.toLowerCase();
     const type = (el.getAttribute("type") || "text").toLowerCase();
@@ -113,10 +112,6 @@
 
   const FIELD_SKIP = new Set(["hidden", "submit", "button", "image", "reset", "file"]);
 
-  // The fields a sealed value went into: read as masked from then on, whatever their kind, so a username filled into a
-  // text or email field never goes back up in a read (qa-kiff's gate on sealed sign-ins).
-  const sealedFilled = new WeakSet();
-
   function fieldsOf() {
     const out = [];
     for (const el of document.querySelectorAll("input, textarea, select")) {
@@ -128,7 +123,7 @@
       const ref = "f" + (out.length + 1);
       bind(ref, el);
       const field = { ref, label: labelOf(el), kind: wireKind(kind) };
-      if (kind === "password" || kind === "card" || kind === "code" || sealedFilled.has(el)) {
+      if (kind === "password" || kind === "card" || kind === "code") {
         field.masked = true;
       } else if (kind === "checkbox" || kind === "radio") {
         field.value = el.checked ? "checked" : "";
@@ -400,7 +395,7 @@
 
   /**
    * Does one act (`{kind, ref, value?}`) planned from read `readId`, or says why not: `{ok: true}` or `{ok: false, code}`.
-   * The service worker reads the page back afterwards. A sealed value is filled by `fillSealed`, never here.
+   * The service worker reads the page back afterwards. Nothing here ever types a saved value: the extension keeps none.
    */
   function act(a, readId) {
     if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
@@ -439,22 +434,6 @@
         return { ok: false, code: "bad_step" };
     }
     current = null; // the next act needs a new read
-    return { ok: true };
-  }
-
-  /** Fills a sealed value into a password, username or code field on this exact origin (slice 5, after the phone's release). */
-  function fillSealed(ref, readId, origin, value, part) {
-    if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
-    if (location.origin !== origin || window.top !== window) return { ok: false, code: "secret_field" };
-    const el = refs.get(ref);
-    if (!el || !el.isConnected || el.tagName !== "INPUT" || prints.get(ref) !== printOf(el)) return { ok: false, code: "ref_unknown" };
-    const kind = kindOf(el);
-    const fits = part === "password" ? kind === "password" : part === "username" ? ["username", "text", "email"].includes(kind) : false;
-    if (!fits) return { ok: false, code: "secret_field" };
-    if (!visible(el) || !onTop(el)) return { ok: false, code: "not_visible" };
-    sealedFilled.add(el);
-    setValue(el, value);
-    current = null;
     return { ok: true };
   }
 
@@ -520,8 +499,8 @@
     return rects;
   }
 
-  /** Every field whose value a picture must not show: a password, card or one-time-code field, one the extension filled from a
-   * sealed sign-in, and a text field whose value is a secret by its shape (a key, a card number). The same rules as a read's. */
+  /** Every field whose value a picture must not show: a password, card or one-time-code field, and a text field whose value
+   * is a secret by its shape (a key, a card number). The same rules as a read's. */
   function secretFields() {
     const out = [];
     const all = [];
@@ -531,7 +510,7 @@
       if (!visible(el)) continue;
       const kind = kindOf(el);
       const value = el.tagName === "SELECT" ? "" : String(el.value || "");
-      if (kind === "password" || kind === "card" || kind === "code" || sealedFilled.has(el) || (value && M.maskText(value) !== value)) out.push(el);
+      if (kind === "password" || kind === "card" || kind === "code" || (value && M.maskText(value) !== value)) out.push(el);
     }
     return out;
   }
@@ -642,5 +621,5 @@
     return true;
   }
 
-  root.TafsPage = { read, act, fillSealed, kindOf, listen, maskForShot, unmaskShot, outline, unoutline };
+  root.TafsPage = { read, act, kindOf, listen, maskForShot, unmaskShot, outline, unoutline };
 })(globalThis);

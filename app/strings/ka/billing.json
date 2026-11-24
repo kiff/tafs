@@ -71,7 +71,7 @@
   "billing.solo_subscription_one_charged_your": "Solo არის გამოწერა ერთი პერიოდისთვის ({period}) {price}-ად, რომელიც თქვენს Apple ანგარიშს ჩამოეჭრება. ახლდება ყოველ პერიოდში ({period_2}), სანამ არ გააუქმებთ.",
   "billing.starts_free": "იწყება უფასოდ: {trial}.",
   "billing.tafs_kiff_one_person_every": "tafs ერთი ადამიანისთვის, ყოველ თვე.",
-  "billing.team_on_web": "მიიღეთ Team kiff.dev-ზე",
+  "billing.team_on_web": "მიიღეთ Company kiff.dev-ზე",
   "billing.terms_use": "გამოყენების პირობები",
   "billing.test_purchase_credits": "სატესტო შეძენები ამ ანგარიშს კრედიტებს არ უმატებს.",
   "billing.try_free": "სცადეთ უფასოდ: {trial}",
