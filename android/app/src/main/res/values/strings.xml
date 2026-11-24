@@ -105,6 +105,8 @@
     <string name="approval_security_key_failed">The security key couldn\'t sign, so nothing was approved. The request is kept: approve again when you\'re ready.</string>
     <string name="approval_security_key_locked">This security key is locked after too many wrong PINs, so it can\'t approve. Approve on your phone. Resetting the key erases it, so to approve with a key again, pair this computer again.</string>
     <string name="approval_security_key_no_key">Plug in your security key, then try again.</string>
+    <string name="approval_security_key_no_library">This computer can\'t use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package), so nothing was approved. Install it, then approve again. The request is kept.</string>
+    <string name="approval_security_key_no_library_pairing">This computer can\'t use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package). To add your key, cancel, install it, then pair again. Or pair without a key now.</string>
     <string name="approval_security_key_no_pin_set">This security key has no PIN, so it can\'t approve. Plug in the one that goes with this computer. If it was reset, approve on your phone, and pair this computer again to approve with a key.</string>
     <string name="approval_security_key_none_paired">This computer has no security key yet. A security key is a small USB key you touch to approve; an ordinary USB stick won\'t work.</string>
     <string name="approval_security_key_not_allowed">The security key didn\'t allow it, so nothing was approved. The request is kept: approve again when you\'re ready.</string>

@@ -27722,6 +27722,28 @@
         }
       }
     },
+    "approval.security_key.no_library": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This computer can't use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package), so nothing was approved. Install it, then approve again. The request is kept."
+          }
+        }
+      }
+    },
+    "approval.security_key.no_library_pairing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This computer can't use a security key until libfido2 1.14 or later is installed (on Ubuntu, the libfido2-1 package). To add your key, cancel, install it, then pair again. Or pair without a key now."
+          }
+        }
+      }
+    },
     "approval.security_key.no_pin_set": {
       "extractionState": "manual",
       "localizations": {
