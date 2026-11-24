@@ -494,7 +494,10 @@
     <string name="chat_it_lower">nó</string>
     <string name="chat_jump_latest_something_new">Chuyển tới tin mới nhất, có điều gì mới</string>
     <string name="chat_jump_to_latest">Chuyển tới tin mới nhất</string>
+    <string name="chat_link_blocked_body">Từ cuộc trò chuyện, tafs chỉ mở các trang web an toàn. Liên kết này đi tới: %1$s</string>
+    <string name="chat_link_blocked_title">Liên kết này sẽ không mở</string>
     <string name="chat_link_confirm_body">Liên kết đến từ một trang Coach đã đọc. Đi tới: %1$s</string>
+    <string name="chat_link_confirm_body_live">Câu trả lời này vẫn đang được viết. Liên kết này đi tới: %1$s</string>
     <string name="chat_link_confirm_open">Mở</string>
     <string name="chat_link_confirm_title">Mở liên kết này?</string>
     <string name="chat_message_carries_most_files">Một tin nhắn mang tối đa %1$s tệp.</string>

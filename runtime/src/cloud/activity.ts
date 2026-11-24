@@ -21,8 +21,13 @@ export function activityFilters(lang: Lang = "en"): Array<{ id: ActivityFilter; 
   return ACTIVITY_FILTERS.map((f) => ({ id: f.id, title: titles[f.id] }));
 }
 
+/**
+ * A refusal of Activity's or the Record's. `code` and `words` only when the person can reach it (a search too long, an
+ * export's days): the words in their language, which the apps show as they are. A refusal only an app's own mistake
+ * reaches (a cursor, a limit, a date's format) keeps the English `error` alone.
+ */
 export class ActivityError extends Error {
-  constructor(readonly status: number, message: string) { super(message); }
+  constructor(readonly status: number, message: string, readonly code?: string, readonly words?: string) { super(message); }
 }
 
 /** KIFF's public activity contract. Signed evidence is passed through, never reconstructed. */

@@ -646,7 +646,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   } catch (err) {
     if (err instanceof HTTPError) return json(err.status, { error: err.message, ...(await withRefusalWords(event, err, deps)) });
     if (err instanceof DoorError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
-    if (err instanceof ActivityError) return json(err.status, { error: err.message });
+    if (err instanceof ActivityError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}), ...(err.words ? { words: err.words } : {}) });
     if (err instanceof KIFFError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
     if (err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
@@ -7849,7 +7849,7 @@ async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, 
     if (!seesEvery) {
       throw new HTTPError(403, "exporting receipts is for the people who see every taf's Record");
     }
-    return receiptsExport({ token: bearer(event), from: q.get("from"), to: q.get("to"), tafs, zone }, deps.fetch, deps.kiffBase);
+    return receiptsExport({ token: bearer(event), from: q.get("from"), to: q.get("to"), tafs, zone, lang }, deps.fetch, deps.kiffBase);
   }
   throw new HTTPError(404, "not found");
 }
