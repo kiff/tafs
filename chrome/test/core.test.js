@@ -187,7 +187,7 @@ test("every shipped language has an extension locale with English's keys and pla
   const sameAsEnglish = new Set(["name", "coach_title"]); // Coach is a name, the same in every language
   // A word the language shares with English, on purpose: "Site" in French, Dutch, Portuguese, Romanian and Turkish,
   // "Password" in Italian, "Conversation" in French. Anything else equal to English is English left in.
-  const sharedWords = { vault_site: ["fr", "nl", "pt_BR", "pt_PT", "ro", "tr"], vault_password: ["it"], coach_untitled: ["fr"] };
+  const sharedWords = { coach_untitled: ["fr"] };
   for (const loc of ["en", ...locales]) {
     const m = read(loc);
     assert.deepEqual(Object.keys(m).sort(), Object.keys(en).sort(), loc);

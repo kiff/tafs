@@ -185,80 +185,9 @@
     "message": "Telefonyňyzda tassyklaň",
     "description": "Where an approval waits"
   },
-  "share_button": {
-    "message": "Bu sahypany paýlaşyň",
-    "description": "Share toggle"
-  },
-  "share_preview": {
-    "message": "Habaryňyz bilen gidýär:",
-    "description": "Label above the page preview (URL and title) before sending"
-  },
-  "share_remove": {
-    "message": "Aýyryň",
-    "description": "Remove the shared page from the message"
-  },
-  "share_chars": {
-    "message": "$N$ belgi",
-    "placeholders": {
-      "n": {
-        "content": "$1"
-      }
-    }
-  },
-  "share_unavailable": {
-    "message": "Bu sahypa paýlaşylyp bilinmeýär.",
-    "description": "chrome:// pages, the Web Store, PDFs and other pages that can't be read"
-  },
-  "share_error_site_blocked": {
-    "message": "Muňa meňzeş sahypalar hiç haçan paýlaşylmaýar: banklar, gapjyklar, parollar, tölegler, saglyk we döwlet."
-  },
-  "share_error_bad_url": {
-    "message": "Diňe https sahypalary paýlaşylyp bilner."
-  },
   "coach_empty_title": {
     "message": "Coach bilen gürleşiň",
     "description": "Empty chat: heading"
-  },
-  "coach_empty_body": {
-    "message": "Bu tafs programmasyndaky bilen deň gürrüň. Coach bu sahypany diňe siz paýlaşsaňyz görýär.",
-    "description": "Empty chat: body"
-  },
-  "share_note": {
-    "message": "Bu bir sahypany Coach-a iberýär, parol, kart we kod meýdanlary aýrylan görnüşde.",
-    "description": "Note under Share this page"
-  },
-  "vault_title": {
-    "message": "Ýatda saklanan girişler"
-  },
-  "vault_body": {
-    "message": "Şu ýerde saklanýar, bu kompýuterde möhürlenýär. Taf diňe şol anyk sahypada birini ulanmagy sorap biler, ol diňe şol bir dolduryşy telefonyňyzda tassyklanyňyzdan soň ýazylýar. tafs we KIFF muny hiç haçan görmeýär."
-  },
-  "vault_site": {
-    "message": "Sahypa"
-  },
-  "vault_username": {
-    "message": "Ulanyjy ady ýa-da e-poçta (islege görä)"
-  },
-  "vault_password": {
-    "message": "Parol"
-  },
-  "vault_save": {
-    "message": "Möhürläp saklaň"
-  },
-  "vault_saved": {
-    "message": "Saklandy. Bu kompýuterde möhürlendi."
-  },
-  "vault_error": {
-    "message": "Saklanmady: sahypa https talap edýär, we parol hem gerek."
-  },
-  "vault_remove": {
-    "message": "Aýyryň"
-  },
-  "vault_with_username": {
-    "message": "ulanyjy ady bilen"
-  },
-  "vault_one_per_site": {
-    "message": "Her sahypa üçin bir giriş: şol sahypa üçin başga birini saklasaňyz, ol çalşylýar."
   },
   "coach_new": {
     "message": "Täze gürrüň"

@@ -109,6 +109,17 @@ export async function checkWelcome(message, { planqueKey, chromeId, nonceP, nonc
 }
 
 /**
+ * A sealed value's handle, `sec_<id>:password` or `sec_<id>:username`, and nothing else: exactly two segments. The phone's card
+ * names the part from the handle's suffix, so a handle with a third segment would show one part and name another. A handle that
+ * isn't one is null. Kept for the release's shared contract (vectors/chrome-release.json); this extension keeps no sealed value.
+ */
+const HANDLE = /^(sec_[A-Za-z0-9_-]+):(password|username)$/;
+export function parseHandle(handle) {
+  const m = typeof handle === "string" ? HANDLE.exec(handle) : null;
+  return m ? { id: m[1], part: m[2] } : null;
+}
+
+/**
  * Whether `release` is the paired phone's signature releasing sealed value `sealed` for one fill of step `step` on
  * `origin`, into field `field_ref` of read `read_id` (refs are renumbered on every read, so the read names the exact
  * field the owner saw), unexpired. planque relays it and can't make one.
