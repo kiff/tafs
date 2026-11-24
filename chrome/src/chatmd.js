@@ -3,6 +3,17 @@
 // innerHTML, so nothing in the words can become markup. A link is drawn as its words, then its address, and nothing opens
 // on a click: a page Coach read can steer what an answer links to, and the panel opens no link (docs/chrome.md).
 
+// A link's address, read just after its `](` (sticky: from that place, with no copy of the rest of the answer).
+const ADDRESS = /([^)\s]+)\)/y;
+
+/**
+ * An address as it's shown: each format character (bidi overrides and isolates, zero-width marks) and control character
+ * becomes U+FFFD, so an override inside it can't make it read as another address. Shown, not dropped, so nothing is hidden.
+ */
+export function shownAddress(address) {
+  return String(address).replace(/[\p{Cf}\p{Cc}]/gu, "\uFFFD");
+}
+
 /** The blocks of [text]: `{ type: "p" | "h", lines: string[] }` or `{ type: "ul" | "ol", items: string[] }`. */
 export function blocks(text) {
   const out = [];
@@ -58,6 +69,10 @@ export function inline(text, marks = {}) {
     if (plain) out.push({ text: plain, ...marks });
     plain = "";
   };
+  // Where the next `]` and the next line break are, kept as `i` moves on, so an answer full of `[` stays linear.
+  let close = -2;
+  let lineEnd = -2;
+  let noAddressAt = -1; // a `](` whose address never closes: not read again for the next `[`
   let i = 0;
   while (i < s.length) {
     const c = s[i];
@@ -86,12 +101,19 @@ export function inline(text, marks = {}) {
         continue;
       }
     } else if (c === "[") {
-      const m = /^\[([^\]\n]+)\]\(([^)\s]+)\)/.exec(s.slice(i));
-      if (m) {
-        flush();
-        out.push({ text: m[1], ...marks, link: m[2] });
-        i += m[0].length;
-        continue;
+      if (close !== -1 && close <= i) close = s.indexOf("]", i + 1);
+      if (lineEnd !== -1 && lineEnd <= i) lineEnd = s.indexOf("\n", i + 1);
+      // A link's words end at the next `]`, on the same line, and its address follows at once in `(…)`.
+      if (close > i + 1 && close !== noAddressAt && (lineEnd === -1 || close < lineEnd) && s[close + 1] === "(") {
+        ADDRESS.lastIndex = close + 2;
+        const m = ADDRESS.exec(s);
+        if (m) {
+          flush();
+          out.push({ text: s.slice(i + 1, close), ...marks, link: m[1] });
+          i = ADDRESS.lastIndex;
+          continue;
+        }
+        noAddressAt = close;
       }
     }
     plain += c;
@@ -129,7 +151,7 @@ function runs(doc, parent, text) {
         const addr = doc.createElement("span");
         addr.className = "linkAddress";
         addr.dir = "ltr";
-        addr.textContent = " (" + r.link + ")";
+        addr.textContent = " (" + shownAddress(r.link) + ")";
         parent.append(addr);
       }
       continue;

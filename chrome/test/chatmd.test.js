@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { blocks, inline, render } from "../src/chatmd.js";
+import { blocks, inline, render, shownAddress } from "../src/chatmd.js";
 
 // A document with elements and text nodes only: no innerHTML, no parser. render must build everything from these.
 function fakeDoc() {
@@ -72,4 +72,28 @@ test("blocks: a blank line ends a paragraph or a list, and an item's indented ne
   assert.deepEqual(blocks("- one\n  more\n- two\nafter"), [{ type: "ul", items: ["one more", "two"] }, { type: "p", lines: ["after"] }]);
   assert.deepEqual(blocks("1) a\n2) b"), [{ type: "ol", items: ["a", "b"] }]);
   assert.deepEqual(blocks(""), []);
+});
+
+test("a format or control character in a link's address shows as U+FFFD, so the address can't read as another", () => {
+  const rlo = "\u202E";
+  const out = show(render(fakeDoc(), `[the docs](https://shop.example/${rlo}gnp.exe)`));
+  assert.ok(!out.includes(rlo), "no override reaches the panel");
+  assert.ok(out.includes("<span.linkAddress> (https://shop.example/\uFFFDgnp.exe)</span>"), out);
+  for (const c of ["\u202A", "\u2066", "\u2069", "\u200B", "\u200F", "\uFEFF", "\u0007", "\u0085"]) {
+    assert.equal(shownAddress("a" + c + "b"), "a\uFFFDb", "U+" + c.codePointAt(0).toString(16));
+  }
+  assert.equal(shownAddress("https://a.example/ok"), "https://a.example/ok", "an ordinary address is as written");
+});
+
+test("an answer full of [ stays quick: no copy of the rest of the text at each one", () => {
+  const text = "[".repeat(200_000) + "x";
+  const start = Date.now();
+  assert.deepEqual(inline(text), [{ text }]);
+  assert.ok(Date.now() - start < 2_000, "linear, not quadratic");
+  const unclosed = "[".repeat(100_000) + "](" + "a".repeat(100_000);
+  const t2 = Date.now();
+  assert.deepEqual(inline(unclosed), [{ text: unclosed }], "an address that never closes is no link");
+  assert.ok(Date.now() - t2 < 2_000, "and is read once");
+  // Links are still found anywhere in a long answer.
+  assert.deepEqual(inline("a ".repeat(5_000) + "[w](https://a.example/)").at(-1), { text: "w", link: "https://a.example/" });
 });
