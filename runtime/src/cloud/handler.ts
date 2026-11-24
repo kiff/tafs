@@ -7059,13 +7059,17 @@ export function heldLine(text: string): boolean {
  * retry or a self-correction before a card never reaches the person. One exception: a run that ends with no
  * words after its tools keeps its last note as its message, and never an earlier one.
  * The live stream does the same (relay).
+ *
+ * A call is its `tool_call` while the run goes, and its `called` line once it ended: kiff/agents keeps a run's
+ * `tool_call` events only until the run ends, and its `called` ones after. Either one follows a note, so a run read
+ * after its end leaves its notes out too (24 Nov: "Follow the English link first." reached the chat).
  */
 export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; kind: string; body?: unknown }>): Set<string> {
   const out = new Set<string>();
   const pending = new Map<string, string>(); // run → its latest message, while nothing has followed it
   const called = new Map<string, string[]>(); // run → messages its calls followed, nothing shown since
   for (const e of events) {
-    if (e.kind === "tool_call") {
+    if (e.kind === "tool_call" || e.kind === "called") {
       const id = pending.get(e.run);
       if (id) called.set(e.run, [...(called.get(e.run) ?? []), id]);
       pending.delete(e.run);

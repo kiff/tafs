@@ -1,0 +1,1 @@
+- A run read after its end leaves its notes out of the chat (its calls are then only their `called` lines), and a taf says what it couldn't read instead of answering from memory, and uses a site's search for a page no read links to.
