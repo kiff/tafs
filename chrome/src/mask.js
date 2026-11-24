@@ -45,9 +45,9 @@
 
   // A one-time code written in the page's text ("Your verification code is 482913", "123456 is your login code", "votre
   // code est 4821", "tu código es 4821", "Ihr Code lautet 4821"): the digits go, the words stay. A code is 4 to 8 digits, or
-  // two groups of 3 or 4 joined by a space or a dash. A postal, order or promo code stays. tafs cloud masks the same in a
+  // two groups of 3 or 4 joined by a space (a non-breaking or thin one too) or a dash. A postal, order or promo code stays. tafs cloud masks the same in a
   // page Coach reads (runtime/src/cloud/page-codes.ts): the cases in runtime/test/fixtures/one-time-codes.json hold both.
-  const CODE_DIGITS = "(?<!\\d)(\\d{3,4}[ -]\\d{3,4}|\\d{4,8})(?!\\d)";
+  const CODE_DIGITS = "(?<!\\d)(\\d{3,4}[ \\u00a0\\u2009\\u202f-]\\d{3,4}|\\d{4,8})(?!\\d)";
   const CODE_NAMED = "(?:verification|security|confirmation|authentication|login|log-in|sign-in|signin|one-time|one time|access|2fa|mfa|otp)\\s+code" +
     "|one-time\\s+password|otp|passcode|code\\s+(?:de\\s+(?:vérification|verification|confirmation|sécurité|securite|connexion|validation)|à\\s+usage\\s+unique)" +
     "|código\\s+de\\s+(?:verificación|verificacion|confirmación|confirmacion|seguridad|acceso|validación|validacion|un\\s+solo\\s+uso)" +
@@ -55,8 +55,8 @@
   const CODE_OTHER = "(?<!\\b(?:postal|zip|post|area|country|promo|discount|coupon|gift|tracking|product|error|status|order|source|tax|reference|ref)\\s)";
   const CODE_WORD = "(?:code|código|codigo)";
   const CODES = [
-    // A code named for what it is, then the digits within a few words: "verification code for Acme: 482913".
-    new RegExp(`(\\b(?:${CODE_NAMED})\\b[^\\d\\n]{0,40}?)${CODE_DIGITS}`, "giu"),
+    // A code named for what it is, then the digits within a few words, on its line or the next: "verification code for Acme: 482913".
+    new RegExp(`(\\b(?:${CODE_NAMED})\\b[^\\d]{0,40}?)${CODE_DIGITS}`, "giu"),
     // A bare "code" only with "is" or ":" right after it: "your code is 4821", "code: 4821".
     new RegExp(`(\\b(?:(?:your|votre|ton|tu|su|ihr|dein)\\s+)?${CODE_OTHER}${CODE_WORD}\\s*(?:(?:is|est|es|ist|lautet)\\s*:?|[:=])\\s*)${CODE_DIGITS}`, "giu"),
   ];

@@ -2,6 +2,9 @@
   "masked": [
     ["Your verification code is 482913", "Your verification code is [masked]"],
     ["Your Acme verification code: 482 913. It expires in 10 minutes.", "Your Acme verification code: [masked]. It expires in 10 minutes."],
+    ["Verification code\n\n482913\n\nIt expires in 10 minutes.", "Verification code\n\n[masked]\n\nIt expires in 10 minutes."],
+    ["Your login code: 482 913", "Your login code: [masked]"],
+    ["Your login code: 482 913", "Your login code: [masked]"],
     ["123456 is your login code", "[masked] is your login code"],
     ["G-482913 is your Google verification code.", "G-[masked] is your Google verification code."],
     ["Enter OTP 48291366 to continue", "Enter OTP [masked] to continue"],
