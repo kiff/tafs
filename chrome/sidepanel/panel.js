@@ -1,7 +1,7 @@
 // The side panel: pairing by the phone's code, and while a taf works, what it's doing, with Pause, Resume and Stop. It
 // shows only what the service worker reports; it decides nothing.
 
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork, switchDraft } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork, switchDraft, turnOver, stillPending } from "../src/coachchat.js";
 import { render as renderWords } from "../src/chatmd.js";
 
 /** A message's words: the person's as they typed them; a taf's or Coach's with their Markdown drawn, opening no link. */
@@ -301,8 +301,9 @@ async function renderCoach() {
     note.textContent = t("coach_not_started");
     return;
   }
+  const atEnd = nearEnd();
   list.textContent = "";
-  $("coachEmpty").hidden = r.thread.messages.length > 0;
+  $("coachEmpty").hidden = r.thread.messages.length > 0 || !!coachPending;
   for (const m of r.thread.messages.slice(-20)) {
     const li = document.createElement("li");
     li.className = m.from;
@@ -318,7 +319,11 @@ async function renderCoach() {
   }
   $("coachPhone").hidden = !r.thread.waitsOnPhone;
   working = !!r.thread.working;
-  if (working) note.textContent = t("coach_working");
+  if (coachPending && !stillPending(coachPending, r.thread.messages)) coachPending = null;
+  // What was just sent stays on show until the chat has it, and Coach's working line goes under the last message, as in the app.
+  if (coachPending) showPending(list, coachPending);
+  if (coachPending || working) list.append(workingLine(t("coach_working")));
+  if (atEnd) toEnd();
 }
 
 /**
@@ -438,6 +443,8 @@ function showView(name) {
   if (current === "tafView" && name !== "tafView") clearTimeout(tafTimer);
   for (const v of VIEWS) $(v).hidden = v !== name;
   current = name;
+  // The pairing's lines show on the taf's own view; Coach, its chats and Settings get the room (panel.css).
+  $("paired").dataset.view = name;
   closeMenu();
   if (name === "tafView") readTaf();
   if (name === "coach") drawReads();
@@ -514,16 +521,28 @@ $("coachNew").onclick = () => {
 async function sendCoach(alone) {
   const words = $("coachWords").value.trim();
   if (!words) return;
+  // Shown at once, as in the app: the person's message at the bottom right and Coach's working line under it, before tafs
+  // cloud has answered. The box is cleared now; on a failure the words come back to it, never lost.
+  coachPending = words;
+  $("coachWords").value = "";
+  $("coachNote").textContent = "";
+  $("coachEmpty").hidden = true;
+  const list = $("coachThread");
+  showPending(list, words);
+  list.append(workingLine(t("coach_working")));
+  toEnd();
   // The page in front of this panel's window goes with the words only with the person's page consent and if the gate lets
   // it (sw.js, pageconsent.js): only on this send. "Send without the page" sends the words alone, whatever the consent.
-  const r = await send({ type: "coach_send", words, alone, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow, ...sendOptions(view) });
+  const r = await send({ type: "coach_send", words, alone, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow, ...sendOptions(view) }).catch(() => ({ error: "failed" }));
   if (r.error) {
+    coachPending = null;
+    for (const el of list.querySelectorAll(".pending, .working")) el.remove();
+    if (!$("coachWords").value) $("coachWords").value = words;
     $("coachNote").textContent = t("coach_error");
     return;
   }
   view = afterSend(view, r.sent);
   sentAt = Date.now();
-  $("coachWords").value = "";
   drawCoach();
 }
 
@@ -587,6 +606,7 @@ async function readTaf() {
     note.textContent = t(r.error === "no_session" ? "unpaired" : "taf_error", tafName());
   } else {
     const list = $("tafThread");
+    const atEnd = nearEnd();
     list.textContent = "";
     for (const m of r.thread.messages.slice(-20)) {
       const li = document.createElement("li");
@@ -596,7 +616,18 @@ async function readTaf() {
     }
     $("tafPhone").hidden = !r.thread.waitsOnPhone;
     tafWorking = !!r.thread.working;
-    if (tafWorking) note.textContent = t("working", tafName());
+    if (tafPending && tafPending.taf === id && !stillPending(tafPending.words, r.thread.messages)) tafPending = null;
+    const pending = tafPending && tafPending.taf === id ? tafPending.words : null;
+    if (pending) showPending(list, pending);
+    if (pending || tafWorking) list.append(workingLine(t("working", tafName())));
+    if (atEnd) toEnd();
+    // The taf's turn is over, in tafs cloud's word: its run here stops saying it works, rather than until the idle sweep.
+    for (const run of turnOver(id, r.thread, (lastState && lastState.runs) || [], tafs)) {
+      send({ type: "turn_over", run }).then((out) => {
+        // Its last step was a moment ago: the chat is read again once the run has been quiet long enough.
+        if (out && out.retryIn > 0 && id === tafId) setTimeout(() => id === tafId && readTaf(), out.retryIn + 500);
+      }).catch(() => {});
+    }
   }
   scheduleTaf();
 }
@@ -635,15 +666,27 @@ $("tafForm").onsubmit = async (e) => {
   const words = $("tafWords").value.trim();
   const to = tafId;
   if (!words || !to) return;
-  const r = await send({ type: "taf_send", taf: to, words, clientID: crypto.randomUUID() });
+  // Shown at once, as Coach's are: the message, and the taf's working line under it; the box is cleared now, its words kept
+  // to come back on a failure.
+  tafPending = { taf: to, words };
+  $("tafWords").value = "";
+  $("tafNote").textContent = "";
+  showPending($("tafThread"), words);
+  $("tafThread").append(workingLine(t("working", tafName())));
+  toEnd();
+  const r = await send({ type: "taf_send", taf: to, words, clientID: crypto.randomUUID() }).catch(() => ({ error: "failed" }));
   if (r.error) {
-    if (tafId === to) $("tafNote").textContent = t("taf_error", tafName());
+    tafPending = null;
+    if (tafId === to) {
+      for (const el of $("tafThread").querySelectorAll(".pending, .working")) el.remove();
+      if (!$("tafWords").value) $("tafWords").value = words;
+      $("tafNote").textContent = t("taf_error", tafName());
+    } else if (!drafts.get(to)) drafts.set(to, words);
     return;
   }
   tafSentAt = Date.now();
   // Sent: those words are gone from the taf they went to, and from nowhere else (the chat may have switched meanwhile).
-  if (tafId === to) $("tafWords").value = "";
-  else drafts.delete(to);
+  if (tafId !== to) drafts.delete(to);
   readTaf();
 };
 
@@ -759,3 +802,34 @@ $("coachReadsSwitch").onclick = async () => {
 chrome.tabs.onUpdated.addListener((id, change) => {
   if (id === activeTab && change.url) drawReads();
 });
+
+// The words just sent to Coach, or to a taf ({taf, words}), on show until the chat as tafs cloud reads it has them (stillPending).
+let coachPending = null;
+let tafPending = null;
+
+/** The person's message as it was sent, at the bottom right, until the chat has it. */
+function showPending(list, words) {
+  const li = document.createElement("li");
+  li.className = "owner pending";
+  li.textContent = words;
+  list.append(li);
+}
+
+/** The working line under the last message ("Coach travaille…"), as in the app; read out when it appears. */
+function workingLine(text) {
+  const li = document.createElement("li");
+  li.className = "working";
+  li.setAttribute("role", "status");
+  li.textContent = text;
+  return li;
+}
+
+/** Whether the person is at the end of the chat: a new message then keeps it in view, and one scrolled up isn't moved. */
+function nearEnd() {
+  const doc = document.documentElement;
+  return window.innerHeight + window.scrollY >= doc.scrollHeight - 80;
+}
+
+function toEnd() {
+  window.scrollTo({ top: document.documentElement.scrollHeight });
+}

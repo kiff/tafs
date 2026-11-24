@@ -77,6 +77,27 @@ export function tafOfRun(run, tafs) {
 }
 
 /**
+ * The runs of taf [tafId] here whose turn is over, in tafs cloud's word: its chat, as the panel just read it, says it isn't
+ * working, and it isn't waiting on the person's phone (a step held for their answer goes on in the same tab once they answer).
+ * Only the taf's own runs, by their grant, never another's; the runner then ends each only if it has had no step for a while
+ * (runner.endTurn). Empty while the chat says it works, or when it couldn't be read.
+ */
+export function turnOver(tafId, thread, runs, tafs) {
+  if (!tafId || !thread || thread.working !== false || thread.waitsOnPhone) return [];
+  return (runs || []).filter((r) => r && !r.stopped && !r.paused && !r.hand && (tafOfRun(r, tafs) || {}).id === tafId).map((r) => r.id);
+}
+
+/**
+ * Whether the words just sent are still to come in the chat as tafs cloud reads it: the panel shows them at once, as the app
+ * does, and keeps showing them, with the working line under them, until the chat has the person's message with those words.
+ */
+export function stillPending(words, messages) {
+  if (!words) return false;
+  const said = String(words).trim();
+  return !(messages || []).some((m) => m && m.from === "owner" && String(m.text || "").trim() === said);
+}
+
+/**
  * Words typed for a taf stay that taf's (D2): switching the chat to another taf, by its tab, a chip or the picker, keeps
  * what was typed for the one before and brings back what was typed for the new one, or nothing. Never carried over: Send
  * goes to the taf on show, and an instruction for one taf must never reach another. Returns the drafts after and the text

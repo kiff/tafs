@@ -387,7 +387,7 @@ was done.
   taf's close step, planque's `stop`, the person's Stop, the idle sweep): the person sees the page where the taf stopped and
   nothing opens and closes under them. **Each taf keeps only its latest finished run's tabs:** when that taf's next run opens, it closes the
   previous "· done" tabs (and a window of its own) first, so a taf's calls never pile up. **Only a tab still where the run left it, and not in front of the window the person is using, closes then;** one they moved on or are using stays, is dropped from the list, leaves the run's "· done" group if it's still in it, never a group of the person's own (Chrome ends a group once it's empty, so a person who watches each run doesn't collect one done group per run), and keeps a window of its own open with it. Unpairing closes them all. Which tabs are kept is held in `chrome.storage.session`
-  (`doneTabs`), so a stopped worker still finds them; a taf is told apart by the name its steps carry. The group is renamed "tafs · Rae · done" and turns grey **15 s after the run ends** (`DONE_GRACE_MS`), unless the taf's next run starts first: a taf works in a few calls, each its own run, so its group stays amber while it works and waits instead of blinking grey between calls (a worker that stopped in those 15 s greys it when it starts again). Its fence goes, and the tabs are no longer the
+  (`doneTabs`), so a stopped worker still finds them; a taf is told apart by the name its steps carry. The group is renamed "tafs · Rae · done" and turns grey **15 s after the run ends** (`DONE_GRACE_MS`), unless the taf's next run starts first: a taf works in a few calls, each its own run, so its group stays amber while it works and waits instead of blinking grey between calls (a worker that stopped in those 15 s greys it when it starts again). **A run someone ended says done at once** (0.2.9): the person's Stop, from the bar or the panel, the idle sweep, and the taf's turn over (below) have no next call to wait for. Its fence goes, and the tabs are no longer the
   run's: a touch in one pauses nothing and a step can't reach it. **Unpairing closes them all** (the tabs the run opened, wherever they are
   by then, and a window of its own); so does a run that never loaded a page (a Stop while the tab is still being opened, or a window that
   couldn't be set up), since a blank tab is nothing to keep. When the window last used is private or a pop-up, or there is no normal window (the run
@@ -415,6 +415,15 @@ was done.
   ends, so this is what ends a turn's run: soon after, the bar, the badge and the group stop saying the taf works. A call that
   timed out or a lost `close` doesn't leave a run fenced and counting as active either. The service worker's minute alarm does
   the sweeping. A run with a step running or a step handed to the person isn't idle.
+- **The taf's turn over ends its run sooner** (0.2.9, `Runner.endTurn`, `turnOver`): when the panel reads the taf's chat and
+  tafs cloud says it isn't working (and isn't waiting on the person's phone), each of that taf's runs here with no step for
+  10 s (`TURN_QUIET_MS`), not paused and with nothing handed to the person, stops saying it works: its bar and the panel's
+  card go and its group says done at once, its tabs kept. A step that came under 10 s ago makes the panel read the chat again
+  once it's quiet that long. **It isn't a Stop:** planque isn't told the run stopped, and the run is forgotten here, as
+  after the worker restarts. planque keeps the run for the taf's next call for 2 minutes, so the person's next message may come
+  back to it; that call's first read finds no page there and goes on in a new run (planque's `restart`), and is never told
+  "the owner stopped this run". The panel only reads chats while it's open on the taf, so with the panel closed the 150 s
+  sweep still ends the run.
 - **A paused run gets 15 minutes** (`PAUSED_IDLE_MS`), counted from its last step, its pause or its Resume, whichever is
   last: a taf holds its step for the owner's Resume for up to 10 minutes, so a held run is never ended under it (a step sent
   meanwhile is answered `paused_by_owner` and keeps the run, like any step). One no step follows (the taf's turn ended on the pause, or
@@ -720,7 +729,16 @@ the runs (Pause, Resume, Stop, a hand-over) stay below whichever is on show. The
 **Set up a new taf for this site** (Coach in a view of its own, on a fresh conversation; **← Back** returns to the taf),
 **Previous conversations** and **Settings**. **Each chat's composer is the app's** (`form.composer`): the words in a
 rounded box with Send inside it on the right, a round ↑ named "Send"; Enter sends and Shift+Enter is a new line (never
-mid-composition in an input method); Coach's "Send without the page" is a small action under it. **Settings** holds Coach's page reading (its state, the page consent's screen,
+mid-composition in an input method); Coach's "Send without the page" is a small action under it. **As in the app**
+(0.2.9): the panel's head and each view's own head (**← Back**, the view's name, **New conversation**, ⋮) stay at the top while
+the chat scrolls, and **the composer stays at the bottom**, Coach's line about the page it reads with it (`.dock`). **A message
+shows at once**, at the bottom right, with the working line under it ("Coach is working…", or the taf's), before tafs cloud has
+answered; it stays until the chat as tafs cloud reads it has the person's message with those words (`stillPending`), and on a
+failure it goes and the words come back to the box. The working line goes under the last message while the chat says it
+works. A chat the person is at the end of follows new messages; one scrolled up isn't moved. The pairing's lines ("Paired as
+…") show on the taf's own view only, so Coach, its conversations and Settings get the room. No attachment and no microphone:
+the side panel sends no files (tafs cloud refuses them from a Chrome), and Chrome's speech recognition would send the voice
+to Google, which the on-device promise rules out. **Settings** holds Coach's page reading (its state, the page consent's screen,
 Stop reading pages) and **Unpair this Chrome**; the chat screens hold only the chat.
 **Remove this taf** says it's removed on the phone: tafs cloud takes a removal only signed by the phone's approval key or a
 computer's passkey, which this Chrome has neither of.
