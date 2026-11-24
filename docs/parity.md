@@ -1,8 +1,8 @@
 # Parity: every feature on every device
 
-One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A PR that moves a row updates this page, and the desktop columns follow each repo's `docs/port-checklist.md`.
+One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why); a watch row reads **built** while its code has merged but the owner's watch hasn't shown it working ([Watches](#watches)). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A PR that moves a row updates this page, and the desktop columns follow each repo's `docs/port-checklist.md`.
 
-**Read from:** kiff/tafs main `414ffb6` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `7497741`, kiff/tafs-windows `9ec91ef` and kiff/tafs-linux `ceec200`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
+**Read from:** kiff/tafs main `f513da4` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `7497741`, kiff/tafs-windows `9ec91ef` and kiff/tafs-linux `ceec200`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
 
 - **Mac 13+** is the iPad app built with Mac Catalyst ([mac-app.md](mac-app.md)): it follows the iPad unless that page says it differs.
 - **macOS 12, Windows, Linux** are native ports ([kiff/tafs-macos](https://github.com/kiff/tafs-macos), [kiff/tafs-windows](https://github.com/kiff/tafs-windows), [kiff/tafs-linux](https://github.com/kiff/tafs-linux)).
@@ -19,14 +19,14 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Windows | done 50, not for it 8 | the 58 iPad view files |
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
-| Wear OS | done 24, partial 3, not started 1, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | done 18, partial 5, not started 4, not for it 5 | the [Watches](#watches) table |
+| Wear OS | built 25, partial 3, not for it 4 | the [Watches](#watches) table |
+| Apple Watch | built 18, partial 5, not started 4, not for it 5 | the [Watches](#watches) table |
 | Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
 1. **macOS 12** is furthest behind: 21 screens partial and 7 not for it. About 13 of those lack only a step a service takes from the phone alone; a recount moves each to done with that service named, as Windows and Linux count them. The rest are real work, landing PR by PR.
 2. **Linux** is level with the iPad: 53 screens done, and 5 not for it, each with its reason. "Allow this from now on" landed last (tafs-linux#120).
-3. **Apple Watch behind Wear OS** ([Watches](#watches)): Keep for later, a complication, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
+3. **The watches wait on the owner's own checks**: both failed earlier tries, so every merged row reads built until it works on the owner's watch. **Apple Watch is behind Wear OS** ([Watches](#watches)): Keep for later, a complication, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
 ## The iPad's screens
 
@@ -235,38 +235,40 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 
 ## Watches
 
+A watch row is **done** only once it works on the owner's own watch: merged code isn't enough. Both watches failed the owner's earlier tries, so until their checks come back (the Apple Watch on the iPhone's build 3974, the Galaxy Watch 5 on Wear's internal-track build), a row whose code has merged reads **built**. Each row moves to done, or to "broken on the owner's watch" with the build and the fix, from the owner's result.
+
 | # | Feature | Apple Watch | Wear OS | Why, or what's missing |
 | -: | :- | :- | :- | :- |
-| 1 | Needs you on the wrist: the count and each held call | done | done | |
-| 2 | Refuse a held call | done | done | takes power away, so the watch may; needs the watch's lock |
-| 3 | Halt a taf, or every taf | done | done | |
+| 1 | Needs you on the wrist: the count and each held call | built | built | |
+| 2 | Refuse a held call | built | built | takes power away, so the watch may; needs the watch's lock |
+| 3 | Halt a taf, or every taf | built | built | |
 | 4 | Approve anything | not for it | not for it | the approval key lives on the phone, behind Face ID or the fingerprint |
 | 5 | Resume a halted taf | not for it | not for it | it gives power back: phone only |
-| 6 | Ask by voice or text | done | done | |
-| 7 | Check before sending (Re-record, Delete, Type, Quick reply) | done | done | |
-| 8 | Keep for later | not started | done | Apple Watch keeps no draft yet |
-| 9 | Send, then "Coach is answering" | done | done | |
-| 10 | The answer: Hear it, and Reply | done (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | done | |
-| 11 | An answer you can't miss, with the app put away | partial | done | Apple Watch: iOS doesn't promise the background time; tafs cloud now pushes watch asks to the iPhone, which doesn't read them yet |
-| 12 | Coach as one conversation | done | done | |
-| 13 | Chat with one taf | done | done | tafs cloud's switch still decides per account |
-| 14 | A taf's page and its settings | done | done | |
-| 15 | Your tafs, with their state | done | done | |
-| 16 | Today's calendar | done | done | |
-| 17 | The Account page | done | done | |
-| 18 | Sign out on this watch alone | done | done | |
+| 6 | Ask by voice or text | built | built | |
+| 7 | Check before sending (Re-record, Delete, Type, Quick reply) | built | built | |
+| 8 | Keep for later | not started | built | Apple Watch keeps no draft yet |
+| 9 | Send, then "Coach is answering" | built | built | |
+| 10 | The answer: Hear it, and Reply | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | built | |
+| 11 | An answer you can't miss, with the app put away | partial | built | Apple Watch: iOS doesn't promise the background time; tafs cloud now pushes watch asks to the iPhone, which doesn't read them yet |
+| 12 | Coach as one conversation | built | built | |
+| 13 | Chat with one taf | built | built | tafs cloud's switch still decides per account |
+| 14 | A taf's page and its settings | built | built | |
+| 15 | Your tafs, with their state | built | built | |
+| 16 | Today's calendar | built | built | |
+| 17 | The Account page | built | built | |
+| 18 | Sign out on this watch alone | built | built | |
 | 19 | Sign in, pair a device, add a passkey, change a Card | not for it | not for it | no sign-in of its own; the keys stay on the phone |
-| 20 | The inbox kept on the watch | done | done | |
-| 21 | The inbox's read and dismissed, in step with the phone | not started | done (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud's piece is in (`/v1/watch/inbox`); the Apple Watch's side and its phone's relay are next |
+| 20 | The inbox kept on the watch | built | built | |
+| 21 | The inbox's read and dismissed, in step with the phone | not started | built (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud's piece is in (`/v1/watch/inbox`); the Apple Watch's side and its phone's relay are next |
 | 22 | Your brief | partial | partial | built; off (`briefOnWatch`, `BRIEF_ON_WATCH`) until the owner's yes |
-| 23 | "From your watch" on the phone | done | done | |
-| 24 | A complication or tile (count, Ask tafs) | not started | done | Apple Watch: planned only |
-| 25 | The phone makes the text when the watch's recognizer gives up | partial | done | Apple Watch: built, off (`WatchVoice.on`) until the privacy page says so and the owner says yes |
+| 23 | "From your watch" on the phone | built | built | |
+| 24 | A complication or tile (count, Ask tafs) | not started | built | Apple Watch: planned only |
+| 25 | The phone makes the text when the watch's recognizer gives up | partial | built | Apple Watch: built, off (`WatchVoice.on`) until the privacy page says so and the owner says yes |
 | 26 | Play and Pause the recording before sending | not started | partial | Apple Watch: W12 held for the owner's yes. Wear: test builds only (`KEEP_AUDIO`) |
-| 27 | Opening at once from what the watch kept | partial | done | Apple Watch: built, off (`WatchCache.on`) |
-| 28 | Open on phone | not for it | done | watchOS can't open the iPhone app |
-| 29 | The all-clear picture | done | done | |
-| 30 | Saying why the phone can't be reached, with Try again | done | done | |
+| 27 | Opening at once from what the watch kept | partial | built | Apple Watch: built, off (`WatchCache.on`) |
+| 28 | Open on phone | not for it | built | watchOS can't open the iPhone app |
+| 29 | The all-clear picture | built | built | |
+| 30 | Saying why the phone can't be reached, with Try again | built | built | |
 | 31 | Working without the phone | not for it | not for it | the phone holds the session and the keys |
 | 32 | In the store | partial | partial | Apple Watch: only the TestFlight build carries it. Wear: the internal track; production is the owner's |
 
