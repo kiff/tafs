@@ -411,6 +411,29 @@ export async function setTimeZoneInKIFF(token: string, zone: string, doFetch: Fe
   return (await ask<{ time_zone: string }>(token, "PUT", "/v1/me/time-zone", { time_zone: zone }, doFetch, base)).time_zone;
 }
 
+/** One of the account's people as KIFF lists them: their KIFF subject, their membership's status, and what their role may do. */
+export interface Member {
+  subject: string;
+  /** "active", or another status (suspended, removed): only an active member acts on the account. */
+  status: string;
+  /** What their role may do; left out when KIFF's row carries no list of them. */
+  capabilities?: string[];
+}
+
+/**
+ * The account's people (GET /v1/tenant/members), with their status and capabilities: any member's session reads it, read
+ * only. A row KIFF sends without a subject is left out.
+ */
+export async function membersOf(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Member[]> {
+  const out = await ask<{ members?: Array<{ subject?: unknown; status?: unknown; capabilities?: unknown }> }>(token, "GET", "/v1/tenant/members", undefined, doFetch, base);
+  if (!Array.isArray(out.members)) throw new KIFFError(502, "KIFF listed no people");
+  return out.members.flatMap((m) => typeof m.subject === "string" && m.subject ? [{
+    subject: m.subject,
+    status: typeof m.status === "string" ? m.status : "",
+    ...(Array.isArray(m.capabilities) ? { capabilities: m.capabilities.filter((c): c is string => typeof c === "string") } : {}),
+  }] : []);
+}
+
 /** The account's people as KIFF lists them (GET /v1/tenant/members): the subjects whose membership is active. */
 export async function activeMembers(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Set<string>> {
   const out = await ask<{ members?: Array<{ subject?: unknown; status?: unknown }> }>(token, "GET", "/v1/tenant/members", undefined, doFetch, base);

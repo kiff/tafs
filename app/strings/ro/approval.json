@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Cheia de securitate nu a putut semna, așa că nu s-a aprobat nimic. Solicitarea se păstrează: aprobați din nou când sunteți gata.",
   "approval.security_key.locked": "Această cheie de securitate este blocată după prea multe PIN-uri greșite, așa că nu poate aproba. Aprobați pe telefon. Resetarea cheii o șterge, așa că, pentru a aproba din nou cu o cheie, asociați din nou acest computer.",
   "approval.security_key.no_key": "Conectați cheia de securitate, apoi încercați din nou.",
+  "approval.security_key.no_library": "Acest computer nu poate folosi o cheie de securitate până nu este instalat libfido2 1.14 sau mai nou (pe Ubuntu, pachetul libfido2-1), așa că nu s-a aprobat nimic. Instalați-l, apoi aprobați din nou. Solicitarea se păstrează.",
+  "approval.security_key.no_library_pairing": "Acest computer nu poate folosi o cheie de securitate până nu este instalat libfido2 1.14 sau mai nou (pe Ubuntu, pachetul libfido2-1). Pentru a adăuga cheia, anulați, instalați-l, apoi asociați din nou. Sau asociați acum fără cheie.",
   "approval.security_key.no_pin_set": "Această cheie de securitate nu are PIN, așa că nu poate aproba. Conectați-o pe cea care merge cu acest computer. Dacă a fost resetată, aprobați pe telefon și asociați din nou acest computer pentru a aproba cu o cheie.",
   "approval.security_key.none_paired": "Acest computer nu are încă nicio cheie de securitate. O cheie de securitate este o mică cheie USB pe care o atingeți pentru a aproba; un stick USB obișnuit nu funcționează.",
   "approval.security_key.not_allowed": "Cheia de securitate nu a permis, așa că nu s-a aprobat nimic. Solicitarea se păstrează: aprobați din nou când sunteți gata.",

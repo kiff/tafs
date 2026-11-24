@@ -27,6 +27,7 @@
   "alert.prompt": "কোনো taf-এর আপনাকে দরকার হলে অ্যালার্ট পান",
   "alert.role_cant": "এই KIFF অ্যাকাউন্টে আপনার ভূমিকা অ্যালার্ট চালু করতে পারে না।",
   "alert.sign_in_again": "অ্যালার্ট চালু করতে আবার KIFF দিয়ে সাইন ইন করুন: এই সাইন-ইন ফোনের হয়ে সই করতে পারে না।",
+  "alert.sign_out_anyway": "তবুও সাইন আউট",
   "alert.silent": "নীরব",
   "alert.silent_example": "সাপোর্ট রিপ্লাই maria@…-কে উত্তর দিয়েছে · ইমেইলে",
   "alert.sound": "শব্দ",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "পাওয়া যাচ্ছে না",
   "alert.status.off": "বন্ধ",
   "alert.status.on": "চালু",
+  "alert.still_on_after_sign_out.body": "tafs সেগুলো বন্ধ করতে পারেনি ({why})। আবার চেষ্টা করুন, অথবা তবুও সাইন আউট করে সেটিংসে tafs-এর নোটিফিকেশন বন্ধ করুন।",
+  "alert.still_on_after_sign_out.title": "এই {device} হয়তো এখনও এই অ্যাকাউন্টের অ্যালার্ট পাবে",
   "alert.taf_needs_you": "{taf}-এর আপনাকে দরকার",
   "alert.tafs": {
     "one": "{count}টি taf ›",

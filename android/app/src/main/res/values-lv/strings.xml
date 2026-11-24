@@ -30,6 +30,7 @@
     <string name="alert_prompt">Saņem paziņojumu, kad taf gaida tevi</string>
     <string name="alert_role_cant">Tava loma šajā KIFF kontā neļauj ieslēgt paziņojumus.</string>
     <string name="alert_sign_in_again">Lai ieslēgtu paziņojumus, vēlreiz pieraksties ar KIFF: šī pierakstīšanās nevar parakstīt tālruņa vārdā.</string>
+    <string name="alert_sign_out_anyway">Tomēr izrakstīties</string>
     <string name="alert_silent">Bez skaņas</string>
     <string name="alert_silent_example">Atbildes atbalstam atbildēja maria@… · Pa e-pastu</string>
     <string name="alert_sound">Skaņa</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Nav pieejams</string>
     <string name="alert_status_off">Izslēgts</string>
     <string name="alert_status_on">Ieslēgts</string>
+    <string name="alert_still_on_after_sign_out_body">tafs nevarēja tos izslēgt (%1$s). Mēģini vēlreiz vai tomēr izrakstieties un iestatījumos izslēdz paziņojumus no tafs.</string>
+    <string name="alert_still_on_after_sign_out_title">Šis %1$s joprojām var saņemt šī konta paziņojumus</string>
     <string name="alert_taf_needs_you">%1$s gaida tevi</string>
     <plurals name="alert_tafs">
         <item quantity="zero">%1$s taf ›</item>
@@ -106,6 +109,8 @@
     <string name="approval_security_key_failed">Drošības atslēga nevarēja parakstīt, tāpēc nekas netika apstiprināts. Pieprasījums ir saglabāts: apstiprini vēlreiz, kad esi gatavs.</string>
     <string name="approval_security_key_locked">Šī drošības atslēga ir bloķēta pēc pārāk daudziem nepareiziem PIN, tāpēc tā nevar apstiprināt. Apstiprini savā tālrunī. Atslēgas atiestatīšana to izdzēš, tāpēc, lai atkal apstiprinātu ar atslēgu, vēlreiz savieno šo datoru pārī.</string>
     <string name="approval_security_key_no_key">Pievieno savu drošības atslēgu, tad mēģini vēlreiz.</string>
+    <string name="approval_security_key_no_library">Šis dators nevar izmantot drošības atslēgu, kamēr nav instalēta libfido2 1.14 vai jaunāka (Ubuntu – pakotne libfido2-1), tāpēc nekas netika apstiprināts. Instalē to un apstiprini vēlreiz. Pieprasījums tiek saglabāts.</string>
+    <string name="approval_security_key_no_library_pairing">Šis dators nevar izmantot drošības atslēgu, kamēr nav instalēta libfido2 1.14 vai jaunāka (Ubuntu – pakotne libfido2-1). Lai pievienotu atslēgu, atcel, instalē to un savieno pārī vēlreiz. Vai savieno pārī tagad bez atslēgas.</string>
     <string name="approval_security_key_no_pin_set">Šai drošības atslēgai nav PIN, tāpēc tā nevar apstiprināt. Pievieno to, kas pieder šim datoram. Ja tā tika atiestatīta, apstiprini savā tālrunī un vēlreiz savieno šo datoru pārī, lai apstiprinātu ar atslēgu.</string>
     <string name="approval_security_key_none_paired">Šim datoram vēl nav drošības atslēgas. Drošības atslēga ir maza USB atslēga, kurai pieskaries, lai apstiprinātu; parasta USB zibatmiņa nederēs.</string>
     <string name="approval_security_key_not_allowed">Drošības atslēga to neatļāva, tāpēc nekas netika apstiprināts. Pieprasījums ir saglabāts: apstiprini vēlreiz, kad esi gatavs.</string>

@@ -1,0 +1,1 @@
+- **iPhone and iPad: the App Store build is made with Xcode 27**, so it's built for iOS 27 and watchOS 27 ([ios-app.md](docs/ios-app.md)).

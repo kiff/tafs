@@ -58,6 +58,8 @@
   "approval.security_key.failed": "La clau de seguretat no ha pogut signar, així que no s'ha aprovat res. La sol·licitud es conserva: torna a aprovar quan estiguis a punt.",
   "approval.security_key.locked": "Aquesta clau de seguretat s'ha bloquejat després de massa PIN incorrectes, així que no pot aprovar. Aprova al telèfon. Restablir la clau l'esborra, per això, per tornar a aprovar amb una clau, cal que vinculis aquest ordinador de nou.",
   "approval.security_key.no_key": "Connecta la teva clau de seguretat i torna-ho a provar.",
+  "approval.security_key.no_library": "Aquest ordinador no pot fer servir una clau de seguretat fins que s'instal·li libfido2 1.14 o posterior (a Ubuntu, el paquet libfido2-1), així que no s'ha aprovat res. Instal·la-ho i torna a aprovar. La sol·licitud es conserva.",
+  "approval.security_key.no_library_pairing": "Aquest ordinador no pot fer servir una clau de seguretat fins que s'instal·li libfido2 1.14 o posterior (a Ubuntu, el paquet libfido2-1). Per afegir la teva clau, cancel·la, instal·la-ho i torna a aparellar. O aparella ara sense clau.",
   "approval.security_key.no_pin_set": "Aquesta clau de seguretat no té PIN, així que no pot aprovar. Connecta la que va amb aquest ordinador. Si s'ha restablert, aprova al telèfon i aparella aquest ordinador de nou per aprovar amb una clau.",
   "approval.security_key.none_paired": "Aquest ordinador encara no té cap clau de seguretat. Una clau de seguretat és una petita clau USB que toques per aprovar; una memòria USB corrent no serveix.",
   "approval.security_key.not_allowed": "La clau de seguretat no ho ha permès, així que no s'ha aprovat res. La sol·licitud es conserva: torna a aprovar quan estiguis a punt.",

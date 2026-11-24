@@ -27,6 +27,7 @@
   "alert.prompt": "Получавайте известие, когато taf има нужда от вас",
   "alert.role_cant": "Ролята ви в този акаунт в KIFF не може да включва известия.",
   "alert.sign_in_again": "Влезте отново с KIFF, за да включите известията: този вход не може да подписва за телефона.",
+  "alert.sign_out_anyway": "Изход въпреки това",
   "alert.silent": "Безшумно",
   "alert.silent_example": "Отговори на поддръжката отговори на maria@… · По имейл",
   "alert.sound": "Звук",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Не е налично",
   "alert.status.off": "Изключено",
   "alert.status.on": "Включено",
+  "alert.still_on_after_sign_out.body": "tafs не успя да ги изключи ({why}). Опитайте отново или излезте въпреки това и изключете известията за tafs в Настройки.",
+  "alert.still_on_after_sign_out.title": "Този {device} може още да получава известията на този акаунт",
   "alert.taf_needs_you": "{taf} ви чака",
   "alert.tafs": {
     "one": "{count} taf ›",

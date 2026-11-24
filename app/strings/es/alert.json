@@ -27,6 +27,7 @@
   "alert.prompt": "Recibe una alerta cuando un taf te necesite",
   "alert.role_cant": "Tu rol en esta cuenta de KIFF no puede activar alertas.",
   "alert.sign_in_again": "Vuelve a iniciar sesión con KIFF para activar las alertas: este inicio de sesión no puede firmar por el teléfono.",
+  "alert.sign_out_anyway": "Cerrar sesión de todos modos",
   "alert.silent": "Sin sonido",
   "alert.silent_example": "Respuestas de soporte respondió a maria@… · Por correo",
   "alert.sound": "Sonido",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "No disponible",
   "alert.status.off": "Desactivado",
   "alert.status.on": "Activado",
+  "alert.still_on_after_sign_out.body": "tafs no pudo desactivarlas ({why}). Vuelve a intentarlo, o cierra sesión de todos modos y desactiva las notificaciones de tafs en Ajustes.",
+  "alert.still_on_after_sign_out.title": "Este {device} podría seguir recibiendo las alertas de esta cuenta",
   "alert.taf_needs_you": "{taf} te necesita",
   "alert.tafs": {
     "one": "{count} taf ›",

@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Bezpečnostní klíč nemohl podepsat, takže se nic neschválilo. Žádost zůstává: schvalte znovu, až budete připraveni.",
   "approval.security_key.locked": "Tento bezpečnostní klíč je po příliš mnoha špatných PINech zamčený, takže nemůže schvalovat. Schvalte v telefonu. Resetování klíč vymaže, takže pro schvalování klíčem tento počítač znovu spárujte.",
   "approval.security_key.no_key": "Připojte bezpečnostní klíč a zkuste to znovu.",
+  "approval.security_key.no_library": "Tento počítač nemůže používat bezpečnostní klíč, dokud nebude nainstalována knihovna libfido2 1.14 nebo novější (v Ubuntu balíček libfido2-1), takže nic nebylo schváleno. Nainstalujte ji a schvalte znovu. Žádost zůstává.",
+  "approval.security_key.no_library_pairing": "Tento počítač nemůže používat bezpečnostní klíč, dokud nebude nainstalována knihovna libfido2 1.14 nebo novější (v Ubuntu balíček libfido2-1). Chcete-li přidat klíč, zrušte to, nainstalujte ji a spárujte znovu. Nebo teď spárujte bez klíče.",
   "approval.security_key.no_pin_set": "Tento bezpečnostní klíč nemá PIN, takže nemůže schvalovat. Připojte ten, který patří k tomuto počítači. Pokud byl resetován, schvalte v telefonu a pro schvalování klíčem tento počítač znovu spárujte.",
   "approval.security_key.none_paired": "Tento počítač zatím nemá žádný bezpečnostní klíč. Bezpečnostní klíč je malý USB klíč, kterého se dotknete ke schválení; obyčejný USB flash disk nefunguje.",
   "approval.security_key.not_allowed": "Bezpečnostní klíč to nedovolil, takže se nic neschválilo. Žádost zůstává: schvalte znovu, až budete připraveni.",

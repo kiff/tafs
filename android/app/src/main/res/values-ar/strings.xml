@@ -30,6 +30,7 @@
     <string name="alert_prompt">احصل على تنبيه عندما يحتاجك taf</string>
     <string name="alert_role_cant">دورك في حساب KIFF هذا لا يتيح تشغيل التنبيهات.</string>
     <string name="alert_sign_in_again">سجّل الدخول عبر KIFF مرة أخرى لتشغيل التنبيهات: لا يستطيع تسجيل الدخول هذا التوقيع عن الهاتف.</string>
+    <string name="alert_sign_out_anyway">تسجيل الخروج على أي حال</string>
     <string name="alert_silent">صامت</string>
     <string name="alert_silent_example">ردود الدعم أُجيب عنها maria@… · بالبريد الإلكتروني</string>
     <string name="alert_sound">صوت</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">غير متاح</string>
     <string name="alert_status_off">متوقف</string>
     <string name="alert_status_on">قيد التشغيل</string>
+    <string name="alert_still_on_after_sign_out_body">لم يتمكن tafs من إيقافها (%1$s). حاول مرة أخرى، أو سجّل الخروج على أي حال وأوقف إشعارات tafs من الإعدادات.</string>
+    <string name="alert_still_on_after_sign_out_title">قد يظل هذا الجهاز (%1$s) يتلقى تنبيهات هذا الحساب</string>
     <string name="alert_taf_needs_you">%1$s بانتظارك</string>
     <plurals name="alert_tafs">
         <item quantity="zero">لا tafs ›</item>
@@ -109,6 +112,8 @@
     <string name="approval_security_key_failed">تعذّر على مفتاح الأمان التوقيع، فلم تتم الموافقة على شيء. الطلب محفوظ: وافق مرة أخرى عندما تكون مستعدًا.</string>
     <string name="approval_security_key_locked">تم قفل مفتاح الأمان هذا بعد إدخال رموز PIN خاطئة كثيرة، فلا يستطيع الموافقة. وافق على هاتفك. إعادة ضبط المفتاح تمسحه، ولتوافق بمفتاح مرة أخرى أعد إقران هذا الكمبيوتر.</string>
     <string name="approval_security_key_no_key">وصّل مفتاح الأمان ثم حاول مرة أخرى.</string>
+    <string name="approval_security_key_no_library">لا يمكن لهذا الكمبيوتر استخدام مفتاح أمان حتى يُثبَّت libfido2 1.14 أو أحدث (على Ubuntu، الحزمة libfido2-1)، لذا لم تتم الموافقة على أي شيء. ثبّته ثم وافق مرة أخرى. يبقى الطلب محفوظًا.</string>
+    <string name="approval_security_key_no_library_pairing">لا يمكن لهذا الكمبيوتر استخدام مفتاح أمان حتى يُثبَّت libfido2 1.14 أو أحدث (على Ubuntu، الحزمة libfido2-1). لإضافة مفتاحك، ألغِ ثم ثبّته ثم اقرن مرة أخرى. أو اقرن الآن بلا مفتاح.</string>
     <string name="approval_security_key_no_pin_set">ليس لمفتاح الأمان هذا رمز PIN فلا يستطيع الموافقة. وصّل المفتاح الذي يخص هذا الكمبيوتر. وإذا أُعيد ضبطه فوافق على هاتفك وأعد إقران هذا الكمبيوتر لتوافق بمفتاح.</string>
     <string name="approval_security_key_none_paired">ليس لدى هذا الكمبيوتر مفتاح أمان بعد. مفتاح الأمان مفتاح USB صغير تلمسه للموافقة؛ ذاكرة USB العادية لا تعمل.</string>
     <string name="approval_security_key_not_allowed">لم يسمح مفتاح الأمان بذلك، فلم تتم الموافقة على شيء. الطلب محفوظ: وافق مرة أخرى عندما تكون مستعدًا.</string>

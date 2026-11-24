@@ -113,7 +113,7 @@ jobs:
           uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
           # What the watch app is built from: its own folders, the relay's contract (WatchShared), the phone's words it
           # compiles, the project file. And this workflow.
-          watch='^(ios/(TafsWatch|TafsWatchTests|Shared|WatchShared)/|ios/(project|watch-embed)\.yml$|ios/Tafs/Design/Words\.swift$|ios/Tafs/Localizable\.xcstrings$|\.github/workflows/ios\.yml$)'
+          watch='^(ios/(TafsWatch|TafsWatchTests|TafsWatchWidgets|Shared|WatchShared)/|ios/(project|watch-embed)\.yml$|ios/Tafs/Design/Words\.swift$|ios/Tafs/Localizable\.xcstrings$|\.github/workflows/ios\.yml$)'
           # What the route walk (RouteWalkUITests) depends on besides the screens: AppModel's
           # open(route:) and its hook, the routes and the map. With the UI tests it always runs;
           # otherwise it runs beside the unit tests when one of these changes.
@@ -869,6 +869,23 @@ jobs:
         with:
           persist-credentials: false
 
+      # The App Store build is made with the newest released Xcode 27 on the image (the iOS 27 and watchOS 27 SDKs),
+      # not the image's default. A runner without one stops here and lists the Xcodes it has, rather than uploading a
+      # build made with an older SDK.
+      - name: Use the newest Xcode 27
+        run: |
+          echo "Xcodes on this runner:"; ls -d /Applications/Xcode*.app || true
+          xcode=$({ ls -d /Applications/Xcode_27*.app 2>/dev/null || true; } | python3 -c '
+          import re, sys
+          found = [l.strip() for l in sys.stdin if l.strip() and not re.search(r"beta|rc|candidate", l, re.I)]
+          version = lambda p: [int(n) for n in re.findall(r"\d+", p.rsplit("/", 1)[-1])]
+          print(max(found, key=version) if found else "")
+          ')
+          [ -n "$xcode" ] || { echo "::error::No released Xcode 27 on this runner image: the App Store build needs the iOS 27 SDK"; exit 1; }
+          sudo xcode-select -s "$xcode/Contents/Developer"
+          xcodebuild -version
+          echo "iOS SDK $(xcrun --sdk iphoneos --show-sdk-version) ($(xcrun --sdk iphoneos --show-sdk-build-version)), watchOS SDK $(xcrun --sdk watchos --show-sdk-version)"
+
       # With the watch app embedded (ios/watch-embed.yml): only this build carries it.
       - name: Generate the Xcode project
         env:
@@ -944,7 +961,8 @@ jobs:
             bot.tafs.app+push+timesensitive+associateddomains="tafs App Store CI" \
             bot.tafs.app.widgets="tafs widgets App Store CI" \
             bot.tafs.app.notify="tafs notify App Store CI" \
-            bot.tafs.app.watchkitapp="tafs watch App Store CI"
+            bot.tafs.app.watchkitapp="tafs watch App Store CI" \
+            bot.tafs.app.watchkitapp.widgets="tafs watch widgets App Store CI"
 
       - name: Archive
         run: |
@@ -960,6 +978,7 @@ jobs:
             TAFS_PROFILE_WIDGETS="tafs widgets App Store CI" \
             TAFS_PROFILE_NOTIFY="tafs notify App Store CI" \
             TAFS_PROFILE_WATCH="tafs watch App Store CI" \
+            TAFS_PROFILE_WATCH_WIDGETS="tafs watch widgets App Store CI" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/signing.keychain-db" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}"
 
@@ -981,6 +1000,7 @@ jobs:
               <key>bot.tafs.app.widgets</key><string>tafs widgets App Store CI</string>
               <key>bot.tafs.app.notify</key><string>tafs notify App Store CI</string>
               <key>bot.tafs.app.watchkitapp</key><string>tafs watch App Store CI</string>
+              <key>bot.tafs.app.watchkitapp.widgets</key><string>tafs watch widgets App Store CI</string>
             </dict>
             <key>uploadSymbols</key><true/>
           </dict>

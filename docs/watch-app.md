@@ -214,9 +214,9 @@ Nothing leaves the watch before Send:
 - **Not in this step:** Ask tafs (`ask` instead of `coach`, below), which waits on the Wear OS slice and tafs cloud's
   iPhone push. Keep for later came later, behind its own switch (below).
 - **Keep for later** (row 8, as Wear OS's `keepForLater`; `CoachModel.keepForLater`, `FileDraftStore`; tested in
-  `CoachModelTests`), **built and off** (`CoachModel.keepForLaterOn`): it keeps the person's words on the watch, so it's
-  switched on only with its sentence in the privacy page's Apple Watch paragraph and the owner's yes. Off, no store is
-  given, and nothing is offered or kept.
+  `CoachModelTests`), **on** (`CoachModel.keepForLaterOn`): it keeps the person's words on the watch, so it was switched on
+  with its sentence in the privacy page's Apple Watch paragraph and the owner's yes. Off, no store is given, and nothing is
+  offered or kept.
   - **Offered** in the review, beside Send, when a Send to Coach got no reply from the phone (no answer, the link failed, or
     not in reach, as Wear OS's "Not sure it arrived"), with the words still the ones sent. Never for a taf's message: nothing
     of a taf's chat is kept on the watch, so that's Send again or close.
@@ -577,6 +577,21 @@ circle above "Nothing waiting". It's drawn in code with shapes and one symbol, a
 number or word. VoiceOver skips it, since the line under it says the same. It shows only once the
 phone has answered, never in place of loading. A locked watch doesn't show the app at all.
 
+## The complication (row 24, step 1)
+
+"Ask tafs" on the watch face and in the Smart Stack (`TafsWatchWidgets`, a WidgetKit extension inside the watch app): the
+microphone, with "Ask Coach" where the family has room, in the circular, corner, rectangular and inline families.
+- **A tap opens the app listening** (`ComplicationLink.ask`, `tafs-watch://ask`): Coach's home, then the system's dictation
+  as its microphone starts it, once per tap. Nothing is sent before the person's Send. Signed out on this watch, it opens
+  nothing. A tap that opens the app cold (the usual case) is kept until Coach's home appears (`CoachModel.askPending`),
+  which takes it once and listens; so does a tap from another page, or with Coach's home already on screen.
+- **It shows nothing of the account**: no count, no taf, no words. So there's nothing to hide while the watch is locked,
+  and it never asks the phone or refreshes (one entry, `.never`).
+- **Signing:** its own bundle id, `bot.tafs.app.watchkitapp.widgets`, and CI's profile "tafs watch widgets App Store CI",
+  made by `asc-profiles.rb` in the `testflight` job. Creating that App ID is the owner's call, so this waits for their yes.
+- **Step 2, later:** the count of what waits, which needs an App Group shared by the watch app and the widget, and the
+  count kept on disk only while the watch has a passcode, cleared on sign-out.
+
 ## What the watch keeps
 
 - **In memory only:** the list, the amounts and Coach's answers. They go when the app leaves the
@@ -586,10 +601,10 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
   protection, and cleared on sign-out.
 - **v2, behind its switch:** after Sign out on this watch, one empty file, `tafs.signed_out_here`, until Sign in with your
   phone.
-- **Keep for later, behind `CoachModel.keepForLaterOn` (off; row 8, as Wear OS's):** `tafs.draft.json`, one message to
+- **Keep for later, behind `CoachModel.keepForLaterOn` (on; row 8, as Wear OS's):** `tafs.draft.json`, one message to
   Coach the phone didn't answer: its words, its message id and the chat it continues. Complete file protection; gone once
-  the phone takes it, on Delete, on either sign-out, and, as the Inbox, when the app opens or is put away without a passcode. **Switched on only with its sentence on the privacy page** and the
-  owner's yes.
+  the phone takes it, on Delete, on either sign-out, and, as the Inbox, when the app opens or is put away without a passcode. **On with its sentence on the privacy page** and the owner's
+  yes.
 - **So it opens at once, behind `WatchCache.on` (off; row 44, D, as Wear OS's tafs#1594):** `tafs.watch_cache`, Your
   tafs as last read: each taf's id, name, and whether it's halted or paused. Never a taf's state line (it can name what a
   held call wants), a held call's details, an amount, or a chat. Needs you isn't kept: with a passcode the Inbox already

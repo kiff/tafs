@@ -30,6 +30,7 @@
     <string name="alert_prompt">Prejmite opozorilo, ko vas taf potrebuje</string>
     <string name="alert_role_cant">Vaša vloga v tem računu KIFF ne more vklopiti opozoril.</string>
     <string name="alert_sign_in_again">Za vklop opozoril se znova prijavite s KIFF: ta prijava ne more podpisovati za telefon.</string>
+    <string name="alert_sign_out_anyway">Vseeno se odjavi</string>
     <string name="alert_silent">Tiho</string>
     <string name="alert_silent_example">Odgovori strankam je odgovoril maria@… · Po e-pošti</string>
     <string name="alert_sound">Zvok</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Ni na voljo</string>
     <string name="alert_status_off">Izklopljeno</string>
     <string name="alert_status_on">Vklopljeno</string>
+    <string name="alert_still_on_after_sign_out_body">tafs jih ni mogel izklopiti (%1$s). Poskusite znova ali se vseeno odjavite in v Nastavitvah izklopite obvestila za tafs.</string>
+    <string name="alert_still_on_after_sign_out_title">Ta %1$s morda še vedno prejema opozorila tega računa</string>
     <string name="alert_taf_needs_you">%1$s vas potrebuje</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -107,6 +110,8 @@
     <string name="approval_security_key_failed">Varnostni ključ ni mogel podpisati, zato ni bilo nič odobreno. Zahteva ostane: odobrite znova, ko boste pripravljeni.</string>
     <string name="approval_security_key_locked">Ta varnostni ključ je po preveč napačnih PIN-ih zaklenjen, zato ne more odobravati. Odobrite v telefonu. Ponastavitev ključ izbriše, zato za odobravanje s ključem ta računalnik znova seznanite.</string>
     <string name="approval_security_key_no_key">Priključite varnostni ključ in poskusite znova.</string>
+    <string name="approval_security_key_no_library">Ta računalnik ne more uporabljati varnostnega ključa, dokler ni nameščena knjižnica libfido2 1.14 ali novejša (v Ubuntuju paket libfido2-1), zato ni bilo nič odobreno. Namestite jo in znova odobrite. Zahteva ostane.</string>
+    <string name="approval_security_key_no_library_pairing">Ta računalnik ne more uporabljati varnostnega ključa, dokler ni nameščena knjižnica libfido2 1.14 ali novejša (v Ubuntuju paket libfido2-1). Če želite dodati ključ, prekličite, jo namestite in znova seznanite. Ali pa zdaj seznanite brez ključa.</string>
     <string name="approval_security_key_no_pin_set">Ta varnostni ključ nima PIN-a, zato ne more odobravati. Priključite tistega, ki spada k temu računalniku. Če je bil ponastavljen, odobrite v telefonu in za odobravanje s ključem ta računalnik znova seznanite.</string>
     <string name="approval_security_key_none_paired">Ta računalnik še nima varnostnega ključa. Varnostni ključ je majhen USB-ključ, ki se ga dotaknete za odobritev; navaden USB-ključek ne deluje.</string>
     <string name="approval_security_key_not_allowed">Varnostni ključ tega ni dovolil, zato ni bilo nič odobreno. Zahteva ostane: odobrite znova, ko boste pripravljeni.</string>

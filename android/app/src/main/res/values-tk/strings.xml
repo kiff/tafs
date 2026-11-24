@@ -30,6 +30,7 @@
     <string name="alert_prompt">Taf size zerur bolanda duýduryş alyň</string>
     <string name="alert_role_cant">Bu KIFF hasabyndaky roluňyz duýduryşlary açyp bilmeýär.</string>
     <string name="alert_sign_in_again">Duýduryşlary açmak üçin KIFF bilen täzeden giriň: bu giriş telefon üçin gol çekip bilmeýär.</string>
+    <string name="alert_sign_out_anyway">Her niçik hem çyk</string>
     <string name="alert_silent">Sessiz</string>
     <string name="alert_silent_example">Goldaw jogaplary maria@… jogap berdi · Email bilen</string>
     <string name="alert_sound">Ses</string>
@@ -37,6 +38,8 @@
     <string name="alert_status_not_available">Elýeterli däl</string>
     <string name="alert_status_off">Öçük</string>
     <string name="alert_status_on">Açyk</string>
+    <string name="alert_still_on_after_sign_out_body">tafs olary öçürip bilmedi (%1$s). Täzeden synanyşyň ýa-da her niçik hem çykyň we Sazlamalarda tafs üçin habarnamalary öçüriň.</string>
+    <string name="alert_still_on_after_sign_out_title">Bu %1$s bu hasabyň duýduryşlaryny entek alyp biler</string>
     <string name="alert_taf_needs_you">%1$s size zerur</string>
     <plurals name="alert_tafs">
         <item quantity="one">%1$s taf ›</item>
@@ -105,6 +108,8 @@
     <string name="approval_security_key_failed">Howpsuzlyk açary gol çekip bilmedi, şonuň üçin hiç zat tassyklanmady. Haýyş saklanýar: taýýar bolanyňyzda täzeden tassyklaň.</string>
     <string name="approval_security_key_locked">Bu howpsuzlyk açary gaty köp ýalňyş PIN-den soň gulplandy, şonuň üçin tassyklap bilmeýär. Telefonyňyzda tassyklaň. Açary täzeden bellemek ony pozýar, şonuň üçin açar bilen täzeden tassyklamak üçin bu kompýuteri täzeden goşalaň.</string>
     <string name="approval_security_key_no_key">Howpsuzlyk açaryňyzy dakyň, soňra täzeden synanyşyň.</string>
+    <string name="approval_security_key_no_library">libfido2 1.14 ýa-da täzesi gurnalýança (Ubuntu-da libfido2-1 bukjasy) bu kompýuter howpsuzlyk açaryny ulanyp bilmeýär, şonuň üçin hiç zat tassyklanmady. Ony guruň, soň täzeden tassyklaň. Haýyş saklanýar.</string>
+    <string name="approval_security_key_no_library_pairing">libfido2 1.14 ýa-da täzesi gurnalýança (Ubuntu-da libfido2-1 bukjasy) bu kompýuter howpsuzlyk açaryny ulanyp bilmeýär. Açaryňyzy goşmak üçin ýatyryň, ony guruň, soň täzeden goşalaň. Ýa-da häzir açarsyz goşalaň.</string>
     <string name="approval_security_key_no_pin_set">Bu howpsuzlyk açarynda PIN ýok, şonuň üçin tassyklap bilmeýär. Bu kompýuter bilen gidýän açary dakyň. Eger ol täzeden bellenen bolsa, telefonyňyzda tassyklaň we açar bilen tassyklamak üçin bu kompýuteri täzeden goşalaň.</string>
     <string name="approval_security_key_none_paired">Bu kompýuterde heniz howpsuzlyk açary ýok. Howpsuzlyk açary tassyklamak üçin degýän kiçijik USB açarydyr; adaty USB fleş işlemeýär.</string>
     <string name="approval_security_key_not_allowed">Howpsuzlyk açary oňa rugsat bermedi, şonuň üçin hiç zat tassyklanmady. Haýyş saklanýar: taýýar bolanyňyzda täzeden tassyklaň.</string>

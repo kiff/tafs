@@ -27,6 +27,7 @@
   "alert.prompt": "Lass dich benachrichtigen, wenn ein taf dich braucht",
   "alert.role_cant": "Deine Rolle in diesem KIFF-Konto kann keine Benachrichtigungen einschalten.",
   "alert.sign_in_again": "Melde dich erneut mit KIFF an, um Benachrichtigungen einzuschalten: Diese Anmeldung kann nicht für das Telefon signieren.",
+  "alert.sign_out_anyway": "Trotzdem abmelden",
   "alert.silent": "Lautlos",
   "alert.silent_example": "Support-Antworten hat maria@… geantwortet · Per E-Mail",
   "alert.sound": "Ton",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "Nicht verfügbar",
   "alert.status.off": "Aus",
   "alert.status.on": "An",
+  "alert.still_on_after_sign_out.body": "tafs konnte sie nicht ausschalten ({why}). Versuch es erneut oder melde dich trotzdem ab und schalte die Benachrichtigungen für tafs in den Einstellungen aus.",
+  "alert.still_on_after_sign_out.title": "Dieses {device} bekommt vielleicht weiter die Benachrichtigungen dieses Kontos",
   "alert.taf_needs_you": "{taf} braucht dich",
   "alert.tafs": {
     "one": "{count} taf ›",

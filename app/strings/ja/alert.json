@@ -27,6 +27,7 @@
   "alert.prompt": "tafがあなたを必要としたときに通知を受け取る",
   "alert.role_cant": "このKIFFアカウントでのあなたの役割では、通知をオンにできません。",
   "alert.sign_in_again": "通知をオンにするには、もう一度KIFFでサインインしてください：このサインインではスマートフォンで署名できません。",
+  "alert.sign_out_anyway": "このままサインアウト",
   "alert.silent": "サイレント",
   "alert.silent_example": "サポート返信がmaria@…に回答しました・メールで",
   "alert.sound": "サウンド",
@@ -34,6 +35,8 @@
   "alert.status.not_available": "利用不可",
   "alert.status.off": "オフ",
   "alert.status.on": "オン",
+  "alert.still_on_after_sign_out.body": "tafsは通知をオフにできませんでした（{why}）。もう一度試すか、このままサインアウトして、設定でtafsの通知をオフにしてください。",
+  "alert.still_on_after_sign_out.title": "この{device}には、まだこのアカウントの通知が届く可能性があります",
   "alert.taf_needs_you": "{taf}があなたを必要としています",
   "alert.tafs": {
     "other": "taf {count}個 ›"

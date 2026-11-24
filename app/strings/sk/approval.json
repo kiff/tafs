@@ -58,6 +58,8 @@
   "approval.security_key.failed": "Bezpečnostný kľúč nemohol podpísať, takže sa nič neschválilo. Žiadosť zostáva: schváľte znova, keď budete pripravení.",
   "approval.security_key.locked": "Tento bezpečnostný kľúč je po príliš mnohých nesprávnych PIN zamknutý, takže nemôže schvaľovať. Schváľte v telefóne. Resetovanie kľúč vymaže, takže na schvaľovanie kľúčom tento počítač znova spárujte.",
   "approval.security_key.no_key": "Pripojte bezpečnostný kľúč a skúste to znova.",
+  "approval.security_key.no_library": "Tento počítač nemôže používať bezpečnostný kľúč, kým nebude nainštalovaná knižnica libfido2 1.14 alebo novšia (v Ubuntu balík libfido2-1), takže nič nebolo schválené. Nainštalujte ju a schváľte znova. Žiadosť zostáva.",
+  "approval.security_key.no_library_pairing": "Tento počítač nemôže používať bezpečnostný kľúč, kým nebude nainštalovaná knižnica libfido2 1.14 alebo novšia (v Ubuntu balík libfido2-1). Ak chcete pridať kľúč, zrušte to, nainštalujte ju a spárujte znova. Alebo teraz spárujte bez kľúča.",
   "approval.security_key.no_pin_set": "Tento bezpečnostný kľúč nemá PIN, takže nemôže schvaľovať. Pripojte ten, ktorý patrí k tomuto počítaču. Ak bol resetovaný, schváľte v telefóne a na schvaľovanie kľúčom tento počítač znova spárujte.",
   "approval.security_key.none_paired": "Tento počítač zatiaľ nemá žiadny bezpečnostný kľúč. Bezpečnostný kľúč je malý USB kľúč, ktorého sa dotknete na schválenie; obyčajný USB flash disk nefunguje.",
   "approval.security_key.not_allowed": "Bezpečnostný kľúč to nedovolil, takže sa nič neschválilo. Žiadosť zostáva: schváľte znova, keď budete pripravení.",
