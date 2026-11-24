@@ -106,6 +106,20 @@ final class AllowFromNowOnTests: XCTestCase {
         XCTAssertFalse(try signs(Self.draft(extra: twice)), "the named Card twice")
     }
 
+    /// When KIFF names the Card in force (`current.id`), it must be the Card the draft revises; one that names another
+    /// is refused, the changed Card and one marked unchanged alike. A KIFF that names none is checked as before.
+    func testTheCardInForceMustBeTheOneRevisedWhenKiffNamesIt() throws {
+        let inForce = "\(Self.g)[\(Self.refund(Self.cap))]"
+        let after = "\(Self.g)[\(Self.refund(Self.raised))]"
+        XCTAssertTrue(try signs(Self.card(after, #""id":"c1","# + inForce)), "the Card revised")
+        XCTAssertFalse(try signs(Self.card(after, #""id":"c9","# + inForce)), "another Card's terms shown as in force")
+        XCTAssertTrue(try signs(Self.card(after, inForce)), "none named: as before")
+        let unchanged = #",{"revises":"c2","unchanged":true,"current":{"id":"c3","grants":[{"action":"list_charges"}]},"grants":[{"action":"list_charges"}]}"#
+        XCTAssertFalse(try signs(Self.draft(extra: unchanged)), "a Card marked unchanged names another Card in force")
+        let own = #",{"revises":"c2","unchanged":true,"current":{"id":"c2","grants":[{"action":"list_charges"}]},"grants":[{"action":"list_charges"}]}"#
+        XCTAssertTrue(try signs(Self.draft(extra: own)), "a Card marked unchanged that names itself in force")
+    }
+
     func testAChangeOfAKindTheContractDoesntNameIsNeverSigned() throws {
         XCTAssertFalse(try signs(Self.draft(), Self.offerJSON(kind: "something_new")))
     }

@@ -26,7 +26,8 @@ enum HoldAllow {
     /// term is the same (`Terms`): actions, caps, scopes, states, next steps, totals with their
     /// window, measure and per-item parameter, what happens past a limit, who holds the Card,
     /// where it applies, and when it starts and ends. A Card marked unchanged must read as in
-    /// force too. Anything else isn't what was offered, and nothing is signed.
+    /// force too. When KIFF names the Card in force (`current.id`), it must be the Card revised.
+    /// Anything else isn't what was offered, and nothing is signed.
     static func matches(_ draft: KIFFClient.AgentDraft, _ offer: TafsCloud.AllowOffer, agent: String?, hold: String?, action: String) -> Bool {
         guard let agent, !agent.isEmpty, draft.agentID == agent else { return false }
         if let from = draft.fromHold, from != hold { return false }
@@ -36,6 +37,9 @@ enum HoldAllow {
         var changed = Set<String>()
         for card in cards {
             guard let revises = card.revises, let current = card.current else { return false }
+            // The Card in force the draft shows must be the one it revises, when KIFF names it: else the comparison
+            // below could be against another Card's terms.
+            if let id = current.id, id != revises { return false }
             // A draft that sets how long a hold waits, or revokes, changes more than a limit.
             guard (card.holdExpiry ?? "").isEmpty, card.revokedAt == nil else { return false }
             let inForce = Terms(current)
