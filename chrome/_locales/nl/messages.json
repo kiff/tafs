@@ -105,7 +105,7 @@
   "page_consent_off": { "message": "Coach leest de pagina waarop je bent niet." },
   "page_consent_turn_on": { "message": "Coach de pagina laten lezen…" },
   "page_consent_title": { "message": "Coach de pagina vooraan laten lezen als je verstuurt?" },
-  "page_consent_what": { "message": "Als je Coach hier een bericht stuurt, gaat de tekst van het tabblad vooraan in dit venster mee: het adres (zonder alles na ? of #), de titel en de woorden. Wachtwoorden, kaartnummers en codes op de pagina worden weggelaten." },
+  "page_consent_what": { "message": "Als je Coach hier een bericht stuurt, gaat de tekst van het tabblad vooraan in dit venster mee: het adres (zonder alles na ? of #), de titel en de woorden. Veldwaarden en wachtwoorden worden niet gelezen; kaartnummers worden ingekort tot hun laatste vier cijfers; sleutels en als geheim gelabelde waarden worden gemaskeerd." },
   "page_consent_when": { "message": "Alleen als je verstuurt, alleen dat tabblad, en nooit een site van een bank, betalingen, mail of gezondheid, of een site die je hebt uitgezet." },
   "page_consent_never": { "message": "Het gaat naar tafs, dat het naar Claude van Anthropic stuurt om je te antwoorden, net als je bericht. tafs bewaart alleen de naam van de site, nooit de pagina; het antwoord van Coach kan eruit citeren." },
   "page_consent_change": { "message": "Je kunt altijd een bericht zonder de pagina sturen, en dit hier stoppen wanneer je wilt." },

@@ -1,0 +1,1 @@
+- **Chrome: the page consent says exactly what Coach's read leaves out.** Field values and passwords aren't read, card numbers are cut to their last four digits, and keys and labelled secrets are masked, in all 43 languages ([chrome.md](docs/chrome.md)).

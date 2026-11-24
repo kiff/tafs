@@ -105,7 +105,7 @@
   "page_consent_off": { "message": "Coach nuk e lexon faqen ku ndodheni." },
   "page_consent_turn_on": { "message": "Lejoni Coach të lexojë faqen…" },
   "page_consent_title": { "message": "Ta lejoni Coach të lexojë faqen përpara kur dërgoni?" },
-  "page_consent_what": { "message": "Kur i dërgoni këtu një mesazh Coach, me të shkon teksti i skedës përpara në këtë dritare: adresa e saj (pa asgjë pas ? ose #), titulli dhe fjalët. Fjalëkalimet, numrat e kartave dhe kodet në faqe lihen jashtë." },
+  "page_consent_what": { "message": "Kur i dërgoni këtu një mesazh Coach, me të shkon teksti i skedës përpara në këtë dritare: adresa e saj (pa asgjë pas ? ose #), titulli dhe fjalët. Vlerat e fushave dhe fjalëkalimet nuk lexohen; numrat e kartave shkurtohen te katër shifrat e fundit; çelësat dhe sekretet e etiketuara maskohen." },
   "page_consent_when": { "message": "Vetëm kur dërgoni, vetëm ajo skedë, dhe kurrë një faqe banke, pagesash, poste ose shëndeti, as një që e keni çaktivizuar." },
   "page_consent_never": { "message": "Shkon te tafs, i cili e dërgon te Claude i Anthropic për t'ju përgjigjur, ashtu si mesazhin tuaj. tafs ruan vetëm emrin e sajtit, kurrë faqen; përgjigjja e Coach mund ta citojë." },
   "page_consent_change": { "message": "Mund të dërgoni një mesazh pa faqen në çdo kohë, dhe ta ndalni këtë këtu kur të doni." },

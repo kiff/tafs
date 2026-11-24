@@ -105,7 +105,7 @@
   "page_consent_off": { "message": "Coach liest die Seite nicht, auf der du bist." },
   "page_consent_turn_on": { "message": "Coach die Seite lesen lassen…" },
   "page_consent_title": { "message": "Soll Coach beim Senden die Seite vorne lesen?" },
-  "page_consent_what": { "message": "Wenn du Coach hier eine Nachricht schickst, geht der Text des vorderen Tabs in diesem Fenster mit: seine Adresse (ohne alles nach ? oder #), sein Titel und seine Wörter. Passwörter, Kartennummern und Codes auf der Seite werden weggelassen." },
+  "page_consent_what": { "message": "Wenn du Coach hier eine Nachricht schickst, geht der Text des vorderen Tabs in diesem Fenster mit: seine Adresse (ohne alles nach ? oder #), sein Titel und seine Wörter. Feldwerte und Passwörter werden nicht gelesen; Kartennummern werden auf ihre letzten vier Ziffern gekürzt; Schlüssel und als solche bezeichnete Geheimnisse werden maskiert." },
   "page_consent_when": { "message": "Nur beim Senden, nur dieser Tab und nie eine Bank-, Zahlungs-, Mail- oder Gesundheitsseite oder eine, die du ausgeschaltet hast." },
   "page_consent_never": { "message": "Er geht an tafs, das ihn an Claude von Anthropic schickt, damit Claude dir antwortet, wie deine Nachricht. tafs behält nur den Namen der Website, nie die Seite; die Antwort von Coach kann daraus zitieren." },
   "page_consent_change": { "message": "Du kannst jederzeit eine Nachricht ohne die Seite senden und das hier beenden, wann du willst." },
