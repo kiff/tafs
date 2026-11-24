@@ -244,6 +244,13 @@ async function onlyHere(taf) {
   if (!(await tafsOfThisChrome()).some((t) => t.id === taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
 }
 
+// The floating bar follows the tab in front of each window, and a page that loads again draws it again.
+chrome.tabs.onActivated.addListener(() => runner.queueBars());
+chrome.windows.onFocusChanged.addListener(() => runner.queueBars());
+chrome.tabs.onUpdated.addListener((id, change, tab) => {
+  if (change.status === "complete" && tab && tab.active) runner.queueBars();
+});
+
 chrome.runtime.onMessage.addListener((m, sender, reply) => {
   if (!m || typeof m.type !== "string") return;
   // Only the extension's own pages speak to it, apart from a content script's "owner_input".
@@ -251,9 +258,9 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     if (sender.tab) runner.ownerInput(sender.tab.id);
     return;
   }
-  // Stop on the bar in a run's tab (page.js showBar): only from that tab's own content script, and only for its run.
-  if (m.type === "bar_stop") {
-    if (sender.tab && sender.id === chrome.runtime.id) runner.stopByPerson(sender.tab.id);
+  // A press on the floating bar (bar.js): only from the extension's own content script in a tab, and only for a run it holds.
+  if (m.type === "bar") {
+    if (sender.tab && sender.id === chrome.runtime.id && typeof m.run === "string") runner.barPress(m.run, String(m.act || "")).catch(() => {});
     return;
   }
   if (sender.id !== chrome.runtime.id || sender.tab) return;

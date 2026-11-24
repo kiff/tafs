@@ -964,23 +964,57 @@ test("unpairing closes a kept tab the person has moved too", async () => {
   assert.ok(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]).includes(tab));
 });
 
-// While a taf works in a tab, the page says so, with Stop (docs/chrome.md, "While a taf works on a page").
-test("every read shows the bar with the taf's name and Stop; the run's end takes it away", async () => {
+// The floating bar: the tab in front of each window, while a run lives (docs/chrome.md, "While a taf works").
+test("while a run lives, the tab in front of each window shows the bar, for its own run or the first; the run's end takes them all away", async () => {
   const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
-  const shown = [];
-  const run = c.scripting.executeScript;
+  const bars = [];
+  const exec = c.scripting.executeScript;
   c.scripting.executeScript = async (o) => {
     const src = String(o.func || "");
-    if (src.includes("TafsPage.showBar")) shown.push(["show", o.target.tabId, ...o.args]);
-    if (src.includes("hideBar")) shown.push(["hide", o.target.tabId]);
-    return run(o);
+    if (o.files && o.files.includes("src/bar.js")) bars.push(["inject", o.target.tabId]);
+    if (src.includes("TafsBar.show")) bars.push(["show", o.target.tabId, o.args[0]]);
+    if (src.includes("TafsBar.hide")) bars.push(["hide", o.target.tabId]);
+    return exec(o);
   };
-  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired, say: (key, sub) => (key === "bar_working" ? sub[0] + " is working on this page" : key === "stop" ? "Stop" : "") });
-  assert.ok((await r.handle(step())).page);
-  const tab = [...c.tabsMap.keys()][0];
-  assert.deepEqual(shown, [["show", tab, "Rae is working on this page", "Stop"]]);
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired, say: (key, sub) => (key === "working" ? sub[0] + " is working" : key === "bar_paused" ? sub[0] + " is paused" : "") });
+  await r.handle(step());
+  const runTab = [...c.tabsMap.keys()][0];
+  // Three windows: the run's (its tab in front), the person's on a page of their own, and one on Chrome's own page.
+  c.windows.getAll = async () => [{ id: 1 }, { id: 2 }, { id: 3 }];
+  c.tabs.query = async ({ windowId }) => [windowId === 1 ? { id: runTab, url: "https://shop.example/" } : windowId === 2 ? { id: 501, url: "https://news.example/today" } : { id: 502, url: "chrome://settings" }];
+  bars.length = 0;
+  await r.queueBars();
+  const shown = bars.filter((b) => b[0] === "show");
+  assert.deepEqual(shown.map((b) => [b[1], b[2].run, b[2].here, b[2].words]), [[runTab, "run_1", true, "Rae is working"], [501, "run_1", false, "Rae is working"]]);
+  assert.ok(!bars.some((b) => b[1] === 502), "Chrome's own pages are left alone");
+  assert.deepEqual(shown[0][2].labels, { go: "Go to its tab", pause: "Pause", resume: "Resume", stop: "Stop" });
+  // Paused: the bar says so, and offers Resume.
+  bars.length = 0;
+  r.pause("run_1");
+  await r.queueBars();
+  assert.ok(bars.filter((b) => b[0] === "show").every((b) => b[2].paused && b[2].words === "Rae is paused"));
+  // Stopped: every tab that showed it is cleared.
+  bars.length = 0;
   await r.stop("run_1");
-  assert.deepEqual(shown.at(-1), ["hide", tab]);
+  await r.queueBars();
+  assert.deepEqual([...new Set(bars.filter((b) => b[0] === "hide").map((b) => b[1]))].sort(), [501, runTab].sort(), "both tabs that showed it");
+  assert.ok(!bars.some((b) => b[0] === "show"));
+});
+
+test("a press on the bar acts only on a run this Chrome holds, as the panel's buttons do", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  assert.deepEqual(await r.barPress("run_9", "stop"), { error: "no_run" });
+  assert.deepEqual(await r.barPress("run_1", "explode"), { error: "bad_act" });
+  await r.barPress("run_1", "pause");
+  assert.equal(r.runs.get("run_1").paused, "owner");
+  await r.barPress("run_1", "resume");
+  assert.equal(r.runs.get("run_1").paused, null);
+  await r.barPress("run_1", "stop");
+  assert.equal(r.runs.get("run_1").stopped, true);
+  assert.deepEqual(r.state()[0].steps.filter((s) => s.op === "stop").map((s) => s.by), ["person"]);
+  assert.deepEqual(await r.barPress("run_1", "go"), { error: "no_run" }, "a stopped run is no one's to go to");
 });
 
 test("Stop on the bar ends the run at once, for that tab's run only; a hand-over open is told Not now", async () => {
