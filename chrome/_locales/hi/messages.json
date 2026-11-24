@@ -189,6 +189,7 @@
     "message": "Coach से बात करें",
     "description": "Empty chat: heading"
   },
+  "coach_empty_body_reads": {"message": "यह वही चैट है जो tafs ऐप में है। जब Coach किसी पेज पर काम करता है, तो पहले उसे पढ़ता है।", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": {
     "message": "नई बातचीत"
   },

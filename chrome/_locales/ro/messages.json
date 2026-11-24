@@ -52,6 +52,7 @@
   "unpaired": { "message": "Acest Chrome nu mai este asociat. Asociați-l din nou din aplicația tafs de pe telefon." },
   "approve_on_phone": { "message": "Aprobați pe telefon" },
   "coach_empty_title": { "message": "Vorbiți cu Coach" },
+  "coach_empty_body_reads": {"message": "Este același chat ca în aplicația tafs. Când Coach lucrează pe o pagină, mai întâi o citește.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Conversație nouă" },
   "coach_previous": { "message": "Conversații anterioare" },
   "coach_previous_none": { "message": "Nicio conversație anterioară." },

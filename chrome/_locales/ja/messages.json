@@ -49,6 +49,7 @@
   "approve_on_phone": { "message": "スマートフォンで承認してください", "description": "Where an approval waits" },
   "unpaired": { "message": "このChromeのペアリングは解除されています。スマートフォンのtafsアプリからもう一度ペアリングしてください。", "description": "A request refused because the Chrome is unpaired" },
   "coach_empty_title": { "message": "Coachと話す", "description": "Empty chat: heading" },
+  "coach_empty_body_reads": {"message": "tafsアプリと同じチャットです。Coachはページで作業するとき、まずそのページを読み取ります。", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_error": { "message": "Coachに届きませんでした。もう一度お試しください。" },
   "coach_not_started": { "message": "先にスマートフォンでCoachを開始してください。" },
   "coach_working": { "message": "Coachが作業中…" },

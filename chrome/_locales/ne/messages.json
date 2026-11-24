@@ -52,6 +52,7 @@
   "unpaired": { "message": "यो Chrome अब जोडिएको छैन। फोनको tafs एपबाट फेरि जोड्नुहोस्।" },
   "approve_on_phone": { "message": "आफ्नो फोनमा स्वीकृत गर्नुहोस्" },
   "coach_empty_title": { "message": "Coach सँग कुरा गर्नुहोस्" },
+  "coach_empty_body_reads": {"message": "यो tafs एपमा जस्तै उही च्याट हो। Coach ले कुनै पृष्ठमा काम गर्दा पहिले त्यो पृष्ठ पढ्छ।", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "नयाँ कुराकानी" },
   "coach_previous": { "message": "अघिल्ला कुराकानी" },
   "coach_previous_none": { "message": "अघिल्ला कुराकानी छैनन्।" },

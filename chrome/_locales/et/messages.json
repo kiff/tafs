@@ -52,6 +52,7 @@
   "unpaired": { "message": "See Chrome pole enam seotud. Seo see uuesti telefoni tafsi rakenduses." },
   "approve_on_phone": { "message": "Kinnita telefonis" },
   "coach_empty_title": { "message": "Räägi Coachiga" },
+  "coach_empty_body_reads": {"message": "See on sama vestlus mis tafsi rakenduses. Kui Coach lehel töötab, loeb ta selle kõigepealt läbi.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Uus vestlus" },
   "coach_previous": { "message": "Varasemad vestlused" },
   "coach_previous_none": { "message": "Varasemaid vestlusi pole." },

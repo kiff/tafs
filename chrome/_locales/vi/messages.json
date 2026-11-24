@@ -52,6 +52,7 @@
   "unpaired": { "message": "Chrome này không còn được ghép đôi. Hãy ghép đôi lại từ ứng dụng tafs trên điện thoại." },
   "approve_on_phone": { "message": "Phê duyệt trên điện thoại" },
   "coach_empty_title": { "message": "Trò chuyện với Coach" },
+  "coach_empty_body_reads": {"message": "Đây là cuộc trò chuyện giống như trong ứng dụng tafs. Khi Coach làm việc trên một trang, nó đọc trang đó trước.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Cuộc trò chuyện mới" },
   "coach_previous": { "message": "Các cuộc trò chuyện trước" },
   "coach_previous_none": { "message": "Chưa có cuộc trò chuyện nào trước đó." },

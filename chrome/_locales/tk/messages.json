@@ -189,6 +189,7 @@
     "message": "Coach bilen gürleşiň",
     "description": "Empty chat: heading"
   },
+  "coach_empty_body_reads": {"message": "Bu tafs programmasyndaky bilen deň gürrüň. Coach bir sahypada işlände, ilki şol sahypany okaýar.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": {
     "message": "Täze gürrüň"
   },

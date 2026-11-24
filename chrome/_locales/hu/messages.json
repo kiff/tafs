@@ -52,6 +52,7 @@
   "unpaired": { "message": "Ez a Chrome már nincs párosítva. Párosítsd újra a tafs alkalmazásból a telefonodon." },
   "approve_on_phone": { "message": "Jóváhagyás a telefonodon" },
   "coach_empty_title": { "message": "Beszélj a Coach-csal" },
+  "coach_empty_body_reads": {"message": "Ugyanaz a csevegés, mint a tafs alkalmazásban. Amikor a Coach egy oldalon dolgozik, először elolvassa azt.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Új beszélgetés" },
   "coach_previous": { "message": "Korábbi beszélgetések" },
   "coach_previous_none": { "message": "Nincsenek korábbi beszélgetések." },

@@ -52,6 +52,7 @@
   "unpaired": { "message": "這個 Chrome 已不再配對。請在手機的 tafs 應用程式中重新配對。" },
   "approve_on_phone": { "message": "在手機上核准" },
   "coach_empty_title": { "message": "和 Coach 聊聊" },
+  "coach_empty_body_reads": {"message": "這和 tafs 應用程式裡是同一個對話。Coach 在頁面上作業時，會先讀取該頁面。", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "新對話" },
   "coach_previous": { "message": "先前的對話" },
   "coach_previous_none": { "message": "沒有更早的對話。" },

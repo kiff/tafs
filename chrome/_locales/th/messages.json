@@ -52,6 +52,7 @@
   "unpaired": { "message": "Chrome นี้ไม่ได้จับคู่อยู่แล้ว จับคู่ใหม่จากแอป tafs บนโทรศัพท์ของคุณ" },
   "approve_on_phone": { "message": "อนุมัติบนโทรศัพท์ของคุณ" },
   "coach_empty_title": { "message": "คุยกับ Coach" },
+  "coach_empty_body_reads": {"message": "เป็นแชตเดียวกับในแอป tafs เมื่อ Coach ทำงานบนหน้าใด จะอ่านหน้านั้นก่อน", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "การสนทนาใหม่" },
   "coach_previous": { "message": "การสนทนาก่อนหน้า" },
   "coach_previous_none": { "message": "ยังไม่มีการสนทนาก่อนหน้า" },

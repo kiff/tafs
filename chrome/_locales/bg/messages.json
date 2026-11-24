@@ -52,6 +52,7 @@
   "unpaired": { "message": "Този Chrome вече не е сдвоен. Сдвоете го отново от приложението tafs на телефона." },
   "approve_on_phone": { "message": "Одобрете на телефона си" },
   "coach_empty_title": { "message": "Поговорете с Coach" },
+  "coach_empty_body_reads": {"message": "Това е същият чат като в приложението tafs. Когато Coach работи по страница, първо я прочита.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Нов разговор" },
   "coach_previous": { "message": "Предишни разговори" },
   "coach_previous_none": { "message": "Няма предишни разговори." },

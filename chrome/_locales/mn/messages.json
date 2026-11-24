@@ -52,6 +52,7 @@
   "unpaired": { "message": "Энэ Chrome одоо хослуулагдаагүй. Утасныхаа tafs аппаас дахин хослуулна уу." },
   "approve_on_phone": { "message": "Утсан дээрээ зөвшөөрөх" },
   "coach_empty_title": { "message": "Coach-тай ярилцах" },
+  "coach_empty_body_reads": {"message": "Энэ нь tafs апп дахь ижил яриа. Coach хуудсан дээр ажиллахдаа эхлээд тэр хуудсыг уншина.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Шинэ яриа" },
   "coach_previous": { "message": "Өмнөх яриа" },
   "coach_previous_none": { "message": "Өмнөх яриа алга." },

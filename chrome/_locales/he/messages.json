@@ -52,6 +52,7 @@
   "unpaired": { "message": "ה-Chrome הזה כבר לא מצומד. צמד אותו שוב מאפליקציית tafs בטלפון." },
   "approve_on_phone": { "message": "אישור בטלפון" },
   "coach_empty_title": { "message": "דבר עם Coach" },
+  "coach_empty_body_reads": {"message": "זו אותה שיחה כמו באפליקציית tafs. כש-Coach עובד על דף, הוא קורא אותו קודם.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "שיחה חדשה" },
   "coach_previous": { "message": "שיחות קודמות" },
   "coach_previous_none": { "message": "אין שיחות קודמות." },

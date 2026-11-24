@@ -52,6 +52,7 @@
   "unpaired": { "message": "Овој Chrome повеќе не е спарен. Спарете го повторно од апликацијата tafs на телефонот." },
   "approve_on_phone": { "message": "Одобри на твојот телефон" },
   "coach_empty_title": { "message": "Разговарајте со Coach" },
+  "coach_empty_body_reads": {"message": "Тоа е истиот разговор како во апликацијата tafs. Кога Coach работи на страница, прво ја чита.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Нов разговор" },
   "coach_previous": { "message": "Претходни разговори" },
   "coach_previous_none": { "message": "Нема претходни разговори." },

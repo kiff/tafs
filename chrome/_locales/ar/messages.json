@@ -52,6 +52,7 @@
   "unpaired": { "message": "لم يعد هذا الـ Chrome مقرونًا. اقرنه من جديد من تطبيق tafs على هاتفك." },
   "approve_on_phone": { "message": "وافق على هاتفك" },
   "coach_empty_title": { "message": "تحدّث مع Coach" },
+  "coach_empty_body_reads": {"message": "إنها المحادثة نفسها كما في تطبيق tafs. عندما يعمل Coach على صفحة، يقرؤها أولًا.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "محادثة جديدة" },
   "coach_previous": { "message": "المحادثات السابقة" },
   "coach_previous_none": { "message": "لا توجد محادثات سابقة." },

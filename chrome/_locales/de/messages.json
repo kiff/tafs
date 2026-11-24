@@ -49,6 +49,7 @@
   "approve_on_phone": { "message": "Genehmige auf deinem Handy", "description": "Where an approval waits" },
   "unpaired": { "message": "Dieses Chrome ist nicht mehr gekoppelt. Kopple es erneut in der tafs-App auf deinem Handy.", "description": "A request refused because the Chrome is unpaired" },
   "coach_empty_title": { "message": "Mit Coach sprechen", "description": "Empty chat: heading" },
+  "coach_empty_body_reads": {"message": "Es ist derselbe Chat wie in der tafs-App. Wenn Coach auf einer Seite arbeitet, liest er sie zuerst.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_error": { "message": "Das hat Coach nicht erreicht. Versuch es noch einmal." },
   "coach_not_started": { "message": "Starte Coach zuerst auf deinem Handy." },
   "coach_working": { "message": "Coach arbeitet…" },

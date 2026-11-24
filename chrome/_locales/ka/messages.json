@@ -52,6 +52,7 @@
   "unpaired": { "message": "ეს Chrome აღარ არის დაწყვილებული. დააწყვილეთ ხელახლა ტელეფონის tafs აპიდან." },
   "approve_on_phone": { "message": "დაამტკიცეთ ტელეფონზე" },
   "coach_empty_title": { "message": "ესაუბრეთ Coach-ს" },
+  "coach_empty_body_reads": {"message": "ეს იგივე საუბარია, რაც tafs აპში. როცა Coach გვერდზე მუშაობს, ჯერ მას კითხულობს.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "ახალი საუბარი" },
   "coach_previous": { "message": "წინა საუბრები" },
   "coach_previous_none": { "message": "ადრინდელი საუბრები არ არის." },

@@ -52,6 +52,7 @@
   "unpaired": { "message": "Chrome ນີ້ບໍ່ໄດ້ຈັບຄູ່ແລ້ວ. ຈັບຄູ່ໃໝ່ຈາກແອັບ tafs ໃນໂທລະສັບ." },
   "approve_on_phone": { "message": "ອະນຸມັດໃນໂທລະສັບຂອງທ່ານ" },
   "coach_empty_title": { "message": "ລົມກັບ Coach" },
+  "coach_empty_body_reads": {"message": "ເປັນການສົນທະນາດຽວກັນກັບໃນແອັບ tafs. ເມື່ອ Coach ເຮັດວຽກໃນໜ້າໃດໜຶ່ງ ມັນຈະອ່ານໜ້ານັ້ນກ່ອນ.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "ການສົນທະນາໃໝ່" },
   "coach_previous": { "message": "ການສົນທະນາກ່ອນໜ້າ" },
   "coach_previous_none": { "message": "ບໍ່ມີການສົນທະນາກ່ອນໜ້າ." },

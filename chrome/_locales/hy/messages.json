@@ -52,6 +52,7 @@
   "unpaired": { "message": "Այս Chrome-ն այլևս զուգակցված չէ։ Նորից զուգակցեք հեռախոսի tafs հավելվածից։" },
   "approve_on_phone": { "message": "Հաստատեք ձեր հեռախոսով" },
   "coach_empty_title": { "message": "Խոսեք Coach-ի հետ" },
+  "coach_empty_body_reads": {"message": "Սա նույն զրույցն է, ինչ tafs հավելվածում։ Երբ Coach-ը աշխատում է էջի վրա, նախ կարդում է այն։", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Նոր զրույց" },
   "coach_previous": { "message": "Նախորդ զրույցները" },
   "coach_previous_none": { "message": "Նախորդ զրույցներ չկան։" },

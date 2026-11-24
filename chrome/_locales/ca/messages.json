@@ -52,6 +52,7 @@
   "unpaired": { "message": "Aquest Chrome ja no està aparellat. Torna a aparellar-lo des de l'app tafs al telèfon." },
   "approve_on_phone": { "message": "Aprova al telèfon" },
   "coach_empty_title": { "message": "Parla amb Coach" },
+  "coach_empty_body_reads": {"message": "És el mateix xat que a l'app tafs. Quan Coach treballa en una pàgina, primer la llegeix.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Conversa nova" },
   "coach_previous": { "message": "Converses anteriors" },
   "coach_previous_none": { "message": "No hi ha converses anteriors." },

@@ -52,6 +52,7 @@
   "unpaired": { "message": "Bu Chrome artıq cütləşdirilməyib. Telefonunuzdakı tafs tətbiqindən yenidən cütləşdirin." },
   "approve_on_phone": { "message": "Telefonunuzda təsdiq edin" },
   "coach_empty_title": { "message": "Coach ilə danışın" },
+  "coach_empty_body_reads": {"message": "tafs tətbiqindəki ilə eyni söhbətdir. Coach bir səhifədə işləyəndə əvvəlcə həmin səhifəni oxuyur.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Yeni söhbət" },
   "coach_previous": { "message": "Əvvəlki söhbətlər" },
   "coach_previous_none": { "message": "Əvvəlki söhbət yoxdur." },

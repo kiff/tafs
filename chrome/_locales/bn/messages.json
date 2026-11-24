@@ -52,6 +52,7 @@
   "unpaired": { "message": "এই Chrome আর জোড়া লাগানো নেই। ফোনের tafs অ্যাপ থেকে আবার জোড়া লাগান।" },
   "approve_on_phone": { "message": "আপনার ফোনে অনুমোদন করুন" },
   "coach_empty_title": { "message": "Coach-এর সঙ্গে কথা বলুন" },
+  "coach_empty_body_reads": {"message": "এটি tafs অ্যাপের মতোই একই চ্যাট। Coach কোনো পৃষ্ঠায় কাজ করলে আগে সেই পৃষ্ঠাটি পড়ে নেয়।", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "নতুন কথোপকথন" },
   "coach_previous": { "message": "আগের কথোপকথন" },
   "coach_previous_none": { "message": "আগের কোনো কথোপকথন নেই।" },

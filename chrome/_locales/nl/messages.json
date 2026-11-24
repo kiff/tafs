@@ -49,6 +49,7 @@
   "approve_on_phone": { "message": "Keur goed op je telefoon", "description": "Where an approval waits" },
   "unpaired": { "message": "Deze Chrome is niet meer gekoppeld. Koppel hem opnieuw vanuit de tafs-app op je telefoon.", "description": "A request refused because the Chrome is unpaired" },
   "coach_empty_title": { "message": "Praat met Coach", "description": "Empty chat: heading" },
+  "coach_empty_body_reads": {"message": "Het is dezelfde chat als in de tafs-app. Als Coach op een pagina werkt, leest hij die eerst.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_error": { "message": "Dat is niet bij Coach aangekomen. Probeer het opnieuw." },
   "coach_not_started": { "message": "Start Coach eerst op je telefoon." },
   "coach_working": { "message": "Coach is bezig…" },

@@ -52,6 +52,7 @@
   "unpaired": { "message": "Ovaj Chrome više nije upareni. Ponovno ga uparite u aplikaciji tafs na telefonu." },
   "approve_on_phone": { "message": "Odobrite na telefonu" },
   "coach_empty_title": { "message": "Razgovarajte s Coachom" },
+  "coach_empty_body_reads": {"message": "To je isti chat kao u aplikaciji tafs. Kad Coach radi na stranici, najprije je pročita.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Novi razgovor" },
   "coach_previous": { "message": "Prethodni razgovori" },
   "coach_previous_none": { "message": "Nema ranijih razgovora." },

@@ -49,6 +49,7 @@
   "approve_on_phone": { "message": "휴대폰에서 승인하세요", "description": "Where an approval waits" },
   "unpaired": { "message": "이 Chrome은 더 이상 페어링되어 있지 않습니다. 휴대폰의 tafs 앱에서 다시 페어링하세요.", "description": "A request refused because the Chrome is unpaired" },
   "coach_empty_title": { "message": "Coach와 대화하기", "description": "Empty chat: heading" },
+  "coach_empty_body_reads": {"message": "tafs 앱과 같은 채팅입니다. Coach는 페이지에서 작업할 때 먼저 그 페이지를 읽습니다.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_error": { "message": "Coach에게 전달되지 않았습니다. 다시 시도하세요." },
   "coach_not_started": { "message": "먼저 휴대폰에서 Coach를 시작하세요." },
   "coach_working": { "message": "Coach가 작업 중…" },

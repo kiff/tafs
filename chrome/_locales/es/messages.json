@@ -49,6 +49,7 @@
   "approve_on_phone": { "message": "Aprueba en tu teléfono", "description": "Where an approval waits" },
   "unpaired": { "message": "Este Chrome ya no está vinculado. Vuelve a vincularlo desde la app tafs en tu teléfono.", "description": "A request refused because the Chrome is unpaired" },
   "coach_empty_title": { "message": "Habla con Coach", "description": "Empty chat: heading" },
+  "coach_empty_body_reads": {"message": "Es el mismo chat que en la app tafs. Cuando Coach trabaja en una página, primero la lee.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_error": { "message": "Eso no llegó a Coach. Inténtalo de nuevo." },
   "coach_not_started": { "message": "Primero inicia Coach en tu teléfono." },
   "coach_working": { "message": "Coach está trabajando…" },

@@ -52,6 +52,7 @@
   "unpaired": { "message": "Ky Chrome nuk është më i çiftuar. Çiftojeni sërish nga aplikacioni tafs në telefon." },
   "approve_on_phone": { "message": "Miratoni në telefonin tuaj" },
   "coach_empty_title": { "message": "Bisedoni me Coach" },
+  "coach_empty_body_reads": {"message": "Është e njëjta bisedë si në aplikacionin tafs. Kur Coach punon në një faqe, fillimisht e lexon.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Bisedë e re" },
   "coach_previous": { "message": "Bisedat e mëparshme" },
   "coach_previous_none": { "message": "Nuk ka biseda më të hershme." },

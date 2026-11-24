@@ -52,6 +52,7 @@
   "unpaired": { "message": "Chrome ini tidak lagi dipasangkan. Pasangkan lagi dari aplikasi tafs di ponsel Anda." },
   "approve_on_phone": { "message": "Setujui di ponsel Anda" },
   "coach_empty_title": { "message": "Bicara dengan Coach" },
+  "coach_empty_body_reads": {"message": "Ini obrolan yang sama dengan di aplikasi tafs. Saat Coach bekerja di sebuah halaman, ia membacanya lebih dulu.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Percakapan baru" },
   "coach_previous": { "message": "Percakapan sebelumnya" },
   "coach_previous_none": { "message": "Belum ada percakapan sebelumnya." },

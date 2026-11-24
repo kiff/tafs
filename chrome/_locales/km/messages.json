@@ -52,6 +52,7 @@
   "unpaired": { "message": "Chrome នេះមិនត្រូវបានផ្គូផ្គងទៀតទេ។ សូមផ្គូផ្គងវាម្តងទៀតពីកម្មវិធី tafs នៅលើទូរសព្ទ។" },
   "approve_on_phone": { "message": "អនុម័តនៅលើទូរសព្ទរបស់អ្នក" },
   "coach_empty_title": { "message": "និយាយជាមួយ Coach" },
+  "coach_empty_body_reads": {"message": "វាជាការសន្ទនាតែមួយដូចក្នុងកម្មវិធី tafs។ នៅពេល Coach ធ្វើការលើទំព័រមួយ វាអានទំព័រនោះជាមុនសិន។", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "ការសន្ទនាថ្មី" },
   "coach_previous": { "message": "ការសន្ទនាមុនៗ" },
   "coach_previous_none": { "message": "គ្មានការសន្ទនាមុនៗទេ។" },

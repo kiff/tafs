@@ -52,6 +52,7 @@
   "unpaired": { "message": "Šis Chrome vairs nav savienots pārī. Savieno to pārī vēlreiz tafs lietotnē tālrunī." },
   "approve_on_phone": { "message": "Apstiprini tālrunī" },
   "coach_empty_title": { "message": "Aprunājies ar Coach" },
+  "coach_empty_body_reads": {"message": "Tā ir tā pati saruna, kas tafs lietotnē. Kad Coach strādā lapā, tas vispirms to izlasa.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Jauna saruna" },
   "coach_previous": { "message": "Iepriekšējās sarunas" },
   "coach_previous_none": { "message": "Agrāku sarunu nav." },

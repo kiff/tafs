@@ -52,6 +52,7 @@
   "unpaired": { "message": "Tento Chrome už nie je spárovaný. Spárujte ho znova v aplikácii tafs v telefóne." },
   "approve_on_phone": { "message": "Schváľte v telefóne" },
   "coach_empty_title": { "message": "Porozprávajte sa s Coachom" },
+  "coach_empty_body_reads": {"message": "Je to ten istý chat ako v aplikácii tafs. Keď Coach pracuje na stránke, najprv si ju prečíta.", "description": "Empty chat: body. There's no Share button: Coach and tafs read a page themselves."},
   "coach_new": { "message": "Nový rozhovor" },
   "coach_previous": { "message": "Predchádzajúce rozhovory" },
   "coach_previous_none": { "message": "Žiadne skoršie rozhovory." },
