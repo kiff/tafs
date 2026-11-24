@@ -1,0 +1,1 @@
+- **Chrome: you can see a taf at work.** The run's tab group reads "tafs · Rae is working" for the whole run, the toolbar icon shows a mark and names who works, and the element a taf is about to click or type into is outlined for a moment first. No new permission. ([chrome.md](docs/chrome.md))

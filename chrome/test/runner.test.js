@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Runner } from "../src/runner.js";
+import { Runner, OUTLINE_MS } from "../src/runner.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 
 // The paired phone: it signs each grant's sites (tafs-chrome/sites/v1) and sensitive allowances.
@@ -994,4 +994,69 @@ test("Stop on the bar ends the run at once, for that tab's run only; a hand-over
   assert.deepEqual(answers.at(-1), { hand: "h1", outcome: "declined", page: null });
   assert.equal((await r.handle(step({ op: "read" }))).error.code, "stopped", "planque's next step is told the person stopped it");
   assert.ok(!c.calls.some((x) => x[0] === "tabs.remove"), "its tabs stay, as with Stop");
+});
+
+// The signals that a taf is at work: the group says so for the whole run, and each act shows where it lands first.
+
+test("the run's group says its taf is working, in the extension's words, until the run ends", async () => {
+  const c = fakeChrome();
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, say: (key, sub) => (key === "working" ? sub[0] + " is working" : "") });
+  await r.handle(step());
+  assert.ok(c.calls.some((x) => x[0] === "tabGroups.update" && x[2].title === "tafs · Rae is working" && x[2].color === "orange"));
+});
+
+test("an act on a ref is outlined first, after its picture, for a moment; back and a scroll of the page outline nothing", async () => {
+  const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [] } });
+  const order = [];
+  const run = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    const src = String(o.func || "");
+    if (src.includes("TafsPage.outline")) {
+      order.push(["outline", ...o.args]);
+      return [{ result: { ok: true } }];
+    }
+    if (src.includes("TafsPage.act")) order.push(["act", o.args[0].kind]);
+    return run(o);
+  };
+  const waited = [];
+  const shots = { capture: async () => (order.push(["picture"]), null), send: async () => {} };
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : (waited.push(ms), Promise.resolve())), paired: () => paired, shots });
+  const opened = await r.handle(step());
+  assert.ok(opened.page, JSON.stringify(opened));
+  await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "click", ref: "c1" } }));
+  assert.deepEqual(order, [["picture"], ["outline", "c1", opened.page.read_id], ["act", "click"]]);
+  assert.ok(waited.includes(OUTLINE_MS), "a moment to see it");
+  order.length = 0;
+  const now = r.runs.get("run_1").pages.keys();
+  let last;
+  for (const id of now) last = id;
+  await r.handle(step({ op: "act", read_id: last, act: { kind: "scroll" } }));
+  assert.ok(!order.some((x) => x[0] === "outline"), "a scroll of the page names no ref");
+});
+
+test("a Pause, the person's own input or a Stop while the outline shows holds the act: the page is never touched", async () => {
+  for (const [what, code] of [["pause", "paused_by_owner"], ["input", "paused_by_owner"], ["stop", "stopped"]]) {
+    const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [] } });
+    const order = [];
+    const exec = c.scripting.executeScript;
+    c.scripting.executeScript = async (o) => {
+      const src = String(o.func || "");
+      if (src.includes("TafsPage.outline")) return [{ result: { ok: true } }];
+      if (src.includes("TafsPage.unoutline")) order.push("unoutline");
+      if (src.includes("TafsPage.act")) order.push("act");
+      return exec(o);
+    };
+    let r;
+    const during = async () => {
+      if (what === "pause") r.pause("run_1");
+      if (what === "input") r.ownerInput([...c.tabsMap.keys()][0]);
+      if (what === "stop") await r.stop("run_1");
+    };
+    r = new Runner({ chrome: c, paired: () => paired, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : ms === OUTLINE_MS ? during() : Promise.resolve()) });
+    await r.handle(step());
+    const out = await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }));
+    assert.equal(out.error && out.error.code, code, what);
+    assert.ok(!order.includes("act"), what + ": the page's act is never called");
+    if (what !== "stop") assert.ok(order.includes("unoutline"), what + ": the outline is taken away");
+  }
 });
