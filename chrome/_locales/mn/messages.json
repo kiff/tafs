@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Архивласан яриа алга."},
   "coach_archive_error": {"message": "Болсонгүй. Дахин оролдоно уу."},
   "taf_remove": {"message": "Энэ taf-ыг хасах"},
-  "taf_remove_on_phone": {"message": "Taf-ыг утсан дээрээ хасна: tafs аппад нээгээд Хасах-ыг дарна уу. Хасахыг тэнд зөвшөөрнө."}
+  "taf_remove_on_phone": {"message": "Taf-ыг утсан дээрээ хасна: tafs аппад нээгээд Хасах-ыг дарна уу. Хасахыг тэнд зөвшөөрнө."},
+  "bar_go": {"message": "Түүний таб руу очих"},
+  "bar_paused": {"message": "$TAF$ түр зогссон", "placeholders": {"taf": {"content": "$1"}}}
 }

@@ -406,8 +406,8 @@
     const x = r.left + r.width / 2;
     const y = r.top + r.height / 2;
     if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false;
-    // The extension's own bar (showBar) is looked through: it's ours, and the person's Stop, not the page's.
-    const hit = document.elementsFromPoint(x, y).find((h) => h !== barHost);
+    // The extension's own bar (bar.js) is looked through: it's ours, and the person's buttons, not the page's.
+    const hit = document.elementsFromPoint(x, y).find((h) => !ourBar(h));
     return !!hit && (hit === el || el.contains(hit) || (el.labels && Array.from(el.labels).some((l) => l.contains(hit))));
   }
 
@@ -535,8 +535,8 @@
   let told = false;
   function ownerInput(e) {
     if (!e.isTrusted || told) return;
-    // A press on the bar's Stop is the person stopping the run, not using the page: Stop says so itself.
-    if (barHost && e.composedPath().includes(barHost)) return;
+    // A press on the floating bar is the person answering the run, not using the page: its buttons say so themselves.
+    if (e.composedPath().some(ourBar)) return;
     told = true;
     try {
       chrome.runtime.sendMessage({ type: "owner_input" });
@@ -547,61 +547,10 @@
   }
   for (const type of ["keydown", "pointerdown", "wheel"]) addEventListener(type, ownerInput, { capture: true, passive: true });
 
-  // The bar that says a taf is working in this tab, with Stop (docs/chrome.md, "While a taf works on a page"). It sits in a
-  // closed shadow root, so the page can't read or restyle what it says; a read never includes it (its text isn't the
-  // page's), and an act's "is it on top" check looks through it. The page can still remove its element: while it should
-  // show, it's put back. Only a real press of Stop (`isTrusted`) stops the run.
-  let barHost = null;
-  let barWatch = null;
-  function showBar(words, stopLabel) {
-    if (typeof words !== "string" || typeof stopLabel !== "string") return { ok: false };
-    if (!barHost) {
-      barHost = document.createElement("tafs-working-bar");
-      const root = barHost.attachShadow({ mode: "closed" });
-      const style = document.createElement("style");
-      style.textContent =
-        ":host{all:initial;position:fixed;top:0;left:0;right:0;z-index:2147483647;pointer-events:none}" +
-        ".bar{display:flex;align-items:center;justify-content:center;gap:10px;height:28px;padding:0 10px;" +
-        "background:#1b1b1f;color:#fff;font:600 13px/1 system-ui,sans-serif;border-bottom:2px solid #F29A2E}" +
-        "button{pointer-events:auto;font:600 12px/1 system-ui,sans-serif;padding:5px 10px;border-radius:6px;border:0;" +
-        "background:#F29A2E;color:#1b1b1f;cursor:pointer}";
-      const bar = document.createElement("div");
-      bar.className = "bar";
-      bar.setAttribute("role", "status");
-      const text = document.createElement("span");
-      const stop = document.createElement("button");
-      stop.type = "button";
-      stop.addEventListener("click", (e) => {
-        if (!e.isTrusted) return;
-        try {
-          chrome.runtime.sendMessage({ type: "bar_stop" });
-        } catch {
-          // the extension is reloading: nothing to tell
-        }
-      });
-      bar.append(text, stop);
-      root.append(style, bar);
-      barHost._text = text;
-      barHost._stop = stop;
-    }
-    barHost._text.textContent = words;
-    barHost._stop.textContent = stopLabel;
-    if (!barHost.isConnected) document.documentElement.appendChild(barHost);
-    if (!barWatch) {
-      barWatch = new MutationObserver(() => {
-        if (barHost && !barHost.isConnected) document.documentElement.appendChild(barHost);
-      });
-      barWatch.observe(document.documentElement, { childList: true });
-    }
-    return { ok: true };
-  }
-
-  function hideBar() {
-    if (barWatch) barWatch.disconnect();
-    barWatch = null;
-    if (barHost) barHost.remove();
-    return true;
-  }
+  // The floating bar is bar.js's own element (docs/chrome.md, "While a taf works"): looked through, and a press on it isn't
+  // the person using the page. Known by identity (bar.js holds it in this isolated world), never by its name: a page can make
+  // an element of that name, and it's then the page's, which pauses the run and blocks an act as any element does.
+  const ourBar = (node) => !!(root.TafsBar && root.TafsBar.isOurs(node));
 
   // Dialogs the page raised (alert, confirm, prompt), reported by dialogs.js from the page's world under this tab's token.
   // None blocks: confirm answers no, prompt answers nothing. A read reports the last one; an act after one is refused.
@@ -773,5 +722,5 @@
     return true;
   }
 
-  root.TafsPage = { read, act, kindOf, listen, maskForShot, unmaskShot, outline, unoutline, showBar, hideBar };
+  root.TafsPage = { read, act, kindOf, listen, maskForShot, unmaskShot, outline, unoutline };
 })(globalThis);

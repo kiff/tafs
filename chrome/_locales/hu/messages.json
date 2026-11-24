@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Nincsenek archivált beszélgetések."},
   "coach_archive_error": {"message": "Ez nem sikerült. Próbáld újra."},
   "taf_remove": {"message": "A taf eltávolítása"},
-  "taf_remove_on_phone": {"message": "A tafot a telefonodon lehet eltávolítani: nyisd meg a tafs alkalmazásban, majd Eltávolítás. Az eltávolítást ott hagyod jóvá."}
+  "taf_remove_on_phone": {"message": "A tafot a telefonodon lehet eltávolítani: nyisd meg a tafs alkalmazásban, majd Eltávolítás. Az eltávolítást ott hagyod jóvá."},
+  "bar_go": {"message": "Ugrás a lapjára"},
+  "bar_paused": {"message": "Szüneteltetve: $TAF$", "placeholders": {"taf": {"content": "$1"}}}
 }

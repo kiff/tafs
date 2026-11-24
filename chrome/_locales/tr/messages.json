@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Arşivlenen sohbet yok."},
   "coach_archive_error": {"message": "Olmadı. Tekrar deneyin."},
   "taf_remove": {"message": "Bu taf'ı kaldır"},
-  "taf_remove_on_phone": {"message": "Bir taf telefonunuzda kaldırılır: tafs uygulamasında açın, sonra Kaldır. Kaldırma orada onaylanır."}
+  "taf_remove_on_phone": {"message": "Bir taf telefonunuzda kaldırılır: tafs uygulamasında açın, sonra Kaldır. Kaldırma orada onaylanır."},
+  "bar_go": {"message": "Sekmesine git"},
+  "bar_paused": {"message": "$TAF$ duraklatıldı", "placeholders": {"taf": {"content": "$1"}}}
 }

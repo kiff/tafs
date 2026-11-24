@@ -637,49 +637,63 @@ test("scroll moves the page by most of a screen, or brings a ref into view", { s
 });
 
 // The bar a run shows while a taf works in a tab (docs/chrome.md, "While a taf works on a page").
-async function openWithBar() {
+const BAR = readFileSync(new URL("../src/bar.js", import.meta.url), "utf8");
+const LABELS = { go: "Go to its tab", pause: "Pause", resume: "Resume", stop: "Stop" };
+
+async function openWithBar(state = { run: "run_1", words: "Rae is working", here: true, paused: false, labels: LABELS }) {
   const page = await ctx.newPage();
   await page.goto("https://shop.example/account");
   await page.evaluate(() => {
     globalThis.__sent = [];
     globalThis.chrome = { runtime: { sendMessage: (m) => globalThis.__sent.push(m) } };
-    // A test's own look into the closed root, taken before page.js makes it: the page itself has no such hook.
+    // A test's own look into the closed root, taken before bar.js makes it: the page itself has no such hook.
     const attach = Element.prototype.attachShadow;
     Element.prototype.attachShadow = function (o) {
       const root = attach.call(this, o);
       if (this.localName === "tafs-working-bar") globalThis.__barRoot = root;
       return root;
     };
-    const top = document.createElement("button");
-    top.id = "topButton";
-    top.textContent = "Menu";
-    top.style.cssText = "position:fixed;top:6px;left:8px;z-index:10";
-    top.onclick = () => (globalThis.__menu = true);
-    document.body.appendChild(top);
+    const low = document.createElement("button");
+    low.id = "lowButton";
+    low.textContent = "Menu";
+    low.style.cssText = "position:fixed;bottom:16px;left:8px;z-index:10";
+    low.onclick = () => (globalThis.__menu = true);
+    document.body.appendChild(low);
   });
   await page.addScriptTag({ content: MASK });
   await page.addScriptTag({ content: PAGE });
-  await page.evaluate(() => TafsPage.showBar("Rae is working on this page", "Stop"));
+  await page.addScriptTag({ content: BAR });
+  assert.deepEqual(await page.evaluate((s) => TafsBar.show(s), state), { ok: true });
   return page;
 }
 
-test("the bar says which taf is working, and nothing of it is in a read", { skip: !playwright }, async () => {
-  const page = await openWithBar();
-  assert.equal(await page.evaluate(() => globalThis.__barRoot.querySelector("span").textContent), "Rae is working on this page");
+const barButtons = (page) => page.evaluate(() => [...globalThis.__barRoot.querySelectorAll("button")].map((b) => ({ act: b.dataset.act || b.className, text: b.textContent, hidden: b.hidden })));
+
+test("the floating bar says who works; Go to its tab shows only on another tab; Pause turns to Resume; nothing of it is in a read", { skip: !playwright }, async () => {
+  let page = await openWithBar();
+  assert.equal(await page.evaluate(() => globalThis.__barRoot.querySelector(".words").textContent), "Rae is working");
   assert.equal(await page.evaluate(() => document.querySelector("tafs-working-bar").shadowRoot), null, "closed to the page");
+  assert.deepEqual((await barButtons(page)).map((b) => [b.act, b.hidden]), [["go", true], ["pause", false], ["stop", false]], "on the run's own tab, no Go to its tab");
   const read = await page.evaluate(() => TafsPage.read());
-  assert.ok(!read.text.includes("is working on this page"), "its words aren't the page's");
-  assert.ok(!read.controls.some((c) => c.label === "Stop"), "its Stop is no control a taf can click");
+  assert.ok(!read.text.includes("Rae is working"), "its words aren't the page's");
+  assert.ok(!read.controls.some((c) => ["Stop", "Pause", "Go to its tab"].includes(c.label)), "its buttons are no controls a taf can click");
+  await page.close();
+  page = await openWithBar({ run: "run_1", words: "Rae is paused", here: true, paused: true, labels: LABELS });
+  assert.deepEqual((await barButtons(page)).map((b) => [b.act, b.text, b.hidden]), [["go", "Go to its tab", true], ["resume", "Resume", false], ["stop", "Stop", false]], "Resume on the run's own tab");
+  await page.close();
+  page = await openWithBar({ run: "run_1", words: "Rae is paused", here: false, paused: true, labels: LABELS });
+  assert.deepEqual((await barButtons(page)).map((b) => [b.act, b.hidden]), [["go", false], ["resume", true], ["stop", false]], "no Resume on another page, which could lay a lure over it");
+  assert.deepEqual(await page.evaluate(() => TafsBar.show({ run: 5, words: "x", labels: {} })), { ok: false }, "anything else isn't a bar");
   await page.close();
 });
 
-test("an act on an element under the bar still lands: the check for what's on top looks through the bar", { skip: !playwright }, async () => {
+test("an act on an element under the floating bar still lands: the check for what's on top looks through it", { skip: !playwright }, async () => {
   const page = await openWithBar();
-  // The page's own button sits right under the bar's Stop, the one part of the bar that takes a pointer.
   await page.evaluate(() => {
-    const r = globalThis.__barRoot.querySelector("button").getBoundingClientRect();
-    const b = document.getElementById("topButton");
+    const r = globalThis.__barRoot.querySelector("button.stop").getBoundingClientRect();
+    const b = document.getElementById("lowButton");
     b.style.left = r.left + "px";
+    b.style.bottom = "auto";
     b.style.top = r.top + "px";
     b.style.width = r.width + "px";
     b.style.height = r.height + "px";
@@ -691,21 +705,57 @@ test("an act on an element under the bar still lands: the check for what's on to
   await page.close();
 });
 
-test("only a real press of Stop stops the run: the page can't press it, and can't keep the bar away", { skip: !playwright }, async () => {
-  const page = await openWithBar();
-  await page.evaluate(() => globalThis.__barRoot.querySelector("button").click());
-  assert.deepEqual(await page.evaluate(() => globalThis.__sent), [], "a click the page made is no one's Stop");
-  const box = await page.evaluate(() => {
-    const r = globalThis.__barRoot.querySelector("button").getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-  });
-  await page.mouse.click(box.x, box.y);
-  assert.deepEqual(await page.evaluate(() => globalThis.__sent), [{ type: "bar_stop" }], "a real press sends Stop, and is no owner input");
+test("only a real press counts, naming its run; it's no owner input; the page can't keep the bar away, and it goes when told", { skip: !playwright }, async () => {
+  const page = await openWithBar({ run: "run_1", words: "Rae is working", here: false, paused: false, labels: LABELS });
+  await page.evaluate(() => globalThis.__barRoot.querySelector("button.stop").click());
+  assert.deepEqual(await page.evaluate(() => globalThis.__sent), [], "a click the page made is no one's");
+  for (const act of ["go", "pause", "stop"]) {
+    const box = await page.evaluate((a) => {
+      const r = globalThis.__barRoot.querySelector("button." + a).getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }, act);
+    await page.mouse.click(box.x, box.y);
+  }
+  assert.deepEqual(await page.evaluate(() => globalThis.__sent), [
+    { type: "bar", act: "go", run: "run_1" },
+    { type: "bar", act: "pause", run: "run_1" },
+    { type: "bar", act: "stop", run: "run_1" },
+  ], "each press names its run, and none is the person's input in the page");
   await page.evaluate(() => document.querySelector("tafs-working-bar").remove());
   await page.waitForFunction(() => document.querySelector("tafs-working-bar"));
-  await page.evaluate(() => TafsPage.hideBar());
+  await page.evaluate(() => TafsBar.hide());
   await page.evaluate(() => new Promise((r) => setTimeout(r, 50)));
   assert.equal(await page.evaluate(() => document.querySelector("tafs-working-bar")), null, "once the run ends it goes, and stays gone");
+  await page.close();
+});
+
+test("an element the page names tafs-working-bar is the page's: a click inside it still pauses the run, and laid over a button it still blocks an act", { skip: !playwright }, async () => {
+  const page = await openWithBar();
+  await page.evaluate(() => {
+    globalThis.__owner = 0;
+    globalThis.chrome.runtime.sendMessage = (m) => (m.type === "owner_input" ? globalThis.__owner++ : globalThis.__sent.push(m));
+    const fake = document.createElement("tafs-working-bar");
+    fake.id = "fake";
+    fake.style.cssText = "position:fixed;left:8px;top:120px;width:300px;height:60px;display:block;background:transparent;z-index:20";
+    const inner = document.createElement("button");
+    inner.id = "inner";
+    inner.textContent = "Accept";
+    inner.style.cssText = "width:100%;height:100%";
+    fake.appendChild(inner);
+    document.body.appendChild(fake);
+    const under = document.createElement("button");
+    under.id = "under";
+    under.textContent = "Under";
+    under.style.cssText = "position:fixed;left:20px;top:130px;width:120px;height:30px;z-index:10";
+    document.body.appendChild(under);
+  });
+  await page.evaluate(() => TafsPage.listen("t".repeat(16)));
+  const read = await page.evaluate(() => TafsPage.read());
+  const under = read.controls.find((c) => c.label === "Under");
+  assert.ok(under, "the button under the page's overlay is read");
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [under.ref, read.read_id]), { ok: false, code: "not_visible" }, "the page's own tafs-working-bar covers it");
+  await page.click("#inner");
+  assert.equal(await page.evaluate(() => globalThis.__owner), 1, "a real click inside the page's element is the person's input");
   await page.close();
 });
 

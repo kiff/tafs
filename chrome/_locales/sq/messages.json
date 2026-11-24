@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Nuk ka biseda të arkivuara."},
   "coach_archive_error": {"message": "Nuk u krye. Provoni sërish."},
   "taf_remove": {"message": "Hiqeni këtë taf"},
-  "taf_remove_on_phone": {"message": "Një taf hiqet në telefon: hapeni në aplikacionin tafs, pastaj Hiqeni. Heqja miratohet atje."}
+  "taf_remove_on_phone": {"message": "Një taf hiqet në telefon: hapeni në aplikacionin tafs, pastaj Hiqeni. Heqja miratohet atje."},
+  "bar_go": {"message": "Shko te skeda e tij"},
+  "bar_paused": {"message": "$TAF$ është pezulluar", "placeholders": {"taf": {"content": "$1"}}}
 }

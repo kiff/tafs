@@ -262,5 +262,7 @@
   "coach_archived_none": {"message": "کوئی آرکائیو شدہ گفتگو نہیں۔"},
   "coach_archive_error": {"message": "یہ نہیں ہو سکا۔ دوبارہ کوشش کریں۔"},
   "taf_remove": {"message": "یہ taf ہٹائیں"},
-  "taf_remove_on_phone": {"message": "taf آپ کے فون پر ہٹایا جاتا ہے: اسے tafs ایپ میں کھولیں، پھر ہٹائیں۔ ہٹانے کی منظوری وہیں دی جاتی ہے۔"}
+  "taf_remove_on_phone": {"message": "taf آپ کے فون پر ہٹایا جاتا ہے: اسے tafs ایپ میں کھولیں، پھر ہٹائیں۔ ہٹانے کی منظوری وہیں دی جاتی ہے۔"},
+  "bar_go": {"message": "اس کے ٹیب پر جائیں"},
+  "bar_paused": {"message": "$TAF$ رکا ہوا ہے", "placeholders": {"taf": {"content": "$1"}}}
 }

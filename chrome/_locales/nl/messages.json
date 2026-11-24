@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Geen gearchiveerde gesprekken."},
   "coach_archive_error": {"message": "Dat is niet gelukt. Probeer het opnieuw."},
   "taf_remove": {"message": "Deze taf verwijderen"},
-  "taf_remove_on_phone": {"message": "Een taf verwijder je op je telefoon: open hem in de tafs-app en kies Verwijderen. Daar keur je het verwijderen goed."}
+  "taf_remove_on_phone": {"message": "Een taf verwijder je op je telefoon: open hem in de tafs-app en kies Verwijderen. Daar keur je het verwijderen goed."},
+  "bar_go": {"message": "Naar zijn tabblad"},
+  "bar_paused": {"message": "$TAF$ is gepauzeerd", "placeholders": {"taf": {"content": "$1"}}}
 }

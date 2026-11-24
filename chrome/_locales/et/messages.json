@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Arhiveeritud vestlusi pole."},
   "coach_archive_error": {"message": "See ei õnnestunud. Proovi uuesti."},
   "taf_remove": {"message": "Eemalda see taf"},
-  "taf_remove_on_phone": {"message": "Taf eemaldatakse telefonis: ava see tafsi rakenduses ja vali Eemalda. Eemaldamine kinnitatakse seal."}
+  "taf_remove_on_phone": {"message": "Taf eemaldatakse telefonis: ava see tafsi rakenduses ja vali Eemalda. Eemaldamine kinnitatakse seal."},
+  "bar_go": {"message": "Mine selle vahekaardile"},
+  "bar_paused": {"message": "$TAF$ on pausil", "placeholders": {"taf": {"content": "$1"}}}
 }

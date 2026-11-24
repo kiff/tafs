@@ -93,5 +93,7 @@
   "coach_archived_none": {"message": "Արխիվացված զրույցներ չկան։"},
   "coach_archive_error": {"message": "Չստացվեց։ Փորձեք նորից։"},
   "taf_remove": {"message": "Հեռացնել այս taf-ը"},
-  "taf_remove_on_phone": {"message": "Taf-ը հեռացվում է հեռախոսում. բացեք այն tafs հավելվածում, ապա Հեռացնել։ Հեռացումը հաստատվում է այնտեղ։"}
+  "taf_remove_on_phone": {"message": "Taf-ը հեռացվում է հեռախոսում. բացեք այն tafs հավելվածում, ապա Հեռացնել։ Հեռացումը հաստատվում է այնտեղ։"},
+  "bar_go": {"message": "Անցնել նրա ներդիրին"},
+  "bar_paused": {"message": "$TAF$-ը դադարեցված է", "placeholders": {"taf": {"content": "$1"}}}
 }
