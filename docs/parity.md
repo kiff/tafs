@@ -2,7 +2,7 @@
 
 One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A PR that moves a row updates this page, and the desktop columns follow each repo's `docs/port-checklist.md`.
 
-**Read from:** kiff/tafs main `3b99073` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `e6e4306`, kiff/tafs-windows `9ec91ef` and kiff/tafs-linux `934aca2`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
+**Read from:** kiff/tafs main `3879bf2` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `7497741`, kiff/tafs-windows `9ec91ef` and kiff/tafs-linux `ceec200`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
 
 - **Mac 13+** is the iPad app built with Mac Catalyst ([mac-app.md](mac-app.md)): it follows the iPad unless that page says it differs.
 - **macOS 12, Windows, Linux** are native ports ([kiff/tafs-macos](https://github.com/kiff/tafs-macos), [kiff/tafs-windows](https://github.com/kiff/tafs-windows), [kiff/tafs-linux](https://github.com/kiff/tafs-linux)).
@@ -17,7 +17,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Mac 13+ | done 55, partial 3 | the 58 iPad view files |
 | macOS 12 | done 30, partial 21, not for it 7 | the 58 iPad view files |
 | Windows | done 50, not for it 8 | the 58 iPad view files |
-| Linux | done 52, not started 1, not for it 5 | the 58 iPad view files |
+| Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | done 25, partial 3, not for it 4 | the [Watches](#watches) table |
 | Apple Watch | done 19, partial 6, not started 2, not for it 5 | the [Watches](#watches) table |
@@ -25,7 +25,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 
 **The three biggest gaps**
 1. **macOS 12** is furthest behind: 21 screens partial and 7 not for it. About 13 of those lack only a step a service takes from the phone alone; a recount moves each to done with that service named, as Windows and Linux count them. The rest are real work, landing PR by PR.
-2. **Linux:** nothing partial, and 1 not started: its "Allow this from now on" waits on its security-key approvals, as macOS 12 has them (counted as not started: see "Counting checks").
+2. **Linux** is level with the iPad: 53 screens done, and 5 not for it, each with its reason. "Allow this from now on" landed last (tafs-linux#120).
 3. **Apple Watch behind Wear OS** ([Watches](#watches)): a complication, and four switches built but off until the owner's yes or the privacy page (Keep for later is one). (iPhone/iPad and Android are level but for the loop card, in review.)
 
 ## The iPad's screens
@@ -37,7 +37,7 @@ Each cell is the device's state; "Missing" lines below the table name what a par
 | AIConsentView | The AI-data consent screen, and Account's row for it | done | done | done | done | done | done |
 | APIDoorViews | A door "From another application": its count and cap, last request, keys, New key, Revoke, the instructions | done | done | partial | done | done | done |
 | AccountPreferencesView | Account's theme and time zone pickers | done | done | done | done | done | done |
-| AllowSheetView | "Allow this from now on" | done | done | done | done | not started | done |
+| AllowSheetView | "Allow this from now on" | done | done | done | done | done | done |
 | AppEventApprovalSheet | An app event's filters before signing a subscription | done | done | partial | done | done | done |
 | ApprovalSetupView | This device's approval readiness, and the gate in place of an approval's button | done | partial | partial | done | done | done |
 | AttachViews | Attaching photos and files in a chat | done | done | done | done | done | done |
@@ -99,8 +99,6 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 
 - **APIDoorViews**
   - **macOS 12** (partial): Not for macOS 12: New key and a drafted door's Approve, each the phone's, since each shows a key once, which this Mac can't keep from screen recording or the clipboard
-- **AllowSheetView**
-  - **Linux** (not started): "Allow this from now on" answers a held call on the device; Linux answers held calls in KIFF until its security-key approvals land, as macOS 12 has them. Not a platform limit, so not "not for it".
 - **AppEventApprovalSheet**
   - **macOS 12** (partial): Approving it: it signs planque's trigger for the grant (`POST grants/{id}/triggers`), a route this Mac never signs
 - **ApprovalSetupView**
@@ -295,8 +293,8 @@ What landed or is in review on 23 Nov, device by device (read again at 22:50 Par
 
 The desktops count a row as ported when the only things missing are this device's real limits, each with why (no API, no
 hardware, the act signed only by the phone's key); "not built yet" is never one. Read against the checklists on 23 Nov:
-- **Linux, AllowSheetView** says "not for Linux" because Linux answers held calls in KIFF. macOS 12 answers them on its
-  security key and has the sheet, so this waits on Linux's security-key approvals: counted here as **not started**.
+- **Linux, AllowSheetView** was counted not started, not "not for Linux", while Linux answered held calls in KIFF. It's
+  done now (tafs-linux#120): the sheet, KIFF's draft checked as the iPad's `HoldAllow.matches`, one security-key signature.
 - **macOS 12, DeleteAccountView** says "not for macOS 12" because KIFF takes a deletion only signed by the phone's approval
   key. Linux draws the same sheet and counts it ported with that line; by the rule it's **ported** on both, counted here as
   done.
