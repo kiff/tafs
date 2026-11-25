@@ -1,0 +1,1 @@
+- **A pull request's own text is checked on every pull request.** `.github/workflows/public-text-pr.yml` runs `scripts/public_text.py --text` on each pull request's title and body and on each review, with the text passed through the environment and the script taken from the base branch.

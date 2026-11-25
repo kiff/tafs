@@ -5,7 +5,7 @@ Those names are matched by the first 16 hex digits of their SHA-256, so this fil
 one: printf %s NAME | sha256sum | cut -c1-16. GitHub logins stay only where they do something: the files in KEEP, with this check and its test.
 
 Run from the repository's root: `python3 scripts/public_text.py`. It prints each line it finds and exits 1, else "clean".
-`--text` checks what's on stdin instead: a pull request's title, body or review.
+`--text` checks what's on stdin instead: a pull request's title, body or review (.github/workflows/public-text-pr.yml).
 """
 
 import hashlib
