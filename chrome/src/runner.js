@@ -139,9 +139,14 @@ export class Runner {
       if (!run || isBlank(d.url)) return;
       if (refuseURL(d.url, run.sites, run.allowed)) {
         // A tab of the person's that joined the run is never sent anywhere: Chrome's fence blocks the request, and the page they
-        // had stays. A tab of the run's own goes to its blank page, as before.
-        if (!run.joined.has(d.tabId)) c.tabs.update(d.tabId, { url: "about:blank" });
-        this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+        // had stays. A tab of the run's own goes to its blank page when the run's own work headed off its sites (an act, its back,
+        // a pop-up's first page); the person's own address there is left to the fence, whose stop gives them the tab (0.2.16,
+        // onErrorOccurred), and it's recorded then.
+        const runs = run.stepping === d.tabId || run.backing === d.tabId || run.landing.has(d.tabId);
+        if (run.joined.has(d.tabId) || runs) {
+          if (!run.joined.has(d.tabId)) c.tabs.update(d.tabId, { url: "about:blank" });
+          this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+        }
       }
     });
     // The dialog guard goes in as each document of a run's tab starts. A page Chrome restores from its back-forward cache

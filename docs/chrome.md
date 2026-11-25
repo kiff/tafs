@@ -482,9 +482,10 @@ was done.
   pauses the run first), or a page's own redirect after its load. The page it shows is never trusted for being in the run's trail:
   how it got there decides. The tab is then given to them as a joined tab is: out of the run's group, unfenced, its bar hidden,
   forgotten, never moved or closed. The run's next read, act or hand-over answers `given_back`, nothing of that page read, and
-  its next `open` takes a fresh tab of its own (`moreTab`). An address of theirs off the run's sites, which the fence stops
-  (`ERR_BLOCKED_BY_CLIENT`) outside the run's own step, gives the tab to them the same way and is asked for again once the fence
-  has gone. Before 0.2.16, an address the person typed in the run's own tab on its sites, or their Back there, was read by the
+  its next `open` takes a fresh tab of its own (`moreTab`). An address of theirs off the run's sites is never sent to a blank page
+  (`onBeforeNavigate` blanks a tab of the run's own only for the run's own work); the fence stops it (`ERR_BLOCKED_BY_CLIENT`),
+  which gives the tab to them the same way, records the refused move, and asks for their address again once the fence has gone,
+  so they land on it with no rule left on the tab. Before 0.2.16, an address the person typed in the run's own tab on its sites, or their Back there, was read by the
   run's next read.
 - **A run's new tab shows its blank page before the step's page goes into it** (`Runner.blankReady`, 10 s at most).
   Navigating a tab whose `about:blank` hadn't committed yet raced it: under load the blank page committed after the

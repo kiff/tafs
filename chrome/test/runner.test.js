@@ -150,6 +150,8 @@ test("a navigation in a run's tab that leaves its sites is stopped, and a pop-up
   const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
+  // The run's own act heads off its sites (the person's own address is theirs: the fence's stop gives them the tab, below).
+  r.runs.get("run_1").stepping = tab;
   c.listeners.before({ tabId: tab, frameId: 0, url: "https://evil.example/steal" });
   assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "about:blank"));
   c.listeners.created({ sourceTabId: tab, tabId: 555, url: "https://evil.example/" });
@@ -551,6 +553,7 @@ test("the run's own blank page is never refused: no loop, and the page the step 
   const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
+  r.runs.get("run_1").stepping = tab; // the run's own work, as an act waiting for its page
   const blanks = () => c.calls.filter((x) => x[0] === "tabs.update" && x[2].url === "about:blank").length;
   const before = blanks();
   // The window opens on about:blank, and a refused move is sent there: neither is a move to refuse.
@@ -2301,12 +2304,22 @@ test("the person's off-site address in the run's own tab, stopped by the fence, 
   const r = runner(c);
   await r.handle(step());
   const tab = r.runs.get("run_1").tab;
+  c.listeners.before({ tabId: tab, frameId: 0, url: "https://news.example/" });
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "about:blank"), "their tab is never sent to a blank page");
   c.listeners.error({ tabId: tab, frameId: 0, url: "https://news.example/", error: "net::ERR_BLOCKED_BY_CLIENT" });
   await pause0();
   await pause0();
   assert.equal(r.tabRun.has(tab), false, "theirs now");
-  assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "https://news.example/"), "their address, asked for once more after the fence went");
+  assert.equal(r.state()[0].steps.at(-1).error, "site_not_listed", "recorded once the fence stopped it");
+  assert.equal(r.fenceIds.has(tab), false, "no fence rule left on their tab");
+  const unfenced = c.calls.findIndex((x) => x[0] === "dnr" && (x[1].removeRuleIds || []).length);
+  const asked = c.calls.findIndex((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "https://news.example/");
+  assert.ok(unfenced >= 0 && asked > unfenced, "their address, asked for once more after the fence went");
+  assert.ok(c.calls.some((x) => x[0] === "tabs.ungroup" && [].concat(x[1]).includes(tab)), "out of the run's group");
   assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
+  const opened = await r.handle(step({ id: "op3", url: "https://shop.example/cart" }));
+  assert.ok(opened.page, JSON.stringify(opened));
+  assert.notEqual(r.runs.get("run_1").tab, tab, "the next open takes a fresh tab of its own");
 });
 
 test("a navigation the fence stops while the run's own act waits in its own tab is not the person's", async () => {

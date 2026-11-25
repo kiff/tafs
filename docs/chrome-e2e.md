@@ -212,10 +212,16 @@ yes, and fail the test.
   work moves its tab; the person's move gives the tab to them, and the run's next read and act answer `given_back`.
 - **The person's Back or Forward in a run's own tab: the run read the page they landed on** (`owntabs.e2e.test.js`): the same
   cause; the transition now decides, never the trail.
+- **An address the person typed in a run's own tab, off the run's sites, sent their tab to a blank page** (`owntabs.e2e.test.js`):
+  the runner blanked a tab of its own on any off-site navigation. It now does that only for the run's own work; the fence's stop
+  gives the tab to them, and their address goes through once the fence has gone.
 - **A second taf of the same name, under another grant, closed the first taf's kept tab** (`owntabs.e2e.test.js`): a taf's
   finished run is now kept by its grant (`doneKey`), not its name.
 
 ## Known bugs, as `todo` tests
+
+The "still open" checks after a Stop and after the taf's next run wait for the runner to have let the run's tabs go (its state, and
+Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed time: a close that comes late fails them.
 
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.

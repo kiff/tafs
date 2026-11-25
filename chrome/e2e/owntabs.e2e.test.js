@@ -96,6 +96,29 @@ test("the person's Back and Forward in the run's own tab: the run's next read ta
   nothingOf(back);
 });
 
+test("an address the person types in the run's own tab OFF the run's sites: the tab is theirs, unfenced, and they land on it", { skip }, async () => {
+  const run = newRun("own-typed-off");
+  const hub = h.sites.url("news.test", "/hub?case=own-typed-off");
+  await open(run, hub);
+  const { page, tabId } = await ownTab(run, hub);
+  assert.ok((await rulesOf(h, tabId)).length > 0, "the run's tab is fenced");
+  // The person types another site's address there. The fence stops the first request; the tab is then given to them, and their
+  // address is asked for again with no fence on it.
+  const elsewhere = h.sites.url("other.test", "/?case=own-typed-off");
+  await page.goto(elsewhere).catch(() => {});
+  await until(async () => (await tabInfo(h, tabId)).url === elsewhere && (await page.title()) !== "", "the person on the address they typed", 10_000);
+  assert.deepEqual(await rulesOf(h, tabId), [], "no fence rule left on their tab");
+  const state = await runState(h, run);
+  assert.ok(!state || !state.tabs.includes(tabId), "the run let the tab go");
+  refusedAsTheirs(await h.planque.sendStep({ op: "read", run }), "read after their address");
+  // The run's next page opens in a fresh tab of its own; theirs stays where they took it.
+  const again = await open(run, hub);
+  assert.equal(again.page.title, "Harbour news");
+  assert.notEqual((await runState(h, run)).tab, tabId, "a fresh tab of the run's own");
+  assert.equal((await tabInfo(h, tabId)).url, elsewhere, "their tab stays on their page");
+  await h.fromPanel({ type: "stop", run });
+});
+
 test("a link the person clicks in the run's own tab: the run pauses, and its next read and act take nothing of the page", { skip }, async () => {
   const run = newRun("own-click");
   const hub = h.sites.url("news.test", "/hub?case=own-click");
@@ -170,13 +193,18 @@ test("the person drags a tab of theirs into the run's group: it never becomes th
 
   // The run's end, Stop or close, never closes it.
   assert.deepEqual(await h.fromPanel({ type: "stop", run }), {});
-  await new Promise((r) => setTimeout(r, 300));
+  // Waited for the runner to have let the stopped run's tabs go, not for a fixed time: a close that comes late still fails here.
+  await until(async () => {
+    const s = await runState(h, run);
+    return !s || s.tabs.length === 0;
+  }, "the stopped run to let its tabs go", 5000);
   assert.ok(await tabInfo(h, theirId), "their tab is still open");
   assert.equal(theirs.url(), account);
   // The same taf's next run, which closes the last run's tabs, leaves it too.
   const next = newRun("own-in-next");
   await open(next, h.sites.url("news.test", "/article?case=own-in-next"));
-  await new Promise((r) => setTimeout(r, 300));
+  // The taf's next run closes the last run's own tab as it opens: waited for until Chrome no longer has it, then theirs is checked.
+  await until(async () => !(await tabInfo(h, tabId)), "the last run's own tab closed by the taf's next run", 5000);
   assert.ok(await tabInfo(h, theirId), "their tab is still open after the taf's next run");
   assert.deepEqual(await rulesOf(h, theirId), []);
   assert.ok(!(await runState(h, next)).tabs.includes(theirId));
