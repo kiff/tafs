@@ -24,7 +24,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * Row 30, call 6 (the owner's Galaxy Watch 5 re-test: with the phone in Airplane mode, "Not sure it arrived" with a Retry button
+ * Row 30, call 6 (the Galaxy Watch 5 re-test: with the phone in Airplane mode, "Not sure it arrived" with a Retry button
  * stayed after the phone was back). A send with no receipt shows one calm linking screen and sends the same words, under the same
  * id, again by itself, until the phone answers.
  */

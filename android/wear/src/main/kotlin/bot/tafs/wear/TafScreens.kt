@@ -255,7 +255,7 @@ internal fun tafChatLatest(open: WatchModel.OpenTaf): Int {
 
 /**
  * Where a taf's chat is centred: with a message sent from the watch, the line under its newest one ("{taf} is answering", or its
- * answer), so the person's words just sent sit whole above it, never cut by the top edge (the owner's Galaxy Watch 5 re-test);
+ * answer), so the person's words just sent sit whole above it, never cut by the top edge (the Galaxy Watch 5 re-test);
  * else what comes after the newest message ([tafChatLatest]).
  */
 internal fun tafChatFocus(open: WatchModel.OpenTaf): Int = tafChatLatest(open).let { if (open.chat.turns.isNotEmpty()) it - 1 else it }

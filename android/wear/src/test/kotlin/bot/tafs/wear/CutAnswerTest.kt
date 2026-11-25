@@ -22,7 +22,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * A cut answer in a taf's chat (rows 10 and 28, the owner's Galaxy Watch 5 re-test: "Versailles" ended in "The rest is on your
+ * A cut answer in a taf's chat (rows 10 and 28, the Galaxy Watch 5 re-test: "Versailles" ended in "The rest is on your
  * phone." with nothing to tap). A message sent from the watch keeps its turn, so Read more reads it whole; a cut line with no turn
  * of its own gets Open on phone.
  */
@@ -112,7 +112,7 @@ class CutAnswerScreenTest {
   }
 }
 
-/** The sent message shows whole after Send (the owner's Galaxy Watch 5 re-test: it sat a millimetre above the top edge). */
+/** The sent message shows whole after Send (the Galaxy Watch 5 re-test: it sat a millimetre above the top edge). */
 class SentFocusTest {
   private val page = WatchReply.TafPage("taf_1", "Wiki lookup", "Ready", halted = false, job = "Looks a word up")
   private val sent = WatchModel.TafTurn("Versailles", 0L, AskLine("wa_1", "w_1", AskLine.WORKING, "Wiki lookup", words = "Working", updated = "u", kind = AskLine.TAF))

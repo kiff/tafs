@@ -625,7 +625,7 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   A restore the watch stopped waiting for goes on in that scope too and the next ask joins it (`RestoreOnce`); one that was
   cancelled or failed is run again.
 
-**Wear 0.4.9: what the owner's Galaxy Watch 5 re-test changed** (25 Nov):
+**Wear 0.4.9: what the Galaxy Watch 5 re-test changed** (25 Nov):
 - **Your tafs never empties** (row 27; `WatchModel.refresh`, `retryTafs`, `tafsChanged`; `TafListTest`). A list read that misses
   (the 10 s passing) keeps the list the watch had, shown and kept: it never saves nothing over it. The open reads it again
   quietly after 2, 5 and 10 s (`TAFS_RETRY_MS`). The phone puts the list as a kept item, `kept/tafs` (`KeptTafs`: the lines

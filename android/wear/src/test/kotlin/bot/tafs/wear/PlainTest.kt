@@ -3,7 +3,7 @@ package bot.tafs.wear
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** No raw markdown on the watch (the owner's Galaxy Watch 5 re-test showed `**Versailles**` as written). */
+/** No raw markdown on the watch (the Galaxy Watch 5 re-test showed `**Versailles**` as written). */
 class PlainTest {
   @Test fun boldAndItalicsKeepTheirWords() {
     assertEquals("The first result is Versailles.", Plain.of("The first result is **Versailles**."))

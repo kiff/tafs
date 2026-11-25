@@ -1,7 +1,7 @@
 package bot.tafs.wear
 
 /**
- * An answer's words as the watch draws and speaks them: plain text, its markdown taken away (the owner's Galaxy Watch 5 re-test
+ * An answer's words as the watch draws and speaks them: plain text, its markdown taken away (the Galaxy Watch 5 re-test
  * showed `**Versailles**` as written). The watch draws no rich text: bold and italics keep their words, a link its words, code its
  * text, a heading its line, and a list item a bullet. Anything else is left as tafs cloud wrote it.
  */

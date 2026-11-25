@@ -15,7 +15,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Your tafs never empties (row 27, the owner's Galaxy Watch 5 re-test): a list read that misses keeps the list the watch had, on
+ * Your tafs never empties (row 27, the Galaxy Watch 5 re-test): a list read that misses keeps the list the watch had, on
  * screen and kept, and is read again quietly; the phone's pushed list ([KeptTafs]) moves the Tafs page at once.
  */
 @RunWith(RobolectricTestRunner::class)

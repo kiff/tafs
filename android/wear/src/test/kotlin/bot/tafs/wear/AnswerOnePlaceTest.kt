@@ -15,7 +15,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * A taf's answer lands in its chat alone, whichever path brings it (the owner's Galaxy Watch 5 re-test: "Paris" sat in the Inbox
+ * A taf's answer lands in its chat alone, whichever path brings it (the Galaxy Watch 5 re-test: "Paris" sat in the Inbox
  * after the open's read of the asks, while "Rambouillet", pushed, went only to Wiki lookup's chat). Coach's answers still go to
  * the Inbox.
  */

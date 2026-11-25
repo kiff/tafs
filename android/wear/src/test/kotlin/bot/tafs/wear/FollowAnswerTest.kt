@@ -12,7 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * While a taf's chat shows "{taf} is answering", the watch follows the answer through the phone, bounded (row 13, the owner's
+ * While a taf's chat shows "{taf} is answering", the watch follows the answer through the phone, bounded (row 13, the
  * Galaxy Watch 5 re-test: with the phone's push missing, the answer never came until the app was reopened).
  */
 class FollowAnswerTest {
