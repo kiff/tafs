@@ -29,7 +29,15 @@ fi
 "$tools/apksigner" sign --ks "$keystore" --ks-pass pass:android --key-pass pass:android \
   --ks-key-alias androiddebugkey --out "$work/signed.apk" "$work/aligned.apk"
 
-if [ -n "$fresh" ]; then adb uninstall "$pkg" >/dev/null 2>&1 || true; fi
+# Uninstalling deletes the app's data, so it's done only on an emulator or in CI, never on a phone someone attached.
+if [ -n "$fresh" ]; then
+  emulator=$(adb shell 'getprop ro.kernel.qemu; getprop ro.boot.qemu' | tr -d '\r' | grep -c '^1$' || true)
+  if [ "$emulator" = "0" ] && [ "${CI:-}" != "true" ]; then
+    echo "::error::no debug key, and the device isn't an emulator: the app would have to be uninstalled, deleting its data. Run a debug build once, or use an emulator."
+    exit 1
+  fi
+  adb uninstall "$pkg" >/dev/null 2>&1 || true
+fi
 adb install -r "$work/signed.apk"
 adb shell am force-stop "$pkg"
 adb logcat -c
