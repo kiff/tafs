@@ -20,7 +20,7 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | built 26, partial 3, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | built 23, partial 4, not started 2, not for it 4 | the [Watches](#watches) table |
+| Apple Watch | built 24, partial 4, not started 1, not for it 4 | the [Watches](#watches) table |
 | Chrome extension | done 10, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
@@ -159,7 +159,9 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | done (tafs#1859) | done (tafs#1761) | android-app.md, ios-app.md, "Pairing a Chrome" |
 | 15 | A re-pairing after a reinstall starts on the one Chrome alike | done (tafs#1780) | done (tafs#1781) | chrome.md, "Your Chrome" 1 |
 | 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | held by the owner's decision: no passwords go through the extension (built on a branch, not opened) | built and off, and stays off by the same decision (tafs#1830, #1837, tafs#1882) | chrome.md, "The phone's release card" |
-| 17 | Delete a Coach conversation for good (`DELETE /v1/tafs/{id}/chats/{session}`, tafs cloud's words in each chats-list read's `delete`; the 409's `error`) | not yet (iOS follows) | done (`AppModel.deleteCoachChat`; the watch's copy put empty) | android-app.md, "Deleting a conversation" |
+| 17 | Delete a Coach conversation for good (`DELETE /v1/tafs/{id}/chats/{session}`, tafs cloud's words in each chats-list read's `delete`; the 409's `error`) | not yet: in review for iOS 1.0.1 (tafs#2107; offered only in tafs cloud's words, no stand-ins) | done (`AppModel.deleteCoachChat`; the watch's copy put empty) | android-app.md, "Deleting a conversation" |
+| 18 | A phone that serves a watch registers for background pushes only while alerts are off (`alerts: false`, tafs#2100), so the watch stays in step; the blocked-alerts prompt with a settings link and a re-check; the one-time "Your watch is using tafs" prompt | done for iOS 1.0.1 (tafs#2101) | not yet: in the 146 batch (`w146-phone`), on the same `alert.*` strings | ios-app.md, android-app.md; privacy line: kiff/cloud#165, merged with the first of the two builds |
+| 19 | The Card step before Coach's first approval (tafs#2091's words; what's shown equals what's signed, compared on structured fields, failing closed), and Coach takes no typing until its tools are approved | not yet: waits on tafs cloud's `start.words` and per-tool fields | not yet: in the 146 batch, same wait | coach.md, "Coach's tools step" |
 
 ## Your Chrome
 
@@ -232,7 +234,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 30 | Saying the phone can't be reached, with retries on their own | built | built | the owner's call: no Try again. One calm "Linking tafs. Keep your phone nearby and connected." (`watch.linking`) on the first link, retries with backoff (tafs#2021, tafs#2018) |
 | 31 | Working without the phone | not for it | not for it | the phone holds the session and the keys |
 | 32 | In the store | partial | partial | Apple Watch: only the TestFlight build carries it. Wear: the internal track; production is the owner's |
-| 33 | One account's data never shows under another's: a change of the phone's sign-in, or a sign-out the watch didn't hear, wipes what it kept | not started | built | Wear OS: the phone's random account mark on every reply and kept item, checked before anything is drawn and failing closed, and `kept/signed-out` at sign-out (docs/watch-wear.md). Apple Watch follows with the same rule |
+| 33 | One account's data never shows under another's: a change of the phone's sign-in, or a sign-out the watch didn't hear, wipes what it kept | built (tafs#2092: the mark checked before anything is drawn, Retry only where safe; tafs#2097: the person's acts go only to the sign-in they were made under) | built (tafs#2093) | Wear OS: the phone's random account mark on every reply and kept item, checked before anything is drawn and failing closed, and `kept/signed-out` at sign-out (docs/watch-wear.md). Apple Watch: the same rule (docs/watch-app.md), in iOS 1.0.1. Both read built until the owner's check |
 
 ## One layout on every app
 
@@ -348,6 +350,30 @@ What landed on 23 Nov, device by device, read again against each repo's main on 
 | Try again under a failed run's line, shown only when tafs cloud's `failed` says `retry`, in its `retry_label` (`contracts/conversation-failed.json`) | not yet: Retry shows on every failed run and sends the message again, even after the run acted; `retry` isn't read (`AppModel.retryChatRun`) | done (tafs#2084) | not yet: the pin has `retry` since tafs-macos#271, nothing reads it | not yet: the pin has `retry` since tafs-windows#347, nothing reads it | not yet: the pin has `retry` since tafs-linux#141, nothing reads it | done (0.2.22, tafs#2077) |
 
 **Still open:** Try again on a failed run's line, on the iPhone and iPad and on the three desktops. Every other row above is done on each device it's for, except the sealed sign-in fill's release card, which stays held and off.
+
+## 25 Nov, device by device
+
+What merged or opened on 25 Nov, read against kiff/tafs main `56319b8` and each desktop repo's main. **done** means merged on main (a phone or watch row still waits for its build to ship); **not yet** says what's missing. "—" means the feature isn't that device's.
+
+| Feature | iPhone/iPad | Android | Apple Watch | Wear OS | macOS 12 | Windows | Linux | Chrome extension |
+| :- | :- | :- | :- | :- | :- | :- | :- | :- |
+| A watch wipes what it kept when the phone's sign-in changes or it signs out | — | — | done (tafs#2092, #2097) | done (tafs#2093) | — | — | — | — |
+| Background-only pushes for a phone that serves a watch, with alerts off (tafs#2100, live) | done (tafs#2101) | not yet: 146 batch | — | — | — | — | — | — |
+| The alerts prompts: blocked alerts with a settings link, and "Your watch is using tafs" once | done (tafs#2101) | not yet: 146 batch | — | — | — | — | — | — |
+| Delete a Coach conversation for good (tafs#2095 live; words tafs#2096, merged) | not yet: in review (tafs#2107) | done (tafs#2099) | — (keeps only its own watch conversations, which can't be deleted yet) | — (as Apple Watch) | not yet: the pinned `coach-chats` contract has no `delete` until the next pin bump | not yet: as macOS 12 | not yet: as macOS 12 | not yet: the side panel's chats can't delete |
+| The Card step before Coach's first approval (tafs#2091's words), shown = signed | not yet: waits on tafs cloud's fields | not yet: 146 batch, same wait | — | — | not yet: same wait (a computer signs with its passkey: `card_step_give_passkey`) | not yet: as macOS 12 | not yet: as macOS 12 | — (never approves) |
+| Coach takes no typing until its tools are approved | not yet: with the Card step | not yet: with the Card step | — | — | not yet | not yet | not yet | not yet: the side panel's Coach |
+| Try again under a failed run's line, only on tafs cloud's `failed.retry` | not yet (see the row above, 23 Nov) | done (tafs#2084) | — | — | not yet | not yet | not yet | done (0.2.22) |
+| Sign-out leaves nothing of the account: its alerts and the files opened from its chats | done (`AppModel.forgetSession`) | opened files: done (`openedFiles` at sign-out); its token is taken back, but no code takes away alerts already in the shade (not yet) | — | — | alerts: done (tafs-macos#272) | done | opened files: done (tafs-linux#142); alerts were already withdrawn | — |
+| The fence: kiff.dev never opened, merchant consoles sensitive, money sent out refused as a payment step | done (sensitive list, tafs#2103) | done (sensitive list, tafs#2103) | — | — | — | — | — | done on main (tafs#2103); ships in 0.2.23. tafs cloud's page reads match (tafs#2105) |
+| The page shows a taf at work: a glow, "… is working here" at the top, a drawn pointer, and no act without its aim | — | — | — | — | — | — | — | not yet: 0.2.23 in review (tafs#2108) |
+
+**Still open from 25 Nov:**
+- The Card step and the composer lock on every device, once tafs cloud sends their fields.
+- Android's 146: background-only push, the alerts prompts, the Card step and the composer lock.
+- Delete on the desktops and in Chrome.
+- iOS's Try again.
+- Chrome 0.2.23's signs.
 
 ## Counting checks
 
