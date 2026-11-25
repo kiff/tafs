@@ -683,8 +683,8 @@ and never to tafs cloud directly.
     kept is drawn;
   - **nothing kept is drawn** before this open of the app has heard the kept mark in a live reply, as on Wear OS: each
     time the app is put away the mark must be heard again (`WatchAccountMark.leave`), since the app can go on running
-    while the phone changes accounts. A lowered wrist is the same open, as on Wear OS: the screen keeps only what it
-    already showed and nothing new is drawn, and once watchOS returns to the clock or the app is left, it's put away; an account change (a push or the context) can wipe, but never lets what's kept be
+    while the phone changes accounts. A lowered wrist counts as put away (`WatchAccountMark.leaves`: any phase but
+    active), since watchOS can keep an app inactive on screen for up to an hour, and the phone can change accounts in it; an account change (a push or the context) can wipe, but never lets what's kept be
     drawn, since it may have waited;
   - **account changes are taken in the order the phone made them** (each carries when): one older than the last change
     or live reply heard is ignored, whichever WatchConnectivity hands over first;

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import UserNotifications
 
 /// Whose data this watch keeps (`WatchMark`; as Wear OS's account wipe): the phone's mark for its session, heard on every
@@ -75,6 +76,11 @@ final class WatchAccountMark {
     /// The app was put away: until a live reply in the next open carries the kept mark again, nothing kept is drawn. The
     /// phone may change accounts while the watch is away, and the app may go on running meanwhile.
     func leave() { confirmed = false }
+
+    /// Whether the app leaves the screen in `phase`: any phase but `.active`. A lowered wrist (`.inactive`) counts, since
+    /// watchOS can keep an app inactive on screen for up to an hour before it returns to the clock, and the phone can change
+    /// accounts in that hour.
+    nonisolated static func leaves(_ phase: ScenePhase) -> Bool { phase != .active }
 
     /// What goes when the account changes: each store and page the app keeps adds its own.
     func onWipe(_ wipe: @escaping @MainActor () -> Void) { wipes.append(wipe) }

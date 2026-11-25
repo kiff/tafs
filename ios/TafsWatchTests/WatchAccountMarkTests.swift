@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 @testable import TafsWatch
 
 /// The account wipe (`WatchAccountMark`, as Wear OS's): whose data the watch keeps, by the phone's mark on every reply and
@@ -118,6 +119,10 @@ final class WatchAccountMarkTests: XCTestCase {
         XCTAssertTrue(mark.mayDraw)
         XCTAssertEqual(confirmed, 2, "confirmed again in this open, so the pages take in what they kept")
         XCTAssertEqual(box.cleared, 0, "the same account: nothing goes")
+        // A lowered wrist leaves the screen too: watchOS can keep the app inactive for up to an hour.
+        XCTAssertTrue(WatchAccountMark.leaves(.inactive))
+        XCTAssertTrue(WatchAccountMark.leaves(.background))
+        XCTAssertFalse(WatchAccountMark.leaves(.active))
         // Put away again, and the phone now says B: everything of A goes, and nothing of it is drawn first.
         mark.leave()
         XCTAssertFalse(mark.heard(Self.b))
