@@ -35,9 +35,9 @@ final class WatchAccountMark {
     private let store: Store
     /// What's kept on disk goes first, whether or not a page is up to forget its own: the threads, the Inbox, a message
     /// kept for later, the tafs read, and the watch's alerts, each of which names one account's tafs.
-    private let clearStored: () -> Void
-    private var wipes: [() -> Void] = []
-    private var confirms: [() -> Void] = []
+    private let clearStored: @MainActor () -> Void
+    private var wipes: [@MainActor () -> Void] = []
+    private var confirms: [@MainActor () -> Void] = []
     /// This run heard the phone's mark, and it's the one kept.
     private(set) var confirmed = false
     /// How many times what was kept went: for the tests.
@@ -47,7 +47,7 @@ final class WatchAccountMark {
     /// When the account last changed, or was last heard live: an account change older than this is ignored.
     private var lastChange: Date?
 
-    init(store: Store = .defaults(), clearStored: @escaping () -> Void = WatchAccountMark.clearAllStored,
+    init(store: Store = .defaults(), clearStored: @escaping @MainActor () -> Void = WatchAccountMark.clearAllStored,
          now: @escaping () -> Date = Date.init) {
         self.store = store
         self.clearStored = clearStored
@@ -72,10 +72,10 @@ final class WatchAccountMark {
     var mayDraw: Bool { confirmed || WatchDemo.on }
 
     /// What goes when the account changes: each store and page the app keeps adds its own.
-    func onWipe(_ wipe: @escaping () -> Void) { wipes.append(wipe) }
+    func onWipe(_ wipe: @escaping @MainActor () -> Void) { wipes.append(wipe) }
 
     /// What can be drawn once the mark is confirmed: the pages take in what they kept.
-    func onConfirm(_ confirm: @escaping () -> Void) { confirms.append(confirm) }
+    func onConfirm(_ confirm: @escaping @MainActor () -> Void) { confirms.append(confirm) }
 
     /// A live reply's mark, or (`live` false, through `heardAccount`) an account change's, before anything in it is used.
     /// Returns whether it's the kept account's. Only a live reply confirms the mark for this run: an account change may

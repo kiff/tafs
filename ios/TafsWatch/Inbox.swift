@@ -128,10 +128,10 @@ final class InboxModel: ObservableObject {
     private(set) var marking: Task<Void, Never>?
     /// Whether what's kept belongs to the account the phone has now (`WatchAccountMark.mayDraw`): until this run has heard
     /// so, the kept lines aren't shown, and come in once it has (`checkLock`).
-    private let mayDraw: () -> Bool
+    private let mayDraw: @MainActor () -> Bool
 
     init(store: InboxStore = FileInboxStore(), lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init,
-         phone: PhoneAsking? = nil, mayDraw: @escaping () -> Bool = { true }) {
+         phone: PhoneAsking? = nil, mayDraw: @escaping @MainActor () -> Bool = { true }) {
         self.mayDraw = mayDraw
         self.store = store
         self.lock = lock

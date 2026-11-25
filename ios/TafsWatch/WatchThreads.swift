@@ -42,10 +42,10 @@ final class WatchThreads {
     private let lock: WristLock
     private let clock: () -> Date
     /// Whether what's kept belongs to the account the phone has now: until this run has heard so, nothing is read or written.
-    private let mayDraw: () -> Bool
+    private let mayDraw: @MainActor () -> Bool
 
     init(url: URL? = nil, on: Bool = WatchThreads.on, lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init,
-         mayDraw: @escaping () -> Bool = { true }) {
+         mayDraw: @escaping @MainActor () -> Bool = { true }) {
         self.mayDraw = mayDraw
         self.url = url ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("tafs.watch_threads")
