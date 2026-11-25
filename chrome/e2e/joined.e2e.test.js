@@ -8,7 +8,7 @@
 
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { playwright, start, newRun, ref, until, rulesOf, runState, tabInfo, fillSessionRules, unfillSessionRules, RULES_PER_TAB } from "./harness.mjs";
+import { playwright, start, newRun, ref, until, rulesOf, runState, tabInfo, fillSessionRules, unfillSessionRules, RULES_PER_TAB, RULES_PER_JOINED_TAB } from "./harness.mjs";
 import { joining } from "./joining.mjs";
 import { PERSON_VALUE, PERSON_WORDS } from "./sites.mjs";
 
@@ -59,7 +59,7 @@ test("a run started from the panel reads the person's tab where it is, only when
   assert.equal(owner.url(), url);
   const tab = await tabInfo(h, second.tabId);
   assert.notEqual(tab.groupId, -1, "it joined the run's group");
-  assert.equal((await rulesOf(h, second.tabId)).length, RULES_PER_TAB, "fenced as a run's own tab");
+  assert.equal((await rulesOf(h, second.tabId)).length, RULES_PER_JOINED_TAB, "fenced as a run's own tab, but never sandboxed");
   // A read while the run is on it reads it in place too.
   const read = await step({ op: "read", run, agent_run: second.agentRun });
   assert.equal(read.ok, true, JSON.stringify(read.error));
@@ -376,7 +376,7 @@ test("a step of another agent run gives the person's tab back unread: out of the
   const run = newRun("other-run");
   const joined = await step({ op: "open", run, url, agent_run: agentRun });
   assert.equal(joined.ok, true, JSON.stringify(joined.error));
-  assert.equal((await rulesOf(h, tabId)).length, RULES_PER_TAB);
+  assert.equal((await rulesOf(h, tabId)).length, RULES_PER_JOINED_TAB);
   await watchMoves();
 
   // A schedule, the phone or a later message: planque keeps the run, but its steps name another agent run.

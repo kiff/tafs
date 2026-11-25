@@ -171,6 +171,8 @@ export async function inWorker(h, func, arg) {
 export { FENCE_RULES } from "../src/runner.js";
 import { FENCE_RULES as ALL_RULES } from "../src/runner.js";
 export const RULES_PER_TAB = ALL_RULES - 1;
+/** A tab of the person's a run joined holds one fewer: never the sandbox (runner.js fence, 0.2.20). */
+export const RULES_PER_JOINED_TAB = RULES_PER_TAB - 1;
 
 /** Chrome's declarativeNetRequest session rules, as the service worker reads them: the fences of the runs' tabs. */
 export function sessionRules(h) {

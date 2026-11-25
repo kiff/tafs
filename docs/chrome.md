@@ -377,7 +377,7 @@ error = {code, detail?}      // detail never carries page text
 | Code | When |
 |---|---|
 | *(no answer)* | not planque's, not for this Chrome, expired, replayed, or malformed (`checkStep`): dropped unanswered, since 0.2.14 |
-| `bad_step` | a verified step the runner can't take: a malformed act, hand-over or offset, an op it doesn't know, or a run's sites that grow or aren't the phone's |
+| `bad_step` | a verified step the runner can't take: a malformed act, hand-over or offset, an op it doesn't know, a run's sites that grow or aren't the phone's, or `check` with `unchecked` on a checked radio (a click never unchecks one; 0.2.20) |
 | `bad_url` | not `https`, user info in the URL, or not a URL |
 | `address_private` | an IP address (in any form a browser reads), or a local name (`.local`, `.internal`, …) |
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
@@ -386,6 +386,7 @@ error = {code, detail?}      // detail never carries page text
 | `given_back` | the person moved the tab the run was on, one of theirs it joined (0.2.15) or one of the run's own (0.2.16): their Back or Forward, an address, a reload, their own click, a navigation the fence stopped. The tab was given to them as it is: the run's next read, act or hand-over, until it opens a page, in a tab of its own; also an act whose wait the person's move ended |
 | `no_back` | a `back` in a tab of the run's own with no page before in the run's trail for it, and any `back` in a joined tab (0.2.15) |
 | `ref_unknown` | the read has no such ref, or its element is gone, or it has become something else since the read: the element's tag, type, name, label, words and link target, and the words of the row it sits in, must be what the read saw |
+| `disabled` | the page made the element unusable (0.2.20): disabled, a disabled fieldset's included (`:disabled`), inside an `inert` part of the page, or `aria-disabled="true"` on it or around it; a fill of a read-only text field or text area; a choice of a list that's disabled, or in a disabled group (no change is told) |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
 | `secret_field` | a fill of a password or one-time-code field with a plain value, or a sealed value into a field its part doesn't fit |
 | `payment_step` | a fill of a card field, a click whose words or semantics pay or place an order, or any click on a checkout or payment page |
@@ -525,9 +526,27 @@ was done.
   Navigating a tab whose `about:blank` hadn't committed yet raced it: under load the blank page committed after the
   navigation began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The end-to-end
   test `races.e2e.test.js` reproduces that load (one renderer for every page, the person's page busy).
+- **A run's own tabs load every page under a sandbox with no `allow-modals`** (0.2.20, `RUN_SANDBOX`): a `Content-Security-Policy`
+  response header that Chrome adds for that tab alone (the fence's rule 7, priority 6, above every allow, `main_frame`). Every other
+  sandbox permission is kept (scripts, the same origin, forms, pop-ups, downloads, top navigation, pointer lock, presentation,
+  orientation lock, storage access), so pages work as before and a frame may still send the tab to a granted page (a card's 3-D
+  Secure). Blink drops `alert`, `confirm` (it answers no), `prompt` (null), `print` and the "leave this page?" prompt **from the
+  page's first byte**, before any script of the page's or the extension's runs, and nothing reaches Chromium. The page can't lift
+  it, and the site sees nothing of it. Before 0.2.20 a dialog a page raised in its own inline script as it loaded reached Chromium
+  (a confirm could be answered yes), as the guard below only went in once the page had committed.
+  - **Never on a tab of the person's the run joined.** Its dialogs keep the guard below, so one the page raises as it loads
+    there still reaches the person.
+  - **The person's own navigation in a tab of the run's own** (outside the run's open, act, back, a pop-up's first page or a
+    hand-over) takes the sandbox off as it starts (`onBeforeNavigate`, `unsandbox`). Chrome doesn't wait for the extension, so
+    the page they chose may still load sandboxed; the commit gives them the tab, unfenced, and their next load is their own.
+  - **A page the run loaded stays sandboxed after the run lets the tab go** (its end, Stop, a give-back without a new load):
+    the rule only governs the next response, so `confirm()` there answers no until the page is loaded again.
+  - The read can't say that a page asked as it loaded: Blink drops the call before any script of the extension's is there. A
+    dialog raised later is still reported.
 - **A run's tabs get two scripts:**
-  - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
-    reported, a confirm answers no, and a "leave this page?" handler is dropped.
+  - In the page's own world, once a document has committed (`webNavigation.onCommitted`): `dialogs.js`. A backstop under the
+    sandbox, and the guard of a joined tab: alert, confirm and prompt stop blocking and are reported, a confirm answers no,
+    and a "leave this page?" handler is dropped.
   - In the isolated world: `mask.js` and `page.js`.
 - **Every https site is granted at install, so nothing in a run asks Chrome for one.** The owner chose it (23 Nov: "closer to Claude in
   Chrome"), and Chrome asks once, when the extension is installed or updated to a manifest that widens it (an update that does is

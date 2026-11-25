@@ -900,7 +900,9 @@ test("the page's check before an act gives refuseURL's very code for every addre
 // What the page made unusable is never acted on (0.2.20): a field a disabled fieldset holds, one inside an inert part or under
 // aria-disabled, a read-only field, a disabled choice of a list; and a checked radio can't be "unchecked".
 const UNUSABLE = `<!doctype html><html><head><title>Unusable</title></head><body>
-<fieldset disabled><label for="a">In a disabled fieldset</label><input id="a" type="text"></fieldset>
+<fieldset disabled><legend><label for="l">In the legend</label><input id="l" type="text"></legend><label for="a">In a disabled fieldset</label><input id="a" type="text"></fieldset>
+<label><input id="k" type="checkbox" readonly>Read-only box</label>
+<label for="m">Read-only list</label><select id="m" readonly><option>One</option><option>Two</option></select>
 <div inert><button id="b">Inert button</button></div>
 <div aria-disabled="true"><button id="c">Aria button</button></div>
 <label for="d">Read only</label><input id="d" type="text" readonly value="kept">
@@ -938,6 +940,11 @@ test("an act on what the page made unusable is refused disabled, and a checked r
   assert.equal(await page.isChecked("#g"), true);
   assert.deepEqual(await act({ kind: "check", value: "unchecked" }, "No"), { ok: true }, "an unchecked radio stays as asked");
   assert.deepEqual(await act({ kind: "fill", value: "typed" }, "Open field"), { ok: true });
+  // What the page didn't disable stays usable: a field in a disabled fieldset's first legend, and read-only on a box or a list
+  // (read-only means nothing there; the person can still use them).
+  assert.deepEqual(await act({ kind: "fill", value: "in legend" }, "In the legend"), { ok: true });
+  assert.deepEqual(await act({ kind: "check", value: "checked" }, "Read-only box"), { ok: true });
+  assert.deepEqual(await act({ kind: "select", value: "Two" }, "Read-only list"), { ok: true });
   // The inert and aria-disabled buttons: refused if the read offers them at all.
   const read = await page.evaluate(() => TafsPage.read());
   for (const label of ["Inert button", "Aria button"]) {

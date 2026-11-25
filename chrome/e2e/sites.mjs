@@ -165,6 +165,11 @@ const CONTROLS = page("Locked controls", `<h1>Locked controls</h1>
 const AT_LOAD = {
   alert: page("Welcome", `<h1>Welcome</h1>`).replace("<title>Welcome</title>", "<title>Welcome</title><script>alert('Welcome to the shop')</script>"),
   confirm: page("Stay", `<h1>Stay</h1><p id="out">-</p><script>document.getElementById("out").textContent = confirm("Stay signed in?") ? "accepted" : "refused";</script>`),
+  // A frame whose own script sends the whole tab to a granted page, as a card's 3-D Secure frame does.
+  frametop: page("Card check", `<h1>Card check</h1><iframe id="tds" src="/at-load-frametopinner"></iframe>`),
+  frametopinner: page("Bank frame", `<p>Checking</p><script>setTimeout(() => { top.location.href = "/article?case=frametop-done"; }, 300);</script>`),
+  // The same confirm, served so the browser may keep it (HTTP cache, back/forward cache).
+  confirmcached: page("Stay", `<h1>Stay</h1><p id="out">-</p><script>document.getElementById("out").textContent = confirm("Stay signed in?") ? "accepted" : "refused";</script>`),
   beforeunload: page("A draft", `<h1>A draft</h1><label for="d">Draft</label><input id="d" type="text"><script>addEventListener("beforeunload", (e) => { e.preventDefault(); e.returnValue = ""; });</script>`),
 };
 

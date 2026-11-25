@@ -257,20 +257,17 @@ Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
 
-- **A page's `alert` or `confirm` as it loads reaches Chromium as a real dialog** (`gaps2.e2e.test.js`). `runner.js` installs
-  the dialog guard (`installDialogGuard`, in the page's own world) with `scripting.executeScript` from
-  `webNavigation.onCommitted`. That's after the document has started, so a page's own inline script runs first, and its
-  confirm can be answered yes. The guard has to be in place "as each document starts" (`docs/chrome.md`), which takes a
-  content script registered at `document_start`.
-- **A field inside a disabled `<fieldset>` takes the taf's fill** (`gaps2.e2e.test.js`). `page.js` checks the field's own
-  `disabled` attribute, which is false there; it should check `:disabled`.
-- **A `readonly` field takes the taf's fill** (`gaps2.e2e.test.js`). `page.js` has no read-only check.
-- **A disabled `<option>` is selected** (`gaps2.e2e.test.js`). `page.js` finds the option without looking at
-  `option.disabled`.
-- **`check` with `unchecked` on a checked radio answers ok, though nothing changed** (`gaps2.e2e.test.js`). A click never
-  unchecks a radio, so the taf is told it did something it didn't.
-
 None.
+
+Fixed in 0.2.20 (`gaps2.e2e.test.js`): **a page's `alert` or `confirm` as it loads reached Chromium as a real dialog**: a run's
+own tabs now load under a sandbox with no `allow-modals`, a response header Chrome adds for that tab alone, so Blink drops the
+call from the page's first byte (the at-load confirm test now asserts the page's own answer is no and nothing reached Chromium;
+the read can't say the page asked). **A field in a disabled `<fieldset>`, a read-only field and a disabled `<option>` took the
+taf's act**, and **`unchecked` on a checked radio answered ok**: refused now (`disabled`, `bad_step`). Added: on one site in one
+run, the person's own tab still gets its real confirm at load; a frame that sets `top.location` (as a 3-D Secure frame does)
+still works; and two findings, logged rather than asserted: the person's own typed address in a run's own tab may still load
+sandboxed (the sandbox comes off as their navigation starts, but Chrome doesn't wait), and a page the run loaded stays sandboxed
+after the run lets its tab go.
 
 Fixed in 0.2.19: **a link to an address, clicked in the person's joined tab, answered `site_not_listed`**
 (`fence219.e2e.test.js`): `page.js` `offFence()` had no branch for an address, a local name, user info or a name not in ASCII.

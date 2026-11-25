@@ -6,7 +6,7 @@
 
 import { test, before, after, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { playwright, start, newRun, ref, until, tabAt, runState, tabInfo, inWorker } from "./harness.mjs";
+import { playwright, start, newRun, ref, until, tabAt, runState, tabInfo, rulesOf, inWorker } from "./harness.mjs";
 import { joining } from "./joining.mjs";
 
 const skip = !playwright;
@@ -59,10 +59,7 @@ test("a disabled button: the taf's click is refused `disabled`, and nothing happ
   await h.fromPanel({ type: "stop", run: c.run });
 });
 
-test("a field in a disabled fieldset: the taf's fill is refused `disabled`, and the field stays empty", {
-  skip,
-  todo: "page.js act checks el.disabled, the field's own attribute, which is false for an input inside <fieldset disabled>: the browser disables it (it matches :disabled, the person can't type there), but the taf's fill sets its value and fires input. The check should be el.matches(':disabled').",
-}, async () => {
+test("a field in a disabled fieldset: the taf's fill is refused `disabled`, and the field stays empty", { skip }, async () => {
   const c = await controls("fieldset");
   const r = await c.act({ kind: "fill", ref: ref(c.page, "Locked name"), value: "typed by the taf" });
   const value = await c.tab.inputValue("#fs");
@@ -72,10 +69,7 @@ test("a field in a disabled fieldset: the taf's fill is refused `disabled`, and 
   assert.equal(r.error.code, "disabled");
 });
 
-test("a read-only field: the taf's fill is refused, and its value stays as the page set it", {
-  skip,
-  todo: "page.js act has no read-only check: a fill of <input readonly> sets its value and fires input, where the person can't type at all. It should be refused as `disabled` is (el.readOnly, or el.matches(':read-only') for a field).",
-}, async () => {
+test("a read-only field: the taf's fill is refused, and its value stays as the page set it", { skip }, async () => {
   const c = await controls("readonly");
   const r = await c.act({ kind: "fill", ref: ref(c.page, "Read-only code"), value: "changed by the taf" });
   const value = await c.tab.inputValue("#ro");
@@ -84,10 +78,7 @@ test("a read-only field: the taf's fill is refused, and its value stays as the p
   assert.equal(r.ok, false);
 });
 
-test("an option that isn't there is `option_unknown`; a disabled option is refused too, and the choice stays", {
-  skip,
-  todo: "page.js select finds the option by its text or value without looking at option.disabled: a disabled option the person can't choose is selected, and change fires. It should be refused (option_unknown, or disabled).",
-}, async () => {
+test("an option that isn't there is `option_unknown`; a disabled option is refused too, and the choice stays", { skip }, async () => {
   const c = await controls("options");
   const unknown = await c.act({ kind: "select", ref: ref(c.page, "Size"), value: "Huge" });
   assert.equal(unknown.ok, false);
@@ -99,10 +90,7 @@ test("an option that isn't there is `option_unknown`; a disabled option is refus
   assert.equal(locked.ok, false);
 });
 
-test("a radio: `check` chooses it; `unchecked` on the checked one is refused, since a click can't uncheck a radio", {
-  skip,
-  todo: "page.js check presses a checked radio for `unchecked` (el.checked !== false), but a click never unchecks a radio: nothing changes and the act answers ok, so the taf is told it did what it didn't. A radio's `unchecked` should be refused (bad_step).",
-}, async () => {
+test("a radio: `check` chooses it; `unchecked` on the checked one is refused, since a click can't uncheck a radio", { skip }, async () => {
   const c = await controls("radio");
   const express = await c.act({ kind: "check", ref: ref(c.page, "Express"), value: "checked" });
   assert.equal(express.ok, true, JSON.stringify(express.error));
@@ -164,10 +152,7 @@ test("planque's stop of a run this Chrome doesn't hold changes nothing", { skip 
 
 // ---- 10. Dialogs as a page loads, and "leave this page?" ----
 
-test("an alert a page raises as it loads never reaches Chromium, nor holds the open", {
-  skip,
-  todo: "runner.js installs the dialog guard (installDialogGuard, world MAIN) with scripting.executeScript from webNavigation.onCommitted, after the document has started: a page's own inline script runs first, so its alert or confirm as it loads reaches Chromium as a real dialog, blocking the page until answered (here the harness accepts it, so the page's confirm is answered yes). docs/chrome.md says the guard goes in 'as each document starts'; that needs a content script registered at document_start in the MAIN world (scripting.registerContentScripts, for the run's sites), not onCommitted.",
-}, async () => {
+test("an alert a page raises as it loads never reaches Chromium, nor holds the open", { skip }, async () => {
   const dialogs = h.dialogs.length;
   const run = newRun("alert-load");
   started.add(run);
@@ -178,10 +163,7 @@ test("an alert a page raises as it loads never reaches Chromium, nor holds the o
   await h.fromPanel({ type: "stop", run });
 });
 
-test("a confirm a page raises as it loads is answered no, never reaches Chromium, and the read says the page asked", {
-  skip,
-  todo: "runner.js installs the dialog guard (installDialogGuard, world MAIN) with scripting.executeScript from webNavigation.onCommitted, after the document has started: a page's own inline script runs first, so its alert or confirm as it loads reaches Chromium as a real dialog, blocking the page until answered (here the harness accepts it, so the page's confirm is answered yes). docs/chrome.md says the guard goes in 'as each document starts'; that needs a content script registered at document_start in the MAIN world (scripting.registerContentScripts, for the run's sites), not onCommitted.",
-}, async () => {
+test("a confirm a page raises as it loads is answered no, never reaches Chromium, and the read says the page asked", { skip }, async () => {
   const dialogs = h.dialogs.length;
   const run = newRun("confirm-load");
   started.add(run);
@@ -190,7 +172,9 @@ test("a confirm a page raises as it loads is answered no, never reaches Chromium
   const tab = await until(() => tabAt(h, url), "the run's tab");
   assert.equal(await tab.textContent("#out"), "refused", "the page's confirm was accepted");
   assert.deepEqual(h.dialogs.slice(dialogs), [], "a dialog reached Chromium");
-  assert.ok(r.page.dialog, "the read says the page asked: " + JSON.stringify(Object.keys(r.page)));
+  // Since 0.2.20 the tab's own sandbox (no allow-modals) drops the call before any script of the extension's is in the page, so
+  // the read can't say the page asked as it loaded; a dialog raised later, once the guard is in, is still told.
+  assert.equal(r.ok, true, JSON.stringify(r.error));
   await h.fromPanel({ type: "stop", run });
 });
 
@@ -314,4 +298,86 @@ test("after the person takes their tab back, the bar there no longer says it's t
 
   await h.fromPanel({ type: "stop", run });
   await until(async () => (await badge()) === "", "the badge cleared once no run is live");
+});
+
+
+// ---- 0.2.20: the sandbox of a run's own tabs (no allow-modals) ----
+
+test("on one site in one run: the person's own tab gets its real confirm at load; the run's tab gets no, and no dialog reaches Chromium", { skip }, async () => {
+  const url = h.sites.url("shop.test", "/at-load-confirm?case=pair");
+  const run = newRun("pair");
+  started.add(run);
+  const dialogs = h.dialogs.length;
+  await open(run, url);
+  const tab = await until(() => tabAt(h, url), "the run's tab");
+  assert.equal(await tab.textContent("#out"), "refused");
+  assert.deepEqual(h.dialogs.slice(dialogs), [], "nothing reached Chromium from the run's tab");
+  // The person's own tab, on the same page, while the run lives: their dialog is theirs.
+  const own = await h.context.newPage();
+  const mine = h.sites.url("shop.test", "/at-load-confirm?case=pair-own");
+  await own.goto(mine);
+  assert.deepEqual(h.dialogs.slice(dialogs).map((d) => [d.type, d.message]), [["confirm", "Stay signed in?"]], "the person's own confirm reached them");
+  assert.equal(await own.textContent("#out"), "accepted", "answered by them (the harness accepts)");
+  await own.close();
+  await h.fromPanel({ type: "stop", run });
+});
+
+// A finding, logged for the decision: the sandbox comes off as the person's own navigation starts (onBeforeNavigate), but Chrome
+// sends the request without waiting for the extension, so the page they chose may still load sandboxed. Asserted: the tab is
+// theirs after, with no rule left, so their next load is their own.
+test("finding: an address the person types in the run's own tab on its site, with a confirm at load", { skip }, async () => {
+  const run = newRun("typed-sandbox");
+  started.add(run);
+  const url = h.sites.url("shop.test", "/article?case=typed-sandbox");
+  await open(run, url);
+  const tab = await until(() => tabAt(h, url), "the run's tab");
+  const tabId = (await runState(h, run)).tab;
+  const dialogs = h.dialogs.length;
+  const theirs = h.sites.url("shop.test", "/at-load-confirm?case=typed-sandbox");
+  await tab.goto(theirs);
+  console.log("FINDING the person's typed page in the run's own tab: its confirm at load answered " + JSON.stringify(await tab.textContent("#out")) + ", dialogs that reached Chromium " + JSON.stringify(h.dialogs.slice(dialogs).map((d) => d.type)));
+  await until(async () => (await tabInfo(h, tabId)).groupId === -1, "the tab given to the person", 5000);
+  assert.deepEqual(await rulesOf(h, tabId), [], "no rule left on their tab: their next load is their own");
+  const next = h.dialogs.length;
+  await tab.goto(theirs + "&next");
+  assert.deepEqual(h.dialogs.slice(next).map((d) => d.type), ["confirm"], "their next page's confirm reaches them");
+  await h.fromPanel({ type: "stop", run });
+});
+
+test("a frame that sends the run's own tab to a granted page (as a 3-D Secure frame does) still can, under the sandbox", { skip }, async () => {
+  const run = newRun("frametop");
+  started.add(run);
+  const r = await open(run, h.sites.url("shop.test", "/at-load-frametop?case=frametop"));
+  const tabId = (await runState(h, run)).tab;
+  await until(async () => String((await tabInfo(h, tabId)).url).includes("/article?case=frametop-done"), "the tab at the page the frame sent it to", 8000);
+  assert.ok(r.verified);
+  await h.fromPanel({ type: "stop", run });
+});
+
+// Findings, measured and logged for the decision, not asserted: loads the header may not reach, and a tab given back.
+test("findings: a confirm at load from the HTTP cache, and on a page given to the person without a new load", { skip }, async () => {
+  const say = (what, value) => console.log("FINDING " + what + ": " + JSON.stringify(value));
+  // HTTP cache: the same cacheable page loaded twice in the run's own tab.
+  const run = newRun("cached");
+  started.add(run);
+  const url = h.sites.url("shop.test", "/at-load-confirmcached?case=cached&bfcache=1");
+  await open(run, url);
+  const tab = await until(() => tabAt(h, url), "the run's tab");
+  say("first load, run's own tab: the page's confirm answered", await tab.textContent("#out"));
+  const dialogs = h.dialogs.length;
+  const asked = h.sites.hits.filter((x) => x.includes("case=cached")).length;
+  await open(run, url + "&again");
+  await open(run, url);
+  const again = await until(() => tabAt(h, url), "the run's tab again");
+  say("second load of the same address: asked of the server again", h.sites.hits.filter((x) => x.includes("case=cached")).length > asked);
+  say("second load: the page's confirm answered", await again.textContent("#out"));
+  say("second load: dialogs that reached Chromium", h.dialogs.slice(dialogs).map((d) => d.type));
+  // A page the run's own tab shows when it's given to the person by their click (the commit gives the tab back; the page shown
+  // after it is the new one), versus the page still showing: confirm() on the page the run loaded, after the run let it go.
+  await h.fromPanel({ type: "stop", run });
+  await until(async () => (await runState(h, run)).tabs.length === 0, "the run's tabs let go", 5000);
+  const before = h.dialogs.length;
+  const answered = await again.evaluate(() => confirm("Still sandboxed?")).catch((e) => "threw: " + e.message);
+  say("after the run ended, confirm() on the page it had loaded answers", answered);
+  say("after the run ended: dialogs that reached Chromium", h.dialogs.slice(before).map((d) => d.type));
 });
