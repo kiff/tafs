@@ -581,6 +581,24 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   (fixed in 145). Signed out, or an ask tafs cloud
   doesn't give this person: nothing is put. A message to a taf is put too: the watch takes it into that taf's chat, open or
   kept, never its Inbox.
+- **The phone takes the watch's pushes, alerts on or off** (`AppModel.watchUsed`, `syncBackgroundPush`; `WatchBackgroundPushTest`).
+  The first request the watch makes in a sign-in marks the phone as serving it (`tafs.watch-served`, cleared at sign-out). From
+  then on a phone whose alerts are off registers with tafs cloud for background pushes only (`POST /v1/push` with
+  `alerts: false`, no alert target): `taf_chat`, `watch_ask` and `watch_inbox` reach it with tafs closed, and no alert ever
+  shows. Firebase delivers these data messages without the notification permission. Turning alerts off keeps this
+  registration; sign-out takes it back (`DELETE /v1/push/{token}`). Before Android 146, a phone with alerts off was never
+  registered, so a taf's answer to the watch waited for the watch to open tafs again (the owner's Galaxy S23, 25 Nov).
+- **The taf list, as the phone's moves** (`WatchTafs`; `WatchTafsTest`). Once the watch is served, the phone puts the list the
+  watch's Tafs page draws as one urgent item, `kept/tafs` (`{put_at, tafs, all_halted, zone, account_mark}`, the fields of the
+  `tafs` reply), whenever it changes: a sign-in, a taf added, removed, paused, resumed or halted, a name changed. Only on a
+  change, compared with the last put, never on a timer; never before the list was read, so it's never put empty. Sign-out
+  drops it with the rest.
+- **The watch's reads answer within its 10 s** (`WatchRelay`; `WatchFastReadTest`). Holding a read, the phone answers Needs you
+  and the list from it in under a second (`FRESH_WAIT_MS`, 800 ms) and the fresh read lands for the next ask, and as
+  `kept/tafs`. A phone woken by the watch restores its session first, which reads tafs cloud and KIFF (15 s measured on a
+  Galaxy S23): the watch waits for it at most 7 s (`FIRST_READ_WAIT_MS`), then hears "not now" and keeps what it shows, while
+  the restore goes on for the next ask. Nothing read yet, or a list that couldn't be read, is "not now" too, never an empty
+  list or a count of 0.
 - **A taf's chat, as the phone's moves.** Once the watch has read a taf's chat (`taf-chat`), the phone keeps each change to it
   for the watch, as one item, `kept/taf-chat/{id}` (its last 30 messages, `ChatLine.KEPT`), so a chat open on the watch moves at
   once and a kept one follows. Two ways: while the phone's app runs, each change to its own thread (a message sent on the phone,
