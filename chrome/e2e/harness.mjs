@@ -82,9 +82,12 @@ export async function start({ pair = true, cloud = false, args = [], bfcache = f
   });
   h.cleanup.unshift(() => h.context.close());
   // A dialog that reaches Chromium is accepted here, so a page's confirm() the extension failed to answer would read as yes.
+  // `holdDialogs`: a test that has to see a dialog, then answer it itself, has it held open in `held` instead.
+  h.held = [];
   const watch = (p) => p.on("dialog", (d) => {
     h.dialogs.push({ type: d.type(), message: d.message(), url: p.url() });
-    d.accept().catch(() => {});
+    if (h.holdDialogs) h.held.push(d);
+    else d.accept().catch(() => {});
   });
   h.context.pages().forEach(watch);
   h.context.on("page", watch);

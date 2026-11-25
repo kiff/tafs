@@ -377,7 +377,7 @@ error = {code, detail?}      // detail never carries page text
 | Code | When |
 |---|---|
 | *(no answer)* | not planque's, not for this Chrome, expired, replayed, or malformed (`checkStep`): dropped unanswered, since 0.2.14 |
-| `bad_step` | a verified step the runner can't take: a malformed act, hand-over or offset, an op it doesn't know, or a run's sites that grow or aren't the phone's |
+| `bad_step` | a verified step the runner can't take: a malformed act, hand-over or offset, an op it doesn't know, a run's sites that grow or aren't the phone's, or `check` with `unchecked` on a checked radio (a click never unchecks one; 0.2.20) |
 | `bad_url` | not `https`, user info in the URL, or not a URL |
 | `address_private` | an IP address (in any form a browser reads), or a local name (`.local`, `.internal`, …) |
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
@@ -386,6 +386,7 @@ error = {code, detail?}      // detail never carries page text
 | `given_back` | the person moved the tab the run was on, one of theirs it joined (0.2.15) or one of the run's own (0.2.16): their Back or Forward, an address, a reload, their own click, a navigation the fence stopped. The tab was given to them as it is: the run's next read, act or hand-over, until it opens a page, in a tab of its own; also an act whose wait the person's move ended |
 | `no_back` | a `back` in a tab of the run's own with no page before in the run's trail for it, and any `back` in a joined tab (0.2.15) |
 | `ref_unknown` | the read has no such ref, or its element is gone, or it has become something else since the read: the element's tag, type, name, label, words and link target, and the words of the row it sits in, must be what the read saw |
+| `disabled` | the page made the element unusable (0.2.20): disabled, a disabled fieldset's included (`:disabled`), inside an `inert` part of the page, or `aria-disabled="true"` on it or around it; a fill of a read-only text field or text area; a choice of a list that's disabled, or in a disabled group (no change is told) |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
 | `secret_field` | a fill of a password or one-time-code field with a plain value, or a sealed value into a field its part doesn't fit |
 | `payment_step` | a fill of a card field, a click whose words or semantics pay or place an order, or any click on a checkout or payment page |
@@ -526,9 +527,14 @@ was done.
   navigation began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The end-to-end
   test `races.e2e.test.js` reproduces that load (one renderer for every page, the person's page busy).
 - **A run's tabs get two scripts:**
-  - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
-    reported, a confirm answers no, and a "leave this page?" handler is dropped.
+  - In the page's own world, once a document has committed (`webNavigation.onCommitted`): `dialogs.js`. From then on alert,
+    confirm and prompt stop blocking and are reported, a confirm answers no, and a "leave this page?" handler is dropped.
   - In the isolated world: `mask.js` and `page.js`.
+- **Open gap: a dialog a page raises as it loads.** The guard goes in once the page has committed, so a page's own inline
+  script comes first: an `alert` or `confirm` it raises as it loads reaches Chromium as a real dialog, and the run waits until
+  it's answered (`gaps2.e2e.test.js` pins this). A sandbox with no `allow-modals`, added as a response header for a run's own
+  tabs, closed it in a spike (the `chrome-sandbox-spike` branch) but doesn't ship: the person's own page opened in a run's tab
+  could still load sandboxed, and a page the run loaded stayed sandboxed after the run let its tab go.
 - **Every https site is granted at install, so nothing in a run asks Chrome for one.** The owner chose it (23 Nov: "closer to Claude in
   Chrome"), and Chrome asks once, when the extension is installed or updated to a manifest that widens it (an update that does is
   disabled until accepted, so `host_permissions` is only changed on purpose). **Chrome's permission is therefore no second gate.** What stops a taf

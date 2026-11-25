@@ -52,6 +52,7 @@ function doneKey(run) {
 /** How many fence rules a tab takes (`Runner.fence`), and their ids from a tab's first. */
 export const FENCE_RULES = 7 + SENSITIVE_LABELS_URLS.length;
 
+
 /** An address with user info (`https://x@bank.example/`), which `refuseURL` refuses outright and the label patterns can't see past. */
 const USER_INFO = "^https?://[^/?#]*@";
 

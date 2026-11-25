@@ -2639,3 +2639,4 @@ test("a taf's act that heads for a sensitive site in its own tab is site_blocked
   const refused = r.runs.get("run_1").steps.filter((x) => x.op === "navigate");
   assert.deepEqual(refused.map((x) => [x.url, x.error]), [["https://bank.shop.example/", "site_blocked"]]);
 });
+
