@@ -6934,13 +6934,19 @@ async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Dep
   if (active.some((r) => r.session === chat.id)) {
     throw new HTTPError(409, wordsIn(lang).chat_delete_busy);
   }
-  // Their reports of its answers, by the answers' ids as the thread names them, read before the chat goes.
-  const reported = deps.reports
-    ? (await conversation(me, taf, deps, chat).catch(() => undefined))?.messages.filter((m) => m.from === "taf").map((m) => reportKey(me.tenantID, me.subject, m.id))
-    : [];
-  if (reported === undefined) throw new HTTPError(503, wordsIn(lang).chat_delete_failed);
+  // Their reports of its answers go first, from the whole chat as kiff/agents keeps it (every answer, never the thread's
+  // last ones), by each answer's id as the thread names it (`<run>.<seq>`). One that can't be removed stops the delete,
+  // with nothing of the chat gone, so trying again finishes it: a chat never goes while a report of it stays.
+  if (deps.reports) {
+    const store = deps.reports.store;
+    const keys = events.filter((e) => e.kind === "agent_message" || e.kind === "report").map((e) => reportKey(me.tenantID, me.subject, `${e.run}.${e.seq}`));
+    const removed = await Promise.all(keys.map((key) => store.remove(key).then(() => true, (err) => {
+      console.error(`delete chat: a report wasn't removed: ${(err as Error).message}`);
+      return false;
+    })));
+    if (removed.includes(false)) throw new HTTPError(503, wordsIn(lang).chat_delete_failed);
+  }
   await agentsCall(() => deps.agents.deleteSession(me.tenantID, chat.id, ownerKey(me)));
-  await Promise.all(reported.map((key) => deps.reports!.store.remove(key).catch((err) => console.error(`delete chat: a report stays until it ends: ${(err as Error).message}`))));
   // What tafs cloud kept by this chat: best effort, each ends on its own (30 days at most) if a removal fails.
   const coach = deps.coach;
   if (coach) {
