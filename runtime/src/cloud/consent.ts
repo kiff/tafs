@@ -5,7 +5,7 @@
  * (`ai_consent_required`). The apps only draw the words and send the answer. A new `AI_CONSENT_VERSION` (the words
  * changed in substance) asks again.
  */
-import { AgentsError } from "./agents.js";
+import { type AISource, AgentsError } from "./agents.js";
 import type { CoachStore } from "./coach.js";
 import { type Lang, wordsIn } from "./words/index.js";
 
@@ -51,13 +51,29 @@ export async function aiConsentOf(store: CoachStore | undefined, tenant: string,
   return kept && !kept.withdrawn_at && kept.version === AI_CONSENT_VERSION && typeof kept.at === "string" ? { at: kept.at, version: kept.version } : undefined;
 }
 
-export function aiConsentView(consent: AIConsent | undefined, lang: Lang): AIConsentView {
+/**
+ * The consent's "Right now" line: the company kiff/agents runs turns on now, from kiff/agents itself, so it can't name
+ * another. None when it wasn't read, when a run may go to either of two (a fallback), or for a source with no line.
+ * Naming it is a fact the setting supplies, not new words: no version change.
+ */
+export function aiSourceLine(src: AISource | undefined, lang: Lang): string | undefined {
+  if (!src || src.fallback) return undefined;
   const w = wordsIn(lang);
+  if (src.source === "bedrock" && src.geo === "eu") return w.ai_consent_now_bedrock;
+  if (src.source === "anthropic") return w.ai_consent_now_anthropic;
+  return undefined;
+}
+
+/** What the apps draw. `now`, the "Right now" line (aiSourceLine), goes under the second line, which names who runs it. */
+export function aiConsentView(consent: AIConsent | undefined, lang: Lang, now?: string): AIConsentView {
+  const w = wordsIn(lang);
+  const lines = [...w.ai_consent_lines];
+  if (now) lines.splice(2, 0, now);
   return {
     given: consent !== undefined,
     ...(consent ? { at: consent.at } : {}),
     version: AI_CONSENT_VERSION,
-    words: { title: w.ai_consent_title, lines: [...w.ai_consent_lines], allow: w.ai_consent_allow, not_now: w.ai_consent_not_now,
+    words: { title: w.ai_consent_title, lines, allow: w.ai_consent_allow, not_now: w.ai_consent_not_now,
       withdraw: w.ai_consent_withdraw, given: w.ai_consent_given },
   };
 }

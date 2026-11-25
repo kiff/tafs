@@ -153,3 +153,60 @@ describe("the AI-data consent", () => {
     expect(readFileSync(new URL("../src/cloud/lambda.ts", import.meta.url), "utf8")).toMatch(/aiConsent: true/);
   });
 });
+
+// The consent names the company that runs the model now, read from kiff/agents itself (GET /ai/source), under the
+// line that says who may run it. Never a guess: unread, or with a fallback that could send a run to either, no line.
+describe("the consent's \"Right now\" line", () => {
+  const lines = async (w: World, language?: string) =>
+    (await call(w, "GET", "/v1/me/ai-consent", { token: "ana", ...(language ? { language } : {}) })).body.consent.words.lines as string[];
+  const withSource = (w: World, read: () => Promise<{ source: string; fallback?: string; geo?: string }>) => {
+    let reads = 0;
+    (w.agents.api as { aiSource?: unknown }).aiSource = async () => { reads++; return read(); };
+    return () => reads;
+  };
+
+  it("names Amazon Web Services in the EU while kiff/agents runs on Bedrock, under the second line", async () => {
+    const w = world();
+    const base = await lines(w);
+    withSource(w, async () => ({ source: "bedrock", geo: "eu" }));
+    const got = await lines(w);
+    expect(got).toHaveLength(base.length + 1);
+    expect(got[1]).toBe(base[1]);
+    expect(got[2]).toBe("Right now: Amazon Web Services, in the EU.");
+    expect(got.slice(3)).toEqual(base.slice(2));
+  });
+
+  it("names Anthropic itself on the Claude API, in the person's language", async () => {
+    const w = world();
+    withSource(w, async () => ({ source: "anthropic" }));
+    expect((await lines(w))[2]).toBe("Right now: Anthropic itself, in the United States and other countries.");
+    const w2 = world();
+    withSource(w2, async () => ({ source: "bedrock", geo: "eu" }));
+    expect((await lines(w2, "de"))[2]).toBe("Derzeit: Amazon Web Services, in der EU.");
+  });
+
+  it("shows no line when it can't be read, when a run may go to either of two, or for a source it has no words for", async () => {
+    for (const read of [
+      async () => { throw new Error("503 this server doesn't say where its turns run"); },
+      async () => ({ source: "anthropic", fallback: "bedrock" }),
+      async () => ({ source: "bedrock" }),
+      async () => ({ source: "vertex", geo: "eu" }),
+    ]) {
+      const w = world();
+      const base = await lines(w);
+      withSource(w, read);
+      expect(await lines(w)).toEqual(base);
+    }
+  });
+
+  it("is on the refusal's screen too, and read once for a while, not for each screen", async () => {
+    const w = world();
+    const reads = withSource(w, async () => ({ source: "bedrock", geo: "eu" }));
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Refund order 42" } });
+    expect(r.status).toBe(403);
+    expect(r.body.consent.words.lines[2]).toBe("Right now: Amazon Web Services, in the EU.");
+    await lines(w);
+    await lines(w);
+    expect(reads()).toBe(1);
+  });
+});

@@ -4,7 +4,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { type AgentDefinition, type AgentVersion, type Agents, type AISource, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers, membersOf } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, tafChatNotification, watchAskNotification, watchInboxNotification, reconcileDevices, ALERT_CAPABILITIES } from "./push.js";
@@ -43,7 +43,7 @@ import { maskedCodes } from "./page-codes.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone, givePageConsent, pageConsentOf, pageConsentView, withdrawPageConsent } from "./consent.js";
+import { AI_CONSENT_CODE, type AIConsent, type AIConsentView, aiConsentOf, aiConsentView, aiSourceLine, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone, givePageConsent, pageConsentOf, pageConsentView, withdrawPageConsent } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
@@ -243,7 +243,7 @@ export type AgentsAPI = Pick<Agents,
   "versions" | "switchVersion" | "checkTool" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" | "listFiles" | "readDeliveredFile" | "downloadDeliveredFile" | "deleteDeliveredFile" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
-  "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
+  "openTrial" | "openedTrial" | "trialMessage" | "endTrial"> & Partial<Pick<Agents, "aiSource">>;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -822,14 +822,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       if (method === "DELETE") await withdrawAIConsent(deps.coach, me.tenantID, me.subject, deps.now?.() ?? new Date());
       else {
         const given = await giveAIConsent(deps.coach, me.tenantID, me.subject, parseBody(event).version, deps.now?.() ?? new Date());
-        if (given === "stale") throw new HTTPError(409, "the consent's words changed: read them again", { consent: aiConsentView(undefined, lang) });
+        if (given === "stale") throw new HTTPError(409, "the consent's words changed: read them again", { consent: await consentView(undefined, lang, me.tenantID, deps) });
         // The account's first yes from someone who manages its tafs is what its tafs from before take.
         if (me.capabilities.includes("cards.manage")) await recordFirstYes(deps.coach, me.tenantID, me.subject, deps.now?.() ?? new Date());
       }
       // Their tafs follow at once: paused on a withdrawal, resumed (and what waited started) on a yes.
       if (deps.aiConsent) await settleConsent(deps, me.tenantID).catch((err) => console.error(`consent: settle: ${(err as Error).message}`));
     }
-    return { consent: aiConsentView(await aiConsentOf(deps.coach, me.tenantID, me.subject), lang) };
+    return { consent: await consentView(await aiConsentOf(deps.coach, me.tenantID, me.subject), lang, me.tenantID, deps) };
   }
   if (parts.length === 3 && parts[1] === "me" && parts[2] === "page-consent" && (method === "GET" || method === "POST" || method === "DELETE")) {
     // Coach reading the page in front (consent.ts): each person's own, given and withdrawn in the extension. It grants no
@@ -964,7 +964,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (!deps.coach) throw new HTTPError(503, "the consent can't be kept here");
     if (!await aiConsentOf(deps.coach, me.tenantID, me.subject)) {
       const lang = langOf(event);
-      throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: AI_CONSENT_CODE, consent: aiConsentView(undefined, lang) });
+      throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: AI_CONSENT_CODE, consent: await consentView(undefined, lang, me.tenantID, deps) });
     }
     await takeOver(deps.coach, me.tenantID, taf.id, me.subject, deps.now?.() ?? new Date());
     await resumeFromConsent(deps, me.tenantID, taf.id);
@@ -4946,7 +4946,35 @@ async function requireAIConsent(event: HTTPEvent, me: KIFFIdentity, deps: Deps):
   if (!deps.aiConsent) return;
   if (await aiConsentOf(deps.coach, me.tenantID, me.subject)) return;
   const lang = langOf(event);
-  throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: "ai_consent_required", consent: aiConsentView(undefined, lang) });
+  throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: "ai_consent_required", consent: await consentView(undefined, lang, me.tenantID, deps) });
+}
+
+/** How long a read of where kiff/agents runs turns is kept: a switch shows within this. A failed read is tried again sooner. */
+export const AI_SOURCE_KEPT_MS = 5 * 60_000;
+const AI_SOURCE_RETRY_MS = 30_000;
+const aiSources = new WeakMap<object, { until: number; src: AISource | undefined }>();
+
+/**
+ * Where kiff/agents runs new turns, read from kiff/agents itself (never a setting of tafs cloud's own, so the two can't
+ * drift) and kept a few minutes per process. Unreadable is undefined: the consent then shows no "Right now" line.
+ */
+async function aiSourceNow(deps: Deps, tenant: string): Promise<AISource | undefined> {
+  const read = deps.agents.aiSource;
+  if (!read) return undefined;
+  const now = (deps.now?.() ?? new Date()).getTime();
+  const kept = aiSources.get(deps.agents);
+  if (kept && kept.until > now) return kept.src;
+  const src = await read.call(deps.agents, tenant).catch((err: unknown) => {
+    console.error(`consent: where turns run: ${(err as Error).message}`);
+    return undefined;
+  });
+  aiSources.set(deps.agents, { until: now + (src ? AI_SOURCE_KEPT_MS : AI_SOURCE_RETRY_MS), src });
+  return src;
+}
+
+/** The consent's view, with the "Right now" line when kiff/agents says where it runs turns. */
+async function consentView(consent: AIConsent | undefined, lang: Lang, tenant: string, deps: Deps): Promise<AIConsentView> {
+  return aiConsentView(consent, lang, aiSourceLine(await aiSourceNow(deps, tenant), lang));
 }
 
 /**

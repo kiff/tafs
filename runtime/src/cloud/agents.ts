@@ -488,6 +488,12 @@ export interface FileQuery {
   after?: string;
 }
 
+/**
+ * Where kiff/agents runs new turns: `source` ("anthropic" or "bedrock"), `fallback` when a run may go elsewhere
+ * instead, and `geo` when the source keeps to one place ("eu").
+ */
+export interface AISource { source: string; fallback?: string; geo?: string }
+
 /** Where the app uploads a file's bytes: a PUT to url with headers, sent as given, until expires. */
 export interface Upload {
   url: string;
@@ -1063,6 +1069,11 @@ export class Agents {
   /** The agent's halt over its account's, or the account's own. */
   halted(tenant: string, agent?: string): Promise<AgentsHalt> {
     return this.call("GET", tenant, agent ? ["agents", agent, "halt"] : ["halt"]);
+  }
+
+  /** Where new runs' turns go, as kiff/agents is configured (its `GET /ai/source`): for the AI consent's "Right now" line. */
+  aiSource(tenant: string): Promise<AISource> {
+    return this.call("GET", tenant, ["ai", "source"]);
   }
 
   // Schedules.
