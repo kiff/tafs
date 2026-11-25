@@ -654,15 +654,30 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
 
 - **Its group says so.** The run's tab group is titled "tafs · Rae is working" (`working`, in every language) and is orange for
   as long as the run lives; its end turns it grey, "tafs · Rae is done" (`group_done`, `Runner.doneTitle`; `Runner.workingTitle` while it works).
-- **Where it acts, a moment first.** Before an act on a ref (a click, a fill, a select, a tick, a key, a scroll to it), the
-  element is outlined in amber for half a second (`OUTLINE_MS`, Show me's outline), after the act's picture so the outline
-  isn't in it; the act takes it away. Back and a scroll of the page name no ref and outline nothing. The outline lets every
-  pointer through, so it never stands in the act's way.
-
+- **The page shows it works** (0.2.23, `src/signs.js`, `Runner.syncSigns`). While a run works in a tab, that tab glows amber
+  round its edges; not while the run is paused, and never on any other tab. Each read shows the pointer saying it reads
+  (`pointer_read`, "Reading"). **Before an act on a ref** (a click, a fill, a select, a tick, a key, a scroll to it), the
+  element is brought into view, outlined in amber, and the pointer moves to its middle with what the taf does there
+  (`pointer_<kind>`: "Clicking", "Typing", "Choosing", "Ticking", "Pressing a key", "Scrolling"), for half a second
+  (`OUTLINE_MS`), after the act's picture, so neither is in it. The act takes the outline away; the pointer stays where it acted
+  until the next read or act. Back and a scroll of the page name no ref and show none of it.
+  - **Drawn, never done.** The pointer is a picture: no real mouse moves, nothing is focused. Glow, outline and pointer let every
+    pointer through (`pointer-events: none`), the page's and the person's.
+  - **The act lands where the pointer is, or nowhere.** The pointer goes to the element the act will resolve (`TafsPage.aim`,
+    the same ref and print as the act's own check). If that element has moved by the time of the act, or isn't the one pointed
+    at, the act is refused `page_changed` and the taf reads again.
+  - **Reduced motion:** with `prefers-reduced-motion`, nothing moves: the glow doesn't breathe, and the pointer is simply at its target.
+  - **Gone at every end.** A pause (the person's, or the run's own), Stop, a run that's done, and a tab the person takes back take
+    every sign away at once, with the outline. A worker that starts again holds no run, so it takes the signs and the bar off
+    every page; a page whose extension was reloaded or removed takes them off by itself.
+  - No `debugger` permission, and none of Chrome's "started debugging this browser" bar: the signs are drawn by the
+    extension's own content script.
 - **A floating bar, on the page in front of every window** (`src/bar.js`, `Runner.syncBars`). While a run lives, the tab in
-  front of each normal window shows a small bar of the extension's own, floating at the foot of the page: who is working
-  ("Rae is working", `working`; "Rae is paused", `bar_paused`), **Go to its tab** (`bar_go`, on any tab but the run's own),
-  **Pause** or **Resume**, and **Stop**. On a run's own tab it's that run's; elsewhere, the first live run's. It follows the
+  front of each normal window shows a small bar of the extension's own. **On the run's own tab it sits at the top** and says
+  who works there ("Rae is working here", `working_here`, 0.2.23; "Rae is paused", `bar_paused`), with **Pause** or
+  **Resume** and **Stop**. **On any other tab it sits at the foot**: "Rae is working" (`working`), **Go to its tab**
+  (`bar_go`), Pause and Stop, for the first live run. It's one control, not two: the "working here" pill and the bar are the
+  same element. It follows the
   tab in front (a tab or window change, a page that loads again) and goes from every tab when the last run ends. Only https
   tabs, which the extension may reach; Chrome's own pages are left alone. Nothing is read from those tabs: the bar is drawn
   in them, and that's all. No new permission: `scripting` on `https://*/*` was already granted.
@@ -678,13 +693,18 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   state is kept until planque answers `run_state_kept`, or `run_state_refused` with a code; `not_kept` waits for the next
   welcome, as a hand-over's answer does. Answers are matched to what was sent in order, so an answer to a Pause never drops
   the Resume sent after it. **`stopped` is final:** a run stopped or swept never says `working` again.
-- **The page can't use it.** The bar lives in a closed shadow root: the page can't read or restyle its words or reach its
-  buttons. Only a real press (`isTrusted`) counts; what it sends names its run, the service worker takes it only from the
+- **The page can't use it.** The bar and the signs live in closed shadow roots, each on a plain `div` with no name, class or
+  attribute of ours (0.2.23; the bar's was `tafs-working-bar`): the page can't read or restyle their words, reach the bar's
+  buttons, or find either by a selector. Only a real press (`isTrusted`) counts; what it sends names its run, the service worker takes it only from the
   extension's own content script in a tab, and the runner acts only on a run it holds and that still lives
   (`Runner.barPress`). A press on it is not the person's input that pauses a run. A read never includes it, and an act's "is
-  it on top" check looks through it (by its element, `tafs-working-bar`), so it never blocks the taf's click on what's under
-  it. A page that removes the bar's element gets it back while the run works. It can still hide it, as it can any page
+  it on top" check looks through it (by the element itself, never by a name a page could copy), so it never blocks the taf's click on what's
+  under it. A page that removes the bar's element gets it back while the run works. It can still hide it, as it can any page
   content: the panel, the toolbar's badge and the tab's group still show the run.
+- **Where Stop is trusted.** A page can draw a look-alike of the bar or the glow, and nothing can stop it drawing one. So none
+  of them is what proves a taf works, and their words never say more than who works there (never that the page is safe). The
+  side panel (the toolbar's tafs button opens it), the toolbar's badge and the tab's group are what a page can't draw: the
+  panel's Stop is the one to trust.
 
 ## Masking
 

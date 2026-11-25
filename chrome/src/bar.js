@@ -1,17 +1,16 @@
 // The floating bar (docs/chrome.md, "While a taf works"): while a taf works in this Chrome, the tab in front of each window
-// shows a small bar of the extension's own, floating at the foot of the page: who is working ("Rae is working"), "Go to its
-// tab" (on any tab but the run's own), Pause or Resume, and Stop. It's put in only while a run lives, and taken away when the
-// last one ends.
+// shows a small bar of the extension's own: on the run's own tab, at the top, who is working there ("Rae is working here"),
+// Pause or Resume, and Stop; on any other tab, at the foot, "Rae is working", Go to its tab, Pause and Stop. It's put in only
+// while a run lives, and taken away when the last one ends.
 //
-// It sits in a closed shadow root, so the page can't read, restyle or press it; a read never includes it, and an act's "is it on
-// top" check looks through it (page.js). Only a real press (`isTrusted`) counts, and what it sends names the run: the service
+// It sits in a closed shadow root on a plain element with no name, class or attribute of ours, so the page can't read, restyle,
+// press or find it by a selector; a read never includes it, and an act's "is it on top" check looks through it (page.js). Only a real press (`isTrusted`) counts, and what it sends names the run: the service
 // worker checks it came from the extension's own content script, and the runner acts only on a run it holds. The page can
 // remove the element: while the bar should show, it's put back.
 
 ((root) => {
   if (root.TafsBar) return;
 
-  const TAG = "tafs-working-bar";
   let host = null;
   let watch = null;
   let parts = null;
@@ -38,14 +37,15 @@
   }
 
   function make() {
-    host = document.createElement(TAG);
+    host = document.createElement("div");
     const shadow = host.attachShadow({ mode: "closed" });
     const style = document.createElement("style");
     style.textContent =
-      ":host{all:initial;position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483647;pointer-events:none}" +
-      ".pill{pointer-events:auto;display:flex;align-items:center;gap:8px;max-width:min(92vw,560px);padding:6px 6px 6px 12px;" +
+      ":host{all:initial;position:fixed;inset:0;z-index:2147483647;pointer-events:none;display:block}" +
+      ".pill{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);pointer-events:auto;display:flex;align-items:center;gap:8px;max-width:min(92vw,560px);padding:6px 6px 6px 12px;" +
       "border-radius:999px;background:#1b1b1f;color:#fff;font:600 13px/1.2 system-ui,sans-serif;border:1.5px solid #F29A2E;" +
       "box-shadow:0 6px 24px rgba(0,0,0,.35)}" +
+      ".pill.top{top:12px;bottom:auto}" +
       ".dot{flex:none;width:9px;height:9px;border-radius:50%;background:#F29A2E;animation:p 1.2s ease-in-out infinite}" +
       ".paused .dot{background:#9a9aa3;animation:none}" +
       "@keyframes p{50%{opacity:.35}}" +
@@ -71,8 +71,9 @@
   }
 
   /**
-   * Shows the bar for run `s.run`: `s.words` (the extension's words, "Rae is working" or "Rae is paused"), `s.here` (this is the
-   * run's own tab, so no Go to its tab), `s.paused`, and `s.labels` {go, pause, resume, stop}. Anything else isn't a bar.
+   * Shows the bar for run `s.run`: `s.words` (the extension's words, "Rae is working here", "Rae is working" or "Rae is paused"),
+   * `s.here` (this is the run's own tab: no Go to its tab, and the bar sits at the top), `s.paused`, and `s.labels` {go, pause,
+   * resume, stop}. Anything else isn't a bar.
    */
   function show(s) {
     const l = s && s.labels;
@@ -83,6 +84,7 @@
     if (!host) make();
     parts.words.textContent = s.words;
     parts.pill.classList.toggle("paused", !!s.paused);
+    parts.pill.classList.toggle("top", !!s.here);
     parts.go.textContent = l.go;
     parts.go.hidden = !!s.here;
     parts.toggle.textContent = s.paused ? l.resume : l.pause;
@@ -114,5 +116,5 @@
     return !!host && node === host;
   }
 
-  root.TafsBar = { show, hide, isOurs, TAG };
+  root.TafsBar = { show, hide, isOurs };
 })(globalThis);
