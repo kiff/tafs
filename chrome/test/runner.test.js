@@ -2,7 +2,7 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS, FENCE_RULES } from "../src/runner.js";
-import { SENSITIVE, SENSITIVE_LABELS_URL, NEVER_OPENED, refuseURL } from "../src/sites.js";
+import { SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED, refuseURL } from "../src/sites.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 import { Panels, joinFront, MARK_MS } from "../src/panels.js";
 
@@ -121,7 +121,7 @@ const FENCE = (granted, allowed = []) => [
   [1, "block", null],
   ...(granted.length ? [[2, "allow", granted]] : []),
   [3, "block", [...SENSITIVE.sites]],
-  [3, "block", SENSITIVE_LABELS_URL],
+  ...SENSITIVE_LABELS_URLS.map((p) => [3, "block", p]),
   ...(allowed.length ? [[4, "allow", allowed]] : []),
   [5, "block", [...NEVER_OPENED]],
   [5, "block", "^http://"],
@@ -716,13 +716,13 @@ test("a fenced tab's rule ids are small whatever the tab id is, a rule's id neve
   await r.handle(step());
   c.setNextTab(1_900_000_000);
   await r.handle(step({ run: "run_2", id: "op2" }));
-  assert.equal(added.length, 12, "six rules a tab with no sensitive site allowed (FENCE_RULES ids kept for each)");
+  assert.equal(added.length, 2 * (FENCE_RULES - 1), "a tab's rules but the allowance's, with no sensitive site allowed (FENCE_RULES ids kept for each)");
   assert.ok(added.every((id) => Number.isInteger(id) && id >= 1 && id <= 2 ** 31 - 1), "every rule id is a valid int32");
-  assert.equal(new Set(added).size, 12, "no id repeated across two tabs");
+  assert.equal(new Set(added).size, 2 * (FENCE_RULES - 1), "no id repeated across two tabs");
   const removals = c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules);
   assert.deepEqual(removals[0][1].removeRuleIds, [77, 78], "rules an earlier service worker left are cleared first");
   await r.stop("run_1");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, fenceIdsFrom(added.slice(0, 6)), "its own rules, not the other run's");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, fenceIdsFrom(added.slice(0, FENCE_RULES - 1)), "its own rules, not the other run's");
 });
 
 test("a window that can't be set up (the fence refuses) is closed, not left open and blank, and the step says why", async () => {
@@ -2157,7 +2157,7 @@ test("an act the page says would leave the run's sites is refused before it fire
   c.setAct({ ok: false, code: "site_not_listed", url: "https://elsewhere.example/ask" });
   const out = await r.handle(started({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }));
   assert.equal(out.error && out.error.code, "site_not_listed");
-  assert.deepEqual(seen[0][2], { fence: { granted: ["shop.example"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE_LABELS_URL, never: [...NEVER_OPENED] } }, "the page is given what the run's fence lets through");
+  assert.deepEqual(seen[0][2], { fence: { granted: ["shop.example"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE_LABELS_URLS, never: [...NEVER_OPENED] } }, "the page is given what the run's fence lets through");
   assert.ok(r.runs.get("run_1").steps.some((x) => x.op === "navigate" && x.url === "https://elsewhere.example/ask" && x.error === "site_not_listed"), "recorded as a refused move");
   assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "still the run's");
   assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/");
@@ -2576,10 +2576,12 @@ test("the fence's label pattern and sensitive() agree on every host", async () =
   const hosts = ["bank.test", "my-bank.example.com", "bank-of.example", "x.bank", "banking", "ebank.com", "bankrupt.com", "banks.com", "a.gov.uk", "gov",
     "governor.com", "irs.gov", "first-irs.example", "creditunion.example", "credit-union.example", "credit--union.example", "sante.fr", "santé.fr",
     "xn--sant-epa.fr", "health.example", "healthy.example", "x.medicaid", "news.test", "example.com", "b-a-n-k.com", "bank1.com"];
-  const re = new RegExp(SENSITIVE_LABELS_URL, "i");
+  const res = SENSITIVE_LABELS_URLS.map((p) => new RegExp(p, "i"));
+  const re = { test: (u) => res.some((x) => x.test(u)) };
   for (const h of hosts) {
     const host = new URL("https://" + h + "/").hostname;
     const labelled = SENSITIVE.labels.test(host);
+    assert.equal(re.test("https://" + host + "?q=1"), labelled, host + " with a query");
     assert.equal(re.test("https://" + host + "/x"), labelled, host);
     assert.equal(re.test("https://" + host + ":8443/"), labelled, host + " with a port");
     assert.equal(re.test("https://" + host), labelled, host + " with no path");

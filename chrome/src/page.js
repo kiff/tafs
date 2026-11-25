@@ -499,7 +499,7 @@
     if (!within(host, fence.granted)) return "site_not_listed";
     let labelled = false;
     try {
-      labelled = new RegExp(fence.labels, "i").test(url.href);
+      labelled = (fence.labels || []).some((p) => new RegExp(p, "i").test(url.href));
     } catch {
       labelled = true; // a pattern this page can't read: as sensitive, refused
     }

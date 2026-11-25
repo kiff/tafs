@@ -428,7 +428,7 @@ was done.
   2. allow the grant's sites as `refuseURL` takes them (`fenceDomains`: one site each, never a public suffix, a local name or
      an address);
   3. **block the sensitive sites:** `SENSITIVE.sites` by domain (and their subdomains), and any host with a label that names a
-     bank, a government or a health account (`SENSITIVE_LABELS_URL`, a pattern built from the very words `sensitive()` tests);
+     bank, a government or a health account (`SENSITIVE_LABELS_URLS`, patterns built from the very words `sensitive()` tests, split so each fits the memory Chrome gives a pattern);
   4. allow the sensitive sites the phone allowed by name, only within a granted site, and exactly that site and its subdomains;
   5. block Chrome's own pages and the Web Store (which no grant opens, even allowed), and plain `http`.
 

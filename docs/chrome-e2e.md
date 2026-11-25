@@ -231,6 +231,11 @@ yes, and fail the test.
   tab), and `record()` took the run's site from it. Since 0.2.17 a move the person made is never one of the run's steps, and the
   run's site comes only from its own pages.
 
+**The fence's sensitive-site patterns are ones this Chromium holds** (`fence.e2e.test.js`, 0.2.19): one pattern with every word
+was refused (`isRegexSupported`: `memoryLimitExceeded`), which would fail the fence of every run, so the words are split over a few,
+and each is checked in real Chromium. A fenced tab holds `RULES_PER_TAB` rules here (harness.mjs: runner.js `FENCE_RULES`, less the
+allowance's, as no grant here allows a sensitive site).
+
 **Chromium runs in English** (`--lang=en-US`, harness.mjs), whatever the computer's language: the panel's lines are checked word for word.
 
 ## Known bugs, as `todo` tests

@@ -8,7 +8,7 @@
 
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { playwright, start, newRun, ref, until, rulesOf, runState, tabInfo, fillSessionRules, unfillSessionRules } from "./harness.mjs";
+import { playwright, start, newRun, ref, until, rulesOf, runState, tabInfo, fillSessionRules, unfillSessionRules, RULES_PER_TAB } from "./harness.mjs";
 import { joining } from "./joining.mjs";
 import { PERSON_VALUE, PERSON_WORDS } from "./sites.mjs";
 
@@ -59,7 +59,7 @@ test("a run started from the panel reads the person's tab where it is, only when
   assert.equal(owner.url(), url);
   const tab = await tabInfo(h, second.tabId);
   assert.notEqual(tab.groupId, -1, "it joined the run's group");
-  assert.equal((await rulesOf(h, second.tabId)).length, 3, "fenced as a run's own tab");
+  assert.equal((await rulesOf(h, second.tabId)).length, RULES_PER_TAB, "fenced as a run's own tab");
   // A read while the run is on it reads it in place too.
   const read = await step({ op: "read", run, agent_run: second.agentRun });
   assert.equal(read.ok, true, JSON.stringify(read.error));
@@ -85,7 +85,7 @@ test("an open of another address goes to a tab of the run's own: the person's ta
   const own = await tabInfo(h, s.tab);
   assert.equal(own.url, other);
   assert.equal(own.groupId, (await tabInfo(h, tabId)).groupId, "in the same group");
-  assert.equal((await rulesOf(h, s.tab)).length, 3, "fenced before it loaded");
+  assert.equal((await rulesOf(h, s.tab)).length, RULES_PER_TAB, "fenced before it loaded");
   assert.equal(owner.url(), url, "the person's tab is where they left it");
   assert.equal((await tabInfo(h, tabId)).url, url);
 
@@ -376,7 +376,7 @@ test("a step of another agent run gives the person's tab back unread: out of the
   const run = newRun("other-run");
   const joined = await step({ op: "open", run, url, agent_run: agentRun });
   assert.equal(joined.ok, true, JSON.stringify(joined.error));
-  assert.equal((await rulesOf(h, tabId)).length, 3);
+  assert.equal((await rulesOf(h, tabId)).length, RULES_PER_TAB);
   await watchMoves();
 
   // A schedule, the phone or a later message: planque keeps the run, but its steps name another agent run.
@@ -425,7 +425,7 @@ test("after giving the person's tab back, the run's next open goes on in a tab o
     const own = await tabInfo(h, s.tab);
     assert.equal(own.url, url);
     assert.notEqual(own.groupId, -1, "in a group made again");
-    assert.equal((await rulesOf(h, s.tab)).length, 3, "fenced");
+    assert.equal((await rulesOf(h, s.tab)).length, RULES_PER_TAB, "fenced");
   } finally {
     await h.fromPanel({ type: "stop", run });
   }

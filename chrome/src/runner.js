@@ -8,7 +8,7 @@
 // pauses the run.
 
 import { RUN_STATES } from "./runstate.js";
-import { refuseURL, bareURL, joinRefusal, joinedRefusal, fenceDomains, SENSITIVE, SENSITIVE_LABELS_URL, NEVER_OPENED } from "./sites.js";
+import { refuseURL, bareURL, joinRefusal, joinedRefusal, fenceDomains, SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED } from "./sites.js";
 import { HAND_MAX_MS, validWords, withoutValues } from "./hand.js";
 
 /**
@@ -50,7 +50,7 @@ function doneKey(run) {
 }
 
 /** How many fence rules a tab takes (`Runner.fence`), and their ids from a tab's first. */
-export const FENCE_RULES = 7;
+export const FENCE_RULES = 6 + SENSITIVE_LABELS_URLS.length;
 
 /** Why the run's fence refuses [url], as `refuseURL` says it: `site_blocked` for a sensitive site or Chrome's own pages. */
 const offWhy = (run, url) => (refuseURL(url, run.sites, run.allowed) || { code: "site_not_listed" }).code;
@@ -58,7 +58,7 @@ const offWhy = (run, url) => (refuseURL(url, run.sites, run.allowed) || { code: 
 /** What the fence lets a tab reach, for page.js's check before an act (`offFence`): the same lists `Runner.fence` gives Chrome. */
 function fenceOf(run) {
   const { granted, allowed } = fenceDomains(run.sites, run.allowed);
-  return { granted, allowed, sensitive: [...SENSITIVE.sites], labels: SENSITIVE_LABELS_URL, never: [...NEVER_OPENED] };
+  return { granted, allowed, sensitive: [...SENSITIVE.sites], labels: [...SENSITIVE_LABELS_URLS], never: [...NEVER_OPENED] };
 }
 const fenceRange = (base) => Array.from({ length: FENCE_RULES }, (_, i) => base + i);
 
@@ -133,7 +133,7 @@ export class Runner {
     this.tabRun = new Map(); // tab id → run id
     this.doneStore = doneStore; // {get(), set(obj)}: the tabs each taf's last finished run left, kept where a stopped worker finds them again
     this.done = null; // doneKey → {name, tabs: [{id, url, joined?}], window: id | null, group: id | null}, loaded on first use
-    this.fenceIds = new Map(); // tab id → the first of its three fence rule ids
+    this.fenceIds = new Map(); // tab id → the first of its FENCE_RULES fence rule ids
     this.nextFence = 1;
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
     this.greying = new Map(); // doneKey → the mark of its finished run whose group turns grey after DONE_GRACE_MS (greyLater)
@@ -307,7 +307,7 @@ export class Runner {
    *   1. block every page and frame;
    *   2. allow the grant's sites, as `refuseURL` takes them (`fenceDomains`: one site each, never a local name or an address);
    *   3. block the sensitive ones: `SENSITIVE.sites` by domain, and any host with a label that names a bank, a government or a
-   *      health account (`SENSITIVE_LABELS_URL`, the same words `sensitive()` tests);
+   *      health account (`SENSITIVE_LABELS_URLS`, the same words `sensitive()` tests, over a few patterns Chrome can hold);
    *   4. allow the sensitive sites the phone allowed by name, only within the grant's;
    *   5. block Chrome's own pages and the Web Store, which no grant opens, and plain http.
    * A domain matches a site and its subdomains, as `within` does, so a grant of example.com never lets bank.example.com through,
@@ -318,8 +318,8 @@ export class Runner {
     const dnr = this.chrome.declarativeNetRequest;
     if (!dnr) return;
     if (dnr.isRegexSupported && this.labelsHeld === undefined) {
-      const said = await Promise.resolve(dnr.isRegexSupported({ regex: SENSITIVE_LABELS_URL })).catch(() => null);
-      this.labelsHeld = !!(said && said.isSupported);
+      const said = await Promise.all(SENSITIVE_LABELS_URLS.map((regex) => Promise.resolve(dnr.isRegexSupported({ regex })).catch(() => null)));
+      this.labelsHeld = said.every((x) => x && x.isSupported);
     }
     if (this.labelsHeld === false) throw Object.assign(new Error("Chrome can't hold the sensitive-site pattern"), { code: "browser_unavailable" });
     const ids = await this.ruleIds(tabId);
@@ -329,10 +329,10 @@ export class Runner {
     const rules = [{ id: ids[0], priority: 1, action: { type: "block" }, condition: on }];
     if (granted.length) rules.push({ id: ids[1], priority: 2, action: { type: "allow" }, condition: { ...on, requestDomains: granted } });
     rules.push({ id: ids[2], priority: 3, action: { type: "block" }, condition: { ...on, requestDomains: [...SENSITIVE.sites] } });
-    rules.push({ id: ids[3], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter: SENSITIVE_LABELS_URL } });
-    if (allowed.length) rules.push({ id: ids[4], priority: 4, action: { type: "allow" }, condition: { ...on, requestDomains: allowed } });
-    rules.push({ id: ids[5], priority: 5, action: { type: "block" }, condition: { ...on, requestDomains: [...NEVER_OPENED] } });
-    rules.push({ id: ids[6], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: "^http://" } });
+    if (allowed.length) rules.push({ id: ids[3], priority: 4, action: { type: "allow" }, condition: { ...on, requestDomains: allowed } });
+    rules.push({ id: ids[4], priority: 5, action: { type: "block" }, condition: { ...on, requestDomains: [...NEVER_OPENED] } });
+    rules.push({ id: ids[5], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: "^http://" } });
+    SENSITIVE_LABELS_URLS.forEach((regexFilter, i) => rules.push({ id: ids[6 + i], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter } }));
     await dnr.updateSessionRules({ removeRuleIds: ids, addRules: rules });
   }
 

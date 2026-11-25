@@ -167,6 +167,11 @@ export async function inWorker(h, func, arg) {
   return worker.evaluate(func, arg);
 }
 
+/** How many fence rules a run's tab holds here (runner.js `fence`): every one but the allowance's, as no grant here allows a sensitive site. */
+export { FENCE_RULES } from "../src/runner.js";
+import { FENCE_RULES as ALL_RULES } from "../src/runner.js";
+export const RULES_PER_TAB = ALL_RULES - 1;
+
 /** Chrome's declarativeNetRequest session rules, as the service worker reads them: the fences of the runs' tabs. */
 export function sessionRules(h) {
   return inWorker(h, () => chrome.declarativeNetRequest.getSessionRules());

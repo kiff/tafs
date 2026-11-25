@@ -832,9 +832,9 @@ test("an act whose link or form would leave the run's sites is refused before it
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
   await page.addScriptTag({ content: PAGE });
-  const { SENSITIVE, SENSITIVE_LABELS_URL, NEVER_OPENED } = await import("../src/sites.js");
+  const { SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED } = await import("../src/sites.js");
   // What the run's fence lets through (runner.js fenceOf): shop.example granted, paypal.com granted too, no sensitive site allowed.
-  const sites = { fence: { granted: ["shop.example", "paypal.com"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE_LABELS_URL, never: [...NEVER_OPENED] } };
+  const sites = { fence: { granted: ["shop.example", "paypal.com"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE_LABELS_URLS, never: [...NEVER_OPENED] } };
   const act = async (a, label, where = "links") => {
     const read = await page.evaluate(() => TafsPage.read());
     const all = [...read.links, ...read.controls, ...read.fields];

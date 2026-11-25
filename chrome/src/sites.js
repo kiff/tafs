@@ -113,15 +113,24 @@ export function sensitive(host) {
 }
 
 /**
- * `SENSITIVE.labels` as a pattern Chrome's fence can hold on a request's address (a declarativeNetRequest `regexFilter`, RE2): the
- * host, from just after `://` to its port or path, has a label that names a bank, a government or a health account, exactly as
- * `sensitive()` tests the host. Built from the label words of that one regex, so the two never drift; a test checks they agree.
+ * `SENSITIVE.labels` as patterns Chrome's fence can hold on a request's address (declarativeNetRequest `regexFilter`s, RE2): the
+ * host, from just after `://`, has a label that names a bank, a government or a health account, exactly as `sensitive()` tests the
+ * host (a label ends at a dot, a hyphen, the port, the path or the end). Built from the label words of that one regex, so the two
+ * never drift; a test checks they agree. Chrome holds a pattern only within a small memory budget (one with every word is refused,
+ * `memoryLimitExceeded`), so the words are split over a few patterns, each well inside it; any one matching blocks.
  * (`SENSITIVE.sites` go to the fence as domains: they match a site and its subdomains, as `within` does.)
  */
-export const SENSITIVE_LABELS_URL = (() => {
+export const SENSITIVE_LABELS_URLS = (() => {
   const words = /^\(\^\|\[\.-\]\)\((.*)\)\(\[\.-\]\|\$\)$/.exec(SENSITIVE.labels.source);
-  if (!words) throw new Error("SENSITIVE.labels changed shape: rebuild SENSITIVE_LABELS_URL");
-  return "^https?://(?:[^/?#:]*[.-])?(?:" + words[1] + ")(?:[.-][^/?#:]*)?(?::[0-9]+)?(?:[/?#]|$)";
+  if (!words) throw new Error("SENSITIVE.labels changed shape: rebuild SENSITIVE_LABELS_URLS");
+  const pattern = (ws) => "^https?://(?:[^/?#:]*[.-])?(?:" + ws.join("|") + ")(?:[.:/?#-]|$)";
+  const chunks = [[]];
+  for (const w of words[1].split("|")) {
+    const last = chunks[chunks.length - 1];
+    if (last.length && pattern([...last, w]).length > 110) chunks.push([w]);
+    else last.push(w);
+  }
+  return Object.freeze(chunks.map(pattern));
 })();
 
 /** Chrome's own pages and the Web Store, which no grant opens: for the fence too. */
