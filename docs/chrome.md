@@ -385,8 +385,14 @@ was done.
 
 ## Runs
 
+- **A run the person started from the side panel works in the tab in front of that panel's window** (0.2.12, below, "A taf
+  works where you are"). Every other run (a schedule, an event, one started from the phone or the watch, or one whose tab in
+  front can't join) opens as follows.
 - **A run opens in the window the owner is using,** as one background tab in a tab group, "tafs · Rae", in orange,
-  beside their tabs. Their active tab stays in front and the run never takes focus. **When the run ends, its tabs stay open** (the
+  beside their tabs. Their active tab stays in front and the run never takes focus. **One group per taf per window** (0.2.12,
+  `Runner.tafGroup`): when the taf's last "· done" group is still in the window its next run's tab lands in, that group says the
+  taf works again (renamed, amber) instead of a new one beside it; the new tab goes in first, then the earlier run's tabs are
+  dealt with as below, so the group isn't emptied (and ended by Chrome) on the way. **When the run ends, its tabs stay open** (the
   taf's close step, planque's `stop`, the person's Stop, the idle sweep): the person sees the page where the taf stopped and
   nothing opens and closes under them. **Each taf keeps only its latest finished run's tabs:** when that taf's next run opens, it closes the
   previous "· done" tabs (and a window of its own) first, so a taf's calls never pile up. **Only a tab still where the run left it, and not in front of the window the person is using, closes then;** one they moved on or are using stays, is dropped from the list, leaves the run's "· done" group if it's still in it, never a group of the person's own (Chrome ends a group once it's empty, so a person who watches each run doesn't collect one done group per run), and keeps a window of its own open with it. Unpairing closes them all. Which tabs are kept is held in `chrome.storage.session`
@@ -395,8 +401,9 @@ was done.
   by then, and a window of its own); so does a run that never loaded a page (a Stop while the tab is still being opened, or a window that
   couldn't be set up), since a blank tab is nothing to keep. When the window last used is private or a pop-up, or there is no normal window (the run
   never opens in a private window), the run gets a window of its own, opened without focus, and it stays with its tabs.
-- **The runner touches only tabs it opened.** It never lists the owner's tabs, and it ignores navigation events from
-  any other tab. A tab a run's page opens joins the run only on the run's sites; anything else is closed.
+- **The runner touches only tabs it opened,** and the one tab of the person's a run started from the panel joins (below). It
+  never lists the owner's tabs, and it ignores navigation events from any other tab. A tab a run's page opens joins the run only
+  on the run's sites; anything else is closed.
 - **A request off the run's sites never leaves.** As a run's tab opens, before it loads anything, the runner gives
   Chrome `declarativeNetRequest` session rules scoped to that tab: block every page and frame request, allow the run's
   sites (and the sensitive sites the phone allowed), and block plain `http`. So a link, a redirect or a form submit to
@@ -456,6 +463,48 @@ was done.
   phone's own allowance for that grant), and `window.open` off in a run's tabs. A run on a site its connection lists just runs.
 - **The toolbar says a taf is at work** (`coachchat.js` `actionBadge`, `actionTitle`): a mark (●) on the badge while a run is on, "!" while one waits on the person, nothing otherwise, the same in every language; its tooltip names who works, in the extension's words ("Rae is working"), and is the extension's name when none does. The side panel shows the taf, the site, the last steps, and Pause,
   Resume and Stop.
+
+### A taf works where you are
+
+From 0.2.12 a taf works in the person's own tab, as Claude's Chrome extension does, when the person started the work from the
+side panel (`src/panels.js`, `Runner.frontTab`).
+
+- **Which runs.** Only a run the person started from that window's side panel. A send from the panel (Coach's chat,
+  `coach_send`, or a taf's, `taf_send`) leaves a mark in the service worker: the panel's window, the tab in front of it then, and
+  the run tafs cloud's answer names (`run`). A run's first step joins that tab only if planque's signed step names the same run
+  (`agent_run`, read only from the step `checkStep` verified), within 2 minutes (`MARK_MS`), while that panel is open; the mark is
+  taken by that one run. A first step that comes before the send's answer waits for it, 5 s at most. A step with no `agent_run`
+  (a schedule, an event, the phone, the watch, and every step until planque sends the field) never joins: its run opens its own
+  tab, as above. The panel says it's open by holding a port named `panel` to the worker, with its window's id; a closed panel's
+  marks go with it.
+- **When.** At the run's first `open`. The tab joins the run's group (the taf's group in that window if there is one, else a new
+  one), is fenced before anything else, and the open navigates it, or reads it in place when it already shows that address. A
+  read before any open is `no_page`, as before. The run may open more tabs, always in the same group.
+- **Which tab, checked by the worker and then the runner at the moment it joins** (`joinFront`, `joinRefusal`): the page consent
+  (`pageConsentReady`, the check Coach's send makes) first, before the tab is looked at; then the tab must still be the active tab
+  of the panel's window (never another window's, so a tab dragged elsewhere since the send doesn't join), not pinned, not in a
+  group of the person's own, held by no other run, and its page and the address the open asks for must pass both gates: the run's
+  (`refuseURL`: the phone's signed sites, https only) and Coach's (`asideRefusal`: never a private tab, Chrome's pages or the Web
+  Store, a bank, payment, mail or health site, even one the phone allowed for the run, nor a site the person switched off). Any
+  of these failing, the run opens its own tab, as above.
+- **Checked again on every step** (`Runner.joinedNow`): the person may have moved the tab or switched its site off since. A read,
+  an act or a hand-over in a joined tab whose page no longer passes is refused with the gate's code (`site_not_listed`,
+  `site_blocked`, `bad_url`) and nothing runs in it. An `open` the person's tab may not show (an allowed sensitive site, a site
+  switched off) goes on in a tab of the run's own, in the same window and group, and the person's tab is left where it is.
+- **Fenced as a run's own tab.** The same `declarativeNetRequest` rules, the same `webNavigation` checks (a navigation off the
+  run's sites goes to a blank page, a pop-up off them is closed), the same dialog guard, the same read (`mask.js`, `page.js`: no
+  field values, passwords or card numbers, one-time codes masked). The person's typing, clicking or scrolling in it pauses the
+  run, as in any run's tab.
+- **Chrome follows the run.** When the run opens a page, its tab comes to the front of the panel's window, only while the panel is
+  open there; no window is raised or focused, and a run nobody started from the panel is never brought forward.
+- **Stop gives the tab back.** The person's Stop (the bar, the panel, or closing the run's last tab) does five things: the tab
+  leaves the group (`tabs.ungroup`); its fence rules go; the run forgets it (`tabRun`), so planque's next step is answered
+  `stopped` and never reaches it; its bar goes; and it stays open. **The extension never closes a joined tab:** not at unpairing
+  (it leaves the group), not when the run ends on its own (the idle sweep, the turn over, the close step, planque's `stop`: it
+  stays in the "· done" group, unfenced and the run's no more), and not when the taf's next run deals with the last run's tabs (it
+  leaves the group, unless it's the tab in front joining again).
+- **A group worked in again is no consent for its old tabs:** only the tab in front, checked as above, joins the new run; the
+  tabs left from earlier runs are the run's no more, and a step can't reach them.
 
 ## While a taf works on a page
 
@@ -749,6 +798,10 @@ Stop reading pages) and **Unpair this Chrome**; the chat screens hold only the c
 **Remove this taf** says it's removed on the phone: tafs cloud takes a removal only signed by the phone's approval key or a
 computer's passkey, which this Chrome has neither of.
 
+- **Work starts where you are** (0.2.12, "A taf works where you are" under Runs): the panel holds a `panel` port to the service
+  worker with its window's id while it's open (and connects again if the worker stopped), and each send from it, to Coach or to
+  a taf, carries the panel's window and the tab in front, so the run tafs cloud starts for that send may work in that tab. The
+  panel decides nothing of it: the worker checks the page consent and the runner checks the tab.
 - **Which tafs:** planque's list of this Chrome's live connections, `connections: [{grant, agent, name, sites}]`, comes in
   the relay's `welcome` and again on each change (`{type: "connections"}`, `readConnections`, at most 50). The panel offers
   each one that is one of the person's tafs (`GET /v1/tafs`, matched by `kiff_agent`, `tafsHere`), once each, with the one
@@ -910,6 +963,14 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 - **`runner.test.js`:** against a fake Chrome API. A run's tab opens in the background of the owner's window and only the run's own tab ids are touched; a window of its own is never focused. The owner's tabs are never listed.
   Off-site opens, navigations, pop-ups and restored pages are stopped. The guard runs before the page is touched. There
   are the pauses (failures, no progress, the owner), Stop, runs closed when idle, steps that never overlap, windows of a page's text, a checkout page that refuses every click, and a dialog's answer.
+  A run started from the panel joins the tab in front (fenced first, read through `page.js`, followed only while the panel is
+  open); a scheduled run, a step naming no run or another, an expired or used mark, another window, no page consent and every
+  refused tab get the run's own tab instead; every step checks the joined tab again; Stop's five guarantees; a joined tab never
+  closed by any end, the next run or unpairing; and the taf's group worked in again.
+- **`panels.test.js`:** the panel's port (only the extension's own page), the marks (the send's `run`, taken once, two minutes,
+  gone with the panel, a send still on its way waited for), the page consent asked only for a marked run and before the tab is
+  looked at, which tab may join (`joinRefusal`), and the worker's wiring. `protocol.test.js` checks `agent_run` is planque's
+  signed word.
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
   `ios/Tafs/KIFF/ChromePairing.swift`.
@@ -933,3 +994,5 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 - **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): a design, off. The extension keeps no sealed value; the vector and Android's card are built, off. planque's hold for a sealed fill, KIFF's taking the release with the answer, and iPhone and iPad's card are still to build ("The phone's release card").
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.
+- **planque naming the run in each step** (`agent_run`, inside what it signs: the kiff run that called the browser tool). Until
+  planque sends it, no run joins the person's tab and every run opens its own, as before 0.2.12 ("A taf works where you are").

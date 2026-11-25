@@ -161,8 +161,23 @@ function followTab(tabId) {
 
 chrome.windows.getCurrent().then((w) => {
   panelWindow = w.id;
+  openHere();
   return chrome.tabs.query({ active: true, windowId: w.id });
 }).then(([tab]) => tab && followTab(tab.id)).catch(() => {});
+
+// The service worker knows this panel is open, in this window, for as long as this port is (panels.js): a run the person starts
+// from here works in the tab in front, and Chrome follows it only while the panel is open. The worker may stop and drop the port;
+// the panel connects again.
+function openHere() {
+  let port;
+  try {
+    port = chrome.runtime.connect({ name: "panel" });
+  } catch {
+    return; // the extension was reloaded: this panel is gone with it
+  }
+  port.onDisconnect.addListener(() => setTimeout(openHere, 1000));
+  port.postMessage({ windowId: panelWindow });
+}
 
 chrome.tabs.onActivated.addListener(({ tabId, windowId }) => {
   if (panelWindow === null || windowId === panelWindow) followTab(tabId);
@@ -687,7 +702,7 @@ $("tafForm").onsubmit = async (e) => {
   showPending($("tafThread"), said);
   $("tafThread").append(workingLine(t("working", tafName())));
   toEnd();
-  const r = await send({ type: "taf_send", taf: to, words, attachments: files, clientID: crypto.randomUUID() }).catch(() => ({ error: "failed" }));
+  const r = await send({ type: "taf_send", taf: to, words, attachments: files, clientID: crypto.randomUUID(), tabId: activeTab, windowId: panelWindow }).catch(() => ({ error: "failed" }));
   if (r.error) {
     tafPending = null;
     if (tafId === to) {
