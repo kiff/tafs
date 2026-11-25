@@ -77,7 +77,7 @@ import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./bus
 import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
 import { briefDue, briefLaterKey, briefZoneKey, buildBrief, checkDecision, connectionDecision, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
 import { logDelivered, logPage, readLog } from "./missionlog.js";
-import { chromeBegan, chromeMayCall, chromeOf, markChromeChat } from "./chrome-chats.js";
+import { chromeBegan, chromeMayCall, chromeOf, chromeRunChats, chromeRunsOf, markChromeChat } from "./chrome-chats.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -135,6 +135,7 @@ import { chromeBegan, chromeMayCall, chromeOf, markChromeChat } from "./chrome-c
  *   DELETE /v1/tafs/{id}/chats/{session}  the person deletes one of their own chats for good (deleteChat)
  *   POST /v1/tafs/{id}/messages         {text, attachments?, session?, new_chat?, new_chat_after_handover?}: into the live chat, a chosen one, or a new one (a Coach chat that handed a taf over, a new one)
  *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
+ *   POST /v1/tafs/{id}/messages/{message}/report  {reason, note?, session?}: reports an answer of the taf's (reportRoute)
  *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
@@ -913,20 +914,54 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   const taf = await owned(me, parts[2] ?? "", deps);
   const action = parts[3];
-  // A Chrome sees only the chats begun in it (chrome-chats.ts): its lists, its live thread, a chat by its id, and where its
-  // messages go. A chat it didn't begin is 404, as one that isn't there.
+  // A Chrome sees the chats begun in it (chrome-chats.ts): its lists, its live thread, a chat by its id, and where its
+  // messages go; and, of a chat whose run worked in it (planque's record), only those runs' turns, which it reads and
+  // reports from but never writes to. Any other chat is 404, as one that isn't there.
   const chrome = chromeOf(me);
   if (chrome) {
     const began = (session: string) => chromeBegan(deps.coach, me, chrome, session);
+    let worked: Promise<Map<string, Set<string>>> | undefined;
+    const runChats = () => worked ??= chromeRunsOf(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event))
+      .then((runs) => chromeRunChats(deps.coach, deps.agents, me, taf, runs, deps.now?.() ?? new Date()));
+    // What the panel may read of a chat: all of one it began, or only its runs that worked here; undefined for none.
+    const may = async (session: string): Promise<{ runs?: ReadonlySet<string> } | undefined> => {
+      if (!session) return undefined;
+      if (await began(session)) return {};
+      const runs = (await runChats()).get(session);
+      return runs ? { runs } : undefined;
+    };
     const latest = async () => (await chats(me, taf, deps, false, began)).find((c) => !c.set_aside)?.session;
-    if (action === "chats" && method === "GET") return { chats: await chats(me, taf, deps, parts.length === 5, began) };
+    if (action === "chats" && method === "GET") {
+      const ran = await runChats();
+      const listed = async (session: string) => await began(session) || ran.has(session);
+      const turnsOf = (session: string) => ran.get(session);
+      // A chat it began is listed whole, even where a run also worked here (chromeBegan, read again per row).
+      const whole = new Set<string>();
+      await Promise.all([...ran.keys()].map(async (s) => { if (await began(s)) whole.add(s); }));
+      return { chats: await chats(me, taf, deps, parts.length === 5, listed, (session) => whole.has(session) ? undefined : turnsOf(session)) };
+    }
     if (action === "chats" && parts.length === 6 && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
     if (action === "chats" && parts.length === 5 && method === "DELETE" && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
-    if (action === "conversation" && parts.length === 5 && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
+    if (action === "conversation" && parts.length === 5 && method === "GET") {
+      const id = parts[4] ?? "";
+      const seen = await may(id);
+      if (!seen) throw new HTTPError(404, "no such chat");
+      if (seen.runs) {
+        // Only the turns of the runs that worked here: the message that started each, its steps and its answer.
+        const [only, titles] = await Promise.all([ownChat(me, taf, id, deps), titlesOf(event, me, taf, deps)]);
+        const { messages, components, held, drives, sessions, agreements } = await conversation(me, taf, deps, only, false, titles, langOf(event), seen.runs);
+        await markSigns(event, me, taf, components, deps, agreements);
+        const latest = await latestRun(me, taf, sessions, deps, langOf(event), seen.runs);
+        return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: null, ...(latest.failed ? { failed: latest.failed } : {}) };
+      }
+    }
     if (action === "conversation" && parts.length === 4) {
       const own = await latest();
       if (!own) return { messages: [], components: [], items: [], working: null };
       parts.push(own); // read as that chat
+    }
+    if (action === "messages" && parts.length === 6 && parts[5] === "report" && method === "POST") {
+      return reportRoute(event, me, taf, parts[4] ?? "", deps, { may });
     }
     if (action === "messages" && parts.length === 4 && method === "POST") {
       const body = parseBody(event);
@@ -3056,7 +3091,7 @@ export interface ThreadUsage {
   cost_micro_usd: number;
 }
 
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map(), lang: Lang = "en"): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; drives: ThreadDrive[]; sessions: Session[]; usage?: ThreadUsage; agreements: Map<string, ReturnType<typeof rulesAgreement>> }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map(), lang: Lang = "en", runs?: ReadonlySet<string>): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; drives: ThreadDrive[]; sessions: Session[]; usage?: ThreadUsage; agreements: Map<string, ReturnType<typeof rulesAgreement>> }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
   // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
@@ -3073,7 +3108,10 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     ...chats.slice(0, CHAT.chatsInThread),
   ];
   // Read as the person: their own and the jobs'. A door's chat is read as its own owner says.
-  const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id, readerOf(me, s)).catch(() => undefined)));
+  // `runs`: only those runs' events, by each event's own run (a Chrome's view of a run that worked in it): nothing of
+  // the chat outside them, an event with no run included.
+  const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id, readerOf(me, s))
+    .then((r) => (runs ? { ...r, events: r.events.filter((e) => runs.has(e.run)) } : r)).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
   const components: ThreadComponent[] = [];
   // Words written while a card waited, by where they were recorded: unless Coach showed that card again, they answered it.
@@ -3902,16 +3940,17 @@ function parkedOnDrive(r: Run): boolean {
   return open.length > 0 && open.every((q) => q.kind === "event" && q.wait?.grant === DRIVE_WAIT_GRANT);
 }
 
-async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps, lang: Lang = "en"): Promise<{ working: { session: string; run: string; parked?: true } | null; steering: Steering | null; capped?: Capped; stopped?: Stopped; failed?: Failed }> {
+async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps, lang: Lang = "en", runs?: ReadonlySet<string>): Promise<{ working: { session: string; run: string; parked?: true } | null; steering: Steering | null; capped?: Capped; stopped?: Stopped; failed?: Failed }> {
   const none = { working: null, steering: null };
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
   if (!latest) return none;
   // What the person wrote that waits in this chat for the taf to be done, whatever run is latest.
-  const held = await heldFor(me, taf, latest.id, deps).catch(() => undefined);
+  // `runs`: a Chrome's view of the runs that worked in it says only of those, and nothing the person wrote elsewhere.
+  const held = runs ? undefined : await heldFor(me, taf, latest.id, deps).catch(() => undefined);
   try {
     const read = await deps.agents.session(me.tenantID, latest.id, readerOf(me, latest));
     const run = read.events.at(-1)?.run;
-    if (!run) return none;
+    if (!run || (runs && !runs.has(run))) return none;
     const r = await deps.agents.getRun(me.tenantID, taf.id, run);
     // Times as the thread's are (milliseconds): kiff/agents writes nanoseconds, which the app can't read.
     let untaken = (r.steering ?? []).filter((m) => !m.taken).map(({ text, at }) => ({ text, at: iso(at) }));
@@ -4063,9 +4102,14 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps,
  * trial's too), and keeps and sends it as kiff/agents holds it. 404 when no answer of the
  * taf's by that id is theirs to read; reporting one again answers the first report.
  */
-async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, messageID: string, deps: Deps): Promise<unknown> {
-  if (!deps.reports) throw new HTTPError(503, "reports aren't taken here");
+async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, messageID: string, deps: Deps,
+  chrome?: { may: (session: string) => Promise<{ runs?: ReadonlySet<string> } | undefined> }): Promise<unknown> {
   const body = parseBody(event);
+  // A Chrome reports only what its panel may show (chrome-chats.ts): an answer in a chat it began, or in the turn of a
+  // run that worked in it. Its chat is named, and nothing else is searched.
+  const seen = chrome ? await chrome.may(str(body.session).trim()) : undefined;
+  if (chrome && (!seen || !messageID)) throw new HTTPError(404, "no answer of the taf's by that id");
+  if (!deps.reports) throw new HTTPError(503, "reports aren't taken here");
   let input: ReturnType<typeof reportInput>;
   try {
     input = reportInput(body);
@@ -4075,8 +4119,12 @@ async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, message
   const session = str(body.session).trim();
   const answer = (messages: ThreadMessage[]) => messages.find((m) => m.id === messageID && m.from === "taf");
   let found: ThreadMessage | undefined;
+  if (chrome && seen) {
+    found = answer((await conversation(me, taf, deps, await ownChat(me, taf, session, deps), false, new Map(), "en", seen.runs)).messages);
+    if (!found) throw new HTTPError(404, "no answer of the taf's by that id");
+  }
   // The chat the app names first, when it's the person's; else the whole thread (a run's, a door's).
-  if (messageID && session) {
+  if (!found && messageID && session) {
     for (const kind of ["chat", "trial"] as const) {
       const only = await ownChat(me, taf, session, deps, kind).catch((err) => {
         if (err instanceof HTTPError && err.status === 404) return undefined;
@@ -6918,7 +6966,8 @@ function phoneChat(s: Session): boolean {
  * ones are left out, or, with `archivedOnly`, are the only ones (kiff/tafs#97).
  * A Coach chat its person set aside says so (`set_aside: true`): the apps never open it as the newest, on any device.
  */
-async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false, only?: (session: string) => Promise<boolean>): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
+async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false, only?: (session: string) => Promise<boolean>,
+  turnsOf?: (session: string) => ReadonlySet<string> | undefined): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
   await moveArchived(me, taf, deps);
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
   const shown = all.filter((s) => phoneChat(s) && (s.archived === true) === archivedOnly);
@@ -6931,14 +6980,19 @@ async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = fals
     ? await Promise.all(listed.map((s) => deps.coach!.get(setAsideKey(me.tenantID, s.id)).then((v) => v !== undefined && v !== null, () => false)))
     : [];
   return listed.flatMap((s, i) => {
-    const events = read[i]?.events ?? [];
+    // A chat a Chrome sees only for the runs that worked in it (chrome-chats.ts): its row is those runs' turns alone,
+    // by each event's own run, its title and its times too.
+    const turns = turnsOf?.(s.id);
+    const events = (read[i]?.events ?? []).filter((e) => !turns || turns.has(e.run));
+    if (turns && events.length === 0) return [];
     const text = chatTitle(events.filter((e) => e.kind === "owner_message").map((e) => {
       const t = (e.body as { text?: unknown })?.text;
       return typeof t === "string" ? ownerWords(t.trim()) : "";
     }), events.filter((e) => e.kind === "component").map((e) => e.body));
     if (!text) return [];
     const title = text.length > CHAT.chatTitle ? text.slice(0, CHAT.chatTitle - 1).trimEnd() + "…" : text;
-    return [{ session: s.id, started: iso(s.started), updated: iso(s.updated), title, ...(setAside[i] ? { set_aside: true as const } : {}) }];
+    const [started, updated] = turns ? [events[0]!.time, events.at(-1)!.time] : [s.started, s.updated];
+    return [{ session: s.id, started: iso(started), updated: iso(updated), title, ...(setAside[i] && !turns ? { set_aside: true as const } : {}) }];
   });
 }
 

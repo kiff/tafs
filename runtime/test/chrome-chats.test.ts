@@ -35,16 +35,25 @@ async function world() {
 }
 type World = Awaited<ReturnType<typeof world>>;
 
+/** What planque recorded for each token's Chrome (`GET …/chromes/self/runs`); undefined, planque isn't set. */
+let PLANQUE: Record<string, Array<{ run: string; taf: string; at: string }>> | undefined;
+let planqueAsked = 0;
+
 function deps(w: World) {
   return {
+    ...(PLANQUE ? { planqueBase: "https://planque.test" } : {}),
     agents: w.agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: w.tafs,
     names: memoryNames(), slots: memorySlots(), claims: memoryClaims(), removals: memoryRemovals(), archived: memoryArchived(), coach: w.coach,
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
     // KIFF answers each token as who it is; the request's own headers never say which device it comes from.
-    fetch: (async (_url: unknown, init?: RequestInit) => {
+    fetch: (async (url: unknown, init?: RequestInit) => {
       const auth = new Headers(init?.headers).get("authorization") ?? "";
+      if (String(url) === "https://planque.test/v1/accounts/t_acme/chromes/self/runs") {
+        planqueAsked++;
+        return new Response(JSON.stringify({ runs: PLANQUE?.[auth.replace("Bearer ", "")] ?? [] }), { status: 200 });
+      }
       return new Response(JSON.stringify(WHO[auth.replace("Bearer ", "")] ?? WHO.phone), { status: 200 });
     }) as typeof fetch,
     now: () => NOW,
@@ -79,7 +88,7 @@ async function threadOf(w: World, who: string, session?: string, taf = COACH) {
 
 const texts = (body: Record<string, unknown>) => ((body.messages as Array<{ text: string }>) ?? []).map((m) => m.text);
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); PLANQUE = undefined; planqueAsked = 0; });
 
 describe("which Chrome is asking comes from KIFF alone", () => {
   // Invariant: a Chrome is the session KIFF paired as chrome, by KIFF's device id; nothing in the request names it
@@ -297,5 +306,125 @@ describe("a Chrome calls only its side panel's routes", () => {
     expect((await call(w, "chromeA", "GET", "/v1/me/chats/export")).status).toBe(404);
     expect((await call(w, "chromeA", "POST", `/v1/tafs/${COACH}/messages/stream`, { text: "hi" })).status).toBe(404);
     expect((await call(w, "chromeA", "POST", `/v1/tafs/${COACH}/messages/m1/report`, { reason: "wrong" })).status).toBe(404);
+  });
+});
+
+describe("a Chrome sees the turn of a run that worked in it, wherever it was sent from", () => {
+  /** The phone's chat with Rae: an earlier private turn, then "Toulouse", whose run worked in Chrome A; each answered. */
+  async function phoneChat(w: World) {
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const session = await say(w, "phone", "My private note", {}, RAE);
+    const answer = (run: string, text: string) => {
+      const list = w.agents.events.get(session)!;
+      list.push({ session, run, seq: list.length + 1, time: NOW.toISOString(), kind: "agent_message", body: { text } } as never);
+    };
+    const before = w.agents.runs.find((r) => r.session === session)!.id;
+    answer(before, "Noted, privately.");
+    for (const r of w.agents.runs) (r as { status: string }).status = "COMPLETED";
+    expect(await say(w, "phone", "Toulouse", { session }, RAE)).toBe(session);
+    const run = w.agents.runs.find((r) => r.session === session && r.id !== before)!.id;
+    answer(run, "Toulouse is in Occitanie.");
+    for (const r of w.agents.runs) (r as { status: string }).status = "COMPLETED";
+    PLANQUE = { chromeA: [{ run, taf: "rae", at: NOW.toISOString() }] };
+    return { session, run, before };
+  }
+
+  // Invariant: the chat of a run planque recorded in this Chrome is listed for it, titled and timed by that run's turn alone; another Chrome lists nothing
+  // Category: privacy
+  it("lists the run's chat for that Chrome alone, titled by the run's own message", async () => {
+    const w = await world();
+    const { session } = await phoneChat(w);
+    const r = await call(w, "chromeA", "GET", `/v1/tafs/${RAE}/chats`);
+    expect(r.status).toBe(200);
+    expect(r.body.chats).toEqual([{ session, started: NOW.toISOString(), updated: NOW.toISOString(), title: "Toulouse" }]);
+    expect(JSON.stringify(r.body)).not.toContain("private");
+    expect(await listed(w, "chromeB", false, RAE)).toEqual([]);
+    expect(await listed(w, "chromeA", false, COACH)).toEqual([]);
+    expect(await listed(w, "phone", false, RAE)).toEqual([session]);
+  });
+
+  // Invariant: the panel reads only the listed runs' events, by each event's own run, never the chat's earlier turns
+  // Category: privacy
+  // Attack: a Chrome where a run worked opens the whole chat by its id
+  // Refused: conversation() keeps only the events whose run planque listed for this Chrome
+  it("opens only that run's turn: its message and its answer, never the earlier ones", async () => {
+    const w = await world();
+    const { session } = await phoneChat(w);
+    const r = await threadOf(w, "chromeA", session, RAE);
+    expect(r.status).toBe(200);
+    expect(texts(r.body)).toEqual(["Toulouse", "Toulouse is in Occitanie."]);
+    expect(JSON.stringify(r.body)).not.toMatch(/private|Noted/);
+    expect((await threadOf(w, "chromeB", session, RAE)).status).toBe(404);
+    expect(texts((await threadOf(w, "phone", session, RAE)).body)).toEqual(["My private note", "Noted, privately.", "Toulouse", "Toulouse is in Occitanie."]);
+  });
+
+  // Invariant: a run's chat is read-only from the panel: no message, archive or delete into it, and the live thread stays the Chrome's own
+  it("never writes into the run's chat from the panel", async () => {
+    const w = await world();
+    const { session } = await phoneChat(w);
+    expect((await call(w, "chromeA", "POST", `/v1/tafs/${RAE}/messages`, { text: "and Lyon?", session })).status).toBe(404);
+    for (const a of ["archive", "unarchive"]) expect((await call(w, "chromeA", "POST", `/v1/tafs/${RAE}/chats/${session}/${a}`)).status).toBe(404);
+    expect((await call(w, "chromeA", "DELETE", `/v1/tafs/${RAE}/chats/${session}`)).status).toBe(404);
+    const live = await threadOf(w, "chromeA", undefined, RAE);
+    expect(live.body.messages).toEqual([]);
+    expect(w.agents.runs.filter((r) => r.session === session)).toHaveLength(2);
+  });
+
+  // Invariant: a Chrome reports only an answer its panel may show: one in the listed run, never one outside it, and always naming its chat
+  // Category: privacy
+  it("reports an answer in the run's turn, and 404 for one outside it", async () => {
+    const w = await world();
+    const reports = new Map<string, unknown>();
+    const { session } = await phoneChat(w);
+    const withReports = { ...deps(w), reports: { store: { create: async (k: string, v: unknown) => !reports.has(k) && !!reports.set(k, v), get: async (k: string) => reports.get(k) } } } as never;
+    const report = async (message: string, body: Record<string, unknown>) => {
+      const r = await handle(event("chromeA", "POST", `/v1/tafs/${RAE}/messages/${message}/report`, body), withReports);
+      return r.statusCode;
+    };
+    const all = (await threadOf(w, "phone", session, RAE)).body.messages as Array<{ id: string; text: string }>;
+    const inRun = all.find((m) => m.text === "Toulouse is in Occitanie.")!.id;
+    const outside = all.find((m) => m.text === "Noted, privately.")!.id;
+    expect(await report(outside, { reason: "wrong", session })).toBe(404);
+    expect(await report(inRun, { reason: "wrong" })).toBe(404);
+    expect(await report(inRun, { reason: "wrong", session })).toBe(200);
+    expect(reports.size).toBe(1);
+  });
+
+  // Invariant: a run planque lists is read back from kiff/agents under the asker's account and this taf; one that isn't theirs is dropped
+  // Category: privacy
+  // Attack: planque's record names a run of another account or another taf
+  // Refused: chromeRunChats reads each run with the person's tenant and the taf, and keeps only a run that is that taf's
+  it("drops a listed run that isn't this account's or this taf's", async () => {
+    const w = await world();
+    const { run } = await phoneChat(w);
+    PLANQUE = { chromeA: [{ run: "run-of-another-account", taf: "rae", at: NOW.toISOString() }, { run, taf: "setup-acme", at: NOW.toISOString() }] };
+    expect(await listed(w, "chromeA", false, RAE)).toEqual([]);
+    expect(await listed(w, "chromeA", false, COACH)).toEqual([]);
+  });
+
+  // Invariant: with nothing recorded (unpaired, moved, or planque unread) the run's chat leaves the panel, and a deleted chat is gone from it
+  it("leaves the panel when planque lists the run no more, or the chat is deleted", async () => {
+    const w = await world();
+    const { session, run } = await phoneChat(w);
+    expect(await listed(w, "chromeA", false, RAE)).toEqual([session]);
+    PLANQUE = { chromeA: [] };
+    expect(await listed(w, "chromeA", false, RAE)).toEqual([]);
+    expect((await threadOf(w, "chromeA", session, RAE)).status).toBe(404);
+    PLANQUE = { chromeA: [{ run, taf: "rae", at: NOW.toISOString() }] };
+    expect((await call(w, "phone", "DELETE", `/v1/tafs/${RAE}/chats/${session}`)).status).toBe(200);
+    expect(await listed(w, "chromeA", false, RAE)).toEqual([]);
+    expect((await threadOf(w, "chromeA", session, RAE)).status).toBe(404);
+  });
+
+  // Invariant: planque is asked with the panel's own session, once per read, and never for a phone or a desktop
+  it("asks planque with the panel's session only", async () => {
+    const w = await world();
+    await phoneChat(w);
+    planqueAsked = 0;
+    await listed(w, "phone", false, RAE);
+    await listed(w, "desktop", false, RAE);
+    expect(planqueAsked).toBe(0);
+    await listed(w, "chromeA", false, RAE);
+    expect(planqueAsked).toBe(1);
   });
 });

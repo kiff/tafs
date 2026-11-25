@@ -1049,8 +1049,24 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   hold only those. A chat it didn't begin is 404 by its id (its thread, a message into it, archiving it). Its live thread,
   and where a message with no chat goes, are its own newest chat or a new one. A re-pair is a new KIFF device, so it starts
   empty. A view-only device session KIFF names neither a device nor a platform for is taken as a Chrome with no chats (fail closed); once KIFF names the device, only its platform says Chrome.
+- **A run that worked in this Chrome shows there too, wherever its message was sent from, and only that run's turn.** planque
+  marks each run whose call sent a step to a Chrome: the run as KIFF signed it in the call's permit, and the Chrome the
+  step went to. tafs cloud asks planque for the asking Chrome's runs with the panel's own KIFF session
+  (`GET …/chromes/self/runs`). planque finds that Chrome from KIFF's word on the session's device, matched by the key the
+  extension offered KIFF at pairing, never from the request.
+  - **The account and the taf, again:** tafs cloud reads each listed run back from kiff/agents under the person's account
+    and that taf, and drops one that isn't theirs.
+  - **Only that run's turn:** the chat is listed with the run's own message as its title and the run's times. It opens with only the events
+    whose run is a listed one: the message that started it, its steps and its answer. An event of another run, or one
+    with no run, never reaches the panel.
+  - **Read-only:** a message into it, archiving or deleting it from the panel is 404. Reporting an answer in it
+    (`POST …/messages/{message}/report`, naming its chat) is allowed, and only for an answer in a listed run.
+  - **It leaves the panel** when the chat is deleted, when the Chrome is unpaired (planque drops its marks), and when its
+    connection moves to another Chrome: planque drops that connection's marks from the old Chrome, and carries none to
+    the new one, which shows only the runs that work there after the move. A Chrome paired before planque kept its KIFF
+    key lists no such run until it's paired again.
 - **A Chrome calls only the side panel's routes:** the Coach and tafs reads, a taf's thread, chats, messages, declaring a
-  file for a message (`POST …/attachments`, never reading one back), archiving, and the page consent. Every other tafs cloud route answers it 404 (export included), so a route added later is closed to
+  file for a message (`POST …/attachments`, never reading one back), reporting an answer it shows, archiving, and the page consent. Every other tafs cloud route answers it 404 (export included), so a route added later is closed to
   it until it's listed.
 
 - **Chrome treats those calls as the extension's own** (it holds every https site, tafs cloud's included), so they need no CORS
