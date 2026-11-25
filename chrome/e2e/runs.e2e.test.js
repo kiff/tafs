@@ -5,7 +5,7 @@
 
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { playwright, start, newRun, ref, until, tabAt } from "./harness.mjs";
+import { playwright, start, newRun, ref, until, tabAt, extensionState } from "./harness.mjs";
 import { PASSWORD } from "./sites.mjs";
 
 const skip = !playwright;
@@ -63,6 +63,23 @@ test("close ends the run and leaves its tab; the taf's next run closes it", { sk
   await open(next, nextURL);
   await until(() => !tabAt(h, url), "the finished run's tab to close");
   assert.ok(tabAt(h, nextURL));
+});
+
+test("the panel's Stop: the state the panel reads lists none of the stopped run's tabs as soon as the Stop is answered", { skip }, async () => {
+  const run = newRun("panel-stop");
+  const url = unique("panel-stop");
+  await open(run, url);
+  const live = await extensionState(h);
+  assert.equal(live.runs.find((r) => r.id === run).tabs.length, 1, "the panel lists the run's tab while it works");
+  const said = runState(run, "stopped");
+  assert.deepEqual(await h.fromPanel({ type: "stop", run }), {});
+  // Read at once, with no wait for a later change: the state published with the Stop.
+  const now = (await extensionState(h)).runs.find((r) => r.id === run);
+  assert.equal(now.stopped, true);
+  assert.deepEqual(now.tabs, [], "no tab of the stopped run is listed");
+  assert.equal(now.tab, null);
+  assert.equal((await said).verified, true);
+  assert.ok(tabAt(h, url), "its tab stays open for the person");
 });
 
 test("the panel's Pause holds the run's steps until Resume, and planque hears both", { skip }, async () => {

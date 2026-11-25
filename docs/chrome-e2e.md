@@ -21,16 +21,17 @@ npm run e2e                               # node --test e2e/*.e2e.test.js
 - Without Playwright they skip, as `page.test.js` does. In CI (`CI` set) a missing Playwright fails them instead.
 - CI's `chrome.yml` runs them as their own step, after the unit tests, on every change under `chrome/`.
 - Each test file starts its own Chromium, profile, fake planque and sites, and throws them away after. A run of all of
-  them takes about half a minute.
+  them takes about a minute and a half.
 
 ## The harness
 
 | File | What it is |
 |---|---|
 | `e2e/build.mjs` | The test build: a copy of `chrome/` in a temporary folder (without `test/`, `e2e/` and `store/`). Only the copy's `config.js` changes: it gains a `test` environment (the fake planque's `api` and `relay` on 127.0.0.1, its test step key, no push key, no screenshots) and `ENV = "test"`. The copy's manifest also lists `http://127.0.0.1/*`, so the service worker can reach the fake planque. |
-| `e2e/planque.mjs` | The fake planque: the pairing routes and the relay on one port of 127.0.0.1, and the paired phone. |
+| `e2e/planque.mjs` | The fake planque: the pairing routes and the relay on one port of 127.0.0.1, and the paired phone. Also the fake tafs cloud and KIFF (`FakeCloud`), for the tests of a run started from the side panel. |
 | `e2e/sites.mjs` | The fixture sites: one HTTPS server, with a certificate made at the start, that answers by host name. |
 | `e2e/harness.mjs` | Starts all of it, opens the side panel, pairs, and gives the tests their helpers. |
+| `e2e/joining.mjs` | What the tests of a run that joins the person's tab share: the person's tab, a send to the taf from the side panel with it in front, the person's Stop, and a record of every move the extension makes of a tab (`watchMoves`). |
 | `e2e/*.e2e.test.js` | The tests, run with `node --test`. |
 
 **The fake planque** is built on the extension's own `src/crypto.js` and `src/pairing.js`, so what it signs is checked by
@@ -48,14 +49,29 @@ the extension exactly as planque's would be. Its keys are made for each test fil
   sites, the phone's `sites_signed`), signs it with the step key, sends it and resolves with the extension's signed result.
   Any field can be overridden, and the step can be signed by another key, or its sites by planque's key in the phone's
   place: that is how the refused steps are made.
+- The welcome lists the one connection with the phone's signature over its sites (`sites_signed`), as planque relays it.
 - Every other route answers 404, and `POST /v1/extension/unpair` 204. The extension's claim of its view-only KIFF device goes
-  to `api.kiff.dev`, which the test Chromium can't resolve, so it fails at once and does nothing.
+  to `api.kiff.dev`, which the test Chromium can't resolve, so it fails at once and does nothing, except in the tests that
+  start the fake tafs cloud (below).
+
+**The fake tafs cloud and KIFF** (`FakeCloud`, `start({cloud: true})`) are only what a send from the side panel goes through.
+The harness maps `api.kiff.dev` and `cloud.tafs.kiff.dev` to the fixture sites' HTTPS server (`MAP <host> 127.0.0.1:<port>`),
+which answers them with `FakeCloud`. As KIFF it answers the extension's claim of its view-only device at once, as if the owner
+had approved it on the phone, and its logout. As tafs cloud it keeps the page consent (`/v1/me/page-consent`), lists the one
+taf (`GET /v1/tafs`, matched to the connection by its KIFF agent), and answers a message to it (`POST /v1/tafs/{id}/messages`)
+with the agent run it starts (`run`), which the test's steps then name as `agent_run`. Every call must carry the claimed
+session's bearer.
 - The relay is a small WebSocket server of its own (text messages, ping, pong and close), so the harness needs no package
   beyond Playwright.
 
-**The fixture sites** are `news.test` (an article, and a long page whose text comes in windows), `shop.test` (a form with
-a text field, a select, a checkbox and a password field holding a known value; a page that asks `confirm()`; a page with
-a link to `other.test`) and `other.test`, which no grant lists. Chromium reaches them through
+**The fixture sites** are `news.test` (an article, a long page whose text comes in windows, and a page with a link on the
+run's sites and a form to `other.test`), `shop.test` (a form with a text field, a select, a checkbox and a password field
+holding a known value; a page that asks `confirm()`; a page with a link to `other.test`; one page for each other way off the
+run's sites: a 302 redirect, a form that posts there, a meta refresh, a button whose script calls `location.assign()`, a
+`target=_blank` link and a frame; a page with a password in a frame of its own site and another in a frame of `news.test`; and
+the person's own page, with words and a field's value only it holds and a form that posts to its own site, open in their tab
+before a run joins it) and `other.test`, which no grant lists (it has the person's own page too). The server logs every request (`hits`, and `posts`), so a test can show `other.test`
+was never asked for anything. Chromium reaches them through
 `--host-resolver-rules=MAP *.test 127.0.0.1, MAP * ~NOTFOUND, EXCLUDE 127.0.0.1`, with `--ignore-certificate-errors`
 and `--no-proxy-server`. Their URLs carry the server's port (`https://shop.test:43127/form`): the extension's site rules
 and Chrome's fence read the host alone. The grant's sites are `shop.test` and `news.test`.
@@ -64,7 +80,19 @@ and Chrome's fence read the host alone. The grant's sites are `shop.test` and `n
 types the fake phone's code into the panel's form and submits it; the panel sends `pair`, then `poll`, and the extension
 connects. The service worker takes these messages only from the extension's own pages outside a tab, and Playwright lists
 no side panel among its pages, so the harness reaches the panel through Chromium's DevTools protocol. The same way, the
-tests press the panel's Pause, Resume and a hand-over's Done (`pause`, `resume`, `hand_answer`).
+tests press the panel's Pause, Resume, Stop and a hand-over's Done (`pause`, `resume`, `stop`, `hand_answer`), and send the
+taf a message as the panel's composer does (`taf_send`, with the panel's window and the tab in front). What only the service
+worker can read (Chrome's `declarativeNetRequest` session rules, a tab's address and group) is read there with Playwright's
+`serviceWorker.evaluate` (`inWorker`, `sessionRules`, `rulesOf`, `tabInfo`).
+- **What the extension does to a tab** is recorded the same way, from the test: `watchMoves` wraps the worker's own
+  `chrome.tabs.update`, `goBack` and `goForward`, so a test can show the person's tab was never sent anywhere. The extension's code
+  is as it ships; a worker that starts again starts without the wrapper.
+- **Chrome's own limits and events** are reached the same way: `fillSessionRules` fills Chrome's limit on session rules with rules
+  no tab names, so the next fence is refused as it would be at that limit; and a test stops the service worker as Chrome stops it,
+  through the DevTools protocol (`ServiceWorker.stopWorker`, with its version id), never `chrome.runtime.reload`, which would
+  reload the whole extension.
+- **The back/forward cache:** Playwright starts Chromium with it off (`--disable-back-forward-cache`); `start({bfcache: true})`
+  leaves it on, as people have it, and a page asked for with `?bfcache=1` is served so Chrome may keep it there.
 
 **Nothing waits on a clock.** A test waits for a result, a message or a state, each with a time limit. Any dialog that
 reaches Chromium is accepted by the harness and recorded, so a `confirm()` the extension failed to answer would read as
@@ -82,32 +110,98 @@ yes, and fail the test.
 | A confirmation that isn't the phone's (planque swapped the phone's key) pairs nothing, and the relay never opens | `pairing.e2e.test.js` |
 | Paired again, the extension connects under its new Chrome id and runs steps | `pairing.e2e.test.js` |
 | `open` on the grant's sites opens a background tab of the run's own; the result is signed, for the step's id and nonce | `steps.e2e.test.js` |
+| A run's first open succeeds even when its new tab is slow to show its blank page (`blankReady`) | `races.e2e.test.js` |
 | `read` gives the text, fields with refs, options and controls; a password field is `masked`, and its value is nowhere in a result | `steps.e2e.test.js` |
 | A long page's text comes in windows (`more`, `next_offset`, `offset`) | `steps.e2e.test.js` |
 | `act` fills, selects and ticks in the real page, and reads it back; a fill of the password is `secret_field` and leaves it as it was; an act on another read is `page_changed` | `steps.e2e.test.js` |
 | A page's `confirm()` doesn't block the run, is answered no, never reaches Chromium, and the read says the page asked | `steps.e2e.test.js` |
+| `back` in a run's own tab, after the taf's click on a link, returns to the page it clicked on; with nothing before the run's first page it's `no_back` and nothing moves | `steps.e2e.test.js` |
 | A step signed by another key, changed after signing, for another Chrome, expired, too far ahead, or sent twice (also under a new id) is dropped with no answer at all, not even a signed refusal, and nothing opens or loads; a good step after it is answered | `refusals.e2e.test.js` |
 | A message with no id and no signature gets no answer | `refusals.e2e.test.js` |
 | A run's sites are the phone's: sites the phone didn't sign, or signed by planque in its place, are `bad_step` before anything opens | `refusals.e2e.test.js` |
 | An open off the run's sites is `site_not_listed`; plain http is `bad_url`; an address or a local name is `address_private`; the site is never reached | `refusals.e2e.test.js` |
 | A click on a link off the run's sites is fenced in the tab: the other site never gets the request | `refusals.e2e.test.js` |
+| The fence on every other way off the run's sites, with nothing reaching `other.test`: a 302 redirect (the open is `site_not_listed`; Chrome's error page stays, and a read of it is refused), a form that posts there, a script's `location.assign()` and a `target=_blank` link (the taf's click is `bad_url`, the move is recorded as `navigate`/`site_not_listed` and the run's own tab is on its blank page; no new tab opens), a meta refresh (the same record and blank page), and a frame (blocked; the page reads as usual) | `fence.e2e.test.js` |
+| A run's tab has its three session rules (block every page and frame, allow the run's sites, block `http`) while the run lives; planque's stop and the taf's close take them away, and another run's stay; unpairing (4410) leaves none at all | `fence.e2e.test.js` |
+| The person closing a run's last tab ends the run, and the closed tab's rules go with it | `fence.e2e.test.js` |
+| A fence Chrome refuses (its limit on session rules reached) loads nothing: a run's first tab, or a further tab of a run in the person's tab, closes before its page is asked for, and the step is `browser_unavailable` | `fence.e2e.test.js`, `joined.e2e.test.js` |
+| No fence outlives the service worker: stopped as Chrome stops it and woken by the panel, the worker clears every session rule as its Runner is made, and both the person's joined tab and a run's own tab load `other.test` | `worker.e2e.test.js` |
+| A password in a frame of the same site or of another of the run's sites, and the frames' words, are in no read: only the top document is read | `masking.e2e.test.js` |
+| The page's own script sees nothing of the isolated world: no `TafsPage`, `TafsMask` or `TafsBar`, no extension API, only the dialog guard's own mark, and a read leaves the page's DOM as it was | `masking.e2e.test.js` |
+| A run started from the side panel joins the person's tab only when its first open asks for exactly the address it shows: then it's read in place (loaded once, by the person), grouped and fenced; another address opens a tab of the run's own and leaves theirs alone; the person's Stop gives it back out of the group, unfenced, still open, and the panel lists none of the run's tabs at once | `joined.e2e.test.js` |
+| Once joined, an open of another address goes to a tab of the run's own in the same group, and the person's tab keeps its address; an open of their address reads it in place again | `joined.e2e.test.js` |
+| The taf's acts in the joined tab stay inside the run's sites: a link on them is followed; a form to another site is fenced, with nothing reached, the move recorded, and the person's tab never blanked or moved by the extension (no `tabs.update`, `goBack` or `goForward`) | `joined.e2e.test.js` |
+| In a joined tab, the taf's `back` never goes before the address it joined at: with the run not having moved it, `no_back` and nothing moves; after the taf's click, its answer is never the person's earlier page; a read and an act there carry none of that page's words or field values, and post nothing (the person's earlier page on the run's sites, and off them) | `joined.e2e.test.js` |
+| A step of another agent run gives the joined tab back unread (`no_page`, and an act too): out of the group, its rules gone, still at its address, nothing moved | `joined.e2e.test.js` |
+| After the joined tab is given back (Chrome ends the run's emptied group), the run's next open goes on in a tab of its own, in a group made again, fenced | `joined.e2e.test.js` |
 | planque's `stop` ends the run: planque hears `stopped`, signed; the next step is `stopped`; the tab stays | `runs.e2e.test.js` |
 | `close` ends the run and leaves its tab; the same taf's next run closes it | `runs.e2e.test.js` |
+| The panel's Stop: the state the panel reads lists none of the stopped run's tabs as soon as the Stop is answered | `runs.e2e.test.js` |
 | The panel's Pause holds the run's steps (`paused_by_owner`) until Resume, and planque hears both, signed | `runs.e2e.test.js` |
 | The person's own click in a run's tab pauses it, and the taf's next act doesn't reach the page | `runs.e2e.test.js` |
 | A hand-over is answered at once as `handed`; the panel shows the taf's words; the person's Done reaches planque signed, its page without any field's value | `runs.e2e.test.js` |
+| Chrome's back/forward cache is on when a test asks for it (the person's Back case below runs with it on and off) | `bfcache.e2e.test.js` |
 
 ## Not covered yet
 
 - **Sensitive sites** and the phone's signed allowance (`sensitive_allowed`): the fixture sites would need a host the
   sensitive rules match.
-- **A step's own refusals of a payment or a checkout** (`payment_step`), and `press`, `scroll` and `back`: covered by the
-  unit and page tests only.
+- **A step's own refusals of a payment or a checkout** (`payment_step`), and `press` and `scroll` as acts of their own: covered by
+  the unit and page tests only.
 - **The relay's limits:** a dropped connection opened again, a result cut to fit 120 KB, `page_too_large`, and a step
-  replayed after Chrome stops the service worker.
-- **A run that works in the person's tab** (a run started from the side panel, "A taf works where you are"), and the
-  floating bar.
+  replayed after Chrome stops the service worker. The worker's restart is covered for its fences only, woken by the panel; its
+  wake by the relay's alarm isn't.
+- **A pop-up whose fence Chrome refuses** (a run's page opening a tab on its sites at the session rules' limit): the fixture sites
+  have no such link; the run's first tab and a further tab are covered.
+- **A page off the run's sites restored from the back/forward cache in a joined tab**: Chrome flushes that cache as the fence's
+  rules are added, so the person's Back off the run's sites is always a new request (see the known bugs); the give-back on such a
+  commit can't be reached from a test.
+- **The floating bar**, and a joined tab followed while the panel is open or after it closes; **Coach's own send**
+  (`coach_send`) as the start of a joined run (the tests start one from a taf's chat, `taf_send`). That the bar is hidden when
+  the person's tab is given back is not checked.
+- **A frame's own reads:** the extension reads no frame, so there is nothing more to mask in one; Coach's page read
+  (`aside.js`) in a frame isn't tested either.
 - **Push:** the test build has no push key, so the extension never subscribes.
 - **Coach and the KIFF device** in the side panel: they need tafs cloud and KIFF.
 - **Chrome as people install it:** the tests load the unpacked copy; the Web Store's build and its manifest hash are checked
   by the release, not here.
+
+## Bugs these tests found that are fixed
+
+- **A run's first open failed now and then under load** (`races.e2e.test.js`). `Runner.open` navigated the run's new tab
+  before its `about:blank` had committed. When the tab's renderer was slow, that blank page committed after the navigation
+  began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The test makes the renderer
+  slow on purpose (one renderer process, a page busy for two seconds). The fix is `Runner.blankReady`: the new tab shows its
+  blank page before the step's page goes into it. This was also what made "the person's own click in the run's tab pauses
+  the run" fail now and then; that test itself has no race.
+- **The person closing a run's last tab left its three rules behind** (`fence.e2e.test.js`): the run ended, but the closed tab's
+  session rules stayed until the service worker started again. The tab is unfenced as it closes now.
+- **`back` after the taf's own click did nothing in a run's own tab** (`steps.e2e.test.js`): Chrome skips, on back, a history
+  entry left without a person's gesture. `back` now goes to the page before in the run's own record of the tab, and loads it
+  when Chrome's back lands elsewhere.
+- **After a step of another agent run gave the joined tab back, the run's next open failed** (`joined.e2e.test.js`): the run's
+  group ended as the tab left it, and the open answered `browser_unavailable` and closed the run. A group Chrome ended is made
+  again now.
+
+## Known bugs, as `todo` tests
+
+These tests say what the extension should do and fail today; `node --test` reports them as `todo`, not as failures.
+
+- **The person's own Back to a page they had before the run, on the run's sites, is read by the run** (`joined.e2e.test.js`).
+  The run joined their tab at page B; their Back to page A commits on the run's sites, and the extension takes it as the run's
+  own work: the run's next read answers with A, its words and its fields' values, and an act on that read acts on A (a click on
+  its form's button posted it). A page the person had before the run should be `page_changed`, never read.
+- **The person's own Back off the run's sites isn't given back** (`joined.e2e.test.js`, `bfcache.e2e.test.js`). The joined
+  tab's fence blocks their Back (Chrome flushes its back/forward cache as the fence's rules are added, so the Back is always a
+  new request): Chrome shows its error page at their address, the tab stays in the run's group, fenced and the run's, and the
+  run's read and act answer `site_not_listed`. It should be given back as it is (out of the group, unfenced, forgotten), and the
+  run's next read and act should answer `no_page`.
+- **An off-site click or submit in the joined tab replaces the person's page with Chrome's error page**
+  (`joined.e2e.test.js`). The fence stops the request, and the extension never moves the tab, but Chrome commits its own
+  "blocked" page at the other site's address, with a new history entry, in place of the person's page. Their page should stay
+  as it was.
+- **The taf's `back` in a joined tab, after its own click, loads the person's earlier page and answers `no_back`**
+  (`joined.e2e.test.js`). Chrome skips the joined page on back (the taf's click gave no user activation) and lands on the page
+  the person had before the run, which is asked for again and committed in their tab before the extension goes forward and
+  answers `no_back`. It should return to the joined page, never loading the earlier one. Nothing of the earlier page is read
+  (a test that passes checks that).

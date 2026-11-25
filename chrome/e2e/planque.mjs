@@ -159,7 +159,9 @@ export class FakePlanque extends EventEmitter {
         if (this.socket && this.socket !== ws) this.socket.close(1000);
         this.socket = ws;
         const sig = await sign(this.planqueKeys.privateKey, LABEL.welcome, { chrome_id: this.chromeId, nonce_p: conn.nonceP, nonce_e: m.nonce_e });
-        ws.send(JSON.stringify({ type: "welcome", sig, connections: [{ grant: this.grant, agent: this.agent, name: this.taf, sites: this.sites }], now: Date.now() }));
+        // The connection as planque lists it, with the phone's signature over its sites, as the panel checks it (signedSitesOf).
+        const connection = { grant: this.grant, agent: this.agent, name: this.taf, sites: this.sites, sites_signed: await this.sitesSigned() };
+        ws.send(JSON.stringify({ type: "welcome", sig, connections: [connection], now: Date.now() }));
         this.emit("welcome", m);
         return;
       }
@@ -275,6 +277,76 @@ export class FakePlanque extends EventEmitter {
       }, timeout);
       this.on(type, on);
     });
+  }
+}
+
+/**
+ * The fake tafs cloud and KIFF, for the side panel's part of a run (docs/chrome.md, "A taf works where you are"): only what a
+ * send from the panel goes through. As **KIFF**, it answers the extension's claim of its view-only device at once, as if the
+ * owner had approved it on the phone (`POST /v1/pair/claim`), and its logout. As **tafs cloud**, it keeps the person's page
+ * consent (`/v1/me/page-consent`), lists the account's one taf (`GET /v1/tafs`, matched to the connection by its KIFF agent),
+ * and answers a message to that taf (`POST /v1/tafs/{id}/messages`) with the agent run it starts (`run`), which planque's steps
+ * then name as `agent_run`. Every call must carry the claimed session's bearer. Anything else is 404.
+ *
+ * It answers on the fixture sites' HTTPS server (sites.mjs `serve`), for the hosts the extension calls (`api.kiff.dev`,
+ * `cloud.tafs.kiff.dev`), which the harness maps to that server: nothing leaves the computer.
+ */
+export class FakeCloud {
+  static KIFF = "api.kiff.dev";
+  static CLOUD = "cloud.tafs.kiff.dev";
+
+  constructor({ agent = "agt_e2e", taf = "Rae", tafId = "taf_e2e" } = {}) {
+    Object.assign(this, { agent, taf, tafId });
+    this.token = "kfs_" + randomBytes(16).toString("hex");
+    this.tenant = "tnt_e2e";
+    this.subject = "sub_e2e";
+    this.consent = { given: false };
+    this.claimed = false;
+    this.sends = []; // every message to the taf: {text, page, run}
+    this.requests = []; // every call, as "METHOD host path"
+  }
+
+  /** Serves KIFF's and tafs cloud's hosts on `sites` (a FixtureSites). */
+  on(sites) {
+    sites.serve(FakeCloud.KIFF, (req, res) => this.http(FakeCloud.KIFF, req, res).catch((e) => res.writeHead(500).end(String(e && e.message))));
+    sites.serve(FakeCloud.CLOUD, (req, res) => this.http(FakeCloud.CLOUD, req, res).catch((e) => res.writeHead(500).end(String(e && e.message))));
+    return this;
+  }
+
+  async http(host, req, res) {
+    const url = new URL(req.url, "https://" + host);
+    this.requests.push(req.method + " " + host + " " + url.pathname);
+    const send = (status, body) => {
+      res.writeHead(status, body !== undefined ? { "content-type": "application/json" } : {});
+      res.end(body !== undefined ? JSON.stringify(body) : undefined);
+    };
+    const body = req.method === "POST" ? JSON.parse((await readBody(req)) || "{}") : null;
+    if (host === FakeCloud.KIFF) {
+      if (req.method === "POST" && url.pathname === "/v1/pair/claim") {
+        if (typeof body.nonce !== "string" || typeof body.pub !== "string" || typeof body.proof !== "string") return send(400, { error: "invalid_request" });
+        this.claimed = true;
+        return send(200, { access_token: this.token, approval_mode: "view", tenant: this.tenant, subject: this.subject, expires_in: 3600 });
+      }
+      if (req.method === "POST" && url.pathname === "/v1/auth/device/logout") return send(204);
+      return send(404, { error: "not_found" });
+    }
+    if (req.headers.authorization !== "Bearer " + this.token) return send(401, { error: "unauthorized" });
+    if (url.pathname === "/v1/me/page-consent") {
+      if (req.method === "POST") this.consent = { given: true, version: String(body.version || "") };
+      if (req.method === "DELETE") this.consent = { given: false };
+      return send(200, { consent: this.consent });
+    }
+    if (req.method === "GET" && url.pathname === "/v1/tafs") return send(200, { tafs: [{ id: this.tafId, name: this.taf, kiff_agent: this.agent }] });
+    if (req.method === "GET" && url.pathname === "/v1/setup") return send(200, { setup: null });
+    const taf = /^\/v1\/tafs\/([^/]+)\/(messages|conversation)$/.exec(url.pathname);
+    if (taf && taf[1] === this.tafId && taf[2] === "conversation" && req.method === "GET") return send(200, { messages: [], working: null });
+    if (taf && taf[1] === this.tafId && taf[2] === "messages" && req.method === "POST") {
+      // The agent run this message starts: what the panel's mark and planque's steps name.
+      const run = randomId("agr_");
+      this.sends.push({ text: body.text, page: body.page || null, run });
+      return send(201, { message: { id: randomId("msg_") }, run });
+    }
+    return send(404, { error: "not_found" });
   }
 }
 
