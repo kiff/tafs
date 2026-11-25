@@ -19,7 +19,7 @@ How to try it
 
 In-app purchases to review: Solo (a monthly subscription, with its credits included each month) and credit packs of 500, 1,500 and 5,000 (consumable, never expire). Restore Purchases is on the Solo screen. A run of a taf uses credits for the AI it used.
 
-AI and data: a taf's work uses an AI provider (Anthropic) as a sub-processor. Anthropic does not use the person's content to train models and deletes it within 30 days; what tafs itself keeps, and for how long, is on the Privacy page. Sub-processors are listed at kiff.dev/subprocessors. Sample mode sends nothing.
+AI and data: Coach and a taf's work use the Claude AI model, made by Anthropic and run for us by Anthropic or one of the cloud providers listed at kiff.dev/subprocessors, which marks the one in use (now Amazon Web Services, in the EU). Nothing is sent until the person allows it on the AI consent screen. Whichever company runs it uses what it gets to answer and deletes it within 30 days, unless it's flagged as breaking that company's usage rules or the law requires keeping it; what tafs itself keeps, and for how long, is on the Privacy page. Sample mode sends nothing.
 
 Chrome: Account > Chrome pairs the person's own Chrome with the tafs Chrome extension, which is a separate product on the Chrome Web Store. The row appears only where the service offers it and is not needed to review the app.
 
@@ -65,7 +65,7 @@ Wear OS: the watch app needs this app signed in on the paired phone; it has no s
 
 In-app products: Solo (a monthly subscription, with its credits included each month) and credit packs of 500, 1,500 and 5,000 (consumable, never expire). A run of a taf uses credits for the AI it used.
 
-AI and data: a taf's work uses an AI provider (Anthropic) as a sub-processor. Anthropic does not use the person's content to train models and deletes it within 30 days; what tafs itself keeps, and for how long, is on the Privacy page. Sub-processors are listed at kiff.dev/subprocessors. Speech for the microphone is recognized on the device. Sample mode sends nothing.
+AI and data: Coach and a taf's work use the Claude AI model, made by Anthropic and run for us by Anthropic or one of the cloud providers listed at kiff.dev/subprocessors, which marks the one in use (now Amazon Web Services, in the EU). Nothing is sent until the person allows it on the AI consent screen. Whichever company runs it uses what it gets to answer and deletes it within 30 days, unless it's flagged as breaking that company's usage rules or the law requires keeping it; what tafs itself keeps, and for how long, is on the Privacy page. Speech for the microphone is recognized on the device. Sample mode sends nothing.
 
 Chrome: Account > Chrome pairs the person's own Chrome with the tafs Chrome extension, which is a separate product on the Chrome Web Store. The row appears only where the service offers it and is not needed to review the app.
 
