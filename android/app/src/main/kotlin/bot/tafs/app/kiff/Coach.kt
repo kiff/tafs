@@ -336,9 +336,9 @@ data class CoachStart(
       else -> ""
     }.trim()
 
-    /** Every line of the Card step came, this phone's button included: then Start's screen is the Card step. */
+    /** Every line of the Card step came, this phone's button and the locked box's line included: then Start's screen is the Card step. */
     fun cardStep(biometry: String): Boolean =
-      listOf(title, lines.allows, lines.asks, lines.sign, lines.stop, exact, give(biometry)).none { it.isBlank() }
+      listOf(title, lines.allows, lines.asks, lines.sign, lines.stop, exact, locked, give(biometry)).none { it.isBlank() }
   }
 
   @Serializable
