@@ -573,7 +573,8 @@ struct KeptWatchReading: WatchReading {
             // This phone's session can only view (KIFF's `view_only`): it signs nothing, so the watch can't ask through it.
             return WatchReply(.failed, line: Words.Watch.viewOnlyPhone)
         } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
-            return WatchReply(.failed, line: Words.Watch.coachNeedsConsent)
+            // A request, to Coach or a taf, refused for the AI consent: the ask's own line, as on Wear OS.
+            return WatchReply(.failed, line: Words.Watch.askNeedsConsent)
         } catch let e as TafsCloud.CloudError where AppModel.waitsForCredits(e) != nil {
             return WatchReply(.failed, line: AppModel.waitsForCredits(e))
         } catch {

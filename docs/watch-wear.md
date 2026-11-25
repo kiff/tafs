@@ -98,7 +98,7 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
   - **The watch's own id for each ask** (`client_id`, `w_` and 24 random hex digits), the same on every retry, so tafs cloud
     never starts it twice. The phone signs the ask with its **device key, no prompt**, as the wrist's Refuse, and sends it to
     tafs cloud (`POST /v1/watch/asks`, `AppModel.watchAsk`). tafs cloud checks the AI consent given on the phone, and its
-    refusal (`ai_consent_required`) reaches the watch as `watch.ask_needs_consent`. It sends the words and the id, and a reply's ask: never a taf, never a mark that it's the
+    refusal (`ai_consent_required`) reaches the watch as `watch.ask_needs_consent`, for an ask and a taf's message alike; Coach refused for it (the phone held the consent as given, and it was asked again) says `watch.coach_needs_consent`, never a bare Open on phone (`WatchCoachTest`). It sends the words and the id, and a reply's ask: never a taf, never a mark that it's the
     watch's, which tafs cloud's own route decides. The approval key is never used on this path.
   - **Sending…, then Sent** with the taf it went to and its state once tafs cloud names one ("Calendar · Working"); the
     microphone comes back after 2.5 s, so the wrist can drop.
