@@ -1,0 +1,1 @@
+- **Korean: "it's on our side, not yours" no longer reads as "not my problem".** The four lines that said it (a stopped turn, and our AI provider not serving) now say 사용자 쪽이 아니라 저희 쪽 문제입니다.
