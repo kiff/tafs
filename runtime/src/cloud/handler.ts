@@ -12019,11 +12019,17 @@ async function watchChanged(tenant: string, ask: Ask, deps: Deps): Promise<void>
   }
 }
 
-/** A silent push to one person's phones alone, never the account's others; a phone its push service has forgotten is forgotten here. */
+/**
+ * A silent push to one person's phones alone, never the account's others; a phone its push service has forgotten is forgotten
+ * here. Each push is logged with what changed, the phone's platform and how it went (sent, gone or failed), so a push a phone
+ * never acted on can be told from one that never left: never a token, an id, the person or the account.
+ */
 async function tellPersonsPhones(tenant: string, subject: string, n: Notification, deps: Deps): Promise<void> {
   const { devices } = await deps.push.get(tenant);
+  const change = typeof n.payload.change === "string" ? n.payload.change : "other";
   await Promise.all(devices.filter((d) => d.subject === subject).map(async (d) => {
     const r = await sendNotification(deps.apns, d, n).catch(() => "failed" as const);
+    console.log(`phone push ${change}: ${r} (${d.platform ?? "ios"})`);
     if (r === "gone") await deps.push.removeDevice(tenant, d.token);
   }));
 }
