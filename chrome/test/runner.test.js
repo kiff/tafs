@@ -93,6 +93,8 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
           calls.push(["page", "read"]);
           return [{ result: pageFor(tabs.get(o.target.tabId)) }];
         }
+        // A page with the signs loaded points where it's asked (page.js `aim`); a test that wants an aim to fail says so itself.
+        if (src.includes("TafsPage.aim")) return [{ result: { ok: true } }];
         if (src.includes("TafsPage.act")) {
           calls.push(["page", "act start"]);
           if (c.gate) await c.gate;
@@ -1240,6 +1242,32 @@ test("a Pause, the person's own input or a Stop while the outline shows holds th
     assert.ok(!order.includes("act"), what + ": the page's act is never called");
     if (what !== "stop") assert.ok(order.includes("unoutline"), what + ": the outline is taken away");
     assert.ok(order.includes("signs off"), what + ": the glow and the pointer go with it");
+  }
+});
+
+test("an act whose pointer can't aim is refused, failing closed: the page's act is never called", async () => {
+  // Without the aim there's no check that the act lands where the pointer is (`sameSpot`): a missing TafsSigns, a page
+  // that doesn't answer, or an aim refused in its own words all hold the act.
+  for (const [aimed, code] of [[null, "page_unresponsive"], [{ ok: false }, "page_unresponsive"], [{ ok: false, code: "page_changed" }, "page_changed"], ["throw", "page_unresponsive"]]) {
+    const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [] } });
+    const order = [];
+    const exec = c.scripting.executeScript;
+    c.scripting.executeScript = async (o) => {
+      const src = String(o.func || "");
+      if (src.includes("TafsPage.aim")) {
+        if (aimed === "throw") throw new Error("no TafsSigns");
+        return [{ result: aimed }];
+      }
+      if (src.includes("TafsSigns.off")) order.push("signs off");
+      if (src.includes("TafsPage.act")) order.push("act");
+      return exec(o);
+    };
+    const r = new Runner({ chrome: c, paired: () => paired, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()) });
+    await r.handle(step());
+    const out = await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }));
+    assert.equal(out.error && out.error.code, code, JSON.stringify(aimed));
+    assert.ok(!order.includes("act"), JSON.stringify(aimed) + ": the page's act is never called");
+    assert.ok(order.includes("signs off"), JSON.stringify(aimed) + ": the signs go");
   }
 });
 

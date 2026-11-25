@@ -665,7 +665,9 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
     pointer through (`pointer-events: none`), the page's and the person's.
   - **The act lands where the pointer is, or nowhere.** The pointer goes to the element the act will resolve (`TafsPage.aim`,
     the same ref and print as the act's own check). If that element has moved by the time of the act, or isn't the one pointed
-    at, the act is refused `page_changed` and the taf reads again.
+    at, the act is refused `page_changed` and the taf reads again. **No aim, no act:** if the pointer can't be drawn (the signs
+    didn't load, the page doesn't answer, or the aim is refused), the act is refused in the aim's own code, or
+    `page_unresponsive`, and the page is never touched (`Runner`, failing closed).
   - **Reduced motion:** with `prefers-reduced-motion`, nothing moves: the glow doesn't breathe, and the pointer is simply at its target.
   - **Gone at every end.** A pause (the person's, or the run's own), Stop, a run that's done, and a tab the person takes back take
     every sign away at once, with the outline. A worker that starts again holds no run, so it takes the signs and the bar off
@@ -694,8 +696,9 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   welcome, as a hand-over's answer does. Answers are matched to what was sent in order, so an answer to a Pause never drops
   the Resume sent after it. **`stopped` is final:** a run stopped or swept never says `working` again.
 - **The page can't use it.** The bar and the signs live in closed shadow roots, each on a plain `div` with no name, class or
-  attribute of ours (0.2.23; the bar's was `tafs-working-bar`): the page can't read or restyle their words, reach the bar's
-  buttons, or find either by a selector. Only a real press (`isTrusted`) counts; what it sends names its run, the service worker takes it only from the
+  attribute of ours (0.2.23; the bar's was `tafs-working-bar`): the page can't read their words or change what they say, or
+  press the bar's buttons. Like anything on a page, it can hide them (a bare `div` as the last child of `<html>` can be hidden by
+  a page's own `!important` rule), which is why the side panel, the tab group and the toolbar, not these, show a taf is at work. Only a real press (`isTrusted`) counts; what it sends names its run, the service worker takes it only from the
   extension's own content script in a tab, and the runner acts only on a run it holds and that still lives
   (`Runner.barPress`). A press on it is not the person's input that pauses a run. A read never includes it, and an act's "is
   it on top" check looks through it (by the element itself, never by a name a page could copy), so it never blocks the taf's click on what's

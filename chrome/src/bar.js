@@ -3,8 +3,8 @@
 // Pause or Resume, and Stop; on any other tab, at the foot, "Rae is working", Go to its tab, Pause and Stop. It's put in only
 // while a run lives, and taken away when the last one ends.
 //
-// It sits in a closed shadow root on a plain element with no name, class or attribute of ours, so the page can't read, restyle,
-// press or find it by a selector; a read never includes it, and an act's "is it on top" check looks through it (page.js). Only a real press (`isTrusted`) counts, and what it sends names the run: the service
+// It sits in a closed shadow root on a plain element with no name, class or attribute of ours, so the page can't read its words,
+// change what they say or press it (it can hide it, as anything on a page; the side panel is the trusted Stop); a read never includes it, and an act's "is it on top" check looks through it (page.js). Only a real press (`isTrusted`) counts, and what it sends names the run: the service
 // worker checks it came from the extension's own content script, and the runner acts only on a run it holds. The page can
 // remove the element: while the bar should show, it's put back.
 

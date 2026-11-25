@@ -4,8 +4,9 @@
 //
 // All of it is drawn, never done: no real mouse moves, nothing is focused, and every part lets each pointer through
 // (`pointer-events: none`), so it never takes a click, the page's or the person's. It sits in a closed shadow root on a plain
-// element with no name, class or attribute of ours, made from the extension's own world: the page can't read its words, can't
-// restyle it, and can't find it by a selector. A read and the picture of an act look through it (page.js).
+// element with no name, class or attribute of ours, made from the extension's own world: the page can't read its words or change
+// what they say. Like anything on a page, it can hide it, which is why the side panel, the tab group and the toolbar, not
+// these signs, are what show a taf is at work. A read and the picture of an act look through it (page.js).
 //
 // A page can draw a look-alike of any of this, so none of it is what proves a taf works: that's the side panel, the tab group
 // and the toolbar, which a page can't draw. Its words say only who works here, never that the page is safe.

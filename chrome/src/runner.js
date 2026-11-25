@@ -1454,7 +1454,13 @@ export class Runner {
     // act takes the outline away, and lands only on the element the pointer went to (page.js `aim`).
     if (step.act.ref) {
       const shown = await this.inTab(run.tab, (r, id, w) => globalThis.TafsPage.aim(r, id, w), [step.act.ref, step.read_id, this.pointerWords(step.act.kind)]).catch(() => null);
-      if (shown && shown.ok) await this.sleep(OUTLINE_MS);
+      // No aim, no act: without the pointer there's no check that the act lands where it points (`sameSpot`), so the step is
+      // refused in the aim's own words, or as an unresponsive page. It fails closed, never acts unchecked.
+      if (!shown || !shown.ok) {
+        if (run.tab != null) await this.signsOff(run.tab);
+        return { error: { code: (shown && shown.code) || "page_unresponsive" } };
+      }
+      await this.sleep(OUTLINE_MS);
       // The outline is what makes a person react ("it's about to click that"): a Pause, their own click or key in the page
       // (which pauses the run), or a Stop in those moments holds the act. Nothing reaches the page, and the signs go.
       if (run.stopped || run.paused) {
