@@ -46,7 +46,7 @@
   "step_stopped": { "message": "ຖືກຢຸດ" },
   "step_closed": { "message": "ສຳເລັດ" },
   "step_refused": { "message": "ຍັງບໍ່ໄດ້ເຮັດ ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ທ່ານຍ້າຍແທັບນີ້, ຕອນນີ້ມັນຈຶ່ງເປັນຂອງທ່ານ" },
+  "step_refused_given_back": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ແທັບຍ້າຍໄປໂດຍບໍ່ມີ taf, ຕອນນີ້ມັນຈຶ່ງເປັນຂອງທ່ານ" },
   "step_refused_page_changed": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ໜ້າປ່ຽນໄປກ່ອນແລ້ວ" },
   "step_refused_no_back": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ບໍ່ມີໜ້າໃຫ້ກັບຄືນ" },
   "step_refused_site_not_listed": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ເວັບໄຊນັ້ນບໍ່ແມ່ນຂອງ taf ນີ້" },

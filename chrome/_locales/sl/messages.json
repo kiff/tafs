@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Končano" },
   "step_closed": { "message": "Končano" },
   "step_refused": { "message": "ni opravljeno ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "ni opravljeno: premaknili ste ta zavihek, zato je zdaj vaš" },
+  "step_refused_given_back": { "message": "ni opravljeno: zavihek se je premaknil brez tafa, zato je zdaj vaš" },
   "step_refused_page_changed": { "message": "ni opravljeno: stran se je prej spremenila" },
   "step_refused_no_back": { "message": "ni opravljeno: ni strani, na katero bi se vrnil" },
   "step_refused_site_not_listed": { "message": "ni opravljeno: to spletno mesto ni eno od mest tega tafa" },

@@ -46,7 +46,7 @@
   "step_stopped": { "message": "रोकिएको" },
   "step_closed": { "message": "सकियो" },
   "step_refused": { "message": "गरिएन ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "गरिएन: तपाईंले यो ट्याब सार्नुभयो, त्यसैले अब यो तपाईंको हो" },
+  "step_refused_given_back": { "message": "गरिएन: ट्याब taf बिना सर्यो, त्यसैले अब यो तपाईंको हो" },
   "step_refused_page_changed": { "message": "गरिएन: पेज पहिल्यै बदलियो" },
   "step_refused_no_back": { "message": "गरिएन: फर्कने कुनै पेज छैन" },
   "step_refused_site_not_listed": { "message": "गरिएन: त्यो साइट यो taf का साइटमध्ये होइन" },

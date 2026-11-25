@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Pārtraukts" },
   "step_closed": { "message": "Pabeigts" },
   "step_refused": { "message": "nav izdarīts ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "nav izdarīts: tu pārvietoji šo cilni, tāpēc tagad tā ir tava" },
+  "step_refused_given_back": { "message": "nav izdarīts: cilne pārvietojās bez taf, tāpēc tagad tā ir tava" },
   "step_refused_page_changed": { "message": "nav izdarīts: lapa pirms tam mainījās" },
   "step_refused_no_back": { "message": "nav izdarīts: nav lapas, uz kuru atgriezties" },
   "step_refused_site_not_listed": { "message": "nav izdarīts: šī vietne nav šī taf vietne" },

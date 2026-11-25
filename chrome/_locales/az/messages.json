@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Dayandırıldı" },
   "step_closed": { "message": "Bitdi" },
   "step_refused": { "message": "edilmədi ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "edilmədi: bu sekməni dəyişdiniz, ona görə indi sizindir" },
+  "step_refused_given_back": { "message": "edilmədi: sekmə taf olmadan dəyişdi, ona görə indi sizindir" },
   "step_refused_page_changed": { "message": "edilmədi: səhifə ondan əvvəl dəyişdi" },
   "step_refused_no_back": { "message": "edilmədi: qayıtmaq üçün səhifə yoxdur" },
   "step_refused_site_not_listed": { "message": "edilmədi: o sayt bu taf-ın saytlarından deyil" },

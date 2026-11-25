@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Arrêté" },
   "step_closed": { "message": "Terminé" },
   "step_refused": { "message": "non fait ($CODE$)", "placeholders": { "code": { "content": "$1" } } },
-  "step_refused_given_back": { "message": "non fait : vous avez déplacé cet onglet, il est maintenant à vous" },
+  "step_refused_given_back": { "message": "non fait : l'onglet a changé sans le taf, il est maintenant à vous" },
   "step_refused_page_changed": { "message": "non fait : la page a changé avant" },
   "step_refused_no_back": { "message": "non fait : il n'y a pas de page où revenir" },
   "step_refused_site_not_listed": { "message": "non fait : ce site n'est pas l'un de ceux de ce taf" },
