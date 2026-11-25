@@ -193,30 +193,38 @@ struct ConnectAppsView: View {
                 name(app, said).frame(maxWidth: .infinity, alignment: .leading)
                 Text(said.how).scaledFont(14).foregroundColor(Theme.soft).frame(maxWidth: .infinity, alignment: .leading)
                 Text(said.whose ?? "").scaledFont(14).foregroundColor(Theme.soft).frame(maxWidth: .infinity, alignment: .leading)
-                HStack(spacing: 8) {
-                    if let setup = said.setup, !setup.isEmpty {
-                        Text(setup).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).lineLimit(2)
-                    } else if let status = said.status {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(status).scaledFont(14, weight: .semibold).foregroundColor(said.removing ? Theme.soft : app.connected ? Theme.ok : Theme.amberText)
-                            if let used = said.usedBy { Text(used).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).lineLimit(2) }
+                // The status, and Connect (or Sign in again, or Ask Coach) beside it while the status keeps room to read;
+                // in a narrow Status column (Spanish's "Volver a iniciar sesión"), the button goes under it instead,
+                // so the button never squeezes the status to a sliver (`BesideOrUnder`).
+                BesideOrUnder(textLeast: BesideOrUnder.tableLeast) {
+                    Group {
+                        if let setup = said.setup, !setup.isEmpty {
+                            Text(setup).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).lineLimit(2)
+                        } else if let status = said.status {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(status).scaledFont(14, weight: .semibold).foregroundColor(said.removing ? Theme.soft : app.connected ? Theme.ok : Theme.amberText)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                if let used = said.usedBy { Text(used).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).lineLimit(2) }
+                            }
+                        } else {
+                            Color.clear.frame(width: 0, height: 0)
                         }
                     }
-                    Spacer(minLength: 4)
                     trailing(app)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(minHeight: 52)
         } else {
-            HStack(spacing: 12) {
+            // The name and its line, with the button beside them while they keep room to read; a wide button
+            // (Spanish's "Volver a iniciar sesión") on a phone goes under them instead of cutting the name.
+            BesideOrUnder(textLeast: BesideOrUnder.rowLeast, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     name(app, said)
                     // How it connects, whose it is, and where it stands, in one line.
                     Text(said.second).scaledFont(13, relativeTo: .footnote).foregroundColor(app.needsReconnect ? Theme.amberText : Theme.dim)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer(minLength: 8)
                 trailing(app)
             }
             .frame(minHeight: 52)
@@ -344,6 +352,57 @@ struct ConnectColumns: Layout {
         for (view, width) in zip(subviews, Self.widths(bounds.width)) {
             view.place(at: CGPoint(x: x, y: bounds.midY), anchor: .leading, proposal: ProposedViewSize(width: width, height: bounds.height))
             x += width + Self.spacing
+        }
+    }
+}
+
+/// A row's words and its button (Connect, Sign in again, Ask Coach): the button as wide as its words, beside the words while
+/// they keep at least `textLeast` to read in, else under them, at the trailing edge. A long label in another language
+/// (Spanish's "Volver a iniciar sesión") never squeezes a status to a sliver or cuts an app's name.
+struct BesideOrUnder: Layout {
+    /// The least the Status column's words keep beside the button, in the iPad's and the Mac's table.
+    static let tableLeast: CGFloat = 110
+    /// The least a phone row's name and line keep beside the button.
+    static let rowLeast: CGFloat = 150
+
+    var textLeast: CGFloat
+    var spacing: CGFloat = 8
+
+    /// Whether the button goes under the words: the room beside it, in `total`, is under `textLeast`.
+    static func under(total: CGFloat, button: CGFloat, spacing: CGFloat, textLeast: CGFloat) -> Bool {
+        total - button - spacing < textLeast
+    }
+
+    private func sizes(_ width: CGFloat, _ subviews: Subviews) -> (under: Bool, text: CGSize, button: CGSize) {
+        let button = subviews.count > 1 ? subviews[1].sizeThatFits(.unspecified) : .zero
+        let under = button.width > 0 && Self.under(total: width, button: button.width, spacing: spacing, textLeast: textLeast)
+        let textWidth = under || button.width == 0 ? width : width - button.width - spacing
+        let text = subviews.first?.sizeThatFits(ProposedViewSize(width: max(0, textWidth), height: nil)) ?? .zero
+        return (under, text, button)
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let ideal = (subviews.first?.sizeThatFits(.unspecified).width ?? 0) + spacing + (subviews.count > 1 ? subviews[1].sizeThatFits(.unspecified).width : 0)
+        let width = proposal.width.flatMap { $0.isFinite ? $0 : nil } ?? ideal
+        let s = sizes(width, subviews)
+        let height = s.under ? s.text.height + spacing + s.button.height : max(s.text.height, s.button.height)
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let s = sizes(bounds.width, subviews)
+        guard let words = subviews.first else { return }
+        if s.under {
+            words.place(at: CGPoint(x: bounds.minX, y: bounds.minY), anchor: .topLeading, proposal: ProposedViewSize(width: bounds.width, height: nil))
+            if subviews.count > 1 {
+                subviews[1].place(at: CGPoint(x: bounds.maxX, y: bounds.minY + s.text.height + spacing), anchor: .topTrailing, proposal: .unspecified)
+            }
+        } else {
+            let textWidth = subviews.count > 1 ? bounds.width - s.button.width - spacing : bounds.width
+            words.place(at: CGPoint(x: bounds.minX, y: bounds.midY), anchor: .leading, proposal: ProposedViewSize(width: max(0, textWidth), height: nil))
+            if subviews.count > 1 {
+                subviews[1].place(at: CGPoint(x: bounds.maxX, y: bounds.midY), anchor: .trailing, proposal: .unspecified)
+            }
         }
     }
 }

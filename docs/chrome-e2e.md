@@ -139,16 +139,19 @@ yes, and fail the test.
 - **Chrome as people install it:** the tests load the unpacked copy; the Web Store's build and its manifest hash are checked
   by the release, not here.
 
+## A bug these tests found and that is fixed
+
+- **A run's first open failed now and then under load** (`races.e2e.test.js`). `Runner.open` navigated the run's new tab
+  before its `about:blank` had committed. When the tab's renderer was slow, that blank page committed after the navigation
+  began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The test makes the renderer
+  slow on purpose (one renderer process, a page busy for two seconds). The fix is `Runner.blankReady`: the new tab shows its
+  blank page before the step's page goes into it. This was also what made "the person's own click in the run's tab pauses
+  the run" fail now and then; that test itself has no race.
+
 ## Known bugs, as `todo` tests
 
 These tests say what the extension should do and fail today; `node --test` reports them as `todo`, not as failures.
 
-- **A run's first open can fail under load** (`races.e2e.test.js`). `Runner.open` navigates the run's new tab before its
-  `about:blank` has committed; when the tab's renderer is slow, that blank page commits after the navigation began and aborts
-  it (`net::ERR_ABORTED`), the tab is left "unloaded" on `about:blank`, `loaded()` waits its whole 30 s, and the open answers
-  `bad_url`. The test makes the renderer slow on purpose (one renderer process, a page busy for two seconds). This is what made
-  a test's first open fail now and then in a loaded run of the whole suite, among them "the person's own click in the run's tab
-  pauses the run": that test itself has no race (the content script's listener is in the page before `open` answers).
 - **The person closing a run's last tab leaves its three rules behind** (`fence.e2e.test.js`): the run ends, but the closed
   tab's session rules stay until the service worker starts again; unpairing doesn't clear them either.
 - **`back` after the taf's own click skips the page it clicked on** (`steps.e2e.test.js`, `joined.e2e.test.js`): in a run's own
