@@ -231,13 +231,19 @@ cd android
 ./gradlew :app:testDebugUnitTest      # the unit tests, against fake KIFF, tafs cloud, planque and Google Play
 ./gradlew :app:assembleDebug           # a debug build
 ./gradlew :app:connectedDebugAndroidTest   # the UI tests, on a running emulator or phone
+./gradlew :app:assembleRelease && play/check_release_starts.sh app/build/outputs/apk/release/app-release-unsigned.apk
+                                           # the minified release build starts and stays up
 ```
 
 Gradle needs a JDK 17 or later; Android Studio's own (`jbr`) does. The build uses the
 Android Gradle plugin 9.5 on Gradle 9.6.0, which the wrapper fetches and checks against its
 checksum; Android Studio needs to support that plugin version to open the project. On Windows,
 `gradlew.bat`. CI (`.github/workflows/android.yml`) runs the unit tests and the debug
-builds on every pull request that touches `android/`, and the UI tests on an emulator. The UI
+builds on every pull request that touches `android/`, and the UI tests on an emulator. After them, on the same
+emulator, it builds the release APK (minified by R8), signs it with the debug key, installs it and starts it
+(`play/check_release_starts.sh`), and fails if the app's process dies or the crash log names it: a debug build doesn't
+run R8, so only this catches code R8 removed that the app reaches by reflection at start (Android 144 closed at every
+launch that way). The UI
 tests run in a debug-only `TestHostActivity` (`createStableComposeRule`), which takes configuration
 changes in place: on a just-booted emulator the system settles after the first test starts, and an
 ordinary activity recreated then would drop the test's screen ("No compose hierarchies found").
