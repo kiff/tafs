@@ -2,7 +2,7 @@ import { ownerWords } from "../src/cloud/improve.js";
 import { withReplyLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
-import { handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf, waitsOf, withLine } from "../src/cloud/handler.js";
+import { handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf, waitsOf, withLine, wordsOnRefusedCards } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -931,5 +931,30 @@ describe("Coach's runs announce their pauses", () => {
     const tafRun = w.agents.runs.find((r) => r.agent === RAE)!;
     expect(w.agents.notified.get(tafRun.id)?.url).toBe("https://cloud.test/v1/runs/ended");
     expect(await w.coach.get(`t_acme#taf-chat-ref#${w.agents.notified.get(tafRun.id)!.ref}`)).toMatchObject({ taf: RAE });
+  });
+});
+
+// A phone test, 25 Nov (seqs 203 to 209): Coach showed an approval, wrote "I'm waiting for you to approve…", and
+// tafs cloud's check refused the draft before the card was drawn. The person saw the line and no Approve anywhere.
+describe("Coach's words on an approval card tafs cloud refused leave the thread", () => {
+  const ev = (seq: number, kind: string, body?: unknown, run = "r1") => ({ run, seq, kind, ...(body === undefined ? {} : { body }) });
+  const card = (seq: number, id = "ap8", run = "r1") => ev(seq, "component", { type: "approval", id, grant: "grt_1", draft: "drf_1" }, run);
+  const say = (seq: number, text: string, run = "r1") => ev(seq, "agent_message", { text }, run);
+  const answer = (seq: number, answer: string, id = "ap8", run = "r1") => ev(seq, "answered", { id, type: "approval", answer }, run);
+
+  it("the run's words between the card and a \"failed:\" answer go; before the card, and after the answer, they stay", () => {
+    const got = wordsOnRefusedCards([say(201, "Here are the rules."), ev(203, "tool_call"), card(205),
+      say(207, "I'm waiting for you to approve the Refund requests taf's tools and rules."), ev(208, "tool_result"),
+      answer(209, "failed: the rules the owner agreed say \"Refund a charge in EUR\" refuses past its limit…"), say(215, "I drafted it again.")]);
+    expect([...got]).toEqual(["r1.207"]);
+  });
+
+  it("an approval answered otherwise, or still open, keeps them; another run's words are its own", () => {
+    expect([...wordsOnRefusedCards([card(1), say(2, "Approve it when you're ready."), answer(3, "approved")])]).toEqual([]);
+    expect([...wordsOnRefusedCards([card(1), say(2, "Waiting for your approval.")])]).toEqual([]);
+    expect([...wordsOnRefusedCards([card(1), say(2, "Other run.", "r2"), say(3, "This one."), answer(4, "failed: no")])]).toEqual(["r1.3"]);
+    // Another card's answer isn't this one's; a confirm isn't an approval.
+    expect([...wordsOnRefusedCards([card(1), say(2, "Waiting."), answer(3, "failed: no", "other")])]).toEqual([]);
+    expect([...wordsOnRefusedCards([ev(1, "component", { type: "confirm", id: "c1" }), say(2, "Pick one."), answer(3, "failed: no", "c1")])]).toEqual([]);
   });
 });

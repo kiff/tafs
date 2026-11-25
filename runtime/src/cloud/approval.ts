@@ -1,4 +1,4 @@
-import { grantSuffix, kiffsOwnCount, KIFF_COUNT_A_DAY, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement, unpinnedConnection } from "./rules.js";
+import { grantSuffix, kiffsOwnCount, KIFF_COUNT_A_DAY, moneyCardsOff, type MoneyCard, type MoneyUnbuilt, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement, unpinnedConnection } from "./rules.js";
 import { noteSendingOutside, sendingProfileOf } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
@@ -71,7 +71,7 @@ export interface ApprovalGrant {
  * a read that didn't come back) wait for the owner's tap, as before.
  */
 export const REDRAFT_CODES: ReadonlySet<string> = new Set(["rules_unpinned", "no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
-  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed_figure", "rules_unagreed", "rules_required", "rules_unsaid"]);
+  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed_figure", "rules_unagreed", "rules_required", "rules_unsaid", "money_cards", "money_rules"]);
 /** The refusals Coach mends by having the owner agree to the rules first, then drafting again. */
 /**
  * Said with every refusal for rules not agreed: nothing waits for the owner until Coach shows the rules, so Coach shows
@@ -158,6 +158,12 @@ export function unagreedRefusal(notice: string, grant: ApprovalGrant, lang: Lang
 
 async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = [], combined = false): Promise<CardsChecked> {
   const W = approvalWords(ctx.lang);
+  // The conversation's rules are read once, for the money Cards and for the rules' own checks.
+  if (ctx.rulesAgreement) {
+    const read = ctx.rulesAgreement;
+    let once: Promise<RulesAgreement> | undefined;
+    ctx = { ...ctx, rulesAgreement: () => (once ??= read()) };
+  }
   const draft = await draftInfo(ctx.token, draftID, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
   if (!draft) return { outcome: "answered", answer: `failed: KIFF has no Card draft ${draftID} on this account`, note: `KIFF has no Card draft for this. Ask Coach for a new one.`, code: "no_draft" };
   // Its Card confirmed already: a real approval, signed earlier (another phone, or a tap before this one).
@@ -235,6 +241,10 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     if (elsewhere) {
       return { outcome: "answered", answer: `failed: no Card covers "${elsewhere.tool}", which the taf's ${elsewhere.vendor} connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${elsewhere.tool}" on a Card too (a read goes on the reads' Card, which carries KIFF's count of ${READS_A_DAY.toLocaleString("en")} a day, not the owner's).`, note: W.uncovered(elsewhere.tool), code: "uncovered_elsewhere" };
     }
+    // A money tool's Cards are the ones its agreed rules give (rules.ts, cardsFromRules), before the checks below, which
+    // each name one thing to change: Coach hears the whole Cards at once, to draft as they are.
+    const money = await moneyChecked(grant, others, draft, ctx);
+    if (money) return money;
     // A limit for each item drafted as one lifetime count on the whole tool stops the taf after its first item
     // (Eval 43402441612: "one invoice per order, ever" signed as 1 create_invoice in the Card's life). Never signed.
     const capped = lifetimeCapOnWrite(grant, draft.cards);
@@ -272,6 +282,45 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
   const ruled = await rulesChecked(grant, others, draft.cards, ctx);
   if (ruled) return ruled;
   return { draft: draft as NonNullable<typeof draft> & { version: string } };
+}
+
+/** What a money tool's agreed rules lack for KIFF to sign Cards of them (cardsFromRules), said to Coach. */
+const MONEY_UNBUILT: Record<MoneyUnbuilt, string> = {
+  refused_total: "its refused limits have no total over a window, and KIFF needs one on every Card: the rules need a day's total that is refused",
+  held_bound: "its held Card would limit no amount, and KIFF needs every Card on a money tool to limit its amount: the rules need each call's limit on the amount",
+  held_total: "its held limits have no total, and no refused day's total on the amount stands beside them for KIFF's own count: the rules need a day's total on the amount",
+  count: "the rules count its calls, and a money tool is limited by its amounts: each call's and a day's total, no count of calls but 0 (every call asks)",
+};
+
+/** Whether a money tool's held Card carries its refused Card's cap on each call (cardsFromRules), said to Coach as such. */
+function copiedCap(cards: MoneyCard[]): boolean {
+  const caps = (on: "owner" | "refuse") => cards.filter((c) => c.on_exceed === on).flatMap((c) => c.grants[0].per_action_max ?? []);
+  return caps("owner").some((h) => caps("refuse").some((r) => r.quantity === h.quantity && r.max === h.max));
+}
+
+/**
+ * A money tool's Cards against the ones its agreed rules give (rules.ts, moneyCardsOff), with the rules the owner agreed
+ * in this conversation. Nothing to check with no conversation to read, or rules not agreed (rulesChecked answers those).
+ * A draft that differs is refused with the Cards to draft in its place, exactly; rules that give no Cards KIFF signs are
+ * shown again, with what they lack.
+ */
+async function moneyChecked(grant: ApprovalGrant, others: ApprovalGrant[], draft: { agent: string; cards?: unknown[] }, ctx: DecideContext): Promise<Decision & { code?: string } | undefined> {
+  if (!ctx.rulesAgreement) return undefined;
+  const W = approvalWords(ctx.lang);
+  let agreement: RulesAgreement | undefined;
+  try {
+    agreement = await ctx.rulesAgreement();
+  } catch {
+    agreement = undefined;
+  }
+  if (!agreement) return { outcome: "read_again", note: W.cardsUnread, code: "rules_unread" };
+  if (agreement.state !== "agreed") return undefined;
+  const off = moneyCardsOff([grant, ...others], draft.cards ?? [], agreement.rules, draft.agent);
+  if (!off) return undefined;
+  if ("unbuilt" in off) {
+    return { outcome: "answered", answer: `failed: "${off.tool}" moves money, and the rules the owner agreed give it no Cards KIFF signs: ${MONEY_UNBUILT[off.unbuilt]}. Ask the owner that one thing, show the rules again with it, and draft once they tap agree.`, note: W.rulesMissing(off.tool), code: "money_rules" };
+  }
+  return { outcome: "answered", answer: `failed: "${off.tool}" moves money, so its Cards are the ones the rules the owner agreed give, and the draft's differ. Draft it again with exactly these Cards in place of every Card covering "${off.action}", the other Cards as they are, and nothing else changed: ${JSON.stringify(off.cards)}.${copiedCap(off.cards) ? " The held Card carries each call's refused cap too: KIFF needs every Card on a money tool to limit its amount, and a call past it is refused." : ""} These are the owner's rules as agreed: never ask them to change a rule for it.`, note: W.rulesFigures(off.tool), code: "money_cards" };
 }
 
 /**

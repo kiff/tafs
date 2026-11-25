@@ -3078,6 +3078,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     // A run's line before its tool calls (one short line, which its calls follow) is shown on the live line
     // while the run goes, never as a message: the run's work, on its next message, holds it (docs/chat.md).
     const lines = preToolLines(r.events);
+    for (const id of wordsOnRefusedCards(r.events)) lines.add(id);
     // Each run's work, shown once, on its first message (the 845 test): when the run started,
     // the tools it called, in order, and when it last wrote. The app's live block sits there too,
     // under the owner's message, so it folds in place when the run ends. A run that paused on a
@@ -7464,6 +7465,33 @@ export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; k
     if (e.kind === "agent_message" && typeof text === "string" && text.trim()) pending.set(e.run, `${e.run}.${e.seq}`);
   }
   // Nothing after the calls: the last note is the run's message (an earlier one was followed by that note, so it's out).
+  return out;
+}
+
+/**
+ * What Coach wrote, by `<run>.<seq>`, while an approval card waited that tafs cloud's check then answered "failed: …":
+ * the run's words after the card and before that answer. Written while Coach took the card to stand ("I'm waiting for
+ * your approval"), they are false once the draft is refused, most often before the card was ever drawn (precheck); Coach
+ * hears the refusal and drafts again (a phone test, 25 Nov: "I'm waiting for you to approve" over a card refused at
+ * once, and no Approve anywhere). Words after any other answer, or after a card that's still open, stay.
+ */
+export function wordsOnRefusedCards(events: ReadonlyArray<{ run: string; seq: number; kind: string; body?: unknown }>): Set<string> {
+  const out = new Set<string>();
+  const open = new Map<string, { card: string; said: string[] }>(); // run → the approval card it waits on, and its words since
+  for (const e of events) {
+    const b = (e.body ?? {}) as { type?: unknown; id?: unknown; answer?: unknown; text?: unknown };
+    if (e.kind === "component" && b.type === "approval" && typeof b.id === "string") {
+      open.set(e.run, { card: b.id, said: [] });
+      continue;
+    }
+    const waiting = open.get(e.run);
+    if (!waiting) continue;
+    if (e.kind === "agent_message" && typeof b.text === "string" && b.text.trim()) waiting.said.push(`${e.run}.${e.seq}`);
+    else if (e.kind === "answered" && b.id === waiting.card) {
+      if (typeof b.answer === "string" && b.answer.startsWith("failed:")) for (const id of waiting.said) out.add(id);
+      open.delete(e.run);
+    }
+  }
   return out;
 }
 

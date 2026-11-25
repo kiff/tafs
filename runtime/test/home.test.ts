@@ -277,3 +277,25 @@ describe("which tafs are relevant now", () => {
     expect(relevantNow({ ...all, held: false, step: false, knock: false, lastRun: ago(30 * H) }, now)).toBe("recent_change");
   });
 });
+
+// A money tool's held Card carries its refused Card's cap on each call (rules.ts, cardsFromRules): the plain list says it once.
+describe("a refund's €50 cap on each call, on its refused Card and its held one, is said once", () => {
+  const cap = { quantity: "sum(amount)", max: 5000, unit: "EUR", scale: 2 };
+  const refused: Mandate = { id: "refused", subject: "refunds-x", active: true, on_exceed: "refuse",
+    grants: [{ action: "create_refund", title: "Refund a charge", per_action_max: [cap] }],
+    aggregates: [{ quantity: "sum(amount)", limit: 20000, window: "calendar_day", unit: "EUR", scale: 2 }] };
+  const held: Mandate = { id: "held", subject: "refunds-x", active: true, on_exceed: "owner",
+    grants: [{ action: "create_refund", title: "Refund a charge", per_action_max: [cap] }],
+    aggregates: [{ quantity: "count", limit: 0, window: "calendar_day" }] };
+
+  it("on the refused line, never on the held one", () => {
+    const lines = summary([refused, held]).rules;
+    expect(lines.map((r) => [r.outside, r.per_action?.minor ?? null, r.per_window?.minor ?? null, r.count_per_window])).toEqual([
+      ["refuse", 5000, 20000, null], ["hold", null, null, 0]]);
+  });
+
+  it("a held line with a cap of its own keeps it", () => {
+    const own: Mandate = { ...held, grants: [{ action: "create_refund", title: "Refund a charge", per_action_max: [{ ...cap, max: 500 }] }] };
+    expect(summary([refused, own]).rules.map((r) => r.per_action?.minor ?? null)).toEqual([5000, 500]);
+  });
+});
