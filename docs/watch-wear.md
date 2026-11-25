@@ -732,6 +732,33 @@ watch doesn't know is shown as Open on phone, never guessed at.
   - `files/voice/`, in a test version only (`KEEP_AUDIO`): the review's recording, erased when the review is left and swept at
     start, put-away and sign-out here. A production build keeps no recording.
   - The result notifications (a taf's name and its line), cancelled on Sign out on this watch.
+  - `tafs.account`: the phone's **account mark** for the sign-in the watch last read (`MarkStore`, `AccountMark`).
+- **One account's data never shows under another's** (`AccountMarkTest`, `WatchAccountMarkTest`). Everything above that holds
+  an account's data goes, the same list as on a sign-out (`WatchModel.wipeAccount`), whenever the phone's account changes, not
+  only on an explicit sign-out:
+  - **The account mark.** The phone makes a random mark at each sign-in (16 bytes, base64url, `AppModel.watchMark`) and drops it
+    at sign-out. It's never derived from the tenant, the person or their email, so it tells the watch only "the same sign-in" or
+    "not". It rides beside the reply's own fields on every reply from a signed-in phone (`account_mark`, `WatchLink.encodeReply`),
+    and on each kept item, which a watch before marks ignores. The phone reads it before and after it answers: a reply read across
+    a change of sign-in goes as Open on phone with no mark (`WatchRelay.answerMarked`), and a kept item read across one isn't put.
+  - **On the watch, it fails closed.** Every reply's mark is checked before anything of it is used (`WatchModel.ask`):
+    - another sign-in's mark wipes everything kept first, then the reply is the new account's;
+    - holding a mark, a reply with none (an older code path, a downgraded phone app) wipes too, and its read isn't shown;
+    - a reply that carries nothing of an account (a failure, a refusal, no offline speech) proves nothing and wipes nothing;
+    - holding no mark (a phone before marks, or the first open after this version), as before.
+  - **Nothing kept is drawn before the mark is confirmed.** Holding a mark, the watch draws nothing it kept (the cache's read, the
+    conversation, the Inbox, a taf's kept chat, a message kept for later) until a reply in this open carried that same mark. **So
+    opened with the phone out of reach, the watch shows its linking screen, then that the phone isn't reachable, not the last
+    read** as it did before marks: the phone may have changed accounts meanwhile. Pushed items from the phone are taken in only
+    when they carry the mark held (`AccountMark.keptTaken`).
+  - **A message kept for later** keeps the mark it was kept under, and is sent only once a reply in this open said it's that
+    same sign-in; another's, it's deleted unsent.
+  - **The phone tells the watch at sign-out** (`WatchSignedOut`): it takes back what it kept for the watch (`kept/ask/`,
+    `kept/inbox-marks`, `kept/taf-chat/`) and puts `kept/signed-out` with the mark it dropped. The watch takes it only from a
+    phone connected to it now, as it does replies, and wipes without asking, the app open or closed, notifications included. If
+    the watch was off, the item is still in the Data Layer when it comes back on, and is taken the same way then. One naming an
+    earlier sign-in than the one the watch holds is late, and wipes nothing.
+  - The Apple Watch follows with the same rule (docs/parity.md).
 
   In memory only, for the app's life, and kept when it's put away so it comes back as it was (`WatchModel.putAway`): the reads
   (apart from the cache above), the asks, Coach's conversation (with `KEEP_THREADS` off), an open result, a taf's page and its

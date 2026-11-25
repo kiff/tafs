@@ -250,4 +250,44 @@ class WatchLinkTest {
   @Test fun theTafChatSwitchOffIsAReplyOfItsOwn() {
     assertEquals(WatchReply.TafChatOff, WatchLink.decodeReply(WatchLink.encodeReply(WatchReply.TafChatOff)))
   }
+
+  private val markA = "aaaaaaaaaaaaaaaaaaaaaa"
+
+  /** The phone's account mark rides beside a reply's own fields: read by a watch that knows it, ignored by one before marks. */
+  @Test fun aReplyCarriesTheAccountMarkAndAnOlderWatchIgnoresIt() {
+    val reply = WatchReply.Tafs(listOf(TafLine("taf_1", "Refunds", "Ready", halted = false)), allHalted = false)
+    val bytes = WatchLink.encodeReply(reply, markA)
+    assertEquals(WatchLink.Marked(reply, markA), WatchLink.decodeMarked(bytes))
+    // What an older watch does with it: its own decode, unchanged, reads the reply.
+    assertEquals(reply, WatchLink.decodeReply(bytes))
+    // No mark (a phone before marks, or signed out): none on the wire, and none read.
+    assertEquals(WatchLink.Marked(reply, null), WatchLink.decodeMarked(WatchLink.encodeReply(reply)))
+    assertEquals(false, "account_mark" in WatchLink.encodeReply(WatchReply.SignedOut).decodeToString())
+  }
+
+  /** Only a mark as the phone makes it is one: anything else is read as none, never as a change of account. */
+  @Test fun somethingThatIsntAMarkIsNone() {
+    for (bad in listOf("", "short", "has space in it.....", "x".repeat(65))) {
+      val bytes = """{"kind":"signed_out","account_mark":"$bad"}""".encodeToByteArray()
+      assertEquals(WatchLink.Marked(WatchReply.SignedOut, null), WatchLink.decodeMarked(bytes))
+    }
+    assertEquals(WatchLink.Marked(WatchReply.SignedOut, null), WatchLink.decodeMarked("""{"kind":"signed_out","account_mark":3}""".encodeToByteArray()))
+    // The phone never sends one that isn't a mark.
+    assertEquals(WatchLink.Marked(WatchReply.SignedOut, null), WatchLink.decodeMarked(WatchLink.encodeReply(WatchReply.SignedOut, "bad")))
+  }
+
+  /** What the phone keeps for the watch carries the mark too; the signed-out item names the mark it dropped. */
+  @Test fun keptItemsCarryTheMarkAndTheSignedOutItemNamesItsOwn() {
+    val ask = AskLine("wa_01", "w_00000001", AskLine.DONE, words = "Done", updated = "2026-11-16T19:00:00Z")
+    assertEquals(KeptAsk(1, ask, markA), WatchLink.decodeKeptAsk(WatchLink.encodeKept(KeptAsk(1, ask, markA))))
+    assertEquals(KeptMarks(1, listOf("wa_01"), mark = markA), WatchLink.decodeKeptMarks(WatchLink.encodeKept(KeptMarks(1, listOf("wa_01"), mark = markA))))
+    assertEquals(KeptChat(1, "taf_1", mark = markA), WatchLink.decodeKeptChat(WatchLink.encodeKept(KeptChat(1, "taf_1", mark = markA))))
+    // An older phone's kept items have none.
+    assertEquals(KeptAsk(1, ask), WatchLink.decodeKeptAsk(WatchLink.encodeKept(KeptAsk(1, ask))))
+    assertEquals(KeptSignedOut(2, markA), WatchLink.decodeKeptSignedOut(WatchLink.encodeKept(KeptSignedOut(2, markA))))
+    assertEquals(KeptSignedOut(2, null), WatchLink.decodeKeptSignedOut("""{"put_at":2,"account_mark":"no"}""".encodeToByteArray()))
+    assertNull(WatchLink.decodeKeptSignedOut("not json".encodeToByteArray()))
+    assertEquals(true, WatchLink.KEPT_SIGNED_OUT.startsWith(WatchLink.KEPT))
+    assertNull("the signed-out item is no ask's", WatchLink.keptAskId(WatchLink.KEPT_SIGNED_OUT))
+  }
 }

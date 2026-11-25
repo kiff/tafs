@@ -58,6 +58,23 @@ class WatchRelay(
   /** How long it waits when it holds none yet: still under the watch's own 10 s, which then asks again by itself. */
   private val firstReadWaitMs: Long = FIRST_READ_WAIT_MS,
 ) {
+  /**
+   * [answer], with the phone's account mark for the watch ([AppModel.watchMark]): read before and after, so a reply is never marked
+   * as another sign-in's. Signed out, refused, or the sign-in changed while it was read: no mark, and for a change, Open on phone
+   * rather than one account's reply under another's mark.
+   */
+  suspend fun answerMarked(path: String, data: ByteArray): Pair<WatchReply, String?> {
+    val before = signedIn()?.watchMark()
+    val reply = answer(path, data)
+    if (reply is WatchReply.SignedOut || reply is WatchReply.Refused) return reply to null
+    val after = signedIn()?.watchMark()
+    return when {
+      before == null && after == null -> reply to null
+      before == after -> reply to after
+      else -> WatchReply.Failed(Words.Watch.openOnPhone) to null
+    }
+  }
+
   suspend fun answer(path: String, data: ByteArray): WatchReply {
     val request = when (val accepted = WatchLink.accept(path, data, now())) {
       is WatchLink.Accepted.No -> return WatchReply.Refused(accepted.reason)

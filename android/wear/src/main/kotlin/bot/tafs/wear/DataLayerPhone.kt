@@ -59,10 +59,11 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
           is PhoneRoute.Tried.Reply -> {
             sendMs = android.os.SystemClock.elapsedRealtime() - started - (lookupMs ?: 0L)
             bytes = tried.bytes.size
-            val decoded = WatchLink.decodeReply(tried.bytes)
+            val decoded = WatchLink.decodeMarked(tried.bytes)
             outcome = (if (decoded != null) LinkTrace.OK else LinkTrace.UNREADABLE)
             if (decoded != null && tried.retried) outcome = LinkTrace.OK_RETRIED
-            decoded?.let { Asked.Answered(it) } ?: Asked.NotUnderstood
+            // With the phone's account mark: the model checks it before anything of the reply is used.
+            decoded?.let { Asked.Answered(it.reply, it.mark) } ?: Asked.NotUnderstood
           }
         }
       } ?: Asked.Unreachable(LinkFailure.NoAnswer)

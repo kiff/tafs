@@ -3,6 +3,10 @@ package bot.tafs.watchlink
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
 
 /**
  * What the watch may ask the phone, and nothing else (docs/watch-wear.md). The watch holds no keys and no session: it asks, and
@@ -278,7 +282,12 @@ sealed interface WatchReply {
  * reach, its app open or not. [putAt] is when the phone put it, so a changed state is a changed item.
  */
 @Serializable
-data class KeptAsk(@SerialName("put_at") val putAt: Long, val ask: AskLine)
+data class KeptAsk(
+  @SerialName("put_at") val putAt: Long,
+  val ask: AskLine,
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
 
 /**
  * A taf's chat as the phone holds it now (the last [ChatLine.KEPT] turns, as [WatchReply.TafChat] gives them), kept for the watch
@@ -291,6 +300,8 @@ data class KeptChat(
   @SerialName("taf_id") val tafId: String,
   val lines: List<ChatLine> = emptyList(),
   val zone: String? = null,
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
 )
 
 /**
@@ -302,6 +313,19 @@ data class KeptMarks(
   @SerialName("put_at") val putAt: Long,
   val read: List<String> = emptyList(),
   val dismissed: List<String> = emptyList(),
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
+
+/**
+ * The phone signed out ([WatchLink.KEPT_SIGNED_OUT]): put at every sign-out, so a watch out of reach then still forgets the
+ * account when it's next in reach, without asking. [mark] is the account mark the phone dropped, so a late one never wipes the
+ * account the watch has read since.
+ */
+@Serializable
+data class KeptSignedOut(
+  @SerialName("put_at") val putAt: Long,
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
 )
 
 /** One of a taf's Cards, as the phone's Card tab draws it: its title, the face's figure and line, and its rules in one line each. */
@@ -450,6 +474,21 @@ object WatchLink {
 
   /** A taf's chat as the phone holds it, by the phone's id for the taf: `kept/taf-chat/{id}` ([KeptChat]). */
   const val KEPT_TAF_CHAT = KEPT + "taf-chat/"
+
+  /** The phone signed out ([KeptSignedOut]): the watch forgets everything of the account, without asking. */
+  const val KEPT_SIGNED_OUT = KEPT + "signed-out"
+
+  /**
+   * The key of the phone's account mark: random, made at each sign-in on the phone and dropped at sign-out, never derived from
+   * the account, so it says only "the same sign-in as before" or "not". On every reply from a signed-in phone, and on what it keeps
+   * for the watch. A watch that sees it change forgets everything it kept, before it shows anything of the reply.
+   */
+  const val MARK_KEY = "account_mark"
+
+  /** An account mark as the phone makes it: 16 to 64 base64url characters. */
+  private val MARK = Regex("^[A-Za-z0-9_-]{16,64}$")
+
+  fun isMark(mark: String?): Boolean = mark != null && MARK.matches(mark)
 
   /** A taf's id on the phone, as a kept item's path may name it. */
   private val TAF_ID = Regex("^[A-Za-z0-9_.:-]{1,128}$")
@@ -640,12 +679,28 @@ object WatchLink {
     is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief, is WatchRequest.Account, is WatchRequest.InboxMarks -> true
   }
 
-  /** The phone's answer, as bytes for the Data Layer. */
-  fun encodeReply(reply: WatchReply): ByteArray = replies.encodeToString(WatchReply.serializer(), reply).encodeToByteArray()
+  /**
+   * The phone's answer, as bytes for the Data Layer, with its account [mark] beside the reply's own fields ([MARK_KEY]) when it
+   * has one: a watch before marks ignores it, as it does any field it doesn't know.
+   */
+  fun encodeReply(reply: WatchReply, mark: String? = null): ByteArray {
+    val fields = replies.encodeToJsonElement(WatchReply.serializer(), reply).jsonObject
+    val sent = if (isMark(mark)) JsonObject(fields + (MARK_KEY to JsonPrimitive(mark))) else fields
+    return sent.toString().encodeToByteArray()
+  }
 
   /** The watch's side: the phone's answer, or null for one it doesn't understand (a newer phone), which it shows as Open on phone. */
-  fun decodeReply(data: ByteArray): WatchReply? =
-    runCatching { replies.decodeFromString(WatchReply.serializer(), data.decodeToString()) }.getOrNull()
+  fun decodeReply(data: ByteArray): WatchReply? = decodeMarked(data)?.reply
+
+  /** A reply and the phone's account mark on it; [mark] is null from a phone before marks, or for one that isn't a mark. */
+  data class Marked(val reply: WatchReply, val mark: String?)
+
+  /** The watch's side: the phone's answer and its account mark, or null for one it doesn't understand. */
+  fun decodeMarked(data: ByteArray): Marked? = runCatching {
+    val fields = replies.parseToJsonElement(data.decodeToString()).jsonObject
+    val mark = (fields[MARK_KEY] as? JsonPrimitive)?.contentOrNull?.takeIf(::isMark)
+    Marked(replies.decodeFromJsonElement(WatchReply.serializer(), JsonObject(fields - MARK_KEY)), mark)
+  }.getOrNull()
 
   /** The phone's side: an ask's new state, for the watch ([ASK_RESULT]). */
   fun encodeResult(ask: AskLine): ByteArray = replies.encodeToString(AskLine.serializer(), ask).encodeToByteArray()
@@ -682,6 +737,12 @@ object WatchLink {
   fun decodeKeptMarks(data: ByteArray): KeptMarks? =
     runCatching { replies.decodeFromString(KeptMarks.serializer(), data.decodeToString()) }.getOrNull()
       ?.let { it.copy(read = InboxMarkIds.checked(it.read), dismissed = InboxMarkIds.checked(it.dismissed)) }
+
+  fun encodeKept(kept: KeptSignedOut): ByteArray = replies.encodeToString(KeptSignedOut.serializer(), kept).encodeToByteArray()
+
+  fun decodeKeptSignedOut(data: ByteArray): KeptSignedOut? =
+    runCatching { replies.decodeFromString(KeptSignedOut.serializer(), data.decodeToString()) }.getOrNull()
+      ?.let { it.copy(mark = it.mark?.takeIf(::isMark)) }
 
   /** Replies tolerate fields a newer phone adds; requests, which the phone acts on, don't. */
   private val replies = Json { ignoreUnknownKeys = true; classDiscriminator = "kind"; explicitNulls = false }
