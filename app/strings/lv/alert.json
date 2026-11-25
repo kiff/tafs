@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Atbildi līdz {zone}. Nekas netiek nosūtīts, kamēr tu neapstiprini.",
   "alert.answered": "taf kādam atbildēja",
   "alert.approve_once": "Apstiprināt vienreiz…",
+  "alert.blocked.body": "Šī ierīce ({device}) vairs nejautā, tāpēc tafs paziņojumi iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu.",
+  "alert.blocked.body_android": "Android vairs nejautā, tāpēc tafs paziņojumi tālruņa iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu, šajā tālrunī un pulkstenī. Pulkstenis savus atjauninājumus saņem jebkurā gadījumā.",
+  "alert.blocked.body_watch": "Tavs iPhone vairs nejautā, tāpēc tafs paziņojumi iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu, šajā iPhone un pulkstenī. Pulkstenis savus atjauninājumus saņem jebkurā gadījumā.",
+  "alert.blocked.title": "Ieslēdz tafs paziņojumus",
   "alert.by_email": "Pa e-pastu",
   "alert.example": "Piemērs",
   "alert.foot.cant_answer_holds": "Paziņojumi tiek sūtīti tiem, kas drīkst atbildēt uz aizturētiem izsaukumiem. Tava loma šajā kontā to neļauj.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Šim tālrunim paziņojumi vēl nav ieslēgti. {why}",
   "alert.not_refused": "Nav atteikts",
   "alert.not_sent": "Atbilde netika nosūtīta",
+  "alert.now_on": "Paziņojumi ir ieslēgti.",
   "alert.on_this_device": "Paziņojumi: šis {device}",
+  "alert.open_notification_settings": "Atvērt paziņojumu iestatījumus",
+  "alert.open_settings": "Atvērt Iestatījumus",
   "alert.open_tafs_answer_kiff_did": "Atver tafs, lai atbildētu: KIFF nepateica, kuru tā versiju tu redzēji.",
   "alert.open_tafs_answer_phone_can": "Atver tafs, lai atbildētu: šis tālrunis nevar to parakstīt no paziņojuma.",
   "alert.prompt": "Saņem paziņojumu, kad taf gaida tevi",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Nav pieejams",
   "alert.status.off": "Izslēgts",
   "alert.status.on": "Ieslēgts",
+  "alert.still_off": "Paziņojumi joprojām ir izslēgti.",
   "alert.still_on_after_sign_out.body": "tafs nevarēja tos izslēgt ({why}). Mēģini vēlreiz vai tomēr izrakstieties un iestatījumos izslēdz paziņojumus no tafs.",
   "alert.still_on_after_sign_out.title": "Šis {device} joprojām var saņemt šī konta paziņojumus",
   "alert.taf_needs_you": "{taf} gaida tevi",
@@ -44,6 +52,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs nevarēja sazināties ar KIFF, lai to atteiktu. Atver tafs, lai atbildētu.",
+  "alert.watch_first.body": "Lai redzētu apstiprinājumus un atbildes kā paziņojumus šajā tālrunī un pulkstenī, ieslēdz tafs paziņojumus. Pulkstenis turpinās saņemt savus atjauninājumus, pat ja to nedarīsi.",
+  "alert.watch_first.title": "Tavs pulkstenis izmanto tafs",
   "alert.what_alerts": "Par ko tev paziņo",
   "alert.with_sound": "Ar skaņu"
 }

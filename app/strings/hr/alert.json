@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Odgovorite do: {zone}. Ništa se ne šalje dok ne odobrite.",
   "alert.answered": "Taf je nekome odgovorio",
   "alert.approve_once": "Odobrite jednom…",
+  "alert.blocked.body": "Ovaj {device} više ne pita, pa su obavijesti za tafs isključene u Postavkama. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas.",
+  "alert.blocked.body_android": "Android više ne pita, pa su obavijesti za tafs isključene u postavkama telefona. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas, na ovaj telefon i na sat. Sat ionako prima svoja ažuriranja.",
+  "alert.blocked.body_watch": "Vaš iPhone više ne pita, pa su obavijesti za tafs isključene u Postavkama. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas, na ovaj iPhone i na sat. Sat ionako prima svoja ažuriranja.",
+  "alert.blocked.title": "Uključite obavijesti za tafs",
   "alert.by_email": "E-poštom",
   "alert.example": "Primjer",
   "alert.foot.cant_answer_holds": "Obavijesti idu ljudima koji smiju odgovarati na zadržane pozive. Vaša uloga na ovom računu ne smije.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Obavijesti još nisu uključene za ovaj telefon. {why}",
   "alert.not_refused": "Nije odbijeno",
   "alert.not_sent": "Odgovor nije poslan",
+  "alert.now_on": "Obavijesti su uključene.",
   "alert.on_this_device": "Obavijesti na ovom uređaju ({device})",
+  "alert.open_notification_settings": "Otvori postavke obavijesti",
+  "alert.open_settings": "Otvori Postavke",
   "alert.open_tafs_answer_kiff_did": "Otvorite tafs da odgovorite: KIFF nije rekao koju ste verziju vidjeli.",
   "alert.open_tafs_answer_phone_can": "Otvorite tafs da odgovorite: ovaj telefon to ne može potpisati iz obavijesti.",
   "alert.prompt": "Primite obavijest kad taf treba vas",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Nedostupno",
   "alert.status.off": "Isključeno",
   "alert.status.on": "Uključeno",
+  "alert.still_off": "Obavijesti su i dalje isključene.",
   "alert.still_on_after_sign_out.body": "tafs ih nije mogao isključiti ({why}). Pokušajte ponovno ili se svejedno odjavite i isključite obavijesti za tafs u Postavkama.",
   "alert.still_on_after_sign_out.title": "Ovaj uređaj ({device}) možda i dalje prima obavijesti ovog računa",
   "alert.taf_needs_you": "Taf {taf} čeka vas",
@@ -44,6 +52,8 @@
     "other": "{count} tafova ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs nije mogao doći do KIFF-a da to odbije. Otvorite tafs da odgovorite.",
+  "alert.watch_first.body": "Da biste odobrenja i odgovore vidjeli kao obavijesti, na ovom telefonu i na satu, uključite obavijesti za tafs. Sat će i dalje primati svoja ažuriranja i ako to ne učinite.",
+  "alert.watch_first.title": "Vaš sat koristi tafs",
   "alert.what_alerts": "Što vas obavještava",
   "alert.with_sound": "Sa zvukom"
 }

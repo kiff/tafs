@@ -1,12 +1,22 @@
 {
   "alert.allow_notifications": "Permita as notificações do tafs nas Configurações e tente novamente.",
+  "alert.blocked.body": "Este {device} não pergunta mais, por isso os alertas do tafs estão desativados em Ajustes. Ative-os lá para que as aprovações e as respostas cheguem até você.",
+  "alert.blocked.body_android": "O Android não pergunta mais, por isso os alertas do tafs estão desativados nas configurações do telefone. Ative-os lá para que as aprovações e as respostas cheguem até você, neste telefone e no seu relógio. O relógio recebe as atualizações de qualquer forma.",
+  "alert.blocked.body_watch": "Seu iPhone não pergunta mais, por isso os alertas do tafs estão desativados em Ajustes. Ative-os lá para que as aprovações e as respostas cheguem até você, neste iPhone e no seu relógio. O relógio recebe as atualizações de qualquer forma.",
+  "alert.blocked.title": "Ative os alertas do tafs",
   "alert.foot.tells_you_device": "Quando um taf precisa de você, este {device} avisa você mesmo com o tafs fechado.",
   "alert.loud_example": "Encomendas atrasadas precisa de você · Pedido #5098 · Os reenvios esperam pelo seu sim",
   "alert.needs_you": "Um taf precisa de você",
+  "alert.now_on": "Os alertas estão ativados.",
+  "alert.open_notification_settings": "Abrir configurações de notificação",
+  "alert.open_settings": "Abrir Ajustes",
   "alert.prompt": "Receba um alerta quando um taf precisar de você",
   "alert.sign_in_again": "Entre novamente com o KIFF para ativar os alertas: esta sessão não pode assinar pelo telefone.",
   "alert.sign_out_anyway": "Sair mesmo assim",
+  "alert.still_off": "Os alertas continuam desativados.",
   "alert.still_on_after_sign_out.body": "O tafs não conseguiu desativá-los ({why}). Tente novamente, ou saia mesmo assim e desative as notificações do tafs nas Configurações.",
   "alert.taf_needs_you": "{taf} precisa de você",
-  "alert.tafs_could_not_reach_kiff": "O tafs não conseguiu contatar o KIFF para recusar. Abra o tafs para responder."
+  "alert.tafs_could_not_reach_kiff": "O tafs não conseguiu contatar o KIFF para recusar. Abra o tafs para responder.",
+  "alert.watch_first.body": "Para ver as aprovações e as respostas como alertas, neste telefone e no seu relógio, ative os alertas do tafs. O relógio continua recebendo as atualizações mesmo que você não ative.",
+  "alert.watch_first.title": "Seu relógio está usando o tafs"
 }

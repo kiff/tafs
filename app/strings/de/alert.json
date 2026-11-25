@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Antworte bis {zone}. Nichts wird gesendet, bevor du genehmigst.",
   "alert.answered": "Ein taf hat jemandem geantwortet",
   "alert.approve_once": "Einmal genehmigen…",
+  "alert.blocked.body": "Dieses {device} fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen.",
+  "alert.blocked.body_android": "Android fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen deines Telefons aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen, auf diesem Telefon und auf deiner Uhr. Deine Uhr bekommt ihre Updates so oder so.",
+  "alert.blocked.body_watch": "Dein iPhone fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen, auf diesem iPhone und auf deiner Uhr. Deine Uhr bekommt ihre Updates so oder so.",
+  "alert.blocked.title": "Benachrichtigungen für tafs einschalten",
   "alert.by_email": "Per E-Mail",
   "alert.example": "Beispiel",
   "alert.foot.cant_answer_holds": "Benachrichtigungen gehen an die Personen, die zurückgehaltene Aufrufe beantworten dürfen. Deine Rolle in diesem Konto darf das nicht.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Benachrichtigungen sind für dieses Telefon noch nicht an. {why}",
   "alert.not_refused": "Nicht abgelehnt",
   "alert.not_sent": "Eine Antwort wurde nicht gesendet",
+  "alert.now_on": "Benachrichtigungen sind an.",
   "alert.on_this_device": "Benachrichtigungen auf diesem {device}",
+  "alert.open_notification_settings": "Benachrichtigungseinstellungen öffnen",
+  "alert.open_settings": "Einstellungen öffnen",
   "alert.open_tafs_answer_kiff_did": "Öffne tafs, um zu antworten: KIFF hat nicht gesagt, welche Version du gesehen hast.",
   "alert.open_tafs_answer_phone_can": "Öffne tafs, um zu antworten: Dieses Telefon kann es nicht aus der Benachrichtigung heraus signieren.",
   "alert.prompt": "Lass dich benachrichtigen, wenn ein taf dich braucht",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Nicht verfügbar",
   "alert.status.off": "Aus",
   "alert.status.on": "An",
+  "alert.still_off": "Benachrichtigungen sind noch aus.",
   "alert.still_on_after_sign_out.body": "tafs konnte sie nicht ausschalten ({why}). Versuch es erneut oder melde dich trotzdem ab und schalte die Benachrichtigungen für tafs in den Einstellungen aus.",
   "alert.still_on_after_sign_out.title": "Dieses {device} bekommt vielleicht weiter die Benachrichtigungen dieses Kontos",
   "alert.taf_needs_you": "{taf} braucht dich",
@@ -43,6 +51,8 @@
     "other": "{count} tafs ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs hat KIFF zum Ablehnen nicht erreicht. Öffne tafs, um zu antworten.",
+  "alert.watch_first.body": "Um Genehmigungen und Antworten als Benachrichtigungen zu sehen, auf diesem Telefon und auf deiner Uhr, schalte die Benachrichtigungen für tafs ein. Deine Uhr bekommt ihre Updates auch, wenn du es nicht tust.",
+  "alert.watch_first.title": "Deine Uhr nutzt tafs",
   "alert.what_alerts": "Was dich benachrichtigt",
   "alert.with_sound": "Mit Ton"
 }

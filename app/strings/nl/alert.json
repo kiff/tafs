@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Antwoord vóór {zone}. Er wordt niets verzonden tot je goedkeurt.",
   "alert.answered": "Een taf heeft iemand geantwoord",
   "alert.approve_once": "Eenmalig goedkeuren…",
+  "alert.blocked.body": "Deze {device} vraagt het niet meer, dus meldingen voor tafs staan uit in Instellingen. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken.",
+  "alert.blocked.body_android": "Android vraagt het niet meer, dus meldingen voor tafs staan uit in de instellingen van je telefoon. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken, op deze telefoon en op je horloge. Je horloge krijgt zijn updates hoe dan ook.",
+  "alert.blocked.body_watch": "Je iPhone vraagt het niet meer, dus meldingen voor tafs staan uit in Instellingen. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken, op deze iPhone en op je horloge. Je horloge krijgt zijn updates hoe dan ook.",
+  "alert.blocked.title": "Meldingen voor tafs aanzetten",
   "alert.by_email": "Via e-mail",
   "alert.example": "Voorbeeld",
   "alert.foot.cant_answer_holds": "Meldingen gaan naar de mensen die vastgehouden aanroepen mogen beantwoorden. Jouw rol in dit account mag dat niet.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Meldingen staan nog niet aan voor deze telefoon. {why}",
   "alert.not_refused": "Niet geweigerd",
   "alert.not_sent": "Een antwoord is niet verzonden",
+  "alert.now_on": "Meldingen staan aan.",
   "alert.on_this_device": "Meldingen op deze {device}",
+  "alert.open_notification_settings": "Meldingsinstellingen openen",
+  "alert.open_settings": "Instellingen openen",
   "alert.open_tafs_answer_kiff_did": "Open tafs om te antwoorden: KIFF gaf niet aan welke versie je hebt gezien.",
   "alert.open_tafs_answer_phone_can": "Open tafs om te antwoorden: deze telefoon kan het niet vanuit de melding ondertekenen.",
   "alert.prompt": "Krijg een melding als een taf op jou wacht",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Niet beschikbaar",
   "alert.status.off": "Uit",
   "alert.status.on": "Aan",
+  "alert.still_off": "Meldingen staan nog uit.",
   "alert.still_on_after_sign_out.body": "tafs kon ze niet uitzetten ({why}). Probeer het opnieuw, of log toch uit en zet meldingen voor tafs uit in Instellingen.",
   "alert.still_on_after_sign_out.title": "Deze {device} krijgt misschien nog meldingen van dit account",
   "alert.taf_needs_you": "{taf} wacht op jou",
@@ -43,6 +51,8 @@
     "other": "{count} tafs ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs kon KIFF niet bereiken om te weigeren. Open tafs om te antwoorden.",
+  "alert.watch_first.body": "Zet meldingen voor tafs aan om goedkeuringen en antwoorden als melding te zien, op deze telefoon en op je horloge. Je horloge blijft zijn updates krijgen, ook als je dat niet doet.",
+  "alert.watch_first.title": "Je horloge gebruikt tafs",
   "alert.what_alerts": "Waarvoor je een melding krijgt",
   "alert.with_sound": "Met geluid"
 }

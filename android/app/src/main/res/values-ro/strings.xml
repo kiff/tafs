@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Răspundeți până la %3$s. Nimic nu se trimite până nu aprobați.</string>
     <string name="alert_answered">Un taf a răspuns cuiva</string>
     <string name="alert_approve_once">Aprobați o dată…</string>
+    <string name="alert_blocked_body">Acest dispozitiv (%1$s) nu mai întreabă, așa că alertele tafs sunt dezactivate în Configurări. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs.</string>
+    <string name="alert_blocked_body_android">Android nu mai întreabă, așa că alertele tafs sunt dezactivate în setările telefonului. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs., pe acest telefon și pe ceas. Ceasul își primește actualizările oricum.</string>
+    <string name="alert_blocked_body_watch">iPhone-ul dvs. nu mai întreabă, așa că alertele tafs sunt dezactivate în Configurări. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs., pe acest iPhone și pe ceas. Ceasul își primește actualizările oricum.</string>
+    <string name="alert_blocked_title">Activați alertele tafs</string>
     <string name="alert_by_email">Prin e-mail</string>
     <string name="alert_example">Exemplu</string>
     <string name="alert_foot_cant_answer_holds">Alertele merg la persoanele care pot răspunde la apelurile reținute. Rolul dvs. în acest cont nu poate.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Alertele nu sunt încă activate pe acest telefon. %1$s</string>
     <string name="alert_not_refused">Nerefuzat</string>
     <string name="alert_not_sent">Un răspuns nu a fost trimis</string>
+    <string name="alert_now_on">Alertele sunt activate.</string>
     <string name="alert_on_this_device">Alerte pe acest dispozitiv (%1$s)</string>
+    <string name="alert_open_notification_settings">Deschideți setările notificărilor</string>
+    <string name="alert_open_settings">Deschideți Configurări</string>
     <string name="alert_open_tafs_answer_kiff_did">Deschideți tafs pentru a răspunde: KIFF nu a spus ce versiune ați văzut.</string>
     <string name="alert_open_tafs_answer_phone_can">Deschideți tafs pentru a răspunde: acest telefon nu îl poate semna din notificare.</string>
     <string name="alert_prompt">Primiți o alertă când un taf are nevoie de dvs.</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Indisponibil</string>
     <string name="alert_status_off">Dezactivat</string>
     <string name="alert_status_on">Activat</string>
+    <string name="alert_still_off">Alertele sunt încă dezactivate.</string>
     <string name="alert_still_on_after_sign_out_body">tafs nu le-a putut dezactiva (%1$s). Încercați din nou sau deconectați-vă oricum și dezactivați notificările pentru tafs în Configurări.</string>
     <string name="alert_still_on_after_sign_out_title">Acest dispozitiv (%1$s) poate primi în continuare alertele acestui cont</string>
     <string name="alert_taf_needs_you">%1$s vă așteaptă</string>
@@ -47,6 +55,8 @@
         <item quantity="other">%1$s de tafuri ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs nu a putut contacta KIFF pentru a refuza. Deschideți tafs pentru a răspunde.</string>
+    <string name="alert_watch_first_body">Ca să vedeți aprobările și răspunsurile ca alerte, pe acest telefon și pe ceas, activați alertele tafs. Ceasul va primi în continuare actualizările, chiar dacă nu o faceți.</string>
+    <string name="alert_watch_first_title">Ceasul dvs. folosește tafs</string>
     <string name="alert_what_alerts">Ce vă alertează</string>
     <string name="alert_with_sound">Cu sunet</string>
     <string name="app_name">tafs</string>

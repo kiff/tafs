@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Respon abans de %3$s. No s\'envia res fins que ho aprovis.</string>
     <string name="alert_answered">Un taf ha respost algú</string>
     <string name="alert_approve_once">Aprova una vegada…</string>
+    <string name="alert_blocked_body">Aquest dispositiu (%1$s) ja no ho pregunta, així que les alertes de tafs estan desactivades a Configuració. Activa-les allà perquè les aprovacions i les respostes t\'arribin.</string>
+    <string name="alert_blocked_body_android">Android ja no ho pregunta, així que les alertes de tafs estan desactivades a la configuració del telèfon. Activa-les allà perquè les aprovacions i les respostes t\'arribin, en aquest telèfon i al rellotge. El rellotge rep les actualitzacions igualment.</string>
+    <string name="alert_blocked_body_watch">El teu iPhone ja no ho pregunta, així que les alertes de tafs estan desactivades a Configuració. Activa-les allà perquè les aprovacions i les respostes t\'arribin, en aquest iPhone i al rellotge. El rellotge rep les actualitzacions igualment.</string>
+    <string name="alert_blocked_title">Activa les alertes de tafs</string>
     <string name="alert_by_email">Per correu electrònic</string>
     <string name="alert_example">Exemple</string>
     <string name="alert_foot_cant_answer_holds">Les alertes arriben a qui pot respondre les crides retingudes. El teu rol en aquest compte no ho pot fer.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Les alertes encara no estan activades en aquest telèfon. %1$s</string>
     <string name="alert_not_refused">No rebutjat</string>
     <string name="alert_not_sent">No s\'ha enviat una resposta</string>
+    <string name="alert_now_on">Les alertes estan activades.</string>
     <string name="alert_on_this_device">Alertes en aquest dispositiu (%1$s)</string>
+    <string name="alert_open_notification_settings">Obre la configuració de notificacions</string>
+    <string name="alert_open_settings">Obre Configuració</string>
     <string name="alert_open_tafs_answer_kiff_did">Obre tafs per respondre: KIFF no ha dit quina versió has vist.</string>
     <string name="alert_open_tafs_answer_phone_can">Obre tafs per respondre: aquest telèfon no ho pot signar des de la notificació.</string>
     <string name="alert_prompt">Rep una alerta quan un taf et necessiti</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">No disponible</string>
     <string name="alert_status_off">Desactivat</string>
     <string name="alert_status_on">Activat</string>
+    <string name="alert_still_off">Les alertes encara estan desactivades.</string>
     <string name="alert_still_on_after_sign_out_body">tafs no les ha pogut desactivar (%1$s). Torna-ho a provar, o tanca la sessió igualment i desactiva les notificacions de tafs als Ajustos.</string>
     <string name="alert_still_on_after_sign_out_title">Aquest dispositiu (%1$s) encara pot rebre les alertes d\'aquest compte</string>
     <string name="alert_taf_needs_you">%1$s et necessita</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs no ha pogut arribar a KIFF per rebutjar. Obre tafs per respondre.</string>
+    <string name="alert_watch_first_body">Per veure les aprovacions i les respostes com a alertes, en aquest telèfon i al rellotge, activa les alertes de tafs. El rellotge continuarà rebent les actualitzacions encara que no ho facis.</string>
+    <string name="alert_watch_first_title">El teu rellotge fa servir tafs</string>
     <string name="alert_what_alerts">Què t\'avisa</string>
     <string name="alert_with_sound">Amb so</string>
     <string name="app_name">tafs</string>

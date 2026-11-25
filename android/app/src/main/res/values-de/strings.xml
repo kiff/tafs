@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Antworte bis %3$s. Nichts wird gesendet, bevor du genehmigst.</string>
     <string name="alert_answered">Ein taf hat jemandem geantwortet</string>
     <string name="alert_approve_once">Einmal genehmigen…</string>
+    <string name="alert_blocked_body">Dieses %1$s fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen.</string>
+    <string name="alert_blocked_body_android">Android fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen deines Telefons aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen, auf diesem Telefon und auf deiner Uhr. Deine Uhr bekommt ihre Updates so oder so.</string>
+    <string name="alert_blocked_body_watch">Dein iPhone fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen, auf diesem iPhone und auf deiner Uhr. Deine Uhr bekommt ihre Updates so oder so.</string>
+    <string name="alert_blocked_title">Benachrichtigungen für tafs einschalten</string>
     <string name="alert_by_email">Per E-Mail</string>
     <string name="alert_example">Beispiel</string>
     <string name="alert_foot_cant_answer_holds">Benachrichtigungen gehen an die Personen, die zurückgehaltene Aufrufe beantworten dürfen. Deine Rolle in diesem Konto darf das nicht.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Benachrichtigungen sind für dieses Telefon noch nicht an. %1$s</string>
     <string name="alert_not_refused">Nicht abgelehnt</string>
     <string name="alert_not_sent">Eine Antwort wurde nicht gesendet</string>
+    <string name="alert_now_on">Benachrichtigungen sind an.</string>
     <string name="alert_on_this_device">Benachrichtigungen auf diesem %1$s</string>
+    <string name="alert_open_notification_settings">Benachrichtigungseinstellungen öffnen</string>
+    <string name="alert_open_settings">Einstellungen öffnen</string>
     <string name="alert_open_tafs_answer_kiff_did">Öffne tafs, um zu antworten: KIFF hat nicht gesagt, welche Version du gesehen hast.</string>
     <string name="alert_open_tafs_answer_phone_can">Öffne tafs, um zu antworten: Dieses Telefon kann es nicht aus der Benachrichtigung heraus signieren.</string>
     <string name="alert_prompt">Lass dich benachrichtigen, wenn ein taf dich braucht</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nicht verfügbar</string>
     <string name="alert_status_off">Aus</string>
     <string name="alert_status_on">An</string>
+    <string name="alert_still_off">Benachrichtigungen sind noch aus.</string>
     <string name="alert_still_on_after_sign_out_body">tafs konnte sie nicht ausschalten (%1$s). Versuch es erneut oder melde dich trotzdem ab und schalte die Benachrichtigungen für tafs in den Einstellungen aus.</string>
     <string name="alert_still_on_after_sign_out_title">Dieses %1$s bekommt vielleicht weiter die Benachrichtigungen dieses Kontos</string>
     <string name="alert_taf_needs_you">%1$s braucht dich</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs hat KIFF zum Ablehnen nicht erreicht. Öffne tafs, um zu antworten.</string>
+    <string name="alert_watch_first_body">Um Genehmigungen und Antworten als Benachrichtigungen zu sehen, auf diesem Telefon und auf deiner Uhr, schalte die Benachrichtigungen für tafs ein. Deine Uhr bekommt ihre Updates auch, wenn du es nicht tust.</string>
+    <string name="alert_watch_first_title">Deine Uhr nutzt tafs</string>
     <string name="alert_what_alerts">Was dich benachrichtigt</string>
     <string name="alert_with_sound">Mit Ton</string>
     <string name="app_name">tafs</string>

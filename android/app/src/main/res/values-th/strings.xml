@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s ตอบภายใน %3$s จะไม่มีอะไรถูกส่งจนกว่าคุณจะอนุมัติ</string>
     <string name="alert_answered">taf ตอบใครบางคนแล้ว</string>
     <string name="alert_approve_once">อนุมัติครั้งเดียว…</string>
+    <string name="alert_blocked_body">%1$sเครื่องนี้ไม่ถามอีกแล้ว การแจ้งเตือนสำหรับ tafs จึงปิดอยู่ในการตั้งค่า เปิดที่นั่นเพื่อให้การอนุมัติและคำตอบมาถึงคุณ</string>
+    <string name="alert_blocked_body_android">Android ไม่ถามอีกแล้ว การแจ้งเตือนสำหรับ tafs จึงปิดอยู่ในการตั้งค่าโทรศัพท์ของคุณ เปิดที่นั่นเพื่อให้การอนุมัติและคำตอบมาถึงคุณ ทั้งบนโทรศัพท์เครื่องนี้และบนนาฬิกา นาฬิกาของคุณได้รับการอัปเดตอยู่แล้วไม่ว่ากรณีใด</string>
+    <string name="alert_blocked_body_watch">iPhone ของคุณไม่ถามอีกแล้ว การแจ้งเตือนสำหรับ tafs จึงปิดอยู่ในการตั้งค่า เปิดที่นั่นเพื่อให้การอนุมัติและคำตอบมาถึงคุณ ทั้งบน iPhone เครื่องนี้และบนนาฬิกา นาฬิกาของคุณได้รับการอัปเดตอยู่แล้วไม่ว่ากรณีใด</string>
+    <string name="alert_blocked_title">เปิดการแจ้งเตือนสำหรับ tafs</string>
     <string name="alert_by_email">ทางอีเมล</string>
     <string name="alert_example">ตัวอย่าง</string>
     <string name="alert_foot_cant_answer_holds">การแจ้งเตือนจะส่งถึงผู้ที่ตอบการเรียกที่ถูกพักไว้ได้ บทบาทของคุณในบัญชีนี้ทำไม่ได้</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">การแจ้งเตือนยังไม่เปิดสำหรับโทรศัพท์เครื่องนี้ %1$s</string>
     <string name="alert_not_refused">ยังไม่ได้ปฏิเสธ</string>
     <string name="alert_not_sent">ยังไม่ได้ส่งคำตอบ</string>
+    <string name="alert_now_on">เปิดการแจ้งเตือนแล้ว</string>
     <string name="alert_on_this_device">การแจ้งเตือนบน%1$sเครื่องนี้</string>
+    <string name="alert_open_notification_settings">เปิดการตั้งค่าการแจ้งเตือน</string>
+    <string name="alert_open_settings">เปิดการตั้งค่า</string>
     <string name="alert_open_tafs_answer_kiff_did">เปิด tafs เพื่อตอบ: KIFF ไม่ได้บอกว่าคุณเห็นเวอร์ชันใดของมัน</string>
     <string name="alert_open_tafs_answer_phone_can">เปิด tafs เพื่อตอบ: โทรศัพท์เครื่องนี้ลงนามจากการแจ้งเตือนไม่ได้</string>
     <string name="alert_prompt">รับการแจ้งเตือนเมื่อ taf ต้องการคุณ</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">ไม่พร้อมใช้งาน</string>
     <string name="alert_status_off">ปิด</string>
     <string name="alert_status_on">เปิด</string>
+    <string name="alert_still_off">การแจ้งเตือนยังปิดอยู่</string>
     <string name="alert_still_on_after_sign_out_body">tafs ปิดการแจ้งเตือนไม่ได้ (%1$s) ลองอีกครั้ง หรือออกจากระบบต่อไป แล้วปิดการแจ้งเตือนสำหรับ tafs ในการตั้งค่า</string>
     <string name="alert_still_on_after_sign_out_title">%1$sเครื่องนี้อาจยังได้รับการแจ้งเตือนของบัญชีนี้</string>
     <string name="alert_taf_needs_you">%1$s ต้องการคุณ</string>
@@ -45,6 +53,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs เชื่อมต่อ KIFF เพื่อปฏิเสธไม่ได้ เปิด tafs เพื่อตอบ</string>
+    <string name="alert_watch_first_body">หากต้องการเห็นการอนุมัติและคำตอบเป็นการแจ้งเตือน บนโทรศัพท์เครื่องนี้และบนนาฬิกา ให้เปิดการแจ้งเตือนสำหรับ tafs นาฬิกาของคุณยังคงได้รับการอัปเดตแม้คุณไม่เปิด</string>
+    <string name="alert_watch_first_title">นาฬิกาของคุณกำลังใช้ tafs</string>
     <string name="alert_what_alerts">สิ่งที่แจ้งเตือนคุณ</string>
     <string name="alert_with_sound">พร้อมเสียง</string>
     <string name="app_name">tafs</string>

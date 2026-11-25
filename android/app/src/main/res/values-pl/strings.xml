@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Odpowiedz do %3$s. Nic nie zostanie wysłane, dopóki nie zatwierdzisz.</string>
     <string name="alert_answered">Taf komuś odpowiedział</string>
     <string name="alert_approve_once">Zatwierdź raz…</string>
+    <string name="alert_blocked_body">Ten %1$s już nie pyta, więc alerty tafs są wyłączone w Ustawieniach. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały.</string>
+    <string name="alert_blocked_body_android">Android już nie pyta, więc alerty tafs są wyłączone w ustawieniach telefonu. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały, na tym telefonie i na zegarku. Zegarek i tak dostaje swoje aktualizacje.</string>
+    <string name="alert_blocked_body_watch">Twój iPhone już nie pyta, więc alerty tafs są wyłączone w Ustawieniach. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały, na tym iPhonie i na zegarku. Zegarek i tak dostaje swoje aktualizacje.</string>
+    <string name="alert_blocked_title">Włącz alerty tafs</string>
     <string name="alert_by_email">Przez e-mail</string>
     <string name="alert_example">Przykład</string>
     <string name="alert_foot_cant_answer_holds">Alerty trafiają do osób, które mogą odpowiadać na oczekujące wywołania. Twoja rola na tym koncie nie może.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Alerty nie są jeszcze włączone na tym telefonie. %1$s</string>
     <string name="alert_not_refused">Nie odrzucono</string>
     <string name="alert_not_sent">Odpowiedź nie została wysłana</string>
+    <string name="alert_now_on">Alerty są włączone.</string>
     <string name="alert_on_this_device">Alerty na tym urządzeniu (%1$s)</string>
+    <string name="alert_open_notification_settings">Otwórz ustawienia powiadomień</string>
+    <string name="alert_open_settings">Otwórz Ustawienia</string>
     <string name="alert_open_tafs_answer_kiff_did">Otwórz tafs, aby odpowiedzieć: KIFF nie podał, którą jego wersję widzisz.</string>
     <string name="alert_open_tafs_answer_phone_can">Otwórz tafs, aby odpowiedzieć: ten telefon nie może tego podpisać z powiadomienia.</string>
     <string name="alert_prompt">Otrzymuj alert, gdy taf czeka na Ciebie</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Niedostępne</string>
     <string name="alert_status_off">Wyłączone</string>
     <string name="alert_status_on">Włączone</string>
+    <string name="alert_still_off">Alerty są nadal wyłączone.</string>
     <string name="alert_still_on_after_sign_out_body">tafs nie mógł ich wyłączyć (%1$s). Spróbuj ponownie albo mimo to wyloguj się i wyłącz powiadomienia tafs w Ustawieniach.</string>
     <string name="alert_still_on_after_sign_out_title">Ten %1$s może nadal dostawać alerty tego konta</string>
     <string name="alert_taf_needs_you">%1$s czeka na Ciebie</string>
@@ -48,6 +56,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs nie mógł połączyć się z KIFF, aby to odrzucić. Otwórz tafs, aby odpowiedzieć.</string>
+    <string name="alert_watch_first_body">Aby widzieć zatwierdzenia i odpowiedzi jako alerty, na tym telefonie i na zegarku, włącz alerty tafs. Zegarek będzie dostawać swoje aktualizacje, nawet jeśli tego nie zrobisz.</string>
+    <string name="alert_watch_first_title">Twój zegarek używa tafs</string>
     <string name="alert_what_alerts">Co Cię powiadamia</string>
     <string name="alert_with_sound">Z dźwiękiem</string>
     <string name="app_name">tafs</string>

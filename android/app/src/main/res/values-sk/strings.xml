@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Odpovedzte do %3$s. Nič sa neodošle, kým neschválite.</string>
     <string name="alert_answered">Taf niekomu odpovedal</string>
     <string name="alert_approve_once">Schváliť raz…</string>
+    <string name="alert_blocked_body">Tento %1$s sa už nepýta, takže upozornenia pre tafs sú v Nastaveniach vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili.</string>
+    <string name="alert_blocked_body_android">Android sa už nepýta, takže upozornenia pre tafs sú v nastaveniach telefónu vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili do tohto telefónu aj do hodiniek. Hodinky dostávajú aktualizácie tak či tak.</string>
+    <string name="alert_blocked_body_watch">Váš iPhone sa už nepýta, takže upozornenia pre tafs sú v Nastaveniach vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili do tohto iPhonu aj do hodiniek. Hodinky dostávajú aktualizácie tak či tak.</string>
+    <string name="alert_blocked_title">Zapnite upozornenia pre tafs</string>
     <string name="alert_by_email">E-mailom</string>
     <string name="alert_example">Príklad</string>
     <string name="alert_foot_cant_answer_holds">Upozornenia chodia ľuďom, ktorí smú odpovedať na pozdržané volania. Vaša rola v tomto účte nesmie.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Upozornenia zatiaľ nie sú pre tento telefón zapnuté. %1$s</string>
     <string name="alert_not_refused">Neodmietnuté</string>
     <string name="alert_not_sent">Odpoveď sa neodoslala</string>
+    <string name="alert_now_on">Upozornenia sú zapnuté.</string>
     <string name="alert_on_this_device">Upozornenia na tomto zariadení (%1$s)</string>
+    <string name="alert_open_notification_settings">Otvoriť nastavenia upozornení</string>
+    <string name="alert_open_settings">Otvoriť Nastavenia</string>
     <string name="alert_open_tafs_answer_kiff_did">Otvorte tafs a odpovedzte: KIFF nepovedal, ktorú verziu ste videli.</string>
     <string name="alert_open_tafs_answer_phone_can">Otvorte tafs a odpovedzte: tento telefón to z upozornenia podpísať nevie.</string>
     <string name="alert_prompt">Dostávajte upozornenie, keď vás taf potrebuje</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nie je dostupné</string>
     <string name="alert_status_off">Vypnuté</string>
     <string name="alert_status_on">Zapnuté</string>
+    <string name="alert_still_off">Upozornenia sú stále vypnuté.</string>
     <string name="alert_still_on_after_sign_out_body">tafs ich nedokázal vypnúť (%1$s). Skúste to znova, alebo sa aj tak odhláste a vypnite upozornenia pre tafs v Nastaveniach.</string>
     <string name="alert_still_on_after_sign_out_title">Tento %1$s môže naďalej dostávať upozornenia tohto účtu</string>
     <string name="alert_taf_needs_you">%1$s vás potrebuje</string>
@@ -47,6 +55,8 @@
         <item quantity="other">%1$s tafov ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs sa nemohol spojiť s KIFF a odmietnuť to. Otvorte tafs a odpovedzte.</string>
+    <string name="alert_watch_first_body">Ak chcete vidieť schválenia a odpovede ako upozornenia v tomto telefóne aj v hodinkách, zapnite upozornenia pre tafs. Hodinky budú dostávať aktualizácie, aj keď to neurobíte.</string>
+    <string name="alert_watch_first_title">Vaše hodinky používajú tafs</string>
     <string name="alert_what_alerts">Na čo upozorňovať</string>
     <string name="alert_with_sound">So zvukom</string>
     <string name="app_name">tafs</string>

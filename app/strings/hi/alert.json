@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}। {zone} तक उत्तर दें। आपके मंज़ूर करने तक कुछ नहीं भेजा जाता।",
   "alert.answered": "किसी taf ने किसी को उत्तर दिया",
   "alert.approve_once": "एक बार मंज़ूर करें…",
+  "alert.blocked.body": "यह {device} अब नहीं पूछता, इसलिए सेटिंग्स में tafs के अलर्ट बंद हैं। उन्हें वहाँ चालू करें ताकि मंज़ूरियाँ और जवाब आप तक पहुँचें।",
+  "alert.blocked.body_android": "Android अब नहीं पूछता, इसलिए आपके फ़ोन की सेटिंग में tafs के अलर्ट बंद हैं। उन्हें वहाँ चालू करें ताकि मंज़ूरियाँ और जवाब इस फ़ोन पर और आपकी घड़ी पर पहुँचें। आपकी घड़ी को अपडेट हर हाल में मिलते हैं।",
+  "alert.blocked.body_watch": "आपका iPhone अब नहीं पूछता, इसलिए सेटिंग्स में tafs के अलर्ट बंद हैं। उन्हें वहाँ चालू करें ताकि मंज़ूरियाँ और जवाब इस iPhone पर और आपकी घड़ी पर पहुँचें। आपकी घड़ी को अपडेट हर हाल में मिलते हैं।",
+  "alert.blocked.title": "tafs के अलर्ट चालू करें",
   "alert.by_email": "ईमेल से",
   "alert.example": "उदाहरण",
   "alert.foot.cant_answer_holds": "अलर्ट उन लोगों को जाते हैं जो रोकी गई कॉल का उत्तर दे सकते हैं। इस खाते में आपकी भूमिका नहीं दे सकती।",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "इस फ़ोन के लिए अलर्ट अभी चालू नहीं हैं। {why}",
   "alert.not_refused": "अस्वीकार नहीं हुआ",
   "alert.not_sent": "उत्तर नहीं भेजा गया",
+  "alert.now_on": "अलर्ट चालू हैं।",
   "alert.on_this_device": "इस {device} पर अलर्ट",
+  "alert.open_notification_settings": "सूचना सेटिंग खोलें",
+  "alert.open_settings": "सेटिंग्स खोलें",
   "alert.open_tafs_answer_kiff_did": "उत्तर देने के लिए tafs खोलें: KIFF ने नहीं बताया कि आपने उसका कौन सा संस्करण देखा।",
   "alert.open_tafs_answer_phone_can": "उत्तर देने के लिए tafs खोलें: यह फ़ोन उसे सूचना से हस्ताक्षर नहीं कर सकता।",
   "alert.prompt": "जब किसी taf को आपकी ज़रूरत हो तो अलर्ट पाएँ",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "उपलब्ध नहीं",
   "alert.status.off": "बंद",
   "alert.status.on": "चालू",
+  "alert.still_off": "अलर्ट अब भी बंद हैं।",
   "alert.still_on_after_sign_out.body": "tafs उन्हें बंद नहीं कर सका ({why})। दोबारा कोशिश करें, या फिर भी साइन आउट करें और सेटिंग में tafs की सूचनाएँ बंद करें।",
   "alert.still_on_after_sign_out.title": "इस {device} पर अब भी इस खाते के अलर्ट आ सकते हैं",
   "alert.taf_needs_you": "{taf} को आपकी ज़रूरत है",
@@ -43,6 +51,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs अस्वीकार करने के लिए KIFF तक नहीं पहुँच सका। उत्तर देने के लिए tafs खोलें।",
+  "alert.watch_first.body": "इस फ़ोन पर और अपनी घड़ी पर मंज़ूरियाँ और जवाब अलर्ट के रूप में देखने के लिए tafs के अलर्ट चालू करें। चालू न करें तब भी आपकी घड़ी को अपडेट मिलते रहेंगे।",
+  "alert.watch_first.title": "आपकी घड़ी tafs इस्तेमाल कर रही है",
   "alert.what_alerts": "आपको क्या अलर्ट करता है",
   "alert.with_sound": "आवाज़ के साथ"
 }

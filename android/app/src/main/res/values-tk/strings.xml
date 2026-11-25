@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. %3$s çenli jogap beriň. Siz tassyklamaňyzça hiç zat iberilmeýär.</string>
     <string name="alert_answered">Bir taf kimdir birine jogap berdi</string>
     <string name="alert_approve_once">Bir gezek tassyklaň…</string>
+    <string name="alert_blocked_body">Bu %1$s indi soramaýar, şonuň üçin tafs duýduryşlary Sazlamalarda öçürilen. Tassyklamalar we jogaplar size ýetip gelsin diýip, olary şol ýerde açyň.</string>
+    <string name="alert_blocked_body_android">Android indi soramaýar, şonuň üçin tafs duýduryşlary telefonyňyzyň sazlamalarynda öçürilen. Tassyklamalar we jogaplar size, bu telefonda we sagadyňyzda ýetip gelsin diýip, olary şol ýerde açyň. Sagadyňyz täzelenmelerini islendik ýagdaýda alýar.</string>
+    <string name="alert_blocked_body_watch">iPhone-yňyz indi soramaýar, şonuň üçin tafs duýduryşlary Sazlamalarda öçürilen. Tassyklamalar we jogaplar size, bu iPhone-da we sagadyňyzda ýetip gelsin diýip, olary şol ýerde açyň. Sagadyňyz täzelenmelerini islendik ýagdaýda alýar.</string>
+    <string name="alert_blocked_title">tafs üçin duýduryşlary açyň</string>
     <string name="alert_by_email">Email bilen</string>
     <string name="alert_example">Mysal</string>
     <string name="alert_foot_cant_answer_holds">Duýduryşlar saklanan çagyryşlara jogap berip biljek adamlara gidýär. Bu hasapdaky roluňyz bilen jogap berip bilmeýärsiňiz.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Duýduryşlar bu telefon üçin heniz açyk däl. %1$s</string>
     <string name="alert_not_refused">Ret edilmedi</string>
     <string name="alert_not_sent">Jogap iberilmedi</string>
+    <string name="alert_now_on">Duýduryşlar açyk.</string>
     <string name="alert_on_this_device">Bu %1$s-daky duýduryşlar</string>
+    <string name="alert_open_notification_settings">Bildiriş sazlamalaryny açyň</string>
+    <string name="alert_open_settings">Sazlamalary açyň</string>
     <string name="alert_open_tafs_answer_kiff_did">Jogap bermek üçin tafs-y açyň: KIFF siziň görenizin haýsy wersiýadygyny aýtmady.</string>
     <string name="alert_open_tafs_answer_phone_can">Jogap bermek üçin tafs-y açyň: bu telefon ony habarnamadan gol çekip bilmeýär.</string>
     <string name="alert_prompt">Taf size zerur bolanda duýduryş alyň</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Elýeterli däl</string>
     <string name="alert_status_off">Öçük</string>
     <string name="alert_status_on">Açyk</string>
+    <string name="alert_still_off">Duýduryşlar heniz öçük.</string>
     <string name="alert_still_on_after_sign_out_body">tafs olary öçürip bilmedi (%1$s). Täzeden synanyşyň ýa-da her niçik hem çykyň we Sazlamalarda tafs üçin habarnamalary öçüriň.</string>
     <string name="alert_still_on_after_sign_out_title">Bu %1$s bu hasabyň duýduryşlaryny entek alyp biler</string>
     <string name="alert_taf_needs_you">%1$s size zerur</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs ret etmek üçin KIFF-e ýetip bilmedi. Jogap bermek üçin tafs-y açyň.</string>
+    <string name="alert_watch_first_body">Tassyklamalary we jogaplary bu telefonda we sagadyňyzda duýduryş hökmünde görmek üçin tafs duýduryşlaryny açyň. Açmasaňyz hem, sagadyňyz täzelenmelerini almagy dowam etdirer.</string>
+    <string name="alert_watch_first_title">Sagadyňyz tafs ulanýar</string>
     <string name="alert_what_alerts">Sizi nämäniň duýdurýandygy</string>
     <string name="alert_with_sound">Ses bilen</string>
     <string name="app_name">tafs</string>

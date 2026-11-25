@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}। {zone}-এর মধ্যে উত্তর দিন। আপনি অনুমোদন না করা পর্যন্ত কিছু পাঠানো হয় না।",
   "alert.answered": "একটি taf কাউকে উত্তর দিয়েছে",
   "alert.approve_once": "একবার অনুমোদন করুন…",
+  "alert.blocked.body": "এই {device} আর জিজ্ঞাসা করে না, তাই সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন আপনার কাছে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন।",
+  "alert.blocked.body_android": "Android আর জিজ্ঞাসা করে না, তাই আপনার ফোনের সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন এই ফোনে ও আপনার ঘড়িতে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন। আপনার ঘড়ি যেকোনোভাবেই আপডেট পায়।",
+  "alert.blocked.body_watch": "আপনার iPhone আর জিজ্ঞাসা করে না, তাই সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন এই iPhone-এ ও আপনার ঘড়িতে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন। আপনার ঘড়ি যেকোনোভাবেই আপডেট পায়।",
+  "alert.blocked.title": "tafs-এর অ্যালার্ট চালু করুন",
   "alert.by_email": "ইমেইলে",
   "alert.example": "উদাহরণ",
   "alert.foot.cant_answer_holds": "অ্যালার্ট তাঁদের কাছে যায় যাঁরা ধরে রাখা কল-এর উত্তর দিতে পারেন। এই অ্যাকাউন্টে আপনার ভূমিকা তা পারে না।",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "এই ফোনের জন্য অ্যালার্ট এখনও চালু নেই। {why}",
   "alert.not_refused": "প্রত্যাখ্যান হয়নি",
   "alert.not_sent": "একটি উত্তর পাঠানো হয়নি",
+  "alert.now_on": "অ্যালার্ট চালু আছে।",
   "alert.on_this_device": "এই {device}-এ অ্যালার্ট",
+  "alert.open_notification_settings": "বিজ্ঞপ্তি সেটিংস খুলুন",
+  "alert.open_settings": "সেটিংস খুলুন",
   "alert.open_tafs_answer_kiff_did": "উত্তর দিতে tafs খুলুন: আপনি এর কোন সংস্করণ দেখেছেন তা KIFF বলেনি।",
   "alert.open_tafs_answer_phone_can": "উত্তর দিতে tafs খুলুন: এই ফোন নোটিফিকেশন থেকে এতে সই করতে পারে না।",
   "alert.prompt": "কোনো taf-এর আপনাকে দরকার হলে অ্যালার্ট পান",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "পাওয়া যাচ্ছে না",
   "alert.status.off": "বন্ধ",
   "alert.status.on": "চালু",
+  "alert.still_off": "অ্যালার্ট এখনও বন্ধ।",
   "alert.still_on_after_sign_out.body": "tafs সেগুলো বন্ধ করতে পারেনি ({why})। আবার চেষ্টা করুন, অথবা তবুও সাইন আউট করে সেটিংসে tafs-এর নোটিফিকেশন বন্ধ করুন।",
   "alert.still_on_after_sign_out.title": "এই {device} হয়তো এখনও এই অ্যাকাউন্টের অ্যালার্ট পাবে",
   "alert.taf_needs_you": "{taf}-এর আপনাকে দরকার",
@@ -43,6 +51,8 @@
     "other": "{count}টি taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "প্রত্যাখ্যান করতে tafs KIFF-এ পৌঁছাতে পারেনি। উত্তর দিতে tafs খুলুন।",
+  "alert.watch_first.body": "এই ফোনে ও আপনার ঘড়িতে অনুমোদন ও উত্তর অ্যালার্ট হিসেবে দেখতে tafs-এর অ্যালার্ট চালু করুন। চালু না করলেও আপনার ঘড়ি আপডেট পেতে থাকবে।",
+  "alert.watch_first.title": "আপনার ঘড়ি tafs ব্যবহার করছে",
   "alert.what_alerts": "কীসে আপনাকে অ্যালার্ট করে",
   "alert.with_sound": "শব্দ সহ"
 }

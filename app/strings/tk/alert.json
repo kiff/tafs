@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. {zone} çenli jogap beriň. Siz tassyklamaňyzça hiç zat iberilmeýär.",
   "alert.answered": "Bir taf kimdir birine jogap berdi",
   "alert.approve_once": "Bir gezek tassyklaň…",
+  "alert.blocked.body": "Bu {device} indi soramaýar, şonuň üçin tafs duýduryşlary Sazlamalarda öçürilen. Tassyklamalar we jogaplar size ýetip gelsin diýip, olary şol ýerde açyň.",
+  "alert.blocked.body_android": "Android indi soramaýar, şonuň üçin tafs duýduryşlary telefonyňyzyň sazlamalarynda öçürilen. Tassyklamalar we jogaplar size, bu telefonda we sagadyňyzda ýetip gelsin diýip, olary şol ýerde açyň. Sagadyňyz täzelenmelerini islendik ýagdaýda alýar.",
+  "alert.blocked.body_watch": "iPhone-yňyz indi soramaýar, şonuň üçin tafs duýduryşlary Sazlamalarda öçürilen. Tassyklamalar we jogaplar size, bu iPhone-da we sagadyňyzda ýetip gelsin diýip, olary şol ýerde açyň. Sagadyňyz täzelenmelerini islendik ýagdaýda alýar.",
+  "alert.blocked.title": "tafs üçin duýduryşlary açyň",
   "alert.by_email": "Email bilen",
   "alert.example": "Mysal",
   "alert.foot.cant_answer_holds": "Duýduryşlar saklanan çagyryşlara jogap berip biljek adamlara gidýär. Bu hasapdaky roluňyz bilen jogap berip bilmeýärsiňiz.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Duýduryşlar bu telefon üçin heniz açyk däl. {why}",
   "alert.not_refused": "Ret edilmedi",
   "alert.not_sent": "Jogap iberilmedi",
+  "alert.now_on": "Duýduryşlar açyk.",
   "alert.on_this_device": "Bu {device}-daky duýduryşlar",
+  "alert.open_notification_settings": "Bildiriş sazlamalaryny açyň",
+  "alert.open_settings": "Sazlamalary açyň",
   "alert.open_tafs_answer_kiff_did": "Jogap bermek üçin tafs-y açyň: KIFF siziň görenizin haýsy wersiýadygyny aýtmady.",
   "alert.open_tafs_answer_phone_can": "Jogap bermek üçin tafs-y açyň: bu telefon ony habarnamadan gol çekip bilmeýär.",
   "alert.prompt": "Taf size zerur bolanda duýduryş alyň",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Elýeterli däl",
   "alert.status.off": "Öçük",
   "alert.status.on": "Açyk",
+  "alert.still_off": "Duýduryşlar heniz öçük.",
   "alert.still_on_after_sign_out.body": "tafs olary öçürip bilmedi ({why}). Täzeden synanyşyň ýa-da her niçik hem çykyň we Sazlamalarda tafs üçin habarnamalary öçüriň.",
   "alert.still_on_after_sign_out.title": "Bu {device} bu hasabyň duýduryşlaryny entek alyp biler",
   "alert.taf_needs_you": "{taf} size zerur",
@@ -43,6 +51,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs ret etmek üçin KIFF-e ýetip bilmedi. Jogap bermek üçin tafs-y açyň.",
+  "alert.watch_first.body": "Tassyklamalary we jogaplary bu telefonda we sagadyňyzda duýduryş hökmünde görmek üçin tafs duýduryşlaryny açyň. Açmasaňyz hem, sagadyňyz täzelenmelerini almagy dowam etdirer.",
+  "alert.watch_first.title": "Sagadyňyz tafs ulanýar",
   "alert.what_alerts": "Sizi nämäniň duýdurýandygy",
   "alert.with_sound": "Ses bilen"
 }

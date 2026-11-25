@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Răspundeți până la {zone}. Nimic nu se trimite până nu aprobați.",
   "alert.answered": "Un taf a răspuns cuiva",
   "alert.approve_once": "Aprobați o dată…",
+  "alert.blocked.body": "Acest dispozitiv ({device}) nu mai întreabă, așa că alertele tafs sunt dezactivate în Configurări. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs.",
+  "alert.blocked.body_android": "Android nu mai întreabă, așa că alertele tafs sunt dezactivate în setările telefonului. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs., pe acest telefon și pe ceas. Ceasul își primește actualizările oricum.",
+  "alert.blocked.body_watch": "iPhone-ul dvs. nu mai întreabă, așa că alertele tafs sunt dezactivate în Configurări. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs., pe acest iPhone și pe ceas. Ceasul își primește actualizările oricum.",
+  "alert.blocked.title": "Activați alertele tafs",
   "alert.by_email": "Prin e-mail",
   "alert.example": "Exemplu",
   "alert.foot.cant_answer_holds": "Alertele merg la persoanele care pot răspunde la apelurile reținute. Rolul dvs. în acest cont nu poate.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Alertele nu sunt încă activate pe acest telefon. {why}",
   "alert.not_refused": "Nerefuzat",
   "alert.not_sent": "Un răspuns nu a fost trimis",
+  "alert.now_on": "Alertele sunt activate.",
   "alert.on_this_device": "Alerte pe acest dispozitiv ({device})",
+  "alert.open_notification_settings": "Deschideți setările notificărilor",
+  "alert.open_settings": "Deschideți Configurări",
   "alert.open_tafs_answer_kiff_did": "Deschideți tafs pentru a răspunde: KIFF nu a spus ce versiune ați văzut.",
   "alert.open_tafs_answer_phone_can": "Deschideți tafs pentru a răspunde: acest telefon nu îl poate semna din notificare.",
   "alert.prompt": "Primiți o alertă când un taf are nevoie de dvs.",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Indisponibil",
   "alert.status.off": "Dezactivat",
   "alert.status.on": "Activat",
+  "alert.still_off": "Alertele sunt încă dezactivate.",
   "alert.still_on_after_sign_out.body": "tafs nu le-a putut dezactiva ({why}). Încercați din nou sau deconectați-vă oricum și dezactivați notificările pentru tafs în Configurări.",
   "alert.still_on_after_sign_out.title": "Acest dispozitiv ({device}) poate primi în continuare alertele acestui cont",
   "alert.taf_needs_you": "{taf} vă așteaptă",
@@ -44,6 +52,8 @@
     "other": "{count} de tafuri ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs nu a putut contacta KIFF pentru a refuza. Deschideți tafs pentru a răspunde.",
+  "alert.watch_first.body": "Ca să vedeți aprobările și răspunsurile ca alerte, pe acest telefon și pe ceas, activați alertele tafs. Ceasul va primi în continuare actualizările, chiar dacă nu o faceți.",
+  "alert.watch_first.title": "Ceasul dvs. folosește tafs",
   "alert.what_alerts": "Ce vă alertează",
   "alert.with_sound": "Cu sunet"
 }

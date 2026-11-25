@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Atsakykite iki {zone}. Niekas nesiunčiama, kol nepatvirtinsite.",
   "alert.answered": "taf kažkam atsakė",
   "alert.approve_once": "Patvirtinti vieną kartą…",
+  "alert.blocked.body": "Šis įrenginys ({device}) daugiau nebeklausia, todėl tafs pranešimai nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų.",
+  "alert.blocked.body_android": "Android daugiau nebeklausia, todėl tafs pranešimai telefono nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų, šiame telefone ir laikrodyje. Laikrodis savo naujinius gauna bet kuriuo atveju.",
+  "alert.blocked.body_watch": "Jūsų iPhone daugiau nebeklausia, todėl tafs pranešimai nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų, šiame iPhone ir laikrodyje. Laikrodis savo naujinius gauna bet kuriuo atveju.",
+  "alert.blocked.title": "Įjunkite tafs pranešimus",
   "alert.by_email": "El. paštu",
   "alert.example": "Pavyzdys",
   "alert.foot.cant_answer_holds": "Pranešimai siunčiami žmonėms, kurie gali atsakyti į sulaikytas užklausas. Jūsų vaidmuo šioje paskyroje to neleidžia.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Šiame telefone pranešimai dar neįjungti. {why}",
   "alert.not_refused": "Neatmesta",
   "alert.not_sent": "Atsakymas neišsiųstas",
+  "alert.now_on": "Pranešimai įjungti.",
   "alert.on_this_device": "Pranešimai šiame įrenginyje ({device})",
+  "alert.open_notification_settings": "Atidaryti pranešimų nustatymus",
+  "alert.open_settings": "Atidaryti Nustatymus",
   "alert.open_tafs_answer_kiff_did": "Atidarykite tafs ir atsakykite: KIFF nenurodė, kurią jos versiją matėte.",
   "alert.open_tafs_answer_phone_can": "Atidarykite tafs ir atsakykite: šis telefonas negali jos pasirašyti iš pranešimo.",
   "alert.prompt": "Gaukite pranešimą, kai taf jūsų laukia",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Nepasiekiama",
   "alert.status.off": "Išjungta",
   "alert.status.on": "Įjungta",
+  "alert.still_off": "Pranešimai vis dar išjungti.",
   "alert.still_on_after_sign_out.body": "tafs nepavyko jų išjungti ({why}). Bandykite dar kartą arba vis tiek atsijunkite ir išjunkite tafs pranešimus nustatymuose.",
   "alert.still_on_after_sign_out.title": "Šis įrenginys ({device}) gali ir toliau gauti šios paskyros pranešimus",
   "alert.taf_needs_you": "{taf} laukia jūsų",
@@ -44,6 +52,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs nepavyko pasiekti KIFF, kad ją atmestų. Atidarykite tafs ir atsakykite.",
+  "alert.watch_first.body": "Kad matytumėte patvirtinimus ir atsakymus kaip pranešimus šiame telefone ir laikrodyje, įjunkite tafs pranešimus. Laikrodis toliau gaus savo naujinius, net jei to nepadarysite.",
+  "alert.watch_first.title": "Jūsų laikrodis naudoja tafs",
   "alert.what_alerts": "Apie ką pranešama",
   "alert.with_sound": "Su garsu"
 }

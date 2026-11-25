@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Jawab sebelum %3$s. Tidak ada yang dikirim sampai Anda menyetujui.</string>
     <string name="alert_answered">Sebuah taf menjawab seseorang</string>
     <string name="alert_approve_once">Setujui sekali…</string>
+    <string name="alert_blocked_body">%1$s ini tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di Pengaturan. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda.</string>
+    <string name="alert_blocked_body_android">Android tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di pengaturan ponsel Anda. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda, di ponsel ini dan di jam tangan Anda. Jam tangan Anda tetap menerima pembaruannya.</string>
+    <string name="alert_blocked_body_watch">iPhone Anda tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di Pengaturan. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda, di iPhone ini dan di jam tangan Anda. Jam tangan Anda tetap menerima pembaruannya.</string>
+    <string name="alert_blocked_title">Aktifkan peringatan untuk tafs</string>
     <string name="alert_by_email">Lewat email</string>
     <string name="alert_example">Contoh</string>
     <string name="alert_foot_cant_answer_holds">Peringatan dikirim ke orang yang boleh menjawab panggilan yang ditahan. Peran Anda di akun ini tidak bisa.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Peringatan belum aktif untuk ponsel ini. %1$s</string>
     <string name="alert_not_refused">Tidak ditolak</string>
     <string name="alert_not_sent">Sebuah balasan tidak terkirim</string>
+    <string name="alert_now_on">Peringatan aktif.</string>
     <string name="alert_on_this_device">Peringatan di %1$s ini</string>
+    <string name="alert_open_notification_settings">Buka pengaturan notifikasi</string>
+    <string name="alert_open_settings">Buka Pengaturan</string>
     <string name="alert_open_tafs_answer_kiff_did">Buka tafs untuk menjawabnya: KIFF tidak menyebutkan versi mana yang Anda lihat.</string>
     <string name="alert_open_tafs_answer_phone_can">Buka tafs untuk menjawabnya: ponsel ini tidak dapat menandatanganinya dari notifikasi.</string>
     <string name="alert_prompt">Dapatkan peringatan saat sebuah taf membutuhkan Anda</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Tidak tersedia</string>
     <string name="alert_status_off">Nonaktif</string>
     <string name="alert_status_on">Aktif</string>
+    <string name="alert_still_off">Peringatan masih nonaktif.</string>
     <string name="alert_still_on_after_sign_out_body">tafs tidak dapat menonaktifkannya (%1$s). Coba lagi, atau tetap keluar dan nonaktifkan notifikasi untuk tafs di Pengaturan.</string>
     <string name="alert_still_on_after_sign_out_title">%1$s ini mungkin masih menerima peringatan akun ini</string>
     <string name="alert_taf_needs_you">%1$s membutuhkan Anda</string>
@@ -45,6 +53,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs tidak dapat menghubungi KIFF untuk menolaknya. Buka tafs untuk menjawabnya.</string>
+    <string name="alert_watch_first_body">Untuk melihat persetujuan dan jawaban sebagai peringatan, di ponsel ini dan di jam tangan Anda, aktifkan peringatan untuk tafs. Jam tangan Anda tetap menerima pembaruannya meski Anda tidak mengaktifkannya.</string>
+    <string name="alert_watch_first_title">Jam tangan Anda memakai tafs</string>
     <string name="alert_what_alerts">Apa yang memperingatkan Anda</string>
     <string name="alert_with_sound">Dengan suara</string>
     <string name="app_name">tafs</string>

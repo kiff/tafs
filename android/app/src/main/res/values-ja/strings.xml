@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s・%2$s。%3$sまでに回答してください。承認するまで何も送信されません。</string>
     <string name="alert_answered">tafが誰かに回答しました</string>
     <string name="alert_approve_once">1回だけ承認…</string>
+    <string name="alert_blocked_body">この%1$sではもう確認されないため、設定でtafsの通知がオフになっています。承認や回答が届くよう、そこで通知をオンにしてください。</string>
+    <string name="alert_blocked_body_android">Androidはもう確認しないため、スマートフォンの設定でtafsの通知がオフになっています。承認や回答がこのスマートフォンとウォッチに届くよう、そこで通知をオンにしてください。ウォッチはどちらの場合も更新を受け取ります。</string>
+    <string name="alert_blocked_body_watch">iPhoneではもう確認されないため、設定でtafsの通知がオフになっています。承認や回答がこのiPhoneとウォッチに届くよう、そこで通知をオンにしてください。ウォッチはどちらの場合も更新を受け取ります。</string>
+    <string name="alert_blocked_title">tafsの通知をオンにする</string>
     <string name="alert_by_email">メールで</string>
     <string name="alert_example">例</string>
     <string name="alert_foot_cant_answer_holds">通知は、保留中の呼び出しに回答できる人に届きます。このアカウントでのあなたの役割では回答できません。</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">このスマートフォンではまだ通知がオンになっていません。%1$s</string>
     <string name="alert_not_refused">拒否されていません</string>
     <string name="alert_not_sent">返信は送信されませんでした</string>
+    <string name="alert_now_on">通知はオンです。</string>
     <string name="alert_on_this_device">この%1$sの通知</string>
+    <string name="alert_open_notification_settings">通知設定を開く</string>
+    <string name="alert_open_settings">設定を開く</string>
     <string name="alert_open_tafs_answer_kiff_did">tafsを開いて回答してください：KIFFは、あなたが見たバージョンを伝えませんでした。</string>
     <string name="alert_open_tafs_answer_phone_can">tafsを開いて回答してください：このスマートフォンは通知から署名できません。</string>
     <string name="alert_prompt">tafがあなたを必要としたときに通知を受け取る</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">利用不可</string>
     <string name="alert_status_off">オフ</string>
     <string name="alert_status_on">オン</string>
+    <string name="alert_still_off">通知はまだオフです。</string>
     <string name="alert_still_on_after_sign_out_body">tafsは通知をオフにできませんでした（%1$s）。もう一度試すか、このままサインアウトして、設定でtafsの通知をオフにしてください。</string>
     <string name="alert_still_on_after_sign_out_title">この%1$sには、まだこのアカウントの通知が届く可能性があります</string>
     <string name="alert_taf_needs_you">%1$sがあなたを必要としています</string>
@@ -45,6 +53,8 @@
         <item quantity="other">taf %1$s個 ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafsは拒否するためにKIFFに接続できませんでした。tafsを開いて回答してください。</string>
+    <string name="alert_watch_first_body">承認や回答をこのスマートフォンとウォッチで通知として受け取るには、tafsの通知をオンにしてください。オンにしなくても、ウォッチは更新を受け取り続けます。</string>
+    <string name="alert_watch_first_title">ウォッチがtafsを使っています</string>
     <string name="alert_what_alerts">通知する内容</string>
     <string name="alert_with_sound">音あり</string>
     <string name="app_name">tafs</string>

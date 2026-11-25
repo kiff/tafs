@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Atsakykite iki %3$s. Niekas nesiunčiama, kol nepatvirtinsite.</string>
     <string name="alert_answered">taf kažkam atsakė</string>
     <string name="alert_approve_once">Patvirtinti vieną kartą…</string>
+    <string name="alert_blocked_body">Šis įrenginys (%1$s) daugiau nebeklausia, todėl tafs pranešimai nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų.</string>
+    <string name="alert_blocked_body_android">Android daugiau nebeklausia, todėl tafs pranešimai telefono nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų, šiame telefone ir laikrodyje. Laikrodis savo naujinius gauna bet kuriuo atveju.</string>
+    <string name="alert_blocked_body_watch">Jūsų iPhone daugiau nebeklausia, todėl tafs pranešimai nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų, šiame iPhone ir laikrodyje. Laikrodis savo naujinius gauna bet kuriuo atveju.</string>
+    <string name="alert_blocked_title">Įjunkite tafs pranešimus</string>
     <string name="alert_by_email">El. paštu</string>
     <string name="alert_example">Pavyzdys</string>
     <string name="alert_foot_cant_answer_holds">Pranešimai siunčiami žmonėms, kurie gali atsakyti į sulaikytas užklausas. Jūsų vaidmuo šioje paskyroje to neleidžia.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Šiame telefone pranešimai dar neįjungti. %1$s</string>
     <string name="alert_not_refused">Neatmesta</string>
     <string name="alert_not_sent">Atsakymas neišsiųstas</string>
+    <string name="alert_now_on">Pranešimai įjungti.</string>
     <string name="alert_on_this_device">Pranešimai šiame įrenginyje (%1$s)</string>
+    <string name="alert_open_notification_settings">Atidaryti pranešimų nustatymus</string>
+    <string name="alert_open_settings">Atidaryti Nustatymus</string>
     <string name="alert_open_tafs_answer_kiff_did">Atidarykite tafs ir atsakykite: KIFF nenurodė, kurią jos versiją matėte.</string>
     <string name="alert_open_tafs_answer_phone_can">Atidarykite tafs ir atsakykite: šis telefonas negali jos pasirašyti iš pranešimo.</string>
     <string name="alert_prompt">Gaukite pranešimą, kai taf jūsų laukia</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nepasiekiama</string>
     <string name="alert_status_off">Išjungta</string>
     <string name="alert_status_on">Įjungta</string>
+    <string name="alert_still_off">Pranešimai vis dar išjungti.</string>
     <string name="alert_still_on_after_sign_out_body">tafs nepavyko jų išjungti (%1$s). Bandykite dar kartą arba vis tiek atsijunkite ir išjunkite tafs pranešimus nustatymuose.</string>
     <string name="alert_still_on_after_sign_out_title">Šis įrenginys (%1$s) gali ir toliau gauti šios paskyros pranešimus</string>
     <string name="alert_taf_needs_you">%1$s laukia jūsų</string>
@@ -47,6 +55,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs nepavyko pasiekti KIFF, kad ją atmestų. Atidarykite tafs ir atsakykite.</string>
+    <string name="alert_watch_first_body">Kad matytumėte patvirtinimus ir atsakymus kaip pranešimus šiame telefone ir laikrodyje, įjunkite tafs pranešimus. Laikrodis toliau gaus savo naujinius, net jei to nepadarysite.</string>
+    <string name="alert_watch_first_title">Jūsų laikrodis naudoja tafs</string>
     <string name="alert_what_alerts">Apie ką pranešama</string>
     <string name="alert_with_sound">Su garsu</string>
     <string name="app_name">tafs</string>
