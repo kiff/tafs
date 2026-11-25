@@ -212,7 +212,7 @@ const push: PushStore = {
       const m = v.M ?? {};
       const env = m.environment?.S;
       return env === "sandbox" || env === "production"
-        ? [{ token, platform: m.platform?.S === "android" ? "android" as const : m.platform?.S === "macos" ? "macos" as const : "ios" as const, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, ...(m.manages ? { manages: m.manages.BOOL === true } : {}), silent: m.silent?.BOOL === true, ...(m.kinds?.S ? { kinds: parseKinds(JSON.parse(m.kinds.S)) } : {}), at: m.at?.S ?? "" }]
+        ? [{ token, platform: m.platform?.S === "android" ? "android" as const : m.platform?.S === "macos" ? "macos" as const : "ios" as const, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, ...(m.manages ? { manages: m.manages.BOOL === true } : {}), silent: m.silent?.BOOL === true, ...(m.kinds?.S ? { kinds: parseKinds(JSON.parse(m.kinds.S)) } : {}), ...(m.alerts?.BOOL === false ? { alerts: false as const } : {}), at: m.at?.S ?? "" }]
         : [];
     });
     const secrets = Object.values(out.Item?.secrets?.M ?? {})
@@ -223,7 +223,7 @@ const push: PushStore = {
     return { devices, secrets };
   },
   async addDevice(tenant, d) {
-    await setEntry(tenant, "devices", d.token, { platform: { S: d.platform ?? "ios" }, environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, adds_tasks: { BOOL: d.addsTasks === true }, manages: { BOOL: d.manages === true }, silent: { BOOL: d.silent === true }, ...(d.kinds ? { kinds: { S: JSON.stringify(d.kinds) } } : {}), at: { S: d.at } });
+    await setEntry(tenant, "devices", d.token, { platform: { S: d.platform ?? "ios" }, environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, adds_tasks: { BOOL: d.addsTasks === true }, manages: { BOOL: d.manages === true }, silent: { BOOL: d.silent === true }, ...(d.kinds ? { kinds: { S: JSON.stringify(d.kinds) } } : {}), ...(d.alerts === false ? { alerts: { BOOL: false } } : {}), at: { S: d.at } });
   },
   async removeDevice(tenant, token) {
     await dynamo.send(new UpdateItemCommand({

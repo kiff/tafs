@@ -1,10 +1,11 @@
 import { createHmac, generateKeyPairSync, verify } from "node:crypto";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { providerToken } from "../src/cloud/apns.js";
 import { NotPausedYet, type ReadyRun } from "../src/cloud/forward.js";
 import { FORWARD_TRIES, handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
-import { type Device, heldWaitsForBrief, reconcileDevices, UNOWNED_DEVICE_DAYS, type Notification, type PushStore, quietFor, receiveAlert, registration, routing, signedByKIFF, silencing } from "../src/cloud/push.js";
+import { changeNotification, type Device, heldWaitsForBrief, sendNotification, tafChatNotification, watchAskNotification, watchInboxNotification, reconcileDevices, UNOWNED_DEVICE_DAYS, type Notification, type PushStore, quietFor, receiveAlert, registration, routing, signedByKIFF, silencing } from "../src/cloud/push.js";
 
 const NOW = new Date("2026-10-15T09:00:00Z");
 const T = Math.floor(NOW.getTime() / 1000);
@@ -954,3 +955,83 @@ describe("a held call that can wait for the brief (TAFS_BRIEF_HELD_WAIT)", () =>
   });
 });
 
+
+describe("a phone registered for background pushes only (alerts: false)", () => {
+  const signedIn = (who: string) => ({ Authorization: `Bearer ${who}` });
+  const register = (who: string, body: object, push: ReturnType<typeof memoryPush>) =>
+    call("POST", "/v1/push", { body: JSON.stringify(body), headers: signedIn(who), push });
+
+  it("is kept as the person's own phone, shows as alerts off, goes back with a plain sign-up, and is removed like any", async () => {
+    const push = memoryPush();
+    expect((await register("ana", { device_token: TOKEN_A, environment: "production", alerts: false }, push)).status).toBe(200);
+    expect(push.devices.get("t_acme")!.map((d) => [d.token, d.subject, d.alerts])).toEqual([[TOKEN_A, "u_ana", false]]);
+    const read = await call("GET", "/v1/push", { headers: { ...signedIn("ana"), "tafs-device-token": TOKEN_A }, push });
+    expect(read.body).toMatchObject({ enabled: false, background_only: true });
+    // The phone turns alerts on: a sign-up without the flag shows alerts again.
+    await register("ana", { device_token: TOKEN_A, environment: "production" }, push);
+    expect(push.devices.get("t_acme")![0]!.alerts).toBeUndefined();
+    expect((await call("GET", "/v1/push", { headers: { ...signedIn("ana"), "tafs-device-token": TOKEN_A }, push })).body).toMatchObject({ enabled: true });
+    expect((await call("GET", "/v1/push", { headers: { ...signedIn("ana"), "tafs-device-token": TOKEN_A }, push })).body.background_only).toBeUndefined();
+    // Sign-out removes it, whatever its flag.
+    await register("ana", { device_token: TOKEN_A, environment: "production", alerts: false }, push);
+    expect((await call("DELETE", "/v1/push", { body: JSON.stringify({ device_token: TOKEN_A, environment: "production" }), headers: signedIn("ana"), push })).body).toEqual({ removed: true });
+    expect(push.devices.get("t_acme")).toEqual([]);
+  });
+
+  it("refuses a flag that isn't a boolean, and KIFF's alert target beside it", async () => {
+    const push = memoryPush();
+    for (const body of [
+      { device_token: TOKEN_A, environment: "production", alerts: "no" },
+      { device_token: TOKEN_A, environment: "production", alerts: false, alert_target: { id: "at_1", signing_secret: SECRET } },
+    ]) {
+      expect((await register("ana", body, push)).status, JSON.stringify(body)).toBe(400);
+    }
+    expect(push.devices.get("t_acme")).toBeUndefined();
+  });
+
+  it("gets no held call's alert, while a phone with alerts does", async () => {
+    const push = account();
+    push.devices.set("t_acme", push.devices.get("t_acme")!.map((d) => d.token === TOKEN_A ? { ...d, alerts: false as const } : d));
+    const apns = fakeAPNs();
+    const r = await alert(held(), push, { apns });
+    expect(r.status).toBe(200);
+    expect(apns.sent.map((x) => x.token)).toEqual([TOKEN_B]);
+  });
+
+  it("gets every silent push, and no visible alert of any kind, through the one place every send goes", async () => {
+    const apns = fakeAPNs();
+    const device: Device = { token: TOKEN_A, environment: "production", subject: "u_ana", answers: true, alerts: false, at: "" };
+    const silent = [tafChatNotification("taf_1"), watchAskNotification("wa_1"), watchInboxNotification(), changeNotification("taf", "taf_1"), changeNotification("halted")];
+    for (const n of silent) expect(await sendNotification(apns, device, n)).toBe("sent");
+    expect(apns.sent.map((x) => x.n)).toEqual(silent);
+    // A visible alert, with a kind or without, never leaves.
+    apns.sent.length = 0;
+    const visible: Notification[] = [
+      { kind: "alert", payload: { aps: { alert: { title: "A taf needs you", body: "…" } } } },
+      { kind: "alert", preference: "urgent", payload: { aps: { alert: { title: "Stopped", body: "…" } } } },
+    ];
+    for (const n of visible) expect(await sendNotification(apns, device, n)).toBe("sent");
+    expect(apns.sent).toEqual([]);
+  });
+
+  it("is told only ids and a change kind: a silent push carries no words", () => {
+    for (const n of [tafChatNotification("taf_1"), watchAskNotification("wa_1"), watchInboxNotification(), ...(["taf", "halted", "resumed", "knock", "watch_ask"] as const).map((c) => changeNotification(c, "taf_1"))]) {
+      expect(n.kind).toBe("background");
+      const aps = n.payload.aps as Record<string, unknown>;
+      expect(aps.alert).toBeUndefined();
+      for (const k of ["body", "title", "name", "text", "words"]) expect(n.payload[k], k).toBeUndefined();
+    }
+  });
+
+  // Invariant: no alert reaches a phone except through sendNotification, so its rule is the only one needed. The sends
+  // to a push service sit in push.ts alone: sendNotification itself, the router's two (Apple's, Google's) it calls, and
+  // tellChange's silent changes.
+  it("has no send to a push service outside push.ts' four", () => {
+    const root = new URL("../src/cloud/", import.meta.url);
+    const files = (dir: URL): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? files(new URL(`${e.name}/`, dir)) : e.name.endsWith(".ts") ? [new URL(e.name, dir).pathname] : []);
+    const sends = files(root).flatMap((f) => readFileSync(f, "utf8").split("\n").flatMap((line, i) =>
+      /\b(apns|sender|senders\.(ios|android))\.send\(/.test(line) ? [`${f.slice(root.pathname.length)}:${i + 1}`] : []));
+    expect(sends.map((s) => s.split(":")[0])).toEqual(["push.ts", "push.ts", "push.ts", "push.ts"]);
+  });
+});
