@@ -30,6 +30,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [secure-connection.md](secure-connection.md) | The secure sheet for an app's key (its words from tafs cloud, Paste the key, Details, the receipt) and one signature for the key and its Card (the contract) |
 | [connect-apps.md](connect-apps.md) | Connect apps, for the person running tafs: connecting, what you approve, what a taf can do, app events, the Slack door vs an action, disconnecting |
 | [chrome-panel.md](chrome-panel.md) | The Chrome panel (design, not built): watching a taf work, a step handed to the person, approving in the panel with the computer's passkey, never a password alone |
+| [chrome-e2e.md](chrome-e2e.md) | The Chrome extension's end-to-end tests: the real extension in Chromium, paired with a fake planque and phone that sign with test keys, driven on local sites, with no model anywhere |
 | [chrome.md](chrome.md) | tafs in your Chrome (behind a switch): the extension, pairing from the phone, the signed steps between it and planque, what it refuses, and its tests (the contract) |
 | [doors.md](doors.md) | Doors: email, Slack and WhatsApp addresses a taf takes work from |
 | [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |

@@ -1,12 +1,13 @@
-# tafs in your Chrome (docs/chrome.md): the extension's tests, with Chromium for the content script's.
+# tafs in your Chrome (docs/chrome.md): the extension's tests, with Chromium for the content script's, then the end-to-end
+# tests (docs/chrome-e2e.md): the real extension in Chromium, paired with a fake planque, on local sites.
 name: Chrome
 
 on:
   push:
     branches: [main]
-    paths: ["chrome/**", "docs/chrome.md", ".github/workflows/chrome.yml"]
+    paths: ["chrome/**", "docs/chrome.md", "docs/chrome-e2e.md", ".github/workflows/chrome.yml"]
   pull_request:
-    paths: ["chrome/**", "docs/chrome.md", ".github/workflows/chrome.yml"]
+    paths: ["chrome/**", "docs/chrome.md", "docs/chrome-e2e.md", ".github/workflows/chrome.yml"]
 
 permissions:
   contents: read
@@ -33,3 +34,6 @@ jobs:
       - name: The extension's tests
         working-directory: chrome
         run: node --test test/*.test.js
+      - name: The end-to-end tests
+        working-directory: chrome
+        run: node --test e2e/*.e2e.test.js
