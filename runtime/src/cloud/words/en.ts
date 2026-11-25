@@ -395,6 +395,18 @@ export const en = {
   code_ai_unavailable: "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later.",
   // The same, for a run that had sent something first: no claim about credits (work.ts runFailure).
   code_ai_unavailable_partway: "Our AI provider stopped serving us partway through, so this stopped. It's on our side, not yours: try again a little later.",
+  // A turn that failed, as the chat shows it under the person's message (kind "failed"). "ours" is ai_unavailable: our
+  // provider's balance or outage, or Bedrock's day cap. A _partway line is for a turn that changed something first:
+  // it makes no claim about credits and offers no Try again, since sending the message again could act twice.
+  turn_failed_ours: "tafs can't answer right now. It's on our side, and none of your credits were used. Try again a little later.",
+  turn_failed_ours_partway: "tafs stopped partway through. It's on our side, not yours. Check what was done, then ask again a little later.",
+  turn_failed_credits: "No answer: your account has no credits left. Add credits, then try again.",
+  turn_failed_credits_ask: "No answer: your account has no credits left. Ask an admin to add some, then try again.",
+  turn_failed_time: "This took too long and stopped before it changed anything. Try again, or ask for less at once.",
+  turn_failed_time_partway: "This took too long and stopped partway through. Check what was done, then ask again for less at once.",
+  turn_failed_error: "This stopped on an error before it changed anything. Try again.",
+  turn_failed_error_partway: "This stopped on an error partway through. Check what was done, then ask again.",
+  turn_failed_retry: "Try again",
   // Credits and the balance (credits.ts): the period, each taf's row, why runs weren't counted, and the balance's lines.
   // Counts come formatted for the person's locale, with their plural form; "Solo" and "Company" are plan names.
   cr_unreadable: "Credits can't be read right now. Try again in a moment.",
