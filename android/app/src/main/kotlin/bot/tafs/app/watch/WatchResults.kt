@@ -30,12 +30,29 @@ class WatchResults(
   private val readMarks: suspend () -> bot.tafs.app.kiff.WatchInboxMarks?,
   private val keep: KeptPut,
   private val now: () -> Long = System::currentTimeMillis,
+  /** A taf's chat by its id in tafs cloud: the phone's id for the taf and its messages, as the chat view reads them; null for none. */
+  private val readChat: suspend (String) -> Pair<String, List<bot.tafs.app.model.ChatMessage>>? = { null },
+  /** The taf chats the watch has opened, by the phone's id ([WatchChats.openedIds]): only those are kept for it. */
+  private val opened: () -> Set<String> = { emptySet() },
+  private val zone: () -> String? = { null },
 ) {
   /** Reads [askId] and keeps it for the watch. Whether it was put. */
   suspend fun ask(askId: String): Boolean {
     // A message to a taf too: it lands in that taf's chat on the watch, open or kept, never in its Inbox (docs/watch-wear.md).
     val line = WatchRelay.lineOf(readAsk(askId) ?: return false)
     keep.put(WatchLink.keptAskPath(line.id), WatchLink.encodeKept(KeptAsk(now(), line)))
+    return true
+  }
+
+  /**
+   * A taf's chat changed (tafs cloud's `taf_chat` push, by its id there): for a chat the watch has opened, reads it and keeps its
+   * last 30 messages for the watch (`kept/taf-chat/{id}`). One the watch never opened, or a taf this phone doesn't list: nothing.
+   */
+  suspend fun tafChat(cloudId: String): Boolean {
+    val (tafId, messages) = readChat(cloudId) ?: return false
+    if (tafId !in opened()) return false
+    val path = WatchLink.keptChatPath(tafId) ?: return false
+    keep.put(path, WatchLink.encodeKept(bot.tafs.watchlink.KeptChat(now(), tafId, WatchRelay.chatLines(messages, bot.tafs.watchlink.ChatLine.KEPT), zone())))
     return true
   }
 
@@ -52,6 +69,12 @@ class WatchResults(
       readAsk = { id -> app.restoredModel(onScreen = false).watchAskById(id) },
       readMarks = { app.restoredModel(onScreen = false).watchInbox() },
       keep = DataLayerKeep(app),
+      readChat = { cloudId ->
+        val model = app.restoredModel(onScreen = false)
+        model.state.value.tafs.firstOrNull { it.cloudId == cloudId }?.id?.let { tafId -> model.watchTafChat(tafId)?.let { tafId to it } }
+      },
+      opened = { app.watchChats.openedIds() },
+      zone = { bot.tafs.app.model.zone.id },
     )
   }
 }

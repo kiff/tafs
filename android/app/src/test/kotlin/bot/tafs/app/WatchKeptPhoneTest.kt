@@ -153,4 +153,34 @@ class WatchKeptPhoneTest {
     floor.read(now + 30_000, backgroundScope) { reads++ }!!.await()
     assertEquals(2, reads)
   }
+
+  /** tafs cloud's `taf_chat` push: parsed, for the watch only; one with no taf is nothing. */
+  @Test fun theTafChatPushIsForTheWatchOnly() {
+    assertEquals(Alert.TafChat("t_cloud_1"), AlertPayload.parse(mapOf("kind" to "background", "change" to "taf_chat", "taf_id" to "t_cloud_1")))
+    assertNull(AlertPayload.parse(mapOf("kind" to "background", "change" to "taf_chat")))
+    val service = java.io.File("src/main/kotlin/bot/tafs/app/push/TafsMessagingService.kt").readText()
+    assertTrue(service.contains("WatchResultsWork.tafChat(applicationContext, alert.tafId)"))
+  }
+
+  /** The job puts the chat for a taf the watch opened, by the phone's id; for one it never opened, nothing. */
+  @Test fun theTafChatJobPutsOnlyAChatTheWatchOpened() = runTest {
+    val kept = Kept()
+    val messages = listOf(bot.tafs.app.model.ChatMessage(java.time.Instant.parse("2026-11-25T01:11:00Z"), bot.tafs.app.model.ChatMessage.From.taf, "Chrome is closed.", session = "s1"))
+    val chats = mapOf("t_cloud_1" to ("wiki" to messages), "t_cloud_2" to ("other" to messages))
+    val results = WatchResults(readAsk = { null }, readMarks = { null }, keep = kept, now = { now }, readChat = { chats[it] }, opened = { setOf("wiki") })
+    assertTrue(results.tafChat("t_cloud_1"))
+    val (path, data) = kept.put.single()
+    assertEquals("/tafs/watch/v1/kept/taf-chat/wiki", path)
+    assertEquals(listOf("Chrome is closed."), WatchLink.decodeKeptChat(data)!!.lines.map { it.text })
+    assertTrue("never opened on the watch: nothing", !results.tafChat("t_cloud_2"))
+    assertTrue("a taf this phone doesn't list: nothing", !results.tafChat("t_cloud_9"))
+    assertEquals(1, kept.put.size)
+  }
+
+  /** The chats the watch opened are remembered across the phone's restarts, by id alone. */
+  @Test fun theChatsTheWatchOpenedOutliveTheProcess() {
+    val store = bot.tafs.app.watch.WatchChats.OpenedStore.Memory()
+    bot.tafs.app.watch.WatchChats(Kept(), store = store).opened("wiki")
+    assertEquals(setOf("wiki"), bot.tafs.app.watch.WatchChats(Kept(), store = store).openedIds())
+  }
 }

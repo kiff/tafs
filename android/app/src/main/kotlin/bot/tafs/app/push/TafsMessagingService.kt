@@ -24,6 +24,7 @@ class TafsMessagingService : FirebaseMessagingService() {
       // Delivery), since Firebase gives this callback only a few seconds and a phone may have to restore its session first.
       is Alert.WatchAsk -> bot.tafs.app.watch.WatchResultsWork.ask(applicationContext, alert.askId)
       Alert.WatchInbox -> bot.tafs.app.watch.WatchResultsWork.inbox(applicationContext)
+      is Alert.TafChat -> bot.tafs.app.watch.WatchResultsWork.tafChat(applicationContext, alert.tafId)
       null -> Unit
     }
   }

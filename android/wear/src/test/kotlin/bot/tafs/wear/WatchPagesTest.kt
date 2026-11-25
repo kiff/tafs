@@ -118,16 +118,26 @@ class WatchPagesTest {
     assertEquals(listOf(answered), opened)
   }
 
+  /** Coach's turn: the person's words with "HH:mm ✓" under them, as on the Apple Watch; never the word "Sent" for it. */
+  @Test fun aSentTurnShowsItsTimeAndATick() {
+    val at = 1_763_244_000_000L
+    val taken = AskLine(id = "ask_9", clientId = "c9", state = AskLine.ACCEPTED, words = "Sent", updated = "2026-11-19T08:00:00Z")
+    show(read, thread = listOf(WatchModel.Said("Move my call to six", at) to taken))
+    compose.onNodeWithText(WatchChatTime.time(java.time.Instant.ofEpochMilli(at))).assertExists()
+    compose.onNodeWithTag(SENT_TICK, useUnmergedTree = true).assertExists().assertContentDescriptionEquals(Words.Watch.sent)
+    compose.onAllNodesWithText(Words.Watch.sent).assertCountEquals(0)
+  }
+
   /** The state line of an ask at work shows once: in the conversation, not again under the microphone. */
   @Test fun aTurnsStateLineShowsOnce() {
-    val working = AskLine(id = "ask_2", clientId = "c2", state = AskLine.ACCEPTED, words = "Sent · Coach has it", updated = "2026-11-19T08:00:00Z")
+    val working = AskLine(id = "ask_2", clientId = "c2", state = AskLine.WORKING, words = "Calendar is on it", updated = "2026-11-19T08:00:00Z")
     compose.setContent {
       MaterialTheme {
         WatchPages(read, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = listOf(working), ready = emptyList(), act = actions,
           pages = pages(false), thread = listOf(WatchModel.Said("Move my call to six", 1_763_244_000_000L) to working))
       }
     }
-    compose.onAllNodesWithText("Sent · Coach has it", substring = true).assertCountEquals(1)
+    compose.onAllNodesWithText("Calendar is on it", substring = true).assertCountEquals(1)
   }
 
   /** A long answer shows whole in the conversation (the owner's test: it was cut at "the computer is…"). */
@@ -624,7 +634,7 @@ class WatchPagesTest {
 
   @Test fun theStoreKeepsEachLineAsWritten() {
     val lines = listOf(heldLine, answerLine, InboxItem(InboxItem.askId("wa_03"), InboxItem.Kind.ASK, null, "Done", 3))
-    assertEquals(lines, PreferencesInboxStore.decode(PreferencesInboxStore.encode(lines)))
+    assertEquals(lines, KeptInboxStore.decode(KeptInboxStore.encode(lines)))
   }
 
   // MARK: The batch's pre-review (#1408)

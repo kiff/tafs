@@ -116,7 +116,8 @@ class TafsApplication : Application() {
    * threads, at the watch's first read.
    */
   val watchChats: bot.tafs.app.watch.WatchChats by lazy {
-    bot.tafs.app.watch.WatchChats(bot.tafs.app.watch.DataLayerKeep(this), zone = { bot.tafs.app.model.zone.id })
+    bot.tafs.app.watch.WatchChats(bot.tafs.app.watch.DataLayerKeep(this), zone = { bot.tafs.app.model.zone.id },
+      store = bot.tafs.app.watch.WatchChats.OpenedStore.Preferences(this))
       .also { it.follow(bot.tafs.app.watch.WatchChats.of(model.state), background) }
   }
 

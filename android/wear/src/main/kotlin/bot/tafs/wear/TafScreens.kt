@@ -186,7 +186,8 @@ private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions,
   for (turn in open.chat.turns) {
     val at = java.time.Instant.ofEpochMilli(turn.at)
     header(at)
-    item { ChatBubble(turn.said, mine = true, time = WatchChatTime.time(at)) }
+    // Its own words, with "HH:mm ✓" under them: in the thread only once tafs cloud took it.
+    item { ChatBubble(turn.said, mine = true, time = WatchChatTime.time(at), sent = true) }
     item { TafAnswer(turn, open.name, open.chat.whole[turn.ask.id], act) }
   }
   if (open.halted) {
@@ -247,7 +248,7 @@ private fun Centred(words: String, color: androidx.compose.ui.graphics.Color) {
 
 /** One turn's words: the person's on the right in their own colours, the taf's on the left, and what follows under them. */
 @Composable
-internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null, time: String? = null) {
+internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null, time: String? = null, sent: Boolean = false) {
   Column(Modifier.fillMaxWidth().padding(horizontal = 6.dp), horizontalAlignment = if (mine) androidx.compose.ui.Alignment.End else androidx.compose.ui.Alignment.Start) {
     Column(
       Modifier.background(if (mine) Look.mineGround else Look.neutral, androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
@@ -256,7 +257,7 @@ internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null, time:
       Text(text, style = MaterialTheme.typography.bodySmall, color = if (mine) Look.onMineGround else Look.text)
       foot?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = Look.dim) }
     }
-    time?.let { MessageTime(it) }
+    time?.let { if (sent) SentFoot(it, sent = true, Modifier.padding(horizontal = 8.dp)) else MessageTime(it) }
   }
 }
 
@@ -268,8 +269,10 @@ internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null, time:
 internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.Whole?, act: Actions) {
   val ask = turn.ask
   if (!ask.ended && !ask.held) {
-    val words = if (ask.state == bot.tafs.watchlink.AskLine.ACCEPTED) Words.Watch.sent else Words.Chat.tafIsAnswering(taf)
-    Text(words, style = MaterialTheme.typography.labelSmall, color = Look.done, modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp))
+    // Taken: the ✓ under the person's words says it; then "{taf} is answering" until the answer.
+    if (ask.state != bot.tafs.watchlink.AskLine.ACCEPTED) {
+      Text(Words.Chat.tafIsAnswering(taf), style = MaterialTheme.typography.labelSmall, color = Look.done, modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp))
+    }
     return
   }
   val shown = (whole as? WatchModel.Whole.Read)?.text ?: ask.line ?: ask.words

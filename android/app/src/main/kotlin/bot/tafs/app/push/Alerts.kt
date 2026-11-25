@@ -16,7 +16,8 @@ import java.time.Instant
  *               again with the app open; with decision, the one it's about ("hold:<id>")
  *   change      what changed (docs/approvals.md, "Live updates"): "taf", "halted", "resumed" or "knock", with taf_id; or
  *               "watch_ask", with ask_id: an ask from the Wear OS watch changed, for the phone to pass on to the watch; or
- *               "watch_inbox": the watch Inbox's marks changed, for the phone to pass on to the watch
+ *               "watch_inbox": the watch Inbox's marks changed, for the phone to pass on to the watch; or "taf_chat", with
+ *               taf_id: a message went into the person's chat with that taf, for the phone to keep for the watch
  *   title,body  what an alert says
  *   open        where tapping it goes: "needs-you", "usage", or "taf" (a door's alert) with taf_id, the taf's id in tafs cloud
  *   hold_id, request_id   what the alert is about: a later alert with the same one replaces it
@@ -83,6 +84,13 @@ sealed interface Alert {
    * Nothing is shown on the phone.
    */
   data object WatchInbox : Alert
+
+  /**
+   * A message went into the person's chat with a taf, from any device, or the run it started answered, paused or ended
+   * (`taf_chat`, with [tafId] the taf's id in tafs cloud; never Coach's chat). The phone keeps the chat for the watch, when the
+   * watch has opened it. Nothing is shown on the phone.
+   */
+  data class TafChat(val tafId: String) : Alert
 }
 
 object AlertPayload {
@@ -105,6 +113,9 @@ object AlertPayload {
 
   /** The watch Inbox's marks changed: the phone passes them to the watch, and shows nothing itself. */
   const val WATCH_INBOX = "watch_inbox"
+
+  /** A taf's chat changed: the phone keeps it for the watch, when the watch has opened it, and shows nothing itself. */
+  const val TAF_CHAT = "taf_chat"
 
   /** Where a door's alert goes: the taf, by its id in tafs cloud. */
   fun taf(cloudId: String) = "$TAF:$cloudId"
@@ -157,6 +168,7 @@ object AlertPayload {
       "answered" -> if (tag.isEmpty()) null else Alert.Clear(tag)
       "background" -> if (data["change"] == WATCH_ASK) data["ask_id"]?.takeIf(String::isNotBlank)?.let { Alert.WatchAsk(it) }
         else if (data["change"] == WATCH_INBOX) Alert.WatchInbox
+        else if (data["change"] == TAF_CHAT) data["taf_id"]?.takeIf(String::isNotBlank)?.let { Alert.TafChat(it) }
         else data["change"]?.takeIf { it in CHANGES }?.let { Alert.Changed(it, data["taf_id"]?.takeIf(String::isNotBlank)) }
       "alert" -> {
         val tafId = data["taf_id"]?.takeIf { it.isNotBlank() }

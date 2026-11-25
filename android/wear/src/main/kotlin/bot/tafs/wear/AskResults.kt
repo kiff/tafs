@@ -131,8 +131,8 @@ object KeptResults {
   class Stores(val thread: ThreadStore?, val inbox: InboxStore?, val secure: Boolean, val signedOut: Boolean) {
     companion object {
       fun of(context: Context): Stores = Stores(
-        thread = if (WATCH_V2 && KEEP_THREADS) PreferencesThreadStore(context) else null,
-        inbox = if (WATCH_V2) PreferencesInboxStore(context) else null,
+        thread = if (WATCH_V2 && KEEP_THREADS) KeptThreadStore.of(context) else null,
+        inbox = if (WATCH_V2) KeptInboxStore.of(context) else null,
         // The Inbox's own rule: kept only on a watch with a screen lock, unlocked now. A locked watch gets the notification's
         // locked words only, and the app takes the answer in at its next open, from the phone's read.
         secure = context.getSystemService(android.app.KeyguardManager::class.java)?.let { it.isDeviceSecure && !it.isDeviceLocked } == true,

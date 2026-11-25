@@ -27,7 +27,12 @@ class WatchResultsWork(context: Context, params: WorkerParameters) : CoroutineWo
     val results = WatchResults.of(applicationContext as TafsApplication)
     return try {
       val askId = inputData.getString(ASK_ID)
-      if (askId != null) results.ask(askId) else results.inbox()
+      val tafChat = inputData.getString(TAF_CHAT)
+      when {
+        askId != null -> results.ask(askId)
+        tafChat != null -> results.tafChat(tafChat)
+        else -> results.inbox()
+      }
       Result.success()
     } catch (e: kotlinx.coroutines.CancellationException) {
       throw e
@@ -51,6 +56,7 @@ class WatchResultsWork(context: Context, params: WorkerParameters) : CoroutineWo
 
   companion object {
     private const val ASK_ID = "ask_id"
+    private const val TAF_CHAT = "taf_chat"
     private const val MAX_TRIES = 3
     private const val NOTIFICATION_ID = 0x7a75
 
@@ -58,12 +64,17 @@ class WatchResultsWork(context: Context, params: WorkerParameters) : CoroutineWo
     fun ask(context: Context, askId: String) = enqueue(context, "watch-ask:$askId", askId)
 
     /** The Inbox's marks changed: its job, after any still to run. */
-    fun inbox(context: Context) = enqueue(context, "watch-inbox", null)
+    fun inbox(context: Context) = enqueue(context, "watch-inbox", workDataOf())
 
-    private fun enqueue(context: Context, name: String, askId: String?) {
+    /** A taf's chat changed (by its id in tafs cloud): its job, after any for the same taf still to run. */
+    fun tafChat(context: Context, cloudId: String) = enqueue(context, "watch-taf-chat:$cloudId", workDataOf(TAF_CHAT to cloudId))
+
+    private fun enqueue(context: Context, name: String, askId: String?) = enqueue(context, name, workDataOf(ASK_ID to askId))
+
+    private fun enqueue(context: Context, name: String, input: androidx.work.Data) {
       val request = OneTimeWorkRequestBuilder<WatchResultsWork>()
         .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-        .setInputData(if (askId != null) workDataOf(ASK_ID to askId) else workDataOf())
+        .setInputData(input)
         .build()
       WorkManager.getInstance(context).enqueueUniqueWork(name, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
     }

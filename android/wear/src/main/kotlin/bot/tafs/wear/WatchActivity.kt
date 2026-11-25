@@ -47,12 +47,12 @@ class WatchActivity : ComponentActivity() {
       DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, secure = { keyguard.isDeviceSecure }, tile = TileCount(PreferencesTileStore(this)),
       // Only v2 keeps a message for later, an Inbox, and signs out on the watch alone.
       drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
-      inboxStore = if (WATCH_V2) PreferencesInboxStore(this) else null,
+      inboxStore = if (WATCH_V2) KeptInboxStore.of(this) else null,
       signIn = if (WATCH_V2) PreferencesWatchSignIn(this) else null,
       cache = if (WATCH_V2) WatchCache(KeystoreCacheStore(this), System::currentTimeMillis) else null,
       // Coach's conversation, kept across opens (docs/watch-wear.md, "What the watch keeps").
       // Behind its switch until the owner's yes and the Privacy page's line ([KEEP_THREADS]).
-      thread = if (WATCH_V2 && KEEP_THREADS) PreferencesThreadStore(this) else null,
+      thread = if (WATCH_V2 && KEEP_THREADS) KeptThreadStore.of(this) else null,
     )
   }
 

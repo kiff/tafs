@@ -91,22 +91,26 @@ object KeptThreads {
   }
 }
 
-/** [ThreadStore] in the watch's private preferences (`tafs.threads`), as one JSON object by thread. */
-class PreferencesThreadStore(context: android.content.Context) : ThreadStore {
-  private val prefs = context.getSharedPreferences("tafs.threads", android.content.Context.MODE_PRIVATE)
-
-  override fun read(): Map<String, KeptThread> = runCatching { decode(prefs.getString(THREADS, null) ?: return emptyMap()) }.getOrDefault(emptyMap())
-
-  override fun write(threads: Map<String, KeptThread>) {
-    prefs.edit().putString(THREADS, encode(threads)).apply()
+/**
+ * [ThreadStore] in the app's private files (`watch-threads.bin`), as one JSON object by thread, encrypted at rest as the cache is
+ * ([KeystoreCacheStore]: AES-GCM under the watch's Keystore key). What won't decrypt or read reads as none and is cleared.
+ */
+class KeptThreadStore(private val text: EncryptedText) : ThreadStore {
+  override fun read(): Map<String, KeptThread> = runCatching { decode(text.read() ?: return emptyMap()) }.getOrElse {
+    text.clear()
+    emptyMap()
   }
 
-  override fun clear() {
-    prefs.edit().clear().apply()
-  }
+  override fun write(threads: Map<String, KeptThread>) = text.write(encode(threads))
+
+  override fun clear() = text.clear()
 
   companion object {
-    private const val THREADS = "threads"
+    /** The real one, under the watch's Keystore key. The plain `tafs.threads` of the first test build goes. */
+    fun of(context: android.content.Context): KeptThreadStore {
+      context.deleteSharedPreferences("tafs.threads")
+      return KeptThreadStore(EncryptedText(KeystoreCacheStore(context, "watch-threads.bin")))
+    }
 
     fun encode(threads: Map<String, KeptThread>): String = JSONObject().apply {
       for ((key, t) in threads) {

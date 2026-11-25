@@ -183,7 +183,8 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   Inbox"), which goes there; the line that Coach gets words, never a voice; and **Menu** at the foot.
 - **Ask Coach as one conversation** (W4, the owner-approved Watch Coach mockup; `CoachThread.kt`, `WatchModel.thread`): above the
   microphone, today's turns from this watch, oldest first, so the page opens on the microphone with the newest turn just above
-  it. Each turn is the person's words on the right, with when they were sent beside them, and Coach's answer on the left: its line once the
+  it. Each turn is the person's words on the right, with "HH:mm ✓" at their foot, beside them (when they were sent, and ✓ once
+  tafs cloud took them, named "Sent" for TalkBack, as on the Apple Watch), and Coach's answer on the left: its line once the
   ask has ended (a tap opens the answer card, with Hear and Reply), or tafs cloud's state for it while it's at work. Once it ended, the answer
   has its time beside it too: beside, not under, so a turn is no taller and the newest stays in sight over the microphone; and a
   header goes where a day starts (row 44, C; "When each message was sent" in docs/chat.md). TalkBack
@@ -191,8 +192,8 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   conversation, kept:** put away (the screen off, the keyboard's own screen, another app) it stays, and so do a taf's chat
   open and a review's words (`WatchModel.putAway`; a review's recording is erased); on either sign-out it goes. With
   `KEEP_THREADS` on (a `-test` build, until the owner's yes and the Privacy page's line) it's also kept on the watch across
-  opens (`tafs.threads`, "What the watch keeps"), as each taf's chat opened here is; off, it lives in memory while the app runs. **Send goes back to it:** the words
-  are the newest turn at once, with tafs cloud's state under them ("Sent · Coach has it"), and the answer lands under them in
+  opens (`watch-threads.bin`, encrypted, "What the watch keeps"), as each taf's chat opened here is; off, it lives in memory while the app runs. **Send goes back to it:** the words
+  are the newest turn at once, with "HH:mm ✓" beside them, then tafs cloud's state once Coach is at it, and the answer lands under them in
   the thread, whole however many lines (the owner's Watch 5 test: it was cut at five lines), as in a chat; the result card no
   longer opens by itself (W3's), and the answer is unread in the Inbox too. The asks at work under the microphone are only
   those not in the thread above, so a state line is drawn once. An answer tafs cloud says goes on past its line (`more`) says
@@ -278,7 +279,7 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in
   all 8 languages; Start, Stop and Delete are the phone's (`coach.start`, `chat.stop`, `chat.delete`).
 
-**Step (iv): the Inbox kept on the watch** (`Inbox.kt`, `WatchModel.inbox`, `PreferencesInboxStore`). Each held call Needs you
+**Step (iv): the Inbox kept on the watch** (`Inbox.kt`, `WatchModel.inbox`, `KeptInboxStore`). Each held call Needs you
 lists and each ask that ended (Coach's or a taf's answer) is one line of the Inbox, newest first, kept on the watch until it's
 dismissed: its taf, its words, and a blue dot while it's unread. An answer opens its result card (from the line alone if the app
 was put away since), which reads it; a held call shows what it wants, and its amount, while Needs you still holds it, and a tap reads it and opens
@@ -571,13 +572,16 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   `kept/inbox-marks`. A read that fails is tried again by WorkManager, three times at most. Signed out, or an ask tafs cloud
   doesn't give this person: nothing is put. A message to a taf is put too: the watch takes it into that taf's chat, open or
   kept, never its Inbox.
-- **A taf's chat, as the phone's moves.** Once the watch has read a taf's chat (`taf-chat`), the phone keeps each change to its
-  own thread of it for the watch (`WatchChats`, while the phone's process runs): a message sent on the phone, the taf's answer as
-  the phone follows the chat. Each change is one item, `kept/taf-chat/{id}` (its last 30 messages, `ChatLine.KEPT`), so a chat
-  open on the watch moves at once and a kept one follows. **What it can't do yet:** tafs cloud sends no push when a taf's chat
-  gains a message the watch didn't send, so with the phone's app not running, a message sent from another device, or a taf's
-  answer to one, reaches the watch only when the chat is next opened there. A silent push naming the taf
-  (`{kind: "background", change: "taf_chat", taf_id}`) on each new message in the person's chat would let the phone put it then.
+- **A taf's chat, as the phone's moves.** Once the watch has read a taf's chat (`taf-chat`), the phone keeps each change to it
+  for the watch, as one item, `kept/taf-chat/{id}` (its last 30 messages, `ChatLine.KEPT`), so a chat open on the watch moves at
+  once and a kept one follows. Two ways: while the phone's app runs, each change to its own thread (a message sent on the phone,
+  the taf's answer as the phone follows the chat; `WatchChats`); and, the app running or not, tafs cloud's silent push
+  `{kind: "background", change: "taf_chat", taf_id}` (sent to the person's own phones when their message goes in from any
+  device and when the run it started answers, pauses or ends; never for Coach's chat; no words), which starts the same kind of
+  job (`WatchResultsWork`, one chain per taf, `watch-taf-chat:{taf_id}`) that reads the chat (`GET /v1/tafs/{id}/conversation`)
+  and puts it (`WatchResults.tafChat`). Only for a chat the watch has opened: the phone remembers those tafs by id alone, at
+  most 20, across its restarts (`tafs.watch_chats`); a push for any other taf puts nothing. A tafs cloud that never sends the
+  push leaves the first way only.
 - **The taf chat's switch, before sending** (row 13): `GET /v1/watch/asks` answers `taf_chat: true|false` with the asks, and the
   phone passes it on (`AskList.taf_chat`). False, a taf's chat on the watch shows "Asking from your watch isn't on yet."
   (`watch.ask_not_on`) where its microphone and Type would be, before anything is recorded; a tafs cloud before the field says
@@ -636,7 +640,8 @@ own only from an older phone, and forgotten at sign-out, `theWatchsChatTimesAreI
 the send bar, as in a phone's chat: a round keyboard (**Type**) and a round microphone (named **Message {taf}** for TalkBack),
 then a quick reply in its own words. Each start names its taf (`readyToRecord(tafId)`, `review(tafId)`); Coach's
 starts name none, so words never go to a taf by another start. The review is titled "Message {taf}". Sent, the turn shows in
-the chat: "Sent", then "{taf} is answering", then its answer; held, **Approve on your phone** (the watch never approves).
+the chat: the person's words with "HH:mm ✓" under them (when they were sent, in the watch's 12- or 24-hour setting, and ✓ once
+tafs cloud took them, named "Sent" for TalkBack, as on the Apple Watch; `SentFoot`), then "{taf} is answering", then its answer; held, **Approve on your phone** (the watch never approves).
 **2A:** a paused taf still takes the message, with "Paused: its schedule is off. It still answers what you send." Halted,
 nothing is sent: Resume on your phone. **Read more:** a long answer shows its first part; one tap reads the whole from tafs
 cloud (`ask-full`, `?full=1`'s top-level `text`), shown in place; without it, the rest is on the phone. **Kept as Coach's is**
@@ -684,8 +689,11 @@ watch doesn't know is shown as Open on phone, never guessed at.
   - `tafs.draft`: one message kept for later, its text, ask id and the ask it continues; gone on Delete, once it's sent and
     taken, on either sign-out, and on a watch with no screen lock; not on a lock or put-away of a watch with one, since the
     person asked for it to be sent.
-  - `tafs.inbox`: the Inbox's lines (`ask:`/`held:` id, kind, the taf's name, the result's line or what a held call wants, the
-    time first seen, read) and the bare ids taken away. Its read and dismissed ids, and only those, also go to tafs cloud
+  - `watch-inbox.bin` (`KeptInboxStore`): the Inbox's lines (`ask:`/`held:` id, kind, the taf's name, the result's line or what
+    a held call wants, the time first seen, read) and the bare ids taken away, **encrypted at rest as the cache is**: AES-GCM under
+    the watch's Android Keystore key (`KeystoreCacheStore`, `EncryptedText`). What won't decrypt (the key gone, a damaged file)
+    reads as an empty Inbox and is cleared. 0.4.7 and before kept it in plain preferences (`tafs.inbox`): it's read once, written
+    encrypted, and the plain copy cleared (`KeptAtRestTest`). Its read and dismissed ids, and only those, also go to tafs cloud
     through the phone (row 21, above), so the person's other watches show the same. No amount and no reason: the phone takes any amount out of what a call wants before it goes, even where KIFF's title writes one in (`WatchRelay.withoutAmount`): first the call's own amount however it's written, then any figure with a currency beside it (a sign, a code or a word, such as €, zł, kr, PLN or euros); a number with no currency, such as an order's, stays. An answer's line, or its state in tafs cloud's words (`AskLine.words`, e.g. "No taf took it") where there's no line, is kept the same way (`Amounts.strip`, in `watchlink`, the one rule both share); opened while the app holds the answer, it shows whole. An answer that was only an amount is kept blank, and its line reads "The rest is on your phone." (`watch.more_on_phone`), as on the Apple Watch. The lines go when the app is opened or put away
     while locked or with no screen lock (a lock while the app is closed leaves them until the next open), and everything goes on
     either sign-out.
@@ -693,7 +701,8 @@ watch doesn't know is shown as Open on phone, never guessed at.
     lock, unlocked; a locked watch gets the notification's locked words, and the app takes the answer in at its next open.
     Where the Inbox can't be kept (no screen lock), the Inbox page shows every answer the watch knows, opened ones too, so one
     read doesn't vanish (row 20), and held calls as Needs you has them.
-  - `tafs.threads`, only with `KEEP_THREADS` on (a `-test` build, or `TAFS_WATCH_THREADS=1`; off in production until the
+  - `watch-threads.bin` (`KeptThreadStore`), encrypted at rest as the Inbox and the cache are (AES-GCM under the Keystore key;
+    what won't decrypt reads as none and is cleared), only with `KEEP_THREADS` on (a `-test` build, or `TAFS_WATCH_THREADS=1`; off in production until the
     owner's yes and the Privacy page's line), as the Apple Watch keeps them: **the last 30 messages of each of up to 20 threads
     opened on the watch**, Coach's and each taf's (`KeptThreads`, `MESSAGES_MAX`, `THREADS_MAX`), text only with amounts
     stripped (`Amounts.strip`): the phone's lines of a taf's chat, and what was said from the watch with its ask's state and
