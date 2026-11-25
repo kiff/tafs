@@ -154,6 +154,7 @@
     <string name="watch_type">Kirjuta</string>
     <string name="watch_type_hint">Kirjuta Coachile…</string>
     <string name="watch_update_phone">Uuenda telefonis tafsi ja proovi uuesti.</string>
+    <string name="watch_view_on_phone">Vaata telefonis</string>
     <string name="watch_view_only_phone">See telefon saab ainult vaadata, seega ei saa sa kellast küsida. Logi sisse telefonis, mis saab kinnitada.</string>
     <string name="watch_voice_text_only">Coach saab sinu sõnad tekstina, mitte kunagi sinu häält.</string>
     <string name="watch_what_it_does">Mida see teeb</string>

@@ -153,6 +153,9 @@ final class DemoPhone: PhoneAsking {
                 marks.dismissed = Array(Set(marks.dismissed + new.dismissed)).sorted()
             }
             return WatchReply(.ok, marks: marks)
+        case .openOnPhone:
+            // The demo has no phone to open.
+            return WatchReply(.ok)
         }
     }
 

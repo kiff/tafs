@@ -2957,6 +2957,7 @@
     <string name="watch_type">Tipkajte</string>
     <string name="watch_type_hint">Napišite Coachu…</string>
     <string name="watch_update_phone">Ažurirajte tafs na telefonu, pa pokušajte ponovo.</string>
+    <string name="watch_view_on_phone">Pogledajte na telefonu</string>
     <string name="watch_view_only_phone">Ovaj telefon može samo pregledavati pa ne možete pitati sa sata. Prijavite se na telefonu koji može odobravati.</string>
     <string name="watch_voice_text_only">Coach dobiva vaše reči kao tekst, nikad vaš glas.</string>
     <string name="watch_what_it_does">Šta radi</string>

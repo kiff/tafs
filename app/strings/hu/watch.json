@@ -104,6 +104,7 @@
   "watch.type": "Írás",
   "watch.type_hint": "Írj a Coachnak…",
   "watch.update_phone": "Frissítsd a tafst a telefonodon, majd próbáld újra.",
+  "watch.view_on_phone": "Megtekintés a telefonon",
   "watch.view_only_phone": "Ez a telefon csak megtekinteni tud, ezért az óráról nem kérdezhetsz. Jelentkezz be egy jóváhagyásra képes telefonon.",
   "watch.voice_text_only": "A Coach szövegként kapja meg a szavaidat, soha nem a hangodat.",
   "watch.what_it_does": "Mit csinál",

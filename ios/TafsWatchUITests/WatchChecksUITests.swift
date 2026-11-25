@@ -184,8 +184,9 @@ final class WatchChecksUITests: XCTestCase {
     func testThePhoneOutOfReachSaysSo() {
         let app = launch("-watch-demo-unreachable")
         open("Tafs", in: app)
-        shows("Your phone isn't in reach. Bring it closer, then try again.", in: app)
-        shows("Try again", in: app)
+        // One calm line, and the watch reads again by itself: no Try again (docs/watch-app.md, "Linking tafs").
+        shows("Linking tafs. Keep your phone nearby and connected.", in: app)
+        XCTAssertFalse(app.buttons["Try again"].exists, "no manual Try again")
     }
 
     /// The phone in reach but tafs cloud not: the watch says the phone couldn't reach tafs cloud (build 4024's line).

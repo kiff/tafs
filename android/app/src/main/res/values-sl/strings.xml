@@ -3037,6 +3037,7 @@
     <string name="watch_type">Tipkaj</string>
     <string name="watch_type_hint">Napišite Coachu…</string>
     <string name="watch_update_phone">Posodobite tafs v telefonu in poskusite znova.</string>
+    <string name="watch_view_on_phone">Oglej si v telefonu</string>
     <string name="watch_view_only_phone">Ta telefon lahko samo prikazuje, zato z ure ne morete spraševati. Prijavite se v telefonu, ki lahko odobrava.</string>
     <string name="watch_voice_text_only">Coach dobi vaše besede kot besedilo, nikoli vašega glasu.</string>
     <string name="watch_what_it_does">Kaj počne</string>

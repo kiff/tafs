@@ -148,6 +148,7 @@
     <string name="watch_type">入力</string>
     <string name="watch_type_hint">Coachに書く…</string>
     <string name="watch_update_phone">スマートフォンのtafsをアップデートしてから、もう一度お試しください。</string>
+    <string name="watch_view_on_phone">スマートフォンで表示</string>
     <string name="watch_view_only_phone">このスマートフォンは表示のみのため、ウォッチから質問できません。承認できるスマートフォンでサインインしてください。</string>
     <string name="watch_voice_text_only">Coachに届くのはあなたの言葉のテキストだけで、声は届きません。</string>
     <string name="watch_what_it_does">できること</string>

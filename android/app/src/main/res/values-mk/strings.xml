@@ -2877,6 +2877,7 @@
     <string name="watch_type">Пиши</string>
     <string name="watch_type_hint">Пиши на Coach…</string>
     <string name="watch_update_phone">Ажурирај го tafs на твојот телефон, па обиди се повторно.</string>
+    <string name="watch_view_on_phone">Види на телефонот</string>
     <string name="watch_view_only_phone">Овој телефон може само да гледа, па не можеш да прашуваш од часовникот. Најави се на телефон што може да одобрува.</string>
     <string name="watch_voice_text_only">Coach ги добива твоите зборови како текст, никогаш гласот.</string>
     <string name="watch_what_it_does">Што прави</string>

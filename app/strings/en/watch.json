@@ -104,6 +104,7 @@
   "watch.type": "Type",
   "watch.type_hint": "Write to Coach…",
   "watch.update_phone": "Update tafs on your phone, then try again.",
+  "watch.view_on_phone": "View on phone",
   "watch.view_only_phone": "This phone can only view, so you can't ask from the watch. Sign in on a phone that can approve.",
   "watch.voice_text_only": "Coach gets your words as text, never your voice.",
   "watch.what_it_does": "What it does",

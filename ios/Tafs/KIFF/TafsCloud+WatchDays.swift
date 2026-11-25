@@ -42,16 +42,18 @@ extension TafsCloud {
         var replyTo: String?
         /// `taf`: a message to a taf the person chose (chatting with a taf), not a request to Coach. Nil for Coach's.
         var kind: String? = nil
+        /// The line is the first part of the answer: Read more reads the whole (`GET /v1/watch/asks/{id}?full=1`).
+        var more = false
 
         enum CodingKeys: String, CodingKey {
-            case id, said, taf, state, line, words, kind
+            case id, said, taf, state, line, words, kind, more
             case saidAt = "said_at", replyTo = "reply_to"
         }
 
         init(id: String, said: String, saidAt: String, taf: Taf? = nil, state: String, line: String? = nil, words: String,
-             replyTo: String? = nil) {
+             replyTo: String? = nil, more: Bool = false) {
             self.id = id; self.said = said; self.saidAt = saidAt; self.taf = taf; self.state = state; self.line = line
-            self.words = words; self.replyTo = replyTo
+            self.words = words; self.replyTo = replyTo; self.more = more
         }
 
         init(from decoder: Decoder) throws {
@@ -65,6 +67,7 @@ extension TafsCloud {
             words = (try? c.decode(String.self, forKey: .words)) ?? ""
             replyTo = try? c.decode(String.self, forKey: .replyTo)
             kind = try? c.decode(String.self, forKey: .kind)
+            more = (try? c.decode(Bool.self, forKey: .more)) ?? false
         }
 
         /// What came of it, as the watch shows it: tafs cloud's line when there is one, else its words for the state.

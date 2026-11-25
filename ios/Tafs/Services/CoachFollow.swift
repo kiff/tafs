@@ -32,8 +32,10 @@ enum CoachFollow {
     /// The watch read Coach's finished answer itself: nothing to post.
     static func watchHas(_ ticket: WatchCoachTicket) { watchHad.insert(key(ticket)) }
 
-    /// The app's follow: inside a background task, posting with the notification center.
-    static func run(_ ticket: WatchCoachTicket, read: @escaping (WatchCoachTicket) async -> WatchReply) async {
+    /// The app's follow: inside a background task, posting with the notification center. `taf` names the taf whose chat took
+    /// a request sent from a taf's chat on the watch: its answer is posted under the taf's name and opens it.
+    static func run(_ ticket: WatchCoachTicket, taf: @escaping () async -> WatchTafName? = { nil },
+                    read: @escaping (WatchCoachTicket) async -> WatchReply) async {
         #if canImport(UIKit)
         let task = UIApplication.shared.beginBackgroundTask(withName: "coach-follow")
         defer { if task != .invalid { UIApplication.shared.endBackgroundTask(task) } }
@@ -42,7 +44,7 @@ enum CoachFollow {
                      phoneInUse: { Self.phoneActive }, post: { answer in
                          // A watch request's answer is posted once, by this follow or by tafs cloud's push (`WatchAskPush`).
                          if let id = ticket.askID, !WatchAskPushes().claimPost(id) { return }
-                         await notify(answer, ticket: ticket)
+                         await notify(answer, ticket: ticket, taf: await taf())
                      })
     }
 
@@ -87,9 +89,10 @@ enum CoachFollow {
     /// "Coach", then its answer with no amount in it (`WatchAmount.strip`, the rule the watch's Inbox keeps: iOS keeps a
     /// notification until it's dismissed, and the text promises no amount in what's kept or sent through alerts); a tap
     /// opens Coach's chat, where the whole answer is.
-    static func content(_ answer: WatchCoachAnswer) -> UNMutableNotificationContent {
+    static func content(_ answer: WatchCoachAnswer, taf: WatchTafName? = nil) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
-        content.title = Words.Coach.title
+        // A taf chat's answer is the taf's, under its own name (the owner's call 7 for a taf's chat), never "Coach".
+        content.title = taf?.name ?? Words.Coach.title
         // An amount taken out leaves the stripped words; otherwise the answer as written (spacing alone takes nothing out).
         let taken = WatchAmount.hasAmount(answer.text)
         let text = taken ? WatchAmount.strip(answer.text) : answer.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -101,13 +104,22 @@ enum CoachFollow {
         }
         content.body = lines.joined(separator: "\n")
         content.sound = .default
-        content.userInfo = ["open": "coach"]
+        // The owner's call 7, a notification you can't miss: it's the answer to what was just asked from the wrist, so it
+        // comes through a Focus, as a hold does (the app's time-sensitive entitlement).
+        content.interruptionLevel = .timeSensitive
+        content.userInfo = ["open": taf.map { "taf:" + $0.id } ?? "coach"]
         return content
     }
 
     /// Posted under the ticket's own identifier: a second post of the same answer replaces the first.
-    static func notify(_ answer: WatchCoachAnswer, ticket: WatchCoachTicket) async {
-        let request = UNNotificationRequest(identifier: "coach-reply-" + key(ticket), content: content(answer), trigger: nil)
+    static func notify(_ answer: WatchCoachAnswer, ticket: WatchCoachTicket, taf: WatchTafName? = nil) async {
+        let request = UNNotificationRequest(identifier: "coach-reply-" + key(ticket), content: content(answer, taf: taf), trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }
+}
+
+/// The taf whose chat took a request sent from the watch: tafs cloud's id, to open it, and its name, to title its answer.
+struct WatchTafName: Equatable, Sendable {
+    let id: String
+    let name: String
 }

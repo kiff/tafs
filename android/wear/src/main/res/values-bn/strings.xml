@@ -154,6 +154,7 @@
     <string name="watch_type">টাইপ করুন</string>
     <string name="watch_type_hint">Coach-কে লিখুন…</string>
     <string name="watch_update_phone">আপনার ফোনে tafs আপডেট করুন, তারপর আবার চেষ্টা করুন।</string>
+    <string name="watch_view_on_phone">ফোনে দেখুন</string>
     <string name="watch_view_only_phone">এই ফোন শুধু দেখতে পারে, তাই ঘড়ি থেকে জিজ্ঞেস করতে পারবেন না। অনুমোদন করতে পারে এমন ফোনে সাইন ইন করুন।</string>
     <string name="watch_voice_text_only">Coach আপনার কথা লেখা হিসেবে পায়, কণ্ঠ কখনও নয়।</string>
     <string name="watch_what_it_does">এটি কী করে</string>

@@ -154,6 +154,7 @@
     <string name="watch_type">Ýazyň</string>
     <string name="watch_type_hint">Coach-a ýazyň…</string>
     <string name="watch_update_phone">Telefonyňyzdaky tafs-y täzeläň, soňra täzeden synanyşyň.</string>
+    <string name="watch_view_on_phone">Telefonda görüň</string>
     <string name="watch_view_only_phone">Bu telefon diňe görüp bilýär, şonuň üçin sagatdan soramak bolmaýar. Tassyklap bilýän telefonda giriň.</string>
     <string name="watch_voice_text_only">Coach sözleriňizi tekst hökmünde alýar, hiç haçan sesiňizi däl.</string>
     <string name="watch_what_it_does">Ol näme edýär</string>

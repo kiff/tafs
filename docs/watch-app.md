@@ -592,6 +592,56 @@ microphone, with "Ask Coach" where the family has room, in the circular, corner,
 - **Step 2, later:** the count of what waits, which needs an App Group shared by the watch app and the widget, and the
   count kept on disk only while the watch has a passcode, cleared on sign-out.
 
+## Kept and pushed (the owner's eight calls on the watch)
+
+The watch follows the phone's thread without asking it each time, and never asks the person to try again.
+
+- **Pushed, in step with the phone (calls 2 and 3).** tafs cloud's silent push wakes the iPhone (`change: watch_ask`,
+  `change: watch_inbox`, and `change: taf_chat`, `taf` or `knock` for a taf's chat: `taf_chat` comes with every message
+  in it, from any device, and when its run answers). The iPhone reads the change with its own session
+  and hands it to the watch as a `WatchPush` over WatchConnectivity's `transferUserInfo`. That transfer is queued and
+  delivered in order, even when tafs isn't open on either device. A push still waiting for an older state of the same
+  request or chat is cancelled, so a watch out of reach gets each thread's newest state, not every step. On the watch,
+  `WatchPushes` hands it to what's listening:
+  - Coach's thread and a taf's thread finish the turn at once and stop reading (`CoachModel.heard`).
+  - A taf's chat reads its turns again.
+  - The Inbox takes the marks.
+  Only a request this iPhone sent for its watch is handed on, and never one whose answer the watch already read
+  (`WatchAskPushes`). A thread opens on its newest message and stays there as messages come in (`WatchThread`).
+- **Sent from the thread (call 4).** Your message is a bubble on the right, with when it went and ✓ under it (`MineBubble`).
+  The microphone and the keyboard sit side by side right under the newest message (`ThreadInput`). Both open Check before
+  sending, as before.
+- **View on phone (call 5).** Where the rest of an answer is on the phone, or a call waits to be approved there, View on phone
+  sits inline (`ViewOnPhone`). The watch can't bring an app to the front of the iPhone. So it asks the phone
+  (`open_on_phone`), and the phone opens the chat if tafs is in front. Otherwise the phone posts "From your watch", and a tap
+  opens the chat (`WatchOpen`). Nothing is read or changed.
+- **Linking tafs, never Try again (call 6).** When the phone is out of reach, slow to answer, or the link fails, the watch
+  says one calm line: "Linking tafs. Keep your phone nearby and connected." (`PhoneFailure.waiting`). Then it reads again by
+  itself after 3 s, then twice as long each time, every 30 s at most (`WatchRetry`). A Send the phone didn't answer goes
+  again by itself under the same id, `CoachModel.linkTries` times in all, 2, 4 and 8 s apart. tafs cloud takes it once. Only
+  tafs missing from the phone is said as it is, since only installing it helps. Refuse and Halt still offer Try again: each
+  is an act of the person's own.
+- **A notification you can't miss (call 7).** The answer to a request sent from the wrist is posted as time-sensitive, so it
+  comes through a Focus, as a hold does (`CoachFollow.content`). A taf chat's answer is posted the same way, under the taf's
+  name, and a tap opens that taf (`WatchTafName`; the taf's id is kept with the request in `WatchAskPushes`).
+- **The whole answer from the preview (call 8).** Tapping an answer in Coach's thread opens it whole. A cut answer is read
+  whole on that tap (`ask_full`), as a taf's Read more is. The iPhone's From your watch day (W11) offers Read more on a cut
+  line too (`more` on the day's turn): the whole answer is read on the tap, shown in place, and kept only while the day is
+  open (`WatchDaysModel.readMore`).
+- **Kept on the watch (call 1), behind `WatchThreads.on` (off).** Coach's thread and each taf's thread opened on the watch.
+  At most 20 threads, each its last 30 messages, as text with any amount taken out (the Inbox's rule, as on Wear OS), with
+  when each was sent and whose it is. Never an attachment, an
+  image, audio, a held call's details or a key. One file (`tafs.watch_threads`) with complete file protection, so it can't
+  be read while the watch is locked. It's cleared on either sign-out and when the app opens or is put away without a
+  passcode, and a thread not opened for 30 days goes (`WatchThreadsTests`). A thread opens at once on this copy, then the
+  phone's read and pushes move it on. **Switched on only with its sentence on the privacy page** and the owner's yes. Until
+  then, nothing is written.
+
+**At 10,000 users:** nothing new polls. Each change tafs cloud already pushes to an iPhone becomes at most one read of that
+one request or chat by that iPhone, and one queued transfer to its own watch. A watch that's away gets each thread's
+newest state once, not a backlog. The watch's own retries go to its phone only, at most every 30 s while a screen is shown,
+and never to tafs cloud directly.
+
 ## What the watch keeps
 
 - **In memory only:** the list, the amounts and Coach's answers. They go when the app leaves the
@@ -615,6 +665,7 @@ microphone, with "Ask Coach" where the family has room, in the circular, corner,
   read** (`ReadGrace`, on whatever the switch): when the phone doesn't answer, what's shown stays with the dot for 30 s, the
   phone is asked once more, and only then is it unreachable. **Switched on only with its sentence on the privacy page**
   (the Apple Watch paragraph says it keeps nothing apart from the Inbox) and the owner's yes.
+- **Threads, behind `WatchThreads.on` (off):** see "Kept and pushed" above.
 - **On disk:** only the Needs you count and when it was read, for the complication. It's cleared
   when the phone says it's signed out. (This comes with the complication.)
 - **Never:** a token, a key, or an amount, a merchant or a person's name in a log, on the watch

@@ -1,4 +1,5 @@
 import XCTest
+import UserNotifications
 @testable import Tafs
 
 /// W3 on Apple Watch (docs/watch-app.md, "W3"): once the watch is put away, the iPhone posts Coach's answer; never when the
@@ -85,10 +86,27 @@ final class CoachFollowTests: XCTestCase {
         XCTAssertEqual(plain.title, Words.Coach.title)
         XCTAssertEqual(plain.body, "Rae is paused.")
         XCTAssertEqual(plain.userInfo["open"] as? String, "coach")
+        XCTAssertEqual(plain.interruptionLevel, .timeSensitive, "comes through a Focus: a notification you can't miss")
         let cut = CoachFollow.content(WatchCoachAnswer(text: "Rae is paused", more: true, approveOnPhone: false))
         XCTAssertEqual(cut.body, "Rae is paused\n" + Words.Watch.moreOnPhone)
         let card = CoachFollow.content(WatchCoachAnswer(text: "", more: false, approveOnPhone: true))
         XCTAssertEqual(card.body, Words.Watch.approveOnPhone, "a card is only approved on the phone")
+    }
+
+    /// A taf chat's answer (the owner's call 7 for a taf's chat): posted as Coach's is, under the taf's name, and its tap
+    /// opens that taf, never Coach.
+    func testATafChatsAnswerIsTheTafs() {
+        let refunds = CoachFollow.content(rae, taf: WatchTafName(id: "taf-ref", name: "Refunds"))
+        XCTAssertEqual(refunds.title, "Refunds")
+        XCTAssertEqual(refunds.body, "Rae is paused.")
+        XCTAssertEqual(refunds.userInfo["open"] as? String, "taf:taf-ref")
+        XCTAssertEqual(refunds.interruptionLevel, .timeSensitive)
+        let pushes = WatchAskPushes(defaults: UserDefaults(suiteName: "CoachFollowTests.taf")!)
+        pushes.sent("ask_t", taf: "taf-ref")
+        XCTAssertEqual(pushes.entry("ask_t")?.taf, "taf-ref", "kept with the request, so tafs cloud's push posts it the same way")
+        pushes.sent("ask_c")
+        XCTAssertNil(pushes.entry("ask_c")?.taf)
+        UserDefaults(suiteName: "CoachFollowTests.taf")?.removePersistentDomain(forName: "CoachFollowTests.taf")
     }
 
     /// No amount in the notification: the Inbox's rule, and the rest is on the phone.

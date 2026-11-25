@@ -154,6 +154,7 @@
     <string name="watch_type">Írás</string>
     <string name="watch_type_hint">Írj a Coachnak…</string>
     <string name="watch_update_phone">Frissítsd a tafst a telefonodon, majd próbáld újra.</string>
+    <string name="watch_view_on_phone">Megtekintés a telefonon</string>
     <string name="watch_view_only_phone">Ez a telefon csak megtekinteni tud, ezért az óráról nem kérdezhetsz. Jelentkezz be egy jóváhagyásra képes telefonon.</string>
     <string name="watch_voice_text_only">A Coach szövegként kapja meg a szavaidat, soha nem a hangodat.</string>
     <string name="watch_what_it_does">Mit csinál</string>

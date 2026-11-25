@@ -154,6 +154,7 @@
     <string name="watch_type">აკრიფეთ</string>
     <string name="watch_type_hint">მისწერეთ Coach-ს…</string>
     <string name="watch_update_phone">განაახლეთ tafs თქვენს ტელეფონზე, შემდეგ სცადეთ ხელახლა.</string>
+    <string name="watch_view_on_phone">ნახეთ ტელეფონზე</string>
     <string name="watch_view_only_phone">ეს ტელეფონი მხოლოდ ნახვას ახერხებს, ამიტომ საათიდან ვერ ჰკითხავთ. შედით ტელეფონზე, რომელსაც დამტკიცება შეუძლია.</string>
     <string name="watch_voice_text_only">Coach თქვენს სიტყვებს იღებს ტექსტად, არასოდეს თქვენს ხმას.</string>
     <string name="watch_what_it_does">რას აკეთებს</string>

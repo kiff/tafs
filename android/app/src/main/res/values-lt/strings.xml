@@ -2957,6 +2957,7 @@
     <string name="watch_type">Rašyti</string>
     <string name="watch_type_hint">Rašykite Coach…</string>
     <string name="watch_update_phone">Atnaujinkite tafs telefone ir bandykite dar kartą.</string>
+    <string name="watch_view_on_phone">Peržiūrėti telefone</string>
     <string name="watch_view_only_phone">Šis telefonas gali tik peržiūrėti, todėl iš laikrodžio klausti negalima. Prisijunkite telefone, kuris gali tvirtinti.</string>
     <string name="watch_voice_text_only">Coach gauna jūsų žodžius kaip tekstą, niekada ne jūsų balsą.</string>
     <string name="watch_what_it_does">Ką jis daro</string>

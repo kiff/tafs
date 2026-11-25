@@ -2797,6 +2797,7 @@
     <string name="watch_type">វាយ</string>
     <string name="watch_type_hint">សរសេរទៅ Coach…</string>
     <string name="watch_update_phone">អាប់ដេត tafs នៅលើទូរសព្ទរបស់អ្នក រួចព្យាយាមម្តងទៀត។</string>
+    <string name="watch_view_on_phone">មើលនៅលើទូរសព្ទ</string>
     <string name="watch_view_only_phone">ទូរសព្ទនេះអាចមើលតែប៉ុណ្ណោះ ដូច្នេះអ្នកមិនអាចសួរពីនាឡិកាបានទេ។ ចូលនៅលើទូរសព្ទដែលអាចអនុម័តបាន។</string>
     <string name="watch_voice_text_only">Coach ទទួលពាក្យរបស់អ្នកជាអត្ថបទ មិនដែលជាសំឡេងរបស់អ្នកទេ។</string>
     <string name="watch_what_it_does">អ្វីដែលវាធ្វើ</string>

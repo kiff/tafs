@@ -2957,6 +2957,7 @@
     <string name="watch_type">הקלדה</string>
     <string name="watch_type_hint">כתיבה ל-Coach…</string>
     <string name="watch_update_phone">יש לעדכן את tafs בטלפון שלך ולנסות שוב.</string>
+    <string name="watch_view_on_phone">צפייה בטלפון</string>
     <string name="watch_view_only_phone">הטלפון הזה יכול רק להציג, ולכן אי אפשר לשאול מהשעון. יש להיכנס בטלפון שיכול לאשר.</string>
     <string name="watch_voice_text_only">Coach מקבל את המילים שלך כטקסט, אף פעם לא את הקול.</string>
     <string name="watch_what_it_does">מה הוא עושה</string>
