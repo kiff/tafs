@@ -815,6 +815,7 @@ export const sk: Words = {
   chat_delete_busy: "Táto konverzácia ešte pracuje alebo čaká na vás. Najprv ju zastavte alebo odpovedzte, potom ju odstráňte.",
   card_step_give_passkey: "Schváliť prístupovým kľúčom",
   card_step_sign_passkey: "Vaše schválenie to podpíše vaším prístupovým kľúčom, ktorého súkromný kľúč nikdy neopustí tento počítač ani váš bezpečnostný kľúč. Nie je to platba ani heslo.",
+  card_step_locked: "Najprv toto schváľte, potom môžete Coachovi písať.",
   cts_tafs_state: "Zobraziť vaše tafy",
   cts_tafs_state_does: "Číta každý taf, jeho verzie a otvorené behy.",
   cts_tafs_state_why: "Číta váš účet.",

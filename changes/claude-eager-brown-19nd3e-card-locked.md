@@ -1,0 +1,1 @@
+- **Coach's locked message box has its line.** tafs cloud has the words for the one line in Coach's message box while it waits for the Card step ("Approve this first, then you can write to Coach."), in all 26 languages. Words only; tafs cloud sends them with the Card step.

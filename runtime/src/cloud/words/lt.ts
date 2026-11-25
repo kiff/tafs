@@ -815,6 +815,7 @@ export const lt: Words = {
   chat_delete_busy: "Šis pokalbis dar dirba arba laukia jūsų. Pirmiau jį sustabdykite arba atsakykite, tada ištrinkite.",
   card_step_give_passkey: "Patvirtinti slaptarakčiu",
   card_step_sign_passkey: "Jūsų patvirtinimas tai pasirašo jūsų slaptarakčiu, kurio privatusis raktas niekada nepalieka šio kompiuterio ar jūsų saugos rakto. Tai nėra mokėjimas ar slaptažodis.",
+  card_step_locked: "Pirmiausia tai patvirtinkite, tada galėsite rašyti Coach.",
   cts_tafs_state: "Žiūrėti jūsų taf",
   cts_tafs_state_does: "Skaito kiekvieną taf, jo versijas ir atvirus vykdymus.",
   cts_tafs_state_why: "Jis skaito jūsų paskyrą.",
