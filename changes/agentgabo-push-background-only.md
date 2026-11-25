@@ -1,0 +1,1 @@
+A phone can sign up for background pushes only (`POST /v1/push` with `alerts: false`): it gets every silent change, such as a taf's chat, a watch request or the watch Inbox, and never a visible alert. A phone that serves a watch stays in step with alerts off.
