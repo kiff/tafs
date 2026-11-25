@@ -12,7 +12,8 @@ import { type Lang, wordsIn } from "./words/index.js";
 /**
  * The consent's version: raised when what's sent, or to whom, changes, so everyone is asked again. "2": the words name
  * Claude's maker and point to the subprocessors page for who runs it (Anthropic, or Amazon Web Services, Google Cloud or
- * Microsoft Azure, one at a time) and where, keeping it at most 30 days. Moving between providers already on that list
+ * Microsoft Azure, one at a time) and where, deleting it within 30 days unless it's flagged or the law requires keeping
+ * it. Moving between providers already on that list
  * is a configuration change, not a new consent; adding a provider to the list, or changing these words, raises it.
  */
 export const AI_CONSENT_VERSION = "2";
