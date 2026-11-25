@@ -136,7 +136,7 @@ fun CoachScreen(
               state.coachCloudId != null && tools != null && tools.toGive && tools.connect != null ->
                 ComposerLock(tools.step?.row.orEmpty()) { toolsOpen = true }
               else -> null
-            }
+            }?.takeIf { it.words.isNotBlank() } // No line from tafs cloud, no lock: the row and the box stay as they were.
             // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
             // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
             if (state.coachCloudId == null) StartNote(state, chats, wide = width >= WIDE_COACH)
