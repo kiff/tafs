@@ -102,6 +102,7 @@
   "aside_on": {"message": "Энэ сайтыг унших"},
   "aside_off_line": {"message": "Coach $HOST$-ыг уншдаггүй: та унтраасан", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach $HOST$-ыг уншдаггүй: банк, төлбөр, шуудан эсвэл эрүүл мэндийн сайт", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach таны байгаа хуудсыг уншдаггүй." },
   "page_consent_turn_on": { "message": "Coach-д хуудсыг унших зөвшөөрөл өгөх…" },
   "page_consent_title": { "message": "Илгээх үед Coach урд талын хуудсыг уншихыг зөвшөөрөх үү?" },

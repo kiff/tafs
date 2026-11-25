@@ -11,6 +11,7 @@ import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay, MAX_RESULT_BYTES } from "./relay.js";
 import { tafsHere } from "./coachchat.js";
+import { signedSitesOf } from "./protocol.js";
 import { Coach, reusing } from "./coach.js";
 import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { HandAnswers, handMessage } from "./hand.js";
@@ -269,6 +270,12 @@ async function tafsOfThisChrome(fresh = false, working = null) {
   return tafsHere(connections, tafs, working);
 }
 
+/** The sites the paired phone signed for taf [taf]'s connections in this Chrome (protocol.signedSitesOf): never planque's list. */
+async function tafSites(taf) {
+  const one = (await tafsOfThisChrome()).find((t) => t.id === taf);
+  return one ? signedSitesOf(one.grants, (relay && relay.connections) || [], kept.pairing) : [];
+}
+
 async function onlyHere(taf) {
   if (!(await tafsOfThisChrome()).some((t) => t.id === taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
 }
@@ -293,8 +300,8 @@ async function asideStatus(tabId, windowId) {
   return { host, why };
 }
 
-async function asideRead(tabId, windowId) {
-  return readForCoach(chrome, tabId, windowId, await asideOff());
+async function asideRead(tabId, windowId, within = null) {
+  return readForCoach(chrome, tabId, windowId, await asideOff(), within);
 }
 
 // Coach reads the page in front only with the person's page consent (pageconsent.js), checked before the tab is touched.
@@ -384,9 +391,19 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     },
     // A send from the panel marks the run tafs cloud starts for it (its answer's `run`), with the panel's window and the tab in
     // front: that run, and no other, may work in that tab (panels.js).
+    // The page in front goes with it as with Coach's (docs/chrome.md, "A taf works where you are"): the same consent, the same
+    // gate and masked read, only with words, and only on the taf's own sites as the paired phone signed them for its
+    // connections here; off them, nothing of the page is read, and the answer says why.
     taf_send: async () => {
       await onlyHere(m.taf);
-      return { sent: await panels.sent(m.windowId, m.tabId, (await coach()).sendToTaf(m.taf, m.words, m.clientID, m.attachments)) };
+      const alone = m.alone === true || !String(m.words || "").trim();
+      const page = await pageForSend({ alone, consent: pageConsentReady, read: async () => asideRead(m.tabId, m.windowId, await tafSites(m.taf)) });
+      return {
+        sent: await panels.sent(m.windowId, m.tabId, (await coach()).sendToTaf(m.taf, m.words, m.clientID, m.attachments, page.page)),
+        reading: page.page ? page.host : null,
+        notReading: page.why || null,
+        host: page.host || null,
+      };
     },
     // A file the person picked in the panel, declared as the session (Coach's when no taf is named): the answer says where the
     // panel uploads its bytes itself (attach.js). Only a taf of this Chrome, as for its chat.

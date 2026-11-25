@@ -460,9 +460,45 @@ test("the relay takes steps only after both ends proved themselves", async () =>
   assert.equal(await verify(await pub(ext), LABEL.result, signedBody, sig), true);
 
   const bad = step({ nonce: "n2" });
+  const sent = ws.sent.length;
   await ws.deliver({ type: "step", step: bad, sig: "AAAA" });
   assert.equal(handled.length, 1, "an unsigned step never reaches the runner");
-  assert.equal(ws.sent.at(-1).error.code, "bad_step");
+  assert.equal(ws.sent.length, sent, "and gets no answer: nothing signed over its id and nonce");
+  relay.close();
+});
+
+// The security read: a forged step was answered with a signed bad_step over the id and nonce it chose.
+test("a step that doesn't verify gets no signed answer; a verified one the runner refuses keeps its signed refusal", async () => {
+  const p = await planque();
+  const other = await planque();
+  const refusing = { active: false, handle: async () => ({ error: { code: "bad_step", detail: "offset" } }), stop: async () => {} };
+  const { relay, ext, ws } = await relayWith(p, { runner: refusing });
+  await handshake(p, ws);
+  const sent = ws.sent.length;
+  const forged = [
+    ["another key's signature", step({ nonce: "f1" }), other.keys.privateKey],
+    ["another Chrome's", step({ nonce: "f2", chrome_id: "chr_other" }), p.keys.privateKey],
+    ["expired", step({ nonce: "f3", exp: NOW - 600_000 }), p.keys.privateKey],
+    ["an op the extension doesn't take", step({ nonce: "f4", op: "download" }), p.keys.privateKey],
+  ];
+  for (const [what, s, key] of forged) {
+    await ws.deliver({ type: "step", step: s, sig: await sign(key, LABEL.step, s) });
+    assert.equal(ws.sent.length, sent, what + ": no answer");
+  }
+  await ws.deliver({ type: "step", step: { id: "op_x", nonce: "f5" }, sig: "AAAA" });
+  assert.equal(ws.sent.length, sent, "an unsigned message: no answer");
+  // A replay of a step already answered: no second answer.
+  const once = step({ nonce: "r1", id: "op_r", read_id: "x", offset: -1, op: "read" });
+  const sig = await sign(p.keys.privateKey, LABEL.step, once);
+  await ws.deliver({ type: "step", step: once, sig });
+  assert.equal(ws.sent.length, sent + 1);
+  const answer = ws.sent.at(-1);
+  assert.equal(answer.ok, false);
+  assert.equal(answer.error.code, "bad_step", "the verified step's refusal is said");
+  const { sig: asig, type, ...body } = answer; // eslint-disable-line no-unused-vars
+  assert.equal(await verify(await pub(ext), LABEL.result, body, asig), true, "and signed");
+  await ws.deliver({ type: "step", step: once, sig });
+  assert.equal(ws.sent.length, sent + 1, "replayed: no answer");
   relay.close();
 });
 

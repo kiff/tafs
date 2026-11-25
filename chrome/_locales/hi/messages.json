@@ -271,6 +271,7 @@
   "aside_on": {"message": "यह साइट पढ़ें"},
   "aside_off_line": {"message": "Coach $HOST$ नहीं पढ़ता: आपने इसे बंद किया है", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach $HOST$ नहीं पढ़ता: यह बैंक, भुगतान, मेल या स्वास्थ्य साइट है", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach वह पेज नहीं पढ़ता जिस पर आप हैं।" },
   "page_consent_turn_on": { "message": "Coach को पेज पढ़ने दें…" },
   "page_consent_title": { "message": "भेजते समय Coach सामने का पेज पढ़े?" },

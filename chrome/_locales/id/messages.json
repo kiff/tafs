@@ -102,6 +102,7 @@
   "aside_on": {"message": "Baca situs ini"},
   "aside_off_line": {"message": "Coach tidak membaca $HOST$: Anda mematikannya", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach tidak membaca $HOST$: situs bank, pembayaran, email, atau kesehatan", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach tidak membaca halaman yang sedang Anda buka." },
   "page_consent_turn_on": { "message": "Izinkan Coach membaca halaman…" },
   "page_consent_title": { "message": "Izinkan Coach membaca halaman di depan saat Anda mengirim?" },

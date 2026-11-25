@@ -102,6 +102,7 @@
   "aside_on": {"message": "이 사이트 읽기"},
   "aside_off_line": {"message": "Coach가 $HOST$을(를) 읽지 않습니다: 꺼 두셨습니다", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach가 $HOST$을(를) 읽지 않습니다: 은행, 결제, 메일 또는 건강 사이트입니다", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach는 지금 보고 있는 페이지를 읽지 않습니다." },
   "page_consent_turn_on": { "message": "Coach가 페이지를 읽도록 허용…" },
   "page_consent_title": { "message": "보낼 때 Coach가 앞에 있는 페이지를 읽도록 할까요?" },

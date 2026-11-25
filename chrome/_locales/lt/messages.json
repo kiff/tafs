@@ -102,6 +102,7 @@
   "aside_on": {"message": "Skaityti šią svetainę"},
   "aside_off_line": {"message": "Coach neskaito $HOST$: jūs tai išjungėte", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach neskaito $HOST$: banko, mokėjimų, pašto ar sveikatos svetainė", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach neskaito puslapio, kuriame esate." },
   "page_consent_turn_on": { "message": "Leisti Coach skaityti puslapį…" },
   "page_consent_title": { "message": "Ar leisti Coach siunčiant skaityti priekyje esantį puslapį?" },

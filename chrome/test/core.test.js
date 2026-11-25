@@ -4,6 +4,8 @@ import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
 import { refuseURL, bareURL, sensitive, siteOK, asideRefusal, mailHost } from "../src/sites.js";
 import { readForCoach } from "../src/asideread.js";
+import { signedSitesOf } from "../src/protocol.js";
+import { readConnections } from "../src/relay.js";
 import { refuse, PAY_WORDS, KINDS } from "../src/guard.js";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -245,6 +247,8 @@ test("every shipped language has an extension locale with English's keys and pla
   assert.deepEqual(locales, want, "one locale for each language the apps ship, and no other");
   // Lines that are the same in every language: names and the like. Anything else equal to English is English left in.
   const sameAsEnglish = new Set(["name", "coach_title"]); // Coach is a name, the same in every language
+  // A new line whose translations come in their own pull request: English in every locale until then, and this goes with it.
+  for (const key of ["aside_not_taf_site"]) sameAsEnglish.add(key);
   // A word the language shares with English, on purpose: "Site" in French, Dutch, Portuguese, Romanian and Turkish,
   // "Password" in Italian, "Conversation" in French. Anything else equal to English is English left in.
   const sharedWords = { coach_untitled: ["fr"] };
@@ -378,6 +382,42 @@ test("the page is checked again on the address it was read on: a tab that moved 
   c = fake({ before: "https://my.1password.com/", after: "https://my.1password.com/", readOn: "https://my.1password.com/" });
   assert.equal((await readForCoach(c, 7, 2, [])).why, "sensitive");
   assert.deepEqual(c.calls, []);
+
+  // For a taf: only on its own signed sites. A page off them is never read: nothing injected, nothing sent, and why.
+  const wiki = "https://fr.wikipedia.org/wiki/Grenoble";
+  c = fake({ before: wiki, after: wiki, readOn: wiki });
+  assert.deepEqual(await readForCoach(c, 7, 2, [], ["shop.example"]), { host: "fr.wikipedia.org", why: "not_taf_site" });
+  assert.deepEqual(c.calls, [], "a page on a site the taf isn't connected to is never read");
+  c = fake({ before: wiki, after: wiki, readOn: wiki });
+  assert.equal((await readForCoach(c, 7, 2, [], [])).why, "not_taf_site", "no signed sites: no page");
+  // On its sites (a subdomain counts, as for a run), the same masked read as Coach's.
+  c = fake({ before: wiki, after: wiki, readOn: wiki });
+  got = await readForCoach(c, 7, 2, [], ["wikipedia.org"]);
+  assert.equal(got.host, "fr.wikipedia.org");
+  assert.ok(got.page && got.page.text === "words");
+  // Read on its site, the tab moved off it before the read finished: nothing sent.
+  c = fake({ before: "https://shop.example/a", after: "https://news.example/", readOn: "https://news.example/x" });
+  got = await readForCoach(c, 7, 2, [], ["shop.example"]);
+  assert.deepEqual([got.why, got.page], ["not_taf_site", undefined]);
+});
+
+test("a taf's sites for its page are the phone's signed ones: carried at pairing or relayed with their signature, never planque's list", async () => {
+  const phone = await newKeyPair();
+  const pairing = { chromeId: "chr_1", phoneKey: b64u(await publicSPKI(phone.publicKey)), carried: [{ grant: "g_c", sites: ["carried.example"] }] };
+  const signed = async (grant, sites, key = phone.privateKey) => ({ sites, sig: await sign(key, LABEL.sites, { chrome_id: "chr_1", grant, sites }) });
+  const other = await newKeyPair();
+  const connections = readConnections([
+    { grant: "g_1", agent: "a", name: "Wiki lookup", sites: ["wikipedia.org", "evil.example"], sites_signed: await signed("g_1", ["wikipedia.org"]) },
+    { grant: "g_2", agent: "a", name: "Wiki lookup", sites: ["forged.example"], sites_signed: await signed("g_2", ["forged.example"], other.privateKey) },
+    { grant: "g_3", agent: "a", name: "Wiki lookup", sites: ["unsigned.example"] },
+    { grant: "g_4", agent: "b", name: "Other", sites: ["other.example"], sites_signed: await signed("g_4", ["other.example"]) },
+    { grant: "g_5", agent: "a", name: "Wiki lookup", sites: ["moved.example"], sites_signed: await signed("g_1", ["moved.example"]) },
+  ]);
+  assert.deepEqual(await signedSitesOf(["g_1"], connections, pairing), ["wikipedia.org"], "planque's own list adds nothing");
+  assert.deepEqual(await signedSitesOf(["g_2", "g_3", "g_5"], connections, pairing), [], "another key's, none, or another grant's signature: nothing");
+  assert.deepEqual(await signedSitesOf(["g_c"], connections, pairing), ["carried.example"], "a carried connection's sites, as the phone signed them at pairing");
+  assert.deepEqual(await signedSitesOf(["g_1"], connections, null), [], "unpaired: nothing");
+  assert.ok(!(await signedSitesOf(["g_1", "g_c"], connections, pairing)).includes("other.example"), "never another taf's grant");
 });
 
 test("Coach never reads a mail site: Gmail, Outlook, any webmail host, by name or by its label", () => {

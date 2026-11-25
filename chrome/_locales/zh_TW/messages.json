@@ -102,6 +102,7 @@
   "aside_on": {"message": "讀取這個網站"},
   "aside_off_line": {"message": "Coach 不會讀取 $HOST$：您已關閉", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach 不會讀取 $HOST$：這是銀行、付款、郵件或健康網站", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach 不會讀取您正在看的頁面。" },
   "page_consent_turn_on": { "message": "讓 Coach 讀取頁面…" },
   "page_consent_title": { "message": "傳送時讓 Coach 讀取最前面的頁面嗎？" },

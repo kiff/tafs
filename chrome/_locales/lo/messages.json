@@ -102,6 +102,7 @@
   "aside_on": {"message": "ອ່ານເວັບໄຊນີ້"},
   "aside_off_line": {"message": "Coach ບໍ່ອ່ານ $HOST$: ທ່ານປິດມັນແລ້ວ", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach ບໍ່ອ່ານ $HOST$: ເປັນເວັບໄຊທະນາຄານ, ການຈ່າຍເງິນ, ອີເມວ ຫຼື ສຸຂະພາບ", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach ບໍ່ອ່ານໜ້າທີ່ທ່ານຢູ່." },
   "page_consent_turn_on": { "message": "ໃຫ້ Coach ອ່ານໜ້າ…" },
   "page_consent_title": { "message": "ໃຫ້ Coach ອ່ານໜ້າທີ່ຢູ່ດ້ານໜ້າເມື່ອທ່ານສົ່ງບໍ?" },

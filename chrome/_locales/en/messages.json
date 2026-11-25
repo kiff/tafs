@@ -28,6 +28,7 @@
   "aside_on": { "message": "Read this site", "description": "Button: Coach reads this site's page again when you send." },
   "aside_off_line": { "message": "Coach doesn't read $HOST$: you switched it off", "description": "Above Coach's message box, for a site the person switched off.", "placeholders": { "host": { "content": "$1" } } },
   "aside_sensitive": { "message": "Coach doesn't read $HOST$: a bank, payment, mail or health site", "description": "Above Coach's message box, for a sensitive site, which is never read.", "placeholders": { "host": { "content": "$1" } } },
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "working": { "message": "$TAF$ is working", "placeholders": { "taf": { "content": "$1" } } },
   "group_done": { "message": "$TAF$ is done", "description": "Title of a taf's tab group in Chrome once its work there is over (while it works: \"Rae is working\").", "placeholders": { "taf": { "content": "$1" } } },
   "paused_owner": { "message": "Paused: you're using this tab." },

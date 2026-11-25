@@ -102,6 +102,7 @@
   "aside_on": {"message": "Lire ce site"},
   "aside_off_line": {"message": "Coach ne lit pas $HOST$ : vous l'avez désactivé", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach ne lit pas $HOST$ : site de banque, de paiement, de messagerie ou de santé", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach ne lit pas la page sur laquelle vous êtes." },
   "page_consent_turn_on": { "message": "Laisser Coach lire la page…" },
   "page_consent_title": { "message": "Laisser Coach lire la page au premier plan quand vous envoyez ?" },

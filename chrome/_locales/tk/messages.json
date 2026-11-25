@@ -271,6 +271,7 @@
   "aside_on": {"message": "Bu saýty oka"},
   "aside_off_line": {"message": "Coach $HOST$ saýtyny okamaýar: siz öçürdiňiz", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach $HOST$ saýtyny okamaýar: bank, töleg, poçta ýa-da saglyk saýty", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach siziň açan sahypaňyzy okamaýar." },
   "page_consent_turn_on": { "message": "Coach-a sahypany okamaga rugsat beriň…" },
   "page_consent_title": { "message": "Ugradanyňyzda Coach öňdäki sahypany okasynmy?" },

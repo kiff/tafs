@@ -1,7 +1,8 @@
 // Runs checked steps in a run's own tabs (docs/chrome.md, "Runs"). Each run opens a background tab in the owner's window (a window of
 // its own, unfocused, when there is none) in one tab group, "tafs · <taf>", that never comes to the front. A run the person started
 // from the side panel works where they are instead ("A taf works where you are"): the tab in front of that panel's window joins the
-// run, only on the run's sites and with the page consent, and Chrome follows the run's tab while the panel is open there. The runner
+// run, only on the run's sites, with the page consent, and only when the run opens the very page it shows (an open elsewhere goes to
+// a tab of the run's own: the person's tab is never navigated away), and Chrome follows the run's tab while the panel is open there. The runner
 // touches only tabs it opened and that one tab: it never lists the owner's tabs, and nothing outside the run's group is ever read or
 // sent. A navigation off the run's sites is stopped in the tab itself, whatever started it. The owner's own input in a run's tab
 // pauses the run.
@@ -391,8 +392,9 @@ export class Runner {
     this.record(run, by ? { op: "stop", by } : { op: "stop" });
     // A run that never loaded a page has nothing of the person's to keep: its blank tab goes, as before. One the person stopped
     // says done at once: nothing of the taf's will follow it in the grace.
-    // The person's Stop hands a tab of theirs that joined the run back to them: out of the group, still open.
-    await this.closeRun(run, close || !run.opened, by != null, by === "person");
+    // The person's Stop hands a tab of theirs that joined the run back to them: out of the group, still open; so does the end of
+    // a paused run by the taf's newer one.
+    await this.closeRun(run, close || !run.opened, by != null, by === "person" || by === "newer_run");
   }
 
   /**
@@ -665,6 +667,13 @@ export class Runner {
         site: "",
       };
       this.runs.set(run.id, run);
+      // One run of a taf at a time on the person's screen: a newer run of the taf (same name, same grant: never another taf's),
+      // whatever started it, ends an older one the person left paused, as their Stop would, before its own first step: a tab of
+      // theirs the old run joined goes back to them, still open, and planque is told it stopped. The new run takes nothing of it.
+      // One still working is left alone: it may be a call of its own.
+      for (const old of [...this.runs.values()]) {
+        if (old !== run && !old.stopped && old.paused && old.taf === run.taf && old.grant === run.grant) await this.stop(old.id, false, "newer_run");
+      }
     }
     // planque keeps a taf's run for its next call, whatever agent run makes it: a step of another agent run (a schedule, the
     // phone, a later message) never works in a tab of the person's that their panel run joined. That tab goes back to them
@@ -863,18 +872,20 @@ export class Runner {
       // The taf's last finished run's tabs close now, so the calls of one taf never pile up; the person saw the page where it
       // stopped. Only once the new tab is in the group, so a group worked in again isn't emptied (and ended) first.
       await this.closeDone(taf, true, run.tabs, windowId);
-    } else if (run.joined.has(run.tab) && (await this.joinedNow(run, run.tab, url))) {
-      // The person's tab can't show this page (a sensitive site the phone allowed, a site they switched off), or no longer shows
-      // one it may: the run goes on in a tab of its own, in the same window and group, as before; their tab is left as it is.
-      await this.moreTab(run);
+    } else {
+      // The person's tab is never navigated away (docs/chrome.md, "A taf works where you are"). A tab of theirs the run joined
+      // that shows exactly this address, and may still be a run's, is read where it is (the run goes back to it from a tab of
+      // its own). Any other address goes to a tab of the run's own, in the same window and group; their tab stays as it is.
+      const here = await this.joinedShowing(run, url);
+      if (here != null) run.tab = here;
+      else if (run.joined.has(run.tab)) await this.moreTab(run);
     }
     run.opened = true;
     // Chrome follows the run: its tab comes to the front of the panel's window, while the panel is open there. Otherwise, in a
     // window of its own the run's tab is the one in front; in the owner's window it stays in the background.
     const follow = this.follows(run);
-    const now = run.joined.has(run.tab) ? await c.tabs.get(run.tab).catch(() => null) : null;
-    if (now && sameAddress(now.url, url)) {
-      // The person's tab already shows that page: it's read as it is, not loaded again.
+    if (run.joined.has(run.tab)) {
+      // The person's tab, which shows that page (frontTab, joinedShowing): read as it is, never loaded again nor sent elsewhere.
       if (follow) await c.tabs.update(run.tab, { active: true });
     } else await c.tabs.update(run.tab, run.ownWindow || follow ? { url, active: true } : { url });
     await this.loaded(run.tab);
@@ -901,6 +912,9 @@ export class Runner {
     const tab = await this.chrome.tabs.get(front.tabId).catch(() => null);
     const off = Array.isArray(front.off) ? front.off : [];
     if (joinRefusal(tab, { windowId: front.windowId, sites: run.sites, allowed: run.allowed, off })) return null;
+    // It joins only to be read where it is: a first open of any other address never navigates it away (a taf that didn't know
+    // which page "this page" was sent the person's article to the site's home). The run opens its own tab instead.
+    if (!sameAddress(tab.url, url)) return null;
     if (joinedRefusal({ ...tab, url }, { sites: run.sites, allowed: run.allowed, off })) return null;
     // A tab in a group of the person's own stays there: the run never takes it out of it.
     if (typeof tab.groupId === "number" && tab.groupId !== -1 && tab.groupId !== (await this.tafGroup(run.taf || "taf", front.windowId))) return null;
@@ -919,6 +933,19 @@ export class Runner {
     const off = this.panel && this.panel.off ? await Promise.resolve().then(() => this.panel.off()).catch(() => []) : [];
     const rules = { sites: run.sites, allowed: run.allowed, off: Array.isArray(off) ? off : [] };
     return joinedRefusal(tab, rules) || (url != null ? joinedRefusal({ ...tab, url }, rules) : null);
+  }
+
+  /**
+   * The tab of the person's that [run] joined which shows exactly [url] and may still be a run's (`joinedNow`), the run's current
+   * tab first, or null: an open of that address reads it where it is.
+   */
+  async joinedShowing(run, url) {
+    const order = [...run.joined].sort((a, b) => (b === run.tab) - (a === run.tab));
+    for (const t of order) {
+      const tab = await this.chrome.tabs.get(t).catch(() => null);
+      if (tab && sameAddress(tab.url, url) && !(await this.joinedNow(run, t, url))) return t;
+    }
+    return null;
   }
 
   /**

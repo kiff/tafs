@@ -102,6 +102,7 @@
   "aside_on": {"message": "اقرأ هذا الموقع"},
   "aside_off_line": {"message": "لا يقرأ Coach ‏$HOST$: أوقفت ذلك", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "لا يقرأ Coach ‏$HOST$: موقع بنك أو دفع أو بريد أو صحة", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "لا يقرأ Coach الصفحة التي أنت عليها." },
   "page_consent_turn_on": { "message": "اسمح لـ Coach بقراءة الصفحة…" },
   "page_consent_title": { "message": "هل تسمح لـ Coach بقراءة الصفحة الأمامية عند الإرسال؟" },

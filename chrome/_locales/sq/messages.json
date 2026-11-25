@@ -102,6 +102,7 @@
   "aside_on": {"message": "Lexo këtë sajt"},
   "aside_off_line": {"message": "Coach nuk e lexon $HOST$: e çaktivizuat", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach nuk e lexon $HOST$: sajt banke, pagesash, poste ose shëndeti", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach nuk e lexon faqen ku ndodheni." },
   "page_consent_turn_on": { "message": "Lejoni Coach të lexojë faqen…" },
   "page_consent_title": { "message": "Ta lejoni Coach të lexojë faqen përpara kur dërgoni?" },

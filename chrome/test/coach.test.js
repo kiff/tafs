@@ -211,3 +211,34 @@ test("a page tafs cloud refuses never holds the person's words: they go once mor
   const other = new Coach({ token: "t", base: "https://cloud.test", fetch: async (url, init) => (url.endsWith("/v1/setup") ? { ok: true, status: 200, json: async () => ({ setup: { id: "c" } }) } : { ok: false, status: 400, json: async () => ({ error: "x", code: "too_long" }) }) });
   await assert.rejects(other.send("Hi", { clientID: "m2", page: { url: "https://a.example/", text: "t" } }), (e) => e.code === "too_long");
 });
+
+// Chrome 0.2.14: a taf works on the page you're on. Its message carries the page in front, as Coach's does.
+test("a message to a taf carries the page in front as Coach's does, only with words, and a refused page never holds the words", async () => {
+  const calls = [];
+  let refuse = false;
+  const fetch = async (url, init) => {
+    const body = init.body ? JSON.parse(init.body) : null;
+    calls.push([init.method, url.replace("https://cloud.test", ""), body]);
+    if (refuse && body && body.page) return { ok: false, status: 400, json: async () => ({ error: "only Coach reads the page you have open", code: "page_refused" }) };
+    if (init.method === "GET") return { ok: true, status: 200, json: async () => ({ messages: [{ from: "owner", text: "Lis cette page", at: "t1", id: "m1", reading: "fr.wikipedia.org" }] }) };
+    return { ok: true, status: 202, json: async () => ({ id: "m1" }) };
+  };
+  const c = new Coach({ token: "tok", fetch, base: "https://cloud.test" });
+  const page = { url: "https://fr.wikipedia.org/wiki/Grenoble", title: "Grenoble", text: "Grenoble est une commune", truncated: true, extra: "never sent" };
+  await c.sendToTaf("taf-a", "Lis cette page et résume-la", "cm1", [], page);
+  assert.deepEqual(calls.at(-1), ["POST", "/v1/tafs/taf-a/messages", { text: "Lis cette page et résume-la", client_message_id: "cm1", page: { url: page.url, title: "Grenoble", text: "Grenoble est une commune", truncated: true } }]);
+  // Files alone: no page.
+  await c.sendToTaf("taf-a", "  ", "cm2", ["att_" + "0".repeat(32)], page);
+  assert.equal(calls.at(-1)[2].page, undefined);
+  // tafs cloud that doesn't take a page on a taf's messages yet (400 page_refused): the words go once more on their own.
+  refuse = true;
+  const before = calls.length;
+  const sent = await c.sendToTaf("taf-a", "Lis cette page", "cm3", [], page);
+  const posts = calls.slice(before);
+  assert.equal(posts.length, 2);
+  assert.ok(posts[0][2].page && !posts[1][2].page);
+  assert.equal(posts[1][2].client_message_id, "cm3", "the same message");
+  assert.equal(sent.page_refused, true);
+  // The chat says which site went with a message, as Coach's does.
+  assert.equal((await c.tafThread("taf-a")).messages[0].reading, "fr.wikipedia.org");
+});

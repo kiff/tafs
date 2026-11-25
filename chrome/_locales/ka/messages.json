@@ -102,6 +102,7 @@
   "aside_on": {"message": "ამ საიტის წაკითხვა"},
   "aside_off_line": {"message": "Coach არ კითხულობს $HOST$-ს: თქვენ გამორთეთ", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach არ კითხულობს $HOST$-ს: ბანკის, გადახდის, ფოსტის ან ჯანმრთელობის საიტია", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach არ კითხულობს გვერდს, რომელზეც ხართ." },
   "page_consent_turn_on": { "message": "Coach-ისთვის გვერდის წაკითხვის ნების დართვა…" },
   "page_consent_title": { "message": "წაიკითხოს Coach-მა წინა გვერდი გაგზავნისას?" },

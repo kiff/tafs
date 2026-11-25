@@ -102,6 +102,7 @@
   "aside_on": {"message": "Llegeix aquest lloc"},
   "aside_off_line": {"message": "Coach no llegeix $HOST$: ho has desactivat", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach no llegeix $HOST$: és un lloc de banc, pagaments, correu o salut", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach no llegeix la pàgina on sou." },
   "page_consent_turn_on": { "message": "Deixeu que Coach llegeixi la pàgina…" },
   "page_consent_title": { "message": "Voleu que Coach llegeixi la pàgina de davant quan envieu?" },

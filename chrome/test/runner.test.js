@@ -1310,7 +1310,7 @@ function panelPort(windowId) {
  */
 async function joining({ tab = {}, consent = true, off = [], mark = true, clock = { at: 1_000_000 }, page = null } = {}) {
   const c = fakeChrome({ ownerWindow: OWNER_WINDOW, page });
-  const theirs = { id: THEIRS, windowId: 3, active: true, incognito: false, pinned: false, groupId: -1, url: "https://shop.example/basket", ...tab };
+  const theirs = { id: THEIRS, windowId: 3, active: true, incognito: false, pinned: false, groupId: -1, url: "https://shop.example/", ...tab };
   c.tabsMap.set(THEIRS, theirs.url);
   c.looked = []; // every tab the runner asked Chrome about
   const get = c.tabs.get;
@@ -1353,7 +1353,8 @@ test("a run the person started from the side panel works in the tab in front: it
   const grouped = c.calls.findIndex((x) => x[0] === "tabs.group");
   assert.ok(fenced >= 0 && fenced < grouped, "fenced before anything else");
   assert.deepEqual(c.calls[grouped][1], { tabIds: [THEIRS], createProperties: { windowId: 3 } });
-  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.update" && x[2].url), ["tabs.update", THEIRS, { url: "https://shop.example/", active: true }], "Chrome follows the action");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url), "read where it is, never loaded again");
+  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.update"), ["tabs.update", THEIRS, { active: true }], "Chrome follows the action");
   assert.ok(!c.calls.some((x) => x[0] === "windows.update"), "never raises or focuses a window");
   // What's read goes through the same read as any run's tab: mask.js and page.js, then TafsPage.read, in that tab.
   assert.ok(c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js" && x[2] === THEIRS));
@@ -1362,7 +1363,7 @@ test("a run the person started from the side panel works in the tab in front: it
 });
 
 test("the tab in front already at the asked address is read in place, not loaded again", async () => {
-  const { c, r } = await joining({ tab: { url: "https://shop.example/" } });
+  const { c, r } = await joining();
   assert.ok((await r.handle(started())).page);
   assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url), "not loaded again");
   assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].active === true));
@@ -1571,7 +1572,9 @@ test("Chrome follows the run only while the panel is open in its window", async 
   await r.handle(started());
   port.close();
   await r.handle(started({ id: "op2", url: "https://shop.example/next" }));
-  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url).at(-1), ["tabs.update", THEIRS, { url: "https://shop.example/next" }], "the panel closed: no tab is brought to the front");
+  const own = r.runs.get("run_1").tab;
+  assert.notEqual(own, THEIRS, "an open elsewhere goes to a tab of the run's own");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url).at(-1), ["tabs.update", own, { url: "https://shop.example/next" }], "the panel closed: no tab is brought to the front");
 });
 
 // The security read (02:30): planque reuses a taf's run for its next call whatever agent run makes it, so a schedule or a phone
@@ -1601,4 +1604,109 @@ test("a step of another agent run never works in the person's joined tab: it goe
   assert.ok(opened.page, "opened in a tab of its own");
   assert.notEqual(r.runs.get("run_1").tab, THEIRS);
   assert.equal(r.runs.get("run_1").joined.size, 0);
+});
+
+// The owner's 0.2.13 walk-through: a taf asked to read "this page" opened the site's home first, and the person's own article was
+// navigated away. The person's tab is read where it is, and never sent elsewhere.
+test("an open elsewhere never navigates the person's joined tab", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "joined, read in place");
+  const out = await r.handle(started({ id: "op2", url: "https://shop.example/other" }));
+  assert.ok(out.page, JSON.stringify(out));
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url), "no tabs.update with a url on their tab, ever");
+  assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/", "their tab still shows its page");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), "nor closed");
+});
+
+test("the open goes to a tab of the run's own in the same group", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  await r.handle(started({ id: "op2", url: "https://shop.example/other" }));
+  const own = r.runs.get("run_1").tab;
+  assert.notEqual(own, THEIRS);
+  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.create")[1], { windowId: 3, url: "about:blank", active: false });
+  const fenced = c.calls.findIndex((x) => x[0] === "dnr" && x[1].addRules && x[1].addRules[0].condition.tabIds[0] === own);
+  const loaded = c.calls.findIndex((x) => x[0] === "tabs.update" && x[1] === own && x[2].url);
+  assert.ok(fenced >= 0 && fenced < loaded, "fenced before it loads");
+  assert.ok(c.calls.some((x) => x[0] === "tabs.group" && x[1].groupId === 7 && x[1].tabIds[0] === own), "in the run's group");
+  assert.deepEqual(c.calls[loaded], ["tabs.update", own, { url: "https://shop.example/other", active: true }], "Chrome follows to it, as before");
+  // A read now reads the run's own tab; their tab is still the run's, read again only by an open of its own address.
+  const scripts = c.calls.filter((x) => x[0] === "executeScript" && x[2] === THEIRS).length;
+  assert.ok((await r.handle(started({ id: "op3", op: "read" }))).page);
+  assert.equal(c.calls.filter((x) => x[0] === "executeScript" && x[2] === THEIRS).length, scripts, "the read is the run's own tab's");
+});
+
+test("an open of the joined tab's own address reads it in place, even from a tab of the run's own", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  // A read of the joined tab reads it where it is.
+  const read = await r.handle(started({ id: "op_r", op: "read" }));
+  assert.ok(read.page);
+  assert.ok(c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js" && x[2] === THEIRS));
+  await r.handle(started({ id: "op2", url: "https://shop.example/other" }));
+  assert.notEqual(r.runs.get("run_1").tab, THEIRS);
+  const before = c.calls.length;
+  const back = await r.handle(started({ id: "op3", url: "https://shop.example/" }));
+  assert.ok(back.page, JSON.stringify(back));
+  assert.equal(r.runs.get("run_1").tab, THEIRS, "the run is back on their tab");
+  const now = c.calls.slice(before);
+  assert.ok(!now.some((x) => x[0] === "tabs.update" && x[2].url), "nothing loaded again");
+  assert.ok(now.some((x) => x[0] === "page" && x[1] === "read"));
+  assert.ok(!now.some((x) => x[0] === "tabs.create"), "no further tab");
+});
+
+test("a first open of another address than the tab in front shows joins nothing: the run opens its own tab, theirs is untouched", async () => {
+  const { c, r } = await joining({ tab: { url: "https://shop.example/basket" } });
+  const out = await r.handle(started());
+  assert.ok(out.page);
+  assert.deepEqual(touched(c, THEIRS), [], "their tab isn't the run's, and nothing is done to it");
+  assert.equal(r.runs.get("run_1").joined.size, 0);
+  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.create")[1], { windowId: 3, url: "about:blank", active: false });
+  assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/basket");
+});
+
+// The owner's walk-through: two cards for one taf, the older paused, the newer working, each with its own Resume or Pause.
+test("a newer run of the taf ends an older run of it the person paused, as their Stop would; the newer takes nothing of it", async () => {
+  const said = [];
+  const { c, r } = await joining();
+  r.onRunState = (s) => said.push(s);
+  await r.handle(started());
+  r.pause("run_1");
+  // A schedule's run of the same taf (no agent_run): the paused run ends first, its tab handed back.
+  const before = c.calls.length;
+  const out = await r.handle(step({ run: "run_2", id: "op2" }));
+  assert.ok(out.page);
+  const old = r.runs.get("run_1");
+  assert.equal(old.stopped, true);
+  assert.deepEqual(old.steps.at(-1).by, "newer_run");
+  assert.deepEqual(said.map((s) => [s.run, s.state]), [["run_1", "paused"], ["run_1", "stopped"]], "planque hears it stopped");
+  const now = c.calls.slice(before);
+  const ungrouped = now.findIndex((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS));
+  const made = now.findIndex((x) => x[0] === "tabs.create");
+  assert.ok(ungrouped >= 0 && ungrouped < made, "handed back before the newer run's first step");
+  assert.ok(now.some((x) => x[0] === "bar.hide" && x[1] === THEIRS), "its bar goes");
+  assert.ok(!now.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), "still open");
+  assert.equal(r.tabRun.has(THEIRS), false, "forgotten");
+  const fresh = r.runs.get("run_2");
+  assert.equal(fresh.joined.size, 0, "the newer run doesn't inherit their tab");
+  assert.ok(![...fresh.tabs].includes(THEIRS));
+  assert.equal(fresh.agentRun, null, "nor the panel's mark");
+  assert.ok(!now.some((x) => x[0] === "executeScript" && x[2] === THEIRS && x[1] !== "isolated"), "nothing runs in their tab");
+});
+
+test("a newer run leaves an older run of the taf that's working, and a paused run of another taf or another grant", async () => {
+  for (const [what, older, newer] of [
+    ["working", {}, {}],
+    ["another taf, paused", { pause: true }, { taf: "Bo" }],
+    ["another grant of a same-named taf, paused", { pause: true }, { grant: "g_2", sites_signed: await signedSites(["shop.example"], "g_2") }],
+  ]) {
+    const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+    const r = new Runner({ chrome: c, sleep, paired: () => paired });
+    await r.handle(step());
+    if (older.pause) r.pause("run_1");
+    await r.handle(step({ run: "run_2", id: "op2", ...newer }));
+    assert.equal(r.runs.get("run_1").stopped, false, what);
+    assert.ok(!r.runs.get("run_1").steps.some((s) => s.op === "stop"), what);
+  }
 });

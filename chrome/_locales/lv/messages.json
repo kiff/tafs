@@ -102,6 +102,7 @@
   "aside_on": {"message": "Lasīt šo vietni"},
   "aside_off_line": {"message": "Coach nelasa $HOST$: tu to izslēdzi", "placeholders": {"host": {"content": "$1"}}},
   "aside_sensitive": {"message": "Coach nelasa $HOST$: bankas, maksājumu, pasta vai veselības vietne", "placeholders": {"host": {"content": "$1"}}},
+  "aside_not_taf_site": { "message": "$HOST$ isn't read: this taf doesn't work on this site", "description": "Under one of the person's messages to a taf: the page in front didn't go with it, as it is on none of the sites the taf is connected to.", "placeholders": { "host": { "content": "$1" } } },
   "page_consent_off": { "message": "Coach nelasa lapu, kurā esat." },
   "page_consent_turn_on": { "message": "Ļaut Coach lasīt lapu…" },
   "page_consent_title": { "message": "Vai ļaut Coach sūtot lasīt priekšā esošo lapu?" },

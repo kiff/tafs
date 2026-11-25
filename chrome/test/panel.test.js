@@ -103,3 +103,28 @@ test("the composer sits at the bottom even with a short chat: a full-height colu
   assert.match(css, /#tafForm,\s*#coach > \.dock \{\s*margin-top: auto;/);
   assert.match(html, /<div class="dock">/, "Coach's composer is in its dock");
 });
+
+// The owner's chrome://extensions after 0.2.12: "Unchecked runtime.lastError: Could not establish connection. Receiving end does
+// not exist." from the side panel. A port whose connect found no worker ends in onDisconnect with that error set, unread.
+test("the panel's port reads the connect's error and connects again; a press's message to a worker that isn't there is no unhandled error", () => {
+  const open = js.slice(js.indexOf("function openHere("), js.indexOf("chrome.tabs.onActivated"));
+  assert.match(open, /port\.onDisconnect\.addListener\(\(\) => \{\n\s*void chrome\.runtime\.lastError;[^\n]*\n\s*setTimeout\(openHere, 1000\);/, "the error is read where it lands, and the panel connects again");
+  assert.match(open, /try \{\n\s*port\.postMessage\(\{ windowId: panelWindow \}\);\n\s*\} catch \{/, "a port already gone doesn't throw");
+  // Every message whose answer nobody waits for goes through quietly(), which catches; none is a bare send().
+  assert.match(js, /function quietly\(message\) \{\n\s*return send\(message\)\.catch\(\(\) => null\);/);
+  assert.doesNotMatch(js, /=> send\(\{/, "no press sends without a catch");
+  assert.doesNotMatch(js, /^send\(\{/m, "nor the panel's first message");
+  for (const type of ["pause", "resume", "stop", "hand_answer", "go_to_run", "unpair", "state", "turn_over"]) {
+    assert.ok(js.includes(`quietly({ type: "${type}"`), type);
+  }
+});
+
+// Chrome 0.2.14: a taf works on the page you're on, and its chat says which page went with a message, as Coach's does.
+test("a taf's chat shows the page that went with a message, and says when the page was on none of the taf's sites", () => {
+  const read = js.slice(js.indexOf("async function readTaf("), js.indexOf("function scheduleTaf("));
+  assert.match(read, /words\(li, m\);\n\s*reading\(li, m\);/, "the same line as Coach's");
+  assert.match(read, /t\("aside_not_taf_site", notRead\.get\(m\.id\)\)/);
+  assert.match(js, /if \(sent && r\.notReading === "not_taf_site" && r\.host\) notRead\.set\(sent, r\.host\);/);
+  assert.match(js, /function reading\(li, m\) \{[\s\S]*?t\("aside_reading", m\.reading\)/);
+  assert.equal((js.match(/\n\s*reading\(li, m\);/g) || []).length, 2, "drawn by one function, for Coach's chat and a taf's");
+});
