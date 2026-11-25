@@ -36,6 +36,16 @@ npm run e2e                               # node --test e2e/*.e2e.test.js
 
 **The fake planque** is built on the extension's own `src/crypto.js` and `src/pairing.js`, so what it signs is checked by
 the extension exactly as planque's would be. Its keys are made for each test file and never kept.
+- **planque's own shapes, once planque writes them** (`test/planque-contracts.mjs`): the welcome, a connections change and
+  a step are built from planque's golden files, `contracts/chrome-welcome.json`, `contracts/chrome-connections.json` and
+  `contracts/chrome-step.json` (`{about, answer}`, as every contract), with this run's signature, nonces, ids, times and
+  sites laid over them. A step takes only planque's envelope; its op's own fields (`op`, `url`, `read_id`, `act`, `hand`,
+  `offset`, `sensitive_allowed`) are the test's. A field the fake sets that planque's file doesn't carry fails the test, so the
+  fake never sends what planque doesn't. The welcome's and connections' files are planque's own, copied byte for byte; their
+  signatures are placeholders, so the fake signs the welcome with its key and the sites with the test phone's
+  (`withPhoneSignature`, `tafs-chrome/sites/v1`), and a unit test checks a connection from the file gives its sites once
+  signed, and none without `sites_signed`. There's no step file yet: the fake builds its own steps, and the unit test that
+  reads one is skipped until `contracts/chrome-step.json` is added, the only change left for it.
 - **As the phone** it makes a pairing code (a 4-character lookup and a 17-character secret from `pairing.js`'s alphabet).
   When the extension posts its offer to `POST /v1/extension/pairings/{lookup}`, it checks the offer's proof of the
   extension's key under the code's secret. It answers the extension's poll with the phone's confirmation: its own key, its

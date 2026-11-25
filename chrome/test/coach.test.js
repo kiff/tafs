@@ -255,7 +255,9 @@ test("a chat's failed run is read with it, Coach's or a taf's, from tafs cloud's
   };
   const c = new Coach({ token: "tok", fetch, base: "https://cloud.test" });
   for (const t of [await c.tafThread("taf-a"), await c.thread()]) {
-    assert.deepEqual(t.failed, { run: contract.failed.run, code: contract.failed.code, words: contract.failed.words, retry: false });
+    // As the file has it: `retry` true only when it says true, its label when it has one.
+    const label = typeof contract.failed.retry_label === "string" ? { retryLabel: contract.failed.retry_label.trim() } : {};
+    assert.deepEqual(t.failed, { run: contract.failed.run, code: contract.failed.code, words: contract.failed.words, retry: contract.failed.retry === true, ...label });
     assert.equal(t.working, null);
     assert.deepEqual(t.messages.map((m) => m.id), [contract.failed.run + ".in"], "the run's own message, by tafs cloud's id");
   }

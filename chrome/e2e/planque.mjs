@@ -13,6 +13,7 @@ import { EventEmitter } from "node:events";
 import { LABEL, b64u, fromB64u, concat, hmac, sha256, sign, verify, publicSPKI, randomId } from "../src/crypto.js";
 import { ALPHABET, LOOKUP_LENGTH, SECRET_LENGTH, extensionProof, hex } from "../src/pairing.js";
 import { readFileSync } from "node:fs";
+import { welcomeAsPlanque, connectionsAsPlanque, connectionAsPlanque, stepAsPlanque } from "../test/planque-contracts.mjs";
 
 /** tafs cloud's failed run, as its own contract has it (written by its tests): the fake's `failed` starts from it. */
 const CONTRACT_FAILED = JSON.parse(readFileSync(new URL("../../contracts/conversation-failed.json", import.meta.url), "utf8")).answer.failed;
@@ -181,8 +182,8 @@ export class FakePlanque extends EventEmitter {
         this.socket = ws;
         const sig = await sign(this.planqueKeys.privateKey, LABEL.welcome, { chrome_id: this.chromeId, nonce_p: conn.nonceP, nonce_e: m.nonce_e });
         // The connection as planque lists it, with the phone's signature over its sites, as the panel checks it (signedSitesOf).
-        const connection = { grant: this.grant, agent: this.agent, name: this.taf, sites: this.sites, sites_signed: await this.sitesSigned() };
-        ws.send(JSON.stringify({ type: "welcome", sig, connections: [connection], now: Date.now() }));
+        // planque's own welcome and connection (contracts/chrome-welcome.json, once planque writes it), with this run's proof.
+        ws.send(JSON.stringify(welcomeAsPlanque({ type: "welcome", sig, connections: [await this.connection()], now: Date.now() })));
         this.emit("welcome", m);
         return;
       }
@@ -232,6 +233,16 @@ export class FakePlanque extends EventEmitter {
     this.socket.send(JSON.stringify(message));
   }
 
+  /** This Chrome's one connection as planque lists it, with the phone's signature over its sites (signedSitesOf checks it). */
+  async connection() {
+    return connectionAsPlanque({ grant: this.grant, agent: this.agent, name: this.taf, sites: this.sites, sites_signed: await this.sitesSigned() });
+  }
+
+  /** planque's `{type: "connections"}` on a change (contracts/chrome-connections.json, once planque writes it). */
+  async sendConnections(connections) {
+    this.send(connectionsAsPlanque({ type: "connections", connections: connections || [await this.connection()] }));
+  }
+
   // ---- Steps ----
 
   /** The phone's signature over a grant's sites (`tafs-chrome/sites/v1`). */
@@ -250,7 +261,8 @@ export class FakePlanque extends EventEmitter {
    * `key` the key that signs the step (planque's by default).
    */
   async step(fields, { signedSites = this.sites, key = this.planqueKeys.privateKey, phoneKey } = {}) {
-    const step = {
+    // planque's own step (contracts/chrome-step.json, once planque writes it): its envelope, this step's op and values.
+    const step = stepAsPlanque({
       id: randomId("op_"),
       nonce: randomId(),
       exp: Date.now() + 20_000,
@@ -261,7 +273,7 @@ export class FakePlanque extends EventEmitter {
       sites: this.sites,
       sites_signed: await this.sitesSigned(signedSites, phoneKey ? { key: phoneKey } : {}),
       ...fields,
-    };
+    });
     return { type: "step", step, sig: await sign(key, LABEL.step, step) };
   }
 

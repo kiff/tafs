@@ -208,7 +208,7 @@ test("a failed run offers Try again only when tafs cloud says so, for a code the
   assert.deepEqual(FAILED_CODES, ["ai_unavailable", "no_credits", "ai_consent_required", "timeout", "failed"]);
   assert.equal(retryOf(f, messages), messages[0].text, "the run's own message (`<run>.in`)");
   for (const code of FAILED_CODES) assert.equal(retryOf({ ...f, code }, messages), messages[0].text, code);
-  assert.equal(retryOf(contract.failed, messages), null, "the contract as it is today: no `retry`, no Try again");
+  assert.equal(retryOf(contract.failed, messages), contract.failed.retry === true ? messages[0].text : null, "the file as it is: Try again only if it says so");
   assert.equal(retryOf({ ...f, retry: false }, messages), null, "not offered");
   assert.equal(retryOf({ ...f, code: "provider_cap" }, messages), null, "a code it doesn't know: words only");
   assert.equal(retryOf({ ...f, run: "run9" }, messages), null, "the run's message isn't in the chat: never a guess at another");
