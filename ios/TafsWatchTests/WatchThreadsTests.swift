@@ -26,8 +26,9 @@ final class WatchThreadsTests: XCTestCase {
         WatchChatLine(id: "m\(i)", mine: mine, at: now.addingTimeInterval(Double(i)), text: "Line \(i)", more: false)
     }
 
-    func testOffUntilThePrivacyPageSaysSo() {
-        XCTAssertFalse(WatchThreads.on)
+    /// On, as the privacy page says; a store switched off writes and reads nothing.
+    func testOnAsThePrivacyPageSaysAndOffKeepsNothing() {
+        XCTAssertTrue(WatchThreads.on)
         let off = threads(on: false)
         off.keep("coach", [line(1)])
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path), "nothing written")

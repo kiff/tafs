@@ -4,6 +4,18 @@ import XCTest
 /// Chatting with a taf from the wrist (docs/watch-app.md, "Chatting with a taf"): the owner's picks 1A and 2A, and Read more.
 @MainActor
 final class TafChatTests: XCTestCase {
+    // Kept threads are on (`WatchThreads.on`): each test starts and ends with none kept on this simulator, so no Coach or taf
+    // chat opens on what another test said.
+    override func setUp() async throws {
+        try await super.setUp()
+        await MainActor.run { WatchThreads.shared.clear() }
+    }
+
+    override func tearDown() async throws {
+        await MainActor.run { WatchThreads.shared.clear() }
+        try await super.tearDown()
+    }
+
     private let now = Date(timeIntervalSinceReferenceDate: 813_667_500)
     nonisolated private static let tafID = "taf-0a1b2c3d4e5f60718293"
     nonisolated private static let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil)

@@ -12,8 +12,9 @@ import Foundation
 /// **Cleared:** on either sign-out (on the phone or on this watch); whenever the app opens or is put away on a watch with no
 /// passcode, when nothing is kept at all; and a thread not opened for `unused` goes.
 ///
-/// Behind `on` (off): the privacy page's Apple Watch paragraph says the watch keeps no chat but its Inbox, so this is switched
-/// on only with its sentence live there, and the owner's yes. Off, nothing is written and nothing is read.
+/// Behind `on` (on): the privacy page's Apple Watch paragraph says the watch keeps the last 30 messages of up to 20 threads,
+/// as text, locked, gone on sign-out, without a passcode and after 30 days unopened, and the owner said yes. Off, nothing is
+/// written and nothing is read, as before that sentence went live.
 @MainActor
 final class WatchThreads {
     struct Thread: Codable, Equatable {
@@ -24,8 +25,8 @@ final class WatchThreads {
         var lines: [WatchChatLine]
     }
 
-    /// Off until the privacy page says so (above).
-    nonisolated static let on = false
+    /// On, as the privacy page says (above), together with Wear OS's `KEEP_THREADS`.
+    nonisolated static let on = true
     nonisolated static let mostThreads = 20
     nonisolated static let mostLines = 30
     /// As the chats: a thread not opened for 30 days goes.
