@@ -320,7 +320,7 @@ Each watch cell moves to done, or to "broken on the owner's check", from the own
 | Finding | State |
 | :- | :- |
 | Coach drafted a held Card with no total, KIFF refused it ("a mandate with no aggregate bounds nothing"), and Coach asked the owner to change their own rule | fixed: the held Card's one total is KIFF's own count, drafted by Coach, and a refusal says how (`draft-the-card@47`, tafs#2045) |
-| Coach added four letters to a tool's name, and KIFF refused it ("not declared") | fixed: tool names copied from planque letter for letter, with no example to build from (`draft-the-card@47`, `set-up-a-taf@15`, tafs#2045, #2047) |
+| Coach added four letters to a tool's name, and KIFF refused it ("not declared") | partial: tool names are copied from planque letter for letter, with no example to build from (`draft-the-card@47`, `set-up-a-taf@15`, tafs#2045, #2047), and the draft still lands. But the E2E of 25 Nov on those skills was still refused 4 times first (`read_charge_…`, `stripe_api_read_…`, each twice), so fewer, not none |
 
 **Open, in one place:**
 1. Tafs set up before tonight keep their old instructions (B, and the cut read) until the tafs upgrade runs. That waits on the owner.
