@@ -351,6 +351,23 @@ What landed on 23 Nov, device by device, read again against each repo's main on 
 
 **Still open:** Try again on a failed run's line, on the iPhone and iPad and on the three desktops. Every other row above is done on each device it's for, except the sealed sign-in fill's release card, which stays held and off.
 
+## The chat, on every surface that draws it
+
+The chat is one thing drawn in several places: Coach's chat and a taf's on the phones, and the Chrome extension's side panel. It follows the same rules everywhere ([chat.md](chat.md)). **From 25 Nov, a pull request that changes the chat on a phone sets its Chrome cell here in the same change**, as done or not yet, so the panel never silently falls behind. The desktops follow their own `docs/port-checklist.md`.
+
+| Feature | iPhone/iPad | Android | Chrome side panel |
+| :- | :- | :- | :- |
+| Each message's time, and a header where a day starts | done | done | not yet: 0.2.24 (the chats list shows a time or a date only) |
+| Copy an answer | done | done | not yet: 0.2.24 |
+| Report this answer (⋯) | done | done | not yet: 0.2.24 (the route opens to the panel with the panel-runs server change) |
+| Your own message: Send again, Edit and send, Copy | done | done | not yet: 0.2.24 (a failed turn has Retry, 0.2.22) |
+| A run's work folded into "Worked 12 s · N steps", which opens the steps again | done | done | not yet: 0.2.24 (a separate run card) |
+| Answers in markdown, drawn as the phones draw them | done | done | partial: the panel's own reader (`chatmd.js`); the phones' rules in 0.2.24 |
+| The working line, and a failed turn's line with why | done | done | done (0.2.22) |
+| Try again under a failed turn, only on tafs cloud's `failed.retry` | not yet: Retry shows on every failed run | done (tafs#2084) | done (0.2.22) |
+| Delete a conversation for good | not yet: in review (tafs#2107) | done (tafs#2099) | not yet: the panel's chats can't delete |
+| A run that worked in this Chrome, started from another device: its message, steps and answer | — | — | not yet: needs the Chrome's KIFF device recorded at pairing (planque) and the run's turn listed for it (tafs cloud); an existing Chrome pairs once more |
+
 ## 25 Nov, device by device
 
 What merged or opened on 25 Nov, read against kiff/tafs main `56319b8` and each desktop repo's main. **done** means merged on main (a phone or watch row still waits for its build to ship); **not yet** says what's missing. "—" means the feature isn't that device's.
