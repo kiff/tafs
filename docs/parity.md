@@ -294,9 +294,9 @@ Each watch cell moves to done, or to "broken on the owner's check", from the own
 | :- | :- | :- | :- | :- | :- |
 | 1. One centred column on every page | fixed (tafs#2009) | fixed (tafs#2011, #2013) | fixed (tafs-macos#264) | fixed (tafs-windows#342) | fixed (tafs-linux#136) |
 | 2. Plan & usage and Calendar cut off when maximized | fixed by note 1's caps | fixed by note 1's caps | fixed by note 1's caps | fixed (tafs-windows#342) | fixed by note 1's caps |
-| 3. Connect apps: a long status ("Volver a conectar") cut, and Ask Coach over it | **open**: check a long status in Spanish | n/a: a row has one action at a time (Connect, Sign in again or Ask Coach), and every line wraps; drawn whole at 360 dp in es, de, fr, pl and en (`ConnectAppsNarrowTest`) | **open**: same | fixed (tafs-windows#342) | **open**: same |
+| 3. Connect apps: a long status ("Volver a conectar") cut, and Ask Coach over it | fixed: a long button goes under the status (`BesideOrUnder`, tafs#2035) | n/a: a row has one action at a time (Connect, Sign in again or Ask Coach), and every line wraps; drawn whole at 360 dp in es, de, fr, pl and en (`ConnectAppsNarrowTest`) | fixed: the button goes under a worded status (tafs-macos#268) | fixed (tafs-windows#342) | fixed: the status wraps, the button under it (tafs-linux#139) |
 | 4. Account's explanations beside their actions | fixed (tafs#2009) | fixed (tafs#2011) | fixed (tafs-macos#264) | fixed (tafs-windows#342) | fixed (tafs-linux#136) |
-| 5a. Overview cut "1 persona" in a medium window | **open**: check in Spanish | fixed: who uses a taf, under its name, two lines, the count held whole (`PeopleWords.peopleLine`) | **open**: same | fixed: it wraps (tafs-windows#342) | **open**: same |
+| 5a. Overview cut "1 persona" in a medium window | fixed: two lines, the count held whole (`peopleLine`, tafs#2035) | fixed: who uses a taf, under its name, two lines, the count held whole (`PeopleWords.peopleLine`) | fixed: two lines, the count held whole (tafs-macos#268) | fixed: it wraps (tafs-windows#342) | fixed: two lines, the count held whole (tafs-linux#139) |
 | 5b. Connect apps' lines in English in another language | fixed at the source: planque's catalogue in every app language (planque#414), asked in the person's language (tafs#2015) | fixed, same | fixed, same | fixed, same; checked in Spanish | fixed, same |
 
 **Cut answers**
@@ -308,7 +308,6 @@ Each watch cell moves to done, or to "broken on the owner's check", from the own
 
 **Open, in one place:**
 1. Tafs set up before tonight keep their old instructions (B, and the cut read) until the tafs upgrade runs. That waits on the owner.
-2. Windows notes 3 and 5a on the other apps: a long Spanish status in Connect apps, and Overview's people count in a medium window, are still to check on iPhone/iPad and Mac 13+, macOS 12 and Linux.
 
 ## Today's cross-device work
 
