@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Yenidən göndərilir…</string>
     <string name="work_stop_run">İşi dayandırın</string>
     <string name="work_stopped_part_way_before_finished">%1$s bitirməmiş yarıda dayandı.</string>
+    <string name="alerts_blocked_title">tafs üçün bildirişləri aktiv edin</string>
+    <string name="alerts_blocked_body">Android artıq soruşmur, buna görə tafs bildirişləri telefonunuzun ayarlarında söndürülüb. Təsdiqlər və cavablar bu telefona və saatınıza çatsın deyə onları orada aktiv edin. Saatınız yeniləmələrini hər halda alır.</string>
+    <string name="alerts_open_notification_settings">Bildiriş ayarlarını açın</string>
+    <string name="alerts_now_on">Bildirişlər aktivdir.</string>
+    <string name="alerts_still_off">Bildirişlər hələ də söndürülüb.</string>
+    <string name="watch_uses_tafs_title">Saatınız tafs-dan istifadə edir</string>
+    <string name="watch_uses_tafs_body">Təsdiqləri və cavabları bu telefonda və saatınızda bildiriş kimi görmək üçün tafs bildirişlərini aktiv edin. Aktiv etməsəniz də, saatınız yeniləmələrini almağa davam edəcək.</string>
 </resources>

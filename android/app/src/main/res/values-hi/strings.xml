@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">फिर भेजा जा रहा है…</string>
     <string name="work_stop_run">रन रोकें</string>
     <string name="work_stopped_part_way_before_finished">%1$s पूरा होने से पहले बीच में रुक गया।</string>
+    <string name="alerts_blocked_title">tafs के अलर्ट चालू करें</string>
+    <string name="alerts_blocked_body">Android अब नहीं पूछता, इसलिए आपके फ़ोन की सेटिंग में tafs के अलर्ट बंद हैं। उन्हें वहाँ चालू करें ताकि मंज़ूरियाँ और जवाब इस फ़ोन पर और आपकी घड़ी पर पहुँचें। आपकी घड़ी को अपडेट हर हाल में मिलते हैं।</string>
+    <string name="alerts_open_notification_settings">सूचना सेटिंग खोलें</string>
+    <string name="alerts_now_on">अलर्ट चालू हैं।</string>
+    <string name="alerts_still_off">अलर्ट अब भी बंद हैं।</string>
+    <string name="watch_uses_tafs_title">आपकी घड़ी tafs इस्तेमाल कर रही है</string>
+    <string name="watch_uses_tafs_body">इस फ़ोन पर और अपनी घड़ी पर मंज़ूरियाँ और जवाब अलर्ट के रूप में देखने के लिए tafs के अलर्ट चालू करें। चालू न करें तब भी आपकी घड़ी को अपडेट मिलते रहेंगे।</string>
 </resources>

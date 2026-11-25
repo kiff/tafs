@@ -2997,4 +2997,11 @@
     <string name="work_sending_again">Siunčiama dar kartą…</string>
     <string name="work_stop_run">Nutraukti paleidimą</string>
     <string name="work_stopped_part_way_before_finished">%1$s sustojo pusiaukelėje, nebaigęs darbo.</string>
+    <string name="alerts_blocked_title">Įjunkite tafs pranešimus</string>
+    <string name="alerts_blocked_body">Android daugiau nebeklausia, todėl tafs pranešimai telefono nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų, šiame telefone ir laikrodyje. Laikrodis savo naujinius gauna bet kuriuo atveju.</string>
+    <string name="alerts_open_notification_settings">Atidaryti pranešimų nustatymus</string>
+    <string name="alerts_now_on">Pranešimai įjungti.</string>
+    <string name="alerts_still_off">Pranešimai vis dar išjungti.</string>
+    <string name="watch_uses_tafs_title">Jūsų laikrodis naudoja tafs</string>
+    <string name="watch_uses_tafs_body">Kad matytumėte patvirtinimus ir atsakymus kaip pranešimus šiame telefone ir laikrodyje, įjunkite tafs pranešimus. Laikrodis toliau gaus savo naujinius, net jei to nepadarysite.</string>
 </resources>

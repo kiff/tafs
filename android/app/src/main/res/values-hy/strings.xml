@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Նորից ուղարկվում է…</string>
     <string name="work_stop_run">Կանգնեցրեք գործարկումը</string>
     <string name="work_stopped_part_way_before_finished">%1$s-ը կանգ առավ կիսատ, ավարտելուց առաջ։</string>
+    <string name="alerts_blocked_title">Միացրեք tafs-ի ծանուցումները</string>
+    <string name="alerts_blocked_body">Android-ն այլևս չի հարցնում, ուստի tafs-ի ծանուցումներն անջատված են ձեր հեռախոսի կարգավորումներում։ Միացրեք դրանք այնտեղ, որպեսզի հաստատումներն ու պատասխանները հասնեն ձեզ՝ այս հեռախոսին և ձեր ժամացույցին։ Ձեր ժամացույցն ամեն դեպքում ստանում է իր թարմացումները։</string>
+    <string name="alerts_open_notification_settings">Բացել ծանուցումների կարգավորումները</string>
+    <string name="alerts_now_on">Ծանուցումները միացված են։</string>
+    <string name="alerts_still_off">Ծանուցումները դեռ անջատված են։</string>
+    <string name="watch_uses_tafs_title">Ձեր ժամացույցն օգտագործում է tafs</string>
+    <string name="watch_uses_tafs_body">Հաստատումներն ու պատասխանները ծանուցումների տեսքով այս հեռախոսում և ձեր ժամացույցում տեսնելու համար միացրեք tafs-ի ծանուցումները։ Ձեր ժամացույցը կշարունակի ստանալ իր թարմացումները, նույնիսկ եթե չմիացնեք։</string>
 </resources>

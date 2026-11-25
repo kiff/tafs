@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">फेरि पठाइँदैछ…</string>
     <string name="work_stop_run">चलाइ रोक्नुहोस्</string>
     <string name="work_stopped_part_way_before_finished">%1$s सकिनुअघि नै बीचमा रोकियो।</string>
+    <string name="alerts_blocked_title">tafs को सूचना खोल्नुहोस्</string>
+    <string name="alerts_blocked_body">Android ले अब सोध्दैन, त्यसैले तपाईंको फोनको सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ यो फोन र तपाईंको घडीमा आइपुगून् भनेर त्यहाँ खोल्नुहोस्। तपाईंको घडीले जसरी पनि अपडेट पाउँछ।</string>
+    <string name="alerts_open_notification_settings">सूचना सेटिङ खोल्नुहोस्</string>
+    <string name="alerts_now_on">सूचना खुला छ।</string>
+    <string name="alerts_still_off">सूचना अझै बन्द छ।</string>
+    <string name="watch_uses_tafs_title">तपाईंको घडीले tafs प्रयोग गर्दैछ</string>
+    <string name="watch_uses_tafs_body">स्वीकृति र जवाफलाई यो फोन र तपाईंको घडीमा सूचनाको रूपमा हेर्न tafs को सूचना खोल्नुहोस्। नखोले पनि तपाईंको घडीले अपडेट पाइरहनेछ।</string>
 </resources>

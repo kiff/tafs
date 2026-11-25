@@ -2829,4 +2829,11 @@
     <string name="work_sending_again">再送信しています…</string>
     <string name="work_stop_run">実行を停止</string>
     <string name="work_stopped_part_way_before_finished">%1$sは完了する前に途中で停止しました。</string>
+    <string name="alerts_blocked_title">tafsの通知をオンにする</string>
+    <string name="alerts_blocked_body">Androidはもう確認しないため、スマートフォンの設定でtafsの通知がオフになっています。承認や回答がこのスマートフォンとウォッチに届くよう、そこで通知をオンにしてください。ウォッチはどちらの場合も更新を受け取ります。</string>
+    <string name="alerts_open_notification_settings">通知設定を開く</string>
+    <string name="alerts_now_on">通知はオンです。</string>
+    <string name="alerts_still_off">通知はまだオフです。</string>
+    <string name="watch_uses_tafs_title">ウォッチがtafsを使っています</string>
+    <string name="watch_uses_tafs_body">承認や回答をこのスマートフォンとウォッチで通知として受け取るには、tafsの通知をオンにしてください。オンにしなくても、ウォッチは更新を受け取り続けます。</string>
 </resources>

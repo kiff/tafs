@@ -2997,4 +2997,11 @@
     <string name="work_sending_again">שולח שוב…</string>
     <string name="work_stop_run">עצירת הריצה</string>
     <string name="work_stopped_part_way_before_finished">%1$s נעצר באמצע, לפני שסיים.</string>
+    <string name="alerts_blocked_title">הפעלת התראות של tafs</string>
+    <string name="alerts_blocked_body">Android כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות הטלפון. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך, בטלפון הזה ובשעון. השעון מקבל את העדכונים שלו בכל מקרה.</string>
+    <string name="alerts_open_notification_settings">פתיחת הגדרות ההתראות</string>
+    <string name="alerts_now_on">ההתראות מופעלות.</string>
+    <string name="alerts_still_off">ההתראות עדיין כבויות.</string>
+    <string name="watch_uses_tafs_title">השעון שלך משתמש ב-tafs</string>
+    <string name="watch_uses_tafs_body">כדי לראות אישורים ותשובות כהתראות, בטלפון הזה ובשעון, יש להפעיל את ההתראות של tafs. השעון ימשיך לקבל את העדכונים שלו גם בלי זה.</string>
 </resources>

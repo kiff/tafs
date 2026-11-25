@@ -3081,4 +3081,11 @@
     <string name="work_sending_again">Znova pošiljam…</string>
     <string name="work_stop_run">Ustavi zagon</string>
     <string name="work_stopped_part_way_before_finished">%1$s se je ustavil na pol poti, preden je končal.</string>
+    <string name="alerts_blocked_title">Vklopite opozorila za tafs</string>
+    <string name="alerts_blocked_body">Android ne sprašuje več, zato so opozorila za tafs v nastavitvah telefona izklopljena. Vklopite jih tam, da bodo odobritve in odgovori prihajali do vas, na ta telefon in na uro. Ura svoje posodobitve dobi v vsakem primeru.</string>
+    <string name="alerts_open_notification_settings">Odpri nastavitve obvestil</string>
+    <string name="alerts_now_on">Opozorila so vklopljena.</string>
+    <string name="alerts_still_off">Opozorila so še vedno izklopljena.</string>
+    <string name="watch_uses_tafs_title">Vaša ura uporablja tafs</string>
+    <string name="watch_uses_tafs_body">Če želite odobritve in odgovore videti kot opozorila na tem telefonu in na uri, vklopite opozorila za tafs. Ura bo še naprej dobivala svoje posodobitve, tudi če tega ne storite.</string>
 </resources>

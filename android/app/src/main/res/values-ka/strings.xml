@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">იგზავნება ხელახლა…</string>
     <string name="work_stop_run">გააჩერეთ გაშვება</string>
     <string name="work_stopped_part_way_before_finished">%1$s შუაში გაჩერდა, დასრულებამდე.</string>
+    <string name="alerts_blocked_title">ჩართეთ tafs-ის შეტყობინებები</string>
+    <string name="alerts_blocked_body">Android აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია ტელეფონის პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ ამ ტელეფონზე და საათზე. საათი განახლებებს ნებისმიერ შემთხვევაში იღებს.</string>
+    <string name="alerts_open_notification_settings">შეტყობინებების პარამეტრების გახსნა</string>
+    <string name="alerts_now_on">შეტყობინებები ჩართულია.</string>
+    <string name="alerts_still_off">შეტყობინებები ჯერ კიდევ გამორთულია.</string>
+    <string name="watch_uses_tafs_title">თქვენი საათი იყენებს tafs-ს</string>
+    <string name="watch_uses_tafs_body">დადასტურებებისა და პასუხების შეტყობინებებად სანახავად ამ ტელეფონზე და საათზე, ჩართეთ tafs-ის შეტყობინებები. საათი განახლებებს მაინც მიიღებს, თუნდაც არ ჩართოთ.</string>
 </resources>

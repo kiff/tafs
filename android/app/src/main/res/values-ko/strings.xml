@@ -2829,4 +2829,11 @@
     <string name="work_sending_again">다시 보내는 중…</string>
     <string name="work_stop_run">실행 멈추기</string>
     <string name="work_stopped_part_way_before_finished">%1$s이(가) 끝나기 전에 중간에 멈췄습니다.</string>
+    <string name="alerts_blocked_title">tafs 알림 켜기</string>
+    <string name="alerts_blocked_body">Android가 더 이상 묻지 않아 휴대폰 설정에서 tafs 알림이 꺼져 있습니다. 승인과 답변이 이 휴대폰과 시계로 오도록 설정에서 알림을 켜세요. 시계는 어느 쪽이든 업데이트를 받습니다.</string>
+    <string name="alerts_open_notification_settings">알림 설정 열기</string>
+    <string name="alerts_now_on">알림이 켜져 있습니다.</string>
+    <string name="alerts_still_off">알림이 아직 꺼져 있습니다.</string>
+    <string name="watch_uses_tafs_title">시계에서 tafs를 사용하고 있습니다</string>
+    <string name="watch_uses_tafs_body">이 휴대폰과 시계에서 승인과 답변을 알림으로 보려면 tafs 알림을 켜세요. 켜지 않아도 시계는 계속 업데이트를 받습니다.</string>
 </resources>

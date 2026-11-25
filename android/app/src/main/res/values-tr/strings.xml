@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Tekrar gönderiliyor…</string>
     <string name="work_stop_run">Çalıştırmayı durdur</string>
     <string name="work_stopped_part_way_before_finished">%1$s adlı taf bitirmeden yarıda durdu.</string>
+    <string name="alerts_blocked_title">tafs için uyarıları açın</string>
+    <string name="alerts_blocked_body">Android artık sormuyor, bu yüzden tafs uyarıları telefonunuzun ayarlarında kapalı. Onaylar ve yanıtlar size, bu telefonda ve saatinizde ulaşsın diye onları orada açın. Saatiniz güncellemelerini her durumda alır.</string>
+    <string name="alerts_open_notification_settings">Bildirim ayarlarını aç</string>
+    <string name="alerts_now_on">Uyarılar açık.</string>
+    <string name="alerts_still_off">Uyarılar hâlâ kapalı.</string>
+    <string name="watch_uses_tafs_title">Saatiniz tafs kullanıyor</string>
+    <string name="watch_uses_tafs_body">Onayları ve yanıtları bu telefonda ve saatinizde uyarı olarak görmek için tafs uyarılarını açın. Açmasanız da saatiniz güncellemelerini almaya devam eder.</string>
 </resources>

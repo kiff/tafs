@@ -2997,4 +2997,11 @@
     <string name="work_sending_again">Odosielam znova…</string>
     <string name="work_stop_run">Ukončiť beh</string>
     <string name="work_stopped_part_way_before_finished">%1$s sa zastavil v polovici, kým skončil.</string>
+    <string name="alerts_blocked_title">Zapnite upozornenia pre tafs</string>
+    <string name="alerts_blocked_body">Android sa už nepýta, takže upozornenia pre tafs sú v nastaveniach telefónu vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili do tohto telefónu aj do hodiniek. Hodinky dostávajú aktualizácie tak či tak.</string>
+    <string name="alerts_open_notification_settings">Otvoriť nastavenia upozornení</string>
+    <string name="alerts_now_on">Upozornenia sú zapnuté.</string>
+    <string name="alerts_still_off">Upozornenia sú stále vypnuté.</string>
+    <string name="watch_uses_tafs_title">Vaše hodinky používajú tafs</string>
+    <string name="watch_uses_tafs_body">Ak chcete vidieť schválenia a odpovede ako upozornenia v tomto telefóne aj v hodinkách, zapnite upozornenia pre tafs. Hodinky budú dostávať aktualizácie, aj keď to neurobíte.</string>
 </resources>

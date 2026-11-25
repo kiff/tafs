@@ -2829,4 +2829,11 @@
     <string name="work_sending_again">ກຳລັງສົ່ງອີກ…</string>
     <string name="work_stop_run">ຢຸດການເຮັດວຽກ</string>
     <string name="work_stopped_part_way_before_finished">%1$s ຢຸດກາງທາງ ກ່ອນຈະສຳເລັດ.</string>
+    <string name="alerts_blocked_title">ເປີດການແຈ້ງເຕືອນສຳລັບ tafs</string>
+    <string name="alerts_blocked_body">Android ບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າໂທລະສັບຂອງທ່ານ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ, ໃນໂທລະສັບນີ້ ແລະ ໃນໂມງຂອງທ່ານ. ໂມງຂອງທ່ານຍັງໄດ້ຮັບການອັບເດດຢູ່ດີ.</string>
+    <string name="alerts_open_notification_settings">ເປີດການຕັ້ງຄ່າການແຈ້ງເຕືອນ</string>
+    <string name="alerts_now_on">ການແຈ້ງເຕືອນເປີດຢູ່.</string>
+    <string name="alerts_still_off">ການແຈ້ງເຕືອນຍັງປິດຢູ່.</string>
+    <string name="watch_uses_tafs_title">ໂມງຂອງທ່ານກຳລັງໃຊ້ tafs</string>
+    <string name="watch_uses_tafs_body">ເພື່ອເບິ່ງການອະນຸມັດ ແລະ ຄຳຕອບເປັນການແຈ້ງເຕືອນ, ໃນໂທລະສັບນີ້ ແລະ ໃນໂມງຂອງທ່ານ, ໃຫ້ເປີດການແຈ້ງເຕືອນສຳລັບ tafs. ໂມງຂອງທ່ານຍັງຈະໄດ້ຮັບການອັບເດດ ເຖິງທ່ານບໍ່ເປີດກໍຕາມ.</string>
 </resources>

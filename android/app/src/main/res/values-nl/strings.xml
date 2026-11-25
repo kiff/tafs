@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Opnieuw verzenden…</string>
     <string name="work_stop_run">De run stoppen</string>
     <string name="work_stopped_part_way_before_finished">%1$s is halverwege gestopt, voordat het klaar was.</string>
+    <string name="alerts_blocked_title">Meldingen voor tafs aanzetten</string>
+    <string name="alerts_blocked_body">Android vraagt het niet meer, dus meldingen voor tafs staan uit in de instellingen van je telefoon. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken, op deze telefoon en op je horloge. Je horloge krijgt zijn updates hoe dan ook.</string>
+    <string name="alerts_open_notification_settings">Meldingsinstellingen openen</string>
+    <string name="alerts_now_on">Meldingen staan aan.</string>
+    <string name="alerts_still_off">Meldingen staan nog uit.</string>
+    <string name="watch_uses_tafs_title">Je horloge gebruikt tafs</string>
+    <string name="watch_uses_tafs_body">Zet meldingen voor tafs aan om goedkeuringen en antwoorden als melding te zien, op deze telefoon en op je horloge. Je horloge blijft zijn updates krijgen, ook als je dat niet doet.</string>
 </resources>

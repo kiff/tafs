@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Wird erneut gesendet…</string>
     <string name="work_stop_run">Lauf stoppen</string>
     <string name="work_stopped_part_way_before_finished">%1$s hat mittendrin aufgehört, bevor er fertig war.</string>
+    <string name="alerts_blocked_title">Benachrichtigungen für tafs einschalten</string>
+    <string name="alerts_blocked_body">Android fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen deines Telefons aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen, auf diesem Telefon und auf deiner Uhr. Deine Uhr bekommt ihre Updates so oder so.</string>
+    <string name="alerts_open_notification_settings">Benachrichtigungseinstellungen öffnen</string>
+    <string name="alerts_now_on">Benachrichtigungen sind an.</string>
+    <string name="alerts_still_off">Benachrichtigungen sind noch aus.</string>
+    <string name="watch_uses_tafs_title">Deine Uhr nutzt tafs</string>
+    <string name="watch_uses_tafs_body">Um Genehmigungen und Antworten als Benachrichtigungen zu sehen, auf diesem Telefon und auf deiner Uhr, schalte die Benachrichtigungen für tafs ein. Deine Uhr bekommt ihre Updates auch, wenn du es nicht tust.</string>
 </resources>

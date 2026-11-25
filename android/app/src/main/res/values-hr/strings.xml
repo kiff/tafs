@@ -2997,4 +2997,11 @@
     <string name="work_sending_again">Ponovno slanje…</string>
     <string name="work_stop_run">Zaustavite izvođenje</string>
     <string name="work_stopped_part_way_before_finished">Taf %1$s zaustavio se usred posla, prije nego što je završio.</string>
+    <string name="alerts_blocked_title">Uključite obavijesti za tafs</string>
+    <string name="alerts_blocked_body">Android više ne pita, pa su obavijesti za tafs isključene u postavkama telefona. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas, na ovaj telefon i na sat. Sat ionako prima svoja ažuriranja.</string>
+    <string name="alerts_open_notification_settings">Otvori postavke obavijesti</string>
+    <string name="alerts_now_on">Obavijesti su uključene.</string>
+    <string name="alerts_still_off">Obavijesti su i dalje isključene.</string>
+    <string name="watch_uses_tafs_title">Vaš sat koristi tafs</string>
+    <string name="watch_uses_tafs_body">Da biste odobrenja i odgovore vidjeli kao obavijesti, na ovom telefonu i na satu, uključite obavijesti za tafs. Sat će i dalje primati svoja ažuriranja i ako to ne učinite.</string>
 </resources>

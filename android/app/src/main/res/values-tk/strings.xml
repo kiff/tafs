@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Täzeden iberilýär…</string>
     <string name="work_stop_run">Işlemäni duruzyň</string>
     <string name="work_stopped_part_way_before_finished">%1$s gutarmanka ýarym ýolda durdy.</string>
+    <string name="alerts_blocked_title">tafs üçin duýduryşlary açyň</string>
+    <string name="alerts_blocked_body">Android indi soramaýar, şonuň üçin tafs duýduryşlary telefonyňyzyň sazlamalarynda öçürilen. Tassyklamalar we jogaplar size, bu telefonda we sagadyňyzda ýetip gelsin diýip, olary şol ýerde açyň. Sagadyňyz täzelenmelerini islendik ýagdaýda alýar.</string>
+    <string name="alerts_open_notification_settings">Bildiriş sazlamalaryny açyň</string>
+    <string name="alerts_now_on">Duýduryşlar açyk.</string>
+    <string name="alerts_still_off">Duýduryşlar heniz öçük.</string>
+    <string name="watch_uses_tafs_title">Sagadyňyz tafs ulanýar</string>
+    <string name="watch_uses_tafs_body">Tassyklamalary we jogaplary bu telefonda we sagadyňyzda duýduryş hökmünde görmek üçin tafs duýduryşlaryny açyň. Açmasaňyz hem, sagadyňyz täzelenmelerini almagy dowam etdirer.</string>
 </resources>

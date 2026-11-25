@@ -2829,4 +2829,11 @@
     <string name="work_sending_again">Đang gửi lại…</string>
     <string name="work_stop_run">Dừng lượt chạy</string>
     <string name="work_stopped_part_way_before_finished">taf %1$s đã dừng giữa chừng, trước khi hoàn thành.</string>
+    <string name="alerts_blocked_title">Bật cảnh báo cho tafs</string>
+    <string name="alerts_blocked_body">Android không hỏi nữa, nên cảnh báo cho tafs đang tắt trong cài đặt điện thoại của bạn. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn, trên điện thoại này và trên đồng hồ. Đồng hồ của bạn vẫn nhận cập nhật dù thế nào.</string>
+    <string name="alerts_open_notification_settings">Mở cài đặt thông báo</string>
+    <string name="alerts_now_on">Cảnh báo đã bật.</string>
+    <string name="alerts_still_off">Cảnh báo vẫn đang tắt.</string>
+    <string name="watch_uses_tafs_title">Đồng hồ của bạn đang dùng tafs</string>
+    <string name="watch_uses_tafs_body">Để xem phê duyệt và câu trả lời dưới dạng cảnh báo, trên điện thoại này và trên đồng hồ, hãy bật cảnh báo cho tafs. Đồng hồ của bạn vẫn tiếp tục nhận cập nhật kể cả khi bạn không bật.</string>
 </resources>

@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">আবার পাঠানো হচ্ছে…</string>
     <string name="work_stop_run">রান বন্ধ করুন</string>
     <string name="work_stopped_part_way_before_finished">%1$s শেষ হওয়ার আগে মাঝপথে থেমে গেছে।</string>
+    <string name="alerts_blocked_title">tafs-এর অ্যালার্ট চালু করুন</string>
+    <string name="alerts_blocked_body">Android আর জিজ্ঞাসা করে না, তাই আপনার ফোনের সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন এই ফোনে ও আপনার ঘড়িতে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন। আপনার ঘড়ি যেকোনোভাবেই আপডেট পায়।</string>
+    <string name="alerts_open_notification_settings">বিজ্ঞপ্তি সেটিংস খুলুন</string>
+    <string name="alerts_now_on">অ্যালার্ট চালু আছে।</string>
+    <string name="alerts_still_off">অ্যালার্ট এখনও বন্ধ।</string>
+    <string name="watch_uses_tafs_title">আপনার ঘড়ি tafs ব্যবহার করছে</string>
+    <string name="watch_uses_tafs_body">এই ফোনে ও আপনার ঘড়িতে অনুমোদন ও উত্তর অ্যালার্ট হিসেবে দেখতে tafs-এর অ্যালার্ট চালু করুন। চালু না করলেও আপনার ঘড়ি আপডেট পেতে থাকবে।</string>
 </resources>

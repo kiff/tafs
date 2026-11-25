@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Tornant a enviar…</string>
     <string name="work_stop_run">Atura l\'execució</string>
     <string name="work_stopped_part_way_before_finished">%1$s s\'ha aturat a mig camí, abans d\'acabar.</string>
+    <string name="alerts_blocked_title">Activa les alertes de tafs</string>
+    <string name="alerts_blocked_body">Android ja no ho pregunta, així que les alertes de tafs estan desactivades a la configuració del telèfon. Activa-les allà perquè les aprovacions i les respostes t\'arribin, en aquest telèfon i al rellotge. El rellotge rep les actualitzacions igualment.</string>
+    <string name="alerts_open_notification_settings">Obre la configuració de notificacions</string>
+    <string name="alerts_now_on">Les alertes estan activades.</string>
+    <string name="alerts_still_off">Les alertes encara estan desactivades.</string>
+    <string name="watch_uses_tafs_title">El teu rellotge fa servir tafs</string>
+    <string name="watch_uses_tafs_body">Per veure les aprovacions i les respostes com a alertes, en aquest telèfon i al rellotge, activa les alertes de tafs. El rellotge continuarà rebent les actualitzacions encara que no ho facis.</string>
 </resources>

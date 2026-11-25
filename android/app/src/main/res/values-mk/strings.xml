@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Се испраќа повторно…</string>
     <string name="work_stop_run">Стопирај го извршувањето</string>
     <string name="work_stopped_part_way_before_finished">%1$s запре на половина пат, пред да заврши.</string>
+    <string name="alerts_blocked_title">Вклучи известувања за tafs</string>
+    <string name="alerts_blocked_body">Android повеќе не прашува, па известувањата за tafs се исклучени во поставките на телефонот. Вклучи ги таму за одобренијата и одговорите да стигнуваат до тебе, на овој телефон и на часовникот. Часовникот ги добива ажурирањата во секој случај.</string>
+    <string name="alerts_open_notification_settings">Отвори поставки за известувања</string>
+    <string name="alerts_now_on">Известувањата се вклучени.</string>
+    <string name="alerts_still_off">Известувањата сè уште се исклучени.</string>
+    <string name="watch_uses_tafs_title">Твојот часовник користи tafs</string>
+    <string name="watch_uses_tafs_body">За да ги гледаш одобренијата и одговорите како известувања, на овој телефон и на часовникот, вклучи ги известувањата за tafs. Часовникот ќе продолжи да ги добива ажурирањата и ако не го направиш тоа.</string>
 </resources>

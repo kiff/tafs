@@ -3249,4 +3249,11 @@
     <string name="work_sending_again">جارٍ الإرسال مرة أخرى…</string>
     <string name="work_stop_run">إيقاف التشغيل</string>
     <string name="work_stopped_part_way_before_finished">توقف taf %1$s في منتصف العمل، قبل أن ينتهي.</string>
+    <string name="alerts_blocked_title">شغّل التنبيهات لـ tafs</string>
+    <string name="alerts_blocked_body">لم يعد Android يسأل، لذا فإن تنبيهات tafs متوقفة في إعدادات هاتفك. شغّلها هناك لتصلك الموافقات والإجابات على هذا الهاتف وعلى ساعتك. تصل التحديثات إلى ساعتك في كل الأحوال.</string>
+    <string name="alerts_open_notification_settings">فتح إعدادات الإشعارات</string>
+    <string name="alerts_now_on">التنبيهات قيد التشغيل.</string>
+    <string name="alerts_still_off">لا تزال التنبيهات متوقفة.</string>
+    <string name="watch_uses_tafs_title">ساعتك تستخدم tafs</string>
+    <string name="watch_uses_tafs_body">لترى الموافقات والإجابات كتنبيهات على هذا الهاتف وعلى ساعتك، شغّل التنبيهات لـ tafs. ستظل ساعتك تتلقى تحديثاتها حتى إن لم تفعل.</string>
 </resources>

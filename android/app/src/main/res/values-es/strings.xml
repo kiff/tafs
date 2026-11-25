@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Volviendo a enviar…</string>
     <string name="work_stop_run">Detener la ejecución</string>
     <string name="work_stopped_part_way_before_finished">%1$s se detuvo a medias, antes de terminar.</string>
+    <string name="alerts_blocked_title">Activa las alertas de tafs</string>
+    <string name="alerts_blocked_body">Android ya no pregunta, así que las alertas de tafs están desactivadas en los ajustes del teléfono. Actívalas ahí para que las aprobaciones y respuestas te lleguen, en este teléfono y en tu reloj. Tu reloj recibe sus actualizaciones de todos modos.</string>
+    <string name="alerts_open_notification_settings">Abrir ajustes de notificaciones</string>
+    <string name="alerts_now_on">Las alertas están activadas.</string>
+    <string name="alerts_still_off">Las alertas siguen desactivadas.</string>
+    <string name="watch_uses_tafs_title">Tu reloj está usando tafs</string>
+    <string name="watch_uses_tafs_body">Para ver las aprobaciones y respuestas como alertas, en este teléfono y en tu reloj, activa las alertas de tafs. Tu reloj seguirá recibiendo sus actualizaciones aunque no lo hagas.</string>
 </resources>

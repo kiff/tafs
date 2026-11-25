@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Sending again…</string>
     <string name="work_stop_run">Stop the run</string>
     <string name="work_stopped_part_way_before_finished">%1$s stopped part-way, before it finished.</string>
+    <string name="alerts_blocked_title">Turn on alerts for tafs</string>
+    <string name="alerts_blocked_body">Android no longer asks, so alerts for tafs are off in your phone\'s settings. Turn them on there so approvals and answers reach you, on this phone and on your watch. Your watch gets its updates either way.</string>
+    <string name="alerts_open_notification_settings">Open notification settings</string>
+    <string name="alerts_now_on">Alerts are on.</string>
+    <string name="alerts_still_off">Alerts are still off.</string>
+    <string name="watch_uses_tafs_title">Your watch is using tafs</string>
+    <string name="watch_uses_tafs_body">To see approvals and answers as alerts, on this phone and on your watch, turn on alerts for tafs. Your watch keeps getting its updates even if you don\'t.</string>
 </resources>

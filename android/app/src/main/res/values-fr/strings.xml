@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Renvoi…</string>
     <string name="work_stop_run">Arrêter l\'exécution</string>
     <string name="work_stopped_part_way_before_finished">%1$s s\'est arrêté en cours de route, avant la fin.</string>
+    <string name="alerts_blocked_title">Activer les alertes de tafs</string>
+    <string name="alerts_blocked_body">Android ne pose plus la question, donc les alertes de tafs sont désactivées dans les réglages du téléphone. Activez-les là pour que les approbations et les réponses vous parviennent, sur ce téléphone et sur votre montre. Votre montre reçoit ses mises à jour de toute façon.</string>
+    <string name="alerts_open_notification_settings">Ouvrir les réglages des notifications</string>
+    <string name="alerts_now_on">Les alertes sont activées.</string>
+    <string name="alerts_still_off">Les alertes sont toujours désactivées.</string>
+    <string name="watch_uses_tafs_title">Votre montre utilise tafs</string>
+    <string name="watch_uses_tafs_body">Pour voir les approbations et les réponses en alertes, sur ce téléphone et sur votre montre, activez les alertes de tafs. Votre montre continue de recevoir ses mises à jour même si vous ne le faites pas.</string>
 </resources>

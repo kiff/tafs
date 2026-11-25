@@ -2829,4 +2829,11 @@
     <string name="work_sending_again">Mengirim lagi…</string>
     <string name="work_stop_run">Hentikan eksekusi</string>
     <string name="work_stopped_part_way_before_finished">taf %1$s berhenti di tengah jalan, sebelum selesai.</string>
+    <string name="alerts_blocked_title">Aktifkan peringatan untuk tafs</string>
+    <string name="alerts_blocked_body">Android tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di pengaturan ponsel Anda. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda, di ponsel ini dan di jam tangan Anda. Jam tangan Anda tetap menerima pembaruannya.</string>
+    <string name="alerts_open_notification_settings">Buka pengaturan notifikasi</string>
+    <string name="alerts_now_on">Peringatan aktif.</string>
+    <string name="alerts_still_off">Peringatan masih nonaktif.</string>
+    <string name="watch_uses_tafs_title">Jam tangan Anda memakai tafs</string>
+    <string name="watch_uses_tafs_body">Untuk melihat persetujuan dan jawaban sebagai peringatan, di ponsel ini dan di jam tangan Anda, aktifkan peringatan untuk tafs. Jam tangan Anda tetap menerima pembaruannya meski Anda tidak mengaktifkannya.</string>
 </resources>

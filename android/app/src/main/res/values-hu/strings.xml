@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Újraküldés…</string>
     <string name="work_stop_run">Futás leállítása</string>
     <string name="work_stopped_part_way_before_finished">%1$s félúton leállt, mielőtt befejezte volna.</string>
+    <string name="alerts_blocked_title">Kapcsold be a tafs riasztásait</string>
+    <string name="alerts_blocked_body">Az Android már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a telefon beállításaiban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád, ezen a telefonon és az órádon. Az órád így is megkapja a frissítéseit.</string>
+    <string name="alerts_open_notification_settings">Értesítési beállítások megnyitása</string>
+    <string name="alerts_now_on">A riasztások be vannak kapcsolva.</string>
+    <string name="alerts_still_off">A riasztások még mindig ki vannak kapcsolva.</string>
+    <string name="watch_uses_tafs_title">Az órád a tafst használja</string>
+    <string name="watch_uses_tafs_body">Ha a jóváhagyásokat és a válaszokat riasztásként szeretnéd látni ezen a telefonon és az órádon, kapcsold be a tafs riasztásait. Az órád akkor is megkapja a frissítéseit, ha nem teszed meg.</string>
 </resources>

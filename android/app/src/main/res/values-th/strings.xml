@@ -2829,4 +2829,11 @@
     <string name="work_sending_again">กำลังส่งอีกครั้ง…</string>
     <string name="work_stop_run">หยุดการทำงาน</string>
     <string name="work_stopped_part_way_before_finished">%1$s หยุดกลางคัน ก่อนที่จะเสร็จ</string>
+    <string name="alerts_blocked_title">เปิดการแจ้งเตือนสำหรับ tafs</string>
+    <string name="alerts_blocked_body">Android ไม่ถามอีกแล้ว การแจ้งเตือนสำหรับ tafs จึงปิดอยู่ในการตั้งค่าโทรศัพท์ของคุณ เปิดที่นั่นเพื่อให้การอนุมัติและคำตอบมาถึงคุณ ทั้งบนโทรศัพท์เครื่องนี้และบนนาฬิกา นาฬิกาของคุณได้รับการอัปเดตอยู่แล้วไม่ว่ากรณีใด</string>
+    <string name="alerts_open_notification_settings">เปิดการตั้งค่าการแจ้งเตือน</string>
+    <string name="alerts_now_on">เปิดการแจ้งเตือนแล้ว</string>
+    <string name="alerts_still_off">การแจ้งเตือนยังปิดอยู่</string>
+    <string name="watch_uses_tafs_title">นาฬิกาของคุณกำลังใช้ tafs</string>
+    <string name="watch_uses_tafs_body">หากต้องการเห็นการอนุมัติและคำตอบเป็นการแจ้งเตือน บนโทรศัพท์เครื่องนี้และบนนาฬิกา ให้เปิดการแจ้งเตือนสำหรับ tafs นาฬิกาของคุณยังคงได้รับการอัปเดตแม้คุณไม่เปิด</string>
 </resources>

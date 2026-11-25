@@ -2997,4 +2997,11 @@
     <string name="work_sending_again">Sūta vēlreiz…</string>
     <string name="work_stop_run">Pārtraukt palaišanu</string>
     <string name="work_stopped_part_way_before_finished">%1$s apstājās pusceļā, pirms bija pabeidzis.</string>
+    <string name="alerts_blocked_title">Ieslēdz tafs paziņojumus</string>
+    <string name="alerts_blocked_body">Android vairs nejautā, tāpēc tafs paziņojumi tālruņa iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu, šajā tālrunī un pulkstenī. Pulkstenis savus atjauninājumus saņem jebkurā gadījumā.</string>
+    <string name="alerts_open_notification_settings">Atvērt paziņojumu iestatījumus</string>
+    <string name="alerts_now_on">Paziņojumi ir ieslēgti.</string>
+    <string name="alerts_still_off">Paziņojumi joprojām ir izslēgti.</string>
+    <string name="watch_uses_tafs_title">Tavs pulkstenis izmanto tafs</string>
+    <string name="watch_uses_tafs_body">Lai redzētu apstiprinājumus un atbildes kā paziņojumus šajā tālrunī un pulkstenī, ieslēdz tafs paziņojumus. Pulkstenis turpinās saņemt savus atjauninājumus, pat ja to nedarīsi.</string>
 </resources>

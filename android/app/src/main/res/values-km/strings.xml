@@ -2829,4 +2829,11 @@
     <string name="work_sending_again">កំពុងផ្ញើម្តងទៀត…</string>
     <string name="work_stop_run">បញ្ឈប់ការដំណើរការ</string>
     <string name="work_stopped_part_way_before_finished">%1$s បានឈប់ពាក់កណ្តាលផ្លូវ មុនពេលបញ្ចប់។</string>
+    <string name="alerts_blocked_title">បើកការជូនដំណឹងសម្រាប់ tafs</string>
+    <string name="alerts_blocked_body">Android លែងសួរទៀតហើយ ដូច្នេះការជូនដំណឹងសម្រាប់ tafs ត្រូវបានបិទក្នុងការកំណត់ទូរសព្ទរបស់អ្នក។ បើកវានៅទីនោះ ដើម្បីឱ្យការអនុម័ត និងចម្លើយទៅដល់អ្នក នៅលើទូរសព្ទនេះ និងនាឡិការបស់អ្នក។ នាឡិការបស់អ្នកនៅតែទទួលបានបច្ចុប្បន្នភាពរបស់វា។</string>
+    <string name="alerts_open_notification_settings">បើកការកំណត់ការជូនដំណឹង</string>
+    <string name="alerts_now_on">ការជូនដំណឹងបានបើក។</string>
+    <string name="alerts_still_off">ការជូនដំណឹងនៅតែបិទ។</string>
+    <string name="watch_uses_tafs_title">នាឡិការបស់អ្នកកំពុងប្រើ tafs</string>
+    <string name="watch_uses_tafs_body">ដើម្បីមើលការអនុម័ត និងចម្លើយជាការជូនដំណឹង នៅលើទូរសព្ទនេះ និងនាឡិការបស់អ្នក សូមបើកការជូនដំណឹងសម្រាប់ tafs។ នាឡិការបស់អ្នកនៅតែទទួលបានបច្ចុប្បន្នភាព ទោះបីអ្នកមិនបើកក៏ដោយ។</string>
 </resources>

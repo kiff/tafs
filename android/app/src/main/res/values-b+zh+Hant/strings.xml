@@ -2829,4 +2829,11 @@
     <string name="work_sending_again">再次傳送中…</string>
     <string name="work_stop_run">停止執行</string>
     <string name="work_stopped_part_way_before_finished">%1$s 在完成之前中途停止了。</string>
+    <string name="alerts_blocked_title">開啟 tafs 的通知</string>
+    <string name="alerts_blocked_body">Android 不會再詢問，因此 tafs 的通知在手機設定中為關閉。請在那裡開啟，讓核准與回答傳到這部手機和您的手錶。無論如何，手錶都會收到更新。</string>
+    <string name="alerts_open_notification_settings">開啟通知設定</string>
+    <string name="alerts_now_on">通知已開啟。</string>
+    <string name="alerts_still_off">通知仍為關閉。</string>
+    <string name="watch_uses_tafs_title">您的手錶正在使用 tafs</string>
+    <string name="watch_uses_tafs_body">若要在這部手機和手錶上以通知查看核准與回答，請開啟 tafs 的通知。即使不開啟，手錶仍會持續收到更新。</string>
 </resources>

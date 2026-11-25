@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Po dërgohet sërish…</string>
     <string name="work_stop_run">Ndaloni ekzekutimin</string>
     <string name="work_stopped_part_way_before_finished">%1$s u ndal në mes, para se të mbaronte.</string>
+    <string name="alerts_blocked_title">Aktivizoni njoftimet për tafs</string>
+    <string name="alerts_blocked_body">Android nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara në cilësimet e telefonit. Aktivizojini atje që miratimet dhe përgjigjet t\'ju arrijnë, në këtë telefon dhe në orën tuaj. Ora i merr përditësimet e saj gjithsesi.</string>
+    <string name="alerts_open_notification_settings">Hap cilësimet e njoftimeve</string>
+    <string name="alerts_now_on">Njoftimet janë aktive.</string>
+    <string name="alerts_still_off">Njoftimet janë ende të çaktivizuara.</string>
+    <string name="watch_uses_tafs_title">Ora juaj po përdor tafs</string>
+    <string name="watch_uses_tafs_body">Për të parë miratimet dhe përgjigjet si njoftime, në këtë telefon dhe në orën tuaj, aktivizoni njoftimet për tafs. Ora do të vazhdojë t\'i marrë përditësimet edhe nëse nuk e bëni.</string>
 </resources>

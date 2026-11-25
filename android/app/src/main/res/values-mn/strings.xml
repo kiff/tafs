@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Дахин илгээж байна…</string>
     <string name="work_stop_run">Ажиллалтыг зогсоох</string>
     <string name="work_stopped_part_way_before_finished">%1$s дуусахаас өмнө дундаа зогслоо.</string>
+    <string name="alerts_blocked_title">tafs-ын мэдэгдлийг асаах</string>
+    <string name="alerts_blocked_body">Android дахин асуухгүй тул утасны тохиргоонд tafs-ын мэдэгдэл унтраастай байна. Зөвшөөрөл, хариулт энэ утас болон цагт тань ирэхийн тулд тэнд асаана уу. Цаг тань шинэчлэлтээ ямар ч байсан авна.</string>
+    <string name="alerts_open_notification_settings">Мэдэгдлийн тохиргоог нээх</string>
+    <string name="alerts_now_on">Мэдэгдэл асаалттай байна.</string>
+    <string name="alerts_still_off">Мэдэгдэл унтраастай хэвээр байна.</string>
+    <string name="watch_uses_tafs_title">Таны цаг tafs ашиглаж байна</string>
+    <string name="watch_uses_tafs_body">Зөвшөөрөл, хариултыг энэ утас болон цагтаа мэдэгдэл хэлбэрээр харахын тулд tafs-ын мэдэгдлийг асаана уу. Асаахгүй байсан ч цаг тань шинэчлэлтээ авсаар байна.</string>
 </resources>

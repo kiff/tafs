@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Uuesti saatmine…</string>
     <string name="work_stop_run">Lõpeta käivitus</string>
     <string name="work_stopped_part_way_before_finished">%1$s lõpetas poole pealt, enne kui sai valmis.</string>
+    <string name="alerts_blocked_title">Lülita tafsi teavitused sisse</string>
+    <string name="alerts_blocked_body">Android enam ei küsi, seega on tafsi teavitused telefoni seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni, selles telefonis ja kellas. Kell saab oma uuendused igal juhul.</string>
+    <string name="alerts_open_notification_settings">Ava teavituste seaded</string>
+    <string name="alerts_now_on">Teavitused on sees.</string>
+    <string name="alerts_still_off">Teavitused on endiselt väljas.</string>
+    <string name="watch_uses_tafs_title">Sinu kell kasutab tafsi</string>
+    <string name="watch_uses_tafs_body">Et näha kinnitusi ja vastuseid teavitustena selles telefonis ja kellas, lülita tafsi teavitused sisse. Kell saab oma uuendusi ka siis, kui sa seda ei tee.</string>
 </resources>

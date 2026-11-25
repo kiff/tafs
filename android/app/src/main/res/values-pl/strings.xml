@@ -3081,4 +3081,11 @@
     <string name="work_sending_again">Ponowne wysyłanie…</string>
     <string name="work_stop_run">Zatrzymaj uruchomienie</string>
     <string name="work_stopped_part_way_before_finished">%1$s: zatrzymało się w połowie, zanim się skończyło.</string>
+    <string name="alerts_blocked_title">Włącz alerty tafs</string>
+    <string name="alerts_blocked_body">Android już nie pyta, więc alerty tafs są wyłączone w ustawieniach telefonu. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały, na tym telefonie i na zegarku. Zegarek i tak dostaje swoje aktualizacje.</string>
+    <string name="alerts_open_notification_settings">Otwórz ustawienia powiadomień</string>
+    <string name="alerts_now_on">Alerty są włączone.</string>
+    <string name="alerts_still_off">Alerty są nadal wyłączone.</string>
+    <string name="watch_uses_tafs_title">Twój zegarek używa tafs</string>
+    <string name="watch_uses_tafs_body">Aby widzieć zatwierdzenia i odpowiedzi jako alerty, na tym telefonie i na zegarku, włącz alerty tafs. Zegarek będzie dostawać swoje aktualizacje, nawet jeśli tego nie zrobisz.</string>
 </resources>

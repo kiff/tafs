@@ -2997,4 +2997,11 @@
     <string name="work_sending_again">Se retrimite…</string>
     <string name="work_stop_run">Opriți rularea</string>
     <string name="work_stopped_part_way_before_finished">%1$s s-a oprit la jumătatea drumului, înainte să termine.</string>
+    <string name="alerts_blocked_title">Activați alertele tafs</string>
+    <string name="alerts_blocked_body">Android nu mai întreabă, așa că alertele tafs sunt dezactivate în setările telefonului. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs., pe acest telefon și pe ceas. Ceasul își primește actualizările oricum.</string>
+    <string name="alerts_open_notification_settings">Deschideți setările notificărilor</string>
+    <string name="alerts_now_on">Alertele sunt activate.</string>
+    <string name="alerts_still_off">Alertele sunt încă dezactivate.</string>
+    <string name="watch_uses_tafs_title">Ceasul dvs. folosește tafs</string>
+    <string name="watch_uses_tafs_body">Ca să vedeți aprobările și răspunsurile ca alerte, pe acest telefon și pe ceas, activați alertele tafs. Ceasul va primi în continuare actualizările, chiar dacă nu o faceți.</string>
 </resources>

@@ -2913,4 +2913,11 @@
     <string name="work_sending_again">Nuovo invio…</string>
     <string name="work_stop_run">Ferma l\'esecuzione</string>
     <string name="work_stopped_part_way_before_finished">%1$s si è fermato a metà, prima di finire.</string>
+    <string name="alerts_blocked_title">Attiva gli avvisi di tafs</string>
+    <string name="alerts_blocked_body">Android non lo chiede più, quindi gli avvisi di tafs sono disattivati nelle impostazioni del telefono. Attivali lì perché approvazioni e risposte ti raggiungano, su questo telefono e sul tuo orologio. L\'orologio riceve comunque i suoi aggiornamenti.</string>
+    <string name="alerts_open_notification_settings">Apri le impostazioni delle notifiche</string>
+    <string name="alerts_now_on">Gli avvisi sono attivi.</string>
+    <string name="alerts_still_off">Gli avvisi sono ancora disattivati.</string>
+    <string name="watch_uses_tafs_title">Il tuo orologio usa tafs</string>
+    <string name="watch_uses_tafs_body">Per vedere approvazioni e risposte come avvisi, su questo telefono e sull\'orologio, attiva gli avvisi di tafs. L\'orologio continua a ricevere i suoi aggiornamenti anche se non lo fai.</string>
 </resources>
