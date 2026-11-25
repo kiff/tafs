@@ -927,7 +927,7 @@ export const hu: Words = {
   ai_consent_now_anthropic: "Jelenleg: maga az Anthropic.",
   ai_consent_now_bedrock: "Jelenleg: Amazon Web Services, az EU-ban.",
   ai_consent_now_vertex: "Jelenleg: Google Cloud, az EU-ban.",
-  ai_consent_now_foundry: "Jelenleg: Microsoft Azure, az EU-ban.",
+  ai_consent_now_foundry: "Jelenleg: Microsoft Azure, az EU-ban; az adatokat az Anthropic kezeli.",
   ai_consent_allow: "Engedélyezés",
   ai_consent_not_now: "Most nem",
   ai_consent_withdraw: "Visszavonás",

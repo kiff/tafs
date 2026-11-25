@@ -935,7 +935,7 @@ export const ja: Words = {
   ai_consent_now_anthropic: "現在：Anthropic自身。",
   ai_consent_now_bedrock: "現在：Amazon Web Services（EU内）。",
   ai_consent_now_vertex: "現在：Google Cloud（EU内）。",
-  ai_consent_now_foundry: "現在：Microsoft Azure（EU内）。",
+  ai_consent_now_foundry: "現在：Microsoft Azure（EU内、処理はAnthropic）。",
   ai_consent_allow: "許可",
   ai_consent_not_now: "今はしない",
   ai_consent_withdraw: "撤回",

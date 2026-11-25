@@ -927,7 +927,7 @@ export const ro: Words = {
   ai_consent_now_anthropic: "În prezent: direct Anthropic.",
   ai_consent_now_bedrock: "În prezent: Amazon Web Services, în UE.",
   ai_consent_now_vertex: "În prezent: Google Cloud, în UE.",
-  ai_consent_now_foundry: "În prezent: Microsoft Azure, în UE.",
+  ai_consent_now_foundry: "În prezent: Microsoft Azure, în UE, iar datele sunt prelucrate de Anthropic.",
   ai_consent_allow: "Permiteți",
   ai_consent_not_now: "Nu acum",
   ai_consent_withdraw: "Retrageți",

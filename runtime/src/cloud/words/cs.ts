@@ -927,7 +927,7 @@ export const cs: Words = {
   ai_consent_now_anthropic: "Právě teď: přímo Anthropic.",
   ai_consent_now_bedrock: "Právě teď: Amazon Web Services, v EU.",
   ai_consent_now_vertex: "Právě teď: Google Cloud, v EU.",
-  ai_consent_now_foundry: "Právě teď: Microsoft Azure, v EU.",
+  ai_consent_now_foundry: "Právě teď: Microsoft Azure, v EU, přičemž data zpracovává Anthropic.",
   ai_consent_allow: "Povolit",
   ai_consent_not_now: "Teď ne",
   ai_consent_withdraw: "Odvolat",

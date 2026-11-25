@@ -927,7 +927,7 @@ export const hr: Words = {
   ai_consent_now_anthropic: "Trenutačno: izravno Anthropic.",
   ai_consent_now_bedrock: "Trenutačno: Amazon Web Services, u EU-u.",
   ai_consent_now_vertex: "Trenutačno: Google Cloud, u EU-u.",
-  ai_consent_now_foundry: "Trenutačno: Microsoft Azure, u EU-u.",
+  ai_consent_now_foundry: "Trenutačno: Microsoft Azure, u EU-u, a podatke obrađuje Anthropic.",
   ai_consent_allow: "Dopusti",
   ai_consent_not_now: "Ne sada",
   ai_consent_withdraw: "Povuci",

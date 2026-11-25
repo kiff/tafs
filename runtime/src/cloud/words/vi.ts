@@ -927,7 +927,7 @@ export const vi: Words = {
   ai_consent_now_anthropic: "Hiện tại: chính Anthropic.",
   ai_consent_now_bedrock: "Hiện tại: Amazon Web Services, tại EU.",
   ai_consent_now_vertex: "Hiện tại: Google Cloud, tại EU.",
-  ai_consent_now_foundry: "Hiện tại: Microsoft Azure, tại EU.",
+  ai_consent_now_foundry: "Hiện tại: Microsoft Azure, tại EU, do Anthropic xử lý.",
   ai_consent_allow: "Cho phép",
   ai_consent_not_now: "Để sau",
   ai_consent_withdraw: "Rút lại",

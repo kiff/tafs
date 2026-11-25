@@ -927,7 +927,7 @@ export const lv: Words = {
   ai_consent_now_anthropic: "Pašlaik: pati Anthropic.",
   ai_consent_now_bedrock: "Pašlaik: Amazon Web Services, ES.",
   ai_consent_now_vertex: "Pašlaik: Google Cloud, ES.",
-  ai_consent_now_foundry: "Pašlaik: Microsoft Azure, ES.",
+  ai_consent_now_foundry: "Pašlaik: Microsoft Azure, ES; datus apstrādā Anthropic.",
   ai_consent_allow: "Atļaut",
   ai_consent_not_now: "Ne tagad",
   ai_consent_withdraw: "Atsaukt",

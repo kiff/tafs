@@ -927,7 +927,7 @@ export const et: Words = {
   ai_consent_now_anthropic: "Praegu: Anthropic ise.",
   ai_consent_now_bedrock: "Praegu: Amazon Web Services, ELis.",
   ai_consent_now_vertex: "Praegu: Google Cloud, ELis.",
-  ai_consent_now_foundry: "Praegu: Microsoft Azure, ELis.",
+  ai_consent_now_foundry: "Praegu: Microsoft Azure, ELis; andmeid töötleb Anthropic.",
   ai_consent_allow: "Luba",
   ai_consent_not_now: "Mitte praegu",
   ai_consent_withdraw: "Võta tagasi",

@@ -927,7 +927,7 @@ export const lt: Words = {
   ai_consent_now_anthropic: "Šiuo metu: pati Anthropic.",
   ai_consent_now_bedrock: "Šiuo metu: Amazon Web Services, ES.",
   ai_consent_now_vertex: "Šiuo metu: Google Cloud, ES.",
-  ai_consent_now_foundry: "Šiuo metu: Microsoft Azure, ES.",
+  ai_consent_now_foundry: "Šiuo metu: Microsoft Azure, ES; duomenis tvarko Anthropic.",
   ai_consent_allow: "Leisti",
   ai_consent_not_now: "Ne dabar",
   ai_consent_withdraw: "Atšaukti",

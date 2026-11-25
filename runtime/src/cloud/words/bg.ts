@@ -927,7 +927,7 @@ export const bg: Words = {
   ai_consent_now_anthropic: "В момента: самата Anthropic.",
   ai_consent_now_bedrock: "В момента: Amazon Web Services, в ЕС.",
   ai_consent_now_vertex: "В момента: Google Cloud, в ЕС.",
-  ai_consent_now_foundry: "В момента: Microsoft Azure, в ЕС.",
+  ai_consent_now_foundry: "В момента: Microsoft Azure, в ЕС, като Anthropic го обработва.",
   ai_consent_allow: "Разреши",
   ai_consent_not_now: "Не сега",
   ai_consent_withdraw: "Оттегли",

@@ -935,7 +935,7 @@ export const pl: Words = {
   ai_consent_now_anthropic: "Obecnie: bezpośrednio Anthropic.",
   ai_consent_now_bedrock: "Obecnie: Amazon Web Services, w UE.",
   ai_consent_now_vertex: "Obecnie: Google Cloud, w UE.",
-  ai_consent_now_foundry: "Obecnie: Microsoft Azure, w UE.",
+  ai_consent_now_foundry: "Obecnie: Microsoft Azure, w UE, a dane przetwarza Anthropic.",
   ai_consent_allow: "Zezwól",
   ai_consent_not_now: "Nie teraz",
   ai_consent_withdraw: "Wycofaj",

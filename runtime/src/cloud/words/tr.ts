@@ -927,7 +927,7 @@ export const tr: Words = {
   ai_consent_now_anthropic: "Şu anda: doğrudan Anthropic.",
   ai_consent_now_bedrock: "Şu anda: Amazon Web Services, AB'de.",
   ai_consent_now_vertex: "Şu anda: Google Cloud, AB'de.",
-  ai_consent_now_foundry: "Şu anda: Microsoft Azure, AB'de.",
+  ai_consent_now_foundry: "Şu anda: Microsoft Azure, AB'de; verileri Anthropic işliyor.",
   ai_consent_allow: "İzin ver",
   ai_consent_not_now: "Şimdi değil",
   ai_consent_withdraw: "Geri çek",

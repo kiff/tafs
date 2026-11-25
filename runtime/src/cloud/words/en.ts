@@ -1015,7 +1015,7 @@ export const en = {
   ai_consent_now_anthropic: "Right now: Anthropic itself.",
   ai_consent_now_bedrock: "Right now: Amazon Web Services, in the EU.",
   ai_consent_now_vertex: "Right now: Google Cloud, in the EU.",
-  ai_consent_now_foundry: "Right now: Microsoft Azure, in the EU.",
+  ai_consent_now_foundry: "Right now: Microsoft Azure, in the EU, with Anthropic processing it.",
   ai_consent_allow: "Allow",
   ai_consent_not_now: "Not now",
   ai_consent_withdraw: "Withdraw",

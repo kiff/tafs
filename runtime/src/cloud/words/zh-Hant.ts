@@ -927,7 +927,7 @@ export const zhHant: Words = {
   ai_consent_now_anthropic: "目前：由 Anthropic 直接執行。",
   ai_consent_now_bedrock: "目前：Amazon Web Services，位於歐盟。",
   ai_consent_now_vertex: "目前：Google Cloud，位於歐盟。",
-  ai_consent_now_foundry: "目前：Microsoft Azure，位於歐盟。",
+  ai_consent_now_foundry: "目前：Microsoft Azure，位於歐盟，由 Anthropic 處理。",
   ai_consent_allow: "允許",
   ai_consent_not_now: "現在不要",
   ai_consent_withdraw: "撤回",

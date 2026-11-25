@@ -927,7 +927,7 @@ export const th: Words = {
   ai_consent_now_anthropic: "ขณะนี้: Anthropic เอง",
   ai_consent_now_bedrock: "ขณะนี้: Amazon Web Services ในสหภาพยุโรป",
   ai_consent_now_vertex: "ขณะนี้: Google Cloud ในสหภาพยุโรป",
-  ai_consent_now_foundry: "ขณะนี้: Microsoft Azure ในสหภาพยุโรป",
+  ai_consent_now_foundry: "ขณะนี้: Microsoft Azure ในสหภาพยุโรป โดย Anthropic เป็นผู้ประมวลผล",
   ai_consent_allow: "อนุญาต",
   ai_consent_not_now: "ไว้ทีหลัง",
   ai_consent_withdraw: "ถอน",

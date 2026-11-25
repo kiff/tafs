@@ -927,7 +927,7 @@ export const id: Words = {
   ai_consent_now_anthropic: "Saat ini: Anthropic sendiri.",
   ai_consent_now_bedrock: "Saat ini: Amazon Web Services, di UE.",
   ai_consent_now_vertex: "Saat ini: Google Cloud, di UE.",
-  ai_consent_now_foundry: "Saat ini: Microsoft Azure, di UE.",
+  ai_consent_now_foundry: "Saat ini: Microsoft Azure, di UE, dengan Anthropic yang memprosesnya.",
   ai_consent_allow: "Izinkan",
   ai_consent_not_now: "Nanti saja",
   ai_consent_withdraw: "Tarik",

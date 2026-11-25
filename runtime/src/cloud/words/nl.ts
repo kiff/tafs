@@ -935,7 +935,7 @@ export const nl: Words = {
   ai_consent_now_anthropic: "Op dit moment: Anthropic zelf.",
   ai_consent_now_bedrock: "Op dit moment: Amazon Web Services, in de EU.",
   ai_consent_now_vertex: "Op dit moment: Google Cloud, in de EU.",
-  ai_consent_now_foundry: "Op dit moment: Microsoft Azure, in de EU.",
+  ai_consent_now_foundry: "Op dit moment: Microsoft Azure, in de EU, waarbij Anthropic het verwerkt.",
   ai_consent_allow: "Toestaan",
   ai_consent_not_now: "Niet nu",
   ai_consent_withdraw: "Intrekken",

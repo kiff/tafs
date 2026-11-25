@@ -932,7 +932,7 @@ export const ko: Words = {
   ai_consent_now_anthropic: "현재: Anthropic 직접.",
   ai_consent_now_bedrock: "현재: Amazon Web Services(EU 내).",
   ai_consent_now_vertex: "현재: Google Cloud(EU 내).",
-  ai_consent_now_foundry: "현재: Microsoft Azure(EU 내).",
+  ai_consent_now_foundry: "현재: Microsoft Azure(EU 내, 처리는 Anthropic).",
   ai_consent_allow: "허용",
   ai_consent_not_now: "지금은 안 함",
   ai_consent_withdraw: "철회",
