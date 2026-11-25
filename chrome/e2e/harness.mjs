@@ -71,7 +71,7 @@ export async function start({ pair = true, cloud = false, args = [], bfcache = f
       "--disable-extensions-except=" + h.dir,
       "--load-extension=" + h.dir,
       // The fixture sites are on this computer, and nothing else is reached: every other name fails to resolve.
-      "--host-resolver-rules=" + ["MAP *.test 127.0.0.1", ...mapped, "MAP * ~NOTFOUND", "EXCLUDE 127.0.0.1"].join(", "),
+      "--host-resolver-rules=" + ["MAP *.test 127.0.0.1", "MAP google.com 127.0.0.1", "MAP *.google.com 127.0.0.1", "MAP *.github.io 127.0.0.1", ...mapped, "MAP * ~NOTFOUND", "EXCLUDE 127.0.0.1"].join(", "),
       "--ignore-certificate-errors",
       // Straight to 127.0.0.1, whatever proxy the computer has set.
       "--no-proxy-server",
