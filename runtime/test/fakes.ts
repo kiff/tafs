@@ -534,6 +534,15 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       s.archived = archived;
       return { ...s };
     },
+    /** As kiff/agents: only a thread its owner continued, its events with it; runs stay. */
+    async deleteSession(tenant, id, owner) {
+      calls.push(`deleteSession ${id} ${owner}`);
+      failing("deleteSession");
+      const i = sessions.findIndex((x) => x.tenant === tenant && x.id === id);
+      if (i < 0 || !continuedBy(sessions[i]!, owner)) throw gone();
+      sessions.splice(i, 1);
+      events.delete(id);
+    },
     async memories(tenant, agent, owner) {
       if (!agents.has(k(tenant, agent))) throw gone();
       return (notes.get(k(tenant, agent)) ?? []).filter((x) => !owner || !x.scope || x.scope === owner);
