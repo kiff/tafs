@@ -69,8 +69,13 @@ final class WatchThreadsTests: XCTestCase {
         kept.keep("coach", [line(1)])
         now.addTimeInterval(WatchThreads.unused - 1)
         XCTAssertEqual(kept.lines("coach").count, 1)
+        kept.keep("taf-1", [line(2)])
         now.addTimeInterval(2)
         XCTAssertEqual(kept.lines("coach"), [])
+        // Gone from the file itself, not only skipped.
+        let data = try? Data(contentsOf: url)
+        let onDisk = data.flatMap { try? JSONDecoder().decode([WatchThreads.Thread].self, from: $0) } ?? []
+        XCTAssertEqual(onDisk.map(\.key), ["taf-1"])
     }
 
     func testNothingStaysWithoutAPasscode() {

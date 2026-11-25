@@ -80,12 +80,17 @@ final class WatchThreads {
         try? FileManager.default.removeItem(at: url)
     }
 
-    /// What's kept and still in use; a file that won't read is none, and goes.
+    /// What's kept and still in use; a file that won't read is none, and goes. A thread unused too long goes from the file
+    /// the moment it's found, not at the next `keep`.
     private func read() -> [Thread] {
         guard let data = try? Data(contentsOf: url) else { return [] }
         guard let threads = try? JSONDecoder().decode([Thread].self, from: data) else { clear(); return [] }
         let now = clock()
-        return threads.filter { now.timeIntervalSince($0.used) < Self.unused }
+        let used = threads.filter { now.timeIntervalSince($0.used) < Self.unused }
+        if used.count != threads.count {
+            if used.isEmpty { clear() } else { write(used) }
+        }
+        return used
     }
 
     private func write(_ threads: [Thread]) {
