@@ -176,6 +176,9 @@ struct WatchReply: Codable, Equatable, Sendable {
     var text: String?
     /// `inboxMarks` and `inboxMark`: the lines read and dismissed, as tafs cloud keeps them now.
     var marks: WatchInboxMarks?
+    /// Whose answer this is (`WatchMark`): the phone's mark for the session it answered with, on every reply while it's
+    /// signed in, none once it's signed out. Set by `WatchRelay.answer`, never by a single answer of its own.
+    var mark: String?
 
     init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
          brief: WatchBrief? = nil, tafPage: WatchTafPage? = nil, calendar: WatchCalendarDay? = nil, account: WatchAccount? = nil,
@@ -471,6 +474,9 @@ struct WatchPush: Codable, Equatable, Sendable {
         case chat
         /// The Inbox's lines read and dismissed: `reply.marks`.
         case inbox
+        /// The phone signed in or out: `mark` is the new session's, or none once signed out. Sent at once and as the
+        /// application context, so a watch out of reach hears it before anything else when it's back.
+        case account
     }
 
     /// The `userInfo` key its bytes go under.
@@ -481,13 +487,16 @@ struct WatchPush: Codable, Equatable, Sendable {
     var taf: String?
     var reply: WatchReply?
     var at: Date
+    /// Whose push this is (`WatchMark`), as on a reply: set by the phone as it hands the push on, none once signed out.
+    var mark: String?
 
-    init(_ kind: Kind, ask: String? = nil, taf: String? = nil, reply: WatchReply? = nil, at: Date) {
+    init(_ kind: Kind, ask: String? = nil, taf: String? = nil, reply: WatchReply? = nil, at: Date, mark: String? = nil) {
         self.kind = kind
         self.ask = ask
         self.taf = taf
         self.reply = reply
         self.at = at
+        self.mark = mark
     }
 
     /// As `transferUserInfo` takes it: the push's bytes under `key`.
@@ -497,6 +506,23 @@ struct WatchPush: Codable, Equatable, Sendable {
     static func from(_ userInfo: [String: Any]) -> WatchPush? {
         guard let data = userInfo[key] as? Data else { return nil }
         return WatchMessage.decode(WatchPush.self, from: data)
+    }
+}
+
+/// Whose data the watch keeps (the account wipe, as Wear OS's): the phone makes a random mark at each sign-in, from
+/// nothing about the account (not its tenant, its person or an email), so the watch learns nothing from it. Every reply and
+/// push carries it while the phone is signed in. The watch keeps the mark it last heard, and when one arrives that differs,
+/// or none arrives after it kept one, everything it kept goes before anything is drawn (`WatchAccountMark`).
+enum WatchMark {
+    /// A new mark: 32 hex digits of a random UUID.
+    static func make() -> String {
+        UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+    }
+
+    /// A mark as the phone makes them, so a damaged one never counts as an account.
+    static func isMark(_ value: String?) -> Bool {
+        guard let value else { return false }
+        return value.range(of: "^[0-9a-f]{32}$", options: .regularExpression) != nil
     }
 }
 

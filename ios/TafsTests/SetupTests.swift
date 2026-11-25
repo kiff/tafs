@@ -1646,7 +1646,7 @@ final class SetupTests: XCTestCase {
         thread(answer)
         await model.loadSetup()
         XCTAssertNil(model.setupError)
-        XCTAssertEqual(model.setupThread.failed, TafsCloud.RunFailed(run: "run2", words: words))
+        XCTAssertEqual(model.setupThread.failed, TafsCloud.RunFailed(run: "run2", words: words, retry: true, retryLabel: "Try again"))
         let line = try XCTUnwrap(model.setupRunFailedLine)
         XCTAssertEqual(line.from, .taf)
         XCTAssertEqual(line.text, words, "tafs cloud's words, as they are")
@@ -1699,9 +1699,10 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// A run that fails part-way says so and offers Retry, which sends its message again; a
-    /// stopped run is marked stopped (#58 B1, B8).
-    func testARunThatFailsPartWayOffersRetry() async throws {
+    /// A run that fails says so, and offers Retry, which sends its message again, only where tafs cloud's thread says it's
+    /// safe (`failed.retry`); with no such word there's no Retry and nothing is sent. A stopped run is marked stopped
+    /// (#58 B1, B8).
+    func testARunThatFailsOffersRetryOnlyWhereTafsCloudSaysItsSafe() async throws {
         final class Sent { var texts: [String] = [] }
         let model = await model(signer: FaceIDSigner())
         model.planqueSetUp(for: "t_01")
@@ -1725,9 +1726,28 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(model.setupEnded, .failed(retry: "Connect my Stripe"))
         XCTAssertFalse(model.setupThinking, "the run is over")
 
+        // No word from tafs cloud on it: no Retry, and nothing is sent.
+        XCTAssertNil(model.setupRetryLabel)
         await model.retrySetupRun()
         await model.setupStream?.value
-        XCTAssertEqual(sent.texts, ["Connect my Stripe", "Connect my Stripe"])
+        XCTAssertEqual(sent.texts, ["Connect my Stripe"])
+
+        // tafs cloud's thread says nothing it did acted (contracts/conversation-failed.json): Retry, in its words.
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("contracts/conversation-failed.json")
+        let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let answer = String(decoding: try JSONSerialization.data(withJSONObject: try XCTUnwrap(root["answer"])), as: UTF8.self)
+        // The thread is read again when a run's stream ends, whichever chat the read names: this run's says Retry is safe.
+        for path in ["conversation", "conversation/s1", "conversation/sess1"] {
+            StubProtocol.responses["GET /v1/tafs/taf-setup/" + path] = (200, answer)
+        }
+        _ = await model.sendSetup("Connect my Stripe")
+        await model.setupStream?.value
+        XCTAssertEqual(model.setupEnded, .failed(retry: "Connect my Stripe"))
+        XCTAssertEqual(model.setupRetryLabel, "Try again")
+        await model.retrySetupRun()
+        await model.setupStream?.value
+        XCTAssertEqual(sent.texts, ["Connect my Stripe", "Connect my Stripe", "Connect my Stripe"])
 
         ending = "CANCELLED"
         await model.sendSetup("again")
