@@ -11,7 +11,7 @@
 tafs cho Chrome để các taf của bạn làm việc trong chính Chrome của bạn, chỉ trên những trang bạn cho phép. Mọi bước có rủi ro đều chờ bạn duyệt trên điện thoại.
 
 • Ghép Chrome này với điện thoại của bạn: trong ứng dụng tafs, mở Tài khoản › Chrome › Ghép đôi một Chrome và nhập mã hiển thị.
-• Một taf làm việc trong các tab riêng của nó, trong một nhóm tab bạn nhìn thấy. Taf mà bạn nhắn từ bảng bên có thể làm việc trong thẻ bạn đang mở thay vào đó, nếu đó là một trang của nó, và mở mọi trang khác trong thẻ riêng của nó. Bạn có thể tạm dừng hoặc dừng nó bất cứ lúc nào, và nó tạm dừng khi bạn chạm vào một tab của nó. Trong lúc nó làm việc, một thanh nhỏ trên trang phía trước của mỗi cửa sổ cho phép bạn tạm dừng, dừng hoặc đi tới thẻ của nó. Thanh này không đọc gì từ trang đó.
+• Một taf làm việc trong các tab riêng của nó, trong một nhóm tab bạn nhìn thấy. Taf mà bạn nhắn từ bảng bên có thể làm việc trong thẻ bạn đang mở thay vào đó, nếu đó là một trang của nó, và mở mọi trang khác trong thẻ riêng của nó. Ở đó taf có thể nhấp và gõ, chỉ trên các trang của chính nó. Bạn có thể tạm dừng hoặc dừng nó bất cứ lúc nào, và nó tạm dừng khi bạn chạm vào một tab của nó. Trong lúc nó làm việc, một thanh nhỏ trên trang phía trước của mỗi cửa sổ cho phép bạn tạm dừng, dừng hoặc đi tới thẻ của nó. Thanh này không đọc gì từ trang đó.
 • Chrome chỉ hỏi một lần, lúc cài đặt, để truy cập mọi trang web. tafs chỉ làm việc trên các trang mà mỗi tác vụ nêu, và bạn duyệt chúng trên điện thoại.
 • Thanh toán và đặt hàng luôn chờ bạn duyệt trên điện thoại.
 • Nó đọc một trang dưới dạng văn bản và các trường biểu mẫu, bỏ các trường mật khẩu, thẻ và mã. Nó không bao giờ đọc các tab khác hay lịch sử của bạn.

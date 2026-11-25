@@ -11,7 +11,7 @@ Nechte své tafy pracovat ve vašem Chromu, jen na povolených stránkách. Risk
 tafs pro Chrome nechá vaše tafy pracovat ve vašem vlastním Chromu, jen na stránkách, které povolíte. Každý riskantní krok čeká na vaše schválení v telefonu.
 
 • Spárujte tento Chrome s telefonem: v aplikaci tafs otevřete Účet › Chrome › Spárovat Chrome a zadejte zobrazený kód.
-• Taf pracuje ve vlastních kartách, ve skupině karet, kterou vidíte. Taf, kterému napíšete z postranního panelu, může místo toho pracovat v kartě, na které jste, pokud je to jeden z jeho webů, a jakoukoli jinou stránku otevře ve vlastní kartě. Můžete ho kdykoli pozastavit nebo zastavit a on se pozastaví, když se dotknete jedné z jeho karet. Zatímco pracuje, malá lišta na stránce vpředu v každém okně vám umožní ho pozastavit, zastavit nebo přejít na jeho kartu. Z té stránky nic nečte.
+• Taf pracuje ve vlastních kartách, ve skupině karet, kterou vidíte. Taf, kterému napíšete z postranního panelu, může místo toho pracovat v kartě, na které jste, pokud je to jeden z jeho webů, a jakoukoli jinou stránku otevře ve vlastní kartě. Tam může klikat a psát, jen na svých vlastních webech. Můžete ho kdykoli pozastavit nebo zastavit a on se pozastaví, když se dotknete jedné z jeho karet. Zatímco pracuje, malá lišta na stránce vpředu v každém okně vám umožní ho pozastavit, zastavit nebo přejít na jeho kartu. Z té stránky nic nečte.
 • Chrome se při instalaci jednou zeptá na přístup ke všem webům. tafs pracuje jen na webech, které uvádí každý úkol a které schvalujete v telefonu.
 • Platba a odeslání objednávky vždy čekají na vaše schválení v telefonu.
 • Čte stránku jako text a pole formuláře, bez polí pro heslo, kartu a kód. Nikdy nečte vaše další karty ani historii.

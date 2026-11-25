@@ -11,7 +11,7 @@ Lase oma tafidel töötada oma Chromes, ainult sinu lubatud saitidel. Iga riskan
 tafs Chrome'ile laseb sinu tafidel töötada sinu enda Chromes, ainult sinu lubatud saitidel. Iga riskantne samm ootab sinu heakskiitu telefonis.
 
 • Seo see Chrome oma telefoniga: ava tafsi rakenduses Konto › Chrome › Seo Chrome ja sisesta kuvatud kood.
-• Taf töötab oma lehtedel, sinu nähtavas lehtede rühmas. Taf, kellele kirjutad külgpaneelilt, võib selle asemel töötada sinu praegusel lehel, kui see on üks tema saitidest, ja avab iga muu lehe oma vahelehel. Saad selle igal ajal peatada või lõpetada ning see peatub, kui puudutad ühte selle lehte. Töö ajal saad iga akna eesoleval lehel oleva väikese riba kaudu selle peatada, lõpetada või minna selle vahekaardile. Riba ei loe sellelt lehelt midagi.
+• Taf töötab oma lehtedel, sinu nähtavas lehtede rühmas. Taf, kellele kirjutad külgpaneelilt, võib selle asemel töötada sinu praegusel lehel, kui see on üks tema saitidest, ja avab iga muu lehe oma vahelehel. Seal saab see klõpsata ja kirjutada, ainult oma saitidel. Saad selle igal ajal peatada või lõpetada ning see peatub, kui puudutad ühte selle lehte. Töö ajal saad iga akna eesoleval lehel oleva väikese riba kaudu selle peatada, lõpetada või minna selle vahekaardile. Riba ei loe sellelt lehelt midagi.
 • Chrome küsib paigaldamisel ühe korra juurdepääsu kõikidele saitidele. tafs töötab ainult nendel saitidel, mille iga ülesanne loetleb ja mille sa telefonis heaks kiidad.
 • Maksmine ja tellimuse tegemine ootavad alati sinu heakskiitu telefonis.
 • See loeb lehte tekstina ja vormiväljadena, ilma parooli-, kaardi- ja koodiväljadeta. See ei loe kunagi sinu teisi lehti ega ajalugu.
