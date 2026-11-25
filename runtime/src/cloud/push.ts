@@ -593,6 +593,15 @@ export function watchInboxNotification(): Notification {
   return { kind: "background", payload: { aps: { "content-available": 1 }, change: "watch_inbox" } };
 }
 
+/**
+ * One person's chat with a taf changed (docs/watch-wear.md, the owner's call 2b): a message of theirs went in, from any
+ * device, or the taf's run answered, paused or ended. Only the taf's id, for the phone to read that chat with its own
+ * session and put it to the watch, with the phone app not running. Never the words, the run or an amount.
+ */
+export function tafChatNotification(tafID: string): Notification {
+  return { kind: "background", payload: { aps: { "content-available": 1 }, change: "taf_chat", taf_id: tafID } };
+}
+
 function answeredNotification(holdID: string): Notification {
   return { kind: "background", payload: { aps: { "content-available": 1 }, hold_id: holdID, answered: true } };
 }

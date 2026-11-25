@@ -2737,7 +2737,7 @@
     <string name="watch_keep_for_later">Giữ lại để sau</string>
     <string name="watch_kept_to_send">Được giữ trên đồng hồ này. Nó sẽ được gửi khi điện thoại của bạn trong tầm với trở lại.</string>
     <string name="watch_limit">Tối đa 30 giây</string>
-    <string name="watch_linking">Đang liên kết tafs. Hãy để điện thoại của bạn ở gần và luôn được kết nối.</string>
+    <string name="watch_linking">Đang liên kết tafs. Hãy để điện thoại ở gần và luôn kết nối.</string>
     <string name="watch_listening">Đang nghe</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Để hỏi bằng giọng nói, hãy cho phép micrô cho tafs trên đồng hồ này.</string>

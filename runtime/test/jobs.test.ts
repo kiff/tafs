@@ -234,7 +234,13 @@ describe("jobs", () => {
       // (Chrome 0.2.4's try, 24 Nov: three typed addresses refused url_not_read before the taf searched).
       const flat = prompt.replace(/\s+/g, " ");
       expect(flat).toContain("When something you need couldn't be read (a tool refused it, it didn't answer, or your run was stopped first), say so in your answer: what you couldn't read, and what you did read. Never fill the gap from memory with what it would say, even when you think you know.");
-      expect(flat).toContain("a page that nothing you read links to is reached through the site's own search: fill its search field, then press Enter on it (or click its search button), in one step. Never an address you put together.");
+      expect(flat).toContain("a page that nothing you read links to is reached through the site's own search: fill its search field, then press Enter on it (or click its search button), in one step. Never an address you put together, with one exception: on wikipedia.org, open the article you need directly, as https://<language>.wikipedia.org/wiki/<Title> in the language asked, never its home page or its search first, whatever start page your job names.");
+      // A long page is read to the end of what's needed, and its size is never the owner's business (Chrome 0.2.10's
+      // try, Lyon: "La lecture s'est arrêtée à environ 32 Ko sur 52 Ko" after one part of the article).
+      expect(flat).toContain("when a read says more, read on (the next part, with its offset and that read) until you have what you were asked, and answer from all of it. Never say how you read a page, how much of it you read, its size, or that a read was cut or came in parts.");
+      expect(flat).toContain("you may offer, in one short clause, to read on about something it covers");
+      // Never talking about parts never hides what wasn't read: a run stopped mid-page still says so.
+      expect(flat).toContain("If you couldn't read on to what you were asked (a read failed or your run was stopped first), the rule above holds: say what you couldn't read.");
       // An item left behind a hold was explained with a limit no read gave (Chargebacks, 20 Nov, 2 runs of 3).
       expect(prompt.replace(/\s+/g, " ")).toContain("An item you didn't reach because your run paused on a hold is said as just that (\"A-1048: not done, since my run paused on the hold first\"), with no limit named for it: you never made its call, so you can't know what KIFF would have done with it.");
       // Tools' descriptions carry the Card's line, so "no limit was read" was untrue (Eval 44732158037).

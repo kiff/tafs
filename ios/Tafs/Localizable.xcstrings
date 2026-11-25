@@ -705198,7 +705198,7 @@
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs qoşulur. Telefonunuzu yaxında və qoşulu saxlayın."
+            "value": "tafs bağlanır. Telefonunuzu yaxında və qoşulu saxlayın."
           }
         },
         "bg": {
@@ -705210,7 +705210,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs লিঙ্ক করা হচ্ছে। আপনার ফোন কাছে ও সংযুক্ত রাখুন।"
+            "value": "tafs যুক্ত করা হচ্ছে। আপনার ফোন কাছে ও সংযুক্ত রাখুন।"
           }
         },
         "ca": {
@@ -705222,7 +705222,7 @@
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Propojování tafs. Mějte telefon nablízku a připojený."
+            "value": "Propojuji tafs. Mějte telefon nablízku a připojený."
           }
         },
         "de": {
@@ -705246,43 +705246,43 @@
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ühendan tafsi. Hoia telefon lähedal ja ühendatuna."
+            "value": "tafs ühendub. Hoia telefon lähedal ja ühendatud."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liaison de tafs. Gardez votre téléphone à proximité et connecté."
+            "value": "Association de tafs. Gardez votre téléphone à proximité et connecté."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "מקשרים את tafs. יש להשאיר את הטלפון קרוב ומחובר."
+            "value": "מקשר את tafs. יש להשאיר את הטלפון קרוב ומחובר."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs लिंक हो रहा है। अपना फ़ोन पास और कनेक्टेड रखें।"
+            "value": "tafs जोड़ा जा रहा है। अपना फ़ोन पास और कनेक्टेड रखें।"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Povezivanje tafsa. Držite telefon u blizini i povezan."
+            "value": "Povezivanje aplikacije tafs. Držite telefon u blizini i povezan."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "A tafs összekapcsolása. Tartsd a közelben a telefonod, és maradjon csatlakozva."
+            "value": "A tafs összekapcsolása. Tartsd a telefonod a közelben, csatlakoztatva."
           }
         },
         "hy": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs-ը կապակցվում է։ Պահեք հեռախոսը մոտ և միացված։"
+            "value": "tafs-ը կապվում է։ Պահեք ձեր հեռախոսը մոտ և միացված։"
           }
         },
         "id": {
@@ -705294,43 +705294,43 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Collego tafs. Tieni il telefono vicino e connesso."
+            "value": "Collegamento di tafs. Tieni il telefono vicino e connesso."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafsをリンクしています。スマートフォンを近くに置き、接続したままにしてください。"
+            "value": "tafs をリンクしています。スマートフォンを近くに置き、接続したままにしてください。"
           }
         },
         "ka": {
           "stringUnit": {
             "state": "translated",
-            "value": "მიმდინარეობს tafs-ის დაკავშირება. ტელეფონი ახლოს და დაკავშირებული გქონდეთ."
+            "value": "tafs უკავშირდება. ტელეფონი ახლოს და დაკავშირებული იქონიეთ."
           }
         },
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "កំពុងភ្ជាប់ tafs។ សូមទុកទូរសព្ទរបស់អ្នកនៅជិត ហើយរក្សាការតភ្ជាប់។"
+            "value": "កំពុងភ្ជាប់ tafs។ ទុកទូរសព្ទរបស់អ្នកនៅជិត ហើយភ្ជាប់ជានិច្ច។"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs를 연결하는 중입니다. 휴대폰을 가까이 두고 연결된 상태로 유지하세요."
+            "value": "tafs 연결 중. 휴대폰을 가까이 두고 연결된 상태로 유지하세요."
           }
         },
         "lo": {
           "stringUnit": {
             "state": "translated",
-            "value": "ກຳລັງເຊື່ອມໂຍງ tafs. ວາງໂທລະສັບຂອງທ່ານໄວ້ໃກ້ໆ ແລະ ໃຫ້ເຊື່ອມຕໍ່ຢູ່."
+            "value": "ກຳລັງເຊື່ອມຕໍ່ tafs. ເກັບໂທລະສັບຂອງທ່ານໄວ້ໃກ້ໆ ແລະ ເຊື່ອມຕໍ່ໄວ້."
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Susiejamas tafs. Laikykite telefoną netoliese ir prijungtą."
+            "value": "Susiejama tafs. Laikykite telefoną šalia ir prijungtą."
           }
         },
         "lv": {
@@ -705342,43 +705342,43 @@
         "mk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Се поврзува tafs. Држи го телефонот блиску и поврзан."
+            "value": "Поврзување на tafs. Држи го телефонот блиску и поврзан."
           }
         },
         "mn": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs-ыг холбож байна. Утсаа ойрхон, холбогдсон байлгана уу."
+            "value": "tafs-ийг холбож байна. Утсаа ойрхон, холбогдсон байлгаарай."
           }
         },
         "ne": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs लिंक हुँदैछ। आफ्नो फोन नजिक र जडान भएको राख्नुहोस्।"
+            "value": "tafs जोडिँदैछ। आफ्नो फोन नजिक र जडित राख्नुहोस्।"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs wordt gekoppeld. Houd je telefoon in de buurt en verbonden."
+            "value": "tafs koppelen. Houd je telefoon in de buurt en verbonden."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Łączę tafs. Trzymaj telefon blisko i z włączonym połączeniem."
+            "value": "Łączenie z tafs. Trzymaj telefon w pobliżu i połączony."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A ligar o tafs. Mantenha o telemóvel por perto e com ligação."
+            "value": "A ligar o tafs. Mantenha o telemóvel por perto e ligado."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A ligar o tafs. Mantenha o telemóvel por perto e com ligação."
+            "value": "Vinculando o tafs. Mantenha o celular por perto e conectado."
           }
         },
         "ro": {
@@ -705390,13 +705390,13 @@
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prepája sa tafs. Majte telefón nablízku a pripojený."
+            "value": "Prepájam tafs. Majte telefón nablízku a pripojený."
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Povezujem tafs. Imejte telefon blizu in povezan."
+            "value": "Povezujem tafs. Telefon imejte blizu in povezan."
           }
         },
         "sq": {
@@ -705408,13 +705408,13 @@
         "sr-Latn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Povezivanje tafsa. Držite telefon u blizini i povezan."
+            "value": "Povezivanje aplikacije tafs. Držite telefon u blizini i povezan."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "กำลังเชื่อมโยง tafs วางโทรศัพท์ของคุณไว้ใกล้ๆ และให้เชื่อมต่ออยู่เสมอ"
+            "value": "กำลังเชื่อมต่อ tafs วางโทรศัพท์ไว้ใกล้ๆ และเชื่อมต่อไว้"
           }
         },
         "tk": {
@@ -705432,13 +705432,13 @@
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs لنک ہو رہا ہے۔ اپنا فون قریب اور منسلک رکھیں۔"
+            "value": "tafs کو جوڑا جا رہا ہے۔ اپنا فون قریب اور منسلک رکھیں۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đang liên kết tafs. Hãy để điện thoại của bạn ở gần và luôn được kết nối."
+            "value": "Đang liên kết tafs. Hãy để điện thoại ở gần và luôn kết nối."
           }
         },
         "zh-Hant": {

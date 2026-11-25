@@ -45,6 +45,23 @@ test("a step runs only when planque signed it for this Chrome, unexpired and new
   assert.equal((await checkStep(changed, ctx)).why, "not signed by planque", "a field changed after signing");
 });
 
+// The run the person started from the side panel (docs/chrome.md, "A taf works where you are"): planque names it inside what it
+// signs, so only planque's verified step can let a run work in the person's tab.
+test("a step's agent_run is planque's signed word: taken through the check, and refused when added or changed after signing", async () => {
+  const p = await planque();
+  const ctx = { planqueKey: p.key, chromeId: "chr_1", nonces: new Nonces(() => NOW), now: NOW };
+  const signed = async (s) => ({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) });
+  const ok = await checkStep(await signed(step({ nonce: "a1", op: "open", agent_run: "kr_1" })), ctx);
+  assert.equal(ok.why, null, "a step with the field is a step");
+  assert.equal(ok.step.agent_run, "kr_1");
+  const changed = await signed(step({ nonce: "a2", agent_run: "kr_1" }));
+  changed.step.agent_run = "kr_2";
+  assert.equal((await checkStep(changed, ctx)).why, "not signed by planque", "changed");
+  const added = await signed(step({ nonce: "a3" }));
+  added.step.agent_run = "kr_1";
+  assert.equal((await checkStep(added, ctx)).why, "not signed by planque", "added by someone else");
+});
+
 // The hand-over's step, as planque signs it (chrome_hand.go): op "hand", the read it was planned from, and the taf's words
 // with the field to outline.
 function handStep(extra = {}) {

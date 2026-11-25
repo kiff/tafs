@@ -37,6 +37,8 @@ wearWatchface = "1.3.0"
 playServicesWearable = "20.0.1"
 wearRemoteInteractions = "1.2.0"
 concurrentFutures = "1.3.0"
+# The phone's job that keeps an ask's answer for the watch when tafs cloud's push says it changed (docs/watch-wear.md).
+work = "2.10.0"
 lifecycleViewmodelNav3 = "2.10.0"
 
 [libraries]
@@ -57,6 +59,7 @@ zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" 
 # Making a kiff.dev passkey on the phone (Credential Manager), and the same on Android 11 to 13 through Play services.
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }

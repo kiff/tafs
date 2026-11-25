@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.withLock
 import bot.tafs.watchlink.InboxMarkIds
-import bot.tafs.watchlink.Amounts
 
 /**
  * Your brief on the watch (docs/watch-wear.md, Your brief): off. With it off the watch asks and shows exactly what it did before;
@@ -23,6 +22,15 @@ internal const val BRIEF_ON_WATCH = false
 
 /** How long the phone may fail to answer while the last read stays on screen, before it's called unreachable (row 44, D). */
 internal const val UNREACHABLE_AFTER_MS = 30_000L
+
+/**
+ * The waits between the watch's own tries when the phone doesn't answer a read in time (docs/watch-wear.md, Delivery): a first
+ * slow answer (a phone restoring its session) is tried again by itself, never by the person's Try again.
+ */
+internal val RETRY_BACKOFF_MS = listOf(2_000L, 4_000L, 8_000L)
+
+/** With nothing kept to show, the watch goes on trying this often while it's open, behind its linking screen. */
+internal const val LINKING_RETRY_MS = 15_000L
 
 /** How the watch reaches the phone: one live request and its answer, or nothing when the phone can't be reached. */
 fun interface PhoneLink {
@@ -76,8 +84,9 @@ sealed interface Asked {
 }
 
 /**
- * What the watch shows, read from the phone each time it's opened. Kept in memory only (docs/watch-wear.md): nothing of the
- * list, the tafs or their words is written to the watch's storage, and a new read replaces it whole.
+ * What the watch shows, read from the phone each time it's opened. What it keeps (docs/watch-wear.md, "What the watch keeps"):
+ * Coach's conversation ([ThreadStore]), the Inbox ([InboxStore]), the cache ([WatchCache]) and a message kept for later; the
+ * rest is in memory, and a new read replaces it whole.
  */
 class WatchModel(
   private val phone: PhoneLink,
@@ -113,6 +122,11 @@ class WatchModel(
   private val signIn: WatchSignIn? = null,
   /** What the watch keeps so it opens at once (row 44, D, [WatchCache]); none in a test that doesn't use it. */
   private val cache: WatchCache? = null,
+  /**
+   * The chats kept on the watch, Coach's and each taf's opened here ([ThreadStore], [KeptThreads]); in memory only in a test that
+   * doesn't pass one, in v1, and with [KEEP_THREADS] off.
+   */
+  private val thread: ThreadStore? = null,
 ) {
   sealed interface Shown {
     /** Asking the phone, with nothing to show yet. */
@@ -128,6 +142,8 @@ class WatchModel(
       val brief: WatchReply.Brief? = null,
       /** What's shown is the last read (kept, or from before a short drop), and a fresh one is on its way (row 44, D). */
       val updating: Boolean = false,
+      /** The watch's own tries all went unanswered: what's shown stays, with this small line and Try again (never a screen). */
+      val unreachable: LinkFailure? = null,
     ) : Shown {
       /**
        * The hold [decision] may be refused by, from the wrist: only a held call Needs you's own read lists as refusable, matched by
@@ -280,8 +296,9 @@ class WatchModel(
   }
 
   /**
-   * A taf's chat while it's open (docs/watch-wear.md, chatting with a taf): its last turns as the phone shows them, this visit's
-   * turns with the taf's answers, and the answers read in full. In memory only: gone when the chat closes, never in the Inbox.
+   * A taf's chat while it's open (docs/watch-wear.md, chatting with a taf): its last turns as the phone shows them, the turns sent
+   * from this watch with the taf's answers, and the answers read in full. Kept as Coach's is ([KeptThreads]), the whole answers
+   * read with Read more excepted; never in the Inbox.
    */
   data class TafChat(val history: History = History.Reading, val turns: List<TafTurn> = emptyList(), val whole: Map<String, Whole> = emptyMap()) {
     sealed interface History {
@@ -307,26 +324,67 @@ class WatchModel(
 
   private val _taf = MutableStateFlow<OpenTaf?>(null)
 
-  /** The taf's page open now, from the Tafs page; in memory only, as the rest. */
+  /** The taf's page open now, from the Tafs page, with its chat (kept on the watch as Coach's is, with [KEEP_THREADS] on). */
   val taf: StateFlow<OpenTaf?> = _taf.asStateFlow()
 
-  /** A taf tapped on the Tafs page: its page, read from the phone. */
+  /**
+   * A taf tapped on the Tafs page: its page, read from the phone; its chat opens at once on what the watch keeps of it, newest at
+   * the bottom, and is read again behind it.
+   */
   suspend fun openTaf(tafId: String) {
     if (_signedOutHere.value) return
     val listed = (_shown.value as? Shown.Read)?.tafs?.tafs?.firstOrNull { it.tafId == tafId }
-    _taf.value = OpenTaf(tafId, listed, TafRead.Asking)
-    if (tafChatOn) readTafChat(tafId)
+    val kept = keptRead()[tafThread(tafId)]
+    val chat = kept?.let { k ->
+      tafAsks += k.turns.map { it.ask.id }
+      TafChat(history = if (k.lines.isEmpty()) TafChat.History.Reading else TafChat.History.Read(k.lines), turns = k.turns.map { TafTurn(it.said.text, it.said.at, it.ask) })
+    } ?: TafChat()
+    _taf.value = OpenTaf(tafId, listed, TafRead.Asking, chat)
+    if (tafChatOn) {
+      // Opened here: it's kept (with KEEP_THREADS on), and stays while it's opened within 30 days.
+      keptWrite { all -> all + (tafThread(tafId) to (all[tafThread(tafId)] ?: KeptThread(now())).copy(openedAt = now())) }
+      readTafChat(tafId)
+    }
     readTaf(tafId)
   }
 
-  /** The last turns of a taf's chat, read from the phone; nothing of them is kept once the chat closes. */
+  /**
+   * The last turns of a taf's chat, read from the phone. What the watch kept stays shown if the phone can't answer; once it does,
+   * the watch's own turns its lines already hold go, and the chat is kept again.
+   */
   private suspend fun readTafChat(tafId: String) {
-    val history = when (val asked = phone.ask(WatchRequest.TafChat(now(), tafId))) {
+    val read = when (val asked = phone.ask(WatchRequest.TafChat(now(), tafId))) {
       is Asked.Answered -> (asked.reply as? WatchReply.TafChat)?.also { if (it.zone != null) WatchChatTime.use(it.zone) }
-        ?.let { TafChat.History.Read(it.lines) } ?: TafChat.History.NotRead
-      else -> TafChat.History.NotRead
+      else -> null
     }
-    _taf.update { it?.takeIf { open -> open.tafId == tafId }?.let { open -> open.copy(chat = open.chat.copy(history = history)) } ?: it }
+    if (read != null) return tafChatChanged(tafId, read.lines)
+    _taf.update { open ->
+      open?.takeIf { it.tafId == tafId && it.chat.history !is TafChat.History.Read }?.let { it.copy(chat = it.chat.copy(history = TafChat.History.NotRead)) } ?: open
+    }
+  }
+
+  /**
+   * A taf's chat as the phone holds it now: from a read, or pushed by the phone as it changes (a kept item, while the chat is
+   * open here). The open chat moves at once; the kept copy follows.
+   */
+  fun tafChatChanged(tafId: String, lines: List<bot.tafs.watchlink.ChatLine>) {
+    if (_signedOutHere.value) return
+    _taf.update { open ->
+      open?.takeIf { it.tafId == tafId }?.let {
+        val kept = KeptThreads.withLines(KeptThread(0, turns = it.chat.turns.map { t -> KeptTurn(Said(t.said, t.at), t.ask) }), lines)
+        it.copy(chat = it.chat.copy(history = TafChat.History.Read(lines), turns = kept.turns.map { t -> TafTurn(t.said.text, t.said.at, t.ask) }))
+      } ?: open
+    }
+    keptWrite { all -> KeptThreads.chat(all, tafId, lines) ?: all }
+  }
+
+  /** Keeps the open taf's chat as it shows now. */
+  private fun saveTaf(tafId: String) {
+    val open = _taf.value?.takeIf { it.tafId == tafId } ?: return
+    keptWrite { all ->
+      all + (tafThread(tafId) to KeptThread(now(), lines = (open.chat.history as? TafChat.History.Read)?.lines.orEmpty(),
+        turns = open.chat.turns.map { KeptTurn(Said(it.said, it.at), it.ask) }))
+    }
   }
 
   /** The asks sent from a taf's chat this session: never Coach's, never in the Inbox. */
@@ -473,6 +531,8 @@ class WatchModel(
       /** Chatting with a taf: the phone's taf the words go to, and its name for the title; null for Coach. */
       val tafId: String? = null,
       val tafName: String? = null,
+      /** Why the words came back here unsent, in the phone's words (row 13): they're kept, never dropped behind Open on phone. */
+      val notice: String? = null,
     ) : Voice
 
     /** v2: deleted from the review; nothing was sent. */
@@ -515,21 +575,24 @@ class WatchModel(
       if (kept != null && (value as? Voice.Review)?.audio !== kept) kept.delete()
     }
 
-  private val _asks = MutableStateFlow<Map<String, AskLine>>(emptyMap())
+  /** Coach's conversation as kept on the watch when the app opened: only on a watch with a screen lock, else it goes. */
+  private val keptAtOpen: List<KeptTurn> = if (secure()) keptRead()[COACH_THREAD]?.turns.orEmpty() else { thread?.clear(); emptyList() }
 
-  /** The watch's asks as tafs cloud last said, by id: in memory only. */
+  private val _asks = MutableStateFlow(keptAtOpen.associate { it.ask.id to it.ask })
+
+  /** The watch's asks as tafs cloud last said, by id: the kept conversation's, then each read's. */
   val asks: StateFlow<Map<String, AskLine>> = _asks.asStateFlow()
 
-  /** What the person said from this watch, by its ask's id, with when (W4, Ask Coach as one conversation). Memory only. */
+  /** What the person said from this watch, by its ask's id, with when (W4, Ask Coach as one conversation). */
   data class Said(val text: String, val at: Long)
 
-  private val _said = MutableStateFlow<Map<String, Said>>(emptyMap())
+  private val _said = MutableStateFlow(keptAtOpen.associate { it.ask.id to it.said })
   val said: StateFlow<Map<String, Said>> = _said.asStateFlow()
 
   /**
-   * Today's conversation with Coach from this watch, oldest first: each thing said and its ask as the phone relays it (W4).
-   * In memory only, as the asks are: forgotten when the app is put away and on sign-out, so nothing new is kept on the watch
-   * (docs/watch-wear.md, "What the watch keeps"). Until tafs cloud keeps the watch's conversation, it's what this watch said.
+   * Coach's conversation from this watch, oldest first: each thing said and its ask as the phone relays it (W4). One
+   * conversation across opens: kept on the watch ([ThreadStore]) on a watch with a screen lock, and in memory for the app's life
+   * on one without; put away, it stays; gone on either sign-out (docs/watch-wear.md, "What the watch keeps").
    */
   fun thread(): List<Pair<Said, AskLine>> =
     _said.value.mapNotNull { (id, said) -> _asks.value[id]?.let { said to it } }.sortedBy { it.first.at }
@@ -547,8 +610,45 @@ class WatchModel(
   private var heardAt: Long? = null
   private val timings = mutableMapOf<String, Timing>()
   private val receivedAt = mutableMapOf<String, Long>()
-  /** Asks this watch sent whose answer hasn't come yet, in memory only: their answer opens by itself when it ends (W3). */
-  private val awaiting = mutableSetOf<String>()
+  /** The chats kept on the watch, as they may stay now ([KeptThreads.pruned]): none on a watch with no screen lock. */
+  private fun keptRead(): Map<String, KeptThread> =
+    if (thread == null || !secure()) emptyMap() else KeptThreads.pruned(thread.read(), now())
+
+  /** Changes what's kept, on a watch with a screen lock, signed in here; what may no longer stay goes as it's written. */
+  private fun keptWrite(change: (Map<String, KeptThread>) -> Map<String, KeptThread>) {
+    val store = thread ?: return
+    if (!secure() || _signedOutHere.value) return
+    store.write(KeptThreads.pruned(change(KeptThreads.pruned(store.read(), now())), now()))
+  }
+
+  /** Keeps Coach's conversation on the watch: it's opened as the app is, since it's the app's home. */
+  private fun saveThread() {
+    keptWrite { all -> all + (COACH_THREAD to KeptThread(now(), turns = thread().map { (said, ask) -> KeptTurn(said, ask) })) }
+  }
+
+  /**
+   * Back on screen: what the phone kept for the watch while the app was put away (KeptResults wrote it to the stores) is taken in,
+   * an ask newer than the one in memory replacing it, so the app shows what's there without a read.
+   */
+  fun reload() {
+    if (_signedOutHere.value) return
+    keptRead()[COACH_THREAD]?.turns?.forEach { turn ->
+      val before = _asks.value[turn.ask.id]
+      if (before == null || before.updated < turn.ask.updated) _asks.value = _asks.value + (turn.ask.id to turn.ask)
+      if (turn.ask.id !in _said.value) _said.value = _said.value + (turn.ask.id to turn.said)
+    }
+    inboxStore?.let { store ->
+      dismissed = store.dismissed()
+      _inbox.value = store.read().sortedByDescending { it.at }
+    }
+  }
+
+  /** The conversation gone, on the watch and in memory: either sign-out. */
+  private fun clearThread() {
+    thread?.clear()
+    _asks.value = emptyMap()
+    _said.value = emptyMap()
+  }
 
   fun timing(clientId: String): Timing? = timings[clientId]
 
@@ -577,6 +677,8 @@ class WatchModel(
    */
   fun readyToRecord(replyTo: String? = null, tafId: String? = null) {
     if (_signedOutHere.value) return
+    // A taf's chat with the account's switch off (row 13): its page says so, and nothing is recorded to be dropped.
+    if (tafId != null && _tafChatOff.value) return
     messaging = tafId
     if (!unlocked()) {
       voiceNow = Voice.NeedsLock
@@ -605,9 +707,19 @@ class WatchModel(
   /** The switch for chatting with a taf, as [reviewFirst]: off, a taf's page opens as before and no chat is read. */
   var tafChatOn: Boolean = WATCH_TAF_CHAT
 
+  private val _tafChatOff = MutableStateFlow(false)
+
+  /**
+   * tafs cloud said chatting with a taf isn't on for this account ([WatchReply.TafChatOff], row 13): a taf's chat says so where
+   * its microphone and Type would be, until the app is opened again. tafs cloud gives no read of the switch, so the watch learns
+   * it from the first send.
+   */
+  val tafChatOff: StateFlow<Boolean> = _tafChatOff.asStateFlow()
+
   private fun reviewOf(text: String, replyTo: String?, audio: VoiceAudio? = null): Voice.Review {
     val taf = messaging?.let { id -> _taf.value?.takeIf { it.tafId == id } }
-    return Voice.Review(text.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), replyTo, audio, tafId = taf?.tafId, tafName = taf?.name)
+    val notice = if (taf != null && _tafChatOff.value) Words.Watch.askNotOn else null
+    return Voice.Review(text.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), replyTo, audio, tafId = taf?.tafId, tafName = taf?.name, notice = notice)
   }
 
   /** v2: words typed or a quick reply picked, to check before Send, as words heard are. Blank is nothing. */
@@ -703,10 +815,28 @@ class WatchModel(
     // the Inbox.
     val taken = ((asked as? Asked.Answered)?.reply as? WatchReply.AskTaken)?.ask
     if (sending.tafId != null && taken != null) {
+      _tafChatOff.value = false
       tafAsks += taken.id
       val turn = TafTurn(sending.text, now(), taken)
       _taf.update { open -> open?.takeIf { it.tafId == sending.tafId }?.let { it.copy(chat = it.chat.copy(turns = it.chat.turns + turn)) } ?: open }
+      saveTaf(sending.tafId)
       voiceNow = null
+      return
+    }
+    // A taf's chat that didn't take it (row 13): the words go back to Check before sending, kept, with why; never dropped behind
+    // Open on phone. "Not sure it arrived" stays as Coach's, with Retry under the same id.
+    if (sending.tafId != null && !(asked is Asked.Unreachable || (asked as? Asked.Answered)?.reply == WatchReply.Unsure)) {
+      val reply = (asked as? Asked.Answered)?.reply
+      if (reply == WatchReply.TafChatOff) _tafChatOff.value = true
+      val notice = when (reply) {
+        WatchReply.TafChatOff -> Words.Watch.askNotOn
+        is WatchReply.Failed -> reply.words
+        WatchReply.SignedOut -> Words.Watch.signInOnPhone
+        is WatchReply.Refused -> if (reply.reason == NotAccepted.UNKNOWN_PATH) Words.Watch.updatePhone else Words.Watch.phoneLinkFailed
+        else -> Words.Watch.phoneLinkFailed
+      }
+      val name = _taf.value?.takeIf { it.tafId == sending.tafId }?.name
+      voiceNow = Voice.Review(sending.text, sending.replyTo, tafId = sending.tafId, tafName = name, notice = notice)
       return
     }
     voiceNow = when (asked) {
@@ -715,10 +845,12 @@ class WatchModel(
           val at = now()
           receivedAt[sending.clientId] = at
           timings[sending.clientId] = Timing(listenMs, heardAt?.let { at - it }, null)
-          awaiting += reply.ask.id
           _said.value = _said.value + (reply.ask.id to Said(sending.text, at))
           took(reply.ask)
-          Voice.Sent(reply.ask)
+          saveThread()
+          // v2: back to the conversation, where the words are the newest turn with tafs cloud's state under them, and the answer
+          // comes in its place, as in a chat (the owner's call). v1 shows Sent until the answer.
+          if (reviewFirst) null else Voice.Sent(reply.ask)
         }
         WatchReply.Unsure -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo, sending.tafId)
         is WatchReply.Failed -> Voice.NotSent(reply.words)
@@ -786,15 +918,17 @@ class WatchModel(
         open?.takeIf { o -> o.chat.turns.any { it.ask.id == ask.id && it.ask.updated <= ask.updated } }
           ?.let { o -> o.copy(chat = o.chat.copy(turns = o.chat.turns.map { if (it.ask.id == ask.id) it.copy(ask = ask) else it })) } ?: open
       }
+      keptWrite { all -> KeptThreads.took(all, ask) ?: all }
       return
     }
     val before = _asks.value[ask.id]
     // An older state never replaces a newer one (two messages crossing).
     if (before != null && before.updated > ask.updated) return
     _asks.value = _asks.value + (ask.id to ask)
+    if (ask.id in _said.value) saveThread()
     // An ended ask is a line in the Inbox: Coach's or a taf's answer, kept until dismissed.
     // Kept on the watch, so with no amount (docs/watch-wear.md, "What the watch keeps"): the result shows whole while it's open.
-    if (ask.ended) inboxPut(InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, Amounts.strip(ask.line ?: ask.words), now()))
+    InboxLines.of(ask, now())?.let(::inboxPut)
     val at = now()
     if (ask.ended) receivedAt[ask.clientId]?.let { t -> timings[ask.clientId] = (timings[ask.clientId] ?: Timing(null, null, null)).copy(resultMs = at - t) }
     when (val v = _voice.value) {
@@ -807,10 +941,8 @@ class WatchModel(
       else -> Unit
     }
     if (_result.value?.id == ask.id) _result.value = ask
-    // v2 (W3, the owner's Watch 5 test: the answer came while the app was elsewhere, and they didn't know where it was): an ask
-    // sent from this watch that ends while the app is open opens its answer by itself, unless the person is busy with a new
-    // message or another answer; then it waits in Coach's home and the Inbox, unread.
-    if (ask.ended && awaiting.remove(ask.id) && reviewFirst && _result.value == null && _voice.value == null) open(ask)
+    // v2: the answer comes in the conversation, under the words it answers, as in a chat (the owner's call; it replaces W3's
+    // card that opened by itself), and unread in the Inbox.
   }
 
   /** Opens an ask's result card (from the home screen or its notification). */
@@ -848,11 +980,7 @@ class WatchModel(
     // v1 keeps no Inbox; a locked watch, or one with no screen lock, adds nothing to it.
     if (inboxStore == null && !reviewFirst) return
     if (!unlocked()) return
-    if (item.id in dismissed) return
-    val before = _inbox.value.firstOrNull { it.id == item.id }
-    if (before != null && before.line == item.line && before.title == item.title) return
-    val next = if (before != null) _inbox.value.map { if (it.id == item.id) it.copy(title = item.title, line = item.line) else it } else listOf(item) + _inbox.value
-    saveInbox(next)
+    InboxLines.put(_inbox.value, dismissed, item)?.let(::saveInbox)
   }
 
   /** Opened: read, and read on the person's other watches once [sendMarks] sends it (row 21). */
@@ -928,12 +1056,10 @@ class WatchModel(
    * The marks from tafs cloud: a line dismissed on any watch goes, and stays away while the phone lists it (its id kept with the
    * ids taken away, pruned as theirs are); a line read on any watch is read here. Nothing is ever brought back.
    */
-  private fun takeMarks(marks: WatchReply.InboxMarks) {
-    val gone = marks.dismissed.toSet()
-    val read = marks.read.toSet()
-    val away = _inbox.value.filter { it.ref in gone }
-    if (away.isNotEmpty()) setDismissed(dismissed + away.map { it.id })
-    val next = _inbox.value.filterNot { it.ref in gone }.map { if (!it.read && it.ref in read) it.copy(read = true) else it }
+  fun takeMarks(marks: WatchReply.InboxMarks) {
+    if (!inboxHere()) return
+    val (next, away) = InboxLines.marked(_inbox.value, dismissed, marks.read.toSet(), marks.dismissed.toSet())
+    if (away != dismissed) setDismissed(away)
     if (next != _inbox.value) saveInbox(next)
   }
 
@@ -956,12 +1082,14 @@ class WatchModel(
   }
 
   /**
-   * Locked, or no screen lock: the lines go (no taf, words or time stays), but the ids taken away stay, bare, so a line dismissed
-   * before the lock doesn't come back unread after it.
+   * Locked, or no screen lock: the lines go (no taf, words or time stays), and the conversation kept on the watch, but the ids
+   * taken away stay, bare, so a line dismissed before the lock doesn't come back unread after it.
    */
   private fun clearInboxLines() {
     inboxStore?.write(emptyList())
     _inbox.value = emptyList()
+    // The conversation kept on the watch goes with them; what's in memory stays for the app's life, as the reads do.
+    thread?.clear()
   }
 
   /** Put away while locked (or with no screen lock): the Inbox's lines are cleared now, not at the next start. */
@@ -992,16 +1120,47 @@ class WatchModel(
     _result.value = null
   }
 
+  private val _wholes = MutableStateFlow<Map<String, Whole>>(emptyMap())
+
+  /** Answers read whole (Read more on a cut answer, Coach's or a taf's), by the ask's id: in memory only. */
+  val wholes: StateFlow<Map<String, Whole>> = _wholes.asStateFlow()
+
+  /**
+   * Read more on an answer tafs cloud says goes on past its line (`more`): the whole, read through the phone
+   * (`GET /v1/watch/asks/{id}?full=1`), shown in place and heard by Hear, kept nowhere; with none, the rest is on the phone.
+   */
+  suspend fun readWhole(askId: String) {
+    if (_signedOutHere.value || _wholes.value[askId] is Whole.Read) return
+    _wholes.update { it + (askId to Whole.Reading) }
+    val whole = when (val asked = phone.ask(WatchRequest.AskFull(now(), askId))) {
+      is Asked.Answered -> (asked.reply as? WatchReply.AskFull)?.let { Whole.Read(it.text) } ?: Whole.OnPhone
+      else -> Whole.OnPhone
+    }
+    _wholes.update { it + (askId to whole) }
+  }
+
+  /** What Hear reads for [ask]: the whole answer once read, else its line or its state. */
+  fun heard(ask: AskLine): String = (_wholes.value[ask.id] as? Whole.Read)?.text ?: ask.line ?: ask.words
+
   /** The asks at work, newest first, for the home screen. */
   fun working(): List<AskLine> = _asks.value.values.filter { !it.ended }.sortedByDescending { it.updated }
 
   /** Ended asks not opened yet, newest first. */
   fun ready(): List<AskLine> = _asks.value.values.filter { it.ended && it.id !in seen }.sortedByDescending { it.updated }
 
+  /**
+   * Every answered ask the watch knows, opened or not, newest first: the Inbox where it can't be kept on this watch (no screen
+   * lock), so an answer opened there doesn't vanish from it (row 20). Never a message to a taf.
+   */
+  fun answered(): List<AskLine> = _asks.value.values.filter { it.ended && !it.tafChat && it.id !in tafAsks }.sortedByDescending { it.updated }
+
   /** Reads the watch's asks from the phone: those of the last day, as tafs cloud has them. A failed read leaves what's shown. */
   suspend fun readAsks() {
     if (_signedOutHere.value) return
     val reply = (phone.ask(WatchRequest.Asks(now())) as? Asked.Answered)?.reply as? WatchReply.AskList ?: return
+    // tafs cloud's switch for chatting with a taf (row 13): off, a taf's chat says so before anything is recorded. Not said (an
+    // older tafs cloud), the watch learns it from a send's refusal, as before.
+    reply.tafChat?.let { _tafChatOff.value = !it }
     for (ask in reply.asks) took(ask)
     pruneDismissed("ask:", reply.asks.map { InboxItem.askId(it.id) }.toSet())
   }
@@ -1046,6 +1205,7 @@ class WatchModel(
           cache?.clear()
           deleteKept()
           clearInbox()
+          clearThread()
           if (_voice.value is Voice.Review) voiceNow = null
           // Nor what an open screen read: a taf's page, the halt pick, the calendar, Account.
           _taf.value = null
@@ -1060,6 +1220,7 @@ class WatchModel(
       Asked.NotUnderstood -> return show(Shown.OpenOnPhone)
     }
     failingSince = null
+    lastFailed = false
     // Your brief, only with the switch on: none, or a phone that can't say (an older one), and Needs you stays, as today.
     val brief = if (briefOn) (phone.ask(WatchRequest.Brief(now())) as? Asked.Answered)?.reply as? WatchReply.Brief else null
     val tafs = (phone.ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }
@@ -1074,17 +1235,79 @@ class WatchModel(
   /** Since when the phone hasn't answered, while the last read is still shown. */
   private var failingSince: Long? = null
 
+  /** The last read went unanswered. */
+  private var lastFailed = false
+
+  /** The watch will try again by itself ([start]): an unanswered read changes nothing on screen yet. */
+  private var tryingAgain = false
+
+  /** The read just made was the last of the watch's own tries. */
+  private var afterTries = false
+
   /**
-   * No phone answered: a short drop keeps the last read on screen, marked as updating; only after [UNREACHABLE_AFTER_MS] of
-   * failing is the phone called unreachable (row 44, D: "a short disconnect must not flash 'Asking your phone'").
+   * No phone answered. While the watch is still to try again by itself, nothing changes on screen. Then the last read, or what was
+   * kept, stays, with a small line ([Shown.Read.unreachable]) and Try again, never a screen of its own: at once after the watch's
+   * own tries, or after [UNREACHABLE_AFTER_MS] of failing for any other read (row 44, D: "a short disconnect must not flash
+   * 'Asking your phone'"). With nothing to show, the phone is called unreachable.
    */
   private fun unreachable(why: LinkFailure = LinkFailure.NotReachable) {
+    lastFailed = true
     val shown = _shown.value
+    if (tryingAgain) return if (shown is Shown.Read) show(shown.copy(updating = true)) else Unit
     if (shown is Shown.Read) {
       val since = failingSince ?: now().also { failingSince = it }
-      if (now() - since < UNREACHABLE_AFTER_MS) return show(shown.copy(updating = true))
+      val short = now() - since < UNREACHABLE_AFTER_MS && !afterTries
+      return show(if (short) shown.copy(updating = true) else shown.copy(updating = false, unreachable = why))
     }
     show(Shown.PhoneUnreachable(why))
+  }
+
+  /**
+   * The app opened (docs/watch-wear.md, Delivery): it shows what's kept at once, and reads the phone behind it. A read the phone
+   * doesn't answer in time is tried again by itself, after each of [backoff]; only once those go unanswered does the small line
+   * show. With nothing kept to show, it goes on trying every [LINKING_RETRY_MS] behind the linking screen while the app is open.
+   * Then the asks and the Inbox's marks are read.
+   */
+  suspend fun start(backoff: List<Long> = RETRY_BACKOFF_MS, wait: suspend (Long) -> Unit = { kotlinx.coroutines.delay(it) }) {
+    if (_signedOutHere.value) return
+    // Each open tries the taf chat's switch again: tafs cloud may have turned it on since.
+    _tafChatOff.value = false
+    // Coach's conversation is the app's home: opening the app opens it, so it stays kept while the app is used.
+    keptWrite { all -> all[COACH_THREAD]?.let { all + (COACH_THREAD to it.copy(openedAt = now())) } ?: all }
+    var tries = 0
+    while (true) {
+      val last = tries >= backoff.size
+      tryingAgain = !last
+      afterTries = last
+      lastFailed = false
+      try {
+        refresh()
+      } finally {
+        tryingAgain = false
+        afterTries = false
+      }
+      if (!lastFailed) break
+      // Tries spent: what's shown stays with its small line; with nothing to show, the linking screen stays and the watch goes on.
+      if (last && !linking()) break
+      wait(if (last) LINKING_RETRY_MS else backoff[tries])
+      tries++
+    }
+    if (_signedOutHere.value) return
+    readAsks()
+    // Row 21: the Inbox's read and dismissed, in step with the person's other watches.
+    syncInbox()
+  }
+
+  /**
+   * The watch has nothing to show while it reaches the phone (a first link, a first open): no read, no conversation, no Inbox
+   * kept. Then it shows one calm screen, the tafs mark in a ring and "Linking tafs…", while it tries; anything kept opens instead.
+   */
+  fun linking(): Boolean {
+    val shown = _shown.value
+    if (shown is Shown.Read || shown == Shown.SignedOut || shown == Shown.OpenOnPhone) return false
+    // tafs isn't on the phone: no try mends that, so its line shows.
+    if ((shown as? Shown.PhoneUnreachable)?.why == LinkFailure.NoApp) return false
+    return _said.value.isEmpty() && _inbox.value.isEmpty()
   }
 
   // MARK: Keep for later (v2, docs/watch-wear.md)
@@ -1132,14 +1355,32 @@ class WatchModel(
     took(taken)
   }
 
-  /** What the watch keeps once it's put away or the phone signs out: nothing. */
+  /**
+   * Put away (the screen off, another app, the keyboard's own screen): what's kept stays, the conversation, the asks, the last
+   * read, a taf's chat open and an answer being read included, so the app comes back as it was. A review keeps its words, never
+   * its recording, which is erased now; words heard so far stay as a review, never sent. What was being asked or confirmed goes.
+   */
+  fun putAway() {
+    _outcome.value = null
+    _confirmingHaltAll.value = false
+    _haltPick.value = null
+    voiceNow = when (val v = _voice.value) {
+      is Voice.Review -> v.copy(audio = null)
+      is Voice.Listening -> v.heard.trim().takeIf { it.isNotEmpty() }?.let { reviewOf(it, v.replyTo) }
+      is Voice.Sending, is Voice.Unsure -> v
+      else -> null
+    }
+    closeCalendar()
+    _account.value = null
+  }
+
+  /** What the watch keeps once the phone signs out, or it's signed out here: nothing, the conversation included. */
   fun forget() {
     _shown.value = Shown.Asking
     _outcome.value = null
     _confirmingHaltAll.value = false
     voiceNow = null
-    _asks.value = emptyMap()
-    _said.value = emptyMap()
+    clearThread()
     _result.value = null
     _taf.value = null
     _haltPick.value = null
@@ -1244,9 +1485,9 @@ class WatchModel(
     clearInbox()
     tile?.signedOut()
     seen.clear()
+    _wholes.value = emptyMap()
     timings.clear()
     receivedAt.clear()
-    awaiting.clear()
     today = null
   }
 

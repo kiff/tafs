@@ -2737,7 +2737,7 @@
     <string name="watch_keep_for_later">나중에 보내기</string>
     <string name="watch_kept_to_send">이 워치에 보관했습니다. 휴대폰이 다시 가까이 오면 보냅니다.</string>
     <string name="watch_limit">최대 30초</string>
-    <string name="watch_linking">tafs를 연결하는 중입니다. 휴대폰을 가까이 두고 연결된 상태로 유지하세요.</string>
+    <string name="watch_linking">tafs 연결 중. 휴대폰을 가까이 두고 연결된 상태로 유지하세요.</string>
     <string name="watch_listening">듣는 중</string>
     <string name="watch_menu">메뉴</string>
     <string name="watch_mic_needed">음성으로 물으려면 이 워치에서 tafs의 마이크 사용을 허용하세요.</string>

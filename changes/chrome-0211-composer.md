@@ -1,0 +1,1 @@
+- **Chrome 0.2.11: the message box sits at the bottom of the side panel even with a short chat**, as in the app; before, it sat under the last message until the chat filled the panel ([docs/chrome.md](../docs/chrome.md), "The taf in the side panel").

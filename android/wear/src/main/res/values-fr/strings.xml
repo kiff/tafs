@@ -92,7 +92,7 @@
     <string name="watch_keep_for_later">Garder pour plus tard</string>
     <string name="watch_kept_to_send">Gardé sur cette montre. Il part dès que votre téléphone est de nouveau à portée.</string>
     <string name="watch_limit">30 s maximum</string>
-    <string name="watch_linking">Liaison de tafs. Gardez votre téléphone à proximité et connecté.</string>
+    <string name="watch_linking">Association de tafs. Gardez votre téléphone à proximité et connecté.</string>
     <string name="watch_listening">À l\'écoute</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Pour demander à la voix, autorisez le micro pour tafs sur cette montre.</string>

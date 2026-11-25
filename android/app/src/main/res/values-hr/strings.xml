@@ -2893,7 +2893,7 @@
     <string name="watch_keep_for_later">Zadržite za kasnije</string>
     <string name="watch_kept_to_send">Zadržano na ovom satu. Šalje se kad vaš telefon opet bude u dometu.</string>
     <string name="watch_limit">najviše 30 s</string>
-    <string name="watch_linking">Povezivanje tafsa. Držite telefon u blizini i povezan.</string>
+    <string name="watch_linking">Povezivanje aplikacije tafs. Držite telefon u blizini i povezan.</string>
     <string name="watch_listening">Slušanje</string>
     <string name="watch_menu">Izbornik</string>
     <string name="watch_mic_needed">Da pitate glasom, dopustite mikrofon za tafs na ovom satu.</string>

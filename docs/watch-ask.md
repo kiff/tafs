@@ -95,6 +95,17 @@ over a full answer (W5, the owner's Galaxy Watch 5 test). Requests kept from bef
 go, and a longer line is cut at a word with an ellipsis (`checkedLine`). With no line from Coach, the state's words stand
 in; if Coach's turn can't be started, the taf's own two sentences, checked the same way, are the line.
 
+- **A cut line says so** (the owner's Watch 5 test, 25 Nov: an answer stopped at "…the computer is…" with no way to read
+  the rest). When Coach's answer went on past 140 characters (`watchCoachLine`), the request carries `more: true`, as a
+  taf chat's does, in `{ask}`, the list and a watch day's turns. The apps say the rest is there and open it whole.
+- **The whole answer** is `GET /v1/watch/asks/{id}?full=1`'s `text`, as for a taf chat: each paragraph checked, none cut,
+  at most 16 KB, read on the tap from the Coach run that gave the line and kept nowhere. tafs cloud keeps only which run
+  that was (`line_run`, never shown). It's only for the person's own request, once it's final, and only while that run is
+  the account's Coach's; anything else has no `text`.
+- **Whether a watch may send to a taf** is read before any send: `GET /v1/watch/asks` answers `{asks, taf_chat}`, where
+  `taf_chat` is `TAFS_WATCH_TAF_CHAT` for the account (below). With `false`, the watches don't offer Send in a taf's chat
+  and say it's off before the person records. The 404 `watch_taf_chat_off` on a send stays as the backstop.
+
 ## Chatting with a taf (TAFS_WATCH_TAF_CHAT)
 
 A watch can also send its words to **a taf the person chose**, into that taf's own chat, without Coach routing them.
@@ -143,6 +154,16 @@ It's the same route, signature and receipt, with `taf_id` added: `{client_id, te
 - **Not on the watch days.** A message to a taf is in that taf's own chat on the phone, so `/v1/watch/days` leaves it out
   of every day's turns and count.
 - **Logged** as `watch_ask` with the taf's id and `signed: "device"`, never the words.
+- **Live on the watch, with the phone app not running** (the owner's call 2b, 25 Nov). Each time a person's chat with a taf
+  changes, their own phones get a silent push, `{change: "taf_chat", taf_id}`: no words, run or amount, and never another
+  member's phones or Coach's chat. The phone reads that chat with its own session and puts it to the watch.
+  - **When:** a message of theirs goes into the chat, from any device (`POST /v1/tafs/{id}/messages`, its stream, or the
+    watch), and when the run it started answers, pauses or ends.
+  - **How tafs cloud hears the end:** the run is started with a run-ended note to `/v1/runs/ended`, under a ref kept two
+    days with whose chat and which taf it is (`taf-chat-ref#`). A note is told once per run and state. One whose ref names
+    another taf is dropped, and an unknown ref is dropped as any is.
+  - **Never in the way of the send:** the push gets a second and a half, then the answer goes on. A push that fails is
+    logged.
 
 ## Watch days (W11)
 
@@ -156,7 +177,7 @@ one day at a time: `GET /v1/watch/days` and `GET /v1/watch/days/{yyyy-mm-dd}` ([
   watch route opened and marked (`watch-session#`). Only tafs cloud's own lines are taken off it (language, time zone),
   as in any Coach chat. A conversation the route didn't mark is never read for it, whatever its messages say, and a reply's
   words are its own run's, not its request's.
-- **A turn** is `{id, said, said_at, taf?, state, line?, words, reply_to?}`: the state, line and words of `{ask}` above, in
+- **A turn** is `{id, said, said_at, taf?, state, line?, more?, words, reply_to?}`: the state, line, `more` and words of `{ask}` above, in
   the reader's language. Turns go oldest first, a reply straight after the request it replies to, so the apps can show it
   under it. `reply_to` is sent only when that request is listed the same day.
 - **The person's own only.** Another member of the account never sees them, the account's owner included, and another

@@ -2737,7 +2737,7 @@
     <string name="watch_keep_for_later">後で送る</string>
     <string name="watch_kept_to_send">このウォッチに保存しました。スマートフォンが近くに戻ると送信します。</string>
     <string name="watch_limit">最大30秒</string>
-    <string name="watch_linking">tafsをリンクしています。スマートフォンを近くに置き、接続したままにしてください。</string>
+    <string name="watch_linking">tafs をリンクしています。スマートフォンを近くに置き、接続したままにしてください。</string>
     <string name="watch_listening">聞き取り中</string>
     <string name="watch_menu">メニュー</string>
     <string name="watch_mic_needed">音声で質問するには、このウォッチでtafsのマイク使用を許可してください。</string>

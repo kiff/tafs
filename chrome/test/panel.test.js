@@ -95,3 +95,11 @@ test("files are picked with Chrome's own file picker only, shown as chips until 
   // A file declared on one taf never goes to another: each chat has its own tray, Coach's by itself.
   assert.match(js, /type: "attach", taf: target === COACH_TRAY \? null : target, file: f/);
 });
+
+// The owner's 0.2.10 walk-through: with a short chat the composer sat under the last message, mid-panel, not at the bottom.
+test("the composer sits at the bottom even with a short chat: a full-height column, the composer pushed to its end", () => {
+  assert.match(css, /body \{\s*min-height: 100vh;\s*display: flex;\s*flex-direction: column;/);
+  assert.match(css, /#paired:not\(\[hidden\]\),\s*#tafView:not\(\[hidden\]\),\s*#coach:not\(\[hidden\]\) \{\s*flex: 1;/, "only the view on show, so [hidden] still hides the others");
+  assert.match(css, /#tafForm,\s*#coach > \.dock \{\s*margin-top: auto;/);
+  assert.match(html, /<div class="dock">/, "Coach's composer is in its dock");
+});

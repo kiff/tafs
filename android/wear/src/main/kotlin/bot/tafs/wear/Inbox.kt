@@ -33,6 +33,38 @@ data class InboxItem(
 }
 
 /**
+ * The Inbox's rules, one place for the open app ([WatchModel]) and the listener that keeps what the phone sends while it's closed
+ * ([KeptResults]).
+ */
+object InboxLines {
+  /**
+   * [item] put in [items]: a new line, unread, first; one already there keeps its place and whether it was read, with the newest
+   * words. Null when nothing changes: a line taken away ([dismissed]) never comes back.
+   */
+  fun put(items: List<InboxItem>, dismissed: Set<String>, item: InboxItem): List<InboxItem>? {
+    if (item.id in dismissed) return null
+    val before = items.firstOrNull { it.id == item.id }
+    if (before != null && before.line == item.line && before.title == item.title) return null
+    return if (before != null) items.map { if (it.id == item.id) it.copy(title = item.title, line = item.line) else it } else listOf(item) + items
+  }
+
+  /** An ended ask's line, as the watch keeps it: no amount ([bot.tafs.watchlink.Amounts]); none for a message to a taf. */
+  fun of(ask: bot.tafs.watchlink.AskLine, at: Long): InboxItem? =
+    if (!ask.ended || ask.tafChat) null
+    else InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, bot.tafs.watchlink.Amounts.strip(ask.line ?: ask.words), at)
+
+  /**
+   * The marks from tafs cloud (row 21): the lines dismissed on any watch go, and their ids join [dismissed]; the lines read on any
+   * watch are read here. Nothing is ever brought back.
+   */
+  fun marked(items: List<InboxItem>, dismissed: Set<String>, read: Set<String>, gone: Set<String>): Pair<List<InboxItem>, Set<String>> {
+    val away = items.filter { it.ref in gone }.map { it.id }
+    val next = items.filterNot { it.ref in gone }.map { if (!it.read && it.ref in read) it.copy(read = true) else it }
+    return next to (dismissed + away)
+  }
+}
+
+/**
  * Where the Inbox is kept: the watch's private preferences, or a list in a test. [dismissed] are the ids taken away (Dismiss, Clear
  * read) that the phone still lists, so a read doesn't bring them back; each goes once the phone no longer lists it.
  */
@@ -44,26 +76,43 @@ interface InboxStore {
   fun clear()
 }
 
-/** [InboxStore] in the watch's private preferences (`tafs.inbox`), as one JSON list: each line's id, kind, taf, words, time and read. */
-class PreferencesInboxStore(context: android.content.Context) : InboxStore {
-  private val prefs = context.getSharedPreferences("tafs.inbox", android.content.Context.MODE_PRIVATE)
-
-  override fun read(): List<InboxItem> = runCatching { decode(prefs.getString(ITEMS, null) ?: return emptyList()) }.getOrDefault(emptyList())
-
-  override fun write(items: List<InboxItem>) {
-    prefs.edit().putString(ITEMS, encode(items)).apply()
+/**
+ * [InboxStore] in the app's private files (`watch-inbox.bin`), encrypted at rest as the cache is ([KeystoreCacheStore]: AES-GCM
+ * under the watch's Keystore key): one JSON object, the lines (each line's id, kind, taf, words, time and read) and the ids taken
+ * away. What won't decrypt reads as an empty Inbox and is cleared. An Inbox kept in plain preferences by 0.4.7 and before
+ * (`tafs.inbox`, [legacy]) is read once, written encrypted, and the plain copy cleared.
+ */
+class KeptInboxStore(private val text: EncryptedText, legacy: android.content.SharedPreferences? = null) : InboxStore {
+  init {
+    if (legacy != null && (legacy.contains(ITEMS) || legacy.contains(DISMISSED))) {
+      val items = runCatching { decode(legacy.getString(ITEMS, null) ?: "[]") }.getOrDefault(emptyList())
+      val gone = runCatching { ids(legacy.getString(DISMISSED, null) ?: "[]") }.getOrDefault(emptySet())
+      save(items, gone)
+      legacy.edit().clear().commit()
+    }
   }
 
-  override fun dismissed(): Set<String> =
-    runCatching { JSONArray(prefs.getString(DISMISSED, null) ?: return emptySet()).let { a -> (0 until a.length()).map { a.getString(it) }.toSet() } }.getOrDefault(emptySet())
-
-  override fun writeDismissed(ids: Set<String>) {
-    prefs.edit().putString(DISMISSED, JSONArray(ids.toList()).toString()).apply()
+  private fun load(): Pair<List<InboxItem>, Set<String>> = runCatching {
+    val o = JSONObject(text.read() ?: return emptyList<InboxItem>() to emptySet())
+    decode(o.optJSONArray(ITEMS)?.toString() ?: "[]") to ids(o.optJSONArray(DISMISSED)?.toString() ?: "[]")
+  }.getOrElse {
+    text.clear()
+    emptyList<InboxItem>() to emptySet()
   }
 
-  override fun clear() {
-    prefs.edit().clear().apply()
+  private fun save(items: List<InboxItem>, gone: Set<String>) {
+    text.write(JSONObject().put(ITEMS, JSONArray(encode(items))).put(DISMISSED, JSONArray(gone.toList())).toString())
   }
+
+  override fun read(): List<InboxItem> = load().first
+
+  override fun write(items: List<InboxItem>) = save(items, load().second)
+
+  override fun dismissed(): Set<String> = load().second
+
+  override fun writeDismissed(ids: Set<String>) = save(load().first, ids)
+
+  override fun clear() = text.clear()
 
   companion object {
     private const val ITEMS = "items"
@@ -72,6 +121,12 @@ class PreferencesInboxStore(context: android.content.Context) : InboxStore {
     fun encode(items: List<InboxItem>): String = JSONArray().apply {
       for (i in items) put(JSONObject().put("id", i.id).put("kind", i.kind.name).put("title", i.title).put("line", i.line).put("at", i.at).put("read", i.read))
     }.toString()
+
+    /** The real one: encrypted under the watch's Keystore key, taking in 0.4.7's plain `tafs.inbox` once. */
+    fun of(context: android.content.Context): KeptInboxStore =
+      KeptInboxStore(EncryptedText(KeystoreCacheStore(context, "watch-inbox.bin")), context.getSharedPreferences("tafs.inbox", android.content.Context.MODE_PRIVATE))
+
+    private fun ids(text: String): Set<String> = JSONArray(text).let { a -> (0 until a.length()).map { a.getString(it) }.toSet() }
 
     fun decode(text: String): List<InboxItem> {
       val a = JSONArray(text)

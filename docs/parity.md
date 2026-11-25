@@ -208,8 +208,8 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 8 | Keep for later | built | built | Apple Watch: on (`CoachModel.keepForLaterOn`), with the privacy page's line and the owner's yes |
 | 9 | Send, then "Coach is answering" | built | built | |
 | 10 | The answer: Hear it, and Reply | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | built | |
-| 11 | An answer you can't miss, with the app put away | built | built | Apple Watch: tafs cloud's push for a watch request wakes the iPhone, which posts the answer as W3 does (`WatchAskPush`), for a request it sent |
-| 12 | Coach as one conversation | built | built | |
+| 11 | An answer you can't miss, with the app put away | built | built | Apple Watch: tafs cloud's push for a watch request wakes the iPhone, which posts the answer as W3 does (`WatchAskPush`), for a request it sent. Wear OS: the push starts a job on the phone that keeps the answer for the watch as a Data Layer item, delivered and notified with the watch's app closed (docs/watch-wear.md, Delivery) |
+| 12 | Coach as one conversation | built | built | Wear OS: kept across put-away; across opens (30 messages, up to 20 threads with each taf's, 30 days unopened) behind `KEEP_THREADS` (on in `-test` builds) until the owner's yes and the Privacy page's line |
 | 13 | Chat with one taf | built | built | tafs cloud's switch still decides per account |
 | 14 | A taf's page and its settings | built | built | |
 | 15 | Your tafs, with their state | built | built | |
@@ -217,7 +217,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 17 | The Account page | built | built | |
 | 18 | Sign out on this watch alone | built | built | |
 | 19 | Sign in, pair a device, add a passkey, change a Card | not for it | not for it | no sign-in of its own; the keys stay on the phone |
-| 20 | The inbox kept on the watch | built | built | |
+| 20 | The inbox kept on the watch | built | built | Wear OS: only on a watch with a screen lock; without one, the Inbox lists every answer the watch knows, opened ones too |
 | 21 | The inbox's read and dismissed, in step with the phone | built (`InboxModel.sync`, `inbox_marks` / `inbox_mark`) | built (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud keeps them (`/v1/watch/inbox`), by id alone |
 | 22 | Your brief | partial | partial | built; off (`briefOnWatch`, `BRIEF_ON_WATCH`) until the owner's yes |
 | 23 | "From your watch" on the phone | built | built | |
@@ -235,7 +235,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 
 The rule: on a wide window, every app draws a page the same way: the iPad, the Mac, Windows, Linux and an Android tablet. The widths are the iPad's and the Mac's caps as they stood, now centred.
 
-Where each app stands: done on the iPhone, iPad and Mac 13+ (tafs#2009), Android (tafs#2011; the brief's own cap, 1100, is tafs#2013, in review), macOS 12 (tafs-macos#264), Linux (tafs-linux#136) and Windows (tafs-windows#342).
+Where each app stands: done on the iPhone, iPad and Mac 13+ (tafs#2009), Android (tafs#2011, and the brief's own cap, 1100, in tafs#2013), macOS 12 (tafs-macos#264), Linux (tafs-linux#136) and Windows (tafs-windows#342).
 
 - **A centred column, capped.** Each page is one column, centred in the window, at most:
   - 720 points for reading pages: Account, Devices, People, Alerts, Chrome, Needs you, Connect apps, Plan & usage;
@@ -256,14 +256,13 @@ What landed on 23 Nov, device by device, read again against each repo's main on 
 | Sign in again and Replace the key on a connection | done | done | not for it: made on the phone (planque takes no security key) | done (tafs-windows#268) | done: drawn up to planque's signature, which is the phone's (granting access is never done from a computer; its checklist's ConnectAppsView) | — |
 | Sign in again shows the connection's approval sheet first, and signs only the request it showed | done (tafs#1878) | done (tafs#1826) | as the row above | as the row above | as the row above | — |
 | A sealed sign-in fill's release card | held: no passwords go through the extension (the owner's decision) | merged and off, stays off (tafs#1882) | — | — | — | — |
-| "Allow this from now on" checks its own `matches`: a revision Card's `current.id`, when sent, must equal `revises`; and a Card key the check doesn't read is refused (`vectors/agent-draft-keys.json`, over KIFF's draft pinned in `contracts/kiff-agent-draft-from-hold.json`) | done (tafs#1891, tafs#2006) | done (tafs#1893, tafs#2006) | first half done (tafs-macos#222); second half in review (tafs-macos#265) | done (tafs-windows#330, tafs-windows#343) | first half done (tafs-linux#121); second half in review (tafs-linux#137) | — |
+| "Allow this from now on" checks its own `matches`: a revision Card's `current.id`, when sent, must equal `revises`; and a Card key the check doesn't read is refused (`vectors/agent-draft-keys.json`, over KIFF's draft pinned in `contracts/kiff-agent-draft-from-hold.json`) | done (tafs#1891, tafs#2006) | done (tafs#1893, tafs#2006) | done (tafs-macos#222, tafs-macos#265) | done (tafs-windows#330, tafs-windows#343) | done (tafs-linux#121, tafs-linux#137) | — |
 | A connection's own page from planque's row, with its actions | done | done | done: its approvals are the phone's, since planque takes no security key (its checklist's ConnectAppsView) | done (tafs-windows#269) | done: Remove access with the security key, Sign in again drawn up to the phone's signature | — |
 | An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | done (tafs-macos#263: said on Needs you, not in the chat) | done (tafs-windows#271: said on Needs you, not in the chat) | done (tafs-linux#99) | — |
 | An API door's example safe to paste into a shell (a plain path only, quoted; `vectors/api-door-endpoint.json`, tafs#1877) | done (tafs#1875) | done (tafs#1874) | done (tafs-macos#205) | done (tafs-windows#323) | done (tafs-linux#111) | — |
 | The side panel is the taf in this Chrome (tafs#1799), no client named (tafs#1810), the read after an act waits for its navigation (tafs#1811) | — | — | — | — | — | done |
 
-**Still open:**
-1. **"Allow this from now on", its second half, on macOS 12 and Linux:** a Card key the check doesn't read is refused. KIFF's draft is pinned (`contracts/kiff-agent-draft-from-hold.json`, written by KIFF's own test) and the keys are `vectors/agent-draft-keys.json`; the iPhone, iPad, Android and Windows check them. macOS 12 (tafs-macos#265) and Linux (tafs-linux#137) are in review.
+**Still open:** nothing to build. Every row above is done on each device it's for, except the sealed sign-in fill's release card, which stays held and off by the owner's decision.
 
 ## Counting checks
 

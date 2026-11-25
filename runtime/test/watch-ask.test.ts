@@ -3,7 +3,7 @@ import { type CoachCall, newRef } from "../src/cloud/coach.js";
 import { coachTool, type Deps, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { watchAskOn } from "../src/cloud/watch-ask.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
-import { type Ask, checkedLine, LINE_MAX, shownAsk, watchKeys } from "../src/cloud/watch-ask.js";
+import { type Ask, checkedLine, dayTurns, LINE_MAX, shownAsk, watchCoachLine, watchKeys } from "../src/cloud/watch-ask.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 /**
@@ -159,7 +159,7 @@ describe("a request from the watch", () => {
     const a = await w.call("POST", "/v1/watch/asks", ASK);
     const id = (a.body.ask as { id: string }).id;
     expect((await w.call("GET", `/v1/watch/asks/${id}`, undefined, {}, "bo")).status).toBe(404);
-    expect((await w.call("GET", "/v1/watch/asks", undefined, {}, "bo")).body).toEqual({ asks: [] });
+    expect((await w.call("GET", "/v1/watch/asks", undefined, {}, "bo")).body).toEqual({ asks: [], taf_chat: false });
     expect(((await w.call("GET", "/v1/watch/asks", undefined, {})).body.asks as unknown[]).length).toBe(1);
     // A reply goes on only in one's own request's conversation.
     expect((await w.call("POST", "/v1/watch/asks", { client_id: "c_bo_reply_01", text: "and at seven", reply_to: id }, SIGNED, "bo")).status).toBe(404);
@@ -315,6 +315,137 @@ describe("the watch's conversation", () => {
     await w.ended(w.agents.notified.get(lineRun.id)!.ref, lineRun.id, COACH, "COMPLETED");
     expect(await w.askOf(id)).toMatchObject({ state: "done", line: "Moved your call to 18:00." });
     expect(w.pushed.map((p) => p.token)).toEqual(["fcm-ana", "a".repeat(64)]);
+  });
+});
+
+describe("a Coach answer longer than the watch's line (the owner's Watch 5 test, 25 Nov)", () => {
+  const LONG = "I couldn't read the Paris page on Wikipedia. The read was refused because your Chrome isn't reachable (it's closed, or the computer is asleep). I stopped there and can't give you the first paragraph yet.\n\nOnce Chrome is open, ask me again.";
+
+  async function answered(output: string) {
+    const w = world();
+    const r = await w.call("POST", "/v1/watch/asks", ASK);
+    const id = (r.body.ask as { id: string }).id;
+    const coachRun = (await w.askOf(id)).coach_run!;
+    Object.assign(w.agents.runs.find((x) => x.id === coachRun)!, { status: "COMPLETED", output });
+    await w.ended(w.agents.notified.get(coachRun)!.ref, coachRun, COACH, "COMPLETED");
+    return { w, id, coachRun };
+  }
+
+  it("says there's more, and gives the whole answer on ?full=1, read from the run that gave the line", async () => {
+    const { w, id, coachRun } = await answered(LONG);
+    const kept = await w.askOf(id);
+    expect(kept).toMatchObject({ state: "done", more: true, line_run: { agent: COACH, run: coachRun } });
+    expect([...kept.line!].length).toBeLessThanOrEqual(LINE_MAX);
+    const shown = await w.call("GET", `/v1/watch/asks/${id}`, undefined, {});
+    expect(shown.body.ask).toMatchObject({ more: true });
+    // The run is never shown, only that there's more.
+    expect(JSON.stringify(shown.body)).not.toMatch(/line_run|run_/);
+    expect(shown.body).not.toHaveProperty("text");
+    const full = await w.call("GET", `/v1/watch/asks/${id}?full=1`, undefined, {});
+    expect(full.body.text).toBe("I couldn't read the Paris page on Wikipedia. The read was refused because your Chrome isn't reachable (it's closed, or the computer is asleep). I stopped there and can't give you the first paragraph yet.\n\nOnce Chrome is open, ask me again.");
+    // In the list too, and on the phone's Today sheet (a day's turns).
+    const listed = (await w.call("GET", "/v1/watch/asks", undefined, {})).body.asks as Array<Record<string, unknown>>;
+    expect(listed[0]).toMatchObject({ id, more: true });
+  });
+
+  it("is the person's own: another member's ?full=1 is 404, as any read of it is", async () => {
+    const { w, id } = await answered(LONG);
+    expect((await w.call("GET", `/v1/watch/asks/${id}?full=1`, undefined, {}, "bo")).status).toBe(404);
+  });
+
+  it("has no more and no whole answer when the line wasn't cut", async () => {
+    const { w, id } = await answered("Nothing is on your calendar today.");
+    const kept = await w.askOf(id);
+    expect(kept).not.toHaveProperty("more");
+    expect(kept).not.toHaveProperty("line_run");
+    expect((await w.call("GET", `/v1/watch/asks/${id}?full=1`, undefined, {})).body).not.toHaveProperty("text");
+  });
+
+  it("gives no whole answer from a run that isn't the account's Coach's any more", async () => {
+    const { w, id } = await answered(LONG);
+    const kept = await w.askOf(id);
+    await w.coach.put(watchKeys.ask(T, id), { ...kept, line_run: { agent: CAL, run: kept.line_run!.run } }, new Date(NOW.getTime() + 3_600_000));
+    expect((await w.call("GET", `/v1/watch/asks/${id}?full=1`, undefined, {})).body).not.toHaveProperty("text");
+  });
+
+  it("does the same for the line Coach writes from a taf's result", async () => {
+    const w = world();
+    const r = await w.call("POST", "/v1/watch/asks", ASK);
+    const id = (r.body.ask as { id: string }).id;
+    await w.tool("taf_task", { taf: CAL, text: ASK.text }, (await w.askOf(id)).session);
+    const tafRun = w.agents.runs.find((x) => x.agent === CAL)!;
+    Object.assign(tafRun, { status: "COMPLETED", output: "Moved it.", stop: "answered" });
+    await w.ended(w.agents.notified.get(tafRun.id)!.ref, tafRun.id, CAL, "COMPLETED");
+    const lineRun = w.agents.runs.filter((x) => x.agent === COACH).at(-1)!;
+    Object.assign(lineRun, { status: "COMPLETED", output: LONG });
+    await w.ended(w.agents.notified.get(lineRun.id)!.ref, lineRun.id, COACH, "COMPLETED");
+    expect(await w.askOf(id)).toMatchObject({ state: "done", more: true, line_run: { agent: COACH, run: lineRun.id } });
+    expect((await w.call("GET", `/v1/watch/asks/${id}?full=1`, undefined, {})).body.text).toContain("Once Chrome is open, ask me again.");
+  });
+
+  it("is cut at 140 and says so only when it went on (watchCoachLine)", () => {
+    expect(watchCoachLine("Short.")).toEqual({ line: "Short.", more: false });
+    const long = watchCoachLine("word ".repeat(60));
+    expect(long.more).toBe(true);
+    expect([...long.line!].length).toBeLessThanOrEqual(LINE_MAX);
+    expect(watchCoachLine("")).toEqual({ more: false });
+  });
+
+  it("carries more onto a watch day's turn, for the phone's Today sheet", () => {
+    const ask: Ask = { id: "wa_1", client_id: "w_1", person: ANA, state: "done", line: "I couldn't read…", more: true, at: "2026-11-25T00:11:00Z", updated: "2026-11-25T00:12:00Z" };
+    expect(dayTurns([{ ask, said: "the Paris page" }], "en")[0]).toMatchObject({ id: "wa_1", more: true });
+    expect(dayTurns([{ ask: { ...ask, more: undefined }, said: "x" }], "en")[0]).not.toHaveProperty("more");
+  });
+});
+
+describe("whether a watch may send to a taf, read before sending (TAFS_WATCH_TAF_CHAT)", () => {
+  it("is `taf_chat` on the watch's list of requests: false where the switch is off, true where it's on for the account", async () => {
+    const off = world();
+    expect((await off.call("GET", "/v1/watch/asks", undefined, {})).body).toMatchObject({ taf_chat: false });
+    const on = world();
+    on.deps.watchTafChat = [T];
+    expect((await on.call("GET", "/v1/watch/asks", undefined, {})).body).toMatchObject({ taf_chat: true });
+    on.deps.watchTafChat = ["t_other"];
+    expect((await on.call("GET", "/v1/watch/asks", undefined, {})).body).toMatchObject({ taf_chat: false });
+    on.deps.watchTafChat = true;
+    expect((await on.call("GET", "/v1/watch/asks", undefined, {})).body).toMatchObject({ taf_chat: true });
+  });
+});
+
+describe("a person's chat with a taf tells their phones, for the watch (call 2b)", () => {
+  const chatPushes = (w: ReturnType<typeof world>) => w.pushed.filter((p) => p.payload.change === "taf_chat");
+
+  it("when their message goes in: a silent push with the taf's id alone, to their own phones, never another member's", async () => {
+    const w = world();
+    const r = await w.call("POST", `/v1/tafs/${CAL}/messages`, { text: "Move my 4pm to 6pm" }, {});
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect(chatPushes(w).map((p) => p.token)).toEqual(["fcm-ana", "a".repeat(64)]);
+    for (const p of chatPushes(w)) expect(p.payload).toEqual({ aps: { "content-available": 1 }, change: "taf_chat", taf_id: CAL });
+    expect(JSON.stringify(w.pushed)).not.toContain("Move my");
+  });
+
+  it("when the taf's run answers, pauses or ends: once per run and state, and a note for another taf is dropped", async () => {
+    const w = world();
+    await w.call("POST", `/v1/tafs/${CAL}/messages`, { text: "Move my 4pm to 6pm" }, {});
+    const run = w.agents.runs.find((x) => x.agent === CAL)!;
+    const ref = w.agents.notified.get(run.id)!.ref;
+    w.pushed.length = 0;
+    Object.assign(run, { status: "COMPLETED", output: "Moved it." });
+    expect(JSON.parse((await w.ended(ref, run.id, CAL, "COMPLETED")).body)).toEqual({ taken: true });
+    expect(chatPushes(w).map((p) => p.token)).toEqual(["fcm-ana", "a".repeat(64)]);
+    // kiff/agents' same note again tells nothing more.
+    await w.ended(ref, run.id, CAL, "COMPLETED");
+    expect(chatPushes(w)).toHaveLength(2);
+    // The ref is this taf's chat run's alone.
+    w.pushed.length = 0;
+    expect(JSON.parse((await w.ended(ref, run.id, INBOX, "COMPLETED")).body)).toEqual({ taken: false });
+    expect(w.pushed).toEqual([]);
+  });
+
+  it("never for Coach's chat, whose runs have their own notes", async () => {
+    const w = world();
+    await w.call("POST", `/v1/tafs/${COACH}/messages`, { text: "What can my tafs do?" }, {});
+    expect(chatPushes(w)).toEqual([]);
   });
 });
 

@@ -97,7 +97,7 @@ internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Lon
       val seconds = (voice.since?.let { ((at - it) / 1000).toInt() } ?: 0).coerceIn(0, (LISTEN_LIMIT_MS / 1000).toInt())
       RecordScreen(heard = voice.heard, seconds = seconds, act = act, start = null)
     }
-    is WatchModel.Voice.Review -> ReviewScreen(voice.text, voice.audio, act, probe, title = voice.tafName?.let { Words.Chat.messageTaf(it) } ?: Words.Watch.review)
+    is WatchModel.Voice.Review -> ReviewScreen(voice.text, voice.audio, act, probe, title = voice.tafName?.let { Words.Chat.messageTaf(it) } ?: Words.Watch.review, notice = voice.notice)
     WatchModel.Voice.Deleted -> {
       LaunchedEffect(Unit) {
         delay(DELETED_SHOWN_MS)
@@ -197,6 +197,7 @@ internal val REVIEW_FOOT: Dp = 68.dp
 /** Test tags for the review's actions, pinned at its foot. */
 internal const val REVIEW_DELETE = "review-delete"
 internal const val REVIEW_SEND = "review-send"
+internal const val REVIEW_NOTICE = "review-notice"
 internal const val REVIEW_AGAIN = "review-again"
 
 /**
@@ -206,7 +207,7 @@ internal const val REVIEW_AGAIN = "review-again"
  * long message rests above the buttons. Each button is named for TalkBack in the watch's words.
  */
 @Composable
-private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: String?, title: String = Words.Watch.review) {
+private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: String?, title: String = Words.Watch.review, notice: String? = null) {
   BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
     val top = maxHeight * TOP_INSET_SHARE
     ScalingLazyColumn(
@@ -217,6 +218,10 @@ private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: 
       verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
       item { ListHeader { Text(title) } }
+      // Why the words came back unsent (row 13): they stay here, with Send, Delete and Re-record, never dropped.
+      notice?.let {
+        item { Text(it, style = MaterialTheme.typography.bodySmall, color = Look.held, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp).testTag(REVIEW_NOTICE)) }
+      }
       // The recording, on the watch only: Play and Pause from where it stopped, and where it is.
       val playback = act.playback
       if (audio != null && playback != null) item { PlayRow(audio, playback) }

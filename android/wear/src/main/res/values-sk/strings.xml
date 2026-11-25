@@ -96,7 +96,7 @@
     <string name="watch_keep_for_later">Nechať na neskôr</string>
     <string name="watch_kept_to_send">Uložené v týchto hodinkách. Odošle sa, keď bude telefón znova na dosah.</string>
     <string name="watch_limit">Najviac 30 s</string>
-    <string name="watch_linking">Prepája sa tafs. Majte telefón nablízku a pripojený.</string>
+    <string name="watch_linking">Prepájam tafs. Majte telefón nablízku a pripojený.</string>
     <string name="watch_listening">Počúvam</string>
     <string name="watch_menu">Ponuka</string>
     <string name="watch_mic_needed">Ak sa chcete pýtať hlasom, povoľte tafs na týchto hodinkách mikrofón.</string>

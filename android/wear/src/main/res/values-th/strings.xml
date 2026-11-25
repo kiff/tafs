@@ -88,7 +88,7 @@
     <string name="watch_keep_for_later">เก็บไว้ภายหลัง</string>
     <string name="watch_kept_to_send">เก็บไว้บนนาฬิกาเรือนนี้ จะส่งเมื่อโทรศัพท์ของคุณอยู่ในระยะอีกครั้ง</string>
     <string name="watch_limit">สูงสุด 30 วินาที</string>
-    <string name="watch_linking">กำลังเชื่อมโยง tafs วางโทรศัพท์ของคุณไว้ใกล้ๆ และให้เชื่อมต่ออยู่เสมอ</string>
+    <string name="watch_linking">กำลังเชื่อมต่อ tafs วางโทรศัพท์ไว้ใกล้ๆ และเชื่อมต่อไว้</string>
     <string name="watch_listening">กำลังฟัง</string>
     <string name="watch_menu">เมนู</string>
     <string name="watch_mic_needed">หากต้องการถามด้วยเสียง ให้อนุญาตไมโครโฟนสำหรับ tafs บนนาฬิกาเรือนนี้</string>

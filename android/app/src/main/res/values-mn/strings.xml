@@ -2815,7 +2815,7 @@
     <string name="watch_keep_for_later">Дараа нь хадгалах</string>
     <string name="watch_kept_to_send">Энэ цагт хадгалсан. Утас тань дахин ойртмогц илгээгдэнэ.</string>
     <string name="watch_limit">хамгийн ихдээ 30 с</string>
-    <string name="watch_linking">tafs-ыг холбож байна. Утсаа ойрхон, холбогдсон байлгана уу.</string>
+    <string name="watch_linking">tafs-ийг холбож байна. Утсаа ойрхон, холбогдсон байлгаарай.</string>
     <string name="watch_listening">Сонсож байна</string>
     <string name="watch_menu">Цэс</string>
     <string name="watch_mic_needed">Дуу хоолойгоор асуухын тулд энэ цагт tafs-д микрофоныг зөвшөөрнө үү.</string>

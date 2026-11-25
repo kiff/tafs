@@ -188,8 +188,8 @@ describe("chatting with a taf from the watch", () => {
     expect(shown.line).toMatch(/^Brio paid the invoice today\. They also asked/);
     expect(shown.line).not.toMatch(/\*|https?:|evil|\n/);
     expect([...shown.line].length).toBeLessThanOrEqual(TAF_LINE_MAX);
-    // The person's Android phone hears the request's id; no one else's.
-    expect(w.pushed).toEqual(["fcm-ana"]);
+    // The person's Android phone hears the chat changed when the message went in, then the request's id; no one else's.
+    expect(w.pushed).toEqual(["fcm-ana", "fcm-ana"]);
     // A short answer is whole.
     const short = (await w.send({ ...MSG, client_id: "c_watch_0002" })).body.ask.id as string;
     await w.end(short, "COMPLETED", "Nothing new since Monday.");

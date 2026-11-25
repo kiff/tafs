@@ -2815,7 +2815,7 @@
     <string name="watch_keep_for_later">Hoia hilisemaks</string>
     <string name="watch_kept_to_send">Hoitakse selles kellas. See saadetakse, kui telefon on jälle käeulatuses.</string>
     <string name="watch_limit">Kuni 30 s</string>
-    <string name="watch_linking">Ühendan tafsi. Hoia telefon lähedal ja ühendatuna.</string>
+    <string name="watch_linking">tafs ühendub. Hoia telefon lähedal ja ühendatud.</string>
     <string name="watch_listening">Kuulan</string>
     <string name="watch_menu">Menüü</string>
     <string name="watch_mic_needed">Häälega küsimiseks luba selles kellas tafsile mikrofon.</string>
