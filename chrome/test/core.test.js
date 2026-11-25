@@ -200,13 +200,14 @@ test("the extension's guard refuses what planque's does", () => {
 });
 
 test("a control or link that sends money out (a refund, a payout, a transfer, a withdrawal) is refused, one that only mentions it isn't", () => {
-  for (const words of ["Refund", "Refund €50.00", "Issue refund", "Refund payment", "Pay out", "Payouts", "Transfer funds", "Withdraw",
-    "Send money", "Rembourser", "Effectuer un virement", "Rückerstattung veranlassen", "Überweisen", "Auszahlen", "Reembolsar",
+  for (const words of ["Refund", "Refund €50.00", "Issue refund", "Refund payment", "Pay out", "Payout", "Transfer funds", "Withdraw funds",
+    "Make a transfer", "Bank transfer", "Retirer des fonds", "Retirar dinero", "Sacar dinheiro", "Send money", "Rembourser", "Effectuer un virement", "Rückerstattung veranlassen", "Überweisen", "Auszahlen", "Reembolsar",
     "Enviar dinero", "Effettua bonifico", "Overmaken", "Uitbetalen", "Fazer transferência", "  refund  ", "REFUND 12,50 $"]) {
     assert.ok(MONEY_OUT.test(words), words);
   }
   for (const words of ["Refund policy", "Refunds and returns", "Transfer history", "Payout schedule", "How to withdraw", "Help",
-    "Download refund report", "Withdrawal terms", "Remboursements", ""]) {
+    "Download refund report", "Withdrawal terms", "Remboursements", "", "Refunds", "Payouts", "Retirer", "Retirar", "Sacar", "Transfer",
+    "Transferir", "Withdraw", "Virer", "Rückerstattung", "Preleva", "Abheben"]) {
     assert.ok(!MONEY_OUT.test(words), words);
   }
   const console = {

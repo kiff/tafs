@@ -34,25 +34,26 @@ export const PAY_WORDS = new RegExp(
 /**
  * A control or link whose whole label sends money out (a refund, a payout, a transfer, a withdrawal), in the same languages,
  * with at most an amount after it ("Refund €50.00"). A label that only mentions it ("Refund policy", "Transfer history") isn't
- * one. On a merchant's console these are how money leaves an account outside any Card, so a taf clicks none of them, as it
+ * one, nor a list's name ("Refunds", "Payouts"), nor a verb that more often means something else without its money ("Retirer",
+ * "Transfer", "Withdraw" alone are Remove, a seat's or a domain's transfer, an application's withdrawal): those need the money named. On a merchant's console these are how money leaves an account outside any Card, so a taf clicks none of them, as it
  * pays nothing.
  */
 export const MONEY_OUT = new RegExp(
   "^\\s*(" +
     // en
-    "(issue |send |make )?(a )?refunds?( (payment|order|charge|now))?|pay ?outs?|send payout|(make |send )?(a )?(bank )?transfers?( (funds|money|now))?|transfer (funds|money)|withdraw( (funds|money|now))?|send money|wire( (funds|money|transfer))?|" +
+    "(issue |send |make )?(a )?refund( (payment|order|charge|now))?|pay ?out|send (a )?payout|(make|send) (a )?(bank )?transfer|bank transfer|transfer (funds|money)|withdraw (funds|money)|send money|wire (funds|money|transfer)|" +
     // fr
-    "rembourser|(émettre|effectuer) (un |le )?remboursement|virer|(effectuer|faire) (un |le )?virement|retirer( des fonds)?|envoyer (de l'|l')argent|" +
+    "rembourser|(émettre|effectuer) (un |le )?remboursement|(effectuer|faire) (un |le )?virement|retirer (des fonds|de l'argent)|envoyer (de l'|l')argent|" +
     // de
-    "(rück)?erstatten|rückerstattung( veranlassen| ausführen)?|überweisen|überweisung( ausführen| senden)?|auszahlen|auszahlung( veranlassen)?|abheben|geld senden|" +
+    "(rück)?erstatten|rückerstattung (veranlassen|ausführen)|überweisen|überweisung (ausführen|senden)|auszahlen|auszahlung veranlassen|geld (senden|abheben)|" +
     // es
-    "reembolsar|(emitir|hacer) (un |el )?reembolso|transferir( fondos| dinero)?|hacer (una )?transferencia|retirar( fondos| dinero)?|enviar dinero|" +
+    "reembolsar|(emitir|hacer) (un |el )?reembolso|transferir (fondos|dinero)|hacer (una )?transferencia|retirar (fondos|dinero)|enviar dinero|" +
     // it
-    "rimborsa|(emetti|effettua) (il |un )?rimborso|trasferisci( fondi| denaro)?|(effettua|esegui) (il |un )?bonifico|preleva|invia denaro|" +
+    "rimborsa|(emetti|effettua) (il |un )?rimborso|trasferisci (fondi|denaro)|(effettua|esegui) (il |un )?bonifico|preleva (fondi|denaro|contanti)|invia denaro|" +
     // nl
     "terugbetalen|terugbetaling (doen|uitvoeren)|overmaken|uitbetalen|geld (overmaken|versturen|opnemen)|" +
     // pt
-    "reembolsar|(emitir|fazer) (o |um )?reembolso|transferir|fazer (uma )?transferência|sacar|enviar dinheiro" +
+    "reembolsar|(emitir|fazer) (o |um )?reembolso|transferir (fundos|dinheiro)|fazer (uma )?transferência|sacar (dinheiro|fundos)|enviar dinheiro" +
     ")[^\\p{L}]*$",
   "iu",
 );
