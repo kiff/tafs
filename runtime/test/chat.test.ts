@@ -1207,27 +1207,55 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     const run = await waiting(w);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "test" } })).status).toBe(200);
     // kiff/agents' copy: refused before its next turn, so nothing more in the session.
-    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "ERROR", code: "ai_unavailable", error: "Our AI provider isn't serving us right now, so this stopped." });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "ERROR", code: "ai_unavailable", error: "Our AI provider isn't serving us right now, so this stopped.", sent: 0 });
     const thread = async (lang?: string) => (await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", ...(lang ? { headers: { "accept-language": lang } } : {}) })).body;
     const en = await thread();
     expect(en.working).toBeNull();
-    expect(en.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable });
+    expect(en.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").turn_failed_ours, retry: true, retry_label: wordsIn("en").turn_failed_retry });
     contract("conversation-failed", "GET /v1/tafs/{id}/conversation once the run a card's answer resumed was refused by the AI provider: `failed` with its code and words, neither at work nor waiting.", en);
-    expect((await thread("fr")).failed.words).toBe(wordsIn("fr").code_ai_unavailable);
+    expect((await thread("fr")).failed.words).toBe(wordsIn("fr").turn_failed_ours);
     // A run that ends ERROR uses no credits, whatever it did before the card (KIFF's meter: a failed run is free).
     // But one that already sent a write did act, so it gets the partway words, which say it stopped partway and
     // make no claim about credits. A run with only refusals or reads keeps code_ai_unavailable.
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { refund: { sent: 1 } } });
     const partway = await thread();
-    expect(partway.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable_partway });
-    expect(partway.failed.words).not.toBe(wordsIn("en").code_ai_unavailable);
+    expect(partway.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").turn_failed_ours_partway, retry: false });
+    expect(partway.failed.words).not.toBe(wordsIn("en").turn_failed_ours);
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { lookup: { refused: 2 } } });
-    expect((await thread()).failed.words).toBe(wordsIn("en").code_ai_unavailable);
+    expect((await thread()).failed.words).toBe(wordsIn("en").turn_failed_ours);
     // An ERROR with no code still ends with words, never silence; and never kiff/agents' English in a French thread.
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: undefined, error: "the run failed" });
     const plain = await thread("fr");
     expect(plain.failed?.run).toBe(run.id);
     expect(typeof plain.failed?.words === "string" && plain.failed.words.length > 0).toBe(true);
+    // The owner's rule (25 Nov): every reason is said, in tafs cloud's words, and Try again only when the record shows
+    // the run did nothing that acted: a call sent, held, of unknown outcome, gone through, or a write sent.
+    expect(plain.failed).toMatchObject({ code: "failed", words: wordsIn("fr").turn_failed_error, retry: true });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { error: "the run reached its time limit", tally: undefined });
+    expect((await thread()).failed).toMatchObject({ code: "timeout", words: wordsIn("en").turn_failed_time, retry: true, retry_label: wordsIn("en").turn_failed_retry });
+    for (const acted of [{ tally: { refund: { sent: 1 } } }, { tally: { refund: { held: 1 } } }, { tally: { refund: { unknown: 1 } } }, { done: [{ tool: "refund" }] }, { sent: 1 }]) {
+      Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: undefined, done: undefined, sent: undefined }, acted);
+      const f = (await thread()).failed;
+      expect(f, JSON.stringify(acted)).toMatchObject({ code: "timeout", words: wordsIn("en").turn_failed_time_partway, retry: false });
+      expect(f.retry_label, JSON.stringify(acted)).toBeUndefined();
+    }
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: undefined, done: undefined, sent: 0, error: "the run failed" });
+    expect((await thread()).failed).toMatchObject({ code: "failed", words: wordsIn("en").turn_failed_error, retry: true });
+    // A record that can't say is never safe: resumed after a crash, a lease that ran out, no count of writes, or turns
+    // with no tally of what they did.
+    const unsure: Array<Record<string, unknown>> = [
+      { resumes: 1 },
+      { error: "its lease ran out: the invocation crashed or timed out" },
+      { sent: undefined },
+      { turns: 3, tally: undefined },
+    ];
+    for (const record of unsure) {
+      Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: undefined, done: undefined, sent: 0, resumes: undefined, turns: 0, error: "the run failed" }, record);
+      expect((await thread()).failed?.retry, JSON.stringify(record)).toBe(false);
+    }
+    // Turns whose tally shows only reads or refusals: safe.
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { resumes: undefined, error: "the run failed", sent: 0, turns: 3, tally: { lookup: { refused: 2 } } });
+    expect((await thread()).failed?.retry).toBe(true);
     expect(plain.failed.words).not.toContain("the run failed");
     // A later run that answered closes it: no failure line left over.
     const next = await w.agents.api.startRun("t_acme", RAE, "Try again", { ...ANA, session: run.session });
