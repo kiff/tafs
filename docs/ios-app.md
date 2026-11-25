@@ -838,11 +838,14 @@ The person's own Coach conversations can be deleted for good from Previous conve
   - **404** (never this person's, or already gone): it leaves the lists, with nothing said.
   - **409** (its run is working or waits on a card): it stays, with the refusal's own words.
   - **Anything else, the network included:** it stays, with `failed` from the last read.
-- **The Apple Watch:** its kept Coach thread holds the watch's own conversations (watch requests), which the phone's list
-  never shows, so there's no watch copy of a phone conversation to empty.
+- **The Apple Watch:** its kept Coach thread (`WatchThreads`, `"coach"`) can hold a phone conversation's turns: when the
+  watch's own requests are switched off, its words go to Coach's current chat. So after every delete that goes through,
+  the phone tells the watch to drop that kept copy (`WatchPush.forget`, `AppModel.forgetOnWatch`). The watch drops it at
+  once, with a screen open or not (`PhoneLink`, `WatchThreads.drop`), and Coach's screen there forgets what it drew. It's
+  only a cache, read again on the next visit. The watch's own conversations (watch requests) can't be deleted yet.
 - **Not here yet:** a taf's own chat (iOS lists no past conversations for one). The route serves it once there's a list.
 - Tests: `SetupTests.testDeletingAConversationForGood` (no words → no Delete, each answer above, the archived list, the
-  opened copy removed).
+  opened copy removed, the watch told once per delete that went through), `WatchThreadsTests.testADeleteOnThePhoneDropsThatThreadAlone`.
 
 ## The calendar
 

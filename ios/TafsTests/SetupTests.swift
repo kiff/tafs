@@ -2564,9 +2564,16 @@ final class SetupTests: XCTestCase {
         let copy = AppModel.openedFiles.appendingPathComponent("f_1.txt")
         try Data("x".utf8).write(to: copy)
 
+        // The watch is told to drop its kept Coach thread, once per delete that went through.
+        var watchTold = 0
+        let tellWatch = AppModel.forgetOnWatch
+        AppModel.forgetOnWatch = { watchTold += 1 }
+        defer { AppModel.forgetOnWatch = tellWatch }
+
         StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_2"] = (200, #"{"session":"s_2","deleted":true}"#)
         StubProtocol.sent = []
         let gone = await model.deleteSetupChat("s_2")
+        XCTAssertEqual(watchTold, 1, "the watch drops its kept copy")
         XCTAssertEqual(gone, .gone)
         XCTAssertEqual(sent("DELETE", "cloud.test", "/v1/tafs/taf-setup/chats/s_2").count, 1)
         XCTAssertEqual(model.setupChats.map(\.session), ["s_3", "s_1"])
@@ -2585,6 +2592,7 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_1"] = (409, #"{"error":"Dieses Gespräch arbeitet noch oder wartet auf dich."}"#)
         let busy = await model.deleteSetupChat("s_1")
         XCTAssertEqual(busy, .kept("Dieses Gespräch arbeitet noch oder wartet auf dich."))
+        XCTAssertEqual(watchTold, 2, "404 told it once more; a 409 tells it nothing")
         XCTAssertEqual(model.setupChats.map(\.session), ["s_1"], "still listed")
 
         // Anything else: it stays, with tafs cloud's `failed` line from the last read.

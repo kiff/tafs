@@ -491,6 +491,9 @@ struct WatchPush: Codable, Equatable, Sendable {
         /// The phone signed in or out: `mark` is the new session's, or none once signed out. Sent at once and as the
         /// application context, so a watch out of reach hears it before anything else when it's back.
         case account
+        /// A conversation was deleted on the phone for good: the watch drops its kept copy of the thread `taf` names, or of
+        /// Coach's when none (`WatchThreads.drop`). It's only a cache, read again on the next visit.
+        case forget
     }
 
     /// The `userInfo` key its bytes go under.

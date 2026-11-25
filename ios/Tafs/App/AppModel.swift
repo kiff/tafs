@@ -5939,6 +5939,12 @@ final class AppModel: ObservableObject {
     /// so nothing a person attached stays on the phone after them (docs/data.md).
     static let openedFiles = FileManager.default.temporaryDirectory.appendingPathComponent("attachments", isDirectory: true)
 
+    /// Tells the watch to drop its kept copy of Coach's thread (`WatchPush.forget`), with this session's mark; nothing on a
+    /// Mac or with no watch. Settable for the tests.
+    static var forgetOnWatch: @MainActor () -> Void = {
+        WatchPushRelay.toWatch(WatchPush(.forget, at: Date()), mark: PhoneWatchMark.current())
+    }
+
     /// The attachments opened full size, alone: a deleted conversation's copies go with it (`deleteSetupChat`).
     static func removeOpenedAttachments() {
         try? FileManager.default.removeItem(at: openedFiles)
@@ -8821,6 +8827,9 @@ final class AppModel: ObservableObject {
         // An attachment opened from it keeps a copy on the phone, which would outlive "deleted for good": that folder is only
         // a cache, so all of it goes.
         Self.removeOpenedAttachments()
+        // The watch's kept Coach thread can hold this conversation's turns (its words go to Coach's own chat when its
+        // requests are switched off): it drops that copy. Only a cache, read again on its next visit.
+        Self.forgetOnWatch()
         if setupChat == session || (setupChat == nil && setupThread.session == session) { newSetupChat() }
         return .gone
     }
