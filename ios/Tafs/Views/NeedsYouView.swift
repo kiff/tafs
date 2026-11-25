@@ -57,6 +57,7 @@ struct NeedsYouView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
+            .pageColumn(PageWidth.reading)
         }
         // A hold opened from its notification is brought into view (kiff/tafs#210).
         .onChange(of: model.requestedHold) { request in scroll(to: request, reader) }

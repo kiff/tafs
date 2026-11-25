@@ -41,6 +41,7 @@ struct UsageView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
+            .pageColumn(PageWidth.reading)
         }
         .screenBackground()
         .navigationTitle(Self.title)

@@ -36,7 +36,7 @@ struct CalendarView: View {
                     if layout == .wide { wide } else { compact }
                 }
                 .padding(layout == .wide ? 24 : 16)
-                .frame(maxWidth: 1180, alignment: .leading)
+                .pageColumn(PageWidth.calendar)
             }
             .refreshable { await model.loadCalendar(state) }
         }

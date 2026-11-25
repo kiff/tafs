@@ -93,6 +93,7 @@ struct ShareTafSheet: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .pageColumn(PageWidth.list)
             .screenBackground()
             .navigationTitle(Words.People.Share.title(taf: "\(taf.name)"))
             .navigationBarTitleDisplayMode(.inline)
@@ -270,10 +271,9 @@ struct OverviewView: View {
                 }
             }
             .padding(24)
-            .frame(maxWidth: 980, alignment: .leading)
-            // The column stretches to the pane's width, so the cream reaches both edges (the owner's iPad:
+            // The column is centred and stretches to the pane's width, so the cream reaches both edges (the owner's iPad:
             // white strips beside a 980-point column), as the recipes' pane does.
-            .frame(maxWidth: .infinity)
+            .pageColumn(PageWidth.list)
         }
         .screenBackground()
         .navigationDestination(isPresented: $showingHowItWorks) { HowTafsWorksView() }

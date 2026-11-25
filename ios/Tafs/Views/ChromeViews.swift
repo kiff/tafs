@@ -135,6 +135,7 @@ struct ChromesView: View {
             }
         }
         .scrollContentBackground(.hidden)
+        .pageColumn(PageWidth.reading)
         .screenBackground()
         .navigationTitle(Self.title)
         .task { await model.refreshChromes() }

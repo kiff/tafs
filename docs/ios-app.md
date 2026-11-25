@@ -225,7 +225,7 @@ the app in sample mode.
   - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
     and opens Account beside the sidebar.
   - **the detail pane is the app's cream, edge to edge,** at every width and in split view: the
-    Overview's 980-point column stretches to the pane, and every list in it (Connect apps, an app's
+    Overview's centred 980-point column stretches to the pane, and every list in it (Connect apps, an app's
     connections, a connection, what a Card counted) hides its grey for `screenBackground`;
   - **the Overview's Needs you** lists the held calls, then, when Needs you counts more (a Coach chat,
     a step, "Did this happen?", Card units, as tafs cloud's `needs_you.count` does), one line in its
@@ -1433,6 +1433,26 @@ on KIFF's page. **Turn off** goes straight from the app (`PUT /v1/me/sign-in {"e
 about the change. **Turn on** opens KIFF's own `/dashboard/sign-in` in the private sheet, because turning it on needs a recent
 sign-in, which a device session never passes; the setting is read again when the sheet closes. When KIFF can't send codes
 (`available` false) the row says so and offers nothing.
+
+How signing in keeps a taf's actions checked ("Every action a taf takes goes through KIFF…") sits in this section, under the
+setting, and, in the sample, beside **Sign in with KIFF**: an explanation beside its action, never a section of its own.
+**How tafs works** is one entry of its own, below.
+
+## One centred column on a wide window
+
+On the iPad and the Mac, every page is one column, centred in the window, at most its width in `PageWidth`
+(`Design/Components.swift`), with its text and rows aligned left inside it, as every app does (docs/parity.md, "One layout on
+every app"):
+
+- **720 points, reading pages:** Account (and the KIFF account's page), Devices, People, Alerts, Chrome, Needs you, Connect apps,
+  Plan & usage;
+- **980, list pages:** the Overview, sharing a taf, an app's connections;
+- **640, the recipe gallery** (and Home's recipes with no taf yet);
+- **1100, the Brief;** **1180, Calendar.**
+
+Each page takes its width through `pageColumn(_:)`, before its `screenBackground()`, so the cream still reaches both edges. On a
+window narrower than the width nothing changes, so the iPhone is as it was. No page sets one of these numbers itself
+(`HomeSidebarTests.testEveryPageIsACentredColumnOfItsNamedWidth`).
 
 ## Store status: a read-only look at App Store Connect
 

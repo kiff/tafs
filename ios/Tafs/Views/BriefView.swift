@@ -42,6 +42,7 @@ struct BriefView: View {
                     }
                 }
                 .padding(.horizontal, 16).padding(.vertical, 12)
+                .pageColumn(PageWidth.brief)
             }
             .screenBackground()
             .navigationDestination(isPresented: $screenshotLog) {

@@ -63,6 +63,7 @@ struct NotificationSettingsView: View {
             }
         }
         .scrollContentBackground(.hidden)
+        .pageColumn(PageWidth.reading)
         .screenBackground()
         .navigationTitle(Self.title)
         .task { await model.loadPhoneAlerts() }

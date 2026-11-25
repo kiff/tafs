@@ -51,6 +51,7 @@ struct DevicesView: View {
             if model.mode == .kiff { passkeys }
         }
         .scrollContentBackground(.hidden)
+        .pageColumn(PageWidth.reading)
         .screenBackground()
         .navigationTitle(Self.title)
         .task { await model.refreshDevices(); await model.refreshPasskeys() }

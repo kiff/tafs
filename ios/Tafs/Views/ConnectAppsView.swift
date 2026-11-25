@@ -64,6 +64,7 @@ struct ConnectAppsView: View {
             }
         }
         .scrollContentBackground(.hidden)
+        .pageColumn(PageWidth.reading)
         // The app's cream, not the list's grey, as every screen in the detail pane.
         .screenBackground()
         .navigationTitle(Self.title)
@@ -627,6 +628,7 @@ struct AppConnectionsView: View {
             }
         }
         .scrollContentBackground(.hidden)
+        .pageColumn(PageWidth.list)
         // The app's cream, not the list's grey, as every screen in the detail pane.
         .screenBackground()
         .navigationTitle(Words.Connect.Apps.yourConnections(app: "\(app.displayName)"))
