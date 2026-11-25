@@ -46,7 +46,7 @@
   "step_stopped": { "message": "הופסק" },
   "step_closed": { "message": "הסתיים" },
   "step_refused": { "message": "לא בוצע ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "לא בוצע: הזזת את הלשונית הזו, אז עכשיו היא שלך" },
+  "step_refused_given_back": { "message": "לא בוצע: הלשונית זזה בלי ה-taf, אז עכשיו היא שלך" },
   "step_refused_page_changed": { "message": "לא בוצע: הדף השתנה לפני כן" },
   "step_refused_no_back": { "message": "לא בוצע: אין דף לחזור אליו" },
   "step_refused_site_not_listed": { "message": "לא בוצע: האתר הזה אינו מהאתרים של ה-taf הזה" },

@@ -159,7 +159,7 @@
       }
     }
   },
-  "step_refused_given_back": { "message": "नहीं हुआ: आपने यह टैब बदला, इसलिए अब यह आपका है" },
+  "step_refused_given_back": { "message": "नहीं हुआ: टैब taf के बिना बदल गया, इसलिए अब यह आपका है" },
   "step_refused_page_changed": { "message": "नहीं हुआ: पेज पहले ही बदल गया" },
   "step_refused_no_back": { "message": "नहीं हुआ: वापस जाने के लिए कोई पेज नहीं है" },
   "step_refused_site_not_listed": { "message": "नहीं हुआ: वह साइट इस taf की साइटों में नहीं है" },
