@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { countOnAmountWrite, dayTotalTwice, type ApprovalGrant } from "../src/cloud/approval.js";
-import { cardsFromRules, moneyCardsOff, rulesAgreement, rulesMismatch, rulesUnnamedFigures, type AgreedRule, type MoneyCard } from "../src/cloud/rules.js";
+import { cardsFromRules, moneyCardsOff, rulesAgreement, rulesMismatch, rulesUnnamedFigures, saysEveryCallAsks, type AgreedRule, type MoneyCard } from "../src/cloud/rules.js";
 
 // A phone test, 25 Nov: "every refund waits for you, a refund over €50 is refused, €200
 // a day at most". Coach drafted the refund's Cards by hand eleven times, KIFF or tafs cloud refused each, and Coach went
@@ -145,7 +145,9 @@ describe("a money tool's Cards are built from the rules the owner agreed (cardsF
     // Every refund held and €200 a day refused, no cap on each: the held Card would limit no amount.
     expect(of([EVERY_ONE, DAY])).toMatchObject({ unbuilt: "held_bound" });
     // Ask past €5 a refund, nothing else: no total for the held Card, and no refused day's total for KIFF's count.
-    expect(of([{ quantity: "sum(amount)", window: "call", limit: 500 }])).toMatchObject({ unbuilt: "held_total" });
+    expect(of([{ quantity: "sum(amount)", window: "call", limit: 500, over: "ask" }])).toMatchObject({ unbuilt: "held_total" });
+    // The same figure saying nothing of its own over, under a rule that asks: shown again with its over said.
+    expect(of([{ quantity: "sum(amount)", window: "call", limit: 500 }])).toMatchObject({ unbuilt: "ask_inherited" });
     // A count of a money tool's calls.
     expect(of([{ quantity: "count", window: "calendar_day", limit: 3 }, DAY])).toMatchObject({ unbuilt: "count" });
   });
@@ -259,5 +261,64 @@ describe("a rule that asks with no figure that asks gives no Cards", () => {
   it("with nothing asking (over: refuse), the refused Card alone is what was agreed", () => {
     const refused: AgreedRule[] = [{ tool: "create_refund", over: "refuse", limits: [EACH, DAY] }, ...reads];
     expect(cardsFromRules([stripe], refused, AGENT)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", cards: [REFUSED] }]);
+  });
+});
+
+// Narrower than asks_unnamed: the words say every refund asks, but the figure that asks is a positive cap (one that
+// inherits the rule's `over: "ask"`, or Coach's €0.01), so refunds under it would run unasked.
+describe("words that say every call asks hold the rule to a count of 0 a day that asks", () => {
+  const WORDS = "Every refund asks you first. A refund over 50 EUR is refused. Refunds past 200 EUR in a day are refused.";
+  const inherited: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [{ ...EACH, over: undefined }, DAY] }, ...reads];
+
+  it("reads the words in each language Coach writes the rules in", () => {
+    for (const text of [
+      WORDS, "Each refund waits for your approval.",
+      "Chaque remboursement attend votre accord.", "Jede Erstattung wartet auf deine Zustimmung.",
+      "Cada reembolso espera tu aprobación.", "Ogni rimborso aspetta la tua approvazione.",
+      "Elke terugbetaling wacht op je goedkeuring.", "Każdy zwrot czeka na twoją zgodę.", "Cada reembolso espera a sua aprovação.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(true);
+  });
+
+  it("reads the will, must, passive and goes-to-you forms, in each language", () => {
+    for (const text of [
+      "Every refund will ask you first.", "Every refund must ask you.", "Each refund is approved by you first.",
+      "Every refund goes to you first.", "Each refund needs you to approve it.", "Every refund must be confirmed by you.",
+      "Chaque remboursement vous sera soumis.", "Chaque remboursement est validé par vous.", "Chaque remboursement passe d'abord par vous.",
+      "Jede Erstattung wird dich zuerst fragen.", "Jede Erstattung muss von dir freigegeben werden.", "Jede Erstattung geht zuerst an dich.",
+      "Cada reembolso te preguntará.", "Cada reembolso debe ser aprobado por ti.", "Cada reembolso pasa primero por ti.",
+      "Ogni rimborso ti chiederà.", "Ogni rimborso deve essere approvato da te.", "Ogni rimborso passa prima da te.",
+      "Elke terugbetaling zal je eerst vragen.", "Elke terugbetaling moet worden goedgekeurd door jou.", "Elke terugbetaling gaat eerst naar jou.",
+      "Każdy zwrot zapyta cię.", "Każdy zwrot musi być zatwierdzony przez ciebie.", "Każdy zwrot trafia najpierw do ciebie.",
+      "Cada reembolso perguntará-lhe.", "Cada reembolso deve ser aprovado por você.", "Cada reembolso passa primeiro por você.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(true);
+  });
+
+  it("never reads a figure that asks, or a rule with no asking, as every call", () => {
+    for (const text of [
+      "Every refund over 50 EUR asks you first.", "Each refund past €5 waits for your approval.",
+      "A refund over 50 EUR is refused. Every call is pinned to test mode.", "Listing and reading payments is open.",
+      "Chaque remboursement de plus de 50 EUR attend votre accord.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(false);
+  });
+
+  it("a figure inheriting ask gives no Cards in any language; a positive cap that asks gives none under those words", () => {
+    for (const text of [WORDS, "Minden visszatérítés előbb téged kérdez.", ""]) {
+      expect(cardsFromRules([stripe], inherited, AGENT, text)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "ask_inherited" }]);
+    }
+    const cent: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [{ quantity: "sum(amount)", window: "call", limit: 1, over: "ask" }, EACH, DAY] }, ...reads];
+    expect(cardsFromRules([stripe], cent, AGENT, WORDS)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "every_call_unheld" }]);
+    expect(moneyCardsOff([stripe], [readsCard, limitsCard(), holdCard(cap(5000), [kiffsCount])], inherited, AGENT, WORDS)).toMatchObject({ unbuilt: "ask_inherited" });
+  });
+
+  it("with the count of 0 a day that asks, the same words build the held and refused Cards", () => {
+    const named: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [EVERY_ONE, EACH, DAY] }, ...reads];
+    expect(cardsFromRules([stripe], named, AGENT, WORDS)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", cards: [REFUSED, HELD] }]);
+  });
+
+  it("without those words, a figure that asks is built as before: \"ask past €5 a refund\"", () => {
+    const ask5: AgreedRule[] = [{ tool: "create_refund", over: "refuse", limits: [{ quantity: "sum(amount)", window: "call", limit: 500, over: "ask" }, { ...DAY, over: undefined }] }, ...reads];
+    const text = "A refund over 5 EUR asks you first. Refunds past 200 EUR in a day are refused.";
+    expect(saysEveryCallAsks(text)).toBe(false);
+    expect(cardsFromRules([stripe], ask5, AGENT, text)[0]).toHaveProperty("cards");
   });
 });
