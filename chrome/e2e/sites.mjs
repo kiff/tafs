@@ -265,6 +265,26 @@ export class FixtureSites {
     // On any host: a link to `to`, a 302 to `to`, and a page that only says where it is (the fence's targets: bank.shop.test,
     // accounts.google.com, me.github.io, an address).
     const to = new URL(req.url, "https://x").searchParams.get("to");
+    // A one-page PDF (an invoice): what a run's own tab shows in Chrome's viewer.
+    if (path === "/invoice.pdf") {
+      const text = "Invoice 42 total 18.40";
+      const stream = `BT /F1 18 Tf 72 720 Td (${text}) Tj ET`;
+      const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>", "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>", `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"];
+      let body = "%PDF-1.4\n";
+      const offs = [];
+      objs.forEach((o, i) => { offs.push(body.length); body += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+      const xref = body.length;
+      body += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map((o) => String(o).padStart(10, "0") + " 00000 n \n").join("") + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+      res.writeHead(200, { "content-type": "application/pdf", "cache-control": "no-store" }).end(body);
+      return;
+    }
+    // A page whose button sends the tab elsewhere `ms` after it's pressed (a submit handler on a timer): a navigation the page starts
+    // after the taf's act has returned.
+    if (path === "/late-move" && to) {
+      const ms = Math.min(Number(new URL(req.url, "https://x").searchParams.get("ms")) || 2500, 5000);
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }).end(page("Later", `<h1>Later</h1><button type="button" onclick="setTimeout(() => location.assign(${JSON.stringify(to).replace(/"/g, "&quot;")}), ${ms})">Send later</button>`));
+      return;
+    }
     // A page whose answer is held `ms` milliseconds (at most 5 s): its navigation is in flight that long, headers not yet answered.
     if (path === "/slow") {
       const ms = Math.min(Number(new URL(req.url, "https://x").searchParams.get("ms")) || 1000, 5000);

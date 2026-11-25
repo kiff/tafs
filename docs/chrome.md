@@ -542,6 +542,8 @@ was done.
   measures each case):
   - A page the run loaded keeps its sandbox for its whole life, so after the run lets its tab go, that page's dialogs stay
     silent until it's loaded again.
+  - A navigation the page starts by itself after the taf's act has returned (a submit handler on a timer, a script's redirect
+    once the page settles) loads with no sandbox, as before it: its load-time dialogs reach Chromium.
   - An address the person types while the run's own navigation is still in flight loads sandboxed. The rule comes off as
     their navigation starts, but Chrome sends their request before that change lands.
 - **Every https site is granted at install, so nothing in a run asks Chrome for one.** The owner chose it (23 Nov: "closer to Claude in

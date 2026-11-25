@@ -9,13 +9,17 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { playwright, start, newRun, ref, until, tabAt, runState } from "./harness.mjs";
+import { joining } from "./joining.mjs";
 
 const skip = !playwright;
 const TRIES = Number(process.env.SANDBOX_TRIES || 20);
 let h;
+let j;
 
 before(async () => {
-  if (!skip) h = await start();
+  if (skip) return;
+  h = await start({ cloud: true });
+  j = await joining(h);
 });
 
 after(async () => {
@@ -132,4 +136,62 @@ test(`(a, in flight) an address the person types while the run's own open is hel
   }
   console.log(`MEASURE (a, in flight) typed address while the run's open was held loaded sandboxed: ${sandboxed}/${tried} (of ${TRIES} tries)`);
   assert.ok(tried > 0, "no try reached the person's page: the window wasn't measured");
+});
+
+// ---- The reviewers' cases ----
+
+test("a PDF the run opens in a tab of its own loads under the sandbox and Chrome still shows it: the open answers as it does with no sandbox", { skip }, async () => {
+  // The same PDF in a tab of the person's, with no run: what Chrome shows there.
+  const plain = await h.context.newPage();
+  const plainURL = h.sites.url("shop.test", "/invoice.pdf?case=person");
+  await plain.goto(plainURL).catch(() => {});
+  const plainType = await plain.evaluate(() => document.contentType).catch(() => "unreadable");
+  await plain.close();
+  const run = newRun("pdf");
+  const url = h.sites.url("shop.test", "/invoice.pdf?case=run");
+  const r = await h.planque.sendStep({ op: "open", run, url });
+  const tab = await until(() => tabAt(h, url), "the run's tab on the PDF", 10_000);
+  const runType = await tab.evaluate(() => document.contentType).catch(() => "unreadable");
+  console.log(`MEASURE PDF: open ${r.ok ? "ok" : r.error.code}; the person's tab shows ${plainType}, the run's ${runType}`);
+  assert.equal(runType, plainType, "the run's tab doesn't show the PDF as Chrome does with no sandbox");
+  assert.ok(h.sites.hits.some((x) => x.includes("/invoice.pdf?case=run")), "the PDF was asked for");
+  await h.fromPanel({ type: "stop", run });
+});
+
+test(`a navigation the page starts after the taf's act has returned loads with no sandbox: its load-time confirm reaches Chromium, and the tab is the person's (${TRIES} tries, logged)`, { skip }, async () => {
+  let reachedChromium = 0;
+  for (let i = 0; i < TRIES; i++) {
+    const run = newRun("late" + i);
+    const tag = "late-" + i;
+    const url = h.sites.url("shop.test", "/late-move?ms=2500&to=" + encodeURIComponent(confirmPage(tag)) + "&case=" + tag);
+    const opened = await open(run, url);
+    const clicked = await h.planque.sendStep({ op: "act", run, read_id: opened.page.read_id, act: { kind: "click", ref: ref(opened.page, "Send later", "controls") } });
+    assert.equal(clicked.ok, true, JSON.stringify(clicked.error));
+    // The page moves 2.5 s after the click; its next page asks as it loads. Wait for that page's answer, whichever way it went.
+    await until(async () => {
+      const p = h.context.pages().find((x) => x.url().includes(tag) && x.url().includes("at-load-confirm"));
+      return p && /accepted|refused/.test((await p.textContent("#out").catch(() => "")) || "");
+    }, "the page's late move, loaded", 10_000);
+    if (reached(tag).length) reachedChromium++;
+    await h.fromPanel({ type: "stop", run });
+  }
+  console.log(`MEASURE late navigation after the act returned: load-time confirm reached Chromium ${reachedChromium}/${TRIES}`);
+});
+
+test(`a run's act that moves the person's joined tab never sandboxes it: the next page's confirm as it loads reaches the person (${TRIES} tries)`, { skip }, async () => {
+  let sandboxed = 0;
+  for (let i = 0; i < TRIES; i++) {
+    const tag = "joined-" + i;
+    const hub = h.sites.url("shop.test", "/link-to?to=" + encodeURIComponent(confirmPage(tag)) + "&case=" + tag);
+    const { agentRun } = await j.sendFromPanel(hub);
+    const run = newRun("joined-sb" + i);
+    const opened = await j.step({ op: "open", run, url: hub, agent_run: agentRun });
+    assert.equal(opened.ok, true, JSON.stringify(opened.error));
+    await j.step({ op: "act", run, agent_run: agentRun, read_id: opened.page.read_id, act: { kind: "click", ref: ref(opened.page, "Go there", "links") } });
+    await until(async () => /accepted|refused/.test((await j.owner.textContent("#out").catch(() => "")) || ""), "the joined tab's next page, loaded", 10_000);
+    if ((await j.owner.textContent("#out")) !== "accepted" || reached(tag).length !== 1) sandboxed++;
+    await h.fromPanel({ type: "stop", run });
+  }
+  console.log(`MEASURE joined tab moved by the run's act: its next page loaded sandboxed ${sandboxed}/${TRIES}`);
+  assert.equal(sandboxed, 0);
 });

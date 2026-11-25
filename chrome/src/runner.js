@@ -370,6 +370,9 @@ export class Runner {
     rules.push({ id: ids[5], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: "^http://" } });
     rules.push({ id: ids[6], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: USER_INFO } });
     SENSITIVE_LABELS_URLS.forEach((regexFilter, i) => rules.push({ id: ids[8 + i], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter } }));
+    // The whole id range goes, the sandbox's included: a fence made again while the run's own navigation is in flight (a pop-up's,
+    // an allowance's) drops that navigation's sandbox. That fails open to the onCommitted guard, as before the sandbox, on purpose:
+    // a sandbox is never left on longer than asked.
     await dnr.updateSessionRules({ removeRuleIds: ids, addRules: rules });
   }
 
