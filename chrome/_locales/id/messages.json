@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Terlalu besar: paling banyak $SIZE$ untuk jenis file ini", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Jenis file ini tidak bisa dilampirkan. Hanya foto, PDF, teks, CSV, Markdown, Word, atau Excel." },
   "attach_too_many": { "message": "Paling banyak 5 file per pesan." },
-  "attach_failed": { "message": "Tidak terunggah. Hapus lalu coba lagi." }
+  "attach_failed": { "message": "Tidak terunggah. Hapus lalu coba lagi." },
+  "working_here": { "message": "$TAF$ sedang bekerja di sini", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Mengeklik" },
+  "pointer_fill": { "message": "Mengetik" },
+  "pointer_select": { "message": "Memilih" },
+  "pointer_check": { "message": "Mencentang" },
+  "pointer_press": { "message": "Menekan tombol" },
+  "pointer_scroll": { "message": "Menggulir" },
+  "pointer_read": { "message": "Membaca" }
 }

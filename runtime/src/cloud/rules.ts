@@ -125,17 +125,26 @@ function kiffsCountAgreed(l: AgreedLimit): boolean {
  * A rule's figures, read whole or not at all: 1 to 4, each with a quantity as a Card writes it (`count`, `sum(<arg>)`,
  * matched exactly), a window of `call` or `calendar_day` (with a `per`, any of an aggregate's windows), a whole limit
  * from 0 (never) to 2^53−1, and, if it says one, an `over` of ask or refuse, with no quantity, window and per twice. An empty list is no figures read, never figures agreed, so the notice carries no rules.
+ * A count for each call is read as what it means: KIFF counts calls over a window, never for one call ("a count per action
+ * is always one", so it refuses one as a per-action limit). 0 for each call is every call past its limit, the same as 0 a
+ * calendar day, and is read as that, so the Cards hold it (a phone test, 25 Nov: "every refund waits for you" agreed as a count of
+ * 0 for each call, which no Card KIFF signs can carry). Any other count for each call limits nothing, and the notice carries no rules.
  */
 function limitsOf(given: unknown): AgreedLimit[] | undefined {
   if (!Array.isArray(given) || given.length === 0 || given.length > LIMITS_MAX) return undefined;
   const out: AgreedLimit[] = [];
   for (const l of given as unknown[]) {
-    const { quantity, window, limit, over, per } = (l ?? {}) as { quantity?: unknown; window?: unknown; limit?: unknown; over?: unknown; per?: unknown };
+    const { quantity, window: given, limit, over, per } = (l ?? {}) as { quantity?: unknown; window?: unknown; limit?: unknown; over?: unknown; per?: unknown };
     if (typeof quantity !== "string" || !QUANTITY.test(quantity)) return undefined;
     if (per !== undefined && (typeof per !== "string" || !PER.test(per))) return undefined;
-    if (typeof window !== "string" || (per === undefined ? window !== "call" && window !== "calendar_day" : !PER_WINDOWS.has(window))) return undefined;
+    if (typeof given !== "string" || (per === undefined ? given !== "call" && given !== "calendar_day" : !PER_WINDOWS.has(given))) return undefined;
+    let window: string = given;
     if (typeof limit !== "number" || !Number.isSafeInteger(limit) || limit < 0) return undefined;
     if (over !== undefined && over !== "ask" && over !== "refuse") return undefined;
+    if (quantity === "count" && window === "call") {
+      if (limit !== 0) return undefined;
+      window = "calendar_day";
+    }
     if (out.some((x) => x.quantity === quantity && x.window === window && x.per === per)) return undefined;
     out.push({ quantity, window, limit, ...(over === undefined ? {} : { over }), ...(per === undefined ? {} : { per }) });
   }

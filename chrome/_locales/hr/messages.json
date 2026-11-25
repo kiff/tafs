@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Prevelika: najviše $SIZE$ za ovu vrstu datoteke", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Ova se vrsta datoteke ne može priložiti. Samo fotografije, PDF, tekst, CSV, Markdown, Word ili Excel." },
   "attach_too_many": { "message": "Najviše 5 datoteka po poruci." },
-  "attach_failed": { "message": "Nije preneseno. Uklonite je i pokušajte ponovno." }
+  "attach_failed": { "message": "Nije preneseno. Uklonite je i pokušajte ponovno." },
+  "working_here": { "message": "$TAF$ radi ovdje", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Klikće" },
+  "pointer_fill": { "message": "Tipka" },
+  "pointer_select": { "message": "Odabire" },
+  "pointer_check": { "message": "Označava" },
+  "pointer_press": { "message": "Pritišće tipku" },
+  "pointer_scroll": { "message": "Pomiče" },
+  "pointer_read": { "message": "Čita" }
 }

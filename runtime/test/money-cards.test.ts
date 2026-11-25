@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { countOnAmountWrite, dayTotalTwice, type ApprovalGrant } from "../src/cloud/approval.js";
-import { cardsFromRules, moneyCardsOff, rulesMismatch, rulesUnnamedFigures, type AgreedRule, type MoneyCard } from "../src/cloud/rules.js";
+import { cardsFromRules, moneyCardsOff, rulesAgreement, rulesMismatch, rulesUnnamedFigures, type AgreedRule, type MoneyCard } from "../src/cloud/rules.js";
 
 // A phone test, 25 Nov: "every refund waits for you, a refund over €50 is refused, €200
 // a day at most". Coach drafted the refund's Cards by hand eleven times, KIFF or tafs cloud refused each, and Coach went
@@ -152,6 +152,22 @@ describe("a money tool's Cards are built from the rules the owner agreed (cardsF
   it("reads, and writes whose rules have no amount, are the other checks' alone", () => {
     expect(cardsFromRules([stripe], [{ tool: "create_refund", over: "ask", limits: [EVERY_ONE] }, ...reads], AGENT)).toEqual([]);
     expect(cardsFromRules([stripe], reads, AGENT)).toEqual([]);
+  });
+});
+
+// The rebuild's second try, 25 Nov: Coach agreed "every refund waits for you" as a count of 0 for each call. Read as 0 a
+// day (rules.ts, limitsOf), it builds the same two Cards KIFF signs, never a per-call count KIFF refuses.
+describe("every refund held, written as 0 for each call", () => {
+  it("builds the refused Card and the held one, as 0 a day", () => {
+    const shown = { type: "notice", id: "rules-1", text: "Every refund waits for your approval first. Over 50 EUR refused, 200 EUR a day.", rules: [
+      { tool: "create_refund", over: "ask", limits: [{ quantity: "count", window: "call", limit: 0, over: "ask" }, { ...EACH }, { ...DAY }] }, ...reads] };
+    const agreement = rulesAgreement([{ kind: "component", run: "r1", body: shown },
+      { kind: "component", run: "r1", body: { type: "confirm", id: "agree-1", agrees: "rules-1", options: [{ value: "agree" }] } },
+      { kind: "answered", run: "r1", body: { id: "agree-1", type: "confirm", answer: "agree" } }]);
+    expect(agreement.state).toBe("agreed");
+    const rules = agreement.state === "agreed" ? agreement.rules : [];
+    expect(cardsFromRules([stripe], rules, AGENT)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", cards: [REFUSED, HELD] }]);
+    expect(JSON.stringify(cardsFromRules([stripe], rules, AGENT))).not.toContain('"quantity":"count","max"');
   });
 });
 

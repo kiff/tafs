@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Преголема: најмногу $SIZE$ за овој вид датотека", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Овој вид датотека не може да се прикачи. Само фотографии, PDF, текст, CSV, Markdown, Word или Excel." },
   "attach_too_many": { "message": "Најмногу 5 датотеки по порака." },
-  "attach_failed": { "message": "Не се прикачи. Отстранете ја и обидете се повторно." }
+  "attach_failed": { "message": "Не се прикачи. Отстранете ја и обидете се повторно." },
+  "working_here": { "message": "$TAF$ работи тука", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Кликнува" },
+  "pointer_fill": { "message": "Пишува" },
+  "pointer_select": { "message": "Избира" },
+  "pointer_check": { "message": "Штиклира" },
+  "pointer_press": { "message": "Притиска копче" },
+  "pointer_scroll": { "message": "Лизга" },
+  "pointer_read": { "message": "Чита" }
 }
