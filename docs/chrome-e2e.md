@@ -260,11 +260,13 @@ failure.
 - **A page's `alert` or `confirm` as it loads reaches Chromium as a real dialog** (`gaps2.e2e.test.js`). `runner.js` installs
   the dialog guard (`installDialogGuard`, in the page's own world) with `scripting.executeScript` from
   `webNavigation.onCommitted`. That's after the document has started, so a page's own inline script runs first, and its
-  confirm can be answered yes. The guard has to be in place "as each document starts" (`docs/chrome.md`), which takes a
-  content script registered at `document_start`.
+  confirm can be answered yes. The guard has to be in place "as each document starts" (`docs/chrome.md`). A content script
+  can't be scoped to a run's tab; a `declarativeNetRequest` `modifyHeaders` rule by `tabIds` can, giving the run's own tabs'
+  pages a CSP `sandbox` without `allow-modals`.
 - **A field inside a disabled `<fieldset>` takes the taf's fill** (`gaps2.e2e.test.js`). `page.js` checks the field's own
   `disabled` attribute, which is false there; it should check `:disabled`.
-- **A `readonly` field takes the taf's fill** (`gaps2.e2e.test.js`). `page.js` has no read-only check.
+- **A `readonly` field takes the taf's fill** (`gaps2.e2e.test.js`). `page.js` has no read-only check. The check belongs on
+  text-like inputs and textareas only (`el.readOnly`): browsers ignore `readonly` on checkboxes, radios, selects and buttons.
 - **A disabled `<option>` is selected** (`gaps2.e2e.test.js`). `page.js` finds the option without looking at
   `option.disabled`.
 - **`check` with `unchecked` on a checked radio answers ok, though nothing changed** (`gaps2.e2e.test.js`). A click never

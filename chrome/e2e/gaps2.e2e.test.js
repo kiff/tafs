@@ -74,7 +74,7 @@ test("a field in a disabled fieldset: the taf's fill is refused `disabled`, and 
 
 test("a read-only field: the taf's fill is refused, and its value stays as the page set it", {
   skip,
-  todo: "page.js act has no read-only check: a fill of <input readonly> sets its value and fires input, where the person can't type at all. It should be refused as `disabled` is (el.readOnly, or el.matches(':read-only') for a field).",
+  todo: "page.js act has no read-only check: a fill of <input readonly> sets its value and fires input, where the person can't type at all. It should be refused as `disabled` is, by el.readOnly on a text-like input or a textarea only (browsers ignore readonly on checkboxes, radios, selects, buttons and file inputs, which :read-only would wrongly match).",
 }, async () => {
   const c = await controls("readonly");
   const r = await c.act({ kind: "fill", ref: ref(c.page, "Read-only code"), value: "changed by the taf" });
@@ -166,7 +166,7 @@ test("planque's stop of a run this Chrome doesn't hold changes nothing", { skip 
 
 test("an alert a page raises as it loads never reaches Chromium, nor holds the open", {
   skip,
-  todo: "runner.js installs the dialog guard (installDialogGuard, world MAIN) with scripting.executeScript from webNavigation.onCommitted, after the document has started: a page's own inline script runs first, so its alert or confirm as it loads reaches Chromium as a real dialog, blocking the page until answered (here the harness accepts it, so the page's confirm is answered yes). docs/chrome.md says the guard goes in 'as each document starts'; that needs a content script registered at document_start in the MAIN world (scripting.registerContentScripts, for the run's sites), not onCommitted.",
+  todo: "runner.js installs the dialog guard (installDialogGuard, world MAIN) with scripting.executeScript from webNavigation.onCommitted, after the document has started: a page's own inline script runs first, so its alert or confirm as it loads reaches Chromium as a real dialog, blocking the page until answered (here the harness accepts it, so the page's confirm is answered yes). docs/chrome.md says the guard goes in 'as each document starts'. A content script registered for the run's sites can't be scoped to a tab and would run in the person's own tabs; what can be is a declarativeNetRequest modifyHeaders rule by tabIds that gives the run's own tabs' main_frame a CSP sandbox without allow-modals.",
 }, async () => {
   const dialogs = h.dialogs.length;
   const run = newRun("alert-load");
@@ -180,7 +180,7 @@ test("an alert a page raises as it loads never reaches Chromium, nor holds the o
 
 test("a confirm a page raises as it loads is answered no, never reaches Chromium, and the read says the page asked", {
   skip,
-  todo: "runner.js installs the dialog guard (installDialogGuard, world MAIN) with scripting.executeScript from webNavigation.onCommitted, after the document has started: a page's own inline script runs first, so its alert or confirm as it loads reaches Chromium as a real dialog, blocking the page until answered (here the harness accepts it, so the page's confirm is answered yes). docs/chrome.md says the guard goes in 'as each document starts'; that needs a content script registered at document_start in the MAIN world (scripting.registerContentScripts, for the run's sites), not onCommitted.",
+  todo: "runner.js installs the dialog guard (installDialogGuard, world MAIN) with scripting.executeScript from webNavigation.onCommitted, after the document has started: a page's own inline script runs first, so its alert or confirm as it loads reaches Chromium as a real dialog, blocking the page until answered (here the harness accepts it, so the page's confirm is answered yes). docs/chrome.md says the guard goes in 'as each document starts'. A content script registered for the run's sites can't be scoped to a tab and would run in the person's own tabs; what can be is a declarativeNetRequest modifyHeaders rule by tabIds that gives the run's own tabs' main_frame a CSP sandbox without allow-modals.",
 }, async () => {
   const dialogs = h.dialogs.length;
   const run = newRun("confirm-load");
