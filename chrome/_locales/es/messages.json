@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "no hecho: la página cambió antes" },
   "step_refused_no_back": { "message": "no hecho: no hay ninguna página a la que volver" },
   "step_refused_site_not_listed": { "message": "no hecho: ese sitio no es de este taf" },
-  "step_refused_paused_by_owner": { "message": "no hecho: en pausa mientras usas esta pestaña" },
+  "step_refused_paused_by_owner": { "message": "no hecho: está en pausa hasta que lo reanudes" },
   "step_refused_no_page": { "message": "no hecho: no tiene ninguna página abierta" },
   "step_refused_browser_unavailable": { "message": "no hecho: Chrome no pudo hacerlo" },
   "coach_title": { "message": "Coach", "description": "Side panel title" },

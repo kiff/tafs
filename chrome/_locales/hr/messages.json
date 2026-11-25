@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "nije učinjeno: stranica se prije toga promijenila" },
   "step_refused_no_back": { "message": "nije učinjeno: nema stranice na koju bi se vratio" },
   "step_refused_site_not_listed": { "message": "nije učinjeno: ta stranica nije među stranicama ovog tafa" },
-  "step_refused_paused_by_owner": { "message": "nije učinjeno: pauzirano dok koristite ovu karticu" },
+  "step_refused_paused_by_owner": { "message": "nije učinjeno: pauziran je dok ga ne nastavite" },
   "step_refused_no_page": { "message": "nije učinjeno: za njega nije otvorena nijedna stranica" },
   "step_refused_browser_unavailable": { "message": "nije učinjeno: Chrome to nije mogao" },
   "coach_title": { "message": "Coach" },

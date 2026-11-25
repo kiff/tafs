@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "nevykonané: stránka sa medzitým zmenila" },
   "step_refused_no_back": { "message": "nevykonané: nie je kam sa vrátiť" },
   "step_refused_site_not_listed": { "message": "nevykonané: ten web nepatrí k webom tohto tafu" },
-  "step_refused_paused_by_owner": { "message": "nevykonané: pozastavené, kým používate túto kartu" },
+  "step_refused_paused_by_owner": { "message": "nevykonané: je pozastavený, kým ho neobnovíte" },
   "step_refused_no_page": { "message": "nevykonané: nemá otvorenú žiadnu stránku" },
   "step_refused_browser_unavailable": { "message": "nevykonané: Chrome to nedokázal" },
   "coach_title": { "message": "Coach" },

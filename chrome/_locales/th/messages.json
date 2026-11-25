@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "ยังไม่ได้ทำ: หน้าเปลี่ยนไปก่อนแล้ว" },
   "step_refused_no_back": { "message": "ยังไม่ได้ทำ: ไม่มีหน้าให้ย้อนกลับ" },
   "step_refused_site_not_listed": { "message": "ยังไม่ได้ทำ: เว็บไซต์นั้นไม่ใช่ของ taf นี้" },
-  "step_refused_paused_by_owner": { "message": "ยังไม่ได้ทำ: หยุดชั่วคราวขณะที่คุณใช้แท็บนี้" },
+  "step_refused_paused_by_owner": { "message": "ยังไม่ได้ทำ: หยุดชั่วคราวอยู่จนกว่าคุณจะทำต่อ" },
   "step_refused_no_page": { "message": "ยังไม่ได้ทำ: ไม่มีหน้าเปิดอยู่สำหรับมัน" },
   "step_refused_browser_unavailable": { "message": "ยังไม่ได้ทำ: Chrome ทำไม่ได้" },
   "coach_title": { "message": "Coach" },

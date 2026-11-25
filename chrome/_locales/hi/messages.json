@@ -163,7 +163,7 @@
   "step_refused_page_changed": { "message": "नहीं हुआ: पेज पहले ही बदल गया" },
   "step_refused_no_back": { "message": "नहीं हुआ: वापस जाने के लिए कोई पेज नहीं है" },
   "step_refused_site_not_listed": { "message": "नहीं हुआ: वह साइट इस taf की साइटों में नहीं है" },
-  "step_refused_paused_by_owner": { "message": "नहीं हुआ: जब तक आप यह टैब उपयोग कर रहे हैं, थमा हुआ है" },
+  "step_refused_paused_by_owner": { "message": "नहीं हुआ: जब तक आप इसे फिर शुरू नहीं करते, यह थमा हुआ है" },
   "step_refused_no_page": { "message": "नहीं हुआ: इसके लिए कोई पेज खुला नहीं है" },
   "step_refused_browser_unavailable": { "message": "नहीं हुआ: Chrome यह नहीं कर सका" },
   "coach_title": {

@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "neatlikta: puslapis prieš tai pasikeitė" },
   "step_refused_no_back": { "message": "neatlikta: nėra puslapio, į kurį grįžti" },
   "step_refused_site_not_listed": { "message": "neatlikta: ta svetainė nėra šio taf svetainė" },
-  "step_refused_paused_by_owner": { "message": "neatlikta: pristabdyta, kol naudojate šį skirtuką" },
+  "step_refused_paused_by_owner": { "message": "neatlikta: pristabdyta, kol jo netęsite" },
   "step_refused_no_page": { "message": "neatlikta: jam neatidarytas joks puslapis" },
   "step_refused_browser_unavailable": { "message": "neatlikta: Chrome to padaryti nepavyko" },
   "coach_title": { "message": "Coach" },

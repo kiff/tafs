@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "गरिएन: पेज पहिल्यै बदलियो" },
   "step_refused_no_back": { "message": "गरिएन: फर्कने कुनै पेज छैन" },
   "step_refused_site_not_listed": { "message": "गरिएन: त्यो साइट यो taf का साइटमध्ये होइन" },
-  "step_refused_paused_by_owner": { "message": "गरिएन: तपाईं यो ट्याब प्रयोग गर्दासम्म पज गरिएको" },
+  "step_refused_paused_by_owner": { "message": "गरिएन: तपाईंले फेरि सुरु नगरेसम्म यो पज गरिएको छ" },
   "step_refused_no_page": { "message": "गरिएन: यसका लागि कुनै पेज खुला छैन" },
   "step_refused_browser_unavailable": { "message": "गरिएन: Chrome ले यो गर्न सकेन" },
   "coach_title": { "message": "Coach" },

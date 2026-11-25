@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "করা হয়নি: তার আগেই পেজ বদলে গেছে" },
   "step_refused_no_back": { "message": "করা হয়নি: ফিরে যাওয়ার মতো কোনো পেজ নেই" },
   "step_refused_site_not_listed": { "message": "করা হয়নি: ওই সাইটটি এই taf-এর সাইটগুলোর একটি নয়" },
-  "step_refused_paused_by_owner": { "message": "করা হয়নি: আপনি এই ট্যাব ব্যবহার করার সময় বিরতিতে আছে" },
+  "step_refused_paused_by_owner": { "message": "করা হয়নি: আপনি আবার চালু না করা পর্যন্ত বিরতিতে আছে" },
   "step_refused_no_page": { "message": "করা হয়নি: এর জন্য কোনো পেজ খোলা নেই" },
   "step_refused_browser_unavailable": { "message": "করা হয়নি: Chrome এটি করতে পারেনি" },
   "coach_title": { "message": "Coach" },

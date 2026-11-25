@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "nicht erledigt: Die Seite hat sich vorher geändert" },
   "step_refused_no_back": { "message": "nicht erledigt: Es gibt keine Seite, zu der es zurückgehen kann" },
   "step_refused_site_not_listed": { "message": "nicht erledigt: Diese Website gehört nicht zu diesem taf" },
-  "step_refused_paused_by_owner": { "message": "nicht erledigt: pausiert, solange du diesen Tab benutzt" },
+  "step_refused_paused_by_owner": { "message": "nicht erledigt: Er ist pausiert, bis du ihn fortsetzt" },
   "step_refused_no_page": { "message": "nicht erledigt: Für ihn ist keine Seite offen" },
   "step_refused_browser_unavailable": { "message": "nicht erledigt: Chrome konnte es nicht ausführen" },
   "coach_title": { "message": "Coach", "description": "Side panel title" },

@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "tidak dilakukan: halamannya berubah lebih dulu" },
   "step_refused_no_back": { "message": "tidak dilakukan: tidak ada halaman untuk kembali" },
   "step_refused_site_not_listed": { "message": "tidak dilakukan: situs itu bukan salah satu situs taf ini" },
-  "step_refused_paused_by_owner": { "message": "tidak dilakukan: dijeda selama Anda memakai tab ini" },
+  "step_refused_paused_by_owner": { "message": "tidak dilakukan: dijeda sampai Anda melanjutkannya" },
   "step_refused_no_page": { "message": "tidak dilakukan: tidak ada halaman yang terbuka untuknya" },
   "step_refused_browser_unavailable": { "message": "tidak dilakukan: Chrome tidak bisa melakukannya" },
   "coach_title": { "message": "Coach" },

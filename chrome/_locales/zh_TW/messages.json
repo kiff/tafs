@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "未完成：頁面先變了" },
   "step_refused_no_back": { "message": "未完成：沒有可返回的頁面" },
   "step_refused_site_not_listed": { "message": "未完成：那個網站不屬於這個 taf" },
-  "step_refused_paused_by_owner": { "message": "未完成：您使用這個分頁時已暫停" },
+  "step_refused_paused_by_owner": { "message": "未完成：已暫停，直到您繼續" },
   "step_refused_no_page": { "message": "未完成：沒有為它開啟的頁面" },
   "step_refused_browser_unavailable": { "message": "未完成：Chrome 無法完成" },
   "coach_title": { "message": "Coach" },

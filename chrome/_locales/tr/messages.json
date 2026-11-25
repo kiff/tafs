@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "yapılmadı: sayfa önce değişti" },
   "step_refused_no_back": { "message": "yapılmadı: geri dönülecek sayfa yok" },
   "step_refused_site_not_listed": { "message": "yapılmadı: o site bu taf'ın sitelerinden değil" },
-  "step_refused_paused_by_owner": { "message": "yapılmadı: bu sekmeyi kullandığınız sürece duraklatıldı" },
+  "step_refused_paused_by_owner": { "message": "yapılmadı: siz sürdürene kadar duraklatıldı" },
   "step_refused_no_page": { "message": "yapılmadı: onun için açık sayfa yok" },
   "step_refused_browser_unavailable": { "message": "yapılmadı: Chrome bunu yapamadı" },
   "coach_title": { "message": "Coach" },

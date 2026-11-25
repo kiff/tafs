@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "neprovedeno: stránka se mezitím změnila" },
   "step_refused_no_back": { "message": "neprovedeno: není kam se vrátit" },
   "step_refused_site_not_listed": { "message": "neprovedeno: ten web nepatří k webům tohoto tafu" },
-  "step_refused_paused_by_owner": { "message": "neprovedeno: pozastaveno, dokud používáte tuto kartu" },
+  "step_refused_paused_by_owner": { "message": "neprovedeno: je pozastaven, dokud ho neobnovíte" },
   "step_refused_no_page": { "message": "neprovedeno: nemá otevřenou žádnou stránku" },
   "step_refused_browser_unavailable": { "message": "neprovedeno: Chrome to nedokázal" },
   "coach_title": { "message": "Coach" },

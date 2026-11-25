@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "لم يتم: تغيّرت الصفحة قبل ذلك" },
   "step_refused_no_back": { "message": "لم يتم: لا توجد صفحة للرجوع إليها" },
   "step_refused_site_not_listed": { "message": "لم يتم: هذا الموقع ليس من مواقع هذا الـ taf" },
-  "step_refused_paused_by_owner": { "message": "لم يتم: متوقف مؤقتًا بينما تستخدم علامة التبويب هذه" },
+  "step_refused_paused_by_owner": { "message": "لم يتم: متوقف مؤقتًا إلى أن تستأنفه" },
   "step_refused_no_page": { "message": "لم يتم: لا توجد صفحة مفتوحة له" },
   "step_refused_browser_unavailable": { "message": "لم يتم: لم يتمكن Chrome من ذلك" },
   "coach_title": { "message": "Coach" },

@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "nefăcut: pagina s-a schimbat înainte" },
   "step_refused_no_back": { "message": "nefăcut: nu există o pagină la care să revină" },
   "step_refused_site_not_listed": { "message": "nefăcut: acel site nu e unul dintre site-urile acestui taf" },
-  "step_refused_paused_by_owner": { "message": "nefăcut: întrerupt cât timp folosiți această filă" },
+  "step_refused_paused_by_owner": { "message": "nefăcut: este întrerupt până când îl reluați" },
   "step_refused_no_page": { "message": "nefăcut: nu are nicio pagină deschisă" },
   "step_refused_browser_unavailable": { "message": "nefăcut: Chrome nu a putut face asta" },
   "coach_title": { "message": "Coach" },

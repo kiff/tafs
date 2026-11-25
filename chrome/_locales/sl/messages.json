@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "ni opravljeno: stran se je prej spremenila" },
   "step_refused_no_back": { "message": "ni opravljeno: ni strani, na katero bi se vrnil" },
   "step_refused_site_not_listed": { "message": "ni opravljeno: to spletno mesto ni eno od mest tega tafa" },
-  "step_refused_paused_by_owner": { "message": "ni opravljeno: začasno ustavljeno, dokler uporabljate ta zavihek" },
+  "step_refused_paused_by_owner": { "message": "ni opravljeno: začasno je ustavljen, dokler ga ne nadaljujete" },
   "step_refused_no_page": { "message": "ni opravljeno: zanj ni odprta nobena stran" },
   "step_refused_browser_unavailable": { "message": "ni opravljeno: Chrome tega ni mogel narediti" },
   "coach_title": { "message": "Coach" },

@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ໜ້າປ່ຽນໄປກ່ອນແລ້ວ" },
   "step_refused_no_back": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ບໍ່ມີໜ້າໃຫ້ກັບຄືນ" },
   "step_refused_site_not_listed": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ເວັບໄຊນັ້ນບໍ່ແມ່ນຂອງ taf ນີ້" },
-  "step_refused_paused_by_owner": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ຢຸດຊົ່ວຄາວ ຂະນະທີ່ທ່ານກຳລັງໃຊ້ແທັບນີ້" },
+  "step_refused_paused_by_owner": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ຢຸດຊົ່ວຄາວຈົນກວ່າທ່ານຈະສືບຕໍ່" },
   "step_refused_no_page": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: ບໍ່ມີໜ້າເປີດຢູ່ສຳລັບມັນ" },
   "step_refused_browser_unavailable": { "message": "ຍັງບໍ່ໄດ້ເຮັດ: Chrome ເຮັດບໍ່ໄດ້" },
   "coach_title": { "message": "Coach" },

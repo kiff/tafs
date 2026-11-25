@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "edilmədi: səhifə ondan əvvəl dəyişdi" },
   "step_refused_no_back": { "message": "edilmədi: qayıtmaq üçün səhifə yoxdur" },
   "step_refused_site_not_listed": { "message": "edilmədi: o sayt bu taf-ın saytlarından deyil" },
-  "step_refused_paused_by_owner": { "message": "edilmədi: bu sekmədən istifadə etdiyiniz müddətdə fasilədədir" },
+  "step_refused_paused_by_owner": { "message": "edilmədi: siz davam etdirənə qədər fasilədədir" },
   "step_refused_no_page": { "message": "edilmədi: onun üçün açıq səhifə yoxdur" },
   "step_refused_browser_unavailable": { "message": "edilmədi: Chrome bunu edə bilmədi" },
   "coach_title": { "message": "Coach" },

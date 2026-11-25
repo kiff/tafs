@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "non fatto: la pagina è cambiata prima" },
   "step_refused_no_back": { "message": "non fatto: non c'è una pagina a cui tornare" },
   "step_refused_site_not_listed": { "message": "non fatto: quel sito non è uno di quelli di questo taf" },
-  "step_refused_paused_by_owner": { "message": "non fatto: in pausa mentre usi questa scheda" },
+  "step_refused_paused_by_owner": { "message": "non fatto: è in pausa finché non lo riprendi" },
   "step_refused_no_page": { "message": "non fatto: non ha nessuna pagina aperta" },
   "step_refused_browser_unavailable": { "message": "non fatto: Chrome non è riuscito a farlo" },
   "coach_title": { "message": "Coach", "description": "Side panel title" },

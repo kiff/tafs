@@ -163,7 +163,7 @@
   "step_refused_page_changed": { "message": "نہیں ہوا: صفحہ پہلے ہی بدل گیا" },
   "step_refused_no_back": { "message": "نہیں ہوا: واپس جانے کے لیے کوئی صفحہ نہیں" },
   "step_refused_site_not_listed": { "message": "نہیں ہوا: وہ سائٹ اس taf کی سائٹس میں سے نہیں" },
-  "step_refused_paused_by_owner": { "message": "نہیں ہوا: جب تک آپ یہ ٹیب استعمال کر رہے ہیں، رکا ہوا ہے" },
+  "step_refused_paused_by_owner": { "message": "نہیں ہوا: جب تک آپ اسے دوبارہ نہ چلائیں، یہ رکا ہوا ہے" },
   "step_refused_no_page": { "message": "نہیں ہوا: اس کے لیے کوئی صفحہ کھلا نہیں" },
   "step_refused_browser_unavailable": { "message": "نہیں ہوا: Chrome یہ نہیں کر سکا" },
   "coach_title": {

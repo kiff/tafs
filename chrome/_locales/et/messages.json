@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "tegemata: leht muutus enne seda" },
   "step_refused_no_back": { "message": "tegemata: pole lehte, kuhu tagasi minna" },
   "step_refused_site_not_listed": { "message": "tegemata: see sait ei kuulu selle tafi saitide hulka" },
-  "step_refused_paused_by_owner": { "message": "tegemata: pausil, kuni kasutad seda vahekaarti" },
+  "step_refused_paused_by_owner": { "message": "tegemata: see on pausil, kuni sa seda jätkad" },
   "step_refused_no_page": { "message": "tegemata: tal pole ühtki lehte avatud" },
   "step_refused_browser_unavailable": { "message": "tegemata: Chrome ei saanud seda teha" },
   "coach_title": { "message": "Coach" },

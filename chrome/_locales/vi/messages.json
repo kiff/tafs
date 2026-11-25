@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "chưa thực hiện: trang đã thay đổi trước đó" },
   "step_refused_no_back": { "message": "chưa thực hiện: không có trang nào để quay lại" },
   "step_refused_site_not_listed": { "message": "chưa thực hiện: trang đó không thuộc các trang của taf này" },
-  "step_refused_paused_by_owner": { "message": "chưa thực hiện: tạm dừng trong khi bạn dùng thẻ này" },
+  "step_refused_paused_by_owner": { "message": "chưa thực hiện: đang tạm dừng cho đến khi bạn tiếp tục" },
   "step_refused_no_page": { "message": "chưa thực hiện: không có trang nào đang mở cho nó" },
   "step_refused_browser_unavailable": { "message": "chưa thực hiện: Chrome không làm được" },
   "coach_title": { "message": "Coach" },

@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "nem történt meg: előtte megváltozott az oldal" },
   "step_refused_no_back": { "message": "nem történt meg: nincs oldal, ahová visszamehetne" },
   "step_refused_site_not_listed": { "message": "nem történt meg: az a webhely nem tartozik ehhez a tafhoz" },
-  "step_refused_paused_by_owner": { "message": "nem történt meg: szüneteltetve, amíg ezt a lapot használod" },
+  "step_refused_paused_by_owner": { "message": "nem történt meg: szüneteltetve van, amíg nem folytatod" },
   "step_refused_no_page": { "message": "nem történt meg: nincs nyitva oldal számára" },
   "step_refused_browser_unavailable": { "message": "nem történt meg: a Chrome nem tudta megtenni" },
   "coach_title": { "message": "Coach" },

@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "មិនបានធ្វើ៖ ទំព័របានផ្លាស់ប្តូរមុន" },
   "step_refused_no_back": { "message": "មិនបានធ្វើ៖ គ្មានទំព័រត្រឡប់ទៅវិញទេ" },
   "step_refused_site_not_listed": { "message": "មិនបានធ្វើ៖ គេហទំព័រនោះមិនមែនជារបស់ taf នេះទេ" },
-  "step_refused_paused_by_owner": { "message": "មិនបានធ្វើ៖ បានផ្អាក ពេលអ្នកកំពុងប្រើផ្ទាំងនេះ" },
+  "step_refused_paused_by_owner": { "message": "មិនបានធ្វើ៖ វាត្រូវបានផ្អាក រហូតដល់អ្នកបន្តវា" },
   "step_refused_no_page": { "message": "មិនបានធ្វើ៖ គ្មានទំព័របើកសម្រាប់វាទេ" },
   "step_refused_browser_unavailable": { "message": "មិនបានធ្វើ៖ Chrome មិនអាចធ្វើបាន" },
   "coach_title": { "message": "Coach" },

@@ -50,7 +50,7 @@
   "step_refused_page_changed": { "message": "nuk u bë: faqja ndryshoi më parë" },
   "step_refused_no_back": { "message": "nuk u bë: nuk ka faqe ku të kthehet" },
   "step_refused_site_not_listed": { "message": "nuk u bë: ai sajt nuk është nga sajtet e këtij taf-i" },
-  "step_refused_paused_by_owner": { "message": "nuk u bë: pezulluar ndërsa po e përdorni këtë skedë" },
+  "step_refused_paused_by_owner": { "message": "nuk u bë: është pezulluar derisa ta vazhdoni" },
   "step_refused_no_page": { "message": "nuk u bë: nuk ka asnjë faqe të hapur për të" },
   "step_refused_browser_unavailable": { "message": "nuk u bë: Chrome nuk mundi ta bënte" },
   "coach_title": { "message": "Coach" },
