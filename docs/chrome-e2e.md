@@ -86,7 +86,7 @@ yes, and fail the test.
 | A long page's text comes in windows (`more`, `next_offset`, `offset`) | `steps.e2e.test.js` |
 | `act` fills, selects and ticks in the real page, and reads it back; a fill of the password is `secret_field` and leaves it as it was; an act on another read is `page_changed` | `steps.e2e.test.js` |
 | A page's `confirm()` doesn't block the run, is answered no, never reaches Chromium, and the read says the page asked | `steps.e2e.test.js` |
-| A step signed by another key, changed after signing, for another Chrome, expired, too far ahead, or sent twice (also under a new id) is `bad_step`, signed, and nothing opens or loads | `refusals.e2e.test.js` |
+| A step signed by another key, changed after signing, for another Chrome, expired, too far ahead, or sent twice (also under a new id) is dropped with no answer at all, not even a signed refusal, and nothing opens or loads; a good step after it is answered | `refusals.e2e.test.js` |
 | A message with no id and no signature gets no answer | `refusals.e2e.test.js` |
 | A run's sites are the phone's: sites the phone didn't sign, or signed by planque in its place, are `bad_step` before anything opens | `refusals.e2e.test.js` |
 | An open off the run's sites is `site_not_listed`; plain http is `bad_url`; an address or a local name is `address_private`; the site is never reached | `refusals.e2e.test.js` |
