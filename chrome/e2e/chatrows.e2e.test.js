@@ -38,7 +38,9 @@ test("a taf's chat: days, times, the work folded, Markdown, Copy, Report, Send a
       },
     );
     await until(() => h.cloud.claimed, "the KIFF device's claim", 15_000);
-    await until(async () => (await h.inPanel(`document.querySelectorAll("#tafThread li.taf").length`)) === 1, "the answer");
+    // The taf's chat is on show (its composer), as the panel's other tests wait for, then its first read draws the answer.
+    await until(async () => (await shown(h, "#tafForm")) !== null, "the taf's composer", 15_000);
+    await until(async () => (await h.inPanel(`document.querySelectorAll("#tafThread li.taf").length`)) === 1, "the answer", 15_000);
 
     // A header where each day starts, and each message's time under it.
     assert.deepEqual(await h.inPanel(`[...document.querySelectorAll("#tafThread li.day")].map((x) => x.textContent)`), ["Yesterday", "Today"]);
