@@ -30,6 +30,12 @@ extension Biometry {
     /// "Face ID" or "Touch ID" when the device has one, for the setup words.
     static var kind: String? { name == Words.Approval.yourPasscode ? nil : name }
 
-    /// Face ID, for the Card step's "Approve with face" button; else the fingerprint's (Touch ID).
-    static var isFace: Bool { name == Words.Approval.faceId }
+    /// Face ID, for the Card step's "Approve with face" button; else the fingerprint's (Touch ID). Read now, not at launch,
+    /// so a face or finger set up since picks the right words. A device with neither gets no button at all
+    /// (`ApprovalGate` draws what to do instead): the approval key needs one, never the passcode.
+    static var isFace: Bool {
+        let context = LAContext()
+        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        return context.biometryType == .faceID
+    }
 }

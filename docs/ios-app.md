@@ -832,8 +832,10 @@ screen is as before.
     and how to stop it (Halt);
   - the plain list: each group of Coach's tools, each tool with what it does and its limit a day;
   - under "Exactly what you sign", folded, Coach's Cards in KIFF's own words, as signed;
-  - one button, the whole sentence for this phone's way: "Approve with face" (Face ID) or "Approve with fingerprint"
-    (Touch ID).
+  - one button, the whole sentence for this phone's way, read when the step is drawn: "Approve with face" (Face ID) or
+    "Approve with fingerprint" (Touch ID). A device with neither, or with it off for tafs, gets no button at all
+    (`ApprovalGate` says what to set up instead), and Give signs and sends nothing (`giveCoachTools`): the approval key
+    needs Face ID or Touch ID, never the passcode.
 - **Shown = signed, failing closed** (`TafsCloud.CardStepCheck`). Each tool in the list carries what its Card signs: `tool`,
   `card`, `limit` and `asks`. These are compared with the draft the button signs (`requests[draft].body.cards`). Each signed
   Card is read on an allowlist:

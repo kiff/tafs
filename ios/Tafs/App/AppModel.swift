@@ -2364,6 +2364,12 @@ final class AppModel: ObservableObject {
         // Before Coach exists, its tools are given by starting it: one Face ID for both.
         if setupTaf == nil, coachStart?.startable == true {
             guard !givingCoachTools else { return false }
+            // A device that can't approve (no Face ID or Touch ID, or it's off for tafs) signs nothing: the approval key
+            // needs one, never the passcode. Its words say what to do, and nothing is asked or sent.
+            if approvalBlocked {
+                coachToolsError = approvalReadiness.short(kind: Biometry.kind)
+                return false
+            }
             // The Card step asks for no signature when its plain list isn't exactly what the draft signs (shown = signed).
             if let start = coachStart, start.cardStep(face: Biometry.isFace), !start.cardStepSigns {
                 coachToolsError = Words.Version.outOfDateCard

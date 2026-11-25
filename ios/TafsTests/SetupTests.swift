@@ -280,6 +280,28 @@ final class SetupTests: XCTestCase {
     /// With Start's own words (`start.words`), Start's screen draws them and what's signed, so
     /// Send signs and starts Coach under the one Face ID, then goes on to send: no step opens.
     /// Without a line or a button, it's the step as before.
+    /// The Card step on a phone with no Face ID or Touch ID: the approval key needs one, never the passcode, so Give asks for
+    /// nothing and sends nothing, and says what to do in the readiness's own words.
+    func testAPhoneThatCantApproveSignsNothingAtTheCardStep() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON())
+        await model.loadSetup()
+        XCTAssertEqual(model.coachStart?.startable, true)
+        model.readApprovalReadiness = { .noneEnrolled }
+        model.checkApprovalReadiness()
+        XCTAssertTrue(model.approvalBlocked)
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertFalse(given)
+        XCTAssertEqual(signer.prompts, [], "no prompt")
+        XCTAssertTrue(sent("POST", "mcp.test", "/v1/connections/batch").isEmpty, "nothing sent")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts").isEmpty)
+        XCTAssertEqual(model.coachToolsError, ApprovalReadiness.noneEnrolled.short(kind: Biometry.kind))
+        model.readApprovalReadiness = { .ready }
+        model.checkApprovalReadiness()
+    }
+
     func testStartsOwnWordsMakeOneScreenAndSendSignsAndSends() async throws {
         let worded = Self.startJSON().replacingOccurrences(of: #""coach_tools_step":"#,
             with: #""words":{"lead":"Start sets up approvals and gives Coach its tools.","start":"Start","does":"One fingerprint, on this device."},"coach_tools_step":"#)
