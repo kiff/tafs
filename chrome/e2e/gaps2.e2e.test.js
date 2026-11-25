@@ -160,18 +160,24 @@ async function heldDialog(what) {
   return until(() => h.held.find((d) => d.type() === what), "the page's " + what + " in Chromium", 10_000);
 }
 
-test("open gap: an alert a page raises as it loads reaches Chromium, and the run's open waits for it", { skip }, async () => {
+test("open gap: an alert a page raises as it loads reaches Chromium (or, when the guard wins the race, nothing does), and the run's open waits for it", { skip }, async () => {
   const run = newRun("alert-load");
   started.add(run);
   h.holdDialogs = true;
   try {
     let answered = false;
     const opening = open(run, h.sites.url("shop.test", "/at-load-alert?case=load")).finally(() => (answered = true));
-    const dialog = await heldDialog("alert");
-    assert.equal(dialog.message(), "Welcome to the shop");
-    await new Promise((res) => setTimeout(res, 500));
-    assert.equal(answered, false, "the open waits while the alert is up");
-    await dialog.accept();
+    // A race, so either way is pinned: the page's inline alert usually runs before the onCommitted guard is in, and reaches
+    // Chromium; under load the guard sometimes wins, and the alert is dropped as any later one is. Never both, never a hang.
+    const dialog = await Promise.race([heldDialog("alert").catch(() => null), opening.then(() => null, () => null)]);
+    if (dialog) {
+      assert.equal(dialog.message(), "Welcome to the shop");
+      await new Promise((res) => setTimeout(res, 500));
+      assert.equal(answered, false, "the open waits while the alert is up");
+      await dialog.accept();
+    } else {
+      assert.equal(h.held.filter((d) => d.type() === "alert").length, 0, "the guard won: no alert reached Chromium");
+    }
     const r = await opening;
     assert.equal(r.page.title, "Welcome");
   } finally {
@@ -189,14 +195,19 @@ test("open gap: a confirm a page raises as it loads reaches Chromium, the run's 
   try {
     let answered = false;
     const opening = open(run, url).finally(() => (answered = true));
-    const dialog = await heldDialog("confirm");
-    assert.equal(dialog.message(), "Stay signed in?");
-    await new Promise((res) => setTimeout(res, 500));
-    assert.equal(answered, false, "the open waits while the confirm is up");
-    await dialog.dismiss();
+    // A race, as with the alert above: when the guard wins it, the confirm is answered no by the guard, and nothing reaches Chromium.
+    const dialog = await Promise.race([heldDialog("confirm").catch(() => null), opening.then(() => null, () => null)]);
+    if (dialog) {
+      assert.equal(dialog.message(), "Stay signed in?");
+      await new Promise((res) => setTimeout(res, 500));
+      assert.equal(answered, false, "the open waits while the confirm is up");
+      await dialog.dismiss();
+    } else {
+      assert.equal(h.held.filter((d) => d.type() === "confirm").length, 0, "the guard won: no confirm reached Chromium");
+    }
     await opening;
     const tab = await until(() => tabAt(h, url), "the run's tab");
-    assert.equal(await tab.textContent("#out"), "refused", "the page got the answer given in Chromium");
+    assert.equal(await tab.textContent("#out"), "refused", "the page got no for an answer, from Chromium or from the guard");
   } finally {
     h.holdDialogs = false;
     h.held.length = 0;

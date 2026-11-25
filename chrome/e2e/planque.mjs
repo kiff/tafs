@@ -317,14 +317,15 @@ export class FakeCloud {
   static KIFF = "api.kiff.dev";
   static CLOUD = "cloud.tafs.kiff.dev";
 
-  constructor({ agent = "agt_e2e", taf = "Rae", tafId = "taf_e2e" } = {}) {
-    Object.assign(this, { agent, taf, tafId });
+  constructor({ agent = "agt_e2e", taf = "Rae", tafId = "taf_e2e", coachId = "taf_coach_e2e" } = {}) {
+    Object.assign(this, { agent, taf, tafId, coachId });
     this.token = "kfs_" + randomBytes(16).toString("hex");
     this.tenant = "tnt_e2e";
     this.subject = "sub_e2e";
     this.consent = { given: false };
     this.claimed = false;
     this.sends = []; // every message to the taf: {text, page, run}
+    this.coachSends = []; // every message to Coach: {text, page, run}
     this.requests = []; // every call, as "METHOD host path"
   }
 
@@ -359,8 +360,15 @@ export class FakeCloud {
       return send(200, { consent: this.consent });
     }
     if (req.method === "GET" && url.pathname === "/v1/tafs") return send(200, { tafs: [{ id: this.tafId, name: this.taf, kiff_agent: this.agent }] });
-    if (req.method === "GET" && url.pathname === "/v1/setup") return send(200, { setup: null });
+    // The account's Coach: a taf of its own, which the panel's Coach chat sends to.
+    if (req.method === "GET" && url.pathname === "/v1/setup") return send(200, { setup: { id: this.coachId } });
     const taf = /^\/v1\/tafs\/([^/]+)\/(messages|conversation)$/.exec(url.pathname);
+    if (taf && taf[1] === this.coachId && taf[2] === "conversation" && req.method === "GET") return send(200, { messages: [], working: null });
+    if (taf && taf[1] === this.coachId && taf[2] === "messages" && req.method === "POST") {
+      const run = randomId("agr_");
+      this.coachSends.push({ text: body.text, page: body.page || null, run });
+      return send(201, { message: { id: randomId("msg_") }, run });
+    }
     if (taf && taf[1] === this.tafId && taf[2] === "conversation" && req.method === "GET") return send(200, { messages: [], working: null });
     if (taf && taf[1] === this.tafId && taf[2] === "messages" && req.method === "POST") {
       // The agent run this message starts: what the panel's mark and planque's steps name.
