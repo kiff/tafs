@@ -122,7 +122,10 @@ yes, and fail the test.
 | An open off the run's sites is `site_not_listed`; plain http is `bad_url`; an address or a local name is `address_private`; the site is never reached | `refusals.e2e.test.js` |
 | A click on a link off the run's sites is fenced in the tab: the other site never gets the request | `refusals.e2e.test.js` |
 | The fence on every other way off the run's sites, with nothing reaching `other.test`: a 302 redirect (the open is `site_not_listed`; Chrome's error page stays, and a read of it is refused), a form that posts there, a script's `location.assign()` and a `target=_blank` link (the taf's click is `bad_url`, the move is recorded as `navigate`/`site_not_listed` and the run's own tab is on its blank page; no new tab opens), a meta refresh (the same record and blank page), and a frame (blocked; the page reads as usual) | `fence.e2e.test.js` |
-| The fence covers navigations only, after a taf's fill, in a tab of the run's own and in the person's joined tab. A page's own `fetch`, XHR, `sendBeacon`, `<img>` and WebSocket reach `other.test`: they're the site's own. A form submitted into a frame is fenced, and nothing reaches `other.test`. A `postMessage` to an off-site frame reaches nobody in a run's own tab (the frame was fenced before it loaded). In the person's tab, the frame loaded before the run joined, and it sends the value on with a fetch of its own. With no run, the same pages send the value every way, so the fenced cases aren't empty | `requests.e2e.test.js` |
+| The fence covers navigations only, after a taf's fill, in a tab of the run's own and in the person's joined tab. A page's own `fetch`, XHR, `sendBeacon`, `<img>` and WebSocket reach `other.test`: they're the site's own. A form submitted into a frame is fenced, and nothing reaches `other.test`. A `postMessage` to an off-site frame reaches nobody in a run's own tab (the frame was fenced before it loaded). In the person's tab, the frame loaded before the run joined, and it sends the value on with a fetch of its own. With no run, the same pages send the value by all seven ways, so the fenced cases aren't empty | `requests.e2e.test.js` |
+| A sensitive site of the grant (`bank.test`: its "bank" label makes it one) opens only on the paired phone's own signed allowance (`sensitive_allowed`). With none, or with one signed by planque's key instead, the open is `site_blocked`, and the bank is never asked for anything. The person's "Not on this site", switched on mid-run, makes the run's next read of their joined tab `site_blocked`, with nothing read, and their next send from the panel goes without the page. A step replayed after Chrome stopped the service worker gets no answer, and the page isn't opened again. A click whose words say only "Continue" is `payment_step`, and nothing is ordered, on each of: a submit in a schema.org Order, a payment provider's button, the submit of a form with a card field, and a button on a page with a provider's payment frame | `gaps.e2e.test.js` |
+| Chrome's own fence says what `refuseURL` says (0.2.19). Four kinds of host are blocked by Chrome before anything is asked of them: a bank label under a granted site (`bank.shop.test`), `accounts.google.com` under a `google.com` grant, a site under a listed `github.io`, and an address (`127.0.0.1`). Each is tried by an open, by the taf's click on a link, and by a 302 from a granted page, in a tab of the run's own and in the person's joined tab. Chrome already holds a connection to each target, since the person visited it first and that visit is checked to have reached it. The server logs no request for any of them, and no result carries the target's page. An open answers `refuseURL`'s code: `site_blocked`, `site_not_listed` or `address_private` | `fence219.e2e.test.js` |
+| What leaves for planque when a page is too large, or the relay is down. A read over the relay's 120 KB is cut to fit, says so (`truncated`), and no cut carries the password field's value, a card number in the page's text, or what the person typed. A hand-over's Done pressed while the relay is down reaches planque once the relay is back: once, signed, without what the person typed. A Done whose page is over the cap goes with no page | `leaving.e2e.test.js` |
 | A run's tab has its three session rules (block every page and frame, allow the run's sites, block `http`) while the run lives; planque's stop and the taf's close take them away, and another run's stay; unpairing (4410) leaves none at all | `fence.e2e.test.js` |
 | The person closing a run's last tab ends the run, and the closed tab's rules go with it | `fence.e2e.test.js` |
 | A fence Chrome refuses (its limit on session rules reached) loads nothing: a run's first tab, or a further tab of a run in the person's tab, closes before its page is asked for, and the step is `browser_unavailable` | `fence.e2e.test.js`, `joined.e2e.test.js` |
@@ -151,12 +154,14 @@ yes, and fail the test.
 
 ## Not covered yet
 
-- **Sensitive sites** and the phone's signed allowance (`sensitive_allowed`): the fixture sites would need a host the
-  sensitive rules match.
-- **A step's own refusals of a payment or a checkout** (`payment_step`), and `press` and `scroll` as acts of their own: covered by
-  the unit and page tests only.
-- **The relay's limits:** a dropped connection opened again, a result cut to fit 120 KB, `page_too_large`, and a step
-  replayed after Chrome stops the service worker. The worker's restart is covered for its fences only, woken by the panel; its
+- **A redirect or a joined tab's move to a sensitive site of the grant** the phone didn't allow: only the taf's click in a
+  tab of the run's own is tested (see the known bugs).
+- **A checkout's own refusals by its words and totals** (`checkout`), and `press` and `scroll` as acts of their own: covered by
+  the unit and page tests only. The refusals by a page's semantics (`places_order`, `payment_frame`) are in `gaps.e2e.test.js`.
+- **The relay's limits:** `page_too_large` (a page no cut makes fit). A dropped connection opened again, and a result cut to
+  fit 120 KB, are covered (`leaving.e2e.test.js`). A step replayed
+  after Chrome stops the service worker is covered (`gaps.e2e.test.js`). The worker's restart is covered for its fences and that
+  replay, woken by the panel; its
   wake by the relay's alarm isn't.
 - **A pop-up whose fence Chrome refuses** (a run's page opening a tab on its sites at the session rules' limit): the fixture sites
   have no such link; the run's first tab and a further tab are covered.
@@ -231,6 +236,14 @@ yes, and fail the test.
   tab), and `record()` took the run's site from it. Since 0.2.17 a move the person made is never one of the run's steps, and the
   run's site comes only from its own pages.
 
+**The fence's sensitive-site patterns are ones this Chromium holds** (`fence.e2e.test.js`, 0.2.19): one pattern with every word
+was refused (`isRegexSupported`: `memoryLimitExceeded`), which would fail the fence of every run, so the words are split over a few,
+and each is checked in real Chromium. A fenced tab holds `RULES_PER_TAB` rules here (harness.mjs: runner.js `FENCE_RULES`, less the
+allowance's, as no grant here allows a sensitive site).
+
+**A link with user info to the bank** (`gaps.e2e.test.js`, `/to-bank`'s "Sign in at your bank", 0.2.19): `https://x@bank.test/`
+slipped past the label patterns; the fence's user-info rule stops it, with a warm connection to the bank, which logs nothing.
+
 **Chromium runs in English** (`--lang=en-US`, harness.mjs), whatever the computer's language: the panel's lines are checked word for word.
 
 ## Known bugs, as `todo` tests
@@ -242,3 +255,13 @@ A test that says what the extension should do and fails today is marked `todo`; 
 failure.
 
 None.
+
+Fixed in 0.2.19: **a link to an address, clicked in the person's joined tab, answered `site_not_listed`**
+(`fence219.e2e.test.js`): `page.js` `offFence()` had no branch for an address, a local name, user info or a name not in ASCII.
+It now follows `refuseURL`'s order and gives its very code (`address_private` here), which a page test checks address by
+address.
+
+Fixed in 0.2.19: **the taf's click on a link to a sensitive site of the grant that the phone didn't allow** asked that
+site for its page, because the fence allowed every site of the grant and only `onBeforeNavigate` raced the request. The fence's
+rules now say what `refuseURL` says, so Chrome stops the request before it's sent, and the act answers `site_blocked`
+(`gaps.e2e.test.js`).

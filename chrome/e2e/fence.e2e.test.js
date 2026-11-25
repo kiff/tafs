@@ -1,12 +1,12 @@
 // End to end: the fence of a run's tabs (docs/chrome.md, "Runs": "A request off the run's sites never leaves"). Each way a page
 // of the run's sites can leave for another site (a redirect, a form that posts there, a refresh, a page's own script, a link to a
 // new tab, a frame) is stopped before other.test is asked for anything, which the fixture server's log shows. The fence is
-// Chrome's declarativeNetRequest session rules, three per tab, read here from the service worker: they exist while the run
+// Chrome's declarativeNetRequest session rules, RULES_PER_TAB per tab (runner.js fence), read here from the service worker: they exist while the run
 // lives, and go when it ends (planque's stop, the taf's close, unpairing).
 
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { playwright, start, newRun, ref, until, pairNow, SITES, sessionRules, rulesOf, fillSessionRules, unfillSessionRules, runState, tabInfo, extensionState } from "./harness.mjs";
+import { playwright, start, newRun, ref, until, pairNow, SITES, RULES_PER_TAB, inWorker, sessionRules, rulesOf, fillSessionRules, unfillSessionRules, runState, tabInfo, extensionState } from "./harness.mjs";
 
 const skip = !playwright;
 let h;
@@ -45,6 +45,16 @@ async function runTab(run) {
   return tabInfo(h, s.tab);
 }
 
+// Chrome holds a pattern only within a memory budget: one with every sensitive word was refused (memoryLimitExceeded), and the
+// fence then fails closed for every run. Each of the fence's patterns must be one this Chromium holds.
+test("this Chromium holds every pattern of the fence's sensitive labels", { skip }, async () => {
+  const { SENSITIVE_LABELS_URLS } = await import("../src/sites.js");
+  for (const regex of SENSITIVE_LABELS_URLS) {
+    const said = await inWorker(h, (r) => chrome.declarativeNetRequest.isRegexSupported({ regex: r }), regex);
+    assert.deepEqual(said, { isSupported: true }, regex);
+  }
+});
+
 test("a redirect from a page of the run's sites to another site is blocked by the fence: the open is refused and nothing reached", { skip }, async () => {
   const run = newRun("redirect");
   const r = await open(run, "/redirect");
@@ -73,7 +83,9 @@ test("a form that posts to another site is fenced: the taf's click sends nothing
   // The click ran; the post it started was blocked before it was sent, and the tab was sent to the run's blank page, where the
   // read back finds nothing of the run's.
   assert.equal(r.ok, false);
-  assert.equal(r.error.code, "bad_url");
+  // The act is refused by the fence's backstop as the run's own act heading off its sites, which answers why (`site_not_listed`, 0.2.19; it
+  // was the blank page's `bad_url` before).
+  assert.equal(r.error.code, "site_not_listed");
   await refusedMove(run, offSite("/collect"));
   assert.equal((await runTab(run)).url, "about:blank");
   assert.deepEqual(otherHits(), [], "no post, and no request at all, reached other.test");
@@ -85,9 +97,10 @@ test("a meta refresh to another site is fenced: the tab goes to a blank page and
   const r = await open(run, "/leave-refresh");
   assert.equal(r.verified, true);
   // The refresh fires as the page loads. The open's read comes after the load and a settle, so it finds the tab already sent to
-  // the blank page (bad_url); only if the refresh were slower than that could it read the page itself first.
+  // the blank page (bad_url); only if the refresh were slower than that could it read the page itself first. The refresh is the
+  // page's own, not the open's step, so the open isn't told why.
   if (r.ok) assert.equal(r.page.url, h.sites.url("shop.test", "/leave-refresh"));
-  else assert.equal(r.error.code, "bad_url");
+  else assert.ok(["bad_url", "site_not_listed"].includes(r.error.code), r.error.code);
   await refusedMove(run, offSite("/"));
   await until(async () => (await runTab(run)).url === "about:blank", "the tab on the run's blank page");
   assert.deepEqual(otherHits(), []);
@@ -100,7 +113,7 @@ test("the page's own script leaving with location.assign() is fenced: nothing re
   // The taf clicks a button whose handler, the page's script, calls location.assign() to other.test.
   const r = await h.planque.sendStep({ op: "act", run, read_id: opened.page.read_id, act: { kind: "click", ref: ref(opened.page, "Go elsewhere", "controls") } });
   assert.equal(r.ok, false);
-  assert.equal(r.error.code, "bad_url");
+  assert.equal(r.error.code, "site_not_listed", "the act's answer says why");
   await refusedMove(run, offSite("/"));
   assert.equal((await runTab(run)).url, "about:blank");
   assert.deepEqual(otherHits(), []);
@@ -113,7 +126,7 @@ test("a target=_blank link to another site opens no new tab: it's followed in th
   const tabs = h.context.pages().length;
   const r = await h.planque.sendStep({ op: "act", run, read_id: opened.page.read_id, act: { kind: "click", ref: ref(opened.page, "Open it in a new tab", "links") } });
   assert.equal(r.ok, false);
-  assert.equal(r.error.code, "bad_url");
+  assert.equal(r.error.code, "site_not_listed", "the act's answer says why");
   await refusedMove(run, offSite("/"));
   assert.equal((await runTab(run)).url, "about:blank", "the run's own tab went, not a new one");
   assert.equal(h.context.pages().length, tabs, "no tab was opened");
@@ -133,20 +146,23 @@ test("a frame from another site in a page of the run's sites is never loaded, an
   assert.equal((await runTab(run)).url, h.sites.url("shop.test", "/leave-frame"));
 });
 
-/** The three rules a run's tab gets as it opens, before it loads anything (runner.js `fence`). */
+/** The rules a run's tab gets as it opens, before it loads anything (runner.js `fence`): RULES_PER_TAB of them, by priority. */
 function assertFenced(rules, tabId) {
-  assert.equal(rules.length, 3, JSON.stringify(rules));
+  assert.equal(rules.length, RULES_PER_TAB, JSON.stringify(rules));
   const frames = ["main_frame", "sub_frame"];
-  const byPriority = Object.fromEntries(rules.map((r) => [r.priority, r]));
-  assert.deepEqual(byPriority[1].action, { type: "block" });
-  assert.deepEqual(byPriority[1].condition, { tabIds: [tabId], resourceTypes: frames });
-  assert.deepEqual(byPriority[2].action, { type: "allow" });
-  assert.deepEqual(byPriority[2].condition, { tabIds: [tabId], resourceTypes: frames, requestDomains: SITES });
-  assert.deepEqual(byPriority[3].action, { type: "block" });
-  assert.deepEqual(byPriority[3].condition, { tabIds: [tabId], resourceTypes: frames, regexFilter: "^http://" });
+  for (const r of rules) assert.deepEqual([r.condition.tabIds, r.condition.resourceTypes], [[tabId], frames]);
+  const at = (p) => rules.filter((r) => r.priority === p);
+  assert.deepEqual(at(1).map((r) => [r.action.type, r.condition.requestDomains || r.condition.regexFilter || null]), [["block", null]]);
+  assert.deepEqual(at(2).map((r) => [r.action.type, r.condition.requestDomains]), [["allow", SITES]]);
+  assert.ok(at(3).length >= 2 && at(3).every((r) => r.action.type === "block"), "the sensitive sites, by name and by label");
+  assert.equal(at(4).length, 0, "no sensitive site allowed here");
+  assert.deepEqual(at(5).map((r) => r.action.type), ["block", "block", "block"]);
+  assert.ok(at(5).some((r) => r.condition.regexFilter === "^http://"), "plain http");
+  assert.ok(at(5).some((r) => r.condition.regexFilter === "^https?://[^/?#]*@"), "user info");
+  assert.ok(at(5).some((r) => (r.condition.requestDomains || []).includes("accounts.google.com")), "Chrome's own pages");
 }
 
-/** Opens a page in a new run and gives the run and its tab id, once its three rules are seen. */
+/** Opens a page in a new run and gives the run and its tab id, once its rules are seen. */
 async function fencedRun(name) {
   const run = newRun(name);
   const r = await h.planque.sendStep({ op: "open", run, url: h.sites.url("news.test", "/article?case=" + name) });
@@ -156,7 +172,7 @@ async function fencedRun(name) {
   return { run, tab };
 }
 
-test("while a run lives its tab has its three rules, and planque's stop takes them away", { skip }, async () => {
+test("while a run lives its tab has its rules, and planque's stop takes them away", { skip }, async () => {
   const { run, tab } = await fencedRun("rules-stop");
   const other = await fencedRun("rules-bystander");
   const stopped = h.planque.next("run_state", (m) => m.run === run && m.state === "stopped");
@@ -178,7 +194,7 @@ test("unpairing (planque's close 4410) stops every run and leaves no rule at all
   const { tab } = await fencedRun("rules-unpair");
   const live = (await extensionState(h)).runs.filter((r) => !r.stopped);
   assert.ok(live.length >= 2, "runs of this file's earlier tests still live");
-  assert.ok((await sessionRules(h)).length >= 3 * live.length);
+  assert.ok((await sessionRules(h)).length >= RULES_PER_TAB * live.length);
   h.planque.send({ type: "close", code: 4410, reason: "unpaired" });
   await until(async () => {
     const s = await extensionState(h);

@@ -8,7 +8,7 @@
 // pauses the run.
 
 import { RUN_STATES } from "./runstate.js";
-import { refuseURL, bareURL, joinRefusal, joinedRefusal } from "./sites.js";
+import { refuseURL, bareURL, joinRefusal, joinedRefusal, fenceDomains, SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED, LOCAL_SUFFIXES } from "./sites.js";
 import { HAND_MAX_MS, validWords, withoutValues } from "./hand.js";
 
 /**
@@ -48,6 +48,22 @@ function persons(d) {
 function doneKey(run) {
   return run.grant ? "grant:" + run.grant : "name:" + (run.taf || "taf");
 }
+
+/** How many fence rules a tab takes (`Runner.fence`), and their ids from a tab's first. */
+export const FENCE_RULES = 7 + SENSITIVE_LABELS_URLS.length;
+
+/** An address with user info (`https://x@bank.example/`), which `refuseURL` refuses outright and the label patterns can't see past. */
+const USER_INFO = "^https?://[^/?#]*@";
+
+/** Why the run's fence refuses [url], as `refuseURL` says it: `site_blocked` for a sensitive site or Chrome's own pages. */
+const offWhy = (run, url) => (refuseURL(url, run.sites, run.allowed) || { code: "site_not_listed" }).code;
+
+/** What the fence lets a tab reach, for page.js's check before an act (`offFence`): the same lists `Runner.fence` gives Chrome. */
+function fenceOf(run) {
+  const { granted, allowed } = fenceDomains(run.sites, run.allowed);
+  return { granted, allowed, sensitive: [...SENSITIVE.sites], labels: SENSITIVE.labels.source, never: [...NEVER_OPENED], local: [...LOCAL_SUFFIXES] };
+}
+const fenceRange = (base) => Array.from({ length: FENCE_RULES }, (_, i) => base + i);
 
 /** How many addresses a tab's trail keeps for `back`. */
 const TRAIL_MAX = 50;
@@ -120,7 +136,7 @@ export class Runner {
     this.tabRun = new Map(); // tab id → run id
     this.doneStore = doneStore; // {get(), set(obj)}: the tabs each taf's last finished run left, kept where a stopped worker finds them again
     this.done = null; // doneKey → {name, tabs: [{id, url, joined?}], window: id | null, group: id | null}, loaded on first use
-    this.fenceIds = new Map(); // tab id → the first of its three fence rule ids
+    this.fenceIds = new Map(); // tab id → the first of its FENCE_RULES fence rule ids
     this.nextFence = 1;
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
     this.greying = new Map(); // doneKey → the mark of its finished run whose group turns grey after DONE_GRACE_MS (greyLater)
@@ -145,8 +161,11 @@ export class Runner {
         // (onErrorOccurred): a move the person made is never one of the run's steps (0.2.17).
         const runs = run.stepping === d.tabId || run.backing === d.tabId || run.landing.has(d.tabId);
         if (!run.joined.has(d.tabId) && runs) {
+          const why = offWhy(run, d.url);
+          // Its own act: the act answers why, as refuseURL says it (`site_blocked` for a sensitive site, 0.2.19).
+          if (run.stepping === d.tabId) run.stepError = why;
           c.tabs.update(d.tabId, { url: "about:blank" });
-          this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+          this.record(run, { op: "navigate", url: bareURL(d.url), error: why });
         }
       }
     });
@@ -166,10 +185,10 @@ export class Runner {
         // given back too, and the act is refused `site_not_listed`.
         const ours = run.stepping === d.tabId && !persons(d) && !off;
         if (!ours) {
-          if (run.stepping === d.tabId && off) run.stepError = "site_not_listed";
+          if (run.stepping === d.tabId && off) run.stepError = offWhy(run, d.url);
           this.giveBack(run, [d.tabId], run.stepping !== d.tabId || persons(d)).catch(() => {});
           // Recorded only as the run's own act's refused move; the person's own (a page Chrome restored on their Back) is theirs.
-          if (off && run.stepping === d.tabId && !persons(d)) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+          if (off && run.stepping === d.tabId && !persons(d)) this.record(run, { op: "navigate", url: bareURL(d.url), error: offWhy(run, d.url) });
           return;
         }
         this.noteAddress(run, d.tabId, d.url);
@@ -197,8 +216,9 @@ export class Runner {
       }
       if (off) {
         // The run's own work took its own tab off its sites: to its blank page, as ever.
+        if (run.stepping === d.tabId) run.stepError = offWhy(run, d.url);
         c.tabs.update(d.tabId, { url: "about:blank" });
-        this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+        this.record(run, { op: "navigate", url: bareURL(d.url), error: offWhy(run, d.url) });
         return;
       }
       this.noteAddress(run, d.tabId, d.url);
@@ -219,10 +239,10 @@ export class Runner {
         // A tab of the run's own: only a navigation that isn't the run's (the person's, the fence stopping it) gives it to them.
         if (!run.joined.has(d.tabId) && (inStep || run.backing === d.tabId || run.landing.has(d.tabId) || !/ERR_BLOCKED_BY_CLIENT/.test(String(d.error || "")))) return;
         const blocked = /ERR_BLOCKED_BY_CLIENT/.test(String(d.error || ""));
-        if (inStep) run.stepError = "site_not_listed";
+        if (inStep) run.stepError = offWhy(run, d.url);
         // Only the run's own act's refused move is the run's step; a block outside a step is the person's (or the page's own), and
         // is none of the run's.
-        if (blocked && inStep) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+        if (blocked && inStep) this.record(run, { op: "navigate", url: bareURL(d.url), error: offWhy(run, d.url) });
         this.giveBack(run, [d.tabId], !inStep).catch(() => {});
       });
     }
@@ -232,7 +252,7 @@ export class Runner {
       if (!run) return;
       if (refuseURL(d.url, run.sites, run.allowed)) {
         c.tabs.remove(d.tabId);
-        this.record(run, { op: "open", url: bareURL(d.url), error: "site_not_listed" });
+        this.record(run, { op: "open", url: bareURL(d.url), error: offWhy(run, d.url) });
         return;
       }
       run.tabs.add(d.tabId);
@@ -267,15 +287,10 @@ export class Runner {
   }
 
   /**
-   * Chrome's own rules for a run's tab (declarativeNetRequest session rules): a page or frame request to any host
-   * outside the run's sites, or over plain http, is blocked before it's sent, whatever started it (a link, a redirect, a
-   * form). onBeforeNavigate stays as the record of a refused move, not the guard.
-   */
-  /**
-   * The ids of a tab's three fence rules. A rule id must be a small positive integer (an int32), and a tab id can be large
-   * (`tabId * 4` overflowed it, and the whole run failed as browser_unavailable), so each fenced tab takes the next three
-   * from a counter of this runner's own. Nothing but this runner adds session rules, and no run outlives it, so the runner
-   * clears whatever an earlier service worker left as it's made.
+   * The ids of a tab's fence rules (FENCE_RULES of them). A rule id must be a small positive integer (an int32), and a tab id can
+   * be large (`tabId * 4` overflowed it, and the whole run failed as browser_unavailable), so each fenced tab takes the next ones
+   * from a counter of this runner's own. Nothing but this runner adds session rules, and no run outlives it, so the runner clears
+   * whatever an earlier service worker left as it's made.
    */
   async ruleIds(tabId) {
     // The clear made with the runner (`ready`), which every fence awaits, so a run starting beside another never has its rules
@@ -283,26 +298,49 @@ export class Runner {
     await this.ready;
     if (!this.fenceIds.has(tabId)) {
       this.fenceIds.set(tabId, this.nextFence);
-      this.nextFence += 3;
+      this.nextFence += FENCE_RULES;
     }
-    const base = this.fenceIds.get(tabId);
-    return [base, base + 1, base + 2];
+    return fenceRange(this.fenceIds.get(tabId));
   }
 
+  /**
+   * Chrome's own rules for a run's tab (declarativeNetRequest session rules): Chrome says what `refuseURL` says, for every page
+   * or frame request of the tab, before it's sent, whatever started it (a link, a redirect, a form, the page's own script). In
+   * priority order, the highest winning (0.2.19):
+   *   1. block every page and frame;
+   *   2. allow the grant's sites, as `refuseURL` takes them (`fenceDomains`: one site each, never a local name or an address);
+   *   3. block the sensitive ones: `SENSITIVE.sites` by domain, and any host with a label that names a bank, a government or a
+   *      health account (`SENSITIVE_LABELS_URLS`, the same words `sensitive()` tests, over a few patterns Chrome can hold);
+   *   4. allow the sensitive sites the phone allowed by name, only within the grant's;
+   *   5. block Chrome's own pages and the Web Store, which no grant opens, plain http, and any address with user info
+   *      (`x@` before the host), which `refuseURL` refuses outright.
+   * Their ids, from the tab's first (`fenceRange`): 0 block all, 1 the grant, 2 the sensitive sites, 3 the allowance, 4 Chrome's
+   * own pages, 5 http, 6 user info, then one for each of the label patterns.
+   * A domain matches a site and its subdomains, as `within` does, so a grant of example.com never lets bank.example.com through,
+   * nor google.com accounts.google.com. A pattern Chrome can't hold fails the fence, so the tab is never left unfenced
+   * (`fenceFailed`). onBeforeNavigate stays as the record of a refused move and a backstop, not the guard.
+   */
   async fence(run, tabId) {
     const dnr = this.chrome.declarativeNetRequest;
     if (!dnr) return;
-    const [one, two, three] = await this.ruleIds(tabId);
+    if (dnr.isRegexSupported && this.labelsHeld === undefined) {
+      const said = await Promise.all([USER_INFO, ...SENSITIVE_LABELS_URLS].map((regex) => Promise.resolve(dnr.isRegexSupported({ regex })).catch(() => null)));
+      this.labelsHeld = said.every((x) => x && x.isSupported);
+    }
+    if (this.labelsHeld === false) throw Object.assign(new Error("Chrome can't hold the sensitive-site pattern"), { code: "browser_unavailable" });
+    const ids = await this.ruleIds(tabId);
     const frames = ["main_frame", "sub_frame"];
-    const domains = [...new Set([...run.sites, ...run.allowed])];
-    await dnr.updateSessionRules({
-      removeRuleIds: [one, two, three],
-      addRules: [
-        { id: one, priority: 1, action: { type: "block" }, condition: { tabIds: [tabId], resourceTypes: frames } },
-        { id: two, priority: 2, action: { type: "allow" }, condition: { tabIds: [tabId], resourceTypes: frames, requestDomains: domains } },
-        { id: three, priority: 3, action: { type: "block" }, condition: { tabIds: [tabId], resourceTypes: frames, regexFilter: "^http://" } },
-      ],
-    });
+    const on = { tabIds: [tabId], resourceTypes: frames };
+    const { granted, allowed } = fenceDomains(run.sites, run.allowed);
+    const rules = [{ id: ids[0], priority: 1, action: { type: "block" }, condition: on }];
+    if (granted.length) rules.push({ id: ids[1], priority: 2, action: { type: "allow" }, condition: { ...on, requestDomains: granted } });
+    rules.push({ id: ids[2], priority: 3, action: { type: "block" }, condition: { ...on, requestDomains: [...SENSITIVE.sites] } });
+    if (allowed.length) rules.push({ id: ids[3], priority: 4, action: { type: "allow" }, condition: { ...on, requestDomains: allowed } });
+    rules.push({ id: ids[4], priority: 5, action: { type: "block" }, condition: { ...on, requestDomains: [...NEVER_OPENED] } });
+    rules.push({ id: ids[5], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: "^http://" } });
+    rules.push({ id: ids[6], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: USER_INFO } });
+    SENSITIVE_LABELS_URLS.forEach((regexFilter, i) => rules.push({ id: ids[7 + i], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter } }));
+    await dnr.updateSessionRules({ removeRuleIds: ids, addRules: rules });
   }
 
   async unfence(tabId) {
@@ -311,7 +349,7 @@ export class Runner {
     const base = this.fenceIds.get(tabId);
     if (base == null) return;
     this.fenceIds.delete(tabId);
-    await dnr.updateSessionRules({ removeRuleIds: [base, base + 1, base + 2] }).catch(() => {});
+    await dnr.updateSessionRules({ removeRuleIds: fenceRange(base) }).catch(() => {});
   }
 
   /** Every fence rule goes (unpairing): those this runner knows, and any session rule left, as only this runner adds them. */
@@ -319,7 +357,7 @@ export class Runner {
     const dnr = this.chrome.declarativeNetRequest;
     if (!dnr) return;
     const ids = new Set();
-    for (const base of this.fenceIds.values()) [base, base + 1, base + 2].forEach((id) => ids.add(id));
+    for (const base of this.fenceIds.values()) fenceRange(base).forEach((id) => ids.add(id));
     this.fenceIds.clear();
     if (dnr.getSessionRules) for (const r of (await dnr.getSessionRules().catch(() => [])) || []) ids.add(r.id);
     if (ids.size) await dnr.updateSessionRules({ removeRuleIds: [...ids] }).catch(() => {});
@@ -1385,9 +1423,9 @@ export class Runner {
       // In the person's tab, the run's sites go with the act: a link or a form's submit that would leave them is refused in the page
       // before it fires, so Chrome never puts its "blocked" page in place of theirs. A tab of the run's own is left to the fence,
       // which sends it to its blank page.
-      const opts = run.joined.has(tabId) ? { sites: [...run.sites, ...run.allowed] } : null;
+      const opts = run.joined.has(tabId) ? { fence: fenceOf(run) } : null;
       const done = await this.inTab(tabId, (a, id, o) => globalThis.TafsPage.act(a, id, o), [step.act, step.read_id, opts]);
-      if (done && done.code === "site_not_listed" && done.url) this.record(run, { op: "navigate", url: done.url, error: "site_not_listed" });
+      if (done && (done.code === "site_not_listed" || done.code === "site_blocked") && done.url) this.record(run, { op: "navigate", url: done.url, error: done.code });
       if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
       // A click is never proof of its effect: the page is read back, after the navigation it started has begun and ended.
       await this.loaded(tabId, before ? before.url || "" : undefined);

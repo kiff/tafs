@@ -8,6 +8,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { playwright, start, newRun, ref, until } from "./harness.mjs";
 import { joining } from "./joining.mjs";
+import { LEAK_VIAS } from "./sites.mjs";
 
 const skip = !playwright;
 let h;
@@ -84,7 +85,7 @@ for (const { via, own, joined } of CASES) {
 test("with no run, the same pages send the value by every way, the fenced ones included: the cases above aren't empty", { skip }, async () => {
   const page = await h.context.newPage();
   try {
-    for (const via of ["form-iframe", "postmessage", "fetch"]) {
+    for (const via of LEAK_VIAS) {
       const value = `typed-${via}-norun-${process.pid}`;
       await page.goto(h.sites.url("shop.test", `/leak-${via}?case=norun`));
       await page.fill("#note", value);

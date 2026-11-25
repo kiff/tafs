@@ -5,7 +5,7 @@
 
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { playwright, start, newRun, ref, until, tabAt, runState, tabInfo, rulesOf, inWorker } from "./harness.mjs";
+import { playwright, start, newRun, ref, until, tabAt, runState, tabInfo, rulesOf, inWorker, RULES_PER_TAB } from "./harness.mjs";
 import { PERSON_WORDS, PERSON_VALUE } from "./sites.mjs";
 
 const skip = !playwright;
@@ -191,7 +191,7 @@ test("the person drags the run's tab out of its group: it stays the run's, fence
   const read = await h.planque.sendStep({ op: "read", run });
   assert.equal(read.ok, true, JSON.stringify(read.error));
   assert.equal(read.page.title, "Tide tables");
-  assert.equal((await rulesOf(h, tabId)).length, 3, "still fenced");
+  assert.equal((await rulesOf(h, tabId)).length, RULES_PER_TAB, "still fenced");
   // Off the run's sites, still refused there.
   const off = await h.planque.sendStep({ op: "open", run, url: h.sites.url("other.test", "/?case=own-out") });
   assert.equal(off.ok, false);
@@ -299,7 +299,7 @@ test("two runs of two tafs at once: each reads and acts only in its own tab, nev
   const read = await asTwo({ op: "read", run: two });
   assert.equal(read.ok, true, JSON.stringify(read.error));
   assert.equal((await runState(h, two)).tab, sb.tab);
-  assert.equal((await rulesOf(h, sb.tab)).length, 3);
+  assert.equal((await rulesOf(h, sb.tab)).length, RULES_PER_TAB);
   assert.equal((await tabInfo(h, sb.tab)).groupId, tb.groupId);
   // The one taf's next run closes its own last run's tab, never the other's.
   const again = newRun("taf-one-again");

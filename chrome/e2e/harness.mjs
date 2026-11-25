@@ -71,7 +71,7 @@ export async function start({ pair = true, cloud = false, args = [], bfcache = f
       "--disable-extensions-except=" + h.dir,
       "--load-extension=" + h.dir,
       // The fixture sites are on this computer, and nothing else is reached: every other name fails to resolve.
-      "--host-resolver-rules=" + ["MAP *.test 127.0.0.1", ...mapped, "MAP * ~NOTFOUND", "EXCLUDE 127.0.0.1"].join(", "),
+      "--host-resolver-rules=" + ["MAP *.test 127.0.0.1", "MAP google.com 127.0.0.1", "MAP *.google.com 127.0.0.1", "MAP *.github.io 127.0.0.1", ...mapped, "MAP * ~NOTFOUND", "EXCLUDE 127.0.0.1"].join(", "),
       "--ignore-certificate-errors",
       // Straight to 127.0.0.1, whatever proxy the computer has set.
       "--no-proxy-server",
@@ -166,6 +166,11 @@ export async function inWorker(h, func, arg) {
   const worker = await until(() => h.context.serviceWorkers().find((w) => w.url().startsWith(`chrome-extension://${h.extensionId}/`)), "the service worker");
   return worker.evaluate(func, arg);
 }
+
+/** How many fence rules a run's tab holds here (runner.js `fence`): every one but the allowance's, as no grant here allows a sensitive site. */
+export { FENCE_RULES } from "../src/runner.js";
+import { FENCE_RULES as ALL_RULES } from "../src/runner.js";
+export const RULES_PER_TAB = ALL_RULES - 1;
 
 /** Chrome's declarativeNetRequest session rules, as the service worker reads them: the fences of the runs' tabs. */
 export function sessionRules(h) {

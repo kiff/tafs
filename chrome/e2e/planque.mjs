@@ -123,7 +123,24 @@ export class FakePlanque extends EventEmitter {
 
   // ---- The relay ----
 
+  /**
+   * The relay down, as when planque or the network is (`relayDown()`): the open connection closes and no new one is taken until
+   * `relayUp()`. The extension tries again on its own (relay.js `reconnectSoon`, while a run lives).
+   */
+  relayDown() {
+    this.down = true;
+    if (this.socket) this.socket.close(1001);
+  }
+
+  relayUp() {
+    this.down = false;
+  }
+
   upgrade(req, sock) {
+    if (this.down) {
+      sock.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
+      return;
+    }
     const url = new URL(req.url, this.api);
     if (url.pathname !== "/relay" || url.searchParams.get("chrome") !== this.chromeId) {
       sock.end("HTTP/1.1 404 Not Found\r\n\r\n");
@@ -216,6 +233,11 @@ export class FakePlanque extends EventEmitter {
   /** The phone's signature over a grant's sites (`tafs-chrome/sites/v1`). */
   async sitesSigned(sites = this.sites, { grant = this.grant, key = this.phoneKeys.privateKey } = {}) {
     return { sites, sig: await sign(key, LABEL.sites, { chrome_id: this.chromeId, grant, sites }) };
+  }
+
+  /** A sensitive site the phone allows for a grant (`tafs-chrome/sensitive/v1`), signed with `key` (the phone's by default). */
+  async sensitiveAllowed(site, { grant = this.grant, key = this.phoneKeys.privateKey } = {}) {
+    return { site, sig: await sign(key, LABEL.sensitive, { chrome_id: this.chromeId, grant, site }) };
   }
 
   /**
