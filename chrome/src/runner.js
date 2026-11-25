@@ -666,6 +666,11 @@ export class Runner {
       };
       this.runs.set(run.id, run);
     }
+    // planque keeps a taf's run for its next call, whatever agent run makes it: a step of another agent run (a schedule, the
+    // phone, a later message) never works in a tab of the person's that their panel run joined. That tab goes back to them
+    // first, as Stop gives it back, and the step goes on in a tab of the run's own; the run can't join one again.
+    const stepRun = typeof step.agent_run === "string" && step.agent_run ? step.agent_run : null;
+    if (run.joined.size && stepRun !== run.agentRun) await this.giveBackJoined(run, stepRun);
     if (run.stopped) return { error: { code: "stopped" } };
     if (run.paused) return { error: { code: PAUSE_CODES[run.paused] || "paused_by_owner" } };
     const out = await this.dispatch(run, step).catch((e) => ({ error: { code: "browser_unavailable", detail: String(e && e.message || e).slice(0, 200) } }));
@@ -914,6 +919,25 @@ export class Runner {
     const off = this.panel && this.panel.off ? await Promise.resolve().then(() => this.panel.off()).catch(() => []) : [];
     const rules = { sites: run.sites, allowed: run.allowed, off: Array.isArray(off) ? off : [] };
     return joinedRefusal(tab, rules) || (url != null ? joinedRefusal({ ...tab, url }, rules) : null);
+  }
+
+  /**
+   * The tabs of the person's that [run] joined go back to them, as Stop gives them back (out of the group, unfenced, forgotten, the
+   * bar gone, still open), while the run itself goes on, now as [agentRun]'s: a step of another agent run reached it.
+   */
+  async giveBackJoined(run, agentRun) {
+    const joined = [...run.joined];
+    for (const t of joined) {
+      await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
+      this.tabRun.delete(t);
+      await this.unfence(t);
+      run.tabs.delete(t);
+      run.joined.delete(t);
+    }
+    if (joined.length) await Promise.resolve(this.chrome.tabs.ungroup(joined)).catch(() => {});
+    if (run.tab != null && joined.includes(run.tab)) run.tab = [...run.tabs][0] ?? null;
+    run.agentRun = agentRun;
+    run.follow = null;
   }
 
   /** A further tab of the run's own, in its window and group, fenced before it loads, and the one the run works in from now on. */

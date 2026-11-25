@@ -1573,3 +1573,32 @@ test("Chrome follows the run only while the panel is open in its window", async 
   await r.handle(started({ id: "op2", url: "https://shop.example/next" }));
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url).at(-1), ["tabs.update", THEIRS, { url: "https://shop.example/next" }], "the panel closed: no tab is brought to the front");
 });
+
+// The security read (02:30): planque reuses a taf's run for its next call whatever agent run makes it, so a schedule or a phone
+// run right after the person's panel run reached the run that held their tab.
+test("a step of another agent run never works in the person's joined tab: it goes back to them first, and the run works in a tab of its own", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "the panel run joined their tab");
+  for (const other of [{}, { agent_run: "kr_other" }]) {
+    const before = c.calls.length;
+    const out = await r.handle(started({ id: "op_" + Object.keys(other).length, op: "read", agent_run: undefined, ...other }));
+    const now = c.calls.slice(before);
+    assert.equal(r.runs.get("run_1").joined.size, 0, "given back");
+    assert.equal(r.tabRun.has(THEIRS), false, "forgotten");
+    // Only the bar's hide reaches their tab: no page script, no read, no act.
+    assert.ok(!now.some((x) => x[0] === "executeScript" && x[2] === THEIRS && x[1] !== "isolated"), "no page script in their tab");
+    assert.ok(!now.some((x) => x[0] === "page"), "nothing read or acted on");
+    assert.ok(!now.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), "still open");
+    if (!Object.keys(other).length) {
+      assert.ok(now.some((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS)), "out of the group");
+      assert.ok(now.some((x) => x[0] === "bar.hide" && x[1] === THEIRS), "its bar goes");
+      assert.equal(out.error && out.error.code, "no_page", "a read with no tab of its own yet: planque goes on in a new run");
+    }
+  }
+  // An open now goes to a tab of the run's own, and their tab can't join again.
+  const opened = await r.handle(started({ id: "op_open", agent_run: "kr_other" }));
+  assert.ok(opened.page, "opened in a tab of its own");
+  assert.notEqual(r.runs.get("run_1").tab, THEIRS);
+  assert.equal(r.runs.get("run_1").joined.size, 0);
+});

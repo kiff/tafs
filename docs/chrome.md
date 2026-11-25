@@ -469,6 +469,11 @@ was done.
 From 0.2.12 a taf works in the person's own tab, as Claude's Chrome extension does, when the person started the work from the
 side panel (`src/panels.js`, `Runner.frontTab`).
 
+**A step of another agent run never works in a joined tab** (0.2.13, `Runner.giveBackJoined`): planque keeps a taf's run for its
+next call whatever agent run makes it, so a schedule, the phone or a later message may reach the run that holds the person's tab. A
+step whose `agent_run` isn't the panel run's gives that tab back first, as Stop does (out of the group, unfenced, forgotten, the bar
+gone, still open), and goes on in a tab of the run's own; the run can't join one again.
+
 - **Which runs.** Only a run the person started from that window's side panel. A send from the panel (Coach's chat,
   `coach_send`, or a taf's, `taf_send`) leaves a mark in the service worker: the panel's window, the tab in front of it then, and
   the run tafs cloud's answer names (`run`). A run's first step joins that tab only if planque's signed step names the same run
