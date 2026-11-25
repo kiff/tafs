@@ -2548,7 +2548,28 @@ describe("Setup (kiff/agents#91)", () => {
       // Start's own words, the first run's items 2 and 3: one line and the button, never the apps' paragraphs. What Start does
       // is the line's to say (the app-words cut, screen 3). It never names a biometric, and never says "once": a first run
       // asks for the face or fingerprint more than once (the first-run walk-through).
-      expect(first.words).toEqual({ lead: "Start gives Coach the tools below. You approve them on this device.", start: "Start" });
+      expect(first.words).toMatchObject({ lead: "Start gives Coach the tools below. You approve them on this device.", start: "Start" });
+      // The Card step before the signature (the words of the guidance before Coach's first approval): its title, its four
+      // lines, the fold's label over KIFF's own words, and a whole-sentence button for each way a device approves, which the
+      // app picks by its lock; a passkey's device says sign_passkey for sign. Every one in the person's language.
+      const en = wordsIn("en");
+      expect(first.words).toEqual({ lead: en.start_lead, start: en.start_button, title: en.card_step_title,
+        lines: { allows: en.card_step_allows, asks: en.card_step_asks, sign: en.card_step_sign, stop: en.card_step_stop },
+        exact: en.card_step_exact, buttons: { fingerprint: en.card_step_give_fingerprint, face: en.card_step_give_face, passkey: en.card_step_give_passkey },
+        sign_passkey: en.card_step_sign_passkey });
+      // Shown = signed: each tool the step lists is on the Card the draft signs, with that Card's limit and what happens past
+      // it, and the step lists every action the draft's Cards grant, so an app can compare the two and refuse when they differ.
+      type Signed = { id: string; on_exceed: string; grants: Array<{ action: string }>; aggregates: Array<{ quantity: string; limit: number; window: string }> };
+      const signed = draft.body.cards as Signed[];
+      const listed = (first.coach_tools_step.groups as Array<{ tools: Array<{ tool: string; card: string; limit: number; asks: boolean }> }>).flatMap((g) => g.tools);
+      for (const t of listed) {
+        const card = signed.find((c) => c.id === t.card);
+        expect(card, t.tool).toBeDefined();
+        expect(card!.grants.map((g) => g.action), t.tool).toContain(t.tool);
+        expect(card!.aggregates, t.tool).toEqual([{ quantity: "count", limit: t.limit, window: "calendar_day" }]);
+        expect(card!.on_exceed, t.tool).toBe(t.asks ? "owner" : "refuse");
+      }
+      expect(listed.map((t) => t.tool).sort()).toEqual(signed.flatMap((c) => c.grants.map((g) => g.action)).sort());
       for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
         expect(wordsIn(lang).start_lead, lang).not.toMatch(/\b(once|einmal|une fois|una vez|una volta|uma vez|één keer|raz)\b/i);
       }

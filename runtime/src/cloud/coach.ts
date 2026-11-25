@@ -336,11 +336,19 @@ export const COACH_TOOL_GROUPS: Array<{ id: "watch" | "run" | "build" | "drive";
   { id: "drive", tools: ["app_look", "app_act"] },
 ];
 
+/**
+ * One of Coach's tools on the step: its words, and what its Card signs, as data, so an app checks the plain list it shows
+ * against the signed draft and refuses to ask for a signature when they differ (shown = signed): the tool's action, its
+ * Card's id, the Card's limit a day (counted with the other tools on the same Card), and whether past it the call asks
+ * the person (`on_exceed: "owner"`; with a limit of 0, every call asks) rather than being refused.
+ */
+export interface CoachStepTool { name: string; does: string; why: string; tool: string; card: string; limit: number; asks: boolean }
+
 /** The tools step's words, as the apps draw them (docs/coach.md, "Coach's tools step"). */
 export interface CoachToolsStep {
   title: string;
   intro: string;
-  groups: Array<{ name: string; line: string; tools: Array<{ name: string; does: string; why: string }> }>;
+  groups: Array<{ name: string; line: string; tools: CoachStepTool[] }>;
   /** The label of the fold the tools sit under, closed by default. */
   details: string;
   give: string;
@@ -373,7 +381,12 @@ export function coachToolsStep(lang: Lang = "en", opts: { cardsOnly?: boolean } 
     groups: COACH_TOOL_GROUPS.map((g) => ({
       name: word(`cts_g_${g.id}`),
       line: word(`cts_g_${g.id}_line`),
-      tools: g.tools.map((t) => ({ name: word(`cts_${t}`), does: [word(`cts_${t}_does`), limit(t)].filter(Boolean).join(" "), why: word(`cts_${t}_why`) })),
+      tools: g.tools.map((t) => {
+        const card = COACH_CARDS.find((c) => c.actions.includes(t));
+        if (!card) throw new Error(`coach tools step: ${t} is on no Card`);
+        return { name: word(`cts_${t}`), does: [word(`cts_${t}_does`), limit(t)].filter(Boolean).join(" "), why: word(`cts_${t}_why`),
+          tool: t, card: card.id, limit: card.limit, asks: card.asks };
+      }),
     })),
   };
 }

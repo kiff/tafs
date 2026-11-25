@@ -2284,11 +2284,32 @@ function validZone(zone: string): boolean {
   try { new Intl.DateTimeFormat("en", { timeZone: zone }); return true; } catch { return false; }
 }
 
-/** Coach's start in words: one line, the button, and what it does (approvals and Coach's tools, one face or fingerprint). */
-function startWords(lang: Lang): { lead: string; start: string } {
+/**
+ * Coach's start in words: one line and the button, then the Card step before the signature (docs/api.md, "Coach's first
+ * start"): its title, its four lines (what it allows, what always asks, how the approval signs, how to stop it), the label
+ * of the fold that holds KIFF's own words for the Cards, and the button for each way the device approves, whole sentences
+ * so each language's grammar holds. A device that approves with a passkey (a computer) says `sign_passkey` for `sign`.
+ */
+function startWords(lang: Lang): StartWords {
   const w = wordsIn(lang);
   // What Start does is the lead's to say, once: no second line under the button (the app-words cut, screen 3).
-  return { lead: w.start_lead, start: w.start_button };
+  return {
+    lead: w.start_lead, start: w.start_button, title: w.card_step_title,
+    lines: { allows: w.card_step_allows, asks: w.card_step_asks, sign: w.card_step_sign, stop: w.card_step_stop },
+    exact: w.card_step_exact, buttons: { fingerprint: w.card_step_give_fingerprint, face: w.card_step_give_face, passkey: w.card_step_give_passkey },
+    sign_passkey: w.card_step_sign_passkey,
+  };
+}
+
+/** Coach's start words, as `start.words` sends them. */
+export interface StartWords {
+  lead: string;
+  start: string;
+  title: string;
+  lines: { allows: string; asks: string; sign: string; stop: string };
+  exact: string;
+  buttons: { fingerprint: string; face: string; passkey: string };
+  sign_passkey: string;
 }
 
 /** `plan_needed` with its words when KIFF says the account has no plan; nothing when it has one or can't be read. */
