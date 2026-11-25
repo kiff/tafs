@@ -358,12 +358,12 @@ The chat is one thing drawn in several places: Coach's chat and a taf's on the p
 
 | Feature | iPhone/iPad | Android | Chrome side panel |
 | :- | :- | :- | :- |
-| Each message's time, and a header where a day starts | done | done | not yet: 0.2.24 (the chats list shows a time or a date only) |
-| Copy an answer | done | done | not yet: 0.2.24 |
-| Report this answer (⋯) | done | done | not yet: 0.2.24 draws it. The route is open to the panel (tafs#2119): only for an answer the panel may show, in a chat it began or in a run's turn shown there, with that chat named |
-| Your own message: Send again, Edit and send, Copy | done | done | not yet: 0.2.24. Send again and Edit and send only in a chat begun in this Chrome; a run's turn from another device gets Copy only (a failed turn has Retry, 0.2.22) |
-| A run's work folded into "Worked 12 s · N steps", which opens the steps again | done | done | not yet: 0.2.24 (a separate run card) |
-| Answers in markdown, drawn as the phones draw them | done | done | partial: the panel's own reader (`chatmd.js`); the phones' rules in 0.2.24 |
+| Each message's time, and a header where a day starts | done | done | done (0.2.24): in the panel's language and the computer's zone; the language's own 12- or 24-hour clock (a browser doesn't say the computer's) |
+| Copy an answer | done | done | done (0.2.24): no permission asked for; a refused clipboard selects the words and says so |
+| Report this answer (⋯) | done | done | done (0.2.24): only on a message the panel may show (its own chats, and a run's turn shown there), always with the chat's session (the route open to the panel, tafs#2119) |
+| Your own message: Send again, Edit and send, Copy | done | done | done (0.2.24): Send again and Edit and send only in a chat begun in this Chrome (a taf's chat always; a Coach chat once a send from here went into it); a run's turn from another device gets Copy only (a failed turn has Retry, 0.2.22) |
+| A run's work folded into "Worked 12 s · N steps", which opens the steps again | done | done | done (0.2.24): the run's card gives way to it once tafs cloud says the turn is over; a run that works, is paused or waits on the person keeps its card |
+| Answers in markdown, drawn as the phones draw them | done | done | done (0.2.24): the phones' rules in the panel's own reader (`chatmd.js`); a link shows its address and never opens |
 | The working line, and a failed turn's line with why | done | done | done (0.2.22) |
 | Try again under a failed turn, only on tafs cloud's `failed.retry` | not yet: Retry shows on every failed run | done (tafs#2084) | done (0.2.22) |
 | Delete a conversation for good | done for iOS 1.0.1 (tafs#2107) | done (tafs#2099) | not yet: the panel's chats can't delete; a deleted chat leaves the panel with it (no copy kept by the extension) |

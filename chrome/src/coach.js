@@ -3,17 +3,33 @@
 // refuses anything else for a view-only session. The panel sends the owner's words and the files they picked (attach.js). When Coach
 // or a taf works on a page, its first step there is to read it itself, through planque.
 
+import { workOf, reportBody } from "./chatrow.js";
+
 export const CLOUD = "https://cloud.tafs.kiff.dev";
 
 /** The longest message tafs cloud takes. */
 export const MAX_TEXT = 2000;
 
-/** tafs cloud's Coach routes, as the session's own: `token` is the view-only KIFF session's, `fetch` the browser's. */
-/** A chat's messages as the panel draws them: the person's and the taf's, with their id and the page they carried. */
-function chatMessages(list, withSession) {
+/**
+ * A chat's messages as the panel draws them: the person's and the taf's, with their id, time, chat, kind, the page they
+ * carried, and an answer's work (chatrow.js `workOf`: how long and the steps, in tafs cloud's words, never a tool's name).
+ */
+function chatMessages(list) {
   return (Array.isArray(list) ? list : [])
     .filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string")
-    .map((m) => ({ from: m.from, text: m.text, at: m.at, ...(withSession ? { session: m.session } : {}), ...(typeof m.id === "string" && m.id ? { id: m.id } : {}), ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}) }));
+    .map((m) => {
+      const work = m.from === "taf" ? workOf(m.work) : null;
+      return {
+        from: m.from,
+        text: m.text,
+        at: m.at,
+        ...(typeof m.session === "string" && m.session ? { session: m.session } : {}),
+        ...(m.kind === "kickoff" ? { kind: "kickoff" } : {}),
+        ...(typeof m.id === "string" && m.id ? { id: m.id } : {}),
+        ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}),
+        ...(work ? { work } : {}),
+      };
+    });
 }
 
 /**
@@ -42,7 +58,9 @@ export class Coach {
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(data.words || data.error || "tafs cloud answered " + res.status), { status: res.status, code: data.code });
+    // A refusal keeps tafs cloud's own words for people (`words`), when it sent them, for the panel to show as they are.
+    const words = typeof data.words === "string" && data.words.trim() ? data.words.trim() : undefined;
+    if (!res.ok) throw Object.assign(new Error(words || data.error || "tafs cloud answered " + res.status), { status: res.status, code: data.code, ...(words ? { words } : {}) });
     return data;
   }
 
@@ -63,7 +81,7 @@ export class Coach {
     if (!id) return null;
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation" + (session ? "/" + encodeURIComponent(session) : ""));
     return {
-      messages: chatMessages(t.messages, true),
+      messages: chatMessages(t.messages),
       working: t.working ? t.working.session : null,
       failed: failedOf(t),
       // A card that waits on the owner (an approval, a sign-in) is answered on the phone, never here.
@@ -100,7 +118,7 @@ export class Coach {
   async tafThread(id) {
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation");
     return {
-      messages: chatMessages(t.messages, false),
+      messages: chatMessages(t.messages),
       working: t.working ? t.working.session : null,
       failed: failedOf(t),
       waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
@@ -182,6 +200,21 @@ export class Coach {
     if (!id) throw Object.assign(new Error("Coach isn't started"), { code: "no_coach" });
     if (typeof session !== "string" || !session) throw Object.assign(new Error("no such chat"), { code: "bad_chat" });
     return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/chats/" + encodeURIComponent(session) + "/" + (archived ? "archive" : "unarchive"));
+  }
+
+  /**
+   * Reports an answer of taf `id`'s (Coach's when `id` is null) by its message id, as the phones do (`POST …/messages/{message}/
+   * report`, docs/chat.md "Reporting an answer"): a reason, the note when there is one, and the chat's `session`, always: tafs
+   * cloud takes a report from the panel only for an answer in a chat it may show. Answers `{id, at, new}`; `new: false` when
+   * the person had reported it already.
+   */
+  async report(id, message, { reason, note, session }) {
+    const body = reportBody(reason, note, session);
+    if (!body || typeof message !== "string" || !message) throw Object.assign(new Error("not a report tafs cloud takes"), { code: "bad_report" });
+    const taf = id || (await this.coach());
+    if (!taf) throw Object.assign(new Error("Coach isn't started"), { code: "no_coach" });
+    const { report } = await this.call("POST", "/v1/tafs/" + encodeURIComponent(taf) + "/messages/" + encodeURIComponent(message) + "/report", body);
+    return report || {};
   }
 
   /** The person's page consent at tafs cloud: `{given, version}` (Coach reading the page in front, docs/chrome.md). */

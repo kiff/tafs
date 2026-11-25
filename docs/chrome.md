@@ -763,7 +763,9 @@ browser: {
 ## What's kept
 
 - **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
-  key, and the connections a re-pairing carried, `carried`, as the phone signed them). No page, step or value read is ever written to disk.
+  key, and the connections a re-pairing carried, `carried`, as the phone signed them), and the ids of the Coach chats a send
+  from this panel went into (`coach_began`, at most 200, newest kept; 0.2.24), so the panel offers Send again and Edit and
+  send only there. No page, step, message or value read is ever written to disk.
 - **No sign-in, ever.** The extension has no saved sign-ins and no password field. At a sign-in page, the taf hands the step
   to the person ("A step handed to the person"): they sign in themselves, in their own tab, and press Done. Versions up to
   0.2.3 could save sealed sign-ins; from 0.2.4, every start of the service worker deletes what they kept (`vault` and
@@ -1033,6 +1035,41 @@ computer's passkey, which this Chrome has neither of.
     are (`Coach.postWithPage`): a refused page never holds the message.
   - There's no "Send without the page" in a taf's composer yet: its words go alone when the page can't go, and the person
     stops it everywhere with Stop reading pages.
+- **The chat is the phones' chat** (0.2.24, `chrome/src/chatrow.js`, `panel.js` `drawMessages`), in Coach's chat and a
+  taf's alike, by the rules in [chat.md](chat.md):
+  - **Each message's time, small, under it** (tafs cloud's `at`), and **a header where a day starts**, over the chat's first
+    message and each first message of a later day: **Today**, **Yesterday**, else the date with its weekday in the language's
+    own order ("Wed, Nov 18"), with the year when it isn't this one (`dayLabel`, `timeLabel`). Both are in the panel's
+    language (`chrome.i18n.getUILanguage()`, through `Intl`) and the computer's time zone; a browser tells nothing of the
+    computer's 12- or 24-hour setting, so the language's own is used ("14:05", "2:05 PM").
+  - **Under an answer, Copy and ⋯.** Copy writes the answer's words, whole, to the clipboard from the press itself, with no
+    permission asked for, and says "Copied"; where the browser refuses, it selects the words and says to copy them with the
+    keyboard. ⋯ holds **Report this answer** (opening it sends nothing), only on an answer tafs cloud has an id for, in a
+    chat the panel can name: it opens a screen over the panel with tafs cloud's four reasons (Offensive, Harmful, Wrong,
+    Other), a note of at most 1,000 characters and **Send**, as the phones' sheet, and sends
+    `POST /v1/tafs/{id}/messages/{message}/report {reason, note?, session}` with the chat's session, always: tafs cloud takes
+    the panel's report only for an answer in a chat this Chrome began or in a run's turn shown here (`chrome.may`). Sent, it
+    says "Thanks. Someone at KIFF will read your report.", or "You've already reported this answer." for `new: false`; not
+    sent, it says why (tafs cloud's words when it sent them, else "This answer isn't on tafs cloud any more." for a 404, else
+    "It didn't reach KIFF. Try again.") and stays open to send again. Send goes once, however fast it's pressed.
+  - **On the person's own message, ⋯** holds **Copy** always, and **Send again** and **Edit and send** only in a chat begun
+    in this Chrome. Send again sends the same words as a new message, as Try again does (a new client id, no files, the box
+    left as it is), once, however fast it's pressed and while the first is on its way; Edit and send puts the words back in
+    the box. A taf's chat in the panel is always one this Chrome began (tafs cloud reads it its own newest). A Coach chat is
+    one when the service worker knows it began it: each chat a send from here went into (tafs cloud takes the panel's message
+    only into a chat this Chrome began, or a new one), kept with the pairing (`coach_began`, below in "What's kept"), and
+    given as the read's `began`. tafs cloud's chat list and thread say nothing of which they are, so a run's chat shown here
+    (read-only to the panel) gets Copy only, and so does a chat begun here before 0.2.24 until its next message from here.
+  - **A run's work, folded** into one line over its answer, "Worked 4.2 s · 3 steps, 1 failed" (tafs cloud's `work` on the
+    message, as Android's `Chat.workLine`), which opens to its steps in tafs cloud's words, never a tool's name: a step with
+    no words is left out, tries of the same step are one row ("2 tries"), a failed step is left out once something worked
+    and otherwise in the failure colour with tafs cloud's reason under it, and a step refused back unmade says "not made ·
+    read first" (iOS's `WorkLog.rows`). What's open stays open across the chat's next read. **A run's card gives way to it:**
+    once tafs cloud says the taf's turn is over (`turnOver`) and the run has had no step for 10 s (the runner's own
+    `TURN_QUIET_MS`, after which it ends the run), the run's card under the chat is no longer drawn (`cardShown`), until a
+    step comes after; a run that works (one from a message sent on the phone too), is paused or waits on the person keeps its
+    card, with Pause, Stop and the hand-over.
+  - **The same working line and failed line** as before (0.2.22). No microphone.
 - Cards still say to approve on the phone ([chrome-panel.md](chrome-panel.md) has the route that approves in the panel,
   off until its gates are answered).
 
@@ -1076,12 +1113,17 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
   the check.
 
-- **A taf's and Coach's words show their Markdown** (`chrome/src/chatmd.js`), in Coach's chat and a taf's: paragraphs,
-  headings, bulleted and numbered lists, **bold**, *italic* and `code`, as the phones draw them. It's built from elements
-  and text nodes only, never `innerHTML`, so any markup in the words stays words. **A link is its words, then its address
-  as text, and nothing opens on a click:** a page Coach read can steer what an answer links to, and the panel opens no
-  link. In the shown address, each format or control character (a bidi override or isolate, a zero-width mark) shows as
-  U+FFFD, so the address can't read as another one. The person's own messages show as they typed them.
+- **A taf's and Coach's words show their Markdown by the phones' rules** (`chrome/src/chatmd.js`, 0.2.24: the same reading
+  as `MarkdownText` on Android and iOS), in Coach's chat and a taf's: paragraphs with their line breaks, headings, bulleted
+  (`-`, `*`, `+`, `•`) and numbered lists (each item keeps the number it was written with, at most three digits), code blocks
+  between fences, kept as written, tables (a header, its `|---|` line and its rows, a column of amounts to the right, a wide
+  one scrolling sideways; anything less is text), a rule (`---`) left out, and **bold**, *italic* (`*` or `_`, never inside a
+  word, so `snake_case` stays), `code` and a mark written with a backslash before it, inline. It's built from elements and
+  text nodes only, never `innerHTML`, so any markup in the words stays words. **A link is its words, then its address as
+  text, and nothing opens on a click:** a page Coach read can steer what an answer links to, and the panel opens no link
+  (the phones open a clean `https` one, and ask first in a page turn). In the shown address, each format or control
+  character (a bidi override or isolate, a zero-width mark) shows as U+FFFD, so the address can't read as another one. The
+  person's own messages show as they typed them.
 - **It opens on a fresh conversation,** as the phone's New conversation does, not on the account's whole old Coach thread
   (`chrome/src/coachchat.js`). The first message sends `new_chat: true`, and the panel follows the `session` tafs cloud
   answers with. **New conversation** goes back to a fresh one at any time. **Previous conversations**, from the ⋮ menu, is a
@@ -1213,6 +1255,10 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
   `ios/Tafs/KIFF/ChromePairing.swift`.
+- **`chatrow.test.js`** and **`chatmd.test.js`:** the chat by the phones' rules: a day's header and each message's time in
+  the panel's language and zone, the plural forms in every locale, the work's line and its steps, when Report is offered and
+  what it sends (the session always), its outcomes, the person's own message's actions only in a chat begun here, the run's
+  card giving way, and the Markdown (lists with their numbers, code blocks, tables, rules, `_italic_`, escapes; text only).
 - **`coach.test.js`** and **`kiff.test.js`:** the owner's words sent alone, cut to fit; Coach read and written through
   tafs cloud's routes with the session's own bearer; the KIFF offer as a view-only extension; the claim's DER proof
   verified; and a claim that waits, and a session that could approve, ended and never kept.
