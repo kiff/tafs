@@ -224,6 +224,13 @@ yes, and fail the test.
 - **A second taf of the same name, under another grant, closed the first taf's kept tab** (`owntabs.e2e.test.js`): a taf's
   finished run is now kept by its grant (`doneKey`), not its name.
 
+- **The person's own move off the run's sites showed in the run's card as the taf's, and the card said the taf was there**
+  (`panel.e2e.test.js`): an address the person typed off the run's sites was recorded as a step of the run's (twice in a joined
+  tab), and `record()` took the run's site from it. Since 0.2.17 a move the person made is never one of the run's steps, and the
+  run's site comes only from its own pages.
+
+**Chromium runs in English** (`--lang=en-US`, harness.mjs), whatever the computer's language: the panel's lines are checked word for word.
+
 ## Known bugs, as `todo` tests
 
 The "still open" checks after a Stop and after the taf's next run wait for the runner to have let the run's tabs go (its state, and
@@ -232,9 +239,4 @@ Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
 
-- **The person's own move off the run's sites shows in the run's card as the taf's, and the card says the taf is there**
-  (`panel.e2e.test.js`). In a joined tab and in a tab of the run's own, an address the person types off the run's sites is
-  recorded as a step of the run's (`{op: navigate, url, error: site_not_listed}`): in a joined tab twice (`onBeforeNavigate`,
-  then `onErrorOccurred` on `ERR_BLOCKED_BY_CLIENT`), in a tab of the run's own once (`onErrorOccurred`). The panel draws
-  "Stopped a move to other.test · not done (site_not_listed)" for a move the taf never made, and `record()` sets the run's site
-  from that address, so the card's site is the person's own destination.
+None.

@@ -198,10 +198,7 @@ test("own tab: the taf's back with no page before is one line, `no_back`, and no
 
 // ---- The person's own move off the run's sites ----
 
-test("joined: the person's own address off the run's sites gives their tab back, and the run's card never says the taf is there", {
-  skip,
-  todo: "runner.js records the person's own blocked navigation in a joined tab as a step of the run's, twice (onBeforeNavigate's record for a joined tab, then onErrorOccurred's for ERR_BLOCKED_BY_CLIENT), each {op: navigate, url, error: site_not_listed}: the panel draws two lines 'Stopped a move to other.test · not done (site_not_listed)' for a move the taf never made, and record() sets run.site from that url, so the run's card says the taf is at other.test, the person's own destination.",
-}, async () => {
+test("joined: the person's own address off the run's sites gives their tab back, and the run's card never says the taf is there", { skip }, async () => {
   const hub = h.sites.url("news.test", "/hub?case=panel-joined-off");
   const { agentRun, tabId } = await j.sendFromPanel(hub);
   const run = newRun("panel-joined-off");
@@ -215,10 +212,7 @@ test("joined: the person's own address off the run's sites gives their tab back,
   assert.ok(!card.steps.some((x) => /other\.test/.test(x.text)), "no line takes the person's own move for the taf's: " + JSON.stringify(card.steps));
 });
 
-test("own tab: the person's own address off the run's sites gives the tab to them, and the run's card never says the taf is there", {
-  skip,
-  todo: "runner.js onErrorOccurred records the person's own blocked navigation in a tab given to them (0.2.16) as a step of the run's, {op: navigate, url, error: site_not_listed}: the panel draws 'Stopped a move to other.test · not done (site_not_listed)' for a move the taf never made, and record() sets run.site from that url, so the run's card says the taf is at other.test, the person's own destination.",
-}, async () => {
+test("own tab: the person's own address off the run's sites gives the tab to them, and the run's card never says the taf is there", { skip }, async () => {
   const hub = h.sites.url("news.test", "/hub?case=panel-own-off");
   const { run, page, tabId } = await ownRun("panel-own-off", hub);
   await page.goto(h.sites.url("other.test", "/?case=panel-own-off")).catch(() => {});
