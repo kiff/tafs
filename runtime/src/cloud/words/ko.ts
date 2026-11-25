@@ -920,6 +920,7 @@ export const ko: Words = {
   // The AI-data consent (docs/accounts.md, "Your data and the AI"): legal consent text, line for line with the English.
   ai_consent_title: "내 데이터와 AI",
   ai_consent_lines: ["tafs는 Coach와 내 tafs에 Anthropic의 Claude AI를 사용합니다.", "Coach와 내 tafs는 AI 에이전트입니다. 이들이 쓰는 내용은 AI가 생성하며 틀릴 수 있습니다. taf가 내 회사 밖으로 보내는 메시지에는 AI 에이전트가 작성했다고 밝힙니다.", "AI에 보내는 것: 내가 Coach와 내 tafs에 쓰는 내용, 내가 첨부하는 파일, taf가 작업하는 동안 연결된 앱이 taf에 돌려주는 내용, Coach가 앱에서 나를 돕는 동안 내 화면에 있는 내용.", "절대 보내지 않는 것: 연결된 앱이 사용하는 비밀번호와 키, 내 지문.", "Anthropic은 이를 답변하는 데 사용하며 최대 30일 동안 보관합니다.", "내가 허용하기 전에는 아무것도 보내지 않습니다. 계정에서 철회할 수 있습니다."],
+  ai_consent_lines_bedrock: ["tafs는 Coach와 내 tafs에 Anthropic의 Claude AI를 사용하며, Claude는 유럽연합에서 Amazon Web Services가 저희를 위해 실행합니다.","Coach와 내 tafs는 AI 에이전트입니다. 이들이 쓰는 내용은 AI가 생성하며 틀릴 수 있습니다. taf가 내 회사 밖으로 보내는 메시지에는 AI 에이전트가 작성했다고 밝힙니다.","AI에 보내는 것: 내가 Coach와 내 tafs에 쓰는 내용, 내가 첨부하는 파일, taf가 작업하는 동안 연결된 앱이 taf에 돌려주는 내용, Coach가 앱에서 나를 돕는 동안 내 화면에 있는 내용.","절대 보내지 않는 것: 연결된 앱이 사용하는 비밀번호와 키, 내 지문.","Amazon Web Services는 이를 답변하는 데 사용하고, 보관하지 않으며, Anthropic에 전달하지 않습니다.","내가 허용하기 전에는 아무것도 보내지 않습니다. 계정에서 철회할 수 있습니다."],
   ai_consent_allow: "허용",
   ai_consent_not_now: "지금은 안 함",
   ai_consent_withdraw: "철회",
