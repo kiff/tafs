@@ -146,6 +146,23 @@ const ORDERS = {
   frame: page("Your order", `<h1>Your order</h1><iframe src="https://js.stripe.com/v3/elements" width="10" height="10"></iframe><button type="button" ${DID}>Continue</button><p id="out">not yet</p>`),
 };
 
+/** A card number in a page's own text: masked in every read, whole or cut. */
+export const CARD_TEXT = "4111 1111 1111 1111";
+/**
+ * A page whose read is over the relay's 120 KB (40 selects of 50 long options: a read keeps 50 of each, 100 characters each), with a password field, a card number in its text
+ * and a field the person types in: the relay cuts it to fit, and nothing masked or typed may ride along in any cut.
+ */
+const HUGE = page("A long order form", `<h1>A long order form</h1>
+<p>Pay with the card ${CARD_TEXT} on file.</p>
+<form onsubmit="return false">
+  <label for="who">Your name</label><input id="who" type="text">
+  <label for="pw">Password</label><input id="pw" type="password" value="${PASSWORD}">
+  ${Array.from({ length: 40 }, (_, k) => `<label for="pick${k}">List ${k + 1}</label><select id="pick${k}">${Array.from({ length: 50 }, (_, i) => `<option>Option ${i + 1} of list ${k + 1}, with words enough to fill the hundred characters a read keeps of one</option>`).join("")}</select>`).join("\n  ")}
+</form>`);
+
+/** What only a fence target's page says (`/here` on any host): a read that has it read a page it may not reach. */
+export const TARGET_WORDS = "A page the run may never reach";
+
 /** What only the bank's page holds: a read or a result that carries it has read a sensitive site. */
 export const BANK_WORDS = "Balance on the joint account";
 const BANK = page("Your bank", `<h1>Your bank</h1><p>${BANK_WORDS}: 4 210,00.</p>`);
@@ -165,7 +182,7 @@ export class FixtureSites {
     this.dir = mkdtempSync(join(tmpdir(), "tafs-e2e-tls-"));
     const key = join(this.dir, "key.pem");
     const cert = join(this.dir, "cert.pem");
-    execFileSync("openssl", ["req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes", "-keyout", key, "-out", cert, "-days", "1", "-subj", "/CN=shop.test", "-addext", "subjectAltName=DNS:shop.test,DNS:news.test,DNS:other.test,DNS:bank.test"], { stdio: "ignore" });
+    execFileSync("openssl", ["req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes", "-keyout", key, "-out", cert, "-days", "1", "-subj", "/CN=shop.test", "-addext", "subjectAltName=DNS:shop.test,DNS:news.test,DNS:other.test,DNS:bank.test,DNS:bank.shop.test,DNS:google.com,DNS:www.google.com,DNS:accounts.google.com,DNS:me.github.io,IP:127.0.0.1"], { stdio: "ignore" });
     this.hits = []; // every request, as "host path?query"
     this.posts = []; // every POST, as "host path?query"
     this.hosts = new Map(); // a host answered by a test's own handler (serve)
@@ -197,6 +214,21 @@ export class FixtureSites {
     this.hits.push(host + " " + req.url);
     if (req.method === "POST") this.posts.push(host + " " + req.url);
     // A redirect off the run's sites: the page answers 302 to other.test.
+    // On any host: a link to `to`, a 302 to `to`, and a page that only says where it is (the fence's targets: bank.shop.test,
+    // accounts.google.com, me.github.io, an address).
+    const to = new URL(req.url, "https://x").searchParams.get("to");
+    if (path === "/link-to" && to) {
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }).end(page("A link", `<h1>A link</h1><a id="go" href="${to.replace(/"/g, "&quot;")}">Go there</a>`));
+      return;
+    }
+    if (path === "/redirect-to" && to) {
+      res.writeHead(302, { location: to, "cache-control": "no-store" }).end();
+      return;
+    }
+    if (path === "/here") {
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }).end(page("Here", `<h1>${host}</h1><p>${TARGET_WORDS}</p>`));
+      return;
+    }
     if (host === "shop.test" && path === "/redirect") {
       res.writeHead(302, { location: this.url("other.test", "/?from=redirect"), "cache-control": "no-store" }).end();
       return;
@@ -205,6 +237,7 @@ export class FixtureSites {
       "news.test": { "/article": ARTICLE, "/long": LONG, "/inner": INNER(CROSS_FRAME_PASSWORD), "/hub": HUB(this.port) },
       "shop.test": {
         "/to-bank": TO_BANK(this.port),
+        "/huge": HUGE,
         ...Object.fromEntries(Object.entries(ORDERS).map(([name, body]) => ["/order-" + name, body])),
         "/form": FORM, "/confirm": CONFIRM, "/account": ACCOUNT, "/links": LINKS(this.port), "/frames": FRAMES(this.port), "/inner": INNER(FRAME_PASSWORD),
         ...Object.fromEntries(Object.entries(LEAVE).map(([name, make]) => ["/leave-" + name, make(this.port)])),

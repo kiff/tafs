@@ -123,7 +123,24 @@ export class FakePlanque extends EventEmitter {
 
   // ---- The relay ----
 
+  /**
+   * The relay down, as when planque or the network is (`relayDown()`): the open connection closes and no new one is taken until
+   * `relayUp()`. The extension tries again on its own (relay.js `reconnectSoon`, while a run lives).
+   */
+  relayDown() {
+    this.down = true;
+    if (this.socket) this.socket.close(1001);
+  }
+
+  relayUp() {
+    this.down = false;
+  }
+
   upgrade(req, sock) {
+    if (this.down) {
+      sock.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
+      return;
+    }
     const url = new URL(req.url, this.api);
     if (url.pathname !== "/relay" || url.searchParams.get("chrome") !== this.chromeId) {
       sock.end("HTTP/1.1 404 Not Found\r\n\r\n");
