@@ -1207,7 +1207,7 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     const run = await waiting(w);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "test" } })).status).toBe(200);
     // kiff/agents' copy: refused before its next turn, so nothing more in the session.
-    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "ERROR", code: "ai_unavailable", error: "Our AI provider isn't serving us right now, so this stopped." });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "ERROR", code: "ai_unavailable", error: "Our AI provider isn't serving us right now, so this stopped.", sent: 0 });
     const thread = async (lang?: string) => (await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", ...(lang ? { headers: { "accept-language": lang } } : {}) })).body;
     const en = await thread();
     expect(en.working).toBeNull();
@@ -1239,8 +1239,23 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
       expect(f, JSON.stringify(acted)).toMatchObject({ code: "timeout", words: wordsIn("en").turn_failed_time_partway, retry: false });
       expect(f.retry_label, JSON.stringify(acted)).toBeUndefined();
     }
-    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: undefined, done: undefined, sent: undefined, error: "the run failed" });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: undefined, done: undefined, sent: 0, error: "the run failed" });
     expect((await thread()).failed).toMatchObject({ code: "failed", words: wordsIn("en").turn_failed_error, retry: true });
+    // A record that can't say is never safe: resumed after a crash, a lease that ran out, no count of writes, or turns
+    // with no tally of what they did.
+    const unsure: Array<Record<string, unknown>> = [
+      { resumes: 1 },
+      { error: "its lease ran out: the invocation crashed or timed out" },
+      { sent: undefined },
+      { turns: 3, tally: undefined },
+    ];
+    for (const record of unsure) {
+      Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: undefined, done: undefined, sent: 0, resumes: undefined, turns: 0, error: "the run failed" }, record);
+      expect((await thread()).failed?.retry, JSON.stringify(record)).toBe(false);
+    }
+    // Turns whose tally shows only reads or refusals: safe.
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { resumes: undefined, error: "the run failed", sent: 0, turns: 3, tally: { lookup: { refused: 2 } } });
+    expect((await thread()).failed?.retry).toBe(true);
     expect(plain.failed.words).not.toContain("the run failed");
     // A later run that answered closes it: no failure line left over.
     const next = await w.agents.api.startRun("t_acme", RAE, "Try again", { ...ANA, session: run.session });

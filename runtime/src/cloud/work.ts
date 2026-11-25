@@ -167,13 +167,23 @@ export function failureCode(r: { error?: unknown; code?: unknown; status?: unkno
 }
 
 /**
- * Whether trying a failed run's message again is safe: the record shows nothing it did that acted (no call sent or held
- * in its tally, none that went through, no write sent). Sent again, the person's message would act a second time.
+ * Whether trying a failed run's message again is safe: only when its record proves nothing it did acted, never when
+ * the record can't say. Not safe when kiff/agents resumed it after a crash (`resumes`) or its lease ran out (it may
+ * have acted with its turns not stored yet), when `sent` is absent (a kiff/agents that doesn't count writes), or when
+ * it had turns but no `tally` to say what they did. Safe when `sent` is 0 and either it never had a turn, or its tally
+ * shows no call sent, held or of unknown outcome and nothing went through. Sent again, the message could act twice.
  */
-export function retrySafe(r: { tally?: Run["tally"]; done?: unknown[]; sent?: number }): boolean {
-  const acted = Object.values(r.tally ?? {}).some((t) => (t?.sent ?? 0) > 0 || (t?.held ?? 0) > 0 || (t?.unknown ?? 0) > 0);
-  return !acted && !(Array.isArray(r.done) && r.done.length > 0) && !((r.sent ?? 0) > 0);
+export function retrySafe(r: { tally?: Run["tally"]; done?: unknown[]; sent?: number; turns?: number; resumes?: number; error?: unknown }): boolean {
+  if ((r.resumes ?? 0) > 0 || FAILED_LEASE.has(typeof r.error === "string" ? r.error.trim() : "")) return false;
+  if (r.sent !== 0) return false;
+  if (Array.isArray(r.done) && r.done.length > 0) return false;
+  // A tally that shows anything acted settles it, whatever the turns.
+  if (Object.values(r.tally ?? {}).some((t) => (t?.sent ?? 0) > 0 || (t?.held ?? 0) > 0 || (t?.unknown ?? 0) > 0)) return false;
+  return (r.turns ?? 0) === 0 || r.tally !== undefined;
 }
+
+/** kiff/agents' words for a run whose invocation stopped mid-work: what it did isn't all recorded. */
+const FAILED_LEASE = new Set(["its lease ran out: the invocation crashed or timed out"]);
 
 /** Whether a run's record has a call that went through: kiff/agents' `tally`, any tool's `sent` above 0. */
 function sentAny(tally: Run["tally"] | undefined): boolean {
