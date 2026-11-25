@@ -816,6 +816,7 @@ export const zhHant: Words = {
   card_step_give_passkey: "以通行密鑰核准",
   card_step_sign_passkey: "您的核准會以您的通行密鑰簽署，其私密金鑰永遠不會離開這部電腦或您的安全金鑰。這不是付款，也不是密碼。",
   card_step_locked: "請先核准這項內容，之後才能傳訊息給 Coach。",
+  card_step_no_biometrics: "核准需要使用您的臉孔或指紋，但這部裝置兩者都尚未設定。請到「設定」開啟其中一項，再回到這裡核准。",
   cts_tafs_state: "查看您的 taf",
   cts_tafs_state_does: "讀取每個 taf、它的版本和進行中的執行。",
   cts_tafs_state_why: "它會讀取您的帳號。",

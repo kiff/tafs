@@ -1,0 +1,1 @@
+- **A phone that can't approve says why.** tafs cloud has the words for the Card step on a phone with no face or fingerprint set up ("Approving needs your face or fingerprint, and this device has neither set up. Turn one on in Settings, then come back here to approve."), in all 26 languages. Words only; tafs cloud sends them with the Card step.

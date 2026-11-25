@@ -903,6 +903,8 @@ export const en = {
   card_step_sign_passkey: "Your approval signs this with your passkey, whose private key never leaves this computer or your security key. It isn't a payment or a password.",
   // The one line in Coach's message box while it's locked: no typing until the Card step is approved.
   card_step_locked: "Approve this first, then you can write to Coach.",
+  // A phone with no face or fingerprint set up has no approval key, so the Card step shows this in place of its button, with an Open Settings link.
+  card_step_no_biometrics: "Approving needs your face or fingerprint, and this device has neither set up. Turn one on in Settings, then come back here to approve.",
   cts_tafs_state: "See your tafs",
   cts_tafs_state_does: "Read each taf, its versions and its open runs.",
   cts_tafs_state_why: "It reads your account.",

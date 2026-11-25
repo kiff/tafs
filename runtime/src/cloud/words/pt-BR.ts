@@ -224,6 +224,7 @@ export const ptBR: Words = {
   card_step_give_passkey: "Aprovar com sua chave de acesso",
   card_step_sign_passkey: "Sua aprovação assina isto com sua chave de acesso, cuja chave privada nunca sai deste computador nem da sua chave de segurança. Não é um pagamento nem uma senha.",
   card_step_locked: "Aprove isto primeiro e depois você poderá escrever para o Coach.",
+  card_step_no_biometrics: "Para aprovar, é preciso seu rosto ou sua digital, e este aparelho não tem nenhum configurado. Ative um nas configurações do aparelho e depois volte aqui para aprovar.",
   cr_solo_used_up: "Solo · os créditos deste período e seus pacotes foram usados",
   cr_solo_warn_pack: (pct) => `${pct} dos créditos deste período foram usados. Um pacote permite que seus tafs continuem para além disso.`,
   cr_solo_warn_wait: (pct, day) => `${pct} dos créditos deste período foram usados. Depois, seus tafs esperam até o período recomeçar em ${day}.`,

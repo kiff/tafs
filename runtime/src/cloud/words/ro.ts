@@ -816,6 +816,7 @@ export const ro: Words = {
   card_step_give_passkey: "Aprobați cu cheia de acces",
   card_step_sign_passkey: "Aprobarea dvs. semnează acest lucru cu cheia dvs. de acces, a cărei cheie privată nu părăsește niciodată acest computer sau cheia dvs. de securitate. Nu este o plată sau o parolă.",
   card_step_locked: "Aprobați mai întâi acest lucru, apoi îi puteți scrie lui Coach.",
+  card_step_no_biometrics: "Pentru a aproba e nevoie de fața sau de amprenta dvs., iar pe acest dispozitiv nu este configurată niciuna. Activați una dintre ele în Setări, apoi reveniți aici ca să aprobați.",
   cts_tafs_state: "Vedeți tafurile dvs.",
   cts_tafs_state_does: "Citește fiecare taf, versiunile lui și rulările deschise.",
   cts_tafs_state_why: "Citește contul dvs.",

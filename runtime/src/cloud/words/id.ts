@@ -816,6 +816,7 @@ export const id: Words = {
   card_step_give_passkey: "Setujui dengan kunci sandi Anda",
   card_step_sign_passkey: "Persetujuan Anda menandatanganinya dengan kunci sandi Anda, yang kunci pribadinya tidak pernah keluar dari komputer ini atau kunci keamanan Anda. Ini bukan pembayaran atau kata sandi.",
   card_step_locked: "Setujui ini dulu, lalu Anda bisa menulis ke Coach.",
+  card_step_no_biometrics: "Untuk menyetujui, perlu wajah atau sidik jari Anda, dan perangkat ini belum menyiapkan keduanya. Aktifkan salah satunya di Pengaturan, lalu kembali ke sini untuk menyetujui.",
   cts_tafs_state: "Lihat taf Anda",
   cts_tafs_state_does: "Membaca setiap taf, versinya, dan prosesnya yang masih terbuka.",
   cts_tafs_state_why: "Ia membaca akun Anda.",

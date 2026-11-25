@@ -823,6 +823,7 @@ export const nl: Words = {
   card_step_give_passkey: "Goedkeuren met je passkey",
   card_step_sign_passkey: "Je goedkeuring ondertekent dit met je passkey, waarvan de privésleutel deze computer of je beveiligingssleutel nooit verlaat. Het is geen betaling en geen wachtwoord.",
   card_step_locked: "Je moet dit eerst goedkeuren, daarna kun je Coach schrijven.",
+  card_step_no_biometrics: "Goedkeuren kan alleen met je gezicht of vingerafdruk, en op dit apparaat is geen van beide ingesteld. Zet er een aan in Instellingen en kom dan hier terug om het goed te keuren.",
   cts_tafs_state: "Je tafs zien",
   cts_tafs_state_does: "Elke taf lezen, met zijn versies en zijn open runs.",
   cts_tafs_state_why: "Hij leest je account.",

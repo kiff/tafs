@@ -816,6 +816,7 @@ export const lv: Words = {
   card_step_give_passkey: "Apstiprināt ar piekļuves atslēgu",
   card_step_sign_passkey: "Tavs apstiprinājums to paraksta ar tavu piekļuves atslēgu, kuras privātā atslēga nekad neatstāj šo datoru vai tavu drošības atslēgu. Tas nav maksājums vai parole.",
   card_step_locked: "Vispirms apstiprini šo, tad varēsi rakstīt Coach.",
+  card_step_no_biometrics: "Lai apstiprinātu, vajag tavu seju vai pirkstu nospiedumu, bet šajā ierīcē nav iestatīts neviens no tiem. Ieslēdz vienu no tiem iestatījumos un tad atgriezies šeit, lai apstiprinātu.",
   cts_tafs_state: "Skatīt tavus taf",
   cts_tafs_state_does: "Lasa katru taf, tā versijas un atvērtās izpildes.",
   cts_tafs_state_why: "Tas lasa tavu kontu.",

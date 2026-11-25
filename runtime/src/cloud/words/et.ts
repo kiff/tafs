@@ -816,6 +816,7 @@ export const et: Words = {
   card_step_give_passkey: "Kinnita pääsuvõtmega",
   card_step_sign_passkey: "Sinu kinnitus allkirjastab selle sinu pääsuvõtmega, mille privaatvõti ei lahku kunagi sellest arvutist ega sinu turvavõtmest. See ei ole makse ega parool.",
   card_step_locked: "Kinnita see kõigepealt, siis saad Coachile kirjutada.",
+  card_step_no_biometrics: "Kinnitamiseks on vaja sinu nägu või sõrmejälge, kuid selles seadmes pole kumbagi seadistatud. Lülita üks neist seadetes sisse ja tule siis siia tagasi kinnitama.",
   cts_tafs_state: "Vaata oma tafe",
   cts_tafs_state_does: "Loeb iga tafi, selle versioone ja avatud käivitusi.",
   cts_tafs_state_why: "See loeb sinu kontot.",

@@ -816,6 +816,7 @@ export const sl: Words = {
   card_step_give_passkey: "Odobri s ključem za dostop",
   card_step_sign_passkey: "Vaša odobritev to podpiše z vašim ključem za dostop, katerega zasebni ključ nikoli ne zapusti tega računalnika ali vašega varnostnega ključa. To ni plačilo ali geslo.",
   card_step_locked: "Najprej to odobrite, nato lahko pišete Coachu.",
+  card_step_no_biometrics: "Za odobritev potrebujete obraz ali prstni odtis, ta naprava pa nima nastavljenega ne enega ne drugega. Vklopite enega v Nastavitvah, nato se vrnite sem in odobrite.",
   cts_tafs_state: "Poglej svoje tafe",
   cts_tafs_state_does: "Bere vsak taf, njegove različice in odprte zagone.",
   cts_tafs_state_why: "Bere vaš račun.",

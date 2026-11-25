@@ -823,6 +823,7 @@ export const es: Words = {
   card_step_give_passkey: "Aprobar con tu llave de acceso",
   card_step_sign_passkey: "Tu aprobación lo firma con tu llave de acceso, cuya clave privada nunca sale de este ordenador ni de tu llave de seguridad. No es un pago ni una contraseña.",
   card_step_locked: "Primero tienes que aprobar esto; luego podrás escribir a Coach.",
+  card_step_no_biometrics: "Para aprobar se necesita tu cara o tu huella, y este dispositivo no tiene ninguna configurada. Activa una en Ajustes y vuelve aquí para aprobar.",
   cts_tafs_state: "Ver tus tafs",
   cts_tafs_state_does: "Leer cada taf, sus versiones y sus ejecuciones abiertas.",
   cts_tafs_state_why: "Lee tu cuenta.",

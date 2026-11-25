@@ -816,6 +816,7 @@ export const sk: Words = {
   card_step_give_passkey: "Schváliť prístupovým kľúčom",
   card_step_sign_passkey: "Vaše schválenie to podpíše vaším prístupovým kľúčom, ktorého súkromný kľúč nikdy neopustí tento počítač ani váš bezpečnostný kľúč. Nie je to platba ani heslo.",
   card_step_locked: "Najprv toto schváľte, potom môžete Coachovi písať.",
+  card_step_no_biometrics: "Na schválenie je potrebná vaša tvár alebo odtlačok prsta a toto zariadenie nemá nastavené ani jedno. Zapnite jedno z nich v Nastaveniach a potom sa sem vráťte schváliť.",
   cts_tafs_state: "Zobraziť vaše tafy",
   cts_tafs_state_does: "Číta každý taf, jeho verzie a otvorené behy.",
   cts_tafs_state_why: "Číta váš účet.",

@@ -816,6 +816,7 @@ export const lt: Words = {
   card_step_give_passkey: "Patvirtinti slaptarakčiu",
   card_step_sign_passkey: "Jūsų patvirtinimas tai pasirašo jūsų slaptarakčiu, kurio privatusis raktas niekada nepalieka šio kompiuterio ar jūsų saugos rakto. Tai nėra mokėjimas ar slaptažodis.",
   card_step_locked: "Pirmiausia tai patvirtinkite, tada galėsite rašyti Coach.",
+  card_step_no_biometrics: "Patvirtinti reikia jūsų veido arba piršto atspaudo, o šiame įrenginyje nenustatytas nė vienas. Įjunkite vieną iš jų nustatymuose, tada grįžkite čia patvirtinti.",
   cts_tafs_state: "Žiūrėti jūsų taf",
   cts_tafs_state_does: "Skaito kiekvieną taf, jo versijas ir atvirus vykdymus.",
   cts_tafs_state_why: "Jis skaito jūsų paskyrą.",

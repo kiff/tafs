@@ -820,6 +820,7 @@ export const ko: Words = {
   card_step_give_passkey: "패스키로 승인",
   card_step_sign_passkey: "내 승인은 패스키로 서명되며, 그 개인 키는 이 컴퓨터나 보안 키 밖으로 나가지 않습니다. 결제나 비밀번호가 아닙니다.",
   card_step_locked: "먼저 이것을 승인하면 Coach에게 메시지를 쓸 수 있습니다.",
+  card_step_no_biometrics: "승인하려면 얼굴이나 지문이 필요한데, 이 기기에는 둘 다 설정되어 있지 않습니다. 설정에서 하나를 켠 다음 여기로 돌아와 승인하세요.",
   cts_tafs_state: "내 tafs 보기",
   cts_tafs_state_does: "각 taf와 버전, 진행 중인 실행을 읽습니다.",
   cts_tafs_state_why: "내 계정을 읽습니다.",
