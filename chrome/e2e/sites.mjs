@@ -193,6 +193,22 @@ const AT_LOAD = {
   beforeunload: page("A draft", `<h1>A draft</h1><label for="d">Draft</label><input id="d" type="text"><script>addEventListener("beforeunload", (e) => { e.preventDefault(); e.returnValue = ""; });</script>`),
 };
 
+/**
+ * A page whose read no cut makes fit the relay's 120 KB: fields and controls are never cut (an act names them), and 200 fields
+ * with a long label and a long plain value, and 200 buttons with long labels, come to well over it. A button writes "pressed" in
+ * #out when it's clicked.
+ */
+const FILLER = "words of an ordinary form that a person filled in at length to say what they want from the shop today";
+const NO_FIT = page("A very long form", `<h1>A very long form</h1><p id="out">untouched</p><form onsubmit="return false">
+${Array.from({ length: 200 }, (_, i) => `<input type="text" aria-label="Field ${i + 1}: ${FILLER} ${FILLER}" value="${(FILLER + " ").repeat(5).trim()}">`).join("\n")}
+${Array.from({ length: 200 }, (_, i) => `<button type="button" onclick="document.getElementById('out').textContent = 'pressed ${i + 1}'">Button ${i + 1}: ${FILLER} ${FILLER}</button>`).join("\n")}
+</form>`);
+
+/** A page that fits until the taf's click, which grows it past what any cut makes fit (NO_FIT's fields and buttons, added in place). */
+const GROWS = (body) => page("A form that grows", `<h1>A form that grows</h1><p id="state">small</p>
+<button type="button" id="grow" onclick="document.getElementById('more').innerHTML = document.getElementById('tpl').innerHTML; document.getElementById('state').textContent = 'grown'">Show every option</button>
+<div id="more"></div><template id="tpl">${body}</template>`);
+
 /** A card number in a page's own text: masked in every read, whole or cut. */
 export const CARD_TEXT = "4111 1111 1111 1111";
 /**
@@ -286,6 +302,8 @@ export class FixtureSites {
       "shop.test": {
         "/to-bank": TO_BANK(this.port),
         "/huge": HUGE,
+        "/no-fit": NO_FIT,
+        "/grows": GROWS(NO_FIT.slice(NO_FIT.indexOf("<form"), NO_FIT.lastIndexOf("</form>") + 7)),
         "/controls": CONTROLS,
         "/controls2": CONTROLS2,
         "/popup-at-load": POPUP_AT_LOAD,
