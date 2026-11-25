@@ -575,7 +575,10 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   changed), starts an expedited WorkManager job (`WatchResultsWork`, one chain per ask, outside Firebase's few seconds), which
   restores the phone's session if it must, reads the ask (`GET /v1/watch/asks/{id}`) or the marks (`GET /v1/watch/inbox`) and
   puts it for the watch as an urgent Data Layer item: `kept/ask/{id}` (the ask as `asks` gives it, and when it was put) or
-  `kept/inbox-marks`. A read that fails is tried again by WorkManager, three times at most. Signed out, or an ask tafs cloud
+  `kept/inbox-marks`. A read that fails is tried again by WorkManager, three times at most. WorkManager makes its Room
+  database by reflection when the app starts, so `app/proguard-rules.pro` keeps every `RoomDatabase`'s no-argument
+  constructor: Room 2.6's own rule keeps only the class, R8 removed the constructor, and Android 144 closed at every launch
+  (fixed in 145). Signed out, or an ask tafs cloud
   doesn't give this person: nothing is put. A message to a taf is put too: the watch takes it into that taf's chat, open or
   kept, never its Inbox.
 - **A taf's chat, as the phone's moves.** Once the watch has read a taf's chat (`taf-chat`), the phone keeps each change to it

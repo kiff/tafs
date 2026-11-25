@@ -22,3 +22,8 @@
 # Stack traces in Play's crash reports, readable with the build's mapping file.
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# WorkManager (the watch relay's job) makes its Room database by reflection at app start:
+# Class.forName("…WorkDatabase_Impl").newInstance(). Room 2.6's own rule keeps the class but not its
+# no-argument constructor, which R8's full mode then removes, and every launch crashed (Android 144).
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
