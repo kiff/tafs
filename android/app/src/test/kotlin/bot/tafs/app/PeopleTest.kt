@@ -123,6 +123,20 @@ class PeopleTest {
     assertEquals("Shared with Support and ana@acme.com", PeopleWords.sharedWith(listOf(Share(group = "g_sup"), Share(subject = "u_ana")), listOf(support), listOf(maria, ana)))
   }
 
+  @Test fun theOverviewSaysWhoUsesATafCountingEachPersonOnce() {
+    // As the iPad's Overview (`OverviewView.usedBy`): the groups' and people's names, then everyone once across them.
+    val luis = Person("u_luis", status = "active", email = "luis@acme.com")
+    assertEquals("Support, luis@acme.com · 3\u00A0people", PeopleWords.usedBy(listOf(Share(group = "g_sup"), Share(subject = "u_luis")), listOf(support), listOf(maria, ana, luis)))
+    assertEquals("someone in the group and shared alone is one person", "Support, ana@acme.com · 2\u00A0people", PeopleWords.usedBy(listOf(Share(group = "g_sup"), Share(subject = "u_ana")), listOf(support), listOf(maria, ana)))
+    assertEquals("ana@acme.com · 1\u00A0person", PeopleWords.usedBy(listOf(Share(subject = "u_ana")), listOf(support), listOf(ana)))
+    assertEquals("Not shared", PeopleWords.usedBy(emptyList(), listOf(support), listOf(maria, ana)))
+    assertEquals("not read yet, or KIFF couldn't say: no line", null, PeopleWords.usedBy(null, listOf(support), listOf(maria, ana)))
+    // The count is held together, so a narrow column moves it to the next line whole.
+    val line = PeopleWords.peopleLine(listOf("Support"), 3)
+    assertFalse("no breaking space inside the count", line.substringAfter(" · ").contains(' '))
+    assertEquals("Support · 3\u00A0people", line)
+  }
+
   @Test fun theOwnerIsNeverSomeoneTheirTafIsSharedWith() {
     // KIFF lists the owner's own share; the line leaves it out, so a taf shared with no one else is "Not shared".
     val owner = Person("u_owner", "owner", email = "owner@acme.com", you = true)

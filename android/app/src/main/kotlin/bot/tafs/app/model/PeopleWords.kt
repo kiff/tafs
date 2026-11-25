@@ -26,6 +26,35 @@ object PeopleWords {
     return Words.People.uses(joined(names))
   }
 
+  /**
+   * Who uses a taf, under its name on the Overview, as the iPad's (`OverviewView.usedBy`): "Support · 3 people", its groups' and
+   * people's names, then everyone counted once across them. "Not shared" when it's shared with no one; null while KIFF hasn't said.
+   */
+  fun usedBy(shares: List<Share>?, groups: List<Group>, people: List<Person>): String? {
+    if (shares == null) return null
+    if (shares.isEmpty()) return Words.People.notShared
+    val names = mutableListOf<String>()
+    val subjects = mutableSetOf<String>()
+    for (share in shares) {
+      val group = share.group?.let { g -> groups.firstOrNull { it.id == g } }
+      if (group != null) {
+        names += group.shownName
+        group.members.forEach { subjects += it.subject }
+      } else if (share.subject != null) {
+        names += label(share.subject, people)
+        subjects += share.subject
+      }
+    }
+    return peopleLine(names, subjects.size)
+  }
+
+  /**
+   * "Support · 3 people": the count held together by no-break spaces, so a narrow column moves "3 people" (or "1 persona") to the
+   * next line whole, never splitting or cutting it.
+   */
+  fun peopleLine(names: List<String>, count: Int): String =
+    names.joinToString(", ") + " · " + Words.People.count(count = count).replace(' ', '\u00A0')
+
   /** "Maria (manager), Ana, Luis". */
   fun peopleOf(group: Group, people: List<Person>): String {
     val names = managersFirst(group.members, people).map { m -> label(m.subject, people).let { if (m.isManager) Words.People.nameManager(it) else it } }

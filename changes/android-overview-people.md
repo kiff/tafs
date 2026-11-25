@@ -1,0 +1,1 @@
+- **Android's Overview says who uses each taf you manage**, under its name, as on iPad: "Support · 3 people", or that it isn't shared, on up to two lines with the count kept whole ([docs/android-app.md](../docs/android-app.md)).

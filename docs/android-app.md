@@ -775,7 +775,11 @@ and its line. Its tafs are those tafs cloud says are relevant now (`relevant_now
 a step, a knock, a run or a change in the last day), as the iPad's; every taf is on the Overview,
 behind the mark. From a tafs cloud that doesn't say yet, every taf. Home's label chips sit over the
 Overview's table on a tablet, as on the iPad, and filter it; filtered to a mission's label, its row
-and Log are there too. `TabletSidebarTest` holds this at the iPad's size and a phone's.
+and Log are there too. Under each taf the person manages, the Overview says who uses it, as the iPad's: "Support · 3 people",
+its groups' and people's names from KIFF's shares, then everyone counted once across them, or "Not shared"
+(`PeopleWords.usedBy`). Up to two lines, the count held together by no-break spaces (`peopleLine`), so a medium window
+moves "1 persona" down whole, never "1 per…". A taf whose shares aren't read yet has no line. `TabletSidebarTest` holds
+this at the iPad's size and a phone's.
 
 The tablet's screens at the iPad's size (1366 × 1024 dp), over the sample, to set beside the iPad's
 reference files, are drawn on the JVM by `TabletScreenshots` into `docs/screenshots/android/tablet/`
