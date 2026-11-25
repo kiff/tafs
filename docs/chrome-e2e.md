@@ -126,6 +126,7 @@ yes, and fail the test.
 | A sensitive site of the grant (`bank.test`: its "bank" label makes it one) opens only on the paired phone's own signed allowance (`sensitive_allowed`). With none, or with one signed by planque's key instead, the open is `site_blocked`, and the bank is never asked for anything. The person's "Not on this site", switched on mid-run, makes the run's next read of their joined tab `site_blocked`, with nothing read, and their next send from the panel goes without the page. A step replayed after Chrome stopped the service worker gets no answer, and the page isn't opened again. A click whose words say only "Continue" is `payment_step`, and nothing is ordered, on each of: a submit in a schema.org Order, a payment provider's button, the submit of a form with a card field, and a button on a page with a provider's payment frame | `gaps.e2e.test.js` |
 | Chrome's own fence says what `refuseURL` says (0.2.19). Four kinds of host are blocked by Chrome before anything is asked of them: a bank label under a granted site (`bank.shop.test`), `accounts.google.com` under a `google.com` grant, a site under a listed `github.io`, and an address (`127.0.0.1`). Each is tried by an open, by the taf's click on a link, and by a 302 from a granted page, in a tab of the run's own and in the person's joined tab. Chrome already holds a connection to each target, since the person visited it first and that visit is checked to have reached it. The server logs no request for any of them, and no result carries the target's page. An open answers `refuseURL`'s code: `site_blocked`, `site_not_listed` or `address_private` | `fence219.e2e.test.js` |
 | What leaves for planque when a page is too large, or the relay is down. A read over the relay's 120 KB is cut to fit, says so (`truncated`), and no cut carries the password field's value, a card number in the page's text, or what the person typed. A hand-over's Done pressed while the relay is down reaches planque once the relay is back: once, signed, without what the person typed. A Done whose page is over the cap goes with no page | `leaving.e2e.test.js` |
+| The last gaps that touch the person's data. Coach's own send (`coach_send`) with the person's page in front sends the page without its query, and the run it starts joins their tab only to read it where it is: the page isn't loaded again, and the tab is fenced. Coach's read of a page with frames, of the same site and of another, sends the top document and none of the frames' words or passwords. A page no cut makes fit the relay's 120 KB is refused `page_too_large`, signed, and the answer fits | `coach.e2e.test.js` |
 | A wrong action, and a stale display: what the rest of the ranked gaps covers. A disabled button's click is `disabled`, an option that isn't there is `option_unknown`, and `check` on a radio chooses it. planque's unsigned `stop` mid-act, while the outline is up, makes the act answer `stopped` with nothing reaching the page, and planque hears `stopped`, signed. A stop with a hand-over open answers it `declined`, and a stop for a run this Chrome doesn't hold changes nothing. A "leave this page?" handler doesn't hold the taf's next open, and no dialog reaches Chromium. A content script's message of a panel's kind changes nothing: `stop`, `pause`, `aside_site`, `page_withdraw`, `unpair`, `taf_send`. Nor does `owner_input` from a tab of no run. After the person takes their joined tab back, the floating bar there no longer says it's the run's tab (`here: false`, read where `TafsBar.show` is given it), and the badge counts the run until it ends, then clears | `gaps2.e2e.test.js` |
 | What is and isn't a lock, and Chrome's own dialog guard. `readonly` on a checkbox, a radio or a select locks nothing, since browsers ignore it, so the taf's check and select go through. An address the person types in a run's own tab gives them a page whose `confirm` as it loads is real and theirs to answer. A frame of the run's site can still send the whole tab to another page of the run's sites | `gaps2.e2e.test.js` |
 | A run's tab has its three session rules (block every page and frame, allow the run's sites, block `http`) while the run lives; planque's stop and the taf's close take them away, and another run's stay; unpairing (4410) leaves none at all | `fence.e2e.test.js` |
@@ -162,8 +163,8 @@ yes, and fail the test.
   tab of the run's own is tested (see the known bugs).
 - **A checkout's own refusals by its words and totals** (`checkout`), and `press` and `scroll` as acts of their own: covered by
   the unit and page tests only. The refusals by a page's semantics (`places_order`, `payment_frame`) are in `gaps.e2e.test.js`.
-- **The relay's limits:** `page_too_large` (a page no cut makes fit). A dropped connection opened again, and a result cut to
-  fit 120 KB, are covered (`leaving.e2e.test.js`). A step replayed
+- **The relay's limits:** a dropped connection opened again, a result cut to fit 120 KB (`leaving.e2e.test.js`), and
+  `page_too_large` (`coach.e2e.test.js`) are covered. A step replayed
   after Chrome stops the service worker is covered (`gaps.e2e.test.js`). The worker's restart is covered for its fences and that
   replay, woken by the panel; its
   wake by the relay's alarm isn't.
@@ -172,16 +173,15 @@ yes, and fail the test.
 - **A page off the run's sites restored from the back/forward cache in a joined tab**: Chrome flushes that cache as the fence's
   rules are added, so the person's Back off the run's sites is always a new request (see the known bugs); the give-back on such a
   commit can't be reached from a test.
-- **The floating bar**, and a joined tab followed while the panel is open or after it closes; **Coach's own send**
-  (`coach_send`) as the start of a joined run (the tests start one from a taf's chat, `taf_send`). That the bar is hidden when
-  the person's tab is given back is not checked.
-- **A frame's own reads:** the extension reads no frame, so there is nothing more to mask in one; Coach's page read
-  (`aside.js`) in a frame isn't tested either.
+- **The floating bar's own words**, and a joined tab followed while the panel is open or after it closes. Coach's own send
+  (`coach_send`) as the start of a joined run, and Coach's page read with frames in it, are covered (`coach.e2e.test.js`).
+- **A frame's own reads:** the extension reads no frame, so there is nothing more to mask in one.
 - **A real drag of a tab:** headless Chromium has no tab strip, so the person's drag in or out of a run's group is made with
   Chrome's own `tabs.group` and `tabs.ungroup`, called from the service worker. It changes Chrome's tabs as a drag does, but no
   drag event is seen. A drag of a run's tab to another window isn't tested.
 - **Push:** the test build has no push key, so the extension never subscribes.
-- **Coach and the KIFF device** in the side panel: they need tafs cloud and KIFF.
+- **Coach's chat and the KIFF device** in the side panel beyond a send: the fake tafs cloud answers a Coach send and its empty
+  chat, nothing more.
 - **Chrome as people install it:** the tests load the unpacked copy; the Web Store's build and its manifest hash are checked
   by the release, not here.
 
@@ -265,6 +265,10 @@ Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed
 
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
+
+- **An act that ran, whose page then grows past any cut, is answered `page_too_large`** (`coach.e2e.test.js`). `relay.js`
+  answers `page_too_large` whenever no cut makes the answer fit, an act's answer included, though its own comment says an act
+  that ran is never answered as a failure. The taf is told its click failed, and may click again.
 
 None.
 
