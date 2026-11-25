@@ -93,6 +93,22 @@ final class CoachFollowTests: XCTestCase {
         XCTAssertEqual(card.body, Words.Watch.approveOnPhone, "a card is only approved on the phone")
     }
 
+    /// A taf chat's answer (the owner's call 7 for a taf's chat): posted as Coach's is, under the taf's name, and its tap
+    /// opens that taf, never Coach.
+    func testATafChatsAnswerIsTheTafs() {
+        let refunds = CoachFollow.content(rae, taf: WatchTafName(id: "taf-ref", name: "Refunds"))
+        XCTAssertEqual(refunds.title, "Refunds")
+        XCTAssertEqual(refunds.body, "Rae is paused.")
+        XCTAssertEqual(refunds.userInfo["open"] as? String, "taf:taf-ref")
+        XCTAssertEqual(refunds.interruptionLevel, .timeSensitive)
+        let pushes = WatchAskPushes(defaults: UserDefaults(suiteName: "CoachFollowTests.taf")!)
+        pushes.sent("ask_t", taf: "taf-ref")
+        XCTAssertEqual(pushes.entry("ask_t")?.taf, "taf-ref", "kept with the request, so tafs cloud's push posts it the same way")
+        pushes.sent("ask_c")
+        XCTAssertNil(pushes.entry("ask_c")?.taf)
+        UserDefaults(suiteName: "CoachFollowTests.taf")?.removePersistentDomain(forName: "CoachFollowTests.taf")
+    }
+
     /// No amount in the notification: the Inbox's rule, and the rest is on the phone.
     func testTheNotificationHoldsNoAmount() {
         let refund = CoachFollow.content(WatchCoachAnswer(text: "Refunded €84 for order A-1039.", more: false, approveOnPhone: false))

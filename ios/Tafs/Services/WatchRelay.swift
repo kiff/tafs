@@ -232,6 +232,13 @@ enum WatchRelay {
 /// in (`HoldNotification.fill`): the phone may be locked, with tafs not open.
 @MainActor
 struct KeptWatchReading: WatchReading {
+    /// A taf's id and its name as Your tafs lists it, to title its answer; "tafs" when the list can't be read now.
+    func tafName(_ id: String?) async -> WatchTafName? {
+        guard let id, !id.isEmpty else { return nil }
+        let name = (try? await tafs())?.first { $0.id == id }?.name
+        return WatchTafName(id: id, name: name ?? "tafs")
+    }
+
     func openOnPhone(taf: String?) async -> WatchReply {
         await WatchOpen.run(WatchOpen.destination(taf: taf))
         return WatchReply(.ok)
@@ -537,11 +544,14 @@ struct KeptWatchReading: WatchReading {
             let asked = try await cloud.watchAsk(body: body, signature: "t=\(signedAt),v1=\(signature)")
             let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: asked.id, sent: nil)
             // Row 11: tafs cloud's push for this request is read only because this iPhone sent it (`WatchAskPush`).
-            if follows { WatchAskPushes().sent(asked.id) }
-            // W3: if the watch is put away before the request ends, the iPhone posts how it went (`CoachFollow`).
+            if follows { WatchAskPushes().sent(asked.id, taf: tafID) }
+            // W3: if the watch is put away before the request ends, the iPhone posts how it went (`CoachFollow`), under the
+            // taf's name for a taf's chat.
             if follows {
                 let reading = self
-                Task { @MainActor in await CoachFollow.run(ticket, read: { await reading.readCoach($0) }) }
+                Task { @MainActor in
+                    await CoachFollow.run(ticket, taf: { await reading.tafName(tafID) }, read: { await reading.readCoach($0) })
+                }
             }
             return WatchReply(.ok, ticket: ticket)
         } catch let e as TafsCloud.CloudError where e.status == 404 && e.code == "no_coach" {

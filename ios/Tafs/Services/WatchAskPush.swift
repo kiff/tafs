@@ -12,6 +12,8 @@ struct WatchAskPushes {
         var at: Date
         var seen = false
         var posted = false
+        /// tafs cloud's id for the taf whose chat took it, for a request sent from a taf's chat: its answer is the taf's.
+        var taf: String? = nil
     }
 
     static let key = "watch.asks.sent"
@@ -32,10 +34,10 @@ struct WatchAskPushes {
         defaults.set(try? JSONEncoder().encode(Dictionary(uniqueKeysWithValues: newest.map { ($0.key, $0.value) })), forKey: Self.key)
     }
 
-    /// The relay sent this request for the watch.
-    func sent(_ id: String, at now: Date = Date()) {
+    /// The relay sent this request for the watch; `taf`, from that taf's chat.
+    func sent(_ id: String, taf: String? = nil, at now: Date = Date()) {
         var entries = all()
-        if entries[id] == nil { entries[id] = Entry(at: now) }
+        if entries[id] == nil { entries[id] = Entry(at: now, taf: taf) }
         save(entries, now: now)
     }
 
@@ -104,9 +106,12 @@ enum WatchAskPush {
     static func run(_ id: String) async {
         let reading = KeptWatchReading()
         guard reading.signedIn else { return }
+        let taf = WatchAskPushes().entry(id)?.taf
         await handle(id, read: { await reading.readAsk($0) }, phoneInUse: { CoachFollow.phoneActive },
                      relay: { WatchPushRelay.toWatch($0) },
-                     post: { answer, ticket in await CoachFollow.notify(answer, ticket: ticket) })
+                     post: { answer, ticket in
+                         await CoachFollow.notify(answer, ticket: ticket, taf: await reading.tafName(taf))
+                     })
     }
 }
 

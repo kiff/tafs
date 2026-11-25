@@ -35,6 +35,37 @@ final class WatchDaysTests: XCTestCase {
             if fails { throw TafsCloud.CloudError(status: 500, message: "down") }
             return turns
         }
+        var whole: [String: String] = [:]
+        var wholeReads: [String] = []
+        func watchAskWhole(_ id: String) async throws -> String? {
+            wholeReads.append(id)
+            return whole[id]
+        }
+    }
+
+    /// Read more on the Today sheet (the owner's call 8, as on the watch): a cut line offers it, the tap reads the whole once
+    /// and shows it in place, and nothing of it stays once the day closes.
+    func testReadMoreReadsTheWholeAnswerOnTheTap() async {
+        let json = #"{"turns":[{"id":"wa_1","said":"Why?","state":"done","line":"Because the run…","words":"Done","more":true},"# +
+            #"{"id":"wa_2","said":"Ok","state":"done","line":"Fine.","words":"Done"}]}"#
+        let turns = TafsCloud.watchTurns(decoding: Data(json.utf8))
+        XCTAssertEqual(turns.map(\.more), [true, false])
+        XCTAssertTrue(WatchTurnRow.offersMore(turns[0], whole: nil))
+        XCTAssertFalse(WatchTurnRow.offersMore(turns[1], whole: nil), "a whole line offers nothing")
+
+        let reading = Reading()
+        reading.whole = ["wa_1": "Because the run read the whole page."]
+        let model = WatchDaysModel(reading: reading)
+        await model.readMore("wa_1")
+        await model.readMore("wa_1")
+        XCTAssertEqual(reading.wholeReads, ["wa_1"], "read once")
+        XCTAssertEqual(WatchTurnRow.shown(turns[0], whole: model.whole["wa_1"]), "Because the run read the whole page.")
+        XCTAssertFalse(WatchTurnRow.offersMore(turns[0], whole: model.whole["wa_1"]))
+        // None to give: the line stays, and Read more stays to tap again.
+        await model.readMore("wa_9")
+        XCTAssertEqual(model.whole["wa_9"], .failed)
+        model.close()
+        XCTAssertTrue(model.whole.isEmpty, "nothing kept")
     }
 
     func testTheDaysAndTurnsAreTheDesignsJSON() {

@@ -621,9 +621,12 @@ The watch follows the phone's thread without asking it each time, and never asks
   tafs missing from the phone is said as it is, since only installing it helps. Refuse and Halt still offer Try again: each
   is an act of the person's own.
 - **A notification you can't miss (call 7).** The answer to a request sent from the wrist is posted as time-sensitive, so it
-  comes through a Focus, as a hold does (`CoachFollow.content`).
+  comes through a Focus, as a hold does (`CoachFollow.content`). A taf chat's answer is posted the same way, under the taf's
+  name, and a tap opens that taf (`WatchTafName`; the taf's id is kept with the request in `WatchAskPushes`).
 - **The whole answer from the preview (call 8).** Tapping an answer in Coach's thread opens it whole. A cut answer is read
-  whole on that tap (`ask_full`), as a taf's Read more is.
+  whole on that tap (`ask_full`), as a taf's Read more is. The iPhone's From your watch day (W11) offers Read more on a cut
+  line too (`more` on the day's turn): the whole answer is read on the tap, shown in place, and kept only while the day is
+  open (`WatchDaysModel.readMore`).
 - **Kept on the watch (call 1), behind `WatchThreads.on` (off).** Coach's thread and each taf's thread opened on the watch.
   At most 20 threads, each its last 30 messages, as text with any amount taken out (the Inbox's rule, as on Wear OS), with
   when each was sent and whose it is. Never an attachment, an
