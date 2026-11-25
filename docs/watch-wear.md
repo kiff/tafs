@@ -745,7 +745,9 @@ watch doesn't know is shown as Open on phone, never guessed at.
     - another sign-in's mark wipes everything kept first, then the reply is the new account's;
     - holding a mark, a reply with none (an older code path, a downgraded phone app) wipes too, and its read isn't shown;
     - a reply that carries nothing of an account (a failure, a refusal, no offline speech) proves nothing and wipes nothing;
-    - holding no mark (a phone before marks, or the first open after this version), as before.
+    - holding no mark (a phone before marks, or the first open after this version), as before;
+    - the first time the watch hears from an updated phone, it clears what it kept before, once: what was kept before marks can't
+      say whose it is, so it goes before anything of that first marked reply is drawn.
   - **Nothing kept is drawn before the mark is confirmed.** Holding a mark, the watch draws nothing it kept (the cache's read, the
     conversation, the Inbox, a taf's kept chat, a message kept for later) until a reply in this open carried that same mark. **So
     opened with the phone out of reach, the watch shows its linking screen, then that the phone isn't reachable, not the last

@@ -37,7 +37,7 @@ object AccountMark {
     /** No mark held, none sent: a phone before marks, as before them. */
     Legacy,
 
-    /** The first mark the watch sees: kept, nothing to wipe. */
+    /** The first mark the watch ever sees: what was kept before marks can't say whose it is, so it goes, once, then the mark is kept. */
     First,
 
     /** The mark held: what's kept is this sign-in's. */

@@ -254,10 +254,31 @@ class AccountMarkTest {
     m.refresh()
     assertTrue("drawn from the cache before the phone answered", (seen as WatchModel.Shown.Read).updating)
     assertEquals(0, wipes)
-    // The first mark the watch sees is kept, nothing wiped.
-    model(Phone(asA)).refresh()
-    assertEquals(markA, marks.mark)
-    assertEquals(0, wipes)
+  }
+
+  /** The first time the watch hears from an updated phone, what it kept before marks goes, once, before any of the reply is drawn. */
+  @Test fun theFirstMarkEverClearsWhatWasKeptBeforeMarksOnce() = runTest {
+    keptFromA()
+    marks.mark = null
+    lateinit var m: WatchModel
+    var answered = false
+    val drawnAfter = mutableListOf<String>()
+    m = model(Phone { r -> answered = true; asB(r) })
+    // Before marks, it opens on what it kept, as before (no regression for a phone that never sends marks).
+    assertEquals(listOf("wa_a"), m.thread().map { it.second.id })
+    backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { m.shown.collect { if (answered && ofA(it)) drawnAfter += "shown: $it" } }
+    backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { m.inbox.collect { if (answered && it.isNotEmpty()) drawnAfter += "inbox: $it" } }
+    backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { m.asks.collect { if (answered && "wa_a" in it) drawnAfter += "asks: $it" } }
+    backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { m.kept.collect { if (answered && it != null) drawnAfter += "kept: $it" } }
+    m.refresh()
+    assertEquals(emptyList<String>(), drawnAfter)
+    nothingOfAKept()
+    assertTrue(m.thread().isEmpty())
+    assertEquals(markB, marks.mark)
+    assertEquals(1, wipes)
+    // Once: the same mark again wipes nothing more.
+    model(Phone(asB)).refresh()
+    assertEquals(1, wipes)
   }
 
   /** Signed out on the phone with the watch off: its kept item is there when the watch comes back on, and wipes with the app closed. */

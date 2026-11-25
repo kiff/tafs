@@ -693,7 +693,14 @@ class WatchModel(
     if (AccountMark.neutral(reply)) return asked
     when (AccountMark.seen(store.read(), answered.mark)) {
       AccountMark.Seen.Legacy -> takeInKept()
-      AccountMark.Seen.First -> { store.write(answered.mark!!); takeInKept() }
+      // The first mark ever (an updated phone): what was kept before marks can't say whose it is, so it goes, once, before
+      // anything of the reply is drawn.
+      AccountMark.Seen.First -> {
+        wipeAccount()
+        _shown.value = Shown.Asking
+        store.write(answered.mark!!)
+        verified = true
+      }
       AccountMark.Seen.Same -> takeInKept()
       AccountMark.Seen.Changed -> {
         wipeAccount()
