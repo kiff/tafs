@@ -102,10 +102,11 @@ describe("a money tool's Cards are built from the rules the owner agreed (cardsF
     it(`seq ${d.seq} (${d.answered}): answered with the Cards the rules give, never a piece at a time`, () => {
       const built = cardsFromRules([stripe], RULES[d.rules]!, AGENT)[0]!;
       const off = moneyCardsOff([stripe], d.cards, RULES[d.rules]!, AGENT);
-      if (d.seq === 228) {
-        // rules5 has no "every refund held" figure: the refused Card alone is what they give, and seq 228 drafted it.
-        expect(built).toEqual({ tool: "Refund a charge in EUR", action: "create_refund", cards: [{ ...REFUSED, id: `${AGENT}-create_refund-refused` }] });
-        expect(off).toBeUndefined();
+      if (d.rules === "rules3" || d.rules === "rules5") {
+        // rules3 and rules5 say the refund asks (`over: "ask"`) with no figure that asks: no Cards, never the refused Card
+        // alone, under which every refund up to €50 would run unasked (seq 228 drafted that, and it is refused now).
+        expect(built).toEqual({ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "asks_unnamed" });
+        expect(off).toEqual(built);
         return;
       }
       expect(off).toEqual(built);
@@ -227,5 +228,36 @@ describe("a held Card may carry the refused Card's cap on each call (rulesMismat
     expect(rulesMismatch([stripe], [readsCard, refusedNoCap, HELD], RULES.rules1)?.kind).toBe("mixed");
     const lower = { ...HELD, grants: [{ action: "create_refund", per_action_max: [{ quantity: "sum(amount)", max: 4000 }] }] };
     expect(rulesMismatch([stripe], [readsCard, REFUSED, lower], RULES.rules1)?.kind).toBe("mixed");
+  });
+});
+
+// The apple@ rebuild, 25 Nov 22:43: "Every refund asks you first. A refund over 50 EUR is refused. Refunds past 200 EUR in a
+// day are refused", agreed as `over: "ask"` beside the two refused figures and nothing that asks. tafs cloud answered with
+// the refused Card alone, and Coach stopped rather than draft it: every refund under €50 would have run unasked.
+describe("a rule that asks with no figure that asks gives no Cards", () => {
+  const agreed: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [EACH, DAY] }, ...reads];
+
+  it("names what's missing, never builds the refused Card alone", () => {
+    expect(cardsFromRules([stripe], agreed, AGENT)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "asks_unnamed" }]);
+  });
+
+  it("refuses every draft for it: the refused Card alone, and Coach's €0.01 held cap", () => {
+    for (const cards of [[readsCard, limitsCard()], [readsCard, limitsCard(), holdCard(cap(1), [kiffsCount])]]) {
+      expect(moneyCardsOff([stripe], cards, agreed, AGENT)).toMatchObject({ unbuilt: "asks_unnamed" });
+    }
+  });
+
+  it("with \"every refund asks\" as a count of 0 a day, gives the held Card beside the refused one, and nothing under €50 runs", () => {
+    const named: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [EVERY_ONE, EACH, DAY] }, ...reads];
+    const built = cardsFromRules([stripe], named, AGENT)[0]!;
+    expect(built).toEqual({ tool: "Refund a charge in EUR", action: "create_refund", cards: [REFUSED, HELD] });
+    const cards = "cards" in built ? built.cards : [];
+    for (const amount of [1, 100, 4999]) expect(kiffDecides(cards, "create_refund", amount)).toBe("held");
+    expect(kiffDecides(cards, "create_refund", 5001)).toBe("refused");
+  });
+
+  it("with nothing asking (over: refuse), the refused Card alone is what was agreed", () => {
+    const refused: AgreedRule[] = [{ tool: "create_refund", over: "refuse", limits: [EACH, DAY] }, ...reads];
+    expect(cardsFromRules([stripe], refused, AGENT)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", cards: [REFUSED] }]);
   });
 });

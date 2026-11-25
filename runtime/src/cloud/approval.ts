@@ -290,6 +290,7 @@ const MONEY_UNBUILT: Record<MoneyUnbuilt, string> = {
   held_bound: "its held Card would limit no amount, and KIFF needs every Card on a money tool to limit its amount: the rules need each call's limit on the amount",
   held_total: "its held limits have no total, and no refused day's total on the amount stands beside them for KIFF's own count: the rules need a day's total on the amount",
   count: "the rules count its calls, and a money tool is limited by its amounts: each call's and a day's total, no count of calls but 0 (every call asks)",
+  asks_unnamed: "its rule says its calls ask the owner, but no figure asks, so no Card can hold it: if every call asks, the rules need a count of 0 a calendar day that asks (count, 0, calendar_day, over ask); if none asks, the rule's over is refuse",
 };
 
 /** Whether a money tool's held Card carries its refused Card's cap on each call (cardsFromRules), said to Coach as such. */
