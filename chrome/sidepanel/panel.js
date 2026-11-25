@@ -36,6 +36,25 @@ function send(message) {
   return chrome.runtime.sendMessage(message);
 }
 
+/**
+ * A message whose answer nobody waits for (a press, the first state): a worker that isn't there yet (stopped, reloaded) is no
+ * error to leave unhandled in chrome://extensions. The press does what it did; its failure says nothing, as before.
+ */
+function quietly(message) {
+  return send(message).catch(() => null);
+}
+
+/**
+ * The page that went with a message (Coach's or a taf's), by its host alone, as tafs cloud recorded it: never silent.
+ */
+function reading(li, m) {
+  if (!m.reading) return;
+  const line = document.createElement("small");
+  line.className = "reading";
+  line.textContent = t("aside_reading", m.reading);
+  li.append(line);
+}
+
 /** A step's site for its line, or "" when its address can't be read: a line never throws, and the panel always draws. */
 function hostOf(url) {
   try {
@@ -124,8 +143,8 @@ function draw(state) {
         else showSaid.delete(run.id);
         draw(lastState);
       };
-      node.querySelector(".handDone").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "done" });
-      node.querySelector(".handNo").onclick = () => send({ type: "hand_answer", run: run.id, outcome: "declined" });
+      node.querySelector(".handDone").onclick = () => quietly({ type: "hand_answer", run: run.id, outcome: "done" });
+      node.querySelector(".handNo").onclick = () => quietly({ type: "hand_answer", run: run.id, outcome: "declined" });
     }
     const list = node.querySelector(".steps");
     for (const s of run.steps.slice(-12)) {
@@ -136,9 +155,9 @@ function draw(state) {
     }
     node.querySelector(".pause").hidden = !!run.paused;
     node.querySelector(".resume").hidden = !run.paused;
-    node.querySelector(".pause").onclick = () => send({ type: "pause", run: run.id });
-    node.querySelector(".resume").onclick = () => send({ type: "resume", run: run.id });
-    node.querySelector(".stop").onclick = () => send({ type: "stop", run: run.id });
+    node.querySelector(".pause").onclick = () => quietly({ type: "pause", run: run.id });
+    node.querySelector(".resume").onclick = () => quietly({ type: "resume", run: run.id });
+    node.querySelector(".stop").onclick = () => quietly({ type: "stop", run: run.id });
     box.append(node);
   }
 }
@@ -167,7 +186,8 @@ chrome.windows.getCurrent().then((w) => {
 
 // The service worker knows this panel is open, in this window, for as long as this port is (panels.js): a run the person starts
 // from here works in the tab in front, and Chrome follows it only while the panel is open. The worker may stop and drop the port;
-// the panel connects again.
+// the panel connects again. A connect that found no worker ("Receiving end does not exist") ends in the same disconnect, its
+// error read there: Chrome logs an error nobody reads as "Unchecked runtime.lastError".
 function openHere() {
   let port;
   try {
@@ -175,8 +195,15 @@ function openHere() {
   } catch {
     return; // the extension was reloaded: this panel is gone with it
   }
-  port.onDisconnect.addListener(() => setTimeout(openHere, 1000));
-  port.postMessage({ windowId: panelWindow });
+  port.onDisconnect.addListener(() => {
+    void chrome.runtime.lastError; // read, so it's checked: the panel connects again either way
+    setTimeout(openHere, 1000);
+  });
+  try {
+    port.postMessage({ windowId: panelWindow });
+  } catch {
+    // Already disconnected: the listener above connects again.
+  }
 }
 
 chrome.tabs.onActivated.addListener(({ tabId, windowId }) => {
@@ -213,7 +240,7 @@ function drawAtWork() {
     b.className = "chip quiet" + (w.waiting ? " waiting" : "") + (hereTaf && hereTaf.id === w.id ? " here" : "");
     b.textContent = w.name;
     b.setAttribute("aria-label", t("go_to_taf", w.name));
-    b.onclick = () => send({ type: "go_to_run", run: w.run });
+    b.onclick = () => quietly({ type: "go_to_run", run: w.run });
     list.append(b);
   }
 }
@@ -245,11 +272,11 @@ $("pairForm").onsubmit = async (e) => {
 
 $("unpair").onclick = async () => {
   if (!confirm(t("unpair_confirm"))) return;
-  await send({ type: "unpair" });
+  await quietly({ type: "unpair" });
 };
 
-chrome.storage.session.get("state").then(({ state }) => state && draw(state));
-send({ type: "state" });
+chrome.storage.session.get("state").then(({ state }) => state && draw(state)).catch(() => {});
+quietly({ type: "state" });
 
 // Coach (docs/chrome.md, "Coach in the side panel"): the same chat as the apps. Approvals stay on the phone. The panel opens on
 // a fresh conversation, as the phone's New conversation does; the earlier ones are under Previous conversations.
@@ -324,13 +351,7 @@ async function renderCoach() {
     const li = document.createElement("li");
     li.className = m.from;
     words(li, m);
-    // The page that went with this message, by its host alone, as tafs cloud recorded it: never silent.
-    if (m.reading) {
-      const line = document.createElement("small");
-      line.className = "reading";
-      line.textContent = t("aside_reading", m.reading);
-      li.append(line);
-    }
+    reading(li, m);
     list.append(li);
   }
   $("coachPhone").hidden = !r.thread.waitsOnPhone;
@@ -586,6 +607,8 @@ let tafWorking = false;
 let tafSentAt = 0;
 let tafIdle = 0;
 let tafTimer = null;
+// The messages sent to a taf from here whose page didn't go, being on none of its sites: message id → the page's host.
+const notRead = new Map();
 
 const tafName = () => (tafs.find((x) => x.id === tafId) || {}).name || "";
 
@@ -636,6 +659,13 @@ async function readTaf() {
       const li = document.createElement("li");
       li.className = m.from;
       words(li, m);
+      reading(li, m);
+      if (!m.reading && m.id && notRead.has(m.id)) {
+        const line = document.createElement("small");
+        line.className = "reading";
+        line.textContent = t("aside_not_taf_site", notRead.get(m.id));
+        li.append(line);
+      }
       list.append(li);
     }
     $("tafPhone").hidden = !r.thread.waitsOnPhone;
@@ -647,10 +677,10 @@ async function readTaf() {
     if (atEnd) toEnd();
     // The taf's turn is over, in tafs cloud's word: its run here stops saying it works, rather than until the idle sweep.
     for (const run of turnOver(id, r.thread, (lastState && lastState.runs) || [], tafs)) {
-      send({ type: "turn_over", run }).then((out) => {
+      quietly({ type: "turn_over", run }).then((out) => {
         // Its last step was a moment ago: the chat is read again once the run has been quiet long enough.
         if (out && out.retryIn > 0 && id === tafId) setTimeout(() => id === tafId && readTaf(), out.retryIn + 500);
-      }).catch(() => {});
+      });
     }
   }
   scheduleTaf();
@@ -714,6 +744,8 @@ $("tafForm").onsubmit = async (e) => {
   }
   tafSentAt = Date.now();
   const sent = sentID(r.sent);
+  // The page in front was on no site of this taf's: it didn't go, and the message says so under it (never silent).
+  if (sent && r.notReading === "not_taf_site" && r.host) notRead.set(sent, r.host);
   if (tafPending && tafPending.taf === to && tafPending.words === said) tafPending = sent ? { ...tafPending, id: sent } : null;
   setTray(to, afterSent(trayOf(to), files));
   // Sent: those words are gone from the taf they went to, and from nowhere else (the chat may have switched meanwhile).

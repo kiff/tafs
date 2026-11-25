@@ -53,7 +53,13 @@ test("the worker reads the tab for Coach only through the page consent, and keep
   // "Send without the page", or files with no words (a page goes only with words): the page is never read.
   assert.match(send, /const alone = m\.alone === true \|\| !String\(m\.words \|\| ""\)\.trim\(\);/);
   assert.match(send, /pageForSend\(\{ alone, consent: pageConsentReady, read: \(\) => asideRead\(/);
-  assert.equal((sw.match(/asideRead\(/g) || []).length, 2, "asideRead is defined once and called only through pageForSend");
+  assert.equal((sw.match(/asideRead\(/g) || []).length, 3, "asideRead is defined once and called only through pageForSend, for Coach and for a taf");
+  // A message to a taf: the same consent, the same words-only rule, the same read, within the taf's own signed sites.
+  const taf = sw.slice(sw.indexOf("taf_send:"), sw.indexOf("attach:"));
+  assert.match(taf, /const alone = m\.alone === true \|\| !String\(m\.words \|\| ""\)\.trim\(\);/);
+  assert.match(taf, /pageForSend\(\{ alone, consent: pageConsentReady, read: async \(\) => asideRead\(m\.tabId, m\.windowId, await tafSites\(m\.taf\)\) \}\)/);
+  assert.match(taf, /sendToTaf\(m\.taf, m\.words, m\.clientID, m\.attachments, page\.page\)/);
+  assert.match(sw, /async function tafSites\(taf\) \{[\s\S]*?signedSitesOf\(one\.grants, \(relay && relay\.connections\) \|\| \[\], kept\.pairing\)/, "the phone's signed sites, never planque's list");
   // The allow is in the pairing's own store, which an unpair (also the sign-out) wipes whole; a withdrawal clears it first.
   assert.match(sw, /indexedStore\.set\(PAGE_CONSENT, \{ tenant: session\.tenant, subject: session\.subject, version: PAGE_CONSENT_VERSION/);
   assert.match(sw, /async function pageWithdraw\(\) \{\n  await indexedStore\.set\(PAGE_CONSENT, null\);/);

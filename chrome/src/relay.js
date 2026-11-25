@@ -64,7 +64,11 @@ export function readConnections(list) {
   for (const c of list) {
     if (!c || typeof c.grant !== "string" || typeof c.agent !== "string" || !c.agent || typeof c.name !== "string") continue;
     const sites = Array.isArray(c.sites) ? c.sites.filter((x) => typeof x === "string").slice(0, 100) : [];
-    out.push({ grant: c.grant, agent: c.agent, name: c.name.slice(0, 80), sites });
+    // The phone's signature over the grant's sites, when planque relays it: kept as it came, to be verified where it's used
+    // (protocol.signedSitesOf), never taken on its word.
+    const s = c.sites_signed;
+    const signed = s && Array.isArray(s.sites) && s.sites.length <= 100 && s.sites.every((x) => typeof x === "string") && typeof s.sig === "string" ? { sites_signed: { sites: s.sites, sig: s.sig } } : {};
+    out.push({ grant: c.grant, agent: c.agent, name: c.name.slice(0, 80), sites, ...signed });
     if (out.length === 50) break;
   }
   return out;
@@ -216,12 +220,10 @@ export class Relay {
     }
     if (m.type === "step") {
       const checked = await checkStep(m, { planqueKey: this.config.planqueKey, chromeId: pairing.chromeId, nonces: this.nonces, now: this.now(), offset: this.offset ?? null });
-      if (checked.why) {
-        // Not run, and said so only when it carries an id we can answer: an unsigned message gets no signed answer.
-        const id = m.step && typeof m.step.id === "string" ? m.step.id : null;
-        if (id) this.send(await result(keys.privateKey, { id, nonce: m.step.nonce }, pairing.chromeId, { error: { code: "bad_step", detail: checked.why } }));
-        return;
-      }
+      // A step that doesn't verify (not planque's signature, not for this Chrome, expired, replayed, malformed) is dropped: not
+      // run, and given no answer at all. This extension's key never signs over an id and a nonce it can't trust, so a forged step
+      // gets nothing signed back. A verified step the runner refuses (a bad act, a site off the run's) keeps its signed refusal.
+      if (checked.why) return;
       const out = await this.runner.handle(checked.step);
       let answer = await result(keys.privateKey, checked.step, pairing.chromeId, out);
       // Too large: the page is cut until it fits, and says what was cut. An act that ran is never answered as a failure

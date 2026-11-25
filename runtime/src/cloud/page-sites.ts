@@ -47,6 +47,11 @@ function within(host: string, site: string): boolean {
   return host === site || host.endsWith("." + site);
 }
 
+/** Whether `host` is one of `sites` or under one, as planque holds a browser connection to them. */
+export function onSites(host: string, sites: readonly string[]): boolean {
+  return sites.some((s) => within(host, s));
+}
+
 /**
  * Why Coach never reads a page at `host` (normalised) and `path`: "store" for Chrome's Web Store, "sensitive" for a bank,
  * wallet, password manager, payment, health, government or mail site; else null.
