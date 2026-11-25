@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Shumë i madh: jo më shumë se $SIZE$ për këtë lloj skedari", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Ky lloj skedari nuk mund të bashkëngjitet. Vetëm foto, PDF, tekst, CSV, Markdown, Word ose Excel." },
   "attach_too_many": { "message": "Jo më shumë se 5 skedarë për mesazh." },
-  "attach_failed": { "message": "Nuk u ngarkua. Hiqeni dhe provoni sërish." }
+  "attach_failed": { "message": "Nuk u ngarkua. Hiqeni dhe provoni sërish." },
+  "working_here": { "message": "$TAF$ po punon këtu", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Po klikon" },
+  "pointer_fill": { "message": "Po shkruan" },
+  "pointer_select": { "message": "Po zgjedh" },
+  "pointer_check": { "message": "Po shënon" },
+  "pointer_press": { "message": "Po shtyp një tast" },
+  "pointer_scroll": { "message": "Po lëviz" },
+  "pointer_read": { "message": "Po lexon" }
 }

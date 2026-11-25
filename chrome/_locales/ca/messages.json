@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Massa gran: com a màxim $SIZE$ per a aquest tipus de fitxer", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "No es pot adjuntar aquest tipus de fitxer. Només fotos, PDF, text, CSV, Markdown, Word o Excel." },
   "attach_too_many": { "message": "Com a màxim 5 fitxers per missatge." },
-  "attach_failed": { "message": "No s'ha pujat. Treu-lo i torna-ho a provar." }
+  "attach_failed": { "message": "No s'ha pujat. Treu-lo i torna-ho a provar." },
+  "working_here": { "message": "$TAF$ està treballant aquí", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Fent clic" },
+  "pointer_fill": { "message": "Escrivint" },
+  "pointer_select": { "message": "Triant" },
+  "pointer_check": { "message": "Marcant" },
+  "pointer_press": { "message": "Prement una tecla" },
+  "pointer_scroll": { "message": "Desplaçant" },
+  "pointer_read": { "message": "Llegint" }
 }

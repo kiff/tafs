@@ -815,6 +815,7 @@ export const zhHant: Words = {
   chat_delete_busy: "這段對話仍在進行或正在等您。請先停止或回覆，再刪除。",
   card_step_give_passkey: "以通行密鑰核准",
   card_step_sign_passkey: "您的核准會以您的通行密鑰簽署，其私密金鑰永遠不會離開這部電腦或您的安全金鑰。這不是付款，也不是密碼。",
+  card_step_locked: "請先核准這項內容，之後才能傳訊息給 Coach。",
   cts_tafs_state: "查看您的 taf",
   cts_tafs_state_does: "讀取每個 taf、它的版本和進行中的執行。",
   cts_tafs_state_why: "它會讀取您的帳號。",

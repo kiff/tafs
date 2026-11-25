@@ -815,6 +815,7 @@ export const lv: Words = {
   chat_delete_busy: "Šī saruna vēl strādā vai gaida tevi. Vispirms to aptur vai atbildi, tad dzēs.",
   card_step_give_passkey: "Apstiprināt ar piekļuves atslēgu",
   card_step_sign_passkey: "Tavs apstiprinājums to paraksta ar tavu piekļuves atslēgu, kuras privātā atslēga nekad neatstāj šo datoru vai tavu drošības atslēgu. Tas nav maksājums vai parole.",
+  card_step_locked: "Vispirms apstiprini šo, tad varēsi rakstīt Coach.",
   cts_tafs_state: "Skatīt tavus taf",
   cts_tafs_state_does: "Lasa katru taf, tā versijas un atvērtās izpildes.",
   cts_tafs_state_why: "Tas lasa tavu kontu.",

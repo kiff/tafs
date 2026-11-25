@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { playwright, start, newRun, ref, until, runState, fillSessionRules, unfillSessionRules } from "./harness.mjs";
+import { playwright, start, newRun, ref, until, runState, signsIn, fillSessionRules, unfillSessionRules } from "./harness.mjs";
 import { joining } from "./joining.mjs";
 
 const skip = !playwright;
@@ -93,7 +93,8 @@ async function sevenInPanel(lang, locale) {
     // A step that arrives already paused is refused before it's recorded, so the card says "Paused" and draws no line for it.
     const read = await j.step({ ...as, op: "read" });
     const held = expect({ ...as, op: "act", read_id: read.page.read_id, act: { kind: "fill", ref: ref(read.page, "Question"), value: "x" } }, "paused_by_owner", t("step_act_fill"));
-    await until(() => j.owner.evaluate(() => !!document.querySelector("[data-tafs-outline]")), "the taf's outline in the page", 5000);
+    const theirs = (await j.front()).tabId;
+    await until(async () => ((await signsIn(h, theirs)) || {}).ring, "the taf's outline in the page", 5000);
     await h.fromPanel({ type: "pause", run });
     await held;
     await h.fromPanel({ type: "resume", run });

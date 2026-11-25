@@ -815,6 +815,7 @@ export const tr: Words = {
   chat_delete_busy: "Bu sohbet hâlâ çalışıyor veya sizi bekliyor. Önce durdurun ya da yanıtlayın, sonra silin.",
   card_step_give_passkey: "Geçiş anahtarınızla onaylayın",
   card_step_sign_passkey: "Onayınız bunu, özel anahtarı bu bilgisayardan veya güvenlik anahtarınızdan hiç çıkmayan geçiş anahtarınızla imzalar. Bu bir ödeme ya da parola değildir.",
+  card_step_locked: "Önce bunu onaylayın, sonra Coach'a yazabilirsiniz.",
   cts_tafs_state: "Taf'larınızı görün",
   cts_tafs_state_does: "Her taf'ı, sürümlerini ve açık çalıştırmalarını okur.",
   cts_tafs_state_why: "Hesabınızı okur.",

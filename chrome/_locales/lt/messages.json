@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Per didelis: šio tipo failui ne daugiau kaip $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Šio tipo failo pridėti negalima. Tik nuotraukos, PDF, tekstas, CSV, Markdown, Word arba Excel." },
   "attach_too_many": { "message": "Ne daugiau kaip 5 failai vienoje žinutėje." },
-  "attach_failed": { "message": "Neįkelta. Pašalinkite jį ir bandykite dar kartą." }
+  "attach_failed": { "message": "Neįkelta. Pašalinkite jį ir bandykite dar kartą." },
+  "working_here": { "message": "$TAF$ dirba čia", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Spusteli" },
+  "pointer_fill": { "message": "Rašo" },
+  "pointer_select": { "message": "Renkasi" },
+  "pointer_check": { "message": "Pažymi" },
+  "pointer_press": { "message": "Spaudžia klavišą" },
+  "pointer_scroll": { "message": "Slenka" },
+  "pointer_read": { "message": "Skaito" }
 }

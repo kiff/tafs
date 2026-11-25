@@ -822,6 +822,7 @@ export const nl: Words = {
   chat_delete_busy: "Dit gesprek is nog bezig of wacht op jou. Stop het of beantwoord het eerst, en verwijder het dan.",
   card_step_give_passkey: "Goedkeuren met je passkey",
   card_step_sign_passkey: "Je goedkeuring ondertekent dit met je passkey, waarvan de privésleutel deze computer of je beveiligingssleutel nooit verlaat. Het is geen betaling en geen wachtwoord.",
+  card_step_locked: "Je moet dit eerst goedkeuren, daarna kun je Coach schrijven.",
   cts_tafs_state: "Je tafs zien",
   cts_tafs_state_does: "Elke taf lezen, met zijn versies en zijn open runs.",
   cts_tafs_state_why: "Hij leest je account.",

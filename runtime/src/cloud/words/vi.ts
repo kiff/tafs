@@ -815,6 +815,7 @@ export const vi: Words = {
   chat_delete_busy: "Cuộc trò chuyện này vẫn đang làm việc hoặc đang chờ bạn. Hãy dừng hoặc trả lời trước, rồi xóa.",
   card_step_give_passkey: "Phê duyệt bằng khóa truy cập",
   card_step_sign_passkey: "Sự phê duyệt của bạn ký điều này bằng khóa truy cập của bạn, với khóa riêng không bao giờ rời khỏi máy tính này hoặc khóa bảo mật của bạn. Đây không phải là thanh toán hay mật khẩu.",
+  card_step_locked: "Hãy phê duyệt điều này trước, rồi bạn mới có thể viết cho Coach.",
   cts_tafs_state: "Xem các taf của bạn",
   cts_tafs_state_does: "Đọc từng taf, các phiên bản và các lượt chạy đang mở của nó.",
   cts_tafs_state_why: "Nó đọc tài khoản của bạn.",
