@@ -1,0 +1,1 @@
+- **Apple Watch: a thread opens at once on what the watch kept.** Coach's thread and each taf's thread opened on the watch keep their last 30 messages, as text with any amount taken out, locked at rest, as the privacy page says; they go on sign-out, without a passcode, and after 30 days unopened ([docs/watch-app.md](docs/watch-app.md), "Kept and pushed").
