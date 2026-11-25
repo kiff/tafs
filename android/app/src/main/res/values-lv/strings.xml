@@ -2893,6 +2893,7 @@
     <string name="watch_keep_for_later">Saglabāt vēlākam</string>
     <string name="watch_kept_to_send">Saglabāts šajā pulkstenī. Tas tiks nosūtīts, kad tālrunis atkal būs tuvumā.</string>
     <string name="watch_limit">Ne vairāk kā 30 s</string>
+    <string name="watch_linking">Savieno tafs. Turi tālruni tuvumā un savienotu.</string>
     <string name="watch_listening">Klausās</string>
     <string name="watch_menu">Izvēlne</string>
     <string name="watch_mic_needed">Lai jautātu balsī, atļauj tafs izmantot mikrofonu šajā pulkstenī.</string>
@@ -2956,6 +2957,7 @@
     <string name="watch_type">Rakstīt</string>
     <string name="watch_type_hint">Raksti Coach…</string>
     <string name="watch_update_phone">Atjaunini tafs savā tālrunī, tad mēģini vēlreiz.</string>
+    <string name="watch_view_on_phone">Skatīt tālrunī</string>
     <string name="watch_view_only_phone">Šis tālrunis var tikai skatīt, tāpēc no pulksteņa nevar jautāt. Pieraksties tālrunī, kas var apstiprināt.</string>
     <string name="watch_voice_text_only">Coach saņem tavus vārdus kā tekstu, nekad tavu balsi.</string>
     <string name="watch_what_it_does">Ko tas dara</string>

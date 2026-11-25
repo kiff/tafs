@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">Պահեք ավելի ուշի համար</string>
     <string name="watch_kept_to_send">Պահվում է այս ժամացույցում։ Կուղարկվի, երբ ձեր հեռախոսը նորից հասանելի լինի։</string>
     <string name="watch_limit">Առավելագույնը 30 վ</string>
+    <string name="watch_linking">tafs-ը կապակցվում է։ Պահեք հեռախոսը մոտ և միացված։</string>
     <string name="watch_listening">Լսում է</string>
     <string name="watch_menu">Ընտրացանկ</string>
     <string name="watch_mic_needed">Ձայնով հարցնելու համար այս ժամացույցում թույլ տվեք tafs-ին օգտագործել խոսափողը։</string>
@@ -153,6 +154,7 @@
     <string name="watch_type">Մուտքագրեք</string>
     <string name="watch_type_hint">Գրեք Coach-ին…</string>
     <string name="watch_update_phone">Թարմացրեք tafs-ը ձեր հեռախոսում, ապա նորից փորձեք։</string>
+    <string name="watch_view_on_phone">Դիտեք հեռախոսում</string>
     <string name="watch_view_only_phone">Այս հեռախոսը կարող է միայն դիտել, ուստի ժամացույցից չեք կարող հարցնել։ Մուտք գործեք հեռախոսում, որը կարող է հաստատել։</string>
     <string name="watch_voice_text_only">Coach-ը ձեր բառերը ստանում է որպես տեքստ, երբեք ձեր ձայնը։</string>
     <string name="watch_what_it_does">Ինչ է անում</string>

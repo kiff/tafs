@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Hoia hilisemaks</string>
     <string name="watch_kept_to_send">Hoitakse selles kellas. See saadetakse, kui telefon on jälle käeulatuses.</string>
     <string name="watch_limit">Kuni 30 s</string>
+    <string name="watch_linking">Ühendan tafsi. Hoia telefon lähedal ja ühendatuna.</string>
     <string name="watch_listening">Kuulan</string>
     <string name="watch_menu">Menüü</string>
     <string name="watch_mic_needed">Häälega küsimiseks luba selles kellas tafsile mikrofon.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Kirjuta</string>
     <string name="watch_type_hint">Kirjuta Coachile…</string>
     <string name="watch_update_phone">Uuenda telefonis tafsi ja proovi uuesti.</string>
+    <string name="watch_view_on_phone">Vaata telefonis</string>
     <string name="watch_view_only_phone">See telefon saab ainult vaadata, seega ei saa sa kellast küsida. Logi sisse telefonis, mis saab kinnitada.</string>
     <string name="watch_voice_text_only">Coach saab sinu sõnad tekstina, mitte kunagi sinu häält.</string>
     <string name="watch_what_it_does">Mida see teeb</string>

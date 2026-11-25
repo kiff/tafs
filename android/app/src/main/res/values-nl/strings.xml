@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Bewaren voor later</string>
     <string name="watch_kept_to_send">Bewaard op dit horloge. Het gaat zodra je telefoon weer binnen bereik is.</string>
     <string name="watch_limit">Maximaal 30 s</string>
+    <string name="watch_linking">tafs wordt gekoppeld. Houd je telefoon in de buurt en verbonden.</string>
     <string name="watch_listening">Luistert</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Typen</string>
     <string name="watch_type_hint">Schrijf aan Coach…</string>
     <string name="watch_update_phone">Werk tafs bij op je telefoon en probeer het opnieuw.</string>
+    <string name="watch_view_on_phone">Bekijken op telefoon</string>
     <string name="watch_view_only_phone">Deze telefoon kan alleen bekijken, dus je kunt niets vragen vanaf je horloge. Log in op een telefoon die kan goedkeuren.</string>
     <string name="watch_voice_text_only">Coach krijgt je woorden als tekst, nooit je stem.</string>
     <string name="watch_what_it_does">Wat hij doet</string>

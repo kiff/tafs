@@ -56,7 +56,10 @@ struct CoachAsk: View {
         List {
             Text(verbatim: model.draft)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            if case .failed(let why) = model.state {
+            if model.linking {
+                // The Send goes again by itself (`CoachModel.reachRetrying`): one calm line, no Try again.
+                Text(Words.Watch.linking).font(.footnote).foregroundStyle(.secondary)
+            } else if case .failed(let why) = model.state {
                 // Not sent, or not sure it arrived: what waits for you, in amber (W7).
                 Text(why).font(.footnote).foregroundStyle(WatchLook.held)
             }

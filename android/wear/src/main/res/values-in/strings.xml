@@ -88,6 +88,7 @@
     <string name="watch_keep_for_later">Simpan untuk nanti</string>
     <string name="watch_kept_to_send">Disimpan di jam tangan ini. Dikirim saat ponsel Anda kembali terjangkau.</string>
     <string name="watch_limit">maksimal 30 dtk</string>
+    <string name="watch_linking">Menautkan tafs. Jaga ponsel Anda tetap dekat dan terhubung.</string>
     <string name="watch_listening">Mendengarkan</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Untuk bertanya dengan suara, izinkan mikrofon untuk tafs di jam tangan ini.</string>
@@ -147,6 +148,7 @@
     <string name="watch_type">Ketik</string>
     <string name="watch_type_hint">Tulis ke Coach…</string>
     <string name="watch_update_phone">Perbarui tafs di ponsel Anda, lalu coba lagi.</string>
+    <string name="watch_view_on_phone">Lihat di ponsel</string>
     <string name="watch_view_only_phone">Ponsel ini hanya dapat melihat, jadi Anda tidak dapat bertanya dari jam tangan. Masuk di ponsel yang dapat menyetujui.</string>
     <string name="watch_voice_text_only">Coach menerima kata-kata Anda sebagai teks, tidak pernah suara Anda.</string>
     <string name="watch_what_it_does">Yang dilakukannya</string>

@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Megtartás későbbre</string>
     <string name="watch_kept_to_send">Ezen az órán megtartva. Akkor megy el, amikor a telefonod újra elérhető közelségben lesz.</string>
     <string name="watch_limit">legfeljebb 30 mp</string>
+    <string name="watch_linking">A tafs összekapcsolása. Tartsd a közelben a telefonod, és maradjon csatlakozva.</string>
     <string name="watch_listening">Figyelés</string>
     <string name="watch_menu">Menü</string>
     <string name="watch_mic_needed">A hangalapú kérdezéshez engedélyezd a mikrofont a tafs számára ezen az órán.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Írás</string>
     <string name="watch_type_hint">Írj a Coachnak…</string>
     <string name="watch_update_phone">Frissítsd a tafst a telefonodon, majd próbáld újra.</string>
+    <string name="watch_view_on_phone">Megtekintés a telefonon</string>
     <string name="watch_view_only_phone">Ez a telefon csak megtekinteni tud, ezért az óráról nem kérdezhetsz. Jelentkezz be egy jóváhagyásra képes telefonon.</string>
     <string name="watch_voice_text_only">A Coach szövegként kapja meg a szavaidat, soha nem a hangodat.</string>
     <string name="watch_what_it_does">Mit csinál</string>

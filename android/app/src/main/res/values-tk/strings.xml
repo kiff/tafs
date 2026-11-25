@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Soňa saklaň</string>
     <string name="watch_kept_to_send">Bu sagatda saklandy. Telefonyňyz ýene elýeterli bolanda iberilýär.</string>
     <string name="watch_limit">Iň köp 30 s</string>
+    <string name="watch_linking">tafs baglanýar. Telefonyňyzy ýakynda we birikdirilen saklaň.</string>
     <string name="watch_listening">Diňlenýär</string>
     <string name="watch_menu">Menýu</string>
     <string name="watch_mic_needed">Ses bilen soramak üçin, bu sagatda tafs üçin mikrofona rugsat beriň.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Ýazyň</string>
     <string name="watch_type_hint">Coach-a ýazyň…</string>
     <string name="watch_update_phone">Telefonyňyzdaky tafs-y täzeläň, soňra täzeden synanyşyň.</string>
+    <string name="watch_view_on_phone">Telefonda görüň</string>
     <string name="watch_view_only_phone">Bu telefon diňe görüp bilýär, şonuň üçin sagatdan soramak bolmaýar. Tassyklap bilýän telefonda giriň.</string>
     <string name="watch_voice_text_only">Coach sözleriňizi tekst hökmünde alýar, hiç haçan sesiňizi däl.</string>
     <string name="watch_what_it_does">Ol näme edýär</string>

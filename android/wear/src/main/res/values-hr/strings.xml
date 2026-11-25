@@ -96,6 +96,7 @@
     <string name="watch_keep_for_later">Zadržite za kasnije</string>
     <string name="watch_kept_to_send">Zadržano na ovom satu. Šalje se kad vaš telefon opet bude u dometu.</string>
     <string name="watch_limit">najviše 30 s</string>
+    <string name="watch_linking">Povezivanje tafsa. Držite telefon u blizini i povezan.</string>
     <string name="watch_listening">Slušanje</string>
     <string name="watch_menu">Izbornik</string>
     <string name="watch_mic_needed">Da pitate glasom, dopustite mikrofon za tafs na ovom satu.</string>
@@ -159,6 +160,7 @@
     <string name="watch_type">Tipkajte</string>
     <string name="watch_type_hint">Napišite Coachu…</string>
     <string name="watch_update_phone">Ažurirajte tafs na telefonu, pa pokušajte ponovno.</string>
+    <string name="watch_view_on_phone">Pogledajte na telefonu</string>
     <string name="watch_view_only_phone">Ovaj telefon može samo pregledavati pa ne možete pitati sa sata. Prijavite se na telefonu koji može odobravati.</string>
     <string name="watch_voice_text_only">Coach dobiva vaše riječi kao tekst, nikad vaš glas.</string>
     <string name="watch_what_it_does">Što radi</string>

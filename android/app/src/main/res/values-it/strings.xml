@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Tieni per dopo</string>
     <string name="watch_kept_to_send">Tenuto su questo orologio. Viene inviato quando il telefono torna raggiungibile.</string>
     <string name="watch_limit">Al massimo 30 s</string>
+    <string name="watch_linking">Collego tafs. Tieni il telefono vicino e connesso.</string>
     <string name="watch_listening">In ascolto</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Per chiedere a voce, consenti il microfono a tafs su questo orologio.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Scrivi</string>
     <string name="watch_type_hint">Scrivi a Coach…</string>
     <string name="watch_update_phone">Aggiorna tafs sul telefono, poi riprova.</string>
+    <string name="watch_view_on_phone">Vedi sul telefono</string>
     <string name="watch_view_only_phone">Questo telefono può solo visualizzare, quindi non puoi chiedere dall\'orologio. Accedi da un telefono che può approvare.</string>
     <string name="watch_voice_text_only">Coach riceve le tue parole come testo, mai la tua voce.</string>
     <string name="watch_what_it_does">Cosa fa</string>

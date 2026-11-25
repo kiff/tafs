@@ -101,6 +101,9 @@ enum CoachFollow {
         }
         content.body = lines.joined(separator: "\n")
         content.sound = .default
+        // The owner's call 7, a notification you can't miss: it's the answer to what was just asked from the wrist, so it
+        // comes through a Focus, as a hold does (the app's time-sensitive entitlement).
+        content.interruptionLevel = .timeSensitive
         content.userInfo = ["open": "coach"]
         return content
     }

@@ -76,6 +76,8 @@ final class CoachModel: ObservableObject {
     /// first appears with, and a complication most often opens the app cold, so the pages and Coach's home also look at
     /// this when they appear. Coach's home takes it once (`takeAskPending`), and listens.
     @Published private(set) var askPending = false
+    /// v3: a Send got no reply and goes again by itself: the screen says "Linking tafs", never Try again.
+    @Published private(set) var linking = false
     /// v2: the last Send got no reply from the phone, which may have it: Keep for later is offered beside Send.
     @Published private(set) var unsure = false
     /// v2's Keep for later: the message kept on this watch, or none. On disk (`DraftStore`) until it's sent, deleted, or the
@@ -121,8 +123,12 @@ final class CoachModel: ObservableObject {
     var onAnswer: (@MainActor (WatchCoachAnswer?, String) -> Void)?
     /// v2 (W2): between two reads of Coach's answer.
     private let pause: () async -> Void
+    /// v3: before a Send that got no reply goes again (`reachRetrying`): 2 s, then 4, then 8.
+    private let linkPause: (Int) async -> Void
     /// Counts each leave, so a read loop started before it stops.
     private var visit = 0
+    /// The owner's call 1: where this thread's copy is kept (`WatchThreads`, off until the privacy page says so).
+    private let threads: WatchThreads
     /// Where Keep for later keeps its message: v2's file, or none (v1, and tests that don't use it), and then it's never offered.
     private let drafts: DraftStore?
     /// A kept message on its way: the next read doesn't send it again meanwhile.
@@ -136,8 +142,14 @@ final class CoachModel: ObservableObject {
 
     init(phone: PhoneAsking, taf: String? = nil, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock(),
          newID: @escaping () -> UUID = UUID.init, drafts: DraftStore? = nil,
-         pause: @escaping () async -> Void = { try? await Task.sleep(nanoseconds: 1_500_000_000) }) {
+         pause: @escaping () async -> Void = { try? await Task.sleep(nanoseconds: 1_500_000_000) },
+         linkPause: @escaping (Int) async -> Void = { attempt in
+             try? await Task.sleep(nanoseconds: UInt64(1 << min(attempt, 3)) * 1_000_000_000)
+         },
+         threads: WatchThreads = .shared) {
         self.phone = phone
+        self.threads = threads
+        self.linkPause = linkPause
         self.taf = taf
         self.clock = clock
         self.lock = lock
@@ -147,6 +159,35 @@ final class CoachModel: ObservableObject {
         kept = taf == nil ? drafts?.read() : nil
         // As the Inbox: nothing of it stays on a watch without a passcode.
         checkLock()
+        WatchPushes.shared.listen(self)
+        reopen()
+    }
+
+    /// This thread's key where it's kept: Coach's, or the taf's id.
+    var threadKey: String { taf ?? WatchThreads.coach }
+
+    /// The owner's call 1: the thread opens at once on its stored copy, before any read. Nothing when it's off.
+    func reopen() {
+        guard turns.isEmpty, history.isEmpty else { return }
+        history = threads.lines(threadKey)
+    }
+
+    /// The thread as shown, as lines: what came before, then this visit's turns with their answers.
+    var shownLines: [WatchChatLine] {
+        var lines = history
+        for turn in turns {
+            lines.append(WatchChatLine(id: turn.id, mine: true, at: turn.at, text: turn.said, more: false))
+            if case .answered(let answer?) = turn.answer, !answer.text.isEmpty {
+                lines.append(WatchChatLine(id: turn.id + ".answer", mine: false, at: answer.at ?? turn.at, text: answer.text,
+                                           more: answer.more))
+            }
+        }
+        return lines
+    }
+
+    /// Keeps the thread's copy as shown now (`WatchThreads`; nothing when it's off).
+    private func keepThread() {
+        threads.keep(threadKey, shownLines)
     }
 
     /// The app was opened or put away, as the Inbox's `checkLock`: on a watch without a passcode, a message kept for later is
@@ -238,13 +279,14 @@ final class CoachModel: ObservableObject {
         unsure = false
         state = .sending
         let reply: WatchReply
-        switch await phone.reach(WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
-                                              ticket: lastTicket)) {
+        let request = WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
+                                   ticket: lastTicket)
+        switch await reachRetrying(request) {
         case .reply(let answered): reply = answered
         case .failed(let why):
             // No reply: the phone may have the words, or may be out of reach. Coach's may be kept for later (as Wear OS's
             // "Not sure it arrived"); a taf's never are, since nothing of a taf's chat is kept on the watch.
-            state = .failed(why.line)
+            state = .failed(why.waiting)
             unsure = taf == nil && drafts != nil
             return
         }
@@ -258,6 +300,7 @@ final class CoachModel: ObservableObject {
             asked = text
             state = .sent
             turns.append(Turn(id: id.uuidString.lowercased(), said: text, at: clock(), answer: .sent, ticket: ticket))
+            keepThread()
             await read(ticket, message: id.uuidString.lowercased())
         case .notYet where taf != nil, .refused where taf != nil:
             // A phone from before chatting with a taf: the words stay, and never go to Coach.
@@ -280,6 +323,26 @@ final class CoachModel: ObservableObject {
         }
     }
 
+    /// v3 (the owner's calls on the watch, docs/watch-app.md, "Linking tafs"): a Send the phone didn't answer goes again by
+    /// itself, under the same id, which tafs cloud takes once, so the person never has to tap Try again. Between tries the
+    /// watch says "Linking tafs. Keep your phone nearby and connected." `linkTries` sends in all, `linkPause` apart; tafs
+    /// missing from the phone isn't tried again.
+    static let linkTries = 4
+
+    private func reachRetrying(_ request: WatchRequest) async -> PhoneReach {
+        let visit = self.visit
+        var reached = await phone.reach(request)
+        for attempt in 1..<Self.linkTries {
+            guard case .failed(let why) = reached, why != .noApp, visit == self.visit else { break }
+            linking = true
+            await linkPause(attempt)
+            guard visit == self.visit else { break }
+            reached = await phone.reach(request)
+        }
+        linking = false
+        return reached
+    }
+
     /// Coach's answer, read until its chat no longer says it's working and it has written, for `answerReads` at most. A
     /// read the phone can't answer is read again: the words were sent, so the watch never says they weren't.
     private func read(_ ticket: WatchCoachTicket, message: String, shown: Bool = true) async {
@@ -288,9 +351,9 @@ final class CoachModel: ObservableObject {
         for index in 0..<Self.answerReads {
             await pause()
             if index >= Self.quickReads { await pause() }
-            guard visit == self.visit else { return }
+            guard visit == self.visit, !answered(message) else { return }
             let reply = await phone.ask(WatchRequest(.coachRead, made: clock(), ticket: ticket))
-            guard visit == self.visit else { return }
+            guard visit == self.visit, !answered(message) else { return }
             guard let reply, reply.outcome == .ok else { continue }
             if let coach = reply.coach { last = coach }
             if reply.answering == true {
@@ -310,8 +373,15 @@ final class CoachModel: ObservableObject {
         // The ask may have been closed meanwhile: the conversation still gets its answer.
         if shown, inFlight { state = .answered(answer) }
         setTurn(message, .answered(answer))
+        keepThread()
         // The Inbox keeps Coach's answers only: nothing of a taf's chat is kept on the watch.
         if taf == nil { onAnswer?(answer, message) }
+    }
+
+    /// A push from the phone answered this turn already: the reads stop.
+    private func answered(_ id: String) -> Bool {
+        guard case .answered? = turns.first(where: { $0.id == id })?.answer else { return false }
+        return true
     }
 
     private func setTurn(_ id: String, _ answer: Turn.Answer) {
@@ -328,8 +398,9 @@ final class CoachModel: ObservableObject {
         guard visit == self.visit, let reply, reply.outcome == .ok, let chat = reply.chat else { return }
         WatchAccountZone.learn(reply.zone)
         // This visit's turns are shown below them: only what came before the first is history, so none shows twice.
-        guard let first = turns.first?.at else { history = chat; return }
+        guard let first = turns.first?.at else { history = chat; keepThread(); return }
         history = chat.filter { $0.at < first }
+        keepThread()
     }
 
     /// Read more: the whole answer to a turn, read through the phone only now, and shown in place. A phone or a tafs cloud that
@@ -347,6 +418,12 @@ final class CoachModel: ObservableObject {
         } else {
             whole[turn] = .onPhone
         }
+    }
+
+    /// View on phone (docs/watch-app.md, "View on phone"): the phone opens this chat, Coach's or the taf's, in front or with a
+    /// notification. Nothing on the watch changes, and nothing is said if the phone isn't in reach: the row stays to tap again.
+    func openOnPhone() async {
+        _ = await phone.reach(WatchRequest(.openOnPhone, made: clock(), taf: taf))
     }
 
     /// v2: the ask closed with the app still open. Words not sent go; a Send on its way carries on, and its answer lands in
@@ -433,6 +510,8 @@ final class CoachModel: ObservableObject {
 
     /// The app left the screen: the words and the answer go.
     func leave() {
+        // What was shown stays as the thread's copy, for the next open (`WatchThreads`, when it's on).
+        if !turns.isEmpty { keepThread() }
         visit += 1
         asked = nil
         turns = []
@@ -485,5 +564,30 @@ final class FileDraftStore: DraftStore {
 
     func clear() {
         try? FileManager.default.removeItem(at: url)
+    }
+}
+
+/// A push from the phone (`WatchPush`): the thread on the wrist moves with no read of its own.
+extension CoachModel: WatchPushListening {
+    func heard(_ push: WatchPush) {
+        switch push.kind {
+        case .ask:
+            guard let ask = push.ask, let reply = push.reply, reply.outcome == .ok,
+                  let turn = turns.first(where: { $0.ticket?.askID == ask }), !answered(turn.id) else { return }
+            // The ask on screen is the last turn while its words are at work.
+            let shown = turn.id == turns.last?.id && inFlight
+            if reply.answering == true {
+                if shown { state = .answering }
+                setTurn(turn.id, .answering)
+            } else if let coach = reply.coach {
+                finish(coach, message: turn.id, shown: shown)
+            }
+        case .chat:
+            // A taf's chat changed on the phone or in tafs cloud: read again, as when it opens.
+            guard let taf, push.taf == taf else { return }
+            Task { await loadHistory() }
+        case .inbox:
+            return
+        }
     }
 }

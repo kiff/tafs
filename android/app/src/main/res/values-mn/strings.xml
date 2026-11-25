@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Дараа нь хадгалах</string>
     <string name="watch_kept_to_send">Энэ цагт хадгалсан. Утас тань дахин ойртмогц илгээгдэнэ.</string>
     <string name="watch_limit">хамгийн ихдээ 30 с</string>
+    <string name="watch_linking">tafs-ыг холбож байна. Утсаа ойрхон, холбогдсон байлгана уу.</string>
     <string name="watch_listening">Сонсож байна</string>
     <string name="watch_menu">Цэс</string>
     <string name="watch_mic_needed">Дуу хоолойгоор асуухын тулд энэ цагт tafs-д микрофоныг зөвшөөрнө үү.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Бичих</string>
     <string name="watch_type_hint">Coach-д бичих…</string>
     <string name="watch_update_phone">Утсан дээрээ tafs-ыг шинэчлээд дахин оролдоно уу.</string>
+    <string name="watch_view_on_phone">Утсан дээр харах</string>
     <string name="watch_view_only_phone">Энэ утас зөвхөн харах боломжтой тул цагнаасаа асууж чадахгүй. Зөвшөөрч чадах утсан дээр нэвтэрнэ үү.</string>
     <string name="watch_voice_text_only">Coach таны үгийг текст хэлбэрээр авдаг, хэзээ ч дуу хоолойг нь биш.</string>
     <string name="watch_what_it_does">Юу хийдэг</string>

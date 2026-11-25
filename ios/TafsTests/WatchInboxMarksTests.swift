@@ -82,6 +82,50 @@ final class WatchInboxMarksTests: XCTestCase {
         XCTAssertEqual(reply, WatchReply(.notYet))
     }
 
+    /// View on phone: an older reader opens nothing and says so; a request naming no taf opens Coach's chat.
+    func testViewOnPhoneOpensCoachOrTheTaf() async {
+        struct Opener: WatchReading {
+            var signedIn: Bool { true }
+            func needsYou(now: Date) async throws -> WatchNeedsYou { WatchNeedsYou(count: 0, calls: [], at: now) }
+            func tafs() async throws -> [WatchTaf] { [] }
+            func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome { .gone }
+            func halt(taf: String?) async -> HaltAll.Outcome { .needsApp("") }
+            func coach(text: String, messageID: UUID) async -> WatchReply { WatchReply(.notYet) }
+            func tafPage(_ id: String) async throws -> WatchTafPage? { nil }
+            func calendar(day: String?) async throws -> WatchCalendarDay { WatchCalendarDay(day: "", words: "", events: [], halted: false) }
+            func account() async throws -> WatchAccount { WatchAccount(email: nil, account: "", plan: nil) }
+            func openOnPhone(taf: String?) async -> WatchReply { WatchReply(.ok, line: WatchOpen.destination(taf: taf)) }
+        }
+        let coach = await send(WatchRequest(.openOnPhone, made: now), reading: Opener())
+        let taf = await send(WatchRequest(.openOnPhone, made: now, taf: "taf-1"), reading: Opener())
+        XCTAssertEqual(coach, WatchReply(.ok, line: "coach"))
+        XCTAssertEqual(taf, WatchReply(.ok, line: "taf:taf-1"))
+        let blank = await send(WatchRequest(.openOnPhone, made: now, taf: "  "), reading: Opener())
+        XCTAssertEqual(blank, WatchReply(.refused))
+        struct Older: WatchReading {
+            var signedIn: Bool { true }
+            func needsYou(now: Date) async throws -> WatchNeedsYou { WatchNeedsYou(count: 0, calls: [], at: now) }
+            func tafs() async throws -> [WatchTaf] { [] }
+            func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome { .gone }
+            func halt(taf: String?) async -> HaltAll.Outcome { .needsApp("") }
+            func coach(text: String, messageID: UUID) async -> WatchReply { WatchReply(.notYet) }
+            func tafPage(_ id: String) async throws -> WatchTafPage? { nil }
+            func calendar(day: String?) async throws -> WatchCalendarDay { WatchCalendarDay(day: "", words: "", events: [], halted: false) }
+            func account() async throws -> WatchAccount { WatchAccount(email: nil, account: "", plan: nil) }
+        }
+        let older = await send(WatchRequest(.openOnPhone, made: now), reading: Older())
+        XCTAssertEqual(older, WatchReply(.notYet))
+    }
+
+    /// The notification View on phone posts with tafs not in front: "From your watch", whose tap opens the chat.
+    func testViewOnPhonesNotificationOpensTheChat() {
+        let coach = WatchOpen.content("coach")
+        XCTAssertEqual(coach.body, Words.Coach.Chats.fromYourWatch)
+        XCTAssertEqual(coach.userInfo["open"] as? String, "coach")
+        XCTAssertEqual(WatchOpen.content("taf:taf-1").userInfo["open"] as? String, "taf:taf-1")
+        XCTAssertEqual(WatchOpen.destination(taf: ""), "coach")
+    }
+
     /// tafs cloud's answer as the API gives it: ids it can't use are left out, each once, and a dismissed id is never read.
     func testTheMarksAreTafsCloudsJSON() {
         let json = #"{"read":["ce_1","ce_1","wa_9",7,"bad id","ce_2"],"dismissed":["ce_2","6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90"]}"#

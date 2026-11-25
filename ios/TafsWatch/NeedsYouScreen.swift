@@ -51,7 +51,7 @@ struct NeedsYouScreen: View {
             }
             .refreshable { await model.load() }
         case .unreachable(let why):
-            WatchNotice(line: why.line) { await model.load() }
+            WatchNotice(line: why.waiting) { await model.load() }
         case .signedOut:
             WatchNotice(line: Words.Watch.signInOnPhone) { await model.load() }
         case .failed(let why):
@@ -116,11 +116,39 @@ struct WatchNotice: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
+                ProgressView()
                 Text(line)
                     .multilineTextAlignment(.center)
-                Button(Words.Common.tryAgain) { Task { await retry() } }
             }
         }
+        // No Try again (docs/watch-app.md, "Linking tafs"): the watch reads again by itself, sooner at first, then every
+        // `WatchRetry.most` seconds while the screen is shown.
+        .task {
+            await WatchRetry.wait()
+            await retry()
+        }
+    }
+}
+
+/// How long a screen waits before it reads again by itself: 3 s, then twice as long each time it's shown again within a
+/// minute, at most `most`. A read that answers starts over.
+@MainActor
+enum WatchRetry {
+    static let first: TimeInterval = 3
+    static let most: TimeInterval = 30
+    private static var next = first
+    private static var last = Date.distantPast
+
+    static func delay(now: Date = Date()) -> TimeInterval {
+        if now.timeIntervalSince(last) > 60 { next = first }
+        let wait = next
+        next = min(next * 2, most)
+        last = now
+        return wait
+    }
+
+    static func wait() async {
+        try? await Task.sleep(nanoseconds: UInt64(delay() * 1_000_000_000))
     }
 }
 

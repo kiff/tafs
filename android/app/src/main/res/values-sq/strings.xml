@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Mbajeni për më vonë</string>
     <string name="watch_kept_to_send">Mbahet në këtë orë. Dërgohet kur telefoni juaj të jetë sërish në rreze.</string>
     <string name="watch_limit">Më së shumti 30 s</string>
+    <string name="watch_linking">Po lidhet tafs. Mbajeni telefonin afër dhe të lidhur.</string>
     <string name="watch_listening">Po dëgjon</string>
     <string name="watch_menu">Menuja</string>
     <string name="watch_mic_needed">Për të pyetur me zë, lejoni mikrofonin për tafs në këtë orë.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Shkruani</string>
     <string name="watch_type_hint">Shkruajini Coach…</string>
     <string name="watch_update_phone">Përditësoni tafs në telefonin tuaj, pastaj provoni sërish.</string>
+    <string name="watch_view_on_phone">Shihni në telefon</string>
     <string name="watch_view_only_phone">Ky telefon mund vetëm të shikojë, ndaj nuk mund të pyesni nga ora. Hyni në një telefon që mund të miratojë.</string>
     <string name="watch_voice_text_only">Coach i merr fjalët tuaja si tekst, kurrë zërin.</string>
     <string name="watch_what_it_does">Çfarë bën</string>

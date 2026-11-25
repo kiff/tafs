@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">შეინახეთ მოგვიანებისთვის</string>
     <string name="watch_kept_to_send">ინახება ამ საათზე. გაიგზავნება, როცა თქვენი ტელეფონი ისევ მიმწვდომი იქნება.</string>
     <string name="watch_limit">მაქსიმუმ 30 წმ</string>
+    <string name="watch_linking">მიმდინარეობს tafs-ის დაკავშირება. ტელეფონი ახლოს და დაკავშირებული გქონდეთ.</string>
     <string name="watch_listening">უსმენს</string>
     <string name="watch_menu">მენიუ</string>
     <string name="watch_mic_needed">ხმით სათხოვნელად ამ საათზე tafs-ს მიეცით მიკროფონის უფლება.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">აკრიფეთ</string>
     <string name="watch_type_hint">მისწერეთ Coach-ს…</string>
     <string name="watch_update_phone">განაახლეთ tafs თქვენს ტელეფონზე, შემდეგ სცადეთ ხელახლა.</string>
+    <string name="watch_view_on_phone">ნახეთ ტელეფონზე</string>
     <string name="watch_view_only_phone">ეს ტელეფონი მხოლოდ ნახვას ახერხებს, ამიტომ საათიდან ვერ ჰკითხავთ. შედით ტელეფონზე, რომელსაც დამტკიცება შეუძლია.</string>
     <string name="watch_voice_text_only">Coach თქვენს სიტყვებს იღებს ტექსტად, არასოდეს თქვენს ხმას.</string>
     <string name="watch_what_it_does">რას აკეთებს</string>

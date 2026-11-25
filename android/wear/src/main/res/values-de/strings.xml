@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">Für später behalten</string>
     <string name="watch_kept_to_send">Auf dieser Uhr gespeichert. Wird gesendet, sobald dein Handy wieder in Reichweite ist.</string>
     <string name="watch_limit">Höchstens 30 s</string>
+    <string name="watch_linking">tafs wird verbunden. Halte dein Handy in der Nähe und verbunden.</string>
     <string name="watch_listening">Hört zu</string>
     <string name="watch_menu">Menü</string>
     <string name="watch_mic_needed">Um per Stimme zu fragen, erlaube tafs das Mikrofon auf dieser Uhr.</string>
@@ -153,6 +154,7 @@
     <string name="watch_type">Tippen</string>
     <string name="watch_type_hint">Schreib an Coach…</string>
     <string name="watch_update_phone">Aktualisiere tafs auf deinem Handy und versuch es dann erneut.</string>
+    <string name="watch_view_on_phone">Auf dem Handy ansehen</string>
     <string name="watch_view_only_phone">Dieses Handy kann nur ansehen, daher kannst du nicht von der Uhr aus fragen. Melde dich auf einem Handy an, das genehmigen kann.</string>
     <string name="watch_voice_text_only">Coach bekommt deine Worte als Text, nie deine Stimme.</string>
     <string name="watch_what_it_does">Was er tut</string>

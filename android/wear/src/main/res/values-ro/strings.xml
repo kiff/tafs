@@ -96,6 +96,7 @@
     <string name="watch_keep_for_later">Păstrați pentru mai târziu</string>
     <string name="watch_kept_to_send">Păstrat pe acest ceas. Se trimite când telefonul este din nou în apropiere.</string>
     <string name="watch_limit">cel mult 30 s</string>
+    <string name="watch_linking">Se conectează tafs. Țineți telefonul aproape și conectat.</string>
     <string name="watch_listening">Se ascultă</string>
     <string name="watch_menu">Meniu</string>
     <string name="watch_mic_needed">Pentru a întreba cu vocea, permiteți microfonul pentru tafs pe acest ceas.</string>
@@ -159,6 +160,7 @@
     <string name="watch_type">Tastați</string>
     <string name="watch_type_hint">Scrieți-i lui Coach…</string>
     <string name="watch_update_phone">Actualizați tafs pe telefon, apoi încercați din nou.</string>
+    <string name="watch_view_on_phone">Vedeți pe telefon</string>
     <string name="watch_view_only_phone">Acest telefon poate doar vizualiza, așa că nu puteți întreba de pe ceas. Conectați-vă pe un telefon care poate aproba.</string>
     <string name="watch_voice_text_only">Coach primește cuvintele dvs. ca text, niciodată vocea.</string>
     <string name="watch_what_it_does">Ce face</string>

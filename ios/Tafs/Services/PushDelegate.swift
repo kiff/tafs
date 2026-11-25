@@ -135,7 +135,13 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
             // tafs not open, and only for a request this iPhone sent for its watch (`WatchAskPush`).
             let ask = change == "watch_ask" ? userInfo["ask_id"] as? String : nil
             Task {
-                if let ask { await WatchAskPush.run(ask) } else { await onChange?(change, taf) }
+                if let ask {
+                    await WatchAskPush.run(ask)
+                } else {
+                    // The watch's Inbox and its taf chats stay in step too (docs/watch-app.md, "Kept and pushed").
+                    await WatchPushRelay.run(change: change, taf: taf)
+                    await onChange?(change, taf)
+                }
                 completionHandler(.newData)
             }
             return

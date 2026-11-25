@@ -96,6 +96,7 @@
     <string name="watch_keep_for_later">Nechat na později</string>
     <string name="watch_kept_to_send">Uloženo v těchto hodinkách. Odešle se, až bude telefon zase na dosah.</string>
     <string name="watch_limit">Nejvýš 30 s</string>
+    <string name="watch_linking">Propojování tafs. Mějte telefon nablízku a připojený.</string>
     <string name="watch_listening">Poslouchám</string>
     <string name="watch_menu">Nabídka</string>
     <string name="watch_mic_needed">Chcete-li se ptát hlasem, povolte tafs na těchto hodinkách mikrofon.</string>
@@ -159,6 +160,7 @@
     <string name="watch_type">Napsat</string>
     <string name="watch_type_hint">Napište Coachovi…</string>
     <string name="watch_update_phone">Aktualizujte tafs v telefonu a zkuste to znovu.</string>
+    <string name="watch_view_on_phone">Zobrazit v telefonu</string>
     <string name="watch_view_only_phone">Tento telefon může jen prohlížet, takže se z hodinek ptát nemůžete. Přihlaste se v telefonu, který může schvalovat.</string>
     <string name="watch_voice_text_only">Coach dostane vaše slova jako text, nikdy váš hlas.</string>
     <string name="watch_what_it_does">Co dělá</string>

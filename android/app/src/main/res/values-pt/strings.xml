@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Guardar para mais tarde</string>
     <string name="watch_kept_to_send">Guardado neste relógio. É enviado quando o telemóvel voltar a estar ao alcance.</string>
     <string name="watch_limit">No máximo 30 s</string>
+    <string name="watch_linking">A ligar o tafs. Mantenha o telemóvel por perto e com ligação.</string>
     <string name="watch_listening">A ouvir</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Para pedir por voz, autorize o microfone para o tafs neste relógio.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Escrever</string>
     <string name="watch_type_hint">Escrever ao Coach…</string>
     <string name="watch_update_phone">Atualize o tafs no telemóvel e tente novamente.</string>
+    <string name="watch_view_on_phone">Ver no telemóvel</string>
     <string name="watch_view_only_phone">Este telemóvel só pode ver, por isso não pode pedir a partir do relógio. Inicie sessão num telemóvel que possa aprovar.</string>
     <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
     <string name="watch_what_it_does">O que faz</string>

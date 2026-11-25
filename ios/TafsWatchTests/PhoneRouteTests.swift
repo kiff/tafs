@@ -120,6 +120,24 @@ final class PhoneRouteTests: XCTestCase {
         XCTAssertEqual(Set(lines).count, 4)
     }
 
+    /// A screen that reads again by itself says one calm line for every failure but tafs missing from the phone, which only
+    /// installing it fixes (docs/watch-app.md, "Linking tafs").
+    func testAScreenThatTriesAgainSaysLinking() {
+        for failure in [PhoneFailure.notReachable, .noAnswer, .link] { XCTAssertEqual(failure.waiting, Words.Watch.linking) }
+        XCTAssertEqual(PhoneFailure.noApp.waiting, Words.Watch.phoneNoApp)
+        XCTAssertFalse(Words.Watch.linking.contains(Words.Common.tryAgain))
+    }
+
+    /// Reading again by itself: sooner at first, at most every 30 s, and from the start after a quiet minute.
+    func testRetriesBackOff() {
+        let t = Date(timeIntervalSinceReferenceDate: 900_000_000)
+        _ = WatchRetry.delay(now: t.addingTimeInterval(-3_600))
+        let delays = (0..<6).map { WatchRetry.delay(now: t.addingTimeInterval(Double($0))) }
+        XCTAssertEqual(delays.first, WatchRetry.first)
+        XCTAssertEqual(delays, [3, 6, 12, 24, 30, 30])
+        XCTAssertEqual(WatchRetry.delay(now: t.addingTimeInterval(120)), WatchRetry.first)
+    }
+
     /// WatchConnectivity's own errors, worded.
     func testWatchConnectivitysErrorsAreWorded() {
         XCTAssertEqual(PhoneLink.failure(WCError(.notReachable)), .notReachable)

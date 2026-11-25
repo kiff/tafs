@@ -275,6 +275,22 @@ final class InboxModelTests: XCTestCase {
         XCTAssertTrue(phone.sent.isEmpty, "taking marks in sends none")
     }
 
+    /// The phone's push of the marks (docs/watch-app.md, "Kept and pushed"): taken in at once, with no ask of the watch's own.
+    func testThePhonesPushOfTheMarksIsTakenWithNoAsk() {
+        let store = Kept()
+        let phone = MarksPhone()
+        let inbox = model(store, phone: phone)
+        inbox.heard(heard([call("h_1"), call("h_2")]))
+        WatchPushes.shared.deliver(WatchPush(.inbox, reply: WatchReply(.ok, marks: WatchInboxMarks(read: ["h_2"], dismissed: ["h_1"])),
+                                             at: now))
+        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_2"])
+        XCTAssertEqual(inbox.lines.first?.read, true)
+        XCTAssertTrue(phone.asked.isEmpty, "nothing asked")
+        // Another push (a chat, or an ask) leaves the Inbox as it is.
+        WatchPushes.shared.deliver(WatchPush(.chat, taf: "taf-1", at: now))
+        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_2"])
+    }
+
     /// Open, Dismiss and Clear read send their ids, by a held call's own id or the message an answer is to; never words.
     func testWhatThisWatchDoesIsMarked() async {
         let phone = MarksPhone()

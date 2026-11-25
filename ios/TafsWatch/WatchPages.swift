@@ -124,24 +124,32 @@ struct CoachHome: View {
 
     var body: some View {
         NavigationStack {
+            ScrollViewReader { proxy in
             List {
                 // W4: Ask Coach as one conversation, oldest first, so the newest turn sits just over the microphone. A header
                 // where a day starts and every time in the account's zone, as a taf's chat and Wear OS read (row 44, C).
-                let days = coach.turns.map(\.at)
+                // The thread's stored copy first (the owner's call 1, behind `WatchThreads.on`), then this visit's turns.
+                let days = coach.history.map(\.at) + coach.turns.map(\.at)
+                ForEach(Array(coach.history.enumerated()), id: \.element.id) { i, line in
+                    if ChatTime.startsDay(days, at: i, calendar: coach.calendar) { WatchChatDay(date: line.at, calendar: coach.calendar) }
+                    TafChatLineRow(line: line, zone: coach.zone) { Task { await coach.openOnPhone() } }
+                }
                 ForEach(Array(coach.turns.enumerated()), id: \.element.id) { i, turn in
-                    if ChatTime.startsDay(days, at: i, calendar: coach.calendar) { WatchChatDay(date: turn.at, calendar: coach.calendar) }
-                    CoachTurnRow(turn: turn, zone: coach.zone)
+                    if ChatTime.startsDay(days, at: coach.history.count + i, calendar: coach.calendar) {
+                        WatchChatDay(date: turn.at, calendar: coach.calendar)
+                    }
+                    CoachTurnRow(turn: turn, coach: coach, zone: coach.zone)
                 }
                 // Keep for later (row 8): the message kept on this watch, sent when the phone is in reach again, and Delete.
                 if let kept = coach.kept {
                     KeptRow(kept: kept) { coach.deleteKept() }
                 }
-                Button {
-                    listen()
-                } label: {
-                    Label(Words.Coach.ask, systemImage: "mic.fill")
-                        .font(.headline)
-                }
+                // Right under the newest message: the microphone and the keyboard (the owner's call 4).
+                ThreadInput(speak: Words.Coach.ask, listen: listen, typed: { words in
+                    coach.review(words)
+                    if coach.reviewing { asking = true }
+                })
+                .id(WatchThread.newest)
                 if let count = WatchPage.unread(needsYou.state, inboxKept: inbox.kept, unreadLines: inbox.unread) {
                     Button(Words.Watch.inboxUnread(count: count), action: openInbox)
                 }
@@ -152,8 +160,10 @@ struct CoachHome: View {
                 Button(Words.Watch.menu, action: openMenu)
             }
             .navigationTitle(Words.Coach.title)
-            // The page opens on the microphone, with the conversation above it.
+            // The page opens on the microphone, with the conversation above it, and stays on the newest message as it moves.
             .defaultScrollAnchor(.bottom)
+            .onChange(of: WatchThread.shape(coach)) { _, _ in proxy.scrollTo(WatchThread.newest, anchor: .bottom) }
+            }
         }
         .sheet(isPresented: $asking) {
             CoachAsk(model: coach)
@@ -162,6 +172,7 @@ struct CoachHome: View {
             VoiceRecordScreen(model: VoiceModel { words in coach.review(words) })
         }
         .task {
+            coach.reopen()
             await needsYou.load()
             await coach.afterRead(needsYou.state)
         }
@@ -211,22 +222,12 @@ struct KeptRow: View {
 /// it. VoiceOver hears whose words each side is.
 struct CoachTurnRow: View {
     let turn: CoachModel.Turn
+    @ObservedObject var coach: CoachModel
     var zone: TimeZone = .current
 
     var body: some View {
         VStack(spacing: 4) {
-            Text(ChatTime.time(turn.at, zone: zone))
-                .font(.caption2)
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-            Text(verbatim: turn.said)
-                .font(.footnote)
-                .lineLimit(4)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .foregroundStyle(WatchLook.onMineGround)
-                .background(WatchLook.mineGround, in: RoundedRectangle(cornerRadius: 12))
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            MineBubble(said: turn.said, at: turn.at, zone: zone, lineLimit: 4)
             coachSide
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -236,9 +237,8 @@ struct CoachTurnRow: View {
     @ViewBuilder private var coachSide: some View {
         switch turn.answer {
         case .sent:
-            Label(Words.Watch.sent, systemImage: "checkmark")
-                .font(.caption2)
-                .foregroundStyle(WatchLook.done)
+            // The ✓ under the bubble says it went; nothing more until Coach starts.
+            EmptyView()
         case .answering:
             HStack(spacing: 4) {
                 ProgressView().frame(width: 14, height: 14)
@@ -246,8 +246,9 @@ struct CoachTurnRow: View {
             }
             .accessibilityElement(children: .combine)
         case .answered(let answer):
+            VStack(alignment: .leading, spacing: 4) {
             NavigationLink {
-                CoachTurnScreen(turn: turn, answer: answer)
+                CoachTurnScreen(turn: turn, answer: answer, coach: coach)
             } label: {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(CoachTurnRow.line(answer))
@@ -265,7 +266,16 @@ struct CoachTurnRow: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(CoachTurnRow.spoken(answer, zone: zone))
+                // The rest on the phone, or a call to approve there: View on phone, inline (the owner's call 5).
+                if CoachTurnRow.onPhone(answer) { ViewOnPhone { Task { await coach.openOnPhone() } } }
+            }
         }
+    }
+
+    /// Whether part of the answer is on the phone only: an answer still to come, one to approve there.
+    static func onPhone(_ answer: WatchCoachAnswer?) -> Bool {
+        guard let answer else { return true }
+        return answer.approveOnPhone || (answer.text.isEmpty)
     }
 
     /// What VoiceOver hears of Coach's side: whose words, the words, and when they came.
@@ -287,6 +297,7 @@ struct CoachTurnRow: View {
 struct CoachTurnScreen: View {
     let turn: CoachModel.Turn
     let answer: WatchCoachAnswer?
+    @ObservedObject var coach: CoachModel
 
     var body: some View {
         ScrollView {
@@ -295,19 +306,29 @@ struct CoachTurnScreen: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                if let answer, !answer.text.isEmpty {
-                    Text(answer.text)
+                // The whole answer from the preview (the owner's call 8): a cut answer is read whole on the tap.
+                if let text = TafTurnRow.shown(answer, whole: coach.whole[turn.id]), !text.isEmpty {
+                    Text(verbatim: text)
                 }
                 if answer?.approveOnPhone == true {
                     Label(Words.Watch.approveOnPhone, systemImage: "iphone").font(.footnote).foregroundStyle(WatchLook.held)
                 }
-                if answer == nil || answer?.more == true {
+                switch TafTurnRow.foot(answer, whole: coach.whole[turn.id]) {
+                case .reading?, .readMore?:
+                    ProgressView()
+                case .onPhone?:
                     Text(Words.Watch.moreOnPhone).font(.footnote).foregroundStyle(.secondary)
+                case nil:
+                    EmptyView()
+                }
+                if TafTurnRow.foot(answer, whole: coach.whole[turn.id]) == .onPhone || answer?.approveOnPhone == true {
+                    ViewOnPhone { Task { await coach.openOnPhone() } }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .navigationTitle(Words.Coach.title)
+        .task { if answer?.more == true { await coach.readMore(turn.id) } }
     }
 }
 

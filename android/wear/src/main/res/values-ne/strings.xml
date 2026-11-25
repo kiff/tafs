@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">पछिका लागि राख्नुहोस्</string>
     <string name="watch_kept_to_send">यो घडीमा राखिएको छ। फोन फेरि पहुँचमा आएपछि पठाइन्छ।</string>
     <string name="watch_limit">बढीमा ३० सेकेन्ड</string>
+    <string name="watch_linking">tafs लिंक हुँदैछ। आफ्नो फोन नजिक र जडान भएको राख्नुहोस्।</string>
     <string name="watch_listening">सुन्दैछ</string>
     <string name="watch_menu">मेनु</string>
     <string name="watch_mic_needed">आवाजले सोध्न यो घडीमा tafs लाई माइक्रोफोन अनुमति दिनुहोस्।</string>
@@ -153,6 +154,7 @@
     <string name="watch_type">टाइप गर्नुहोस्</string>
     <string name="watch_type_hint">Coach लाई लेख्नुहोस्…</string>
     <string name="watch_update_phone">आफ्नो फोनमा tafs अपडेट गरेर फेरि प्रयास गर्नुहोस्।</string>
+    <string name="watch_view_on_phone">फोनमा हेर्नुहोस्</string>
     <string name="watch_view_only_phone">यो फोनले हेर्न मात्र मिल्छ, त्यसैले घडीबाट सोध्न सकिँदैन। स्वीकृत गर्न सक्ने फोनमा साइन इन गर्नुहोस्।</string>
     <string name="watch_voice_text_only">Coach ले तपाईंका शब्द पाठका रूपमा पाउँछ, आवाज कहिल्यै होइन।</string>
     <string name="watch_what_it_does">यसले के गर्छ</string>

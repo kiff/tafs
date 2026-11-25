@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">Чувај за подоцна</string>
     <string name="watch_kept_to_send">Чувано на овој часовник. Се испраќа кога телефонот пак ќе биде на дофат.</string>
     <string name="watch_limit">најмногу 30 с</string>
+    <string name="watch_linking">Се поврзува tafs. Држи го телефонот блиску и поврзан.</string>
     <string name="watch_listening">Слушам</string>
     <string name="watch_menu">Мени</string>
     <string name="watch_mic_needed">За да прашуваш со глас, дозволи му на tafs микрофон на овој часовник.</string>
@@ -153,6 +154,7 @@
     <string name="watch_type">Пиши</string>
     <string name="watch_type_hint">Пиши на Coach…</string>
     <string name="watch_update_phone">Ажурирај го tafs на твојот телефон, па обиди се повторно.</string>
+    <string name="watch_view_on_phone">Види на телефонот</string>
     <string name="watch_view_only_phone">Овој телефон може само да гледа, па не можеш да прашуваш од часовникот. Најави се на телефон што може да одобрува.</string>
     <string name="watch_voice_text_only">Coach ги добива твоите зборови како текст, никогаш гласот.</string>
     <string name="watch_what_it_does">Што прави</string>

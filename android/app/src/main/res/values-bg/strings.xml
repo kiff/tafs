@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Запазване за по-късно</string>
     <string name="watch_kept_to_send">Запазено на този часовник. Изпраща се, когато телефонът ви отново е наблизо.</string>
     <string name="watch_limit">най-много 30 с</string>
+    <string name="watch_linking">Свързване на tafs. Дръжте телефона си наблизо и свързан.</string>
     <string name="watch_listening">Слушане</string>
     <string name="watch_menu">Меню</string>
     <string name="watch_mic_needed">За да питате с глас, разрешете микрофона за tafs на този часовник.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Писане</string>
     <string name="watch_type_hint">Пишете на Coach…</string>
     <string name="watch_update_phone">Актуализирайте tafs на телефона си и опитайте отново.</string>
+    <string name="watch_view_on_phone">Преглед на телефона</string>
     <string name="watch_view_only_phone">Този телефон може само да преглежда, така че не можете да питате от часовника. Влезте на телефон, който може да одобрява.</string>
     <string name="watch_voice_text_only">Coach получава думите ви като текст, никога гласа ви.</string>
     <string name="watch_what_it_does">Какво прави</string>

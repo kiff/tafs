@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Sonraya saxlayın</string>
     <string name="watch_kept_to_send">Bu saatda saxlanılıb. Telefonunuz yenidən əlçatan olanda göndərilir.</string>
     <string name="watch_limit">Ən çoxu 30 s</string>
+    <string name="watch_linking">tafs qoşulur. Telefonunuzu yaxında və qoşulu saxlayın.</string>
     <string name="watch_listening">Dinlənilir</string>
     <string name="watch_menu">Menyu</string>
     <string name="watch_mic_needed">Səslə soruşmaq üçün bu saatda tafs-a mikrofon icazəsi verin.</string>
@@ -2876,6 +2877,7 @@
     <string name="watch_type">Yazın</string>
     <string name="watch_type_hint">Coach-a yazın…</string>
     <string name="watch_update_phone">Telefonunuzda tafs-ı yeniləyin, sonra yenidən cəhd edin.</string>
+    <string name="watch_view_on_phone">Telefonda baxın</string>
     <string name="watch_view_only_phone">Bu telefon yalnız baxa bilir, ona görə saatdan soruşa bilməzsiniz. Təsdiq edə bilən telefonda daxil olun.</string>
     <string name="watch_voice_text_only">Coach sözlərinizi mətn kimi alır, səsinizi heç vaxt.</string>
     <string name="watch_what_it_does">Nə edir</string>

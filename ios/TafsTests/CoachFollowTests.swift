@@ -85,6 +85,7 @@ final class CoachFollowTests: XCTestCase {
         XCTAssertEqual(plain.title, Words.Coach.title)
         XCTAssertEqual(plain.body, "Rae is paused.")
         XCTAssertEqual(plain.userInfo["open"] as? String, "coach")
+        XCTAssertEqual(plain.interruptionLevel, .timeSensitive, "comes through a Focus: a notification you can't miss")
         let cut = CoachFollow.content(WatchCoachAnswer(text: "Rae is paused", more: true, approveOnPhone: false))
         XCTAssertEqual(cut.body, "Rae is paused\n" + Words.Watch.moreOnPhone)
         let card = CoachFollow.content(WatchCoachAnswer(text: "", more: false, approveOnPhone: true))

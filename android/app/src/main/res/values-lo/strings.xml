@@ -2737,6 +2737,7 @@
     <string name="watch_keep_for_later">ເກັບໄວ້ພາຍຫຼັງ</string>
     <string name="watch_kept_to_send">ເກັບໄວ້ໃນໂມງນີ້. ມັນຖືກສົ່ງເມື່ອໂທລະສັບຂອງທ່ານຢູ່ໃນໄລຍະອີກ.</string>
     <string name="watch_limit">ສູງສຸດ 30 ວິນາທີ</string>
+    <string name="watch_linking">ກຳລັງເຊື່ອມໂຍງ tafs. ວາງໂທລະສັບຂອງທ່ານໄວ້ໃກ້ໆ ແລະ ໃຫ້ເຊື່ອມຕໍ່ຢູ່.</string>
     <string name="watch_listening">ກຳລັງຟັງ</string>
     <string name="watch_menu">ເມນູ</string>
     <string name="watch_mic_needed">ເພື່ອຖາມດ້ວຍສຽງ ໃຫ້ອະນຸຍາດໄມໂຄຣໂຟນສຳລັບ tafs ໃນໂມງນີ້.</string>
@@ -2796,6 +2797,7 @@
     <string name="watch_type">ພິມ</string>
     <string name="watch_type_hint">ຂຽນຫາ Coach…</string>
     <string name="watch_update_phone">ອັບເດດ tafs ໃນໂທລະສັບຂອງທ່ານ ແລ້ວລອງໃໝ່.</string>
+    <string name="watch_view_on_phone">ເບິ່ງໃນໂທລະສັບ</string>
     <string name="watch_view_only_phone">ໂທລະສັບນີ້ເບິ່ງໄດ້ຢ່າງດຽວ ສະນັ້ນທ່ານຖາມຈາກໂມງບໍ່ໄດ້. ເຂົ້າສູ່ລະບົບໃນໂທລະສັບທີ່ອະນຸມັດໄດ້.</string>
     <string name="watch_voice_text_only">Coach ໄດ້ຮັບຄຳເວົ້າຂອງທ່ານເປັນຂໍ້ຄວາມ, ບໍ່ເຄີຍເປັນສຽງ.</string>
     <string name="watch_what_it_does">ມັນເຮັດຫຍັງ</string>
