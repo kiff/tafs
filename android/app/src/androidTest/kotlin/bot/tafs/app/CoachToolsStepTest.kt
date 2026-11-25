@@ -137,6 +137,12 @@ class CoachToolsStepTest {
     rule.onAllNodes(hasSetTextAction()).assertCountEquals(0)
   }
 
+  /**
+   * Coach with its tools given, only Cards for newer tools still to approve (no `connect`): typing is open and the row still
+   * draws. With the tools themselves to give, the box is locked (`aFirstStartEnds…`), so the keyboard tests start from here.
+   */
+  private fun typingOpen() = state(asked = false).copy(coachTools = tools.copy(connect = null))
+
   /** The box and its buttons, in what's left of a phone once the keyboard is up. */
   private fun assertTheBoxKeepsItsRoom() {
     val send = rule.onNodeWithContentDescription(Words.Common.send).assertIsDisplayed().fetchSemanticsNode()
@@ -154,7 +160,7 @@ class CoachToolsStepTest {
       TafsTheme {
         CompositionLocalProvider(LocalBiometry provides "your fingerprint", bot.tafs.app.views.LocalKeyboardOpen provides true) {
           androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.height(320.dp)) {
-            CoachScreen(state(asked = false), actions, loadCoach = {}, onBack = {}, chats = CoachChatActions())
+            CoachScreen(typingOpen(), actions, loadCoach = {}, onBack = {}, chats = CoachChatActions())
           }
         }
       }
@@ -165,7 +171,7 @@ class CoachToolsStepTest {
 
   @Test fun withTheRealKeyboardUpTheBoxShows() {
     rule.setShown {
-      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(state(asked = false), actions, loadCoach = {}, onBack = {}, chats = CoachChatActions()) } }
+      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(typingOpen(), actions, loadCoach = {}, onBack = {}, chats = CoachChatActions()) } }
     }
     rule.onNode(hasSetTextAction()).performClick()
     // Only where this device raises a keyboard: an emulator with a hardware one shows none, and the test above stands in.
