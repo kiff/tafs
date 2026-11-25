@@ -3023,7 +3023,10 @@ final class TafsCloud {
     /// This phone gets the account's alerts at `deviceToken`. With `target`, also hands over
     /// the KIFF target's signing secret, which checks KIFF's deliveries. `sound` false: this
     /// phone's alerts arrive quietly, with no sound or banner.
-    func registerPush(deviceToken: String, environment: String, sound: Bool = true, target: KIFFClient.AlertTarget? = nil, kinds: [String: Bool]? = nil) async throws -> PushStatus {
+    /// `alerts: false` registers this phone for background pushes only (a phone that serves a watch with alerts off): tafs
+    /// cloud sends it every silent change and never a visible alert, and it takes no alert target.
+    func registerPush(deviceToken: String, environment: String, sound: Bool = true, target: KIFFClient.AlertTarget? = nil, kinds: [String: Bool]? = nil,
+                      alerts: Bool? = nil) async throws -> PushStatus {
         struct Target: Encodable {
             let id: String, signingSecret: String
             enum CodingKeys: String, CodingKey { case id, signingSecret = "signing_secret" }
@@ -3031,11 +3034,12 @@ final class TafsCloud {
         struct Body: Encodable {
             let deviceToken: String, environment: String, sound: Bool, alertTarget: Target?
             let kinds: [String: Bool]?
-            enum CodingKeys: String, CodingKey { case environment, sound, kinds, deviceToken = "device_token", alertTarget = "alert_target" }
+            let alerts: Bool?
+            enum CodingKeys: String, CodingKey { case environment, sound, kinds, alerts, deviceToken = "device_token", alertTarget = "alert_target" }
         }
         return try await send("POST", "/v1/push", body: Body(
             deviceToken: deviceToken, environment: environment, sound: sound,
-            alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }, kinds: kinds))
+            alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }, kinds: kinds, alerts: alerts))
     }
 
     /// Whether tafs cloud holds KIFF's alert secret for the account (kiff/tafs#206).

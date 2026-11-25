@@ -15,6 +15,11 @@ object Words {
     fun answerNothingSentUntilYou(what: String, why: String, zone: String): String = Res.s(R.string.alert_answer_nothing_sent_until_you, what, why, zone)
     val answered: String get() = Res.s(R.string.alert_answered)
     val approveOnce: String get() = Res.s(R.string.alert_approve_once)
+    object Blocked {
+      fun body(device: String): String = Res.s(R.string.alert_blocked_body, device)
+      val bodyWatch: String get() = Res.s(R.string.alert_blocked_body_watch)
+      val title: String get() = Res.s(R.string.alert_blocked_title)
+    }
     val byEmail: String get() = Res.s(R.string.alert_by_email)
     val example: String get() = Res.s(R.string.alert_example)
     object Foot {
@@ -32,7 +37,9 @@ object Words {
     fun notOnForPhone(why: String): String = Res.s(R.string.alert_not_on_for_phone, why)
     val notRefused: String get() = Res.s(R.string.alert_not_refused)
     val notSent: String get() = Res.s(R.string.alert_not_sent)
+    val nowOn: String get() = Res.s(R.string.alert_now_on)
     fun onThisDevice(device: String): String = Res.s(R.string.alert_on_this_device, device, Words.demonstrative(device))
+    val openSettings: String get() = Res.s(R.string.alert_open_settings)
     val openTafsAnswerKiffDid: String get() = Res.s(R.string.alert_open_tafs_answer_kiff_did)
     val openTafsAnswerPhoneCan: String get() = Res.s(R.string.alert_open_tafs_answer_phone_can)
     val prompt: String get() = Res.s(R.string.alert_prompt)
@@ -48,6 +55,7 @@ object Words {
       val off: String get() = Res.s(R.string.alert_status_off)
       val on: String get() = Res.s(R.string.alert_status_on)
     }
+    val stillOff: String get() = Res.s(R.string.alert_still_off)
     object StillOnAfterSignOut {
       fun body(why: String): String = Res.s(R.string.alert_still_on_after_sign_out_body, why)
       fun title(device: String): String = Res.s(R.string.alert_still_on_after_sign_out_title, device, Words.demonstrative(device, capital = true))
@@ -55,6 +63,10 @@ object Words {
     fun tafNeedsYou(taf: String): String = Res.s(R.string.alert_taf_needs_you, taf)
     fun tafs(count: Int): String = Res.p(R.plurals.alert_tafs, count, Res.number(count))
     val tafsCouldNotReachKiff: String get() = Res.s(R.string.alert_tafs_could_not_reach_kiff)
+    object WatchFirst {
+      val body: String get() = Res.s(R.string.alert_watch_first_body)
+      val title: String get() = Res.s(R.string.alert_watch_first_title)
+    }
     val whatAlerts: String get() = Res.s(R.string.alert_what_alerts)
     val withSound: String get() = Res.s(R.string.alert_with_sound)
   }

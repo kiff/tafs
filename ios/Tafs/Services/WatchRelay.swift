@@ -774,6 +774,8 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     func sessionDidDeactivate(_ session: WCSession) { session.activate() }
 
     func session(_ session: WCSession, didReceiveMessageData messageData: Data, replyHandler: @escaping (Data) -> Void) {
+        // The watch is using tafs: the phone says once what alerts need (AppModel.checkAlertsOnReturn).
+        UserDefaults.standard.set(true, forKey: AppModel.watchUsedKey)
         let reply = Reply(replyHandler)
         Task { @MainActor in
             let answer = await WatchRelay.answer(messageData, now: Date(), reading: KeptWatchReading())

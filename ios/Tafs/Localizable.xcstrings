@@ -2932,6 +2932,39 @@
         }
       }
     },
+    "alert.blocked.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your %1$@ no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you."
+          }
+        }
+      }
+    },
+    "alert.blocked.body_watch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your iPhone no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you, on this iPhone and on your watch. Your watch gets its updates either way."
+          }
+        }
+      }
+    },
+    "alert.blocked.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on alerts for tafs"
+          }
+        }
+      }
+    },
     "alert.by_email": {
       "extractionState": "manual",
       "localizations": {
@@ -6877,6 +6910,17 @@
         }
       }
     },
+    "alert.now_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts are on."
+          }
+        }
+      }
+    },
     "alert.on_this_device": {
       "extractionState": "manual",
       "localizations": {
@@ -7136,6 +7180,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "這部%1$@上的通知"
+          }
+        }
+      }
+    },
+    "alert.open_settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
           }
         }
       }
@@ -10559,6 +10614,17 @@
         }
       }
     },
+    "alert.still_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts are still off."
+          }
+        }
+      }
+    },
     "alert.still_on_after_sign_out.body": {
       "extractionState": "manual",
       "localizations": {
@@ -12201,6 +12267,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ taf ›"
+          }
+        }
+      }
+    },
+    "alert.watch_first.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To see approvals and answers as alerts, on this iPhone and on your watch, turn on alerts for tafs. Your watch keeps getting its updates even if you don't."
+          }
+        }
+      }
+    },
+    "alert.watch_first.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your watch is using tafs"
           }
         }
       }

@@ -19,6 +19,14 @@ enum Words {
         static var answered: String { Words.line("alert.answered") }
         /// Approve once…
         static var approveOnce: String { Words.line("alert.approve_once") }
+        enum Blocked {
+            /// Your {device} no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you.
+            static func body(device: String) -> String { Words.line("alert.blocked.body", device) }
+            /// Your iPhone no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you, on this iPhone and on your watch. Your watch gets its updates either way.
+            static var bodyWatch: String { Words.line("alert.blocked.body_watch") }
+            /// Turn on alerts for tafs
+            static var title: String { Words.line("alert.blocked.title") }
+        }
         /// By email
         static var byEmail: String { Words.line("alert.by_email") }
         /// Example
@@ -51,8 +59,12 @@ enum Words {
         static var notRefused: String { Words.line("alert.not_refused") }
         /// A reply wasn't sent
         static var notSent: String { Words.line("alert.not_sent") }
+        /// Alerts are on.
+        static var nowOn: String { Words.line("alert.now_on") }
         /// Alerts on this {device}
         static func onThisDevice(device: String) -> String { Words.line("alert.on_this_device", device, Words.demonstrative(device)) }
+        /// Open Settings
+        static var openSettings: String { Words.line("alert.open_settings") }
         /// Open tafs to answer it: KIFF didn't say which version of it you saw.
         static var openTafsAnswerKiffDid: String { Words.line("alert.open_tafs_answer_kiff_did") }
         /// Open tafs to answer it: this phone can't sign it from the notification.
@@ -81,6 +93,8 @@ enum Words {
             /// On
             static var on: String { Words.line("alert.status.on") }
         }
+        /// Alerts are still off.
+        static var stillOff: String { Words.line("alert.still_off") }
         enum StillOnAfterSignOut {
             /// tafs couldn't turn them off ({why}). Try again, or sign out anyway and turn off notifications for tafs in Settings.
             static func body(why: String) -> String { Words.line("alert.still_on_after_sign_out.body", why) }
@@ -93,6 +107,12 @@ enum Words {
         static func tafs(count: Int) -> String { Words.count("alert.tafs", count) }
         /// tafs couldn't reach KIFF to refuse it. Open tafs to answer it.
         static var tafsCouldNotReachKiff: String { Words.line("alert.tafs_could_not_reach_kiff") }
+        enum WatchFirst {
+            /// To see approvals and answers as alerts, on this iPhone and on your watch, turn on alerts for tafs. Your watch keeps getting its updates even if you don't.
+            static var body: String { Words.line("alert.watch_first.body") }
+            /// Your watch is using tafs
+            static var title: String { Words.line("alert.watch_first.title") }
+        }
         /// What alerts you
         static var whatAlerts: String { Words.line("alert.what_alerts") }
         /// With sound
