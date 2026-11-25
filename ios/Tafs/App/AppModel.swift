@@ -1058,7 +1058,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; setupDraftErrors = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; chatDeleteWords = nil; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -2060,7 +2060,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; setupDraftErrors = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; chatDeleteWords = nil; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -5939,6 +5939,17 @@ final class AppModel: ObservableObject {
     /// so nothing a person attached stays on the phone after them (docs/data.md).
     static let openedFiles = FileManager.default.temporaryDirectory.appendingPathComponent("attachments", isDirectory: true)
 
+    /// Tells the watch to drop its kept copy of Coach's thread (`WatchPush.forget`), with this session's mark; nothing on a
+    /// Mac or with no watch. Settable for the tests.
+    static var forgetOnWatch: @MainActor () -> Void = {
+        WatchPushRelay.toWatch(WatchPush(.forget, at: Date()), mark: PhoneWatchMark.current())
+    }
+
+    /// The attachments opened full size, alone: a deleted conversation's copies go with it (`deleteSetupChat`).
+    static func removeOpenedAttachments() {
+        try? FileManager.default.removeItem(at: openedFiles)
+    }
+
     static func removeOpenedFiles() {
         try? FileManager.default.removeItem(at: openedFiles)
         // The last export's files too: a person's chats never stay on the phone after them.
@@ -8333,6 +8344,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupChats: [TafsCloud.Chat] = []
     /// Setup's archived chats, under Archived (kiff/tafs#97).
     @Published private(set) var archivedSetupChats: [TafsCloud.Chat] = []
+    /// tafs cloud's words for deleting a conversation, from the last chats-list read that sent them all; nil until one
+    /// has, and then Delete conversation isn't offered (the app has no words of its own for it).
+    @Published private(set) var chatDeleteWords: TafsCloud.DeleteWords?
     /// What the owner sent that tafs cloud's thread doesn't have yet (kiff/tafs#82): shown
     /// at once, and kept across reloads until tafs cloud's copy arrives, so a tapped choice
     /// shows when it's tapped, and once. A reload while the send is on its way would
@@ -8753,8 +8767,9 @@ final class AppModel: ObservableObject {
     func loadSetupChats() async {
         guard mode == .kiff, let s = setupTaf else { return }
         let gen = accountGeneration
-        guard let chats = try? await cloud.chats(s.id), gen == accountGeneration else { return }
-        setupChats = chats
+        guard let read = try? await cloud.chatsRead(s.id), gen == accountGeneration else { return }
+        setupChats = read.chats
+        if let words = read.delete { chatDeleteWords = words }
     }
 
     /// Archives one of Setup's chats (kiff/tafs#82): tafs cloud keeps it out of the list
@@ -8781,8 +8796,52 @@ final class AppModel: ObservableObject {
     func loadArchivedSetupChats() async {
         guard mode == .kiff, let s = setupTaf else { return }
         let gen = accountGeneration
-        guard let chats = try? await cloud.archivedChats(s.id), gen == accountGeneration else { return }
-        archivedSetupChats = chats
+        guard let read = try? await cloud.archivedChatsRead(s.id), gen == accountGeneration else { return }
+        archivedSetupChats = read.chats
+        if let words = read.delete { chatDeleteWords = words }
+    }
+
+    /// Deletes one of Coach's conversations for good, after the person confirmed it in tafs cloud's words: it leaves both
+    /// lists, and the one shown gives way to a new conversation. tafs cloud decides whose it is, and the app decides nothing:
+    /// - one it doesn't have (404: already gone, or never this person's) leaves the lists, with nothing said;
+    /// - one still working or waiting on a card (409) stays, with the refusal's own words;
+    /// - any other failure keeps it, with `failed` from the last read, so the line is on hand with no network.
+    /// Never asked without tafs cloud's words: Delete isn't offered until a read has brought them.
+    func deleteSetupChat(_ session: String) async -> ChatDeleted {
+        guard mode == .kiff, let s = setupTaf, let words = chatDeleteWords else { return .notAsked }
+        let gen = accountGeneration
+        do {
+            try await cloud.deleteChat(s.id, session: session)
+        } catch let e as TafsCloud.CloudError where e.status == 404 {
+            // Already gone, or never this person's: it leaves the lists all the same.
+        } catch let e as TafsCloud.CloudError where e.status == 409 {
+            guard gen == accountGeneration else { return .notAsked }
+            return .kept(e.localizedDescription)
+        } catch {
+            guard gen == accountGeneration else { return .notAsked }
+            return .kept(words.failed)
+        }
+        guard gen == accountGeneration else { return .notAsked }
+        setupChats.removeAll { $0.session == session }
+        archivedSetupChats.removeAll { $0.session == session }
+        // An attachment opened from it keeps a copy on the phone, which would outlive "deleted for good": that folder is only
+        // a cache, so all of it goes.
+        Self.removeOpenedAttachments()
+        // The watch's kept Coach thread can hold this conversation's turns (its words go to Coach's own chat when its
+        // requests are switched off): it drops that copy. Only a cache, read again on its next visit.
+        Self.forgetOnWatch()
+        if setupChat == session || (setupChat == nil && setupThread.session == session) { newSetupChat() }
+        return .gone
+    }
+
+    /// What became of a conversation the person asked to delete.
+    enum ChatDeleted: Equatable {
+        /// Gone from tafs cloud (or it never had it), and from both lists.
+        case gone
+        /// Still there, with the line saying why: the 409's own words, or tafs cloud's `failed`.
+        case kept(String)
+        /// Nothing was asked: no words from tafs cloud yet, or the account changed meanwhile.
+        case notAsked
     }
 
     /// Puts an archived chat of Setup's back in the list (kiff/tafs#97). False, with why in

@@ -617,6 +617,12 @@ extension CoachModel: WatchPushListening {
             // A taf's chat changed on the phone or in tafs cloud: read again, as when it opens.
             guard let taf, push.taf == taf else { return }
             Task { await loadHistory() }
+        case .forget:
+            // A conversation deleted on the phone: what this screen drew of it goes too (its kept copy went in `PhoneLink`).
+            guard push.taf ?? WatchThreads.coach == threadKey else { return }
+            threads.drop(threadKey)
+            history = []
+            if !inFlight { turns = [] }
         case .inbox, .account:
             return
         }

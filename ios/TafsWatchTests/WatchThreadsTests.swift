@@ -35,6 +35,19 @@ final class WatchThreadsTests: XCTestCase {
         XCTAssertEqual(off.lines("coach"), [])
     }
 
+    /// A conversation deleted on the phone (`WatchPush.forget`): that thread's kept copy goes, the others stay.
+    func testADeleteOnThePhoneDropsThatThreadAlone() {
+        let kept = threads()
+        kept.keep("coach", [line(1), line(2, mine: true)])
+        kept.keep("taf-1", [line(3)])
+        kept.drop("coach")
+        XCTAssertEqual(kept.lines("coach"), [], "the next open draws none of it")
+        XCTAssertEqual(kept.lines("taf-1").map(\.id), ["m3"])
+        kept.drop("taf-1")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path), "nothing left, no file")
+        kept.drop("coach")
+    }
+
     func testAThreadOpensOnItsLastThirtyMessages() {
         let kept = threads()
         kept.keep("taf-1", (0..<40).map { line($0, mine: $0.isMultiple(of: 2)) })
