@@ -20,13 +20,13 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
 | Wear OS | built 25, partial 3, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | built 21, partial 5, not started 1, not for it 5 | the [Watches](#watches) table |
-| Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
+| Apple Watch | built 23, partial 4, not started 1, not for it 4 | the [Watches](#watches) table |
+| Chrome extension | done 10, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
 1. **The desktop ports are level with the iPad.** macOS 12 has 50 screens done and 8 not for it: its last three, the alerts, count as done since a signed `PUSH=1` build showed a held call's alert with tafs closed (tafs-macos#262). Windows has 50 done and 8 not for it, Linux 53 done and 5 not for it, each with its reason.
 2. **Mac 13+ and the Chrome extension** are what's partial on a computer: Mac 13+'s 2 wait on the owner's check on a signed Mac ([mac-app.md](mac-app.md#the-owners-check-on-a-signed-mac)), and the extension's 3 are named in its [table](#chrome-extension).
-3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): the complication's count, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
+3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): the complication's count, and two switches built but off until the owner's yes or the privacy page (the brief, and the phone making the text). (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
 ## The iPad's screens
 
@@ -186,6 +186,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | A step handed to the person ("Your turn": the taf asks, the person does it) | done (tafs#1806) | the extension types, clicks and fills nothing; planque's `browse_hand` tools are still to land |
 | A run in the owner's window, its tabs kept as "· done" until that taf's next run | done (tafs#1782, #1813, #1815) | a tab the person moved or is using is never closed |
 | Re-pairing replaces (Your Chrome 1), one fingerprint (5), isolation (6) | done | |
+| A taf on the tab you're on: a message from the side panel joins that tab, and carries the page only on the taf's own signed sites | done (tafs#2024, #2025, #2030) | Chrome 0.2.12–0.2.14, with page consent "2"; the taf reads a joined tab only at its exact address and opens anything else in a tab of its own; tafs cloud checks the sites again and gives a page turn only `browse_open` and `browse_read`. It reaches the Web Store with 0.2.14's package (the store row below) |
 | Sealed values (Saved sign-ins) | partial | the extension checks the release; the phone's card that signs `tafs-chrome/release/v1` is designed ([chrome.md](chrome.md), "The phone's release card") and isn't built |
 | Screenshots of a run's acts | partial | built; off (`config.js`) until planque keeps them and the privacy words are live |
 | In the Chrome Web Store | partial | CI builds the package (`chrome-package.yml`); the upload waits on the owner's yes |
@@ -207,27 +208,27 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 7 | Check before sending (Re-record, Delete, Type, Quick reply) | built | built | |
 | 8 | Keep for later | built | built | Apple Watch: on (`CoachModel.keepForLaterOn`), with the privacy page's line and the owner's yes |
 | 9 | Send, then "Coach is answering" | built | built | |
-| 10 | The answer: Hear it, and Reply | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | built | |
-| 11 | An answer you can't miss, with the app put away | built | built | Apple Watch: tafs cloud's push for a watch request wakes the iPhone, which posts the answer as W3 does (`WatchAskPush`), for a request it sent. Wear OS: the push starts a job on the phone that keeps the answer for the watch as a Data Layer item, delivered and notified with the watch's app closed (docs/watch-wear.md, Delivery) |
-| 12 | Coach as one conversation | built | built | Wear OS: kept across put-away; across opens (30 messages, up to 20 threads with each taf's, 30 days unopened) behind `KEEP_THREADS` (on in `-test` builds) until the owner's yes and the Privacy page's line |
-| 13 | Chat with one taf | built | built | tafs cloud's switch still decides per account |
+| 10 | The answer: Hear it, Reply, and Read more for the whole answer | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | built | Read more reads the whole answer, Coach's too (`?full=1`, tafs#2020), on both watches and the phones' From your watch days (tafs#2021, tafs#2018) |
+| 11 | An answer you can't miss, with the app put away | built | built | failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov); both rebuilt to the owner's 8 calls. Apple Watch: the iPhone posts the answer, a taf chat's under the taf's name, and the watch shows the iPhone's notification (`CoachFollow`, tafs#2018). Wear OS: the push starts a job on the phone that hands the answer to the watch as a Data Layer item, delivered and notified with the watch's app closed (tafs#2021) |
+| 12 | Coach as one conversation, opening on the newest, in step with the phone | built | built | failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov); rebuilt in tafs#2021 and tafs#2018: one thread with the phone's, pushed live, opening at the bottom |
+| 13 | Chat with one taf: send in the thread with your time and ✓, the answer under it | built | built | failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov) (Send gave "Open on phone"); rebuilt in tafs#2021 and tafs#2018. A message from another device reaches the watch by tafs cloud's `taf_chat` push (tafs#2022). tafs cloud's switch still decides per account, and the watch says it's off before recording |
 | 14 | A taf's page and its settings | built | built | |
 | 15 | Your tafs, with their state | built | built | |
 | 16 | Today's calendar | built | built | |
 | 17 | The Account page | built | built | |
 | 18 | Sign out on this watch alone | built | built | |
 | 19 | Sign in, pair a device, add a passkey, change a Card | not for it | not for it | no sign-in of its own; the keys stay on the phone |
-| 20 | The inbox kept on the watch | built | built | Wear OS: only on a watch with a screen lock; without one, the Inbox lists every answer the watch knows, opened ones too |
+| 20 | The inbox kept on the watch | built | built | Wear OS: failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov); rebuilt in tafs#2021, kept encrypted (AES-GCM under the watch's Keystore key), only on a watch with a screen lock |
 | 21 | The inbox's read and dismissed, in step with the phone | built (`InboxModel.sync`, `inbox_marks` / `inbox_mark`) | built (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud keeps them (`/v1/watch/inbox`), by id alone |
 | 22 | Your brief | partial | partial | built; off (`briefOnWatch`, `BRIEF_ON_WATCH`) until the owner's yes |
 | 23 | "From your watch" on the phone | built | built | |
 | 24 | A complication or tile (count, Ask tafs) | partial | built | Apple Watch: Ask tafs on the face and in the Smart Stack (`TafsWatchWidgets`), opening Coach's home listening; the count of what waits comes with an App Group |
 | 25 | The phone makes the text when the watch's recognizer gives up | partial | built | Apple Watch: built, off (`WatchVoice.on`) until the privacy page says so and the owner says yes |
 | 26 | Play and Pause the recording before sending | not started | partial | Apple Watch: W12 held for the owner's yes. Wear: test builds only (`KEEP_AUDIO`) |
-| 27 | Opening at once from what the watch kept | partial | built | Apple Watch: built, off (`WatchCache.on`) |
-| 28 | Open on phone | not for it | built | watchOS can't open the iPhone app |
+| 27 | Opening at once from what the watch kept, with no "Asking your phone…" | built | built | Wear OS: failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov). Both rebuilt to keep Coach's and each taf's thread (30 messages, 20 threads, 30 days unopened, no amounts), at rest encrypted on Wear and protected on the Apple Watch (tafs#2021, tafs#2018), and on with the Privacy line (kiff/cloud#151): Wear 0.4.8 (`KEEP_THREADS`, tafs#2027) and the Apple Watch (`WatchThreads.on`, tafs#2028) |
+| 28 | Open on phone, and "The rest is on your phone" in the thread | built | built | Wear OS: failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov); rebuilt in tafs#2021. Apple Watch: the iPhone opens the chat when tafs is in front, else posts a notification whose tap opens it (`WatchOpen`, tafs#2018) |
 | 29 | The all-clear picture | built | built | |
-| 30 | Saying why the phone can't be reached, with Try again | built | built | |
+| 30 | Saying the phone can't be reached, with retries on their own | built | built | the owner's call: no Try again. One calm "Linking tafs. Keep your phone nearby and connected." (`watch.linking`) on the first link, retries with backoff (tafs#2021, tafs#2018) |
 | 31 | Working without the phone | not for it | not for it | the phone holds the session and the keys |
 | 32 | In the store | partial | partial | Apple Watch: only the TestFlight build carries it. Wear: the internal track; production is the owner's |
 
