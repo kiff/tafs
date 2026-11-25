@@ -857,6 +857,9 @@ struct SetupChatsList: View {
     @State private var notArchived: String?
     /// The conversation waiting for the owner's yes to archive it.
     @State private var confirming: TafsCloud.Chat?
+    /// The conversation waiting for the owner's yes to delete it for good, and why the last delete didn't go through.
+    @State private var deleting: TafsCloud.Chat?
+    @State private var notDeleted: String?
     /// W11: the watch's conversations, one a day.
     @State private var watchDays: WatchDaysModel?
 
@@ -865,6 +868,10 @@ struct SetupChatsList: View {
             List {
                 if let notArchived {
                     Text(notArchived).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                        .listRowBackground(Color.clear)
+                }
+                if let notDeleted {
+                    Text(notDeleted).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                         .listRowBackground(Color.clear)
                 }
                 ForEach(model.setupChats) { chat in
@@ -879,6 +886,11 @@ struct SetupChatsList: View {
                     .swipeActions(edge: .trailing) {
                         Button { confirming = chat } label: { Label(Words.Coach.Chats.archive, systemImage: "archivebox") }
                             .tint(Theme.soft)
+                        // Only in tafs cloud's words: none sent yet, no Delete.
+                        if let words = model.chatDeleteWords {
+                            Button { deleting = chat } label: { Label(words.item, systemImage: "trash") }
+                                .tint(Theme.no)
+                        }
                     }
                 }
                 if let watchDays { WatchDaysSection(model: watchDays) }
@@ -896,6 +908,7 @@ struct SetupChatsList: View {
             } message: { _ in
                 Text(Words.Coach.Chats.archiveBody)
             }
+            .deleteChatDialog(words: model.chatDeleteWords, deleting: $deleting) { delete($0.session) }
             .overlay {
                 if model.setupChats.isEmpty {
                     Text(Words.Coach.Chats.none).scaledFont(14).foregroundColor(Theme.dim)
@@ -917,9 +930,19 @@ struct SetupChatsList: View {
         }
     }
 
+    private func delete(_ session: String) {
+        Haptics.tap()
+        notDeleted = nil
+        notArchived = nil
+        Task {
+            if case .kept(let why) = await model.deleteSetupChat(session) { notDeleted = why }
+        }
+    }
+
     private func archive(_ session: String) {
         Haptics.tap()
         notArchived = nil
+        notDeleted = nil
         Task {
             if !(await model.archiveSetupChat(session)) {
                 // Said here, under the sheet the app's alert would wait behind.
@@ -935,11 +958,18 @@ struct ArchivedSetupChats: View {
     @EnvironmentObject private var model: AppModel
     let open: (String) -> Void
     @State private var notPutBack: String?
+    /// The conversation waiting for the owner's yes to delete it for good, and why the last delete didn't go through.
+    @State private var deleting: TafsCloud.Chat?
+    @State private var notDeleted: String?
 
     var body: some View {
         List {
             if let notPutBack {
                 Text(notPutBack).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                    .listRowBackground(Color.clear)
+            }
+            if let notDeleted {
+                Text(notDeleted).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                     .listRowBackground(Color.clear)
             }
             ForEach(model.archivedSetupChats) { chat in
@@ -954,9 +984,14 @@ struct ArchivedSetupChats: View {
                 .swipeActions(edge: .trailing) {
                     Button { putBack(chat.session) } label: { Label(Words.Coach.Chats.putBack, systemImage: "tray.and.arrow.up") }
                         .tint(Theme.soft)
+                    if let words = model.chatDeleteWords {
+                        Button { deleting = chat } label: { Label(words.item, systemImage: "trash") }
+                            .tint(Theme.no)
+                    }
                 }
             }
         }
+        .deleteChatDialog(words: model.chatDeleteWords, deleting: $deleting) { delete($0.session) }
         .overlay {
             if model.archivedSetupChats.isEmpty {
                 Text(Words.Coach.Chats.nothingArchived).scaledFont(14).foregroundColor(Theme.dim)
@@ -969,14 +1004,41 @@ struct ArchivedSetupChats: View {
         .task { await model.loadArchivedSetupChats() }
     }
 
+    private func delete(_ session: String) {
+        Haptics.tap()
+        notDeleted = nil
+        notPutBack = nil
+        Task {
+            if case .kept(let why) = await model.deleteSetupChat(session) { notDeleted = why }
+        }
+    }
+
     private func putBack(_ session: String) {
         Haptics.tap()
         notPutBack = nil
+        notDeleted = nil
         Task {
             if !(await model.unarchiveSetupChat(session)) {
                 notPutBack = model.lastError ?? Words.Coach.notPutBackTryAgain
                 model.lastError = nil
             }
+        }
+    }
+}
+
+extension View {
+    /// Delete conversation's question, in tafs cloud's words only: the conversation by name, what goes and what stays,
+    /// then Delete and Cancel. Nothing is deleted before that yes.
+    func deleteChatDialog(words: TafsCloud.DeleteWords?, deleting: Binding<TafsCloud.Chat?>,
+                          delete: @escaping (TafsCloud.Chat) -> Void) -> some View {
+        confirmationDialog(words?.confirmTitle ?? "",
+                           isPresented: Binding(get: { words != nil && deleting.wrappedValue != nil },
+                                                set: { if !$0 { deleting.wrappedValue = nil } }),
+                           titleVisibility: .visible, presenting: deleting.wrappedValue) { chat in
+            Button(words?.confirmButton ?? "", role: .destructive) { delete(chat) }
+            Button(Words.Common.cancel, role: .cancel) {}
+        } message: { chat in
+            Text(chat.title + "\n\n" + (words?.confirmBody ?? ""))
         }
     }
 }
