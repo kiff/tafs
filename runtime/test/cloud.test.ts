@@ -2548,7 +2548,28 @@ describe("Setup (kiff/agents#91)", () => {
       // Start's own words, the first run's items 2 and 3: one line and the button, never the apps' paragraphs. What Start does
       // is the line's to say (the app-words cut, screen 3). It never names a biometric, and never says "once": a first run
       // asks for the face or fingerprint more than once (the first-run walk-through).
-      expect(first.words).toEqual({ lead: "Start gives Coach the tools below. You approve them on this device.", start: "Start" });
+      expect(first.words).toMatchObject({ lead: "Start gives Coach the tools below. You approve them on this device.", start: "Start" });
+      // The Card step before the signature (the words of the guidance before Coach's first approval): its title, its four
+      // lines, the fold's label over KIFF's own words, and a whole-sentence button for each way a device approves, which the
+      // app picks by its lock; a passkey's device says sign_passkey for sign. Every one in the person's language.
+      const en = wordsIn("en");
+      expect(first.words).toEqual({ lead: en.start_lead, start: en.start_button, title: en.card_step_title,
+        lines: { allows: en.card_step_allows, asks: en.card_step_asks, sign: en.card_step_sign, stop: en.card_step_stop },
+        exact: en.card_step_exact, buttons: { fingerprint: en.card_step_give_fingerprint, face: en.card_step_give_face, passkey: en.card_step_give_passkey },
+        sign_passkey: en.card_step_sign_passkey, locked: en.card_step_locked });
+      // Shown = signed: each tool the step lists is on the Card the draft signs, with that Card's limit and what happens past
+      // it, and the step lists every action the draft's Cards grant, so an app can compare the two and refuse when they differ.
+      type Signed = { id: string; on_exceed: string; grants: Array<{ action: string }>; aggregates: Array<{ quantity: string; limit: number; window: string }> };
+      const signed = draft.body.cards as Signed[];
+      const listed = (first.coach_tools_step.groups as Array<{ tools: Array<{ tool: string; card: string; limit: number; asks: boolean }> }>).flatMap((g) => g.tools);
+      for (const t of listed) {
+        const card = signed.find((c) => c.id === t.card);
+        expect(card, t.tool).toBeDefined();
+        expect(card!.grants.map((g) => g.action), t.tool).toContain(t.tool);
+        expect(card!.aggregates, t.tool).toEqual([{ quantity: "count", limit: t.limit, window: "calendar_day" }]);
+        expect(card!.on_exceed, t.tool).toBe(t.asks ? "owner" : "refuse");
+      }
+      expect(listed.map((t) => t.tool).sort()).toEqual(signed.flatMap((c) => c.grants.map((g) => g.action)).sort());
       for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
         expect(wordsIn(lang).start_lead, lang).not.toMatch(/\b(once|einmal|une fois|una vez|una volta|uma vez|één keer|raz)\b/i);
       }
@@ -2618,11 +2639,14 @@ describe("Setup (kiff/agents#91)", () => {
       expect(draft).toMatchObject({ method: "POST", path: "/v1/me/agent-drafts", body: { agent_id: "setup-acme", label: "Coach", contract_digest: "cd_123" } });
       expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
       expect(draft.card_title).toBeDefined();
+      // The worded pair carries the draft: every missing Card's tools are in it.
+      expect((both.coach_tools_step.groups as Array<{ tools: Array<{ in_draft: boolean }> }>).flatMap((g) => g.tools).every((t) => t.in_draft)).toBe(true);
       // KIFF can't word the pair: the steps, as before, never an unworded draft.
       (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = true;
       const unworded = await tools();
       expect(unworded.connect).toBeDefined();
       expect(unworded).not.toHaveProperty("requests");
+      expect((unworded.coach_tools_step.groups as Array<{ tools: Array<{ in_draft: boolean }> }>).flatMap((g) => g.tools).some((t) => t.in_draft)).toBe(false);
       (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = false;
       // Every tool there, Cards for new ones missing: the Cards alone (one fingerprint already), and the row says why.
       w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
@@ -2656,6 +2680,8 @@ describe("Setup (kiff/agents#91)", () => {
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
     expect(first.card).toBeUndefined();
     expect(w.account.previewed ?? []).toEqual([]);
+    // No draft in this answer, so no tool is marked in it: the app compares nothing against a draft that isn't there.
+    expect((first.coach_tools_step.groups as Array<{ tools: Array<{ in_draft: boolean }> }>).flatMap((g) => g.tools).some((t) => t.in_draft)).toBe(false);
     expect(first.connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
     expect(first.connect.body.connections[0]).toEqual({ name: "tafs_state", url: mcp, tool: "tafs_state", mode: "verify", audience: mcp, control: true, idempotency_argument: "tafs_op", read_only: true });
     expect(first.connect.body.connections[3]).not.toHaveProperty("read_only");
@@ -2668,6 +2694,7 @@ describe("Setup (kiff/agents#91)", () => {
     expect(cardsOnly.connect).toBeUndefined();
     expect(cardsOnly.card.body).toMatchObject({ agent_id: "setup-acme", label: "Coach" });
     expect(cardsOnly.card.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+    expect((cardsOnly.coach_tools_step.groups as Array<{ tools: Array<{ in_draft: boolean }> }>).flatMap((g) => g.tools).every((t) => t.in_draft)).toBe(true);
     expect(cardsOnly.card.body.cards[1]).toEqual({ id: "coach-taf-task", subject: "setup-acme", domain: "gateway", on_exceed: "owner", hold_expiry: "10m", grants: [{ action: "taf_task" }], aggregates: [{ quantity: "count", limit: 50, window: "calendar_day" }] });
     expect(cardsOnly.card.body.cards[0]).not.toHaveProperty("hold_expiry");
     expect(cardsOnly.card.card_title).toBe("Coach's Card");
@@ -2678,6 +2705,12 @@ describe("Setup (kiff/agents#91)", () => {
     const again = await tools();
     expect(again.card.body.label).toBe("Coach");
     expect(again.card.body.cards.map((c: { id: string }) => c.id)).toEqual([COACH_CARDS[2]!.id]);
+    // The step still lists every tool, and says which ones this draft signs (`in_draft`): those on the Card asked for again,
+    // and no other, so an app compares the draft with what it marks, both ways, never with every tool listed.
+    const stepTools = (again.coach_tools_step.groups as Array<{ tools: Array<{ tool: string; card: string; in_draft: boolean }> }>).flatMap((g) => g.tools);
+    expect(stepTools.length).toBe(COACH_CARDS.flatMap((c) => c.actions).length);
+    expect(stepTools.filter((t) => t.in_draft).map((t) => t.tool).sort()).toEqual([...COACH_CARDS[2]!.actions].sort());
+    expect(stepTools.filter((t) => t.in_draft).every((t) => t.card === COACH_CARDS[2]!.id)).toBe(true);
     // A Card added later (taf_results) is drafted alone, never with the ones Coach holds in force.
     w.account.mandates = coachCards(true).filter((m) => m.id !== "coach-taf-results");
     expect((await tools()).card.body.cards.map((c: { id: string }) => c.id)).toEqual(["coach-taf-results"]);

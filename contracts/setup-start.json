@@ -688,17 +688,32 @@
               {
                 "name": "See your tafs",
                 "does": "Read each taf, its versions and its open runs. Up to 500 a day, counted with “Read a run”.",
-                "why": "It reads your account."
+                "why": "It reads your account.",
+                "tool": "tafs_state",
+                "card": "coach-reads",
+                "limit": 500,
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Read a run",
                 "does": "See what one run did and what it's waiting on. Up to 500 a day, counted with “See your tafs”.",
-                "why": "A run can hold what your apps answered."
+                "why": "A run can hold what your apps answered.",
+                "tool": "taf_run",
+                "card": "coach-reads",
+                "limit": 500,
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Check a taf",
                 "does": "Find what failed in a taf's latest runs, and the next step. It calls no app. Up to 200 a day.",
-                "why": "It reads your tafs' runs."
+                "why": "It reads your tafs' runs.",
+                "tool": "taf_check",
+                "card": "coach-checks",
+                "limit": 200,
+                "asks": false,
+                "in_draft": true
               }
             ]
           },
@@ -709,17 +724,32 @@
               {
                 "name": "Give a taf a task",
                 "does": "Hand a taf a task or a message. The taf works under its own Card. Up to 50 a day; after that, each one waits for you.",
-                "why": "It starts work in your name."
+                "why": "It starts work in your name.",
+                "tool": "taf_task",
+                "card": "coach-taf-task",
+                "limit": 50,
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Stop a run",
                 "does": "Stop a taf's run. Anything in it waiting for you is withdrawn. Up to 50 a day.",
-                "why": "It ends work you might want finished."
+                "why": "It ends work you might want finished.",
+                "tool": "run_stop",
+                "card": "coach-run-stop",
+                "limit": 50,
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Pause a schedule",
                 "does": "Pause or resume a taf's schedule. Up to 50 a day.",
-                "why": "A paused taf does nothing until it's resumed."
+                "why": "A paused taf does nothing until it's resumed.",
+                "tool": "taf_pause",
+                "card": "coach-taf-pause",
+                "limit": 50,
+                "asks": false,
+                "in_draft": true
               }
             ]
           },
@@ -730,57 +760,112 @@
               {
                 "name": "Draft a change",
                 "does": "Write a taf's next version: what starts it, its steps, where results go. Nothing runs from a draft. Up to 20 a day.",
-                "why": "A draft is what you'd install."
+                "why": "A draft is what you'd install.",
+                "tool": "taf_dial",
+                "card": "coach-taf-dial",
+                "limit": 20,
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Estimate a taf's credits",
                 "does": "Say what a taf will likely use in a month, from records, before you approve it. It calls no app. Up to 200 a day.",
-                "why": "It reads your tafs' runs and your plan."
+                "why": "It reads your tafs' runs and your plan.",
+                "tool": "taf_estimate",
+                "card": "coach-estimates",
+                "limit": 200,
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Read a public page",
                 "does": "Read one public web page, such as an app's documentation or its published API description, to connect it the right way. Only public pages, with nothing signed in. Up to 50 a day.",
-                "why": "It reads only what anyone can open on the web."
+                "why": "It reads only what anyone can open on the web.",
+                "tool": "web_read",
+                "card": "coach-web-reads",
+                "limit": 50,
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Label tafs",
                 "does": "Put labels on your tafs, such as Money or Customers, so you can filter the list. A label is only a name: it changes nothing a taf may do. Up to 100 a day.",
-                "why": "It changes only how your list is filtered."
+                "why": "It changes only how your list is filtered.",
+                "tool": "taf_labels",
+                "card": "coach-labels",
+                "limit": 100,
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Gather tafs into a mission",
                 "does": "Gather tafs that work toward one goal into a mission, such as running the money side. Each taf keeps its own job, apps and Card. Each one waits for your approval.",
-                "why": "It changes nothing a taf may do."
+                "why": "It changes nothing a taf may do.",
+                "tool": "mission_create",
+                "card": "coach-mission-create",
+                "limit": 0,
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Change a mission's tafs",
                 "does": "Add a taf to a mission or take one out, or end a mission. Each taf keeps its own job, apps and Card. Up to 50 a day.",
-                "why": "It changes nothing a taf may do."
+                "why": "It changes nothing a taf may do.",
+                "tool": "mission",
+                "card": "coach-missions",
+                "limit": 50,
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Keep your business description",
                 "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Each one waits for your approval.",
-                "why": "It's words only, and you see it in Account."
+                "why": "It's words only, and you see it in Account.",
+                "tool": "business_context",
+                "card": "coach-business",
+                "limit": 0,
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Try a version",
                 "does": "Run a version as a trial that sends nothing to your apps. Up to 20 a day; after that, each one waits for you.",
-                "why": "A trial reads your apps as the taf would."
+                "why": "A trial reads your apps as the taf would.",
+                "tool": "version_try",
+                "card": "coach-version-try",
+                "limit": 20,
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Install a version",
                 "does": "Put a version live. Each one waits for your approval.",
-                "why": "It changes what a taf does."
+                "why": "It changes what a taf does.",
+                "tool": "version_install",
+                "card": "coach-version-install",
+                "limit": 0,
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Choose where results go",
                 "does": "Set where a taf's results go. Each one waits for your approval.",
-                "why": "Results can leave tafs, by email or into an app."
+                "why": "Results can leave tafs, by email or into an app.",
+                "tool": "taf_results",
+                "card": "coach-taf-results",
+                "limit": 0,
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Draft a door for an application",
                 "does": "Write a door through which your company's own software hands a taf work. Nothing is made from a draft: you approve the door yourself. Up to 20 a day.",
-                "why": "A draft is what you'd approve."
+                "why": "A draft is what you'd approve.",
+                "tool": "taf_door_api",
+                "card": "coach-taf-door",
+                "limit": 20,
+                "asks": false,
+                "in_draft": true
               }
             ]
           },
@@ -791,12 +876,22 @@
               {
                 "name": "See tafs while it drives",
                 "does": "While you've turned on a drive, see tafs on your device, its own screens only. Up to 2,000 a day.",
-                "why": "It sees what's on your screen."
+                "why": "It sees what's on your screen.",
+                "tool": "app_look",
+                "card": "coach-app-look",
+                "limit": 2000,
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Use tafs while it drives",
                 "does": "While a drive is on, tap, type and scroll in tafs on your phone, with a caption for each step. It can't approve anything: only you approve, on your phone. Up to 1,000 a day.",
-                "why": "It acts in the app as you."
+                "why": "It acts in the app as you.",
+                "tool": "app_act",
+                "card": "coach-app-act",
+                "limit": 1000,
+                "asks": false,
+                "in_draft": true
               }
             ]
           }
@@ -804,7 +899,22 @@
       },
       "words": {
         "lead": "Start gives Coach the tools below. You approve them on this device.",
-        "start": "Start"
+        "start": "Start",
+        "title": "Let Coach build tafs with you",
+        "lines": {
+          "allows": "This lets Coach look at your tafs, run them, and draft and try new versions, each within the daily limits below. Only while you turn on a drive, it can also see and use the app on this device.",
+          "asks": "Installing a version, choosing where a taf's results go, making a mission and saving your business description always wait for you in Needs you. Giving a taf a task or trying a version waits for you past its daily limit; anything else past its limit is refused.",
+          "sign": "Your approval signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
+          "stop": "Halt stops Coach and every taf at once, with one tap."
+        },
+        "exact": "Exactly what you sign",
+        "buttons": {
+          "fingerprint": "Approve with fingerprint",
+          "face": "Approve with face",
+          "passkey": "Approve with your passkey"
+        },
+        "sign_passkey": "Your approval signs this with your passkey, whose private key never leaves this computer or your security key. It isn't a payment or a password.",
+        "locked": "Approve this first, then you can write to Coach."
       }
     }
   }
