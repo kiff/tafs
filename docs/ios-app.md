@@ -854,6 +854,10 @@ screen is as before.
   tafs cloud's `locked` line (`card_step_locked`) stands in the box's place. Once Coach exists, while its tools themselves
   are still to give (`tools.connect`), the box is one locked line in tafs cloud's words (the step's `row`) that opens the
   step (`SetupChatView.lockedComposer`). When only Cards for tools Coach gained since are missing, typing stays open.
+- **Later approvals of Coach's Cards** (the tools step, once Coach exists): the step lists every tool while the draft may
+  carry only the missing Cards, so the plain list is never presented as what's signed there. Coach's Cards in KIFF's own
+  words come first, unfolded, and the tools sit under the fold (`CoachToolsGiven.stepBody`), until tafs cloud marks
+  which tools a partial draft covers.
 - Tests: `CardStepTests`: the list matches the draft, each change to a signed Card or to the list fails closed, and the
   Card step shows only when every line came.
 

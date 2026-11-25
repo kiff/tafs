@@ -194,6 +194,10 @@ struct CoachToolsGiven: View {
     private var stepBody: some View {
         let step = tools.step
         let grouped = !(step?.groups.isEmpty ?? true)
+        // What this approval signs comes first and unfolded: Coach's Cards in KIFF's own words. Once Coach exists, the step
+        // lists every tool while the draft may carry only some Cards, so the list below is never presented as what's signed
+        // (the Card step's check, `CardStepCheck`, covers the first start alone).
+        if tools.card != nil { cards }
         if let step, grouped {
             // A few groups up front; each tool and its limits folded under them, closed at first.
             ForEach(Array(step.groups.enumerated()), id: \.offset) { _, group in
@@ -235,15 +239,8 @@ struct CoachToolsGiven: View {
             } else if let lines = tools.connect?.lines {
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, said in line(said, 14, Theme.ink) }
             }
-            if let card = tools.card {
-                if let title = card.cardTitle, !title.isEmpty { line(title, 14, Theme.ink, .semibold).padding(.top, 4) }
-                ForEach(Array(card.cards.enumerated()), id: \.offset) { _, words in
-                    VStack(alignment: .leading, spacing: 2) {
-                        if !words.title.isEmpty { line(words.title, 13, Theme.ink, .semibold) }
-                        ForEach(Array(words.lines.enumerated()), id: \.offset) { _, said in line(said, 13, Theme.soft) }
-                    }
-                }
-            }
+            // Coach's Cards in KIFF's words are drawn above, unfolded (`cards`).
+
         }
     }
 
