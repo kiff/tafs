@@ -50,7 +50,21 @@ function doneKey(run) {
 }
 
 /** How many fence rules a tab takes (`Runner.fence`), and their ids from a tab's first. */
-export const FENCE_RULES = 7 + SENSITIVE_LABELS_URLS.length;
+export const FENCE_RULES = 8 + SENSITIVE_LABELS_URLS.length;
+
+/** Which of a tab's fence rule ids is its sandbox's (`Runner.sandbox`): in place only while the run's own navigation is in flight. */
+const SANDBOX_RULE = 7;
+
+/**
+ * The sandbox the pages the run itself loads in a tab of its own come with, as a response header Chrome adds for that tab alone:
+ * every sandbox permission but `allow-modals`, so Blink drops alert, confirm, prompt, print and the "leave this page?" prompt from the
+ * page's first byte (confirm answers false, prompt null), and nothing reaches Chromium. The page can't lift it, and the site sees
+ * nothing of it. The rule is in place only while the run's own navigation is in flight (`sandbox`, `unsandbox`): an address the
+ * person types in that tab outside the run's step loads as it is, their dialogs theirs.
+ */
+export const RUN_SANDBOX =
+  "sandbox allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-top-navigation " +
+  "allow-top-navigation-by-user-activation allow-storage-access-by-user-activation allow-pointer-lock allow-presentation allow-orientation-lock";
 
 
 /** An address with user info (`https://x@bank.example/`), which `refuseURL` refuses outright and the label patterns can't see past. */
@@ -154,6 +168,10 @@ export class Runner {
       if (d.frameId !== 0) return;
       const run = this.runOfTab(d.tabId);
       if (!run || isBlank(d.url)) return;
+      // A navigation of the person's in a tab of the run's own while the run's own is in flight (their typed address, Back, a
+      // reload): the sandbox comes off before its request is sent, as early as the extension hears of it.
+      const runsWork = run.stepping === d.tabId || run.backing === d.tabId || run.landing.has(d.tabId) || (run.tab === d.tabId && this.handOpen(run));
+      if (!runsWork) this.unsandbox(d.tabId).catch(() => {});
       if (refuseURL(d.url, run.sites, run.allowed)) {
         // A tab of the person's that joined the run is never sent anywhere: Chrome's fence blocks the request, and the page they
         // had stays (a block in the run's own act is recorded once, by onErrorOccurred). A tab of the run's own goes to its blank
@@ -210,6 +228,9 @@ export class Runner {
       const handed = run.tab === d.tabId && this.handOpen(run);
       const ours = backing || (!persons(d) && (run.stepping === d.tabId || run.landing.has(d.tabId) || handed));
       run.landing.delete(d.tabId);
+      // The page has its headers now: the sandbox comes off, so nothing after this commit (a redirect's next page aside, which
+      // commits once) loads under it unless the run's own next navigation asks for it again.
+      this.unsandbox(d.tabId).catch(() => {});
       if (!ours) {
         // The person's move, wherever it went: theirs, never one of the run's steps.
         this.giveBack(run, [d.tabId], true).catch(() => {});
@@ -236,6 +257,7 @@ export class Runner {
         if (d.frameId !== 0) return;
         const run = this.runOfTab(d.tabId);
         if (!run) return;
+        this.unsandbox(d.tabId).catch(() => {});
         const inStep = run.stepping === d.tabId;
         // A tab of the run's own: only a navigation that isn't the run's (the person's, the fence stopping it) gives it to them.
         if (!run.joined.has(d.tabId) && (inStep || run.backing === d.tabId || run.landing.has(d.tabId) || !/ERR_BLOCKED_BY_CLIENT/.test(String(d.error || "")))) return;
@@ -260,7 +282,8 @@ export class Runner {
       run.landing.add(d.tabId);
       this.tabRun.set(d.tabId, run.id);
       // Fenced, or closed: a pop-up Chrome's rules can't hold never stays open unfenced.
-      this.fence(run, d.tabId).catch(() => {
+      // Its first page is the run's page's own move: it comes with the sandbox, which its first commit takes off.
+      this.fence(run, d.tabId).then(() => this.sandbox(run, d.tabId)).catch(() => {
         run.tabs.delete(d.tabId);
         this.tabRun.delete(d.tabId);
         Promise.resolve(c.tabs.remove(d.tabId)).catch(() => {});
@@ -340,8 +363,33 @@ export class Runner {
     rules.push({ id: ids[4], priority: 5, action: { type: "block" }, condition: { ...on, requestDomains: [...NEVER_OPENED] } });
     rules.push({ id: ids[5], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: "^http://" } });
     rules.push({ id: ids[6], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: USER_INFO } });
-    SENSITIVE_LABELS_URLS.forEach((regexFilter, i) => rules.push({ id: ids[7 + i], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter } }));
+    SENSITIVE_LABELS_URLS.forEach((regexFilter, i) => rules.push({ id: ids[8 + i], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter } }));
     await dnr.updateSessionRules({ removeRuleIds: ids, addRules: rules });
+  }
+
+  /**
+   * The sandbox on for the run's own navigation of tab [tabId] (a tab of the run's own, fenced): its next page comes with
+   * `RUN_SANDBOX`. Taken off (`unsandbox`) at that navigation's commit or error, and at the step's end, whichever comes first.
+   * Never for a tab of the person's the run joined: its dialogs keep the onCommitted guard.
+   */
+  async sandbox(run, tabId) {
+    const dnr = this.chrome.declarativeNetRequest;
+    const base = this.fenceIds.get(tabId);
+    if (!dnr || base == null || run.joined.has(tabId)) return;
+    const id = base + SANDBOX_RULE;
+    await dnr.updateSessionRules({
+      removeRuleIds: [id],
+      // Above every allow (an allow of higher priority keeps Chrome from changing a response's headers).
+      addRules: [{ id, priority: 6, action: { type: "modifyHeaders", responseHeaders: [{ header: "Content-Security-Policy", operation: "append", value: RUN_SANDBOX }] }, condition: { tabIds: [tabId], resourceTypes: ["main_frame"] } }],
+    });
+  }
+
+  /** The sandbox off tab [tabId], keeping the rest of its fence: its next response loads as it is. */
+  async unsandbox(tabId) {
+    const dnr = this.chrome.declarativeNetRequest;
+    const base = this.fenceIds.get(tabId);
+    if (!dnr || base == null) return;
+    await dnr.updateSessionRules({ removeRuleIds: [base + SANDBOX_RULE] }).catch(() => {});
   }
 
   async unfence(tabId) {
@@ -1114,10 +1162,12 @@ export class Runner {
       const tabId = run.tab;
       run.stepping = tabId;
       try {
+        await this.sandbox(run, tabId);
         await c.tabs.update(tabId, run.ownWindow || follow ? { url, active: true } : { url });
         await this.loaded(tabId);
       } finally {
         if (run.stepping === tabId) run.stepping = null;
+        await this.unsandbox(tabId);
       }
     }
     return this.read(run);
@@ -1376,6 +1426,7 @@ export class Runner {
     const from = await c.tabs.get(tabId).catch(() => null);
     run.backing = tabId;
     try {
+      await this.sandbox(run, tabId);
       await Promise.resolve(c.tabs.goBack(tabId)).catch(() => {});
       await this.loaded(tabId, from ? from.url || "" : undefined);
       const now = await c.tabs.get(tabId).catch(() => null);
@@ -1386,6 +1437,7 @@ export class Runner {
       run.trail.set(tabId, trail.slice(0, -1));
     } finally {
       run.backing = null;
+      await this.unsandbox(tabId);
     }
     return this.read(run);
   }
@@ -1421,6 +1473,7 @@ export class Runner {
     run.stepping = tabId;
     run.stepError = null;
     try {
+      await this.sandbox(run, tabId);
       // In the person's tab, the run's sites go with the act: a link or a form's submit that would leave them is refused in the page
       // before it fires, so Chrome never puts its "blocked" page in place of theirs. A tab of the run's own is left to the fence,
       // which sends it to its blank page.
@@ -1436,6 +1489,7 @@ export class Runner {
     } finally {
       run.stepping = null;
       run.stepError = null;
+      await this.unsandbox(tabId);
     }
     return this.read(run);
   }

@@ -530,11 +530,15 @@ was done.
   - In the page's own world, once a document has committed (`webNavigation.onCommitted`): `dialogs.js`. From then on alert,
     confirm and prompt stop blocking and are reported, a confirm answers no, and a "leave this page?" handler is dropped.
   - In the isolated world: `mask.js` and `page.js`.
-- **Open gap: a dialog a page raises as it loads.** The guard goes in once the page has committed, so a page's own inline
-  script comes first: an `alert` or `confirm` it raises as it loads reaches Chromium as a real dialog, and the run waits until
-  it's answered (`gaps2.e2e.test.js` pins this). A sandbox with no `allow-modals`, added as a response header for a run's own
-  tabs, closed it in a spike (the `chrome-sandbox-spike` branch) but doesn't ship: the person's own page opened in a run's tab
-  could still load sandboxed, and a page the run loaded stayed sandboxed after the run let its tab go.
+- **A dialog a page raises as it loads, in a tab of the run's own** (draft, not shipped). While the run's own navigation is in
+  flight (an open, an act, a `back`, a pop-up's first page), the tab's fence also carries a response-header rule
+  (`Runner.sandbox`): the page comes with a CSP `sandbox` holding every permission but `allow-modals` (`RUN_SANDBOX`), so Blink
+  drops its `alert`, `confirm`, `prompt`, `print` and "leave this page?" from its first byte, and nothing reaches Chromium. The
+  rule comes off at that navigation's commit or error, at the step's end, and as any navigation of the person's starts
+  (`onBeforeNavigate` outside the run's work), so an address they type in that tab loads as it is, with their dialogs theirs.
+  Never in a tab of the person's that a run joined: its dialogs keep the `onCommitted` guard. **Still open:** a page the run
+  loaded keeps its sandbox for its whole life, so after the run lets its tab go, that page's dialogs stay silent until it's
+  loaded again (`sandbox.e2e.test.js` measures each case).
 - **Every https site is granted at install, so nothing in a run asks Chrome for one.** The owner chose it (23 Nov: "closer to Claude in
   Chrome"), and Chrome asks once, when the extension is installed or updated to a manifest that widens it (an update that does is
   disabled until accepted, so `host_permissions` is only changed on purpose). **Chrome's permission is therefore no second gate.** What stops a taf

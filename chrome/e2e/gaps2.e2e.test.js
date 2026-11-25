@@ -152,55 +152,29 @@ test("planque's stop of a run this Chrome doesn't hold changes nothing", { skip 
 
 // ---- 10. Dialogs as a page loads, and "leave this page?" ----
 
-// Open gap: load-time dialogs, see chrome-sandbox-spike. The dialog guard goes into a run's tab once its page has committed
-// (webNavigation.onCommitted), so a dialog the page raises in its own script as it loads comes first: it reaches Chromium as a real
-// dialog, and the run waits for it to be answered. These tests pin that, so a change to it is seen. The harness holds the dialog
-// open here instead of answering it, so the test sees it, then answers it itself.
-async function heldDialog(what) {
-  return until(() => h.held.find((d) => d.type() === what), "the page's " + what + " in Chromium", 10_000);
-}
-
-test("open gap: an alert a page raises as it loads reaches Chromium, and the run's open waits for it", { skip }, async () => {
+// Load-time dialogs: the pages a run loads in a tab of its own come with a sandbox without modals (runner.js `sandbox`, in place only
+// while the run's own navigation is in flight), so a dialog the page raises in its own script as it loads is dropped by Chrome itself:
+// nothing reaches Chromium, and the run never waits on one. sandbox.e2e.test.js measures it, and the person's own loads, many times.
+test("an alert a page raises as it loads in a run's own tab never reaches Chromium, nor holds the open", { skip }, async () => {
   const run = newRun("alert-load");
   started.add(run);
-  h.holdDialogs = true;
-  try {
-    let answered = false;
-    const opening = open(run, h.sites.url("shop.test", "/at-load-alert?case=load")).finally(() => (answered = true));
-    const dialog = await heldDialog("alert");
-    assert.equal(dialog.message(), "Welcome to the shop");
-    await new Promise((res) => setTimeout(res, 500));
-    assert.equal(answered, false, "the open waits while the alert is up");
-    await dialog.accept();
-    const r = await opening;
-    assert.equal(r.page.title, "Welcome");
-  } finally {
-    h.holdDialogs = false;
-    h.held.length = 0;
-  }
+  const before = h.dialogs.length;
+  const r = await open(run, h.sites.url("shop.test", "/at-load-alert?case=load"));
+  assert.equal(r.page.title, "Welcome");
+  await new Promise((res) => setTimeout(res, 300));
+  assert.deepEqual(h.dialogs.slice(before), [], "a dialog reached Chromium");
   await h.fromPanel({ type: "stop", run });
 });
 
-test("open gap: a confirm a page raises as it loads reaches Chromium, the run's open waits, and the page reads the answer it got", { skip }, async () => {
+test("a confirm a page raises as it loads in a run's own tab is answered no, and never reaches Chromium", { skip }, async () => {
   const run = newRun("confirm-load");
   started.add(run);
   const url = h.sites.url("shop.test", "/at-load-confirm?case=load");
-  h.holdDialogs = true;
-  try {
-    let answered = false;
-    const opening = open(run, url).finally(() => (answered = true));
-    const dialog = await heldDialog("confirm");
-    assert.equal(dialog.message(), "Stay signed in?");
-    await new Promise((res) => setTimeout(res, 500));
-    assert.equal(answered, false, "the open waits while the confirm is up");
-    await dialog.dismiss();
-    await opening;
-    const tab = await until(() => tabAt(h, url), "the run's tab");
-    assert.equal(await tab.textContent("#out"), "refused", "the page got the answer given in Chromium");
-  } finally {
-    h.holdDialogs = false;
-    h.held.length = 0;
-  }
+  const before = h.dialogs.length;
+  await open(run, url);
+  const tab = await until(() => tabAt(h, url), "the run's tab");
+  assert.equal(await tab.textContent("#out"), "refused", "the page's confirm was answered yes");
+  assert.deepEqual(h.dialogs.slice(before), [], "a dialog reached Chromium");
   await h.fromPanel({ type: "stop", run });
 });
 

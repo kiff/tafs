@@ -749,7 +749,8 @@ test("two runs opening together in a fresh worker: the stale-rule clear finishes
   };
   c.declarativeNetRequest.updateSessionRules = async (o) => {
     c.calls.push(["dnr", o]);
-    if (o.addRules) order.push("add");
+    // A fence's rules (the sandbox's one rule, added for the run's own navigation, is not a fence).
+    if (o.addRules && o.addRules.length > 1) order.push("add");
     else if (o.removeRuleIds.includes(900)) order.push("clear");
   };
   const r = new Runner({ chrome: c, sleep: (ms) => new Promise((x) => setTimeout(x, ms > 5 ? 5 : ms)), paired: () => paired });
@@ -1824,7 +1825,8 @@ test("the person closing a run's tab takes its fence rules with it, even once th
   // A pop-up on its sites: fenced too.
   c.listeners.created({ sourceTabId: tab, tabId: 556, url: "https://shop.example/help" });
   await new Promise((go) => setImmediate(go));
-  const popup = c.calls.filter((x) => x[0] === "dnr" && x[1].addRules).at(-1)[1].addRules.map((x) => x.id);
+  // Its fence (the last rules added more than one at a time: the sandbox for its first page is one rule of its fence's ids).
+  const popup = c.calls.filter((x) => x[0] === "dnr" && x[1].addRules && x[1].addRules.length > 1).at(-1)[1].addRules.map((x) => x.id);
   c.listeners.removed(556);
   await new Promise((go) => setImmediate(go));
   assert.deepEqual(c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).at(-1)[1].removeRuleIds, fenceIdsFrom(popup), "the pop-up's rules go when it closes");
@@ -2605,17 +2607,18 @@ test("a sensitive-site pattern Chrome can't hold fails the fence: the run's tab 
   assert.equal(r.runs.get("run_1") && r.runs.get("run_1").tabs.size || 0, 0, "no tab left the run's, unfenced");
 });
 
-test("a fence holds FENCE_RULES ids a tab, all of them go with the tab and at unpairing, and an allowance adds its rule", async () => {
+test("a fence holds FENCE_RULES ids a tab, all of them go with the tab and at unpairing; an allowance adds its rule, and the sandbox's is added only for the run's own navigation", async () => {
   const c = fakeChrome();
   const r = runner(c);
   await r.handle(step({ sensitive_allowed: undefined }));
   const tab = r.runs.get("run_1").tab;
   const first = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1];
   assert.deepEqual(first.removeRuleIds, fenceIdsFrom(first.addRules.map((x) => x.id)), "every id of the tab's is cleared first");
-  assert.equal(first.addRules.length, FENCE_RULES - 1, "no allowance, no rule for it");
+  assert.equal(first.addRules.length, FENCE_RULES - 2, "no allowance, no rule for it; and no sandbox in the fence itself");
+  assert.ok(!first.addRules.some((x) => x.action.type === "modifyHeaders"), "the sandbox isn't part of the fence");
   await r.fence({ sites: ["example.com"], allowed: ["bank.example.com"] }, tab);
   const second = c.calls.filter((x) => x[0] === "dnr" && x[1].addRules).at(-1)[1];
-  assert.equal(second.addRules.length, FENCE_RULES);
+  assert.equal(second.addRules.length, FENCE_RULES - 1);
   assert.deepEqual(second.addRules.find((x) => x.priority === 4).condition.requestDomains, ["bank.example.com"]);
   await r.stopAll();
   const removed = c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).flatMap((x) => x[1].removeRuleIds);
