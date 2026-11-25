@@ -493,15 +493,18 @@ class TafsCloud(
 
   /**
    * This phone gets the account's alerts at [deviceToken] (its Firebase token). With [target], also hands over the KIFF target's
-   * signing secret, which checks KIFF's deliveries. `sound` false: this phone's alerts arrive quietly.
+   * signing secret, which checks KIFF's deliveries. `sound` false: this phone's alerts arrive quietly. [alerts] false: background
+   * pushes only (a taf's chat, a watch request, the watch Inbox), never a visible alert, for a phone that serves a watch with its
+   * alerts off; it hands over no target.
    */
-  suspend fun registerPush(deviceToken: String, sound: Boolean = true, target: AlertTarget? = null, kinds: Map<String, Boolean>? = null): PushStatus {
+  suspend fun registerPush(deviceToken: String, sound: Boolean = true, target: AlertTarget? = null, kinds: Map<String, Boolean>? = null, alerts: Boolean = true): PushStatus {
     val body = kotlinx.serialization.json.buildJsonObject {
       put("device_token", deviceToken)
       put("platform", "android")
       // Firebase has one environment; tafs cloud's field is Apple's.
       put("environment", "production")
       put("sound", sound)
+      if (!alerts) put("alerts", false)
       kinds?.let { choices -> put("kinds", kotlinx.serialization.json.buildJsonObject { choices.forEach { (id, on) -> put(id, on) } }) }
       target?.let {
         put("alert_target", kotlinx.serialization.json.buildJsonObject {

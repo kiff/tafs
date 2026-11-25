@@ -289,7 +289,8 @@ class PushTest {
     push.allow = false
     val m = model()
     assertFalse(m.turnOnAlerts())
-    assertEquals("Allow notifications for tafs in Settings, then try again.", m.state.value.lastError)
+    // The guided dialog, with the way to tafs's switch in Settings, not a bare "Not done".
+    assertTrue(m.state.value.alertsBlocked)
     assertTrue(auth.asked.isEmpty())
     assertTrue(transport.requestsTo(alertTarget).isEmpty() && transport.requestsTo(register).isEmpty())
   }

@@ -622,6 +622,17 @@ data class AppState(
   /** Alerts were on for this account when this phone signed out, and didn't come back on with the sign-in: it says so once. */
   val alertsOffSinceSignOut: Boolean = false,
   /**
+   * Alerts were asked for, but Android no longer asks for the notification permission (declined before): the guided dialog with
+   * Open notification settings, and a re-check when the person comes back ([recheckAlerts]).
+   */
+  val alertsBlocked: Boolean = false,
+  /** The one-time "Your watch is using tafs" prompt, shown the first time the watch uses tafs on a phone whose alerts are off. */
+  val watchAlertsOffer: Boolean = false,
+  /** The watch has used tafs in this sign-in: the phone keeps the taf list for it (`kept/tafs`) and takes its background pushes. */
+  val watchServed: Boolean = false,
+  /** The re-check's outcome, said once under the dialog's place: alerts on now, or still off. */
+  val alertsRecheckLine: String? = null,
+  /**
    * Alerts were offered on this phone for this account already (answered, or turned on): the offer on a new taf's card shows once.
    * True until the session says otherwise, so it never shows for a session not read yet.
    */
@@ -1221,7 +1232,7 @@ class AppModel(
     val key = signer.approvalPublicKeyDER
     if (keyed && key.isNotEmpty() && KiffClient.sameKey(secrets.load(APPROVAL_KEYED), key)) useApprovalKey()
     // Drawn at once, saying it is loading, not after the network: the owner never waits on a blank screen.
-    _state.update { it.copy(mode = Mode.kiff, ready = true, sessionHasKey = keyed, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant)) }
+    _state.update { it.copy(mode = Mode.kiff, ready = true, sessionHasKey = keyed, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant), watchServed = servesWatch()) }
     if (keyGone) lostApprovalKey()
     refresh()
     loadAIConsent(ask = true)
@@ -1529,7 +1540,7 @@ class AppModel(
     followers.values.forEach { it.cancel() }
     followers.clear()
     // Nothing of an earlier session or of the sample shows in this one.
-    _state.value = AppState(mode = Mode.kiff, ready = true, sessionHasKey = tenant != null, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant))
+    _state.value = AppState(mode = Mode.kiff, ready = true, sessionHasKey = tenant != null, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant), watchServed = servesWatch())
     // This sign-in, so a later one that overtook it while it read gets nothing of it: no alert registration, no notice.
     val generation = accountGeneration
     refresh()
@@ -1990,7 +2001,7 @@ class AppModel(
    * didn't end it, so a phone still signed in never goes without its alerts.
    */
   private suspend fun endSessionAtKiff(): Boolean {
-    val token = pushToken?.takeIf { alertsWanted() }
+    val token = registeredToken()
     val unregistered = token != null && runCatching { cloud.unregisterPush(token) }.isSuccess
     val ended = try {
       kiff.signOut()
@@ -2012,7 +2023,7 @@ class AppModel(
     // Signing out ends a drive at once (docs/drive.md, "When a drive ends").
     drive.stop("signed_out")
     // This phone stops getting the account's alerts, while the session can still say so.
-    if (tellKiff && _state.value.mode == Mode.kiff) pushToken?.let { token -> if (alertsWanted()) runCatching { cloud.unregisterPush(token) } }
+    if (tellKiff && _state.value.mode == Mode.kiff) registeredToken()?.let { token -> runCatching { cloud.unregisterPush(token) } }
     if (tellKiff && _state.value.mode == Mode.kiff) runCatching { kiff.signOut() }
     // Remembered for this account only: signing in to it again turns this phone's alerts back on, as they were.
     kiffTenant?.let { tenant ->
@@ -2020,6 +2031,8 @@ class AppModel(
     }
     secrets.delete(ALERTS_ON)
     secrets.delete(HANDOFF)
+    secrets.delete(BACKGROUND_PUSH)
+    secrets.delete(WATCH_SERVED)
     secrets.delete(TOKEN)
     secrets.delete(TENANT)
     secrets.delete(KEYED)
@@ -3096,6 +3109,76 @@ class AppModel(
   /** Alerts were turned on on this phone: only then is it registered at launch, so a phone that never asked is never alerted. */
   private fun alertsWanted(): Boolean = secrets.load(ALERTS_ON) == "1"
 
+  /** The watch has used tafs in this sign-in (a request, or a chat it opened): the phone serves it, whatever its alerts. */
+  private fun servesWatch(): Boolean = kiffTenant?.let { secrets.load(WATCH_SERVED) == it } == true
+
+
+  /**
+   * The watch used tafs (any request the relay takes): the first time in a sign-in, this phone registers for the watch's background
+   * pushes if its alerts are off ([syncBackgroundPush]), and, on a phone whose notifications are off, offers alerts once
+   * ("Your watch is using tafs"). Never a prompt the person has seen before on this phone.
+   */
+  fun watchUsed() {
+    val tenant = kiffTenant ?: return
+    if (_state.value.mode != Mode.kiff || secrets.load(WATCH_SERVED) == tenant) return
+    secrets.save(tenant, WATCH_SERVED)
+    _state.update { it.copy(watchServed = true) }
+    if (push.available && !alertsWanted() && !push.enabledNow() && secrets.load(WATCH_ALERTS_OFFERED) == null) {
+      secrets.save("1", WATCH_ALERTS_OFFERED)
+      _state.update { it.copy(watchAlertsOffer = true) }
+    }
+    viewModelScope.launch { syncPush() }
+  }
+
+  /**
+   * Registers this phone for background pushes only (`alerts: false`): a taf's chat, a watch request and the watch Inbox reach it
+   * with tafs closed, so its watch stays in step, and no alert ever shows. Only for a phone that serves a watch, with alerts off.
+   * It needs no notification permission: Firebase delivers data messages without it.
+   */
+  private suspend fun syncBackgroundPush() {
+    if (!servesWatch()) return
+    val token = pushToken ?: push.token()?.also { pushToken = it } ?: return
+    val generation = accountGeneration
+    attempt { cloud.registerPush(token, sound = false, alerts = false) } ?: return
+    if (generation == accountGeneration) secrets.save(token, BACKGROUND_PUSH)
+  }
+
+  /** The token to take back from tafs cloud at sign-out: one registered for alerts, or for the watch's background pushes. */
+  private fun registeredToken(): String? = pushToken?.takeIf { alertsWanted() } ?: secrets.load(BACKGROUND_PUSH)
+
+  /** "Your watch is using tafs", answered either way: it never shows again on this phone. */
+  fun dismissWatchAlertsOffer() = _state.update { it.copy(watchAlertsOffer = false) }
+
+  /** The guided dialog closed without going to Settings. */
+  fun dismissAlertsBlocked() = _state.update { it.copy(alertsBlocked = false) }
+
+  /** The person went to Settings from a dialog: the next [recheckAlerts] looks again. */
+  private var recheckOnReturn = false
+
+  /** Called as the person leaves for Android's notification settings from a dialog. */
+  fun leftForNotificationSettings() {
+    recheckOnReturn = true
+    _state.update { it.copy(alertsBlocked = false, watchAlertsOffer = false) }
+  }
+
+  /**
+   * Back in the app after Settings: notifications allowed now turn alerts on with no other tap ("Alerts are on."); still blocked,
+   * it says so once ("Alerts are still off."). Asks nothing.
+   */
+  suspend fun recheckAlerts() {
+    if (!recheckOnReturn) return
+    recheckOnReturn = false
+    if (!push.enabledNow()) {
+      _state.update { it.copy(alertsRecheckLine = Words.Alert.stillOff) }
+      return
+    }
+    val on = turnOnAlerts()
+    if (on) _state.update { it.copy(alertsRecheckLine = Words.Alert.nowOn) }
+    runCatching { loadPhoneAlerts() }
+  }
+
+  fun dismissAlertsRecheckLine() = _state.update { it.copy(alertsRecheckLine = null) }
+
   /**
    * The watch's account mark for this sign-in (docs/watch-wear.md, "What the watch keeps"): random, made at sign-in (or here, for
    * a session from before marks) and dropped at sign-out, so it tells the watch only whether it's still the same sign-in. None
@@ -3278,6 +3361,8 @@ class AppModel(
       if (gen != accountGeneration) return
       secrets.save("0", ALERTS_ON)
       _state.update { it.copy(alertsReady = false, phoneAlerts = it.phoneAlerts?.copy(enabled = false)) }
+      // Alerts off doesn't take the watch's updates with them: a phone that serves a watch keeps its background pushes.
+      syncBackgroundPush()
     } catch (e: CancellationException) { throw e
     } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(phoneAlertsError = ErrorWords.of(e)) }
     } finally { if (gen == accountGeneration) _state.update { it.copy(phoneAlertsBusy = false) } }
@@ -3377,8 +3462,10 @@ class AppModel(
    * whether the account's alerts are set up. Only for a phone whose owner turned alerts on.
    */
   suspend fun syncPush() {
+    if (_state.value.mode != Mode.kiff || !push.available) return
+    // Alerts off: a phone that serves a watch still takes its background pushes, and only those (docs/watch-wear.md, Delivery).
+    if (!(alertsWanted() || pendingHandoff() != null)) return syncBackgroundPush()
     // A hand-off tafs cloud didn't take is the owner's yes already given: it's handed over again here, with no new confirmation.
-    if (_state.value.mode != Mode.kiff || !push.available || !(alertsWanted() || pendingHandoff() != null)) return
     val token = pushToken ?: push.token()?.also { pushToken = it } ?: return
     val generation = accountGeneration
     val handoff = pendingHandoff()
@@ -3417,7 +3504,8 @@ class AppModel(
     try {
       val generation = accountGeneration
       if (!push.allowed()) {
-        fail(Words.Alert.allowNotifications)
+        // Android no longer asks once declined: the guided dialog, with the way to the switch, not a bare "Not done".
+        _state.update { it.copy(alertsBlocked = true) }
         return false
       }
       val token = pushToken ?: push.token()?.also { pushToken = it }
@@ -10051,6 +10139,12 @@ class AppModel(
     const val APPROVAL_KEYED = "kiff.session-approval-keyed"
     /** The watch's account mark for this sign-in ([watchMark]). */
     const val WATCH_MARK = "tafs.watch-mark"
+    /** The tenant whose sign-in the watch has used tafs in ([watchUsed]); cleared at sign-out. */
+    const val WATCH_SERVED = "tafs.watch-served"
+    /** The token this phone registered for background pushes only ([syncBackgroundPush]), so sign-out takes it back. */
+    const val BACKGROUND_PUSH = "tafs.background-push"
+    /** "Your watch is using tafs" was shown on this phone: once per phone, never again. */
+    const val WATCH_ALERTS_OFFERED = "tafs.watch-alerts-offered"
 
     /** A new account mark: 16 random bytes, base64url, never derived from the account. */
     fun newWatchMark(): String {

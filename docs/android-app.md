@@ -1080,6 +1080,18 @@ wasn't sent, silent. Whatever the kind, a locked phone or watch shows only **A t
 alert target at tafs cloud: a setup call signed with this phone's device key, never the approval key, so there's no
 fingerprint (Android 1.27.2; before, one signed a message nothing sent or checked). As on iPhone and iPad.
 
+**When Android no longer asks** (the permission was declined before), Turn on alerts shows **Turn on alerts for tafs**: why it
+matters ("…so approvals and answers reach you, on this phone and on your watch. Your watch gets its updates either way.") and
+**Open notification settings**, which opens Android's notification settings for tafs itself
+(`ACTION_APP_NOTIFICATION_SETTINGS`), or Not now. Back in the app (`onResume`, `AppModel.recheckAlerts`), notifications allowed
+now turn alerts on with no other tap ("Alerts are on."); still off, it says so once ("Alerts are still off."). Before Android
+146 it was a bare "Not done · Allow notifications for tafs in Settings, then try again.", and the owner had to hunt for the
+switch (`AlertsPromptTest`).
+
+**"Your watch is using tafs"**, once per phone (`tafs.watch-alerts-offered`): the first time a watch uses tafs on a phone whose
+notifications are off, the same way to Settings, or Not now. It never shows again on that phone. The watch's own updates don't
+depend on it: a phone that serves a watch takes its background pushes with alerts off ([watch-wear.md](watch-wear.md), Delivery).
+
 ## Haptics
 
 The same rule as on iPhone and iPad (`design/Haptics.kt`):
