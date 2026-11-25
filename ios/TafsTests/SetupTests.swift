@@ -1737,8 +1737,10 @@ final class SetupTests: XCTestCase {
             .deletingLastPathComponent().appendingPathComponent("contracts/conversation-failed.json")
         let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         let answer = String(decoding: try JSONSerialization.data(withJSONObject: try XCTUnwrap(root["answer"])), as: UTF8.self)
-        // The thread is read again when a run's stream ends: this run's says Retry is safe.
-        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, answer)
+        // The thread is read again when a run's stream ends, whichever chat the read names: this run's says Retry is safe.
+        for path in ["conversation", "conversation/s1", "conversation/sess1"] {
+            StubProtocol.responses["GET /v1/tafs/taf-setup/" + path] = (200, answer)
+        }
         _ = await model.sendSetup("Connect my Stripe")
         await model.setupStream?.value
         XCTAssertEqual(model.setupEnded, .failed(retry: "Connect my Stripe"))
