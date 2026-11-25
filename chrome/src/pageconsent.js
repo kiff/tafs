@@ -9,7 +9,8 @@
  * The page consent's words' version: tafs cloud's PAGE_CONSENT_VERSION. Raised when its words change, so everyone is asked
  * again; not for a rewording that stays true ("the Claude AI model" in place of "Anthropic's Claude" kept "2"), and not for
  * a change of provider: these words name only the model, and the AI consent, which names who runs it, is the one asked
- * again then.
+ * again then. A page only ever goes with a turn, and every turn needs that AI consent at its exact version, so no one's
+ * page reaches a new provider before they've said yes to the consent that names it.
  */
 export const PAGE_CONSENT_VERSION = "2";
 

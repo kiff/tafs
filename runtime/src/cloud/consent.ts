@@ -117,7 +117,9 @@ function history(kept: Kept | undefined): Kept["earlier"] {
  * The page consent's version: raised when what's read from the page, or where it goes, changes. "2": a message to a
  * taf carries the page too (Chrome 0.2.14, `chrome/src/pageconsent.js` in step), so everyone is asked again. It's raised
  * when its words change, not when the provider does: since tafs#2066 the page consent names "the Claude AI model", true on
- * either provider, and the AI consent (which names who runs the model) is the one asked again on a switch.
+ * either provider, and the AI consent (which names who runs the model) is the one asked again on a switch. A page only
+ * ever goes with a turn, and every turn needs the AI consent at its exact version (requireAIConsent), so no one's page
+ * reaches a new provider before they've said yes to the AI consent that names it.
  */
 export const PAGE_CONSENT_VERSION = "2";
 
