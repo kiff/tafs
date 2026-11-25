@@ -1,4 +1,8 @@
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
+import UserNotifications
 
 /// The watch requests this iPhone sent for its watch (docs/watch-app.md, "An answer you can't miss, with the app put away"):
 /// their ids alone, never their words, each kept a day, at most `most`. With each, whether the watch read its answer itself
@@ -172,7 +176,7 @@ enum WatchOpen {
     }
 
     static func run(_ destination: String) async {
-        if CoachFollow.phoneActive, let app = UIApplication.shared.delegate as? PushDelegate {
+        if CoachFollow.phoneActive, let app = PushDelegate.current {
             app.open(destination)
             return
         }

@@ -1,4 +1,5 @@
 import XCTest
+import UserNotifications
 @testable import Tafs
 
 /// Row 21: the watch Inbox's lines read and dismissed, kept in step across the person's watches by tafs cloud

@@ -1,4 +1,5 @@
 import XCTest
+import UserNotifications
 @testable import Tafs
 
 /// W3 on Apple Watch (docs/watch-app.md, "W3"): once the watch is put away, the iPhone posts Coach's answer; never when the
