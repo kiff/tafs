@@ -15,7 +15,7 @@ import type { WhatsAppClient } from "../src/cloud/doors/whatsapp.js";
 import { fakeAgents, memoryAccounts, memoryCoach, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import { eventLog } from "../src/cloud/events.js";
 import { contract } from "./contract.js";
-import { consentPauseOf } from "../src/cloud/consent.js";
+import { AI_CONSENT_VERSION, consentPauseOf } from "../src/cloud/consent.js";
 
 const NOW = new Date("2026-10-24T09:00:00Z");
 const OWNER = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"], email: "Ana@Acme.example" };
@@ -1717,7 +1717,7 @@ describe("an app's event for a taf whose runs have no consent", () => {
     expect((await appEvent(w, { id: "ev_consent2" })).body).toEqual({ outcome: "held" });
     expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(0);
     // Ana manages tafs: her yes is the account's first, the taf goes on, and both events run, oldest first.
-    expect((await send(w, "POST", "/v1/me/ai-consent", { token: "ana", body: { version: "1" } })).status).toBe(200);
+    expect((await send(w, "POST", "/v1/me/ai-consent", { token: "ana", body: { version: AI_CONSENT_VERSION } })).status).toBe(200);
     expect(await consentPauseOf(w.consent, "t_acme", REFUNDS)).toBeUndefined();
     expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(2);
   });
