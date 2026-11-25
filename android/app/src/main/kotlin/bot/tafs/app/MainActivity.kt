@@ -983,6 +983,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
                   state, loadReport = model::loadReport, onOpenCalendar = null,
                   onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
                   onNeedsYou = { onTab(Tab.NeedsYou) },
+                  people = people,
                 ) { overviewOpen = false; openTaf = it }
                 else -> home()
               }
