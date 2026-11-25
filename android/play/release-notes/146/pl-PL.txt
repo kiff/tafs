@@ -1,0 +1,3 @@
+• Zegarek dostaje odpowiedzi nawet przy wyłączonych powiadomieniach tafs.
+• Włączenie powiadomień prowadzi prosto do ustawienia.
+• Usuń rozmowę z Coachem na zawsze.
