@@ -83,8 +83,8 @@ const STEP_WORDS = {
 };
 
 /**
- * Why a step wasn't done, in words: the code's own line when there is one (`step_refused_<code>`, "not done: you moved this
- * tab, so it's yours now"), else the code as it is ("not done (<code>)"). Only a plain code names a key.
+ * Why a step wasn't done, in words: the code's own line when there is one (`step_refused_<code>`, "not done: the tab moved
+ * without the taf, so it's yours now"), else the code as it is ("not done (<code>)"). Only a plain code names a key.
  */
 function refusedWords(code) {
   const own = /^[a-z_]{1,40}$/.test(String(code)) ? chrome.i18n.getMessage("step_refused_" + code) : "";
