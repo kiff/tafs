@@ -2639,11 +2639,14 @@ describe("Setup (kiff/agents#91)", () => {
       expect(draft).toMatchObject({ method: "POST", path: "/v1/me/agent-drafts", body: { agent_id: "setup-acme", label: "Coach", contract_digest: "cd_123" } });
       expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
       expect(draft.card_title).toBeDefined();
+      // The worded pair carries the draft: every missing Card's tools are in it.
+      expect((both.coach_tools_step.groups as Array<{ tools: Array<{ in_draft: boolean }> }>).flatMap((g) => g.tools).every((t) => t.in_draft)).toBe(true);
       // KIFF can't word the pair: the steps, as before, never an unworded draft.
       (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = true;
       const unworded = await tools();
       expect(unworded.connect).toBeDefined();
       expect(unworded).not.toHaveProperty("requests");
+      expect((unworded.coach_tools_step.groups as Array<{ tools: Array<{ in_draft: boolean }> }>).flatMap((g) => g.tools).some((t) => t.in_draft)).toBe(false);
       (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = false;
       // Every tool there, Cards for new ones missing: the Cards alone (one fingerprint already), and the row says why.
       w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
@@ -2677,6 +2680,8 @@ describe("Setup (kiff/agents#91)", () => {
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
     expect(first.card).toBeUndefined();
     expect(w.account.previewed ?? []).toEqual([]);
+    // No draft in this answer, so no tool is marked in it: the app compares nothing against a draft that isn't there.
+    expect((first.coach_tools_step.groups as Array<{ tools: Array<{ in_draft: boolean }> }>).flatMap((g) => g.tools).some((t) => t.in_draft)).toBe(false);
     expect(first.connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
     expect(first.connect.body.connections[0]).toEqual({ name: "tafs_state", url: mcp, tool: "tafs_state", mode: "verify", audience: mcp, control: true, idempotency_argument: "tafs_op", read_only: true });
     expect(first.connect.body.connections[3]).not.toHaveProperty("read_only");

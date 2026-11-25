@@ -2154,8 +2154,9 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
     return {
       state: "to_give", ...(connect ? { connect } : {}), ...(card ? { card } : {}), ...(together ?? {}),
       // Only Cards missing (Coach gained tools since its Card was signed): the row says why it asks again.
-      // Which tools' Cards this answer's draft carries (`in_draft`): the missing ones, or none when only tools are to connect.
-      coach_tools_step: coachToolsStep(langOf(event), { cardsOnly: !connect && !issued, drafted: issued ? new Set() : missingCards }),
+      // Which tools' Cards this answer's draft carries (`in_draft`): the missing ones when a draft is in it (`card`, or the
+      // pair's), none when it carries no draft (only tools to connect, or a pair KIFF couldn't word).
+      coach_tools_step: coachToolsStep(langOf(event), { cardsOnly: !connect && !issued, drafted: card || together ? missingCards : new Set() }),
     };
   } catch (err) {
     if (err instanceof KIFFError) {
