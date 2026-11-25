@@ -122,7 +122,7 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), say = (key, sub) => (globalThis.chrome && globalThis.chrome.i18n ? globalThis.chrome.i18n.getMessage(key, sub) : ""), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, onRunState = () => {}, doneStore = null, panel = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), say = (key, sub) => (globalThis.chrome && globalThis.chrome.i18n ? globalThis.chrome.i18n.getMessage(key, sub) : ""), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, onRunState = () => {}, doneStore = null, panel = null, drawnStore = null }) {
     this.chrome = chrome;
     // The side panels (panels.js), from the service worker: `front({agentRun})` the tab a run started from a panel may join
     // ({windowId, tabId, off} or null, the page consent checked first), `isOpen(windowId)`, and `off()` the hosts the person
@@ -138,6 +138,10 @@ export class Runner {
     this.now = now;
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, ownWindow, groupId, tabs: Set, joined: Set, tab, agentRun, follow, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
+    // {get(), set(ids)}: every tab the bar or the signs were drawn in since the worker started, kept where a worker that starts
+    // again finds them, so its sweep (sweepDrawn) reaches those tabs alone and never a page no run touched.
+    this.drawnStore = drawnStore;
+    this.drawn = new Set();
     this.doneStore = doneStore; // {get(), set(obj)}: the tabs each taf's last finished run left, kept where a stopped worker finds them again
     this.done = null; // doneKey → {name, tabs: [{id, url, joined?}], window: id | null, group: id | null}, loaded on first use
     this.fenceIds = new Map(); // tab id → the first of its FENCE_RULES fence rule ids
@@ -522,6 +526,7 @@ export class Runner {
     await this.syncSigns(live);
     for (const [t, s] of want) {
       try {
+        await this.noteDrawn(t);
         await this.chrome.scripting.executeScript({ target: { tabId: t }, files: ["src/bar.js"] });
         await this.inTab(t, (x) => globalThis.TafsBar.show(x), [s]);
       } catch {
@@ -543,6 +548,7 @@ export class Runner {
     }
     for (const t of want) {
       try {
+        await this.noteDrawn(t);
         await this.chrome.scripting.executeScript({ target: { tabId: t }, files: ["src/signs.js"] });
         await this.inTab(t, () => globalThis.TafsSigns.working());
       } catch {
@@ -550,6 +556,28 @@ export class Runner {
       }
     }
     this.signTabs = want;
+  }
+
+  /** Tab [t] is about to get the bar or the signs: kept, before they're drawn, for a later worker's sweep. */
+  async noteDrawn(t) {
+    if (this.drawn.has(t)) return;
+    this.drawn.add(t);
+    if (this.drawnStore) await this.drawnStore.set([...this.drawn]).catch(() => {});
+  }
+
+  /**
+   * A worker that starts again holds no run (they're forgotten as it stops), so no page should still say a taf works there.
+   * The bar and the signs go from the tabs an earlier worker drew them in (drawnStore), and from no other: a tab no run ever
+   * touched (a bank, an account page) gets nothing run in it. The list is emptied after.
+   */
+  async sweepDrawn() {
+    if (!this.drawnStore) return;
+    const ids = ((await this.drawnStore.get().catch(() => [])) || []).filter((t) => typeof t === "number" && !this.drawn.has(t));
+    await Promise.all(ids.map((t) => this.inTab(t, () => {
+      if (globalThis.TafsSigns) globalThis.TafsSigns.off();
+      if (globalThis.TafsBar) globalThis.TafsBar.hide();
+    }).catch(() => {})));
+    await this.drawnStore.set([...this.drawn]).catch(() => {});
   }
 
   /** Every sign leaves tab [t] at once: the glow, the outline and the pointer. */
@@ -1352,6 +1380,7 @@ export class Runner {
   async inject(tabId, run) {
     const c = this.chrome;
     await this.guardDialogs(tabId, run).catch(() => {});
+    await this.noteDrawn(tabId);
     await c.scripting.executeScript({ target: { tabId }, files: ["src/mask.js", "src/signs.js", "src/page.js"] });
     await c.scripting.executeScript({ target: { tabId }, func: (token) => globalThis.TafsPage.listen(token), args: [run.token] });
   }

@@ -62,6 +62,12 @@ async function sendRunStates(only) {
   }
 }
 
+// The tabs the bar or the signs were drawn in since a worker started (Runner.noteDrawn): ids alone, kept for the session, so a
+// worker that starts again sweeps those tabs and no other.
+const drawnStore = {
+  get: async () => (await chrome.storage.session.get("drawnTabs")).drawnTabs || [],
+  set: (ids) => chrome.storage.session.set({ drawnTabs: ids }),
+};
 const doneStore = {
   get: async () => (await chrome.storage.session.get("doneTabs")).doneTabs || {},
   set: (done) => chrome.storage.session.set({ doneTabs: done }),
@@ -75,7 +81,7 @@ const panel = {
   isOpen: (windowId) => panels.isOpen(windowId),
   off: () => asideOff(),
 };
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, shots, panel, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}), onRunState: (s) => runStates.add(s).then((added) => added && sendRunStates(s.run)).catch(() => {}) });
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, drawnStore, shots, panel, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}), onRunState: (s) => runStates.add(s).then((added) => added && sendRunStates(s.run)).catch(() => {}) });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
@@ -289,25 +295,8 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
 });
 
 // A worker that starts again holds no run (they're forgotten as it stops), so no page should still say a taf works there:
-// the bar and the signs a run left in any tab go now.
-chrome.tabs
-  .query({ url: "https://*/*" })
-  .then((tabs) =>
-    Promise.all(
-      (tabs || []).map((t) =>
-        chrome.scripting
-          .executeScript({
-            target: { tabId: t.id },
-            func: () => {
-              if (globalThis.TafsSigns) globalThis.TafsSigns.off();
-              if (globalThis.TafsBar) globalThis.TafsBar.hide();
-            },
-          })
-          .catch(() => {}),
-      ),
-    ),
-  )
-  .catch(() => {});
+// the bar and the signs go from the tabs an earlier worker drew them in, and only those (Runner.sweepDrawn).
+runner.sweepDrawn().catch(() => {});
 
 // Coach reads the page in front (docs/chrome.md, "Coach reads the page you're on"): on the person's send, the tab in front
 // of the panel's own window, once, through aside.js; never on a timer, never another tab, never a site the gate refuses.

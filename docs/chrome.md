@@ -671,7 +671,9 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   - **Reduced motion:** with `prefers-reduced-motion`, nothing moves: the glow doesn't breathe, and the pointer is simply at its target.
   - **Gone at every end.** A pause (the person's, or the run's own), Stop, a run that's done, and a tab the person takes back take
     every sign away at once, with the outline. A worker that starts again holds no run, so it takes the signs and the bar off
-    every page; a page whose extension was reloaded or removed takes them off by itself.
+    the tabs an earlier worker drew them in, and only those: their ids are kept in `storage.session` (`drawnTabs`,
+    `Runner.noteDrawn`, `Runner.sweepDrawn`), so a tab no run ever touched gets nothing run in it. A page whose extension was
+    reloaded or removed takes them off by itself.
   - No `debugger` permission, and none of Chrome's "started debugging this browser" bar: the signs are drawn by the
     extension's own content script.
 - **A floating bar, on the page in front of every window** (`src/bar.js`, `Runner.syncBars`). While a run lives, the tab in

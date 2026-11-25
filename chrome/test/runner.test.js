@@ -1245,6 +1245,39 @@ test("a Pause, the person's own input or a Stop while the outline shows holds th
   }
 });
 
+test("a worker that starts again sweeps the bar and signs only from tabs drawn in before, never a tab no run touched", async () => {
+  // A first worker draws in its run's tab; the list of drawn tabs is kept (storage.session in the extension).
+  let kept = [];
+  const drawnStore = { get: async () => kept, set: async (ids) => { kept = ids; } };
+  const c1 = fakeChrome();
+  const r1 = new Runner({ chrome: c1, sleep, paired: () => paired, drawnStore });
+  await r1.handle(step());
+  const runTab = r1.runs.get("run_1").tab;
+  assert.ok(kept.includes(runTab), "the run's tab is kept as drawn in: " + JSON.stringify(kept));
+  // A tab the person has open (a bank, say) that no run touched is never in the list.
+  const theirs = 777;
+  assert.ok(!kept.includes(theirs));
+  // A new worker: it holds no run, and sweeps the kept tabs alone.
+  const c2 = fakeChrome();
+  const swept = [];
+  const exec = c2.scripting.executeScript;
+  c2.scripting.executeScript = async (o) => {
+    swept.push(o.target.tabId);
+    return exec(o);
+  };
+  const r2 = new Runner({ chrome: c2, sleep, paired: () => paired, drawnStore });
+  const before = [...kept];
+  await r2.sweepDrawn();
+  assert.deepEqual([...new Set(swept)].sort(), [...before].sort(), "only kept tabs are reached");
+  assert.ok(swept.includes(runTab), "the earlier run's tab is swept");
+  assert.ok(!swept.includes(theirs), "a tab never drawn in gets nothing run in it");
+  assert.deepEqual(kept, [], "the list is emptied after the sweep");
+  // With nothing kept, a sweep runs nothing in any page.
+  swept.length = 0;
+  await r2.sweepDrawn();
+  assert.deepEqual(swept, []);
+});
+
 test("an act whose pointer can't aim is refused, failing closed: the page's act is never called", async () => {
   // Without the aim there's no check that the act lands where the pointer is (`sameSpot`): a missing TafsSigns, a page
   // that doesn't answer, or an aim refused in its own words all hold the act.
