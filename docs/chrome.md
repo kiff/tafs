@@ -1061,8 +1061,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
     with no run, never reaches the panel.
   - **Read-only:** a message into it, archiving or deleting it from the panel is 404. Reporting an answer in it
     (`POST …/messages/{message}/report`, naming its chat) is allowed, and only for an answer in a listed run.
-  - **It leaves the panel** when the chat is deleted, when the Chrome is unpaired (planque drops its marks), and for a
-    connection moved to another Chrome, whose later runs mark that Chrome. A Chrome paired before planque kept its KIFF
+  - **It leaves the panel** when the chat is deleted, when the Chrome is unpaired (planque drops its marks), and when its
+    connection moves to another Chrome: planque drops that connection's marks from the old Chrome, and carries none to
+    the new one, which shows only the runs that work there after the move. A Chrome paired before planque kept its KIFF
     key lists no such run until it's paired again.
 - **A Chrome calls only the side panel's routes:** the Coach and tafs reads, a taf's thread, chats, messages, declaring a
   file for a message (`POST …/attachments`, never reading one back), reporting an answer it shows, archiving, and the page consent. Every other tafs cloud route answers it 404 (export included), so a route added later is closed to
