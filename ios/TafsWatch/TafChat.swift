@@ -332,6 +332,7 @@ struct ThreadInput: View {
 }
 
 /// Keeping a thread on its newest message (the owner's calls 2 and 3).
+@MainActor
 enum WatchThread {
     /// The id of the thread's last row, under the microphone and the keyboard.
     static let newest = "thread.newest"
