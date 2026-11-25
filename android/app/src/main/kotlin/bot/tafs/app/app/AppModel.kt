@@ -3945,6 +3945,12 @@ class AppModel(
     }
     val draftRequest = start.draft ?: return false
     if (_state.value.startingCoach) return false
+    // Shown = signed (docs/coach.md, "Coach's tools step"): once tafs cloud sends the Card step, its plain list must be exactly
+    // what the draft signs ([bot.tafs.app.kiff.CardStepCheck]), whatever the screen drew. Otherwise nothing is signed.
+    if (start.words?.title?.isNotBlank() == true && !start.cardStepSigns) {
+      failed(VersionWords.OUT_OF_DATE_CARD)
+      return false
+    }
     // Approvals are set up here, at Start: a phone that signed in before it could approve registers its approval key now, and
     // nothing is signed unless KIFF holds it (the one signature over both requests is the approval key's).
     if (!sessionHasApprovalKey) registerApprovalKey()
@@ -4069,6 +4075,14 @@ class AppModel(
     // tafs cloud's batch or Cards changed since the step was drawn (more tools, another draft): nothing is signed. The step is
     // drawn again from this read, and the next Give signs exactly that.
     if (tools.toGive && (shown == null || !sameToolsToGive(shown, tools))) {
+      _state.update { it.copy(coachTools = tools, coachToolsError = VersionWords.OUT_OF_DATE_CARD) }
+      return false
+    }
+    // Shown = signed for a later approval of Coach's Cards: when tafs cloud marks which tools this draft carries (`in_draft`),
+    // those must be exactly what the draft signs ([bot.tafs.app.kiff.CardStepCheck]). Otherwise nothing is signed.
+    val draftBody = tools.card?.body
+    val step = tools.step
+    if (tools.toGive && draftBody != null && step != null && step.marksDraft && !bot.tafs.app.kiff.CardStepCheck.matches(step, draftBody, "")) {
       _state.update { it.copy(coachTools = tools, coachToolsError = VersionWords.OUT_OF_DATE_CARD) }
       return false
     }

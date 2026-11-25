@@ -713,6 +713,19 @@ tools are `to_give` (`coachToolsStep` in `coach.ts`):
 - **The Card step's words** come with `start.words` ([api.md](api.md)): its title, four lines, the fold's label over KIFF's
   own words, a whole-sentence button for each way a device approves, and `locked`, the line in place of Coach's message box
   until the step is approved.
+- **On Android** (146, `CardStepScreen`, `CardStepCheck`, `CardStepTest`): Start's screen is the Card step when every one of its
+  lines came, the button for this phone's way of approving included (fingerprint, or face where there's no sensor); otherwise
+  it's Start's screen as before. It shows the title and the four lines, Coach's tools in plain groups, Coach's Cards in KIFF's own
+  words folded under `exact`, and the button. **Shown = signed, failing closed:** each tool's `tool`, `card`, `limit` and `asks`
+  are compared with the draft the button signs, each signed Card read on the same allowlist as the iPhone's (its id, the
+  draft's own agent as subject, the gateway domain, `on_exceed` owner or refuse with a hold's expiry only on owner, grants of an
+  action alone, exactly one count a calendar day with a whole limit). On a mismatch there's no button, and the step says it
+  changed. The model holds the rule too: Start and a later approval sign nothing that doesn't match, whatever the screen drew,
+  and a later approval compares only the tools `in_draft`. The phone signs the very requests it read and showed, with no
+  second read. **No typing until it's approved:** on the Card step, Coach's box gives way to `locked`; once Coach exists, while
+  its tools themselves are still to give, the box is the step's `row`, which opens the step; when only Cards for newer tools
+  are missing, typing stays open. A phone with no strong biometric never reaches the step: Coach says it can't approve yet,
+  with Open Settings and Check again.
 - **One confirmation** gives the tools on either phone. The words never name a biometric (fingerprint,
   Face ID): the phone knows which it asks for, and tafs cloud doesn't.
 - **Buttons:** `give` and `not_now`. After **Not now**, the Coach screen keeps one line, `row`, which

@@ -307,8 +307,39 @@ data class CoachStart(
   /** Start's words, tafs cloud's in the person's language: the line before it, its button, and what it does. */
   val words: StartWords? = null,
 ) {
+  /**
+   * Start's words, and the Card step's (docs/coach.md, "Coach's tools step"): its title, four lines (what it allows, what always
+   * waits for the person, how it signs, how to stop it), the label of the fold with KIFF's own words, a whole sentence for the
+   * button per way of approving, and the line that stands where the message box would be until it's approved.
+   */
   @Serializable
-  data class StartWords(val lead: String = "", val start: String = "", val does: String = "")
+  data class StartWords(
+    val lead: String = "",
+    val start: String = "",
+    val does: String = "",
+    val title: String = "",
+    val lines: Lines = Lines(),
+    val exact: String = "",
+    val buttons: Buttons = Buttons(),
+    val locked: String = "",
+  ) {
+    @Serializable
+    data class Lines(val allows: String = "", val asks: String = "", val sign: String = "", val stop: String = "")
+
+    @Serializable
+    data class Buttons(val fingerprint: String = "", val face: String = "", val passkey: String = "")
+
+    /** The button's whole sentence for this phone's way of approving ([biometry], `Biometry.name`); empty for none it has. */
+    fun give(biometry: String): String = when (biometry) {
+      bot.tafs.app.model.Words.Approval.Biometry.fingerprint -> buttons.fingerprint
+      bot.tafs.app.model.Words.Approval.Biometry.face -> buttons.face
+      else -> ""
+    }.trim()
+
+    /** Every line of the Card step came, this phone's button included: then Start's screen is the Card step. */
+    fun cardStep(biometry: String): Boolean =
+      listOf(title, lines.allows, lines.asks, lines.sign, lines.stop, exact, give(biometry)).none { it.isBlank() }
+  }
 
   @Serializable
   data class Request(
@@ -324,6 +355,20 @@ data class CoachStart(
 
   val connect: Request? get() = requests.firstOrNull { it.id == "connect" }
   val draft: Request? get() = requests.firstOrNull { it.id == "draft" }
+
+  /** Start's screen is the Card step, for this phone's way of approving ([biometry]): every one of its lines sent. */
+  fun cardStep(biometry: String): Boolean = startable && words?.cardStep(biometry) == true
+
+  /**
+   * Whether the plain list the Card step shows is exactly what the draft signs ([CardStepCheck]): false, and the Card step
+   * asks for no signature.
+   */
+  val cardStepSigns: Boolean
+    get() {
+      val d = draft ?: return false
+      val s = step ?: return false
+      return CardStepCheck.matches(s, d.body, agentId)
+    }
 
   /** The batch and the draft under one `kiff.requests.v1` signature. */
   val together: Boolean get() = scheme == TOGETHER && connect != null && draft != null
@@ -405,8 +450,103 @@ data class CoachToolsStep(
   @Serializable
   data class Group(val name: String = "", val line: String = "", val tools: List<Tool> = emptyList())
 
+  /**
+   * One of Coach's tools: its words, and what its Card signs as data (docs/coach.md, "Coach's tools step"): the action
+   * ([tool]), its Card's id, the Card's count a day, whether past it the call waits for the person, and whether its Card is
+   * in the draft this same answer carries to sign. Each is null from a tafs cloud that doesn't send it.
+   */
   @Serializable
-  data class Tool(val name: String = "", val does: String = "", val why: String = "")
+  data class Tool(
+    val name: String = "",
+    val does: String = "",
+    val why: String = "",
+    val tool: String? = null,
+    val card: String? = null,
+    val limit: Int? = null,
+    val asks: Boolean? = null,
+    @kotlinx.serialization.SerialName("in_draft") val inDraft: Boolean? = null,
+  )
+
+  /** Whether tafs cloud says which tools a draft carries (`in_draft`): then those are compared with it ([CardStepCheck]). */
+  val marksDraft: Boolean get() = groups.any { g -> g.tools.any { it.inDraft != null } }
+}
+
+/**
+ * The Card step's shown = signed (docs/coach.md, "Coach's tools step"): the plain list a step shows, each tool with its Card,
+ * its limit a day and whether past it the call waits for the person, against the Cards' draft the one approval signs, compared
+ * on structured fields and failing closed. Each signed Card is read on an allowlist: its id, its subject (the draft's own
+ * agent), the gateway domain, `on_exceed` (`owner` or `refuse`, with a hold's expiry only on `owner`), grants that name an
+ * action and nothing else, and exactly one aggregate, a count a calendar day with a whole limit. Anything else on a Card, a grant
+ * or the aggregate is a mismatch, and so is a tool, a Card or an action on one side only, or a tool listed twice. The iPhone
+ * holds the same rule (`TafsCloud.CardStepCheck`).
+ */
+object CardStepCheck {
+  private val cardKeys = setOf("id", "subject", "domain", "on_exceed", "hold_expiry", "grants", "aggregates")
+  private val aggregateKeys = setOf("quantity", "limit", "window")
+
+  data class Signed(val card: String, val tool: String, val limit: Int, val asks: Boolean)
+
+  fun matches(step: CoachToolsStep, draft: kotlinx.serialization.json.JsonObject, agent: String): Boolean {
+    val shown = shown(step) ?: return false
+    val signed = signed(draft, agent) ?: return false
+    return shown.isNotEmpty() && shown == signed
+  }
+
+  /** What the step shows as signed, one entry per tool (those `in_draft`, or every one when unmarked); null when one doesn't say all of it. */
+  fun shown(step: CoachToolsStep): Set<Signed>? {
+    val out = mutableSetOf<Signed>()
+    val tools = mutableSetOf<String>()
+    for (group in step.groups) for (t in group.tools) {
+      if (t.inDraft == false) continue
+      val tool = t.tool?.takeIf { it.isNotEmpty() } ?: return null
+      val card = t.card?.takeIf { it.isNotEmpty() } ?: return null
+      val limit = t.limit?.takeIf { it >= 0 } ?: return null
+      val asks = t.asks ?: return null
+      if (!tools.add(tool.lowercase())) return null
+      out += Signed(card, tool.lowercase(), limit, asks)
+    }
+    return out
+  }
+
+  /** What the draft signs, one entry per Card and action; null when anything on it is outside the allowlist. */
+  fun signed(draft: kotlinx.serialization.json.JsonObject, agent: String): Set<Signed>? {
+    fun str(e: JsonElement?): String? = (e as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
+    val cards = draft["cards"] as? kotlinx.serialization.json.JsonArray ?: return null
+    if (cards.isEmpty()) return null
+    val owner = str(draft["agent_id"]) ?: agent
+    if (owner.isEmpty() || (agent.isNotEmpty() && owner != agent)) return null
+    val out = mutableSetOf<Signed>()
+    val ids = mutableSetOf<String>()
+    val actions = mutableSetOf<String>()
+    for (item in cards) {
+      val card = item as? kotlinx.serialization.json.JsonObject ?: return null
+      if (!cardKeys.containsAll(card.keys)) return null
+      val id = str(card["id"])?.takeIf { it.isNotEmpty() } ?: return null
+      if (!ids.add(id)) return null
+      if (str(card["subject"]) != owner || str(card["domain"]) != "gateway") return null
+      val onExceed = str(card["on_exceed"]) ?: return null
+      if (onExceed != "owner" && onExceed != "refuse") return null
+      if (card.containsKey("hold_expiry") && (onExceed != "owner" || str(card["hold_expiry"]) == null)) return null
+      val aggregates = card["aggregates"] as? kotlinx.serialization.json.JsonArray ?: return null
+      if (aggregates.size != 1) return null
+      val aggregate = aggregates[0] as? kotlinx.serialization.json.JsonObject ?: return null
+      if (aggregate.keys != aggregateKeys) return null
+      if (str(aggregate["quantity"]) != "count" || str(aggregate["window"]) != "calendar_day") return null
+      val limitPrimitive = aggregate["limit"] as? kotlinx.serialization.json.JsonPrimitive ?: return null
+      if (limitPrimitive.isString) return null
+      val limit = limitPrimitive.content.toIntOrNull()?.takeIf { it >= 0 } ?: return null
+      val grants = card["grants"] as? kotlinx.serialization.json.JsonArray ?: return null
+      if (grants.isEmpty()) return null
+      for (g in grants) {
+        val grant = g as? kotlinx.serialization.json.JsonObject ?: return null
+        if (grant.keys != setOf("action")) return null
+        val action = str(grant["action"])?.takeIf { it.isNotEmpty() } ?: return null
+        if (!actions.add(action.lowercase())) return null
+        out += Signed(id, action.lowercase(), limit, onExceed == "owner")
+      }
+    }
+    return out
+  }
 }
 
 /** The batch for KIFF's `POST /v1/connections/batch`, and a line per tool for the owner to read before signing. */
