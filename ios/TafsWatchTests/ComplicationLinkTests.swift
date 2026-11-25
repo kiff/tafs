@@ -4,6 +4,18 @@ import XCTest
 /// Watch row 24, step 1: the complication's link opens Coach's home, listening, once per tap, and nothing else does.
 @MainActor
 final class ComplicationLinkTests: XCTestCase {
+    // Kept threads are on (`WatchThreads.on`): each test starts and ends with none kept on this simulator, so no Coach or taf
+    // chat opens on what another test said.
+    override func setUp() async throws {
+        try await super.setUp()
+        await MainActor.run { WatchThreads.shared.clear() }
+    }
+
+    override func tearDown() async throws {
+        await MainActor.run { WatchThreads.shared.clear() }
+        try await super.tearDown()
+    }
+
     func testOnlyTheComplicationsOwnLinkIsTaken() {
         XCTAssertTrue(ComplicationLink.isAsk(ComplicationLink.ask))
         XCTAssertTrue(ComplicationLink.isAsk(URL(string: "tafs-watch://ask/")!))

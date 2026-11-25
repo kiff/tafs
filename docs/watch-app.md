@@ -628,14 +628,14 @@ The watch follows the phone's thread without asking it each time, and never asks
   whole on that tap (`ask_full`), as a taf's Read more is. The iPhone's From your watch day (W11) offers Read more on a cut
   line too (`more` on the day's turn): the whole answer is read on the tap, shown in place, and kept only while the day is
   open (`WatchDaysModel.readMore`).
-- **Kept on the watch (call 1), behind `WatchThreads.on` (off).** Coach's thread and each taf's thread opened on the watch.
+- **Kept on the watch (call 1), behind `WatchThreads.on` (on, with Wear OS's `KEEP_THREADS`).** Coach's thread and each taf's thread opened on the watch.
   At most 20 threads, each its last 30 messages, as text with any amount taken out (the Inbox's rule, as on Wear OS), with
   when each was sent and whose it is. Never an attachment, an
   image, audio, a held call's details or a key. One file (`tafs.watch_threads`) with complete file protection, so it can't
   be read while the watch is locked. It's cleared on either sign-out and when the app opens or is put away without a
   passcode, and a thread not opened for 30 days goes (`WatchThreadsTests`). A thread opens at once on this copy, then the
-  phone's read and pushes move it on. **Switched on only with its sentence on the privacy page** and the owner's yes. Until
-  then, nothing is written.
+  phone's read and pushes move it on. **On since its sentence went live on the privacy page** (the Apple Watch paragraph),
+  with the owner's yes. Switched off, nothing is written or read.
 
 **At 10,000 users:** nothing new polls. Each change tafs cloud already pushes to an iPhone becomes at most one read of that
 one request or chat by that iPhone, and one queued transfer to its own watch. A watch that's away gets each thread's
@@ -665,7 +665,7 @@ and never to tafs cloud directly.
   read** (`ReadGrace`, on whatever the switch): when the phone doesn't answer, what's shown stays with the dot for 30 s, the
   phone is asked once more, and only then is it unreachable. **Switched on only with its sentence on the privacy page**
   (the Apple Watch paragraph says it keeps nothing apart from the Inbox) and the owner's yes.
-- **Threads, behind `WatchThreads.on` (off):** see "Kept and pushed" above.
+- **Threads, behind `WatchThreads.on` (on):** see "Kept and pushed" above.
 - **On disk:** only the Needs you count and when it was read, for the complication. It's cleared
   when the phone says it's signed out. (This comes with the complication.)
 - **Never:** a token, a key, or an amount, a merchant or a person's name in a log, on the watch

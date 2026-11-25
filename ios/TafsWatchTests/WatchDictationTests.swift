@@ -5,6 +5,18 @@ import XCTest
 /// Check before sending, never to the phone.
 @MainActor
 final class WatchDictationTests: XCTestCase {
+    // Kept threads are on (`WatchThreads.on`): each test starts and ends with none kept on this simulator, so no Coach or taf
+    // chat opens on what another test said.
+    override func setUp() async throws {
+        try await super.setUp()
+        await MainActor.run { WatchThreads.shared.clear() }
+    }
+
+    override func tearDown() async throws {
+        await MainActor.run { WatchThreads.shared.clear() }
+        try await super.tearDown()
+    }
+
     private final class Phone: PhoneAsking {
         var asked: [WatchRequest] = []
         var reply: WatchReply?
