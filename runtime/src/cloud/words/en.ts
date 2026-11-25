@@ -884,7 +884,7 @@ export const en = {
   // passkey (Windows Hello or a security key), so it uses card_step_give_passkey and card_step_sign_passkey instead.
   card_step_title: "Let Coach build tafs with you",
   card_step_allows: "This lets Coach look at your tafs, run them, and draft and try new versions, each within the daily limits below. Only while you turn on a drive, it can also see and use the app on this device.",
-  card_step_asks: "Installing a version, choosing where a taf's results go, gathering tafs into a mission and saving your business description always wait for you in Needs you. Giving a taf a task or trying a version waits for you past its daily limit; anything else past its limit is refused.",
+  card_step_asks: "Installing a version, choosing where a taf's results go, making a mission and saving your business description always wait for you in Needs you. Giving a taf a task or trying a version waits for you past its daily limit; anything else past its limit is refused.",
   card_step_sign: "Your approval signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
   card_step_stop: "Halt stops Coach and every taf at once, with one tap.",
   card_step_exact: "Exactly what you sign",

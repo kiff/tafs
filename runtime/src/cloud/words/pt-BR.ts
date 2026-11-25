@@ -209,7 +209,7 @@ export const ptBR: Words = {
   turn_failed_retry: "Tentar novamente",
   card_step_title: "Deixe o Coach criar tafs com você",
   card_step_allows: "Assim, o Coach pode ver seus tafs, executá-los, e redigir e experimentar novas versões, sempre dentro dos limites diários abaixo. Só quando você ativa a condução, ele pode também ver e usar o app neste dispositivo.",
-  card_step_asks: "Colocar uma versão em produção, escolher para onde vão os resultados de um taf, reunir tafs em uma missão e salvar a descrição do seu negócio esperam sempre por você em \"Precisa de você\". Dar uma tarefa a um taf ou experimentar uma versão espera por você depois do limite diário; todo o resto acima do limite é recusado.",
+  card_step_asks: "Colocar uma versão em produção, escolher para onde vão os resultados de um taf, criar uma missão e salvar a descrição do seu negócio esperam sempre por você em \"Precisa de você\". Dar uma tarefa a um taf ou experimentar uma versão espera por você depois do limite diário; todo o resto acima do limite é recusado.",
   card_step_sign: "Sua aprovação assina isto com uma chave guardada neste dispositivo, que nunca sai dele. Não é um pagamento nem uma senha.",
   card_step_stop: "Bloquear para o Coach e todos os tafs de uma vez, com um toque.",
   card_step_exact: "Exatamente o que você assina",

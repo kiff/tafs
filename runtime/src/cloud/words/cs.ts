@@ -801,7 +801,7 @@ export const cs: Words = {
   cts_always_asks: "Každé čeká na vaše schválení.",
   card_step_title: "Nechte Coach tvořit tafy s vámi",
   card_step_allows: "Coach tak může prohlížet vaše tafy, spouštět je a připravovat a zkoušet nové verze, vše v denních limitech níže. Jen když zapnete řízení, může také vidět a používat aplikaci na tomto zařízení.",
-  card_step_asks: "Instalace verze, volba, kam jdou výsledky tafu, sdružení tafů do mise a uložení popisu vaší firmy vždy čekají na vás v „Potřebuje vás“. Zadání úkolu tafu nebo vyzkoušení verze na vás čeká po překročení denního limitu; cokoli jiného nad limit se odmítne.",
+  card_step_asks: "Instalace verze, volba, kam jdou výsledky tafu, vytvoření mise a uložení popisu vaší firmy vždy čekají na vás v „Potřebuje vás“. Zadání úkolu tafu nebo vyzkoušení verze na vás čeká po překročení denního limitu; cokoli jiného nad limit se odmítne.",
   card_step_sign: "Vaše schválení to podepíše klíčem uloženým v tomto zařízení, který ho nikdy neopustí. Není to platba ani heslo.",
   card_step_stop: "„Zastavit“ zastaví Coach i všechny tafy najednou, jedním klepnutím.",
   card_step_exact: "Přesně to, co podepisujete",

@@ -801,7 +801,7 @@ export const hr: Words = {
   cts_always_asks: "Svaki čeka vaše odobrenje.",
   card_step_title: "Neka Coach gradi tafove s vama",
   card_step_allows: "Tako Coach može pregledavati vaše tafove, pokretati ih te sastavljati i isprobavati nove verzije, svaki put unutar dnevnih ograničenja u nastavku. Samo dok uključite vožnju, može vidjeti i koristiti i aplikaciju na ovom uređaju.",
-  card_step_asks: "Instalacija verzije, odabir kamo idu rezultati tafa, okupljanje tafova u misiju i spremanje opisa vaše tvrtke uvijek čekaju vas u „Treba vas“. Davanje zadatka tafu ili isprobavanje verzije čeka vas nakon dnevnog ograničenja; sve ostalo iznad ograničenja se odbija.",
+  card_step_asks: "Instalacija verzije, odabir kamo idu rezultati tafa, stvaranje misije i spremanje opisa vaše tvrtke uvijek čekaju vas u „Treba vas“. Davanje zadatka tafu ili isprobavanje verzije čeka vas nakon dnevnog ograničenja; sve ostalo iznad ograničenja se odbija.",
   card_step_sign: "Vaše odobrenje to potpisuje ključem koji se čuva na ovom uređaju i nikad ga ne napušta. To nije plaćanje ni lozinka.",
   card_step_stop: "„Blokirajte“ zaustavlja Coacha i sve tafove odjednom, jednim dodirom.",
   card_step_exact: "Točno ono što potpisujete",

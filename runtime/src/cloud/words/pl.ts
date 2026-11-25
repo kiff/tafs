@@ -808,7 +808,7 @@ export const pl: Words = {
   cts_always_asks: "Zawsze czeka na Twoje zatwierdzenie.",
   card_step_title: "Pozwól Coachowi tworzyć z Tobą tafs",
   card_step_allows: "Dzięki temu Coach może przeglądać Twoje tafs, uruchamiać je oraz szkicować i wypróbowywać nowe wersje, za każdym razem w dziennych limitach poniżej. Tylko gdy włączysz sterowanie, może też widzieć i używać aplikacji na tym urządzeniu.",
-  card_step_asks: "Uruchomienie wersji na żywo, wybór miejsca wyników tafa, zebranie tafs w misję i zapisanie opisu Twojej firmy zawsze czekają na Ciebie w „Czeka na Ciebie”. Zlecenie zadania tafowi lub wypróbowanie wersji czeka na Ciebie po przekroczeniu dziennego limitu; wszystko inne ponad limit jest odrzucane.",
+  card_step_asks: "Uruchomienie wersji na żywo, wybór miejsca wyników tafa, utworzenie misji i zapisanie opisu Twojej firmy zawsze czekają na Ciebie w „Czeka na Ciebie”. Zlecenie zadania tafowi lub wypróbowanie wersji czeka na Ciebie po przekroczeniu dziennego limitu; wszystko inne ponad limit jest odrzucane.",
   card_step_sign: "Twoje zatwierdzenie podpisuje to kluczem przechowywanym na tym urządzeniu, który nigdy go nie opuszcza. To nie jest płatność ani hasło.",
   card_step_stop: "Zablokuj zatrzymuje Coacha i wszystkie tafs naraz, jednym dotknięciem.",
   card_step_exact: "Dokładnie to, co podpisujesz",

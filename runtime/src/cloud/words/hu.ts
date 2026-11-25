@@ -801,7 +801,7 @@ export const hu: Words = {
   cts_always_asks: "Mindegyik a jóváhagyásodra vár.",
   card_step_title: "Hagyd, hogy a Coach veled építsen tafokat",
   card_step_allows: "Így a Coach megnézheti a tafjaidat, futtathatja őket, és új verziókat írhat és próbálhat ki, mindig az alábbi napi korlátokon belül. Csak amíg bekapcsolod a vezetést, láthatja és használhatja az alkalmazást is ezen az eszközön.",
-  card_step_asks: "Egy verzió telepítése, annak kiválasztása, hová kerülnek egy taf eredményei, tafok küldetésbe gyűjtése és a vállalkozásod leírásának mentése mindig rád vár a „Rád vár” részben. Feladat adása egy tafnak vagy egy verzió kipróbálása a napi korlát után rád vár; minden más a korláton felül elutasításra kerül.",
+  card_step_asks: "Egy verzió telepítése, annak kiválasztása, hová kerülnek egy taf eredményei, egy küldetés létrehozása és a vállalkozásod leírásának mentése mindig rád vár a „Rád vár” részben. Feladat adása egy tafnak vagy egy verzió kipróbálása a napi korlát után rád vár; minden más a korláton felül elutasításra kerül.",
   card_step_sign: "A jóváhagyásod ezt egy ezen az eszközön tárolt kulccsal írja alá, amely soha nem hagyja el. Ez nem fizetés és nem jelszó.",
   card_step_stop: "A Leállítás egyetlen koppintással egyszerre leállítja a Coachot és minden tafot.",
   card_step_exact: "Pontosan, amit aláírsz",

@@ -801,7 +801,7 @@ export const id: Words = {
   cts_always_asks: "Masing-masing menunggu persetujuan Anda.",
   card_step_title: "Biarkan Coach membangun taf bersama Anda",
   card_step_allows: "Dengan ini Coach dapat melihat taf Anda, menjalankannya, serta menyusun dan mencoba versi baru, masing-masing dalam batas harian di bawah. Hanya selama Anda menyalakan mode kemudi, Coach juga dapat melihat dan memakai aplikasi di perangkat ini.",
-  card_step_asks: "Memasang versi, memilih ke mana hasil taf dikirim, mengumpulkan taf ke dalam misi, dan menyimpan deskripsi bisnis Anda selalu menunggu Anda di \"Menunggu Anda\". Memberi taf tugas atau mencoba versi menunggu Anda setelah melewati batas hariannya; hal lain di atas batas ditolak.",
+  card_step_asks: "Memasang versi, memilih ke mana hasil taf dikirim, membuat misi, dan menyimpan deskripsi bisnis Anda selalu menunggu Anda di \"Menunggu Anda\". Memberi taf tugas atau mencoba versi menunggu Anda setelah melewati batas hariannya; hal lain di atas batas ditolak.",
   card_step_sign: "Persetujuan Anda menandatanganinya dengan kunci yang disimpan di perangkat ini dan tidak pernah keluar darinya. Ini bukan pembayaran atau kata sandi.",
   card_step_stop: "Bekukan menghentikan Coach dan semua taf sekaligus, dengan satu ketukan.",
   card_step_exact: "Persis yang Anda tanda tangani",

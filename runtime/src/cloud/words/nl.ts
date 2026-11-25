@@ -808,7 +808,7 @@ export const nl: Words = {
   cts_always_asks: "Wacht altijd op je goedkeuring.",
   card_step_title: "Laat Coach samen met jou tafs bouwen",
   card_step_allows: "Zo kan Coach je tafs bekijken, ze laten draaien, en nieuwe versies opstellen en uitproberen, telkens binnen de daglimieten hieronder. Alleen als je het bedienen aanzet, kan hij ook de app op dit apparaat zien en gebruiken.",
-  card_step_asks: "Een versie live zetten, kiezen waar de resultaten van een taf heen gaan, tafs in een missie samenbrengen en je bedrijfsbeschrijving opslaan wachten altijd op jou in 'Wacht op jou'. Een taf een taak geven of een versie uitproberen wacht op jou na de daglimiet; al het andere boven de limiet wordt geweigerd.",
+  card_step_asks: "Een versie live zetten, kiezen waar de resultaten van een taf heen gaan, een missie aanmaken en je bedrijfsbeschrijving opslaan wachten altijd op jou in 'Wacht op jou'. Een taf een taak geven of een versie uitproberen wacht op jou na de daglimiet; al het andere boven de limiet wordt geweigerd.",
   card_step_sign: "Je goedkeuring ondertekent dit met een sleutel die op dit apparaat blijft en het nooit verlaat. Het is geen betaling en geen wachtwoord.",
   card_step_stop: "Stilzetten stopt Coach en alle tafs tegelijk, met één tik.",
   card_step_exact: "Precies wat je ondertekent",

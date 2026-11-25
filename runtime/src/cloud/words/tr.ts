@@ -801,7 +801,7 @@ export const tr: Words = {
   cts_always_asks: "Her biri onayınızı bekler.",
   card_step_title: "Coach sizinle taf'lar oluştursun",
   card_step_allows: "Böylece Coach taf'larınızı görebilir, çalıştırabilir, yeni sürümler hazırlayıp deneyebilir; hepsi aşağıdaki günlük sınırlar içinde. Yalnızca siz yönlendirmeyi açtığınızda bu cihazdaki uygulamayı da görebilir ve kullanabilir.",
-  card_step_asks: "Bir sürümü yüklemek, bir taf'ın sonuçlarının nereye gideceğini seçmek, taf'ları bir görevde toplamak ve işletme açıklamanızı kaydetmek her zaman \"Sizi bekliyor\" bölümünde sizi bekler. Bir taf'a görev vermek veya bir sürümü denemek günlük sınırını aşınca sizi bekler; sınırı aşan diğer her şey reddedilir.",
+  card_step_asks: "Bir sürümü yüklemek, bir taf'ın sonuçlarının nereye gideceğini seçmek, bir görev oluşturmak ve işletme açıklamanızı kaydetmek her zaman \"Sizi bekliyor\" bölümünde sizi bekler. Bir taf'a görev vermek veya bir sürümü denemek günlük sınırını aşınca sizi bekler; sınırı aşan diğer her şey reddedilir.",
   card_step_sign: "Onayınız bunu, bu cihazda saklanan ve cihazdan hiç çıkmayan bir anahtarla imzalar. Bu bir ödeme ya da parola değildir.",
   card_step_stop: "Dondur, tek dokunuşla Coach'u ve tüm taf'ları aynı anda durdurur.",
   card_step_exact: "Tam olarak imzaladığınız şey",

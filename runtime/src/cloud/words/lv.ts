@@ -801,7 +801,7 @@ export const lv: Words = {
   cts_always_asks: "Katrs gaida tavu apstiprinājumu.",
   card_step_title: "Ļauj Coach veidot taf kopā ar tevi",
   card_step_allows: "Tā Coach var skatīt tavus taf, tos palaist un sagatavot un izmēģināt jaunas versijas, katru reizi zemāk norādīto dienas limitu robežās. Tikai kamēr tu ieslēdz vadību, tas var arī redzēt un izmantot lietotni šajā ierīcē.",
-  card_step_asks: "Versijas instalēšana, taf rezultātu mērķa izvēle, taf apvienošana misijā un tava uzņēmuma apraksta saglabāšana vienmēr gaida tevi sadaļā “Gaida tevi”. Uzdevuma došana taf vai versijas izmēģināšana gaida tevi pēc dienas limita; viss cits virs limita tiek atteikts.",
+  card_step_asks: "Versijas instalēšana, taf rezultātu mērķa izvēle, misijas izveide un tava uzņēmuma apraksta saglabāšana vienmēr gaida tevi sadaļā “Gaida tevi”. Uzdevuma došana taf vai versijas izmēģināšana gaida tevi pēc dienas limita; viss cits virs limita tiek atteikts.",
   card_step_sign: "Tavs apstiprinājums to paraksta ar atslēgu, kas glabājas šajā ierīcē un nekad to neatstāj. Tas nav maksājums vai parole.",
   card_step_stop: "“Apturēt” ar vienu pieskārienu uzreiz aptur Coach un visus taf.",
   card_step_exact: "Tieši tas, ko tu paraksti",

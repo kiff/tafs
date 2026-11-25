@@ -801,7 +801,7 @@ export const vi: Words = {
   cts_always_asks: "Từng cái chờ bạn phê duyệt.",
   card_step_title: "Để Coach cùng bạn tạo taf",
   card_step_allows: "Nhờ vậy Coach có thể xem các taf của bạn, chạy chúng, và soạn thử các phiên bản mới, luôn trong giới hạn hằng ngày bên dưới. Chỉ khi bạn bật chế độ điều khiển, Coach mới có thể xem và dùng ứng dụng trên thiết bị này.",
-  card_step_asks: "Cài đặt một phiên bản, chọn nơi nhận kết quả của taf, gom các taf vào một nhiệm vụ và lưu mô tả doanh nghiệp của bạn luôn chờ bạn trong \"Đang chờ bạn\". Giao việc cho taf hoặc thử một phiên bản sẽ chờ bạn khi vượt giới hạn hằng ngày; mọi thứ khác vượt giới hạn sẽ bị từ chối.",
+  card_step_asks: "Cài đặt một phiên bản, chọn nơi nhận kết quả của taf, tạo một nhiệm vụ và lưu mô tả doanh nghiệp của bạn luôn chờ bạn trong \"Đang chờ bạn\". Giao việc cho taf hoặc thử một phiên bản sẽ chờ bạn khi vượt giới hạn hằng ngày; mọi thứ khác vượt giới hạn sẽ bị từ chối.",
   card_step_sign: "Sự phê duyệt của bạn ký điều này bằng một khóa được giữ trên thiết bị này và không bao giờ rời khỏi nó. Đây không phải là thanh toán hay mật khẩu.",
   card_step_stop: "Đóng băng dừng Coach và mọi taf cùng lúc, chỉ với một lần chạm.",
   card_step_exact: "Đúng những gì bạn ký",

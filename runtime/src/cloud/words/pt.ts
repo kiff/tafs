@@ -808,7 +808,7 @@ export const pt: Words = {
   cts_always_asks: "Espera sempre pela sua aprovação.",
   card_step_title: "Deixe o Coach criar tafs consigo",
   card_step_allows: "Assim, o Coach pode ver os seus tafs, executá-los, e redigir e experimentar novas versões, sempre dentro dos limites diários abaixo. Só quando ativa a condução, pode também ver e usar a app neste dispositivo.",
-  card_step_asks: "Pôr uma versão em produção, escolher para onde vão os resultados de um taf, reunir tafs numa missão e guardar a descrição do seu negócio esperam sempre por si em «Precisa de si». Dar uma tarefa a um taf ou experimentar uma versão espera por si depois do limite diário; tudo o resto acima do limite é recusado.",
+  card_step_asks: "Pôr uma versão em produção, escolher para onde vão os resultados de um taf, criar uma missão e guardar a descrição do seu negócio esperam sempre por si em «Precisa de si». Dar uma tarefa a um taf ou experimentar uma versão espera por si depois do limite diário; tudo o resto acima do limite é recusado.",
   card_step_sign: "A sua aprovação assina isto com uma chave guardada neste dispositivo, que nunca sai dele. Não é um pagamento nem uma palavra-passe.",
   card_step_stop: "Bloquear para o Coach e todos os tafs de uma vez, com um toque.",
   card_step_exact: "Exatamente o que assina",

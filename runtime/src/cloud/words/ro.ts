@@ -801,7 +801,7 @@ export const ro: Words = {
   cts_always_asks: "Fiecare așteaptă aprobarea dvs.",
   card_step_title: "Lăsați-l pe Coach să creeze tafuri cu dvs.",
   card_step_allows: "Astfel, Coach poate vedea tafurile dvs., le poate rula și poate redacta și încerca versiuni noi, de fiecare dată în limitele zilnice de mai jos. Doar cât activați conducerea, poate și vedea și folosi aplicația pe acest dispozitiv.",
-  card_step_asks: "Instalarea unei versiuni, alegerea destinației rezultatelor unui taf, gruparea tafurilor într-o misiune și salvarea descrierii afacerii dvs. vă așteaptă mereu în „Vă așteaptă”. Darea unei sarcini unui taf sau încercarea unei versiuni vă așteaptă după limita zilnică; orice altceva peste limită este refuzat.",
+  card_step_asks: "Instalarea unei versiuni, alegerea destinației rezultatelor unui taf, crearea unei misiuni și salvarea descrierii afacerii dvs. vă așteaptă mereu în „Vă așteaptă”. Darea unei sarcini unui taf sau încercarea unei versiuni vă așteaptă după limita zilnică; orice altceva peste limită este refuzat.",
   card_step_sign: "Aprobarea dvs. semnează acest lucru cu o cheie păstrată pe acest dispozitiv, care nu îl părăsește niciodată. Nu este o plată sau o parolă.",
   card_step_stop: "Opriți îl oprește pe Coach și toate tafurile deodată, cu o atingere.",
   card_step_exact: "Exact ce semnați",

@@ -808,7 +808,7 @@ export const de: Words = {
   cts_always_asks: "Wartet immer auf deine Genehmigung.",
   card_step_title: "Lass Coach mit dir tafs bauen",
   card_step_allows: "So kann Coach deine tafs ansehen, sie ausführen und neue Versionen entwerfen und testen, jeweils innerhalb der Tageslimits unten. Nur wenn du das Bedienen einschaltest, kann er auch die App auf diesem Gerät sehen und benutzen.",
-  card_step_asks: "Eine Version live schalten, festlegen, wohin die Ergebnisse eines tafs gehen, tafs zu einer Mission zusammenfassen und deine Unternehmensbeschreibung speichern warten immer auf dich unter „Braucht dich“. Einem taf eine Aufgabe geben oder eine Version testen wartet nach seinem Tageslimit auf dich; alles andere über dem Limit wird abgelehnt.",
+  card_step_asks: "Eine Version live schalten, festlegen, wohin die Ergebnisse eines tafs gehen, eine Mission anlegen und deine Unternehmensbeschreibung speichern warten immer auf dich unter „Braucht dich“. Einem taf eine Aufgabe geben oder eine Version testen wartet nach seinem Tageslimit auf dich; alles andere über dem Limit wird abgelehnt.",
   card_step_sign: "Deine Genehmigung signiert das mit einem Schlüssel, der auf diesem Gerät bleibt und es nie verlässt. Sie ist keine Zahlung und kein Passwort.",
   card_step_stop: "„Anhalten“ stoppt Coach und alle tafs auf einmal, mit einem Tippen.",
   card_step_exact: "Genau das, was du signierst",

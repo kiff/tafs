@@ -808,7 +808,7 @@ export const fr: Words = {
   cts_always_asks: "Attend toujours votre approbation.",
   card_step_title: "Laissez Coach créer des tafs avec vous",
   card_step_allows: "Coach peut ainsi consulter vos tafs, les exécuter, et rédiger et essayer de nouvelles versions, chaque fois dans les limites quotidiennes ci-dessous. Seulement quand vous activez le pilotage, il peut aussi voir et utiliser l'app sur cet appareil.",
-  card_step_asks: "Mettre une version en service, choisir où vont les résultats d'un taf, réunir des tafs dans une mission et enregistrer la description de votre entreprise vous attendent toujours dans « Vous attend ». Donner une tâche à un taf ou essayer une version vous attend au-delà de sa limite quotidienne ; tout le reste au-delà de la limite est refusé.",
+  card_step_asks: "Mettre une version en service, choisir où vont les résultats d'un taf, créer une mission et enregistrer la description de votre entreprise vous attendent toujours dans « Vous attend ». Donner une tâche à un taf ou essayer une version vous attend au-delà de sa limite quotidienne ; tout le reste au-delà de la limite est refusé.",
   card_step_sign: "Votre approbation signe cela avec une clé conservée sur cet appareil, qui ne le quitte jamais. Ce n'est ni un paiement ni un mot de passe.",
   card_step_stop: "Bloquer arrête Coach et tous les tafs à la fois, d'un seul geste.",
   card_step_exact: "Exactement ce que vous signez",

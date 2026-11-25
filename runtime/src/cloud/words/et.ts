@@ -801,7 +801,7 @@ export const et: Words = {
   cts_always_asks: "Iga üks ootab sinu kinnitust.",
   card_step_title: "Lase Coachil sinuga tafe ehitada",
   card_step_allows: "Nii saab Coach vaadata sinu tafe, neid käivitada ning uusi versioone koostada ja proovida, igaüks allpool olevate päevapiirangute piires. Ainult siis, kui lülitad juhtimise sisse, saab see ka selles seadmes rakendust näha ja kasutada.",
-  card_step_asks: "Versiooni paigaldamine, tafi tulemuste sihtkoha valimine, tafide koondamine missiooniks ja sinu ettevõtte kirjelduse salvestamine ootavad alati sind jaotises „Vajab sind“. Tafile ülesande andmine või versiooni proovimine ootab sind pärast päevapiirangut; kõik muu üle piirangu lükatakse tagasi.",
+  card_step_asks: "Versiooni paigaldamine, tafi tulemuste sihtkoha valimine, missiooni loomine ja sinu ettevõtte kirjelduse salvestamine ootavad alati sind jaotises „Vajab sind“. Tafile ülesande andmine või versiooni proovimine ootab sind pärast päevapiirangut; kõik muu üle piirangu lükatakse tagasi.",
   card_step_sign: "Sinu kinnitus allkirjastab selle võtmega, mida hoitakse selles seadmes ja mis ei lahku sealt kunagi. See ei ole makse ega parool.",
   card_step_stop: "„Peata“ peatab Coachi ja kõik tafid korraga, ühe puudutusega.",
   card_step_exact: "Täpselt see, mida allkirjastad",
