@@ -366,7 +366,6 @@ export const lv: Words = {
   code_ai_unavailable_partway: "Mūsu mākslīgā intelekta nodrošinātājs pusceļā pārstāja mūs apkalpot, tāpēc tas apstājās. Tā ir mūsu puses problēma, ne tava: mēģini vēlāk.",
   turn_failed_ours: "tafs šobrīd nevar atbildēt. Tā ir mūsu puses problēma, un neviens tavs kredīts netika izmantots. Mēģini vēlāk.",
   turn_failed_ours_partway: "tafs apstājās pusceļā. Tā ir mūsu puses problēma, ne tava. Pārbaudi, kas jau izdarīts, un pajautā vēlreiz vēlāk.",
-  turn_failed_ours_charged: "tafs šobrīd nevar atbildēt. Tā ir mūsu puses problēma, ne tava. Mēģini vēlāk.",
   turn_failed_credits: "Atbildes nav: tavā kontā vairs nav kredītu. Pievieno kredītus un mēģini vēlreiz.",
   turn_failed_credits_ask: "Atbildes nav: tavā kontā vairs nav kredītu. Palūdz administratoram tos pievienot un mēģini vēlreiz.",
   turn_failed_time: "Tas aizņēma pārāk ilgu laiku un apstājās, pirms kaut kas tika mainīts. Mēģini vēlreiz vai lūdz mazāk vienlaikus.",

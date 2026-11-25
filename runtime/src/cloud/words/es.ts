@@ -372,7 +372,6 @@ export const es: Words = {
   code_ai_unavailable_partway: "Nuestro proveedor de IA dejó de atendernos a mitad de camino, así que esto se detuvo. Es cosa nuestra, no tuya: vuelve a intentarlo un poco más tarde.",
   turn_failed_ours: "tafs no puede responder ahora mismo. Es cosa nuestra, y no se usó ninguno de tus créditos. Vuelve a intentarlo un poco más tarde.",
   turn_failed_ours_partway: "tafs se detuvo a mitad de camino. Es cosa nuestra, no tuya. Revisa lo que se hizo y vuelve a pedirlo un poco más tarde.",
-  turn_failed_ours_charged: "tafs no puede responder ahora mismo. Es cosa nuestra, no tuya. Vuelve a intentarlo un poco más tarde.",
   turn_failed_credits: "Sin respuesta: a tu cuenta no le quedan créditos. Puedes añadir créditos y volver a intentarlo.",
   turn_failed_credits_ask: "Sin respuesta: a tu cuenta no le quedan créditos. Puedes pedir a un administrador que añada más y volver a intentarlo.",
   turn_failed_time: "Esto tardó demasiado y se detuvo antes de cambiar nada. Vuelve a intentarlo, o pide menos de una vez.",

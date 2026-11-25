@@ -366,7 +366,6 @@ export const hu: Words = {
   code_ai_unavailable_partway: "Az MI-szolgáltatónk menet közben leállt, ezért ez megállt. A hiba nálunk van, nem nálad: próbáld újra kicsit később.",
   turn_failed_ours: "A tafs most nem tud válaszolni. A hiba nálunk van, és egyetlen kreditedet sem használtuk el. Próbáld újra kicsit később.",
   turn_failed_ours_partway: "A tafs menet közben leállt. A hiba nálunk van, nem nálad. Nézd meg, mi történt már meg, aztán kérdezz újra kicsit később.",
-  turn_failed_ours_charged: "A tafs most nem tud válaszolni. A hiba nálunk van, nem nálad. Próbáld újra kicsit később.",
   turn_failed_credits: "Nincs válasz: a fiókodban nincs több kredit. Adj hozzá kreditet, aztán próbáld újra.",
   turn_failed_credits_ask: "Nincs válasz: a fiókodban nincs több kredit. Kérd meg az adminisztrátort, hogy adjon hozzá, aztán próbáld újra.",
   turn_failed_time: "Ez túl sokáig tartott, és leállt, mielőtt bármi megváltozott volna. Próbáld újra, vagy kérj egyszerre kevesebbet.",

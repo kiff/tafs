@@ -366,7 +366,6 @@ export const cs: Words = {
   code_ai_unavailable_partway: "Náš poskytovatel AI nás v půlce přestal obsluhovat, takže se to zastavilo. Chyba je na naší straně, ne na tvé: zkus to za chvíli.",
   turn_failed_ours: "tafs teď nemůže odpovědět. Chyba je na naší straně a nespotřebovaly se žádné tvé kredity. Zkus to za chvíli.",
   turn_failed_ours_partway: "tafs se v půlce zastavil. Chyba je na naší straně, ne na tvé. Zkontroluj, co se udělalo, a zeptej se za chvíli znovu.",
-  turn_failed_ours_charged: "tafs teď nemůže odpovědět. Chyba je na naší straně, ne na tvé. Zkus to za chvíli.",
   turn_failed_credits: "Bez odpovědi: na tvém účtu nezbyly žádné kredity. Přidej kredity a zkus to znovu.",
   turn_failed_credits_ask: "Bez odpovědi: na tvém účtu nezbyly žádné kredity. Požádej správce, ať nějaké přidá, a zkus to znovu.",
   turn_failed_time: "Trvalo to příliš dlouho a zastavilo se to dřív, než se cokoli změnilo. Zkus to znovu, nebo žádej méně najednou.",

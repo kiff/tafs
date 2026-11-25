@@ -366,7 +366,6 @@ export const sl: Words = {
   code_ai_unavailable_partway: "Naš ponudnik umetne inteligence nas je sredi dela nehal strežiti, zato se je to ustavilo. To je na naši strani, ne na tvoji: poskusi znova malo pozneje.",
   turn_failed_ours: "tafs trenutno ne more odgovoriti. To je na naši strani in porabljen ni bil noben tvoj kredit. Poskusi znova malo pozneje.",
   turn_failed_ours_partway: "tafs se je ustavil sredi dela. To je na naši strani, ne na tvoji. Preveri, kaj je bilo narejeno, in vprašaj znova malo pozneje.",
-  turn_failed_ours_charged: "tafs trenutno ne more odgovoriti. To je na naši strani, ne na tvoji. Poskusi znova malo pozneje.",
   turn_failed_credits: "Brez odgovora: na tvojem računu ni več kreditov. Dodaj kredite in poskusi znova.",
   turn_failed_credits_ask: "Brez odgovora: na tvojem računu ni več kreditov. Prosi skrbnika, naj jih doda, in poskusi znova.",
   turn_failed_time: "To je trajalo predolgo in se je ustavilo, preden se je kar koli spremenilo. Poskusi znova ali prosi za manj naenkrat.",

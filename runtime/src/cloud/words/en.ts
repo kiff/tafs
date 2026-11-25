@@ -400,8 +400,6 @@ export const en = {
   // it makes no claim about credits and offers no Try again, since sending the message again could act twice.
   turn_failed_ours: "tafs can't answer right now. It's on our side, and none of your credits were used. Try again a little later.",
   turn_failed_ours_partway: "tafs stopped partway through. It's on our side, not yours. Check what was done, then ask again a little later.",
-  // The same, for a turn that changed nothing but was charged (read turns first): Try again is safe, but no claim about credits.
-  turn_failed_ours_charged: "tafs can't answer right now. It's on our side, not yours. Try again a little later.",
   turn_failed_credits: "No answer: your account has no credits left. Add credits, then try again.",
   turn_failed_credits_ask: "No answer: your account has no credits left. Ask an admin to add some, then try again.",
   turn_failed_time: "This took too long and stopped before it changed anything. Try again, or ask for less at once.",

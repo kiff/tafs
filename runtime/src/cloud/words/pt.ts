@@ -372,7 +372,6 @@ export const pt: Words = {
   code_ai_unavailable_partway: "O nosso fornecedor de IA deixou de nos servir a meio, por isso isto parou. O problema é nosso, não seu: tente novamente um pouco mais tarde.",
   turn_failed_ours: "O tafs não consegue responder neste momento. O problema é nosso, e nenhum dos seus créditos foi usado. Tente novamente um pouco mais tarde.",
   turn_failed_ours_partway: "O tafs parou a meio. O problema é nosso, não seu. Veja o que já foi feito e peça novamente um pouco mais tarde.",
-  turn_failed_ours_charged: "O tafs não consegue responder neste momento. O problema é nosso, não seu. Tente novamente um pouco mais tarde.",
   turn_failed_credits: "Sem resposta: a sua conta já não tem créditos. Pode adicionar créditos e tentar novamente.",
   turn_failed_credits_ask: "Sem resposta: a sua conta já não tem créditos. Pode pedir a um administrador que adicione mais e tentar novamente.",
   turn_failed_time: "Isto demorou demasiado e parou antes de alterar o que quer que fosse. Tente novamente, ou peça menos de cada vez.",

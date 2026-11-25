@@ -366,7 +366,6 @@ export const zhHant: Words = {
   code_ai_unavailable_partway: "我們的 AI 供應商在途中停止了服務，所以這項已停止。問題在我們這邊，不在您這邊：請稍後再試。",
   turn_failed_ours: "tafs 目前無法回答。問題在我們這邊，也沒有使用您的任何額度。請稍後再試。",
   turn_failed_ours_partway: "tafs 在途中停止了。問題在我們這邊，不在您這邊。請查看已完成的部分，然後稍後再提出要求。",
-  turn_failed_ours_charged: "tafs 目前無法回答。問題在我們這邊，不在您這邊。請稍後再試。",
   turn_failed_credits: "沒有回答：您的帳號已沒有剩餘額度。請新增額度，然後再試一次。",
   turn_failed_credits_ask: "沒有回答：您的帳號已沒有剩餘額度。請向管理員要求新增額度，然後再試一次。",
   turn_failed_time: "這項花了太久的時間，在做出任何變更之前就停止了。請再試一次，或一次要求少一點。",

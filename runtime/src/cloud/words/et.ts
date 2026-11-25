@@ -366,7 +366,6 @@ export const et: Words = {
   code_ai_unavailable_partway: "Meie tehisintellekti pakkuja lõpetas teenindamise poole peal, seega see peatus. See on meie poolel, mitte sinul: proovi veidi hiljem uuesti.",
   turn_failed_ours: "tafs ei saa praegu vastata. See on meie poolel ja ühtki sinu krediiti ei kasutatud. Proovi veidi hiljem uuesti.",
   turn_failed_ours_partway: "tafs peatus poole peal. See on meie poolel, mitte sinul. Vaata, mis jõuti teha, ja küsi veidi hiljem uuesti.",
-  turn_failed_ours_charged: "tafs ei saa praegu vastata. See on meie poolel, mitte sinul. Proovi veidi hiljem uuesti.",
   turn_failed_credits: "Vastust ei tulnud: sinu kontol pole enam krediite. Lisa krediite ja proovi siis uuesti.",
   turn_failed_credits_ask: "Vastust ei tulnud: sinu kontol pole enam krediite. Palu administraatoril neid lisada ja proovi siis uuesti.",
   turn_failed_time: "See võttis liiga kaua aega ja peatus enne, kui midagi muudeti. Proovi uuesti või küsi korraga vähem.",

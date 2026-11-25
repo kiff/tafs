@@ -372,7 +372,6 @@ export const fr: Words = {
   code_ai_unavailable_partway: "Notre fournisseur d'IA a cessé de nous répondre en cours de route : cela s'est donc arrêté. Le problème vient de nous, pas de vous : réessayez un peu plus tard.",
   turn_failed_ours: "tafs ne peut pas répondre pour le moment. Le problème vient de nous, et aucun de vos crédits n'a été utilisé. Réessayez un peu plus tard.",
   turn_failed_ours_partway: "tafs s'est arrêté en cours de route. Le problème vient de nous, pas de vous. Vérifiez ce qui a été fait, puis redemandez un peu plus tard.",
-  turn_failed_ours_charged: "tafs ne peut pas répondre pour le moment. Le problème vient de nous, pas de vous. Réessayez un peu plus tard.",
   turn_failed_credits: "Pas de réponse : votre compte n'a plus de crédits. Vous pouvez ajouter des crédits, puis réessayer.",
   turn_failed_credits_ask: "Pas de réponse : votre compte n'a plus de crédits. Vous pouvez demander à un administrateur d'en ajouter, puis réessayer.",
   turn_failed_time: "Cela a pris trop de temps et s'est arrêté avant de changer quoi que ce soit. Réessayez, ou demandez moins à la fois.",
