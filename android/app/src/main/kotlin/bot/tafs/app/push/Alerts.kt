@@ -221,6 +221,9 @@ interface PushPlatform {
 
   /** This phone's push token; null when it can't be had. */
   suspend fun token(): String?
+
+  /** Takes every tafs notification still in the shade away: at sign-out, since a held call's alert names its taf and its ask. */
+  fun clearShown() {}
 }
 
 /** A build with no Firebase settings: alerts are off, and the app says so. */

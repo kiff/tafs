@@ -34,6 +34,8 @@ class PushTest {
   ) : PushPlatform {
     var asked = 0
     var tokens = 0
+    var cleared = 0
+    override fun clearShown() { cleared++ }
     override suspend fun allowed(): Boolean { asked++; return allow }
     override suspend fun token(): String? { tokens++; return token }
   }
@@ -447,6 +449,7 @@ class PushTest {
     assertNull(secrets.load(AppModel.ALERTS_ON))
     assertNull(secrets.load(AppModel.HANDOFF))
     assertFalse(m.state.value.alertsReady)
+    assertEquals("the alerts in the shade go too", 1, push.cleared)
   }
 
   @Test fun aSignOutKiffDidntConfirmKeepsThePhonesAlerts() = runTest {

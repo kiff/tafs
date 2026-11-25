@@ -423,6 +423,8 @@ couldn't be read (`card_unit_exceptions_notice`).
 they were on for that account (`ALERTS_WERE_ON`). Signing in to the same account again registers
 this phone again, with no new confirmation, while the account's alerts still reach tafs cloud;
 otherwise the app says once that they're off, with **Turn on**. Another account doesn't get them.
+Signing out also takes every tafs notification still in the shade away (`PushPlatform.clearShown`), since a held call's
+alert names its taf and what it asks.
 
 **Halt and Resume say what happened on the Halt screen** (`haltError`): a halt or resume that
 didn't go through says why there, and the screen never calls a connection by its service's name.

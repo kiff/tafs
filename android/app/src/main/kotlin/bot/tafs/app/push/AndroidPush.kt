@@ -117,6 +117,10 @@ class FirebasePush(private val context: Context) : PushPlatform {
   override val available: Boolean
     get() = runCatching { FirebaseApp.getApps(context).isNotEmpty() || FirebaseApp.initializeApp(context) != null }.getOrDefault(false)
 
+  override fun clearShown() {
+    NotificationManagerCompat.from(context).cancelAll()
+  }
+
   override fun enabledNow(): Boolean = NotificationManagerCompat.from(context).areNotificationsEnabled() &&
     (Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
 

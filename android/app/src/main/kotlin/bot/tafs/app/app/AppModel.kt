@@ -2044,6 +2044,8 @@ class AppModel(
     val mark = secrets.load(WATCH_MARK)
     secrets.delete(WATCH_MARK)
     runCatching { watchSignedOut?.invoke(mark) }
+    // Nothing of the account stays in the shade either: a held call's alert names its taf and what it asks.
+    runCatching { push.clearShown() }
     forgetApprovalKey()
     kiff.token = null
     // KIFF ends this session's approval window at sign-out.
