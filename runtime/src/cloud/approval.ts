@@ -104,6 +104,14 @@ type CardsChecked = Decision | { waitsFor: string } | { draft: NonNullable<Await
 export const REFUSAL_CLOSED = "Refused by tafs cloud's check, not by the owner: this approval is closed and nothing waits for them.";
 export const DRAW_AGAIN = "Draft it again now and show a new approval.";
 export const AGREE_FIRST = "Show the rules for the owner to agree first, then draft it again and show a new approval.";
+/**
+ * What a held per-action limit's Card carries instead, said with a refusal that took its total away (count_on_amount on
+ * that Card, day_total_twice): KIFF refuses a Card with no total, so its one total is KIFF's own count (kiffsOwnCount),
+ * and the day's total goes once, on the refused Card. E2E 45557276812: told only to drop the count, then that the Card has
+ * no day's total, Coach drafted the held Card with none, KIFF refused it, and Coach told the owner KIFF couldn't hold
+ * "ask past €5 a refund, refuse past €50 a day", which the owner then changed to refuse past €5.
+ */
+export const KIFFS_OWN_TOTAL = `A held per-action limit's Card keeps one total, KIFF's own count, never the owner's: quantity "count", limit ${KIFF_COUNT_A_DAY}, window "calendar_day", no per. The day's total goes once, on the refused Card. Those two Cards hold the owner's rules as agreed: never tell them KIFF can't, and never ask them to change a rule for it.`;
 /** A count_on_amount refusal's: the count was never the owner's, so Coach drops it without asking them again. */
 export const COUNT_NEVER_A_RULE = "A count of calls on a tool with an amount limit is never one of the owner's rules: drop it without asking them.";
 
@@ -246,7 +254,7 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     // same amount on one tool make the stricter one decide past the limit, whatever was agreed. Never signed.
     const twice = dayTotalTwice(grant, draft.cards);
     if (twice) {
-      return { outcome: "answered", answer: `failed: the draft counts "${twice.tool}"'s ${twice.quantity} over a day on two Cards: ${twice.first.limit} on one whose on_exceed is "${twice.first.onExceed}", and ${twice.second.limit} on one whose on_exceed is "${twice.second.onExceed}". A day's total appears once, at the agreed amount, on the Card whose on_exceed is the agreed answer; a held per-action limit's Card has no day's total. Draft it again.`, note: W.dayTotalTwice(twice.tool), code: "day_total_twice" };
+      return { outcome: "answered", answer: `failed: the draft counts "${twice.tool}"'s ${twice.quantity} over a day on two Cards: ${twice.first.limit} on one whose on_exceed is "${twice.first.onExceed}", and ${twice.second.limit} on one whose on_exceed is "${twice.second.onExceed}". A day's total appears once, at the agreed amount, on the Card whose on_exceed is the agreed answer; a held per-action limit's Card has no day's total. ${KIFFS_OWN_TOTAL} Draft it again.`, note: W.dayTotalTwice(twice.tool), code: "day_total_twice" };
     }
     // A write with an amount limit is limited by its amounts, as agreed: a count of its calls beside them is a limit
     // nobody set (Evals 10 to 12: a refund Card also held past 1,000 refunds a day, so 1,001 one-cent refunds under the
@@ -256,7 +264,7 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     const counted = countOnAmountWrite(grant, draft.cards);
     if (counted) {
       const each = counted.per ? ` for each ${counted.per}` : "";
-      return { outcome: "answered", answer: `failed: the draft counts "${counted.tool}"'s calls (${counted.limit} per ${counted.window}${each}) beside its amount limits. A write with an amount limit has only the agreed amounts, each call's and the day's total: no count of its calls. Draft it again without the count.`, note: W.countOnAmount(counted.tool), code: "count_on_amount" };
+      return { outcome: "answered", answer: `failed: the draft counts "${counted.tool}"'s calls (${counted.limit} per ${counted.window}${each}) beside its amount limits. A write with an amount limit has only the agreed amounts, each call's and the day's total: no count of its calls. Draft it again without the count.${counted.held ? ` ${KIFFS_OWN_TOTAL}` : ""}`, note: W.countOnAmount(counted.tool), code: "count_on_amount" };
     }
   }
   // What happens past each limit is what the owner agreed (rules.ts): the newest rules they agreed in this conversation,
@@ -274,7 +282,7 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
  * resource_argument. KIFF's own count, the only total of a held Card, is never the owner's and is kept (kiffsOwnCount).
  * The tool is named as the connection titles it, with the count's limit, window and item.
  */
-export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; window: string; per?: string } | undefined {
+export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; window: string; per?: string; held?: true } | undefined {
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const writes = (grant.request.tools ?? []).filter((t) => !t.read_only && !t.setup_reads);
   type Aggregate = { quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown };
@@ -283,24 +291,27 @@ export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { to
     const name = fold(t.name || t.tool);
     if (!name) continue;
     let amount = false;
-    let count: { limit: number; window: string; per?: string } | undefined;
+    let count: { limit: number; window: string; per?: string; held?: true } | undefined;
     const resource = fold((t as { resource_argument?: unknown }).resource_argument);
     // The owner's limit for each item, as the rules draft it: never another item, or a day's count per item.
     const owners = (a: Aggregate) => !!resource && fold(a.per) === resource && ["lifetime", "rolling_7d"].includes(fold(a.window));
     for (const raw of cards) {
-      const card = raw as { grants?: unknown; aggregates?: unknown };
+      const card = raw as { grants?: unknown; aggregates?: unknown; on_exceed?: unknown };
       const grants = (Array.isArray(card.grants) ? card.grants : []) as Grant[];
       const mine = grants.filter((g) => fold(g.action) === name);
       if (!mine.length) continue;
       const aggregates = (Array.isArray(card.aggregates) ? card.aggregates : []) as Aggregate[];
-      if (mine.some((g) => Array.isArray(g.per_action_max) && (g.per_action_max as Aggregate[]).some((m) => fold(m.quantity).startsWith("sum(")))) amount = true;
+      const eachCall = mine.some((g) => Array.isArray(g.per_action_max) && (g.per_action_max as Aggregate[]).some((m) => fold(m.quantity).startsWith("sum(")));
+      if (eachCall) amount = true;
+      // A held Card with each call's limit: the count in its place is KIFF's own, which Coach hears (KIFFS_OWN_TOTAL).
+      const held = eachCall && fold(card.on_exceed) !== "refuse" ? { held: true as const } : {};
       for (const a of aggregates) {
         if (kiffsOwnCount(cards, card, a)) continue;
         if (fold(a.quantity).startsWith("sum(")) amount = true;
         const limit = typeof a.limit === "number" ? a.limit : 0;
         if (count || fold(a.quantity) !== "count" || limit <= 0) continue;
-        if (!fold(a.per)) count = { limit, window: fold(a.window) || "window" };
-        else if (!owners(a)) count = { limit, window: fold(a.window) || "window", per: (a.per as string).trim() };
+        if (!fold(a.per)) count = { limit, window: fold(a.window) || "window", ...held };
+        else if (!owners(a)) count = { limit, window: fold(a.window) || "window", per: (a.per as string).trim(), ...held };
       }
     }
     if (amount && count) return { tool: t.title || t.name || t.tool || name, ...count };
