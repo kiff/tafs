@@ -901,6 +901,8 @@ export const en = {
   chat_delete_busy: "This conversation is still working or waiting for you. Stop it or answer it first, then delete it.",
   card_step_give_passkey: "Approve with your passkey",
   card_step_sign_passkey: "Your approval signs this with your passkey, whose private key never leaves this computer or your security key. It isn't a payment or a password.",
+  // The one line in Coach's message box while it's locked: no typing until the Card step is approved.
+  card_step_locked: "Approve this first, then you can write to Coach.",
   cts_tafs_state: "See your tafs",
   cts_tafs_state_does: "Read each taf, its versions and its open runs.",
   cts_tafs_state_why: "It reads your account.",

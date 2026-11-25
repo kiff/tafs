@@ -815,6 +815,7 @@ export const et: Words = {
   chat_delete_busy: "See vestlus alles töötab või ootab sind. Peata see või vasta sellele kõigepealt, siis kustuta.",
   card_step_give_passkey: "Kinnita pääsuvõtmega",
   card_step_sign_passkey: "Sinu kinnitus allkirjastab selle sinu pääsuvõtmega, mille privaatvõti ei lahku kunagi sellest arvutist ega sinu turvavõtmest. See ei ole makse ega parool.",
+  card_step_locked: "Kinnita see kõigepealt, siis saad Coachile kirjutada.",
   cts_tafs_state: "Vaata oma tafe",
   cts_tafs_state_does: "Loeb iga tafi, selle versioone ja avatud käivitusi.",
   cts_tafs_state_why: "See loeb sinu kontot.",

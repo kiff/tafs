@@ -223,6 +223,7 @@ export const ptBR: Words = {
   chat_delete_busy: "Esta conversa ainda está trabalhando ou esperando por você. Pare ou responda primeiro e depois exclua.",
   card_step_give_passkey: "Aprovar com sua chave de acesso",
   card_step_sign_passkey: "Sua aprovação assina isto com sua chave de acesso, cuja chave privada nunca sai deste computador nem da sua chave de segurança. Não é um pagamento nem uma senha.",
+  card_step_locked: "Aprove isto primeiro e depois você poderá escrever para o Coach.",
   cr_solo_used_up: "Solo · os créditos deste período e seus pacotes foram usados",
   cr_solo_warn_pack: (pct) => `${pct} dos créditos deste período foram usados. Um pacote permite que seus tafs continuem para além disso.`,
   cr_solo_warn_wait: (pct, day) => `${pct} dos créditos deste período foram usados. Depois, seus tafs esperam até o período recomeçar em ${day}.`,

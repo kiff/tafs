@@ -815,6 +815,7 @@ export const ro: Words = {
   chat_delete_busy: "Această conversație încă lucrează sau vă așteaptă. Opriți-o sau răspundeți mai întâi, apoi ștergeți-o.",
   card_step_give_passkey: "Aprobați cu cheia de acces",
   card_step_sign_passkey: "Aprobarea dvs. semnează acest lucru cu cheia dvs. de acces, a cărei cheie privată nu părăsește niciodată acest computer sau cheia dvs. de securitate. Nu este o plată sau o parolă.",
+  card_step_locked: "Aprobați mai întâi acest lucru, apoi îi puteți scrie lui Coach.",
   cts_tafs_state: "Vedeți tafurile dvs.",
   cts_tafs_state_does: "Citește fiecare taf, versiunile lui și rulările deschise.",
   cts_tafs_state_why: "Citește contul dvs.",

@@ -822,6 +822,7 @@ export const de: Words = {
   chat_delete_busy: "Diese Unterhaltung arbeitet noch oder wartet auf dich. Stopp sie oder antworte zuerst, dann lösche sie.",
   card_step_give_passkey: "Mit deinem Passkey genehmigen",
   card_step_sign_passkey: "Deine Genehmigung signiert das mit deinem Passkey, dessen privater Schlüssel diesen Computer oder deinen Sicherheitsschlüssel nie verlässt. Sie ist keine Zahlung und kein Passwort.",
+  card_step_locked: "Du musst das zuerst genehmigen, dann kannst du Coach schreiben.",
   cts_tafs_state: "Deine tafs sehen",
   cts_tafs_state_does: "Jeden taf, seine Versionen und seine offenen Läufe lesen.",
   cts_tafs_state_why: "Er liest dein Konto.",

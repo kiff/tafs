@@ -822,6 +822,7 @@ export const pt: Words = {
   chat_delete_busy: "Esta conversa ainda está a trabalhar ou à sua espera. Pare-a ou responda primeiro e depois elimine-a.",
   card_step_give_passkey: "Aprovar com a sua chave de acesso",
   card_step_sign_passkey: "A sua aprovação assina isto com a sua chave de acesso, cuja chave privada nunca sai deste computador nem da sua chave de segurança. Não é um pagamento nem uma palavra-passe.",
+  card_step_locked: "Aprove isto primeiro e depois poderá escrever ao Coach.",
   cts_tafs_state: "Ver os seus tafs",
   cts_tafs_state_does: "Ler cada taf, as suas versões e as execuções em aberto.",
   cts_tafs_state_why: "Lê a sua conta.",

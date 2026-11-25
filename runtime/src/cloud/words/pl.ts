@@ -822,6 +822,7 @@ export const pl: Words = {
   chat_delete_busy: "Ta rozmowa nadal działa lub czeka na Ciebie. Najpierw ją zatrzymaj albo odpowiedz, potem ją usuń.",
   card_step_give_passkey: "Zatwierdź kluczem dostępu",
   card_step_sign_passkey: "Twoje zatwierdzenie podpisuje to Twoim kluczem dostępu. Jego klucz prywatny trzyma ten komputer albo Twój klucz bezpieczeństwa i nigdy go nie oddaje. To nie jest płatność ani hasło.",
+  card_step_locked: "Najpierw to zatwierdź, potem możesz pisać do Coacha.",
   cts_tafs_state: "Zobacz swoje tafy",
   cts_tafs_state_does: "Odczytaj każdy taf, jego wersje i otwarte uruchomienia.",
   cts_tafs_state_why: "Odczytuje Twoje konto.",

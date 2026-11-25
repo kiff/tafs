@@ -815,6 +815,7 @@ export const hr: Words = {
   chat_delete_busy: "Ovaj razgovor još radi ili čeka vas. Najprije ga zaustavite ili odgovorite, zatim ga izbrišite.",
   card_step_give_passkey: "Odobri pristupnim ključem",
   card_step_sign_passkey: "Vaše odobrenje to potpisuje vašim pristupnim ključem, čiji privatni ključ nikad ne napušta ovo računalo ni vaš sigurnosni ključ. To nije plaćanje ni lozinka.",
+  card_step_locked: "Najprije ovo odobrite, zatim možete pisati Coachu.",
   cts_tafs_state: "Pogledati vaše tafove",
   cts_tafs_state_does: "Čita svaki taf, njegove verzije i otvorena izvođenja.",
   cts_tafs_state_why: "Čita vaš račun.",
