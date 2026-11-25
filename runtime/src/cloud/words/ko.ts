@@ -811,6 +811,8 @@ export const ko: Words = {
   card_step_exact: "내가 서명하는 내용 그대로",
   card_step_give_fingerprint: "지문으로 승인",
   card_step_give_face: "얼굴로 승인",
+  card_step_give_passkey: "패스키로 승인",
+  card_step_sign_passkey: "내 승인은 패스키로 서명되며, 그 개인 키는 이 컴퓨터나 보안 키 밖으로 나가지 않습니다. 결제나 비밀번호가 아닙니다.",
   cts_tafs_state: "내 tafs 보기",
   cts_tafs_state_does: "각 taf와 버전, 진행 중인 실행을 읽습니다.",
   cts_tafs_state_why: "내 계정을 읽습니다.",

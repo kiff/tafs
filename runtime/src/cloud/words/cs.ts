@@ -807,6 +807,8 @@ export const cs: Words = {
   card_step_exact: "Přesně to, co podepisujete",
   card_step_give_fingerprint: "Schválit otiskem prstu",
   card_step_give_face: "Schválit obličejem",
+  card_step_give_passkey: "Schválit přístupovým klíčem",
+  card_step_sign_passkey: "Vaše schválení to podepíše vaším přístupovým klíčem, jehož soukromý klíč nikdy neopustí tento počítač ani váš bezpečnostní klíč. Není to platba ani heslo.",
   cts_tafs_state: "Zobrazit vaše tafy",
   cts_tafs_state_does: "Čte každý taf, jeho verze a otevřené běhy.",
   cts_tafs_state_why: "Čte váš účet.",

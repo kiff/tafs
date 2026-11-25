@@ -807,6 +807,8 @@ export const lv: Words = {
   card_step_exact: "Tieši tas, ko tu paraksti",
   card_step_give_fingerprint: "Apstiprināt ar pirksta nospiedumu",
   card_step_give_face: "Apstiprināt ar seju",
+  card_step_give_passkey: "Apstiprināt ar piekļuves atslēgu",
+  card_step_sign_passkey: "Tavs apstiprinājums to paraksta ar tavu piekļuves atslēgu, kuras privātā atslēga nekad neatstāj šo datoru vai tavu drošības atslēgu. Tas nav maksājums vai parole.",
   cts_tafs_state: "Skatīt tavus taf",
   cts_tafs_state_does: "Lasa katru taf, tā versijas un atvērtās izpildes.",
   cts_tafs_state_why: "Tas lasa tavu kontu.",

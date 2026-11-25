@@ -807,6 +807,8 @@ export const hu: Words = {
   card_step_exact: "Pontosan, amit aláírsz",
   card_step_give_fingerprint: "Jóváhagyás ujjlenyomattal",
   card_step_give_face: "Jóváhagyás arccal",
+  card_step_give_passkey: "Jóváhagyás azonosítókulccsal",
+  card_step_sign_passkey: "A jóváhagyásod ezt az azonosítókulcsoddal írja alá, amelynek privát kulcsa soha nem hagyja el ezt a számítógépet vagy a biztonsági kulcsodat. Ez nem fizetés és nem jelszó.",
   cts_tafs_state: "A tafjaid megtekintése",
   cts_tafs_state_does: "Elolvassa az egyes tafokat, a verzióikat és a nyitott futásaikat.",
   cts_tafs_state_why: "A fiókodat olvassa.",

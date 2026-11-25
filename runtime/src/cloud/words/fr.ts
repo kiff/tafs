@@ -814,6 +814,8 @@ export const fr: Words = {
   card_step_exact: "Exactement ce que vous signez",
   card_step_give_fingerprint: "Approuver avec l'empreinte",
   card_step_give_face: "Approuver avec le visage",
+  card_step_give_passkey: "Approuver avec votre clé d'accès",
+  card_step_sign_passkey: "Votre approbation signe cela avec votre clé d'accès, dont la clé privée ne quitte jamais cet ordinateur ni votre clé de sécurité. Ce n'est ni un paiement ni un mot de passe.",
   cts_tafs_state: "Voir vos tafs",
   cts_tafs_state_does: "Lire chaque taf, ses versions et ses exécutions en cours.",
   cts_tafs_state_why: "Il lit votre compte.",

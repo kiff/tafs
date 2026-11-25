@@ -807,6 +807,8 @@ export const zhHant: Words = {
   card_step_exact: "您簽署的確切內容",
   card_step_give_fingerprint: "以指紋核准",
   card_step_give_face: "以臉孔核准",
+  card_step_give_passkey: "以通行密鑰核准",
+  card_step_sign_passkey: "您的核准會以您的通行密鑰簽署，其私密金鑰永遠不會離開這部電腦或您的安全金鑰。這不是付款，也不是密碼。",
   cts_tafs_state: "查看您的 taf",
   cts_tafs_state_does: "讀取每個 taf、它的版本和進行中的執行。",
   cts_tafs_state_why: "它會讀取您的帳號。",

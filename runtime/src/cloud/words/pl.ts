@@ -814,6 +814,8 @@ export const pl: Words = {
   card_step_exact: "Dokładnie to, co podpisujesz",
   card_step_give_fingerprint: "Zatwierdź odciskiem palca",
   card_step_give_face: "Zatwierdź twarzą",
+  card_step_give_passkey: "Zatwierdź kluczem dostępu",
+  card_step_sign_passkey: "Twoje zatwierdzenie podpisuje to Twoim kluczem dostępu. Jego klucz prywatny trzyma ten komputer albo Twój klucz bezpieczeństwa i nigdy go nie oddaje. To nie jest płatność ani hasło.",
   cts_tafs_state: "Zobacz swoje tafy",
   cts_tafs_state_does: "Odczytaj każdy taf, jego wersje i otwarte uruchomienia.",
   cts_tafs_state_why: "Odczytuje Twoje konto.",
