@@ -66,7 +66,7 @@ import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, set
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { inboxMarks, inboxState, markInbox } from "./watch-inbox.js";
-import { type Ask, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, askDay, askOfSession, type AskState, checkedLine, CLIENT_ID, dayTurns, fullAnswer, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, ROUTING_MS, shownAsk, SINCE_DEFAULT_MS, tafLine, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
+import { type Ask, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, askDay, askOfSession, type AskState, checkedLine, CLIENT_ID, dayTurns, fullAnswer, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, ROUTING_MS, shownAsk, SINCE_DEFAULT_MS, tafLine, WATCH_TOOLS, watchCoachLine, watchDaysOf, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, unagreedRefusal, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
@@ -11564,7 +11564,9 @@ async function watchRoute(event: HTTPEvent, method: string, parts: string[], dep
   if (parts.length === 3 && method === "GET") {
     const raw = new URLSearchParams(event.rawQueryString ?? "").get("since") ?? "";
     const since = raw && !Number.isNaN(Date.parse(raw)) ? new Date(Date.parse(raw)) : new Date(now.getTime() - SINCE_DEFAULT_MS);
-    return { asks: (await recentAsks(store, me.tenantID, me.subject, since)).map((a) => shownAsk(a, lang)) };
+    // `taf_chat`: whether this account's watch may send to a taf it chose (TAFS_WATCH_TAF_CHAT), read before any send, so a
+    // watch says it's off before the person records, never after (the owner's Watch 5 test, 25 Nov).
+    return { asks: (await recentAsks(store, me.tenantID, me.subject, since)).map((a) => shownAsk(a, lang)), taf_chat: onFor(deps.watchTafChat, me.tenantID) };
   }
   if (parts.length === 4 && method === "GET") {
     const ask = await ownAsk(store, me.tenantID, me.subject, parts[3] ?? "");
@@ -11719,11 +11721,13 @@ async function watchTafMessage(event: HTTPEvent, me: KIFFIdentity, store: CoachS
 }
 
 /**
- * "Read more" on a taf chat's answer (`?full=1`): the whole answer, read from the taf's run on each tap and kept nowhere,
- * checked paragraph by paragraph (fullAnswer). Only for the person's own finished taf chat, and only while KIFF still lets
- * them use the taf; anything else has no `text`, and the watch shows the line, then "the rest is on your phone".
+ * "Read more" (`?full=1`): the whole answer, read from its run on each tap and kept nowhere, checked paragraph by paragraph
+ * (fullAnswer). For the person's own finished taf chat, only while KIFF still lets them use the taf; for the person's own
+ * Coach request whose line was cut, from the Coach run that gave the line. Anything else has no `text`, and the watch shows
+ * the line, then "the rest is on your phone".
  */
 async function watchFullAnswer(event: HTTPEvent, me: KIFFIdentity, ask: Ask, deps: Deps): Promise<{ text?: string }> {
+  if (ask.kind !== "taf") return coachFullAnswer(me, ask, deps);
   // Only a finished answer: a run at work, held or paused on the person, or failed, has none (its status is read back below).
   if (ask.kind !== "taf" || !ask.taf || !ask.taf_run) return {};
   const taf = await owned(me, ask.taf.id, deps).catch(() => undefined);
@@ -11733,6 +11737,20 @@ async function watchFullAnswer(event: HTTPEvent, me: KIFFIdentity, ask: Ask, dep
   const grant = taf.kiffAgent ? await runGrant(bearer(event), taf.kiffAgent, deps.fetch, deps.kiffBase) : undefined;
   if (typeof grant !== "string" || grant === "no_access") return {};
   const r = await deps.agents.getRun(me.tenantID, taf.id, ask.taf_run).catch(() => undefined);
+  const text = r && r.status === "COMPLETED" ? fullAnswer(r.output) : undefined;
+  return text ? { text } : {};
+}
+
+/**
+ * A Coach request's whole answer: only once it's final with a cut line, and only from the run that gave it, which must be
+ * a run of the account's Coach as it is now (a Coach removed or made again has none). The request is the person's own
+ * (ownAsk), and the run is their own conversation's, started as them.
+ */
+async function coachFullAnswer(me: KIFFIdentity, ask: Ask, deps: Deps): Promise<{ text?: string }> {
+  if (!ask.more || !ask.line_run || !ASK_FINAL.includes(ask.state)) return {};
+  const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!setup || setup.id !== ask.line_run.agent) return {};
+  const r = await deps.agents.getRun(me.tenantID, setup.id, ask.line_run.run).catch(() => undefined);
   const text = r && r.status === "COMPLETED" ? fullAnswer(r.output) : undefined;
   return text ? { text } : {};
 }
@@ -11927,15 +11945,20 @@ async function watchCoachEnded(tenant: string, id: string, note: { run: string; 
     await watchChanged(tenant, ask, deps);
     return true;
   }
-  const line = r.status === "COMPLETED" ? checkedLine(r.output) : undefined;
+  const said = r.status === "COMPLETED" ? watchCoachLine(r.output) : { more: false };
+  const line = said.line;
+  // A cut line says so, and keeps which run gave it, for the whole answer on `?full=1`; a line that wasn't cut clears both.
+  delete ask.more;
+  delete ask.line_run;
+  const more = said.more ? { more: true, line_run: { agent: note.agent, run: note.run } } : {};
   if (ask.turn === "result") {
-    Object.assign(ask, { state: ask.next ?? "done", ...(line ? { line } : {}) });
+    Object.assign(ask, { state: ask.next ?? "done", ...(line ? { line, ...more } : {}) });
   } else if (!ask.taf) {
     // Coach answered itself (W5, the owner's Watch 5 test: every ask Coach answered read "No taf took it"): done, with its
     // line. No taf took it only when Coach's turn ends with nothing to show. A turn that sent a taf_task this request never
     // took (the 17:33 ask) handed work over elsewhere: its sentence ("…: working.") is no answer, so the request failed.
     const handedElsewhere = (r.tally?.taf_task?.sent ?? 0) > 0 || (r.done ?? []).some((d) => d.tool === "taf_task");
-    Object.assign(ask, r.status !== "COMPLETED" || handedElsewhere ? { state: "failed" } : line ? { state: "done", line } : { state: "no_taf" });
+    Object.assign(ask, r.status !== "COMPLETED" || handedElsewhere ? { state: "failed" } : line ? { state: "done", line, ...more } : { state: "no_taf" });
   } else {
     return true; // routed: the taf's run tells how it went
   }

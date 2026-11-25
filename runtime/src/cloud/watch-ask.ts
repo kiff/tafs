@@ -39,8 +39,10 @@ export interface Ask {
   reply_to?: string;
   /** A message to a taf the person chose (TAFS_WATCH_TAF_CHAT): it went into that taf's own chat, never through Coach. */
   kind?: "taf";
-  /** The taf's answer was longer than the watch shows: the rest is on the phone. */
+  /** The answer was longer than the watch shows (a taf chat's, or Coach's line): the rest is read whole with `?full=1`. */
   more?: boolean;
+  /** The run whose answer gave a cut Coach line, for `?full=1`: tafs cloud's taf id (Coach's) and the run. Never shown. */
+  line_run?: { agent: string; run: string };
   /** The taf waits on the person (an approval, a question): they answer it on the phone, never on the watch. */
   held?: boolean;
   /** Which of Coach's turns is at work: routing the request, or writing the taf's result as a line. */
@@ -63,7 +65,7 @@ export interface ShownAsk {
    * thread or a cache), and draw it only in that taf's chat while it's open.
    */
   kind?: "taf";
-  /** A taf chat's answer goes on past the line: the rest is on the phone. */
+  /** The answer goes on past the line, a taf chat's or Coach's: `GET /v1/watch/asks/{id}?full=1` gives it whole. */
   more?: boolean;
   /** A taf chat's taf waits on the person, on the phone. */
   held?: boolean;
@@ -141,7 +143,20 @@ export function checkedLine(raw: unknown, max = LINE_MAX): string | undefined {
  * control characters), at most TAF_LINE_MAX, and whether there was more than that (the rest is on the phone).
  */
 export function tafLine(raw: unknown): { line?: string; more: boolean } {
-  const line = checkedLine(raw, TAF_LINE_MAX);
+  return cutLine(raw, TAF_LINE_MAX);
+}
+
+/**
+ * Coach's answer to a watch request as the watch shows it: checkedLine at LINE_MAX, and whether it went on past that, so
+ * the watches and the phone's Today sheet say there's more and open it whole (the owner's Watch 5 test, 25 Nov: "…the
+ * computer is…" with no way to read the rest).
+ */
+export function watchCoachLine(raw: unknown): { line?: string; more: boolean } {
+  return cutLine(raw, LINE_MAX);
+}
+
+function cutLine(raw: unknown, max: number): { line?: string; more: boolean } {
+  const line = checkedLine(raw, max);
   return { ...(line ? { line } : {}), more: line !== undefined && line !== checkedLine(raw, Number.MAX_SAFE_INTEGER) };
 }
 
@@ -228,6 +243,8 @@ export interface WatchTurn {
   kind?: "taf";
   state: AskState;
   line?: string;
+  /** The line was cut (ShownAsk's `more`): the whole answer is `GET /v1/watch/asks/{id}?full=1`. */
+  more?: boolean;
   words: string;
   /** The request it replies to, listed just before it the same day. */
   reply_to?: string;
@@ -265,7 +282,7 @@ export function dayTurns(said: Array<{ ask: Ask; said: string }>, lang: Lang): W
     const shown = shownAsk(t.ask, lang);
     const to = t.ask.reply_to && listed.has(t.ask.reply_to) && t.ask.reply_to !== t.ask.id ? t.ask.reply_to : undefined;
     out.push({ id: shown.id, said: t.said, said_at: t.ask.at, ...(shown.taf ? { taf: shown.taf } : {}), ...(shown.kind ? { kind: shown.kind } : {}), state: shown.state,
-      ...(shown.line ? { line: shown.line } : {}), words: shown.words, ...(to ? { reply_to: to } : {}) });
+      ...(shown.line ? { line: shown.line } : {}), ...(shown.more ? { more: true } : {}), words: shown.words, ...(to ? { reply_to: to } : {}) });
     for (const r of replies.get(t.ask.id) ?? []) place(r);
   };
   // A request whose own request is listed comes under it; any other starts where its time puts it.
