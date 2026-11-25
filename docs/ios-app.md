@@ -855,10 +855,12 @@ screen is as before.
   are still to give (`tools.connect`), the box is one locked line in tafs cloud's words (the step's `row`) that opens the
   step (`SetupChatView.lockedComposer`). When only Cards for tools Coach gained since are missing, typing stays open.
 - **Later approvals of Coach's Cards** (the tools step, once Coach exists): the step lists every tool while the draft may
-  carry only the missing Cards, so the plain list is never presented as what's signed there. Coach's Cards in KIFF's own
-  words come first, unfolded, and the tools sit under the fold (`CoachToolsGiven.stepBody`), until tafs cloud marks
-  which tools a partial draft covers.
-- Tests: `CardStepTests`: the list matches the draft, each change to a signed Card or to the list fails closed, and the
+  carry only the missing Cards. tafs cloud marks the ones it carries (`in_draft`), and only those are compared with the
+  draft, both ways, on the same allowlist (`CoachTools.draftSigns`). That check runs at Give, after the byte-for-byte
+  re-read and before Face ID, and a mismatch signs nothing. Coach's Cards in KIFF's own words come first, unfolded, and the
+  tools sit under the fold (`CoachToolsGiven.stepBody`). From a tafs cloud that doesn't mark them, KIFF's words are what's
+  shown as signed, as before.
+- Tests: `CardStepTests`: the list matches the draft, a later approval compares only the tools `in_draft`, each change to a signed Card or to the list fails closed, and the
   Card step shows only when every line came.
 
 ## The calendar

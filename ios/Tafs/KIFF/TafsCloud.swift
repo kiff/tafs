@@ -2631,12 +2631,13 @@ final class TafsCloud {
             return !shown.isEmpty && shown == signed
         }
 
-        /// What the step shows, one entry per tool; nil when a tool doesn't say all of it, or a tool is listed twice.
+        /// What the step shows as signed by this draft, one entry per tool (those `in_draft`, or every one from a tafs cloud
+        /// that doesn't mark them); nil when such a tool doesn't say all of it, or a tool is listed twice.
         static func shown(_ step: CoachTools.Step) -> Set<Signed>? {
             var out = Set<Signed>()
             var tools = Set<String>()
             for group in step.groups {
-                for t in group.tools {
+                for t in group.tools where t.inDraft != false {
                     guard let tool = t.tool, !tool.isEmpty, let card = t.card, !card.isEmpty, let limit = t.limit, limit >= 0, let asks = t.asks,
                           tools.insert(tool.lowercased()).inserted else { return nil }
                     out.insert(Signed(card: card, tool: tool.lowercased(), limit: limit, asks: asks))
@@ -2712,8 +2713,11 @@ final class TafsCloud {
                 var card: String? = nil
                 var limit: Int? = nil
                 var asks: Bool? = nil
-                init(name: String, does: String = "", why: String = "", tool: String? = nil, card: String? = nil, limit: Int? = nil, asks: Bool? = nil) {
-                    self.name = name; self.does = does; self.why = why; self.tool = tool; self.card = card; self.limit = limit; self.asks = asks
+                /// Whether its Card is in the draft this same answer carries to sign: every one on a first start, only the
+                /// missing ones later. Nil from a tafs cloud that doesn't say.
+                var inDraft: Bool? = nil
+                init(name: String, does: String = "", why: String = "", tool: String? = nil, card: String? = nil, limit: Int? = nil, asks: Bool? = nil, inDraft: Bool? = nil) {
+                    self.name = name; self.does = does; self.why = why; self.tool = tool; self.card = card; self.limit = limit; self.asks = asks; self.inDraft = inDraft
                 }
                 init(from decoder: Decoder) throws {
                     let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -2722,8 +2726,9 @@ final class TafsCloud {
                     card = (try? c.decodeIfPresent(String.self, forKey: .card)) ?? nil
                     limit = (try? c.decodeIfPresent(Int.self, forKey: .limit)) ?? nil
                     asks = (try? c.decodeIfPresent(Bool.self, forKey: .asks)) ?? nil
+                    inDraft = (try? c.decodeIfPresent(Bool.self, forKey: .inDraft)) ?? nil
                 }
-                enum CodingKeys: String, CodingKey { case name, does, why, tool, card, limit, asks }
+                enum CodingKeys: String, CodingKey { case name, does, why, tool, card, limit, asks, inDraft = "in_draft" }
             }
             struct Group: Decodable, Equatable {
                 var name = ""
@@ -2775,6 +2780,18 @@ final class TafsCloud {
 
         var toGive: Bool { state == "to_give" }
         var given: Bool { state == "given" }
+
+        /// The Cards' draft this read asks to sign: on its own (`card`), or in the pair (`together`).
+        var draftBody: Data? { card?.body ?? together?.draft?.body }
+
+        /// Shown = signed for a later approval of Coach's Cards: when tafs cloud marks which tools this draft carries
+        /// (`in_draft`), those must be exactly what the draft signs (`CardStepCheck`). True with no draft to sign, and from a
+        /// tafs cloud that doesn't mark them, where KIFF's own words are what's shown as signed.
+        var draftSigns: Bool {
+            guard let draftBody else { return true }
+            guard let step, step.groups.contains(where: { $0.tools.contains { $0.inDraft != nil } }) else { return true }
+            return CardStepCheck.matches(step: step, draft: draftBody, agent: "")
+        }
 
         /// Read from `GET /v1/setup`'s answer; nil from a tafs cloud that sends no `tools`.
         /// The bodies are kept as their own bytes: they're signed and sent as they came.

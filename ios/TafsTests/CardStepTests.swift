@@ -89,6 +89,31 @@ final class CardStepTests: XCTestCase {
         XCTAssertFalse(matches(cards(), step: #"{"title":"t","groups":[]}"#), "nothing shown")
     }
 
+    /// A later approval (Coach exists, some Cards held): the step lists every tool and marks those its draft carries
+    /// (`in_draft`); only those are compared with the draft, both ways.
+    func testALaterApprovalComparesTheToolsInItsDraft() {
+        let marked = step
+            .replacingOccurrences(of: #""asks":false}"#, with: #""asks":false,"in_draft":false}"#)
+            .replacingOccurrences(of: #""asks":true}"#, with: #""asks":true,"in_draft":true}"#)
+        let partial = cards { $0.removeFirst() }
+        XCTAssertTrue(matches(partial, step: marked), "the two drafted Cards, as marked")
+        XCTAssertFalse(matches(cards(), step: marked), "a Card in the draft the step doesn't mark")
+        XCTAssertFalse(matches(cards { $0.removeFirst(); $0.removeLast() }, step: marked), "a marked tool whose Card isn't in the draft")
+        XCTAssertFalse(matches(partial, step: step), "unmarked, every tool must be in the draft")
+
+        var tools = TafsCloud.CoachTools()
+        tools.state = "to_give"
+        tools.step = decoded(marked)
+        tools.card = .init(body: partial)
+        XCTAssertTrue(tools.draftSigns)
+        tools.card = .init(body: cards())
+        XCTAssertFalse(tools.draftSigns, "the read's draft signs more than the step marks: nothing is signed")
+        tools.step = decoded(step.replacingOccurrences(of: #","card":"coach-reads""#, with: #","card":"coach-reads""#))
+        XCTAssertTrue(tools.draftSigns, "a tafs cloud that doesn't mark them: KIFF's own words are what's shown as signed")
+        tools.card = nil
+        XCTAssertTrue(tools.draftSigns, "no draft to sign")
+    }
+
     /// Start's words carry the Card step; without every line of it, Start's screen is as before.
     func testStartsWordsMakeTheCardStepOnlyWhenComplete() {
         func start(_ words: String) -> TafsCloud.CoachStart? {

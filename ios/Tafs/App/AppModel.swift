@@ -2410,7 +2410,7 @@ final class AppModel: ObservableObject {
         // Only the step that was shown is signed: tafs cloud's read now must be byte for byte the batch, the
         // Cards' draft and the pair the person read. On any difference nothing is signed; the step is drawn
         // again from this read (above), and the person reads it and gives again.
-        guard let shown, Self.toolsBodies(shown) == Self.toolsBodies(tools) else {
+        guard let shown, Self.toolsBodies(shown) == Self.toolsBodies(tools), tools.draftSigns else {
             coachToolsError = Words.Version.outOfDateCard
             return false
         }
