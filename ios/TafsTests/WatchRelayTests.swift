@@ -208,7 +208,8 @@ final class WatchRelayTests: XCTestCase {
 
         var read = WatchRequest(.needsYou, made: now)
         read.mark = WatchMark.make()
-        XCTAssertEqual((await send(read, reading: reading)).outcome, .ok, "a read is the same for anyone")
+        let readReply = await send(read, reading: reading)
+        XCTAssertEqual(readReply.outcome, .ok, "a read is the same for anyone")
         XCTAssertFalse(WatchRequest.Kind.needsYou.carriesMark)
         XCTAssertFalse(WatchRequest.Kind.transcribe.carriesMark)
         XCTAssertTrue([WatchRequest.Kind.refuse, .halt, .haltAll, .coach, .coachSend, .inboxMark].allSatisfy(\.carriesMark))
