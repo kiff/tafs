@@ -1043,6 +1043,14 @@ export class Agents {
     return out.session;
   }
 
+  /**
+   * Deletes a session for good, its files first, then its events and the session itself: with `owner`, only one that is
+   * exactly theirs (a job's thread, or another person's, answers 404). Its runs' records and the usage they counted stay.
+   */
+  async deleteSession(tenant: string, id: string, owner: string): Promise<void> {
+    await this.call("DELETE", tenant, ["sessions", id], undefined, as(owner));
+  }
+
   /** The agent's notes: with `owner`, the shared ones and that person's own; without, every note, as the service. */
   async memories(tenant: string, agent: string, owner?: string): Promise<Note[]> {
     return (await this.call<{ memories: Note[] }>("GET", tenant, ["agents", agent, "memories"], undefined, as(owner))).memories;

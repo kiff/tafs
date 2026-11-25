@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, chatTitle, handle, HELD_FULL_WORDS, type HTTPEvent, MEMORY, NOT_SENT_WORDS, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
+import { keys as coachKeys } from "../src/cloud/coach.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { withReplyLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { contract } from "./contract.js";
@@ -1674,6 +1675,51 @@ describe("chats (kiff/tafs#73)", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${job.session}/archive`, { token: "ana" })).status).toBe(404);
     expect((await call(w, "POST", `/v1/tafs/${MAX}/chats/${theirs.session}/archive`, { token: "ana" })).status).toBe(404);
     expect(w.agents.calls.filter((c) => c.startsWith("archive"))).toEqual([]);
+  });
+
+  it("deletes a person's own chat for good, with what tafs cloud kept beside it, and keeps the runs' records", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const old = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe", ANA);
+    (w.agents.runs.find((x) => x.id === old.id) as { status: string }).status = "COMPLETED";
+    w.at(NOW);
+    w.agents.events.get(old.session)!.push({ session: old.session, run: old.id, seq: 9, time: NOW.toISOString(), kind: "answered",
+      body: { id: "c_approve", type: "approval", answer: "failed: rules not agreed" } });
+    const until = new Date(NOW.getTime() + 86_400_000);
+    const kept = [`t_acme#set-aside#${old.session}`, `t_acme#coach-connected#${old.session}`, coachKeys.chatNotes("t_acme", "u_ana", old.session),
+      `t_acme#approval-note#${old.session}#c_approve`];
+    const other = `t_acme#approval-note#other-session#c_approve`;
+    for (const key of [...kept, other]) await w.coach.put(key, { note: "x" }, until);
+
+    const r = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${old.session}`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ session: old.session, deleted: true });
+    expect(w.agents.calls).toContain(`deleteSession ${old.session} member:u_ana`);
+    for (const key of kept) expect(await w.coach.get(key)).toBeUndefined();
+    expect(await w.coach.get(other)).toEqual({ note: "x" });
+    // Gone from the list and by its id; the run's record stays.
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).body.chats).toEqual([]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${old.session}`, { token: "ana" })).status).toBe(404);
+    expect(w.agents.runs.some((x) => x.id === old.id)).toBe(true);
+    // A second delete finds nothing.
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${old.session}`, { token: "ana" })).status).toBe(404);
+  });
+
+  it("deletes only the person's own chat with that taf, and never one still working or waiting on them", async () => {
+    const w = world();
+    const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
+    const job = await jobRun(w, NOW, "Done.");
+    const bos = await w.agents.api.startRun("t_acme", RAE, "Mine", { requester: { kind: "member" as const, id: "u_bos" } });
+    (w.agents.runs.find((x) => x.id === bos.id) as { status: string }).status = "COMPLETED";
+    for (const [taf, session] of [[RAE, theirs.session], [RAE, job.session], [MAX, theirs.session], [RAE, bos.session], [RAE, "archived"]] as const) {
+      expect((await call(w, "DELETE", `/v1/tafs/${taf}/chats/${session}`, { token: "ana" })).status).toBe(404);
+    }
+    const working = await w.agents.api.startRun("t_acme", RAE, "Still going", ANA);
+    const busy = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${working.session}`, { token: "ana" });
+    expect(busy.status).toBe(409);
+    (w.agents.runs.find((x) => x.id === working.id) as { status: string }).status = "PAUSED";
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${working.session}`, { token: "ana" })).status).toBe(409);
+    expect(w.agents.calls.filter((c) => c.startsWith("deleteSession"))).toEqual([]);
   });
 
   it("moves the chats archived before kiff/agents kept archives there, once", async () => {
