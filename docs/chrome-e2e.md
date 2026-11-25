@@ -248,9 +248,7 @@ Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
 
-- **The taf's click on a link to a sensitive site of the grant that the phone didn't allow asks that site for its page**
-  (`gaps.e2e.test.js`). `runner.js` `fence()` allows every site of the grant (`run.sites` and `run.allowed`), including a
-  sensitive one the phone didn't allow, so Chrome lets the main-frame request go. Only `onBeforeNavigate` refuses it
-  (`refuseURL`: `site_blocked`), by sending the run's own tab to `about:blank`, which races the request without stopping it.
-  With a connection to that site already open, it gets the request every time, with the person's cookies. Nothing of its page
-  is read. The act answers `bad_url` and the move is recorded as `site_not_listed`; the real code is `site_blocked`.
+None. Fixed in 0.2.19: **the taf's click on a link to a sensitive site of the grant that the phone didn't allow** asked that
+site for its page, because the fence allowed every site of the grant and only `onBeforeNavigate` raced the request. The fence's
+rules now say what `refuseURL` says, so Chrome stops the request before it's sent, and the act answers `site_blocked`
+(`gaps.e2e.test.js`).

@@ -56,10 +56,7 @@ test("a sensitive site of the grant opens only on the phone's own signed allowan
   await h.fromPanel({ type: "stop", run });
 });
 
-test("the taf's click on a link to a sensitive site of the grant the phone didn't allow: the bank is never asked for anything", {
-  skip,
-  todo: "runner.js fence() allows every site of the grant (requestDomains: run.sites and run.allowed), a sensitive one the phone didn't allow among them, so Chrome's fence lets the main-frame request to bank.test go; only onBeforeNavigate refuses it (refuseURL: site_blocked) and sends the run's own tab to about:blank, racing the request it doesn't stop. With a connection to the bank already open, bank.test gets GET /?from=link every time, with the person's cookies. The act answers bad_url and the move is recorded as site_not_listed, neither of them the code (site_blocked).",
-}, async () => {
+test("the taf's click on a link to a sensitive site of the grant the phone didn't allow: the bank is never asked for anything", { skip }, async () => {
   // The person uses their bank in this Chrome, as people do: Chrome holds a connection to it. (With none open yet, the new
   // connection is slow enough that the tab's blank page sometimes wins; with one, the request goes every time.)
   const own = await h.context.newPage();
@@ -75,6 +72,9 @@ test("the taf's click on a link to a sensitive site of the grant the phone didn'
   await h.fromPanel({ type: "stop", run });
   assert.ok(!JSON.stringify(clicked).includes(BANK_WORDS), "the bank's page was read");
   assert.deepEqual(bankHits().slice(before), [], "bank.test was asked for its page");
+  // Chrome's own fence stopped it (0.2.19), and the act says why: the site check's code, not a blank page's.
+  assert.equal(clicked.ok, false);
+  assert.equal(clicked.error.code, "site_blocked");
 });
 
 // ---- Not on this site ----
