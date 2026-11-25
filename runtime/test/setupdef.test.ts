@@ -336,7 +336,11 @@ describe("Setup's definition on kiff/agents", () => {
     // An approval carries no words of Coach's: what the owner reads as they grant is planque's and KIFF's.
     expect(flat).toContain("An approval carries only its grant and draft, never a title or words of yours");
     // A result's tools are KIFF's names, never titles: show refuses titles, and the hand-over then lost its closing message.
-    expect(flat).toContain("and tools: the tools' names in KIFF as planque's status lists them (post_reply_k3f9), never their titles or the owner's words for them.");
+    // E2E 45564181041: with draft-the-card@47's names copied letter for letter, KIFF still refused create_refund_sqfk twice
+    // ("not declared"): planque listed create_refund, and this line's example ending in four letters was still loaded on
+    // every Setup start. No example name: copied, never built.
+    expect(flat).toContain("and tools: the tools' names in KIFF as planque's status lists them, letter for letter, never their titles or the owner's words for them.");
+    expect(flat).not.toContain("post_reply_k3f9");
     expect(flat).toContain("also when that result was refused once and shown again");
     // Text before a tool call comes back as an empty progress note on Opus 5.5: the plan first, the closing text last.
     expect(flat).toContain("In that turn, show the plan with its last steps done first, then end the turn with the closing message as text, with no tool call after it: a sentence written before a tool call isn't shown to the owner, and a turn that only updates the plan is never the end.");
