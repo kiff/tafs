@@ -6,7 +6,7 @@ import com.google.firebase.messaging.RemoteMessage
 
 /**
  * What tafs cloud sends this phone through Firebase: an alert becomes a notification, and the answer to a held call takes its
- * notification away; an ask from the Wear OS watch that changed goes on to the watch. A message that isn't one of those is ignored.
+ * notification away; an ask from the Wear OS watch that changed, or its Inbox's marks, go on to the watch. A message that isn't one of those is ignored.
  */
 class TafsMessagingService : FirebaseMessagingService() {
   override fun onMessageReceived(message: RemoteMessage) {
@@ -20,8 +20,11 @@ class TafsMessagingService : FirebaseMessagingService() {
       is Alert.Clear -> notifier.clear(alert.tag)
       // Nothing to show: the app, if it's up, reads again what changed.
       is Alert.Changed -> (application as TafsApplication).changeArrived(alert)
-      // The watch's ask changed: read it and pass it to the watch (docs/watch-wear.md). Firebase gives this a few seconds.
-      is Alert.WatchAsk -> kotlinx.coroutines.runBlocking { bot.tafs.app.watch.WatchResults(application as TafsApplication).forward(alert.askId) }
+      // The watch's ask, or its Inbox's marks, changed: read and kept for the watch by a job of its own (docs/watch-wear.md,
+      // Delivery), since Firebase gives this callback only a few seconds and a phone may have to restore its session first.
+      is Alert.WatchAsk -> bot.tafs.app.watch.WatchResultsWork.ask(applicationContext, alert.askId)
+      Alert.WatchInbox -> bot.tafs.app.watch.WatchResultsWork.inbox(applicationContext)
+      is Alert.TafChat -> bot.tafs.app.watch.WatchResultsWork.tafChat(applicationContext, alert.tafId)
       null -> Unit
     }
   }

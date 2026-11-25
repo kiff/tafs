@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">Keep for later</string>
     <string name="watch_kept_to_send">Kept on this watch. It\'s sent when your phone is in reach again.</string>
     <string name="watch_limit">30 s at most</string>
+    <string name="watch_linking">Linking tafs. Keep your phone nearby and connected.</string>
     <string name="watch_listening">Listening</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">To ask by voice, allow the microphone for tafs on this watch.</string>

@@ -96,6 +96,7 @@
     <string name="watch_keep_for_later">Išsaugoti vėlesniam laikui</string>
     <string name="watch_kept_to_send">Išsaugota šiame laikrodyje. Bus išsiųsta, kai telefonas vėl bus pasiekiamas.</string>
     <string name="watch_limit">Daugiausia 30 s</string>
+    <string name="watch_linking">Susiejama tafs. Laikykite telefoną šalia ir prijungtą.</string>
     <string name="watch_listening">Klausomasi</string>
     <string name="watch_menu">Meniu</string>
     <string name="watch_mic_needed">Kad galėtumėte klausti balsu, šiame laikrodyje leiskite tafs naudoti mikrofoną.</string>

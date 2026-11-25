@@ -2971,6 +2971,7 @@
     <string name="watch_keep_for_later">Zachowaj na później</string>
     <string name="watch_kept_to_send">Zapisano na tym zegarku. Zostanie wysłane, gdy telefon znów będzie w zasięgu.</string>
     <string name="watch_limit">Maksymalnie 30 s</string>
+    <string name="watch_linking">Łączenie z tafs. Trzymaj telefon w pobliżu i połączony.</string>
     <string name="watch_listening">Słucham</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Aby pytać głosem, zezwól tafs na mikrofon na tym zegarku.</string>

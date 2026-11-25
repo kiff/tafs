@@ -108,6 +108,7 @@
     <string name="watch_keep_for_later">الاحتفاظ لوقت لاحق</string>
     <string name="watch_kept_to_send">محفوظ على هذه الساعة. يُرسل عندما يعود هاتفك في المتناول.</string>
     <string name="watch_limit">30 ث كحد أقصى</string>
+    <string name="watch_linking">جارٍ ربط tafs. أبقِ هاتفك قريبًا ومتصلًا.</string>
     <string name="watch_listening">جارٍ الاستماع</string>
     <string name="watch_menu">القائمة</string>
     <string name="watch_mic_needed">للسؤال بالصوت، اسمح للميكروفون لـ tafs على هذه الساعة.</string>

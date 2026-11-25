@@ -877,4 +877,6 @@ data class WireWatchTurn(
   val line: String? = null,
   val words: String = "",
   @SerialName("reply_to") val replyTo: String? = null,
+  /** The answer went on past its line (a Coach answer cut at 140): the whole is read on a tap (`GET /v1/watch/asks/{id}?full=1`). */
+  val more: Boolean = false,
 )

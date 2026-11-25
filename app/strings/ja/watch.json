@@ -39,6 +39,7 @@
   "watch.keep_for_later": "後で送る",
   "watch.kept_to_send": "このウォッチに保存しました。スマートフォンが近くに戻ると送信します。",
   "watch.limit": "最大30秒",
+  "watch.linking": "tafs をリンクしています。スマートフォンを近くに置き、接続したままにしてください。",
   "watch.listening": "聞き取り中",
   "watch.menu": "メニュー",
   "watch.mic_needed": "音声で質問するには、このウォッチでtafsのマイク使用を許可してください。",

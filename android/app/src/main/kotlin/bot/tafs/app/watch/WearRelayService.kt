@@ -34,7 +34,7 @@ class WearRelayService : WearableListenerService() {
       // a new reason would be one an older watch can't read. In logs, UNKNOWN_PATH from here means "not a connected node".
       val reply = if (!connected) bot.tafs.watchlink.WatchReply.Refused(bot.tafs.watchlink.NotAccepted.UNKNOWN_PATH)
       else runCatching {
-        WatchRelay(model = { app.restoredModel(onScreen = false) }, floor = floor, voice = voice(), transcriber = OnDeviceTranscriber(applicationContext))
+        WatchRelay(model = { app.restoredModel(onScreen = false) }, floor = floor, voice = voice(), transcriber = OnDeviceTranscriber(applicationContext), background = app.background, chats = app.watchChats)
           .answer(path, request)
       }
         .getOrElse { bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone) }

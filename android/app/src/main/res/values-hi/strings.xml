@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">बाद के लिए रखें</string>
     <string name="watch_kept_to_send">इस घड़ी पर रखा गया। आपके फ़ोन के फिर पहुँच में आने पर भेजा जाता है।</string>
     <string name="watch_limit">अधिकतम 30 सेकंड</string>
+    <string name="watch_linking">tafs जोड़ा जा रहा है। अपना फ़ोन पास और कनेक्टेड रखें।</string>
     <string name="watch_listening">सुन रहा है</string>
     <string name="watch_menu">मेनू</string>
     <string name="watch_mic_needed">आवाज़ से पूछने के लिए, इस घड़ी पर tafs के लिए माइक्रोफ़ोन की अनुमति दें।</string>

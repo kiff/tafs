@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 
 /**
  * The watch app (docs/watch-wear.md): the microphone first ("Ask tafs"), then Needs you and Your tafs, read from the phone each
- * time the watch shows them, and forgotten when it's put away. Speaking is turned into text on the watch, by the system's speech
+ * time the watch shows them; it opens on what it keeps, and comes back as it was when put away. Speaking is turned into text on the watch, by the system's speech
  * recognizer, and sent when the person stops, with nothing to confirm: only the text goes to the phone.
  */
 class WatchActivity : ComponentActivity() {
@@ -47,9 +47,12 @@ class WatchActivity : ComponentActivity() {
       DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, secure = { keyguard.isDeviceSecure }, tile = TileCount(PreferencesTileStore(this)),
       // Only v2 keeps a message for later, an Inbox, and signs out on the watch alone.
       drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
-      inboxStore = if (WATCH_V2) PreferencesInboxStore(this) else null,
+      inboxStore = if (WATCH_V2) KeptInboxStore.of(this) else null,
       signIn = if (WATCH_V2) PreferencesWatchSignIn(this) else null,
       cache = if (WATCH_V2) WatchCache(KeystoreCacheStore(this), System::currentTimeMillis) else null,
+      // Coach's conversation, kept across opens (docs/watch-wear.md, "What the watch keeps").
+      // Behind its switch until the owner's yes and the Privacy page's line ([KEEP_THREADS]).
+      thread = if (WATCH_V2 && KEEP_THREADS) KeptThreadStore.of(this) else null,
     )
   }
 
@@ -142,6 +145,17 @@ class WatchActivity : ComponentActivity() {
         val signedOutHere by model.signedOutHere.collectAsState()
         val calendar by model.calendar.collectAsState()
         val account by model.account.collectAsState()
+        val tafChatOff by model.tafChatOff.collectAsState()
+        val wholes by model.wholes.collectAsState()
+        // Words being said, typed or checked keep the screen on, so the moment isn't lost to the screen going off (row 13); if it
+        // goes off anyway, the words come back as a review (WatchModel.putAway).
+        val inputUp = voice is WatchModel.Voice.Listening || voice is WatchModel.Voice.Review || voice is WatchModel.Voice.Transcribing ||
+          voice is WatchModel.Voice.Sending || voice is WatchModel.Voice.Ready
+        androidx.compose.runtime.DisposableEffect(inputUp) {
+          if (inputUp) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+          else window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+          onDispose { window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+        }
         // v2: past 30 s, listening stops by itself and the words go to the review.
         val listeningSince = (voice as? WatchModel.Voice.Listening)?.since
         androidx.compose.runtime.LaunchedEffect(listeningSince) {
@@ -163,7 +177,9 @@ class WatchActivity : ComponentActivity() {
           closeVoice = { listener.cancel(); model.closeVoice() },
           retry = { lifecycleScope.launch { model.retry() } },
           open = model::open,
-          hear = { ask -> speaker().say(ask.line ?: ask.words) },
+          // The whole answer once it's read (Read more), never only its first line.
+          hear = { ask -> speaker().say(model.heard(ask)) },
+          readWhole = { id -> lifecycleScope.launch { model.readWhole(id) } },
           reply = { ask -> if (WATCH_V2) talk(ask.id) else listen(ask.id) },
           closeResult = model::closeResult,
           dismiss = model::dismissOutcome,
@@ -202,9 +218,7 @@ class WatchActivity : ComponentActivity() {
           signIn = {
             model.signInHere()
             lifecycleScope.launch {
-              model.refresh()
-              model.readAsks()
-              model.syncInbox()
+              model.start()
               NeedsYouTileService.update(this@WatchActivity)
             }
           },
@@ -220,15 +234,18 @@ class WatchActivity : ComponentActivity() {
         val working = asks.values.let { model.working() }
         val ready = asks.values.let { model.ready() }
         val thread = said.let { asks.let { model.thread() } }
+        val answered = asks.let { model.answered() }
+        // Nothing kept to show while the phone is reached: the linking screen (a first link, a first open).
+        val linking = shown.let { said.let { inbox.let { model.linking() } } }
         val timing = result?.let { r -> if (BuildConfig.TIMING) model.timing(r.clientId)?.let(::readout) else null }
         // v2's pages once every step is in (WatchPages.kt); v1 until then.
         if (WATCH_V2) {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
             // The Inbox kept on the watch, or, when it can't be (locked, no screen lock), what the phone answered now.
             probe = if (BuildConfig.TIMING) probe else null, linkTrace = if (BuildConfig.TIMING) linkTrace?.line else null, inbox = inbox.takeIf { inboxKept }, taf = taf, haltPick = haltPick,
-            signedOutHere = signedOutHere, calendar = calendar, account = account, thread = thread)
+            signedOutHere = signedOutHere, calendar = calendar, account = account, thread = thread, answered = answered, linking = linking, tafChatOff = tafChatOff, wholes = wholes)
         }
-        else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
+        else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing, whole = result?.let { wholes[it.id] })
       }
     }
     handle(intent)
@@ -269,15 +286,20 @@ class WatchActivity : ComponentActivity() {
     }
   }
 
+  /** The open's reads and their tries, while the app is on screen. */
+  private var opening: kotlinx.coroutines.Job? = null
+
   override fun onStart() {
     super.onStart()
-    // While the app is open, an ask's new state from the phone is drawn here instead of notified.
+    // What the phone kept for the watch while the app was put away (KeptResults) is taken in first.
+    model.reload()
+    // While the app is open, an ask's new state from the phone, and the Inbox's marks, are drawn here at once instead of notified.
     AskResults.shown = { ask -> runOnUiThread { model.took(ask) } }
-    lifecycleScope.launch {
-      model.refresh()
-      model.readAsks()
-      // Row 21: the Inbox's read and dismissed, in step with the person's other watches.
-      model.syncInbox()
+    KeptResults.marks = { marks -> runOnUiThread { model.takeMarks(marks) } }
+    KeptResults.chats = { tafId, lines -> runOnUiThread { model.tafChatChanged(tafId, lines) } }
+    opening = lifecycleScope.launch {
+      // What's kept shows at once; the phone is read behind it, tried again by itself when it's slow (docs/watch-wear.md).
+      model.start()
       // The tile shows the count just read, or forgets it if the phone signed out.
       NeedsYouTileService.update(this@WatchActivity)
     }
@@ -286,12 +308,17 @@ class WatchActivity : ComponentActivity() {
   override fun onStop() {
     super.onStop()
     AskResults.shown = null
+    KeptResults.marks = null
+    KeptResults.chats = null
+    opening?.cancel()
+    opening = null
     listener.cancel()
     speaker?.close()
     speaker = null
     playback.release()
-    // Put away: the review and its recording are gone, and any recording left over is swept. A locked watch keeps no Inbox.
-    model.forget()
+    // Put away: what's kept stays (the conversation, a taf's chat, a review's words), so the app comes back as it was; a review's
+    // recording is erased, and any recording left over is swept. A locked watch keeps no Inbox.
+    model.putAway()
     if (WATCH_V2) model.clearInboxIfLocked()
     VoiceFiles.sweep(VoiceFiles.dir(this))
   }
@@ -419,6 +446,8 @@ internal class Actions(
   val quickTaf: (String, String) -> Unit = { _, _ -> },
   /** Read more on a taf's answer, by its request's id. */
   val readMore: (String) -> Unit = {},
+  /** Read more on an answer's card (Coach's or a taf's) that tafs cloud says goes on, by its request's id. */
+  val readWhole: (String) -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */
@@ -444,10 +473,11 @@ internal fun WatchScreen(
   // Opened on the microphone.
   list: ScalingLazyListState = rememberScalingLazyListState(initialCenterItemIndex = 0),
   timing: String? = null,
+  whole: WatchModel.Whole? = null,
 ) {
   when {
     voice != null -> return VoiceScreen(voice, act)
-    result != null -> return ResultScreen(result, act, timing)
+    result != null -> return ResultScreen(result, act, timing, whole)
     outcome is WatchModel.Outcome.Halting -> return HaltingScreen(outcome.taf)
   }
   ScalingLazyColumn(Modifier.fillMaxWidth(), state = list, verticalArrangement = Arrangement.spacedBy(4.dp)) {

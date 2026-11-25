@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">Für später behalten</string>
     <string name="watch_kept_to_send">Auf dieser Uhr gespeichert. Wird gesendet, sobald dein Handy wieder in Reichweite ist.</string>
     <string name="watch_limit">Höchstens 30 s</string>
+    <string name="watch_linking">tafs wird verbunden. Halte dein Handy in der Nähe und verbunden.</string>
     <string name="watch_listening">Hört zu</string>
     <string name="watch_menu">Menü</string>
     <string name="watch_mic_needed">Um per Stimme zu fragen, erlaube tafs das Mikrofon auf dieser Uhr.</string>

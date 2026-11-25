@@ -2893,6 +2893,7 @@
     <string name="watch_keep_for_later">Nechat na později</string>
     <string name="watch_kept_to_send">Uloženo v těchto hodinkách. Odešle se, až bude telefon zase na dosah.</string>
     <string name="watch_limit">Nejvýš 30 s</string>
+    <string name="watch_linking">Propojuji tafs. Mějte telefon nablízku a připojený.</string>
     <string name="watch_listening">Poslouchám</string>
     <string name="watch_menu">Nabídka</string>
     <string name="watch_mic_needed">Chcete-li se ptát hlasem, povolte tafs na těchto hodinkách mikrofon.</string>

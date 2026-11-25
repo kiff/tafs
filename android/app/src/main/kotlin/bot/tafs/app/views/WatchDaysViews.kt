@@ -42,6 +42,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
 /*
  * From your watch (docs/android-app.md, From your watch): the watch's Coach conversations, a day at a time, in Coach's
@@ -125,14 +126,18 @@ internal fun WatchDayView(store: WatchDaysStore, day: WatchDay, today: LocalDate
         OutlineButton(Words.Common.tryAgain, { attempt++ }, Modifier.fillMaxWidth().padding(top = 8.dp))
       }
       shown == null -> Text(Words.Common.loading, style = scaled(15, color = Theme.dim), modifier = Modifier.padding(vertical = 16.dp))
-      else -> shown.forEach { WatchTurnView(it) }
+      else -> shown.forEach { WatchTurnView(it, store) }
     }
   }
 }
 
 /** One turn: the watch's label and the time, the person's words, then the taf that took it and what came of it. */
 @Composable
-private fun WatchTurnView(turn: WatchTurn) {
+private fun WatchTurnView(turn: WatchTurn, store: WatchDaysStore? = null) {
+  // A cut answer (`more`): Read more reads the whole from tafs cloud, shown in its place; with none, the line stays as it is.
+  var whole by remember(turn.id) { mutableStateOf<String?>(null) }
+  var reading by remember(turn.id) { mutableStateOf(false) }
+  val scope = androidx.compose.runtime.rememberCoroutineScope()
   val shape = RoundedCornerShape(14.dp)
   Column(
     Modifier.fillMaxWidth().padding(start = if (turn.replyTo != null) 16.dp else 0.dp, top = 10.dp, bottom = 6.dp).testTag("watch.turn"),
@@ -149,7 +154,19 @@ private fun WatchTurnView(turn: WatchTurn) {
     )
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
       turn.tafName?.let { Text(it, style = scaled(13, FontWeight.SemiBold, Theme.soft)) }
-      Text(turn.answer, style = scaled(13, color = Theme.soft), modifier = Modifier.weight(1f, fill = false))
+      Text(whole ?: turn.answer, style = scaled(13, color = Theme.soft), modifier = Modifier.weight(1f, fill = false).testTag("watch.turn.answer"))
+    }
+    if (turn.more && whole == null && store != null) {
+      Text(
+        if (reading) Words.Common.loading else Words.Watch.readMore, style = scaled(13, FontWeight.SemiBold, Theme.amber),
+        modifier = Modifier.heightIn(min = 44.dp).testTag("watch.turn.read_more").tapping(onClick = {
+          if (!reading) scope.launch {
+            reading = true
+            whole = try { store.full(turn.id) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            reading = false
+          }
+        }),
+      )
     }
   }
 }

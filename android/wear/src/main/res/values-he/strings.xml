@@ -96,6 +96,7 @@
     <string name="watch_keep_for_later">שמירה למאוחר</string>
     <string name="watch_kept_to_send">נשמר בשעון הזה. הוא יישלח כשהטלפון שלך יהיה שוב בטווח.</string>
     <string name="watch_limit">30 שנ׳ לכל היותר</string>
+    <string name="watch_linking">מקשר את tafs. יש להשאיר את הטלפון קרוב ומחובר.</string>
     <string name="watch_listening">מאזין</string>
     <string name="watch_menu">תפריט</string>
     <string name="watch_mic_needed">כדי לשאול בקול, יש לאפשר ל-tafs להשתמש במיקרופון בשעון הזה.</string>

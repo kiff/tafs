@@ -2737,6 +2737,7 @@
     <string name="watch_keep_for_later">ເກັບໄວ້ພາຍຫຼັງ</string>
     <string name="watch_kept_to_send">ເກັບໄວ້ໃນໂມງນີ້. ມັນຖືກສົ່ງເມື່ອໂທລະສັບຂອງທ່ານຢູ່ໃນໄລຍະອີກ.</string>
     <string name="watch_limit">ສູງສຸດ 30 ວິນາທີ</string>
+    <string name="watch_linking">ກຳລັງເຊື່ອມຕໍ່ tafs. ເກັບໂທລະສັບຂອງທ່ານໄວ້ໃກ້ໆ ແລະ ເຊື່ອມຕໍ່ໄວ້.</string>
     <string name="watch_listening">ກຳລັງຟັງ</string>
     <string name="watch_menu">ເມນູ</string>
     <string name="watch_mic_needed">ເພື່ອຖາມດ້ວຍສຽງ ໃຫ້ອະນຸຍາດໄມໂຄຣໂຟນສຳລັບ tafs ໃນໂມງນີ້.</string>

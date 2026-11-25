@@ -5587,6 +5587,8 @@ enum Words {
         static var keptToSend: String { Words.line("watch.kept_to_send") }
         /// 30 s at most
         static var limit: String { Words.line("watch.limit") }
+        /// Linking tafs. Keep your phone nearby and connected.
+        static var linking: String { Words.line("watch.linking") }
         /// Listening
         static var listening: String { Words.line("watch.listening") }
         /// Menu

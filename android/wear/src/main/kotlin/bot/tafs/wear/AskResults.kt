@@ -17,7 +17,7 @@ import kotlinx.coroutines.tasks.await
 /**
  * An ask's new state from the phone (docs/watch-wear.md, Ask tafs): drawn at once when the app is open; otherwise, once it has
  * ended, the watch's own notification, which opens its result card with Hear and Reply. Locked, the notification says only that a
- * result is ready, never the taf or its line. Nothing of it is written to the watch's storage.
+ * result is ready, never the taf or its line. What's kept of it is [KeptResults]'s.
  */
 object AskResults {
   /** The open app's model, while it's on screen. */
@@ -84,8 +84,69 @@ object AskResults {
 }
 
 /**
- * Where the phone's message about an ask reaches the watch: only [WatchLink.ASK_RESULT], only from a node connected now, which the
- * Data Layer joins only for tafs on the paired phone, signed with the same key.
+ * What the phone keeps for the watch, arriving with the app closed or open (docs/watch-wear.md, Delivery): an ask's new state goes
+ * into Coach's conversation and the Inbox kept on the watch, and is notified once it has ended; the Inbox's marks are taken in.
+ * With the app on screen, its model takes it instead, so there's one writer at a time. Nothing is kept on a watch with no screen
+ * lock, locked, or signed out here: then an ended ask is only notified, as before.
+ */
+object KeptResults {
+  /** The open app's model, while it's on screen: the Inbox's marks. */
+  @Volatile var marks: ((bot.tafs.watchlink.WatchReply.InboxMarks) -> Unit)? = null
+
+  /** A kept ask: into the stores (the app closed) or the app's model (open), then notified as [AskResults.arrived] does. */
+  fun ask(context: Context, ask: AskLine, stores: Stores = Stores.of(context), now: Long = System.currentTimeMillis()) {
+    if (AskResults.shown == null && !stores.signedOut && stores.secure) {
+      // Whichever kept thread holds it, Coach's or a taf's.
+      stores.thread?.let { thread -> KeptThreads.took(KeptThreads.pruned(thread.read(), now), ask)?.let { thread.write(KeptThreads.pruned(it, now)) } }
+      stores.inbox?.let { inbox -> InboxLines.of(ask, now)?.let { InboxLines.put(inbox.read(), inbox.dismissed(), it) }?.let(inbox::write) }
+    }
+    AskResults.arrived(context, ask)
+  }
+
+  /** The open app's model, while it's on screen: a taf's chat as the phone holds it now. */
+  @Volatile var chats: ((String, List<bot.tafs.watchlink.ChatLine>) -> Unit)? = null
+
+  /**
+   * A taf's chat as the phone holds it now, pushed as it changed there: into the open app's chat at once, or, closed, into its
+   * kept thread when the watch keeps one. Nothing is notified: the phone's own messages and a taf's answers to them are the phone's.
+   */
+  fun chat(tafId: String, lines: List<bot.tafs.watchlink.ChatLine>, stores: Stores, now: Long = System.currentTimeMillis()) {
+    chats?.let { return it(tafId, lines) }
+    val thread = stores.thread ?: return
+    if (stores.signedOut || !stores.secure) return
+    KeptThreads.chat(KeptThreads.pruned(thread.read(), now), tafId, lines)?.let { thread.write(KeptThreads.pruned(it, now)) }
+  }
+
+  /** Kept marks: into the Inbox kept on the watch (the app closed) or the app's model (open). */
+  fun marks(marks: bot.tafs.watchlink.WatchReply.InboxMarks, stores: Stores) {
+    KeptResults.marks?.let { return it(marks) }
+    val inbox = stores.inbox ?: return
+    if (stores.signedOut || !stores.secure) return
+    val (next, away) = InboxLines.marked(inbox.read(), inbox.dismissed(), marks.read.toSet(), marks.dismissed.toSet())
+    inbox.write(next)
+    inbox.writeDismissed(away)
+  }
+
+  /** Where the watch keeps things, and whether it may: v2's stores, on a watch with a screen lock, unlocked, not signed out here. */
+  class Stores(val thread: ThreadStore?, val inbox: InboxStore?, val secure: Boolean, val signedOut: Boolean) {
+    companion object {
+      fun of(context: Context): Stores = Stores(
+        thread = if (WATCH_V2 && KEEP_THREADS) KeptThreadStore.of(context) else null,
+        inbox = if (WATCH_V2) KeptInboxStore.of(context) else null,
+        // The Inbox's own rule: kept only on a watch with a screen lock, unlocked now. A locked watch gets the notification's
+        // locked words only, and the app takes the answer in at its next open, from the phone's read.
+        secure = context.getSystemService(android.app.KeyguardManager::class.java)?.let { it.isDeviceSecure && !it.isDeviceLocked } == true,
+        signedOut = PreferencesWatchSignIn(context).signedOut(),
+      )
+    }
+  }
+}
+
+/**
+ * Where the phone's results reach the watch. Its kept items ([WatchLink.KEPT], `DATA_CHANGED`), which the Data Layer delivers when
+ * the watch is next in reach, its app open or not, and which the watch deletes once kept; and, from a phone before them, its live
+ * message ([WatchLink.ASK_RESULT]), only from a node connected now. The Data Layer joins only tafs on the paired phone, signed
+ * with the same key.
  */
 class AskResultService : WearableListenerService() {
   override fun onMessageReceived(event: MessageEvent) {
@@ -94,5 +155,24 @@ class AskResultService : WearableListenerService() {
     if (!connected) return
     val ask = WatchLink.decodeResult(event.data) ?: return
     AskResults.arrived(this, ask)
+  }
+
+  override fun onDataChanged(events: com.google.android.gms.wearable.DataEventBuffer) {
+    val data = Wearable.getDataClient(this)
+    // Read while the buffer is open: it's released when this returns.
+    val changed = events.filter { it.type == com.google.android.gms.wearable.DataEvent.TYPE_CHANGED }
+      .map { it.dataItem.uri to it.dataItem.data }
+    for ((uri, bytes) in changed) {
+      val path = uri.path ?: continue
+      if (!path.startsWith(WatchLink.KEPT)) continue
+      val stores = KeptResults.Stores.of(this)
+      when {
+        WatchLink.keptAskId(path) != null -> bytes?.let(WatchLink::decodeKeptAsk)?.ask?.takeIf { it.id == WatchLink.keptAskId(path) }?.let { KeptResults.ask(this, it, stores) }
+        path == WatchLink.KEPT_MARKS -> bytes?.let(WatchLink::decodeKeptMarks)?.let { KeptResults.marks(bot.tafs.watchlink.WatchReply.InboxMarks(it.read, it.dismissed), stores) }
+        WatchLink.keptChatTaf(path) != null -> bytes?.let(WatchLink::decodeKeptChat)?.takeIf { it.tafId == WatchLink.keptChatTaf(path) }?.let { KeptResults.chat(it.tafId, it.lines, stores) }
+      }
+      // Kept now: the item goes, on the watch and the phone, so nothing waits in the Data Layer once it's here.
+      runCatching { data.deleteDataItems(uri) }
+    }
   }
 }

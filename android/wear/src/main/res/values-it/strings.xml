@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">Tieni per dopo</string>
     <string name="watch_kept_to_send">Tenuto su questo orologio. Viene inviato quando il telefono torna raggiungibile.</string>
     <string name="watch_limit">Al massimo 30 s</string>
+    <string name="watch_linking">Collegamento di tafs. Tieni il telefono vicino e connesso.</string>
     <string name="watch_listening">In ascolto</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Per chiedere a voce, consenti il microfono a tafs su questo orologio.</string>

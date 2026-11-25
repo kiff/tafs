@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">შეინახეთ მოგვიანებისთვის</string>
     <string name="watch_kept_to_send">ინახება ამ საათზე. გაიგზავნება, როცა თქვენი ტელეფონი ისევ მიმწვდომი იქნება.</string>
     <string name="watch_limit">მაქსიმუმ 30 წმ</string>
+    <string name="watch_linking">tafs უკავშირდება. ტელეფონი ახლოს და დაკავშირებული იქონიეთ.</string>
     <string name="watch_listening">უსმენს</string>
     <string name="watch_menu">მენიუ</string>
     <string name="watch_mic_needed">ხმით სათხოვნელად ამ საათზე tafs-ს მიეცით მიკროფონის უფლება.</string>

@@ -705186,6 +705186,269 @@
         }
       }
     },
+    "watch.linking": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ ربط tafs. أبقِ هاتفك قريبًا ومتصلًا."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs bağlanır. Telefonunuzu yaxında və qoşulu saxlayın."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свързване на tafs. Дръжте телефона си наблизо и свързан."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs যুক্ত করা হচ্ছে। আপনার ফোন কাছে ও সংযুক্ত রাখুন।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enllaçant tafs. Mantén el telèfon a prop i connectat."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propojuji tafs. Mějte telefon nablízku a připojený."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs wird verbunden. Halte dein Handy in der Nähe und verbunden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linking tafs. Keep your phone nearby and connected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vinculando tafs. Mantén tu teléfono cerca y conectado."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ühendub. Hoia telefon lähedal ja ühendatud."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Association de tafs. Gardez votre téléphone à proximité et connecté."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מקשר את tafs. יש להשאיר את הטלפון קרוב ומחובר."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs जोड़ा जा रहा है। अपना फ़ोन पास और कनेक्टेड रखें।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Povezivanje aplikacije tafs. Držite telefon u blizini i povezan."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tafs összekapcsolása. Tartsd a telefonod a közelben, csatlakoztatva."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs-ը կապվում է։ Պահեք ձեր հեռախոսը մոտ և միացված։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menautkan tafs. Jaga ponsel Anda tetap dekat dan terhubung."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collegamento di tafs. Tieni il telefono vicino e connesso."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs をリンクしています。スマートフォンを近くに置き、接続したままにしてください。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs უკავშირდება. ტელეფონი ახლოს და დაკავშირებული იქონიეთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "កំពុងភ្ជាប់ tafs។ ទុកទូរសព្ទរបស់អ្នកនៅជិត ហើយភ្ជាប់ជានិច្ច។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs 연결 중. 휴대폰을 가까이 두고 연결된 상태로 유지하세요."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ກຳລັງເຊື່ອມຕໍ່ tafs. ເກັບໂທລະສັບຂອງທ່ານໄວ້ໃກ້ໆ ແລະ ເຊື່ອມຕໍ່ໄວ້."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Susiejama tafs. Laikykite telefoną šalia ir prijungtą."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Savieno tafs. Turi tālruni tuvumā un savienotu."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поврзување на tafs. Држи го телефонот блиску и поврзан."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs-ийг холбож байна. Утсаа ойрхон, холбогдсон байлгаарай."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs जोडिँदैछ। आफ्नो फोन नजिक र जडित राख्नुहोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs koppelen. Houd je telefoon in de buurt en verbonden."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Łączenie z tafs. Trzymaj telefon w pobliżu i połączony."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A ligar o tafs. Mantenha o telemóvel por perto e ligado."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vinculando o tafs. Mantenha o celular por perto e conectado."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se conectează tafs. Țineți telefonul aproape și conectat."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepájam tafs. Majte telefón nablízku a pripojený."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Povezujem tafs. Telefon imejte blizu in povezan."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Po lidhet tafs. Mbajeni telefonin afër dhe të lidhur."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Povezivanje aplikacije tafs. Držite telefon u blizini i povezan."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กำลังเชื่อมต่อ tafs วางโทรศัพท์ไว้ใกล้ๆ และเชื่อมต่อไว้"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs baglanýar. Telefonyňyzy ýakynda we birikdirilen saklaň."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs bağlanıyor. Telefonunuzu yakında ve bağlı tutun."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs کو جوڑا جا رہا ہے۔ اپنا فون قریب اور منسلک رکھیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang liên kết tafs. Hãy để điện thoại ở gần và luôn kết nối."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在連結 tafs。請將手機放在附近並保持連線。"
+          }
+        }
+      }
+    },
     "watch.listening": {
       "extractionState": "manual",
       "localizations": {

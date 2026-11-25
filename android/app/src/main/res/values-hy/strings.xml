@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Պահեք ավելի ուշի համար</string>
     <string name="watch_kept_to_send">Պահվում է այս ժամացույցում։ Կուղարկվի, երբ ձեր հեռախոսը նորից հասանելի լինի։</string>
     <string name="watch_limit">Առավելագույնը 30 վ</string>
+    <string name="watch_linking">tafs-ը կապվում է։ Պահեք ձեր հեռախոսը մոտ և միացված։</string>
     <string name="watch_listening">Լսում է</string>
     <string name="watch_menu">Ընտրացանկ</string>
     <string name="watch_mic_needed">Ձայնով հարցնելու համար այս ժամացույցում թույլ տվեք tafs-ին օգտագործել խոսափողը։</string>
