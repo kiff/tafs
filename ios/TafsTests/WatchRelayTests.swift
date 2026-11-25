@@ -178,6 +178,42 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertNil(out.mark)
     }
 
+    /// The person's acts carry the watch's mark: one sent under another sign-in's does nothing and answers signed out, so
+    /// the watch forgets what it kept; one under this session's mark goes; one with no mark (a watch before marks) goes as
+    /// before. A read never needs one. As Wear OS's WatchRelay.
+    func testAnActUnderAnotherSignInsMarkDoesNothing() async {
+        let reading = Reading(at: now)
+        let mark = WatchMark.make()
+        reading.mark = mark
+        var refuse = WatchRequest(.refuse, made: now, hold: "ce_1")
+        refuse.mark = WatchMark.make()
+        let other = await send(refuse, reading: reading)
+        XCTAssertEqual(other.outcome, .signedOut)
+        XCTAssertNil(other.mark)
+        XCTAssertTrue(reading.untouched, "nothing refused under another sign-in")
+        var halt = WatchRequest(.halt, made: now, taf: "taf-1")
+        halt.mark = WatchMark.make()
+        _ = await send(halt, reading: reading)
+        var coach = WatchRequest(.coach, made: now, text: "Pause Rae")
+        coach.mark = WatchMark.make()
+        _ = await send(coach, reading: reading)
+        XCTAssertTrue(reading.untouched, "nor halted, nor sent to Coach")
+
+        refuse.mark = mark
+        _ = await send(refuse, reading: reading)
+        XCTAssertEqual(reading.refused, ["ce_1"], "this session's mark: it goes")
+        refuse.mark = nil
+        _ = await send(refuse, reading: reading)
+        XCTAssertEqual(reading.refused, ["ce_1", "ce_1"], "no mark, from a watch before marks: as before")
+
+        var read = WatchRequest(.needsYou, made: now)
+        read.mark = WatchMark.make()
+        XCTAssertEqual((await send(read, reading: reading)).outcome, .ok, "a read is the same for anyone")
+        XCTAssertFalse(WatchRequest.Kind.needsYou.carriesMark)
+        XCTAssertFalse(WatchRequest.Kind.transcribe.carriesMark)
+        XCTAssertTrue([WatchRequest.Kind.refuse, .halt, .haltAll, .coach, .coachSend, .inboxMark].allSatisfy(\.carriesMark))
+    }
+
     /// The phone's mark: new at each sign-in, made for a session from before marks, gone at sign-out, and never anything
     /// but its own shape.
     func testThePhonesMarkIsNewAtEachSignInAndGoesAtSignOut() {

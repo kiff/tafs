@@ -56,6 +56,17 @@ struct WatchRequest: Codable, Equatable, Sendable {
             case .refuse, .halt, .haltAll, .coach, .coachSend, .transcribe, .inboxMark: return false
             }
         }
+
+        /// The person's words or acts (Refuse, Halt, Coach's and a taf's message, an Inbox mark), as Wear OS's
+        /// `WatchLink.carriesMark`: the watch sends them with the account mark it holds, so a phone signed in as someone
+        /// else since does nothing with them. A read, and a recording's words, are the same for anyone and carry none.
+        var carriesMark: Bool {
+            switch self {
+            case .refuse, .halt, .haltAll, .coach, .coachSend, .inboxMark: return true
+            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks, .openOnPhone,
+                 .transcribe: return false
+            }
+        }
     }
 
     /// How old a request may be when the phone reads it, either way.
@@ -85,6 +96,9 @@ struct WatchRequest: Codable, Equatable, Sendable {
     var ticket: WatchCoachTicket?
     /// `inboxMark`: the ids to mark read or dismissed.
     var marks: WatchInboxMarks?
+    /// The account mark the watch holds (`WatchMark`), on the person's acts only (`Kind.carriesMark`): a phone whose own
+    /// mark differs answers signed out and does nothing. None from a watch before marks, or that holds none yet.
+    var mark: String?
 
     init(_ kind: Kind, made: Date, hold: String? = nil, taf: String? = nil, text: String? = nil, message: String? = nil,
          day: String? = nil, ticket: WatchCoachTicket? = nil, marks: WatchInboxMarks? = nil) {
