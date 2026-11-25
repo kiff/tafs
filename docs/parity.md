@@ -235,7 +235,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 
 The rule: on a wide window, every app draws a page the same way: the iPad, the Mac, Windows, Linux and an Android tablet. The widths are the iPad's and the Mac's caps as they stood, now centred.
 
-Where each app stands: macOS 12 (tafs-macos#264), Linux (tafs-linux#136) and the iPhone, iPad and Mac 13+ (tafs#2009) are in review; Windows and Android aren't started.
+Where each app stands: done on the iPhone, iPad and Mac 13+ (tafs#2009), Android (tafs#2011; the brief's own cap, 1100, is tafs#2013, in review), macOS 12 (tafs-macos#264), Linux (tafs-linux#136) and Windows (tafs-windows#342).
 
 - **A centred column, capped.** Each page is one column, centred in the window, at most:
   - 720 points for reading pages: Account, Devices, People, Alerts, Chrome, Needs you, Connect apps, Plan & usage;
@@ -256,14 +256,14 @@ What landed on 23 Nov, device by device, read again against each repo's main on 
 | Sign in again and Replace the key on a connection | done | done | not for it: made on the phone (planque takes no security key) | done (tafs-windows#268) | done: drawn up to planque's signature, which is the phone's (granting access is never done from a computer; its checklist's ConnectAppsView) | — |
 | Sign in again shows the connection's approval sheet first, and signs only the request it showed | done (tafs#1878) | done (tafs#1826) | as the row above | as the row above | as the row above | — |
 | A sealed sign-in fill's release card | held: no passwords go through the extension (the owner's decision) | merged and off, stays off (tafs#1882) | — | — | — | — |
-| "Allow this from now on" checks its own `matches`: a revision Card's `current.id`, when sent, must equal `revises` (now); a Card key the check doesn't compare is refused (once KIFF's draft schema is pinned in `contracts`) | first half done (tafs#1891) | first half done (tafs#1893) | first half done (tafs-macos#222) | first half done (tafs-windows#330) | first half done (tafs-linux#121) | — |
+| "Allow this from now on" checks its own `matches`: a revision Card's `current.id`, when sent, must equal `revises`; and a Card key the check doesn't read is refused (`vectors/agent-draft-keys.json`, over KIFF's draft pinned in `contracts/kiff-agent-draft-from-hold.json`) | done (tafs#1891, tafs#2006) | done (tafs#1893, tafs#2006) | first half done (tafs-macos#222); second half in review (tafs-macos#265) | done (tafs-windows#330, tafs-windows#343) | first half done (tafs-linux#121); second half in review (tafs-linux#137) | — |
 | A connection's own page from planque's row, with its actions | done | done | done: its approvals are the phone's, since planque takes no security key (its checklist's ConnectAppsView) | done (tafs-windows#269) | done: Remove access with the security key, Sign in again drawn up to the phone's signature | — |
 | An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | done (tafs-macos#263: said on Needs you, not in the chat) | done (tafs-windows#271: said on Needs you, not in the chat) | done (tafs-linux#99) | — |
 | An API door's example safe to paste into a shell (a plain path only, quoted; `vectors/api-door-endpoint.json`, tafs#1877) | done (tafs#1875) | done (tafs#1874) | done (tafs-macos#205) | done (tafs-windows#323) | done (tafs-linux#111) | — |
 | The side panel is the taf in this Chrome (tafs#1799), no client named (tafs#1810), the read after an act waits for its navigation (tafs#1811) | — | — | — | — | — | done |
 
 **Still open:**
-1. **"Allow this from now on", its second half, on every app:** a Card key the `matches` check doesn't compare is refused, once KIFF's draft schema is pinned in `contracts/`. It isn't there yet.
+1. **"Allow this from now on", its second half, on macOS 12 and Linux:** a Card key the check doesn't read is refused. KIFF's draft is pinned (`contracts/kiff-agent-draft-from-hold.json`, written by KIFF's own test) and the keys are `vectors/agent-draft-keys.json`; the iPhone, iPad, Android and Windows check them. macOS 12 (tafs-macos#265) and Linux (tafs-linux#137) are in review.
 
 ## Counting checks
 
