@@ -128,3 +128,26 @@ test("a taf's chat shows the page that went with a message, and says when the pa
   assert.match(js, /function reading\(li, m\) \{[\s\S]*?t\("aside_reading", m\.reading\)/);
   assert.equal((js.match(/\n\s*reading\(li, m\);/g) || []).length, 2, "drawn by one function, for Coach's chat and a taf's");
 });
+
+test("a refused step reads in words: the code's own line when it has one, else the code as it is", () => {
+  const fn = js.slice(js.indexOf("function stepRefusedWords("), js.indexOf("function stepLine("));
+  assert.match(fn, /chrome\.i18n\.getMessage\("step_refused_" \+ code\)/);
+  assert.match(fn, /\|\| t\("step_refused", code\)/);
+  // Only a plain code names a key: anything else falls back to the code as it is.
+  assert.match(fn, /\^\[a-z_\]\{1,40\}\$/);
+  assert.match(js, /return s\.error \? words \+ " · " \+ stepRefusedWords\(s\.error\) : words;/);
+  // Every code with words of its own is one the runner can answer with.
+  const en = JSON.parse(readFileSync(new URL("../_locales/en/messages.json", import.meta.url), "utf8"));
+  const runner = readFileSync(new URL("../src/runner.js", import.meta.url), "utf8");
+  const codes = Object.keys(en).filter((k) => k.startsWith("step_refused_")).map((k) => k.slice("step_refused_".length));
+  assert.ok(codes.length >= 7);
+  for (const code of codes) assert.ok(runner.includes(`"${code}"`), `${code} is a code the runner answers with`);
+});
+
+test("the panel's script parses, with no name declared twice at its top level", async () => {
+  // A second function of the same name stopped the whole panel loading (0.2.18's first draft): `node --check` parses it as the
+  // module it is, where a name declared twice is a SyntaxError.
+  const { execFileSync } = await import("node:child_process");
+  const { fileURLToPath } = await import("node:url");
+  assert.doesNotThrow(() => execFileSync(process.execPath, ["--check", fileURLToPath(new URL("../sidepanel/panel.js", import.meta.url))], { stdio: "pipe" }));
+});

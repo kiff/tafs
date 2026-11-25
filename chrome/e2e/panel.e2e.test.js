@@ -96,7 +96,7 @@ test("joined: the person moves their tab, and the run's next read is one line, `
   await j.owner.goto(theirs);
   await until(async () => (await tabInfo(h, tabId)).groupId === -1, "their tab given back");
 
-  const { card } = await refusedAndShown(run, { op: "read", agent_run: agentRun }, "given_back", "Read the page · not done (given_back)");
+  const { card } = await refusedAndShown(run, { op: "read", agent_run: agentRun }, "given_back", "Read the page · not done: the tab moved without the taf, so it's yours now");
   assert.ok(!(await runState(h, run)).tabs.includes(tabId), "their tab is in none of the run's tabs");
   assert.equal(await hereChip(), false, "the tab in front is no longer taken for the run's");
   assert.equal(card.where, "news.test", "the card's site is the run's, never the person's page's");
@@ -115,7 +115,7 @@ test("joined: an act on an old read is one line, `page_changed`, and the tab sta
     run,
     { op: "act", agent_run: agentRun, read_id: "rd_000000000000000000000000", act: { kind: "fill", ref: ref(opened.page, "Question"), value: "x" } },
     "page_changed",
-    "Filled in a field · not done (page_changed)",
+    "Filled in a field · not done: the page changed first",
   );
   assert.ok((await runState(h, run)).tabs.includes(tabId), "still the run's: nothing was given back");
   assert.equal(await hereChip(), true);
@@ -129,7 +129,7 @@ test("joined: the taf's back is one line, `no_back`, and nothing moves", { skip 
   started.add(run);
   const opened = await j.step({ op: "open", run, url: hub, agent_run: agentRun });
   assert.equal(opened.ok, true, JSON.stringify(opened.error));
-  await refusedAndShown(run, { op: "act", agent_run: agentRun, read_id: opened.page.read_id, act: { kind: "back" } }, "no_back", "Went back · not done (no_back)");
+  await refusedAndShown(run, { op: "act", agent_run: agentRun, read_id: opened.page.read_id, act: { kind: "back" } }, "no_back", "Went back · not done: there's no page to go back to");
   assert.equal((await tabInfo(h, tabId)).url, hub, "the person's tab is where it was");
   assert.ok((await runState(h, run)).tabs.includes(tabId));
   await stop(run);
@@ -159,7 +159,7 @@ test("own tab: the person's address there gives it to them; the next read is one
   await page.goto(theirs);
   await until(async () => !(await runState(h, run)).tabs.includes(tabId), "the tab given to the person");
 
-  const { card } = await refusedAndShown(run, { op: "read" }, "given_back", "Read the page · not done (given_back)");
+  const { card } = await refusedAndShown(run, { op: "read" }, "given_back", "Read the page · not done: the tab moved without the taf, so it's yours now");
   assert.equal(await hereChip(), false, "the tab in front is the person's now, not taken for the run's");
   assert.equal(card.where, "news.test");
   assert.ok(!card.steps.some((x) => /shop\.test/.test(x.text)), "no line names the person's own move");
@@ -181,7 +181,7 @@ test("own tab: an act on an old read is one line, `page_changed`, and the tab st
     run,
     { op: "act", read_id: "rd_000000000000000000000000", act: { kind: "fill", ref: ref(opened.page, "Question"), value: "x" } },
     "page_changed",
-    "Filled in a field · not done (page_changed)",
+    "Filled in a field · not done: the page changed first",
   );
   assert.ok((await runState(h, run)).tabs.includes(tabId));
   await stop(run);
@@ -190,7 +190,7 @@ test("own tab: an act on an old read is one line, `page_changed`, and the tab st
 test("own tab: the taf's back with no page before is one line, `no_back`, and nothing moves", { skip }, async () => {
   const hub = h.sites.url("news.test", "/hub?case=panel-own-noback");
   const { run, opened, tabId } = await ownRun("panel-own-noback", hub);
-  await refusedAndShown(run, { op: "act", read_id: opened.page.read_id, act: { kind: "back" } }, "no_back", "Went back · not done (no_back)");
+  await refusedAndShown(run, { op: "act", read_id: opened.page.read_id, act: { kind: "back" } }, "no_back", "Went back · not done: there's no page to go back to");
   assert.equal((await tabInfo(h, tabId)).url, hub);
   assert.ok((await runState(h, run)).tabs.includes(tabId));
   await stop(run);
@@ -207,7 +207,7 @@ test("joined: the person's own address off the run's sites gives their tab back,
   assert.equal(opened.ok, true, JSON.stringify(opened.error));
   await j.owner.goto(h.sites.url("other.test", "/?case=panel-joined-off")).catch(() => {});
   await until(async () => (await tabInfo(h, tabId)).groupId === -1, "their tab given back");
-  const { card } = await refusedAndShown(run, { op: "read", agent_run: agentRun }, "given_back", "Read the page · not done (given_back)");
+  const { card } = await refusedAndShown(run, { op: "read", agent_run: agentRun }, "given_back", "Read the page · not done: the tab moved without the taf, so it's yours now");
   assert.equal(card.where, "news.test", "the card's site is the run's, never the person's: " + JSON.stringify(card));
   assert.ok(!card.steps.some((x) => /other\.test/.test(x.text)), "no line takes the person's own move for the taf's: " + JSON.stringify(card.steps));
 });
@@ -217,7 +217,7 @@ test("own tab: the person's own address off the run's sites gives the tab to the
   const { run, page, tabId } = await ownRun("panel-own-off", hub);
   await page.goto(h.sites.url("other.test", "/?case=panel-own-off")).catch(() => {});
   await until(async () => !(await runState(h, run)).tabs.includes(tabId), "the tab given to the person");
-  const { card } = await refusedAndShown(run, { op: "read" }, "given_back", "Read the page · not done (given_back)");
+  const { card } = await refusedAndShown(run, { op: "read" }, "given_back", "Read the page · not done: the tab moved without the taf, so it's yours now");
   assert.equal(card.where, "news.test", "the card's site is the run's, never the person's: " + JSON.stringify(card));
   assert.ok(!card.steps.some((x) => /other\.test/.test(x.text)), "no line takes the person's own move for the taf's: " + JSON.stringify(card.steps));
 });
