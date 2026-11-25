@@ -69,11 +69,8 @@ for (const c of CASES) {
 
   for (const how of ["link", "302"]) {
     for (const kind of c.joined ? ["own", "joined"] : ["own"]) {
-      // In the person's tab the act is refused in the page before it fires (page.js offFence), which has no branch for an address.
-      const todo = c.target === "127.0.0.1" && how === "link" && kind === "joined"
-        ? "page.js offFence() mirrors refuseURL for the run's sites, sensitive sites and Chrome's own pages, but not for an address, a local name or a non-ASCII host: a link to https://127.0.0.1 in the person's joined tab is refused in the page as site_not_listed, where refuseURL says address_private. Nothing is asked of it; only the code is wrong."
-        : undefined;
-      test(`${c.name}, by ${how === "link" ? "the taf's click on a link" : "a 302 from a granted page"}, in ${kind === "own" ? "a tab of the run's own" : "the person's joined tab"}: Chrome blocks it before it's asked`, { skip, todo }, async () => {
+      // In the person's tab the act is refused in the page before it fires (page.js offFence), with refuseURL's very code (0.2.19).
+      test(`${c.name}, by ${how === "link" ? "the taf's click on a link" : "a 302 from a granted page"}, in ${kind === "own" ? "a tab of the run's own" : "the person's joined tab"}: Chrome blocks it before it's asked`, { skip }, async () => {
         await warm(c.target);
         const tag = `${how}-${kind}-${c.target}`;
         const goal = target(tag);

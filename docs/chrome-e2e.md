@@ -254,9 +254,12 @@ Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
 
-- **A link to an address, clicked in the person's joined tab, answers `site_not_listed`** (`fence219.e2e.test.js`). `page.js`
-  `offFence()` mirrors `refuseURL` for the run's sites, sensitive sites and Chrome's own pages, but has no branch for an
-  address, a local name or a non-ASCII host. Nothing is asked of the address, and `refuseURL` says `address_private`.
+None.
+
+Fixed in 0.2.19: **a link to an address, clicked in the person's joined tab, answered `site_not_listed`**
+(`fence219.e2e.test.js`): `page.js` `offFence()` had no branch for an address, a local name, user info or a name not in ASCII.
+It now follows `refuseURL`'s order and gives its very code (`address_private` here), which a page test checks address by
+address.
 
 Fixed in 0.2.19: **the taf's click on a link to a sensitive site of the grant that the phone didn't allow** asked that
 site for its page, because the fence allowed every site of the grant and only `onBeforeNavigate` raced the request. The fence's
