@@ -9,7 +9,7 @@ sign-in.
 
 ## The notes (English)
 
-**When the AI provider changes,** the "(now …)" in the AI and data line changes with it, here and in both consoles, on the same day as /subprocessors' "In use now" mark (kiff/cloud) and the AI consent's "Right now" line. It's one of the provider switch's steps, beside `AGENTS_MODEL_SOURCE` (kiff/agents, docs/runs.md).
+**When the AI provider changes,** the "(now …)" in the AI and data line changes with it, here and in both consoles, on the same day as /subprocessors' "In use now" mark (kiff/cloud), and, once it ships (tafs#2079), the AI consent's "Right now" line. It's one of the provider switch's steps, beside `AGENTS_MODEL_SOURCE` (kiff/agents, docs/runs.md).
 
 
 ```
