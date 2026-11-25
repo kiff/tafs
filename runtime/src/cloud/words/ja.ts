@@ -932,6 +932,10 @@ export const ja: Words = {
   // The AI-data consent (docs/accounts.md, "Your data and the AI"): legal consent text, line for line with the English.
   ai_consent_title: "あなたのデータとAI",
   ai_consent_lines: ["tafsは、CoachとあなたのtafsにAnthropicのClaude AIを使用しています。","Claudeは、Anthropicまたは当社のサブプロセッサーのページに記載されたクラウド事業者のいずれかが当社のために動かしています。どの事業者か、どこで動かすかはそのページに記載しています。","CoachとあなたのtafsはAIエージェントです：書く内容はAIによって生成され、誤っている場合があります。tafが会社の外に送るメッセージには、AIエージェントが書いたことが記載されます。","送信されるもの：Coachとあなたのtafsに書いた内容、添付したファイル、tafの作業中に接続済みのアプリがtafに返す内容、Coachがアプリ内であなたを手伝っている間に画面に表示されている内容。","送信されないもの：接続済みのアプリが使用するパスワードとキー、および指紋。","Claudeを動かす会社はこれを回答のために使用し、30日以内に削除します。ただし、その会社の利用規則に違反するとして検知された場合や、法律で保管が求められる場合を除きます。","許可するまで何も送信されません。「アカウント」で撤回できます。"],
+  ai_consent_now_anthropic: "現在：Anthropic自身。",
+  ai_consent_now_bedrock: "現在：Amazon Web Services（EU内）。",
+  ai_consent_now_vertex: "現在：Google Cloud（EU内）。",
+  ai_consent_now_foundry: "現在：Microsoft Azure（EU内）。",
   ai_consent_allow: "許可",
   ai_consent_not_now: "今はしない",
   ai_consent_withdraw: "撤回",

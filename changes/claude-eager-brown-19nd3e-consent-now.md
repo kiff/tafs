@@ -1,0 +1,1 @@
+- **The AI consent can say who runs the AI right now.** Under its second line, the screen can name the provider in use, such as "Right now: Amazon Web Services, in the EU." or "Right now: Anthropic itself.", in all 26 languages. It's read from the AI service itself, with no new consent version. Words only; tafs cloud shows them once it reads the provider.

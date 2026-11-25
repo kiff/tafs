@@ -932,6 +932,10 @@ export const pl: Words = {
   // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
   ai_consent_title: "Twoje dane i AI",
   ai_consent_lines: ["tafs używa AI Claude firmy Anthropic, by działały Coach i Twoje tafy.","Uruchamia ją dla nas Anthropic lub jeden z dostawców chmury z naszej strony podmiotów przetwarzających. Ta strona mówi, który i gdzie.","Coach i Twoje tafy to agenci AI: to, co piszą, generuje AI i może zawierać błędy. Wiadomość, którą taf wysyła poza Twoją firmę, informuje, że napisał ją agent AI.","Co jest wysyłane: to, co piszesz do Coacha i Twoich tafów, załączone pliki, to, co Twoje połączone aplikacje zwracają tafowi podczas pracy, oraz to, co jest na Twoim ekranie, gdy Coach pomaga Ci w aplikacji.","Czego nigdy się nie wysyła: haseł i kluczy używanych przez Twoje połączone aplikacje ani odcisku palca.","Firma, która ją uruchamia, używa tego, by odpowiedzieć, i usuwa to w ciągu 30 dni, chyba że zostanie to oznaczone jako naruszenie jej zasad użytkowania lub prawo wymaga przechowania.","Nic nie jest wysyłane, dopóki na to nie zezwolisz. Możesz to wycofać w Koncie."],
+  ai_consent_now_anthropic: "Obecnie: bezpośrednio Anthropic.",
+  ai_consent_now_bedrock: "Obecnie: Amazon Web Services, w UE.",
+  ai_consent_now_vertex: "Obecnie: Google Cloud, w UE.",
+  ai_consent_now_foundry: "Obecnie: Microsoft Azure, w UE.",
   ai_consent_allow: "Zezwól",
   ai_consent_not_now: "Nie teraz",
   ai_consent_withdraw: "Wycofaj",
