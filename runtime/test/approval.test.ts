@@ -2965,6 +2965,20 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(off.s.checks).toEqual([]);
     });
 
+    // KIFF's draft read writes words on each Card for the owner (its lines, each grant's title, each total's and cap's unit
+    // and what it counts): read as terms, the Cards the refusal prescribes were refused again, every time Coach drafted them.
+    it("the Cards the refusal prescribes, as KIFF's draft read shows them with its words, are signed", async () => {
+      const { s, rules, tap } = await setUp("refuse");
+      const words = (l: Record<string, unknown>) => ({ ...l, quantity_of: { kind: "sum", parameter: "amount" }, unit: "EUR", scale: 2 });
+      const card = REFUSED_CARD(500, 5000);
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { ...card, lines: ["Refund a charge", "Up to 50.00 EUR a day"], aggregates: card.aggregates.map(words),
+          grants: card.grants.map((g) => ({ ...g, title: "Refund a charge", per_action_max: (g.per_action_max ?? []).map(words) })) },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", lines: ["List charges"], grants: [{ action: "list_charges_k3", title: "List charges" }], aggregates: [] }] };
+      rules("rules-1", FIGURED);
+      expect(await tap()).toMatchObject({ outcome: "sign" });
+    });
+
     // The apple@ rebuild's words, "Every refund asks you first", over a figure that inherits the rule's ask: no Cards
     // KIFF signs hold every refund asking, so Approve shows the rules again, whatever Card Coach drafted.
     it("words that say every refund asks, over a cap that asks, are shown again: no Card holds every refund", async () => {

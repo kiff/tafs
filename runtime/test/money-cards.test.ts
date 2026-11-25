@@ -197,7 +197,7 @@ describe("a draft's money Cards are the built ones, compared on what limits them
     off([REFUSED, { ...HELD, environment: "test" }]);
     off([REFUSED, { ...HELD, hold_expiry: "720h" }]);
     off([REFUSED, { ...HELD, grants: [{ ...HELD.grants[0], resources: { parameter: "charge", values: ["ch_1"] } }] }]);
-    off([REFUSED, { ...HELD, grants: [{ ...HELD.grants[0], per_action_max: [{ quantity: "sum(amount)", max: 5000, unit: "EUR" }] }] }]);
+    off([REFUSED, { ...HELD, grants: [{ ...HELD.grants[0], per_action_max: [{ quantity: "sum(amount)", max: 5000, per: "charge" }] }] }]);
     off([REFUSED, { ...HELD, on_exceed: "keep" }]);
   });
 
@@ -320,5 +320,82 @@ describe("words that say every call asks hold the rule to a count of 0 a day tha
     const text = "A refund over 5 EUR asks you first. Refunds past 200 EUR in a day are refused.";
     expect(saysEveryCallAsks(text)).toBe(false);
     expect(cardsFromRules([stripe], ask5, AGENT, text)[0]).toHaveProperty("cards");
+  });
+});
+
+// tafs cloud reads a draft's Cards as KIFF shows them (GET /v1/me/agent-drafts/{id}), and KIFF writes words on each for the
+// owner to read: its lines, each grant's tool title, and on each total and cap what it counts and its amount's unit. Read
+// as terms, they made every money draft differ from the built Cards, the ones the refusal prescribes included, so Coach
+// drafted exactly what it was told and was refused again, every time.
+describe("a draft's money Cards as KIFF shows them are compared on their terms alone", () => {
+  // "A refund over 5 EUR comes to me first; 50 EUR a day at most", agreed as each call's figure that asks and a day's that's refused.
+  const agreed: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [
+    { quantity: "sum(amount)", window: "call", limit: 500, over: "ask" },
+    { quantity: "sum(amount)", window: "calendar_day", limit: 5000, over: "refuse" },
+  ] }, ...reads];
+  const line = (l: Record<string, unknown>) => ({ ...l, quantity_of: { kind: "sum", parameter: "amount" }, ...(l.quantity === "count" ? {} : { unit: "EUR", scale: 2 }) });
+  /** A Card as KIFF's draft read shows it: its terms as drafted, with the words KIFF writes on it. */
+  const shown = (c: MoneyCard | Record<string, unknown>) => {
+    const card = c as { grants: Array<Record<string, unknown>>; aggregates: Array<Record<string, unknown>>; on_exceed?: string };
+    return { ...card, on_exceed: card.on_exceed ?? "owner", lines: ["Refund a charge", "Up to 50.00 EUR a day"],
+      grants: card.grants.map((g) => ({ ...g, title: "Refund a charge in EUR", ...(Array.isArray(g.per_action_max) ? { per_action_max: (g.per_action_max as Array<Record<string, unknown>>).map(line) } : {}) })),
+      aggregates: card.aggregates.map(line) };
+  };
+  const built = () => {
+    const m = cardsFromRules([stripe], agreed, AGENT)[0]!;
+    if (!("cards" in m)) throw new Error(`no Cards built: ${JSON.stringify(m)}`);
+    return m.cards;
+  };
+
+  it("the Cards a refusal prescribes, drafted and read back from KIFF, pass", () => {
+    const prescribed = built();
+    expect(prescribed.map((c) => c.on_exceed).sort()).toEqual(["owner", "refuse"]);
+    expect(moneyCardsOff([stripe], [shown(readsCard), ...prescribed.map(shown)], agreed, AGENT)).toBeUndefined();
+    // Through the JSON a draft is sent and read as, ids KIFF keeps and order aside.
+    const roundTrip = JSON.parse(JSON.stringify([...prescribed].reverse().map(shown))) as unknown[];
+    expect(moneyCardsOff([stripe], roundTrip, agreed, AGENT)).toBeUndefined();
+  });
+
+  it("a revision's Card, shown beside the one it revises, passes on its own terms", () => {
+    const [first, second] = built();
+    const revision = { ...shown(first!), revises: first!.id, unchanged: true, current: shown({ ...first!, aggregates: [{ quantity: "sum(amount)", limit: 1, window: "calendar_day" }] }) };
+    expect(moneyCardsOff([stripe], [revision, shown(second!)], agreed, AGENT)).toBeUndefined();
+  });
+
+  it("any term changed is still refused, read through KIFF's words: a limit, a cap, a window, on_exceed, the action, a subject", () => {
+    const refused = built().find((c) => c.on_exceed === "refuse")!;
+    const held = built().find((c) => c.on_exceed === "owner")!;
+    const g = (c: MoneyCard) => c.grants[0]!;
+    const changed: Array<[string, MoneyCard, MoneyCard]> = [
+      ["the day's limit", { ...refused, aggregates: [{ ...refused.aggregates[0]!, limit: 50000 }] }, held],
+      ["the day's window", { ...refused, aggregates: [{ ...refused.aggregates[0]!, window: "calendar_month" }] }, held],
+      ["each call's cap", refused, { ...held, grants: [{ ...g(held), per_action_max: [{ quantity: "sum(amount)", max: 5000 }] }] }],
+      ["on_exceed", { ...refused, on_exceed: "owner" }, held],
+      ["the action", refused, { ...held, grants: [{ ...g(held), action: "create_payout" }] }],
+      ["the subject", { ...refused, subject: "another-agent" }, held],
+    ];
+    for (const [what, r, h] of changed) {
+      expect(moneyCardsOff([stripe], [shown(r), shown(h)], agreed, AGENT), what).toMatchObject({ action: "create_refund" });
+    }
+  });
+
+  it("only KIFF's own words are set aside, each where KIFF writes it: a term KIFF reads, or its words anywhere else, is refused", () => {
+    const [first, second] = built();
+    const s = () => [shown(first!), shown(second!)] as Array<Record<string, unknown> & { grants: Array<Record<string, unknown>>; aggregates: Array<Record<string, unknown>> }>;
+    const cases: Array<[string, (cards: ReturnType<typeof s>) => void]> = [
+      ["hold_expiry", (c) => { c[0]!.hold_expiry = "720h"; }],
+      ["environment", (c) => { c[0]!.environment = "test"; }],
+      ["subjects", (c) => { c[0]!.subjects = [AGENT, "another-agent"]; }],
+      ["valid_until", (c) => { c[0]!.valid_until = "2099-01-01T00:00:00Z"; }],
+      ["a grant's resources", (c) => { c[0]!.grants[0]!.resources = { parameter: "charge", values: ["ch_1"] }; }],
+      ["a total's extra room", (c) => { c[0]!.aggregates[0]!.extra_room = [{ amount: 10000 }]; }],
+      ["lines on a grant", (c) => { c[0]!.grants[0]!.lines = ["x"]; }],
+      ["a unit on the Card", (c) => { c[0]!.unit = "EUR"; }],
+    ];
+    for (const [what, edit] of cases) {
+      const cards = s();
+      edit(cards);
+      expect(moneyCardsOff([stripe], cards, agreed, AGENT), what).toMatchObject({ action: "create_refund" });
+    }
   });
 });
