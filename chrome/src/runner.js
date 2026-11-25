@@ -31,7 +31,24 @@ import { randomId } from "./crypto.js";
 import { checkAllowances, checkSites } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
+/**
+ * A navigation Chrome says the person made (`webNavigation`'s transition): Back or Forward, an address typed, a reload, a bookmark,
+ * a search from the address bar. Never a run's, even while one of its acts waits for its page.
+ */
+const PERSONS_TRANSITIONS = new Set(["typed", "reload", "auto_bookmark", "generated", "keyword", "keyword_generated"]);
+function persons(d) {
+  return (Array.isArray(d.transitionQualifiers) && d.transitionQualifiers.includes("forward_back")) || PERSONS_TRANSITIONS.has(d.transitionType);
+}
+
+/** How many addresses a tab's trail keeps for `back`. */
+const TRAIL_MAX = 50;
 const SETTLE_MS = 600;
+/**
+ * How long a run's new tab may take to show its blank page before the step's page goes into it (`blankReady`). Navigating a tab
+ * whose about:blank hasn't committed yet races it: under load the blank page commits after the navigation began and aborts it
+ * (net::ERR_ABORTED), and the tab is left "unloaded" on about:blank.
+ */
+const BLANK_WAIT_MS = 10_000;
 // After an act, how long the tab gets to start the navigation the act began (a click's page change begins a moment after the click),
 // as 100 ms looks. A click that navigates nothing costs this and no more.
 const NAV_WAIT_MS = 1000;
@@ -99,6 +116,9 @@ export class Runner {
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
     this.greying = new Map(); // taf → the mark of its finished run whose group turns grey after DONE_GRACE_MS (greyLater)
     this.listen();
+    // A worker that stopped left its fences in Chrome, a joined tab's among them: every session rule goes now (only this runner adds
+    // them), before any fence of this runner's is added (`ruleIds` waits for it), so the sweep never removes a fresh one.
+    this.ready = this.unfenceAll().catch(() => {});
   }
 
   listen() {
@@ -109,7 +129,9 @@ export class Runner {
       const run = this.runOfTab(d.tabId);
       if (!run || isBlank(d.url)) return;
       if (refuseURL(d.url, run.sites, run.allowed)) {
-        c.tabs.update(d.tabId, { url: "about:blank" });
+        // A tab of the person's that joined the run is never sent anywhere: Chrome's fence blocks the request, and the page they
+        // had stays. A tab of the run's own goes to its blank page, as before.
+        if (!run.joined.has(d.tabId)) c.tabs.update(d.tabId, { url: "about:blank" });
         this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
       }
     });
@@ -120,13 +142,58 @@ export class Runner {
       if (d.frameId !== 0) return;
       const run = this.runOfTab(d.tabId);
       if (!run) return;
-      if (!isBlank(d.url) && refuseURL(d.url, run.sites, run.allowed)) {
+      const off = !isBlank(d.url) && refuseURL(d.url, run.sites, run.allowed);
+      if (run.joined.has(d.tabId)) {
+        // A tab of the person's that joined the run is never moved by the extension. Only the run's own act, while it waits for its
+        // page (`stepping`), may take it to another page, on the run's sites. Any other commit there is the person's (their Back or
+        // Forward, an address typed, a reload, their own click, the page's own redirect): the tab is given back to them as it is,
+        // unfenced and forgotten, and the run's next step answers `page_changed`. One off the run's sites in the act's own wait is
+        // given back too, and the act is refused `site_not_listed`.
+        const ours = run.stepping === d.tabId && !persons(d) && !off;
+        if (!ours) {
+          if (run.stepping === d.tabId && off) run.stepError = "site_not_listed";
+          this.giveBack(run, [d.tabId], run.stepping !== d.tabId || persons(d)).catch(() => {});
+          if (off) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+          return;
+        }
+        this.noteAddress(run, d.tabId, d.url);
+        this.guardDialogs(d.tabId, run).catch(() => {});
+        return;
+      }
+      if (off) {
+        // A tab of the run's own goes to its blank page.
         c.tabs.update(d.tabId, { url: "about:blank" });
         this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
         return;
       }
+      if (!isBlank(d.url)) this.noteAddress(run, d.tabId, d.url);
       this.guardDialogs(d.tabId, run).catch(() => {});
     });
+    // A navigation in a joined tab that fails (above all Chrome's fence, net::ERR_BLOCKED_BY_CLIENT, which shows its error page at
+    // the blocked address and commits nothing) gives the tab back as it is. The person's own (their Back to a page off the run's
+    // sites, say), once the fence is gone, is let through: the tab, no longer the run's, loads the address they asked for, and
+    // nothing else of theirs moves. In a run's act, the act is refused `site_not_listed`.
+    if (c.webNavigation.onErrorOccurred) {
+      c.webNavigation.onErrorOccurred.addListener((d) => {
+        if (d.frameId !== 0) return;
+        const run = this.runOfTab(d.tabId);
+        if (!run || !run.joined.has(d.tabId)) return;
+        const inStep = run.stepping === d.tabId;
+        const blocked = /ERR_BLOCKED_BY_CLIENT/.test(String(d.error || ""));
+        if (inStep) run.stepError = "site_not_listed";
+        if (blocked) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+        this.giveBack(run, [d.tabId], !inStep)
+          .then(async () => {
+            if (inStep || !blocked || isBlank(d.url)) return;
+            const tab = await c.tabs.get(d.tabId).catch(() => null);
+            if (!tab) return;
+            // Chrome's error page at their address: loaded again in place. Otherwise their navigation, asked for once more.
+            if (sameAddress(tab.url, d.url)) await c.tabs.reload(d.tabId);
+            else await c.tabs.update(d.tabId, { url: d.url });
+          })
+          .catch(() => {});
+      });
+    }
     // A tab or window a run's page opens joins the run only on its sites; anything else is closed.
     c.webNavigation.onCreatedNavigationTarget.addListener((d) => {
       const run = this.runOfTab(d.sourceTabId);
@@ -138,15 +205,26 @@ export class Runner {
       }
       run.tabs.add(d.tabId);
       this.tabRun.set(d.tabId, run.id);
-      this.fence(run, d.tabId).catch(() => {});
-      // The owner may have ungrouped or closed the run's group: the pop-up stays the run's, grouped or not.
-      if (run.groupId != null) Promise.resolve(c.tabs.group({ groupId: run.groupId, tabIds: [d.tabId] })).catch(() => {});
+      // Fenced, or closed: a pop-up Chrome's rules can't hold never stays open unfenced.
+      this.fence(run, d.tabId).catch(() => {
+        run.tabs.delete(d.tabId);
+        this.tabRun.delete(d.tabId);
+        Promise.resolve(c.tabs.remove(d.tabId)).catch(() => {});
+        this.record(run, { op: "open", url: bareURL(d.url), error: "browser_unavailable" });
+      });
+      // The owner may have ungrouped or closed the run's group: the pop-up stays the run's, in a group made again if Chrome ended it.
+      this.groupTab(run, d.tabId, run.windowId).catch(() => {});
     });
     c.tabs.onRemoved.addListener((tabId) => {
+      // Its fence goes with it, whoever's it was and whatever the run knows of it: a rule naming a closed tab is never left behind.
+      if (this.fenceIds.has(tabId)) this.unfence(tabId).catch(() => {});
+      // A tab the person took back from a run and has now closed: the run's next step is told so no more.
+      for (const r of this.runs.values()) if (r.taken === tabId) r.taken = null;
       const run = this.runOfTab(tabId);
       if (!run) return;
       run.tabs.delete(tabId);
       run.joined.delete(tabId);
+      run.trail.delete(tabId);
       this.tabRun.delete(tabId);
       if (run.tab === tabId) run.tab = [...run.tabs][0] ?? null;
       // The person closed the run's last tab: that's their Stop. The run ends now (a hand-over open answers not now), rather than
@@ -163,18 +241,13 @@ export class Runner {
   /**
    * The ids of a tab's three fence rules. A rule id must be a small positive integer (an int32), and a tab id can be large
    * (`tabId * 4` overflowed it, and the whole run failed as browser_unavailable), so each fenced tab takes the next three
-   * from a counter of this runner's own. Nothing but this runner adds session rules, and no run outlives it, so the first
-   * fence clears whatever an earlier service worker left.
+   * from a counter of this runner's own. Nothing but this runner adds session rules, and no run outlives it, so the runner
+   * clears whatever an earlier service worker left as it's made.
    */
   async ruleIds(tabId) {
-    const dnr = this.chrome.declarativeNetRequest;
-    // One promise that every fence awaits, so a second run starting beside the first never has its rules removed by the clear.
-    this.clearing ||= (async () => {
-      if (!dnr.getSessionRules) return;
-      const left = await dnr.getSessionRules().catch(() => []);
-      if (left.length) await dnr.updateSessionRules({ removeRuleIds: left.map((r) => r.id) }).catch(() => {});
-    })();
-    await this.clearing;
+    // The clear made with the runner (`ready`), which every fence awaits, so a run starting beside another never has its rules
+    // removed by it.
+    await this.ready;
     if (!this.fenceIds.has(tabId)) {
       this.fenceIds.set(tabId, this.nextFence);
       this.nextFence += 3;
@@ -206,6 +279,51 @@ export class Runner {
     if (base == null) return;
     this.fenceIds.delete(tabId);
     await dnr.updateSessionRules({ removeRuleIds: [base, base + 1, base + 2] }).catch(() => {});
+  }
+
+  /** Every fence rule goes (unpairing): those this runner knows, and any session rule left, as only this runner adds them. */
+  async unfenceAll() {
+    const dnr = this.chrome.declarativeNetRequest;
+    if (!dnr) return;
+    const ids = new Set();
+    for (const base of this.fenceIds.values()) [base, base + 1, base + 2].forEach((id) => ids.add(id));
+    this.fenceIds.clear();
+    if (dnr.getSessionRules) for (const r of (await dnr.getSessionRules().catch(() => [])) || []) ids.add(r.id);
+    if (ids.size) await dnr.updateSessionRules({ removeRuleIds: [...ids] }).catch(() => {});
+  }
+
+  /**
+   * The addresses the run's own work took tab [tabId] to, from its committed navigations, oldest first: `back` goes only to the one
+   * before the last. A joined tab's starts at the address it joined at, so `back` there never reaches a page the person had before.
+   */
+  noteAddress(run, tabId, url) {
+    if (run.backing === tabId || !run.tabs.has(tabId)) return;
+    // In a joined tab, only the run's own act, while it waits for its page, adds a page (the commit listener gives any other back);
+    // and never while the run is paused.
+    if (run.joined.has(tabId) && (run.stepping !== tabId || run.paused)) return;
+    const list = run.trail.get(tabId) || [];
+    if (!list.length || !sameAddress(list[list.length - 1], url)) list.push(String(url));
+    if (list.length > TRAIL_MAX) list.splice(0, list.length - TRAIL_MAX);
+    run.trail.set(tabId, list);
+  }
+
+  /**
+   * Puts [tabId] in [run]'s group, in [windowId]. A group Chrome ended (the person's tab given back emptied it) is made again, with
+   * the run's working title; never an error for the step. `reuseDone`: the taf's done group in that window may work again (the
+   * caller then names the group itself).
+   */
+  async groupTab(run, tabId, windowId, reuseDone = false) {
+    const c = this.chrome;
+    const into = (g) => (g == null ? Promise.resolve(null) : Promise.resolve(c.tabs.group({ groupId: g, tabIds: [tabId] })).then(() => g, () => null));
+    let g = await into(run.groupId);
+    if (g == null && reuseDone) g = await into(await this.tafGroup(run.taf || "taf", windowId));
+    if (g != null) {
+      run.groupId = g;
+      return false;
+    }
+    run.groupId = await c.tabs.group({ tabIds: [tabId], createProperties: { windowId } });
+    if (!reuseDone) await Promise.resolve(c.tabGroups.update(run.groupId, { title: this.workingTitle(run), color: "orange", collapsed: false })).catch(() => {});
+    return true;
   }
 
   runOfTab(tabId) {
@@ -395,6 +513,9 @@ export class Runner {
     // The person's Stop hands a tab of theirs that joined the run back to them: out of the group, still open; so does the end of
     // a paused run by the taf's newer one.
     await this.closeRun(run, close || !run.opened, by != null, by === "person" || by === "newer_run");
+    // The panel hears the run without its tabs at once, not at the next change.
+    this.onChange(this.state());
+    this.queueBars();
   }
 
   /**
@@ -424,6 +545,7 @@ export class Runner {
   async stopAll() {
     for (const id of [...this.runs.keys()]) await this.stop(id, true);
     await this.closeAllDone();
+    await this.unfenceAll();
   }
 
   async doneTabs() {
@@ -580,6 +702,7 @@ export class Runner {
       await this.leaveDone(run);
       run.tabs.clear();
       run.joined.clear();
+      run.trail.clear();
       run.tab = null;
       return;
     }
@@ -589,6 +712,7 @@ export class Runner {
     if (run.tabs.size) await this.chrome.tabs.remove([...run.tabs]).catch(() => {});
     if (run.ownWindow && run.windowId != null) await this.chrome.windows.remove(run.windowId).catch(() => {});
     run.tabs.clear();
+    run.trail.clear();
     run.tab = null;
   }
 
@@ -656,6 +780,11 @@ export class Runner {
         agentRun: typeof step.agent_run === "string" && step.agent_run ? step.agent_run : null,
         follow: null, // the panel's window, for a run started there: Chrome follows the run's tab while that panel is open
         tab: null,
+        trail: new Map(), // tab id → the addresses the run's work took it to (noteAddress), for `back`
+        stepping: null, // the tab an act of the run's is working in, until its page has loaded: a commit there then is the act's
+        stepError: null, // why that act failed in a joined tab, said by the navigation listeners (site_not_listed)
+        taken: null, // the joined tab the person moved while the run was on it: its next read, act or hand-over is given_back
+        backing: null, // the tab a `back` is moving now: its commits aren't the run's new pages
         token: randomId(),
         pages: new Map(),
         paused: null,
@@ -713,6 +842,10 @@ export class Runner {
   }
 
   async dispatch(run, step) {
+    // The person moved the tab of theirs the run was working in: nothing of that page is the run's. Its next read, act or hand-over
+    // is refused, until it opens a page of its own.
+    if (run.taken != null && (step.op === "read" || step.op === "act" || step.op === "hand")) return { error: { code: "given_back" } };
+    if (step.op === "open") run.taken = null;
     switch (step.op) {
       case "open":
         return this.open(run, step.url);
@@ -839,6 +972,8 @@ export class Runner {
       this.greying.delete(taf);
       const front = await this.frontTab(run, url);
       const made = front || (await this.runTab());
+      // A tab of the run's own shows its blank page before anything goes into it (BLANK_WAIT_MS); the person's tab already shows theirs.
+      if (!front) await this.blankReady(made.tabId);
       // Stop or close landed while the tab was being made: nothing of the run's is left open, least of all among the owner's tabs.
       if (run.stopped) {
         await this.discard(made);
@@ -849,15 +984,19 @@ export class Runner {
       run.ownWindow = own;
       run.tab = tabId;
       run.tabs.add(tabId);
-      if (made.joined) run.joined.add(tabId);
+      if (made.joined) {
+        // A tab the person took back from another run, joined again: that run's word about it goes.
+        for (const r of this.runs.values()) if (r.taken === tabId) r.taken = null;
+        run.joined.add(tabId);
+        run.trail.set(tabId, [String(url)]);
+      }
       this.tabRun.set(tabId, run.id);
       try {
         // Fenced before it loads anything of the run's: the person's tab as much as a tab of the run's own.
         await this.fence(run, tabId);
-        // One group per taf per window: the taf's last group there says it works again, rather than a new one beside it.
-        const again = await this.tafGroup(taf, windowId);
-        if (again != null) run.groupId = await Promise.resolve(c.tabs.group({ groupId: again, tabIds: [tabId] })).then(() => again, () => null);
-        if (run.groupId == null) run.groupId = await c.tabs.group({ tabIds: [tabId], createProperties: { windowId } });
+        // One group per taf per window: the taf's last group there says it works again, rather than a new one beside it. A run whose
+        // group Chrome ended (its tabs given back) has one made again.
+        await this.groupTab(run, tabId, windowId, true);
         await c.tabGroups.update(run.groupId, { title: this.workingTitle(run), color: "orange", collapsed: false });
         if (run.stopped) {
           // Stopped while it was fenced and grouped: its close ran before these tabs were the run's.
@@ -932,7 +1071,13 @@ export class Runner {
     if (!tab) return "no_page";
     const off = this.panel && this.panel.off ? await Promise.resolve().then(() => this.panel.off()).catch(() => []) : [];
     const rules = { sites: run.sites, allowed: run.allowed, off: Array.isArray(off) ? off : [] };
-    return joinedRefusal(tab, rules) || (url != null ? joinedRefusal({ ...tab, url }, rules) : null);
+    const refused = joinedRefusal(tab, rules) || (url != null ? joinedRefusal({ ...tab, url }, rules) : null);
+    if (refused) return refused;
+    // Only a page the run's work reached in it, from the one it joined at: never one the person had before (a `back` Chrome took
+    // past the joined page, say), even on the run's sites.
+    const trail = run.trail.get(tabId);
+    if (trail && trail.length && !trail.some((a) => sameAddress(a, tab.url))) return "page_changed";
+    return null;
   }
 
   /**
@@ -953,18 +1098,34 @@ export class Runner {
    * bar gone, still open), while the run itself goes on, now as [agentRun]'s: a step of another agent run reached it.
    */
   async giveBackJoined(run, agentRun) {
-    const joined = [...run.joined];
+    await this.giveBack(run, [...run.joined]);
+    run.agentRun = agentRun;
+    run.follow = null;
+  }
+
+  /**
+   * [tabs] of the person's that [run] joined go back to them: their bar hidden, forgotten, unfenced, out of the group, still open.
+   * `byPerson`: they moved it themselves, so the run's next step that would read or act there answers `given_back` (`taken`),
+   * until it opens a page of its own.
+   */
+  async giveBack(run, tabs, byPerson = false) {
+    const joined = tabs.filter((t) => run.joined.has(t));
+    if (byPerson && joined.includes(run.tab)) run.taken = run.tab;
     for (const t of joined) {
-      await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
       this.tabRun.delete(t);
-      await this.unfence(t);
       run.tabs.delete(t);
       run.joined.delete(t);
+      run.trail.delete(t);
+      await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
+      await this.unfence(t);
     }
     if (joined.length) await Promise.resolve(this.chrome.tabs.ungroup(joined)).catch(() => {});
     if (run.tab != null && joined.includes(run.tab)) run.tab = [...run.tabs][0] ?? null;
-    run.agentRun = agentRun;
-    run.follow = null;
+    // The panel hears the run without that tab at once.
+    if (joined.length) {
+      this.onChange(this.state());
+      this.queueBars();
+    }
   }
 
   /** A further tab of the run's own, in its window and group, fenced before it loads, and the one the run works in from now on. */
@@ -973,9 +1134,19 @@ export class Runner {
     const tab = await c.tabs.create({ windowId: run.windowId, url: "about:blank", active: false });
     run.tabs.add(tab.id);
     this.tabRun.set(tab.id, run.id);
+    try {
+      await this.fence(run, tab.id);
+    } catch (e) {
+      // Unfenced, it loads nothing: the blank tab closes and the step says why.
+      run.tabs.delete(tab.id);
+      this.tabRun.delete(tab.id);
+      await Promise.resolve(c.tabs.remove([tab.id])).catch(() => {});
+      throw e;
+    }
     run.tab = tab.id;
-    await this.fence(run, tab.id);
-    if (run.groupId != null) await Promise.resolve(c.tabs.group({ groupId: run.groupId, tabIds: [tab.id] })).catch(() => {});
+    await this.groupTab(run, tab.id, run.windowId).catch(() => {});
+    // Its blank page committed before the step's page goes in, or Chrome aborts that navigation under load.
+    await this.blankReady(tab.id);
   }
 
   /**
@@ -1000,6 +1171,15 @@ export class Runner {
     }
     const own = await c.windows.create({ url: "about:blank", focused: false, type: "normal" });
     return { windowId: own.id, tabId: own.tabs[0].id, own: true };
+  }
+
+  /** Waits while a new tab is still loading its about:blank, BLANK_WAIT_MS at most, so the step's navigation never races it. */
+  async blankReady(tabId) {
+    for (let waited = 0; waited < BLANK_WAIT_MS; waited += 50) {
+      const tab = await this.chrome.tabs.get(tabId).catch(() => null);
+      if (!tab || tab.status !== "loading") return;
+      await this.sleep(50);
+    }
   }
 
   /** Closes what runTab made, for a run that was stopped before it took it: the tab, or the window of the run's own. */
@@ -1083,6 +1263,39 @@ export class Runner {
     }
   }
 
+  /**
+   * Back: to the page before the last one the run's work took this tab to (its trail), and only there. Chrome skips a history entry
+   * no person's gesture made (a taf's own click), so its back can land further: in a tab of the run's own, that page is loaded
+   * instead; in a joined tab, which the run never sends anywhere, it's put back (forward) and refused `no_back`. With no page before
+   * in the trail (a joined tab still at the page it joined at), `no_back`, and nothing moves.
+   */
+  async back(run) {
+    const c = this.chrome;
+    const tabId = run.tab;
+    // A joined tab: never. The run only reads it where it joined and acts there; Chrome skips the entries its acts leave, so a back
+    // would land on a page the person had before (and load it again). Nothing moves.
+    if (run.joined.has(tabId)) return { error: { code: "no_back" } };
+    const trail = [...(run.trail.get(tabId) || [])];
+    if (trail.length < 2) return { error: { code: "no_back" } };
+    const want = trail[trail.length - 2];
+    if (refuseURL(want, run.sites, run.allowed)) return { error: { code: "no_back" } };
+    const from = await c.tabs.get(tabId).catch(() => null);
+    run.backing = tabId;
+    try {
+      await Promise.resolve(c.tabs.goBack(tabId)).catch(() => {});
+      await this.loaded(tabId, from ? from.url || "" : undefined);
+      const now = await c.tabs.get(tabId).catch(() => null);
+      if (!(now && sameAddress(now.url, want))) {
+        await c.tabs.update(tabId, { url: want });
+        await this.loaded(tabId, now ? now.url || "" : undefined);
+      }
+      run.trail.set(tabId, trail.slice(0, -1));
+    } finally {
+      run.backing = null;
+    }
+    return this.read(run);
+  }
+
   async act(run, step) {
     if (run.tab == null) return { error: { code: "no_page" } };
     const page = run.pages.get(step.read_id);
@@ -1095,12 +1308,7 @@ export class Runner {
     const theirs = await this.joinedNow(run, run.tab);
     if (theirs) return { error: { code: theirs } };
     // Back (gap 7): where the tab was before, read and fenced as any page is; nothing is clicked or typed.
-    if (step.act.kind === "back") {
-      const from = await this.chrome.tabs.get(run.tab).catch(() => null);
-      await Promise.resolve(this.chrome.tabs.goBack(run.tab)).catch(() => {});
-      await this.loaded(run.tab, from ? from.url || "" : undefined);
-      return this.read(run);
-    }
+    if (step.act.kind === "back") return this.back(run);
     await this.pictureOf(run, step, page);
     // Where the taf is about to act, shown for a moment first (Show me's outline), after the picture so it isn't in it. Only
     // for an act on a ref: back and a scroll of the page name none. The act takes the outline away.
@@ -1115,10 +1323,26 @@ export class Runner {
       }
     }
     const before = await this.chrome.tabs.get(run.tab).catch(() => null);
-    const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);
-    if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
-    // A click is never proof of its effect: the page is read back, after the navigation it started has begun and ended.
-    await this.loaded(run.tab, before ? before.url || "" : undefined);
+    const tabId = run.tab;
+    run.stepping = tabId;
+    run.stepError = null;
+    try {
+      // In the person's tab, the run's sites go with the act: a link or a form's submit that would leave them is refused in the page
+      // before it fires, so Chrome never puts its "blocked" page in place of theirs. A tab of the run's own is left to the fence,
+      // which sends it to its blank page.
+      const opts = run.joined.has(tabId) ? { sites: [...run.sites, ...run.allowed] } : null;
+      const done = await this.inTab(tabId, (a, id, o) => globalThis.TafsPage.act(a, id, o), [step.act, step.read_id, opts]);
+      if (done && done.code === "site_not_listed" && done.url) this.record(run, { op: "navigate", url: done.url, error: "site_not_listed" });
+      if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
+      // A click is never proof of its effect: the page is read back, after the navigation it started has begun and ended.
+      await this.loaded(tabId, before ? before.url || "" : undefined);
+      if (run.stepError) return { error: { code: run.stepError } };
+      // The person moved their tab in the act's wait (their Back, say): it's theirs again, and nothing of it is read.
+      if (run.taken != null) return { error: { code: "given_back" } };
+    } finally {
+      run.stepping = null;
+      run.stepError = null;
+    }
     return this.read(run);
   }
 }

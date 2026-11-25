@@ -352,7 +352,14 @@ error = {code, detail?}      // detail never carries page text
     (`requestSubmit`), unless the page cancelled the key. `Enter` on a checkout or payment page, in a form that takes a card
     or whose button places an order, and any key on a password, card or code field, are refused, as a click there is.
   - `scroll` of a ref (into view) or of the page (`value` `down`, the default, or `up`, by most of a screen).
-  - `back`, with no ref: the tab goes back, and the page there is read and fenced as any page is; nothing is clicked.
+  - `back`, with no ref, in a tab of the run's own: the tab goes back to the page before the last one the run's work took it to,
+    and the page there is read and fenced as any page is; nothing is clicked (0.2.15, `Runner.back`). The runner keeps each run
+    tab's addresses from its committed navigations (`noteAddress`, the trail, 50 at most); with none before the current one,
+    `back` is `no_back` and nothing moves. Chrome skips a history entry no person's gesture made (after the taf's own click its
+    back went nowhere, or further), so a back that doesn't land on that page loads it instead.
+  - **`back` in a joined tab is always `no_back`, and nothing moves** (0.2.15). The run only reads the person's tab where it
+    joined and acts there; Chrome skips the entries its acts leave, so a back would land on a page the person had before the run
+    (and load it again).
   - planque sends these only once its `browse_act` takes them; until then the extension simply has them.
 - **A link that acts is a control,** never a link to follow: one with a script handler (`onclick`), a button's role, or a
   URL that is this page plus a fragment. A link whose words pay is refused as a control would be, and on a checkout or
@@ -375,7 +382,9 @@ error = {code, detail?}      // detail never carries page text
 | `address_private` | an IP address (in any form a browser reads), or a local name (`.local`, `.internal`, …) |
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
 | `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
-| `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since |
+| `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since. Also a page in a joined tab its run's work never reached (0.2.15) |
+| `given_back` | the person moved the joined tab the run was on (their Back or Forward, an address, a reload, their own click, a navigation that failed there), so it was given back to them: the run's next read, act or hand-over, until it opens a page of its own; also an act whose wait the person's move ended (0.2.15) |
+| `no_back` | a `back` in a tab of the run's own with no page before in the run's trail for it, and any `back` in a joined tab (0.2.15) |
 | `ref_unknown` | the read has no such ref, or its element is gone, or it has become something else since the read: the element's tag, type, name, label, words and link target, and the words of the row it sits in, must be what the read saw |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
 | `secret_field` | a fill of a password or one-time-code field with a plain value, or a sealed value into a field its part doesn't fit |
@@ -413,8 +422,14 @@ was done.
   Chrome `declarativeNetRequest` session rules scoped to that tab: block every page and frame request, allow the run's
   sites (and the sensitive sites the phone allowed), and block plain `http`. So a link, a redirect or a form submit to
   another host is refused by Chrome before the request is sent. A tab the run's page opens gets the same rules. The
-  rules go when the run ends. Their ids come from a counter of the runner's own (a rule id must fit an int32, and a tab id can be
-  larger than that over four), and the first fence clears any rule an earlier service worker left. A window that can't be set up
+  rules go when the run ends, when the person closes the tab (`tabs.onRemoved`, whether or not the run still holds it), and all
+  of them at unpairing (`unfenceAll`: the rules the runner knows and any session rule left in Chrome, as only the runner adds
+  them), so no rule naming a closed tab piles up towards Chrome's cap on session rules (0.2.15). **A fence Chrome won't install
+  fails closed:** a run's first tab, or its window, closes and the step answers `browser_unavailable`; a further tab of the run's
+  own closes, blank, before it loads anything, and the step says why; a pop-up the fence can't hold is closed. Their ids come from a counter of the runner's own (a rule id must fit an int32, and a tab id can be
+  larger than that over four). **A runner clears every session rule as it's made** (0.2.15, `Runner.ready`): a worker that
+  stopped left its fences in Chrome, a joined tab's among them, and before 0.2.15 they stayed until the next run's first fence.
+  Every fence waits for that clear, so it never removes a fresh one. A window that can't be set up
   (the fence or the tab group refused) is closed and the step answers `browser_unavailable` with the reason. `webNavigation`'s record of a refused move stays as the log.
 - **No new window escapes the fence before it's in place:** in a run's tab, `window.open` opens nothing (it's reported as a
   dialog), and a link or form that would open a new tab is followed in the same tab.
@@ -451,10 +466,15 @@ was done.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
   read never lands in the middle of an act. Pause and Stop don't wait.
 - **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
-  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is. The blank page
+  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is; in a tab of the
+  person's that joined the run, nothing moves it: the tab is given back to them as it is (0.2.15, below). The blank page
   itself (`about:blank`, where a run's tab opens and where a refused move goes) is never refused: refusing it sent the
   tab to `about:blank` again and again, which also cancelled the page the step was opening, so the step timed out. A step
   line whose address can't be read draws with no site, never an error.
+- **A run's new tab shows its blank page before the step's page goes into it** (`Runner.blankReady`, 10 s at most).
+  Navigating a tab whose `about:blank` hadn't committed yet raced it: under load the blank page committed after the
+  navigation began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The end-to-end
+  test `races.e2e.test.js` reproduces that load (one renderer for every page, the person's page busy).
 - **A run's tabs get two scripts:**
   - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
     reported, a confirm answers no, and a "leave this page?" handler is dropped.
@@ -487,7 +507,8 @@ away. Now:
   address goes to a tab of the run's own (`moreTab`: in the same window and group, fenced before it loads; Chrome follows it as
   before), which the run works in from then on. An `open` of the address a joined tab shows reads it where it is, even from a tab
   of the run's own; a `read` while the run is on the joined tab reads it in place. Nothing sends the person's tab to another
-  address: no `tabs.update` with a `url` ever names it (a click the taf makes in the page is an act, checked as any act is).
+  address: no `tabs.update` with a `url` ever names it, nor does the fence send it to a blank page (a click the taf makes in the
+  page is an act, checked as any act is, and may move the tab within the run's sites).
 
 **A step of another agent run never works in a joined tab** (0.2.13, `Runner.giveBackJoined`): planque keeps a taf's run for its
 next call whatever agent run makes it, so a schedule, the phone or a later message may reach the run that holds the person's tab. A
@@ -517,10 +538,39 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   `site_blocked`, `bad_url`) and nothing runs in it. An `open` goes on in a tab of the run's own, in the same window and group,
   whenever the person's tab doesn't already show its address or may not show it (an allowed sensitive site, a site switched
   off), and the person's tab is left where it is.
-- **Fenced as a run's own tab.** The same `declarativeNetRequest` rules, the same `webNavigation` checks (a navigation off the
-  run's sites goes to a blank page, a pop-up off them is closed), the same dialog guard, the same read (`mask.js`, `page.js`: no
+- **Fenced as a run's own tab.** The same `declarativeNetRequest` rules, the same `webNavigation` checks (a pop-up off the run's
+  sites is closed), the same dialog guard, the same read (`mask.js`, `page.js`: no
   field values, passwords or card numbers, one-time codes masked). The person's typing, clicking or scrolling in it pauses the
-  run, as in any run's tab.
+  run, as in any run's tab. In it the taf can click and type on its own sites, and its click may take the tab to another page
+  on them. Never further (0.2.15):
+  - **An act that would leave the run's sites is refused before it fires** (`page.js` `headsTo`): a click on a link or inside
+    one, a click on a form's submit button (its `formaction`, else the form's `action`) and Enter in a form's field, whose
+    address (resolved, http or https) isn't https on one of the run's sites, are refused `site_not_listed` in the page and
+    recorded as a refused move, before anything is clicked or submitted. The tab stays the run's, on its page. Only in a joined
+    tab: a tab of the run's own is left to the fence, which sends it to its blank page. A `javascript:` link is a control and
+    isn't checked here.
+  - **Only the run's own act moves it.** While one of the run's acts waits for its page (`stepping`, the act and its load wait), a
+    commit there on the run's sites is the act's: the page joins the tab's trail, and the run reads it. **Any other commit is the
+    person's** (their Back or Forward, an address they typed, a reload, a bookmark, their own click, the page's own redirect;
+    in an act's wait too, when Chrome says the transition is theirs: `forward_back`, `typed`, `reload`, `auto_bookmark`,
+    `generated`, `keyword`): the tab is **given back to them at once, as it is** (`Runner.giveBack`: out of the group, unfenced,
+    forgotten, its bar gone, still open where they took it), never moved, and its page is never read. The run's next read, act
+    or hand-over answers `given_back`, and nothing is read or done, until the run opens a page of its own (a tab of its own,
+    as any open after a give-back). The run keeps which tab that was (`taken`) only until then, or until the tab closes or a
+    run joins it again. A step that reaches a tab the run let go of in any other way answers `no_page`, as before. So a page the person had before the run, on its sites, reached by their own Back, is never
+    the run's.
+  - **A navigation that fails in it gives it back** (`webNavigation.onErrorOccurred`, above all `net::ERR_BLOCKED_BY_CLIENT`,
+    Chrome's fence, which shows its error page at the blocked address and commits nothing). In the run's act, the act is
+    refused `site_not_listed` and the tab is given back, unmoved (planque's next step there is `no_page`). Otherwise it's the
+    person's own navigation (their Back to a page off the run's sites, say), given back as above (`given_back`): its fence
+    goes, and **their navigation then goes through**, so they
+    land where they asked: Chrome's error page at their address is loaded again in place (`tabs.reload`), or, if their tab
+    still shows the joined page, their address is asked for once more (`tabs.update` with its `url`, on a tab no longer the
+    run's, so the rule that the extension never sends a joined tab anywhere still holds). Their next Back is theirs: nothing of
+    the extension's answers it.
+- **Only pages the run reached are read** (0.2.15, `Runner.joinedNow`): a read, an act or a hand-over in a joined tab whose page
+  isn't one of its trail (the address it joined at, then the pages the run's own acts took it to) is refused `page_changed`,
+  even on the run's sites.
 - **Chrome follows the run.** When the run opens a page, its tab comes to the front of the panel's window, only while the panel is
   open there; no window is raised or focused, and a run nobody started from the panel is never brought forward.
 - **Stop gives the tab back.** The person's Stop (the bar, the panel, or closing the run's last tab) does five things: the tab
@@ -529,6 +579,11 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   (it leaves the group), not when the run ends on its own (the idle sweep, the turn over, the close step, planque's `stop`: it
   stays in the "· done" group, unfenced and the run's no more), and not when the taf's next run deals with the last run's tabs (it
   leaves the group, unless it's the tab in front joining again).
+- **A group Chrome ended is made again** (0.2.15, `Runner.groupTab`): giving the person's tab back can empty the run's group,
+  and Chrome then ends it. The run's next tab goes into a new group in its window, with the run's working title and colour, and
+  the step goes on; a group that's gone is never `browser_unavailable`.
+- **The panel drops a stopped run's tabs at once** (0.2.15): Stop publishes the run's state after its tabs are let go, so the
+  panel no longer lists them until the next change.
 - **A group worked in again is no consent for its old tabs:** only the tab in front, checked as above, joins the new run; the
   tabs left from earlier runs are the run's no more, and a step can't reach them.
 - **A newer run of a taf ends an older run of it the person paused** (0.2.14, `Runner.handleStep`). A run of a taf started by

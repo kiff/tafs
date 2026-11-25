@@ -128,3 +128,21 @@ test("dialogs: a page's confirm() doesn't block the run and is never accepted", 
   // Chromium never showed it: the harness accepts any dialog that reaches it, and none did.
   assert.deepEqual(h.dialogs, []);
 });
+
+test("back: after the taf's click on a link, back returns to the page it clicked on", { skip }, async () => {
+  const run = newRun("back");
+  const hub = h.sites.url("news.test", "/hub?case=back");
+  let r = await send({ op: "open", run, url: hub });
+  assert.equal(r.ok, true, JSON.stringify(r.error));
+  r = await send({ op: "act", run, read_id: r.page.read_id, act: { kind: "click", ref: ref(r.page, "Read the long page", "links") } });
+  assert.equal(r.page.url, h.sites.url("news.test", "/long"));
+  r = await send({ op: "act", run, read_id: r.page.read_id, act: { kind: "back" } });
+  assert.equal(r.ok, true, JSON.stringify(r.error));
+  assert.equal(r.page.url, h.sites.url("news.test", "/hub"));
+  assert.ok(tabAt(h, hub), "the run's tab is on the page the click left");
+  // Nothing before the page the run opened: its back goes nowhere, and says so.
+  r = await send({ op: "act", run, read_id: r.page.read_id, act: { kind: "back" } });
+  assert.equal(r.ok, false);
+  assert.equal(r.error.code, "no_back");
+  assert.ok(tabAt(h, hub), "and the tab stays where it was");
+});

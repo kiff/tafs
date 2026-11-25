@@ -806,3 +806,49 @@ test("what Coach gets of a page: its masked text, never a field's value, typed t
   assert.equal(await page.evaluate(() => TafsAside.read().url), "https://shop.example/", "a path past 2,000 characters goes; the origin stays");
   await page.close();
 });
+
+// The harness's finding: an off-site click or submit in a person's tab made Chrome commit its own "blocked" page there. The page
+// refuses such an act before it fires, given the run's sites.
+const LEAVE = `<!doctype html><html><head><title>Leave</title></head><body>
+<a id="off" href="https://elsewhere.example/a?x=1">Elsewhere</a>
+<a id="sub" href="https://help.shop.example/faq">Help</a>
+<a id="plain" href="http://shop.example/plain">Plain http</a>
+<a id="wrap" href="https://elsewhere.example/b"><span id="inner">Inside a link</span></a>
+<a id="js" href="javascript:void(window.__js = true)">Script link</a>
+<form id="f1" action="https://elsewhere.example/ask" method="post"><input id="q" aria-label="Question"><button id="ask">Ask elsewhere</button></form>
+<form id="f2" action="https://shop.example/search"><button id="over" formaction="https://elsewhere.example/over">Over</button><button id="here">Here</button></form>
+</body></html>`;
+
+test("an act whose link or form would leave the run's sites is refused before it fires, with where it would have gone", { skip: !playwright }, async () => {
+  const asked = [];
+  await ctx.route("https://elsewhere.example/**", (route) => (asked.push(route.request().url()), route.fulfill({ status: 200, body: "elsewhere" })));
+  await ctx.route("https://help.shop.example/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>help</p>" }));
+  await ctx.route("https://shop.example/leave", (route) => route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: LEAVE }));
+  const page = await ctx.newPage();
+  await page.goto("https://shop.example/leave");
+  await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
+  await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: PAGE });
+  const sites = { sites: ["shop.example"] };
+  const act = async (a, label, where = "links") => {
+    const read = await page.evaluate(() => TafsPage.read());
+    const all = [...read.links, ...read.controls, ...read.fields];
+    const el = all.find((x) => x.label === label);
+    assert.ok(el, label + " in " + JSON.stringify(all.map((x) => x.label)));
+    return page.evaluate(([x, id, o]) => TafsPage.act(x, id, o), [{ ...a, ref: el.ref }, read.read_id, sites]);
+  };
+  assert.deepEqual(await act({ kind: "click" }, "Elsewhere"), { ok: false, code: "site_not_listed", url: "https://elsewhere.example/a" });
+  assert.deepEqual(await act({ kind: "click" }, "Inside a link"), { ok: false, code: "site_not_listed", url: "https://elsewhere.example/b" });
+  assert.deepEqual(await act({ kind: "click" }, "Ask elsewhere"), { ok: false, code: "site_not_listed", url: "https://elsewhere.example/ask" }, "a form's action");
+  assert.deepEqual(await act({ kind: "click" }, "Over"), { ok: false, code: "site_not_listed", url: "https://elsewhere.example/over" }, "a button's own formaction");
+  assert.deepEqual(await act({ kind: "press", value: "Enter" }, "Question"), { ok: false, code: "site_not_listed", url: "https://elsewhere.example/ask" }, "Enter in a field of a form that leaves");
+  assert.equal(page.url(), "https://shop.example/leave", "nothing went anywhere");
+  assert.deepEqual(asked, [], "elsewhere.example was never asked for anything");
+  // A plain http link and a javascript: one aren't offered by the read at all.
+  const read = await page.evaluate(() => TafsPage.read());
+  assert.ok(![...read.links, ...read.controls].some((x) => x.label === "Plain http" || x.label === "Script link"));
+  // A link under one of the run's sites goes.
+  assert.deepEqual(await act({ kind: "click" }, "Help"), { ok: true });
+  await page.waitForURL("https://help.shop.example/faq");
+  await page.close();
+});
