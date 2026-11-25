@@ -342,8 +342,9 @@ What landed on 23 Nov, device by device, read again against each repo's main on 
 | An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | done (tafs-macos#263: said on Needs you, not in the chat) | done (tafs-windows#271: said on Needs you, not in the chat) | done (tafs-linux#99) | — |
 | An API door's example safe to paste into a shell (a plain path only, quoted; `vectors/api-door-endpoint.json`, tafs#1877) | done (tafs#1875) | done (tafs#1874) | done (tafs-macos#205) | done (tafs-windows#323) | done (tafs-linux#111) | — |
 | The side panel is the taf in this Chrome (tafs#1799), no client named (tafs#1810), the read after an act waits for its navigation (tafs#1811) | — | — | — | — | — | done |
+| Try again under a failed run's line, shown only when tafs cloud's `failed` says `retry`, in its `retry_label` (`contracts/conversation-failed.json`) | not yet (the line, with Retry, is there) | done (tafs#2084) | not yet: the pin has `retry` since tafs-macos#271, nothing reads it | not yet: the pin has `retry` since tafs-windows#347, nothing reads it | not yet: the pin has `retry` since tafs-linux#141, nothing reads it | done (0.2.22, tafs#2077) |
 
-**Still open:** nothing to build. Every row above is done on each device it's for, except the sealed sign-in fill's release card, which stays held and off by the owner's decision.
+**Still open:** Try again on a failed run's line, on the iPhone and iPad and on the three desktops. Every other row above is done on each device it's for, except the sealed sign-in fill's release card, which stays held and off by the owner's decision.
 
 ## Counting checks
 
