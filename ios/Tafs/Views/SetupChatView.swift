@@ -73,9 +73,9 @@ struct SetupChatView: View {
                 if !model.setupStarted && !Screenshots.coachChat {
                     intro
                     // No typing before Coach's tools are approved (the Card step): the words handed over wait in the draft,
-                    // and the box's place says so, in tafs cloud's words.
-                    if cardStepShown, let locked = model.coachStart?.words?.locked, !locked.isEmpty {
-                        Text(locked).scaledFont(14, weight: .semibold).foregroundColor(Theme.dim)
+                    // and the box's place says so, in tafs cloud's words or the app's own. It never opens without a line.
+                    if cardStepShown {
+                        Text(Self.cardStepLockedLine(model.coachStart?.words)).scaledFont(14, weight: .semibold).foregroundColor(Theme.dim)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16).padding(.vertical, 12)
@@ -181,6 +181,12 @@ struct SetupChatView: View {
     private var composerLocked: Bool {
         guard let tools = model.coachTools, tools.toGive else { return false }
         return tools.connect != nil || tools.together?.connect != nil
+    }
+
+    /// The Card step's locked box (docs/ios-app.md, "The Card step"): tafs cloud's `locked`, or the app's own line when none
+    /// came. The box stays locked either way.
+    static func cardStepLockedLine(_ words: TafsCloud.CoachStart.Words?) -> String {
+        CoachToolsSheet.said(words?.locked, Words.Coach.Tools.writeAfter)
     }
 
     private var lockedComposer: some View {

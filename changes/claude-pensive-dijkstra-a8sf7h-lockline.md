@@ -1,0 +1,1 @@
+- **iPhone and iPad: Coach's box never opens before the Card step is approved, even when tafs cloud sends no line for it.** The locked box then says the app's own "Approve Coach's tools first, then you can write." instead of being drawn with no line at all, as on Android. See [the iOS app](docs/ios-app.md#the-card-step).
