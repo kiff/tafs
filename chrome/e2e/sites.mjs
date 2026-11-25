@@ -265,6 +265,12 @@ export class FixtureSites {
     // On any host: a link to `to`, a 302 to `to`, and a page that only says where it is (the fence's targets: bank.shop.test,
     // accounts.google.com, me.github.io, an address).
     const to = new URL(req.url, "https://x").searchParams.get("to");
+    // A page whose answer is held `ms` milliseconds (at most 5 s): its navigation is in flight that long, headers not yet answered.
+    if (path === "/slow") {
+      const ms = Math.min(Number(new URL(req.url, "https://x").searchParams.get("ms")) || 1000, 5000);
+      setTimeout(() => res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }).end(page("Slow", "<h1>Slow</h1>")), ms);
+      return;
+    }
     if (path === "/link-to" && to) {
       res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }).end(page("A link", `<h1>A link</h1><a id="go" href="${to.replace(/"/g, "&quot;")}">Go there</a>`));
       return;

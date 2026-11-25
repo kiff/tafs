@@ -104,32 +104,32 @@ test(`(c) the run's own loads drop a load-time confirm, nothing reaching Chromiu
   assert.equal(actLeaks, 0);
 });
 
-// Logged, not asserted: the one window the sandbox rule is on, the run's own navigation in flight. The person's address typed in the
-// run's tab while the run's open is still loading takes the sandbox off as their navigation starts (onBeforeNavigate), racing
-// their request; this counts how often their page still loads sandboxed.
-test(`(a, in flight) an address the person types while the run's own open is still loading: logged (${TRIES} tries)`, { skip }, async () => {
+// Logged, and asserted only that it ran: the one window the sandbox rule is on, the run's own navigation in flight. The run opens a
+// page whose answer is held (`/slow`: its headers not yet sent), and while it's held the person types an address in that tab. Their
+// navigation takes the sandbox off as it starts (onBeforeNavigate), racing their own request; this counts how often their page
+// still loads sandboxed.
+test(`(a, in flight) an address the person types while the run's own open is held in flight: logged (${TRIES} tries)`, { skip }, async () => {
   let sandboxed = 0;
   let tried = 0;
   for (let i = 0; i < TRIES; i++) {
     const run = newRun("af" + i);
-    // A first open gives the run its tab; the second is the one in flight.
     const first = h.sites.url("news.test", "/article?case=af" + i);
     await open(run, first);
     const tab = await until(() => tabAt(h, first), "the run's tab");
-    const going = h.planque.sendStep({ op: "open", run, url: h.sites.url("news.test", "/long?case=af" + i) });
-    await until(() => tab.url().includes("/long"), "the run's navigation started", 5000).catch(() => {});
+    const slow = h.sites.url("news.test", "/slow?ms=2500&case=af" + i);
+    const going = h.planque.sendStep({ op: "open", run, url: slow });
+    // The run's request is out and held: its navigation is in flight, the sandbox rule on.
+    await until(() => h.sites.hits.some((x) => x.includes("/slow?") && x.includes("case=af" + i + "")), "the run's held request", 5000);
     const tag = "inflight-a" + i;
     await tab.goto(confirmPage(tag)).catch(() => {});
     await going.catch(() => {});
-    if (!tab.url().includes(tag)) {
-      await h.fromPanel({ type: "stop", run });
-      await tab.close();
-      continue;
+    if (tab.url().includes(tag)) {
+      tried++;
+      if ((await tab.textContent("#out").catch(() => "")) !== "accepted" || reached(tag).length !== 1) sandboxed++;
     }
-    tried++;
-    if ((await tab.textContent("#out").catch(() => "")) !== "accepted" || reached(tag).length !== 1) sandboxed++;
     await h.fromPanel({ type: "stop", run });
     await tab.close();
   }
-  console.log(`MEASURE (a, in flight) typed address during the run's open loaded sandboxed: ${sandboxed}/${tried} (of ${TRIES} tries, ${TRIES - tried} where the person's page didn't stay)`);
+  console.log(`MEASURE (a, in flight) typed address while the run's open was held loaded sandboxed: ${sandboxed}/${tried} (of ${TRIES} tries)`);
+  assert.ok(tried > 0, "no try reached the person's page: the window wasn't measured");
 });

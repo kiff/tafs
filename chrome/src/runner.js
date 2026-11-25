@@ -152,6 +152,7 @@ export class Runner {
     this.doneStore = doneStore; // {get(), set(obj)}: the tabs each taf's last finished run left, kept where a stopped worker finds them again
     this.done = null; // doneKey → {name, tabs: [{id, url, joined?}], window: id | null, group: id | null}, loaded on first use
     this.fenceIds = new Map(); // tab id → the first of its FENCE_RULES fence rule ids
+    this.sandboxed = new Map(); // tab id → {url, started}: the run's own navigation its sandbox rule is on for (Runner.sandbox)
     this.nextFence = 1;
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
     this.greying = new Map(); // doneKey → the mark of its finished run whose group turns grey after DONE_GRACE_MS (greyLater)
@@ -170,8 +171,13 @@ export class Runner {
       if (!run || isBlank(d.url)) return;
       // A navigation of the person's in a tab of the run's own while the run's own is in flight (their typed address, Back, a
       // reload): the sandbox comes off before its request is sent, as early as the extension hears of it.
+      // While the run's own step is in flight, its tab's first navigation is the run's (at the address the open asked for, when the
+      // runner knows it); any other there is the person's (their address, their Back, a reload) and loads without the sandbox.
+      const on = this.sandboxed.get(d.tabId);
       const runsWork = run.stepping === d.tabId || run.backing === d.tabId || run.landing.has(d.tabId) || (run.tab === d.tabId && this.handOpen(run));
-      if (!runsWork) this.unsandbox(d.tabId).catch(() => {});
+      const theRuns = on && !on.started && (on.url == null || sameAddress(on.url, d.url));
+      if (on && theRuns) on.started = true;
+      if (!runsWork || (on && !theRuns)) this.unsandbox(d.tabId).catch(() => {});
       if (refuseURL(d.url, run.sites, run.allowed)) {
         // A tab of the person's that joined the run is never sent anywhere: Chrome's fence blocks the request, and the page they
         // had stays (a block in the run's own act is recorded once, by onErrorOccurred). A tab of the run's own goes to its blank
@@ -372,10 +378,13 @@ export class Runner {
    * `RUN_SANDBOX`. Taken off (`unsandbox`) at that navigation's commit or error, and at the step's end, whichever comes first.
    * Never for a tab of the person's the run joined: its dialogs keep the onCommitted guard.
    */
-  async sandbox(run, tabId) {
+  async sandbox(run, tabId, url = null) {
     const dnr = this.chrome.declarativeNetRequest;
     const base = this.fenceIds.get(tabId);
     if (!dnr || base == null || run.joined.has(tabId)) return;
+    // What the run's own navigation is (`url` when the runner knows it: an open, a back), and whether it has started: only that one
+    // navigation may load under the sandbox; any other while the rule is on is the person's (onBeforeNavigate).
+    this.sandboxed.set(tabId, { url, started: false });
     const id = base + SANDBOX_RULE;
     await dnr.updateSessionRules({
       removeRuleIds: [id],
@@ -386,6 +395,7 @@ export class Runner {
 
   /** The sandbox off tab [tabId], keeping the rest of its fence: its next response loads as it is. */
   async unsandbox(tabId) {
+    this.sandboxed.delete(tabId);
     const dnr = this.chrome.declarativeNetRequest;
     const base = this.fenceIds.get(tabId);
     if (!dnr || base == null) return;
@@ -1162,7 +1172,7 @@ export class Runner {
       const tabId = run.tab;
       run.stepping = tabId;
       try {
-        await this.sandbox(run, tabId);
+        await this.sandbox(run, tabId, url);
         await c.tabs.update(tabId, run.ownWindow || follow ? { url, active: true } : { url });
         await this.loaded(tabId);
       } finally {
@@ -1473,7 +1483,9 @@ export class Runner {
     run.stepping = tabId;
     run.stepError = null;
     try {
-      await this.sandbox(run, tabId);
+      // Only an act that can move the page (a click, a key) loads anything: a fill, a select or a check holds no sandbox, so the person's
+      // own navigation in that moment never loads under it.
+      if (step.act.kind === "click" || step.act.kind === "press") await this.sandbox(run, tabId);
       // In the person's tab, the run's sites go with the act: a link or a form's submit that would leave them is refused in the page
       // before it fires, so Chrome never puts its "blocked" page in place of theirs. A tab of the run's own is left to the fence,
       // which sends it to its blank page.
