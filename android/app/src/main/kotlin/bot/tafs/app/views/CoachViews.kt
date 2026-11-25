@@ -123,23 +123,10 @@ fun CoachScreen(
         val shaping = state.coachCloudId != null && state.planqueReady && width >= WIDE_COACH
         Row(Modifier.fillMaxSize()) {
           Column(Modifier.weight(1f).fillMaxHeight()) {
-            // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
-            // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
-            if (state.coachCloudId == null) StartNote(state, chats, wide = width >= WIDE_COACH)
-            else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
-              Column {
-                CoachToolsRow(state) { toolsOpen = true }
-                // Beside the conversation, the plan is in the panel.
-                if (!shaping) CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
-              }
-            }
-            // Started, with nothing said yet: the owner's board 7, when it isn't about improving a taf and there's at most one.
-            if (state.coachCloudId != null && state.chats[COACH_CHAT].isNullOrEmpty() && coachFirst(state)) {
-              bot.tafs.app.design.Illustrated(Modifier.padding(top = 12.dp), height = 150.dp) { bot.tafs.app.design.CoachStartArt(it) }
-            }
             val biometry = LocalBiometry.current
             val start = state.coachStart
             val tools = state.coachTools
+            // Coach's box, locked until its tools are approved (docs/coach.md, "Coach's tools step").
             val lock = when {
               // The Card step is on screen: nothing is typed to Coach until it's approved, and tafs cloud's line says so.
               state.coachCloudId == null && start != null && start.cardStep(biometry) ->
@@ -149,6 +136,21 @@ fun CoachScreen(
               state.coachCloudId != null && tools != null && tools.toGive && tools.connect != null ->
                 ComposerLock(tools.step?.row.orEmpty()) { toolsOpen = true }
               else -> null
+            }
+            // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
+            // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
+            if (state.coachCloudId == null) StartNote(state, chats, wide = width >= WIDE_COACH)
+            else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
+              Column {
+                // The box locked with the step's own line stands in for the row: the same line isn't drawn twice.
+                if (lock == null) CoachToolsRow(state) { toolsOpen = true }
+                // Beside the conversation, the plan is in the panel.
+                if (!shaping) CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
+              }
+            }
+            // Started, with nothing said yet: the owner's board 7, when it isn't about improving a taf and there's at most one.
+            if (state.coachCloudId != null && state.chats[COACH_CHAT].isNullOrEmpty() && coachFirst(state)) {
+              bot.tafs.app.design.Illustrated(Modifier.padding(top = 12.dp), height = 150.dp) { bot.tafs.app.design.CoachStartArt(it) }
             }
             androidx.compose.runtime.CompositionLocalProvider(LocalComposerLock provides lock) {
               TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
