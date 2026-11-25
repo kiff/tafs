@@ -1,0 +1,1 @@
+- **Chrome: the page consent names the Claude AI model, not who runs it, in all 43 languages (extension words).** "…sends it to the Claude AI model to answer you…" in place of "…to Anthropic's Claude…", so the screen stays true whichever provider runs Claude; the tafs Privacy page names who does. See [docs/chrome.md](../docs/chrome.md).

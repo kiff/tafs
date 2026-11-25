@@ -115,7 +115,7 @@
   "page_consent_title": { "message": "Elolvassa Coach és a tafjaid küldéskor az elöl lévő oldalt?" },
   "page_consent_what": { "message": "Amikor itt üzenetet küldesz Coachnak vagy egy tafnak a saját oldalai egyikén, ennek az ablaknak az elöl lévő lapjának szövege is vele megy: a címe (a ? vagy # utáni rész nélkül), a címe és a szavai. A mezők értékei és a jelszavak nem kerülnek beolvasásra; a kártyaszámokból csak az utolsó négy számjegy marad meg; a kulcsok és a megjelölt titkos adatok ki vannak takarva. Az oldal szövegében angolul, franciául, spanyolul vagy németül egyszer használatos kódként megnevezett kódok is ki vannak takarva. Egy taf, akinek itt írsz, ezután dolgozhat azon a lapon, csak a saját oldalain, és minden más oldalt saját lapon nyit meg." },
   "page_consent_when": { "message": "Csak küldéskor, csak az a lap, és soha nem bank, fizetési, levelező vagy egészségügyi oldal, sem olyan, amelyet kikapcsoltál." },
-  "page_consent_never": { "message": "A tafs-hez kerül, amely elküldi az Anthropic Claude-jának, hogy válaszoljon neked, ahogy az üzenetedet is. A tafs csak az oldal nevét őrzi meg, magát az oldalt soha; Coach vagy a taf válasza idézhet belőle." },
+  "page_consent_never": { "message": "A tafs-hez kerül, amely elküldi a Claude MI-modellnek, hogy válaszoljon neked, ahogy az üzenetedet is. A tafs csak az oldal nevét őrzi meg, magát az oldalt soha; Coach vagy a taf válasza idézhet belőle." },
   "page_consent_change": { "message": "Bármikor küldhetsz üzenetet az oldal nélkül, és ezt itt bármikor leállíthatod." },
   "page_consent_allow": { "message": "Engedélyezés" },
   "page_consent_not_now": { "message": "Most nem" },
