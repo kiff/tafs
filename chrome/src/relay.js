@@ -7,6 +7,9 @@ import { CLOSE, Nonces, checkStep, checkWelcome, clockOffset, hello, result } fr
 import { randomId } from "./crypto.js";
 
 const PING_MS = 20_000;
+/** Steps whose effect has happened by the time they answer: never answered as a failure for their page's size. */
+const EFFECT_OPS = new Set(["act", "hand"]);
+
 /** The relay carries at most 128 KB a message: a result above this is answered `page_too_large` instead. */
 export const MAX_RESULT_BYTES = 120 * 1024;
 
@@ -226,8 +229,10 @@ export class Relay {
       if (checked.why) return;
       const out = await this.runner.handle(checked.step);
       let answer = await result(keys.privateKey, checked.step, pairing.chromeId, out);
-      // Too large: the page is cut until it fits, and says what was cut. An act that ran is never answered as a failure
-      // (a taf told its click failed may click Submit again); only a page that fits no way is `page_too_large`.
+      // Too large: the page is cut until it fits, and says what was cut. A step whose effect already happened (an act, its
+      // back included, or a hand-over) is never answered as a failure, or a taf told its click failed may click Submit again:
+      // it's answered done, with no page and `page_dropped`, and the taf reads again. Only an open or a read, which changed
+      // nothing a second try would repeat, is `page_too_large`.
       if (bytesOf(answer) > MAX_RESULT_BYTES && out && out.page) {
         for (const page of cutPages(out.page)) {
           answer = await result(keys.privateKey, checked.step, pairing.chromeId, { ...out, page });
@@ -235,7 +240,10 @@ export class Relay {
         }
       }
       if (bytesOf(answer) > MAX_RESULT_BYTES) {
-        answer = await result(keys.privateKey, checked.step, pairing.chromeId, { error: { code: "page_too_large", detail: "the answer is over " + MAX_RESULT_BYTES + " bytes" } });
+        const ran = out && !out.error && EFFECT_OPS.has(checked.step.op);
+        answer = ran
+          ? await result(keys.privateKey, checked.step, pairing.chromeId, { ...out, page: null, pageDropped: "page_too_large" })
+          : await result(keys.privateKey, checked.step, pairing.chromeId, { error: { code: "page_too_large", detail: "the answer is over " + MAX_RESULT_BYTES + " bytes" } });
       }
       this.send(answer);
       return;

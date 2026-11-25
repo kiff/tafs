@@ -1,0 +1,1 @@
+- **Chrome 0.2.21: a taf's click that ran is never reported as failed because its page grew too large to send.** It's reported as done, and the taf reads the page again, so it never clicks Submit twice. Only opening or reading a page that's too large is refused ([docs/chrome.md](../docs/chrome.md)).
