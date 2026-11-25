@@ -315,10 +315,13 @@ test("the person's own Back off the run's sites gives their tab back with nothin
     assert.deepEqual(await rulesOf(h, tabId), [], "unfenced");
     assert.deepEqual((await runState(h, run)).tabs, [], "forgotten by the run");
     assert.equal((await tabInfo(h, tabId)).url, A, "at the address the person went back to");
-    // The fence blocked their Back, so Chrome showed its error page at A; once the tab is given back the extension loads A again
-    // in place, a moment after the give-back itself. Waited for, with a bound: an error page that stays fails here.
-    await until(async () => owner.url() === A && loads(A) === loadsOfA + 1, "their page, not Chrome's error page", 5000);
-    assert.equal(loads(A), loadsOfA + 1, "their page loaded for them, once");
+    // The fence blocked their Back, so Chrome shows its error page at A, and the extension asks for nothing itself (0.2.17): a
+    // navigation the page started by itself looks the same. A wasn't loaded; their next try (a reload) loads it, with no fence left.
+    await new Promise((done) => setTimeout(done, 1000)); // a re-ask would have come by now
+    assert.equal(loads(A), loadsOfA, "the extension asked for nothing");
+    const mine = await runState(h, run);
+    assert.ok(!mine.steps.some((x) => x.op === "navigate"), "their Back is none of the run's steps");
+    assert.equal(mine.site, "news.test", "the run's site is still its own page's");
     assert.deepEqual(await moves(tabId), [], "nothing moved their tab: no about:blank, no further back");
     const read = await step({ op: "read", run, agent_run: agentRun });
     assert.equal(read.error && read.error.code, "given_back");
@@ -326,11 +329,46 @@ test("the person's own Back off the run's sites gives their tab back with nothin
     assert.equal(act.error && act.error.code, "given_back");
     nothingOfTheirs(read);
     nothingOfTheirs(act);
+    await owner.reload();
+    assert.equal(owner.url(), A, "their next try lands");
+    assert.equal(loads(A), loadsOfA + 1, "once, asked for by them");
   } finally {
     await h.fromPanel({ type: "stop", run });
     await until(async () => (await tabInfo(h, tabId)).groupId === -1, "the person's tab given back");
   }
 });
+
+for (const [name, button] of [["later", "Save it later"], ["slowrefresh", "Refresh it later"]]) {
+  test(`a page that leaves the run's sites by itself after the taf's step (${name}), in the person's tab: nothing reaches the other site`, { skip }, async () => {
+    const url = h.sites.url("shop.test", "/leave-" + name + "?case=joined-" + name);
+    const { agentRun, tabId } = await sendFromPanel(url);
+    const run = newRun("joined-" + name);
+    const value = "joined-" + name + "-value-e2e";
+    try {
+      let r = await step({ op: "open", run, url, agent_run: agentRun });
+      assert.equal(r.ok, true, JSON.stringify(r.error));
+      assert.equal((await runState(h, run)).tab, tabId, "the person's tab");
+      await watchMoves();
+      const asked = otherHits().length;
+      r = await step({ op: "act", run, agent_run: agentRun, read_id: r.page.read_id, act: { kind: "fill", ref: ref(r.page, "Word"), value } });
+      assert.equal(r.ok, true, JSON.stringify(r.error));
+      r = await step({ op: "act", run, agent_run: agentRun, read_id: r.page.read_id, act: { kind: "click", ref: ref(r.page, button, "controls") } });
+      assert.equal(r.ok, true, JSON.stringify(r.error));
+      await until(async () => String((await tabInfo(h, tabId)).url).startsWith(h.sites.url("other.test", "/?from=" + name)), "the page's own try to leave", 8000);
+      await until(async () => (await tabInfo(h, tabId)).groupId === -1, "the person's tab given back", 5000);
+      await new Promise((done) => setTimeout(done, 1500)); // a re-ask would have come by now
+      assert.equal(otherHits().length, asked, "other.test was asked for nothing");
+      assert.ok(!h.sites.hits.some((x) => x.includes(value)), "the value is in no request");
+      assert.deepEqual(await rulesOf(h, tabId), [], "unfenced");
+      assert.deepEqual(await moves(tabId), [], "the extension moved nothing");
+      const read = await step({ op: "read", run, agent_run: agentRun });
+      assert.equal(read.error && read.error.code, "given_back");
+    } finally {
+      await h.fromPanel({ type: "stop", run });
+      await owner.goto(h.sites.url("news.test", "/article?case=after-" + name)).catch(() => {});
+    }
+  });
+}
 
 test("a step of another agent run gives the person's tab back unread: out of the group, unfenced, still where it was", { skip }, async () => {
   const url = h.sites.url("news.test", "/article?case=other-run");

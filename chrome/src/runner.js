@@ -139,12 +139,13 @@ export class Runner {
       if (!run || isBlank(d.url)) return;
       if (refuseURL(d.url, run.sites, run.allowed)) {
         // A tab of the person's that joined the run is never sent anywhere: Chrome's fence blocks the request, and the page they
-        // had stays. A tab of the run's own goes to its blank page when the run's own work headed off its sites (an act, its back,
-        // a pop-up's first page); the person's own address there is left to the fence, whose stop gives them the tab (0.2.16,
-        // onErrorOccurred), and it's recorded then.
+        // had stays (a block in the run's own act is recorded once, by onErrorOccurred). A tab of the run's own goes to its blank
+        // page when the run's own work headed off its sites (an act, its back, a pop-up's first page), and that is recorded as the
+        // run's refused move. The person's own address, in either, is left to the fence, whose stop gives them the tab
+        // (onErrorOccurred): a move the person made is never one of the run's steps (0.2.17).
         const runs = run.stepping === d.tabId || run.backing === d.tabId || run.landing.has(d.tabId);
-        if (run.joined.has(d.tabId) || runs) {
-          if (!run.joined.has(d.tabId)) c.tabs.update(d.tabId, { url: "about:blank" });
+        if (!run.joined.has(d.tabId) && runs) {
+          c.tabs.update(d.tabId, { url: "about:blank" });
           this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
         }
       }
@@ -167,7 +168,8 @@ export class Runner {
         if (!ours) {
           if (run.stepping === d.tabId && off) run.stepError = "site_not_listed";
           this.giveBack(run, [d.tabId], run.stepping !== d.tabId || persons(d)).catch(() => {});
-          if (off) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+          // Recorded only as the run's own act's refused move; the person's own (a page Chrome restored on their Back) is theirs.
+          if (off && run.stepping === d.tabId && !persons(d)) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
           return;
         }
         this.noteAddress(run, d.tabId, d.url);
@@ -189,7 +191,7 @@ export class Runner {
       const ours = backing || (!persons(d) && (run.stepping === d.tabId || run.landing.has(d.tabId) || handed));
       run.landing.delete(d.tabId);
       if (!ours) {
-        if (off) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+        // The person's move, wherever it went: theirs, never one of the run's steps.
         this.giveBack(run, [d.tabId], true).catch(() => {});
         return;
       }
@@ -202,10 +204,12 @@ export class Runner {
       this.noteAddress(run, d.tabId, d.url);
       this.guardDialogs(d.tabId, run).catch(() => {});
     });
-    // A navigation in a joined tab that fails (above all Chrome's fence, net::ERR_BLOCKED_BY_CLIENT, which shows its error page at
-    // the blocked address and commits nothing) gives the tab back as it is. The person's own (their Back to a page off the run's
-    // sites, say), once the fence is gone, is let through: the tab, no longer the run's, loads the address they asked for, and
-    // nothing else of theirs moves. In a run's act, the act is refused `site_not_listed`.
+    // A navigation in a run's tab that the fence stops (net::ERR_BLOCKED_BY_CLIENT: Chrome shows its error page at the blocked
+    // address and commits nothing), or any failed one in a joined tab, gives the tab back as it is, on that error page. Nothing here
+    // tells the person's own navigation (their Back, an address they typed) from one the page started by itself after a step
+    // returned (a delayed redirect, a refresh): neither carries a transition. So the extension never asks for a blocked address
+    // again, in any tab: the tab is theirs now, unfenced, and their own next try loads (0.2.17). In a run's act, the act is
+    // refused `site_not_listed`.
     if (c.webNavigation.onErrorOccurred) {
       c.webNavigation.onErrorOccurred.addListener((d) => {
         if (d.frameId !== 0) return;
@@ -216,17 +220,10 @@ export class Runner {
         if (!run.joined.has(d.tabId) && (inStep || run.backing === d.tabId || run.landing.has(d.tabId) || !/ERR_BLOCKED_BY_CLIENT/.test(String(d.error || "")))) return;
         const blocked = /ERR_BLOCKED_BY_CLIENT/.test(String(d.error || ""));
         if (inStep) run.stepError = "site_not_listed";
-        if (blocked) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
-        this.giveBack(run, [d.tabId], !inStep)
-          .then(async () => {
-            if (inStep || !blocked || isBlank(d.url)) return;
-            const tab = await c.tabs.get(d.tabId).catch(() => null);
-            if (!tab) return;
-            // Chrome's error page at their address: loaded again in place. Otherwise their navigation, asked for once more.
-            if (sameAddress(tab.url, d.url)) await c.tabs.reload(d.tabId);
-            else await c.tabs.update(d.tabId, { url: d.url });
-          })
-          .catch(() => {});
+        // Only the run's own act's refused move is the run's step; a block outside a step is the person's (or the page's own), and
+        // is none of the run's.
+        if (blocked && inStep) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+        this.giveBack(run, [d.tabId], !inStep).catch(() => {});
       });
     }
     // A tab or window a run's page opens joins the run only on its sites; anything else is closed.
@@ -389,7 +386,9 @@ export class Runner {
 
   record(run, entry) {
     run.steps.push({ at: Date.now(), ...entry });
-    if (entry.url) {
+    // The run's site is the run's own page's: a step that reached one. A refused move names where the page tried to go, not
+    // where the run is, so it leaves the site as it was (0.2.17).
+    if (entry.url && !entry.error) {
       try {
         run.site = new URL(entry.url).hostname;
       } catch {

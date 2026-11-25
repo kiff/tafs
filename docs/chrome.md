@@ -484,9 +484,16 @@ was done.
   forgotten, never moved or closed. The run's next read, act or hand-over answers `given_back`, nothing of that page read, and
   its next `open` takes a fresh tab of its own (`moreTab`). An address of theirs off the run's sites is never sent to a blank page
   (`onBeforeNavigate` blanks a tab of the run's own only for the run's own work); the fence stops it (`ERR_BLOCKED_BY_CLIENT`),
-  which gives the tab to them the same way, records the refused move, and asks for their address again once the fence has gone,
-  so they land on it with no rule left on the tab. Before 0.2.16, an address the person typed in the run's own tab on its sites, or their Back there, was read by the
+  which gives the tab to them the same way, with no rule left on it. **The extension never asks for a blocked address again** (0.2.17): nothing tells the person's own navigation from one a page started by itself off the run's sites after a step returned (a delayed redirect, a refresh it adds, with what the taf typed), so neither is sent by the extension. The tab stays on Chrome's block page, theirs and unfenced, and their own next try (typing the address again, a reload) loads. Before 0.2.16, an address the person typed in the run's own tab on its sites, or their Back there, was read by the
   run's next read.
+- **A move the person made is never one of the run's steps** (0.2.17, `Runner.record`). The panel's card lists the run's own steps
+  and refused moves; the person's own navigation (an address they typed, their Back, a page Chrome kept, in a tab of the run's own
+  or one of theirs it joined) is recorded nowhere, blocked or not, and a block outside the run's own step is none of the run's. Only
+  a block during the run's own open, act or back is recorded, once, as that step's refused move. **The run's site** (the card's
+  site line) **is only ever its own page's:** a step that reached one; a refused move names where a page tried to go, not where the
+  run is. Before 0.2.17 the person's own blocked address was recorded (twice in a joined tab) and became the run's site, so the card
+  read "Stopped a move to" their destination. These records live only in this Chrome (the panel's state, in
+  `chrome.storage.session`); none of them is sent to planque, tafs cloud or KIFF.
 - **A run's new tab shows its blank page before the step's page goes into it** (`Runner.blankReady`, 10 s at most).
   Navigating a tab whose `about:blank` hadn't committed yet raced it: under load the blank page committed after the
   navigation began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The end-to-end
@@ -578,12 +585,10 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   - **A navigation that fails in it gives it back** (`webNavigation.onErrorOccurred`, above all `net::ERR_BLOCKED_BY_CLIENT`,
     Chrome's fence, which shows its error page at the blocked address and commits nothing). In the run's act, the act is
     refused `site_not_listed` and the tab is given back, unmoved (planque's next step there is `no_page`). Otherwise it's the
-    person's own navigation (their Back to a page off the run's sites, say), given back as above (`given_back`): its fence
-    goes, and **their navigation then goes through**, so they
-    land where they asked: Chrome's error page at their address is loaded again in place (`tabs.reload`), or, if their tab
-    still shows the joined page, their address is asked for once more (`tabs.update` with its `url`, on a tab no longer the
-    run's, so the rule that the extension never sends a joined tab anywhere still holds). Their next Back is theirs: nothing of
-    the extension's answers it.
+    person's own navigation (their Back to a page off the run's sites, say) or one the page started by itself, given back as
+    above (`given_back`): its fence goes, and the tab stays on Chrome's block page. **The extension never asks for a blocked address again** (0.2.17): nothing tells the person's own navigation from one a page started by itself off the run's sites after a step returned (a delayed redirect, a refresh it adds, with what the taf typed), so neither is sent by the extension. The tab stays on Chrome's block page, theirs and unfenced, and their own next try (typing the address again, a reload) loads. From 0.2.15 to 0.2.16 the
+    extension loaded the blocked address again itself (`tabs.reload`, or `tabs.update` with its `url`); that is gone. Nothing of
+    the extension's answers their next try.
 - **Only pages the run reached are read** (0.2.15, `Runner.joinedNow`): a read, an act or a hand-over in a joined tab whose page
   isn't one of its trail (the address it joined at, then the pages the run's own acts took it to) is refused `page_changed`,
   even on the run's sites.

@@ -55,7 +55,8 @@ test("with the back/forward cache on, the person's own Back off the run's sites 
     assert.deepEqual(await rulesOf(h, tabId), [], "unfenced");
     assert.deepEqual((await runState(h, run)).tabs, [], "forgotten by the run");
     assert.equal((await tabInfo(h, tabId)).url, A, "at the address the person went back to");
-    assert.equal(owner.url(), A, "their page, not Chrome's error page");
+    // The fence's rules going in flushed the cache, so their Back was a new request the fence stopped: Chrome's block page at A,
+    // and the extension asks for nothing itself (0.2.17). Their next try loads it.
     assert.deepEqual(await j.moves(tabId), [], "nothing moved their tab: no about:blank, no further back");
     const read = await j.step({ op: "read", run, agent_run: agentRun });
     assert.equal(read.error && read.error.code, "given_back");
@@ -65,6 +66,8 @@ test("with the back/forward cache on, the person's own Back off the run's sites 
       assert.ok(!JSON.stringify(r).includes(PERSON_WORDS));
       assert.ok(!JSON.stringify(r).includes(PERSON_VALUE));
     }
+    if (owner.url() !== A) await owner.reload();
+    assert.equal(owner.url(), A, "their next try lands on their page");
   } finally {
     await h.fromPanel({ type: "stop", run });
     await until(async () => (await tabInfo(h, tabId)).groupId === -1, "the person's tab given back");

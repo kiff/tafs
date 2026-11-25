@@ -73,6 +73,8 @@ export async function start({ pair = true, cloud = false, args = [], bfcache = f
       "--ignore-certificate-errors",
       // Straight to 127.0.0.1, whatever proxy the computer has set.
       "--no-proxy-server",
+      // The extension's words in English whatever the computer's language: the panel's lines are checked word for word.
+      "--lang=en-US",
       ...args,
     ],
   });

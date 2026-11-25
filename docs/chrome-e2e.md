@@ -144,6 +144,7 @@ yes, and fail the test.
 | The person drags the run's own tab out of its group: it stays the run's, fenced, its own page read, an open off the run's sites still `site_not_listed` | `owntabs.e2e.test.js` |
 | The person drags a tab of theirs into the run's group: it never becomes the run's (not in its tabs, not fenced), an open of its exact address goes to the run's own tab and nothing they typed in theirs is in a result; the run's Stop and the taf's next run leave it open | `owntabs.e2e.test.js` |
 | Two runs of two tafs (two grants) at once: a tab and a group each; a read of one is `page_changed` in the other; each fill lands in its own tab only; one's close and its taf's next run leave the other's tab, group and fence as they were | `owntabs.e2e.test.js` |
+| The side panel after a refusal of a page that isn't the run's: `given_back` (the person moved the tab: one of theirs the run joined, or one of the run's own), `page_changed` (an act on an old read) and `no_back` (the taf's `back`), in a joined tab and in a tab of the run's own. Each is one new line in the run's card, "<step> · not done (<code>)", drawn as refused, with no Your turn left; after `given_back` the tab is in none of the run's tabs and the panel's head no longer marks the taf as the one whose tab is in front; the card's site stays the run's, and the person's own move on the run's sites draws no line. The run's next open after `given_back` is one plain line, in a tab of its own | `panel.e2e.test.js` |
 | Chrome's back/forward cache is on when a test asks for it (the person's Back case below runs with it on and off) | `bfcache.e2e.test.js` |
 
 ## Not covered yet
@@ -198,8 +199,8 @@ yes, and fail the test.
 - **The person's own Back off the run's sites wasn't given back** (`joined.e2e.test.js`, `bfcache.e2e.test.js`). The joined
   tab's fence blocked their Back (Chrome flushes its back/forward cache as the fence's rules are added, so the Back is always a
   new request): Chrome's error page at their address, the tab still the run's, fenced. A failed navigation in a joined tab
-  (`webNavigation.onErrorOccurred`) now gives it back, and, the fence gone, their navigation goes through; the run's next read
-  and act answer `given_back`.
+  (`webNavigation.onErrorOccurred`) now gives it back, on Chrome's block page; their next try (a reload) loads, as the fence has
+  gone. The run's next read and act answer `given_back`.
 - **An off-site click or submit in the joined tab replaced the person's page with Chrome's error page**
   (`joined.e2e.test.js`): the fence stopped the request, but Chrome committed its "blocked" page at the other site's address,
   with a new history entry. An act whose link or form leaves the run's sites is now refused in the page before it fires
@@ -214,9 +215,21 @@ yes, and fail the test.
   cause; the transition now decides, never the trail.
 - **An address the person typed in a run's own tab, off the run's sites, sent their tab to a blank page** (`owntabs.e2e.test.js`):
   the runner blanked a tab of its own on any off-site navigation. It now does that only for the run's own work; the fence's stop
-  gives the tab to them, and their address goes through once the fence has gone.
+  gives the tab to them, on Chrome's block page, and their next try loads.
+- **The extension asked for a blocked address again itself** (`owntabs.e2e.test.js`, `joined.e2e.test.js`, two fixture pages
+  `/leave-later` and `/leave-slowrefresh`): after giving a tab back on a fence block, it reloaded the blocked address or loaded it
+  again. A navigation a page starts by itself off the run's sites after a step returned looks the same, so what the taf typed could
+  leave, sent by the extension. Since 0.2.17 it never asks for a blocked address again: other.test is asked for nothing, the value
+  is in no request, and the tab is given back on Chrome's block page, in a tab of the run's own and in a joined one.
 - **A second taf of the same name, under another grant, closed the first taf's kept tab** (`owntabs.e2e.test.js`): a taf's
   finished run is now kept by its grant (`doneKey`), not its name.
+
+- **The person's own move off the run's sites showed in the run's card as the taf's, and the card said the taf was there**
+  (`panel.e2e.test.js`): an address the person typed off the run's sites was recorded as a step of the run's (twice in a joined
+  tab), and `record()` took the run's site from it. Since 0.2.17 a move the person made is never one of the run's steps, and the
+  run's site comes only from its own pages.
+
+**Chromium runs in English** (`--lang=en-US`, harness.mjs), whatever the computer's language: the panel's lines are checked word for word.
 
 ## Known bugs, as `todo` tests
 

@@ -19,6 +19,9 @@ after(async () => {
   if (h) await h.close();
 });
 
+/** Everything other.test was ever asked for, in this file. */
+const otherHits = () => h.sites.hits.filter((x) => x.startsWith("other.test "));
+
 /** What a step answers when the page in the run's tab is the person's: refused, as in a tab of theirs the run joined. */
 const NOT_THE_RUNS = ["page_changed", "given_back"];
 
@@ -96,18 +99,27 @@ test("the person's Back and Forward in the run's own tab: the run's next read ta
   nothingOf(back);
 });
 
-test("an address the person types in the run's own tab OFF the run's sites: the tab is theirs, unfenced, and they land on it", { skip }, async () => {
+test("an address the person types in the run's own tab OFF the run's sites: the first try is stopped and the tab is theirs, unfenced; their next try lands", { skip }, async () => {
   const run = newRun("own-typed-off");
   const hub = h.sites.url("news.test", "/hub?case=own-typed-off");
   await open(run, hub);
   const { page, tabId } = await ownTab(run, hub);
   assert.ok((await rulesOf(h, tabId)).length > 0, "the run's tab is fenced");
-  // The person types another site's address there. The fence stops the first request; the tab is then given to them, and their
-  // address is asked for again with no fence on it.
+  // The person types another site's address there. The fence stops that first try (Chrome's block page at their address), and the
+  // tab is given to them; the extension asks for nothing itself. Their next try loads, with no fence left on the tab.
   const elsewhere = h.sites.url("other.test", "/?case=own-typed-off");
+  const asked = otherHits().length;
   await page.goto(elsewhere).catch(() => {});
-  await until(async () => (await tabInfo(h, tabId)).url === elsewhere && (await page.title()) !== "", "the person on the address they typed", 10_000);
+  await until(async () => (await tabInfo(h, tabId)).groupId === -1, "the tab given to the person", 10_000);
+  assert.equal((await tabInfo(h, tabId)).url, elsewhere, "Chrome's block page at their address");
+  assert.equal(otherHits().length, asked, "the first try reached nothing, and the extension asked for nothing");
   assert.deepEqual(await rulesOf(h, tabId), [], "no fence rule left on their tab");
+  const mine = await runState(h, run);
+  assert.ok(!mine.steps.some((x) => x.op === "navigate"), "their move is none of the run's steps");
+  assert.equal(mine.site, "news.test", "the run's site is still its own page's");
+  await page.goto(elsewhere);
+  assert.equal(await page.title(), "Other", "their next try lands");
+  assert.ok(otherHits().slice(asked).some((x) => x.includes("case=own-typed-off")), "asked for by them");
   const state = await runState(h, run);
   assert.ok(!state || !state.tabs.includes(tabId), "the run let the tab go");
   refusedAsTheirs(await h.planque.sendStep({ op: "read", run }), "read after their address");
@@ -118,6 +130,34 @@ test("an address the person types in the run's own tab OFF the run's sites: the 
   assert.equal((await tabInfo(h, tabId)).url, elsewhere, "their tab stays on their page");
   await h.fromPanel({ type: "stop", run });
 });
+
+// A page of the run's sites that leaves by itself a moment after the taf's step returned, with what the taf typed: the fence stops
+// it, and the extension never asks for that address itself (0.2.17). The tab is given to the person, on Chrome's block page.
+for (const [name, button] of [["later", "Save it later"], ["slowrefresh", "Refresh it later"]]) {
+  test(`a page that leaves the run's sites by itself after the taf's step (${name}), in the run's own tab: nothing reaches the other site`, { skip }, async () => {
+    const run = newRun("own-" + name);
+    const url = h.sites.url("shop.test", "/leave-" + name + "?case=own-" + name);
+    const value = "own-" + name + "-value-e2e";
+    let r = await open(run, url);
+    const tabId = (await runState(h, run)).tab;
+    const asked = otherHits().length;
+    r = await h.planque.sendStep({ op: "act", run, read_id: r.page.read_id, act: { kind: "fill", ref: ref(r.page, "Word"), value } });
+    assert.equal(r.ok, true, JSON.stringify(r.error));
+    r = await h.planque.sendStep({ op: "act", run, read_id: r.page.read_id, act: { kind: "click", ref: ref(r.page, button, "controls") } });
+    assert.equal(r.ok, true, JSON.stringify(r.error));
+    // The step has returned; the page now tries to leave on its own.
+    await until(async () => String((await tabInfo(h, tabId)).url).startsWith(h.sites.url("other.test", "/?from=" + name)), "the page's own try to leave", 8000);
+    await until(async () => (await tabInfo(h, tabId)).groupId === -1, "the tab given back", 5000);
+    await new Promise((done) => setTimeout(done, 1500)); // a re-ask would have come by now
+    assert.equal(otherHits().length, asked, "other.test was asked for nothing");
+    assert.ok(!h.sites.hits.some((x) => x.includes(value)), "the value is in no request");
+    assert.deepEqual(await rulesOf(h, tabId), [], "unfenced");
+    const read = await h.planque.sendStep({ op: "read", run });
+    assert.equal(read.ok, false);
+    assert.equal(read.error.code, "given_back");
+    await h.fromPanel({ type: "stop", run });
+  });
+}
 
 test("a link the person clicks in the run's own tab: the run pauses, and its next read and act take nothing of the page", { skip }, async () => {
   const run = newRun("own-click");

