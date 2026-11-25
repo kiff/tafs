@@ -15,7 +15,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, relevantNow, stateOf, summary } from "./home.js";
 import { AGENTS_MAX_INPUT, heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
+import { failedLine, failureCode, retrySafe, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
@@ -3943,13 +3943,32 @@ const STOPS_TO_WORD = new Set<string>(["cost_cap", "turn_cap", "max_token", "ref
  */
 interface Failed {
   run: string;
-  code?: string;
+  /** Why: kiff/agents' own code (`ai_unavailable`), `timeout`, or `failed`. An app that doesn't know it shows `words`. */
+  code: string;
   words: string;
+  /**
+   * Whether sending the person's message again is safe: the run's record shows nothing it did that acted (retrySafe).
+   * Read from what the run did, never from its code: a run that acted partway could act twice.
+   */
+  retry: boolean;
+  /** The Try again button's words, only when `retry`. */
+  retry_label?: string;
 }
 
 function failedOf(r: Run, lang: Lang): Failed {
-  const coded = runFailure(r, lang);
-  return coded ? { run: r.id, code: coded.code, words: coded.words } : { run: r.id, words: failedLine(r.error, lang) };
+  const w = wordsIn(lang);
+  const code = failureCode(r);
+  const retry = retrySafe(r);
+  // Each reason's line, and its partway line once the run had acted: that one claims nothing about credits or "before
+  // it changed anything", and offers no Try again. A kiff/agents code tafs cloud doesn't word passes its words on.
+  const lines: Record<string, [string, string]> = {
+    ai_unavailable: [w.turn_failed_ours, w.turn_failed_ours_partway],
+    timeout: [w.turn_failed_time, w.turn_failed_time_partway],
+    failed: [w.turn_failed_error, w.turn_failed_error_partway],
+  };
+  const own = lines[code];
+  const words = own ? own[retry ? 0 : 1] : runFailure(r, lang)?.words ?? failedLine(r.error, lang);
+  return { run: r.id, code, words, retry, ...(retry ? { retry_label: w.turn_failed_retry } : {}) };
 }
 
 /**
