@@ -50,10 +50,7 @@ function refusedAsTheirs(r, what) {
   nothingOf(r);
 }
 
-test("an address the person types in the run's own tab, on the run's sites: the run's next read and act take nothing of it", {
-  skip,
-  todo: "runner.js onCommitted takes every commit on the run's sites in a tab of the run's own (not joined) as the run's: it calls noteAddress with no persons(d) check and no run.stepping check, and read() and act() check only a joined tab (joinedNow). So the address the person typed there (shop.test/account) is read by the run's next read, which answers ok with their page: 'Your account', PERSON_WORDS and PERSON_VALUE go to planque.",
-}, async () => {
+test("an address the person types in the run's own tab, on the run's sites: the run's next read and act take nothing of it", { skip }, async () => {
   const run = newRun("own-typed");
   const hub = h.sites.url("news.test", "/hub?case=own-typed");
   const opened = await open(run, hub);
@@ -77,10 +74,7 @@ test("an address the person types in the run's own tab, on the run's sites: the 
   assert.equal(again.page.title, "Harbour news");
 });
 
-test("the person's Back and Forward in the run's own tab: the run's next read takes nothing of the page they land on", {
-  skip,
-  todo: "As with an address typed: runner.js onCommitted ignores the forward_back qualifier (persons(d)) in a tab of the run's own, and the page the person's Back lands on is already in the run's trail, so the run's next read answers ok with it, after their Back and after their Forward.",
-}, async () => {
+test("the person's Back and Forward in the run's own tab: the run's next read takes nothing of the page they land on", { skip }, async () => {
   const run = newRun("own-back");
   const first = h.sites.url("news.test", "/article?case=own-back");
   const second = h.sites.url("news.test", "/long?case=own-back");
@@ -248,10 +242,7 @@ test("two runs of two tafs at once: each reads and acts only in its own tab, nev
   await h.fromPanel({ type: "stop", run: two });
 });
 
-test("a second taf of the same name, under another grant: neither closes, regroups nor reads the other's tabs", {
-  skip,
-  todo: "runner.js keys a taf's finished run (done, tafGroup, greying, the group titles) by its name (run.taf), not its grant: the other taf of the same name opening a run runs closeDone(taf, true) on the first taf's kept tab and closes it, and groupTab(..., reuseDone) may put it in the first taf's group.",
-}, async () => {
+test("a second taf of the same name, under another grant: neither closes, regroups nor reads the other's tabs", { skip }, async () => {
   const same = { taf: h.planque.taf, grant: "grt_e2e_same_name" };
   const asSame = async (fields) => h.planque.sendStep({ ...same, sites_signed: await h.planque.sitesSigned(h.planque.sites, { grant: same.grant }), ...fields });
   const first = newRun("same-name-one");

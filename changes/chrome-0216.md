@@ -1,1 +1,3 @@
 - **Chrome 0.2.16: a taf's own tab is yours once you move it.** An address you type, your Back or Forward, a reload or your own click in a tab a taf opened makes that tab yours as it is: the taf reads and does nothing in it and opens its next page in a new tab. Two tafs with the same name never close or reuse each other's tabs or groups ([docs/chrome.md](../docs/chrome.md)).
+
+- Chrome end-to-end tests: the run's own tabs. The person's click there pauses the run; dragging the run's tab out of its group, or a tab of the person's into it, changes nothing the run may read; two runs of two tafs at once each work only in their own tabs; an address the person types there, their Back or Forward, and a second taf of the same name are each held to 0.2.16's rule.

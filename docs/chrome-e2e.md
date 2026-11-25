@@ -207,19 +207,17 @@ yes, and fail the test.
 - **The taf's `back` in a joined tab, after its own click, loaded the person's earlier page** (`joined.e2e.test.js`): Chrome
   skipped the joined page on back and asked for the page the person had before the run. `back` in a joined tab is now always
   `no_back`, and nothing moves.
+- **An address the person typed in a run's own tab, on the run's sites, was read by the run** (`owntabs.e2e.test.js`):
+  `onCommitted` took every commit on the run's sites in a tab of the run's own as the run's. Since 0.2.16 only the run's own
+  work moves its tab; the person's move gives the tab to them, and the run's next read and act answer `given_back`.
+- **The person's Back or Forward in a run's own tab: the run read the page they landed on** (`owntabs.e2e.test.js`): the same
+  cause; the transition now decides, never the trail.
+- **A second taf of the same name, under another grant, closed the first taf's kept tab** (`owntabs.e2e.test.js`): a taf's
+  finished run is now kept by its grant (`doneKey`), not its name.
 
 ## Known bugs, as `todo` tests
 
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
 
-- **An address the person types in a run's own tab, on the run's sites, is read by the run** (`owntabs.e2e.test.js`).
-  `runner.js` `onCommitted` takes every commit on the run's sites in a tab of the run's own as the run's (`noteAddress`, with
-  no `persons(d)` and no `stepping` check), and `read()` and `act()` check only a joined tab (`joinedNow`). The run's next read
-  answers with the person's page. It should answer as a joined tab does, with nothing read.
-- **The person's Back or Forward in a run's own tab: the run reads the page they land on** (`owntabs.e2e.test.js`). The same
-  cause: the `forward_back` qualifier isn't looked at in a tab of the run's own, and the page Back lands on is already in the
-  run's trail.
-- **A second taf of the same name, under another grant, closes the first taf's kept tab** (`owntabs.e2e.test.js`). A taf's
-  finished run (`done`, `tafGroup`, `greying`) is kept by the taf's name, not its grant, so the other taf's next run closes
-  that tab as its own last run's, and may work in its group.
+None.
