@@ -114,6 +114,9 @@ test("an address the person types in the run's own tab OFF the run's sites: the 
   assert.equal((await tabInfo(h, tabId)).url, elsewhere, "Chrome's block page at their address");
   assert.equal(otherHits().length, asked, "the first try reached nothing, and the extension asked for nothing");
   assert.deepEqual(await rulesOf(h, tabId), [], "no fence rule left on their tab");
+  const mine = await runState(h, run);
+  assert.ok(!mine.steps.some((x) => x.op === "navigate"), "their move is none of the run's steps");
+  assert.equal(mine.site, "news.test", "the run's site is still its own page's");
   await page.goto(elsewhere);
   assert.equal(await page.title(), "Other", "their next try lands");
   assert.ok(otherHits().slice(asked).some((x) => x.includes("case=own-typed-off")), "asked for by them");

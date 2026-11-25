@@ -544,7 +544,8 @@ test("a page Chrome restores from its cache off the run's sites on the person's 
   await new Promise((done) => setTimeout(done, 0));
   assert.ok(!c.calls.slice(before).some((x) => x[0] === "tabs.update" && x[2].url), "nothing loaded in their tab");
   assert.equal(r.tabRun.has(tab), false, "the run forgets it");
-  assert.equal(r.state()[0].steps.at(-1).error, "site_not_listed");
+  assert.ok(!r.state()[0].steps.some((x) => x.op === "navigate"), "the person's move is none of the run's steps");
+  assert.equal(r.state()[0].site, "shop.example", "its site is still the run's page's");
   assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
 });
 
@@ -1895,7 +1896,7 @@ test("a navigation in a joined tab off the run's sites is blocked by the fence a
   c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://evil.example/steal" });
   assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url), "no tabs.update with a url on their tab");
   assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "a blocked request leaves the tab the run's");
-  assert.deepEqual(r.runs.get("run_1").steps.filter((x) => x.error === "site_not_listed").map((x) => x.url), ["https://evil.example/steal"], "recorded");
+  assert.ok(!r.runs.get("run_1").steps.some((x) => x.op === "navigate"), "not recorded here: a block in the run's own act is recorded once, by onErrorOccurred");
 });
 
 // The security read: a page off the run's sites that commits in a joined tab is mostly the person's own Back from Chrome's cache.
@@ -1918,7 +1919,8 @@ test("a joined tab that commits a page off the run's sites is given back as it i
     assert.ok(now.some((x) => x[0] === "bar.hide" && x[1] === THEIRS), what + ": its bar goes");
     assert.ok(now.some((x) => x[0] === "dnr" && !x[1].addRules), what + ": its fence goes");
     assert.equal(r.fenceIds.has(THEIRS), false, what);
-    assert.deepEqual(run.steps.filter((x) => x.error === "site_not_listed").map((x) => x.url), ["https://elsewhere.example/"], what + ": recorded");
+    assert.ok(!run.steps.some((x) => x.op === "navigate"), what + ": the person's move is none of the run's steps");
+    assert.equal(run.site, "shop.example", what + ": its site is still the run's page's");
     // The run's next step is never in their tab: they moved it, so nothing of that page is the run's.
     const after = c.calls.length;
     assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "given_back", what + ": a read");
@@ -2093,7 +2095,8 @@ test("a navigation the fence blocks in a joined tab outside a step gives the tab
     assert.ok(!now.some((x) => x[0] === "tabs.reload" || x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), what + ": the extension asks for nothing, and moves nothing");
     assert.equal(r.runs.get("run_1").joined.has(THEIRS), false, what + ": given back");
     assert.equal(r.tabRun.has(THEIRS), false, what);
-    assert.ok(r.runs.get("run_1").steps.some((x) => x.op === "navigate" && x.error === "site_not_listed" && x.url === "https://elsewhere.example/account"), what + ": recorded");
+    assert.ok(!r.runs.get("run_1").steps.some((x) => x.op === "navigate"), what + ": the person's move is none of the run's steps");
+    assert.equal(r.runs.get("run_1").site, "shop.example", what + ": its site is still the run's page's");
     assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "given_back", what);
     // Their own next try is theirs: nothing of the extension's answers it, and no rule holds the tab.
     const later = c.calls.length;
@@ -2308,7 +2311,8 @@ test("a navigation the fence blocks in the run's own tab outside a step gives th
   await pause0();
   await pause0();
   assert.equal(r.tabRun.has(tab), false, "theirs now");
-  assert.equal(r.state()[0].steps.at(-1).error, "site_not_listed", "recorded once the fence stopped it");
+  assert.ok(!r.state()[0].steps.some((x) => x.op === "navigate"), "the person's move is none of the run's steps");
+  assert.equal(r.state()[0].site, "shop.example", "its site is still the run's page's");
   assert.equal(r.fenceIds.has(tab), false, "no fence rule left on their tab");
   assert.ok(c.calls.some((x) => x[0] === "dnr" && (x[1].removeRuleIds || []).length), "unfenced");
   assert.ok(!c.calls.slice(blockedAt).some((x) => x[0] === "tabs.reload" || x[0] === "tabs.goBack" || (x[0] === "tabs.update" && x[1] === tab && x[2].url)), "the extension asks for nothing again: their own next try loads");
@@ -2423,3 +2427,69 @@ for (const where of ["own", "joined"]) {
     assert.equal((await r.handle(go({ id: "op_n", op: "read" }))).error.code, "given_back");
   });
 }
+
+// A move the person made is never one of the run's steps, and the run's site is only ever its own page's: the panel's card and
+// site line once showed the person's destination ("Stopped a move to other.test"), from their own blocked address or Back (0.2.17).
+for (const where of ["own", "joined"]) {
+  for (const [what, events] of [
+    ["an address they typed off the sites", (c, tab) => {
+      c.listeners.before({ tabId: tab, frameId: 0, url: "https://other.example/typed" });
+      c.listeners.error({ tabId: tab, frameId: 0, url: "https://other.example/typed", error: "net::ERR_BLOCKED_BY_CLIENT" });
+    }],
+    ["their Back off the sites", (c, tab) => {
+      c.listeners.before({ tabId: tab, frameId: 0, url: "https://other.example/before" });
+      c.listeners.error({ tabId: tab, frameId: 0, url: "https://other.example/before", error: "net::ERR_BLOCKED_BY_CLIENT" });
+    }],
+    ["their Back to a page Chrome kept off the sites", (c, tab) => {
+      c.tabsMap.set(tab, "https://other.example/kept");
+      c.listeners.committed({ tabId: tab, frameId: 0, url: "https://other.example/kept", transitionType: "link", transitionQualifiers: ["forward_back"] });
+    }],
+  ]) {
+    test(`${what}, in a ${where} tab, is no step of the run's, and the run's site stays its own page's`, async () => {
+      const { c, r, tab } = where === "own"
+        ? await (async () => {
+            const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+            const r = runner(c);
+            await r.handle(step());
+            return { c, r, tab: r.runs.get("run_1").tab };
+          })()
+        : await (async () => {
+            const { c, r } = await joining();
+            await r.handle(started());
+            return { c, r, tab: THEIRS };
+          })();
+      const steps = r.runs.get("run_1").steps.length;
+      events(c, tab);
+      await new Promise((done) => setTimeout(done, 5));
+      const run = r.state()[0];
+      assert.equal(run.steps.length, steps, "nothing recorded: " + JSON.stringify(run.steps.slice(steps)));
+      assert.equal(run.site, "shop.example");
+      assert.equal(r.tabRun.has(tab), false, "the tab is theirs");
+    });
+  }
+}
+
+test("a block during the run's own act is the run's refused move, recorded once, and the run's site stays its own page's", async () => {
+  for (const where of ["own", "joined"]) {
+    const { c, r, tab } = where === "own"
+      ? await (async () => {
+          const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+          const r = runner(c);
+          await r.handle(step());
+          return { c, r, tab: r.runs.get("run_1").tab };
+        })()
+      : await (async () => {
+          const { c, r } = await joining();
+          await r.handle(started());
+          return { c, r, tab: THEIRS };
+        })();
+    const run = r.runs.get("run_1");
+    run.stepping = tab;
+    c.listeners.before({ tabId: tab, frameId: 0, url: "https://other.example/x" });
+    c.listeners.error({ tabId: tab, frameId: 0, url: "https://other.example/x", error: "net::ERR_BLOCKED_BY_CLIENT" });
+    await new Promise((done) => setTimeout(done, 5));
+    const refused = run.steps.filter((x) => x.op === "navigate" && x.error === "site_not_listed");
+    assert.deepEqual(refused.map((x) => x.url), ["https://other.example/x"], where + ": recorded once");
+    assert.equal(run.site, "shop.example", where + ": the run's site isn't where its page tried to go");
+  }
+});

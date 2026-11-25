@@ -319,6 +319,9 @@ test("the person's own Back off the run's sites gives their tab back with nothin
     // navigation the page started by itself looks the same. A wasn't loaded; their next try (a reload) loads it, with no fence left.
     await new Promise((done) => setTimeout(done, 1000)); // a re-ask would have come by now
     assert.equal(loads(A), loadsOfA, "the extension asked for nothing");
+    const mine = await runState(h, run);
+    assert.ok(!mine.steps.some((x) => x.op === "navigate"), "their Back is none of the run's steps");
+    assert.equal(mine.site, "news.test", "the run's site is still its own page's");
     assert.deepEqual(await moves(tabId), [], "nothing moved their tab: no about:blank, no further back");
     const read = await step({ op: "read", run, agent_run: agentRun });
     assert.equal(read.error && read.error.code, "given_back");

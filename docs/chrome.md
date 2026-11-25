@@ -484,8 +484,16 @@ was done.
   forgotten, never moved or closed. The run's next read, act or hand-over answers `given_back`, nothing of that page read, and
   its next `open` takes a fresh tab of its own (`moreTab`). An address of theirs off the run's sites is never sent to a blank page
   (`onBeforeNavigate` blanks a tab of the run's own only for the run's own work); the fence stops it (`ERR_BLOCKED_BY_CLIENT`),
-  which gives the tab to them the same way, with no rule left on it, and records the refused move. **The extension never asks for a blocked address again** (0.2.17): nothing tells the person's own navigation from one a page started by itself off the run's sites after a step returned (a delayed redirect, a refresh it adds, with what the taf typed), so neither is sent by the extension. The tab stays on Chrome's block page, theirs and unfenced, and their own next try (typing the address again, a reload) loads. Before 0.2.16, an address the person typed in the run's own tab on its sites, or their Back there, was read by the
+  which gives the tab to them the same way, with no rule left on it. **The extension never asks for a blocked address again** (0.2.17): nothing tells the person's own navigation from one a page started by itself off the run's sites after a step returned (a delayed redirect, a refresh it adds, with what the taf typed), so neither is sent by the extension. The tab stays on Chrome's block page, theirs and unfenced, and their own next try (typing the address again, a reload) loads. Before 0.2.16, an address the person typed in the run's own tab on its sites, or their Back there, was read by the
   run's next read.
+- **A move the person made is never one of the run's steps** (0.2.17, `Runner.record`). The panel's card lists the run's own steps
+  and refused moves; the person's own navigation (an address they typed, their Back, a page Chrome kept, in a tab of the run's own
+  or one of theirs it joined) is recorded nowhere, blocked or not, and a block outside the run's own step is none of the run's. Only
+  a block during the run's own open, act or back is recorded, once, as that step's refused move. **The run's site** (the card's
+  site line) **is only ever its own page's:** a step that reached one; a refused move names where a page tried to go, not where the
+  run is. Before 0.2.17 the person's own blocked address was recorded (twice in a joined tab) and became the run's site, so the card
+  read "Stopped a move to" their destination. These records live only in this Chrome (the panel's state, in
+  `chrome.storage.session`); none of them is sent to planque, tafs cloud or KIFF.
 - **A run's new tab shows its blank page before the step's page goes into it** (`Runner.blankReady`, 10 s at most).
   Navigating a tab whose `about:blank` hadn't committed yet raced it: under load the blank page committed after the
   navigation began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The end-to-end
