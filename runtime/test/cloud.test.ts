@@ -1923,6 +1923,30 @@ describe("Connect apps' rows", () => {
     return { status: r.statusCode, body: JSON.parse(r.body) as { apps: Array<Record<string, unknown>> } };
   };
 
+  // planque titles each reviewed app in the asker's language (its `lang`): the Spanish row read "Read a range, add a row".
+  it("ask planque for the person's language, so a reviewed app's line is in it, and English for a language tafs doesn't speak", async () => {
+    const w = world();
+    const asked: string[] = [];
+    const rows = async (lang: string) => {
+      const r = await handle({ rawPath: "/v1/connect/apps", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_co", "accept-language": lang } },
+        { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+          if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog")) {
+            const said = new URL(url).searchParams.get("lang");
+            asked.push(said ?? "");
+            const title = said === "es" ? "Google Sheets: leer un rango, añadir una fila" : "Google Sheets: read a range, add a row";
+            return new Response(JSON.stringify({ entries: [{ entry: "googlesheets@1", vendor: "Google Sheets", title, how: "oauth", state: "available" }] }), { status: 200 });
+          }
+          if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
+          return depsOf(w).fetch!(url, init);
+        }) as Deps["fetch"] });
+      expect(r.statusCode).toBe(200);
+      return (JSON.parse(r.body) as { apps: Array<{ name: string; subtitle?: string }> }).apps[0]!;
+    };
+    expect(await rows("es-ES,es;q=0.9")).toMatchObject({ name: "Google Sheets", subtitle: "Leer un rango, añadir una fila" });
+    expect(await rows("xx")).toMatchObject({ name: "Google Sheets", subtitle: "Read a range, add a row" });
+    expect(asked).toEqual(["es", "en"]);
+  });
+
   it("say whether each app is connected, how it connects, whose it is and which tafs use it, connected first", async () => {
     const w = world();
     const { status, body } = await read(w, "ana_co");

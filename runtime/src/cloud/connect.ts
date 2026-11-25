@@ -109,9 +109,17 @@ export interface AppsPage {
   proved?: Record<string, Proof>;
 }
 
-/** One page of the catalog, the account's connections marked, searched by q; page.cursor asks for the next. */
-export async function listApps(fetchFn: Fetch, base: string, tenant: string, bearer: string, q: string, page: { cursor?: string; provider?: string } = {}): Promise<AppsPage> {
+/** A language tag planque reads (`es`, `pt-BR`, `zh-Hant`): anything else isn't sent, and planque answers in English. */
+const LANG_TAG = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8}){0,2}$/;
+
+/**
+ * One page of the catalog, the account's connections marked, searched by q; page.cursor asks for the next. page.lang is the
+ * person's language: planque titles each reviewed app in it, else in English (planque's `lang`), and a search matches it.
+ * Only what the person reads passes it; a read that only matches apps by their entry or vendor doesn't need to.
+ */
+export async function listApps(fetchFn: Fetch, base: string, tenant: string, bearer: string, q: string, page: { cursor?: string; provider?: string; lang?: string } = {}): Promise<AppsPage> {
   const params = new URLSearchParams();
+  if (page.lang && LANG_TAG.test(page.lang)) params.set("lang", page.lang);
   if (q.trim()) params.set("q", q.trim().slice(0, 100));
   if (page.provider && PROVIDER.test(page.provider)) params.set("provider", page.provider);
   if (page.cursor && CURSOR.test(page.cursor)) params.set("cursor", page.cursor);

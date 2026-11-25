@@ -27,6 +27,18 @@ describe("Connect apps", () => {
     ] });
   });
 
+  it("sends planque the person's language as a tag, and nothing that isn't one", async () => {
+    const seen: { url?: string; init?: RequestInit }[] = [];
+    await listApps(fake(200, { entries: [] }, seen), BASE, "t1", "s", "", { lang: "pt-BR" });
+    await listApps(fake(200, { entries: [] }, seen), BASE, "t1", "s", "", { lang: "es&q=x" });
+    await listApps(fake(200, { entries: [] }, seen), BASE, "t1", "s", "");
+    expect(seen.map((s) => s.url)).toEqual([
+      "https://planque.test/v1/accounts/t1/catalog?lang=pt-BR",
+      "https://planque.test/v1/accounts/t1/catalog",
+      "https://planque.test/v1/accounts/t1/catalog",
+    ]);
+  });
+
   it("keeps a proof (planque's proved) only with a date and a how, and its link only when https: on an entry and in the read's map", async () => {
     const link = "https://github.com/kiff/tafs/commit/3084c2a2";
     const got = await listApps(fake(200, { entries: [
