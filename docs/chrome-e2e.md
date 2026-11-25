@@ -126,6 +126,7 @@ yes, and fail the test.
 | A sensitive site of the grant (`bank.test`: its "bank" label makes it one) opens only on the paired phone's own signed allowance (`sensitive_allowed`). With none, or with one signed by planque's key instead, the open is `site_blocked`, and the bank is never asked for anything. The person's "Not on this site", switched on mid-run, makes the run's next read of their joined tab `site_blocked`, with nothing read, and their next send from the panel goes without the page. A step replayed after Chrome stopped the service worker gets no answer, and the page isn't opened again. A click whose words say only "Continue" is `payment_step`, and nothing is ordered, on each of: a submit in a schema.org Order, a payment provider's button, the submit of a form with a card field, and a button on a page with a provider's payment frame | `gaps.e2e.test.js` |
 | Chrome's own fence says what `refuseURL` says (0.2.19). Four kinds of host are blocked by Chrome before anything is asked of them: a bank label under a granted site (`bank.shop.test`), `accounts.google.com` under a `google.com` grant, a site under a listed `github.io`, and an address (`127.0.0.1`). Each is tried by an open, by the taf's click on a link, and by a 302 from a granted page, in a tab of the run's own and in the person's joined tab. Chrome already holds a connection to each target, since the person visited it first and that visit is checked to have reached it. The server logs no request for any of them, and no result carries the target's page. An open answers `refuseURL`'s code: `site_blocked`, `site_not_listed` or `address_private` | `fence219.e2e.test.js` |
 | What leaves for planque when a page is too large, or the relay is down. A read over the relay's 120 KB is cut to fit, says so (`truncated`), and no cut carries the password field's value, a card number in the page's text, or what the person typed. A hand-over's Done pressed while the relay is down reaches planque once the relay is back: once, signed, without what the person typed. A Done whose page is over the cap goes with no page | `leaving.e2e.test.js` |
+| A wrong action, and a stale display: what the rest of the ranked gaps covers. A disabled button's click is `disabled`, an option that isn't there is `option_unknown`, and `check` on a radio chooses it. planque's unsigned `stop` mid-act, while the outline is up, makes the act answer `stopped` with nothing reaching the page, and planque hears `stopped`, signed. A stop with a hand-over open answers it `declined`, and a stop for a run this Chrome doesn't hold changes nothing. A "leave this page?" handler doesn't hold the taf's next open, and no dialog reaches Chromium. A content script's message of a panel's kind changes nothing: `stop`, `pause`, `aside_site`, `page_withdraw`, `unpair`, `taf_send`. Nor does `owner_input` from a tab of no run. After the person takes their joined tab back, the floating bar there no longer says it's the run's tab (`here: false`, read where `TafsBar.show` is given it), and the badge counts the run until it ends, then clears | `gaps2.e2e.test.js` |
 | A run's tab has its three session rules (block every page and frame, allow the run's sites, block `http`) while the run lives; planque's stop and the taf's close take them away, and another run's stay; unpairing (4410) leaves none at all | `fence.e2e.test.js` |
 | The person closing a run's last tab ends the run, and the closed tab's rules go with it | `fence.e2e.test.js` |
 | A fence Chrome refuses (its limit on session rules reached) loads nothing: a run's first tab, or a further tab of a run in the person's tab, closes before its page is asked for, and the step is `browser_unavailable` | `fence.e2e.test.js`, `joined.e2e.test.js` |
@@ -154,6 +155,8 @@ yes, and fail the test.
 
 ## Not covered yet
 
+- **The minute alarm's idle sweep** (a run nobody sends a step to for 150 s ends): it needs that much real time per test, so
+  only the runner's unit tests cover it.
 - **A redirect or a joined tab's move to a sensitive site of the grant** the phone didn't allow: only the taf's click in a
   tab of the run's own is tested (see the known bugs).
 - **A checkout's own refusals by its words and totals** (`checkout`), and `press` and `scroll` as acts of their own: covered by
@@ -253,6 +256,19 @@ Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed
 
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
+
+- **A page's `alert` or `confirm` as it loads reaches Chromium as a real dialog** (`gaps2.e2e.test.js`). `runner.js` installs
+  the dialog guard (`installDialogGuard`, in the page's own world) with `scripting.executeScript` from
+  `webNavigation.onCommitted`. That's after the document has started, so a page's own inline script runs first, and its
+  confirm can be answered yes. The guard has to be in place "as each document starts" (`docs/chrome.md`), which takes a
+  content script registered at `document_start`.
+- **A field inside a disabled `<fieldset>` takes the taf's fill** (`gaps2.e2e.test.js`). `page.js` checks the field's own
+  `disabled` attribute, which is false there; it should check `:disabled`.
+- **A `readonly` field takes the taf's fill** (`gaps2.e2e.test.js`). `page.js` has no read-only check.
+- **A disabled `<option>` is selected** (`gaps2.e2e.test.js`). `page.js` finds the option without looking at
+  `option.disabled`.
+- **`check` with `unchecked` on a checked radio answers ok, though nothing changed** (`gaps2.e2e.test.js`). A click never
+  unchecks a radio, so the taf is told it did something it didn't.
 
 None.
 

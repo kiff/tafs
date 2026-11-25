@@ -146,6 +146,28 @@ const ORDERS = {
   frame: page("Your order", `<h1>Your order</h1><iframe src="https://js.stripe.com/v3/elements" width="10" height="10"></iframe><button type="button" ${DID}>Continue</button><p id="out">not yet</p>`),
 };
 
+/**
+ * Controls the person can't use: a disabled button, a field in a disabled fieldset, a read-only field, a disabled option, and a
+ * radio group (a checked radio can't be unchecked by a click). Anything that lands writes what it did in #out.
+ */
+const CONTROLS = page("Locked controls", `<h1>Locked controls</h1>
+<form onsubmit="return false">
+  <button type="button" id="off" disabled onclick="document.getElementById('out').textContent = 'disabled button pressed'">Send it</button>
+  <fieldset disabled><legend>Locked</legend><label for="fs">Locked name</label><input id="fs" type="text" oninput="document.getElementById('out').textContent = 'fieldset field typed'"></fieldset>
+  <label for="ro">Read-only code</label><input id="ro" type="text" readonly value="fixed" oninput="document.getElementById('out').textContent = 'read-only field typed'">
+  <label for="sz">Size</label><select id="sz" onchange="document.getElementById('out').textContent = 'size ' + this.value"><option>Small</option><option disabled>Large</option></select>
+  <input type="radio" name="ship" id="r1" value="standard" checked><label for="r1">Standard</label>
+  <input type="radio" name="ship" id="r2" value="express"><label for="r2">Express</label>
+</form>
+<p id="out">untouched</p>`);
+
+/** Dialogs a page raises as it loads, before anything of the run's could run in it, and a page that asks before it's left. */
+const AT_LOAD = {
+  alert: page("Welcome", `<h1>Welcome</h1>`).replace("<title>Welcome</title>", "<title>Welcome</title><script>alert('Welcome to the shop')</script>"),
+  confirm: page("Stay", `<h1>Stay</h1><p id="out">-</p><script>document.getElementById("out").textContent = confirm("Stay signed in?") ? "accepted" : "refused";</script>`),
+  beforeunload: page("A draft", `<h1>A draft</h1><label for="d">Draft</label><input id="d" type="text"><script>addEventListener("beforeunload", (e) => { e.preventDefault(); e.returnValue = ""; });</script>`),
+};
+
 /** A card number in a page's own text: masked in every read, whole or cut. */
 export const CARD_TEXT = "4111 1111 1111 1111";
 /**
@@ -239,6 +261,8 @@ export class FixtureSites {
       "shop.test": {
         "/to-bank": TO_BANK(this.port),
         "/huge": HUGE,
+        "/controls": CONTROLS,
+        ...Object.fromEntries(Object.entries(AT_LOAD).map(([name, body]) => ["/at-load-" + name, body])),
         ...Object.fromEntries(Object.entries(ORDERS).map(([name, body]) => ["/order-" + name, body])),
         "/form": FORM, "/confirm": CONFIRM, "/account": ACCOUNT, "/links": LINKS(this.port), "/frames": FRAMES(this.port), "/inner": INNER(FRAME_PASSWORD),
         ...Object.fromEntries(Object.entries(LEAVE).map(([name, make]) => ["/leave-" + name, make(this.port)])),
