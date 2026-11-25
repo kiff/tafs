@@ -349,7 +349,7 @@ internal fun stateLine(ask: AskLine): String = listOfNotNull(ask.tafName, ask.wo
  * owner's Watch 5 test: the answer flashed past and couldn't be read).
  */
 @Composable
-internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null) {
+internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null, whole: WatchModel.Whole? = null) {
   Box(Modifier.fillMaxSize().background(Color.Black)) {
     // A ScalingLazyColumn, so the crown or bezel scrolls it as a swipe does (a plain scrolling column takes no rotary input).
     androidx.wear.compose.foundation.lazy.ScalingLazyColumn(
@@ -362,7 +362,16 @@ internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null) {
       item { T(ask.tafName ?: "", 12.sp, Look.coach, FontWeight.Medium, lines = 1) }
       // tafs cloud's checked line (up to 140 characters); with none, its word for the state. Whole, however many lines.
       item {
-        T((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, 15.sp, Look.onCoachGround, FontWeight.SemiBold, Modifier.width(156.dp), lines = Int.MAX_VALUE, lineHeight = 18.sp)
+        val text = (whole as? WatchModel.Whole.Read)?.text ?: (ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }
+        T(text, 15.sp, Look.onCoachGround, FontWeight.SemiBold, Modifier.width(156.dp).testTag(RESULT_TEXT), lines = Int.MAX_VALUE, lineHeight = 18.sp)
+      }
+      // tafs cloud says the answer goes on past its line (`more`): Read more reads the whole (`full=1`), shown here and heard by
+      // Hear; with none, the rest is on the phone.
+      if (ask.more) when (whole) {
+        null -> item { QuietButton(Words.Watch.readMore) { act.readWhole(ask.id) } }
+        WatchModel.Whole.Reading -> item { T(Words.Common.loading, 12.sp, Look.dim, modifier = Modifier.width(150.dp), lines = 1) }
+        WatchModel.Whole.OnPhone -> item { T(Words.Watch.moreOnPhone, 12.sp, Look.dim, modifier = Modifier.width(150.dp), lines = 2) }
+        is WatchModel.Whole.Read -> Unit
       }
       item {
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -377,6 +386,7 @@ internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null) {
 }
 
 internal const val RESULT_SCREEN = "result-screen"
+internal const val RESULT_TEXT = "result-text"
 
 /** A Halt sent, until the phone answers: never "halted" before tafs cloud says so. */
 @Composable

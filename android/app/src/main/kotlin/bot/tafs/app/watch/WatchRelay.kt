@@ -17,6 +17,7 @@ import bot.tafs.watchlink.TafLine
 import bot.tafs.watchlink.WatchLink
 import bot.tafs.watchlink.WatchReply
 import bot.tafs.watchlink.WatchRequest
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 
 /**
@@ -45,6 +46,17 @@ class WatchRelay(
   private val voice: VoiceInbox? = null,
   /** The phone's on-device recognizer, for a recording the watch's own gave up on; none, and it's [WatchReply.NoOfflineSpeech]. */
   private val transcriber: Transcriber? = null,
+  /** The taf chats the watch opened, which the phone then keeps for it as they change ([WatchChats]); none in a test. */
+  private val chats: WatchChats? = null,
+  /**
+   * Where a read of tafs cloud and KIFF for the watch runs (the app's [bot.tafs.app.TafsApplication.background]), so one slower
+   * than the watch's wait goes on after the phone has answered from what it holds; none in a test that waits for every read.
+   */
+  private val background: kotlinx.coroutines.CoroutineScope? = null,
+  /** How long the phone waits for a fresh read when it already holds one: past it, it answers from what it holds. */
+  private val freshWaitMs: Long = FRESH_WAIT_MS,
+  /** How long it waits when it holds none yet: still under the watch's own 10 s, which then asks again by itself. */
+  private val firstReadWaitMs: Long = FIRST_READ_WAIT_MS,
 ) {
   suspend fun answer(path: String, data: ByteArray): WatchReply {
     val request = when (val accepted = WatchLink.accept(path, data, now())) {
@@ -57,7 +69,7 @@ class WatchRelay(
         // Read again now: the watch shows what tafs cloud and KIFF say, not what the phone last drew. Within the floor of the
         // last read, that read stands. The brief is the one the phone holds, read with Needs you (`AppModel.refresh`): no read
         // of its own.
-        if (request !is WatchRequest.Tafs && floor.due(now())) model.refresh()
+        if (request !is WatchRequest.Tafs) readAgain(model)
         val state = model.state.value
         when {
           state.mode != Mode.kiff -> WatchReply.SignedOut
@@ -76,7 +88,7 @@ class WatchRelay(
       is WatchRequest.Taf -> {
         val model = signedIn() ?: return WatchReply.SignedOut
         // Read again within the floor, as Needs you: today's use is KIFF's now, not what the phone last drew.
-        if (floor.due(now())) model.refresh()
+        readAgain(model)
         tafPage(model.state.value, request.tafId) ?: WatchReply.Failed(Words.Watch.openOnPhone)
       }
       is WatchRequest.Transcribe -> transcribe(request)
@@ -168,7 +180,9 @@ class WatchRelay(
     val model = signedIn() ?: return WatchReply.SignedOut
     return try {
       val messages = model.watchTafChat(tafId) ?: return WatchReply.Failed(Words.Watch.openOnPhone)
-      WatchReply.TafChat(chatLines(messages), zone = bot.tafs.app.model.zone.id)
+      // Opened on the watch: from now on the phone keeps it for the watch as it changes here (docs/watch-wear.md, Delivery).
+      chats?.opened(tafId)
+      WatchReply.TafChat(chatLines(messages, bot.tafs.watchlink.ChatLine.KEPT), zone = bot.tafs.app.model.zone.id)
     } catch (e: kotlinx.coroutines.CancellationException) {
       throw e
     } catch (_: Exception) {
@@ -192,8 +206,9 @@ class WatchRelay(
   private suspend fun asks(since: String?): WatchReply {
     val model = signedIn() ?: return WatchReply.SignedOut
     return try {
-      val asks = model.watchAsks(since) ?: return WatchReply.SignedOut
-      WatchReply.AskList(asks.map(::lineOf))
+      val read = model.watchAsksRead(since) ?: return WatchReply.SignedOut
+      // The switch for chatting with a taf, as tafs cloud says it (row 13), so the watch says so before recording.
+      WatchReply.AskList(read.asks.map(::lineOf), tafChat = read.tafChat)
     } catch (e: kotlinx.coroutines.CancellationException) {
       throw e
     } catch (e: bot.tafs.app.kiff.CloudError) {
@@ -230,6 +245,19 @@ class WatchRelay(
   }
 
   private suspend fun signedIn(): AppModel? = model()?.takeIf { it.state.value.mode == Mode.kiff }
+
+  /**
+   * Reads tafs cloud and KIFF again for the watch, past the floor, or joins the read under way; a read is the app's whole refresh,
+   * which can take longer than the watch waits (the Galaxy Watch 5 test: every first ask timed out with tafs in front). So it
+   * runs in [background] and the phone waits for it at most [freshWaitMs] when it already holds a read, [firstReadWaitMs] when it
+   * holds none; past that it answers from what it holds, and the read lands for the next ask.
+   */
+  private suspend fun readAgain(model: AppModel) {
+    val scope = background ?: return if (floor.due(now())) model.refresh() else Unit
+    val read = floor.read(now(), scope) { model.refresh() } ?: return
+    val held = model.state.value.let { it.listLoaded && !it.listUnread }
+    kotlinx.coroutines.withTimeoutOrNull(if (held) freshWaitMs else firstReadWaitMs) { runCatching { read.await() } }
+  }
 
   /**
    * Refuses the held call the watch named, after reading Needs you again: one answered or gone meanwhile is "already answered",
@@ -282,12 +310,16 @@ class WatchRelay(
      * ask was taken, is "may have arrived", so the watch retries with the same id; anything else, tafs cloud's own words.
      */
     /**
-     * tafs cloud's refusal of a message to a taf: its switch off (`watch_taf_chat_off`), the taf not the person's to use
-     * (`no_taf`), Coach named as a taf (`coach_taf`), or the watch's own switch off: the phone has it, Open on phone. Never a
+     * tafs cloud's refusal of a message to a taf: its switch off (`watch_taf_chat_off`, [WatchReply.TafChatOff]); the taf not
+     * the person's to use (`no_taf`), Coach named as a taf (`coach_taf`), or the watch's own switch off: Open on phone. Never a
      * fallback to Coach. The rest is as for an ask ([refusedAsk]): a view-only phone, the AI consent, a 5xx.
      */
-    fun refusedTafMessage(e: bot.tafs.app.kiff.CloudError): WatchReply =
-      if (e.status == 404 || e.code == "coach_taf") WatchReply.Failed(Words.Watch.openOnPhone) else refusedAsk(e)
+    fun refusedTafMessage(e: bot.tafs.app.kiff.CloudError): WatchReply = when {
+      // The account's switch off (row 13): its own reply, so the watch keeps the words and says so before the next recording.
+      e.code == "watch_taf_chat_off" -> WatchReply.TafChatOff
+      e.status == 404 || e.code == "coach_taf" -> WatchReply.Failed(Words.Watch.openOnPhone)
+      else -> refusedAsk(e)
+    }
 
     fun refusedAsk(e: bot.tafs.app.kiff.CloudError): WatchReply = when {
       e.code == "watch_off" -> WatchReply.Failed(Words.Watch.askNotOn)
@@ -303,6 +335,12 @@ class WatchRelay(
      * set back).
      */
     fun waitLeft(startedMs: Long, nowMs: Long, budgetMs: Long): Long = (budgetMs - (nowMs - startedMs)).coerceIn(0, budgetMs)
+
+    /** The phone's wait for a fresh read while it holds one: well under the watch's 10 s. */
+    const val FRESH_WAIT_MS = 3_000L
+
+    /** The phone's wait for a first read: under the watch's 10 s, with the time to find and reach the phone. */
+    const val FIRST_READ_WAIT_MS = 7_000L
 
     /** The longest answer the watch draws whole: past it, the start and Open on phone. */
     const val COACH_SHORT = 280
@@ -456,11 +494,12 @@ class WatchRelay(
 
     /**
      * A taf's chat as the watch shows it: messages with words only (a run's kickoff note isn't a turn), the last
-     * [ChatLine.LAST], each cut as Coach's answer is on the wrist, with whether more is on the phone.
+     * [last] ([ChatLine.LAST] by default; [ChatLine.KEPT] for the chat the watch keeps), each cut as Coach's answer is on the wrist,
+     * with whether more is on the phone. A message still on its way isn't one yet.
      */
-    fun chatLines(messages: List<bot.tafs.app.model.ChatMessage>): List<bot.tafs.watchlink.ChatLine> =
-      messages.filter { it.kind == bot.tafs.app.model.ChatMessage.Kind.message && it.text.isNotBlank() }
-        .takeLast(bot.tafs.watchlink.ChatLine.LAST)
+    fun chatLines(messages: List<bot.tafs.app.model.ChatMessage>, last: Int = bot.tafs.watchlink.ChatLine.LAST): List<bot.tafs.watchlink.ChatLine> =
+      messages.filter { it.kind == bot.tafs.app.model.ChatMessage.Kind.message && it.text.isNotBlank() && it.session != "pending" }
+        .takeLast(last)
         .map { m ->
           val words = m.text.trim()
           val cut = words.length > COACH_SHORT
@@ -509,6 +548,17 @@ class WatchRelay(
  */
 class RefreshFloor(private val ms: Long = 10_000) {
   private var last: Long? = null
+  private var running: kotlinx.coroutines.Deferred<Unit>? = null
+
+  /**
+   * The read under way, joined; or, past the floor, a new one started in [scope]; or none, within the floor of the last one,
+   * whose read stands.
+   */
+  @Synchronized fun read(now: Long, scope: kotlinx.coroutines.CoroutineScope, refresh: suspend () -> Unit): kotlinx.coroutines.Deferred<Unit>? {
+    running?.takeIf { it.isActive }?.let { return it }
+    if (!due(now)) return null
+    return scope.async { refresh() }.also { running = it }
+  }
 
   @Synchronized fun due(now: Long): Boolean {
     val then = last

@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Sonrası için sakla</string>
     <string name="watch_kept_to_send">Bu saatte saklandı. Telefonunuz tekrar erişilebilir olunca gönderilir.</string>
     <string name="watch_limit">en fazla 30 sn</string>
+    <string name="watch_linking">tafs bağlanıyor. Telefonunuzu yakında ve bağlı tutun.</string>
     <string name="watch_listening">Dinliyor</string>
     <string name="watch_menu">Menü</string>
     <string name="watch_mic_needed">Sesle sormak için bu saatte tafs\'a mikrofon izni verin.</string>

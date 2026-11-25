@@ -120,6 +120,7 @@ object Words {
     val keepForLater: String get() = Res.s(R.string.watch_keep_for_later)
     val keptToSend: String get() = Res.s(R.string.watch_kept_to_send)
     val limit: String get() = Res.s(R.string.watch_limit)
+    val linking: String get() = Res.s(R.string.watch_linking)
     val listening: String get() = Res.s(R.string.watch_listening)
     val menu: String get() = Res.s(R.string.watch_menu)
     val micNeeded: String get() = Res.s(R.string.watch_mic_needed)

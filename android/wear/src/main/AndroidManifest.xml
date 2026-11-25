@@ -54,6 +54,14 @@
                     android:host="*"
                     android:path="/tafs/watch/v1/ask-result" />
             </intent-filter>
+            <!-- What the phone keeps for the watch (WatchLink.KEPT): an ask's new state, the Inbox's marks; with the app closed too. -->
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/tafs/watch/v1/kept/" />
+            </intent-filter>
         </service>
 
         <!-- The tile: Needs you's count, only while the watch is unlocked (docs/watch-wear.md). -->

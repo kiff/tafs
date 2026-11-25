@@ -96,6 +96,8 @@ dependencies {
   // The Wear OS watch's requests (docs/watch-wear.md): the messages both apps share, and the Data Layer they arrive on.
   implementation(project(":watchlink"))
   implementation(libs.play.services.wearable)
+  // An expedited job keeps an ask's answer for the watch, outside Firebase's few seconds (docs/watch-wear.md).
+  implementation(libs.androidx.work.runtime.ktx)
   implementation(libs.kotlinx.coroutines.play.services)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.activity.compose)

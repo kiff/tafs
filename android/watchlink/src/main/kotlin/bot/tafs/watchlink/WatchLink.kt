@@ -10,7 +10,8 @@ import kotlinx.serialization.json.Json
  * "Approve on your phone", and only the phone's fingerprint can approve.
  *
  * Each request is a live message (the Data Layer's `MessageClient.sendRequest`), never a `DataItem`, so nothing queued while the
- * phone was away lands later; and each carries when it was made, so the phone drops one older than [MAX_AGE_MS].
+ * phone was away lands later; and each carries when it was made, so the phone drops one older than [MAX_AGE_MS]. Only the
+ * phone's results go the other way as kept items ([WatchLink.KEPT]): something to show, never something to act on.
  */
 sealed interface WatchRequest {
   /** When the watch made it, in milliseconds since the epoch. */
@@ -176,9 +177,12 @@ sealed interface WatchReply {
   @Serializable @SerialName("unsure")
   data object Unsure : WatchReply
 
-  /** The watch's own asks, as tafs cloud has them. */
+  /**
+   * The watch's own asks, as tafs cloud has them, and whether chatting with a taf from the watch is on for the account (`taf_chat`,
+   * row 13): null from a tafs cloud or a phone before it, when the watch learns it from a send's refusal instead.
+   */
   @Serializable @SerialName("asks")
-  data class AskList(val asks: List<AskLine>) : WatchReply
+  data class AskList(val asks: List<AskLine>, @SerialName("taf_chat") val tafChat: Boolean? = null) : WatchReply
 
   /**
    * Your brief, in tafs cloud's words, as the phone shows it in Needs you's place: its title and its `when` line ("Morning brief ·
@@ -260,7 +264,45 @@ sealed interface WatchReply {
   /** The Inbox's lines read and dismissed, as tafs cloud keeps them now (row 21): ids only, a dismissed one never also read. */
   @Serializable @SerialName("inbox_marks")
   data class InboxMarks(val read: List<String> = emptyList(), val dismissed: List<String> = emptyList()) : WatchReply
+
+  /**
+   * Chatting with a taf from the watch isn't on for this account (tafs cloud's `watch_taf_chat_off`, row 13): nothing was sent.
+   * The watch keeps the words and says so, never Open on phone. An older watch reads it as one it doesn't know (Open on phone).
+   */
+  @Serializable @SerialName("taf_chat_off")
+  data object TafChatOff : WatchReply
 }
+
+/**
+ * An ask's new state, kept for the watch as a Data Layer item ([WatchLink.KEPT_ASK]), so the watch gets it when it's next in
+ * reach, its app open or not. [putAt] is when the phone put it, so a changed state is a changed item.
+ */
+@Serializable
+data class KeptAsk(@SerialName("put_at") val putAt: Long, val ask: AskLine)
+
+/**
+ * A taf's chat as the phone holds it now (the last [ChatLine.KEPT] turns, as [WatchReply.TafChat] gives them), kept for the watch
+ * as a Data Layer item ([WatchLink.KEPT_TAF_CHAT]) when it changes on the phone, for a taf whose chat the watch has opened, so an
+ * open chat there moves as the phone's does.
+ */
+@Serializable
+data class KeptChat(
+  @SerialName("put_at") val putAt: Long,
+  @SerialName("taf_id") val tafId: String,
+  val lines: List<ChatLine> = emptyList(),
+  val zone: String? = null,
+)
+
+/**
+ * The Inbox's marks as tafs cloud keeps them now (row 21), kept for the watch as a Data Layer item ([WatchLink.KEPT_MARKS]) when
+ * tafs cloud says they changed: ids only, as [WatchReply.InboxMarks].
+ */
+@Serializable
+data class KeptMarks(
+  @SerialName("put_at") val putAt: Long,
+  val read: List<String> = emptyList(),
+  val dismissed: List<String> = emptyList(),
+)
 
 /** One of a taf's Cards, as the phone's Card tab draws it: its title, the face's figure and line, and its rules in one line each. */
 @Serializable
@@ -370,6 +412,9 @@ data class ChatLine(val id: String, val mine: Boolean, val at: String, val text:
   companion object {
     /** The most turns the watch shows from before this visit, as Apple Watch's. */
     const val LAST = 6
+
+    /** The most messages of one chat the phone keeps for the watch, as the watch keeps them (docs/watch-wear.md). */
+    const val KEPT = 30
   }
 }
 
@@ -389,6 +434,25 @@ object WatchLink {
    * says it changed. The phone refuses it as unknown if a watch ever sends it.
    */
   const val ASK_RESULT = PREFIX + "ask-result"
+
+  /**
+   * What the phone keeps for the watch as Data Layer items (`DataClient.putDataItem`, urgent), when tafs cloud's push says
+   * something changed: delivered when the watch is next in reach, its app open or not, and deleted by the watch once it has kept
+   * it. Never a request: the phone acts on nothing under this prefix, and the watch only stores and shows it.
+   */
+  const val KEPT = PREFIX + "kept/"
+
+  /** One ask's new state, by its id in tafs cloud: `kept/ask/{id}` ([KeptAsk]). */
+  const val KEPT_ASK = KEPT + "ask/"
+
+  /** The Inbox's marks ([KeptMarks]). */
+  const val KEPT_MARKS = KEPT + "inbox-marks"
+
+  /** A taf's chat as the phone holds it, by the phone's id for the taf: `kept/taf-chat/{id}` ([KeptChat]). */
+  const val KEPT_TAF_CHAT = KEPT + "taf-chat/"
+
+  /** A taf's id on the phone, as a kept item's path may name it. */
+  private val TAF_ID = Regex("^[A-Za-z0-9_.:-]{1,128}$")
   const val BRIEF = PREFIX + "brief"
   const val TAF = PREFIX + "taf"
   const val TAF_CHAT = PREFIX + "taf-chat"
@@ -589,6 +653,35 @@ object WatchLink {
   /** The watch's side: an ask's new state from the phone, or null for one it can't read. */
   fun decodeResult(data: ByteArray): AskLine? =
     runCatching { replies.decodeFromString(AskLine.serializer(), data.decodeToString()) }.getOrNull()
+
+  /** Where the phone keeps [ask] for the watch. */
+  fun keptAskPath(askId: String): String = KEPT_ASK + askId
+
+  /** The ask's id a kept item's [path] names, or null for any other path or an id tafs cloud never gives. */
+  fun keptAskId(path: String): String? = path.takeIf { it.startsWith(KEPT_ASK) }?.removePrefix(KEPT_ASK)?.takeIf(ID::matches)
+
+  fun encodeKept(kept: KeptAsk): ByteArray = replies.encodeToString(KeptAsk.serializer(), kept).encodeToByteArray()
+
+  fun decodeKeptAsk(data: ByteArray): KeptAsk? =
+    runCatching { replies.decodeFromString(KeptAsk.serializer(), data.decodeToString()) }.getOrNull()
+
+  /** Where the phone keeps a taf's chat for the watch, by the phone's id for the taf; null for an id a path can't carry. */
+  fun keptChatPath(tafId: String): String? = tafId.takeIf(TAF_ID::matches)?.let { KEPT_TAF_CHAT + it }
+
+  /** The taf a kept chat's [path] names, or null for any other path. */
+  fun keptChatTaf(path: String): String? = path.takeIf { it.startsWith(KEPT_TAF_CHAT) }?.removePrefix(KEPT_TAF_CHAT)?.takeIf(TAF_ID::matches)
+
+  fun encodeKept(kept: KeptChat): ByteArray = replies.encodeToString(KeptChat.serializer(), kept).encodeToByteArray()
+
+  fun decodeKeptChat(data: ByteArray): KeptChat? =
+    runCatching { replies.decodeFromString(KeptChat.serializer(), data.decodeToString()) }.getOrNull()
+
+  fun encodeKept(kept: KeptMarks): ByteArray = replies.encodeToString(KeptMarks.serializer(), kept).encodeToByteArray()
+
+  /** The marks a kept item holds, only ids tafs cloud takes ([InboxMarkIds]); null for one it can't read. */
+  fun decodeKeptMarks(data: ByteArray): KeptMarks? =
+    runCatching { replies.decodeFromString(KeptMarks.serializer(), data.decodeToString()) }.getOrNull()
+      ?.let { it.copy(read = InboxMarkIds.checked(it.read), dismissed = InboxMarkIds.checked(it.dismissed)) }
 
   /** Replies tolerate fields a newer phone adds; requests, which the phone acts on, don't. */
   private val replies = Json { ignoreUnknownKeys = true; classDiscriminator = "kind"; explicitNulls = false }

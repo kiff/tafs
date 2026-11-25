@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">Guardar para luego</string>
     <string name="watch_kept_to_send">Guardado en este reloj. Se envía cuando tu teléfono vuelva a estar al alcance.</string>
     <string name="watch_limit">30 s como máximo</string>
+    <string name="watch_linking">Vinculando tafs. Mantén tu teléfono cerca y conectado.</string>
     <string name="watch_listening">Escuchando</string>
     <string name="watch_menu">Menú</string>
     <string name="watch_mic_needed">Para pedir con la voz, permite el micrófono a tafs en este reloj.</string>

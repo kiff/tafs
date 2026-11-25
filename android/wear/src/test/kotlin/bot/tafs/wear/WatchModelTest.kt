@@ -457,39 +457,27 @@ class WatchModelTest {
     assertEquals("the 30 s count from the grant, not the tap", WatchModel.Voice.Listening("", null, since = t + 4_000), model.voice.value)
   }
 
-  /** W3: the answer to an ask sent from this watch opens by itself when it ends with the app elsewhere (back on Coach's home). */
-  @Test fun v2sAnswerOpensByItselfWhenTheAppIsElsewhere() = runTest {
+  /**
+   * The owner's call, replacing W3's card that opened by itself: the answer to an ask sent from this watch lands in the
+   * conversation under the words it answers, as in a chat, and no card opens over what the person is doing.
+   */
+  @Test fun v2sAnswerLandsInTheConversationAndNoCardOpensByItself() = runTest {
     val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
     val model = v2(phone)
     model.listen()
     model.heard("Move my call to six")
     model.sendReviewed()
-    model.closeVoice()
+    assertNull("back to the conversation", model.voice.value)
     model.took(working)
-    assertNull("not before it ends", model.result.value)
     model.took(done)
-    assertEquals(done, model.result.value)
+    assertNull(model.result.value)
+    assertEquals(listOf(WatchModel.Said("Move my call to six", t) to done), model.thread())
   }
 
-  /** ...but never over a new message being recorded, and never for an ask this watch didn't send. */
-  @Test fun v2sAnswerWaitsWhileTheWatchIsBusyAndOthersNeverOpen() = runTest {
-    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
-    val model = v2(phone)
-    model.listen()
-    model.heard("Move my call to six")
-    model.sendReviewed()
-    model.closeVoice()
-    model.listen()
-    model.took(done)
-    assertNull("a new message is being recorded", model.result.value)
-    model.closeVoice()
-    assertNull("an answer opens once, as it ends", model.result.value)
-    val other = v2(phone)
-    other.took(done)
-    assertNull("not sent from this watch", other.result.value)
-  }
-
-  /** W4: what was said from this watch and its answer make today's conversation, oldest first, in memory only. */
+  /**
+   * W4: what was said from this watch and its answer make one conversation, oldest first. Put away (the screen off) it stays;
+   * signed out it goes (WatchKeptTest: kept across opens).
+   */
   @Test fun v2sConversationIsWhatThisWatchSaidAndItsAnswers() = runTest {
     val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
     val model = v2(phone)
@@ -499,7 +487,8 @@ class WatchModelTest {
     assertEquals(listOf(WatchModel.Said("Move my call to six", t) to taken), model.thread())
     model.took(done)
     assertEquals(listOf(WatchModel.Said("Move my call to six", t) to done), model.thread())
-    // Put away or signed out: forgotten, as the asks are. Nothing of it is kept on the watch.
+    model.putAway()
+    assertEquals("the screen off and on: still there", listOf(WatchModel.Said("Move my call to six", t) to done), model.thread())
     model.forget()
     assertTrue(model.thread().isEmpty())
   }
@@ -513,7 +502,9 @@ class WatchModelTest {
     assertTrue("nothing sent on stop", phone.asked.isEmpty())
     model.sendReviewed()
     assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move my four o'clock call to six")), phone.asked)
-    assertEquals(WatchModel.Voice.Sent(taken), model.voice.value)
+    // Back to the conversation, where the words are the newest turn.
+    assertNull(model.voice.value)
+    assertEquals(taken, model.thread().last().second)
   }
 
   @Test fun v2sDeleteSendsNothing() = runTest {

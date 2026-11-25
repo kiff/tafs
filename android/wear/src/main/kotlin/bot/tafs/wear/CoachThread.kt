@@ -68,9 +68,10 @@ internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) 
     }
     val answer = if (ask.ended) (ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone } else stateLine(ask)
     androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
+    // The answer whole, however many lines (the owner's Watch 5 test: it was cut at five, "the computer is…", with no way on);
+    // the page scrolls with the crown, and a tap opens it with Hear and Reply.
     Text(
-      answer, fontSize = 13.sp, lineHeight = 16.sp, color = if (ask.ended) Look.onCoachGround else Look.coach, maxLines = 5,
-      overflow = TextOverflow.Ellipsis,
+      answer, fontSize = 13.sp, lineHeight = 16.sp, color = if (ask.ended) Look.onCoachGround else Look.coach,
       modifier = Modifier.weight(1f, fill = false).widthIn(max = 156.dp)
         .background(Look.coachGround, RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp))
         .then(if (ask.ended) Modifier.clickable(onClick = onOpen) else Modifier)
@@ -82,9 +83,12 @@ internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) 
     )
     if (ask.ended) WatchChatTime.instantOf(ask.updated)?.let { MessageTime(WatchChatTime.time(it), inset = 0.dp) }
     }
+    // tafs cloud says the answer goes on past its line: Read more, in the thread itself; a tap opens it whole on its card.
+    if (ask.ended && ask.more) Text(Words.Watch.readMore, fontSize = 11.sp, color = Look.coach, modifier = Modifier.clickable(onClick = onOpen).testTag(THREAD_MORE + ask.id))
   }
 }
 
 internal const val THREAD_TURN = "thread-turn-"
 internal const val THREAD_ANSWER = "thread-answer-"
 internal const val THREAD_WORKING = "thread-working-"
+internal const val THREAD_MORE = "thread-more-"

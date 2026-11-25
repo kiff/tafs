@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">Guarda per a més tard</string>
     <string name="watch_kept_to_send">Guardat en aquest rellotge. S\'envia quan el telèfon torni a ser a l\'abast.</string>
     <string name="watch_limit">30 s com a màxim</string>
+    <string name="watch_linking">Enllaçant tafs. Mantén el telèfon a prop i connectat.</string>
     <string name="watch_listening">Escoltant</string>
     <string name="watch_menu">Menú</string>
     <string name="watch_mic_needed">Per preguntar amb la veu, permet que tafs faci servir el micròfon en aquest rellotge.</string>

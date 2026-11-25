@@ -41,8 +41,8 @@ import kotlinx.coroutines.launch
  * phone's answer, never the watch's guess.
  */
 
-/** Where the phone's Open on phone goes: it opens Needs you, and nothing else yet (`Alerts.openedFromWatch`). */
-private const val ON_PHONE = "needs-you"
+/** Where Open on phone goes from a taf (row 28): that taf on the phone, by the phone's own id (`Alerts.openedFromWatch`). */
+internal fun onPhone(open: WatchModel.OpenTaf): String = "taf/" + open.tafId
 
 /**
  * A taf's page, read from the phone (`taf`): its name and state, what it does, its Card with each rule on a line, what of it waits
@@ -58,6 +58,8 @@ internal fun TafScreen(
   openInbox: () -> Unit,
   chat: Boolean = WATCH_TAF_CHAT && WATCH_V2,
   pager: PagerState = rememberPagerState { if (chat) 3 else 2 },
+  /** tafs cloud said chatting with a taf isn't on for this account (row 13): the chat says so in place of its send bar. */
+  chatOff: Boolean = false,
 ) {
   var confirming by remember(open.tafId) { mutableStateOf(false) }
   val scope = rememberCoroutineScope()
@@ -76,15 +78,19 @@ internal fun TafScreen(
     }, cancel = { confirming = false })
   }
   HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
+    // 1A: its chat first, then its page, then its settings; with the switch off, its page and settings as before.
+    val page = if (chat) i - 1 else i
+    // The chat opens on its newest message, with the send bar under it, as a chat app does; older ones are above (the owner's call).
+    val latest = if (page < 0) tafChatLatest(open) else 0
+    val list = rememberScalingLazyListState(initialCenterItemIndex = latest)
+    if (page < 0) androidx.compose.runtime.LaunchedEffect(latest) { list.scrollToItem(latest) }
     ScalingLazyColumn(
       Modifier.fillMaxWidth(),
-      state = rememberScalingLazyListState(initialCenterItemIndex = 0),
+      state = list,
       verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-      // 1A: its chat first, then its page, then its settings; with the switch off, its page and settings as before.
-      val page = if (chat) i - 1 else i
       when {
-        page < 0 -> tafChat(open, act)
+        page < 0 -> tafChat(open, act, chatOff)
         page == 0 -> tafPage(open, outcome, act, openInbox, settings = { scope.launch { pager.animateScrollToPage(pager.pageCount - 1) } })
         else -> tafSettings(open, outcome, act, halt = { confirming = true })
       }
@@ -124,7 +130,7 @@ private fun ScalingLazyListScope.tafPage(
     } else {
       line(Words.Watch.nothingWaits)
     }
-    if (page.halted) resumeOnPhone(act)
+    if (page.halted) resumeOnPhone(open, act)
   }
   item { Spacer(Modifier.height(8.dp)) }
   item { Button(onClick = settings, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text("${Words.Watch.itsSettings} ›") } }
@@ -147,7 +153,7 @@ private fun ScalingLazyListScope.notReadTaf(open: WatchModel.OpenTaf, act: Actio
     WatchModel.TafRead.UpdatePhone -> line(Words.Watch.updatePhone)
     is WatchModel.TafRead.Failed -> {
       read.words?.let { line(it) }
-      item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
+      item { Button(onClick = { act.openOnPhone(onPhone(open)) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
     }
     is WatchModel.TafRead.Read -> Unit
   }
@@ -158,7 +164,7 @@ private fun ScalingLazyListScope.notReadTaf(open: WatchModel.OpenTaf, act: Actio
  * Message {taf}, Type and Quick reply. Halted, nothing is sent: Resume on your phone. Paused, the message still goes, and it
  * answers now (2A). A long answer shows its first part with Read more, read whole only on the tap. Nothing here is kept.
  */
-private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions) {
+private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions, chatOff: Boolean = false) {
   item { ListHeader { Text(open.name, textAlign = TextAlign.Center) } }
   when {
     open.halted -> Unit
@@ -185,7 +191,14 @@ private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions)
   }
   if (open.halted) {
     item { Centred(Words.Halt.Explain.halted, Look.danger) }
-    item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text("↗ ${Words.Watch.resumeOnPhone}") } }
+    item { Button(onClick = { act.openOnPhone(onPhone(open)) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text("↗ ${Words.Watch.resumeOnPhone}") } }
+    return
+  }
+  // The account's switch off (row 13): said where the send bar would be, before anything is recorded or typed, and Open on phone
+  // as an extra, never as what Send ends in.
+  if (chatOff) {
+    item { Centred(Words.Watch.askNotOn, Look.held) }
+    item { Button(onClick = { act.openOnPhone(onPhone(open)) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
     return
   }
   // The send bar, as in a phone's chat: a round keyboard and a round microphone, named for TalkBack ("Message {taf}"); the quick
@@ -200,6 +213,30 @@ private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions)
   for (line in quickReplies().take(1)) item {
     Button(onClick = { act.quickTaf(open.tafId, line) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(line, maxLines = 2) }
   }
+}
+
+/**
+ * Where a taf's chat opens: the index of what comes after its newest message (the send bar, or why nothing is sent), so that
+ * message sits just above it, as [tafChat] lays the items out.
+ */
+internal fun tafChatLatest(open: WatchModel.OpenTaf): Int {
+  var n = 1
+  if (!open.halted && (open.paused || (open.read as? WatchModel.TafRead.Read)?.page?.state != null)) n++
+  var previous: java.time.LocalDate? = null
+  fun header(at: java.time.Instant) {
+    val day = WatchChatTime.dayOf(at)
+    if (bot.tafs.watchlink.ChatTime.startsDay(previous, day)) n++
+    previous = day
+  }
+  (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.forEach { line ->
+    WatchChatTime.instantOf(line.at)?.let(::header)
+    n++
+  }
+  for (turn in open.chat.turns) {
+    header(java.time.Instant.ofEpochMilli(turn.at))
+    n += 2
+  }
+  return n
 }
 
 /** A line under a taf's name in its chat: its state, the paused line, or why nothing is sent. */
@@ -260,21 +297,21 @@ internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.
 private fun ScalingLazyListScope.tafSettings(open: WatchModel.OpenTaf, outcome: WatchModel.Outcome?, act: Actions, halt: () -> Unit) {
   item { ListHeader { Text(Words.Watch.settingsOf(open.name), textAlign = TextAlign.Center) } }
   outcome?.let { item { OutcomeCard(it, act) } }
-  item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
+  item { Button(onClick = { act.openOnPhone(onPhone(open)) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
   item { Spacer(Modifier.height(16.dp)) }
   if (open.halted) {
-    resumeOnPhone(act)
+    resumeOnPhone(open, act)
   } else {
     item { Button(onClick = halt, colors = dangerButton(), modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.haltThis) } }
   }
 }
 
 /** Halted: resuming starts only new work, and it's the phone's (it asks for a fingerprint or face). */
-private fun ScalingLazyListScope.resumeOnPhone(act: Actions) {
+private fun ScalingLazyListScope.resumeOnPhone(open: WatchModel.OpenTaf, act: Actions) {
   item {
     Text(Words.Halt.Explain.halted, color = Look.danger, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
   }
-  item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text("↗ ${Words.Watch.resumeOnPhone}") } }
+  item { Button(onClick = { act.openOnPhone(onPhone(open)) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text("↗ ${Words.Watch.resumeOnPhone}") } }
 }
 
 private fun ScalingLazyListScope.label(words: String) = item {

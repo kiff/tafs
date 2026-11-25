@@ -785,8 +785,14 @@ class TafsCloud(
     KiffClient.json.decodeFromString(WatchAskTaken.serializer(), String(send("GET", "/v1/watch/asks/" + java.net.URLEncoder.encode(id, "UTF-8")))).ask
 
   /** The watch's asks, as tafs cloud has them: those updated after [since], or in the last day. */
-  suspend fun watchAsks(since: String?): List<WatchAsk> =
-    KiffClient.json.decodeFromString(WatchAskList.serializer(), String(send("GET", "/v1/watch/asks" + (since?.let { "?since=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: "")))).asks
+  suspend fun watchAsks(since: String?): List<WatchAsk> = watchAsksRead(since).asks
+
+  /**
+   * The watch's asks, and whether chatting with a taf from the watch is on for the account (`taf_chat`, row 13): null from a tafs
+   * cloud before it, when the watch learns it from a send's refusal instead.
+   */
+  suspend fun watchAsksRead(since: String?): WatchAskList =
+    KiffClient.json.decodeFromString(WatchAskList.serializer(), String(send("GET", "/v1/watch/asks" + (since?.let { "?since=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""))))
 
   /**
    * Row 21 (docs/watch-wear.md): the watch Inbox's lines the person read and dismissed, by id alone (`GET /v1/watch/inbox`), so
@@ -1262,7 +1268,7 @@ private data class WatchAskTaken(val ask: WatchAsk)
 private data class WatchAskFull(val text: String? = null)
 
 @kotlinx.serialization.Serializable
-private data class WatchAskList(val asks: List<WatchAsk>)
+data class WatchAskList(val asks: List<WatchAsk>, @kotlinx.serialization.SerialName("taf_chat") val tafChat: Boolean? = null)
 
 /** Row 21: the watch Inbox's lines read and dismissed, by id alone, as tafs cloud keeps them. A dismissed id is never also read. */
 data class WatchInboxMarks(val read: List<String> = emptyList(), val dismissed: List<String> = emptyList())

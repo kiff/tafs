@@ -2737,6 +2737,7 @@
     <string name="watch_keep_for_later">រក្សាទុកសម្រាប់ពេលក្រោយ</string>
     <string name="watch_kept_to_send">បានរក្សាទុកនៅលើនាឡិកានេះ។ វាត្រូវបានផ្ញើនៅពេលទូរសព្ទរបស់អ្នកស្ថិតក្នុងចម្ងាយម្តងទៀត។</string>
     <string name="watch_limit">យូរបំផុត ៣០ វិនាទី</string>
+    <string name="watch_linking">កំពុងភ្ជាប់ tafs។ ទុកទូរសព្ទរបស់អ្នកនៅជិត ហើយភ្ជាប់ជានិច្ច។</string>
     <string name="watch_listening">កំពុងស្តាប់</string>
     <string name="watch_menu">ម៉ឺនុយ</string>
     <string name="watch_mic_needed">ដើម្បីសួរដោយសំឡេង សូមអនុញ្ញាតមីក្រូហ្វូនសម្រាប់ tafs នៅលើនាឡិកានេះ។</string>

@@ -223,4 +223,31 @@ class WatchLinkTest {
     val taf = String(WatchLink.encode(WatchRequest.Ask(1L, "w_7f3a9c21", "Hello", tafId = "refunds-1")).second)
     org.junit.Assert.assertTrue(taf, taf.contains("\"taf_id\":\"refunds-1\""))
   }
+
+  @Test fun aKeptAskComesBackAsThePhonePutIt() {
+    val ask = AskLine("wa_01", "w_7f3a9c21", AskLine.DONE, tafName = "Calendar", line = "Moved to six.", words = "Done", updated = "2026-11-25T01:11:00.000Z")
+    val kept = KeptAsk(now, ask)
+    assertEquals(kept, WatchLink.decodeKeptAsk(WatchLink.encodeKept(kept)))
+    assertEquals("/tafs/watch/v1/kept/ask/wa_01", WatchLink.keptAskPath("wa_01"))
+    assertEquals("wa_01", WatchLink.keptAskId(WatchLink.keptAskPath("wa_01")))
+    // Another path, or an id tafs cloud never gives, names no ask.
+    assertNull(WatchLink.keptAskId(WatchLink.KEPT_MARKS))
+    assertNull(WatchLink.keptAskId(WatchLink.KEPT_ASK + "wa 01/../x"))
+    assertNull(WatchLink.decodeKeptAsk("not json".encodeToByteArray()))
+  }
+
+  @Test fun keptMarksKeepOnlyIdsTafsCloudTakes() {
+    val kept = WatchLink.decodeKeptMarks(WatchLink.encodeKept(KeptMarks(now, read = listOf("wa_01", "bad id"), dismissed = listOf("hold_1"))))
+    assertEquals(KeptMarks(now, read = listOf("wa_01"), dismissed = listOf("hold_1")), kept)
+  }
+
+  @Test fun thePhoneNeverActsOnAKeptPath() {
+    for (path in listOf(WatchLink.keptAskPath("wa_01"), WatchLink.KEPT_MARKS)) {
+      assertEquals(WatchLink.Accepted.No(NotAccepted.UNKNOWN_PATH), WatchLink.accept(path, """{"made_at":$now}""".encodeToByteArray(), now))
+    }
+  }
+
+  @Test fun theTafChatSwitchOffIsAReplyOfItsOwn() {
+    assertEquals(WatchReply.TafChatOff, WatchLink.decodeReply(WatchLink.encodeReply(WatchReply.TafChatOff)))
+  }
 }

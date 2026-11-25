@@ -111,12 +111,21 @@ internal fun WatchPages(
   calendar: WatchModel.Reading<WatchModel.DayRead>? = null,
   /** Account's read from the phone (step vi). */
   account: WatchModel.Reading<bot.tafs.watchlink.WatchReply.AccountPage>? = null,
-  /** Today's conversation with Coach from this watch, oldest first (W4). */
+  /** Coach's conversation from this watch, oldest first (W4), kept across opens. */
   thread: List<Pair<WatchModel.Said, AskLine>> = emptyList(),
   /** The internal timing build's last link measurement (LinkTrace), drawn faint above the page dots; null elsewhere. */
   linkTrace: String? = null,
+  /** Every answered ask the watch knows, opened or not: the Inbox when it can't be kept on this watch (row 20). */
+  answered: List<AskLine> = emptyList(),
+  /** Nothing kept to show while the watch reaches the phone: the linking screen, with its tries behind it (WatchModel.linking). */
+  linking: Boolean = false,
+  /** tafs cloud said chatting with a taf isn't on for this account (row 13). */
+  tafChatOff: Boolean = false,
+  /** Answers read whole (Read more), by the ask's id. */
+  wholes: Map<String, WatchModel.Whole> = emptyMap(),
 ) {
   if (signedOutHere) return SignedOutHereScreen(act)
+  if (linking && voice == null && result == null) return LinkingScreen()
   // The system's back (a swipe from the left edge) closes what's drawn over the pages, as its own Cancel or Close does, and never
   // the app; on the pages themselves it's the system's own (backOf).
   when {
@@ -126,7 +135,7 @@ internal fun WatchPages(
     }
     result != null -> {
       BackHandler(onBack = act.closeResult)
-      return ResultScreen(result, act, timing)
+      return ResultScreen(result, act, timing, wholes[result.id])
     }
     outcome is WatchModel.Outcome.Halting -> {
       // Nothing to cancel: the phone's answer is shown when it comes.
@@ -161,7 +170,7 @@ internal fun WatchPages(
     return TafScreen(it, outcome, act, openInbox = {
       act.closeTaf()
       goTo(Page.Inbox)
-    })
+    }, chatOff = tafChatOff)
   }
   // Account is read from the phone each time it's the page shown.
   androidx.compose.runtime.LaunchedEffect(pager.currentPage) { if (pages.getOrNull(pager.currentPage) == Page.Account) act.readAccount() }
@@ -185,20 +194,26 @@ internal fun WatchPages(
         val page = pages[i]
         if (page == Page.Coach) {
           coachThread(thread, act)
-          coachHome(shown, working, ready, act, kept, inbox, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
+          // The asks at work under the microphone: those not in the conversation above, where each one's state is already drawn.
+          val inThread = thread.map { it.second.id }.toSet()
+          coachHome(shown, working.filter { it.id !in inThread }, ready, act, kept, inbox, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
         } else {
           item { ListHeader { Text(page.title) } }
         }
         outcome?.let { item { OutcomeCard(it, act) } }
+        // The watch's own tries went unanswered: what's shown stays, with one small line and Try again.
+        (shown as? WatchModel.Shown.Read)?.unreachable?.let { why -> if (page != Page.Account) unreachableLine(why, act) }
         when (page) {
           Page.Coach -> Unit
           Page.Account -> accountItems(account, act, signOut = { over = Over.SignOut })
+          // The Inbox kept on the watch shows at once, read from the phone or not.
+          Page.Inbox -> if (inbox != null) keptInboxPage(inbox, (shown as? WatchModel.Shown.Read)?.needsYou?.calls, act, openCall = { over = Over.HeldCall(it.holdId) })
+            else if (notRead(shown, act)) inboxPage(shown as WatchModel.Shown.Read, answered, act, openCall = { over = Over.HeldCall(it.holdId) })
           else -> if (notRead(shown, act)) {
             when (page) {
-              Page.Inbox -> if (inbox != null) keptInboxPage(inbox, shown as WatchModel.Shown.Read, act, openCall = { over = Over.HeldCall(it.holdId) })
-                else inboxPage(shown as WatchModel.Shown.Read, ready, act, openCall = { over = Over.HeldCall(it.holdId) })
               Page.Tafs -> { tafsPage(shown as WatchModel.Shown.Read, act); calendarDoor { over = Over.Calendar } }
               Page.Brief -> { briefPage(shown as WatchModel.Shown.Read, act); calendarDoor { over = Over.Calendar } }
+              else -> Unit
             }
           }
         }
@@ -207,8 +222,9 @@ internal fun WatchPages(
     linkTrace?.let {
       Text(it, fontSize = 8.sp, color = Look.faint, maxLines = 1, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 18.dp))
     }
-    // The last read on screen while a fresh one comes (row 44, D): one small dot at the top, named for TalkBack.
-    if ((shown as? WatchModel.Shown.Read)?.updating == true) {
+    // The last read on screen while a fresh one comes (row 44, D), or what's kept while the first comes: one small dot at the top,
+    // named for TalkBack.
+    if ((shown as? WatchModel.Shown.Read)?.updating == true || shown == WatchModel.Shown.Asking) {
       androidx.compose.foundation.layout.Box(
         Modifier.align(Alignment.TopCenter).padding(top = 6.dp).size(5.dp)
           .background(Look.dim, androidx.compose.foundation.shape.CircleShape)
@@ -275,10 +291,13 @@ private fun ScalingLazyListScope.coachHome(
   item { Button(onClick = openMenu, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.menu) } }
 }
 
-/** A page's lines before the phone has answered, or when it can't, as v1 says them. True once [shown] is the phone's read. */
+/**
+ * A page's lines before the phone has answered, or when it can't. True once [shown] is the phone's read. While it's asked, nothing:
+ * what's kept is drawn, with the dot at the top (with nothing kept, the linking screen is shown instead of the pages).
+ */
 private fun ScalingLazyListScope.notRead(shown: WatchModel.Shown, act: Actions): Boolean {
   when (shown) {
-    WatchModel.Shown.Asking -> line(Words.Watch.askingPhone)
+    WatchModel.Shown.Asking -> Unit
     WatchModel.Shown.SignedOut -> line(Words.Watch.signInOnPhone)
     is WatchModel.Shown.PhoneUnreachable -> {
       line(shown.why.line)
@@ -293,29 +312,67 @@ private fun ScalingLazyListScope.notRead(shown: WatchModel.Shown, act: Actions):
 }
 
 /**
- * The Inbox when it can't be kept on this watch (locked, or no screen lock): what the phone answered now, stored nowhere. Needs
- * you's held calls, each opening on its own screen (step vi), then each result ready to open. With nothing, what lands there.
+ * The Inbox when it can't be kept on this watch (locked, or no screen lock): what the phone answered, stored nowhere. Needs you's
+ * held calls, each opening on its own screen (step vi), then every answer the watch knows, opened ones too, so one read doesn't
+ * vanish (row 20): each its taf and its line, a tap opening it whole. With nothing, what lands there.
  */
-private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, ready: List<AskLine>, act: Actions, openCall: (bot.tafs.watchlink.HeldLine) -> Unit) {
+private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, answered: List<AskLine>, act: Actions, openCall: (bot.tafs.watchlink.HeldLine) -> Unit) {
   for (call in shown.needsYou.calls) item { HeldCallRow(call) { openCall(call) } }
-  for (ask in ready) item {
-    Card(onClick = { act.open(ask) }, modifier = Modifier.fillMaxWidth()) { Text(stateLine(ask)) }
+  for (ask in answered) item {
+    Card(onClick = { act.open(ask) }, modifier = Modifier.fillMaxWidth().testTag(INBOX_ITEM + InboxItem.askId(ask.id))) {
+      Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        ask.tafName?.let { Text(it, style = MaterialTheme.typography.titleSmall, color = Look.coach, maxLines = 1) }
+        Text((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+      }
+    }
   }
-  if (shown.needsYou.calls.isEmpty() && ready.isEmpty()) line(Words.Watch.inboxEmpty)
+  if (shown.needsYou.calls.isEmpty() && answered.isEmpty()) line(Words.Watch.inboxEmpty)
+}
+
+/** The watch's own tries went unanswered (docs/watch-wear.md, Delivery): one small line, why, and Try again; never a screen. */
+private fun ScalingLazyListScope.unreachableLine(why: LinkFailure, act: Actions) {
+  item {
+    Column(Modifier.fillMaxWidth().testTag(UNREACHABLE_LINE), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      Text(why.line, style = MaterialTheme.typography.bodySmall, color = Look.dim, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 12.dp))
+      Button(onClick = act.tryAgain, colors = neutralButton()) { Text(Words.Common.tryAgain) }
+    }
+  }
+}
+
+/**
+ * The one screen while the watch first reaches the phone, with nothing kept to show (the owner's call, after WhatsApp's own on the
+ * same watch): the tafs mark inside a ring that turns, and "Linking tafs. Keep your phone nearby and connected." The watch's tries
+ * run behind it; it replaces "Asking your phone…" and "Your phone didn't answer in time" with Try again.
+ */
+@Composable
+internal fun LinkingScreen() {
+  Column(
+    Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black).padding(horizontal = 20.dp).testTag(LINKING),
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.Center,
+  ) {
+    SpinnerAround(76.dp, Look.coach) {
+      androidx.compose.foundation.Image(
+        androidx.compose.ui.res.painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(96.dp),
+      )
+    }
+    Spacer(Modifier.height(10.dp))
+    Text(Words.Watch.linking, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+  }
 }
 
 /**
  * The Inbox kept on the watch (step iv): newest first, each line with a dot while unread, its taf and its words. An answer opens
  * its result card; a held call Needs you still holds opens whole (step vi), else it says it's already answered. Each has Dismiss;
- * Clear read takes every read line away.
+ * Clear read takes every read line away. Drawn at once from what's kept; [calls] are Needs you's, once the phone has answered.
  */
-private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, shown: WatchModel.Shown.Read, act: Actions, openCall: (bot.tafs.watchlink.HeldLine) -> Unit) {
+private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, calls: List<bot.tafs.watchlink.HeldLine>?, act: Actions, openCall: (bot.tafs.watchlink.HeldLine) -> Unit) {
   if (inbox.isEmpty()) {
     line(Words.Watch.inboxEmpty)
     return
   }
   for (entry in inbox) item {
-    val call = if (entry.kind == InboxItem.Kind.HELD) shown.needsYou.calls.firstOrNull { it.holdId == entry.ref } else null
+    val call = if (entry.kind == InboxItem.Kind.HELD) calls?.firstOrNull { it.holdId == entry.ref } else null
     // A held call Needs you still holds opens whole (step vi), where Refuse and Approve on your phone are; tapping reads the line.
     Card(onClick = { act.openItem(entry); call?.let(openCall) }, modifier = Modifier.fillMaxWidth().testTag(INBOX_ITEM + entry.id)) {
       Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -328,7 +385,7 @@ private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, shown: Wa
         }
         // An answer that was only an amount is kept blank (no amount is kept on the watch): it says the rest is on the phone.
         Text(entry.line.ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-        if (entry.kind == InboxItem.Kind.HELD) {
+        if (entry.kind == InboxItem.Kind.HELD && calls != null) {
           if (call == null) {
             Text(Words.Watch.alreadyAnswered, style = MaterialTheme.typography.bodySmall)
           } else {
@@ -390,3 +447,5 @@ private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions,
 }
 
 internal const val UPDATING = "updating"
+internal const val LINKING = "linking"
+internal const val UNREACHABLE_LINE = "unreachable-line"

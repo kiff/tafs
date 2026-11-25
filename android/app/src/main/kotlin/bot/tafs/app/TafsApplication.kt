@@ -104,9 +104,26 @@ class TafsApplication : Application() {
     )
   }
 
+  /**
+   * The process's own work, outliving any one caller: a restore or a read the watch asked for goes on here once the watch has
+   * stopped waiting, so the next ask finds it done or joins it (docs/watch-wear.md, Delivery).
+   */
+  val background: kotlinx.coroutines.CoroutineScope =
+    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate)
+
+  /**
+   * The taf chats the watch opened, kept for it as they change here (docs/watch-wear.md, Delivery): made, and following the model's
+   * threads, at the watch's first read.
+   */
+  val watchChats: bot.tafs.app.watch.WatchChats by lazy {
+    bot.tafs.app.watch.WatchChats(bot.tafs.app.watch.DataLayerKeep(this), zone = { bot.tafs.app.model.zone.id })
+      .also { it.follow(bot.tafs.app.watch.WatchChats.of(model.state), background) }
+  }
+
   private val restoring = bot.tafs.app.app.RestoreOnce(
     restore = { onScreen -> model.restore(onScreen) },
     finishOnScreen = { model.finishRestoreOnScreen() },
+    scope = background,
   )
 
   /**

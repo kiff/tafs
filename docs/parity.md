@@ -208,8 +208,8 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 8 | Keep for later | built | built | Apple Watch: on (`CoachModel.keepForLaterOn`), with the privacy page's line and the owner's yes |
 | 9 | Send, then "Coach is answering" | built | built | |
 | 10 | The answer: Hear it, and Reply | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | built | |
-| 11 | An answer you can't miss, with the app put away | built | built | Apple Watch: tafs cloud's push for a watch request wakes the iPhone, which posts the answer as W3 does (`WatchAskPush`), for a request it sent |
-| 12 | Coach as one conversation | built | built | |
+| 11 | An answer you can't miss, with the app put away | built | built | Apple Watch: tafs cloud's push for a watch request wakes the iPhone, which posts the answer as W3 does (`WatchAskPush`), for a request it sent. Wear OS: the push starts a job on the phone that keeps the answer for the watch as a Data Layer item, delivered and notified with the watch's app closed (docs/watch-wear.md, Delivery) |
+| 12 | Coach as one conversation | built | built | Wear OS: kept across put-away; across opens (30 messages, up to 20 threads with each taf's, 30 days unopened) behind `KEEP_THREADS` (on in `-test` builds) until the owner's yes and the Privacy page's line |
 | 13 | Chat with one taf | built | built | tafs cloud's switch still decides per account |
 | 14 | A taf's page and its settings | built | built | |
 | 15 | Your tafs, with their state | built | built | |
@@ -217,7 +217,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 17 | The Account page | built | built | |
 | 18 | Sign out on this watch alone | built | built | |
 | 19 | Sign in, pair a device, add a passkey, change a Card | not for it | not for it | no sign-in of its own; the keys stay on the phone |
-| 20 | The inbox kept on the watch | built | built | |
+| 20 | The inbox kept on the watch | built | built | Wear OS: only on a watch with a screen lock; without one, the Inbox lists every answer the watch knows, opened ones too |
 | 21 | The inbox's read and dismissed, in step with the phone | built (`InboxModel.sync`, `inbox_marks` / `inbox_mark`) | built (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud keeps them (`/v1/watch/inbox`), by id alone |
 | 22 | Your brief | partial | partial | built; off (`briefOnWatch`, `BRIEF_ON_WATCH`) until the owner's yes |
 | 23 | "From your watch" on the phone | built | built | |

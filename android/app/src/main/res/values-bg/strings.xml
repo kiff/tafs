@@ -2815,6 +2815,7 @@
     <string name="watch_keep_for_later">Запазване за по-късно</string>
     <string name="watch_kept_to_send">Запазено на този часовник. Изпраща се, когато телефонът ви отново е наблизо.</string>
     <string name="watch_limit">най-много 30 с</string>
+    <string name="watch_linking">Свързване на tafs. Дръжте телефона си наблизо и свързан.</string>
     <string name="watch_listening">Слушане</string>
     <string name="watch_menu">Меню</string>
     <string name="watch_mic_needed">За да питате с глас, разрешете микрофона за tafs на този часовник.</string>

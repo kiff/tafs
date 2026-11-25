@@ -33,6 +33,38 @@ data class InboxItem(
 }
 
 /**
+ * The Inbox's rules, one place for the open app ([WatchModel]) and the listener that keeps what the phone sends while it's closed
+ * ([KeptResults]).
+ */
+object InboxLines {
+  /**
+   * [item] put in [items]: a new line, unread, first; one already there keeps its place and whether it was read, with the newest
+   * words. Null when nothing changes: a line taken away ([dismissed]) never comes back.
+   */
+  fun put(items: List<InboxItem>, dismissed: Set<String>, item: InboxItem): List<InboxItem>? {
+    if (item.id in dismissed) return null
+    val before = items.firstOrNull { it.id == item.id }
+    if (before != null && before.line == item.line && before.title == item.title) return null
+    return if (before != null) items.map { if (it.id == item.id) it.copy(title = item.title, line = item.line) else it } else listOf(item) + items
+  }
+
+  /** An ended ask's line, as the watch keeps it: no amount ([bot.tafs.watchlink.Amounts]); none for a message to a taf. */
+  fun of(ask: bot.tafs.watchlink.AskLine, at: Long): InboxItem? =
+    if (!ask.ended || ask.tafChat) null
+    else InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, bot.tafs.watchlink.Amounts.strip(ask.line ?: ask.words), at)
+
+  /**
+   * The marks from tafs cloud (row 21): the lines dismissed on any watch go, and their ids join [dismissed]; the lines read on any
+   * watch are read here. Nothing is ever brought back.
+   */
+  fun marked(items: List<InboxItem>, dismissed: Set<String>, read: Set<String>, gone: Set<String>): Pair<List<InboxItem>, Set<String>> {
+    val away = items.filter { it.ref in gone }.map { it.id }
+    val next = items.filterNot { it.ref in gone }.map { if (!it.read && it.ref in read) it.copy(read = true) else it }
+    return next to (dismissed + away)
+  }
+}
+
+/**
  * Where the Inbox is kept: the watch's private preferences, or a list in a test. [dismissed] are the ids taken away (Dismiss, Clear
  * read) that the phone still lists, so a read doesn't bring them back; each goes once the phone no longer lists it.
  */

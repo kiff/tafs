@@ -15,7 +15,8 @@ import java.time.Instant
  *   brief_kind  on an alert, "brief" (Your brief is ready) or "urgent" (one that came at once, a held call's): the brief is read
  *               again with the app open; with decision, the one it's about ("hold:<id>")
  *   change      what changed (docs/approvals.md, "Live updates"): "taf", "halted", "resumed" or "knock", with taf_id; or
- *               "watch_ask", with ask_id: an ask from the Wear OS watch changed, for the phone to pass on to the watch
+ *               "watch_ask", with ask_id: an ask from the Wear OS watch changed, for the phone to pass on to the watch; or
+ *               "watch_inbox": the watch Inbox's marks changed, for the phone to pass on to the watch
  *   title,body  what an alert says
  *   open        where tapping it goes: "needs-you", "usage", or "taf" (a door's alert) with taf_id, the taf's id in tafs cloud
  *   hold_id, request_id   what the alert is about: a later alert with the same one replaces it
@@ -76,6 +77,12 @@ sealed interface Alert {
    * watch. Nothing is shown on the phone.
    */
   data class WatchAsk(val askId: String) : Alert
+
+  /**
+   * The watch Inbox's read and dismissed marks changed in tafs cloud (row 21): the phone reads them and keeps them for the watch.
+   * Nothing is shown on the phone.
+   */
+  data object WatchInbox : Alert
 }
 
 object AlertPayload {
@@ -96,6 +103,9 @@ object AlertPayload {
   /** An ask from the Wear OS watch changed: the phone passes it to the watch, and shows nothing itself. */
   const val WATCH_ASK = "watch_ask"
 
+  /** The watch Inbox's marks changed: the phone passes them to the watch, and shows nothing itself. */
+  const val WATCH_INBOX = "watch_inbox"
+
   /** Where a door's alert goes: the taf, by its id in tafs cloud. */
   fun taf(cloudId: String) = "$TAF:$cloudId"
 
@@ -109,13 +119,19 @@ object AlertPayload {
     open?.let { o -> listOf("$TAF:", "$KNOCK:").firstOrNull { o.startsWith(it) }?.let { o.removePrefix(it) } }?.takeIf { it.isNotEmpty() }
 
   /**
-   * Where the Wear OS watch's Open on phone goes (docs/watch-wear.md): `tafs://open/needs-you` opens Needs you. Anything else,
-   * or a link that isn't the watch's, opens nothing.
+   * Where the Wear OS watch's Open on phone goes (docs/watch-wear.md): `tafs://open/needs-you` opens Needs you, and
+   * `tafs://open/taf/{id}` that taf's chat. Anything else, or a link that isn't the watch's, opens the app as it is.
    */
-  fun openedFromWatch(link: String?): String? = when (link) {
-    "tafs://open/$NEEDS_YOU" -> NEEDS_YOU
+  fun openedFromWatch(link: String?): String? = when {
+    link == "tafs://open/$NEEDS_YOU" -> NEEDS_YOU
+    // A taf's chat on the watch (row 28): that taf, by the id the phone gave the watch, opened on its chat.
+    link != null && link.startsWith(WATCH_TAF) -> link.removePrefix(WATCH_TAF).takeIf { WATCH_TAF_ID.matches(it) }?.let(::taf)
     else -> null
   }
+
+  /** The watch's Open on phone for a taf's chat: `tafs://open/taf/{id}`, the phone's own id for the taf. */
+  private const val WATCH_TAF = "tafs://open/taf/"
+  private val WATCH_TAF_ID = Regex("^[A-Za-z0-9_.:-]{1,128}$")
 
   /** Whether a destination opens its taf on Activity: a door's knock does, as the knocks are answered there. */
   fun opensActivity(open: String?): Boolean = open?.startsWith("$KNOCK:") == true
@@ -140,6 +156,7 @@ object AlertPayload {
     return when (data["kind"]) {
       "answered" -> if (tag.isEmpty()) null else Alert.Clear(tag)
       "background" -> if (data["change"] == WATCH_ASK) data["ask_id"]?.takeIf(String::isNotBlank)?.let { Alert.WatchAsk(it) }
+        else if (data["change"] == WATCH_INBOX) Alert.WatchInbox
         else data["change"]?.takeIf { it in CHANGES }?.let { Alert.Changed(it, data["taf_id"]?.takeIf(String::isNotBlank)) }
       "alert" -> {
         val tafId = data["taf_id"]?.takeIf { it.isNotBlank() }
