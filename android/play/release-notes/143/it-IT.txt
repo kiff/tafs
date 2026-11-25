@@ -1,3 +1,3 @@
 • Su un tablet, ogni pagina è una colonna centrata, come sull'iPad.
 • Il tuo orologio Wear OS riceve le risposte di Coach e dei tuoi taf anche quando tafs è chiuso sul telefono.
-• «Consenti da ora in poi» controlla ogni condizione della modifica della Card prima che la tua impronta la approvi.
+• «Consenti d'ora in poi» controlla ogni condizione della modifica della Card prima che la tua impronta la approvi.
