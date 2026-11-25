@@ -876,6 +876,12 @@ screen is as before.
   Anything else is a mismatch: a per-call cap, extra room, a measure, another window, a second aggregate, an environment or
   resources, a Card or an action on one side only, a tool listed twice, or a limit or `asks` that differs. On a mismatch
   there's no button, and the step says it changed (`Words.Version.outOfDateCard`).
+- **The tools batch signed with it** (`POST /v1/connections/batch`) is held to the step too (`CardStepCheck.batchMatches`).
+  Each connection must be one of the step's tools (its `name` the tool's), connected as Coach's own control server at this
+  app's tafs cloud: `url` and `audience` are both `/v1/mcp` on the address the app reads tafs cloud at (`AppModel.coachMCP`),
+  with `control: true` and `mode: verify`. Its keys are only those tafs cloud writes, with `read_only` and `replace` only
+  as true. Anything else, a tool twice, or an empty batch signs nothing. That holds at the first start (with the Cards'
+  check) and at a later approval once tafs cloud marks the step's data (`CoachTools.batchSigns`).
 - **Only what it showed is sent.** At the tap, before Face ID, the check runs again (`giveCoachTools`). After Face ID,
   `startSetup` reads the start again and sends it only if its requests are byte for byte the ones shown and their list still
   matches. Otherwise nothing is sent, and the step is drawn again from the new read.

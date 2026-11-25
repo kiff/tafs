@@ -1,0 +1,1 @@
+- **Coach's tools batch is held to the Card step on iPhone and iPad:** the one approval that gives Coach its Cards also connects its tools. Every connection must now be one of the tools the step shows, connected as Coach's own server at the app's tafs cloud, or nothing is signed ([docs/ios-app.md](docs/ios-app.md#the-card-step)).

@@ -2596,6 +2596,14 @@ final class TafsCloud {
             return CardStepCheck.matches(step: step, draft: draft.body, agent: agentID)
         }
 
+        /// Whether the tools batch signed with it (when there is one) connects only the step's tools, as Coach's own control
+        /// server at this app's tafs cloud (`mcp`): false, and nothing is signed.
+        func batchSigns(mcp: String) -> Bool {
+            guard let connect else { return true }
+            guard let step else { return false }
+            return CardStepCheck.batchMatches(step: step, batch: connect.body, mcp: mcp)
+        }
+
         /// What the tools step draws for it: its words, the batch's lines, and what's to give.
         var tools: CoachTools {
             var t = CoachTools()
@@ -2678,6 +2686,38 @@ final class TafsCloud {
         static func matches(step: CoachTools.Step, draft: Data, agent: String) -> Bool {
             guard let shown = shown(step), let signed = signed(draft, agent: agent) else { return false }
             return !shown.isEmpty && shown == signed
+        }
+
+        private static let connectionKeys: Set<String> = ["name", "url", "tool", "mode", "audience", "control", "idempotency_argument", "read_only", "replace"]
+
+        /// The tools batch the same approval signs (`POST /v1/connections/batch`), held to the step: each connection is one of
+        /// the step's tools (its `name` the tool's), connected as Coach's own control server at this app's tafs cloud (`url` and
+        /// `audience` both `mcp`, `control: true`, `mode: verify`), with only the keys tafs cloud writes (`read_only` and
+        /// `replace` only as true). Anything else, a tool twice, or an empty batch is a mismatch, and nothing is signed.
+        static func batchMatches(step: CoachTools.Step, batch: Data, mcp: String) -> Bool {
+            let tools = Set(step.groups.flatMap { $0.tools.compactMap { $0.tool?.lowercased() } })
+            guard !tools.isEmpty, !mcp.isEmpty,
+                  let body = (try? JSONSerialization.jsonObject(with: batch)) as? [String: Any], Set(body.keys) == ["connections"],
+                  let connections = body["connections"] as? [Any], !connections.isEmpty else { return false }
+            var seen = Set<String>()
+            for item in connections {
+                guard let c = item as? [String: Any], Set(c.keys).isSubset(of: connectionKeys),
+                      let tool = c["tool"] as? String, c["name"] as? String == tool, tools.contains(tool.lowercased()),
+                      seen.insert(tool.lowercased()).inserted,
+                      c["url"] as? String == mcp, c["audience"] as? String == mcp,
+                      c["mode"] as? String == "verify", flag(c["control"]) == true,
+                      let op = c["idempotency_argument"] as? String, !op.isEmpty else { return false }
+                for key in ["read_only", "replace"] where c[key] != nil {
+                    guard flag(c[key]) == true else { return false }
+                }
+            }
+            return true
+        }
+
+        /// A JSON boolean as it came, never a number read as one.
+        private static func flag(_ value: Any?) -> Bool? {
+            guard let n = value as? NSNumber, CFGetTypeID(n) == CFBooleanGetTypeID() else { return nil }
+            return n.boolValue
         }
 
         /// What the step shows as signed by this draft, one entry per tool (those `in_draft`, or every one from a tafs cloud
@@ -2838,8 +2878,20 @@ final class TafsCloud {
         /// tafs cloud that doesn't mark them, where KIFF's own words are what's shown as signed.
         var draftSigns: Bool {
             guard let draftBody else { return true }
-            guard let step, step.groups.contains(where: { $0.tools.contains { $0.inDraft != nil } }) else { return true }
+            guard let step, marksDraft else { return true }
             return CardStepCheck.matches(step: step, draft: draftBody, agent: "")
+        }
+
+        /// tafs cloud says which tools a draft carries (`in_draft`): the step's data is there to compare with.
+        var marksDraft: Bool { step?.groups.contains(where: { $0.tools.contains { $0.inDraft != nil } }) == true }
+
+        /// The tools batch this read asks to sign (on its own, or in the pair), held to the step as the first start's is
+        /// (`CardStepCheck.batchMatches`), once tafs cloud marks the step's data. True with no batch, and from a tafs cloud
+        /// that doesn't mark it.
+        func batchSigns(mcp: String) -> Bool {
+            guard let batch = connect?.body ?? together?.connect?.body else { return true }
+            guard let step, marksDraft else { return true }
+            return CardStepCheck.batchMatches(step: step, batch: batch, mcp: mcp)
         }
 
         /// Read from `GET /v1/setup`'s answer; nil from a tafs cloud that sends no `tools`.
