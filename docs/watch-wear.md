@@ -191,7 +191,7 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   hears an answer as "Coach: …"; a turn at work is heard as its state line alone, which already names Coach. **One
   conversation, kept:** put away (the screen off, the keyboard's own screen, another app) it stays, and so do a taf's chat
   open and a review's words (`WatchModel.putAway`; a review's recording is erased); on either sign-out it goes. With
-  `KEEP_THREADS` on (a `-test` build, until the owner's yes and the Privacy page's line) it's also kept on the watch across
+  `KEEP_THREADS` on (every release build from 0.4.8; a `-test` build before) it's also kept on the watch across
   opens (`watch-threads.bin`, encrypted, "What the watch keeps"), as each taf's chat opened here is; off, it lives in memory while the app runs. **Send goes back to it:** the words
   are the newest turn at once, with "HH:mm ✓" beside them, then tafs cloud's state once Coach is at it, and the answer lands under them in
   the thread, whole however many lines (the owner's Watch 5 test: it was cut at five lines), as in a chat; the result card no
@@ -424,6 +424,12 @@ counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the tw
 foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" and the page back on the microphone after a
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
 to production only **after 0.4.0's review passes**, so the review isn't restarted.
+
+**400,000,013 (0.4.8)** is the owner's eight calls after their Galaxy Watch 5 test (kiff/tafs#2021): the chats kept on the
+watch and opened at once, answers pushed through the phone with the app closed, a taf's chat that sends from the watch, Read
+more, and no manual Try again. It turns `KEEP_THREADS` on in every release build, now that the Privacy page's line for watch
+threads is live. To `wear:internal` on merge, with its notes in the listing's 11 languages; with it, the phone's Android 143
+(1.49.0) carries the phone's side.
 
 **400,000,012 (0.4.7)** closes a gap found live in 0.4.6: a message kept for later is deleted, unsent, once the watch has no
 screen lock, checked when the app starts, opens or is put away (`WatchModel.checkLock`, #1943), as the Inbox's lines are. A
@@ -702,7 +708,7 @@ watch doesn't know is shown as Open on phone, never guessed at.
     Where the Inbox can't be kept (no screen lock), the Inbox page shows every answer the watch knows, opened ones too, so one
     read doesn't vanish (row 20), and held calls as Needs you has them.
   - `watch-threads.bin` (`KeptThreadStore`), encrypted at rest as the Inbox and the cache are (AES-GCM under the Keystore key;
-    what won't decrypt reads as none and is cleared), only with `KEEP_THREADS` on (a `-test` build, or `TAFS_WATCH_THREADS=1`; off in production until the
+    what won't decrypt reads as none and is cleared), only with `KEEP_THREADS` on (every release build from 0.4.8; before it, a `-test` build, or `TAFS_WATCH_THREADS=1`; off in production until the
     owner's yes and the Privacy page's line), as the Apple Watch keeps them: **the last 30 messages of each of up to 20 threads
     opened on the watch**, Coach's and each taf's (`KeptThreads`, `MESSAGES_MAX`, `THREADS_MAX`), text only with amounts
     stripped (`Amounts.strip`): the phone's lines of a taf's chat, and what was said from the watch with its ask's state and

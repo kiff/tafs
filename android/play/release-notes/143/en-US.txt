@@ -1,0 +1,3 @@
+• On a tablet, each page is one centred column, as on the iPad.
+• Your Wear OS watch gets Coach's and your tafs' answers even when tafs is closed on your phone.
+• "Allow this from now on" checks every term of the Card change before your fingerprint approves it.

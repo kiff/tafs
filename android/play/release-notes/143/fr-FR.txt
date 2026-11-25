@@ -1,0 +1,3 @@
+• Sur une tablette, chaque page est une colonne centrée, comme sur l'iPad.
+• Votre montre Wear OS reçoit les réponses de Coach et de vos tafs même quand tafs est fermé sur votre téléphone.
+• « Autoriser désormais » vérifie chaque condition du changement de Card avant que votre empreinte ne l'approuve.
