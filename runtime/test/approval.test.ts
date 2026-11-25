@@ -2682,7 +2682,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     unagreed.rules("rules-1", RULES, false);
     expect(await check(unagreed.w, { conversation: events(unagreed.w) })).toMatchObject({ outcome: "answered", code: "rules_unagreed", redraft: true });
     const unsaid = await setUp("refuse");
-    (unsaid.s.drafts.drf_1.cards as Array<{ aggregates: unknown[] }>)[0]!.aggregates = [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }];
+    Object.assign((unsaid.s.drafts.drf_1.cards as Array<Record<string, unknown>>)[0]!, { domain: "gateway", aggregates: [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }] });
     unsaid.rules("rules-1", [{ tool: "refund_charge", over: "refuse", limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }] }, { tool: "list_charges", over: "refuse" }], true, "Refunds only refunds charges.");
     expect(await check(unsaid.w, { conversation: events(unsaid.w) })).toMatchObject({ outcome: "answered", code: "rules_unsaid", redraft: true });
     // No rules shown, where they're required: refused with the conversation, ok without it (as before).
@@ -2935,7 +2935,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     /** The refund Card with a cap on each refund and the day's total, and what else it carries. */
     function setFigures(s: ReturnType<typeof services>, max: number, aggregates: unknown[]) {
       s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
-        { id: "c1", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max }] }], aggregates },
+        { id: "c1", subject: "refunds-x", domain: "gateway", on_exceed: "refuse", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max }] }], aggregates },
         { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }] };
     }
     const dayTotal = (limit: number) => ({ quantity: "sum(amount)", window: "calendar_day", limit });
@@ -2979,8 +2979,8 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     it("a limit the owner never agreed, in any window, is refused, and Coach hears the Cards the rules give", async () => {
       const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
       const cards = (held: unknown[]) => [
-        { id: "c1", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: held },
-        { id: "c1b", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
+        { id: "c1", subject: "refunds-x", domain: "gateway", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: held },
+        { id: "c1b", subject: "refunds-x", domain: "gateway", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
         { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }];
       const hour = await setUp("refuse");
       hour.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards([{ quantity: "sum(amount)", window: "rolling_1h", limit: 5000 }]) };
@@ -3004,8 +3004,8 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
       const two = await setUp("refuse");
       two.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
-        { id: "c1", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [KIFFS_COUNT] },
-        { id: "c1b", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
+        { id: "c1", subject: "refunds-x", domain: "gateway", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [KIFFS_COUNT] },
+        { id: "c1b", subject: "refunds-x", domain: "gateway", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
         { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }] };
       two.rules("rules-1", split);
       expect(await two.tap()).toMatchObject({ outcome: "sign" });

@@ -362,30 +362,57 @@ function moneyCardsOf(rule: AgreedRule, action: string, agent: string): MoneyCar
 
 /**
  * The first money tool whose drafted Cards aren't the ones its agreed rules give (cardsFromRules), or whose rules give
- * none: every Card covering it, compared on what limits it (each grant's action and `per_action_max`, the aggregates'
- * quantity, limit, window and per, and `on_exceed`, which KIFF reads as "owner" when unsaid), in any order, ids and
- * the rest aside. A Card over this tool and another is never one the rules give. Undefined when every one matches.
+ * none: every Card covering it, in any order, ids and titles aside. Compared on an allowlist, failing closed: a Card
+ * with any other field, or another subject or domain, isn't one the rules give, whatever it limits (a field the check
+ * didn't read could widen it: a total's extra room raises its ceiling, its measure changes what it counts, and KIFF
+ * checks a money tool's amounts only on a Card in a domain). A Card over this tool and another isn't either. Undefined
+ * when every one matches.
  */
 export function moneyCardsOff(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[], agent: string): MoneyCards | undefined {
   for (const m of cardsFromRules(grants, rules, agent)) {
     if ("unbuilt" in m) return m;
     const name = fold(m.action);
-    const drafted = cards.filter((raw) => covers(raw, name)).map(limitsKey).sort();
-    const built = m.cards.map(limitsKey).sort();
-    if (drafted.length !== built.length || drafted.some((k, i) => k !== built[i])) return m;
+    const drafted = cards.filter((raw) => covers(raw, name)).map((c) => limitsKey(c, agent));
+    const built = m.cards.map((c) => limitsKey(c, agent));
+    if (drafted.some((k) => k === undefined)) return m;
+    const [a, b] = [(drafted as string[]).sort(), (built as string[]).sort()];
+    if (a.length !== b.length || a.some((k, i) => k !== b[i])) return m;
   }
   return undefined;
 }
 
-/** What limits a Card, as one string: the same for the same terms, whatever their order. */
-function limitsKey(raw: unknown): string {
-  const card = (raw ?? {}) as { grants?: unknown; aggregates?: unknown; on_exceed?: unknown };
-  const trim = (v: unknown) => (typeof v === "string" ? v.trim() : JSON.stringify(v ?? null));
-  const list = (v: unknown) => (Array.isArray(v) ? v : []) as Array<Record<string, unknown>>;
-  const grants = list(card.grants).map((g) => JSON.stringify([fold(g.action),
-    list(g.per_action_max).map((c) => `${trim(c.quantity)}|${JSON.stringify(c.max ?? null)}`).sort()])).sort();
-  const aggregates = list(card.aggregates).map((a) => `${trim(a.quantity)}|${JSON.stringify(a.limit ?? null)}|${fold(a.window)}|${fold(a.per)}`).sort();
-  return JSON.stringify([grants, aggregates, card.on_exceed === undefined ? "owner" : card.on_exceed]);
+/** The fields a money tool's drafted Card may have: the built Cards' own, and a title, which limits nothing. */
+const CARD_FIELDS = new Set(["id", "title", "subject", "domain", "grants", "aggregates", "on_exceed"]);
+const GRANT_FIELDS = new Set(["action", "per_action_max"]);
+const CAP_FIELDS = new Set(["quantity", "max"]);
+const TOTAL_FIELDS = new Set(["quantity", "limit", "window", "per", "measure"]);
+
+/**
+ * What limits a Card, as one string, the same for the same terms whatever their order; undefined for a Card with a
+ * field the allowlist doesn't name, a subject other than `agent`, a domain other than "gateway", an `on_exceed` other
+ * than "owner" or "refuse" (unsaid is "owner", as KIFF reads a new Card's), or a total's `measure` other than KIFF's
+ * default for its quantity (calls count attempts, amounts count effects).
+ */
+function limitsKey(raw: unknown, agent: string): string | undefined {
+  const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+  const within = (v: unknown, fields: ReadonlySet<string>): v is Record<string, unknown> => isObject(v) && Object.keys(v).every((k) => fields.has(k));
+  if (!within(raw, CARD_FIELDS) || raw.subject !== agent || raw.domain !== "gateway") return undefined;
+  if (raw.on_exceed !== undefined && raw.on_exceed !== "owner" && raw.on_exceed !== "refuse") return undefined;
+  if (!Array.isArray(raw.grants) || !Array.isArray(raw.aggregates)) return undefined;
+  const grants: string[] = [];
+  for (const g of raw.grants) {
+    if (!within(g, GRANT_FIELDS) || typeof g.action !== "string") return undefined;
+    const caps = g.per_action_max === undefined ? [] : g.per_action_max;
+    if (!Array.isArray(caps) || !caps.every((c) => within(c, CAP_FIELDS))) return undefined;
+    grants.push(JSON.stringify([fold(g.action), (caps as Array<Record<string, unknown>>).map((c) => JSON.stringify([c.quantity, c.max])).sort()]));
+  }
+  const totals: string[] = [];
+  for (const a of raw.aggregates) {
+    if (!within(a, TOTAL_FIELDS) || typeof a.quantity !== "string") return undefined;
+    if (a.measure !== undefined && a.measure !== (a.quantity.trim() === "count" ? "attempts" : "effects")) return undefined;
+    totals.push(JSON.stringify([a.quantity, a.limit, a.window, a.per ?? null]));
+  }
+  return JSON.stringify([grants.sort(), totals.sort(), raw.on_exceed ?? "owner"]);
 }
 
 /**

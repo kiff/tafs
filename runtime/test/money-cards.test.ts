@@ -159,9 +159,27 @@ describe("a draft's money Cards are the built ones, compared on what limits them
   const ok = (cards: unknown[]) => expect(moneyCardsOff([stripe], [readsCard, ...cards], RULES.rules1, AGENT)).toBeUndefined();
   const off = (cards: unknown[]) => expect(moneyCardsOff([stripe], [readsCard, ...cards], RULES.rules1, AGENT)).toMatchObject({ action: "create_refund", cards: [REFUSED, HELD] });
 
-  it("ids, order, subject and fields that limit nothing aside", () => {
+  it("ids, order and a title aside, and a measure only as KIFF's default for its quantity", () => {
     ok([{ ...HELD, id: "h" }, { ...REFUSED, id: "r" }]);
-    ok([{ ...REFUSED, title: "Refunds", aggregates: [{ ...REFUSED.aggregates[0], measure: "effects" }] }, HELD]);
+    ok([{ ...REFUSED, title: "Refunds", aggregates: [{ ...REFUSED.aggregates[0], measure: "effects" }] },
+      { ...HELD, aggregates: [{ ...HELD.aggregates[0], measure: "attempts" }] }]);
+  });
+
+  // A field the comparison doesn't read could widen a Card: compared on an allowlist, failing closed.
+  it("any field it doesn't name, another subject or domain, or another measure is refused", () => {
+    off([{ ...REFUSED, aggregates: [{ ...REFUSED.aggregates[0], extra_room: [{ amount: 10000 }] }] }, HELD]);
+    off([{ ...REFUSED, aggregates: [{ ...REFUSED.aggregates[0], measure: "attempts" }] }, HELD]);
+    off([REFUSED, { ...HELD, aggregates: [{ ...HELD.aggregates[0], measure: "effects" }] }]);
+    off([{ ...REFUSED, subject: "another-agent" }, HELD]);
+    off([{ ...REFUSED, subjects: [AGENT, "another-agent"] }, HELD]);
+    const { domain: _, ...noDomain } = REFUSED;
+    off([noDomain, HELD]);
+    off([{ ...REFUSED, domain: "stripe" }, HELD]);
+    off([REFUSED, { ...HELD, environment: "test" }]);
+    off([REFUSED, { ...HELD, hold_expiry: "720h" }]);
+    off([REFUSED, { ...HELD, grants: [{ ...HELD.grants[0], resources: { parameter: "charge", values: ["ch_1"] } }] }]);
+    off([REFUSED, { ...HELD, grants: [{ ...HELD.grants[0], per_action_max: [{ quantity: "sum(amount)", max: 5000, unit: "EUR" }] }] }]);
+    off([REFUSED, { ...HELD, on_exceed: "keep" }]);
   });
 
   it("on_exceed unsaid is owner, as KIFF reads a new Card's", () => {
