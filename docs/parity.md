@@ -159,7 +159,7 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | done (tafs#1859) | done (tafs#1761) | android-app.md, ios-app.md, "Pairing a Chrome" |
 | 15 | A re-pairing after a reinstall starts on the one Chrome alike | done (tafs#1780) | done (tafs#1781) | chrome.md, "Your Chrome" 1 |
 | 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | held by the owner's decision: no passwords go through the extension (built on a branch, not opened) | built and off, and stays off by the same decision (tafs#1830, #1837, tafs#1882) | chrome.md, "The phone's release card" |
-| 17 | Delete a Coach conversation for good (`DELETE /v1/tafs/{id}/chats/{session}`, tafs cloud's words in each chats-list read's `delete`; the 409's `error`) | done for iOS 1.0.1 (`AppModel.deleteSetupChat`; only in tafs cloud's words, no stand-ins) | done (`AppModel.deleteCoachChat`; the watch's copy put empty) | android-app.md, "Deleting a conversation" |
+| 17 | Delete a Coach conversation for good (`DELETE /v1/tafs/{id}/chats/{session}`, tafs cloud's words in each chats-list read's `delete`; the 409's `error`) | not yet (iOS follows) | done (`AppModel.deleteCoachChat`; the watch's copy put empty) | android-app.md, "Deleting a conversation" |
 
 ## Your Chrome
 
