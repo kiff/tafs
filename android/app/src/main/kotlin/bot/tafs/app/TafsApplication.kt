@@ -106,9 +106,16 @@ class TafsApplication : Application() {
       // Signed out: the watch forgets the account, now or when it's next in reach (docs/watch-wear.md, "What the watch keeps").
       model.watchSignedOut = { mark ->
         watchChats.forget()
+        watchTafs.forget()
         background.launch { bot.tafs.app.watch.WatchSignedOut.of(this@TafsApplication).tell(mark) }
       }
     }
+  }
+
+  /** The taf list, kept for the watch as it changes ([bot.tafs.app.watch.WatchTafs]), once the watch has used tafs. */
+  val watchTafs: bot.tafs.app.watch.WatchTafs by lazy {
+    bot.tafs.app.watch.WatchTafs(bot.tafs.app.watch.DataLayerKeep(this), mark = { model.watchMark() })
+      .also { it.follow(model.state, background) }
   }
 
   /**
