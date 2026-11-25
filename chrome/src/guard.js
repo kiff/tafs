@@ -1,6 +1,7 @@
 // The extension's own check of an act on the page it was planned from (docs/chrome.md, "The guard"). planque refuses the
-// same steps first (internal/browser Refuse); this holds even if planque didn't. A fill of a secret field, a click that pays
-// or places an order, any click on a checkout or payment page, and a ref the page lacks are refused, and nothing runs.
+// same steps first (internal/browser Refuse); this holds even if planque didn't. A fill of a secret field, a click that pays,
+// places an order or sends money out, any click on a checkout or payment page, and a ref the page lacks are refused, and nothing
+// runs.
 
 export const CODE = Object.freeze({
   paymentStep: "payment_step",
@@ -30,12 +31,43 @@ export const PAY_WORDS = new RegExp(
   "i",
 );
 
+/**
+ * A control or link whose whole label sends money out (a refund, a payout, a transfer, a withdrawal), in the same languages,
+ * with at most an amount after it ("Refund €50.00"). A label that only mentions it ("Refund policy", "Transfer history") isn't
+ * one. On a merchant's console these are how money leaves an account outside any Card, so a taf clicks none of them, as it
+ * pays nothing.
+ */
+export const MONEY_OUT = new RegExp(
+  "^\\s*(" +
+    // en
+    "(issue |send |make )?(a )?refunds?( (payment|order|charge|now))?|pay ?outs?|send payout|(make |send )?(a )?(bank )?transfers?( (funds|money|now))?|transfer (funds|money)|withdraw( (funds|money|now))?|send money|wire( (funds|money|transfer))?|" +
+    // fr
+    "rembourser|(émettre|effectuer) (un |le )?remboursement|virer|(effectuer|faire) (un |le )?virement|retirer( des fonds)?|envoyer (de l'|l')argent|" +
+    // de
+    "(rück)?erstatten|rückerstattung( veranlassen| ausführen)?|überweisen|überweisung( ausführen| senden)?|auszahlen|auszahlung( veranlassen)?|abheben|geld senden|" +
+    // es
+    "reembolsar|(emitir|hacer) (un |el )?reembolso|transferir( fondos| dinero)?|hacer (una )?transferencia|retirar( fondos| dinero)?|enviar dinero|" +
+    // it
+    "rimborsa|(emetti|effettua) (il |un )?rimborso|trasferisci( fondi| denaro)?|(effettua|esegui) (il |un )?bonifico|preleva|invia denaro|" +
+    // nl
+    "terugbetalen|terugbetaling (doen|uitvoeren)|overmaken|uitbetalen|geld (overmaken|versturen|opnemen)|" +
+    // pt
+    "reembolsar|(emitir|fazer) (o |um )?reembolso|transferir|fazer (uma )?transferência|sacar|enviar dinheiro" +
+    ")[^\\p{L}]*$",
+  "iu",
+);
+
+/** Whether a label pays or places an order (`PAY_WORDS`) or sends money out (`MONEY_OUT`). */
+export function moves(label) {
+  return PAY_WORDS.test(label || "") || MONEY_OUT.test(label || "");
+}
+
 export function secret(field) {
   return field.kind === "password" || field.kind === "card" || field.kind === "code";
 }
 
 export function pays(control) {
-  return control.places_order === true || PAY_WORDS.test(control.label || "");
+  return control.places_order === true || moves(control.label);
 }
 
 export function payment(page) {
@@ -86,7 +118,7 @@ export function refuse(page, act) {
   if (act.kind === "click") {
     const control = (page.controls || []).find((c) => c.ref === act.ref);
     if (control) {
-      if (pays(control)) return { code: CODE.paymentStep, why: "that click would pay or place an order; only a pay held for the owner may" };
+      if (pays(control)) return { code: CODE.paymentStep, why: "that click would pay, place an order or send money out; only a pay held for the owner may" };
       if (page.checkout || payment(page)) return { code: CODE.paymentStep, why: "on a checkout or payment page a taf clicks no control" };
       return null;
     }
@@ -94,7 +126,7 @@ export function refuse(page, act) {
     if (link) {
       // A link whose words pay is refused as a control would be. On a checkout or payment page no link is followed at
       // all: neither its URL nor its words can prove that following it places no order (a GET to /place-order).
-      if (PAY_WORDS.test(link.label || "")) return { code: CODE.paymentStep, why: "that link's words pay or place an order" };
+      if (moves(link.label)) return { code: CODE.paymentStep, why: "that link's words pay, place an order or send money out" };
       if (page.checkout || payment(page)) return { code: CODE.paymentStep, why: "on a checkout or payment page a taf follows no link" };
       return null;
     }

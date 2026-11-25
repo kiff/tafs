@@ -383,7 +383,7 @@ error = {code, detail?}      // detail never carries page text
 | `bad_url` | not `https`, user info in the URL, or not a URL |
 | `address_private` | an IP address (in any form a browser reads), or a local name (`.local`, `.internal`, …) |
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
-| `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
+| `site_blocked` | Chrome's own pages, the Web Store, Google's account pages and KIFF's own (kiff.dev and its subdomains: a taf never drives the controls it's held by), always. Also a sensitive site (a bank, wallet, password manager, payment, merchant console, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
 | `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since. Also a page in a joined tab its run's work never reached (0.2.15) |
 | `given_back` | the person moved the tab the run was on, one of theirs it joined (0.2.15) or one of the run's own (0.2.16): their Back or Forward, an address, a reload, their own click, a navigation the fence stopped. The tab was given to them as it is: the run's next read, act or hand-over, until it opens a page, in a tab of its own; also an act whose wait the person's move ended |
 | `no_back` | a `back` in a tab of the run's own with no page before in the run's trail for it, and any `back` in a joined tab (0.2.15) |
@@ -391,7 +391,7 @@ error = {code, detail?}      // detail never carries page text
 | `disabled` | the page made the element unusable (0.2.20): disabled, a disabled fieldset's included (`:disabled`), inside an `inert` part of the page, or `aria-disabled="true"` on it or around it; a fill of a read-only text field or text area; a choice of a list that's disabled, or in a disabled group (no change is told) |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
 | `secret_field` | a fill of a password or one-time-code field with a plain value, or a sealed value into a field its part doesn't fit |
-| `payment_step` | a fill of a card field, a click whose words or semantics pay or place an order, or any click on a checkout or payment page |
+| `payment_step` | a fill of a card field, a click whose words or semantics pay or place an order, a control or link whose whole label sends money out (a refund, a payout, a transfer or a withdrawal, `MONEY_OUT`), or any click on a checkout or payment page (one with any of those controls counts as one) |
 | `dialog_open` | the page raised a dialog since the read |
 | `paused_by_owner`, `paused_failures`, `paused_no_progress`, `stopped` | the run is paused or stopped |
 | `page_unresponsive`, `browser_unavailable` | the page didn't answer in 20 s, or Chrome failed |

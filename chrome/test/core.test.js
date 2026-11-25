@@ -2,11 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
-import { refuseURL, bareURL, sensitive, siteOK, asideRefusal, mailHost } from "../src/sites.js";
+import { refuseURL, bareURL, sensitive, siteOK, asideRefusal, mailHost, NEVER_OPENED } from "../src/sites.js";
 import { readForCoach } from "../src/asideread.js";
 import { signedSitesOf } from "../src/protocol.js";
 import { readConnections } from "../src/relay.js";
-import { refuse, PAY_WORDS, KINDS } from "../src/guard.js";
+import { refuse, PAY_WORDS, MONEY_OUT, KINDS } from "../src/guard.js";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { parseCode } from "../src/pairing.js";
@@ -87,6 +87,17 @@ test("Chrome's own pages are never opened, and sensitive sites only when allowed
   assert.equal(refuseURL("https://www.paypal.com/", ["paypal.com"]).code, "site_blocked");
   assert.equal(refuseURL("https://www.paypal.com/", ["paypal.com"], ["paypal.com"]), null, "allowed by name");
   assert.equal(refuseURL("https://online.bank.example/", ["bank.example"]).code, "site_blocked", "a bank by its name");
+  // KIFF's own sites: never, even granted and allowed by name. A taf never drives the controls it's held by.
+  for (const url of ["https://kiff.dev/", "https://www.kiff.dev/cards", "https://api.kiff.dev/v1/me", "https://planque.kiff.dev/", "https://cloud.tafs.kiff.dev/v1/tafs", "https://KIFF.dev./"]) {
+    assert.equal(refuseURL(url, ["kiff.dev"], ["kiff.dev"]).code, "site_blocked", url);
+  }
+  assert.ok(NEVER_OPENED.includes("kiff.dev"), "Chrome's fence holds it too");
+  assert.equal(refuseURL("https://notkiff.dev/", ["notkiff.dev"]), null, "only kiff.dev and its subdomains");
+  // A merchant's console: blocked unless the phone allowed it by name.
+  assert.equal(refuseURL("https://dashboard.stripe.com/payments", ["stripe.com"]).code, "site_blocked");
+  assert.equal(refuseURL("https://dashboard.stripe.com/payments", ["stripe.com"], ["stripe.com"]), null, "allowed by name");
+  assert.equal(sensitive("vendors.paddle.com"), true);
+  assert.equal(sensitive("notstripe.com"), false);
   assert.equal(sensitive("www.impots.gouv.fr"), true);
   assert.equal(sensitive("bank.example.com"), true);
   assert.equal(sensitive("www.gov.uk"), true);
@@ -186,6 +197,29 @@ test("the extension's guard refuses what planque's does", () => {
   for (const words of ["Pay now", "Commander", "Jetzt kaufen", "Finalizar compra", "Acquista ora", "Afrekenen", "Fazer pedido"]) {
     assert.ok(PAY_WORDS.test(words), words);
   }
+});
+
+test("a control or link that sends money out (a refund, a payout, a transfer, a withdrawal) is refused, one that only mentions it isn't", () => {
+  for (const words of ["Refund", "Refund €50.00", "Issue refund", "Refund payment", "Pay out", "Payouts", "Transfer funds", "Withdraw",
+    "Send money", "Rembourser", "Effectuer un virement", "Rückerstattung veranlassen", "Überweisen", "Auszahlen", "Reembolsar",
+    "Enviar dinero", "Effettua bonifico", "Overmaken", "Uitbetalen", "Fazer transferência", "  refund  ", "REFUND 12,50 $"]) {
+    assert.ok(MONEY_OUT.test(words), words);
+  }
+  for (const words of ["Refund policy", "Refunds and returns", "Transfer history", "Payout schedule", "How to withdraw", "Help",
+    "Download refund report", "Withdrawal terms", "Remboursements", ""]) {
+    assert.ok(!MONEY_OUT.test(words), words);
+  }
+  const console = {
+    url: "https://console.example/payments/py_1", fields: [],
+    controls: [{ ref: "c1", label: "Refund €50.00" }, { ref: "c2", label: "Copy payment id" }],
+    links: [{ ref: "l1", label: "Refund policy", url: "https://console.example/policy" }, { ref: "l2", label: "Payout", url: "https://console.example/payouts/new" }],
+  };
+  assert.equal(refuse(console, { kind: "click", ref: "c1" }).code, "payment_step", "a refund button");
+  assert.equal(refuse(console, { kind: "click", ref: "c2" }).code, "payment_step", "a page that refunds is a payment page: no other control either");
+  assert.equal(refuse(console, { kind: "click", ref: "l2" }).code, "payment_step", "a link whose words pay out");
+  const quiet = { ...console, controls: [{ ref: "c2", label: "Copy payment id" }] };
+  assert.equal(refuse(quiet, { kind: "click", ref: "l1" }), null, "a link that only names refunds is followed");
+  assert.equal(refuse(quiet, { kind: "click", ref: "c2" }), null);
 });
 
 test("press, scroll and back (gap 7) are held to the same rules: Enter submits nothing on a pay page, a key never goes into a secret", () => {
