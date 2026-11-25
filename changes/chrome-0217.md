@@ -1,0 +1,1 @@
+- **Chrome 0.2.17: a navigation a page starts by itself off a taf's sites after a step is never sent by the extension.** When the taf's site limits stop a navigation in a tab it works in, the tab is given back to you on Chrome's block page and the extension asks for nothing itself; your own next try loads ([docs/chrome.md](../docs/chrome.md)).

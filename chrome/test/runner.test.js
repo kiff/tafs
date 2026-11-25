@@ -2073,36 +2073,33 @@ test("a page the person goes to in a joined tab while the run is paused gives it
 });
 
 // The harness's finding: the person's Back to a page off the run's sites is a new request the fence blocks (Chrome's error page,
-// net::ERR_BLOCKED_BY_CLIENT, nothing committed), so the tab stayed the run's and their Back couldn't load their page.
-test("the person's Back off the run's sites that the fence blocks gives the tab back, then loads their page; their next Back is theirs", async () => {
-  for (const [what, shown, expect] of [
-    ["Chrome's error page at their address", "https://elsewhere.example/account", ["tabs.reload", THEIRS]],
-    ["their tab still on the joined page", "https://shop.example/", ["tabs.update", THEIRS, { url: "https://elsewhere.example/account" }]],
+// net::ERR_BLOCKED_BY_CLIENT, nothing committed), so the tab stayed the run's. Since 0.2.17 the tab is given back on that error page
+// and nothing is asked for again: a navigation the page starts by itself after a step looks the same, and must never be sent by the
+// extension. Their own next try loads, as the tab is no longer fenced.
+test("a navigation the fence blocks in a joined tab outside a step gives the tab back on Chrome's block page; nothing is asked again", async () => {
+  for (const [what, shown] of [
+    ["Chrome's error page at the blocked address", "https://elsewhere.example/account"],
+    ["their tab still on the joined page", "https://shop.example/"],
   ]) {
     const { c, r } = await joining({ page: PLAIN });
     await r.handle(started());
     const rules = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules.map((x) => x.id);
     const before = c.calls.length;
     c.tabsMap.set(THEIRS, shown);
-    c.listeners.error({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/account", error: "net::ERR_BLOCKED_BY_CLIENT" });
+    c.listeners.error({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/account?leak=v", error: "net::ERR_BLOCKED_BY_CLIENT" });
     await new Promise((go) => setTimeout(go, 5));
     const now = c.calls.slice(before);
-    const unfenced = now.findIndex((x) => x[0] === "dnr" && !x[1].addRules && x[1].removeRuleIds.join() === rules.join());
-    const again = now.findIndex((x) => x[0] === expect[0] && x[1] === THEIRS);
-    assert.ok(unfenced >= 0, what + ": unfenced");
-    assert.ok(again > unfenced, what + ": their navigation goes through once the fence is gone");
-    assert.deepEqual(now[again], expect, what);
-    assert.ok(!now.some((x) => x[0] === "tabs.goBack" || x[0] === "tabs.goForward"), what + ": nothing else moves");
+    assert.ok(now.some((x) => x[0] === "dnr" && !x[1].addRules && x[1].removeRuleIds.join() === rules.join()), what + ": unfenced");
+    assert.ok(!now.some((x) => x[0] === "tabs.reload" || x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), what + ": the extension asks for nothing, and moves nothing");
     assert.equal(r.runs.get("run_1").joined.has(THEIRS), false, what + ": given back");
     assert.equal(r.tabRun.has(THEIRS), false, what);
     assert.ok(r.runs.get("run_1").steps.some((x) => x.op === "navigate" && x.error === "site_not_listed" && x.url === "https://elsewhere.example/account"), what + ": recorded");
     assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "given_back", what);
-    // Never stuck: their next Back is theirs, and nothing of the extension's answers it.
+    // Their own next try is theirs: nothing of the extension's answers it, and no rule holds the tab.
     const later = c.calls.length;
-    c.tabsMap.set(THEIRS, "https://elsewhere.example/older");
-    c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/older" });
-    c.listeners.committed({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/older", transitionType: "link", transitionQualifiers: ["forward_back"] });
-    c.listeners.error({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/older", error: "net::ERR_ABORTED" });
+    c.tabsMap.set(THEIRS, "https://elsewhere.example/account");
+    c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/account" });
+    c.listeners.committed({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/account", transitionType: "typed", transitionQualifiers: [] });
     await new Promise((go) => setTimeout(go, 5));
     assert.deepEqual(c.calls.slice(later), [], what + ": their tab is theirs");
     assert.equal(r.fenceIds.has(THEIRS), false, what + ": no rule holds it");
@@ -2299,22 +2296,22 @@ test("a page the run's page opens (a pop-up) is the run's for its first page; th
   assert.equal(r.tabRun.get(tab), "run_1", "the run's own tab is unchanged");
 });
 
-test("the person's off-site address in the run's own tab, stopped by the fence, gives the tab to them and goes through", async () => {
+test("a navigation the fence blocks in the run's own tab outside a step gives the tab to them on Chrome's block page; nothing is asked again", async () => {
   const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
   const r = runner(c);
   await r.handle(step());
   const tab = r.runs.get("run_1").tab;
   c.listeners.before({ tabId: tab, frameId: 0, url: "https://news.example/" });
   assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "about:blank"), "their tab is never sent to a blank page");
+  const blockedAt = c.calls.length;
   c.listeners.error({ tabId: tab, frameId: 0, url: "https://news.example/", error: "net::ERR_BLOCKED_BY_CLIENT" });
   await pause0();
   await pause0();
   assert.equal(r.tabRun.has(tab), false, "theirs now");
   assert.equal(r.state()[0].steps.at(-1).error, "site_not_listed", "recorded once the fence stopped it");
   assert.equal(r.fenceIds.has(tab), false, "no fence rule left on their tab");
-  const unfenced = c.calls.findIndex((x) => x[0] === "dnr" && (x[1].removeRuleIds || []).length);
-  const asked = c.calls.findIndex((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "https://news.example/");
-  assert.ok(unfenced >= 0 && asked > unfenced, "their address, asked for once more after the fence went");
+  assert.ok(c.calls.some((x) => x[0] === "dnr" && (x[1].removeRuleIds || []).length), "unfenced");
+  assert.ok(!c.calls.slice(blockedAt).some((x) => x[0] === "tabs.reload" || x[0] === "tabs.goBack" || (x[0] === "tabs.update" && x[1] === tab && x[2].url)), "the extension asks for nothing again: their own next try loads");
   assert.ok(c.calls.some((x) => x[0] === "tabs.ungroup" && [].concat(x[1]).includes(tab)), "out of the run's group");
   assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
   const opened = await r.handle(step({ id: "op3", url: "https://shop.example/cart" }));
@@ -2390,3 +2387,39 @@ test("an entry kept before 0.2.16 under the taf's name alone is never matched to
   await r.stopAll();
   assert.ok(c.calls.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(77)), "unpairing closes it");
 });
+
+// A page of the run's sites that, a moment after the taf's act returned, sends itself off the run's sites (a delayed redirect, a
+// refresh) with what the taf filled: the fence stops it, and the extension never asks for that address itself, in a tab of the run's
+// own or in one of the person's it joined (0.2.17). Nothing tells such a navigation from the person's own, so neither is re-asked.
+const FIELD = { read_id: "rd_f", url: "https://shop.example/", title: "t", text: "", fields: [{ ref: "f1", label: "Name", kind: "text" }], controls: [{ ref: "c1", label: "Save" }], links: [] };
+for (const where of ["own", "joined"]) {
+  test(`a navigation the page starts by itself off the run's sites after a step (${where} tab) is never sent by the extension`, async () => {
+    const { c, r, tab, go } = where === "own"
+      ? await (async () => {
+          const c = fakeChrome({ ownerWindow: OWNER_WINDOW, page: FIELD });
+          const r = runner(c);
+          const first = await r.handle(step());
+          return { c, r, tab: r.runs.get("run_1").tab, go: (extra) => step(extra), first };
+        })()
+      : await (async () => {
+          const { c, r } = await joining({ page: FIELD });
+          await r.handle(started());
+          return { c, r, tab: THEIRS, go: (extra) => started(extra) };
+        })();
+    const read = await r.handle(go({ id: "op_r", op: "read" }));
+    const filled = await r.handle(go({ id: "op_f", op: "act", read_id: read.page.read_id, act: { kind: "fill", ref: "f1", value: "secret-value-1" } }));
+    assert.ok(filled.page, JSON.stringify(filled));
+    // The step has returned. The page now leaves by itself, carrying the value.
+    const leak = "https://elsewhere.example/?leak=secret-value-1";
+    const before = c.calls.length;
+    c.listeners.before({ tabId: tab, frameId: 0, url: leak });
+    c.listeners.error({ tabId: tab, frameId: 0, url: leak, error: "net::ERR_BLOCKED_BY_CLIENT" });
+    await new Promise((done) => setTimeout(done, 5));
+    const now = c.calls.slice(before);
+    assert.ok(!now.some((x) => x[0] === "tabs.reload" || x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), "the extension asks for nothing");
+    assert.ok(!JSON.stringify(now).includes("secret-value-1"), "the value is in nothing the extension did");
+    assert.equal(r.tabRun.has(tab), false, "the tab is given back");
+    assert.equal(r.fenceIds.has(tab), false, "unfenced");
+    assert.equal((await r.handle(go({ id: "op_n", op: "read" }))).error.code, "given_back");
+  });
+}

@@ -202,10 +202,12 @@ export class Runner {
       this.noteAddress(run, d.tabId, d.url);
       this.guardDialogs(d.tabId, run).catch(() => {});
     });
-    // A navigation in a joined tab that fails (above all Chrome's fence, net::ERR_BLOCKED_BY_CLIENT, which shows its error page at
-    // the blocked address and commits nothing) gives the tab back as it is. The person's own (their Back to a page off the run's
-    // sites, say), once the fence is gone, is let through: the tab, no longer the run's, loads the address they asked for, and
-    // nothing else of theirs moves. In a run's act, the act is refused `site_not_listed`.
+    // A navigation in a run's tab that the fence stops (net::ERR_BLOCKED_BY_CLIENT: Chrome shows its error page at the blocked
+    // address and commits nothing), or any failed one in a joined tab, gives the tab back as it is, on that error page. Nothing here
+    // tells the person's own navigation (their Back, an address they typed) from one the page started by itself after a step
+    // returned (a delayed redirect, a refresh): neither carries a transition. So the extension never asks for a blocked address
+    // again, in any tab: the tab is theirs now, unfenced, and their own next try loads (0.2.17). In a run's act, the act is
+    // refused `site_not_listed`.
     if (c.webNavigation.onErrorOccurred) {
       c.webNavigation.onErrorOccurred.addListener((d) => {
         if (d.frameId !== 0) return;
@@ -217,16 +219,7 @@ export class Runner {
         const blocked = /ERR_BLOCKED_BY_CLIENT/.test(String(d.error || ""));
         if (inStep) run.stepError = "site_not_listed";
         if (blocked) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
-        this.giveBack(run, [d.tabId], !inStep)
-          .then(async () => {
-            if (inStep || !blocked || isBlank(d.url)) return;
-            const tab = await c.tabs.get(d.tabId).catch(() => null);
-            if (!tab) return;
-            // Chrome's error page at their address: loaded again in place. Otherwise their navigation, asked for once more.
-            if (sameAddress(tab.url, d.url)) await c.tabs.reload(d.tabId);
-            else await c.tabs.update(d.tabId, { url: d.url });
-          })
-          .catch(() => {});
+        this.giveBack(run, [d.tabId], !inStep).catch(() => {});
       });
     }
     // A tab or window a run's page opens joins the run only on its sites; anything else is closed.
