@@ -932,9 +932,9 @@ export const nl: Words = {
   // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
   ai_consent_title: "Je gegevens en de AI",
   ai_consent_lines: ["tafs gebruikt de AI Claude van Anthropic om Coach en je tafs te laten werken.","Anthropic, of een van de cloudaanbieders op onze pagina met subverwerkers, draait die voor ons. Die pagina zegt welke, en waar.","Coach en je tafs zijn AI-agents: wat ze schrijven, wordt door AI gemaakt en kan fout zijn. Een bericht dat een taf buiten je bedrijf stuurt, zegt dat een AI-agent het heeft geschreven.","Wat ernaartoe gaat: wat je aan Coach en je tafs schrijft, de bestanden die je bijvoegt, wat je gekoppelde apps een taf teruggeven terwijl hij werkt, en wat er op je scherm staat terwijl Coach je in de app helpt.","Wat nooit wordt verzonden: de wachtwoorden en sleutels die je gekoppelde apps gebruiken, of je vingerafdruk.","Het bedrijf dat hem draait, gebruikt het om te antwoorden en verwijdert het binnen 30 dagen, tenzij het wordt gemarkeerd als in strijd met zijn gebruiksregels of de wet vereist dat het bewaard blijft.","Er wordt niets verzonden voordat je het toestaat. Je kunt het intrekken bij Account."],
-  ai_consent_now_anthropic: "Op dit moment: Anthropic zelf.",
+  ai_consent_now_anthropic: "Op dit moment: Anthropic zelf, in de Verenigde Staten en andere landen.",
   ai_consent_now_bedrock: "Op dit moment: Amazon Web Services, in de EU.",
-  ai_consent_now_vertex: "Op dit moment: Google Cloud, in de EU.",
+  ai_consent_now_vertex: "Op dit moment: Google Cloud, in de EU, dat het voor misbruikcontroles met Anthropic kan delen.",
   ai_consent_now_foundry: "Op dit moment: Microsoft Azure, in de EU, waarbij Anthropic het verwerkt.",
   ai_consent_allow: "Toestaan",
   ai_consent_not_now: "Niet nu",

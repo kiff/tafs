@@ -932,9 +932,9 @@ export const it: Words = {
   // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
   ai_consent_title: "I tuoi dati e l'IA",
   ai_consent_lines: ["tafs usa l'IA Claude di Anthropic per far funzionare Coach e i tuoi taf.","Anthropic, o uno dei fornitori cloud della nostra pagina dei sub-responsabili, la esegue per noi. Quella pagina dice quale, e dove.","Coach e i tuoi taf sono agenti di IA: ciò che scrivono è generato da un'IA e può essere sbagliato. Un messaggio che un taf invia fuori dalla tua azienda dice che l'ha scritto un agente di IA.","Cosa le viene inviato: ciò che scrivi a Coach e ai tuoi taf, i file che alleghi, ciò che le tue app collegate restituiscono a un taf mentre lavora e ciò che è sul tuo schermo mentre Coach ti aiuta nell'app.","Cosa non viene mai inviato: le password e le chiavi usate dalle tue app collegate, né la tua impronta.","L'azienda che la esegue lo usa per rispondere e lo cancella entro 30 giorni, a meno che non sia segnalato come contrario alle sue regole d'uso o la legge ne imponga la conservazione.","Non viene inviato nulla finché non lo consenti. Puoi revocarlo in Account."],
-  ai_consent_now_anthropic: "In questo momento: direttamente Anthropic.",
+  ai_consent_now_anthropic: "In questo momento: direttamente Anthropic, negli Stati Uniti e in altri paesi.",
   ai_consent_now_bedrock: "In questo momento: Amazon Web Services, nell'UE.",
-  ai_consent_now_vertex: "In questo momento: Google Cloud, nell'UE.",
+  ai_consent_now_vertex: "In questo momento: Google Cloud, nell'UE, che può condividere i dati con Anthropic per i controlli sugli abusi.",
   ai_consent_now_foundry: "In questo momento: Microsoft Azure, nell'UE, con Anthropic che tratta i dati.",
   ai_consent_allow: "Consenti",
   ai_consent_not_now: "Non ora",
