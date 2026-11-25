@@ -167,7 +167,10 @@ class TafChatModelTest {
     assertEquals(WatchModel.Whole.OnPhone, m.taf.value?.chat?.whole?.get("wa_1"))
   }
 
-  /** Not sure a taf's message arrived: Retry or Cancel, never Keep for later (kept on the watch, then sent as Coach's). */
+  /**
+   * Not sure a taf's message arrived: the linking screen, sending it again by itself, then Retry or Cancel; never Keep for later
+   * (kept on the watch, then sent as Coach's).
+   */
   @Test fun aTafsMessageIsNeverKeptForLater() = runTest {
     val drafts = mutableListOf<WatchModel.Draft>()
     val phone = Phone { if (it is WatchRequest.Ask) Asked.Unreachable() else reads(it) }
@@ -178,8 +181,14 @@ class TafChatModelTest {
     m.openTaf("taf_1")
     m.review("Reship order 5098", tafId = "taf_1")
     m.sendReviewed()
+    val linking = m.voice.value as WatchModel.Voice.Linking
+    assertEquals("taf_1", linking.tafId)
+    m.keepForLater()
+    assertTrue("nothing kept on the watch", drafts.isEmpty())
+    assertEquals(linking, m.voice.value)
+    // Its tries spent, unanswered: "Not sure it arrived".
+    m.keepTrying(wait = {})
     val unsure = m.voice.value as WatchModel.Voice.Unsure
-    assertEquals("taf_1", unsure.tafId)
     m.keepForLater()
     assertTrue("nothing kept on the watch", drafts.isEmpty())
     assertNull(m.kept.value)

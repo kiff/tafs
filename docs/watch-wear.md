@@ -627,8 +627,10 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   `replies` channel (high importance; locked, "A result is ready" only). The watch then deletes the item, on both ends.
 - **Opening.** What's kept draws at once (the conversation, the Inbox, the cache's count and tafs) with a small dot at the top
   while the phone is read behind it. A read the phone doesn't answer in time is tried again by the watch itself after 2, 4 and
-  8 s (`RETRY_BACKOFF_MS`), nothing changing on screen meanwhile; only then does a small line say why ("Your phone didn't
-  answer in time. Try again.") with **Try again**, over what's kept, never a screen of its own. With nothing kept at all (a
+  8 s (`RETRY_BACKOFF_MS`), nothing changing on screen meanwhile; only then does a small calm line say "Linking tafs. Keep your
+  phone nearby and connected." over what's kept, never a screen of its own, and the watch goes on reading the phone by itself
+  every 15 s while it shows, with no Try again (0.4.9; before, the line was why, with **Try again**). tafs missing from the phone
+  keeps its own line. With nothing kept at all (a
   first link, a first open) the watch shows one calm screen, the tafs mark in a turning ring and "Linking tafs. Keep your
   phone nearby and connected." (`watch.linking`, `LinkingScreen`), and goes on trying every 15 s behind it while the app is
   open; tafs missing from the phone says so instead. "Asking your phone…" is v1's only.
@@ -640,6 +642,45 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   recipes and the gallery, one after another) before answering, which could pass the watch's 10 s even with tafs in front.
   A restore the watch stopped waiting for goes on in that scope too and the next ask joins it (`RestoreOnce`); one that was
   cancelled or failed is run again.
+
+**Wear 0.4.9: what the Galaxy Watch 5 re-test changed** (25 Nov):
+- **Your tafs never empties** (row 27; `WatchModel.refresh`, `retryTafs`, `tafsChanged`; `TafListTest`). A list read that misses
+  (the 10 s passing) keeps the list the watch had, shown and kept: it never saves nothing over it. The open reads it again
+  quietly after 2, 5 and 10 s (`TAFS_RETRY_MS`). The phone puts the list as a kept item, `kept/tafs` (`KeptTafs`: the lines
+  `tafs` gives, `all_halted`, the zone, and the account mark), when its list changes (a sign-in, a taf added, removed, paused or
+  halted): the open Tafs page moves at once (`KeptResults.tafs`), and with the app closed the kept list the next open draws
+  (`WatchCache.saveTafs`), only under the mark held.
+- **The Inbox keeps its lines across a close and reopen** (row 20; `WatchModel.reload`; `InboxReopenTest`). A reopen took the
+  Inbox only from its encrypted store, so a line whose write the Keystore refused (`EncryptedText.write` is quiet on failure)
+  vanished, and the page said "Nothing new". The open's own lines the store lacks now stay, and are written again; a line
+  dismissed stays away; a lock or a sign-out still empties it.
+- **A taf's answer lands in its chat alone** (`KeptThreads.inTafChat`, `KeptThread.sent`; `AnswerOnePlaceTest`). A taf's kept
+  chat remembers the asks sent from it, by id alone, the last 30, also once the phone's lines hold their turns. The open's read
+  of the asks, a kept item with the app closed and the Inbox with no lock all check it, so a taf's answer is never filed in
+  the Inbox; one an older watch filed there goes at the next open. Coach's answers are unchanged.
+- **The answer is followed while it's awaited** (row 13; `WatchModel.followAnswer`; `FollowAnswerTest`). While a taf's chat on
+  screen shows "{taf} is answering", the watch reads its asks through the phone every 5 s (`ANSWER_READ_EVERY_MS`), for 2
+  minutes at most (`ANSWER_FOLLOW_MS`), and stops at once when the answer lands or the chat closes; then Open on phone shows
+  beside the answering line, and the answer still lands when it's pushed. It runs only while the chat is on screen.
+- **A cut answer reads whole, or opens on the phone** (rows 10, 28; `KeptThreads.withLines`, `shownLines`; `CutAnswerTest`).
+  A message sent from the watch keeps its turn while it knows more than the phone's lines (its answer, so Read more reads it
+  by its request's id; or its "answering" before the lines hold an answer), and the lines of the same message (the same words,
+  within 10 minutes) aren't drawn twice. A cut line with no turn of its own, and an answer that couldn't be read whole, get
+  **Open on phone**, which opens that taf's chat on the phone while the watch stays.
+- **Plain text** (`Plain`; `PlainTest`). Wherever the watch draws or speaks an answer, markdown goes: bold and italics keep
+  their words, a link its words, code its text, a heading its line, a list item a bullet. The person's own words are never
+  changed.
+- **The words just sent show whole** (`tafChatFocus`). With a message sent from the watch, a taf's chat centres on the line
+  under its newest one, so the words sit whole above "{taf} is answering".
+- **Calm linking for a send** (row 30, call 6; `Voice.Linking`, `WatchModel.keepTrying`; `CalmLinkingTest`). A send with no
+  receipt (no answer in 10 s, or the phone's "may have arrived") shows one calm screen, "Linking tafs. Keep your phone nearby
+  and connected.", with Cancel (and Keep for later for Coach's), and sends the same words under the same id again by itself
+  after 2, 5 and 10 s, then every 30 s, for 10 minutes at most; tafs cloud takes one id once. It ends on its own when the phone
+  answers; a locked watch sends nothing meanwhile. Its tries spent: "Not sure it arrived", with Retry. A taf's page the phone
+  can't give shows the same calm line and reads itself again.
+- **At 10,000 users:** the answer is followed only while one person looks at an open chat that's answering, at most 24 reads;
+  a send is tried again only while its linking screen shows, at most about 22 times in 10 minutes; the phone puts the taf list
+  only when it changes, never on a timer. None of it runs with the app put away.
 
 **Chatting with a taf, the phone's half** (behind tafs cloud's `TAFS_WATCH_TAF_CHAT`, off; the wrist's screens follow the
 owner's picks; docs/watch-ask.md). An `ask` with `taf_id` names the phone's taf: the phone sends that taf's tafs cloud id as

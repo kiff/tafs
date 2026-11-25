@@ -51,7 +51,7 @@ object InboxLines {
   /** An ended ask's line, as the watch keeps it: no amount ([bot.tafs.watchlink.Amounts]); none for a message to a taf. */
   fun of(ask: bot.tafs.watchlink.AskLine, at: Long): InboxItem? =
     if (!ask.ended || ask.tafChat) null
-    else InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, bot.tafs.watchlink.Amounts.strip(ask.line ?: ask.words), at)
+    else InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, Plain.of(bot.tafs.watchlink.Amounts.strip(ask.line ?: ask.words)), at)
 
   /**
    * The marks from tafs cloud (row 21): the lines dismissed on any watch go, and their ids join [dismissed]; the lines read on any

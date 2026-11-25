@@ -322,7 +322,7 @@ class TafScreensTest {
     openOnPhone = { did += "phone $it" }, tryAgain = {}, refuse = {}, halt = { did += "halt $it" }, askHaltAll = { did += "ask halt all" },
     confirmHaltAll = { did += "halt all" }, cancelHaltAll = {}, listen = {}, closeVoice = {}, retry = {}, open = {}, hear = {}, reply = {},
     closeResult = {}, dismiss = {},
-    openTaf = { did += "open $it" }, closeTaf = { did += "close taf" }, pickToHalt = { did += "pick to halt" }, togglePick = { did += "pick $it" },
+    openTaf = { did += "open $it" }, closeTaf = { did += "close taf" }, rereadTaf = { did += "reread" }, pickToHalt = { did += "pick to halt" }, togglePick = { did += "pick $it" },
     togglePickAll = { did += "pick all" }, askPicked = { did += "ask picked" }, cancelPick = { did += "cancel pick" }, haltPicked = { did += "halt picked" },
   )
 
@@ -430,12 +430,15 @@ class TafScreensTest {
     compose.onNodeWithText(Words.Watch.askingPhone).assertExists()
   }
 
+  /** Row 30, call 6: no phone, the calm linking line and no Try again; the page is read again by itself while it shows. */
   @Test fun withNoPhoneItsPageIsAskedAgain() {
+    compose.mainClock.autoAdvance = false
     showTaf(WatchModel.OpenTaf("taf_1", parcels, WatchModel.TafRead.PhoneUnreachable()))
-    compose.onNodeWithText(Words.Watch.phoneNotReachable).assertExists()
-    compose.onNodeWithText(Words.Common.tryAgain).performClick()
-    compose.onNodeWithText(Words.Common.close).performClick()
-    assertEquals(listOf("open taf_1", "close taf"), did)
+    compose.onNodeWithText(Words.Watch.linking).assertExists()
+    compose.onAllNodesWithText(Words.Common.tryAgain).assertCountEquals(0)
+    compose.mainClock.advanceTimeBy(RETRY_BACKOFF_MS.first() + 100)
+    compose.waitForIdle()
+    assertEquals(listOf("reread"), did)
   }
 
   @Test fun anOlderPhoneSaysToUpdateIt() {

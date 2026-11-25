@@ -318,6 +318,21 @@ data class KeptMarks(
 )
 
 /**
+ * The person's tafs as the phone holds them now, the lines [WatchReply.Tafs] gives, kept for the watch as a Data Layer item
+ * ([WatchLink.KEPT_TAFS]) when the list changes on the phone (a sign-in, a taf added, removed, paused or halted), so the watch's
+ * Tafs page moves as the phone's does without a read. Put on change only, never on a timer.
+ */
+@Serializable
+data class KeptTafs(
+  @SerialName("put_at") val putAt: Long,
+  val tafs: List<TafLine> = emptyList(),
+  @SerialName("all_halted") val allHalted: Boolean = false,
+  val zone: String? = null,
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
+
+/**
  * The phone signed out ([WatchLink.KEPT_SIGNED_OUT]): put at every sign-out, so a watch out of reach then still forgets the
  * account when it's next in reach, without asking. [mark] is the account mark the phone dropped, so a late one never wipes the
  * account the watch has read since.
@@ -477,6 +492,9 @@ object WatchLink {
 
   /** The phone signed out ([KeptSignedOut]): the watch forgets everything of the account, without asking. */
   const val KEPT_SIGNED_OUT = KEPT + "signed-out"
+
+  /** The person's tafs as the phone holds them now ([KeptTafs]), put when the list changes there. */
+  const val KEPT_TAFS = KEPT + "tafs"
 
   /**
    * The key of the phone's account mark: random, made at each sign-in on the phone and dropped at sign-out, never derived from
@@ -773,6 +791,11 @@ object WatchLink {
   fun decodeKeptMarks(data: ByteArray): KeptMarks? =
     runCatching { replies.decodeFromString(KeptMarks.serializer(), data.decodeToString()) }.getOrNull()
       ?.let { it.copy(read = InboxMarkIds.checked(it.read), dismissed = InboxMarkIds.checked(it.dismissed)) }
+
+  fun encodeKept(kept: KeptTafs): ByteArray = replies.encodeToString(KeptTafs.serializer(), kept).encodeToByteArray()
+
+  fun decodeKeptTafs(data: ByteArray): KeptTafs? =
+    runCatching { replies.decodeFromString(KeptTafs.serializer(), data.decodeToString()) }.getOrNull()
 
   fun encodeKept(kept: KeptSignedOut): ByteArray = replies.encodeToString(KeptSignedOut.serializer(), kept).encodeToByteArray()
 

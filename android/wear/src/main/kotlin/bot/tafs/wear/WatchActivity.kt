@@ -201,6 +201,9 @@ class WatchActivity : ComponentActivity() {
           typeTaf = { taf -> typingFor = taf; type() },
           quickTaf = { taf, text -> model.review(text, tafId = taf) },
           readMore = { id -> lifecycleScope.launch { model.readMore(id) } },
+          followAnswer = { id -> model.followAnswer(id) },
+          keepTrying = { model.keepTrying() },
+          rereadTaf = { model.rereadTaf() },
           keep = if (WATCH_V2) model::keepForLater else null,
           deleteKept = model::deleteKept,
           playback = if (WATCH_V2) playback else null,
@@ -304,6 +307,7 @@ class WatchActivity : ComponentActivity() {
     AskResults.shown = { ask -> runOnUiThread { model.took(ask) } }
     KeptResults.marks = { marks -> runOnUiThread { model.takeMarks(marks) } }
     KeptResults.chats = { tafId, lines -> runOnUiThread { model.tafChatChanged(tafId, lines) } }
+    KeptResults.tafs = { kept -> runOnUiThread { model.tafsChanged(kept.tafs, kept.allHalted, kept.zone) } }
     // The phone signed out while the app is open: everything goes now, then the phone is read again.
     KeptResults.signedOut = { runOnUiThread { model.phoneSignedOut(); lifecycleScope.launch { model.refresh() } } }
     opening = lifecycleScope.launch {
@@ -319,6 +323,7 @@ class WatchActivity : ComponentActivity() {
     AskResults.shown = null
     KeptResults.marks = null
     KeptResults.chats = null
+    KeptResults.tafs = null
     KeptResults.signedOut = null
     opening?.cancel()
     opening = null
@@ -458,6 +463,12 @@ internal class Actions(
   val readMore: (String) -> Unit = {},
   /** Read more on an answer's card (Coach's or a taf's) that tafs cloud says goes on, by its request's id. */
   val readWhole: (String) -> Unit = {},
+  /** While a taf's chat on screen is answering: its answer followed through the phone, bounded ([WatchModel.followAnswer]). */
+  val followAnswer: suspend (String) -> Unit = {},
+  /** While a send's linking screen shows: the same words sent again by itself ([WatchModel.keepTrying]). */
+  val keepTrying: suspend () -> Unit = {},
+  /** While a taf's page can't be read: read again by itself, behind its calm linking line. */
+  val rereadTaf: suspend () -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */
