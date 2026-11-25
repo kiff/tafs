@@ -37,8 +37,8 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine } from "./connections.js";
-import { maskedPath, normalHost, pageSiteRefused } from "./page-sites.js";
+import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine, tafPageSites } from "./connections.js";
+import { maskedPath, normalHost, onSites, pageSiteRefused } from "./page-sites.js";
 import { maskedCodes } from "./page-codes.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
@@ -3264,10 +3264,10 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   await markConnected(me.tenantID, shown, deps, lang);
   await markPlanNeeded(me.tenantID, shown, deps, lang);
   const last = messages.slice(-CHAT.maxThread);
-  // The site each of the person's messages to Coach went with (PAGE), and which of Coach's answers came from a turn that read
+  // The site each of the person's messages to Coach or a taf went with (PAGE), and which answers came from a turn that read
   // a page (`page_turn`): tafs cloud's record of the host, never the page. One read for the whole thread, and none when no
   // message in view is a run's.
-  const ofRuns = taf.job === SETUP_JOB && deps.coach ? last.filter((m) => m.id.endsWith(".in") || m.from === "taf") : [];
+  const ofRuns = deps.coach ? last.filter((m) => m.id.endsWith(".in") || m.from === "taf") : [];
   if (ofRuns.length) {
     const hosts = new Map((await pageReads(deps.coach!, me.tenantID, me.subject, deps.now?.() ?? new Date())).map((r) => [r.run, r.host]));
     for (const m of ofRuns) {
@@ -5054,7 +5054,7 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   if (attached.length) at.attachments = attached;
   if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
   const page = await pageFor(event, me, taf, deps);
-  withPage(at, page);
+  withPage(at, page, taf);
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const said = await withCoachSkills(me, taf, at, text, event, deps);
   // The page's host goes in the message kiff/agents keeps, so a later turn knows this one read it (withPageRead).
@@ -6470,11 +6470,12 @@ async function pageReads(store: CoachStore, tenant: string, person: string, now:
 }
 
 /**
- * The page the person had open, sent beside their words to Coach as `page: {url, title, text, truncated}` (the
- * Chrome side panel): what the run reads, and the host each message shows (`reading`). Only Coach reads one, only an
- * https page with no credentials in its address, kept to its address with no query or fragment. Anything else is a
- * 400, and nothing starts. A message that answers a card waiting in the chat goes on with the person's words alone,
- * and says no `reading`: only a message whose run read the page says which site went with it.
+ * The page the person had open, sent beside their words to Coach or a taf as `page: {url, title, text, truncated}`
+ * (the Chrome side panel): what the run reads, and the host each message shows (`reading`). Only an https page with no
+ * credentials in its address, kept to its address with no query or fragment, and to a taf only from one of the sites
+ * the owner signed for its browser connection (tafPageSites): a taf with none, or one signed for any public site, gets
+ * no page. Anything else is a 400, and nothing starts. A message that answers a card waiting in the chat goes on with
+ * the person's words alone, and says no `reading`: only a message whose run read the page says which site went with it.
  */
 async function pageFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ host: string; aside: string } | undefined> {
   const raw = parseBody(event).page;
@@ -6482,14 +6483,24 @@ async function pageFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   // Without the person's page consent the page is dropped here: never checked, read, kept or logged, and the message
   // goes alone, on their AI consent as ever (consent.ts).
   if (!await pageConsentOf(deps.coach, me.tenantID, me.subject)) return undefined;
-  return pageOf(event, taf);
+  return pageOf(event, taf, taf.job === SETUP_JOB ? undefined : await tafSites(event, me, taf, deps));
 }
 
-function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | undefined {
+/**
+ * The sites a taf gets the page from: those planque lists for its browser connections, read with the person's own
+ * session (the extension checks the phone-signed list too, chrome/src/sites.js). None when planque can't be read: the
+ * page is refused, never sent on a list tafs cloud couldn't check.
+ */
+async function tafSites(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string[]> {
+  if (!deps.planqueBase || !taf.kiffAgent) return [];
+  const conns = await accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => [] as AccountConnection[]);
+  return tafPageSites(conns, taf.kiffAgent);
+}
+
+function pageOf(event: HTTPEvent, taf: Taf, sites?: string[]): { host: string; aside: string } | undefined {
   const raw = parseBody(event).page;
   if (raw === undefined || raw === null) return undefined;
   const bad = (why: string) => new HTTPError(400, why, { code: "page_refused" });
-  if (taf.job !== SETUP_JOB) throw bad("only Coach reads the page you have open");
   // A page goes with the person's words, never alone (kiff/agents takes an aside only with an input).
   if (!withoutTafsLines(str(parseBody(event).text)).trim()) throw bad("a page goes with your words");
   if (typeof raw !== "object" || Array.isArray(raw)) throw bad("page is {url, title, text, truncated}");
@@ -6507,6 +6518,8 @@ function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | u
   if (u.protocol !== "https:" || !u.hostname || u.username || u.password) throw bad("Coach reads only an https page, with nothing signed in its address");
   // As the extension reads a host, so no form of one (a trailing dot, upper case) gets past the lists.
   const host = normalHost(u.hostname);
+  // A taf scoped to one shop never gets the text of any page the person happens to send from.
+  if (taf.job !== SETUP_JOB && !onSites(host, sites ?? [])) throw bad("a taf reads only a page on one of its own sites");
   // Never a bank, payment, mail or health site, nor the Web Store: the extension never sends one, and this holds whatever does.
   if (pageSiteRefused(host, u.pathname)) throw bad("Coach never reads a bank, payment, mail or health site, or Chrome's Web Store");
   const title = maskedCodes((p.title ?? "").replace(/\s+/g, " ").trim().slice(0, PAGE.title));
@@ -6519,14 +6532,21 @@ function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | u
 }
 
 /**
- * Sends a run that reads a page with only the tools a page may lead to (PAGE_TOOLS), and keeps its host, never its
- * text, for the message's `reading`. The log says the host, never the page.
+ * Sends a run that reads a page with only the tools a page may lead to (PAGE_TOOLS for Coach, TAF_PAGE_TOOLS for a
+ * taf), and keeps its host, never its text, for the message's `reading`. The log says the host, never the page.
  */
-function withPage(at: RunAt, page: { host: string; aside: string } | undefined): void {
+function withPage(at: RunAt, page: { host: string; aside: string } | undefined, taf: Taf): void {
   if (!page) return;
   at.aside = page.aside;
-  at.asideTools = PAGE_TOOLS;
+  at.asideTools = taf.job === SETUP_JOB ? PAGE_TOOLS : TAF_PAGE_TOOLS;
 }
+
+/**
+ * The only tools a taf has in a turn that reads the page the person sent: it reads, on its own sites (planque holds
+ * it to them), and nothing else. A page can steer a call as any input can, so it never leads to an act, a pay or a
+ * call to another app; the chat's next message without a page has all of the taf's tools again.
+ */
+export const TAF_PAGE_TOOLS = ["browse_open", "browse_read"] as const;
 
 /** How far kiff/agents' clock may be behind tafs cloud's for a run to still count as this send's (startedBy). */
 export const PAGE_RUN_MARGIN_MS = 1000;
@@ -7037,7 +7057,7 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
       titles = known;
       if (attached.length) at.attachments = attached;
       if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
-      withPage(at, page);
+      withPage(at, page, taf);
       try {
         // Coach's runs are announced when they pause, so a result it shows is
         // handed over by tafs cloud with no phone needed (handOver).

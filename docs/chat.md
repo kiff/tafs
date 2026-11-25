@@ -94,10 +94,18 @@ A message to **Coach** may carry the page the person had in front as they wrote 
 it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the page you're on"), as
 `page: {url, title, text, truncated}` on either send route.
 
-- **Only Coach, only https, only with words.** A page on another taf's message, a page with no words beside it
-  (files alone), an address that isn't https or has a name or password in it, a page that isn't
-  `{url, title, text, truncated}`, or one past 24,000 bytes as the run reads it, is `400 page_refused`, and
-  nothing starts.
+- **Only https, only with words.** A page with no words beside it (files alone), an address that isn't https or
+  has a name or password in it, a page that isn't `{url, title, text, truncated}`, or one past 24,000 bytes as the
+  run reads it, is `400 page_refused`, and nothing starts.
+- **A taf, only on its own sites (Chrome 0.2.14).** A message to a taf carries the page the same way, under the
+  same page consent (version "2", which names a taf's message too), when the page's host is one of the sites the
+  owner signed for that taf's browser connection, or under one. tafs cloud reads them from planque's connections
+  (`sites`, with the person's own session), beside the extension's own check of the phone-signed list. A page off
+  them, a connection signed for any public site (`any_site`), a taf with no browser connection, or a list planque
+  doesn't answer, is `400 page_refused`, and nothing starts. The taf's page turn has `browse_open` and `browse_read`
+  alone (`TAF_PAGE_TOOLS`): it reads, on its sites, and never acts, pays or calls another app with a page in front;
+  its next message without one has all its tools. What's kept is Coach's: the host, never the page. Every taf's
+  shared instructions say "this page" is the one sent with the message, read first where it is (`jobs.ts`).
 - **Never a bank, payment, mail or health site.** A page from a sensitive or mail site, or from Chrome's Web Store,
   is `400 page_refused` too. These are the extension's own lists (`chrome/src/sites.js`, `SENSITIVE` and `MAIL`),
   kept in tafs cloud as `page-sites.ts`, with the host read the same way (lower case, no trailing dot). The
@@ -120,7 +128,7 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
   read one. Now the message kiff/agents keeps carries a line of tafs cloud's own, in its envelope before "The owner
   says:": `[tafs page read] <host>`, saying the person sent that message with the page on that host, that a page given
   in that turn was read, that its text isn't kept after the turn, and never to deny a page it was given
-  (`withPageRead`). It stays true for a message that answers a waiting card, whose run reads no page. The host alone, which page consent "1" already
+  (`withPageRead`). It stays true for a message that answers a waiting card, whose run reads no page. The host alone, which the page consent already
   keeps for the chat's life; never the path, title or text. The thread shows the person's words without it, and a
   line of the person's own that starts `[tafs page read]` is dropped from their words, as the language and time-zone
   lines are.

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { readEvents } from "../src/cloud/agents.js";
 import { PAGE_TOOLS, TOOLS } from "../src/cloud/coach.js";
-import { handle, handleStream, type HTTPEvent, PAGE, pageReadsKey, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { handle, handleStream, type HTTPEvent, PAGE, pageReadsKey, SETUP_JOB, TAF_PAGE_TOOLS, type Taf } from "../src/cloud/handler.js";
 import { givePageConsent, PAGE_CONSENT_VERSION, pageConsentKey } from "../src/cloud/consent.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -170,10 +170,10 @@ describe("Coach reads the page the person has open, with their message", () => {
   });
 
   // Invariant: a page that can't go is refused with its message, and nothing starts: never a message that went without the page its panel said it read
-  it("refuses a page anywhere but Coach, not https, with credentials, malformed or past the bound, on both routes, and starts nothing", async () => {
+  it("refuses a page to a taf with no site of its own, not https, with credentials, malformed or past the bound, on both routes, and starts nothing", async () => {
     const w = await world();
     const cases: Array<[string, string, unknown]> = [
-      ["another taf", RAE, PAGE_SENT],
+      ["a taf with no browser connection", RAE, PAGE_SENT],
       ["http", COACH, { ...PAGE_SENT, url: "http://shop.example/" }],
       ["a browser page", COACH, { ...PAGE_SENT, url: "chrome://settings" }],
       ["credentials in the address", COACH, { ...PAGE_SENT, url: "https://ana:pw@shop.example/" }],
@@ -407,5 +407,84 @@ describe("Coach reads the page only with the person's page consent, given in the
     // The page's words are never in a log line, and nothing of it is kept but a host, which needs the consent.
     expect(logs.join("\n")).not.toContain("Ignore the person");
     expect(JSON.stringify([...w.coach.held.values()])).not.toContain("Ignore the person");
+  });
+});
+
+/** planque's connections for the account: Rae's browser connection, signed for `sites` (or any public site). */
+function withConnections(w: World, conn: Record<string, unknown> | "down") {
+  const base = deps(w);
+  return {
+    ...base,
+    planqueBase: "https://planque.test",
+    fetch: (async (input: RequestInfo | URL) => {
+      if (String(input) === "https://planque.test/v1/accounts/t_acme/connections") {
+        return conn === "down" ? new Response("{}", { status: 503 })
+          : new Response(JSON.stringify({ connections: [{ agent: "rae", vendor: "Websites", kind: "browser", status: "connected", ...conn }] }), { status: 200 });
+      }
+      return new Response(JSON.stringify(ME), { status: 200 });
+    }) as typeof fetch,
+  };
+}
+
+describe("a taf reads the page the person sends it, only on its own sites", () => {
+  const sendTo = async (d: ReturnType<typeof withConnections>, body: unknown, via: "send" | "stream" = "send") => {
+    const path = `/v1/tafs/${RAE}/messages${via === "stream" ? "/stream" : ""}`;
+    if (via === "send") {
+      const r = await handle(event("POST", path, body), d);
+      return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown> };
+    }
+    const r = await handleStream(event("POST", path, body), d);
+    let raw = "";
+    for await (const chunk of r.body) raw += chunk;
+    return { status: r.statusCode, body: r.statusCode === 200 ? {} : JSON.parse(raw) as Record<string, unknown> };
+  };
+
+  // Invariant: a taf gets the page only from a site the owner signed for its browser connection, read only, and the page never reaches its run's input or chat
+  // Category: privacy
+  // Attack: a taf scoped to one shop gets the text of any page the person sends from, or a page steers it to act, pay or call another app, or stays in the chat kiff/agents keeps
+  // Refused: off its sites, signed for any public site, no connection, or planque unread: 400 page_refused and nothing starts; on them: the page as the aside with TAF_PAGE_TOOLS alone, and the host the only thing kept
+  it("on its own site: the page as the aside, read-only tools, the host kept, the page's text nowhere in the run's input", async () => {
+    const w = await world();
+    const d = withConnections(w, { sites: ["shop.example"] });
+    const r = await sendTo(d, { text: "Lis cette page et résume-la", page: PAGE_SENT });
+    expect(r.status).toBe(200);
+    const run = r.body.run as string;
+    expect((r.body.message as { reading?: string }).reading).toBe("shop.example");
+    const sent = w.agents.asides.get(run)!;
+    expect(sent.tools).toEqual([...TAF_PAGE_TOOLS]);
+    expect(sent.aside).toContain("Address: https://shop.example/orders/42\n");
+    // The run's input, which kiff/agents keeps with the chat, is the person's words and the host's line alone.
+    const started = JSON.stringify(w.agents.runs.find((x) => x.id === run)!);
+    expect(started).not.toContain("Refunds within 30 days");
+    expect(started).not.toContain("evil.example");
+    expect(started).not.toContain("Refund policy");
+    expect(await keptHost(w, run)).toBe("shop.example");
+    // A subdomain of a signed site is that site, as planque holds the connection to it.
+    expect((await sendTo(d, { text: "And this?", page: { ...PAGE_SENT, url: "https://help.shop.example/a" } })).status).toBe(200);
+    // The thread says which site went with the taf's message.
+    const thread = await handle(event("GET", `/v1/tafs/${RAE}/conversation`), d);
+    const messages = (JSON.parse(thread.body) as { messages: Array<{ id: string; reading?: string }> }).messages;
+    expect(messages.find((m) => m.id === `${run}.in`)?.reading).toBe("shop.example");
+  });
+
+  it("refuses the page off its sites, for any public site, with no connection or planque unread, on both routes, and starts nothing", async () => {
+    const w = await world();
+    const cases: Array<[string, Record<string, unknown> | "down", unknown]> = [
+      ["another site", { sites: ["shop.example"] }, { ...PAGE_SENT, url: "https://other.example/" }],
+      ["a site that only ends like it", { sites: ["shop.example"] }, { ...PAGE_SENT, url: "https://evilshop.example/" }],
+      ["signed for any public site", { any_site: true }, PAGE_SENT],
+      ["no sites said", {}, PAGE_SENT],
+      ["planque unread", "down", PAGE_SENT],
+      ["a mail site, even if signed", { sites: ["mail.google.com"] }, { ...PAGE_SENT, url: "https://mail.google.com/mail/u/0/" }],
+    ];
+    for (const [name, conn, page] of cases) {
+      for (const via of ["send", "stream"] as const) {
+        const r = await sendTo(withConnections(w, conn), { text: "What's this?", page }, via);
+        expect(r.status, `${name} (${via})`).toBe(400);
+        expect(r.body.code, name).toBe("page_refused");
+      }
+    }
+    expect(w.agents.runs.filter((x) => x.agent === RAE)).toHaveLength(0);
+    expect(w.agents.asides.size).toBe(0);
   });
 });
