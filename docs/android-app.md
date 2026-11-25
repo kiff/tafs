@@ -725,13 +725,15 @@ app (docs/parity.md, "One layout on every app"). The caps are named in one place
   sheet unless it says otherwise;
 - `PageWidth.List`, 980 dp: the Overview, your tafs (the home list), sharing;
 - `PageWidth.Gallery`, 640 dp: the recipe gallery;
+- `PageWidth.Brief`, 1100 dp: your brief, which the Needs you tab draws when it's on (`BriefView.kt`, `BriefTab`); a held
+  call or a step opened from it is a reading page, 720;
 - `PageWidth.Calendar`, 1180 dp.
 
 `Modifier.pageColumn(max)` centres the column, then caps it; text and rows inside stay aligned to the start, and a window
 narrower than the cap is unchanged. **Every sheet takes its cap through `DriveSheet(maxWidth = …)`**, as a sheet of its own
 (`sheetMaxWidth`) and beside a tablet's sidebar, where it draws in place. A cap written after a column fills the window does
 nothing, which is how the Overview and the Calendar used to sit capped at the left. `PageWidthTest` fails on a page that
-sets its own number. Android has no Brief screen, and Alerts are a section of Account.
+sets its own number. Alerts are a section of Account, not a page of their own.
 
 ## The bar
 

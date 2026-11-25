@@ -1,0 +1,1 @@
+- **Android on a tablet: the brief is a centred column too**, at most 1100 wide as on the iPad and the Mac, and a held call or step opened from it at most 720 ([docs/android-app.md](../docs/android-app.md), "Wide screens").
