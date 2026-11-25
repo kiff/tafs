@@ -10,11 +10,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Your tafs never empties (row 27, the owner's Galaxy Watch 5 re-test): a list read that misses keeps the list the watch had, on
  * screen and kept, and is read again quietly; the phone's pushed list ([KeptTafs]) moves the Tafs page at once.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35], application = WatchApplication::class)
 class TafListTest {
   private val t = 1_763_244_000_000L
   private val wiki = TafLine("taf_1", "Wiki lookup", "Ready", halted = false)
