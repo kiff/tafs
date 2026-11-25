@@ -83,8 +83,10 @@ class AnswerOnePlaceTest {
   }
 
   @Test fun theTurnsThePhonesLinesCoverStayThisChatsByTheirIds() {
-    val turn = KeptTurn(WatchModel.Said("Paris", t), paris.copy(state = AskLine.ACCEPTED))
-    val lines = listOf(ChatLine("m1", mine = true, at = "2026-11-25T16:54:30Z", text = "Paris"))
+    // Sent from the watch, unanswered here; the phone's lines hold the message and its answer, so the lines show it.
+    val turn = KeptTurn(WatchModel.Said("Paris", java.time.Instant.parse("2026-11-25T16:53:43Z").toEpochMilli()), paris.copy(state = AskLine.ACCEPTED))
+    val lines = listOf(ChatLine("m1", mine = true, at = "2026-11-25T16:53:44Z", text = "Paris"),
+      ChatLine("m2", mine = false, at = "2026-11-25T16:54:10Z", text = "I couldn't read the Paris page."))
     val merged = KeptThreads.withLines(KeptThread(t, turns = listOf(turn)), lines)
     assertTrue(merged.turns.isEmpty())
     assertEquals(listOf("wa_9"), merged.sent)

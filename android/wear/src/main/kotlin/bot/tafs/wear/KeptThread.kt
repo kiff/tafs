@@ -107,12 +107,47 @@ object KeptThreads {
     return threads + (key to withLines(thread, lines))
   }
 
-  /** [thread] with the phone's [lines]: the watch's own turns the lines already hold (sent before the newest line) go. */
-  fun withLines(thread: KeptThread, lines: List<ChatLine>): KeptThread {
-    val newest = lines.mapNotNull { WatchChatTime.instantOf(it.at)?.toEpochMilli() }.maxOrNull()
-    // The turns that go are still this chat's: their ids stay in [KeptThread.sent], so their answers never land in the Inbox.
-    return thread.copy(lines = lines, turns = if (newest == null) thread.turns else thread.turns.filter { it.said.at > newest })
-      .sending(thread.turns.map { it.ask.id })
+  /**
+   * [thread] with the phone's [lines]. A turn sent from this watch stays while it knows more than the lines do: its answer (with
+   * Read more, by its request's id), or its "answering" while the lines hold no answer yet. One the lines hold with their answer,
+   * still unanswered here, goes: the lines show it. The ids of the turns that go stay in [KeptThread.sent], so their answers
+   * never land in the Inbox.
+   */
+  fun withLines(thread: KeptThread, lines: List<ChatLine>): KeptThread =
+    thread.copy(lines = lines, turns = thread.turns.filter { keeps(it, lines) }).sending(thread.turns.map { it.ask.id })
+
+  /** How far apart the person's words on the watch and the phone's line of them may be, and still be the same message. */
+  private const val SAME_MESSAGE_MS = 10 * 60 * 1000L
+
+  /** The phone's line of [turn]: the person's, the same words, within [SAME_MESSAGE_MS] of when the watch sent it. */
+  private fun lineOf(turn: KeptTurn, lines: List<ChatLine>): Int = lines.indexOfFirst { line ->
+    line.mine && line.text.trim() == turn.said.text.trim() &&
+      (WatchChatTime.instantOf(line.at)?.toEpochMilli()?.let { kotlin.math.abs(it - turn.said.at) <= SAME_MESSAGE_MS } ?: false)
+  }
+
+  /** The taf's lines answering the person's line at [index]: those after it, up to their next one. */
+  private fun answersAfter(index: Int, lines: List<ChatLine>): IntRange {
+    val end = (index + 1 until lines.size).firstOrNull { lines[it].mine } ?: lines.size
+    return index + 1 until end
+  }
+
+  private fun keeps(turn: KeptTurn, lines: List<ChatLine>): Boolean {
+    val at = lineOf(turn, lines)
+    return at < 0 || turn.ask.ended || answersAfter(at, lines).isEmpty()
+  }
+
+  /**
+   * The phone's [lines] as the chat draws them beside the watch's [turns]: a turn shows its own words and answer, so the lines of
+   * the same message, the person's and the taf's answer to it, aren't drawn twice.
+   */
+  fun shownLines(lines: List<ChatLine>, turns: List<KeptTurn>): List<ChatLine> {
+    val hidden = mutableSetOf<Int>()
+    for (turn in turns) {
+      val at = lineOf(turn, lines).takeIf { it >= 0 } ?: continue
+      hidden += at
+      hidden += answersAfter(at, lines)
+    }
+    return lines.filterIndexed { i, _ -> i !in hidden }
   }
 }
 

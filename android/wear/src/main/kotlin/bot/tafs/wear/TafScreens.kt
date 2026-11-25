@@ -181,10 +181,12 @@ private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions,
     if (bot.tafs.watchlink.ChatTime.startsDay(previous, day)) item { DayHeader(WatchChatTime.day(day)) }
     previous = day
   }
-  (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.forEach { line ->
+  shownLines(open).forEach { line ->
     val at = WatchChatTime.instantOf(line.at)
     at?.let(::header)
     item { ChatBubble(line.text, mine = line.mine, foot = if (line.more) Words.Watch.moreOnPhone else null, time = at?.let { WatchChatTime.time(it) }) }
+    // A cut answer the watch can't read whole (no request of its own here): the phone opens on this chat, and the watch stays.
+    if (line.more && !line.mine) item { OpenChatOnPhone(open, act) }
   }
   for (turn in open.chat.turns) {
     val at = java.time.Instant.ofEpochMilli(turn.at)
@@ -232,15 +234,28 @@ internal fun tafChatLatest(open: WatchModel.OpenTaf): Int {
     if (bot.tafs.watchlink.ChatTime.startsDay(previous, day)) n++
     previous = day
   }
-  (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.forEach { line ->
+  shownLines(open).forEach { line ->
     WatchChatTime.instantOf(line.at)?.let(::header)
     n++
+    if (line.more && !line.mine) n++
   }
   for (turn in open.chat.turns) {
     header(java.time.Instant.ofEpochMilli(turn.at))
     n += 2
   }
   return n
+}
+
+/** The phone's lines of a taf's chat, less those of the messages sent from this watch, which their turns show ([KeptThreads.shownLines]). */
+internal fun shownLines(open: WatchModel.OpenTaf): List<bot.tafs.watchlink.ChatLine> =
+  (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.let { lines ->
+    KeptThreads.shownLines(lines, open.chat.turns.map { KeptTurn(WatchModel.Said(it.said, it.at), it.ask) })
+  }.orEmpty()
+
+/** Open on phone, under a cut answer: the phone opens this taf's chat, where the whole answer is; the watch stays where it is. */
+@Composable
+private fun OpenChatOnPhone(open: WatchModel.OpenTaf, act: Actions) {
+  Button(onClick = { act.openOnPhone(onPhone(open)) }, modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp), colors = neutralButton()) { Text(Words.Watch.openOnPhone) }
 }
 
 /** A line under a taf's name in its chat: its state, the paused line, or why nothing is sent. */
@@ -297,6 +312,10 @@ internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.
         WatchModel.Foot.OnPhone -> Text(Words.Watch.moreOnPhone, style = MaterialTheme.typography.labelSmall, color = Look.dim)
         null -> Unit
       }
+    }
+    // The whole couldn't be read on the watch: the phone opens on this chat, where it is.
+    if (footOf(ask, whole) == WatchModel.Foot.OnPhone && onPhone != null) {
+      Button(onClick = { act.openOnPhone(onPhone) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) }
     }
     // When the answer came, under it (row 44, C).
     WatchChatTime.instantOf(ask.updated)?.let { MessageTime(WatchChatTime.time(it)) }
