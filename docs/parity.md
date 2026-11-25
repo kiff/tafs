@@ -268,7 +268,7 @@ Every finding from the owner's walk-throughs of the Chrome extension, the Galaxy
 | :- | :- |
 | A run started from the side panel should work in the tab you're on | fixed (tafs#2024, 0.2.12) |
 | A step of another run must never work in a tab joined by an earlier one | fixed (tafs#2025, 0.2.13) |
-| A joined tab was sent to another address | fixed for an open: a joined tab is read only at its own address, and any other open goes to the run's own tab (tafs#2030, 0.2.14). **Open:** an act (a link clicked, a form sent, back) can still move a joined tab within the run's sites |
+| A joined tab was sent to another address | fixed for an open: a joined tab is read only at its own address, and any other open goes to the run's own tab (tafs#2030, 0.2.14). An act (a link clicked, a form sent, back) moving a joined tab within the run's sites is the feature: the work happens in your tab, where you see it. The store and Privacy words say so |
 | A taf's message carries the page you're on | fixed: only on that taf's phone-signed sites, under page consent "2", checked again by tafs cloud, and a page turn only reads (tafs#2030) |
 
 The other devices have no tab to join: — on each.
@@ -308,8 +308,7 @@ Each watch cell moves to done, or to "broken on the owner's check", from the own
 
 **Open, in one place:**
 1. Tafs set up before tonight keep their old instructions (B, and the cut read) until the tafs upgrade runs. That waits on the owner.
-2. Chrome: an act in a joined tab can still move it within the run's sites.
-3. Windows notes 3 and 5a on the other apps: a long Spanish status in Connect apps, and Overview's people count in a medium window, are still to check on iPhone/iPad and Mac 13+, Android, macOS 12 and Linux.
+2. Windows notes 3 and 5a on the other apps: a long Spanish status in Connect apps, and Overview's people count in a medium window, are still to check on iPhone/iPad and Mac 13+, Android, macOS 12 and Linux.
 
 ## Today's cross-device work
 
