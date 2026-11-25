@@ -144,6 +144,7 @@ yes, and fail the test.
 | The person drags the run's own tab out of its group: it stays the run's, fenced, its own page read, an open off the run's sites still `site_not_listed` | `owntabs.e2e.test.js` |
 | The person drags a tab of theirs into the run's group: it never becomes the run's (not in its tabs, not fenced), an open of its exact address goes to the run's own tab and nothing they typed in theirs is in a result; the run's Stop and the taf's next run leave it open | `owntabs.e2e.test.js` |
 | Two runs of two tafs (two grants) at once: a tab and a group each; a read of one is `page_changed` in the other; each fill lands in its own tab only; one's close and its taf's next run leave the other's tab, group and fence as they were | `owntabs.e2e.test.js` |
+| The side panel after a refusal of a page that isn't the run's: `given_back` (the person moved the tab: one of theirs the run joined, or one of the run's own), `page_changed` (an act on an old read) and `no_back` (the taf's `back`), in a joined tab and in a tab of the run's own. Each is one new line in the run's card, "<step> · not done (<code>)", drawn as refused, with no Your turn left; after `given_back` the tab is in none of the run's tabs and the panel's head no longer marks the taf as the one whose tab is in front; the card's site stays the run's, and the person's own move on the run's sites draws no line. The run's next open after `given_back` is one plain line, in a tab of its own | `panel.e2e.test.js` |
 | Chrome's back/forward cache is on when a test asks for it (the person's Back case below runs with it on and off) | `bfcache.e2e.test.js` |
 
 ## Not covered yet
@@ -226,4 +227,9 @@ Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
 
-None.
+- **The person's own move off the run's sites shows in the run's card as the taf's, and the card says the taf is there**
+  (`panel.e2e.test.js`). In a joined tab and in a tab of the run's own, an address the person types off the run's sites is
+  recorded as a step of the run's (`{op: navigate, url, error: site_not_listed}`): in a joined tab twice (`onBeforeNavigate`,
+  then `onErrorOccurred` on `ERR_BLOCKED_BY_CLIENT`), in a tab of the run's own once (`onErrorOccurred`). The panel draws
+  "Stopped a move to other.test · not done (site_not_listed)" for a move the taf never made, and `record()` sets the run's site
+  from that address, so the card's site is the person's own destination.
