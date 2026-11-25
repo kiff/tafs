@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "খুব বড়: এই ধরনের ফাইলের জন্য সর্বোচ্চ $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "এই ধরনের ফাইল সংযুক্ত করা যায় না। শুধু ছবি, PDF, টেক্সট, CSV, Markdown, Word বা Excel।" },
   "attach_too_many": { "message": "একটি বার্তায় সর্বোচ্চ 5টি ফাইল।" },
-  "attach_failed": { "message": "আপলোড হয়নি। এটি সরিয়ে আবার চেষ্টা করুন।" }
+  "attach_failed": { "message": "আপলোড হয়নি। এটি সরিয়ে আবার চেষ্টা করুন।" },
+  "working_here": { "message": "$TAF$ এখানে কাজ করছে", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "ক্লিক করছে" },
+  "pointer_fill": { "message": "টাইপ করছে" },
+  "pointer_select": { "message": "বেছে নিচ্ছে" },
+  "pointer_check": { "message": "টিক দিচ্ছে" },
+  "pointer_press": { "message": "কী চাপছে" },
+  "pointer_scroll": { "message": "স্ক্রল করছে" },
+  "pointer_read": { "message": "পড়ছে" }
 }

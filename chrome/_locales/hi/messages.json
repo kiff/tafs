@@ -302,5 +302,13 @@
   "attach_too_big": { "message": "बहुत बड़ी: इस तरह की फ़ाइल के लिए ज़्यादा से ज़्यादा $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "इस तरह की फ़ाइल अटैच नहीं हो सकती। सिर्फ़ फ़ोटो, PDF, टेक्स्ट, CSV, Markdown, Word या Excel।" },
   "attach_too_many": { "message": "एक संदेश में ज़्यादा से ज़्यादा 5 फ़ाइलें।" },
-  "attach_failed": { "message": "अपलोड नहीं हुई। इसे हटाएँ और फिर कोशिश करें।" }
+  "attach_failed": { "message": "अपलोड नहीं हुई। इसे हटाएँ और फिर कोशिश करें।" },
+  "working_here": { "message": "$TAF$ यहाँ काम कर रहा है", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "क्लिक कर रहा है" },
+  "pointer_fill": { "message": "टाइप कर रहा है" },
+  "pointer_select": { "message": "चुन रहा है" },
+  "pointer_check": { "message": "टिक कर रहा है" },
+  "pointer_press": { "message": "कुंजी दबा रहा है" },
+  "pointer_scroll": { "message": "स्क्रॉल कर रहा है" },
+  "pointer_read": { "message": "पढ़ रहा है" }
 }

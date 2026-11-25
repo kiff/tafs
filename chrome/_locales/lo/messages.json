@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "ໃຫຍ່ເກີນໄປ: ສູງສຸດ $SIZE$ ສຳລັບໄຟລ໌ປະເພດນີ້", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "ແນບໄຟລ໌ປະເພດນີ້ບໍ່ໄດ້. ສະເພາະຮູບພາບ, PDF, ຂໍ້ຄວາມ, CSV, Markdown, Word ຫຼື Excel ເທົ່ານັ້ນ." },
   "attach_too_many": { "message": "ສູງສຸດ 5 ໄຟລ໌ຕໍ່ຂໍ້ຄວາມ." },
-  "attach_failed": { "message": "ອັບໂຫຼດບໍ່ສຳເລັດ. ເອົາມັນອອກ ແລ້ວລອງໃໝ່ອີກຄັ້ງ." }
+  "attach_failed": { "message": "ອັບໂຫຼດບໍ່ສຳເລັດ. ເອົາມັນອອກ ແລ້ວລອງໃໝ່ອີກຄັ້ງ." },
+  "working_here": { "message": "$TAF$ ກຳລັງເຮັດວຽກຢູ່ທີ່ນີ້", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "ກຳລັງຄລິກ" },
+  "pointer_fill": { "message": "ກຳລັງພິມ" },
+  "pointer_select": { "message": "ກຳລັງເລືອກ" },
+  "pointer_check": { "message": "ກຳລັງໝາຍ" },
+  "pointer_press": { "message": "ກຳລັງກົດປຸ່ມ" },
+  "pointer_scroll": { "message": "ກຳລັງເລື່ອນ" },
+  "pointer_read": { "message": "ກຳລັງອ່ານ" }
 }

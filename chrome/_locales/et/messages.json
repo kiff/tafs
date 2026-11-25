@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Liiga suur: seda tüüpi faili jaoks kuni $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Seda tüüpi faili ei saa lisada. Ainult fotod, PDF, tekst, CSV, Markdown, Word või Excel." },
   "attach_too_many": { "message": "Kuni 5 faili sõnumi kohta." },
-  "attach_failed": { "message": "Ei laaditud üles. Eemalda see ja proovi uuesti." }
+  "attach_failed": { "message": "Ei laaditud üles. Eemalda see ja proovi uuesti." },
+  "working_here": { "message": "$TAF$ töötab siin", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Klõpsab" },
+  "pointer_fill": { "message": "Kirjutab" },
+  "pointer_select": { "message": "Valib" },
+  "pointer_check": { "message": "Märgib" },
+  "pointer_press": { "message": "Vajutab klahvi" },
+  "pointer_scroll": { "message": "Kerib" },
+  "pointer_read": { "message": "Loeb" }
 }

@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Trop volumineux : $SIZE$ au maximum pour ce type de fichier", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Impossible de joindre ce type de fichier. Uniquement photos, PDF, texte, CSV, Markdown, Word ou Excel." },
   "attach_too_many": { "message": "5 fichiers au maximum par message." },
-  "attach_failed": { "message": "Échec de l'envoi. Retirez-le et réessayez." }
+  "attach_failed": { "message": "Échec de l'envoi. Retirez-le et réessayez." },
+  "working_here": { "message": "$TAF$ travaille ici", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Clique" },
+  "pointer_fill": { "message": "Saisit" },
+  "pointer_select": { "message": "Choisit" },
+  "pointer_check": { "message": "Coche" },
+  "pointer_press": { "message": "Appuie sur une touche" },
+  "pointer_scroll": { "message": "Fait défiler" },
+  "pointer_read": { "message": "Lit" }
 }

@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Quá lớn: tối đa $SIZE$ cho loại tệp này", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Không thể đính kèm loại tệp này. Chỉ ảnh, PDF, văn bản, CSV, Markdown, Word hoặc Excel." },
   "attach_too_many": { "message": "Tối đa 5 tệp mỗi tin nhắn." },
-  "attach_failed": { "message": "Chưa tải lên được. Hãy gỡ tệp và thử lại." }
+  "attach_failed": { "message": "Chưa tải lên được. Hãy gỡ tệp và thử lại." },
+  "working_here": { "message": "$TAF$ đang làm việc ở đây", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Đang nhấp" },
+  "pointer_fill": { "message": "Đang gõ" },
+  "pointer_select": { "message": "Đang chọn" },
+  "pointer_check": { "message": "Đang đánh dấu" },
+  "pointer_press": { "message": "Đang nhấn phím" },
+  "pointer_scroll": { "message": "Đang cuộn" },
+  "pointer_read": { "message": "Đang đọc" }
 }

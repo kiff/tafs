@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "ძალიან დიდია: ამ ტიპის ფაილისთვის მაქსიმუმ $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "ამ ტიპის ფაილის მიმაგრება შეუძლებელია. მხოლოდ ფოტოები, PDF, ტექსტი, CSV, Markdown, Word ან Excel." },
   "attach_too_many": { "message": "ერთ შეტყობინებაში მაქსიმუმ 5 ფაილი." },
-  "attach_failed": { "message": "არ აიტვირთა. ამოიღეთ და სცადეთ ხელახლა." }
+  "attach_failed": { "message": "არ აიტვირთა. ამოიღეთ და სცადეთ ხელახლა." },
+  "working_here": { "message": "$TAF$ აქ მუშაობს", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "აწკაპუნებს" },
+  "pointer_fill": { "message": "წერს" },
+  "pointer_select": { "message": "ირჩევს" },
+  "pointer_check": { "message": "ნიშნავს" },
+  "pointer_press": { "message": "ღილაკს აჭერს" },
+  "pointer_scroll": { "message": "გადაახვევს" },
+  "pointer_read": { "message": "კითხულობს" }
 }

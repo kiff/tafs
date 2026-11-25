@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Too large: at most $SIZE$ for this kind of file", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Can't attach this kind of file. Photos, PDF, text, CSV, Markdown, Word or Excel only." },
   "attach_too_many": { "message": "At most 5 files a message." },
-  "attach_failed": { "message": "Didn't upload. Remove it and try again." }
+  "attach_failed": { "message": "Didn't upload. Remove it and try again." },
+  "working_here": { "message": "$TAF$ is working here", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Clicking" },
+  "pointer_fill": { "message": "Typing" },
+  "pointer_select": { "message": "Choosing" },
+  "pointer_check": { "message": "Ticking" },
+  "pointer_press": { "message": "Pressing a key" },
+  "pointer_scroll": { "message": "Scrolling" },
+  "pointer_read": { "message": "Reading" }
 }

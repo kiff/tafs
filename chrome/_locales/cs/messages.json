@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Příliš velký: pro tento druh souboru nejvýše $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Tento druh souboru nelze připojit. Jen fotky, PDF, text, CSV, Markdown, Word nebo Excel." },
   "attach_too_many": { "message": "Nejvýše 5 souborů na zprávu." },
-  "attach_failed": { "message": "Nenahrálo se. Odstraňte ho a zkuste to znovu." }
+  "attach_failed": { "message": "Nenahrálo se. Odstraňte ho a zkuste to znovu." },
+  "working_here": { "message": "$TAF$ tu pracuje", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Kliká" },
+  "pointer_fill": { "message": "Píše" },
+  "pointer_select": { "message": "Vybírá" },
+  "pointer_check": { "message": "Zaškrtává" },
+  "pointer_press": { "message": "Mačká klávesu" },
+  "pointer_scroll": { "message": "Posouvá" },
+  "pointer_read": { "message": "Čte" }
 }

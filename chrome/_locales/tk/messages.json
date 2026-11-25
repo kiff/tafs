@@ -302,5 +302,13 @@
   "attach_too_big": { "message": "Örän uly: bu görnüşli faýl üçin iň köp $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Bu görnüşli faýly goşup bolmaýar. Diňe suratlar, PDF, tekst, CSV, Markdown, Word ýa-da Excel." },
   "attach_too_many": { "message": "Bir habarda iň köp 5 faýl." },
-  "attach_failed": { "message": "Ýüklenmedi. Ony aýyryň we gaýtadan synanyşyň." }
+  "attach_failed": { "message": "Ýüklenmedi. Ony aýyryň we gaýtadan synanyşyň." },
+  "working_here": { "message": "$TAF$ şu ýerde işleýär", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Basýar" },
+  "pointer_fill": { "message": "Ýazýar" },
+  "pointer_select": { "message": "Saýlaýar" },
+  "pointer_check": { "message": "Belleýär" },
+  "pointer_press": { "message": "Düwme basýar" },
+  "pointer_scroll": { "message": "Aýlaýar" },
+  "pointer_read": { "message": "Okaýar" }
 }
