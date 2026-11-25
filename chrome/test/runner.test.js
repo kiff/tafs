@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS, FENCE_RULES, RUN_SANDBOX } from "../src/runner.js";
+import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS, FENCE_RULES } from "../src/runner.js";
 import { SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED, LOCAL_SUFFIXES, refuseURL, fenceDomains } from "../src/sites.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 import { Panels, joinFront, MARK_MS } from "../src/panels.js";
@@ -116,8 +116,8 @@ const runner = (c) => new Runner({ chrome: c, sleep, paired: () => paired });
 const fenceIdsFrom = (ids) => Array.from({ length: FENCE_RULES }, (_, i) => Math.min(...ids) + i);
 
 /** The fence Chrome is given for a tab, as [action, requestDomains or regexFilter or null], by priority then id. */
-const fenceShape = (rules) => rules.slice().sort((a, b) => a.priority - b.priority || a.id - b.id).map((x) => [x.priority, x.action.type, x.condition.requestDomains || x.condition.regexFilter || (x.action.responseHeaders ? x.action.responseHeaders.map((hh) => hh.header + ": " + hh.value).join() : null)]);
-const FENCE = (granted, allowed = [], joined = false) => [
+const fenceShape = (rules) => rules.slice().sort((a, b) => a.priority - b.priority || a.id - b.id).map((x) => [x.priority, x.action.type, x.condition.requestDomains || x.condition.regexFilter || null]);
+const FENCE = (granted, allowed = []) => [
   [1, "block", null],
   ...(granted.length ? [[2, "allow", granted]] : []),
   [3, "block", [...SENSITIVE.sites]],
@@ -126,7 +126,6 @@ const FENCE = (granted, allowed = [], joined = false) => [
   [5, "block", [...NEVER_OPENED]],
   [5, "block", "^http://"],
   [5, "block", "^https?://[^/?#]*@"],
-  ...(joined ? [] : [[6, "modifyHeaders", "Content-Security-Policy: " + RUN_SANDBOX]]),
 ];
 
 test("a run opens in a background window of its own, grouped and named, and reads the page", async () => {
@@ -463,10 +462,8 @@ test("a run's tab is fenced by Chrome's own rules before it loads: only its site
   assert.deepEqual(fenceShape(rules.addRules), FENCE(["shop.example"]));
   for (const x of rules.addRules) {
     assert.deepEqual(x.condition.tabIds, [tab]);
-    // The sandbox is the page's own header: a frame inherits it.
-    assert.deepEqual(x.condition.resourceTypes, x.action.type === "modifyHeaders" ? ["main_frame"] : ["main_frame", "sub_frame"]);
+    assert.deepEqual(x.condition.resourceTypes, ["main_frame", "sub_frame"]);
   }
-  assert.ok(!RUN_SANDBOX.includes("allow-modals"), "no dialog reaches Chromium");
   const fenced = c.calls.findIndex((x) => x[0] === "dnr");
   const loaded = c.calls.findIndex((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/");
   assert.ok(fenced < loaded, "fenced before the run's page loads");
@@ -1541,7 +1538,7 @@ test("a navigation in a joined tab that leaves its sites is stopped, and a pop-u
   const { c, r } = await joining();
   await r.handle(started());
   const rules = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules;
-  assert.deepEqual(fenceShape(rules), FENCE(["shop.example"], [], true), "the same fence as a run's own tab, but no sandbox: the person's tab is never sandboxed");
+  assert.deepEqual(fenceShape(rules), FENCE(["shop.example"]), "the same fence as a run's own tab");
   assert.ok(rules.every((x) => x.condition.tabIds.join() === String(THEIRS)));
   c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://evil.example/steal" });
   assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url), "the fence blocks it; the person's page stays");
@@ -2534,8 +2531,7 @@ function dnrAllows(rules, tabId, raw) {
     if (c.regexFilter && !new RegExp(c.regexFilter, "i").test(u.href)) return false;
     return true;
   };
-  // A rule that changes a response's headers lets the request go or not as the others say.
-  const hit = rules.filter((r) => r.action.type !== "modifyHeaders").filter(matches).sort((a, b) => b.priority - a.priority || (a.action.type === "allow" ? -1 : 1))[0];
+  const hit = rules.filter(matches).sort((a, b) => b.priority - a.priority || (a.action.type === "allow" ? -1 : 1))[0];
   return !!hit && hit.action.type === "allow";
 }
 
@@ -2644,28 +2640,3 @@ test("a taf's act that heads for a sensitive site in its own tab is site_blocked
   assert.deepEqual(refused.map((x) => [x.url, x.error]), [["https://bank.shop.example/", "site_blocked"]]);
 });
 
-// The run's own tabs load under a sandbox with no allow-modals (0.2.20); the person's own navigation there lifts it before its
-// request is sent, so the page they chose loads as their own. The run's own work keeps it.
-test("the person's own navigation in a run's own tab takes the sandbox off before its request; the run's own act keeps it", async () => {
-  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
-  const r = runner(c);
-  await r.handle(step());
-  const tab = r.runs.get("run_1").tab;
-  const base = r.fenceIds.get(tab);
-  const sandbox = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules.find((x) => x.action.type === "modifyHeaders");
-  assert.equal(sandbox.id, base + 7, "the sandbox is the fence's id 7");
-  assert.deepEqual(sandbox.condition, { tabIds: [tab], resourceTypes: ["main_frame"] });
-  assert.equal(sandbox.priority, 6, "above every allow");
-  // The run's own act heading somewhere on its sites: the sandbox stays.
-  r.runs.get("run_1").stepping = tab;
-  let at = c.calls.length;
-  c.listeners.before({ tabId: tab, frameId: 0, url: "https://shop.example/next" });
-  await new Promise((done) => setTimeout(done, 0));
-  assert.ok(!c.calls.slice(at).some((x) => x[0] === "dnr"), "the run's own act keeps the sandbox");
-  r.runs.get("run_1").stepping = null;
-  // The person types an address on the run's site there: the sandbox goes before the request, and only it.
-  at = c.calls.length;
-  c.listeners.before({ tabId: tab, frameId: 0, url: "https://shop.example/account" });
-  await new Promise((done) => setTimeout(done, 0));
-  assert.deepEqual(c.calls.slice(at).filter((x) => x[0] === "dnr").map((x) => x[1]), [{ removeRuleIds: [base + 7] }]);
-});

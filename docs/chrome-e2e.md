@@ -250,6 +250,14 @@ slipped past the label patterns; the fence's user-info rule stops it, with a war
 
 **Chromium runs in English** (`--lang=en-US`, harness.mjs), whatever the computer's language: the panel's lines are checked word for word.
 
+## Open gaps
+
+- **A dialog a page raises as it loads** (`gaps2.e2e.test.js`, two tests). The dialog guard goes into a run's tab once its page
+  has committed (`webNavigation.onCommitted`), so a page's own inline `alert` or `confirm` as it loads reaches Chromium as a real
+  dialog, and the run's open waits until it's answered. The tests pin that: the harness holds the dialog (`h.holdDialogs`), the
+  test sees it and the open still waiting, then answers it itself. A sandbox with no `allow-modals` for a run's own tabs closed it
+  in a spike (branch `chrome-sandbox-spike`), not shipped.
+
 ## Known bugs, as `todo` tests
 
 The "still open" checks after a Stop and after the taf's next run wait for the runner to have let the run's tabs go (its state, and
@@ -260,19 +268,10 @@ failure.
 
 None.
 
-Fixed in 0.2.20 (`gaps2.e2e.test.js`): **a page's `alert` or `confirm` as it loads reached Chromium as a real dialog**, in a run's
-tab and in a pop-up its page opened as it loaded. A run's own tabs now load under a sandbox with no `allow-modals`, a response
-header Chrome adds for that tab alone, so Blink drops the call from the page's first byte; the read can't say the page asked. On
-one site in one run, the person's own tab still gets its real `confirm` as it loads, and a frame can still send the tab to another
-page of the run's sites. **A field in a disabled `<fieldset>`, a button inside `[inert]` or marked `aria-disabled`, a read-only
-field, a disabled `<option>` or one of a disabled `<optgroup>`** took the taf's act: refused `disabled` now, while `readonly` on a
-checkbox, a radio or a select, and a field in a disabled fieldset's first legend, stay usable. **`unchecked` on a checked radio**
-answered ok: `bad_step` now.
-
-Logged, not asserted (`FINDING` lines in the run's output), for a decision: an address the person types in a run's own tab may
-still load sandboxed (the sandbox comes off as their navigation starts, but Chrome doesn't wait for the extension; asserted: the
-tab is theirs after, with no rule left, and their next page's `confirm` reaches them); and a page the run loaded stays sandboxed
-after the run lets its tab go, so `confirm()` there answers no until the page is loaded again.
+Fixed in 0.2.20 (`gaps2.e2e.test.js`): **a field in a disabled `<fieldset>`, a button inside `[inert]` or marked
+`aria-disabled`, a read-only field, a disabled `<option>` or one of a disabled `<optgroup>`** took the taf's act: refused
+`disabled` now, while `readonly` on a checkbox, a radio or a select, and a field in a disabled fieldset's first legend, stay
+usable. **`unchecked` on a checked radio** answered ok: `bad_step` now.
 
 Fixed in 0.2.19: **a link to an address, clicked in the person's joined tab, answered `site_not_listed`**
 (`fence219.e2e.test.js`): `page.js` `offFence()` had no branch for an address, a local name, user info or a name not in ASCII.

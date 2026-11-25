@@ -8,7 +8,7 @@
 
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { playwright, start, newRun, until, inWorker, sessionRules, rulesOf, runState, tabInfo, RULES_PER_TAB, RULES_PER_JOINED_TAB } from "./harness.mjs";
+import { playwright, start, newRun, until, inWorker, sessionRules, rulesOf, runState, tabInfo, RULES_PER_TAB } from "./harness.mjs";
 import { joining } from "./joining.mjs";
 
 const skip = !playwright;
@@ -58,7 +58,7 @@ test("a service worker that stops leaves no fence: the worker that starts again 
   const own = await j.step({ op: "open", run: ownRun, url: ownURL });
   assert.equal(own.ok, true, JSON.stringify(own.error));
   const ownTab = (await runState(h, ownRun)).tab;
-  assert.equal((await rulesOf(h, tabId)).length, RULES_PER_JOINED_TAB, "the person's tab: never sandboxed");
+  assert.equal((await rulesOf(h, tabId)).length, RULES_PER_TAB);
   assert.equal((await rulesOf(h, ownTab)).length, RULES_PER_TAB);
   await inWorker(h, () => { globalThis.__e2eBeforeStop = true; });
 

@@ -526,28 +526,15 @@ was done.
   Navigating a tab whose `about:blank` hadn't committed yet raced it: under load the blank page committed after the
   navigation began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The end-to-end
   test `races.e2e.test.js` reproduces that load (one renderer for every page, the person's page busy).
-- **A run's own tabs load every page under a sandbox with no `allow-modals`** (0.2.20, `RUN_SANDBOX`): a `Content-Security-Policy`
-  response header that Chrome adds for that tab alone (the fence's rule 7, priority 6, above every allow, `main_frame`). Every other
-  sandbox permission is kept (scripts, the same origin, forms, pop-ups, downloads, top navigation, pointer lock, presentation,
-  orientation lock, storage access), so pages work as before and a frame may still send the tab to a granted page (a card's 3-D
-  Secure). Blink drops `alert`, `confirm` (it answers no), `prompt` (null), `print` and the "leave this page?" prompt **from the
-  page's first byte**, before any script of the page's or the extension's runs, and nothing reaches Chromium. The page can't lift
-  it, and the site sees nothing of it. Before 0.2.20 a dialog a page raised in its own inline script as it loaded reached Chromium
-  (a confirm could be answered yes), as the guard below only went in once the page had committed.
-  - **Never on a tab of the person's the run joined.** Its dialogs keep the guard below, so one the page raises as it loads
-    there still reaches the person.
-  - **The person's own navigation in a tab of the run's own** (outside the run's open, act, back, a pop-up's first page or a
-    hand-over) takes the sandbox off as it starts (`onBeforeNavigate`, `unsandbox`). Chrome doesn't wait for the extension, so
-    the page they chose may still load sandboxed; the commit gives them the tab, unfenced, and their next load is their own.
-  - **A page the run loaded stays sandboxed after the run lets the tab go** (its end, Stop, a give-back without a new load):
-    the rule only governs the next response, so `confirm()` there answers no until the page is loaded again.
-  - The read can't say that a page asked as it loaded: Blink drops the call before any script of the extension's is there. A
-    dialog raised later is still reported.
 - **A run's tabs get two scripts:**
-  - In the page's own world, once a document has committed (`webNavigation.onCommitted`): `dialogs.js`. A backstop under the
-    sandbox, and the guard of a joined tab: alert, confirm and prompt stop blocking and are reported, a confirm answers no,
-    and a "leave this page?" handler is dropped.
+  - In the page's own world, once a document has committed (`webNavigation.onCommitted`): `dialogs.js`. From then on alert,
+    confirm and prompt stop blocking and are reported, a confirm answers no, and a "leave this page?" handler is dropped.
   - In the isolated world: `mask.js` and `page.js`.
+- **Open gap: a dialog a page raises as it loads.** The guard goes in once the page has committed, so a page's own inline
+  script comes first: an `alert` or `confirm` it raises as it loads reaches Chromium as a real dialog, and the run waits until
+  it's answered (`gaps2.e2e.test.js` pins this). A sandbox with no `allow-modals`, added as a response header for a run's own
+  tabs, closed it in a spike (the `chrome-sandbox-spike` branch) but doesn't ship: the person's own page opened in a run's tab
+  could still load sandboxed, and a page the run loaded stayed sandboxed after the run let its tab go.
 - **Every https site is granted at install, so nothing in a run asks Chrome for one.** The owner chose it (23 Nov: "closer to Claude in
   Chrome"), and Chrome asks once, when the extension is installed or updated to a manifest that widens it (an update that does is
   disabled until accepted, so `host_permissions` is only changed on purpose). **Chrome's permission is therefore no second gate.** What stops a taf

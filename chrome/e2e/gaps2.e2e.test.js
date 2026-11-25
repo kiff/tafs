@@ -1,12 +1,12 @@
 // End to end: the second half of the ranked gaps (docs/chrome-e2e.md, "What each test covers"). A wrong action: no act lands on a
 // control the person can't use (a disabled button, a field in a disabled fieldset, a read-only field, a disabled option, a radio
-// that can't be unchecked); planque's unsigned stop really ends the run, even mid-act; a page's dialogs as it loads and its "leave
-// this page?" never hold the run or reach Chromium; only the extension's own pages command the worker. A stale display: after a
+// that can't be unchecked); planque's unsigned stop really ends the run, even mid-act; a page's "leave this page?" never holds the
+// run, and its dialogs as it loads are pinned as they are today (an open gap); only the extension's own pages command the worker. A stale display: after a
 // tab is given back, the floating bar there no longer says it's the run's, and the badge counts live runs only.
 
 import { test, before, after, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { playwright, start, newRun, ref, until, tabAt, runState, tabInfo, rulesOf, inWorker } from "./harness.mjs";
+import { playwright, start, newRun, ref, until, tabAt, runState, tabInfo, inWorker } from "./harness.mjs";
 import { joining } from "./joining.mjs";
 
 const skip = !playwright;
@@ -152,29 +152,55 @@ test("planque's stop of a run this Chrome doesn't hold changes nothing", { skip 
 
 // ---- 10. Dialogs as a page loads, and "leave this page?" ----
 
-test("an alert a page raises as it loads never reaches Chromium, nor holds the open", { skip }, async () => {
-  const dialogs = h.dialogs.length;
+// Open gap: load-time dialogs, see chrome-sandbox-spike. The dialog guard goes into a run's tab once its page has committed
+// (webNavigation.onCommitted), so a dialog the page raises in its own script as it loads comes first: it reaches Chromium as a real
+// dialog, and the run waits for it to be answered. These tests pin that, so a change to it is seen. The harness holds the dialog
+// open here instead of answering it, so the test sees it, then answers it itself.
+async function heldDialog(what) {
+  return until(() => h.held.find((d) => d.type() === what), "the page's " + what + " in Chromium", 10_000);
+}
+
+test("open gap: an alert a page raises as it loads reaches Chromium, and the run's open waits for it", { skip }, async () => {
   const run = newRun("alert-load");
   started.add(run);
-  const r = await open(run, h.sites.url("shop.test", "/at-load-alert?case=load"));
-  assert.equal(r.page.title, "Welcome");
-  await new Promise((res) => setTimeout(res, 300));
-  assert.deepEqual(h.dialogs.slice(dialogs), [], "a dialog reached Chromium");
+  h.holdDialogs = true;
+  try {
+    let answered = false;
+    const opening = open(run, h.sites.url("shop.test", "/at-load-alert?case=load")).finally(() => (answered = true));
+    const dialog = await heldDialog("alert");
+    assert.equal(dialog.message(), "Welcome to the shop");
+    await new Promise((res) => setTimeout(res, 500));
+    assert.equal(answered, false, "the open waits while the alert is up");
+    await dialog.accept();
+    const r = await opening;
+    assert.equal(r.page.title, "Welcome");
+  } finally {
+    h.holdDialogs = false;
+    h.held.length = 0;
+  }
   await h.fromPanel({ type: "stop", run });
 });
 
-test("a confirm a page raises as it loads is answered no, and never reaches Chromium", { skip }, async () => {
-  const dialogs = h.dialogs.length;
+test("open gap: a confirm a page raises as it loads reaches Chromium, the run's open waits, and the page reads the answer it got", { skip }, async () => {
   const run = newRun("confirm-load");
   started.add(run);
   const url = h.sites.url("shop.test", "/at-load-confirm?case=load");
-  const r = await open(run, url);
-  const tab = await until(() => tabAt(h, url), "the run's tab");
-  assert.equal(await tab.textContent("#out"), "refused", "the page's confirm was accepted");
-  assert.deepEqual(h.dialogs.slice(dialogs), [], "a dialog reached Chromium");
-  // No read is asked to say the page asked: with the guard in Chrome itself (a sandbox without modals), the page's call is dropped
-  // before any script of the extension's could see it.
-  void r;
+  h.holdDialogs = true;
+  try {
+    let answered = false;
+    const opening = open(run, url).finally(() => (answered = true));
+    const dialog = await heldDialog("confirm");
+    assert.equal(dialog.message(), "Stay signed in?");
+    await new Promise((res) => setTimeout(res, 500));
+    assert.equal(answered, false, "the open waits while the confirm is up");
+    await dialog.dismiss();
+    await opening;
+    const tab = await until(() => tabAt(h, url), "the run's tab");
+    assert.equal(await tab.textContent("#out"), "refused", "the page got the answer given in Chromium");
+  } finally {
+    h.holdDialogs = false;
+    h.held.length = 0;
+  }
   await h.fromPanel({ type: "stop", run });
 });
 
@@ -357,56 +383,7 @@ test("an option of a disabled optgroup is refused, and the choice stays", { skip
   assert.equal(r.ok, false);
 });
 
-// ---- 10, under Chrome's own guard (0.2.20: a sandbox without modals, only in the run's tabs) ----
-
-test("one site, one run: the person's own tab gets the page's real confirm as it loads, while the run's tab gets no dialog", { skip }, async () => {
-  const run = newRun("pair");
-  started.add(run);
-  const runURL = h.sites.url("shop.test", "/at-load-confirm?case=pair-run");
-  const before = h.dialogs.length;
-  await open(run, runURL);
-  const runTab = await until(() => tabAt(h, runURL), "the run's tab");
-  // The person's own tab, on the same site, while the run lives.
-  const theirs = await h.context.newPage();
-  await theirs.goto(h.sites.url("shop.test", "/at-load-confirm?case=pair-person"));
-  const theirsSaid = await theirs.textContent("#out");
-  await theirs.close();
-  const dialogs = h.dialogs.slice(before);
-  assert.equal(theirsSaid, "accepted", "the person's own page was answered for");
-  assert.equal(dialogs.filter((d) => d.url.includes("pair-person")).length, 1, "the person's confirm reached Chromium, theirs to answer");
-  assert.equal(await runTab.textContent("#out"), "refused", "the run's page was answered yes");
-  assert.equal(dialogs.filter((d) => d.url.includes("pair-run")).length, 0, "the run's page's confirm reached Chromium");
-});
-
-// A finding, logged for the decision (0.2.20): the sandbox comes off as the person's own navigation starts (onBeforeNavigate), but
-// Chrome sends the request without waiting for the extension, so the page they typed may still load sandboxed, its confirm at load
-// answered no. Asserted: the tab is theirs after, with no rule left, and their next page's confirm reaches them.
-test("an address the person types in the run's own tab: logged; the tab is theirs after, and their next page's confirm is theirs", { skip }, async () => {
-  const run = newRun("typed-confirm");
-  started.add(run);
-  const url = h.sites.url("news.test", "/article?case=typed-confirm");
-  await open(run, url);
-  const tab = await until(() => tabAt(h, url), "the run's tab");
-  const tabId = (await runState(h, run)).tab;
-  const before = h.dialogs.length;
-  await tab.goto(h.sites.url("shop.test", "/at-load-confirm?case=typed-confirm"));
-  console.log("FINDING the person's typed page in the run's own tab: its confirm at load answered " + JSON.stringify(await tab.textContent("#out")) + ", confirms that reached Chromium " + h.dialogs.slice(before).filter((d) => d.type === "confirm").length);
-  await until(async () => (await tabInfo(h, tabId)).groupId === -1, "the tab given to the person", 5000);
-  assert.deepEqual(await rulesOf(h, tabId), [], "no rule left on their tab");
-  const next = h.dialogs.length;
-  await tab.goto(h.sites.url("shop.test", "/at-load-confirm?case=typed-confirm-next"));
-  assert.equal(await tab.textContent("#out"), "accepted", "their next page's confirm was theirs");
-  assert.equal(h.dialogs.slice(next).filter((d) => d.type === "confirm").length, 1);
-});
-
-test("a pop-up a run's page opens as it loads raises no dialog either", { skip }, async () => {
-  const run = newRun("popup-load");
-  started.add(run);
-  const before = h.dialogs.length;
-  await open(run, h.sites.url("shop.test", "/popup-at-load?case=popup"));
-  await new Promise((r) => setTimeout(r, 1500));
-  assert.deepEqual(h.dialogs.slice(before), [], "a dialog reached Chromium");
-});
+// ---- A frame that moves the whole tab ----
 
 test("a frame of the run's site can still send the whole tab to another page of the run's sites", { skip }, async () => {
   const run = newRun("frame-top");
@@ -414,32 +391,4 @@ test("a frame of the run's site can still send the whole tab to another page of 
   await open(run, h.sites.url("shop.test", "/frame-top?case=frame-top"));
   const tabId = (await runState(h, run)).tab;
   await until(async () => /\/article-moved$/.test(((await tabInfo(h, tabId)) || {}).url || ""), "the tab moved by its frame", 5000);
-});
-
-// Findings, measured and logged for the decision, not asserted: loads the header may not reach, and a tab given back.
-test("findings: a confirm at load from the HTTP cache, and on a page given to the person without a new load", { skip }, async () => {
-  const say = (what, value) => console.log("FINDING " + what + ": " + JSON.stringify(value));
-  // HTTP cache: the same cacheable page loaded twice in the run's own tab.
-  const run = newRun("cached");
-  started.add(run);
-  const url = h.sites.url("shop.test", "/at-load-confirmcached?case=cached&bfcache=1");
-  await open(run, url);
-  const tab = await until(() => tabAt(h, url), "the run's tab");
-  say("first load, run's own tab: the page's confirm answered", await tab.textContent("#out"));
-  const dialogs = h.dialogs.length;
-  const asked = h.sites.hits.filter((x) => x.includes("case=cached")).length;
-  await open(run, url + "&again");
-  await open(run, url);
-  const again = await until(() => tabAt(h, url), "the run's tab again");
-  say("second load of the same address: asked of the server again", h.sites.hits.filter((x) => x.includes("case=cached")).length > asked);
-  say("second load: the page's confirm answered", await again.textContent("#out"));
-  say("second load: dialogs that reached Chromium", h.dialogs.slice(dialogs).map((d) => d.type));
-  // A page the run's own tab shows when it's given to the person by their click (the commit gives the tab back; the page shown
-  // after it is the new one), versus the page still showing: confirm() on the page the run loaded, after the run let it go.
-  await h.fromPanel({ type: "stop", run });
-  await until(async () => (await runState(h, run)).tabs.length === 0, "the run's tabs let go", 5000);
-  const before = h.dialogs.length;
-  const answered = await again.evaluate(() => confirm("Still sandboxed?")).catch((e) => "threw: " + e.message);
-  say("after the run ended, confirm() on the page it had loaded answers", answered);
-  say("after the run ended: dialogs that reached Chromium", h.dialogs.slice(before).map((d) => d.type));
 });

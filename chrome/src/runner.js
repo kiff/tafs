@@ -50,17 +50,8 @@ function doneKey(run) {
 }
 
 /** How many fence rules a tab takes (`Runner.fence`), and their ids from a tab's first. */
-export const FENCE_RULES = 8 + SENSITIVE_LABELS_URLS.length;
+export const FENCE_RULES = 7 + SENSITIVE_LABELS_URLS.length;
 
-/**
- * The sandbox a run's tab's pages load under (0.2.20), as a response header Chrome adds for that tab alone: every sandbox permission
- * but `allow-modals` (a frame inherits it, and one that sets `top.location`, as a card's 3-D Secure page does, still may; the fence
- * still says where), so Blink drops alert, confirm, prompt, print and the "leave this page?" prompt from the page's first byte
- * (confirm answers false, prompt null), and nothing reaches Chromium. The page can't lift a sandbox, and the site sees nothing of it.
- */
-export const RUN_SANDBOX =
-  "sandbox allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-top-navigation " +
-  "allow-top-navigation-by-user-activation allow-storage-access-by-user-activation allow-pointer-lock allow-presentation allow-orientation-lock";
 
 /** An address with user info (`https://x@bank.example/`), which `refuseURL` refuses outright and the label patterns can't see past. */
 const USER_INFO = "^https?://[^/?#]*@";
@@ -163,11 +154,6 @@ export class Runner {
       if (d.frameId !== 0) return;
       const run = this.runOfTab(d.tabId);
       if (!run || isBlank(d.url)) return;
-      // A navigation of the person's in a tab of the run's own (not the run's open, act, back or a pop-up's first page; this event
-      // says no more, nor does a hand-over's): the sandbox comes off before its request is sent, so the page they chose loads as
-      // their own, its dialogs theirs (0.2.20). onCommitted gives them the tab.
-      const runsWork = run.stepping === d.tabId || run.backing === d.tabId || run.landing.has(d.tabId) || (run.tab === d.tabId && this.handOpen(run));
-      if (!run.joined.has(d.tabId) && !runsWork) this.unsandbox(d.tabId).catch(() => {});
       if (refuseURL(d.url, run.sites, run.allowed)) {
         // A tab of the person's that joined the run is never sent anywhere: Chrome's fence blocks the request, and the page they
         // had stays (a block in the run's own act is recorded once, by onErrorOccurred). A tab of the run's own goes to its blank
@@ -329,11 +315,8 @@ export class Runner {
    *   4. allow the sensitive sites the phone allowed by name, only within the grant's;
    *   5. block Chrome's own pages and the Web Store, which no grant opens, plain http, and any address with user info
    *      (`x@` before the host), which `refuseURL` refuses outright.
-   *   6. (not a block or an allow) every page a tab of the run's own loads gets `RUN_SANDBOX` (0.2.20): its dialogs never reach
-   *      Chromium, from its first byte. Never a tab of the person's the run joined; and the person's own navigation in a tab of
-   *      the run's (`onBeforeNavigate`, outside the run's own work) takes the sandbox off before its request is sent (`unsandbox`).
    * Their ids, from the tab's first (`fenceRange`): 0 block all, 1 the grant, 2 the sensitive sites, 3 the allowance, 4 Chrome's
-   * own pages, 5 http, 6 user info, 7 the sandbox, then one for each of the label patterns.
+   * own pages, 5 http, 6 user info, then one for each of the label patterns.
    * A domain matches a site and its subdomains, as `within` does, so a grant of example.com never lets bank.example.com through,
    * nor google.com accounts.google.com. A pattern Chrome can't hold fails the fence, so the tab is never left unfenced
    * (`fenceFailed`). onBeforeNavigate stays as the record of a refused move and a backstop, not the guard.
@@ -357,19 +340,8 @@ export class Runner {
     rules.push({ id: ids[4], priority: 5, action: { type: "block" }, condition: { ...on, requestDomains: [...NEVER_OPENED] } });
     rules.push({ id: ids[5], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: "^http://" } });
     rules.push({ id: ids[6], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: USER_INFO } });
-    // Above every allow (an allow of higher priority keeps Chrome from changing a response's headers): the page's own sandbox, in a
-    // tab of the run's own only. The person's tab the run joined is never sandboxed; its dialogs keep the onCommitted guard.
-    if (!(run.joined && run.joined.has(tabId))) rules.push({ id: ids[7], priority: 6, action: { type: "modifyHeaders", responseHeaders: [{ header: "Content-Security-Policy", operation: "append", value: RUN_SANDBOX }] }, condition: { tabIds: [tabId], resourceTypes: ["main_frame"] } });
-    SENSITIVE_LABELS_URLS.forEach((regexFilter, i) => rules.push({ id: ids[8 + i], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter } }));
+    SENSITIVE_LABELS_URLS.forEach((regexFilter, i) => rules.push({ id: ids[7 + i], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter } }));
     await dnr.updateSessionRules({ removeRuleIds: ids, addRules: rules });
-  }
-
-  /** Takes the sandbox off tab [tabId] (its fence's header rule), keeping the rest of its fence: the next response loads as it is. */
-  async unsandbox(tabId) {
-    const dnr = this.chrome.declarativeNetRequest;
-    const base = this.fenceIds.get(tabId);
-    if (!dnr || base == null) return;
-    await dnr.updateSessionRules({ removeRuleIds: [base + 7] });
   }
 
   async unfence(tabId) {
