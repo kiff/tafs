@@ -5,8 +5,8 @@
 #
 #   play/check_release_starts.sh app/build/outputs/apk/release/app-release-unsigned.apk
 #
-# The APK is signed with the debug key (~/.android/debug.keystore, made by any debug build), never the upload key,
-# and installed over whatever build of the app is there, keeping its data.
+# The APK is signed with the debug key (~/.android/debug.keystore) or, where there is none (a CI runner), a throwaway
+# key made here, never the upload key; with the debug key it is installed over the build there, keeping its data.
 set -euo pipefail
 
 apk=${1:?the unsigned release APK}
@@ -17,10 +17,19 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
 "$tools/zipalign" -f -p 4 "$apk" "$work/aligned.apk"
+pkg=$("$tools/aapt2" dump packagename "$work/aligned.apk" | tr -d '\r')
+# No debug key here (a CI runner keeps none): a throwaway one, and the app installed afresh, since its signature differs.
+fresh=""
+if [ ! -f "$keystore" ]; then
+  keystore="$work/throwaway.keystore"
+  keytool -genkeypair -keystore "$keystore" -storepass android -keypass android -alias androiddebugkey \
+    -keyalg RSA -keysize 2048 -validity 1 -dname "CN=Android Debug,O=Android,C=US" >/dev/null 2>&1
+  fresh=1
+fi
 "$tools/apksigner" sign --ks "$keystore" --ks-pass pass:android --key-pass pass:android \
   --ks-key-alias androiddebugkey --out "$work/signed.apk" "$work/aligned.apk"
-pkg=$("$tools/aapt2" dump packagename "$work/signed.apk" | tr -d '\r')
 
+if [ -n "$fresh" ]; then adb uninstall "$pkg" >/dev/null 2>&1 || true; fi
 adb install -r "$work/signed.apk"
 adb shell am force-stop "$pkg"
 adb logcat -c
