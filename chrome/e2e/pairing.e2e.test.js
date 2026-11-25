@@ -47,7 +47,9 @@ test("the hello is signed by the paired key for planque's challenge, and the wel
   }, "the extension to say it's connected");
   assert.equal(state.paired, true);
   assert.equal(state.name, "Test Chrome");
-  assert.deepEqual(state.connections, [{ grant: h.planque.grant, agent: h.planque.agent, name: h.planque.taf, sites: SITES }]);
+  // planque's list, with the phone's signature over the grant's sites as planque relays it (checked where it's used).
+  assert.deepEqual(state.connections.map(({ sites_signed: _signed, ...c }) => c), [{ grant: h.planque.grant, agent: h.planque.agent, name: h.planque.taf, sites: SITES }]);
+  assert.deepEqual(state.connections[0].sites_signed.sites, SITES);
   assert.equal(await h.inPanel("document.getElementById('pair').hidden"), true, "the panel no longer asks for a code");
 });
 

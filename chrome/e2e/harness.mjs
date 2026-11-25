@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildTestExtension } from "./build.mjs";
-import { FakePlanque } from "./planque.mjs";
+import { FakeCloud, FakePlanque } from "./planque.mjs";
 import { FixtureSites } from "./sites.mjs";
 
 const require = createRequire(import.meta.url);
@@ -38,10 +38,20 @@ export async function until(check, what, timeout = 10_000) {
   }
 }
 
-export async function start({ pair = true } = {}) {
+/**
+ * `cloud`: the fake tafs cloud and KIFF answer the extension too (planque.mjs `FakeCloud`), so the side panel can send to the
+ * taf and a run can join the person's tab. Without it, both names fail to resolve, and the extension has no Coach.
+ */
+export async function start({ pair = true, cloud = false, args = [] } = {}) {
   const h = { dialogs: [], cleanup: [] };
   h.sites = await new FixtureSites().start();
   h.cleanup.push(() => h.sites.stop());
+  // KIFF and tafs cloud on the fixture sites' server: their names, and the HTTPS port, mapped to it.
+  const mapped = [];
+  if (cloud) {
+    h.cloud = new FakeCloud().on(h.sites);
+    for (const host of [FakeCloud.KIFF, FakeCloud.CLOUD]) mapped.push(`MAP ${host} 127.0.0.1:${h.sites.port}`);
+  }
   h.planque = await new FakePlanque({ sites: SITES }).start();
   h.cleanup.push(() => h.planque.stop());
   h.dir = buildTestExtension({ api: h.planque.api, relay: h.planque.relayURL, planqueKey: h.planque.planqueKeys.spki });
@@ -57,10 +67,11 @@ export async function start({ pair = true } = {}) {
       "--disable-extensions-except=" + h.dir,
       "--load-extension=" + h.dir,
       // The fixture sites are on this computer, and nothing else is reached: every other name fails to resolve.
-      "--host-resolver-rules=MAP *.test 127.0.0.1, MAP * ~NOTFOUND, EXCLUDE 127.0.0.1",
+      "--host-resolver-rules=" + ["MAP *.test 127.0.0.1", ...mapped, "MAP * ~NOTFOUND", "EXCLUDE 127.0.0.1"].join(", "),
       "--ignore-certificate-errors",
       // Straight to 127.0.0.1, whatever proxy the computer has set.
       "--no-proxy-server",
+      ...args,
     ],
   });
   h.cleanup.unshift(() => h.context.close());
@@ -139,6 +150,41 @@ export async function pairNow(h) {
     return true;
   })()`);
   await welcomed;
+}
+
+/**
+ * Runs `func(arg)` in the extension's service worker (Playwright evaluates there as in a page) and resolves with its value: how a
+ * test reads what only the worker can, such as Chrome's session rules. The worker Chromium runs now, should it have restarted.
+ */
+export async function inWorker(h, func, arg) {
+  const worker = await until(() => h.context.serviceWorkers().find((w) => w.url().startsWith(`chrome-extension://${h.extensionId}/`)), "the service worker");
+  return worker.evaluate(func, arg);
+}
+
+/** Chrome's declarativeNetRequest session rules, as the service worker reads them: the fences of the runs' tabs. */
+export function sessionRules(h) {
+  return inWorker(h, () => chrome.declarativeNetRequest.getSessionRules());
+}
+
+/** The session rules scoped to tab `tabId`. */
+export async function rulesOf(h, tabId) {
+  return (await sessionRules(h)).filter((r) => (r.condition.tabIds || []).includes(tabId));
+}
+
+/** The extension's state as the panel reads it (sw.js `publish`): its runs, each with its tab ids and its steps. */
+export function extensionState(h) {
+  return h.inPanel("chrome.storage.session.get('state').then((x) => x.state || null)");
+}
+
+/** The run `run` as the extension last published it, or undefined. */
+export async function runState(h, run) {
+  const s = await extensionState(h);
+  return s && s.runs.find((r) => r.id === run);
+}
+
+/** Chrome's own view of tab `tabId` (its URL, group, whether it's active), or null once it's closed. */
+export function tabInfo(h, tabId) {
+  return inWorker(h, (id) => chrome.tabs.get(id).then((t) => ({ id: t.id, url: t.url, groupId: t.groupId, active: t.active, windowId: t.windowId }), () => null), tabId);
 }
 
 /** The tab Playwright sees at `url` (exactly), or undefined. */
