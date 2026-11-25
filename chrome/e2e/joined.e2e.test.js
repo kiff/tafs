@@ -315,8 +315,10 @@ test("the person's own Back off the run's sites gives their tab back with nothin
     assert.deepEqual(await rulesOf(h, tabId), [], "unfenced");
     assert.deepEqual((await runState(h, run)).tabs, [], "forgotten by the run");
     assert.equal((await tabInfo(h, tabId)).url, A, "at the address the person went back to");
-    assert.equal(owner.url(), A, "their page, not Chrome's error page");
-    assert.equal(loads(A), loadsOfA + 1, "their page loaded for them");
+    // The fence blocked their Back, so Chrome showed its error page at A; once the tab is given back the extension loads A again
+    // in place, a moment after the give-back itself. Waited for, with a bound: an error page that stays fails here.
+    await until(async () => owner.url() === A && loads(A) === loadsOfA + 1, "their page, not Chrome's error page", 5000);
+    assert.equal(loads(A), loadsOfA + 1, "their page loaded for them, once");
     assert.deepEqual(await moves(tabId), [], "nothing moved their tab: no about:blank, no further back");
     const read = await step({ op: "read", run, agent_run: agentRun });
     assert.equal(read.error && read.error.code, "given_back");
