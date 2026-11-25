@@ -4,7 +4,7 @@ import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 
 // Who runs Claude (docs/accounts.md, "Your data and the AI"): the consent names it, so a change of provider is a new
 // consent. INFERENCE_PROVIDER picks it, never silently, and the words for each provider differ only in who runs the
-// model and what that provider keeps (kiff/work#32, PM 13:18).
+// model and what that provider keeps; everything else stays word for word.
 describe("the inference provider and its consent", () => {
   it("is anthropic when unset, bedrock when asked, and stops on anything else", () => {
     expect(inferenceProvider(undefined)).toBe("anthropic");
