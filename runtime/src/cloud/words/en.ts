@@ -878,6 +878,20 @@ export const en = {
   cts_up_to_asks: (n: string) => `Up to ${n} a day; after that, each one waits for you.`,
   cts_up_to_shared: (n: string, other: string) => `Up to ${n} a day, counted with “${other}”.`,
   cts_always_asks: "Each one waits for your approval.",
+  // The guidance before Coach's first approval (its Cards): what it allows, what still waits, what the approval signs, how to stop.
+  // The tools and limits under it come from the Cards themselves (coachToolsStep). The app picks the button by its biometric:
+  // an approval is never signed with the screen lock or a passcode, so there is no passcode button. A computer approves with a
+  // passkey (Windows Hello or a security key), so it uses card_step_give_passkey and card_step_sign_passkey instead.
+  card_step_title: "Let Coach build tafs with you",
+  card_step_allows: "This lets Coach look at your tafs, run them, and draft and try new versions, each within the daily limits below. Only while you turn on a drive, it can also see and use the app on this device.",
+  card_step_asks: "Installing a version, choosing where a taf's results go, making a mission and saving your business description always wait for you in Needs you. Giving a taf a task or trying a version waits for you past its daily limit; anything else past its limit is refused.",
+  card_step_sign: "Your approval signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
+  card_step_stop: "Halt stops Coach and every taf at once, with one tap.",
+  card_step_exact: "Exactly what you sign",
+  card_step_give_fingerprint: "Approve with fingerprint",
+  card_step_give_face: "Approve with face",
+  card_step_give_passkey: "Approve with your passkey",
+  card_step_sign_passkey: "Your approval signs this with your passkey, whose private key never leaves this computer or your security key. It isn't a payment or a password.",
   cts_tafs_state: "See your tafs",
   cts_tafs_state_does: "Read each taf, its versions and its open runs.",
   cts_tafs_state_why: "It reads your account.",
