@@ -261,6 +261,12 @@ export class FixtureSites {
     const path = new URL(req.url, "https://x").pathname;
     this.hits.push(host + " " + req.url);
     if (req.method === "POST") this.posts.push(host + " " + req.url);
+    // `/hold?ms=`: the page's headers come only after `ms`, so a run's open of it stays in flight that long (sandbox.e2e).
+    if (path === "/hold") {
+      const ms = Math.min(10_000, Number(new URL(req.url, "https://x").searchParams.get("ms")) || 0);
+      setTimeout(() => res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }).end("<!doctype html><title>Held</title><h1>Held</h1>"), ms);
+      return;
+    }
     // A redirect off the run's sites: the page answers 302 to other.test.
     // On any host: a link to `to`, a 302 to `to`, and a page that only says where it is (the fence's targets: bank.shop.test,
     // accounts.google.com, me.github.io, an address).

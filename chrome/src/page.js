@@ -803,5 +803,13 @@
     return true;
   }
 
-  root.TafsPage = { read, act, kindOf, listen, maskForShot, unmaskShot, outline, unoutline, offFence };
+  /** Whether act [a], planned from read [readId], would take the tab to another page (a link, a form's submit, Enter in a form). */
+  function navigates(a, readId) {
+    if (!current || current.read_id !== readId || !a || !a.ref) return false;
+    const el = refs.get(a.ref);
+    if (!el || !el.isConnected) return false;
+    return !!headsTo(el, a);
+  }
+
+  root.TafsPage = { read, act, kindOf, listen, maskForShot, unmaskShot, outline, unoutline, offFence, navigates };
 })(globalThis);

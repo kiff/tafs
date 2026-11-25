@@ -2643,3 +2643,78 @@ test("a taf's act that heads for a sensitive site in its own tab is site_blocked
   assert.deepEqual(refused.map((x) => [x.url, x.error]), [["https://bank.shop.example/", "site_blocked"]]);
 });
 
+
+// 0.2.21: the sandbox only around the run's own navigation; which pages loaded under it; the notice once the run lets the tab go.
+const sandboxAdds = (c) => c.calls.filter((x) => x[0] === "dnr" && (x[1].addRules || []).some((r) => r.action.type === "modifyHeaders"));
+
+test("an act that doesn't head anywhere never puts the sandbox on; one that does, puts it on and takes it off at its step's end", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  const first = await r.handle(step());
+  assert.ok(first.page, JSON.stringify(first));
+  const tab = r.runs.get("run_1").tab;
+  // page.js says whether the act heads somewhere: a fill doesn't.
+  const exec = c.scripting.executeScript;
+  let heads = false;
+  // Not an async wrapper: the step's timeout races the page's answer, and an extra turn would lose it under the test's instant sleep.
+  c.scripting.executeScript = (o) => (String(o.func || "").includes("TafsPage.navigates") ? exec(o).then(() => [{ result: heads }]) : exec(o));
+  let before = sandboxAdds(c).length;
+  await r.handle(step({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "fill", ref: "f1", value: "a@b.example" } }));
+  assert.equal(sandboxAdds(c).length, before, "a fill never sandboxes");
+  assert.equal(r.sandboxOn.has(tab), false);
+  const read = await r.handle(step({ id: "op3", op: "read" }));
+  assert.ok(read.page, JSON.stringify(read));
+  heads = true;
+  before = sandboxAdds(c).length;
+  await r.handle(step({ id: "op4", op: "act", read_id: read.page.read_id, act: { kind: "fill", ref: "f1", value: "x@y.example" } }));
+  assert.equal(sandboxAdds(c).length, before + 1, "an act that heads somewhere sandboxes its next page");
+  assert.equal(r.sandboxOn.has(tab), false, "and the step's end takes it off");
+});
+
+test("a page that commits while the sandbox is on is noted; once the run lets the tab go its bar says so, with Reload; a new page takes it away", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const shown = [];
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    if (String(o.func || "").includes("TafsBar.show")) shown.push([o.target.tabId, o.args && o.args[0]]);
+    return exec(o);
+  };
+  c.tabGroups.get = async (id) => ({ id, windowId: 3 });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  // The run's own navigation, under the sandbox: its page commits.
+  r.sandboxOn.add(tab);
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/p2", documentId: "doc-2", transitionType: "link", transitionQualifiers: [] });
+  r.sandboxOn.delete(tab);
+  assert.deepEqual(r.sandboxedDocs.get(tab), { taf: "Rae", documentId: "doc-2", group: 7 });
+  await r.stop("run_1", false, "person");
+  await r.queueBars();
+  const notice = shown.filter(([t, s]) => t === tab && s && s.notice).at(-1);
+  assert.ok(notice, "the bar stays in that tab, with the notice");
+  assert.match(notice[1].words, /dialogs are off/);
+  assert.equal(notice[1].labels.reload, "Reload");
+  const titles = c.calls.filter((x) => x[0] === "tabGroups.update" && x[1] === 7).map((x) => x[2].title);
+  assert.ok(titles.some((t) => /reload/.test(t)), "the done group says reload: " + JSON.stringify(titles));
+  // The person reloads (bar.js reloads; the extension never does): the new page commits outside the sandbox.
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/p2", documentId: "doc-3", transitionType: "reload", transitionQualifiers: [] });
+  await r.queueBars();
+  assert.equal(r.sandboxedDocs.has(tab), false, "the new page isn't sandboxed");
+  assert.ok(c.calls.some((x) => x[0] === "bar.hide" || (x[0] === "executeScript" && x[2] === tab)), "the notice goes");
+  const after = c.calls.filter((x) => x[0] === "tabGroups.update" && x[1] === 7).map((x) => x[2].title).at(-1);
+  assert.doesNotMatch(after, /reload/, "the group's title is done again");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.reload"), "the extension never reloads");
+});
+
+test("the person's own page committing while the sandbox may still be on is noted too", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  r.sandboxOn.add(tab);
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/theirs", documentId: "doc-p", transitionType: "typed", transitionQualifiers: [] });
+  await new Promise((done) => setTimeout(done, 0));
+  assert.equal(r.sandboxedDocs.get(tab).documentId, "doc-p");
+  assert.equal(r.tabRun.has(tab), false, "and the tab is theirs");
+});
+

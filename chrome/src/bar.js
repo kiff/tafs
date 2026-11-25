@@ -1,7 +1,7 @@
 // The floating bar (docs/chrome.md, "While a taf works"): while a taf works in this Chrome, the tab in front of each window
 // shows a small bar of the extension's own, floating at the foot of the page: who is working ("Rae is working"), "Go to its
 // tab" (on any tab but the run's own), Pause or Resume, and Stop. It's put in only while a run lives, and taken away when the
-// last one ends.
+// last one ends; except, in a tab a run has let go whose page it loaded under its sandbox, a notice with Reload (0.2.21).
 //
 // It sits in a closed shadow root, so the page can't read, restyle or press it; a read never includes it, and an act's "is it on
 // top" check looks through it (page.js). Only a real press (`isTrusted`) counts, and what it sends names the run: the service
@@ -32,6 +32,8 @@
     b.className = act;
     b.addEventListener("click", (e) => {
       if (!e.isTrusted) return;
+      // The notice's Reload: the person's own press reloads their page, here; nothing is sent.
+      if (b.dataset.act === "reload") return location.reload();
       send(b.dataset.act || act);
     });
     return b;
@@ -71,16 +73,43 @@
   }
 
   /**
+   * The notice (0.2.21) in a tab a run has let go, whose page it loaded under its sandbox: `s.words` says the page's dialogs are off,
+   * and `s.labels.reload` is the one button. The person's own press reloads the page (the extension never does); the new page loads
+   * as it is, and the notice goes.
+   */
+  function notice(s) {
+    if (!host) make();
+    state = null;
+    parts.words.textContent = s.words;
+    parts.pill.classList.add("paused");
+    parts.go.hidden = true;
+    parts.stop.hidden = true;
+    parts.toggle.hidden = false;
+    parts.toggle.textContent = s.labels.reload;
+    parts.toggle.dataset.act = "reload";
+    if (!host.isConnected) document.documentElement.appendChild(host);
+    if (!watch) {
+      watch = new MutationObserver(() => {
+        if (host && (state || (parts && parts.toggle.dataset.act === "reload")) && !host.isConnected) document.documentElement.appendChild(host);
+      });
+      watch.observe(document.documentElement, { childList: true });
+    }
+    return { ok: true };
+  }
+
+  /**
    * Shows the bar for run `s.run`: `s.words` (the extension's words, "Rae is working" or "Rae is paused"), `s.here` (this is the
    * run's own tab, so no Go to its tab), `s.paused`, and `s.labels` {go, pause, resume, stop}. Anything else isn't a bar.
    */
   function show(s) {
+    if (s && s.notice === true && typeof s.words === "string" && s.labels && typeof s.labels.reload === "string") return notice(s);
     const l = s && s.labels;
     if (!s || typeof s.run !== "string" || typeof s.words !== "string" || !l || ["go", "pause", "resume", "stop"].some((k) => typeof l[k] !== "string")) {
       return { ok: false };
     }
     state = { run: s.run };
     if (!host) make();
+    parts.stop.hidden = false;
     parts.words.textContent = s.words;
     parts.pill.classList.toggle("paused", !!s.paused);
     parts.go.textContent = l.go;
@@ -94,7 +123,7 @@
     if (!host.isConnected) document.documentElement.appendChild(host);
     if (!watch) {
       watch = new MutationObserver(() => {
-        if (host && state && !host.isConnected) document.documentElement.appendChild(host);
+        if (host && (state || (parts && parts.toggle.dataset.act === "reload")) && !host.isConnected) document.documentElement.appendChild(host);
       });
       watch.observe(document.documentElement, { childList: true });
     }

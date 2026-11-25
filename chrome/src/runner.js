@@ -155,6 +155,12 @@ export class Runner {
     this.nextFence = 1;
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
     this.greying = new Map(); // doneKey → the mark of its finished run whose group turns grey after DONE_GRACE_MS (greyLater)
+    this.sandboxOn = new Set(); // tabs whose sandbox rule is (or may still be) in place: a document committing there loads sandboxed
+    this.sandboxOff = new Map(); // tab id → when its sandbox rule was last taken off (Date.now() once Chrome confirmed it)
+    this.sandboxStarted = new Set(); // tabs whose navigation began while the rule was in place: its response may carry the sandbox
+    // tab id → {taf, documentId, group}: its current document loaded under the run's sandbox (0.2.21). While the tab isn't a live
+    // run's, its bar says so, with Reload; its "· done" group says reload too. A new document there takes it away.
+    this.sandboxedDocs = new Map();
     this.listen();
     // A worker that stopped left its fences in Chrome, a joined tab's among them: every session rule goes now (only this runner adds
     // them), before any fence of this runner's is added (`ruleIds` waits for it), so the sweep never removes a fresh one.
@@ -166,6 +172,9 @@ export class Runner {
     // A navigation in a run's tab that leaves its sites is stopped before it loads.
     c.webNavigation.onBeforeNavigate.addListener((d) => {
       if (d.frameId !== 0) return;
+      // Whether this navigation's response may come under the run's sandbox (noteSandboxed, at its commit).
+      if (this.sandboxOn.has(d.tabId)) this.sandboxStarted.add(d.tabId);
+      else this.sandboxStarted.delete(d.tabId);
       const run = this.runOfTab(d.tabId);
       if (!run || isBlank(d.url)) return;
       // A navigation of the person's in a tab of the run's own while the run's own is in flight (their typed address, Back, a
@@ -193,6 +202,8 @@ export class Runner {
     // sites is sent to a blank page, and recorded.
     c.webNavigation.onCommitted.addListener((d) => {
       if (d.frameId !== 0) return;
+      // Whether this document loaded under the run's sandbox, before anything below takes the rule off (0.2.21).
+      this.noteSandboxed(d);
       const run = this.runOfTab(d.tabId);
       if (!run) return;
       const off = !isBlank(d.url) && refuseURL(d.url, run.sites, run.allowed);
@@ -293,6 +304,14 @@ export class Runner {
       this.groupTab(run, d.tabId, run.windowId).catch(() => {});
     });
     c.tabs.onRemoved.addListener((tabId) => {
+      // A closed tab's sandbox notes go with it.
+      this.sandboxOff.delete(tabId);
+      this.sandboxStarted.delete(tabId);
+      if (this.sandboxedDocs.has(tabId)) {
+        const was = this.sandboxedDocs.get(tabId);
+        this.sandboxedDocs.delete(tabId);
+        if (was.group != null && ![...this.sandboxedDocs.values()].some((e) => e.group === was.group)) this.retitleDone(was.group);
+      }
       // Its fence goes with it, whoever's it was and whatever the run knows of it: a rule naming a closed tab is never left behind.
       if (this.fenceIds.has(tabId)) this.unfence(tabId).catch(() => {});
       // A tab the person took back from a run and has now closed: the run's next step is told so no more.
@@ -377,6 +396,9 @@ export class Runner {
     const base = this.fenceIds.get(tabId);
     if (!dnr || base == null || run.joined.has(tabId)) return;
     const id = base + SANDBOX_RULE;
+    // Marked before the rule is in, and unmarked only once it's gone (`unsandbox`): a document committing in between is counted
+    // as sandboxed, never missed.
+    this.sandboxOn.add(tabId);
     await dnr.updateSessionRules({
       removeRuleIds: [id],
       // Above every allow (an allow of higher priority keeps Chrome from changing a response's headers).
@@ -388,8 +410,11 @@ export class Runner {
   async unsandbox(tabId) {
     const dnr = this.chrome.declarativeNetRequest;
     const base = this.fenceIds.get(tabId);
-    if (!dnr || base == null) return;
+    if (!dnr || base == null) return this.sandboxOn.delete(tabId);
+    const was = this.sandboxOn.has(tabId);
     await dnr.updateSessionRules({ removeRuleIds: [base + SANDBOX_RULE] }).catch(() => {});
+    if (was) this.sandboxOff.set(tabId, Date.now());
+    this.sandboxOn.delete(tabId);
   }
 
   async unfence(tabId) {
@@ -529,6 +554,16 @@ export class Runner {
     };
   }
 
+  /** The bar's notice in a tab whose page a run loaded sandboxed: why its dialogs are off, and Reload. */
+  noticeState(e) {
+    const taf = e.taf || "taf";
+    return {
+      notice: true,
+      words: this.say("bar_sandboxed", [taf]) || "This page was opened by " + taf + ", so its dialogs are off. Reload it to use it normally.",
+      labels: { reload: this.say("bar_reload", []) || "Reload" },
+    };
+  }
+
   /** Brings the bars up to date, one sync at a time; a change while one runs is taken by the next. */
   queueBars() {
     if (this.barsQueued) return this.barsQueued;
@@ -559,6 +594,13 @@ export class Runner {
         const run = own && !own.stopped ? own : live[0];
         want.set(tab.id, this.barState(run, run.tabs.has(tab.id)));
       }
+    }
+    // A tab no live run holds whose page a run loaded under its sandbox: its bar stays, with one line and Reload (0.2.21). The
+    // person's press reloads it (bar.js); the extension never does.
+    for (const [t, e] of this.sandboxedDocs) {
+      const holder = this.runOfTab(t);
+      if (holder && !holder.stopped) continue;
+      want.set(t, this.noticeState(e));
     }
     for (const t of this.barTabs || []) {
       if (!want.has(t)) await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
@@ -786,13 +828,51 @@ export class Runner {
   }
 
   greyGroup(taf, groupId) {
-    return Promise.resolve(this.chrome.tabGroups.update(groupId, { title: this.doneTitle(taf), color: "grey" })).catch(() => {});
+    return Promise.resolve(this.chrome.tabGroups.update(groupId, { title: this.doneTitle(taf, groupId), color: "grey" })).catch(() => {});
   }
 
   /** A group whose run is over, in the extension's words ("Rae is done"), as `workingTitle` is while it works. */
-  doneTitle(taf) {
+  doneTitle(taf, groupId = null) {
     const name = taf || "taf";
+    // A tab of the group still shows a page the run loaded under its sandbox: the person is told to reload it (0.2.21).
+    if (groupId != null && [...this.sandboxedDocs.values()].some((e) => e.group === groupId)) {
+      return "tafs · " + (this.say("group_done_reload", [name]) || name + " is done · reload");
+    }
     return "tafs · " + (this.say("group_done", [name]) || name + " · done");
+  }
+
+  /**
+   * At a document's commit in tab [d.tabId]: it loaded sandboxed if the run's sandbox rule was (or may still have been) in place
+   * there (`sandboxOn`), whoever's navigation it was; else that tab's earlier note goes. A note that goes takes the bar's reload line
+   * and the done group's "· reload" with it.
+   */
+  noteSandboxed(d) {
+    // Chrome may tell of a commit after the rule is already gone (the event comes after the page's own load is seen complete): the
+    // commit's own time says whether it came while the rule was still in place.
+    const off = this.sandboxOff.get(d.tabId);
+    // A navigation that began while the rule was in place may have had its response headers changed before the rule went, whoever
+    // made it: counted too (a notice that says reload when it needn't is harmless; one missed leaves dialogs off unexplained).
+    const on = this.sandboxOn.has(d.tabId) || this.sandboxStarted.has(d.tabId) || (off != null && typeof d.timeStamp === "number" && d.timeStamp <= off);
+    this.sandboxStarted.delete(d.tabId);
+    if (on) {
+      const run = this.runOfTab(d.tabId);
+      const was = this.sandboxedDocs.get(d.tabId);
+      this.sandboxedDocs.set(d.tabId, { taf: (run && run.taf) || (was && was.taf) || "taf", documentId: d.documentId || null, group: run && run.groupId != null ? run.groupId : was ? was.group : null });
+      return;
+    }
+    const was = this.sandboxedDocs.get(d.tabId);
+    if (!was) return;
+    this.sandboxedDocs.delete(d.tabId);
+    this.queueBars();
+    if (was.group != null && ![...this.sandboxedDocs.values()].some((e) => e.group === was.group)) this.retitleDone(was.group);
+  }
+
+  /** A "· done" group's title again, now that none of its tabs shows a sandboxed page: only a group still kept as a taf's done one. */
+  retitleDone(groupId) {
+    for (const [key, left] of Object.entries(this.done || {})) {
+      if (left && left.group === groupId && !this.greying.has(key)) return this.greyGroup(left.name || key, groupId);
+    }
+    return null;
   }
 
   async closeRun(run, close = true, doneNow = false, handBack = false) {
@@ -1473,7 +1553,11 @@ export class Runner {
     run.stepping = tabId;
     run.stepError = null;
     try {
-      await this.sandbox(run, tabId);
+      // Only an act that heads somewhere (a link, a form's submit, Enter in a form: page.js `navigates`) loads its next page under the
+      // sandbox; a fill or a check never puts it on, so the person's own move during it loads as theirs (0.2.21). A page's own script
+      // that navigates on a click isn't known here: that page loads without it, its dialogs under the onCommitted guard.
+      const heads = await this.inTab(tabId, (a, id) => (globalThis.TafsPage.navigates ? globalThis.TafsPage.navigates(a, id) : true), [step.act, step.read_id]).catch(() => false);
+      if (heads) await this.sandbox(run, tabId);
       // In the person's tab, the run's sites go with the act: a link or a form's submit that would leave them is refused in the page
       // before it fires, so Chrome never puts its "blocked" page in place of theirs. A tab of the run's own is left to the fence,
       // which sends it to its blank page.
