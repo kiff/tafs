@@ -354,7 +354,15 @@ did**, and no Not sure. On Android: `AppModel.checkDidThisHappen`.
 ## Alerts while tafs is closed
 
 KIFF tells tafs cloud when a call is held, and tafs cloud tells the account's phones
-through Apple push for an iPhone and Firebase Cloud Messaging for an Android phone (`runtime/src/cloud/push.ts`, `apns.ts`, `fcm.ts`):
+through Apple push for an iPhone and Firebase Cloud Messaging for an Android phone (`runtime/src/cloud/push.ts`, `apns.ts`, `fcm.ts`).
+
+**Apple's provider token is one for all of tafs cloud** (`apns.ts`, `TokenStore`). Apple answers `429
+TooManyProviderTokenUpdates` to a key whose token changes more often than every 20 minutes, and every push failed that way
+when each instance (a cold start, a deploy) minted its own. So one token is kept in the table (`apns#provider-token`) and
+every instance uses it until it's 40 minutes old (`TOKEN_MINUTES`). Then one instance replaces it, swapped only if it's still
+the token that instance read, and an instance that loses that race uses the winner's. Pushes sent together in one instance
+wait on the same token. A push Apple refuses as one update too many is sent once more with the shared token. Without the
+table (a test, a local run) an instance keeps its own token, as before.
 
 1. The phone registers the account's **alert target** in KIFF, pointed at
    `/v1/kiff/alerts`, with a signed setup call. The device key signs it, not the approval key:

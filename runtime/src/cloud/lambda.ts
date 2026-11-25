@@ -8,7 +8,7 @@ import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
 import { type AccountStore, agentAlertSecrets, keepAccount } from "./accounts.js";
 import { agentKeys } from "./agentkeys.js";
 import { Agents, envCredentials } from "./agents.js";
-import { apnsSender } from "./apns.js";
+import { apnsSender, type ProviderToken, type TokenStore } from "./apns.js";
 import { type Deletion, type Deletions, httpPeer } from "./deletion.js";
 import { fcmSender } from "./fcm.js";
 import { KIFF_API } from "./kiff.js";
@@ -276,6 +276,34 @@ const fcm = process.env.FCM_PROJECT_ID && ownKeys.configured("fcm")
   : undefined;
 
 /**
+ * The one APNs provider token every instance of tafs cloud uses (apns.ts, TokenStore): one item in the table, replaced
+ * only if it's still the token the replacing instance read. Its ttl lets DynamoDB remove one long past its hour.
+ */
+const APNS_TOKEN_KEY = { id: { S: "apns#provider-token" } };
+const apnsTokens: TokenStore = {
+  async get() {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: APNS_TOKEN_KEY, ConsistentRead: true }));
+    const value = out.Item?.token?.S;
+    const at = Number(out.Item?.at?.N);
+    return value && Number.isFinite(at) ? { value, at } : undefined;
+  },
+  async swap(prev: ProviderToken | undefined, next: ProviderToken) {
+    try {
+      await dynamo.send(new PutItemCommand({
+        TableName: TABLE,
+        Item: { ...APNS_TOKEN_KEY, token: { S: next.value }, at: { N: String(next.at) }, ttl: { N: String(Math.floor(next.at / 1000) + 2 * 3600) } },
+        ConditionExpression: prev === undefined ? "attribute_not_exists(id)" : "#at = :prev",
+        ...(prev === undefined ? {} : { ExpressionAttributeNames: { "#at": "at" }, ExpressionAttributeValues: { ":prev": { N: String(prev.at) } } }),
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
+};
+
+/**
  * Push to every phone: Apple's with the "tafs push" key, read from Secrets Manager on first use, for an iPhone; Google's
  * for an Android phone. Quiet on the phones whose Sound for alerts is off.
  */
@@ -290,6 +318,8 @@ const apns = silencing(routing({
     topic: process.env.APNS_TOPIC ?? "bot.tafs.app",
     // macOS 12's own app (kiff/tafs-macos), registered as `macos`: the same team's key, its own topic.
     macTopic: process.env.APNS_MAC_TOPIC ?? "bot.tafs.macos",
+    // One token for every instance: each minting its own was refused as TooManyProviderTokenUpdates.
+    tokens: apnsTokens,
   }),
   android: fcm,
 }));

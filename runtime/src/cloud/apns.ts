@@ -3,8 +3,25 @@ import http2 from "node:http2";
 import type { Device, Notification, Sender } from "./push.js";
 
 const HOSTS = { production: "https://api.push.apple.com", sandbox: "https://api.sandbox.push.apple.com" } as const;
-/** APNs accepts a provider token for an hour; a new one is made well before. */
-const TOKEN_MINUTES = 50;
+/**
+ * How long one provider token is used: Apple takes a token for an hour and answers 429 TooManyProviderTokenUpdates to a
+ * key whose token changes more often than every 20 minutes. So one token is made for every tafs cloud instance at once
+ * (`tokens`), used until it's this old, then replaced by one instance alone.
+ */
+export const TOKEN_MINUTES = 40;
+
+/** A provider token as kept: the JWT, and when it was made (its `iat`, in milliseconds). */
+export interface ProviderToken { value: string; at: number }
+
+/**
+ * Where every tafs cloud instance keeps the one provider token, so a new instance (a cold start, a deploy) reuses it
+ * instead of minting its own: each instance minting its own was a token update per push, and Apple refused them all.
+ */
+export interface TokenStore {
+  get(): Promise<ProviderToken | undefined>;
+  /** Keeps `next` if the kept token is still `prev` (undefined: none kept); false when another instance kept one first. */
+  swap(prev: ProviderToken | undefined, next: ProviderToken): Promise<boolean>;
+}
 
 /**
  * An APNs provider token: a JWT signed ES256 with the team's APNs key
@@ -34,24 +51,54 @@ export interface APNsConfig {
   macTopic?: string;
   /** Apple's host for each environment; a test points both at its own server. */
   host?: string;
+  /** The provider token every instance shares (TokenStore). Unset, this instance keeps its own (tests, a local run). */
+  tokens?: TokenStore;
+  /** The clock, in milliseconds; tests pass their own. */
+  now?: () => number;
 }
 
 /** Sends through Apple's HTTP/2 push API, one connection per environment, kept while it lives. */
 export function apnsSender(config: APNsConfig): Sender {
   let key: Promise<KeyObject> | undefined;
-  let token: { value: string; at: number } | undefined;
+  let token: ProviderToken | undefined;
   const sessions: Partial<Record<Device["environment"], http2.ClientHttp2Session>> = {};
   /** Pushes waiting on each connection's answer. */
   const inFlight = new WeakMap<http2.ClientHttp2Session, number>();
 
-  const bearer = async () => {
+  const now = config.now ?? Date.now;
+  /** A token still to use: made less than TOKEN_MINUTES ago, and not ahead of this clock by more than a minute. */
+  const fresh = (t: ProviderToken | undefined): t is ProviderToken =>
+    t !== undefined && now() - t.at < TOKEN_MINUTES * 60_000 && t.at - now() < 60_000;
+  /** One token at a time per instance: pushes sent together wait on the same one, never mint one each. */
+  let pending: Promise<string> | undefined;
+
+  const mint = async (): Promise<string> => {
+    // Another instance's token first: a cold start or a deploy never makes one of its own while the shared one is good.
+    const kept = config.tokens ? await config.tokens.get().catch(() => undefined) : undefined;
+    if (fresh(kept)) {
+      token = kept;
+      return kept.value;
+    }
     key ??= config.keyPEM().then((pem) => createPrivateKey(pem));
     key.catch(() => { key = undefined; });
-    const now = Date.now();
-    if (!token || now - token.at > TOKEN_MINUTES * 60_000) {
-      token = { value: providerToken(await key, config.keyID, config.teamID, new Date(now)), at: now };
+    const at = now();
+    const next = { value: providerToken(await key, config.keyID, config.teamID, new Date(at)), at };
+    // Kept only if no other instance replaced the token meanwhile; else theirs is used, so Apple sees one update.
+    if (config.tokens && !(await config.tokens.swap(kept, next).catch(() => true))) {
+      const theirs = await config.tokens.get().catch(() => undefined);
+      if (fresh(theirs)) {
+        token = theirs;
+        return theirs.value;
+      }
     }
-    return token.value;
+    token = next;
+    return next.value;
+  };
+
+  const bearer = async (): Promise<string> => {
+    if (fresh(token)) return token.value;
+    pending ??= mint().finally(() => { pending = undefined; });
+    return pending;
   };
 
   const session = (env: Device["environment"]) => {
@@ -93,7 +140,15 @@ export function apnsSender(config: APNsConfig): Sender {
       inFlight.set(s, (inFlight.get(s) ?? 0) + 1);
       s.ref();
       try {
-        const { status, reason } = await request(s, headers, JSON.stringify(n.payload));
+        let { status, reason } = await request(s, headers, JSON.stringify(n.payload));
+        // Apple refused this token as one update too many: another instance's is the one to use, once.
+        if (status === 429 && reason === "TooManyProviderTokenUpdates" && config.tokens) {
+          const kept = await config.tokens.get().catch(() => undefined);
+          if (fresh(kept) && `bearer ${kept.value}` !== headers.authorization) {
+            token = kept;
+            ({ status, reason } = await request(s, { ...headers, authorization: `bearer ${kept.value}` }, JSON.stringify(n.payload)));
+          }
+        }
         if (status === 200) return "sent";
         if (status === 410 || GONE.has(reason)) return "gone";
         console.error(`APNs answered ${status} ${reason}`);
