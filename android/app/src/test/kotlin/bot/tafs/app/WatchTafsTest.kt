@@ -38,7 +38,11 @@ class WatchTafsTest {
     assertEquals(42L, json.getValue("put_at").jsonPrimitive.long)
     assertEquals(mark, json.getValue("account_mark").jsonPrimitive.content)
     assertEquals(WatchRelay.tafs(loaded).tafs.size, json.getValue("tafs").jsonArray.size)
-    assertEquals(false, json.getValue("all_halted").jsonPrimitive.boolean)
+    // Read as the watch reads it (watchlink's KeptTafs): a false all_halted may be left out of the JSON, and reads back false.
+    val kept = WatchLink.decodeKeptTafs(data)!!
+    assertEquals(false, kept.allHalted)
+    assertEquals(mark, kept.mark)
+    assertEquals(42L, kept.putAt)
     assertNull("the same list again: nothing", keeper.changed(loaded))
     // A taf halted: the list changes, and it's put again.
     val first = loaded.tafs.first().id
