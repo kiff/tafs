@@ -13,7 +13,8 @@ import { type Lang, wordsIn } from "./words/index.js";
  * Who runs Claude for tafs: "anthropic" (Anthropic's Claude API, today) or "bedrock" (Amazon Bedrock, in the EU). It must
  * match kiff/agents' AGENTS_MODEL_SOURCE: the production switch sets both, this one first, so everyone is asked again
  * before anything goes to the new provider. Unset means "anthropic"; anything else stops tafs cloud at start, never a
- * silent default. A change of provider changes who receives what's sent, so both consents' versions follow it.
+ * silent default. A change of provider changes who receives what's sent, so the AI consent, which names it, is asked
+ * again; the page consent's words name only the model, so it stays.
  */
 export type InferenceProvider = "anthropic" | "bedrock";
 
@@ -25,8 +26,12 @@ export function inferenceProvider(value: string | undefined = process.env.INFERE
 
 export const INFERENCE_PROVIDER: InferenceProvider = inferenceProvider();
 
-/** The consent's version: raised when what's sent, or to whom, changes, so everyone is asked again. "2": Bedrock. */
-export const AI_CONSENT_VERSION = INFERENCE_PROVIDER === "bedrock" ? "2" : "1";
+/**
+ * The consent's version: raised when what's sent, or to whom, changes, so everyone is asked again. It names the provider
+ * ("bedrock-1" on Bedrock, "1" on Anthropic's API), so a yes given on one provider never counts for the other, whatever
+ * either's next version is.
+ */
+export const AI_CONSENT_VERSION = INFERENCE_PROVIDER === "bedrock" ? "bedrock-1" : "1";
 
 /** Kept for the account's life (the store's records expire; this one far off). */
 const CONSENT_KEPT_MS = 10 * 365 * 24 * 3600_000;
@@ -110,11 +115,11 @@ function history(kept: Kept | undefined): Kept["earlier"] {
 
 /**
  * The page consent's version: raised when what's read from the page, or where it goes, changes. "2": a message to a
- * taf carries the page too (Chrome 0.2.14, `chrome/src/pageconsent.js` in step), so everyone is asked again. A rewording
- * that stays true keeps it ("the Claude AI model" in place of "Anthropic's Claude", tafs#2066). Moving inference to
- * another provider (Bedrock) changes where it goes: raise it then, here and in the extension together.
+ * taf carries the page too (Chrome 0.2.14, `chrome/src/pageconsent.js` in step), so everyone is asked again. It's raised
+ * when its words change, not when the provider does: since tafs#2066 the page consent names "the Claude AI model", true on
+ * either provider, and the AI consent (which names who runs the model) is the one asked again on a switch.
  */
-export const PAGE_CONSENT_VERSION = INFERENCE_PROVIDER === "bedrock" ? "3" : "2";
+export const PAGE_CONSENT_VERSION = "2";
 
 /** Where one person's page consent is kept. */
 export const pageConsentKey = (tenant: string, subject: string) => `${tenant}#page-consent#${subject}`;

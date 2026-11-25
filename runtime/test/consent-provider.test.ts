@@ -27,14 +27,14 @@ describe("the inference provider and its consent", () => {
     }
   });
 
-  it("raises both consents' versions and serves Bedrock's words when INFERENCE_PROVIDER is bedrock", async () => {
+  it("names Bedrock in the AI consent's version, keeps the page consent's, and serves Bedrock's words, on bedrock", async () => {
     vi.resetModules();
     vi.stubEnv("INFERENCE_PROVIDER", "bedrock");
     try {
       const c = await import("../src/cloud/consent.js");
-      expect([c.INFERENCE_PROVIDER, c.AI_CONSENT_VERSION, c.PAGE_CONSENT_VERSION]).toEqual(["bedrock", "2", "3"]);
+      expect([c.INFERENCE_PROVIDER, c.AI_CONSENT_VERSION, c.PAGE_CONSENT_VERSION]).toEqual(["bedrock", "bedrock-1", "2"]);
       const view = c.aiConsentView(undefined, "en");
-      expect(view.version).toBe("2");
+      expect(view.version).toBe("bedrock-1");
       expect(view.words.lines).toEqual([...wordsIn("en").ai_consent_lines_bedrock]);
     } finally {
       vi.unstubAllEnvs();
