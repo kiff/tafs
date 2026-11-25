@@ -156,6 +156,25 @@ export function runFailure(r: { status?: unknown; error?: unknown; code?: unknow
   return { code: r.code, words: flat.length > 400 ? `${flat.slice(0, 399)}…` : flat };
 }
 
+/**
+ * A failed run's reason, as the apps read it: kiff/agents' own code (`ai_unavailable`), `timeout` for a run that
+ * reached its time limit, else `failed`. An app that doesn't know a code shows the words, with no Retry.
+ */
+export function failureCode(r: { error?: unknown; code?: unknown; status?: unknown; tally?: Run["tally"] }): string {
+  const coded = runFailure(r);
+  if (coded) return coded.code;
+  return FAILED_WORDS[typeof r.error === "string" ? r.error.trim() : ""] === "run_failed_time" ? "timeout" : "failed";
+}
+
+/**
+ * Whether trying a failed run's message again is safe: the record shows nothing it did that acted (no call sent or held
+ * in its tally, none that went through, no write sent). Sent again, the person's message would act a second time.
+ */
+export function retrySafe(r: { tally?: Run["tally"]; done?: unknown[]; sent?: number }): boolean {
+  const acted = Object.values(r.tally ?? {}).some((t) => (t?.sent ?? 0) > 0 || (t?.held ?? 0) > 0 || (t?.unknown ?? 0) > 0);
+  return !acted && !(Array.isArray(r.done) && r.done.length > 0) && !((r.sent ?? 0) > 0);
+}
+
 /** Whether a run's record has a call that went through: kiff/agents' `tally`, any tool's `sent` above 0. */
 function sentAny(tally: Run["tally"] | undefined): boolean {
   return Object.values(tally ?? {}).some((t) => typeof t?.sent === "number" && t.sent > 0);
