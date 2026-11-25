@@ -372,6 +372,7 @@ export const nl: Words = {
   code_ai_unavailable_partway: "Onze AI-provider bediende ons halverwege niet meer, dus dit is gestopt. Het ligt aan ons, niet aan jou: probeer het iets later opnieuw.",
   turn_failed_ours: "tafs kan nu niet antwoorden. Het ligt aan ons, en er zijn geen credits van je gebruikt. Je kunt het iets later opnieuw proberen.",
   turn_failed_ours_partway: "tafs stopte halverwege. Het ligt aan ons, niet aan jou. Kijk wat er al gedaan is en vraag het iets later opnieuw.",
+  turn_failed_ours_charged: "tafs kan nu niet antwoorden. Het ligt aan ons, niet aan jou. Je kunt het iets later opnieuw proberen.",
   turn_failed_credits: "Geen antwoord: je account heeft geen credits meer. Je kunt credits toevoegen en het dan opnieuw proberen.",
   turn_failed_credits_ask: "Geen antwoord: je account heeft geen credits meer. Je kunt een beheerder vragen om er toe te voegen en het dan opnieuw proberen.",
   turn_failed_time: "Dit duurde te lang en stopte voordat er iets veranderd was. Je kunt het opnieuw proberen, of minder tegelijk vragen.",

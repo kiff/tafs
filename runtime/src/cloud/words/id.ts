@@ -366,6 +366,7 @@ export const id: Words = {
   code_ai_unavailable_partway: "Penyedia AI kami berhenti melayani kami di tengah jalan, jadi ini berhenti. Ini masalah di pihak kami, bukan Anda: coba lagi sebentar lagi.",
   turn_failed_ours: "tafs tidak bisa menjawab sekarang. Ini masalah di pihak kami, dan tidak ada kredit Anda yang terpakai. Coba lagi sebentar lagi.",
   turn_failed_ours_partway: "tafs berhenti di tengah jalan. Ini masalah di pihak kami, bukan Anda. Periksa apa yang sudah dilakukan, lalu minta lagi sebentar lagi.",
+  turn_failed_ours_charged: "tafs tidak bisa menjawab sekarang. Ini masalah di pihak kami, bukan Anda. Coba lagi sebentar lagi.",
   turn_failed_credits: "Tidak ada jawaban: akun Anda tidak punya kredit lagi. Tambah kredit, lalu coba lagi.",
   turn_failed_credits_ask: "Tidak ada jawaban: akun Anda tidak punya kredit lagi. Minta admin untuk menambahkannya, lalu coba lagi.",
   turn_failed_time: "Ini terlalu lama dan berhenti sebelum mengubah apa pun. Coba lagi, atau minta lebih sedikit sekaligus.",

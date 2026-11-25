@@ -366,6 +366,7 @@ export const tr: Words = {
   code_ai_unavailable_partway: "Yapay zekâ sağlayıcımız işin ortasında bize hizmet vermeyi bıraktı, bu yüzden bu durdu. Bu bizim tarafımızda, sizin değil: biraz sonra yeniden deneyin.",
   turn_failed_ours: "tafs şu an yanıt veremiyor. Bu bizim tarafımızda ve hiçbir krediniz kullanılmadı. Biraz sonra yeniden deneyin.",
   turn_failed_ours_partway: "tafs işin ortasında durdu. Bu bizim tarafımızda, sizin değil. Nelerin yapıldığını kontrol edin, sonra biraz sonra yeniden isteyin.",
+  turn_failed_ours_charged: "tafs şu an yanıt veremiyor. Bu bizim tarafımızda, sizin değil. Biraz sonra yeniden deneyin.",
   turn_failed_credits: "Yanıt yok: hesabınızda kredi kalmadı. Kredi ekleyin, sonra yeniden deneyin.",
   turn_failed_credits_ask: "Yanıt yok: hesabınızda kredi kalmadı. Bir yöneticiden kredi eklemesini isteyin, sonra yeniden deneyin.",
   turn_failed_time: "Bu çok uzun sürdü ve hiçbir şey değişmeden durdu. Yeniden deneyin ya da bir seferde daha az isteyin.",

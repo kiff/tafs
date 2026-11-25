@@ -366,6 +366,7 @@ export const ro: Words = {
   code_ai_unavailable_partway: "Furnizorul nostru de IA a încetat să ne deservească pe parcurs, așa că s-a oprit. Este vina noastră, nu a dvs.: încercați din nou puțin mai târziu.",
   turn_failed_ours: "tafs nu poate răspunde acum. Este vina noastră și nu s-a folosit niciun credit al dvs. Încercați din nou puțin mai târziu.",
   turn_failed_ours_partway: "tafs s-a oprit pe parcurs. Este vina noastră, nu a dvs. Verificați ce s-a făcut, apoi cereți din nou puțin mai târziu.",
+  turn_failed_ours_charged: "tafs nu poate răspunde acum. Este vina noastră, nu a dvs. Încercați din nou puțin mai târziu.",
   turn_failed_credits: "Niciun răspuns: contul dvs. nu mai are credite. Adăugați credite, apoi încercați din nou.",
   turn_failed_credits_ask: "Niciun răspuns: contul dvs. nu mai are credite. Cereți unui administrator să adauge, apoi încercați din nou.",
   turn_failed_time: "A durat prea mult și s-a oprit înainte de a schimba ceva. Încercați din nou sau cereți mai puțin deodată.",

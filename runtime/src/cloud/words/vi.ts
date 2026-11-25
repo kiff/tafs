@@ -366,6 +366,7 @@ export const vi: Words = {
   code_ai_unavailable_partway: "Nhà cung cấp AI của chúng tôi ngừng phục vụ giữa chừng, nên việc này đã dừng. Đây là lỗi phía chúng tôi, không phải của bạn: hãy thử lại sau một lát.",
   turn_failed_ours: "tafs hiện không thể trả lời. Đây là lỗi phía chúng tôi, và không có tín dụng nào của bạn bị dùng. Hãy thử lại sau một lát.",
   turn_failed_ours_partway: "tafs đã dừng giữa chừng. Đây là lỗi phía chúng tôi, không phải của bạn. Hãy kiểm tra những gì đã được làm, rồi yêu cầu lại sau một lát.",
+  turn_failed_ours_charged: "tafs hiện không thể trả lời. Đây là lỗi phía chúng tôi, không phải của bạn. Hãy thử lại sau một lát.",
   turn_failed_credits: "Không có câu trả lời: tài khoản của bạn đã hết tín dụng. Hãy thêm tín dụng, rồi thử lại.",
   turn_failed_credits_ask: "Không có câu trả lời: tài khoản của bạn đã hết tín dụng. Hãy nhờ quản trị viên thêm tín dụng, rồi thử lại.",
   turn_failed_time: "Việc này mất quá lâu và đã dừng trước khi thay đổi bất cứ điều gì. Hãy thử lại, hoặc yêu cầu ít hơn mỗi lần.",

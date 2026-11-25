@@ -366,6 +366,7 @@ export const hr: Words = {
   code_ai_unavailable_partway: "Naš pružatelj umjetne inteligencije prestao nas je posluživati usred posla pa se ovo zaustavilo. Greška je na našoj strani, ne na vašoj: pokušajte ponovno malo kasnije.",
   turn_failed_ours: "tafs trenutačno ne može odgovoriti. Greška je na našoj strani i nije potrošen nijedan vaš kredit. Pokušajte ponovno malo kasnije.",
   turn_failed_ours_partway: "tafs se zaustavio usred posla. Greška je na našoj strani, ne na vašoj. Provjerite što je učinjeno, pa pitajte ponovno malo kasnije.",
+  turn_failed_ours_charged: "tafs trenutačno ne može odgovoriti. Greška je na našoj strani, ne na vašoj. Pokušajte ponovno malo kasnije.",
   turn_failed_credits: "Nema odgovora: na vašem računu nema više kredita. Dodajte kredite, pa pokušajte ponovno.",
   turn_failed_credits_ask: "Nema odgovora: na vašem računu nema više kredita. Zamolite administratora da ih doda, pa pokušajte ponovno.",
   turn_failed_time: "Ovo je trajalo predugo i zaustavilo se prije nego što je išta promijenjeno. Pokušajte ponovno ili tražite manje odjednom.",

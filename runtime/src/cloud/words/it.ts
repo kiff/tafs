@@ -372,6 +372,7 @@ export const it: Words = {
   code_ai_unavailable_partway: "Il nostro fornitore di IA ha smesso di servirci a metà strada, quindi si è fermato. Dipende da noi, non da te: riprova tra poco.",
   turn_failed_ours: "tafs non può rispondere al momento. Dipende da noi, e non è stato usato nessuno dei tuoi crediti. Riprova tra poco.",
   turn_failed_ours_partway: "tafs si è fermato a metà strada. Dipende da noi, non da te. Controlla cosa è stato fatto, poi chiedi di nuovo tra poco.",
+  turn_failed_ours_charged: "tafs non può rispondere al momento. Dipende da noi, non da te. Riprova tra poco.",
   turn_failed_credits: "Nessuna risposta: il tuo account non ha più crediti. Aggiungi crediti, poi riprova.",
   turn_failed_credits_ask: "Nessuna risposta: il tuo account non ha più crediti. Chiedi a un amministratore di aggiungerne, poi riprova.",
   turn_failed_time: "Ci è voluto troppo tempo e si è fermato prima di cambiare qualcosa. Riprova, oppure chiedi meno cose alla volta.",

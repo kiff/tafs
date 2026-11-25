@@ -372,6 +372,7 @@ export const de: Words = {
   code_ai_unavailable_partway: "Unser KI-Anbieter stand uns mittendrin nicht mehr zur Verfügung, deshalb wurde das gestoppt. Das liegt an uns, nicht an dir: Versuch es etwas später noch einmal.",
   turn_failed_ours: "tafs kann gerade nicht antworten. Das liegt an uns, und es wurden keine deiner Credits verbraucht. Versuch es etwas später noch einmal.",
   turn_failed_ours_partway: "tafs hat mittendrin aufgehört. Das liegt an uns, nicht an dir. Sieh nach, was schon erledigt wurde, und frag dann etwas später noch einmal.",
+  turn_failed_ours_charged: "tafs kann gerade nicht antworten. Das liegt an uns, nicht an dir. Versuch es etwas später noch einmal.",
   turn_failed_credits: "Keine Antwort: Dein Konto hat keine Credits mehr. Du kannst Credits hinzufügen und es dann noch einmal versuchen.",
   turn_failed_credits_ask: "Keine Antwort: Dein Konto hat keine Credits mehr. Du kannst einen Admin fragen, welche hinzuzufügen, und es dann noch einmal versuchen.",
   turn_failed_time: "Das hat zu lange gedauert und wurde gestoppt, bevor etwas geändert wurde. Versuch es noch einmal oder bitte um weniger auf einmal.",

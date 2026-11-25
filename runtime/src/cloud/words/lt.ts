@@ -366,6 +366,7 @@ export const lt: Words = {
   code_ai_unavailable_partway: "Mūsų dirbtinio intelekto tiekėjas nustojo mus aptarnauti per vidurį, todėl tai sustojo. Tai mūsų pusėje, ne tavo: pabandyk vėliau.",
   turn_failed_ours: "tafs šiuo metu negali atsakyti. Tai mūsų pusėje, ir nepanaudotas nė vienas tavo kreditas. Pabandyk vėliau.",
   turn_failed_ours_partway: "tafs sustojo per vidurį. Tai mūsų pusėje, ne tavo. Patikrink, kas jau padaryta, ir paprašyk dar kartą vėliau.",
+  turn_failed_ours_charged: "tafs šiuo metu negali atsakyti. Tai mūsų pusėje, ne tavo. Pabandyk vėliau.",
   turn_failed_credits: "Atsakymo nėra: tavo paskyroje neliko kreditų. Pridėk kreditų ir pabandyk dar kartą.",
   turn_failed_credits_ask: "Atsakymo nėra: tavo paskyroje neliko kreditų. Paprašyk administratoriaus jų pridėti ir pabandyk dar kartą.",
   turn_failed_time: "Tai užtruko per ilgai ir sustojo dar nieko nepakeitus. Pabandyk dar kartą arba prašyk mažiau iš karto.",

@@ -1,0 +1,1 @@
+- **A failed turn that changed nothing but was charged has its own line.** When our AI provider stops after a turn has already read something (and used credits), the line says it's on our side and offers Try again, with no claim about credits. In all 26 languages.
