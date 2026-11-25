@@ -296,7 +296,7 @@ export interface MoneyCard {
  * every Card), a held Card that would bound no amount, a held Card with no total of its own and no refused day's total
  * beside it for KIFF's count, or a count of a money tool's calls (its limits are its amounts).
  */
-export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count";
+export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count" | "asks_unnamed";
 
 /** A money tool's Cards, as the agreed rules give them, or why they can't be. `tool` is named as the connection titles it. */
 export type MoneyCards = { tool: string; action: string } & ({ cards: MoneyCard[] } | { unbuilt: MoneyUnbuilt });
@@ -337,6 +337,11 @@ function moneyCardsOf(rule: AgreedRule, action: string, agent: string): MoneyCar
   const limits = rule.limits ?? [];
   if (limits.some((l) => l.quantity === "count" && l.limit > 0 && !l.per)) return "count";
   const over = (l: AgreedLimit) => l.over ?? rule.over;
+  // A rule that says its calls ask, with no figure that asks, names nothing a Card can hold: built as its refused figures
+  // alone, every call under them would run unasked, though the owner read that it asks (a phone test, 25 Nov: "Every refund
+  // asks you first", agreed as `over: "ask"` beside a refused €50 a refund and €200 a day). It's never guessed either way:
+  // the rules are shown again with the figure that asks ("every call asks" is a count of 0 a day), or with nothing asking.
+  if (rule.over === "ask" && !limits.some((l) => over(l) === "ask")) return "asks_unnamed";
   const cap = (l: AgreedLimit) => ({ quantity: l.quantity, max: l.limit });
   const total = (l: AgreedLimit) => ({ quantity: l.quantity, limit: l.limit, window: l.window, ...(l.per ? { per: l.per } : {}) });
   const card = (kind: "refused" | "held", caps: Array<{ quantity: string; max: number }>, totals: MoneyCard["aggregates"]): MoneyCard => ({
