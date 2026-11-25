@@ -59,7 +59,7 @@ import { type APIDraft, doorKeys } from "./doors/model.js";
 type KeptAPIDraft = { draft?: APIDraft; made: string; expires: string; used?: { door: string; at: string } };
 import { canonical } from "./jcs.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
-import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
+import { fileReport, reportInput, reportKey, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
 import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, removedRecordTafs, removedTafsKey, type RemovedTaf } from "./record.js";
 import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
@@ -6920,7 +6920,8 @@ function deleteWords(lang: Lang): { item: string; confirm_title: string; confirm
  * tafs cloud kept by it that holds the chat's content or says something about it: what they wrote that waits to go as
  * their next message there and the runs they wrote to (steer: the chat then drops out of their steer list at its next
  * settle, as nothing waits in it), the ends of Coach's drives in it and their steps, its set aside, its connections, its
- * notes for Coach and the reasons kept beside its approval cards. Markers with no content (skills loaded, claims, a
+ * notes for Coach and the reasons kept beside its approval cards, and their reports of its answers (reports.ts): the answer's
+ * text and their note go with the chat, though the email that told KIFF's support of a report is the support inbox's. Markers with no content (skills loaded, claims, a
  * Chrome's or a watch's mark of the chat) end on their own. It is theirs alone (ownChat, and kiff/agents deletes only a
  * thread its owner continued), never a job's or another person's. A chat whose run is still working or waits on a card is
  * refused: stop it or answer it first, so no card outlives its chat. A run started by a message sent between that check
@@ -6932,6 +6933,18 @@ async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Dep
   const active = await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, true));
   if (active.some((r) => r.session === chat.id)) {
     throw new HTTPError(409, wordsIn(lang).chat_delete_busy);
+  }
+  // Their reports of its answers go first, from the whole chat as kiff/agents keeps it (every answer, never the thread's
+  // last ones), by each answer's id as the thread names it (`<run>.<seq>`). One that can't be removed stops the delete,
+  // with nothing of the chat gone, so trying again finishes it: a chat never goes while a report of it stays.
+  if (deps.reports) {
+    const store = deps.reports.store;
+    const keys = events.filter((e) => e.kind === "agent_message" || e.kind === "report").map((e) => reportKey(me.tenantID, me.subject, `${e.run}.${e.seq}`));
+    const removed = await Promise.all(keys.map((key) => store.remove(key).then(() => true, (err) => {
+      console.error(`delete chat: a report wasn't removed: ${(err as Error).message}`);
+      return false;
+    })));
+    if (removed.includes(false)) throw new HTTPError(503, wordsIn(lang).chat_delete_failed);
   }
   await agentsCall(() => deps.agents.deleteSession(me.tenantID, chat.id, ownerKey(me)));
   // What tafs cloud kept by this chat: best effort, each ends on its own (30 days at most) if a removal fails.

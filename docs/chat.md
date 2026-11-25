@@ -727,6 +727,9 @@ cloud has an id for the answer (not in the sample).
   in the app's words and keeps the sheet open to send again.
 - tafs cloud keeps the answer as kiff/agents holds it, never the app's copy. A run's report
   (`GET /v1/tafs/{id}/runs/{session}`) carries no message id, so it isn't reported from there.
+- tafs cloud keeps a report 180 days, with the answer and the person's note (`reports.ts`). **Deleting the chat erases
+  the person's reports of its answers with it** (`deleteChat`), and deleting the account erases them all. The email
+  that told KIFF's support of a report is the support inbox's.
 
 ## Message ids
 
