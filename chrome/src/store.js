@@ -1,6 +1,6 @@
-// What the extension keeps (docs/chrome.md, "What's kept"): its key pair, whose private half can't be exported, and the
-// pairing (this Chrome's id and name, and the phone's key). Nothing else is written to disk: no page, no step, no value
-// read. Unpairing wipes all of it. A code being typed waits in chrome.storage.session, which Chrome keeps in memory only.
+// What the extension keeps (docs/chrome.md, "What's kept"): its key pair, whose private half can't be exported, the
+// pairing (this Chrome's id and name, and the phone's key), and the ids of the Coach chats begun here (sw.js `coachBegan`).
+// Nothing else is written to disk: no page, no step, no message, no value read. Unpairing wipes all of it. A code being typed waits in chrome.storage.session, which Chrome keeps in memory only.
 
 const DB = "tafs";
 const STORE = "kept";

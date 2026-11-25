@@ -281,7 +281,9 @@ test("every shipped language has an extension locale with English's keys and pla
   const locales = readdirSync(dir).filter((l) => l !== "en").sort();
   assert.deepEqual(locales, want, "one locale for each language the apps ship, and no other");
   // Lines that are the same in every language: names and the like. Anything else equal to English is English left in.
-  const sameAsEnglish = new Set(["name", "coach_title"]); // Coach is a name, the same in every language
+  // Coach is a name, the same in every language; "12 s" and "1 min 5 s" are unit symbols, the same in many (the apps' own
+  // `work.duration.*`).
+  const sameAsEnglish = new Set(["name", "coach_title", "chat_duration_seconds", "chat_duration_minutes"]);
   // A word the language shares with English, on purpose: "Site" in French, Dutch, Portuguese, Romanian and Turkish,
   // "Password" in Italian, "Conversation" in French. Anything else equal to English is English left in.
   const sharedWords = { coach_untitled: ["fr"] };

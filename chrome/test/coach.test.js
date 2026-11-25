@@ -274,3 +274,50 @@ test("a chat's failed run is read with it, Coach's or a taf's, from tafs cloud's
   answer = { ...contract, failed: { run: "r1", code: "failed", words: "It failed.", retry: "yes" } };
   assert.equal((await c.tafThread("taf-a")).failed.retry, false);
 });
+
+// Chrome 0.2.24: the chat drawn by the phones' rules (docs/chat.md).
+test("a chat's messages keep their chat, time, kind and an answer's work in tafs cloud's words, never a step's tool", async () => {
+  const fetch = async (url) => {
+    const body = url.endsWith("/v1/setup")
+      ? { setup: { id: "taf-coach" } }
+      : { messages: [
+        { id: "r1.in", from: "owner", kind: "message", text: "Refund Rae", at: "2026-11-25T09:00:00Z", session: "s1", work: { ms: 1, steps: [] } },
+        { id: "r1.3", from: "taf", kind: "message", text: "Done.", at: "2026-11-25T09:00:12Z", session: "s1", work: { ms: 12000, steps: [{ tool: "stripe_refund", words: "Refunding…", error: true, why: "Card declined" }] } },
+        { id: "r2.in", from: "owner", kind: "kickoff", text: "Daily check", at: "2026-11-25T10:00:00Z", session: "s1" },
+      ] };
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const c = new Coach({ token: "t", fetch, base: "https://cloud.test" });
+  for (const t of [await c.thread("s1"), await c.tafThread("taf-a")]) {
+    assert.deepEqual(t.messages[0], { from: "owner", text: "Refund Rae", at: "2026-11-25T09:00:00Z", session: "s1", id: "r1.in" }, "the person's message carries no work");
+    assert.deepEqual(t.messages[1].work, { ms: 12000, steps: [{ words: "Refunding…", failed: true, why: "Card declined", notMade: false }] });
+    assert.equal(t.messages[1].session, "s1", "a taf's answer names its chat, for a report");
+    assert.equal(t.messages[2].kind, "kickoff");
+    assert.equal(JSON.stringify(t).includes("stripe_refund"), false);
+  }
+});
+
+test("Report this answer goes to tafs cloud's route with a reason, the note, and the chat's session, always", async () => {
+  const calls = [];
+  let answer = { status: 200, body: { report: { id: "rep1", at: "2026-11-25T10:00:00Z", new: true } } };
+  const fetch = async (url, init) => {
+    calls.push([init.method, url, init.body && JSON.parse(init.body)]);
+    const body = url.endsWith("/v1/setup") ? { setup: { id: "taf-coach" } } : answer.body;
+    const status = url.endsWith("/v1/setup") ? 200 : answer.status;
+    return { ok: status < 400, status, json: async () => body };
+  };
+  const c = new Coach({ token: "t", fetch, base: "https://cloud.test" });
+  assert.deepEqual(await c.report("taf-a", "r1.3", { reason: "wrong", note: "  off  ", session: "s1" }), { id: "rep1", at: "2026-11-25T10:00:00Z", new: true });
+  assert.deepEqual(calls.at(-1), ["POST", "https://cloud.test/v1/tafs/taf-a/messages/r1.3/report", { reason: "wrong", note: "off", session: "s1" }]);
+  await c.report(null, "r 9.2", { reason: "other", note: "", session: "s2" });
+  assert.deepEqual(calls.at(-1), ["POST", "https://cloud.test/v1/tafs/taf-coach/messages/r%209.2/report", { reason: "other", session: "s2" }], "Coach's, by its id");
+  const n = calls.length;
+  await assert.rejects(c.report("taf-a", "r1.3", { reason: "wrong", session: "" }), { code: "bad_report" }, "never without the chat");
+  await assert.rejects(c.report("taf-a", "r1.3", { reason: "spam", session: "s1" }), { code: "bad_report" });
+  assert.equal(calls.length, n, "nothing sent");
+  // A refusal keeps tafs cloud's words and its status for the panel.
+  answer = { status: 403, body: { error: "halted", words: "Your account is halted." } };
+  await assert.rejects(c.report("taf-a", "r1.3", { reason: "wrong", session: "s1" }), { status: 403, words: "Your account is halted." });
+  answer = { status: 404, body: { error: "no answer of the taf's by that id" } };
+  await assert.rejects(c.report("taf-a", "r1.3", { reason: "wrong", session: "s1" }), (e) => e.status === 404 && e.words === undefined);
+});

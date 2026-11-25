@@ -184,7 +184,7 @@ test("the page consent's banner sits right above the box, in Coach's chat and a 
 
 test("a failed run shows tafs cloud's words as text, as the chat's last line, with Try again only when offered, pressed once", () => {
   const draw = js.slice(js.indexOf("function drawMessages("), js.indexOf("function whyUnder("));
-  assert.match(draw, /if \(thread\.failed\) list\.append\(failedLine\(thread\.failed, thread\.messages, retry\)\);\n\}/, "the chat's last line");
+  assert.match(draw, /if \(thread\.failed\) list\.append\(failedLine\(thread\.failed, thread\.messages, chat\.retry\)\);\n\}/, "the chat's last line");
   assert.match(draw, /p\.textContent = f\.words;/, "its words, as text, never HTML");
   assert.doesNotMatch(draw, /innerHTML|f\.code ===|\.code\)/, "never by its code");
   assert.match(draw, /const again = retryOf\(f, messages\);/);
@@ -192,8 +192,8 @@ test("a failed run shows tafs cloud's words as text, as the chat's last line, wi
   assert.match(draw, /b\.onclick = \(\) => \{\n\s*if \(retried\.has\(key\)\) return;\n\s*retried\.add\(key\);\n\s*b\.disabled = true;\n\s*b\.remove\(\);\n\s*retry\(again\);/, "once: gone at the first press");
   assert.match(draw, /if \(again && label && !retried\.has\(key\)\)/, "and not back on the next draw");
   // Try again sends the words as a new message (a fresh clientID), with no file, and leaves the box alone.
-  assert.match(js, /drawMessages\(list, r\.thread, \(again\) => sendTaf\(id, again, \[\]\)\);/);
-  assert.match(js, /drawMessages\(list, r\.thread, \(again\) => sendCoach\(false, again\)\);/);
+  assert.match(js, /drawMessages\(list, r\.thread, \{\n\s*retry: \(again\) => sendTaf\(id, again, \[\]\),/);
+  assert.match(js, /drawMessages\(list, r\.thread, \{\n\s*retry: \(again\) => sendCoach\(false, again\),/);
   assert.match(js, /if \(again == null\) \$\("coachWords"\)\.value = "";/);
   const taf = js.slice(js.indexOf("async function sendTaf("), js.indexOf("\n}", js.indexOf("async function sendTaf(")));
   assert.doesNotMatch(taf, /\$\("tafWords"\)\.value = "";/, "the box is cleared by the form, never by Try again");
@@ -206,4 +206,73 @@ test("a failed turn ends the working line, and a message that never reached the 
     assert.match(js, new RegExp(`if \\(lapsed\\(${pending}, r\\.thread\\.messages\\)\\) ${lapsedVar} = `), lapsedVar);
     assert.match(js, new RegExp(`note\\.textContent = t\\("${key}"`), key);
   }
+});
+
+// Chrome 0.2.24: the chat is one thing, drawn by the same rules as on the phones (docs/chat.md, docs/parity.md).
+test("each message has its time under it and a header where a day starts, in the panel's language", () => {
+  const draw = js.slice(js.indexOf("function drawMessages("), js.indexOf("function dayHeader("));
+  assert.match(draw, /if \(startsDay\(shown, i\)\) list\.append\(dayHeader\(m\.at\)\);/);
+  assert.match(draw, /words\(li, m\);\n\s*reading\(li, m\);\n\s*whyUnder\(li, m\);\n\s*under\(li, m, chat\);/);
+  assert.match(js, /const LANG = chrome\.i18n\.getUILanguage\(\);/);
+  assert.match(js, /dayLabel\(at, \{ lang: LANG, today: t\("chat_today"\), yesterday: t\("chat_yesterday"\) \}\)/);
+  assert.match(js, /const when = timeLabel\(m\.at, LANG\);/);
+});
+
+test("Copy writes the words from the press itself, with no permission asked for, and says when it couldn't", () => {
+  const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
+  assert.deepEqual(manifest.permissions, ["storage", "alarms", "scripting", "sidePanel", "tabs", "tabGroups", "webNavigation", "declarativeNetRequest", "notifications"], "no clipboard permission, nothing new");
+  const copy = js.slice(js.indexOf("function copyButton("), js.indexOf("function workFold("));
+  assert.match(copy, /b\.onclick = async \(\) => \{\n\s*try \{\n\s*await navigator\.clipboard\.writeText\(text\);/, "inside the click");
+  assert.match(copy, /b\.textContent = t\("chat_copy_selected"\);/, "a refusal is said, the words selected");
+  assert.doesNotMatch(js, /execCommand|clipboardWrite|clipboard\.read/);
+});
+
+test("Report goes with the chat's session, always, from a screen over the panel; opening ⋯ sends nothing", () => {
+  assert.match(html, /<section id="report" class="sheet" role="dialog" aria-modal="true" aria-labelledby="reportTitle" hidden>/);
+  for (const reason of ["offensive", "harmful", "wrong", "other"]) assert.match(html, new RegExp(`<input type="radio" name="reason" value="${reason}"> <span data-m="report_reason_${reason}"></span>`));
+  const under = js.slice(js.indexOf("function under("), js.indexOf("// A Send again on its way"));
+  assert.match(under, /const session = m\.session \|\| chat\.session;\n\s*if \(canReport\(m, session\)\) \{/);
+  assert.match(under, /report\.onclick = \(\) => openReport\(\{ taf: chat\.taf, message: m\.id, session \}\);/);
+  const submit = js.slice(js.indexOf('$("reportForm").onsubmit'), js.indexOf("/**", js.indexOf('$("reportForm").onsubmit')));
+  assert.match(submit, /const body = answer && reportBody\(\$\("reportForm"\)\.elements\.reason\.value, \$\("reportNote"\)\.value, answer\.session\);\n\s*if \(!body \|\| reportSending\) return;/, "never without a session, never twice at once");
+  assert.match(submit, /send\(\{ type: "report", taf: answer\.taf, message: answer\.message, \.\.\.body \}\)/);
+  const more = js.slice(js.indexOf("function moreMenu("), js.indexOf("function copyButton("));
+  assert.doesNotMatch(more, /send\(/, "opening the menu sends nothing");
+  // The worker reports for a taf of this Chrome only, and gives back how it went, tafs cloud's words included.
+  const sw = readFileSync(new URL("../src/sw.js", import.meta.url), "utf8");
+  const report = sw.slice(sw.indexOf("    report: async () => {"), sw.indexOf("    aside_status:"));
+  assert.match(report, /if \(m\.taf\) await onlyHere\(m\.taf\);/);
+  assert.match(report, /\.report\(m\.taf \|\| null, String\(m\.message \|\| ""\), \{ reason: m\.reason, note: m\.note, session: m\.session \}\)/);
+  assert.match(report, /return \{ failed: \{ status: \(e && e\.status\) \|\| 0, \.\.\.\(e && e\.words \? \{ words: e\.words \} : \{\}\) \} \};/);
+});
+
+test("the person's own message: Send again and Edit and send only in a chat begun here, Send again pressed once", () => {
+  const under = js.slice(js.indexOf("function under("), js.indexOf("// A Send again on its way"));
+  assert.match(under, /const can = ownerActions\(m, chat\.began\);/);
+  assert.match(under, /again\.onclick = \(\) => \{\n\s*if \(again\.disabled \|\| resending\) return;\n\s*again\.disabled = true;\n\s*resending = true;/, "once, and not while the first is on its way");
+  // Coach's chat: as the worker knows it (it began it, by a send from here); a taf's chat in the panel is always one begun here.
+  assert.match(js, /began: r\.thread\.began === true,/);
+  assert.match(js, /again: \(again\) => sendCoach\(false, again\),\n\s*edit: \(text\) => editIn\(\$\("coachWords"\), text\),/);
+  assert.match(js, /again: \(again\) => sendTaf\(id, again, \[\]\),\n\s*edit: \(text\) => id === tafId && editIn\(\$\("tafWords"\), text\),\n\s*began: true,/);
+  const sw = readFileSync(new URL("../src/sw.js", import.meta.url), "utf8");
+  assert.match(sw, /if \(sent && typeof sent\.session === "string"\) await rememberBegan\(sent\.session\)\.catch\(\(\) => \{\}\);/, "a send tafs cloud took names a chat begun here");
+  assert.match(sw, /began: session \? \(await coachBegan\(\)\)\.includes\(session\) : true/);
+  assert.match(sw, /await indexedStore\.set\(COACH_BEGAN, withBegan\(await coachBegan\(\), session\)\);/, "kept with the pairing, wiped with it");
+});
+
+test("a run's work is folded into one line over its answer, and its card gives way once tafs cloud says the turn is over", () => {
+  assert.match(js, /if \(m\.from === "taf" && m\.work\) li\.append\(workFold\(m\)\);/);
+  const fold = js.slice(js.indexOf("function workFold("), js.indexOf("function editIn("));
+  assert.match(fold, /const line = workLine\(m\.work, LANG, t\);/);
+  assert.match(fold, /b\.setAttribute\("aria-expanded", String\(open\)\);/);
+  assert.doesNotMatch(fold, /\.tool\b/, "a step is never named by its tool");
+  assert.match(js, /const runs = \(here \? \[here, \.\.\.live\.filter\(\(r\) => r !== here\)\] : live\)\.filter\(\(r\) => cardShown\(r, overRuns\)\);/);
+  assert.match(js, /overRuns\.set\(run, steps\.length\);/);
+});
+
+test("the tafs are read again once the KIFF session is claimed, not only when the connections change", () => {
+  // The worker claims the session after the phone pairs this Chrome; until then a read answers `no_session`, and the claim
+  // lands as a state with the same connections. The panel reads again on that state, so the taf's chat shows.
+  assert.match(js, /tafsNoSession = r\.error === "no_session";/);
+  assert.match(js, /if \(state\.paired && \(connections !== lastConnections \|\| tafsNoSession\)\) \{\n    lastConnections = connections;\n    loadTafs\(\);/);
 });

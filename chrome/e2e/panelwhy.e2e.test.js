@@ -89,7 +89,7 @@ test("a failed run is the chat's last line, in tafs cloud's words, ends the work
     h.cloud.failNext = { retry: true, retry_label: "Try again" };
     await sendTyped(h, "Sum up this page");
     await until(async () => (await shown(h, "#tafThread li.failed p")) === words, "the failed turn's words, as sent");
-    assert.equal(await h.inPanel(`document.querySelector("#tafThread li.failed").previousElementSibling.textContent`), "Sum up this page", "under the message whose run failed");
+    assert.equal(await h.inPanel(`document.querySelector("#tafThread li.failed").previousElementSibling.querySelector(".words").textContent`), "Sum up this page", "under the message whose run failed");
     assert.equal(await h.inPanel(`document.querySelector("#tafThread li.failed") === document.querySelector("#tafThread").lastElementChild`), true, "the chat's last line");
     assert.equal(await h.inPanel(`document.querySelectorAll("#tafThread li.working, #tafThread li.pending").length`), 0, "no working line once the turn failed");
     assert.equal(await shown(h, "#tafThread li.failed button.retry"), "Try again", "tafs cloud's label");
