@@ -1,0 +1,1 @@
+- **"Every refund waits for you" is drafted even when Coach writes it as 0 for each call.** A count of 0 for each call means every call goes past it, so tafs cloud reads it as 0 a day, which a Card can hold. A count above 0 for each call limits nothing, and such rules are shown again. See [Coach](docs/coach.md).
