@@ -69,7 +69,7 @@ internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) 
     }
     // Taken and not yet at work: the ✓ says it, and Coach's side waits for its first word.
     if (ask.state == AskLine.ACCEPTED) return@Column
-    val answer = if (ask.ended) (ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone } else stateLine(ask)
+    val answer = if (ask.ended) Plain.of(ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone } else stateLine(ask)
     androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
     // The answer whole, however many lines (the owner's Watch 5 test: it was cut at five, "the computer is…", with no way on);
     // the page scrolls with the crown, and a tap opens it with Hear and Reply.

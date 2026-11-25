@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Coach-д хэрэгслүүдийг нь өгөх</string>
     <string name="coach_tools_giving">Өгч байна…</string>
     <string name="coach_tools_title">Coach-ийн хэрэгслүүд</string>
+    <string name="coach_tools_write_after">Эхлээд Coach-ийн хэрэгслүүдийг зөвшөөрнө үү, дараа нь бичих боломжтой.</string>
     <string name="coach_tools_eyebrow">Хэрэгслүүд</string>
     <string name="coach_tools_not_given">Coach-ийн хэрэгслүүдийг өгөөгүй. %1$s</string>
     <string name="coach_tools_not_read">Coach-ийн хэрэгслүүдийг уншиж чадсангүй. %1$s</string>

@@ -922,6 +922,7 @@
     <string name="coach_tools_give">Daj Coachowi jego narzędzia</string>
     <string name="coach_tools_giving">Przekazywanie…</string>
     <string name="coach_tools_title">Narzędzia Coacha</string>
+    <string name="coach_tools_write_after">Najpierw zatwierdź narzędzia Coacha, potem możesz pisać.</string>
     <string name="coach_tools_eyebrow">Narzędzia</string>
     <string name="coach_tools_not_given">Narzędzia Coacha nie zostały przekazane. %1$s</string>
     <string name="coach_tools_not_read">Nie udało się odczytać narzędzi Coacha. %1$s</string>

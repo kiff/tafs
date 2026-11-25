@@ -186,6 +186,7 @@
   "coach.tools.give": "Coach-д хэрэгслүүдийг нь өгөх",
   "coach.tools.giving": "Өгч байна…",
   "coach.tools.title": "Coach-ийн хэрэгслүүд",
+  "coach.tools.write_after": "Эхлээд Coach-ийн хэрэгслүүдийг зөвшөөрнө үү, дараа нь бичих боломжтой.",
   "coach.tools_eyebrow": "Хэрэгслүүд",
   "coach.tools_not_given": "Coach-ийн хэрэгслүүдийг өгөөгүй. {why}",
   "coach.tools_not_read": "Coach-ийн хэрэгслүүдийг уншиж чадсангүй. {why}",

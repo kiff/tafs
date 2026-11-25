@@ -423,6 +423,8 @@ couldn't be read (`card_unit_exceptions_notice`).
 they were on for that account (`ALERTS_WERE_ON`). Signing in to the same account again registers
 this phone again, with no new confirmation, while the account's alerts still reach tafs cloud;
 otherwise the app says once that they're off, with **Turn on**. Another account doesn't get them.
+Signing out also takes every tafs notification still in the shade away (`PushPlatform.clearShown`), since a held call's
+alert names its taf and what it asks.
 
 **Halt and Resume say what happened on the Halt screen** (`haltError`): a halt or resume that
 didn't go through says why there, and the screen never calls a connection by its service's name.
@@ -1079,6 +1081,18 @@ wasn't sent, silent. Whatever the kind, a locked phone or watch shows only **A t
 **Turning alerts on** (`AppModel.turnOnAlerts`) asks for the phone's notification permission, then points the account's KIFF
 alert target at tafs cloud: a setup call signed with this phone's device key, never the approval key, so there's no
 fingerprint (Android 1.27.2; before, one signed a message nothing sent or checked). As on iPhone and iPad.
+
+**When Android no longer asks** (the permission was declined before), Turn on alerts shows **Turn on alerts for tafs**: why it
+matters ("…so approvals and answers reach you, on this phone and on your watch. Your watch gets its updates either way.") and
+**Open notification settings**, which opens Android's notification settings for tafs itself
+(`ACTION_APP_NOTIFICATION_SETTINGS`), or Not now. Back in the app (`onResume`, `AppModel.recheckAlerts`), notifications allowed
+now turn alerts on with no other tap ("Alerts are on."); still off, it says so once ("Alerts are still off."). Before Android
+146 it was a bare "Not done · Allow notifications for tafs in Settings, then try again.", and the owner had to hunt for the
+switch (`AlertsPromptTest`).
+
+**"Your watch is using tafs"**, once per phone (`tafs.watch-alerts-offered`): the first time a watch uses tafs on a phone whose
+notifications are off, the same way to Settings, or Not now. It never shows again on that phone. The watch's own updates don't
+depend on it: a phone that serves a watch takes its background pushes with alerts off ([watch-wear.md](watch-wear.md), Delivery).
 
 ## Haptics
 

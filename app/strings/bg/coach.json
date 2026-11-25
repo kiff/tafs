@@ -186,6 +186,7 @@
   "coach.tools.give": "Даване на инструментите на Coach",
   "coach.tools.giving": "Даване…",
   "coach.tools.title": "Инструментите на Coach",
+  "coach.tools.write_after": "Първо одобрете инструментите на Coach, след това можете да пишете.",
   "coach.tools_eyebrow": "Инструменти",
   "coach.tools_not_given": "Инструментите на Coach не бяха дадени. {why}",
   "coach.tools_not_read": "Инструментите на Coach не можаха да бъдат прочетени. {why}",

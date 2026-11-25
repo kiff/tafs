@@ -1,0 +1,4 @@
+• Twoje tafy i skrzynka zostają na miejscu, nawet gdy telefon zwalnia.
+• Długie odpowiedzi: Czytaj dalej na zegarku lub Otwórz w telefonie.
+• Odpowiedzi wyświetlają się jako zwykły tekst, a to, co wysyłasz, zostaje widoczne.
+• Poza zasięgiem telefonu zegarek sam próbuje ponownie.

@@ -823,6 +823,7 @@
     <string name="coach_tools_give">ឱ្យឧបករណ៍របស់វាទៅ Coach</string>
     <string name="coach_tools_giving">កំពុងឱ្យ…</string>
     <string name="coach_tools_title">ឧបករណ៍របស់ Coach</string>
+    <string name="coach_tools_write_after">សូមអនុម័តឧបករណ៍របស់ Coach ជាមុនសិន បន្ទាប់មកអ្នកអាចសរសេរបាន។</string>
     <string name="coach_tools_eyebrow">ឧបករណ៍</string>
     <string name="coach_tools_not_given">ឧបករណ៍របស់ Coach មិនត្រូវបានឱ្យទេ។ %1$s</string>
     <string name="coach_tools_not_read">មិនអាចអានឧបករណ៍របស់ Coach បានទេ។ %1$s</string>

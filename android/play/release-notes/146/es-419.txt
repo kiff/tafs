@@ -1,0 +1,3 @@
+• Tu reloj recibe sus respuestas aunque las alertas de tafs estén desactivadas.
+• Activar las alertas te lleva directo al ajuste.
+• Elimina una conversación con Coach para siempre.

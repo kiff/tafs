@@ -1640,6 +1640,8 @@ enum Words {
             static var giving: String { Words.line("coach.tools.giving") }
             /// Coach's tools
             static var title: String { Words.line("coach.tools.title") }
+            /// Approve Coach's tools first, then you can write.
+            static var writeAfter: String { Words.line("coach.tools.write_after") }
         }
         /// Tools
         static var toolsEyebrow: String { Words.line("coach.tools_eyebrow") }

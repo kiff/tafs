@@ -186,6 +186,7 @@
   "coach.tools.give": "מתן הכלים ל-Coach",
   "coach.tools.giving": "נותן…",
   "coach.tools.title": "הכלים של Coach",
+  "coach.tools.write_after": "יש לאשר קודם את הכלים של Coach, ואז אפשר לכתוב.",
   "coach.tools_eyebrow": "כלים",
   "coach.tools_not_given": "הכלים של Coach לא ניתנו. {why}",
   "coach.tools_not_read": "לא ניתן היה לקרוא את הכלים של Coach. {why}",

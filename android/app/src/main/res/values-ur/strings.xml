@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Coach کو اس کے ٹولز دیں</string>
     <string name="coach_tools_giving">دیا جا رہا ہے…</string>
     <string name="coach_tools_title">Coach کے ٹولز</string>
+    <string name="coach_tools_write_after">پہلے Coach کے ٹولز منظور کریں، پھر آپ لکھ سکتے ہیں۔</string>
     <string name="coach_tools_eyebrow">ٹولز</string>
     <string name="coach_tools_not_given">Coach کے ٹولز نہیں دیے گئے۔ %1$s</string>
     <string name="coach_tools_not_read">Coach کے ٹولز پڑھے نہیں جا سکے۔ %1$s</string>

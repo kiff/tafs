@@ -322,19 +322,29 @@ private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, answere
     Card(onClick = { act.open(ask) }, modifier = Modifier.fillMaxWidth().testTag(INBOX_ITEM + InboxItem.askId(ask.id))) {
       Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         ask.tafName?.let { Text(it, style = MaterialTheme.typography.titleSmall, color = Look.coach, maxLines = 1) }
-        Text((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Text(Plain.of(ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
       }
     }
   }
   if (shown.needsYou.calls.isEmpty() && answered.isEmpty()) line(Words.Watch.inboxEmpty)
 }
 
-/** The watch's own tries went unanswered (docs/watch-wear.md, Delivery): one small line, why, and Try again; never a screen. */
+/**
+ * The watch's own tries went unanswered (docs/watch-wear.md, Delivery): one small calm line, "Linking tafs. Keep your phone nearby
+ * and connected.", while it goes on reading the phone by itself every [LINKING_RETRY_MS] (row 30, call 6); never a screen, and no
+ * Try again. tafs not on the phone keeps its own line, which no try mends.
+ */
 private fun ScalingLazyListScope.unreachableLine(why: LinkFailure, act: Actions) {
   item {
-    Column(Modifier.fillMaxWidth().testTag(UNREACHABLE_LINE), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-      Text(why.line, style = MaterialTheme.typography.bodySmall, color = Look.dim, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 12.dp))
-      Button(onClick = act.tryAgain, colors = neutralButton()) { Text(Words.Common.tryAgain) }
+    if (why != LinkFailure.NoApp) androidx.compose.runtime.LaunchedEffect(Unit) {
+      while (true) {
+        kotlinx.coroutines.delay(LINKING_RETRY_MS)
+        act.tryAgain()
+      }
+    }
+    Column(Modifier.fillMaxWidth().testTag(UNREACHABLE_LINE), horizontalAlignment = Alignment.CenterHorizontally) {
+      Text(if (why == LinkFailure.NoApp) why.line else Words.Watch.linking, style = MaterialTheme.typography.bodySmall, color = Look.dim,
+        textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 12.dp))
     }
   }
 }
@@ -384,7 +394,7 @@ private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, calls: Li
           entry.title?.let { Text(it, style = MaterialTheme.typography.titleSmall, color = if (entry.kind == InboxItem.Kind.HELD) Look.held else Look.coach, maxLines = 1) }
         }
         // An answer that was only an amount is kept blank (no amount is kept on the watch): it says the rest is on the phone.
-        Text(entry.line.ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Text(Plain.of(entry.line).ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         if (entry.kind == InboxItem.Kind.HELD && calls != null) {
           if (call == null) {
             Text(Words.Watch.alreadyAnswered, style = MaterialTheme.typography.bodySmall)

@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Coach-কে তার টুল দিন</string>
     <string name="coach_tools_giving">দেওয়া হচ্ছে…</string>
     <string name="coach_tools_title">Coach-এর টুল</string>
+    <string name="coach_tools_write_after">আগে Coach-এর টুল অনুমোদন করুন, তারপর লিখতে পারবেন।</string>
     <string name="coach_tools_eyebrow">টুল</string>
     <string name="coach_tools_not_given">Coach-এর টুল দেওয়া হয়নি। %1$s</string>
     <string name="coach_tools_not_read">Coach-এর টুল পড়া যায়নি। %1$s</string>

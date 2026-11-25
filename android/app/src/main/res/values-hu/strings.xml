@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Eszközök megadása a Coachnak</string>
     <string name="coach_tools_giving">Megadás…</string>
     <string name="coach_tools_title">A Coach eszközei</string>
+    <string name="coach_tools_write_after">Előbb hagyd jóvá a Coach eszközeit, utána írhatsz.</string>
     <string name="coach_tools_eyebrow">Eszközök</string>
     <string name="coach_tools_not_given">A Coach eszközei nem lettek megadva. %1$s</string>
     <string name="coach_tools_not_read">A Coach eszközeit nem sikerült beolvasni. %1$s</string>

@@ -1,0 +1,4 @@
+• Seus tafs e sua caixa de entrada ficam no lugar, mesmo com o celular lento.
+• Respostas longas: Ler mais no relógio, ou Abrir no celular.
+• As respostas aparecem como texto simples, e o que você envia fica visível.
+• Longe do celular, o relógio tenta de novo sozinho.

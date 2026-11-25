@@ -823,6 +823,7 @@
     <string name="coach_tools_give">發給 Coach 它的工具</string>
     <string name="coach_tools_giving">發給中…</string>
     <string name="coach_tools_title">Coach 的工具</string>
+    <string name="coach_tools_write_after">請先核准 Coach 的工具，之後就能輸入訊息。</string>
     <string name="coach_tools_eyebrow">工具</string>
     <string name="coach_tools_not_given">未發給 Coach 工具。%1$s</string>
     <string name="coach_tools_not_read">無法讀取 Coach 的工具。%1$s</string>

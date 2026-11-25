@@ -888,6 +888,7 @@ object Words {
       val give: String get() = Res.s(R.string.coach_tools_give)
       val giving: String get() = Res.s(R.string.coach_tools_giving)
       val title: String get() = Res.s(R.string.coach_tools_title)
+      val writeAfter: String get() = Res.s(R.string.coach_tools_write_after)
     }
     val toolsEyebrow: String get() = Res.s(R.string.coach_tools_eyebrow)
     fun toolsNotGiven(why: String): String = Res.s(R.string.coach_tools_not_given, why)

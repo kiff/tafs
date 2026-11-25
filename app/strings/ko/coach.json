@@ -186,6 +186,7 @@
   "coach.tools.give": "Coach에게 도구 주기",
   "coach.tools.giving": "주는 중…",
   "coach.tools.title": "Coach의 도구",
+  "coach.tools.write_after": "먼저 Coach의 도구를 승인하면 메시지를 쓸 수 있습니다.",
   "coach.tools_eyebrow": "도구",
   "coach.tools_not_given": "Coach에게 도구를 주지 못했습니다. {why}",
   "coach.tools_not_read": "Coach의 도구를 읽지 못했습니다. {why}",

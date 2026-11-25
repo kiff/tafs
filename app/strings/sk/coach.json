@@ -186,6 +186,7 @@
   "coach.tools.give": "Dať Coachovi jeho nástroje",
   "coach.tools.giving": "Odovzdávam…",
   "coach.tools.title": "Nástroje Coacha",
+  "coach.tools.write_after": "Najprv schváľte nástroje Coacha, potom môžete písať.",
   "coach.tools_eyebrow": "Nástroje",
   "coach.tools_not_given": "Nástroje Coacha sa neodovzdali. {why}",
   "coach.tools_not_read": "Nástroje Coacha sa nepodarilo načítať. {why}",

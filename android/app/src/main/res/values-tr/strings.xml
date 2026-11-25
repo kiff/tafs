@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Coach\'a araçlarını ver</string>
     <string name="coach_tools_giving">Veriliyor…</string>
     <string name="coach_tools_title">Coach\'un araçları</string>
+    <string name="coach_tools_write_after">Önce Coach\'un araçlarını onaylayın, sonra yazabilirsiniz.</string>
     <string name="coach_tools_eyebrow">Araçlar</string>
     <string name="coach_tools_not_given">Coach\'un araçları verilmedi. %1$s</string>
     <string name="coach_tools_not_read">Coach\'un araçları okunamadı. %1$s</string>

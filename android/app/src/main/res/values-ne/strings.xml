@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Coach लाई यसका उपकरण दिनुहोस्</string>
     <string name="coach_tools_giving">दिँदैछ…</string>
     <string name="coach_tools_title">Coach का उपकरण</string>
+    <string name="coach_tools_write_after">पहिले Coach का उपकरण स्वीकृत गर्नुहोस्, त्यसपछि लेख्न सक्नुहुन्छ।</string>
     <string name="coach_tools_eyebrow">उपकरणहरू</string>
     <string name="coach_tools_not_given">Coach का उपकरण दिइएन। %1$s</string>
     <string name="coach_tools_not_read">Coach का उपकरण पढ्न सकिएन। %1$s</string>

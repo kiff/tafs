@@ -988,6 +988,7 @@
     <string name="coach_tools_give">منح Coach أدواته</string>
     <string name="coach_tools_giving">جارٍ المنح…</string>
     <string name="coach_tools_title">أدوات Coach</string>
+    <string name="coach_tools_write_after">وافق على أدوات Coach أولاً، ثم يمكنك الكتابة.</string>
     <string name="coach_tools_eyebrow">الأدوات</string>
     <string name="coach_tools_not_given">لم تُمنح أدوات Coach. %1$s</string>
     <string name="coach_tools_not_read">تعذّرت قراءة أدوات Coach. %1$s</string>

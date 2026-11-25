@@ -1,0 +1,4 @@
+• Tus tafs y tu bandeja se mantienen, aunque el teléfono vaya lento.
+• Respuestas largas: Leer más en el reloj, o Abrir en el teléfono.
+• Las respuestas se ven como texto simple, y lo que envías queda a la vista.
+• Lejos del teléfono, el reloj vuelve a intentarlo solo.

@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Coach को उसके टूल दें</string>
     <string name="coach_tools_giving">दिया जा रहा है…</string>
     <string name="coach_tools_title">Coach के टूल</string>
+    <string name="coach_tools_write_after">पहले Coach के टूल मंज़ूर करें, फिर आप लिख सकते हैं।</string>
     <string name="coach_tools_eyebrow">टूल</string>
     <string name="coach_tools_not_given">Coach के टूल नहीं दिए गए। %1$s</string>
     <string name="coach_tools_not_read">Coach के टूल पढ़े नहीं जा सके। %1$s</string>

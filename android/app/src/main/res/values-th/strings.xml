@@ -823,6 +823,7 @@
     <string name="coach_tools_give">มอบเครื่องมือให้ Coach</string>
     <string name="coach_tools_giving">กำลังมอบ…</string>
     <string name="coach_tools_title">เครื่องมือของ Coach</string>
+    <string name="coach_tools_write_after">อนุมัติเครื่องมือของ Coach ก่อน แล้วจึงพิมพ์ได้</string>
     <string name="coach_tools_eyebrow">เครื่องมือ</string>
     <string name="coach_tools_not_given">ยังไม่ได้มอบเครื่องมือให้ Coach %1$s</string>
     <string name="coach_tools_not_read">อ่านเครื่องมือของ Coach ไม่ได้ %1$s</string>

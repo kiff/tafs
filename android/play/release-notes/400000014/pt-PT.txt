@@ -1,0 +1,4 @@
+• Os seus tafs e a caixa de entrada mantêm-se, mesmo com o telemóvel lento.
+• Respostas longas: Ler mais no relógio, ou Abrir no telemóvel.
+• As respostas surgem como texto simples, e o que envia fica visível.
+• Longe do telemóvel, o relógio volta a tentar sozinho.

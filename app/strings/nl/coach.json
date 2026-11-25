@@ -186,6 +186,7 @@
   "coach.tools.give": "Coach zijn tools geven",
   "coach.tools.giving": "Geven…",
   "coach.tools.title": "Tools van Coach",
+  "coach.tools.write_after": "Keur eerst de tools van Coach goed, dan kun je schrijven.",
   "coach.tools_eyebrow": "Tools",
   "coach.tools_not_given": "De tools van Coach zijn niet gegeven. {why}",
   "coach.tools_not_read": "Kon de tools van Coach niet lezen. {why}",

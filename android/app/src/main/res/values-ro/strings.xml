@@ -889,6 +889,7 @@
     <string name="coach_tools_give">Dați-i lui Coach instrumentele</string>
     <string name="coach_tools_giving">Se dau…</string>
     <string name="coach_tools_title">Instrumentele lui Coach</string>
+    <string name="coach_tools_write_after">Aprobați mai întâi instrumentele lui Coach, apoi puteți scrie.</string>
     <string name="coach_tools_eyebrow">Instrumente</string>
     <string name="coach_tools_not_given">Instrumentele lui Coach nu au fost date. %1$s</string>
     <string name="coach_tools_not_read">Instrumentele lui Coach nu au putut fi citite. %1$s</string>

@@ -34,6 +34,8 @@ class PushTest {
   ) : PushPlatform {
     var asked = 0
     var tokens = 0
+    var cleared = 0
+    override fun clearShown() { cleared++ }
     override suspend fun allowed(): Boolean { asked++; return allow }
     override suspend fun token(): String? { tokens++; return token }
   }
@@ -289,7 +291,8 @@ class PushTest {
     push.allow = false
     val m = model()
     assertFalse(m.turnOnAlerts())
-    assertEquals("Allow notifications for tafs in Settings, then try again.", m.state.value.lastError)
+    // The guided dialog, with the way to tafs's switch in Settings, not a bare "Not done".
+    assertTrue(m.state.value.alertsBlocked)
     assertTrue(auth.asked.isEmpty())
     assertTrue(transport.requestsTo(alertTarget).isEmpty() && transport.requestsTo(register).isEmpty())
   }
@@ -446,6 +449,7 @@ class PushTest {
     assertNull(secrets.load(AppModel.ALERTS_ON))
     assertNull(secrets.load(AppModel.HANDOFF))
     assertFalse(m.state.value.alertsReady)
+    assertEquals("the alerts in the shade go too", 1, push.cleared)
   }
 
   @Test fun aSignOutKiffDidntConfirmKeepsThePhonesAlerts() = runTest {

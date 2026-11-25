@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Coach-a alətlərini verin</string>
     <string name="coach_tools_giving">Verilir…</string>
     <string name="coach_tools_title">Coach-un alətləri</string>
+    <string name="coach_tools_write_after">Əvvəlcə Coach-un alətlərini təsdiq edin, sonra yaza bilərsiniz.</string>
     <string name="coach_tools_eyebrow">Alətlər</string>
     <string name="coach_tools_not_given">Coach-un alətləri verilmədi. %1$s</string>
     <string name="coach_tools_not_read">Coach-un alətləri oxuna bilmədi. %1$s</string>

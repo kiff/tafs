@@ -823,6 +823,7 @@
     <string name="coach_tools_give">Coachにツールを渡す</string>
     <string name="coach_tools_giving">渡しています…</string>
     <string name="coach_tools_title">Coachのツール</string>
+    <string name="coach_tools_write_after">先にCoachのツールを承認してください。その後、書き込めます。</string>
     <string name="coach_tools_eyebrow">ツール</string>
     <string name="coach_tools_not_given">Coachのツールは渡されませんでした。%1$s</string>
     <string name="coach_tools_not_read">Coachのツールを読み込めませんでした。%1$s</string>

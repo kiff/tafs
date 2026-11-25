@@ -186,6 +186,7 @@
   "coach.tools.give": "Suteikti Coach jo įrankius",
   "coach.tools.giving": "Suteikiama…",
   "coach.tools.title": "Coach įrankiai",
+  "coach.tools.write_after": "Pirmiausia patvirtinkite Coach įrankius, tada galėsite rašyti.",
   "coach.tools_eyebrow": "Įrankiai",
   "coach.tools_not_given": "Coach įrankiai nesuteikti. {why}",
   "coach.tools_not_read": "Nepavyko nuskaityti Coach įrankių. {why}",

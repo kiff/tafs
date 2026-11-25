@@ -41,7 +41,8 @@ object AskResults {
    * follows, as on the Apple Watch. Opened, the answer shows whole, from memory.
    */
   internal fun alertText(ask: AskLine): String {
-    val whole = ask.line ?: ask.words
+    // Plain text: a notification draws no markdown either.
+    val whole = Plain.of(ask.line ?: ask.words)
     val kept = bot.tafs.watchlink.Amounts.strip(whole)
     return when {
       kept.isBlank() -> Words.Watch.moreOnPhone
@@ -97,8 +98,12 @@ object KeptResults {
   fun ask(context: Context, ask: AskLine, stores: Stores = Stores.of(context), now: Long = System.currentTimeMillis()) {
     if (AskResults.shown == null && !stores.signedOut && stores.secure) {
       // Whichever kept thread holds it, Coach's or a taf's.
-      stores.thread?.let { thread -> KeptThreads.took(KeptThreads.pruned(thread.read(), now), ask)?.let { thread.write(KeptThreads.pruned(it, now)) } }
-      stores.inbox?.let { inbox -> InboxLines.of(ask, now)?.let { InboxLines.put(inbox.read(), inbox.dismissed(), it) }?.let(inbox::write) }
+      val threads = stores.thread?.let { KeptThreads.pruned(it.read(), now) }.orEmpty()
+      stores.thread?.let { thread -> KeptThreads.took(threads, ask)?.let { thread.write(KeptThreads.pruned(it, now)) } }
+      // A taf's answer goes to its chat alone, as with the app open: never the Inbox.
+      if (!KeptThreads.inTafChat(threads, ask.id)) {
+        stores.inbox?.let { inbox -> InboxLines.of(ask, now)?.let { InboxLines.put(inbox.read(), inbox.dismissed(), it) }?.let(inbox::write) }
+      }
     }
     AskResults.arrived(context, ask)
   }
@@ -115,6 +120,20 @@ object KeptResults {
     val thread = stores.thread ?: return
     if (stores.signedOut || !stores.secure) return
     KeptThreads.chat(KeptThreads.pruned(thread.read(), now), tafId, lines)?.let { thread.write(KeptThreads.pruned(it, now)) }
+  }
+
+  /** The open app's model, while it's on screen: Your tafs as the phone holds them now. */
+  @Volatile var tafs: ((bot.tafs.watchlink.KeptTafs) -> Unit)? = null
+
+  /**
+   * Your tafs as the phone pushed them when its list changed: into the open app's Tafs page at once, or, closed, into the kept list
+   * the next open draws, on a watch that keeps one. Nothing is notified.
+   */
+  fun tafList(kept: bot.tafs.watchlink.KeptTafs, stores: Stores, now: () -> Long = System::currentTimeMillis) {
+    tafs?.let { return it(kept) }
+    val cache = stores.cache ?: return
+    if (stores.signedOut || !stores.secure) return
+    WatchCache(cache, now).saveTafs(kept.tafs, kept.allHalted)
   }
 
   /** The open app's model, while it's on screen: the phone signed out ([WatchModel.phoneSignedOut]). */
@@ -142,6 +161,7 @@ object KeptResults {
       path == WatchLink.KEPT_SIGNED_OUT -> if (fromPhone()) bytes?.let(WatchLink::decodeKeptSignedOut)?.let { signedOut(context, it, stores) }
       WatchLink.keptAskId(path) != null -> bytes?.let(WatchLink::decodeKeptAsk)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.ask?.takeIf { it.id == WatchLink.keptAskId(path) }?.let { ask(context, it, stores) }
       path == WatchLink.KEPT_MARKS -> bytes?.let(WatchLink::decodeKeptMarks)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { marks(bot.tafs.watchlink.WatchReply.InboxMarks(it.read, it.dismissed), stores) }
+      path == WatchLink.KEPT_TAFS -> bytes?.let(WatchLink::decodeKeptTafs)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { tafList(it, stores) }
       WatchLink.keptChatTaf(path) != null -> bytes?.let(WatchLink::decodeKeptChat)?.takeIf { it.tafId == WatchLink.keptChatTaf(path) && AccountMark.keptTaken(held, it.mark) }?.let { chat(it.tafId, it.lines, stores) }
     }
   }
