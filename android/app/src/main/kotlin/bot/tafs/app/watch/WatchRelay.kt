@@ -19,6 +19,7 @@ import bot.tafs.watchlink.WatchReply
 import bot.tafs.watchlink.WatchRequest
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * The phone's answers to the Wear OS watch (docs/watch-wear.md). Every message passes [WatchLink.accept] before anything is read
@@ -83,16 +84,27 @@ class WatchRelay(
     // Sent under a sign-in's mark (the person's words or acts, WatchLink.carriesMark): only to that same sign-in. Another's, or no
     // session at all, is answered as signed out, which makes the watch forget what it kept, and nothing is done with it.
     if (mark != null && signedIn()?.watchMark() != mark) return WatchReply.SignedOut
+    // The watch uses tafs on this phone: from now on, alerts off or not, the phone takes the watch's background pushes. Off the
+    // answer's path: a phone still restoring its session never makes the watch wait for this.
+    background?.launch { signedIn()?.watchUsed() } ?: signedIn()?.watchUsed()
     return when (request) {
       is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief -> {
-        val model = signedIn() ?: return WatchReply.SignedOut
-        // Read again now: the watch shows what tafs cloud and KIFF say, not what the phone last drew. Within the floor of the
-        // last read, that read stands. The brief is the one the phone holds, read with Needs you (`AppModel.refresh`): no read
-        // of its own.
-        if (request !is WatchRequest.Tafs) readAgain(model)
+        val started = now()
+        // A phone woken by the watch restores its session first, which reads tafs cloud and KIFF and can take longer than the
+        // watch waits (15 s measured on a Galaxy S23): it goes on in the background, and the watch hears "not now" in time and
+        // keeps what it shows, rather than a timeout. The next ask finds it done.
+        val restored = kotlinx.coroutines.withTimeoutOrNull(firstReadWaitMs) { Restored(signedIn()) }
+          ?: return WatchReply.Failed(Words.Watch.openOnPhone)
+        val model = restored.model ?: return WatchReply.SignedOut
+        // Read again: the watch shows what tafs cloud and KIFF say. Holding a read, the phone answers from it at once and the
+        // fresh one lands for the next ask (and, for the taf list, as `kept/tafs`); holding none, it waits for one, within the
+        // watch's limit. Within the floor of the last read, that read stands. The brief is the one the phone holds.
+        readAgain(model, waitLeft(started, now(), firstReadWaitMs))
         val state = model.state.value
         when {
           state.mode != Mode.kiff -> WatchReply.SignedOut
+          // Nothing read yet: "not now", never an empty list or a count of 0 that the watch would draw as the truth.
+          !state.listLoaded || state.listUnread -> WatchReply.Failed(Words.Watch.openOnPhone)
           request is WatchRequest.NeedsYou -> needsYou(state)
           request is WatchRequest.Brief -> brief(state)
           else -> tafs(state)
@@ -272,12 +284,15 @@ class WatchRelay(
    * runs in [background] and the phone waits for it at most [freshWaitMs] when it already holds a read, [firstReadWaitMs] when it
    * holds none; past that it answers from what it holds, and the read lands for the next ask.
    */
-  private suspend fun readAgain(model: AppModel) {
+  private suspend fun readAgain(model: AppModel, leftMs: Long = firstReadWaitMs) {
     val scope = background ?: return if (floor.due(now())) model.refresh() else Unit
     val read = floor.read(now(), scope) { model.refresh() } ?: return
     val held = model.state.value.let { it.listLoaded && !it.listUnread }
-    kotlinx.coroutines.withTimeoutOrNull(if (held) freshWaitMs else firstReadWaitMs) { runCatching { read.await() } }
+    kotlinx.coroutines.withTimeoutOrNull(minOf(if (held) freshWaitMs else firstReadWaitMs, leftMs)) { runCatching { read.await() } }
   }
+
+  /** What a restore gave: the signed-in model, or none (signed out, the sample). */
+  private class Restored(val model: AppModel?)
 
   /**
    * Refuses the held call the watch named, after reading Needs you again: one answered or gone meanwhile is "already answered",
@@ -356,8 +371,11 @@ class WatchRelay(
      */
     fun waitLeft(startedMs: Long, nowMs: Long, budgetMs: Long): Long = (budgetMs - (nowMs - startedMs)).coerceIn(0, budgetMs)
 
-    /** The phone's wait for a fresh read while it holds one: well under the watch's 10 s. */
-    const val FRESH_WAIT_MS = 3_000L
+    /**
+     * The phone's wait for a fresh read while it holds one: under a second, so the watch's list and count come at once from what
+     * the phone holds, and a read that's slower lands for the next ask (and as `kept/tafs`).
+     */
+    const val FRESH_WAIT_MS = 800L
 
     /** The phone's wait for a first read: under the watch's 10 s, with the time to find and reach the phone. */
     const val FIRST_READ_WAIT_MS = 7_000L
