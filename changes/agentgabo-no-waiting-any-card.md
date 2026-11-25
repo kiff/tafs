@@ -1,0 +1,1 @@
+- **Coach no longer writes "I'm waiting for…" over any card.** Before, the rule covered only an approval. A sign-in card had "I'm waiting for you to sign in to Stripe" over it, and now it says nothing beside it. See [Coach](docs/coach.md).

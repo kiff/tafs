@@ -79,6 +79,15 @@ final class WatchThreads {
         write(threads)
     }
 
+    /// A conversation deleted on the phone (`WatchPush.forget`): this thread's kept copy goes, whoever's mark it was written
+    /// under, so no line of it outlives "deleted for good". The others stay.
+    func drop(_ key: String) {
+        guard let data = try? Data(contentsOf: url), let threads = try? JSONDecoder().decode([Thread].self, from: data) else { return }
+        let left = threads.filter { $0.key != key }
+        guard left.count != threads.count else { return }
+        if left.isEmpty { clear() } else { write(left) }
+    }
+
     /// Opened or put away: with no passcode, nothing stays.
     func checkLock() {
         if !lock.isSecure { clear() }
