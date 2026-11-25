@@ -140,6 +140,10 @@ yes, and fail the test.
 | The panel's Pause holds the run's steps (`paused_by_owner`) until Resume, and planque hears both, signed | `runs.e2e.test.js` |
 | The person's own click in a run's tab pauses it, and the taf's next act doesn't reach the page | `runs.e2e.test.js` |
 | A hand-over is answered at once as `handed`; the panel shows the taf's words; the person's Done reaches planque signed, its page without any field's value | `runs.e2e.test.js` |
+| In a run's own tab, the person's click on a link pauses the run, and its next read and act are `paused_by_owner`, with nothing of the page | `owntabs.e2e.test.js` |
+| The person drags the run's own tab out of its group: it stays the run's, fenced, its own page read, an open off the run's sites still `site_not_listed` | `owntabs.e2e.test.js` |
+| The person drags a tab of theirs into the run's group: it never becomes the run's (not in its tabs, not fenced), an open of its exact address goes to the run's own tab and nothing they typed in theirs is in a result; the run's Stop and the taf's next run leave it open | `owntabs.e2e.test.js` |
+| Two runs of two tafs (two grants) at once: a tab and a group each; a read of one is `page_changed` in the other; each fill lands in its own tab only; one's close and its taf's next run leave the other's tab, group and fence as they were | `owntabs.e2e.test.js` |
 | Chrome's back/forward cache is on when a test asks for it (the person's Back case below runs with it on and off) | `bfcache.e2e.test.js` |
 
 ## Not covered yet
@@ -161,6 +165,9 @@ yes, and fail the test.
   the person's tab is given back is not checked.
 - **A frame's own reads:** the extension reads no frame, so there is nothing more to mask in one; Coach's page read
   (`aside.js`) in a frame isn't tested either.
+- **A real drag of a tab:** headless Chromium has no tab strip, so the person's drag in or out of a run's group is made with
+  Chrome's own `tabs.group` and `tabs.ungroup`, called from the service worker. It changes Chrome's tabs as a drag does, but no
+  drag event is seen. A drag of a run's tab to another window isn't tested.
 - **Push:** the test build has no push key, so the extension never subscribes.
 - **Coach and the KIFF device** in the side panel: they need tafs cloud and KIFF.
 - **Chrome as people install it:** the tests load the unpacked copy; the Web Store's build and its manifest hash are checked
@@ -204,4 +211,15 @@ yes, and fail the test.
 ## Known bugs, as `todo` tests
 
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
-failure. None at the moment.
+failure.
+
+- **An address the person types in a run's own tab, on the run's sites, is read by the run** (`owntabs.e2e.test.js`).
+  `runner.js` `onCommitted` takes every commit on the run's sites in a tab of the run's own as the run's (`noteAddress`, with
+  no `persons(d)` and no `stepping` check), and `read()` and `act()` check only a joined tab (`joinedNow`). The run's next read
+  answers with the person's page. It should answer as a joined tab does, with nothing read.
+- **The person's Back or Forward in a run's own tab: the run reads the page they land on** (`owntabs.e2e.test.js`). The same
+  cause: the `forward_back` qualifier isn't looked at in a tab of the run's own, and the page Back lands on is already in the
+  run's trail.
+- **A second taf of the same name, under another grant, closes the first taf's kept tab** (`owntabs.e2e.test.js`). A taf's
+  finished run (`done`, `tafGroup`, `greying`) is kept by the taf's name, not its grant, so the other taf's next run closes
+  that tab as its own last run's, and may work in its group.
