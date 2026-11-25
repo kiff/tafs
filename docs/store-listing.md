@@ -65,8 +65,8 @@ release.
 Read back from the consoles on 25 Nov 2026. These are answers, not listing text: change them only in the console, then here.
 
 - **App Store** (one questionnaire for the iPhone, iPad and Mac app): every content descriptor is None or No, including unrestricted web access, user-generated content, messaging and chat, social media, shared location, and dating and relationships. tafs's chats are a person with Coach or their own tafs, never person to person, and the AI's answers stay inside the account, so "No" is right for user-generated content, messaging and social media. **Override: 16+** (`ageRatingOverride` and `ageRatingOverrideV2` SIXTEEN_PLUS), which matches the Terms' minimum age of 16 (kiff.dev/terms). The API's legacy field `appStoreAgeRating` shows SEVENTEEN_PLUS for that override.
-- **Google Play** (IARC, completed 31 Oct 2026, certificate `28371930-c800-8cac-8170-3fbd4c5dde50`): ESRB Everyone, PEGI 3, USK 0, IARC 3+, ClassInd 14 (Brazil). These rate content, not audience. Who the app is for is Play's target-audience answer, which must not include anyone under 16, per the Terms.
-- **Open, for one consistent story before 1.0 goes public:** the App Store's 17+ legacy label next to the 16+ override; Brazil's ClassInd 14 next to the other 3s; and Play's target-audience age groups, which haven't been read back yet.
+- **Google Play** (IARC, completed 31 Oct 2026, certificate `28371930-c800-8cac-8170-3fbd4c5dde50`): ESRB Everyone, PEGI 3, USK 0, IARC 3+, ClassInd 14 (Brazil). These rate content, not audience. Play's target audience is **18 and over** only, with the optional restriction for users Google determines to be minors left unticked.
+- **The story:** nothing in either store reaches anyone under 16, the Terms' minimum. The figures differ only in strictness: Terms 16, App Store 16+ (17+ in the legacy field), Play's audience 18+. Brazil's ClassInd 14 is IARC's content rating, not an audience.
 
 ## English
 
