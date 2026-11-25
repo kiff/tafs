@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Pārāk liels: šāda veida failam ne vairāk kā $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Šāda veida failu nevar pievienot. Tikai fotoattēli, PDF, teksts, CSV, Markdown, Word vai Excel." },
   "attach_too_many": { "message": "Ne vairāk kā 5 faili vienā ziņā." },
-  "attach_failed": { "message": "Netika augšupielādēts. Noņem to un pamēģini vēlreiz." }
+  "attach_failed": { "message": "Netika augšupielādēts. Noņem to un pamēģini vēlreiz." },
+  "working_here": { "message": "$TAF$ strādā šeit", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Noklikšķina" },
+  "pointer_fill": { "message": "Raksta" },
+  "pointer_select": { "message": "Izvēlas" },
+  "pointer_check": { "message": "Atzīmē" },
+  "pointer_press": { "message": "Nospiež taustiņu" },
+  "pointer_scroll": { "message": "Ritina" },
+  "pointer_read": { "message": "Lasa" }
 }

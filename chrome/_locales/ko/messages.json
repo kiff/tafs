@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "너무 큽니다: 이 종류의 파일은 최대 $SIZE$입니다", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "이 종류의 파일은 첨부할 수 없습니다. 사진, PDF, 텍스트, CSV, Markdown, Word, Excel만 가능합니다." },
   "attach_too_many": { "message": "메시지 하나에 파일은 최대 5개입니다." },
-  "attach_failed": { "message": "업로드되지 않았습니다. 삭제하고 다시 시도하세요." }
+  "attach_failed": { "message": "업로드되지 않았습니다. 삭제하고 다시 시도하세요." },
+  "working_here": { "message": "$TAF$ 여기서 작업 중", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "클릭 중" },
+  "pointer_fill": { "message": "입력 중" },
+  "pointer_select": { "message": "선택 중" },
+  "pointer_check": { "message": "체크 중" },
+  "pointer_press": { "message": "키 누르는 중" },
+  "pointer_scroll": { "message": "스크롤 중" },
+  "pointer_read": { "message": "읽는 중" }
 }

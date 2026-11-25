@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "ใหญ่เกินไป: ไฟล์ประเภทนี้ได้ไม่เกิน $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "แนบไฟล์ประเภทนี้ไม่ได้ ใช้ได้เฉพาะรูปภาพ, PDF, ข้อความ, CSV, Markdown, Word หรือ Excel" },
   "attach_too_many": { "message": "ไม่เกิน 5 ไฟล์ต่อข้อความ" },
-  "attach_failed": { "message": "อัปโหลดไม่สำเร็จ นำออกแล้วลองใหม่อีกครั้ง" }
+  "attach_failed": { "message": "อัปโหลดไม่สำเร็จ นำออกแล้วลองใหม่อีกครั้ง" },
+  "working_here": { "message": "$TAF$ กำลังทำงานอยู่ที่นี่", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "กำลังคลิก" },
+  "pointer_fill": { "message": "กำลังพิมพ์" },
+  "pointer_select": { "message": "กำลังเลือก" },
+  "pointer_check": { "message": "กำลังติ๊ก" },
+  "pointer_press": { "message": "กำลังกดปุ่ม" },
+  "pointer_scroll": { "message": "กำลังเลื่อน" },
+  "pointer_read": { "message": "กำลังอ่าน" }
 }

@@ -19,6 +19,17 @@ try {
 
 const MASK = readFileSync(new URL("../src/mask.js", import.meta.url), "utf8");
 const PAGE = readFileSync(new URL("../src/page.js", import.meta.url), "utf8");
+const SIGNS = readFileSync(new URL("../src/signs.js", import.meta.url), "utf8");
+// The runner aims before every act on a ref (Runner, "no aim, no act"), and the page refuses an act it wasn't aimed for. The
+// tests of what an act does aim first, as the runner does: TafsPage.act here aims at the ref, then acts. The tests of the
+// pointer itself load the page without it.
+const AIMED = `(() => {
+  const act = TafsPage.act;
+  TafsPage.act = (a, id, o) => {
+    if (a && a.ref) TafsPage.aim(a.ref, id, "");
+    return act(a, id, o);
+  };
+})();`;
 
 const SHOP = `<!doctype html><html><head><title>Shop · checkout key sk_live_${"a".repeat(24)}</title></head><body>
 <h1>Your account</h1>
@@ -64,7 +75,9 @@ async function open() {
   await page.goto("https://shop.example/account?session=abc#x");
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   return page;
 }
 
@@ -302,7 +315,9 @@ async function openHTML(html) {
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.setContent(html);
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   return page;
 }
 
@@ -498,17 +513,17 @@ test("Show me outlines one field and nothing else: no click, no focus, every poi
   await page.evaluate(() => { window.__clicks = 0; document.addEventListener("click", () => window.__clicks++, true); });
   const out = await page.evaluate(([ref, id]) => TafsPage.outline(ref, id), [email.ref, read.read_id]);
   assert.deepEqual(out, { ok: true });
-  const box = await page.evaluate(() => { const b = document.querySelector("[data-tafs-outline]"); return b && { events: getComputedStyle(b).pointerEvents, position: getComputedStyle(b).position }; });
-  assert.deepEqual(box, { events: "none", position: "fixed" });
+  assert.deepEqual(await page.evaluate(() => TafsSigns.state()), { glow: false, ring: true, pointer: false, attached: true, words: "" }, "the outline only: no glow, no pointer");
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll("*")].some((e) => /tafs/i.test(e.localName + " " + [...e.attributes].map((a) => a.name + "=" + a.value).join(" ")))), false, "nothing in the page's own elements says tafs");
   assert.equal(await page.evaluate(() => document.activeElement === document.body), true, "nothing was focused");
   assert.equal(await page.evaluate(() => window.__clicks), 0, "nothing was clicked");
   // Another read's ref, or an unknown one: nothing is drawn.
   assert.deepEqual(await page.evaluate(([ref]) => TafsPage.outline(ref, "rd_other"), [email.ref]), { ok: false, code: "page_changed" });
-  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-outline]").length), 0, "a failed outline leaves none");
+  assert.equal(await page.evaluate(() => TafsSigns.state().ring), false, "a failed outline leaves none");
   assert.deepEqual(await page.evaluate(([id]) => TafsPage.outline("f99", id), [read.read_id]), { ok: false, code: "ref_unknown" });
   await page.evaluate(([ref, id]) => TafsPage.outline(ref, id), [email.ref, read.read_id]);
   await page.evaluate(() => TafsPage.unoutline());
-  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-outline]").length), 0, "asked to go, it goes");
+  assert.equal(await page.evaluate(() => TafsSigns.state().attached), false, "asked to go, it goes");
   await page.close();
 });
 
@@ -650,7 +665,9 @@ async function openWithBar(state = { run: "run_1", words: "Rae is working", here
     const attach = Element.prototype.attachShadow;
     Element.prototype.attachShadow = function (o) {
       const root = attach.call(this, o);
-      if (this.localName === "tafs-working-bar") globalThis.__barRoot = root;
+      // bar.js makes the only shadow root on this page.
+      globalThis.__barRoot = root;
+      globalThis.__barHost = this;
       return root;
     };
     const low = document.createElement("button");
@@ -661,7 +678,9 @@ async function openWithBar(state = { run: "run_1", words: "Rae is working", here
     document.body.appendChild(low);
   });
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   await page.addScriptTag({ content: BAR });
   assert.deepEqual(await page.evaluate((s) => TafsBar.show(s), state), { ok: true });
   return page;
@@ -672,7 +691,9 @@ const barButtons = (page) => page.evaluate(() => [...globalThis.__barRoot.queryS
 test("the floating bar says who works; Go to its tab shows only on another tab; Pause turns to Resume; nothing of it is in a read", { skip: !playwright }, async () => {
   let page = await openWithBar();
   assert.equal(await page.evaluate(() => globalThis.__barRoot.querySelector(".words").textContent), "Rae is working");
-  assert.equal(await page.evaluate(() => document.querySelector("tafs-working-bar").shadowRoot), null, "closed to the page");
+  assert.equal(await page.evaluate(() => globalThis.__barHost.shadowRoot), null, "closed to the page");
+  assert.deepEqual(await page.evaluate(() => [globalThis.__barHost.localName, globalThis.__barHost.attributes.length]), ["div", 0], "a plain element: nothing a selector could find it by");
+  assert.equal(await page.evaluate(() => globalThis.__barRoot.querySelector(".pill").classList.contains("top")), true, "on the run's own tab, at the top");
   assert.deepEqual((await barButtons(page)).map((b) => [b.act, b.hidden]), [["go", true], ["pause", false], ["stop", false]], "on the run's own tab, no Go to its tab");
   const read = await page.evaluate(() => TafsPage.read());
   assert.ok(!read.text.includes("Rae is working"), "its words aren't the page's");
@@ -721,11 +742,12 @@ test("only a real press counts, naming its run; it's no owner input; the page ca
     { type: "bar", act: "pause", run: "run_1" },
     { type: "bar", act: "stop", run: "run_1" },
   ], "each press names its run, and none is the person's input in the page");
-  await page.evaluate(() => document.querySelector("tafs-working-bar").remove());
-  await page.waitForFunction(() => document.querySelector("tafs-working-bar"));
+  assert.equal(await page.evaluate(() => globalThis.__barRoot.querySelector(".pill").classList.contains("top")), false, "on another tab, at the foot");
+  await page.evaluate(() => globalThis.__barHost.remove());
+  await page.waitForFunction(() => globalThis.__barHost.isConnected);
   await page.evaluate(() => TafsBar.hide());
   await page.evaluate(() => new Promise((r) => setTimeout(r, 50)));
-  assert.equal(await page.evaluate(() => document.querySelector("tafs-working-bar")), null, "once the run ends it goes, and stays gone");
+  assert.equal(await page.evaluate(() => globalThis.__barHost.isConnected), false, "once the run ends it goes, and stays gone");
   await page.close();
 });
 
@@ -764,9 +786,147 @@ test("the outline that shows where the taf will act goes as the act starts", { s
   const read = await page.evaluate(() => TafsPage.read());
   const email = read.fields.find((f) => f.label === "Email").ref;
   assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.outline(r, id), [email, read.read_id]), { ok: true });
-  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-outline]").length), 1);
+  assert.equal(await page.evaluate(() => TafsSigns.state().ring), true);
   assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "fill", ref: r, value: "bo@shop.example" }, id), [email, read.read_id]), { ok: true });
-  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-outline]").length), 0);
+  assert.equal(await page.evaluate(() => TafsSigns.state().ring), false);
+  await page.close();
+});
+
+// The signs on the page a taf works in (signs.js): the glow, the outline and the pointer, drawn in a closed layer of the
+// extension's own that a read, the act's on-top check and the picture of an act all look through.
+async function openWithSigns({ reduced = false } = {}) {
+  const page = await ctx.newPage();
+  if (reduced) await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("https://shop.example/account");
+  await page.evaluate(() => {
+    globalThis.chrome = { runtime: { id: "ext", sendMessage: () => {} } };
+    // A test's own look into the closed root, taken before signs.js makes it: the page itself has no such hook.
+    const attach = Element.prototype.attachShadow;
+    Element.prototype.attachShadow = function (o) {
+      const root = attach.call(this, o);
+      globalThis.__signsRoot = root;
+      globalThis.__signsHost = this;
+      return root;
+    };
+  });
+  await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
+  await page.addScriptTag({ content: PAGE });
+  return page;
+}
+
+const saysTafs = (page) => page.evaluate(() => [...document.querySelectorAll("*")].some((e) => /tafs/i.test(e.localName + " " + [...e.attributes].map((a) => a.name + "=" + a.value).join(" "))));
+const layerOf = (page) => page.evaluate(() => getComputedStyle(globalThis.__signsRoot.querySelector("style").nextElementSibling).visibility);
+
+test("an act on a ref needs its own aim in the page: none, or an aim at another ref or read, is refused and nothing is clicked", { skip: !playwright }, async () => {
+  const page = await openWithSigns();
+  await page.evaluate(() => { window.__saved = 0; document.getElementById("save").addEventListener("click", (e) => { e.preventDefault(); window.__saved++; }); });
+  const read = await page.evaluate(() => TafsPage.read());
+  const save = read.controls.find((c) => c.label === "Save");
+  const other = read.fields[0];
+  const act = () => page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [save.ref, read.read_id]);
+  assert.deepEqual(await act(), { ok: false, code: "page_changed" }, "no aim at all");
+  await page.evaluate(([r, id]) => TafsPage.aim(r, id, "Typing"), [other.ref, read.read_id]);
+  assert.deepEqual(await act(), { ok: false, code: "page_changed" }, "an aim at another ref");
+  // An aim is spent by the act it was for: a second act needs a second aim.
+  await page.evaluate(([r, id]) => TafsPage.aim(r, id, "Clicking"), [save.ref, read.read_id]);
+  assert.deepEqual(await act(), { ok: true });
+  assert.deepEqual(await act(), { ok: false, code: "page_changed" }, "the aim was used by the first act");
+  assert.equal(await page.evaluate(() => window.__saved), 1, "clicked once, through its aim");
+});
+
+test("before an act the pointer goes to the element's middle with its words, outlined; the act lands there, through the pointer", { skip: !playwright }, async () => {
+  const page = await openWithSigns();
+  await page.evaluate(() => { window.__saved = 0; document.getElementById("save").addEventListener("click", (e) => { e.preventDefault(); window.__saved++; }); });
+  await page.evaluate(() => TafsSigns.working());
+  const read = await page.evaluate(() => TafsPage.read());
+  const save = read.controls.find((c) => c.label === "Save");
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.aim(r, id, "Clicking"), [save.ref, read.read_id]), { ok: true });
+  assert.deepEqual(await page.evaluate(() => TafsSigns.state()), { glow: true, ring: true, pointer: true, attached: true, words: "Clicking" });
+  // The pointer sits on the button's middle: the very spot the act's on-top check looks at.
+  const [at, middle] = await page.evaluate(() => {
+    const r = document.getElementById("save").getBoundingClientRect();
+    return [TafsSigns.pointerAt(), { x: r.left + r.width / 2, y: r.top + r.height / 2 }];
+  });
+  assert.ok(Math.abs(at.x - middle.x) <= 1 && Math.abs(at.y - middle.y) <= 1, JSON.stringify([at, middle]));
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [save.ref, read.read_id]), { ok: true });
+  assert.equal(await page.evaluate(() => window.__saved), 1, "clicked once, through the pointer");
+  assert.deepEqual(await page.evaluate(() => [TafsSigns.state().ring, TafsSigns.state().pointer]), [false, true], "the outline goes as the act starts; the pointer stays where it acted");
+  // Nothing of it is the page's: not its words in a read, not an element a selector finds, not a closed root the page can open.
+  const again = await page.evaluate(() => TafsPage.read());
+  assert.ok(!again.text.includes("Clicking"), "its words aren't the page's");
+  assert.equal(await saysTafs(page), false, "nothing in the page's own elements says tafs");
+  assert.deepEqual(await page.evaluate(() => [globalThis.__signsHost.localName, globalThis.__signsHost.attributes.length, globalThis.__signsHost.shadowRoot]), ["div", 0, null]);
+  // It lets every pointer through, the person's too.
+  assert.equal(await page.evaluate(() => [...globalThis.__signsRoot.querySelectorAll("*")].filter((e) => e.localName !== "style").every((e) => getComputedStyle(e).pointerEvents === "none")), true);
+  await page.evaluate(() => TafsSigns.off());
+  assert.equal(await page.evaluate(() => globalThis.__signsHost.isConnected), false, "off: every sign goes");
+  await page.close();
+});
+
+test("a target that moves between the pointer and the act is refused page_changed: the click never lands anywhere else", { skip: !playwright }, async () => {
+  const page = await openWithSigns();
+  await page.evaluate(() => { window.__saved = 0; document.getElementById("save").addEventListener("click", (e) => { e.preventDefault(); window.__saved++; }); });
+  const read = await page.evaluate(() => TafsPage.read());
+  const save = read.controls.find((c) => c.label === "Save");
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.aim(r, id, "Clicking"), [save.ref, read.read_id]), { ok: true });
+  // The page slides the button aside after the pointer went to it.
+  await page.evaluate(() => { const b = document.getElementById("save"); b.style.position = "relative"; b.style.left = "120px"; });
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [save.ref, read.read_id]), { ok: false, code: "page_changed" });
+  assert.equal(await page.evaluate(() => window.__saved), 0, "nothing was clicked");
+  // Read again, the taf acts where the button is now.
+  const fresh = await page.evaluate(() => TafsPage.read());
+  const moved = fresh.controls.find((c) => c.label === "Save");
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.aim(r, id, "Clicking"), [moved.ref, fresh.read_id]), { ok: true });
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [moved.ref, fresh.read_id]), { ok: true });
+  assert.equal(await page.evaluate(() => window.__saved), 1);
+  await page.close();
+});
+
+test("the signs aren't in the picture of an act, and come back after it; the covers still check what's on top", { skip: !playwright }, async () => {
+  const page = await openWithSigns();
+  // A page with a one-time-code field is never pictured at all: this one has none.
+  await page.evaluate(() => document.getElementById("otp").remove());
+  await page.evaluate(() => TafsSigns.working());
+  const read = await page.evaluate(() => TafsPage.read());
+  const pw = read.fields.find((f) => f.label === "Password");
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.aim(r, id, "Typing"), [pw.ref, read.read_id]), { ok: true });
+  const masked = await page.evaluate(() => TafsPage.maskForShot());
+  assert.equal(masked.ok, true, "the pointer over a secret field doesn't make its cover look missing");
+  assert.equal(await layerOf(page), "hidden", "not in the picture");
+  await page.evaluate(() => TafsPage.unmaskShot());
+  assert.equal(await layerOf(page), "visible");
+  await page.close();
+});
+
+test("with reduced motion nothing moves: the glow doesn't breathe and the pointer is simply at its target", { skip: !playwright }, async () => {
+  for (const reduced of [false, true]) {
+    const page = await openWithSigns({ reduced });
+    await page.evaluate(() => TafsSigns.working());
+    const read = await page.evaluate(() => TafsPage.read());
+    await page.evaluate(([r, id]) => TafsPage.aim(r, id, "Typing"), [read.fields.find((f) => f.label === "Email").ref, read.read_id]);
+    const motion = await page.evaluate(() => {
+      const css = (sel) => getComputedStyle(globalThis.__signsRoot.querySelector(sel));
+      return { glow: css(".glow").animationName, pointer: css(".pointer").transitionDuration };
+    });
+    if (reduced) assert.deepEqual(motion, { glow: "none", pointer: "0s" });
+    else assert.notDeepEqual(motion, { glow: "none", pointer: "0s" }, "with motion, it moves");
+    await page.close();
+  }
+});
+
+test("the page can't keep the signs away while they show; once off they stay off, and they go by themselves when the extension is gone", { skip: !playwright }, async () => {
+  const page = await openWithSigns();
+  await page.evaluate(() => TafsSigns.working());
+  await page.evaluate(() => globalThis.__signsHost.remove());
+  await page.waitForFunction(() => globalThis.__signsHost.isConnected);
+  await page.evaluate(() => TafsSigns.off());
+  await page.evaluate(() => new Promise((r) => setTimeout(r, 50)));
+  assert.equal(await page.evaluate(() => globalThis.__signsHost.isConnected), false);
+  // The extension reloaded or removed: its world can't be told, so it takes the glow away itself.
+  await page.evaluate(() => TafsSigns.working());
+  await page.evaluate(() => { delete globalThis.chrome.runtime.id; });
+  await page.waitForFunction(() => !globalThis.__signsHost.isConnected, null, { timeout: 5000 });
   await page.close();
 });
 
@@ -831,7 +991,9 @@ test("an act whose link or form would leave the run's sites is refused before it
   await page.goto("https://shop.example/leave");
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   const { SENSITIVE, NEVER_OPENED, LOCAL_SUFFIXES } = await import("../src/sites.js");
   // What the run's fence lets through (runner.js fenceOf): shop.example granted, paypal.com granted too, no sensitive site allowed.
   const sites = { fence: { granted: ["shop.example", "paypal.com"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE.labels.source, never: [...NEVER_OPENED], local: [...LOCAL_SUFFIXES] } };
@@ -871,7 +1033,9 @@ test("the page's check before an act gives refuseURL's very code for every addre
   await page.goto("https://shop.example/codes");
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   const urls = [
     "https://shop.example/", "https://help.shop.example/a", "https://elsewhere.example/", "http://shop.example/", "https://x@shop.example/",
     "https://x:y@shop.example/", "https://shop.example@bank.example/", "https://127.0.0.1/", "https://10.0.0.1/", "https://0x7f.1/",
@@ -919,7 +1083,9 @@ test("an act on what the page made unusable is refused disabled, and a checked r
   await page.goto("https://shop.example/unusable");
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   const act = async (a, label) => {
     const read = await page.evaluate(() => TafsPage.read());
     const all = [...read.links, ...read.controls, ...read.fields];

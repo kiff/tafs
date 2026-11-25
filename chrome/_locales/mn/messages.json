@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Хэт том байна: энэ төрлийн файл хамгийн ихдээ $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Энэ төрлийн файлыг хавсаргах боломжгүй. Зөвхөн зураг, PDF, текст, CSV, Markdown, Word эсвэл Excel." },
   "attach_too_many": { "message": "Нэг мессежид хамгийн ихдээ 5 файл." },
-  "attach_failed": { "message": "Байршсангүй. Үүнийг хасаад дахин оролдоно уу." }
+  "attach_failed": { "message": "Байршсангүй. Үүнийг хасаад дахин оролдоно уу." },
+  "working_here": { "message": "$TAF$ энд ажиллаж байна", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Дарж байна" },
+  "pointer_fill": { "message": "Бичиж байна" },
+  "pointer_select": { "message": "Сонгож байна" },
+  "pointer_check": { "message": "Тэмдэглэж байна" },
+  "pointer_press": { "message": "Товч дарж байна" },
+  "pointer_scroll": { "message": "Гүйлгэж байна" },
+  "pointer_read": { "message": "Уншиж байна" }
 }

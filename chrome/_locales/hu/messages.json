@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Túl nagy: ennél a fájltípusnál legfeljebb $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Ilyen fájlt nem lehet csatolni. Csak fotó, PDF, szöveg, CSV, Markdown, Word vagy Excel." },
   "attach_too_many": { "message": "Üzenetenként legfeljebb 5 fájl." },
-  "attach_failed": { "message": "Nem töltődött fel. Távolítsd el, és próbáld újra." }
+  "attach_failed": { "message": "Nem töltődött fel. Távolítsd el, és próbáld újra." },
+  "working_here": { "message": "$TAF$ itt dolgozik", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Kattint" },
+  "pointer_fill": { "message": "Gépel" },
+  "pointer_select": { "message": "Kiválaszt" },
+  "pointer_check": { "message": "Bejelöl" },
+  "pointer_press": { "message": "Billentyűt nyom" },
+  "pointer_scroll": { "message": "Görget" },
+  "pointer_read": { "message": "Olvas" }
 }

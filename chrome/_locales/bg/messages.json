@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Твърде голям: най-много $SIZE$ за този вид файл", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Този вид файл не може да се прикачи. Само снимки, PDF, текст, CSV, Markdown, Word или Excel." },
   "attach_too_many": { "message": "Най-много 5 файла в съобщение." },
-  "attach_failed": { "message": "Не се качи. Премахнете го и опитайте отново." }
+  "attach_failed": { "message": "Не се качи. Премахнете го и опитайте отново." },
+  "working_here": { "message": "$TAF$ работи тук", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Щраква" },
+  "pointer_fill": { "message": "Пише" },
+  "pointer_select": { "message": "Избира" },
+  "pointer_check": { "message": "Отмята" },
+  "pointer_press": { "message": "Натиска клавиш" },
+  "pointer_scroll": { "message": "Превърта" },
+  "pointer_read": { "message": "Чете" }
 }

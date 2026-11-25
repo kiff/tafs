@@ -161,6 +161,22 @@ const CONTROLS = page("Locked controls", `<h1>Locked controls</h1>
 </form>
 <p id="out">untouched</p>`);
 
+// The signs a run draws on the page (signs.js, 0.2.23): a button and a field to act on, the outcome in #out.
+const SIGNS = page("Signs", `<h1>Signs</h1>
+<form onsubmit="return false">
+  <label for="nm">Your name</label><input id="nm" type="text" oninput="document.getElementById('out').textContent = 'typed ' + this.value">
+  <button type="button" id="press" onclick="document.getElementById('out').textContent = 'pressed'">Press me</button>
+</form>
+<p id="out">untouched</p>`);
+
+// A button below the fold that slides aside the moment the page scrolls: the pointer goes to it (which scrolls it into view), and
+// by the time of the act it's elsewhere. The act must be refused, never land where the button went or where it was.
+const MOVER = page("Mover", `<h1>Mover</h1>
+<div style="height:1800px"></div>
+<button type="button" id="mv" style="position:relative" onclick="document.getElementById('out').textContent = 'pressed'">Move away</button>
+<p id="out">untouched</p>
+<script>addEventListener("scroll", () => { document.getElementById("mv").style.left = "160px"; }, { once: true });</script>`);
+
 /**
  * The rest of the controls: some the person can't use ([inert], aria-disabled, an option of a disabled optgroup), and some they
  * can, which no lock may catch (readonly on a checkbox, a radio or a select, which browsers ignore; a field in the first legend of
@@ -311,6 +327,8 @@ export class FixtureSites {
         "/submit-grows": req.method === "POST" ? NO_FIT : SUBMIT_FORM,
         "/grows": GROWS(NO_FIT.slice(NO_FIT.indexOf("<form"), NO_FIT.lastIndexOf("</form>") + 7)),
         "/controls": CONTROLS,
+        "/signs": SIGNS,
+        "/mover": MOVER,
         "/controls2": CONTROLS2,
         "/popup-at-load": POPUP_AT_LOAD,
         "/frame-top": FRAME_TOP,

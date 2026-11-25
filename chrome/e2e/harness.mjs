@@ -201,6 +201,25 @@ export function tabInfo(h, tabId) {
   return inWorker(h, (id) => chrome.tabs.get(id).then((t) => ({ id: t.id, url: t.url, groupId: t.groupId, active: t.active, windowId: t.windowId }), () => null), tabId);
 }
 
+/**
+ * What the signs (signs.js) show in tab `tabId`, read in its extension world, where they live: `{glow, ring, pointer, attached,
+ * words}`, or null where signs.js never ran (or the page is a new one). The page's own world can't see them; a test can't either.
+ */
+export function signsIn(h, tabId) {
+  return inWorker(
+    h,
+    (id) => chrome.scripting.executeScript({ target: { tabId: id }, func: () => (globalThis.TafsSigns ? globalThis.TafsSigns.state() : null) }).then(([r]) => r.result, () => null),
+    tabId,
+  );
+}
+
+/** The id of the tab at `url` (exactly), as Chrome has it, or undefined. */
+export async function tabIdAt(h, url) {
+  const all = await inWorker(h, () => chrome.tabs.query({}));
+  const t = all.find((x) => x.url === url);
+  return t ? t.id : undefined;
+}
+
 /** The tab Playwright sees at `url` (exactly), or undefined. */
 export function tabAt(h, url) {
   return h.context.pages().find((p) => p.url() === url);

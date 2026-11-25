@@ -114,12 +114,15 @@ function pageKey(page) {
 /** How long the element an act is about to touch stays outlined before the act: long enough to see, short enough not to slow a run. */
 export const OUTLINE_MS = 500;
 
+/** The step kinds the pointer has words for (`pointer_<kind>`); a read is `pointer_read`. */
+const POINTER_KINDS = new Set(["click", "fill", "select", "check", "press", "scroll", "read"]);
+
 export class Runner {
   /**
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), say = (key, sub) => (globalThis.chrome && globalThis.chrome.i18n ? globalThis.chrome.i18n.getMessage(key, sub) : ""), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, onRunState = () => {}, doneStore = null, panel = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), say = (key, sub) => (globalThis.chrome && globalThis.chrome.i18n ? globalThis.chrome.i18n.getMessage(key, sub) : ""), paired = () => null, now = () => Date.now(), shots = null, onHandAnswer = () => {}, onRunState = () => {}, doneStore = null, panel = null, drawnStore = null }) {
     this.chrome = chrome;
     // The side panels (panels.js), from the service worker: `front({agentRun})` the tab a run started from a panel may join
     // ({windowId, tabId, off} or null, the page consent checked first), `isOpen(windowId)`, and `off()` the hosts the person
@@ -135,6 +138,10 @@ export class Runner {
     this.now = now;
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, ownWindow, groupId, tabs: Set, joined: Set, tab, agentRun, follow, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
+    // {get(), set(ids)}: every tab the bar or the signs were drawn in since the worker started, kept where a worker that starts
+    // again finds them, so its sweep (sweepDrawn) reaches those tabs alone and never a page no run touched.
+    this.drawnStore = drawnStore;
+    this.drawn = new Set();
     this.doneStore = doneStore; // {get(), set(obj)}: the tabs each taf's last finished run left, kept where a stopped worker finds them again
     this.done = null; // doneKey → {name, tabs: [{id, url, joined?}], window: id | null, group: id | null}, loaded on first use
     this.fenceIds = new Map(); // tab id → the first of its FENCE_RULES fence rule ids
@@ -476,7 +483,8 @@ export class Runner {
       run: run.id,
       here,
       paused: !!run.paused,
-      words: run.paused ? say("bar_paused", [taf], taf) : say("working", [taf], taf),
+      // On the run's own tab, at the top, where it works ("Rae is working here"); elsewhere, at the foot, who works.
+      words: run.paused ? say("bar_paused", [taf], taf) : here ? say("working_here", [taf], taf) : say("working", [taf], taf),
       labels: { go: say("bar_go", [], "Go to its tab"), pause: say("pause", [], "Pause"), resume: say("resume", [], "Resume"), stop: say("stop", [], "Stop") },
     };
   }
@@ -515,8 +523,10 @@ export class Runner {
     for (const t of this.barTabs || []) {
       if (!want.has(t)) await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
     }
+    await this.syncSigns(live);
     for (const [t, s] of want) {
       try {
+        await this.noteDrawn(t);
         await this.chrome.scripting.executeScript({ target: { tabId: t }, files: ["src/bar.js"] });
         await this.inTab(t, (x) => globalThis.TafsBar.show(x), [s]);
       } catch {
@@ -524,6 +534,60 @@ export class Runner {
       }
     }
     this.barTabs = new Set(want.keys());
+  }
+
+  /**
+   * The signs on the page (signs.js): the glow on the tab each run works in, while it works; not while it's paused, and gone
+   * from a tab no run works in any more. The pointer and the outline go with the glow (a pause takes all three away); the next
+   * read or act puts the pointer back.
+   */
+  async syncSigns(live) {
+    const want = new Set(live.filter((r) => !r.paused && r.tab != null && r.tabs.has(r.tab)).map((r) => r.tab));
+    for (const t of this.signTabs || []) {
+      if (!want.has(t)) await this.signsOff(t);
+    }
+    for (const t of want) {
+      try {
+        await this.noteDrawn(t);
+        await this.chrome.scripting.executeScript({ target: { tabId: t }, files: ["src/signs.js"] });
+        await this.inTab(t, () => globalThis.TafsSigns.working());
+      } catch {
+        // A page that can't take it is no reason to fail: the bar, the panel and the group still show the run.
+      }
+    }
+    this.signTabs = want;
+  }
+
+  /** Tab [t] is about to get the bar or the signs: kept, before they're drawn, for a later worker's sweep. */
+  async noteDrawn(t) {
+    if (this.drawn.has(t)) return;
+    this.drawn.add(t);
+    if (this.drawnStore) await this.drawnStore.set([...this.drawn]).catch(() => {});
+  }
+
+  /**
+   * A worker that starts again holds no run (they're forgotten as it stops), so no page should still say a taf works there.
+   * The bar and the signs go from the tabs an earlier worker drew them in (drawnStore), and from no other: a tab no run ever
+   * touched (a bank, an account page) gets nothing run in it. The list is emptied after.
+   */
+  async sweepDrawn() {
+    if (!this.drawnStore) return;
+    const ids = ((await this.drawnStore.get().catch(() => [])) || []).filter((t) => typeof t === "number" && !this.drawn.has(t));
+    await Promise.all(ids.map((t) => this.inTab(t, () => {
+      if (globalThis.TafsSigns) globalThis.TafsSigns.off();
+      if (globalThis.TafsBar) globalThis.TafsBar.hide();
+    }).catch(() => {})));
+    await this.drawnStore.set([...this.drawn]).catch(() => {});
+  }
+
+  /** Every sign leaves tab [t] at once: the glow, the outline and the pointer. */
+  signsOff(t) {
+    return this.inTab(t, () => globalThis.TafsSigns && globalThis.TafsSigns.off()).catch(() => {});
+  }
+
+  /** The words beside the pointer for a step of kind [kind] ("Clicking"), or none. */
+  pointerWords(kind) {
+    return POINTER_KINDS.has(kind) ? this.say("pointer_" + kind) || "" : "";
   }
 
   /** The owner touched a run's tab: that run pauses until Resume. */
@@ -751,8 +815,9 @@ export class Runner {
     // A step still handed to the person ends with the run: planque is told "not now", not left to its 30 minutes.
     if (run.hand) this.endHand(run, "declined");
     for (const t of run.tabs) {
-      // The bar goes with the run: the tab is the person's again (the next sync takes it from any other tab).
+      // The bar and the signs go with the run: the tab is the person's again (the next sync takes the bar from any other tab).
       await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
+      await this.signsOff(t);
       this.tabRun.delete(t);
       await this.unfence(t);
     }
@@ -1211,6 +1276,7 @@ export class Runner {
       run.trail.delete(t);
       run.landing.delete(t);
       await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
+      await this.signsOff(t);
       await this.unfence(t);
     }
     if (mine.length) await Promise.resolve(this.chrome.tabs.ungroup(mine)).catch(() => {});
@@ -1314,7 +1380,8 @@ export class Runner {
   async inject(tabId, run) {
     const c = this.chrome;
     await this.guardDialogs(tabId, run).catch(() => {});
-    await c.scripting.executeScript({ target: { tabId }, files: ["src/mask.js", "src/page.js"] });
+    await this.noteDrawn(tabId);
+    await c.scripting.executeScript({ target: { tabId }, files: ["src/mask.js", "src/signs.js", "src/page.js"] });
     await c.scripting.executeScript({ target: { tabId }, func: (token) => globalThis.TafsPage.listen(token), args: [run.token] });
   }
 
@@ -1336,6 +1403,13 @@ export class Runner {
     const theirs = await this.joinedNow(run, run.tab);
     if (theirs) return { error: { code: theirs } };
     await this.inject(run.tab, run);
+    // While it works, the page shows it: the glow, and the pointer saying it reads (a page it just loaded has neither yet).
+    if (!run.paused && !run.stopped) {
+      await this.inTab(run.tab, (w) => {
+        globalThis.TafsSigns.working();
+        globalThis.TafsSigns.point(null, w);
+      }, [this.pointerWords("read")]).catch(() => {});
+    }
     const page = await this.inTab(run.tab, (o, p) => globalThis.TafsPage.read(o, p), [offset, opts]);
     if (!page) return { error: { code: "page_unresponsive" } };
     run.pages.set(page.read_id, page);
@@ -1404,15 +1478,25 @@ export class Runner {
     // Back (gap 7): where the tab was before, read and fenced as any page is; nothing is clicked or typed.
     if (step.act.kind === "back") return this.back(run);
     await this.pictureOf(run, step, page);
-    // Where the taf is about to act, shown for a moment first (Show me's outline), after the picture so it isn't in it. Only
-    // for an act on a ref: back and a scroll of the page name none. The act takes the outline away.
+    // Where the taf is about to act, shown for a moment first: the pointer goes to it with what it'll do ("Clicking"), and it's
+    // outlined; after the picture, so neither is in it. Only for an act on a ref: back and a scroll of the page name none. The
+    // act takes the outline away, and lands only on the element the pointer went to (page.js `aim`).
     if (step.act.ref) {
-      const shown = await this.inTab(run.tab, (r, id) => globalThis.TafsPage.outline(r, id), [step.act.ref, step.read_id]).catch(() => null);
-      if (shown && shown.ok) await this.sleep(OUTLINE_MS);
+      const shown = await this.inTab(run.tab, (r, id, w) => globalThis.TafsPage.aim(r, id, w), [step.act.ref, step.read_id, this.pointerWords(step.act.kind)]).catch(() => null);
+      // No aim, no act: without the pointer there's no check that the act lands where it points (`sameSpot`), so the step is
+      // refused in the aim's own words, or as an unresponsive page. It fails closed, never acts unchecked.
+      if (!shown || !shown.ok) {
+        if (run.tab != null) await this.signsOff(run.tab);
+        return { error: { code: (shown && shown.code) || "page_unresponsive" } };
+      }
+      await this.sleep(OUTLINE_MS);
       // The outline is what makes a person react ("it's about to click that"): a Pause, their own click or key in the page
-      // (which pauses the run), or a Stop in those moments holds the act. Nothing reaches the page.
+      // (which pauses the run), or a Stop in those moments holds the act. Nothing reaches the page, and the signs go.
       if (run.stopped || run.paused) {
-        if (run.tab != null) await this.inTab(run.tab, () => globalThis.TafsPage.unoutline()).catch(() => {});
+        if (run.tab != null) {
+          await this.inTab(run.tab, () => globalThis.TafsPage.unoutline()).catch(() => {});
+          await this.signsOff(run.tab);
+        }
         return { error: { code: run.stopped ? "stopped" : PAUSE_CODES[run.paused] || "paused_by_owner" } };
       }
     }
