@@ -2488,6 +2488,8 @@ class AppModel(
     if (generation != accountGeneration) return false
     val shown = _state.value.coachChat == session
     _state.update { s -> s.copy(coachChats = s.coachChats.filterNot { it.session == session }, coachArchived = s.coachArchived.filterNot { it.session == session }) }
+    // A file opened from it keeps a copy here, which would outlive "deleted for good": it's only a cache, so all of it goes.
+    openedFiles.deleteRecursively()
     if (shown) newCoachChat()
     return true
   }

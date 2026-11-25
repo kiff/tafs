@@ -38,11 +38,11 @@ class CoachConversationsTest {
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, conversation)
   }
 
-  private suspend fun model(): AppModel {
+  private suspend fun model(opened: java.io.File = java.nio.file.Files.createTempDirectory("opened").toFile()): AppModel {
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     secrets.save("1", AppModel.KEYED)
-    return testModel(transport = transport, secrets = secrets, clock = { t0 }, start = false).also {
+    return testModel(transport = transport, secrets = secrets, clock = { t0 }, start = false, openedFiles = opened).also {
       it.restore()
       it.loadCoach()
     }
@@ -378,6 +378,28 @@ class CoachConversationsTest {
     assertEquals(listOf("s4", "s3"), m.state.value.coachChats.map { it.session })
     // With no network, the words the last list read brought.
     assertEquals("Elle n'a pas été supprimée.", m.state.value.lastError)
+  }
+
+  /** A file opened from a deleted conversation keeps a copy in the phone's cache: a delete that went through clears it, one that didn't leaves it. */
+  @Test fun aDeletedConversationsOpenedFilesLeaveThePhonesCache() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, twoChats)
+    transport.answer("DELETE /v1/tafs/setup_1/chats/s4", 409, """{"error":"busy"}""")
+    transport.drop("DELETE /v1/tafs/setup_1/chats/s3")
+    val opened = java.nio.file.Files.createTempDirectory("opened").toFile()
+    val copy = java.io.File(opened, "att_1/report.pdf").apply { parentFile!!.mkdirs(); writeText("kept copy") }
+    val m = model(opened)
+    m.loadCoachChats()
+    // Refused (409) and not sent (no network): the copy stays.
+    assertFalse(m.deleteCoachChat("s4"))
+    assertTrue(copy.exists())
+    assertFalse(m.deleteCoachChat("s3"))
+    assertTrue(copy.exists())
+    // Deleted: nothing opened from it is left on the phone.
+    transport.answer("DELETE /v1/tafs/setup_1/chats/s3", 200, """{"session":"s3","deleted":true}""")
+    assertTrue(m.deleteCoachChat("s3"))
+    assertFalse(copy.exists())
+    assertTrue(opened.listFiles().isNullOrEmpty())
   }
 
   @Test fun aDeleteThatFailedBeforeAnyWordsCameTakesTheStandIn() = runTest {

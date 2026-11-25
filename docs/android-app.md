@@ -1782,14 +1782,15 @@ list and keeps it; deleting is the way to erase it.
 - **What the app does with tafs cloud's answer** (`AppModel.deleteCoachChat`), deciding nothing itself:
   - **200:** the conversation leaves both lists. The one on screen gives way to a new conversation, so its thread leaves the
     phone and the watch's kept copy of Coach's chat is put empty (`WatchChats.changed`: a chat the watch was given that has left
-    the phone is put empty, once).
+    the phone is put empty, once). Files opened from it are cleared from the phone's cache too (`openedFiles`, only a cache, so
+    all of it goes), so no copy outlives "deleted for good".
   - **404** (never this person's, a job's thread, or already gone): it leaves the lists, with nothing said.
   - **409** (its run is working or waits on a card): it stays, and the refusal's own `error` is shown; the stand-in only if it
     has none.
   - **Anything else, the network included:** it stays, with tafs cloud's `failed` line from the last read, or the stand-in.
 - **Not here yet:** a taf's own chat has no list of conversations on Android to delete from; the route serves it once there is
   one. Chrome follows on its own.
-- Tests: `CoachConversationsTest` (each answer above, tafs cloud's words and each stand-in), `WatchKeptPhoneTest` (the watch's
+- Tests: `CoachConversationsTest` (each answer above, tafs cloud's words and each stand-in, the opened files' cache cleared only on a delete that went through), `WatchKeptPhoneTest` (the watch's
   copy put empty once), and `CoachChatsMenuTest` on a device (asked again by name in tafs cloud's words, Cancel deletes
   nothing).
 
