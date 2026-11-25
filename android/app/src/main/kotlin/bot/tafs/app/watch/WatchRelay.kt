@@ -236,7 +236,7 @@ class WatchRelay(
       // Refused for the AI consent though the phone held it as given (the consent asked again, e.g. new words): tafs cloud's
       // `ai_consent_required` put its screen up and its answer in the state, so the watch says so, never a bare "Open on phone".
       val after = model.state.value
-      if (after.aiConsent?.given != true) return WatchReply.Failed(Words.Watch.coachNeedsConsent)
+      if (after.aiConsent?.given == false) return WatchReply.Failed(Words.Watch.coachNeedsConsent)
       return WatchReply.Failed(after.chatErrors[bot.tafs.app.app.COACH_CHAT] ?: Words.Watch.openOnPhone)
     }
     val answered = kotlinx.coroutines.withTimeoutOrNull(waitLeft(started, now(), coachWaitMs)) {
