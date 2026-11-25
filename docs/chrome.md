@@ -226,9 +226,11 @@ a dead connection), and the apps (the replace choice at pairing, the Chrome on e
     10, links past 50, the rest of the text, and every link. The fingerprint does count options and links, so a page cut
     there is another read than the same page uncut: steady while the page stays over the limit, but a page near it can go
     from one to the other and give `page_changed`, and the taf reads again. Fields and controls are never cut: an act names
-    them. **An act
-    that ran is never answered as failed for its size** (a taf told its click failed may click Submit again). Only a page
-    whose fields and controls alone are over the limit is answered `page_too_large`, signed as any result.
+    them. **A step whose effect has happened is never answered as failed for its size** (a taf told its click failed may
+    click Submit again). When even the cut page doesn't fit, an `act` (its `back` included) or a `hand` that ran is answered
+    `{ok: true, page: null, page_dropped: "page_too_large"}` (0.2.21; before, `page_too_large`, a failure), with
+    `page_dropped` inside what's signed, and the taf reads again. Only an `open` or a `read` whose fields and controls alone
+    are over the limit is answered `page_too_large`, signed as any result: nothing happened that a second try would repeat.
 - **Keepalive:** `{type: "ping"}` / `{type: "pong"}` every 20 s while a run is on. MV3 keeps the service worker alive
   while messages flow. **Until planque can wake the worker by push** (no `pushKey` in the build, or planque hasn't said `push_kept`), an idle connection pings too, every 20 s, because traffic under 30 s is what keeps an MV3 worker, and so the socket, alive (an idle one is otherwise down about half of each minute). **Once planque has the subscription (it answers `{type: "push_kept"}`; a `push_refused` keeps the ping going), an idle one doesn't ping** (a ping each 20 s for every idle Chrome would cost a message each, about $2 to 3 thousand a month at 10,000 installs): the push wakes it.
 - **The allowlist of released builds** is planque's `deploy/chrome-builds.txt`, one released build per line
@@ -393,7 +395,7 @@ error = {code, detail?}      // detail never carries page text
 | `dialog_open` | the page raised a dialog since the read |
 | `paused_by_owner`, `paused_failures`, `paused_no_progress`, `stopped` | the run is paused or stopped |
 | `page_unresponsive`, `browser_unavailable` | the page didn't answer in 20 s, or Chrome failed |
-| `page_too_large` | the answer is over 120 KB even with its page cut (its fields and controls alone are over), the relay's limit with room to spare |
+| `page_too_large` | an `open` or a `read` whose answer is over 120 KB even with its page cut (its fields and controls alone are over), the relay's limit with room to spare; a step that ran answers `page_dropped` instead |
 
 planque uses the same codes. It adds `chrome_offline` for a step that found no connection within 60 s, and then nothing
 was done.
@@ -1031,7 +1033,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
     once per panel), and from the banner at the top of Coach's chat ("Coach doesn't read the page you're on", with "Let Coach
     read the page…") or Settings. It says what goes (the tab's address without query or fragment, its title and words; field values and
     passwords aren't read, card numbers are cut to their last four digits, keys and labelled secrets are masked, and so are one-time codes named as one in English, French, Spanish or German in the page's text), when (only on Send, only that tab, never a refused site), where (tafs, then
-    Anthropic's Claude, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
+    the Claude AI model, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
     **Allow** records it at tafs cloud (`POST /v1/me/page-consent {version}`) and here, for this pairing's person, in the
     pairing's own store, so an unpair (which is also the sign-out) takes it. **Both must hold before the tab is touched**
     (`pageForSend`): without them nothing is injected or read, and the words go alone. **Send without the page** sends the

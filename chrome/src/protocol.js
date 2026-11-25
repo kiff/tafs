@@ -90,9 +90,13 @@ export async function checkStep(message, { planqueKey, chromeId, nonces, now = D
  * and a result can't be replayed for another step with the same id. `page` is the page as read back, `error`
  * `{code, detail?}`; never both.
  */
-export async function result(privateKey, step, chromeId, { page = null, error = null, handed = false } = {}) {
-  // A hand-over is answered at once as "handed"; the person's own answer comes later, as its own message (hand.js).
-  const body = { id: step.id, nonce: typeof step.nonce === "string" ? step.nonce : null, chrome_id: chromeId, ok: !error, page, error, ...(handed ? { handed: true } : {}) };
+export async function result(privateKey, step, chromeId, { page = null, error = null, handed = false, pageDropped = null } = {}) {
+  // A hand-over is answered at once as "handed"; the person's own answer comes later, as its own message (hand.js). A step that
+  // ran but whose page fits the relay no way says so (`page_dropped`): it's done, and the taf reads again (relay.js).
+  const body = {
+    id: step.id, nonce: typeof step.nonce === "string" ? step.nonce : null, chrome_id: chromeId, ok: !error, page, error,
+    ...(handed ? { handed: true } : {}), ...(pageDropped ? { page_dropped: pageDropped } : {}),
+  };
   return { type: "result", ...body, sig: await sign(privateKey, LABEL.result, body) };
 }
 
