@@ -118,7 +118,9 @@ function draw(state) {
   $("menuBtn").hidden = !state.paired;
   if (!state.paired) closeMenu();
   const connections = JSON.stringify(state.connections || []);
-  if (state.paired && connections !== lastConnections) {
+  // The tafs are read again when this Chrome's connections change, and while the last read found no KIFF session yet: the
+  // worker claims it after the phone pairs this Chrome, and says so with a state of its own, never with new connections.
+  if (state.paired && (connections !== lastConnections || tafsNoSession)) {
     lastConnections = connections;
     loadTafs();
   }
@@ -663,8 +665,12 @@ let tafLapsed = null;
 
 const tafName = () => (tafs.find((x) => x.id === tafId) || {}).name || "";
 
+/** Whether the last read of the tafs found no KIFF session yet (the worker's claim still to come): the next state reads again. */
+let tafsNoSession = false;
+
 async function loadTafs() {
   const r = await send({ type: "taf_list" });
+  tafsNoSession = r.error === "no_session";
   tafs = r.error ? [] : r.tafs || [];
   const pick = $("tafPick");
   pick.textContent = "";

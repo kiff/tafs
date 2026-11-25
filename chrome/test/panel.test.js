@@ -269,3 +269,10 @@ test("a run's work is folded into one line over its answer, and its card gives w
   assert.match(js, /const runs = \(here \? \[here, \.\.\.live\.filter\(\(r\) => r !== here\)\] : live\)\.filter\(\(r\) => cardShown\(r, overRuns\)\);/);
   assert.match(js, /overRuns\.set\(run, steps\.length\);/);
 });
+
+test("the tafs are read again once the KIFF session is claimed, not only when the connections change", () => {
+  // The worker claims the session after the phone pairs this Chrome; until then a read answers `no_session`, and the claim
+  // lands as a state with the same connections. The panel reads again on that state, so the taf's chat shows.
+  assert.match(js, /tafsNoSession = r\.error === "no_session";/);
+  assert.match(js, /if \(state\.paired && \(connections !== lastConnections \|\| tafsNoSession\)\) \{\n    lastConnections = connections;\n    loadTafs\(\);/);
+});
