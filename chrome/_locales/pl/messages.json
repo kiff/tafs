@@ -115,7 +115,7 @@
   "page_consent_title": { "message": "Pozwolić Coachowi i Twoim tafom czytać stronę na pierwszym planie przy wysyłaniu?" },
   "page_consent_what": { "message": "Gdy wysyłasz tu wiadomość do Coacha lub do tafa na jednej z jego witryn, idzie z nią tekst karty na pierwszym planie w tym oknie: jej adres (bez tego, co po ? lub #), tytuł i słowa. Wartości pól i hasła nie są odczytywane; numery kart są skracane do ostatnich czterech cyfr; klucze i oznaczone sekrety są maskowane. Maskowane są też kody jednorazowe nazwane tak po angielsku, francusku, hiszpańsku lub niemiecku w tekście strony. Taf, do którego tu piszesz, może potem pracować w tej karcie, tylko na swoich witrynach, a każdą inną stronę otwiera we własnej karcie." },
   "page_consent_when": { "message": "Tylko przy wysyłaniu, tylko ta karta i nigdy strona banku, płatności, poczty lub zdrowia ani taka, którą wyłączyłeś." },
-  "page_consent_never": { "message": "Trafia do tafs, który wysyła go do Claude od Anthropic, żeby Ci odpowiedział, tak jak Twoją wiadomość. tafs zachowuje tylko nazwę witryny, nigdy stronę; odpowiedź Coacha lub tafa może ją cytować." },
+  "page_consent_never": { "message": "Trafia do tafs, który wysyła go do modelu AI Claude, żeby Ci odpowiedział, tak jak Twoją wiadomość. tafs zachowuje tylko nazwę witryny, nigdy stronę; odpowiedź Coacha lub tafa może ją cytować." },
   "page_consent_change": { "message": "W każdej chwili możesz wysłać wiadomość bez strony i wyłączyć to tutaj, kiedy chcesz." },
   "page_consent_allow": { "message": "Zezwól" },
   "page_consent_not_now": { "message": "Nie teraz" },

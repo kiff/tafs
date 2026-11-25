@@ -115,7 +115,7 @@
   "page_consent_title": { "message": "Sollen Coach und deine tafs beim Senden die vordere Seite lesen?" },
   "page_consent_what": { "message": "Wenn du hier Coach oder einem taf auf einer seiner Websites eine Nachricht schickst, geht der Text des vorderen Tabs in diesem Fenster mit: seine Adresse (ohne alles nach ? oder #), sein Titel und seine Wörter. Feldwerte und Passwörter werden nicht gelesen; Kartennummern werden auf ihre letzten vier Ziffern gekürzt; Schlüssel und als solche bezeichnete Geheimnisse werden maskiert. Auch Einmalcodes, die im Text der Seite auf Englisch, Französisch, Spanisch oder Deutsch als solche bezeichnet sind, werden maskiert. Ein taf, dem du hier schreibst, kann dann in diesem Tab arbeiten, nur auf seinen eigenen Websites, und öffnet jede andere Seite in einem eigenen Tab." },
   "page_consent_when": { "message": "Nur beim Senden, nur dieser Tab und nie eine Bank-, Zahlungs-, Mail- oder Gesundheitsseite oder eine, die du ausgeschaltet hast." },
-  "page_consent_never": { "message": "Er geht an tafs, das ihn an Claude von Anthropic schickt, damit Claude dir antwortet, wie deine Nachricht. tafs behält nur den Namen der Website, nie die Seite; die Antwort von Coach oder dem taf kann daraus zitieren." },
+  "page_consent_never": { "message": "Er geht an tafs, das ihn an das KI-Modell Claude schickt, damit Claude dir antwortet, wie deine Nachricht. tafs behält nur den Namen der Website, nie die Seite; die Antwort von Coach oder dem taf kann daraus zitieren." },
   "page_consent_change": { "message": "Du kannst jederzeit eine Nachricht ohne die Seite senden und das hier beenden, wann du willst." },
   "page_consent_allow": { "message": "Erlauben" },
   "page_consent_not_now": { "message": "Jetzt nicht" },
