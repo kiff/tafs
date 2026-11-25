@@ -24,7 +24,17 @@ export interface AccountConnection {
   since?: string;
   /** The taf's name its request gave, as the connection server says it. */
   agent_name?: string;
+  /**
+   * A browser connection's signed sites, as planque lists them (lower case, at most MAX_SITES), or `any_site` for one
+   * signed for any public site. A taf gets the page the person sends with a message only from one of its `sites`
+   * (tafPageSites); neither, or `any_site`, is no page.
+   */
+  sites?: string[];
+  any_site?: true;
 }
+
+/** At most this many sites are read from a browser connection: planque's own bound (maxSites). */
+export const MAX_SITES = 20;
 
 /** At most this many lines: a conversation's start stays small. */
 export const MAX_CONNECTIONS = 30;
@@ -79,9 +89,29 @@ function parseConnections(list: unknown): AccountConnection[] {
       ...(typeof c.mode_words === "string" && c.mode_words ? { mode_words: line(c.mode_words, 120) } : {}),
       ...(typeof c.since === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.since) ? { since: c.since } : {}),
       ...(typeof c.agent_name === "string" && line(c.agent_name, 100) ? { agent_name: line(c.agent_name, 100) } : {}),
+      ...(c.kind === "browser" ? browserSites(c) : {}),
     });
   }
   return out;
+}
+
+/**
+ * A browser connection's sites as planque lists them: hosts only (no scheme, path, port or space), lower case, no
+ * trailing dot. Anything else in the list drops the whole list, so a site is never read wider than it was signed.
+ */
+function browserSites(c: Record<string, unknown>): Pick<AccountConnection, "sites" | "any_site"> {
+  if (c.any_site === true) return { any_site: true };
+  if (!Array.isArray(c.sites) || !c.sites.length || c.sites.length > MAX_SITES) return {};
+  const sites = c.sites.map((x) => typeof x === "string" ? x.toLowerCase().replace(/\.$/, "") : "");
+  return sites.every((x) => /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(x)) ? { sites } : {};
+}
+
+/**
+ * The sites a taf gets the page the person sends from, by its KIFF agent: those of its browser connections that hold a
+ * sign-in. None for a taf with no browser connection, or one signed for any public site, which gets no page.
+ */
+export function tafPageSites(conns: AccountConnection[], agent: string): string[] {
+  return conns.filter((c) => c.agent === agent && c.kind === "browser" && c.sites).flatMap((c) => c.sites!);
 }
 
 /**
