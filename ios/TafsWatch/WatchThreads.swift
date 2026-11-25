@@ -3,8 +3,10 @@ import Foundation
 /// The owner's call 1 (docs/watch-app.md, "Kept and pushed"): Coach's thread and each taf's thread opened on the watch, kept
 /// on the watch so a thread opens at once on its stored copy, then moves with the phone's pushes and reads.
 ///
-/// **What's kept:** at most `mostThreads` threads, each its last `mostLines` messages, as text, with when each was sent and
-/// whose it is. **Never:** an attachment, an image or audio, a held call's details, a session or a key.
+/// **What's kept:** at most `mostThreads` threads, each its last `mostLines` messages, as text with any amount taken out (the
+/// Inbox's rule, `WatchAmount.strip`, as Wear OS keeps its threads), with when each was sent and whose it is. The thread on
+/// screen keeps its amounts; only the copy at rest has none. **Never:** an attachment, an image or audio, a held call's
+/// details, a session or a key.
 ///
 /// **At rest:** one file in Application Support with complete file protection, so it can't be read while the watch is locked.
 /// **Cleared:** on either sign-out (on the phone or on this watch); whenever the app opens or is put away on a watch with no
@@ -59,7 +61,12 @@ final class WatchThreads {
         guard on else { return }
         guard lock.isSecure else { clear(); return }
         var threads = read().filter { $0.key != key }
-        threads.append(Thread(key: key, used: clock(), lines: Array(lines.suffix(Self.mostLines))))
+        let kept = lines.suffix(Self.mostLines).map { line -> WatchChatLine in
+            var line = line
+            line.text = WatchAmount.strip(line.text)
+            return line
+        }
+        threads.append(Thread(key: key, used: clock(), lines: kept))
         threads = Array(threads.sorted { $0.used > $1.used }.prefix(Self.mostThreads))
         write(threads)
     }

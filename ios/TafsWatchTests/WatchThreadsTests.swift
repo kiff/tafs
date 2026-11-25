@@ -44,6 +44,15 @@ final class WatchThreadsTests: XCTestCase {
         XCTAssertEqual(kept.lines("coach"), [], "each thread its own")
     }
 
+    /// The Inbox's rule, as Wear OS keeps its threads: no amount at rest.
+    func testNoAmountIsKept() {
+        let kept = threads()
+        kept.keep("coach", [WatchChatLine(id: "m1", mine: false, at: now, text: "Refunded €84 for order A-1039.", more: false)])
+        let text = kept.lines("coach").first?.text ?? ""
+        XCTAssertFalse(text.contains("84"), text)
+        XCTAssertFalse(WatchAmount.hasAmount(text))
+    }
+
     func testAtMostTwentyThreadsTheLeastUsedGo() {
         let kept = threads()
         for i in 0..<(WatchThreads.mostThreads + 2) {

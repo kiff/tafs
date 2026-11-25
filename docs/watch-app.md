@@ -625,7 +625,8 @@ The watch follows the phone's thread without asking it each time, and never asks
 - **The whole answer from the preview (call 8).** Tapping an answer in Coach's thread opens it whole. A cut answer is read
   whole on that tap (`ask_full`), as a taf's Read more is.
 - **Kept on the watch (call 1), behind `WatchThreads.on` (off).** Coach's thread and each taf's thread opened on the watch.
-  At most 20 threads, each its last 30 messages, as text with when each was sent and whose it is. Never an attachment, an
+  At most 20 threads, each its last 30 messages, as text with any amount taken out (the Inbox's rule, as on Wear OS), with
+  when each was sent and whose it is. Never an attachment, an
   image, audio, a held call's details or a key. One file (`tafs.watch_threads`) with complete file protection, so it can't
   be read while the watch is locked. It's cleared on either sign-out and when the app opens or is put away without a
   passcode, and a thread not opened for 30 days goes (`WatchThreadsTests`). A thread opens at once on this copy, then the
