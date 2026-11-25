@@ -664,7 +664,12 @@ class WatchModel(
     }
     inboxStore?.let { store ->
       dismissed = store.dismissed()
-      _inbox.value = store.read().sortedByDescending { it.at }
+      // What's kept, and what this open holds that the store doesn't (a write the watch's Keystore refused, say): a line never
+      // vanishes on a reopen (row 20). One dismissed, here or on another watch, stays away; a lock or a sign-out empties both.
+      val stored = store.read()
+      val held = _inbox.value.filter { line -> line.id !in dismissed && stored.none { it.id == line.id } }
+      _inbox.value = (stored + held).sortedByDescending { it.at }
+      if (held.isNotEmpty()) store.write(_inbox.value)
     }
   }
 
