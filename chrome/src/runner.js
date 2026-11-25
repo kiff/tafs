@@ -107,6 +107,9 @@ export class Runner {
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
     this.greying = new Map(); // taf → the mark of its finished run whose group turns grey after DONE_GRACE_MS (greyLater)
     this.listen();
+    // A worker that stopped left its fences in Chrome, a joined tab's among them: every session rule goes now (only this runner adds
+    // them), before any fence of this runner's is added (`ruleIds` waits for it), so the sweep never removes a fresh one.
+    this.ready = this.unfenceAll().catch(() => {});
   }
 
   listen() {
@@ -131,9 +134,12 @@ export class Runner {
       const run = this.runOfTab(d.tabId);
       if (!run) return;
       if (!isBlank(d.url) && refuseURL(d.url, run.sites, run.allowed)) {
-        // A joined tab goes back to the page it showed (the run's own `back` puts it right itself); never to a blank page.
+        // A tab of the run's own goes to its blank page. A tab of the person's that joined the run is never moved: a page off the
+        // run's sites committing there is mostly their own Back (from Chrome's cache), and a goBack would move their tab another
+        // step. It's given back to them as it is, and the run's next step finds it no longer the run's. The run's own `back`
+        // puts its tab right itself.
         if (!run.joined.has(d.tabId)) c.tabs.update(d.tabId, { url: "about:blank" });
-        else if (run.backing !== d.tabId) Promise.resolve(c.tabs.goBack(d.tabId)).catch(() => {});
+        else if (run.backing !== d.tabId) this.giveBack(run, [d.tabId]).catch(() => {});
         this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
         return;
       }
@@ -185,18 +191,13 @@ export class Runner {
   /**
    * The ids of a tab's three fence rules. A rule id must be a small positive integer (an int32), and a tab id can be large
    * (`tabId * 4` overflowed it, and the whole run failed as browser_unavailable), so each fenced tab takes the next three
-   * from a counter of this runner's own. Nothing but this runner adds session rules, and no run outlives it, so the first
-   * fence clears whatever an earlier service worker left.
+   * from a counter of this runner's own. Nothing but this runner adds session rules, and no run outlives it, so the runner
+   * clears whatever an earlier service worker left as it's made.
    */
   async ruleIds(tabId) {
-    const dnr = this.chrome.declarativeNetRequest;
-    // One promise that every fence awaits, so a second run starting beside the first never has its rules removed by the clear.
-    this.clearing ||= (async () => {
-      if (!dnr.getSessionRules) return;
-      const left = await dnr.getSessionRules().catch(() => []);
-      if (left.length) await dnr.updateSessionRules({ removeRuleIds: left.map((r) => r.id) }).catch(() => {});
-    })();
-    await this.clearing;
+    // The clear made with the runner (`ready`), which every fence awaits, so a run starting beside another never has its rules
+    // removed by it.
+    await this.ready;
     if (!this.fenceIds.has(tabId)) {
       this.fenceIds.set(tabId, this.nextFence);
       this.nextFence += 3;
@@ -247,6 +248,9 @@ export class Runner {
    */
   noteAddress(run, tabId, url) {
     if (run.backing === tabId || !run.tabs.has(tabId)) return;
+    // In a joined tab, a page the person goes to while the run is paused (their own input pauses it) is theirs, not the run's work:
+    // it never joins the trail, so the run can't read it after Resume.
+    if (run.paused && run.joined.has(tabId)) return;
     const list = run.trail.get(tabId) || [];
     if (!list.length || !sameAddress(list[list.length - 1], url)) list.push(String(url));
     if (list.length > TRAIL_MAX) list.splice(0, list.length - TRAIL_MAX);
@@ -1035,19 +1039,24 @@ export class Runner {
    * bar gone, still open), while the run itself goes on, now as [agentRun]'s: a step of another agent run reached it.
    */
   async giveBackJoined(run, agentRun) {
-    const joined = [...run.joined];
+    await this.giveBack(run, [...run.joined]);
+    run.agentRun = agentRun;
+    run.follow = null;
+  }
+
+  /** [tabs] of the person's that [run] joined go back to them: their bar hidden, forgotten, unfenced, out of the group, still open. */
+  async giveBack(run, tabs) {
+    const joined = tabs.filter((t) => run.joined.has(t));
     for (const t of joined) {
-      await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
       this.tabRun.delete(t);
-      await this.unfence(t);
       run.tabs.delete(t);
       run.joined.delete(t);
       run.trail.delete(t);
+      await this.inTab(t, () => globalThis.TafsBar && globalThis.TafsBar.hide()).catch(() => {});
+      await this.unfence(t);
     }
     if (joined.length) await Promise.resolve(this.chrome.tabs.ungroup(joined)).catch(() => {});
     if (run.tab != null && joined.includes(run.tab)) run.tab = [...run.tabs][0] ?? null;
-    run.agentRun = agentRun;
-    run.follow = null;
   }
 
   /** A further tab of the run's own, in its window and group, fenced before it loads, and the one the run works in from now on. */

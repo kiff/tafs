@@ -1922,12 +1922,97 @@ test("a navigation in a joined tab off the run's sites is blocked by the fence a
   await r.handle(started());
   c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://evil.example/steal" });
   assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url), "no tabs.update with a url on their tab");
-  // One that commits anyway (a page from Chrome's cache): back to the page they had.
-  c.listeners.committed({ tabId: THEIRS, frameId: 0, url: "https://evil.example/cached" });
-  await new Promise((go) => setImmediate(go));
-  assert.ok(c.calls.some((x) => x[0] === "tabs.goBack" && x[1] === THEIRS));
-  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url));
-  assert.deepEqual(r.runs.get("run_1").steps.filter((x) => x.error === "site_not_listed").map((x) => x.url), ["https://evil.example/steal", "https://evil.example/cached"], "both recorded");
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "a blocked request leaves the tab the run's");
+  assert.deepEqual(r.runs.get("run_1").steps.filter((x) => x.error === "site_not_listed").map((x) => x.url), ["https://evil.example/steal"], "recorded");
+});
+
+// The security read: a page off the run's sites that commits in a joined tab is mostly the person's own Back from Chrome's cache.
+// Moving the tab (a goBack) would take their tab another step: it's given back to them as it is.
+test("a joined tab that commits a page off the run's sites is given back as it is, never moved, and the run's next step isn't there", async () => {
+  for (const [what, extra] of [["the person's own Back (from Chrome's cache)", { transitionQualifiers: ["forward_back"] }], ["any other commit", {}]]) {
+    const { c, r } = await joining({ page: PLAIN });
+    const first = await r.handle(started());
+    const before = c.calls.length;
+    c.tabsMap.set(THEIRS, "https://elsewhere.example/");
+    c.listeners.committed({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/", transitionType: "link", ...extra });
+    await new Promise((go) => setImmediate(go));
+    const now = c.calls.slice(before);
+    assert.ok(!now.some((x) => x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), what + ": their tab isn't moved");
+    assert.ok(!now.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), what + ": nor closed");
+    const run = r.runs.get("run_1");
+    assert.equal(run.joined.has(THEIRS), false, what + ": given back");
+    assert.equal(r.tabRun.has(THEIRS), false, what + ": forgotten");
+    assert.ok(now.some((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS)), what + ": out of the group");
+    assert.ok(now.some((x) => x[0] === "bar.hide" && x[1] === THEIRS), what + ": its bar goes");
+    assert.ok(now.some((x) => x[0] === "dnr" && !x[1].addRules), what + ": its fence goes");
+    assert.equal(r.fenceIds.has(THEIRS), false, what);
+    assert.deepEqual(run.steps.filter((x) => x.error === "site_not_listed").map((x) => x.url), ["https://elsewhere.example/"], what + ": recorded");
+    // The run's next step is never in their tab.
+    const after = c.calls.length;
+    assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "no_page", what + ": a read");
+    assert.equal((await r.handle(started({ id: "op3", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }))).error.code, "no_page", what + ": an act");
+    assert.ok(!c.calls.slice(after).some((x) => x[0] === "page" || (x[0] === "executeScript" && x[2] === THEIRS)), what + ": nothing runs in their tab");
+  }
+});
+
+// The run's own `back` that Chrome takes off the sites in a joined tab is put right by that back, not given back.
+test("a joined tab's commit during the run's own back is left to that back", async () => {
+  const { c, r } = await joining({ page: PLAIN });
+  await r.handle(started());
+  commit(c, THEIRS, "https://shop.example/p2");
+  const read = await r.handle(started({ id: "op2", op: "read" }));
+  c.tabs.goBack = async (id) => {
+    c.calls.push(["tabs.goBack", id]);
+    c.tabsMap.set(id, "https://elsewhere.example/");
+    c.listeners.committed({ tabId: id, frameId: 0, url: "https://elsewhere.example/", transitionQualifiers: ["forward_back"] });
+  };
+  c.tabs.goForward = async (id) => {
+    c.calls.push(["tabs.goForward", id]);
+    c.tabsMap.set(id, "https://shop.example/p2");
+  };
+  assert.equal((await r.handle(started({ id: "op3", op: "act", read_id: read.page.read_id, act: { kind: "back" } }))).error.code, "no_back");
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "still the run's, put back by its own back");
+  assert.ok(c.calls.some((x) => x[0] === "tabs.goForward" && x[1] === THEIRS));
+});
+
+// The security read: a worker restart left a joined tab fenced until the next run's first fence.
+test("a runner made over rules a stopped worker left removes them all, and a fence added right after it survives", async () => {
+  const c = fakeChrome();
+  let rules = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 400 }];
+  c.declarativeNetRequest.getSessionRules = async () => {
+    await new Promise((go) => setTimeout(go, 10));
+    return rules;
+  };
+  c.declarativeNetRequest.updateSessionRules = async (o) => {
+    c.calls.push(["dnr", o]);
+    rules = rules.filter((x) => !(o.removeRuleIds || []).includes(x.id)).concat((o.addRules || []).map((x) => ({ id: x.id })));
+  };
+  const r = runner(c);
+  // A step at once, before the sweep has answered.
+  const out = await r.handle(step());
+  assert.ok(out.page, JSON.stringify(out));
+  const added = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules.map((x) => x.id);
+  assert.deepEqual(rules.map((x) => x.id).sort((a, b) => a - b), [...added].sort((a, b) => a - b), "the leftovers are gone, the fresh fence stays");
+  const sweep = c.calls.findIndex((x) => x[0] === "dnr" && !x[1].addRules);
+  const fence = c.calls.findIndex((x) => x[0] === "dnr" && x[1].addRules);
+  assert.ok(sweep >= 0 && sweep < fence, "the sweep before the fence");
+  assert.deepEqual(c.calls[sweep][1].removeRuleIds.sort((a, b) => a - b), [1, 2, 3, 400]);
+});
+
+// The security read: only the run's own work goes on a joined tab's trail.
+test("a page the person goes to in a joined tab while the run is paused is never read after Resume", async () => {
+  const { c, r } = await joining({ page: PLAIN });
+  await r.handle(started());
+  // The person clicks in their tab (the run pauses), then follows a link of their own on the run's sites.
+  r.ownerInput(THEIRS);
+  commit(c, THEIRS, "https://shop.example/their-own");
+  r.resume("run_1");
+  const before = c.calls.length;
+  assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "page_changed");
+  assert.ok(!c.calls.slice(before).some((x) => x[0] === "page" || (x[0] === "executeScript" && x[2] === THEIRS)), "nothing read");
+  // Back at the page the run joined at, it's the run's again.
+  commit(c, THEIRS, "https://shop.example/");
+  assert.ok((await r.handle(started({ id: "op3", op: "read" }))).page);
 });
 
 test("the panel hears a stopped run without its tabs at once", async () => {

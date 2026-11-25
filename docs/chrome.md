@@ -354,7 +354,7 @@ error = {code, detail?}      // detail never carries page text
   - `scroll` of a ref (into view) or of the page (`value` `down`, the default, or `up`, by most of a screen).
   - `back`, with no ref: the tab goes back to the page before the last one the run's own work took it to, and the page there is
     read and fenced as any page is; nothing is clicked (0.2.15, `Runner.back`). The runner keeps each run tab's addresses from
-    its committed navigations (`noteAddress`, the trail, 50 at most); with none before the current one, `back` is `no_back` and
+    its committed navigations (`noteAddress`, the trail, 50 at most; in a joined tab, none while the run is paused); with none before the current one, `back` is `no_back` and
     nothing moves. Chrome skips a history entry no person's gesture made (after the taf's own click its back went nowhere, or
     further), so: in a tab of the run's own, a back that doesn't land on that page loads it instead; in a joined tab, which the
     run never sends anywhere, a back that lands elsewhere is put back (`tabs.goForward`) and refused `no_back`, and a joined tab's
@@ -425,7 +425,9 @@ was done.
   them), so no rule naming a closed tab piles up towards Chrome's cap on session rules (0.2.15). **A fence Chrome won't install
   fails closed:** a run's first tab, or its window, closes and the step answers `browser_unavailable`; a further tab of the run's
   own closes, blank, before it loads anything, and the step says why; a pop-up the fence can't hold is closed. Their ids come from a counter of the runner's own (a rule id must fit an int32, and a tab id can be
-  larger than that over four), and the first fence clears any rule an earlier service worker left. A window that can't be set up
+  larger than that over four). **A runner clears every session rule as it's made** (0.2.15, `Runner.ready`): a worker that
+  stopped left its fences in Chrome, a joined tab's among them, and before 0.2.15 they stayed until the next run's first fence.
+  Every fence waits for that clear, so it never removes a fresh one. A window that can't be set up
   (the fence or the tab group refused) is closed and the step answers `browser_unavailable` with the reason. `webNavigation`'s record of a refused move stays as the log.
 - **No new window escapes the fence before it's in place:** in a run's tab, `window.open` opens nothing (it's reported as a
   dialog), and a link or form that would open a new tab is followed in the same tab.
@@ -463,7 +465,8 @@ was done.
   read never lands in the middle of an act. Pause and Stop don't wait.
 - **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
   committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is; in a tab of the
-  person's that joined the run, it goes back to the page they had instead (`tabs.goBack`), never to a blank page (0.2.15). The blank page
+  person's that joined the run, nothing moves it (it's mostly the person's own Back): the tab is given back to them as it is (0.2.15,
+  below). The blank page
   itself (`about:blank`, where a run's tab opens and where a refused move goes) is never refused: refusing it sent the
   tab to `about:blank` again and again, which also cancelled the page the step was opening, so the step timed out. A step
   line whose address can't be read draws with no site, never an error.
@@ -538,12 +541,17 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   sites is closed), the same dialog guard, the same read (`mask.js`, `page.js`: no
   field values, passwords or card numbers, one-time codes masked). The person's typing, clicking or scrolling in it pauses the
   run, as in any run's tab. **But it's never sent to a blank page** (0.2.15): a navigation off the run's sites is blocked by the
-  fence and the person's page stays (no `tabs.update` with a `url`), and one that commits anyway (a page from Chrome's cache)
-  goes back to the page they had. In it the taf can click and type on its own sites, and a click may take the tab to another page
-  on them; `back` there goes only to a page the run's work reached (above, `back`).
+  fence and the person's page stays (no `tabs.update` with a `url`). **A page off the run's sites that commits there anyway is
+  given back, never moved** (`Runner.giveBack`): it's mostly the person's own Back from Chrome's cache, and a `goBack` would take
+  their tab another step. The tab leaves the group, its fence goes, the run forgets it and its bar goes, still open where the
+  person took it; the run's next step finds no tab of its own there (`no_page`) and planque goes on in a new tab. The run's own
+  `back` putting its tab right is left to that `back`. In it the taf can click and type on its own sites, and a click may take
+  the tab to another page on them; `back` there goes only to a page the run's work reached (above, `back`).
 - **Only pages the run reached are read** (0.2.15, `Runner.joinedNow`): a read, an act or a hand-over in a joined tab whose page
   isn't one of its trail (the address it joined at, then the pages its work and its clicks took it to) is refused `page_changed`,
-  even on the run's sites: a page the person had before the run, reached by a back Chrome took too far, is never read.
+  even on the run's sites: a page the person had before the run, reached by a back Chrome took too far, is never read. A page the
+  person goes to themselves while the run is paused (their own input pauses it) never joins the trail either, so after Resume the
+  run can't read it; it reads again once the tab is back on a page of its trail.
 - **Chrome follows the run.** When the run opens a page, its tab comes to the front of the panel's window, only while the panel is
   open there; no window is raised or focused, and a run nobody started from the panel is never brought forward.
 - **Stop gives the tab back.** The person's Stop (the bar, the panel, or closing the run's last tab) does five things: the tab
