@@ -2965,6 +2965,19 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(off.s.checks).toEqual([]);
     });
 
+    // The apple@ rebuild's words, "Every refund asks you first", over a figure that inherits the rule's ask: no Cards
+    // KIFF signs hold every refund asking, so Approve shows the rules again, whatever Card Coach drafted.
+    it("words that say every refund asks, over a cap that asks, are shown again: no Card holds every refund", async () => {
+      const inherited = [{ tool: "refund_charge", over: "ask", limits: [EACH, { ...DAY, over: "refuse" }] }, { tool: "list_charges", over: "refuse" }];
+      const { s, rules, tap } = await setUp("refuse");
+      setFigures(s, 500, [dayTotal(5000)]);
+      rules("rules-1", inherited, true, "Every refund asks you first. Refunds over €5 ask you, and are refused past €50 a day.");
+      const r = await tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
+      expect(String(r.answer)).toContain("the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks");
+      expect(s.checks).toEqual([]);
+    });
+
     it("a stricter day's total is refused too, and the chat's read refuses it before the card is drawn", async () => {
       const { s, w, rules } = await setUp("refuse");
       setFigures(s, 500, [dayTotal(2000)]);

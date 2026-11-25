@@ -296,7 +296,7 @@ export interface MoneyCard {
  * every Card), a held Card that would bound no amount, a held Card with no total of its own and no refused day's total
  * beside it for KIFF's count, or a count of a money tool's calls (its limits are its amounts).
  */
-export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count" | "asks_unnamed";
+export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count" | "asks_unnamed" | "every_call_unheld";
 
 /** A money tool's Cards, as the agreed rules give them, or why they can't be. `tool` is named as the connection titles it. */
 export type MoneyCards = { tool: string; action: string } & ({ cards: MoneyCard[] } | { unbuilt: MoneyUnbuilt });
@@ -316,7 +316,8 @@ const summed = (quantity: string) => quantity.startsWith("sum(");
  *   count (kiffsOwnCount), beside the refused day's total.
  * Every other tool is the checks' as before. `agent` is the Cards' subject.
  */
-export function cardsFromRules(grants: readonly ApprovalGrant[], rules: readonly AgreedRule[], agent: string): MoneyCards[] {
+export function cardsFromRules(grants: readonly ApprovalGrant[], rules: readonly AgreedRule[], agent: string, text = ""): MoneyCards[] {
+  const everyCall = saysEveryCallAsks(text);
   const out: MoneyCards[] = [];
   for (const g of grants) {
     const suffix = grantSuffix(g.id);
@@ -326,14 +327,14 @@ export function cardsFromRules(grants: readonly ApprovalGrant[], rules: readonly
       const rule = ruleOf(t, suffix, rules);
       if (!rule?.limits?.some((l) => summed(l.quantity))) continue;
       const tool = t.title || action;
-      const built = moneyCardsOf(rule, action, agent);
+      const built = moneyCardsOf(rule, action, agent, everyCall);
       out.push(typeof built === "string" ? { tool, action, unbuilt: built } : { tool, action, cards: built });
     }
   }
   return out;
 }
 
-function moneyCardsOf(rule: AgreedRule, action: string, agent: string): MoneyCard[] | MoneyUnbuilt {
+function moneyCardsOf(rule: AgreedRule, action: string, agent: string, everyCall = false): MoneyCard[] | MoneyUnbuilt {
   const limits = rule.limits ?? [];
   if (limits.some((l) => l.quantity === "count" && l.limit > 0 && !l.per)) return "count";
   const over = (l: AgreedLimit) => l.over ?? rule.over;
@@ -342,6 +343,10 @@ function moneyCardsOf(rule: AgreedRule, action: string, agent: string): MoneyCar
   // asks you first", agreed as `over: "ask"` beside a refused €50 a refund and €200 a day). It's never guessed either way:
   // the rules are shown again with the figure that asks ("every call asks" is a count of 0 a day), or with nothing asking.
   if (rule.over === "ask" && !limits.some((l) => over(l) === "ask")) return "asks_unnamed";
+  // The notice says every call asks, and this rule asks past a figure, but none of them is a count of 0 a day that asks:
+  // a positive cap, or one a figure inherits from the rule's `over`, lets every call under it run unasked.
+  if (everyCall && limits.some((l) => over(l) === "ask") &&
+    !limits.some((l) => over(l) === "ask" && l.quantity === "count" && l.limit === 0 && l.window === "calendar_day" && !l.per)) return "every_call_unheld";
   const cap = (l: AgreedLimit) => ({ quantity: l.quantity, max: l.limit });
   const total = (l: AgreedLimit) => ({ quantity: l.quantity, limit: l.limit, window: l.window, ...(l.per ? { per: l.per } : {}) });
   const card = (kind: "refused" | "held", caps: Array<{ quantity: string; max: number }>, totals: MoneyCard["aggregates"]): MoneyCard => ({
@@ -382,8 +387,8 @@ function moneyCardsOf(rule: AgreedRule, action: string, agent: string): MoneyCar
  * checks a money tool's amounts only on a Card in a domain). A Card over this tool and another isn't either. Undefined
  * when every one matches.
  */
-export function moneyCardsOff(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[], agent: string): MoneyCards | undefined {
-  for (const m of cardsFromRules(grants, rules, agent)) {
+export function moneyCardsOff(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[], agent: string, text = ""): MoneyCards | undefined {
+  for (const m of cardsFromRules(grants, rules, agent, text)) {
     if ("unbuilt" in m) return m;
     const name = fold(m.action);
     const drafted = cards.filter((raw) => covers(raw, name)).map((c) => limitsKey(c, agent));
@@ -690,3 +695,27 @@ export function unpinnedConnection(grants: readonly ApprovalGrant[], lines: read
   }
   return undefined;
 }
+
+/**
+ * Whether a rules notice's words say every call asks the owner: "every refund asks you first", "chaque remboursement attend
+ * votre accord". Read in the languages tafs cloud speaks to Coach in most (en, fr, de, es, it, nl, pl, pt), as each says it:
+ * a word for every or each, then the verb that asks, with no digit between them, since "every refund over 50 EUR asks" is a
+ * figure that asks, not every call. Used only to hold a money rule that asks to a count of 0 a day (moneyCardsOf); words in
+ * another language aren't read, and the rule's own figures stand, as before.
+ */
+export function saysEveryCallAsks(text: string): boolean {
+  const folded = text.normalize("NFC").toLowerCase();
+  return EVERY_CALL_ASKS.some((re) => re.test(folded));
+}
+
+const between = "[^\\d.;:!?\\n]{1,60}?";
+const EVERY_CALL_ASKS: RegExp[] = [
+  ["every|each", "asks you|asks first|waits for your (?:approval|ok|okay|yes)|needs your (?:approval|ok|okay|yes)"],
+  ["chaque|tout|toute", "vous demande|attend votre (?:accord|approbation|validation|feu vert)|demande votre (?:accord|approbation|validation)"],
+  ["jede|jeder|jedes|jeden", "fragt (?:dich|sie)|wartet auf (?:deine|ihre) (?:zustimmung|freigabe|genehmigung)|braucht (?:deine|ihre) (?:zustimmung|freigabe|genehmigung)"],
+  ["cada|todo|toda", "te pregunta|le pregunta|espera (?:tu|su) (?:aprobación|visto bueno|autorización)|necesita (?:tu|su) (?:aprobación|visto bueno|autorización)"],
+  ["ogni", "ti chiede|le chiede|aspetta la (?:tua|sua) (?:approvazione|conferma)|attende la (?:tua|sua) (?:approvazione|conferma)|richiede la (?:tua|sua) (?:approvazione|conferma)"],
+  ["elke|iedere|ieder", "vraagt (?:je|jou|u)|wacht op (?:je|jouw|uw) (?:goedkeuring|akkoord|ok)|heeft (?:je|jouw|uw) (?:goedkeuring|akkoord) nodig"],
+  ["każdy|każda|każde|każdego|każdej", "pyta (?:cię|ciebie|pana|panią)|czeka na (?:twoją|pana|pani) (?:zgodę|akceptację|zatwierdzenie)|wymaga (?:twojej|pana|pani) (?:zgody|akceptacji|zatwierdzenia)"],
+  ["cada|todo|toda", "(?:lhe |te )?pergunta|espera (?:a sua|pela sua|sua|tua|pela tua) (?:aprovação|autorização)|precisa da (?:sua|tua) (?:aprovação|autorização)"],
+].map(([every, asks]) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])`, "u"));

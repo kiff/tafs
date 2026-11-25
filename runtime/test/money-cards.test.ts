@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { countOnAmountWrite, dayTotalTwice, type ApprovalGrant } from "../src/cloud/approval.js";
-import { cardsFromRules, moneyCardsOff, rulesAgreement, rulesMismatch, rulesUnnamedFigures, type AgreedRule, type MoneyCard } from "../src/cloud/rules.js";
+import { cardsFromRules, moneyCardsOff, rulesAgreement, rulesMismatch, rulesUnnamedFigures, saysEveryCallAsks, type AgreedRule, type MoneyCard } from "../src/cloud/rules.js";
 
 // A phone test, 25 Nov: "every refund waits for you, a refund over €50 is refused, €200
 // a day at most". Coach drafted the refund's Cards by hand eleven times, KIFF or tafs cloud refused each, and Coach went
@@ -259,5 +259,48 @@ describe("a rule that asks with no figure that asks gives no Cards", () => {
   it("with nothing asking (over: refuse), the refused Card alone is what was agreed", () => {
     const refused: AgreedRule[] = [{ tool: "create_refund", over: "refuse", limits: [EACH, DAY] }, ...reads];
     expect(cardsFromRules([stripe], refused, AGENT)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", cards: [REFUSED] }]);
+  });
+});
+
+// Narrower than asks_unnamed: the words say every refund asks, but the figure that asks is a positive cap (one that
+// inherits the rule's `over: "ask"`, or Coach's €0.01), so refunds under it would run unasked.
+describe("words that say every call asks hold the rule to a count of 0 a day that asks", () => {
+  const WORDS = "Every refund asks you first. A refund over 50 EUR is refused. Refunds past 200 EUR in a day are refused.";
+  const inherited: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [{ ...EACH, over: undefined }, DAY] }, ...reads];
+
+  it("reads the words in each language Coach writes the rules in", () => {
+    for (const text of [
+      WORDS, "Each refund waits for your approval.",
+      "Chaque remboursement attend votre accord.", "Jede Erstattung wartet auf deine Zustimmung.",
+      "Cada reembolso espera tu aprobación.", "Ogni rimborso aspetta la tua approvazione.",
+      "Elke terugbetaling wacht op je goedkeuring.", "Każdy zwrot czeka na twoją zgodę.", "Cada reembolso espera a sua aprovação.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(true);
+  });
+
+  it("never reads a figure that asks, or a rule with no asking, as every call", () => {
+    for (const text of [
+      "Every refund over 50 EUR asks you first.", "Each refund past €5 waits for your approval.",
+      "A refund over 50 EUR is refused. Every call is pinned to test mode.", "Listing and reading payments is open.",
+      "Chaque remboursement de plus de 50 EUR attend votre accord.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(false);
+  });
+
+  it("a figure inheriting ask, or a positive cap that asks, gives no Cards under those words", () => {
+    expect(cardsFromRules([stripe], inherited, AGENT, WORDS)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "every_call_unheld" }]);
+    const cent: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [{ quantity: "sum(amount)", window: "call", limit: 1, over: "ask" }, EACH, DAY] }, ...reads];
+    expect(cardsFromRules([stripe], cent, AGENT, WORDS)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "every_call_unheld" }]);
+    expect(moneyCardsOff([stripe], [readsCard, limitsCard(), holdCard(cap(5000), [kiffsCount])], inherited, AGENT, WORDS)).toMatchObject({ unbuilt: "every_call_unheld" });
+  });
+
+  it("with the count of 0 a day that asks, the same words build the held and refused Cards", () => {
+    const named: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [EVERY_ONE, EACH, DAY] }, ...reads];
+    expect(cardsFromRules([stripe], named, AGENT, WORDS)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", cards: [REFUSED, HELD] }]);
+  });
+
+  it("without those words, a figure that asks is built as before: \"ask past €5 a refund\"", () => {
+    const ask5: AgreedRule[] = [{ tool: "create_refund", over: "refuse", limits: [{ quantity: "sum(amount)", window: "call", limit: 500, over: "ask" }, { ...DAY, over: undefined }] }, ...reads];
+    const text = "A refund over 5 EUR asks you first. Refunds past 200 EUR in a day are refused.";
+    expect(saysEveryCallAsks(text)).toBe(false);
+    expect(cardsFromRules([stripe], ask5, AGENT, text)[0]).toHaveProperty("cards");
   });
 });
