@@ -31,9 +31,12 @@ export const PAY_WORDS = new RegExp(
   "i",
 );
 
+/** ISO codes an amount may carry after a money word ("Refund 50 EUR"): checkout's own, and the other common ones. */
+const CURRENCIES = "EUR|USD|GBP|CHF|SEK|NOK|DKK|PLN|CZK|HUF|JPY|CAD|AUD|BRL|MXN|NZD|SGD|HKD|INR|CNY|ZAR|TRY|RON|BGN|ILS|AED|SAR|KRW|TWD|THB|IDR|MYR|PHP|COP|CLP|ARS|PEN";
+
 /**
  * A control or link whose whole label sends money out (a refund, a payout, a transfer, a withdrawal), in the same languages,
- * with at most an amount after it ("Refund €50.00"). A label that only mentions it ("Refund policy", "Transfer history") isn't
+ * with at most an amount after it ("Refund €50.00", "Refund 50 EUR"). A label that only mentions it ("Refund policy", "Transfer history") isn't
  * one, nor a list's name ("Refunds", "Payouts"), nor a verb that more often means something else without its money ("Retirer",
  * "Transfer", "Withdraw" alone are Remove, a seat's or a domain's transfer, an application's withdrawal): those need the money named. On a merchant's console these are how money leaves an account outside any Card, so a taf clicks none of them, as it
  * pays nothing.
@@ -54,7 +57,7 @@ export const MONEY_OUT = new RegExp(
     "terugbetalen|terugbetaling (doen|uitvoeren)|overmaken|uitbetalen|geld (overmaken|versturen|opnemen)|" +
     // pt
     "reembolsar|(emitir|fazer) (o |um )?reembolso|transferir (fundos|dinheiro)|fazer (uma )?transferência|sacar (dinheiro|fundos)|enviar dinheiro" +
-    ")[^\\p{L}]*$",
+    ")(?:[^\\p{L}]|\\b(?:" + CURRENCIES + ")\\b)*$",
   "iu",
 );
 
