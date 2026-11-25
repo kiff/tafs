@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Ukončeno" },
   "step_closed": { "message": "Hotovo" },
   "step_refused": { "message": "neprovedeno ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "neprovedeno: přesunuli jste tuto kartu, takže je teď vaše" },
+  "step_refused_given_back": { "message": "neprovedeno: karta se přesunula bez tafu, takže je teď vaše" },
   "step_refused_page_changed": { "message": "neprovedeno: stránka se mezitím změnila" },
   "step_refused_no_back": { "message": "neprovedeno: není kam se vrátit" },
   "step_refused_site_not_listed": { "message": "neprovedeno: ten web nepatří k webům tohoto tafu" },

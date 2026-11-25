@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Դադարեցված է" },
   "step_closed": { "message": "Ավարտվեց" },
   "step_refused": { "message": "չկատարվեց ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "չկատարվեց. դուք տեղափոխեցիք այս ներդիրը, ուստի այժմ այն ձերն է" },
+  "step_refused_given_back": { "message": "չկատարվեց. ներդիրը տեղափոխվեց առանց taf-ի, ուստի այժմ այն ձերն է" },
   "step_refused_page_changed": { "message": "չկատարվեց. էջը մինչ այդ փոխվեց" },
   "step_refused_no_back": { "message": "չկատարվեց. վերադառնալու էջ չկա" },
   "step_refused_site_not_listed": { "message": "չկատարվեց. այդ կայքը այս taf-ի կայքերից չէ" },

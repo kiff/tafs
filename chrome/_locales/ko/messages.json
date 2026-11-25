@@ -46,7 +46,7 @@
   "step_stopped": { "message": "멈춤" },
   "step_closed": { "message": "완료" },
   "step_refused": { "message": "완료되지 않음 ($CODE$)", "placeholders": { "code": { "content": "$1" } } },
-  "step_refused_given_back": { "message": "완료되지 않음: 이 탭을 옮기셔서 이제 탭은 내 것입니다" },
+  "step_refused_given_back": { "message": "완료되지 않음: taf 없이 탭이 이동해 이제 탭은 내 것입니다" },
   "step_refused_page_changed": { "message": "완료되지 않음: 그 전에 페이지가 바뀌었습니다" },
   "step_refused_no_back": { "message": "완료되지 않음: 돌아갈 페이지가 없습니다" },
   "step_refused_site_not_listed": { "message": "완료되지 않음: 그 사이트는 이 taf의 사이트가 아닙니다" },

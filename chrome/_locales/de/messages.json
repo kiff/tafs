@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Gestoppt" },
   "step_closed": { "message": "Fertig" },
   "step_refused": { "message": "nicht erledigt ($CODE$)", "placeholders": { "code": { "content": "$1" } } },
-  "step_refused_given_back": { "message": "nicht erledigt: Du hast diesen Tab bewegt, er gehört jetzt dir" },
+  "step_refused_given_back": { "message": "nicht erledigt: Der Tab hat sich ohne den taf bewegt, er gehört jetzt dir" },
   "step_refused_page_changed": { "message": "nicht erledigt: Die Seite hat sich vorher geändert" },
   "step_refused_no_back": { "message": "nicht erledigt: Es gibt keine Seite, zu der es zurückgehen kann" },
   "step_refused_site_not_listed": { "message": "nicht erledigt: Diese Website gehört nicht zu diesem taf" },

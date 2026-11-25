@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Gestopt" },
   "step_closed": { "message": "Klaar" },
   "step_refused": { "message": "niet gedaan ($CODE$)", "placeholders": { "code": { "content": "$1" } } },
-  "step_refused_given_back": { "message": "niet gedaan: je hebt dit tabblad verplaatst, dus het is nu van jou" },
+  "step_refused_given_back": { "message": "niet gedaan: het tabblad verplaatste zonder de taf, dus het is nu van jou" },
   "step_refused_page_changed": { "message": "niet gedaan: de pagina was eerst veranderd" },
   "step_refused_no_back": { "message": "niet gedaan: er is geen pagina om naar terug te gaan" },
   "step_refused_site_not_listed": { "message": "niet gedaan: die site is niet een van de sites van deze taf" },

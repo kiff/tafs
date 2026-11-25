@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Zatrzymano" },
   "step_closed": { "message": "Zakończono" },
   "step_refused": { "message": "nie wykonano ($CODE$)", "placeholders": { "code": { "content": "$1" } } },
-  "step_refused_given_back": { "message": "nie wykonano: przeniesiono tę kartę, więc teraz jest Twoja" },
+  "step_refused_given_back": { "message": "nie wykonano: karta zmieniła się bez tafa, więc teraz jest Twoja" },
   "step_refused_page_changed": { "message": "nie wykonano: strona zmieniła się wcześniej" },
   "step_refused_no_back": { "message": "nie wykonano: nie ma strony, na którą można wrócić" },
   "step_refused_site_not_listed": { "message": "nie wykonano: ta witryna nie należy do tego tafa" },

@@ -46,7 +46,7 @@
   "step_stopped": { "message": "বন্ধ করা হয়েছে" },
   "step_closed": { "message": "শেষ" },
   "step_refused": { "message": "করা হয়নি ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "করা হয়নি: আপনি এই ট্যাব সরিয়েছেন, তাই এটি এখন আপনার" },
+  "step_refused_given_back": { "message": "করা হয়নি: ট্যাবটি taf ছাড়াই সরে গেছে, তাই এটি এখন আপনার" },
   "step_refused_page_changed": { "message": "করা হয়নি: তার আগেই পেজ বদলে গেছে" },
   "step_refused_no_back": { "message": "করা হয়নি: ফিরে যাওয়ার মতো কোনো পেজ নেই" },
   "step_refused_site_not_listed": { "message": "করা হয়নি: ওই সাইটটি এই taf-এর সাইটগুলোর একটি নয়" },

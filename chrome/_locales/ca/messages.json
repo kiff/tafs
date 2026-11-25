@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Aturat" },
   "step_closed": { "message": "Acabat" },
   "step_refused": { "message": "no fet ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "no fet: has mogut aquesta pestanya, i ara és teva" },
+  "step_refused_given_back": { "message": "no fet: la pestanya s'ha mogut sense el taf, i ara és teva" },
   "step_refused_page_changed": { "message": "no fet: la pàgina ha canviat abans" },
   "step_refused_no_back": { "message": "no fet: no hi ha cap pàgina on tornar" },
   "step_refused_site_not_listed": { "message": "no fet: aquest lloc no és un dels d'aquest taf" },

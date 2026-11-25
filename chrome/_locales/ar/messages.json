@@ -46,7 +46,7 @@
   "step_stopped": { "message": "متوقف" },
   "step_closed": { "message": "انتهى" },
   "step_refused": { "message": "لم يتم ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "لم يتم: نقلت علامة التبويب هذه، فأصبحت لك الآن" },
+  "step_refused_given_back": { "message": "لم يتم: انتقلت علامة التبويب دون الـ taf، فأصبحت لك الآن" },
   "step_refused_page_changed": { "message": "لم يتم: تغيّرت الصفحة قبل ذلك" },
   "step_refused_no_back": { "message": "لم يتم: لا توجد صفحة للرجوع إليها" },
   "step_refused_site_not_listed": { "message": "لم يتم: هذا الموقع ليس من مواقع هذا الـ taf" },

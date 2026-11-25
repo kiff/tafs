@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Ukončené" },
   "step_closed": { "message": "Hotovo" },
   "step_refused": { "message": "nevykonané ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "nevykonané: presunuli ste túto kartu, takže je teraz vaša" },
+  "step_refused_given_back": { "message": "nevykonané: karta sa presunula bez tafu, takže je teraz vaša" },
   "step_refused_page_changed": { "message": "nevykonané: stránka sa medzitým zmenila" },
   "step_refused_no_back": { "message": "nevykonané: nie je kam sa vrátiť" },
   "step_refused_site_not_listed": { "message": "nevykonané: ten web nepatrí k webom tohto tafu" },

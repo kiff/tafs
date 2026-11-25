@@ -46,7 +46,7 @@
   "step_stopped": { "message": "已停止" },
   "step_closed": { "message": "已完成" },
   "step_refused": { "message": "未完成（$CODE$）", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "未完成：您移動了這個分頁，所以它現在歸您" },
+  "step_refused_given_back": { "message": "未完成：分頁在 taf 未操作時移動了，所以它現在歸您" },
   "step_refused_page_changed": { "message": "未完成：頁面先變了" },
   "step_refused_no_back": { "message": "未完成：沒有可返回的頁面" },
   "step_refused_site_not_listed": { "message": "未完成：那個網站不屬於這個 taf" },

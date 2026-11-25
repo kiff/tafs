@@ -1,0 +1,1 @@
+- **Chrome: the `given_back` step line says "the tab moved without the taf", in all 43 languages (extension words, for 0.2.18).** From 0.2.17 a page leaving the taf's sites by itself also gives the tab back, so "you moved this tab" wasn't always true. See [docs/chrome.md](../docs/chrome.md).

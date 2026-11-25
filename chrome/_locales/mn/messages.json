@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Зогссон" },
   "step_closed": { "message": "Дууссан" },
   "step_refused": { "message": "хийгдээгүй ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "хийгдээгүй: та энэ табыг шилжүүлсэн тул одоо таных боллоо" },
+  "step_refused_given_back": { "message": "хийгдээгүй: таб taf-гүйгээр шилжсэн тул одоо таных боллоо" },
   "step_refused_page_changed": { "message": "хийгдээгүй: хуудас түрүүлж өөрчлөгдсөн" },
   "step_refused_no_back": { "message": "хийгдээгүй: буцах хуудас алга" },
   "step_refused_site_not_listed": { "message": "хийгдээгүй: тэр сайт энэ taf-ын сайт биш" },

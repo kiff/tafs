@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Fermato" },
   "step_closed": { "message": "Finito" },
   "step_refused": { "message": "non fatto ($CODE$)", "placeholders": { "code": { "content": "$1" } } },
-  "step_refused_given_back": { "message": "non fatto: hai spostato questa scheda, quindi ora è tua" },
+  "step_refused_given_back": { "message": "non fatto: la scheda si è spostata senza il taf, quindi ora è tua" },
   "step_refused_page_changed": { "message": "non fatto: la pagina è cambiata prima" },
   "step_refused_no_back": { "message": "non fatto: non c'è una pagina a cui tornare" },
   "step_refused_site_not_listed": { "message": "non fatto: quel sito non è uno di quelli di questo taf" },
