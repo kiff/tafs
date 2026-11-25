@@ -16,7 +16,8 @@ object Words {
     val answered: String get() = Res.s(R.string.alert_answered)
     val approveOnce: String get() = Res.s(R.string.alert_approve_once)
     object Blocked {
-      fun body(device: String): String = Res.s(R.string.alert_blocked_body, device)
+      fun body(device: String): String = Res.s(R.string.alert_blocked_body, device, Words.demonstrative(device, capital = true))
+      val bodyAndroid: String get() = Res.s(R.string.alert_blocked_body_android)
       val bodyWatch: String get() = Res.s(R.string.alert_blocked_body_watch)
       val title: String get() = Res.s(R.string.alert_blocked_title)
     }
@@ -39,6 +40,7 @@ object Words {
     val notSent: String get() = Res.s(R.string.alert_not_sent)
     val nowOn: String get() = Res.s(R.string.alert_now_on)
     fun onThisDevice(device: String): String = Res.s(R.string.alert_on_this_device, device, Words.demonstrative(device))
+    val openNotificationSettings: String get() = Res.s(R.string.alert_open_notification_settings)
     val openSettings: String get() = Res.s(R.string.alert_open_settings)
     val openTafsAnswerKiffDid: String get() = Res.s(R.string.alert_open_tafs_answer_kiff_did)
     val openTafsAnswerPhoneCan: String get() = Res.s(R.string.alert_open_tafs_answer_phone_can)

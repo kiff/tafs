@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Responda até {zone}. Nada é enviado até aprovar.",
   "alert.answered": "Um taf respondeu a alguém",
   "alert.approve_once": "Aprovar uma vez…",
+  "alert.blocked.body": "Este {device} já não pergunta, por isso os alertas do tafs estão desativados em Definições. Ative-os lá para que as aprovações e as respostas cheguem até si.",
+  "alert.blocked.body_android": "O Android já não pergunta, por isso os alertas do tafs estão desativados nas definições do telefone. Ative-os lá para que as aprovações e as respostas cheguem até si, neste telefone e no seu relógio. O relógio recebe as atualizações de qualquer forma.",
+  "alert.blocked.body_watch": "O seu iPhone já não pergunta, por isso os alertas do tafs estão desativados em Definições. Ative-os lá para que as aprovações e as respostas cheguem até si, neste iPhone e no seu relógio. O relógio recebe as atualizações de qualquer forma.",
+  "alert.blocked.title": "Ative os alertas do tafs",
   "alert.by_email": "Por email",
   "alert.example": "Exemplo",
   "alert.foot.cant_answer_holds": "Os alertas vão para as pessoas que podem responder a chamadas retidas. A sua função nesta conta não pode.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Os alertas ainda não estão ativos neste telefone. {why}",
   "alert.not_refused": "Não recusado",
   "alert.not_sent": "Uma resposta não foi enviada",
+  "alert.now_on": "Os alertas estão ativados.",
   "alert.on_this_device": "Alertas neste {device}",
+  "alert.open_notification_settings": "Abrir definições de notificações",
+  "alert.open_settings": "Abrir Definições",
   "alert.open_tafs_answer_kiff_did": "Abra o tafs para responder: o KIFF não indicou que versão do pedido viu.",
   "alert.open_tafs_answer_phone_can": "Abra o tafs para responder: este telefone não pode assiná-lo a partir da notificação.",
   "alert.prompt": "Receba um alerta quando um taf precisar de si",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Indisponível",
   "alert.status.off": "Desativado",
   "alert.status.on": "Ativado",
+  "alert.still_off": "Os alertas continuam desativados.",
   "alert.still_on_after_sign_out.body": "O tafs não conseguiu desativá-los ({why}). Tente novamente, ou termine sessão na mesma e desative as notificações do tafs nas Definições.",
   "alert.still_on_after_sign_out.title": "Este {device} pode continuar a receber os alertas desta conta",
   "alert.taf_needs_you": "{taf} precisa de si",
@@ -43,6 +51,8 @@
     "other": "{count} tafs ›"
   },
   "alert.tafs_could_not_reach_kiff": "O tafs não conseguiu contactar o KIFF para recusar. Abra o tafs para responder.",
+  "alert.watch_first.body": "Para ver as aprovações e as respostas como alertas, neste telefone e no seu relógio, ative os alertas do tafs. O relógio continua a receber as atualizações mesmo que não o faça.",
+  "alert.watch_first.title": "O seu relógio está a usar o tafs",
   "alert.what_alerts": "O que gera alertas",
   "alert.with_sound": "Com som"
 }

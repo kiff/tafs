@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Përgjigjuni deri më: {zone}. Asgjë nuk dërgohet derisa të miratoni.",
   "alert.answered": "Një taf iu përgjigj dikujt",
   "alert.approve_once": "Miratoni një herë…",
+  "alert.blocked.body": "Kjo pajisje ({device}) nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara te Cilësimet. Aktivizojini atje që miratimet dhe përgjigjet t'ju arrijnë.",
+  "alert.blocked.body_android": "Android nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara në cilësimet e telefonit. Aktivizojini atje që miratimet dhe përgjigjet t'ju arrijnë, në këtë telefon dhe në orën tuaj. Ora i merr përditësimet e saj gjithsesi.",
+  "alert.blocked.body_watch": "iPhone-i juaj nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara te Cilësimet. Aktivizojini atje që miratimet dhe përgjigjet t'ju arrijnë, në këtë iPhone dhe në orën tuaj. Ora i merr përditësimet e saj gjithsesi.",
+  "alert.blocked.title": "Aktivizoni njoftimet për tafs",
   "alert.by_email": "Me email",
   "alert.example": "Shembull",
   "alert.foot.cant_answer_holds": "Njoftimet shkojnë te njerëzit që mund t'u përgjigjen thirrjeve të mbajtura. Roli juaj në këtë llogari nuk mundet.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Njoftimet ende nuk janë aktive për këtë telefon. {why}",
   "alert.not_refused": "Nuk u refuzua",
   "alert.not_sent": "Një përgjigje nuk u dërgua",
+  "alert.now_on": "Njoftimet janë aktive.",
   "alert.on_this_device": "Njoftimet në këtë pajisje ({device})",
+  "alert.open_notification_settings": "Hap cilësimet e njoftimeve",
+  "alert.open_settings": "Hap Cilësimet",
   "alert.open_tafs_answer_kiff_did": "Hapni tafs për t'u përgjigjur: KIFF nuk tha cilin version e keni parë.",
   "alert.open_tafs_answer_phone_can": "Hapni tafs për t'u përgjigjur: ky telefon nuk mund ta nënshkruajë nga njoftimi.",
   "alert.prompt": "Merrni një njoftim kur një taf ka nevojë për ju",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Nuk ofrohet",
   "alert.status.off": "Joaktiv",
   "alert.status.on": "Aktiv",
+  "alert.still_off": "Njoftimet janë ende të çaktivizuara.",
   "alert.still_on_after_sign_out.body": "tafs nuk arriti t'i çaktivizojë ({why}). Provoni sërish, ose dilni gjithsesi dhe çaktivizoni njoftimet për tafs te Cilësimet.",
   "alert.still_on_after_sign_out.title": "Kjo pajisje ({device}) mund të vazhdojë të marrë njoftimet e kësaj llogarie",
   "alert.taf_needs_you": "{taf} ka nevojë për ju",
@@ -43,6 +51,8 @@
     "other": "{count} tafs ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs nuk arriti te KIFF për ta refuzuar. Hapni tafs për t'u përgjigjur.",
+  "alert.watch_first.body": "Për të parë miratimet dhe përgjigjet si njoftime, në këtë telefon dhe në orën tuaj, aktivizoni njoftimet për tafs. Ora do të vazhdojë t'i marrë përditësimet edhe nëse nuk e bëni.",
+  "alert.watch_first.title": "Ora juaj po përdor tafs",
   "alert.what_alerts": "Çfarë ju njofton",
   "alert.with_sound": "Me zë"
 }

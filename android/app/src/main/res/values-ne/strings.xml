@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s। %3$s सम्म जवाफ दिनुहोस्। तपाईंले स्वीकृत नगरेसम्म केही पठाइँदैन।</string>
     <string name="alert_answered">एउटा taf ले कसैलाई जवाफ दियो</string>
     <string name="alert_approve_once">एक पटक स्वीकृत गर्नुहोस्…</string>
+    <string name="alert_blocked_body">यो %1$s ले अब सोध्दैन, त्यसैले सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ तपाईंसम्म आइपुगून् भनेर त्यहाँ खोल्नुहोस्।</string>
+    <string name="alert_blocked_body_android">Android ले अब सोध्दैन, त्यसैले तपाईंको फोनको सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ यो फोन र तपाईंको घडीमा आइपुगून् भनेर त्यहाँ खोल्नुहोस्। तपाईंको घडीले जसरी पनि अपडेट पाउँछ।</string>
+    <string name="alert_blocked_body_watch">तपाईंको iPhone ले अब सोध्दैन, त्यसैले सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ यो iPhone र तपाईंको घडीमा आइपुगून् भनेर त्यहाँ खोल्नुहोस्। तपाईंको घडीले जसरी पनि अपडेट पाउँछ।</string>
+    <string name="alert_blocked_title">tafs को सूचना खोल्नुहोस्</string>
     <string name="alert_by_email">इमेलबाट</string>
     <string name="alert_example">उदाहरण</string>
     <string name="alert_foot_cant_answer_holds">सूचनाहरू रोकिएका कलको जवाफ दिन पाउने व्यक्तिहरूलाई जान्छन्। यस खातामा तपाईंको भूमिकाले पाउँदैन।</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">यो फोनका लागि सूचनाहरू अहिलेसम्म खुलेका छैनन्। %1$s</string>
     <string name="alert_not_refused">अस्वीकार गरिएन</string>
     <string name="alert_not_sent">जवाफ पठाइएन</string>
+    <string name="alert_now_on">सूचना खुला छ।</string>
     <string name="alert_on_this_device">यो %1$s मा सूचनाहरू</string>
+    <string name="alert_open_notification_settings">सूचना सेटिङ खोल्नुहोस्</string>
+    <string name="alert_open_settings">सेटिङ खोल्नुहोस्</string>
     <string name="alert_open_tafs_answer_kiff_did">जवाफ दिन tafs खोल्नुहोस्: तपाईंले यसको कुन संस्करण देख्नुभयो KIFF ले भनेन।</string>
     <string name="alert_open_tafs_answer_phone_can">जवाफ दिन tafs खोल्नुहोस्: यो फोनले सूचनाबाट हस्ताक्षर गर्न सक्दैन।</string>
     <string name="alert_prompt">कुनै taf लाई तपाईं चाहिँदा सूचना पाउनुहोस्</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">उपलब्ध छैन</string>
     <string name="alert_status_off">बन्द</string>
     <string name="alert_status_on">खुला</string>
+    <string name="alert_still_off">सूचना अझै बन्द छ।</string>
     <string name="alert_still_on_after_sign_out_body">tafs ले तिनलाई बन्द गर्न सकेन (%1$s)। फेरि प्रयास गर्नुहोस्, वा जे भए पनि साइन आउट गरेर सेटिङमा tafs का सूचनाहरू बन्द गर्नुहोस्।</string>
     <string name="alert_still_on_after_sign_out_title">यो %1$s मा अझै यस खाताका सूचनाहरू आउन सक्छन्</string>
     <string name="alert_taf_needs_you">%1$s ले तपाईंलाई पर्खिरहेको छ</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs ले अस्वीकार गर्न KIFF सम्म पुग्न सकेन। जवाफ दिन tafs खोल्नुहोस्।</string>
+    <string name="alert_watch_first_body">स्वीकृति र जवाफलाई यो फोन र तपाईंको घडीमा सूचनाको रूपमा हेर्न tafs को सूचना खोल्नुहोस्। नखोले पनि तपाईंको घडीले अपडेट पाइरहनेछ।</string>
+    <string name="alert_watch_first_title">तपाईंको घडीले tafs प्रयोग गर्दैछ</string>
     <string name="alert_what_alerts">तपाईंलाई के जानकारी दिने</string>
     <string name="alert_with_sound">आवाजसहित</string>
     <string name="app_name">tafs</string>

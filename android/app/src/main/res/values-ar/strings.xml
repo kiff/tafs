@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. الرد قبل %3$s. لا يُرسل شيء حتى توافق.</string>
     <string name="alert_answered">ردّ taf على أحدهم</string>
     <string name="alert_approve_once">الموافقة مرة واحدة…</string>
+    <string name="alert_blocked_body">لم يعد هذا الجهاز (%1$s) يسأل، لذا فإن تنبيهات tafs متوقفة في الإعدادات. شغّلها هناك لتصلك الموافقات والإجابات.</string>
+    <string name="alert_blocked_body_android">لم يعد Android يسأل، لذا فإن تنبيهات tafs متوقفة في إعدادات هاتفك. شغّلها هناك لتصلك الموافقات والإجابات على هذا الهاتف وعلى ساعتك. تصل التحديثات إلى ساعتك في كل الأحوال.</string>
+    <string name="alert_blocked_body_watch">لم يعد جهاز iPhone الخاص بك يسأل، لذا فإن تنبيهات tafs متوقفة في الإعدادات. شغّلها هناك لتصلك الموافقات والإجابات على هذا الـ iPhone وعلى ساعتك. تصل التحديثات إلى ساعتك في كل الأحوال.</string>
+    <string name="alert_blocked_title">شغّل التنبيهات لـ tafs</string>
     <string name="alert_by_email">بالبريد الإلكتروني</string>
     <string name="alert_example">مثال</string>
     <string name="alert_foot_cant_answer_holds">تصل التنبيهات إلى من يحق لهم الرد على طلبات الاستدعاء المعلّقة. دورك في هذا الحساب لا يتيح ذلك.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">التنبيهات غير مفعّلة لهذا الهاتف بعد. %1$s</string>
     <string name="alert_not_refused">لم يتم الرفض</string>
     <string name="alert_not_sent">لم يُرسل رد</string>
+    <string name="alert_now_on">التنبيهات قيد التشغيل.</string>
     <string name="alert_on_this_device">التنبيهات على هذا الجهاز (%1$s)</string>
+    <string name="alert_open_notification_settings">فتح إعدادات الإشعارات</string>
+    <string name="alert_open_settings">فتح الإعدادات</string>
     <string name="alert_open_tafs_answer_kiff_did">افتح tafs لتردّ: لم يذكر KIFF أي نسخة منه رأيتها.</string>
     <string name="alert_open_tafs_answer_phone_can">افتح tafs لتردّ: لا يستطيع هذا الهاتف التوقيع عليه من الإشعار.</string>
     <string name="alert_prompt">احصل على تنبيه عندما يحتاجك taf</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">غير متاح</string>
     <string name="alert_status_off">متوقف</string>
     <string name="alert_status_on">قيد التشغيل</string>
+    <string name="alert_still_off">لا تزال التنبيهات متوقفة.</string>
     <string name="alert_still_on_after_sign_out_body">لم يتمكن tafs من إيقافها (%1$s). حاول مرة أخرى، أو سجّل الخروج على أي حال وأوقف إشعارات tafs من الإعدادات.</string>
     <string name="alert_still_on_after_sign_out_title">قد يظل هذا الجهاز (%1$s) يتلقى تنبيهات هذا الحساب</string>
     <string name="alert_taf_needs_you">%1$s بانتظارك</string>
@@ -50,6 +58,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">تعذّر على tafs الوصول إلى KIFF لرفضه. افتح tafs لتردّ.</string>
+    <string name="alert_watch_first_body">لترى الموافقات والإجابات كتنبيهات على هذا الهاتف وعلى ساعتك، شغّل التنبيهات لـ tafs. ستظل ساعتك تتلقى تحديثاتها حتى إن لم تفعل.</string>
+    <string name="alert_watch_first_title">ساعتك تستخدم tafs</string>
     <string name="alert_what_alerts">ما الذي ينبّهك</string>
     <string name="alert_with_sound">مع صوت</string>
     <string name="app_name">tafs</string>

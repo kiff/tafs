@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Atbildi līdz %3$s. Nekas netiek nosūtīts, kamēr tu neapstiprini.</string>
     <string name="alert_answered">taf kādam atbildēja</string>
     <string name="alert_approve_once">Apstiprināt vienreiz…</string>
+    <string name="alert_blocked_body">Šī ierīce (%1$s) vairs nejautā, tāpēc tafs paziņojumi iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu.</string>
+    <string name="alert_blocked_body_android">Android vairs nejautā, tāpēc tafs paziņojumi tālruņa iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu, šajā tālrunī un pulkstenī. Pulkstenis savus atjauninājumus saņem jebkurā gadījumā.</string>
+    <string name="alert_blocked_body_watch">Tavs iPhone vairs nejautā, tāpēc tafs paziņojumi iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu, šajā iPhone un pulkstenī. Pulkstenis savus atjauninājumus saņem jebkurā gadījumā.</string>
+    <string name="alert_blocked_title">Ieslēdz tafs paziņojumus</string>
     <string name="alert_by_email">Pa e-pastu</string>
     <string name="alert_example">Piemērs</string>
     <string name="alert_foot_cant_answer_holds">Paziņojumi tiek sūtīti tiem, kas drīkst atbildēt uz aizturētiem izsaukumiem. Tava loma šajā kontā to neļauj.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Šim tālrunim paziņojumi vēl nav ieslēgti. %1$s</string>
     <string name="alert_not_refused">Nav atteikts</string>
     <string name="alert_not_sent">Atbilde netika nosūtīta</string>
+    <string name="alert_now_on">Paziņojumi ir ieslēgti.</string>
     <string name="alert_on_this_device">Paziņojumi: šis %1$s</string>
+    <string name="alert_open_notification_settings">Atvērt paziņojumu iestatījumus</string>
+    <string name="alert_open_settings">Atvērt Iestatījumus</string>
     <string name="alert_open_tafs_answer_kiff_did">Atver tafs, lai atbildētu: KIFF nepateica, kuru tā versiju tu redzēji.</string>
     <string name="alert_open_tafs_answer_phone_can">Atver tafs, lai atbildētu: šis tālrunis nevar to parakstīt no paziņojuma.</string>
     <string name="alert_prompt">Saņem paziņojumu, kad taf gaida tevi</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nav pieejams</string>
     <string name="alert_status_off">Izslēgts</string>
     <string name="alert_status_on">Ieslēgts</string>
+    <string name="alert_still_off">Paziņojumi joprojām ir izslēgti.</string>
     <string name="alert_still_on_after_sign_out_body">tafs nevarēja tos izslēgt (%1$s). Mēģini vēlreiz vai tomēr izrakstieties un iestatījumos izslēdz paziņojumus no tafs.</string>
     <string name="alert_still_on_after_sign_out_title">Šis %1$s joprojām var saņemt šī konta paziņojumus</string>
     <string name="alert_taf_needs_you">%1$s gaida tevi</string>
@@ -47,6 +55,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs nevarēja sazināties ar KIFF, lai to atteiktu. Atver tafs, lai atbildētu.</string>
+    <string name="alert_watch_first_body">Lai redzētu apstiprinājumus un atbildes kā paziņojumus šajā tālrunī un pulkstenī, ieslēdz tafs paziņojumus. Pulkstenis turpinās saņemt savus atjauninājumus, pat ja to nedarīsi.</string>
+    <string name="alert_watch_first_title">Tavs pulkstenis izmanto tafs</string>
     <string name="alert_what_alerts">Par ko tev paziņo</string>
     <string name="alert_with_sound">Ar skaņu</string>
     <string name="app_name">tafs</string>

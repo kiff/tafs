@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what}・{why}。{zone}までに回答してください。承認するまで何も送信されません。",
   "alert.answered": "tafが誰かに回答しました",
   "alert.approve_once": "1回だけ承認…",
+  "alert.blocked.body": "この{device}ではもう確認されないため、設定でtafsの通知がオフになっています。承認や回答が届くよう、そこで通知をオンにしてください。",
+  "alert.blocked.body_android": "Androidはもう確認しないため、スマートフォンの設定でtafsの通知がオフになっています。承認や回答がこのスマートフォンとウォッチに届くよう、そこで通知をオンにしてください。ウォッチはどちらの場合も更新を受け取ります。",
+  "alert.blocked.body_watch": "iPhoneではもう確認されないため、設定でtafsの通知がオフになっています。承認や回答がこのiPhoneとウォッチに届くよう、そこで通知をオンにしてください。ウォッチはどちらの場合も更新を受け取ります。",
+  "alert.blocked.title": "tafsの通知をオンにする",
   "alert.by_email": "メールで",
   "alert.example": "例",
   "alert.foot.cant_answer_holds": "通知は、保留中の呼び出しに回答できる人に届きます。このアカウントでのあなたの役割では回答できません。",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "このスマートフォンではまだ通知がオンになっていません。{why}",
   "alert.not_refused": "拒否されていません",
   "alert.not_sent": "返信は送信されませんでした",
+  "alert.now_on": "通知はオンです。",
   "alert.on_this_device": "この{device}の通知",
+  "alert.open_notification_settings": "通知設定を開く",
+  "alert.open_settings": "設定を開く",
   "alert.open_tafs_answer_kiff_did": "tafsを開いて回答してください：KIFFは、あなたが見たバージョンを伝えませんでした。",
   "alert.open_tafs_answer_phone_can": "tafsを開いて回答してください：このスマートフォンは通知から署名できません。",
   "alert.prompt": "tafがあなたを必要としたときに通知を受け取る",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "利用不可",
   "alert.status.off": "オフ",
   "alert.status.on": "オン",
+  "alert.still_off": "通知はまだオフです。",
   "alert.still_on_after_sign_out.body": "tafsは通知をオフにできませんでした（{why}）。もう一度試すか、このままサインアウトして、設定でtafsの通知をオフにしてください。",
   "alert.still_on_after_sign_out.title": "この{device}には、まだこのアカウントの通知が届く可能性があります",
   "alert.taf_needs_you": "{taf}があなたを必要としています",
@@ -42,6 +50,8 @@
     "other": "taf {count}個 ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafsは拒否するためにKIFFに接続できませんでした。tafsを開いて回答してください。",
+  "alert.watch_first.body": "承認や回答をこのスマートフォンとウォッチで通知として受け取るには、tafsの通知をオンにしてください。オンにしなくても、ウォッチは更新を受け取り続けます。",
+  "alert.watch_first.title": "ウォッチがtafsを使っています",
   "alert.what_alerts": "通知する内容",
   "alert.with_sound": "音あり"
 }

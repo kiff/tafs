@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Antwoord vóór %3$s. Er wordt niets verzonden tot je goedkeurt.</string>
     <string name="alert_answered">Een taf heeft iemand geantwoord</string>
     <string name="alert_approve_once">Eenmalig goedkeuren…</string>
+    <string name="alert_blocked_body">Deze %1$s vraagt het niet meer, dus meldingen voor tafs staan uit in Instellingen. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken.</string>
+    <string name="alert_blocked_body_android">Android vraagt het niet meer, dus meldingen voor tafs staan uit in de instellingen van je telefoon. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken, op deze telefoon en op je horloge. Je horloge krijgt zijn updates hoe dan ook.</string>
+    <string name="alert_blocked_body_watch">Je iPhone vraagt het niet meer, dus meldingen voor tafs staan uit in Instellingen. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken, op deze iPhone en op je horloge. Je horloge krijgt zijn updates hoe dan ook.</string>
+    <string name="alert_blocked_title">Meldingen voor tafs aanzetten</string>
     <string name="alert_by_email">Via e-mail</string>
     <string name="alert_example">Voorbeeld</string>
     <string name="alert_foot_cant_answer_holds">Meldingen gaan naar de mensen die vastgehouden aanroepen mogen beantwoorden. Jouw rol in dit account mag dat niet.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Meldingen staan nog niet aan voor deze telefoon. %1$s</string>
     <string name="alert_not_refused">Niet geweigerd</string>
     <string name="alert_not_sent">Een antwoord is niet verzonden</string>
+    <string name="alert_now_on">Meldingen staan aan.</string>
     <string name="alert_on_this_device">Meldingen op deze %1$s</string>
+    <string name="alert_open_notification_settings">Meldingsinstellingen openen</string>
+    <string name="alert_open_settings">Instellingen openen</string>
     <string name="alert_open_tafs_answer_kiff_did">Open tafs om te antwoorden: KIFF gaf niet aan welke versie je hebt gezien.</string>
     <string name="alert_open_tafs_answer_phone_can">Open tafs om te antwoorden: deze telefoon kan het niet vanuit de melding ondertekenen.</string>
     <string name="alert_prompt">Krijg een melding als een taf op jou wacht</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Niet beschikbaar</string>
     <string name="alert_status_off">Uit</string>
     <string name="alert_status_on">Aan</string>
+    <string name="alert_still_off">Meldingen staan nog uit.</string>
     <string name="alert_still_on_after_sign_out_body">tafs kon ze niet uitzetten (%1$s). Probeer het opnieuw, of log toch uit en zet meldingen voor tafs uit in Instellingen.</string>
     <string name="alert_still_on_after_sign_out_title">Deze %1$s krijgt misschien nog meldingen van dit account</string>
     <string name="alert_taf_needs_you">%1$s wacht op jou</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs kon KIFF niet bereiken om te weigeren. Open tafs om te antwoorden.</string>
+    <string name="alert_watch_first_body">Zet meldingen voor tafs aan om goedkeuringen en antwoorden als melding te zien, op deze telefoon en op je horloge. Je horloge blijft zijn updates krijgen, ook als je dat niet doet.</string>
+    <string name="alert_watch_first_title">Je horloge gebruikt tafs</string>
     <string name="alert_what_alerts">Waarvoor je een melding krijgt</string>
     <string name="alert_with_sound">Met geluid</string>
     <string name="app_name">tafs</string>

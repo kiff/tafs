@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Përgjigjuni deri më: %3$s. Asgjë nuk dërgohet derisa të miratoni.</string>
     <string name="alert_answered">Një taf iu përgjigj dikujt</string>
     <string name="alert_approve_once">Miratoni një herë…</string>
+    <string name="alert_blocked_body">Kjo pajisje (%1$s) nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara te Cilësimet. Aktivizojini atje që miratimet dhe përgjigjet t\'ju arrijnë.</string>
+    <string name="alert_blocked_body_android">Android nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara në cilësimet e telefonit. Aktivizojini atje që miratimet dhe përgjigjet t\'ju arrijnë, në këtë telefon dhe në orën tuaj. Ora i merr përditësimet e saj gjithsesi.</string>
+    <string name="alert_blocked_body_watch">iPhone-i juaj nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara te Cilësimet. Aktivizojini atje që miratimet dhe përgjigjet t\'ju arrijnë, në këtë iPhone dhe në orën tuaj. Ora i merr përditësimet e saj gjithsesi.</string>
+    <string name="alert_blocked_title">Aktivizoni njoftimet për tafs</string>
     <string name="alert_by_email">Me email</string>
     <string name="alert_example">Shembull</string>
     <string name="alert_foot_cant_answer_holds">Njoftimet shkojnë te njerëzit që mund t\'u përgjigjen thirrjeve të mbajtura. Roli juaj në këtë llogari nuk mundet.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Njoftimet ende nuk janë aktive për këtë telefon. %1$s</string>
     <string name="alert_not_refused">Nuk u refuzua</string>
     <string name="alert_not_sent">Një përgjigje nuk u dërgua</string>
+    <string name="alert_now_on">Njoftimet janë aktive.</string>
     <string name="alert_on_this_device">Njoftimet në këtë pajisje (%1$s)</string>
+    <string name="alert_open_notification_settings">Hap cilësimet e njoftimeve</string>
+    <string name="alert_open_settings">Hap Cilësimet</string>
     <string name="alert_open_tafs_answer_kiff_did">Hapni tafs për t\'u përgjigjur: KIFF nuk tha cilin version e keni parë.</string>
     <string name="alert_open_tafs_answer_phone_can">Hapni tafs për t\'u përgjigjur: ky telefon nuk mund ta nënshkruajë nga njoftimi.</string>
     <string name="alert_prompt">Merrni një njoftim kur një taf ka nevojë për ju</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nuk ofrohet</string>
     <string name="alert_status_off">Joaktiv</string>
     <string name="alert_status_on">Aktiv</string>
+    <string name="alert_still_off">Njoftimet janë ende të çaktivizuara.</string>
     <string name="alert_still_on_after_sign_out_body">tafs nuk arriti t\'i çaktivizojë (%1$s). Provoni sërish, ose dilni gjithsesi dhe çaktivizoni njoftimet për tafs te Cilësimet.</string>
     <string name="alert_still_on_after_sign_out_title">Kjo pajisje (%1$s) mund të vazhdojë të marrë njoftimet e kësaj llogarie</string>
     <string name="alert_taf_needs_you">%1$s ka nevojë për ju</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs nuk arriti te KIFF për ta refuzuar. Hapni tafs për t\'u përgjigjur.</string>
+    <string name="alert_watch_first_body">Për të parë miratimet dhe përgjigjet si njoftime, në këtë telefon dhe në orën tuaj, aktivizoni njoftimet për tafs. Ora do të vazhdojë t\'i marrë përditësimet edhe nëse nuk e bëni.</string>
+    <string name="alert_watch_first_title">Ora juaj po përdor tafs</string>
     <string name="alert_what_alerts">Çfarë ju njofton</string>
     <string name="alert_with_sound">Me zë</string>
     <string name="app_name">tafs</string>

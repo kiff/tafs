@@ -21,7 +21,9 @@ enum Words {
         static var approveOnce: String { Words.line("alert.approve_once") }
         enum Blocked {
             /// Your {device} no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you.
-            static func body(device: String) -> String { Words.line("alert.blocked.body", device) }
+            static func body(device: String) -> String { Words.line("alert.blocked.body", device, Words.demonstrative(device, capital: true)) }
+            /// Android no longer asks, so alerts for tafs are off in your phone's settings. Turn them on there so approvals and answers reach you, on this phone and on your watch. Your watch gets its updates either way.
+            static var bodyAndroid: String { Words.line("alert.blocked.body_android") }
             /// Your iPhone no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you, on this iPhone and on your watch. Your watch gets its updates either way.
             static var bodyWatch: String { Words.line("alert.blocked.body_watch") }
             /// Turn on alerts for tafs
@@ -63,6 +65,8 @@ enum Words {
         static var nowOn: String { Words.line("alert.now_on") }
         /// Alerts on this {device}
         static func onThisDevice(device: String) -> String { Words.line("alert.on_this_device", device, Words.demonstrative(device)) }
+        /// Open notification settings
+        static var openNotificationSettings: String { Words.line("alert.open_notification_settings") }
         /// Open Settings
         static var openSettings: String { Words.line("alert.open_settings") }
         /// Open tafs to answer it: KIFF didn't say which version of it you saw.
@@ -108,7 +112,7 @@ enum Words {
         /// tafs couldn't reach KIFF to refuse it. Open tafs to answer it.
         static var tafsCouldNotReachKiff: String { Words.line("alert.tafs_could_not_reach_kiff") }
         enum WatchFirst {
-            /// To see approvals and answers as alerts, on this iPhone and on your watch, turn on alerts for tafs. Your watch keeps getting its updates even if you don't.
+            /// To see approvals and answers as alerts, on this phone and on your watch, turn on alerts for tafs. Your watch keeps getting its updates even if you don't.
             static var body: String { Words.line("alert.watch_first.body") }
             /// Your watch is using tafs
             static var title: String { Words.line("alert.watch_first.title") }

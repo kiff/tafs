@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Rispondi entro le %3$s. Non viene inviato nulla finché non approvi.</string>
     <string name="alert_answered">Un taf ha risposto a qualcuno</string>
     <string name="alert_approve_once">Approva una volta…</string>
+    <string name="alert_blocked_body">Questo %1$s non lo chiede più, quindi gli avvisi di tafs sono disattivati in Impostazioni. Attivali lì perché approvazioni e risposte ti raggiungano.</string>
+    <string name="alert_blocked_body_android">Android non lo chiede più, quindi gli avvisi di tafs sono disattivati nelle impostazioni del telefono. Attivali lì perché approvazioni e risposte ti raggiungano, su questo telefono e sul tuo orologio. L\'orologio riceve comunque i suoi aggiornamenti.</string>
+    <string name="alert_blocked_body_watch">Il tuo iPhone non lo chiede più, quindi gli avvisi di tafs sono disattivati in Impostazioni. Attivali lì perché approvazioni e risposte ti raggiungano, su questo iPhone e sul tuo orologio. L\'orologio riceve comunque i suoi aggiornamenti.</string>
+    <string name="alert_blocked_title">Attiva gli avvisi di tafs</string>
     <string name="alert_by_email">Via email</string>
     <string name="alert_example">Esempio</string>
     <string name="alert_foot_cant_answer_holds">Gli avvisi vanno alle persone che possono rispondere alle chiamate trattenute. Il tuo ruolo in questo account non può.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Gli avvisi non sono ancora attivi su questo telefono. %1$s</string>
     <string name="alert_not_refused">Non rifiutata</string>
     <string name="alert_not_sent">Una risposta non è stata inviata</string>
+    <string name="alert_now_on">Gli avvisi sono attivi.</string>
     <string name="alert_on_this_device">Avvisi su questo %1$s</string>
+    <string name="alert_open_notification_settings">Apri le impostazioni delle notifiche</string>
+    <string name="alert_open_settings">Apri Impostazioni</string>
     <string name="alert_open_tafs_answer_kiff_did">Apri tafs per rispondere: KIFF non ha indicato quale versione hai visto.</string>
     <string name="alert_open_tafs_answer_phone_can">Apri tafs per rispondere: questo telefono non può firmarla dalla notifica.</string>
     <string name="alert_prompt">Ricevi un avviso quando un taf ti aspetta</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Non disponibile</string>
     <string name="alert_status_off">Disattivo</string>
     <string name="alert_status_on">Attivo</string>
+    <string name="alert_still_off">Gli avvisi sono ancora disattivati.</string>
     <string name="alert_still_on_after_sign_out_body">tafs non è riuscito a disattivarli (%1$s). Riprova, oppure esci comunque e disattiva le notifiche per tafs in Impostazioni.</string>
     <string name="alert_still_on_after_sign_out_title">Questo %1$s potrebbe ancora ricevere gli avvisi di questo account</string>
     <string name="alert_taf_needs_you">%1$s ti aspetta</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs non è riuscita a raggiungere KIFF per rifiutarla. Apri tafs per rispondere.</string>
+    <string name="alert_watch_first_body">Per vedere approvazioni e risposte come avvisi, su questo telefono e sull\'orologio, attiva gli avvisi di tafs. L\'orologio continua a ricevere i suoi aggiornamenti anche se non lo fai.</string>
+    <string name="alert_watch_first_title">Il tuo orologio usa tafs</string>
     <string name="alert_what_alerts">Cosa ti avvisa</string>
     <string name="alert_with_sound">Con suono</string>
     <string name="app_name">tafs</string>

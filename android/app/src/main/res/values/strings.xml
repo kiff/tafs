@@ -10,6 +10,7 @@
     <string name="alert_answered">A taf answered someone</string>
     <string name="alert_approve_once">Approve once…</string>
     <string name="alert_blocked_body">Your %1$s no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you.</string>
+    <string name="alert_blocked_body_android">Android no longer asks, so alerts for tafs are off in your phone\'s settings. Turn them on there so approvals and answers reach you, on this phone and on your watch. Your watch gets its updates either way.</string>
     <string name="alert_blocked_body_watch">Your iPhone no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you, on this iPhone and on your watch. Your watch gets its updates either way.</string>
     <string name="alert_blocked_title">Turn on alerts for tafs</string>
     <string name="alert_by_email">By email</string>
@@ -29,6 +30,7 @@
     <string name="alert_not_sent">A reply wasn\'t sent</string>
     <string name="alert_now_on">Alerts are on.</string>
     <string name="alert_on_this_device">Alerts on this %1$s</string>
+    <string name="alert_open_notification_settings">Open notification settings</string>
     <string name="alert_open_settings">Open Settings</string>
     <string name="alert_open_tafs_answer_kiff_did">Open tafs to answer it: KIFF didn\'t say which version of it you saw.</string>
     <string name="alert_open_tafs_answer_phone_can">Open tafs to answer it: this phone can\'t sign it from the notification.</string>
@@ -52,7 +54,7 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs couldn\'t reach KIFF to refuse it. Open tafs to answer it.</string>
-    <string name="alert_watch_first_body">To see approvals and answers as alerts, on this iPhone and on your watch, turn on alerts for tafs. Your watch keeps getting its updates even if you don\'t.</string>
+    <string name="alert_watch_first_body">To see approvals and answers as alerts, on this phone and on your watch, turn on alerts for tafs. Your watch keeps getting its updates even if you don\'t.</string>
     <string name="alert_watch_first_title">Your watch is using tafs</string>
     <string name="alert_what_alerts">What alerts you</string>
     <string name="alert_with_sound">With sound</string>

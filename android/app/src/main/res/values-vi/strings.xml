@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Hãy trả lời trước %3$s. Không có gì được gửi cho đến khi bạn phê duyệt.</string>
     <string name="alert_answered">Một taf đã trả lời ai đó</string>
     <string name="alert_approve_once">Phê duyệt một lần…</string>
+    <string name="alert_blocked_body">%1$s này không hỏi nữa, nên cảnh báo cho tafs đang tắt trong Cài đặt. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn.</string>
+    <string name="alert_blocked_body_android">Android không hỏi nữa, nên cảnh báo cho tafs đang tắt trong cài đặt điện thoại của bạn. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn, trên điện thoại này và trên đồng hồ. Đồng hồ của bạn vẫn nhận cập nhật dù thế nào.</string>
+    <string name="alert_blocked_body_watch">iPhone của bạn không hỏi nữa, nên cảnh báo cho tafs đang tắt trong Cài đặt. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn, trên iPhone này và trên đồng hồ. Đồng hồ của bạn vẫn nhận cập nhật dù thế nào.</string>
+    <string name="alert_blocked_title">Bật cảnh báo cho tafs</string>
     <string name="alert_by_email">Qua email</string>
     <string name="alert_example">Ví dụ</string>
     <string name="alert_foot_cant_answer_holds">Thông báo được gửi tới những người có thể trả lời các yêu cầu đang giữ. Vai trò của bạn trong tài khoản này thì không.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Thông báo chưa bật cho điện thoại này. %1$s</string>
     <string name="alert_not_refused">Chưa từ chối</string>
     <string name="alert_not_sent">Một phản hồi chưa được gửi</string>
+    <string name="alert_now_on">Cảnh báo đã bật.</string>
     <string name="alert_on_this_device">Thông báo trên %1$s này</string>
+    <string name="alert_open_notification_settings">Mở cài đặt thông báo</string>
+    <string name="alert_open_settings">Mở Cài đặt</string>
     <string name="alert_open_tafs_answer_kiff_did">Hãy mở tafs để trả lời: KIFF không cho biết bạn đã thấy phiên bản nào của nó.</string>
     <string name="alert_open_tafs_answer_phone_can">Hãy mở tafs để trả lời: điện thoại này không thể ký từ thông báo.</string>
     <string name="alert_prompt">Nhận thông báo khi một taf cần bạn</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Không khả dụng</string>
     <string name="alert_status_off">Tắt</string>
     <string name="alert_status_on">Bật</string>
+    <string name="alert_still_off">Cảnh báo vẫn đang tắt.</string>
     <string name="alert_still_on_after_sign_out_body">tafs không tắt được chúng (%1$s). Hãy thử lại, hoặc vẫn đăng xuất rồi tắt thông báo cho tafs trong Cài đặt.</string>
     <string name="alert_still_on_after_sign_out_title">%1$s này có thể vẫn nhận cảnh báo của tài khoản này</string>
     <string name="alert_taf_needs_you">%1$s cần bạn</string>
@@ -45,6 +53,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs không kết nối được KIFF để từ chối. Hãy mở tafs để trả lời.</string>
+    <string name="alert_watch_first_body">Để xem phê duyệt và câu trả lời dưới dạng cảnh báo, trên điện thoại này và trên đồng hồ, hãy bật cảnh báo cho tafs. Đồng hồ của bạn vẫn tiếp tục nhận cập nhật kể cả khi bạn không bật.</string>
+    <string name="alert_watch_first_title">Đồng hồ của bạn đang dùng tafs</string>
     <string name="alert_what_alerts">Điều gì báo cho bạn</string>
     <string name="alert_with_sound">Có âm thanh</string>
     <string name="app_name">tafs</string>

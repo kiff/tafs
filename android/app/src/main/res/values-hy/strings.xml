@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Պատասխանեք մինչև՝ %3$s. Ոչինչ չի ուղարկվի, մինչև չհաստատեք։</string>
     <string name="alert_answered">Taf-ը ինչ-որ մեկին պատասխանեց</string>
     <string name="alert_approve_once">Հաստատեք մեկ անգամ…</string>
+    <string name="alert_blocked_body">Այս սարքը (%1$s) այլևս չի հարցնում, ուստի tafs-ի ծանուցումներն անջատված են Կարգավորումներում։ Միացրեք դրանք այնտեղ, որպեսզի հաստատումներն ու պատասխանները հասնեն ձեզ։</string>
+    <string name="alert_blocked_body_android">Android-ն այլևս չի հարցնում, ուստի tafs-ի ծանուցումներն անջատված են ձեր հեռախոսի կարգավորումներում։ Միացրեք դրանք այնտեղ, որպեսզի հաստատումներն ու պատասխանները հասնեն ձեզ՝ այս հեռախոսին և ձեր ժամացույցին։ Ձեր ժամացույցն ամեն դեպքում ստանում է իր թարմացումները։</string>
+    <string name="alert_blocked_body_watch">Ձեր iPhone-ն այլևս չի հարցնում, ուստի tafs-ի ծանուցումներն անջատված են Կարգավորումներում։ Միացրեք դրանք այնտեղ, որպեսզի հաստատումներն ու պատասխանները հասնեն ձեզ՝ այս iPhone-ին և ձեր ժամացույցին։ Ձեր ժամացույցն ամեն դեպքում ստանում է իր թարմացումները։</string>
+    <string name="alert_blocked_title">Միացրեք tafs-ի ծանուցումները</string>
     <string name="alert_by_email">Էլ. փոստով</string>
     <string name="alert_example">Օրինակ</string>
     <string name="alert_foot_cant_answer_holds">Ծանուցումները գնում են նրանց, ովքեր կարող են պատասխանել պահված զանգերին։ Այս հաշվում ձեր դերը չի կարող։</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Ծանուցումները այս հեռախոսի համար դեռ միացված չեն։ %1$s</string>
     <string name="alert_not_refused">Չմերժվեց</string>
     <string name="alert_not_sent">Պատասխանը չուղարկվեց</string>
+    <string name="alert_now_on">Ծանուցումները միացված են։</string>
     <string name="alert_on_this_device">Ծանուցումներ այս սարքում (%1$s)</string>
+    <string name="alert_open_notification_settings">Բացել ծանուցումների կարգավորումները</string>
+    <string name="alert_open_settings">Բացել Կարգավորումները</string>
     <string name="alert_open_tafs_answer_kiff_did">Բացեք tafs-ը՝ պատասխանելու համար․ KIFF-ը չասաց, թե որ տարբերակը տեսաք։</string>
     <string name="alert_open_tafs_answer_phone_can">Բացեք tafs-ը՝ պատասխանելու համար․ այս հեռախոսը չի կարող ստորագրել ծանուցումից։</string>
     <string name="alert_prompt">Ստացեք ծանուցում, երբ taf-ին ձեր օգնությունն է պետք</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Հասանելի չէ</string>
     <string name="alert_status_off">Անջատված է</string>
     <string name="alert_status_on">Միացված է</string>
+    <string name="alert_still_off">Ծանուցումները դեռ անջատված են։</string>
     <string name="alert_still_on_after_sign_out_body">tafs-ը չկարողացավ անջատել դրանք (%1$s). Նորից փորձեք կամ, միևնույն է, դուրս եկեք և անջատեք tafs-ի ծանուցումները Կարգավորումներում։</string>
     <string name="alert_still_on_after_sign_out_title">Այս սարքը (%1$s) կարող է դեռ ստանալ այս հաշվի ծանուցումները</string>
     <string name="alert_taf_needs_you">%1$s-ին ձեր օգնությունն է պետք</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs-ը չկարողացավ կապվել KIFF-ի հետ՝ մերժելու համար։ Բացեք tafs-ը՝ պատասխանելու համար։</string>
+    <string name="alert_watch_first_body">Հաստատումներն ու պատասխանները ծանուցումների տեսքով այս հեռախոսում և ձեր ժամացույցում տեսնելու համար միացրեք tafs-ի ծանուցումները։ Ձեր ժամացույցը կշարունակի ստանալ իր թարմացումները, նույնիսկ եթե չմիացնեք։</string>
+    <string name="alert_watch_first_title">Ձեր ժամացույցն օգտագործում է tafs</string>
     <string name="alert_what_alerts">Ինչը ձեզ ծանուցում է</string>
     <string name="alert_with_sound">Ձայնով</string>
     <string name="app_name">tafs</string>

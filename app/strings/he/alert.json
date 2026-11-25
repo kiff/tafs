@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. יש להשיב עד {zone}. שום דבר לא נשלח עד שתאשר.",
   "alert.answered": "taf השיב למישהו",
   "alert.approve_once": "אישור חד-פעמי…",
+  "alert.blocked.body": "ההתקן הזה ({device}) כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך.",
+  "alert.blocked.body_android": "Android כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות הטלפון. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך, בטלפון הזה ובשעון. השעון מקבל את העדכונים שלו בכל מקרה.",
+  "alert.blocked.body_watch": "ה-iPhone שלך כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך, ב-iPhone הזה ובשעון. השעון מקבל את העדכונים שלו בכל מקרה.",
+  "alert.blocked.title": "הפעלת התראות של tafs",
   "alert.by_email": "בדוא״ל",
   "alert.example": "דוגמה",
   "alert.foot.cant_answer_holds": "ההתראות מגיעות לאנשים שיכולים להשיב על קריאות מוחזקות. התפקיד שלך בחשבון הזה לא יכול.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "ההתראות עדיין כבויות בטלפון הזה. {why}",
   "alert.not_refused": "לא נדחה",
   "alert.not_sent": "תשובה לא נשלחה",
+  "alert.now_on": "ההתראות מופעלות.",
   "alert.on_this_device": "התראות בהתקן הזה ({device})",
+  "alert.open_notification_settings": "פתיחת הגדרות ההתראות",
+  "alert.open_settings": "פתיחת ההגדרות",
   "alert.open_tafs_answer_kiff_did": "יש לפתוח את tafs כדי להשיב: KIFF לא אמר איזו גרסה שלו ראית.",
   "alert.open_tafs_answer_phone_can": "יש לפתוח את tafs כדי להשיב: הטלפון הזה לא יכול לחתום על זה מתוך ההתראה.",
   "alert.prompt": "קבלת התראה כש-taf זקוק לך",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "לא זמין",
   "alert.status.off": "כבוי",
   "alert.status.on": "פעיל",
+  "alert.still_off": "ההתראות עדיין כבויות.",
   "alert.still_on_after_sign_out.body": "tafs לא הצליח לכבות אותן ({why}). יש לנסות שוב, או לצאת בכל זאת ולכבות את ההתראות של tafs בהגדרות.",
   "alert.still_on_after_sign_out.title": "ייתכן שההתקן הזה ({device}) עדיין יקבל את ההתראות של החשבון הזה",
   "alert.taf_needs_you": "{taf} זקוק לך",
@@ -44,6 +52,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs לא הצליח להגיע ל-KIFF כדי לדחות. יש לפתוח את tafs כדי להשיב.",
+  "alert.watch_first.body": "כדי לראות אישורים ותשובות כהתראות, בטלפון הזה ובשעון, יש להפעיל את ההתראות של tafs. השעון ימשיך לקבל את העדכונים שלו גם בלי זה.",
+  "alert.watch_first.title": "השעון שלך משתמש ב-tafs",
   "alert.what_alerts": "מה מתריע",
   "alert.with_sound": "עם צליל"
 }

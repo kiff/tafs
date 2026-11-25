@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Vasta hiljemalt {zone}. Midagi ei saadeta enne, kui kinnitad.",
   "alert.answered": "Taf vastas kellelegi",
   "alert.approve_once": "Kinnita üks kord…",
+  "alert.blocked.body": "See seade ({device}) enam ei küsi, seega on tafsi teavitused seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni.",
+  "alert.blocked.body_android": "Android enam ei küsi, seega on tafsi teavitused telefoni seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni, selles telefonis ja kellas. Kell saab oma uuendused igal juhul.",
+  "alert.blocked.body_watch": "Sinu iPhone enam ei küsi, seega on tafsi teavitused seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni, selles iPhone'is ja kellas. Kell saab oma uuendused igal juhul.",
+  "alert.blocked.title": "Lülita tafsi teavitused sisse",
   "alert.by_email": "E-posti teel",
   "alert.example": "Näide",
   "alert.foot.cant_answer_holds": "Teavitused lähevad inimestele, kes tohivad kinni peetud päringutele vastata. Sinu roll sellel kontol ei tohi.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Teavitused pole selles telefonis veel sees. {why}",
   "alert.not_refused": "Ei keeldutud",
   "alert.not_sent": "Vastust ei saadetud",
+  "alert.now_on": "Teavitused on sees.",
   "alert.on_this_device": "Teavitused selles seadmes ({device})",
+  "alert.open_notification_settings": "Ava teavituste seaded",
+  "alert.open_settings": "Ava Seaded",
   "alert.open_tafs_answer_kiff_did": "Vastamiseks ava tafs: KIFF ei öelnud, millist selle versiooni sa nägid.",
   "alert.open_tafs_answer_phone_can": "Vastamiseks ava tafs: see telefon ei saa seda teavitusest allkirjastada.",
   "alert.prompt": "Saa teavitus, kui taf vajab sind",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Pole saadaval",
   "alert.status.off": "Väljas",
   "alert.status.on": "Sees",
+  "alert.still_off": "Teavitused on endiselt väljas.",
   "alert.still_on_after_sign_out.body": "tafs ei saanud neid välja lülitada ({why}). Proovi uuesti või logi siiski välja ja lülita seadetes tafsi teavitused välja.",
   "alert.still_on_after_sign_out.title": "See {device} võib endiselt saada selle konto teavitusi",
   "alert.taf_needs_you": "{taf} vajab sind",
@@ -43,6 +51,8 @@
     "other": "{count} tafi ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs ei jõudnud keeldumiseks KIFFini. Vastamiseks ava tafs.",
+  "alert.watch_first.body": "Et näha kinnitusi ja vastuseid teavitustena selles telefonis ja kellas, lülita tafsi teavitused sisse. Kell saab oma uuendusi ka siis, kui sa seda ei tee.",
+  "alert.watch_first.title": "Sinu kell kasutab tafsi",
   "alert.what_alerts": "Mis sind teavitab",
   "alert.with_sound": "Heliga"
 }

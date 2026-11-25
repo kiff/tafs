@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. ຕອບກ່ອນ %3$s. ບໍ່ມີຫຍັງຖືກສົ່ງຈົນກວ່າທ່ານຈະອະນຸມັດ.</string>
     <string name="alert_answered">taf ຕອບຄົນໜຶ່ງ</string>
     <string name="alert_approve_once">ອະນຸມັດຄັ້ງດຽວ…</string>
+    <string name="alert_blocked_body">%1$s ນີ້ບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ.</string>
+    <string name="alert_blocked_body_android">Android ບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າໂທລະສັບຂອງທ່ານ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ, ໃນໂທລະສັບນີ້ ແລະ ໃນໂມງຂອງທ່ານ. ໂມງຂອງທ່ານຍັງໄດ້ຮັບການອັບເດດຢູ່ດີ.</string>
+    <string name="alert_blocked_body_watch">iPhone ຂອງທ່ານບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ, ໃນ iPhone ນີ້ ແລະ ໃນໂມງຂອງທ່ານ. ໂມງຂອງທ່ານຍັງໄດ້ຮັບການອັບເດດຢູ່ດີ.</string>
+    <string name="alert_blocked_title">ເປີດການແຈ້ງເຕືອນສຳລັບ tafs</string>
     <string name="alert_by_email">ທາງອີເມວ</string>
     <string name="alert_example">ຕົວຢ່າງ</string>
     <string name="alert_foot_cant_answer_holds">ການແຈ້ງເຕືອນໄປຫາຄົນທີ່ຕອບການໂທທີ່ຖືກພັກໄວ້ໄດ້. ບົດບາດຂອງທ່ານໃນບັນຊີນີ້ບໍ່ໄດ້.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">ການແຈ້ງເຕືອນຍັງບໍ່ໄດ້ເປີດສຳລັບໂທລະສັບນີ້. %1$s</string>
     <string name="alert_not_refused">ບໍ່ໄດ້ປະຕິເສດ</string>
     <string name="alert_not_sent">ຄຳຕອບບໍ່ໄດ້ຖືກສົ່ງ</string>
+    <string name="alert_now_on">ການແຈ້ງເຕືອນເປີດຢູ່.</string>
     <string name="alert_on_this_device">ການແຈ້ງເຕືອນໃນ %1$s ນີ້</string>
+    <string name="alert_open_notification_settings">ເປີດການຕັ້ງຄ່າການແຈ້ງເຕືອນ</string>
+    <string name="alert_open_settings">ເປີດການຕັ້ງຄ່າ</string>
     <string name="alert_open_tafs_answer_kiff_did">ເປີດ tafs ເພື່ອຕອບ: KIFF ບໍ່ໄດ້ບອກວ່າທ່ານເຫັນເວີຊັນໃດຂອງມັນ.</string>
     <string name="alert_open_tafs_answer_phone_can">ເປີດ tafs ເພື່ອຕອບ: ໂທລະສັບນີ້ລົງລາຍເຊັນຈາກການແຈ້ງເຕືອນບໍ່ໄດ້.</string>
     <string name="alert_prompt">ຮັບການແຈ້ງເຕືອນເມື່ອ taf ຕ້ອງການທ່ານ</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">ບໍ່ມີ</string>
     <string name="alert_status_off">ປິດ</string>
     <string name="alert_status_on">ເປີດ</string>
+    <string name="alert_still_off">ການແຈ້ງເຕືອນຍັງປິດຢູ່.</string>
     <string name="alert_still_on_after_sign_out_body">tafs ປິດມັນບໍ່ໄດ້ (%1$s). ລອງໃໝ່ ຫຼື ອອກຈາກລະບົບເລີຍ ແລ້ວປິດການແຈ້ງເຕືອນສຳລັບ tafs ໃນການຕັ້ງຄ່າ.</string>
     <string name="alert_still_on_after_sign_out_title">%1$s ນີ້ອາດຍັງໄດ້ຮັບການແຈ້ງເຕືອນຂອງບັນຊີນີ້</string>
     <string name="alert_taf_needs_you">%1$s ຕ້ອງການທ່ານ</string>
@@ -45,6 +53,8 @@
         <item quantity="other">taf %1$s ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs ຕິດຕໍ່ KIFF ເພື່ອປະຕິເສດບໍ່ໄດ້. ເປີດ tafs ເພື່ອຕອບ.</string>
+    <string name="alert_watch_first_body">ເພື່ອເບິ່ງການອະນຸມັດ ແລະ ຄຳຕອບເປັນການແຈ້ງເຕືອນ, ໃນໂທລະສັບນີ້ ແລະ ໃນໂມງຂອງທ່ານ, ໃຫ້ເປີດການແຈ້ງເຕືອນສຳລັບ tafs. ໂມງຂອງທ່ານຍັງຈະໄດ້ຮັບການອັບເດດ ເຖິງທ່ານບໍ່ເປີດກໍຕາມ.</string>
+    <string name="alert_watch_first_title">ໂມງຂອງທ່ານກຳລັງໃຊ້ tafs</string>
     <string name="alert_what_alerts">ສິ່ງທີ່ແຈ້ງເຕືອນທ່ານ</string>
     <string name="alert_with_sound">ມີສຽງ</string>
     <string name="app_name">tafs</string>
