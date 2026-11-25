@@ -421,10 +421,13 @@ was done.
 - **The runner touches only tabs it opened,** and the one tab of the person's a run started from the panel joins (below). It
   never lists the owner's tabs, and it ignores navigation events from any other tab. A tab a run's page opens joins the run only
   on the run's sites; anything else is closed.
-- **A request off the run's sites never leaves.** As a run's tab opens, before it loads anything, the runner gives
+- **A page or frame off the run's sites never loads in a run's tab.** As a run's tab opens, before it loads anything, the runner gives
   Chrome `declarativeNetRequest` session rules scoped to that tab: block every page and frame request, allow the run's
   sites (and the sensitive sites the phone allowed), and block plain `http`. So a link, a redirect or a form submit to
-  another host is refused by Chrome before the request is sent. A tab the run's page opens gets the same rules. The
+  another host is refused by Chrome before the request is sent. **The fence covers navigations only** (`main_frame` and
+  `sub_frame`): what a page of the run's sites sends by a request of its own (a `fetch`, an XHR, a beacon, an image, a WebSocket),
+  or a frame the person's page already had open before a run joined it, is that site's own, as when the person types there
+  themselves; the extension itself never sends a request elsewhere (`requests.e2e.test.js` pins each case). A tab the run's page opens gets the same rules. The
   rules go when the run ends, when the person closes the tab (`tabs.onRemoved`, whether or not the run still holds it), and all
   of them at unpairing (`unfenceAll`: the rules the runner knows and any session rule left in Chrome, as only the runner adds
   them), so no rule naming a closed tab piles up towards Chrome's cap on session rules (0.2.15). **A fence Chrome won't install
