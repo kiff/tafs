@@ -239,6 +239,10 @@ describe("jobs", () => {
       // try, Lyon: "La lecture s'est arrêtée à environ 32 Ko sur 52 Ko" after one part of the article).
       expect(flat).toContain("when a read says more, read on (the next part, with its offset and that read) until you have what you were asked, and answer from all of it. Never say how you read a page, how much of it you read, its size, or that a read was cut or came in parts.");
       expect(flat).toContain("you may offer, in one short clause, to read on about something it covers");
+      // "This page" is the page the owner sent from Chrome, read where it is (Chrome 0.2.13's try, 25 Nov: Wiki lookup
+      // started from the portal and the Lyon article it had read earlier, with the owner on Grenoble).
+      expect(flat).toContain("When the owner sends a message from Chrome with the page they're on, that page is \"this page\", \"here\" and \"the page\"");
+      expect(flat).toContain("Never search for it or start from the site's home page, and never take an earlier page in the chat for it. If you need more of it, open its exact address once: that reads it where it is, in their tab. Any other page you need opens in a tab of your own, never in theirs.");
       // Never talking about parts never hides what wasn't read: a run stopped mid-page still says so.
       expect(flat).toContain("If you couldn't read on to what you were asked (a read failed or your run was stopped first), the rule above holds: say what you couldn't read.");
       // An item left behind a hold was explained with a limit no read gave (Chargebacks, 20 Nov, 2 runs of 3).

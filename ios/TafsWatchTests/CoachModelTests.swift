@@ -4,6 +4,18 @@ import XCTest
 /// Coach from the wrist (docs/watch-app.md, "Coach"): the words shown, then sent as text.
 @MainActor
 final class CoachModelTests: XCTestCase {
+    // Kept threads are on (`WatchThreads.on`): each test starts and ends with none kept on this simulator, so no Coach or taf
+    // chat opens on what another test said.
+    override func setUp() async throws {
+        try await super.setUp()
+        await MainActor.run { WatchThreads.shared.clear() }
+    }
+
+    override func tearDown() async throws {
+        await MainActor.run { WatchThreads.shared.clear() }
+        try await super.tearDown()
+    }
+
     private let now = Date(timeIntervalSinceReferenceDate: 813_667_500)
 
     private final class Phone: PhoneAsking {

@@ -284,8 +284,12 @@ refused.
 - **A sensitive site opens only on the paired phone's own allowance** (`sensitive_allowed[].sig`, the phone's
   `tafs-chrome/sensitive/v1` over `{chrome_id, grant, site}`, checked with the paired `phone_key`, `protocol.checkAllowances`).
   planque relays it, and an entry without a valid one is dropped. The phones sign it when the owner approves a grant that
-  names a sensitive site. It answers a refused step's `id` with `bad_step`, and gives an unsigned message no
-signed answer.
+  names a sensitive site.
+- **A step that doesn't verify gets no answer at all** (0.2.14, `Relay.receive`): one `checkStep` refuses (not planque's
+  signature, not for this Chrome, expired or too far ahead, replayed, malformed, no sites) is dropped, not run and not answered,
+  so this extension's key never signs over an `id` and a `nonce` it can't trust; planque's own step timeout covers it. Before
+  0.2.14 such a step carrying a string `id` was answered with a signed `bad_step`. A step that verifies and is then refused (the
+  runner's checks below: a malformed act or offset, a site off the run's, a paused or stopped run) keeps its signed refusal.
 
 **The extension answers** `{type: "result", id, nonce, chrome_id, ok, page, error, sig}`, signed with its key over
 `{id, nonce, chrome_id, ok, page, error}`. The step's own `nonce` and this Chrome's `chrome_id` are inside what's signed, so
@@ -333,7 +337,7 @@ error = {code, detail?}      // detail never carries page text
   any other: it has its own `read_id`, and an act names the latest read. An open and an act read the page
   back at the start. An `offset` that isn't a whole number, 0 or more, is `bad_step` and never reaches the page.
   A taf reads on, window by window, until it has what it was asked, and never tells the person how it reads, how much
-  it read or a page's size (the tafs' shared instructions, `runtime/src/jobs.ts`; `a-browser-taf@6` for the tafs Coach
+  it read or a page's size (the tafs' shared instructions, `runtime/src/jobs.ts`; `a-browser-taf@7` for the tafs Coach
   sets up). At most it offers to read on about something the page covers.
 - **A ref names one element for the life of the document** (`f`, `c`, `l` and a number; `page.js` `bind`). A read never
   renumbers what an earlier read named: an element keeps its ref while it's on the page and still what it was (its print:
@@ -365,7 +369,8 @@ error = {code, detail?}      // detail never carries page text
 
 | Code | When |
 |---|---|
-| `bad_step` | not planque's, not for this Chrome, expired, replayed, or malformed |
+| *(no answer)* | not planque's, not for this Chrome, expired, replayed, or malformed (`checkStep`): dropped unanswered, since 0.2.14 |
+| `bad_step` | a verified step the runner can't take: a malformed act, hand-over or offset, an op it doesn't know, or a run's sites that grow or aren't the phone's |
 | `bad_url` | not `https`, user info in the URL, or not a URL |
 | `address_private` | an IP address (in any form a browser reads), or a local name (`.local`, `.internal`, …) |
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
@@ -469,6 +474,21 @@ was done.
 From 0.2.12 a taf works in the person's own tab, as Claude's Chrome extension does, when the person started the work from the
 side panel (`src/panels.js`, `Runner.frontTab`).
 
+**A taf works on the page you're on, and never navigates it away** (0.2.14). In 0.2.13 a taf asked to "read this page and sum
+it up" didn't know which page that was: its first step opened the site's home, and the person's own article was navigated
+away. Now:
+
+- **The page goes with the message** (`taf_send`, as Coach's `coach_send`: "The taf in the side panel" below), so the taf knows
+  which page "this page" is.
+- **The person's tab joins only to be read where it is** (`Runner.frontTab`): only when the run's first `open` asks for exactly
+  the address it shows (`sameAddress`, both parsed as URLs). A first open of any other address joins nothing: the run opens a
+  tab of its own, as any run does, and the person's tab is left as it is, out of the run.
+- **An open elsewhere never navigates a joined tab** (`Runner.open`, `joinedShowing`): once joined, an `open` of any other
+  address goes to a tab of the run's own (`moreTab`: in the same window and group, fenced before it loads; Chrome follows it as
+  before), which the run works in from then on. An `open` of the address a joined tab shows reads it where it is, even from a tab
+  of the run's own; a `read` while the run is on the joined tab reads it in place. Nothing sends the person's tab to another
+  address: no `tabs.update` with a `url` ever names it (a click the taf makes in the page is an act, checked as any act is).
+
 **A step of another agent run never works in a joined tab** (0.2.13, `Runner.giveBackJoined`): planque keeps a taf's run for its
 next call whatever agent run makes it, so a schedule, the phone or a later message may reach the run that holds the person's tab. A
 step whose `agent_run` isn't the panel run's gives that tab back first, as Stop does (out of the group, unfenced, forgotten, the bar
@@ -482,9 +502,9 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   (a schedule, an event, the phone, the watch, and every step until planque sends the field) never joins: its run opens its own
   tab, as above. The panel says it's open by holding a port named `panel` to the worker, with its window's id; a closed panel's
   marks go with it.
-- **When.** At the run's first `open`. The tab joins the run's group (the taf's group in that window if there is one, else a new
-  one), is fenced before anything else, and the open navigates it, or reads it in place when it already shows that address. A
-  read before any open is `no_page`, as before. The run may open more tabs, always in the same group.
+- **When.** At the run's first `open`, of exactly the address the tab shows (above). The tab joins the run's group (the taf's
+  group in that window if there is one, else a new one), is fenced before anything else, and is read in place, never loaded
+  again. A read before any open is `no_page`, as before. The run may open more tabs, always in the same group.
 - **Which tab, checked by the worker and then the runner at the moment it joins** (`joinFront`, `joinRefusal`): the page consent
   (`pageConsentReady`, the check Coach's send makes) first, before the tab is looked at; then the tab must still be the active tab
   of the panel's window (never another window's, so a tab dragged elsewhere since the send doesn't join), not pinned, not in a
@@ -494,8 +514,9 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   of these failing, the run opens its own tab, as above.
 - **Checked again on every step** (`Runner.joinedNow`): the person may have moved the tab or switched its site off since. A read,
   an act or a hand-over in a joined tab whose page no longer passes is refused with the gate's code (`site_not_listed`,
-  `site_blocked`, `bad_url`) and nothing runs in it. An `open` the person's tab may not show (an allowed sensitive site, a site
-  switched off) goes on in a tab of the run's own, in the same window and group, and the person's tab is left where it is.
+  `site_blocked`, `bad_url`) and nothing runs in it. An `open` goes on in a tab of the run's own, in the same window and group,
+  whenever the person's tab doesn't already show its address or may not show it (an allowed sensitive site, a site switched
+  off), and the person's tab is left where it is.
 - **Fenced as a run's own tab.** The same `declarativeNetRequest` rules, the same `webNavigation` checks (a navigation off the
   run's sites goes to a blank page, a pop-up off them is closed), the same dialog guard, the same read (`mask.js`, `page.js`: no
   field values, passwords or card numbers, one-time codes masked). The person's typing, clicking or scrolling in it pauses the
@@ -510,6 +531,13 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   leaves the group, unless it's the tab in front joining again).
 - **A group worked in again is no consent for its old tabs:** only the tab in front, checked as above, joins the new run; the
   tabs left from earlier runs are the run's no more, and a step can't reach them.
+- **A newer run of a taf ends an older run of it the person paused** (0.2.14, `Runner.handleStep`). A run of a taf started by
+  anything (a schedule, an app event, the phone, the panel) ends, on its first step and before that step runs, any older run of
+  the same taf in this Chrome (the same name and the same grant, never another taf's) that the person had paused: it ends as their
+  Stop would, recorded `by: "newer_run"`, and planque is told it stopped. A tab of the person's it joined goes back to them first
+  (out of the group, unfenced, forgotten, its bar gone, still open); its own tabs stay as a finished run's do. The newer run takes
+  nothing of it: not that tab, not its panel mark, not its tabs. An older run that's working, not paused, is left alone: it may
+  be a call of its own. So the panel never shows one taf paused and working at once, each with its own Resume or Pause.
 
 ## While a taf works on a page
 
@@ -804,11 +832,13 @@ Stop reading pages) and **Unpair this Chrome**; the chat screens hold only the c
 computer's passkey, which this Chrome has neither of.
 
 - **Work starts where you are** (0.2.12, "A taf works where you are" under Runs): the panel holds a `panel` port to the service
-  worker with its window's id while it's open (and connects again if the worker stopped), and each send from it, to Coach or to
+  worker with its window's id while it's open (and connects again if the worker stopped; 0.2.14 reads a failed connect's
+  `chrome.runtime.lastError` there, and a press's message to a worker that isn't up yet is caught, `quietly`, so neither is
+  left as an unchecked error in chrome://extensions), and each send from it, to Coach or to
   a taf, carries the panel's window and the tab in front, so the run tafs cloud starts for that send may work in that tab. The
   panel decides nothing of it: the worker checks the page consent and the runner checks the tab.
-- **Which tafs:** planque's list of this Chrome's live connections, `connections: [{grant, agent, name, sites}]`, comes in
-  the relay's `welcome` and again on each change (`{type: "connections"}`, `readConnections`, at most 50). The panel offers
+- **Which tafs:** planque's list of this Chrome's live connections, `connections: [{grant, agent, name, sites,
+  sites_signed?}]`, comes in the relay's `welcome` and again on each change (`{type: "connections"}`, `readConnections`, at most 50). The panel offers
   each one that is one of the person's tafs (`GET /v1/tafs`, matched by `kiff_agent`, `tafsHere`), once each, with the one
   at work first. With one taf it opens on it, and with several there's a picker.
 - **The list is for display only, never authority.** What a step may do still comes only from the signed step and the
@@ -821,6 +851,24 @@ computer's passkey, which this Chrome has neither of.
   extension routes). It's read on each event: the panel shown, a taf picked, a send, a step seen in a run. Then every 4 s
   while the taf works or for a minute after a send, otherwise backing off from 60 s to 5 minutes, jittered (`idleDelay`),
   and never while the panel is hidden. Coach is read only while it's shown.
+- **A message to a taf carries the page you're on** (0.2.14, `sw.js` `taf_send`, `Coach.sendToTaf`), as a message to Coach
+  does ("Coach reads the page you're on", below): the tab in front of the panel's window, read once on Send through the same
+  `pageForSend` and `readForCoach` (the same page consent, the same gate, the same masked read, only with words, never with
+  files alone), sent as `page: {url, title, text, truncated}` for that one message and never kept by the extension. The answer
+  says `reading` (the host) or `notReading` (why not), as Coach's send does, and the chat draws "Reading: ‹site›" under a
+  message tafs cloud recorded a page for (`reading` on the taf's messages, the same line as Coach's).
+  - **Only on that taf's own sites, as the phone signed them** (`protocol.signedSitesOf`, `sw.js` `tafSites`): the sites of
+    the taf's connections in this Chrome that this extension can check itself, a connection a re-pairing carried (in what the
+    phone signed at pairing) or one planque lists with its grant's `sites_signed` (the phone's `tafs-chrome/sites/v1`
+    signature, the one a run's first step carries), verified here. planque's own `sites` for a connection are never taken; a
+    connection planque lists without the signature lets no page go. A page off those sites is never read (checked before the
+    read and again on the address it came from), the words go alone, the answer says `notReading: "not_taf_site"`, and the
+    chat says "‹site› isn't read: this taf doesn't work on this site" under that message.
+  - **tafs cloud takes a page on a taf's messages under the same checks as Coach's.** Until it does, it answers
+    `400 page_refused` ("only Coach reads the page you have open"), and the words are sent once more on their own, as Coach's
+    are (`Coach.postWithPage`): a refused page never holds the message.
+  - There's no "Send without the page" in a taf's composer yet: its words go alone when the page can't go, and the person
+    stops it everywhere with Stop reading pages.
 - Cards still say to approve on the phone ([chrome-panel.md](chrome-panel.md) has the route that approves in the panel,
   off until its gates are answered).
 
@@ -880,7 +928,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
     (`pageForSend`): without them nothing is injected or read, and the words go alone. **Send without the page** sends the
     words alone at any time; **Stop reading pages**, in Settings, withdraws it, here first, then at tafs cloud. tafs cloud drops a page sent
     without its consent, unread, and the message goes alone. It's apart from the AI consent: nothing else waits on it, no taf
-    and no schedule.
+    and no schedule. **The same consent covers a message to a taf from the panel** (0.2.14, "The taf in the side panel"), so
+    its version is `"2"` from 0.2.14, here and at tafs cloud together: an allow given for `"1"` (Coach only) doesn't count,
+    and everyone is asked again once. The screen's words are reworded for Coach and a taf in their own change.
   - **Only the tab in front, only on Send:** never on a timer, never another tab or window. **Only https;** never Chrome's own
     pages, the Web Store or an incognito tab. **Never a sensitive site** (`sensitive()`, the list a run needs the phone's
     signed allowance for) **or a mail site** (`mailHost()`: Gmail, Outlook (its `outlook.cloud.microsoft` address too), iCloud,
@@ -912,8 +962,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   Tafs cloud has no push for Coach's replies yet (the relay carries steps only), so this is the fallback a push would replace.
 - **It reads and sends, never approves.** A card that waits on the owner (an approval, a sign-in) shows "Something waits
   for your approval on your phone"; KIFF refuses the session every approval anyway.
-- **No page goes with the owner's words.** There is no "Share this page": when Coach or a taf works on a page, its
-  first step there is to read it itself, through planque, as any run's read (masked, fenced, on the connection's sites).
+- **There is no "Share this page".** The page in front goes with a message only as above (with the page consent, on Send,
+  masked); when Coach or a taf works on a page, its run reads it itself, through planque, as any run's read (masked, fenced,
+  on the connection's sites).
 - **Coach can set up a browser taf for the site in front of the owner;** the grant is approved on the phone, as always.
 
 ## Files on a message

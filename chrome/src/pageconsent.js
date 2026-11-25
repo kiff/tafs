@@ -6,7 +6,7 @@
  */
 
 /** The page consent's words' version: tafs cloud's PAGE_CONSENT_VERSION. Raised with the words, so everyone is asked again. */
-export const PAGE_CONSENT_VERSION = "1";
+export const PAGE_CONSENT_VERSION = "2";
 
 /** Whether the allow kept here is this person's, on this pairing's session, for the current words. */
 export function allowedHere(session, allow) {

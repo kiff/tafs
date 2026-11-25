@@ -174,3 +174,27 @@ export async function checkSites(step, pairing) {
   if (!step.sites.every((s) => signed.sites.includes(s))) return false;
   return verify(pairing.phoneKey, LABEL.sites, { chrome_id: pairing.chromeId, grant: step.grant, sites: signed.sites }, signed.sig);
 }
+
+/**
+ * The sites the paired phone signed for [grants] on this Chrome, from what this extension can check itself: a connection a
+ * re-pairing carried (`pairing.carried`, inside what the phone signed at pairing), and a connection planque lists with its
+ * grant's `sites_signed` (the phone's `tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`, the same a run's first step
+ * carries), verified here. planque's own `sites` for a connection are never taken: a list without a valid signature adds nothing.
+ */
+export async function signedSitesOf(grants, connections, pairing) {
+  if (!pairing || !pairing.phoneKey || !Array.isArray(grants)) return [];
+  const out = new Set();
+  for (const grant of grants) {
+    if (typeof grant !== "string" || !grant) continue;
+    const carried = Array.isArray(pairing.carried) ? pairing.carried.find((e) => e && e.grant === grant) : null;
+    if (carried && Array.isArray(carried.sites)) for (const s of carried.sites) out.add(s);
+    for (const c of connections || []) {
+      const signed = c && c.grant === grant ? c.sites_signed : null;
+      if (!signed || !Array.isArray(signed.sites) || typeof signed.sig !== "string") continue;
+      if (await verify(pairing.phoneKey, LABEL.sites, { chrome_id: pairing.chromeId, grant, sites: signed.sites }, signed.sig)) {
+        for (const s of signed.sites) out.add(s);
+      }
+    }
+  }
+  return [...out].filter((s) => typeof s === "string");
+}

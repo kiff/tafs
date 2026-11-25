@@ -79,18 +79,41 @@ export class Coach {
   async tafThread(id) {
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation");
     return {
-      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, ...(typeof m.id === "string" && m.id ? { id: m.id } : {}) })),
+      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, ...(typeof m.id === "string" && m.id ? { id: m.id } : {}), ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}) })),
       working: t.working ? t.working.session : null,
       waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
     };
   }
 
-  /** Sends the owner's words, and the files they attached (ids, at most 5), to a taf's own chat. */
-  async sendToTaf(id, words, clientID, attachments = []) {
+  /**
+   * Sends the owner's words, and the files they attached (ids, at most 5), to a taf's own chat, with the page in front as
+   * Coach's send has it (`page`, read on this send, only on the taf's own signed sites: sw.js), and only with words.
+   */
+  async sendToTaf(id, words, clientID, attachments = [], page = null) {
     const text = String(words || "").trim().slice(0, MAX_TEXT);
     const files = fileIDs(attachments);
     if (!text && !files.length) throw Object.assign(new Error("nothing to send"), { code: "empty" });
-    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", { text, client_message_id: clientID, ...(files.length ? { attachments: files } : {}) });
+    const body = { text, client_message_id: clientID, ...(files.length ? { attachments: files } : {}) };
+    return this.postWithPage("/v1/tafs/" + encodeURIComponent(id) + "/messages", body, text, page);
+  }
+
+  /**
+   * POSTs a message with the page in front, when there is one and words go with it, as data for this turn only: tafs cloud
+   * keeps its host, never its text. A page tafs cloud refuses (`page_refused`, nothing started) never holds the message: the
+   * words go once more on their own, and the answer says `page_refused`.
+   */
+  async postWithPage(path, body, text, page) {
+    if (text && page && typeof page.url === "string" && typeof page.text === "string") {
+      body = { ...body, page: { url: page.url, title: String(page.title || ""), text: page.text, truncated: page.truncated === true } };
+    }
+    try {
+      return await this.call("POST", path, body);
+    } catch (e) {
+      if (!body.page || e.status !== 400 || e.code !== "page_refused") throw e;
+      const { page: _dropped, ...words } = body; // eslint-disable-line no-unused-vars
+      const sent = await this.call("POST", path, words);
+      return { ...sent, page_refused: true };
+    }
   }
 
   /**
@@ -171,22 +194,8 @@ export class Coach {
     if (files.length) body.attachments = files;
     if (newChat) body.new_chat = true;
     else if (session) body.session = session;
-    // The page in front, read on this send (aside.js), as data for this turn only: tafs cloud keeps its host, never its text.
-    // A page goes only with words (tafs cloud's rule): files alone go without it.
-    if (text && page && typeof page.url === "string" && typeof page.text === "string") {
-      body.page = { url: page.url, title: String(page.title || ""), text: page.text, truncated: page.truncated === true };
-    }
-    const path = "/v1/tafs/" + encodeURIComponent(id) + "/messages";
-    try {
-      return await this.call("POST", path, body);
-    } catch (e) {
-      // tafs cloud refused the page (nothing started): the person's words go once more on their own, as a page that can't be
-      // read never holds a message. The answer then names no page.
-      if (!body.page || e.status !== 400 || e.code !== "page_refused") throw e;
-      const { page: _dropped, ...words } = body; // eslint-disable-line no-unused-vars
-      const sent = await this.call("POST", path, words);
-      return { ...sent, page_refused: true };
-    }
+    // The page in front, read on this send (aside.js): a page goes only with words (tafs cloud's rule), files alone without it.
+    return this.postWithPage("/v1/tafs/" + encodeURIComponent(id) + "/messages", body, text, page);
   }
 }
 
