@@ -46,7 +46,7 @@
   "step_stopped": { "message": "შეწყვეტილია" },
   "step_closed": { "message": "დასრულდა" },
   "step_refused": { "message": "არ შესრულებულა ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "არ შესრულებულა: ეს ჩანართი გადაიყვანეთ, ამიტომ ახლა თქვენია" },
+  "step_refused_given_back": { "message": "არ შესრულებულა: ჩანართი taf-ის გარეშე გადავიდა, ამიტომ ახლა თქვენია" },
   "step_refused_page_changed": { "message": "არ შესრულებულა: გვერდი მანამდე შეიცვალა" },
   "step_refused_no_back": { "message": "არ შესრულებულა: დასაბრუნებელი გვერდი არ არის" },
   "step_refused_site_not_listed": { "message": "არ შესრულებულა: ეს საიტი ამ taf-ის საიტებს არ ეკუთვნის" },

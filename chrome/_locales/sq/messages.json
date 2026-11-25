@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Ndalur" },
   "step_closed": { "message": "Përfundoi" },
   "step_refused": { "message": "nuk u bë ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "nuk u bë: e lëvizët këtë skedë, prandaj tani është e juaja" },
+  "step_refused_given_back": { "message": "nuk u bë: skeda lëvizi pa taf-in, prandaj tani është e juaja" },
   "step_refused_page_changed": { "message": "nuk u bë: faqja ndryshoi më parë" },
   "step_refused_no_back": { "message": "nuk u bë: nuk ka faqe ku të kthehet" },
   "step_refused_site_not_listed": { "message": "nuk u bë: ai sajt nuk është nga sajtet e këtij taf-i" },

@@ -46,7 +46,7 @@
   "step_stopped": { "message": "Leállt" },
   "step_closed": { "message": "Kész" },
   "step_refused": { "message": "nem történt meg ($CODE$)", "placeholders": {"code": {"content": "$1"}} },
-  "step_refused_given_back": { "message": "nem történt meg: elmozdítottad ezt a lapot, így most a tiéd" },
+  "step_refused_given_back": { "message": "nem történt meg: a lap a taf nélkül mozdult el, így most a tiéd" },
   "step_refused_page_changed": { "message": "nem történt meg: előtte megváltozott az oldal" },
   "step_refused_no_back": { "message": "nem történt meg: nincs oldal, ahová visszamehetne" },
   "step_refused_site_not_listed": { "message": "nem történt meg: az a webhely nem tartozik ehhez a tafhoz" },

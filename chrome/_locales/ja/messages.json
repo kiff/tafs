@@ -46,7 +46,7 @@
   "step_stopped": { "message": "中止しました" },
   "step_closed": { "message": "完了しました" },
   "step_refused": { "message": "未完了（$CODE$）", "placeholders": { "code": { "content": "$1" } } },
-  "step_refused_given_back": { "message": "未完了：このタブを動かしたため、タブはあなたのものになりました" },
+  "step_refused_given_back": { "message": "未完了：tafを介さずにタブが移動したため、タブはあなたのものになりました" },
   "step_refused_page_changed": { "message": "未完了：その前にページが変わりました" },
   "step_refused_no_back": { "message": "未完了：戻るページがありません" },
   "step_refused_site_not_listed": { "message": "未完了：そのサイトはこのtafのサイトではありません" },
