@@ -175,14 +175,22 @@ const commit = (c, tab, url) => {
   c.listeners.committed({ tabId: tab, frameId: 0, url });
 };
 
+/** A page the run's own act took tab [tab] to: committed while the act waits for it (`stepping`), as Chrome says it then. */
+const runCommit = (r, c, tab, url, run = "run_1") => {
+  const held = r.runs.get(run);
+  held.stepping = tab;
+  commit(c, tab, url);
+  held.stepping = null;
+};
+
 test("back goes to the page before the run's last in its own tab and reads it there; nothing runs in the page before it", async () => {
   const c = fakeChrome();
   const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
-  commit(c, tab, "https://shop.example/");
+  runCommit(r, c, tab, "https://shop.example/");
   // The taf's own click took the tab to a second page.
-  commit(c, tab, "https://shop.example/p2");
+  runCommit(r, c, tab, "https://shop.example/p2");
   const opened = await r.handle(step({ id: "op2", op: "read" }));
   // Chrome's back lands where it should.
   c.tabs.goBack = async (id) => {
@@ -211,8 +219,8 @@ test("in a run's own tab, a back Chrome skips loads the page before the taf's cl
   const tab = [...c.tabsMap.keys()][0];
   assert.equal((await r.handle(step({ id: "op1", op: "act", read_id: first.page.read_id, act: { kind: "back" } }))).error.code, "no_back", "nothing before the run's first page");
   assert.ok(!c.calls.some((x) => x[0] === "tabs.goBack"), "nothing moved");
-  commit(c, tab, "https://shop.example/");
-  commit(c, tab, "https://shop.example/p2");
+  runCommit(r, c, tab, "https://shop.example/");
+  runCommit(r, c, tab, "https://shop.example/p2");
   const read = await r.handle(step({ id: "op2", op: "read" }));
   // Chrome's back goes nowhere: the tab still shows p2.
   const before = c.calls.length;
@@ -224,7 +232,7 @@ test("in a run's own tab, a back Chrome skips loads the page before the taf's cl
   const load = now.findIndex((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "https://shop.example/");
   assert.ok(back >= 0 && load > back, "Chrome's back first, then the page loaded");
   // Its own commit of the page it went back to isn't a new page of the run's: one more back has nothing before it.
-  commit(c, tab, "https://shop.example/");
+  runCommit(r, c, tab, "https://shop.example/");
   assert.equal((await r.handle(step({ id: "op4", op: "act", read_id: out.page.read_id, act: { kind: "back" } }))).error.code, "no_back");
 });
 
@@ -509,16 +517,33 @@ test("a run's steps never overlap: the next waits for the one running", async ()
   c.gate = null;
 });
 
-test("a page Chrome restores from its cache off the run's sites is sent to a blank page and recorded", async () => {
+test("a page off the run's sites that the run's own work commits in its own tab is sent to a blank page and recorded", async () => {
   const c = fakeChrome();
   const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
+  r.runs.get("run_1").stepping = tab;
   c.listeners.committed({ tabId: tab, frameId: 0, url: "https://evil.example/restored" });
   assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "about:blank"));
   assert.equal(r.state()[0].steps.at(-1).error, "site_not_listed");
   c.listeners.committed({ tabId: tab, frameId: 1, url: "https://evil.example/frame" });
   assert.equal(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url === "about:blank").length, 1, "only the main frame");
+});
+
+// The person's own Back in the run's own tab restores a page off its sites from Chrome's cache: it's their move, so the tab is theirs,
+// as it is, with nothing sent to a blank page.
+test("a page Chrome restores from its cache off the run's sites on the person's Back gives the run's own tab to them, unmoved", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  const before = c.calls.length;
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://evil.example/restored", transitionType: "link", transitionQualifiers: ["forward_back"] });
+  await new Promise((done) => setTimeout(done, 0));
+  assert.ok(!c.calls.slice(before).some((x) => x[0] === "tabs.update" && x[2].url), "nothing loaded in their tab");
+  assert.equal(r.tabRun.has(tab), false, "the run forgets it");
+  assert.equal(r.state()[0].steps.at(-1).error, "site_not_listed");
+  assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
 });
 
 test("the run's own blank page is never refused: no loop, and the page the step opens loads", async () => {
@@ -981,7 +1006,7 @@ test("a taf keeps only its latest finished run's tabs: its next run closes the e
   await r.stop("run_1");
   assert.deepEqual(removed(), [], "the finished run's tabs stay");
   // Another taf's run: the first taf's tabs are not its to close.
-  await r.handle(step({ run: "run_b", id: "opb", taf: "Sam" }));
+  await r.handle(step({ run: "run_b", id: "opb", taf: "Sam", grant: "g_2", sites_signed: await signedSites(["shop.example"], "g_2") }));
   assert.deepEqual(removed(), [], "another taf's tabs stay");
   await r.stop("run_b");
   // The first taf runs again: its earlier tabs close as the new one opens, and nothing of Sam's.
@@ -990,7 +1015,7 @@ test("a taf keeps only its latest finished run's tabs: its next run closes the e
   assert.equal(Object.keys(stored.done).length, 1, "only Sam's is kept now");
   // A new worker finds what was kept.
   const d = new Runner({ chrome: c, sleep, paired: () => paired, doneStore });
-  await d.closeDone("Sam");
+  await d.closeDone("grant:g_2");
   assert.equal(removed().length, 2, "a restarted worker closes what the last one kept");
   r.done = null; // this runner read the store before the other one closed Sam's
   await r.stop("run_3");
@@ -1044,7 +1069,7 @@ test("a person watching each run of a taf doesn't collect one done group per run
   }
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]), [], "nothing the person is looking at closes");
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.ungroup").flatMap((x) => x[1]), tabs.slice(0, 2), "the two earlier runs' tabs leave their groups");
-  assert.deepEqual(Object.keys(await r.doneTabs()), ["Rae"], "only the latest run is kept as the taf's");
+  assert.deepEqual(Object.keys(await r.doneTabs()), ["grant:g_1"], "only the latest run is kept as the taf's, by its grant");
 });
 
 test("unpairing closes a kept tab the person has moved too", async () => {
@@ -1555,7 +1580,7 @@ test("Stop hands the tab back: out of the group, unfenced, forgotten by the run,
   c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/" });
   r.ownerInput(THEIRS);
   assert.deepEqual(c.calls.slice(before), [], "the late step, their navigation and their input are theirs again");
-  assert.deepEqual(await r.doneTabs(), { Rae: { tabs: [], window: null, group: 7 } }, "not kept as the taf's");
+  assert.deepEqual(await r.doneTabs(), { "grant:g_1": { name: "Rae", tabs: [], window: null, group: 7 } }, "not kept as the taf's");
 });
 
 test("a joined tab is never closed by the extension: not at unpairing, an idle end, the turn over, the close step, planque's stop, nor the taf's next run", async () => {
@@ -2135,4 +2160,220 @@ test("the page's own check: a link or a form's submit off the run's sites, by it
   // It runs before any act touches the page: after the secret-field refusal, before the switch that clicks or submits.
   const check = src.indexOf("const to = headsTo(el, a)");
   assert.ok(check > src.indexOf('code: "secret_field" }') && check < src.indexOf("switch (a.kind)", check), "checked before the act");
+});
+
+// The run's own tabs, as the end-to-end harness found them: the person's own move in one (an address typed, their Back) was taken
+// for the run's, and the run's next read read their page. Only the run's own work moves a tab of the run's; any other move makes
+// it the person's, as a joined tab already was.
+const pause0 = () => new Promise((done) => setTimeout(done, 0));
+const reads = (c) => c.calls.filter((x) => x[0] === "page" && x[1] === "read").length;
+
+for (const [what, move] of [
+  ["an address they typed", { transitionType: "typed", transitionQualifiers: ["from_address_bar"] }],
+  ["their Back", { transitionType: "link", transitionQualifiers: ["forward_back"] }],
+  ["their Forward", { transitionType: "link", transitionQualifiers: ["forward_back", "from_address_bar"] }],
+  ["a reload", { transitionType: "reload", transitionQualifiers: [] }],
+]) {
+  test(`${what} in the run's own tab, on its sites, gives the tab to the person: unmoved, unread, given_back, and the next open takes a fresh tab`, async () => {
+    const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+    const r = runner(c);
+    await r.handle(step());
+    const tab = r.runs.get("run_1").tab;
+    const before = c.calls.length;
+    const read = reads(c);
+    c.tabsMap.set(tab, "https://shop.example/account");
+    c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/account", ...move });
+    await pause0();
+    const now = c.calls.slice(before);
+    assert.ok(!now.some((x) => (x[0] === "tabs.update" && x[2].url) || x[0] === "tabs.remove" || x[0] === "tabs.goBack" || x[0] === "tabs.reload"), "nothing moves or closes their tab");
+    assert.ok(now.some((x) => x[0] === "tabs.ungroup" && [].concat(x[1]).includes(tab)), "it leaves the run's group");
+    assert.ok(now.some((x) => x[0] === "dnr" && (x[1].removeRuleIds || []).length), "its fence goes");
+    assert.equal(r.tabRun.has(tab), false, "the run forgets it");
+    for (const [op, extra] of [["read", {}], ["act", { read_id: "rd_any", act: { kind: "click", ref: "c1" } }], ["hand", { read_id: "rd_any", hand: { words: "Sign in" } }]]) {
+      assert.equal((await r.handle(step({ id: "op_" + op, op, ...extra }))).error.code, "given_back", op);
+    }
+    assert.equal(reads(c), read, "nothing of their page is read");
+    assert.ok(!c.calls.slice(before).some((x) => x[0] === "page" && x[1] === "act start"), "nothing acts in it");
+    // The run's next page: a fresh tab of its own, never theirs again.
+    const opened = await r.handle(step({ id: "op_open", url: "https://shop.example/cart" }));
+    assert.ok(opened.page, JSON.stringify(opened));
+    const fresh = r.runs.get("run_1").tab;
+    assert.notEqual(fresh, tab, "a tab of its own");
+    assert.ok(c.calls.some((x) => x[0] === "tabs.create" && x[1].url === "about:blank"), "made fresh");
+    assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url && c.calls.indexOf(x) > before), "their tab never loaded again");
+    assert.equal(opened.page.url, "https://shop.example/cart");
+  });
+}
+
+test("the person's click in the run's own tab pauses the run, and the page it opens makes the tab theirs", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  r.ownerInput(tab);
+  c.tabsMap.set(tab, "https://shop.example/orders");
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/orders", transitionType: "link", transitionQualifiers: [] });
+  await pause0();
+  assert.equal(r.tabRun.has(tab), false, "theirs now");
+  r.resume("run_1");
+  assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
+});
+
+test("a commit the run didn't ask for in its own tab (a page's own redirect, a late one) is the person's too", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  c.tabsMap.set(tab, "https://shop.example/elsewhere");
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/elsewhere", transitionType: "link", transitionQualifiers: ["client_redirect"] });
+  await pause0();
+  assert.equal(r.tabRun.has(tab), false);
+  assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
+});
+
+test("the run's own open, act and back in its own tab stay the run's: the redirect while it loads, the act's page, a back Chrome marks forward_back", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  // The open's own redirect commits while it loads.
+  const update = c.tabs.update;
+  c.tabs.update = async (id, props) => {
+    await update(id, props);
+    if (props.url && props.url !== "about:blank") {
+      const to = props.url.endsWith("/start") ? "https://shop.example/home" : props.url;
+      c.tabsMap.set(id, to);
+      c.listeners.committed({ tabId: id, frameId: 0, url: to, transitionType: "link", transitionQualifiers: to === props.url ? [] : ["server_redirect"] });
+    }
+  };
+  const first = await r.handle(step({ url: "https://shop.example/start" }));
+  assert.ok(first.page, JSON.stringify(first));
+  const tab = r.runs.get("run_1").tab;
+  assert.equal(r.tabRun.get(tab), "run_1", "still the run's after its redirect");
+  // The act's click takes it to p2, committed while the act waits for its page.
+  let clicked = false;
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    const out = await exec(o);
+    if (String(o.func || "").includes("TafsPage.act")) clicked = true;
+    return out;
+  };
+  const tabsGet = c.tabs.get;
+  c.tabs.get = async (id) => {
+    if (id === tab && clicked) {
+      clicked = false;
+      c.tabsMap.set(tab, "https://shop.example/p2");
+      c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/p2", transitionType: "link", transitionQualifiers: [] });
+    }
+    return tabsGet(id);
+  };
+  const acted = await r.handle(step({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "fill", ref: "f1", value: "a@b.example" } }));
+  assert.ok(acted.page, JSON.stringify(acted));
+  assert.equal(r.tabRun.get(tab), "run_1", "still the run's after its act");
+  // Its back: Chrome's goBack commits with forward_back, while the back is the run's.
+  c.tabs.goBack = async (id) => {
+    c.calls.push(["tabs.goBack", id]);
+    c.tabsMap.set(id, "https://shop.example/home");
+    c.listeners.committed({ tabId: id, frameId: 0, url: "https://shop.example/home", transitionType: "link", transitionQualifiers: ["forward_back"] });
+  };
+  const back = await r.handle(step({ id: "op3", op: "act", read_id: acted.page.read_id, act: { kind: "back" } }));
+  assert.ok(back.page, JSON.stringify(back));
+  assert.equal(back.page.url, "https://shop.example/home");
+  assert.equal(r.tabRun.get(tab), "run_1", "still the run's after its back");
+});
+
+test("a page the run's page opens (a pop-up) is the run's for its first page; the person's move there afterwards makes it theirs", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  c.listeners.created({ sourceTabId: tab, tabId: 555, url: "https://shop.example/popup" });
+  c.tabsMap.set(555, "https://shop.example/popup");
+  c.listeners.committed({ tabId: 555, frameId: 0, url: "https://shop.example/popup", transitionType: "link", transitionQualifiers: [] });
+  await pause0();
+  assert.equal(r.tabRun.get(555), "run_1", "its first page is the run's");
+  c.listeners.committed({ tabId: 555, frameId: 0, url: "https://shop.example/other", transitionType: "typed", transitionQualifiers: [] });
+  await pause0();
+  assert.equal(r.tabRun.has(555), false, "then the person's");
+  assert.equal(r.tabRun.get(tab), "run_1", "the run's own tab is unchanged");
+});
+
+test("the person's off-site address in the run's own tab, stopped by the fence, gives the tab to them and goes through", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  c.listeners.error({ tabId: tab, frameId: 0, url: "https://news.example/", error: "net::ERR_BLOCKED_BY_CLIENT" });
+  await pause0();
+  await pause0();
+  assert.equal(r.tabRun.has(tab), false, "theirs now");
+  assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "https://news.example/"), "their address, asked for once more after the fence went");
+  assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
+});
+
+test("a navigation the fence stops while the run's own act waits in its own tab is not the person's", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  r.runs.get("run_1").stepping = tab;
+  c.listeners.error({ tabId: tab, frameId: 0, url: "https://news.example/", error: "net::ERR_BLOCKED_BY_CLIENT" });
+  await pause0();
+  assert.equal(r.tabRun.get(tab), "run_1", "still the run's");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url === "https://news.example/"), "nothing re-asked");
+});
+
+// Two tafs with one name under two grants (two connections, each a taf of its own): the second never closes, joins or works in the
+// first's kept tabs or its "· done" group.
+test("two tafs named Rae under two grants never share or close each other's kept tabs or groups", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  c.tabGroups.get = async (id) => ({ id, windowId: 3 });
+  const r = runner(c);
+  await r.handle(step());
+  const first = r.runs.get("run_1").tab;
+  await r.stop("run_1");
+  assert.deepEqual(Object.keys(await r.doneTabs()), ["grant:g_1"]);
+  let made = 7;
+  const group = c.tabs.group;
+  c.tabs.group = async (o) => (o.groupId != null ? group(o) : (made++, group({ ...o, groupId: made })));
+  const before = c.calls.length;
+  await r.handle(step({ run: "run_2", id: "op2", grant: "g_2", sites_signed: await signedSites(["shop.example"], "g_2") }));
+  const second = r.runs.get("run_2").tab;
+  const now = c.calls.slice(before);
+  assert.ok(!now.some((x) => x[0] === "tabs.remove"), "the first Rae's kept tab stays");
+  assert.ok(!now.some((x) => x[0] === "tabs.group" && x[1].groupId === 7), "never put in the first Rae's group");
+  assert.ok(!touched(c, first).some((x) => c.calls.indexOf(x) >= before), "nothing of the second Rae's touches the first's tab");
+  assert.equal(r.tabRun.has(first), false, "the second never reads or acts in the first's tab");
+  await r.stop("run_2");
+  assert.deepEqual(Object.keys(await r.doneTabs()).sort(), ["grant:g_1", "grant:g_2"], "each kept under its own grant");
+  // The first Rae again: its own kept tab closes, never the second's.
+  const at = c.calls.length;
+  await r.handle(step({ run: "run_3", id: "op3" }));
+  const removed = c.calls.slice(at).filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]);
+  assert.ok(removed.includes(first) && !removed.includes(second), JSON.stringify(removed));
+});
+
+test("a person's tab in another same-named taf's done group is never joined", async () => {
+  const { c, r } = await joining();
+  c.tabGroups.get = async (id) => ({ id, windowId: 3 });
+  // The other Rae (grant g_2) finished a run whose done group (5) now holds the person's front tab.
+  r.done = { "grant:g_2": { name: "Rae", tabs: [], window: null, group: 5 } };
+  c.groupsMap.set(THEIRS, 5);
+  const out = await r.handle(started());
+  assert.ok(out.page, JSON.stringify(out));
+  assert.equal(r.runs.get("run_1").joined.size, 0, "not joined");
+  assert.notEqual(r.runs.get("run_1").tab, THEIRS, "a tab of its own");
+});
+
+test("an entry kept before 0.2.16 under the taf's name alone is never matched to a run, and unpairing still closes it", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  c.tabGroups.get = async (id) => ({ id, windowId: 3 });
+  c.tabsMap.set(77, "https://shop.example/old");
+  const stored = { done: { Rae: { tabs: [{ id: 77, url: "https://shop.example/old" }], window: null, group: 9 } } };
+  const doneStore = { get: async () => JSON.parse(JSON.stringify(stored.done)), set: async (d) => (stored.done = JSON.parse(JSON.stringify(d))) };
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, doneStore });
+  await r.handle(step());
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.remove"), "its tab isn't the new run's to close");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.group" && x[1].groupId === 9), "nor its group the new run's");
+  assert.ok(c.calls.some((x) => x[0] === "tabGroups.update" && x[1] === 9 && x[2].title === "tafs · Rae · done"), "still greyed under its name");
+  await r.stopAll();
+  assert.ok(c.calls.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(77)), "unpairing closes it");
 });

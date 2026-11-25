@@ -354,7 +354,7 @@ error = {code, detail?}      // detail never carries page text
   - `scroll` of a ref (into view) or of the page (`value` `down`, the default, or `up`, by most of a screen).
   - `back`, with no ref, in a tab of the run's own: the tab goes back to the page before the last one the run's work took it to,
     and the page there is read and fenced as any page is; nothing is clicked (0.2.15, `Runner.back`). The runner keeps each run
-    tab's addresses from its committed navigations (`noteAddress`, the trail, 50 at most); with none before the current one,
+    tab's addresses from the navigations its own work committed (`noteAddress`, the trail, 50 at most; never the person's, 0.2.16); with none before the current one,
     `back` is `no_back` and nothing moves. Chrome skips a history entry no person's gesture made (after the taf's own click its
     back went nowhere, or further), so a back that doesn't land on that page loads it instead.
   - **`back` in a joined tab is always `no_back`, and nothing moves** (0.2.15). The run only reads the person's tab where it
@@ -383,7 +383,7 @@ error = {code, detail?}      // detail never carries page text
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
 | `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
 | `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since. Also a page in a joined tab its run's work never reached (0.2.15) |
-| `given_back` | the person moved the joined tab the run was on (their Back or Forward, an address, a reload, their own click, a navigation that failed there), so it was given back to them: the run's next read, act or hand-over, until it opens a page of its own; also an act whose wait the person's move ended (0.2.15) |
+| `given_back` | the person moved the tab the run was on, one of theirs it joined (0.2.15) or one of the run's own (0.2.16): their Back or Forward, an address, a reload, their own click, a navigation the fence stopped. The tab was given to them as it is: the run's next read, act or hand-over, until it opens a page, in a tab of its own; also an act whose wait the person's move ended |
 | `no_back` | a `back` in a tab of the run's own with no page before in the run's trail for it, and any `back` in a joined tab (0.2.15) |
 | `ref_unknown` | the read has no such ref, or its element is gone, or it has become something else since the read: the element's tag, type, name, label, words and link target, and the words of the row it sits in, must be what the read saw |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
@@ -410,7 +410,10 @@ was done.
   taf's close step, planque's `stop`, the person's Stop, the idle sweep): the person sees the page where the taf stopped and
   nothing opens and closes under them. **Each taf keeps only its latest finished run's tabs:** when that taf's next run opens, it closes the
   previous "· done" tabs (and a window of its own) first, so a taf's calls never pile up. **Only a tab still where the run left it, and not in front of the window the person is using, closes then;** one they moved on or are using stays, is dropped from the list, leaves the run's "· done" group if it's still in it, never a group of the person's own (Chrome ends a group once it's empty, so a person who watches each run doesn't collect one done group per run), and keeps a window of its own open with it. Unpairing closes them all. Which tabs are kept is held in `chrome.storage.session`
-  (`doneTabs`), so a stopped worker still finds them; a taf is told apart by the name its steps carry. The group is renamed "tafs · Rae · done" and turns grey **15 s after the run ends** (`DONE_GRACE_MS`), unless the taf's next run starts first: a taf works in a few calls, each its own run, so its group stays amber while it works and waits instead of blinking grey between calls (a worker that stopped in those 15 s greys it when it starts again). **A run someone ended says done at once** (0.2.9): the person's Stop, from the bar or the panel, the idle sweep, and the taf's turn over (below) have no next call to wait for. Its fence goes, and the tabs are no longer the
+  (`doneTabs`), so a stopped worker still finds them. **A taf is told apart by its grant, not its name** (0.2.16, `doneKey`): two
+  tafs both called Rae under two connections never close, join or work in each other's kept tabs or "· done" group, and a tab of
+  the person's in the other Rae's group is never joined (`frontTab`); the group's title is still the name. An entry kept by an
+  older version under the name alone matches no run: it's greyed and closed at unpairing, nothing else. The group is renamed "tafs · Rae · done" and turns grey **15 s after the run ends** (`DONE_GRACE_MS`), unless the taf's next run starts first: a taf works in a few calls, each its own run, so its group stays amber while it works and waits instead of blinking grey between calls (a worker that stopped in those 15 s greys it when it starts again). **A run someone ended says done at once** (0.2.9): the person's Stop, from the bar or the panel, the idle sweep, and the taf's turn over (below) have no next call to wait for. Its fence goes, and the tabs are no longer the
   run's: a touch in one pauses nothing and a step can't reach it. **Unpairing closes them all** (the tabs the run opened, wherever they are
   by then, and a window of its own); so does a run that never loaded a page (a Stop while the tab is still being opened, or a window that
   couldn't be set up), since a blank tab is nothing to keep. When the window last used is private or a pop-up, or there is no normal window (the run
@@ -466,11 +469,23 @@ was done.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
   read never lands in the middle of an act. Pause and Stop don't wait.
 - **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
-  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is; in a tab of the
-  person's that joined the run, nothing moves it: the tab is given back to them as it is (0.2.15, below). The blank page
+  committed main-frame page off the run's sites that the run's own work brought is sent to a blank page and recorded, as a
+  navigation is. One the person brought (their Back, in a tab of the run's own or one of theirs it joined) moves nothing: the tab
+  is given to them as it is (0.2.15 for a joined tab, 0.2.16 for the run's own; below). The blank page
   itself (`about:blank`, where a run's tab opens and where a refused move goes) is never refused: refusing it sent the
   tab to `about:blank` again and again, which also cancelled the page the step was opening, so the step timed out. A step
   line whose address can't be read draws with no site, never an error.
+- **Only the run's own work moves a tab of the run's own** (0.2.16, `onCommitted`). A commit there is the run's only while an
+  open or act of the run's waits for its page (`stepping`, a redirect while it loads included), during its `back` (`backing`,
+  which Chrome marks forward_back), on the first page of a tab a page of the run's opened (`landing`), or while a step is handed
+  to the person. Any other commit is the person's: their Back or Forward, an address they typed, a reload, their own click (which
+  pauses the run first), or a page's own redirect after its load. The page it shows is never trusted for being in the run's trail:
+  how it got there decides. The tab is then given to them as a joined tab is: out of the run's group, unfenced, its bar hidden,
+  forgotten, never moved or closed. The run's next read, act or hand-over answers `given_back`, nothing of that page read, and
+  its next `open` takes a fresh tab of its own (`moreTab`). An address of theirs off the run's sites, which the fence stops
+  (`ERR_BLOCKED_BY_CLIENT`) outside the run's own step, gives the tab to them the same way and is asked for again once the fence
+  has gone. Before 0.2.16, an address the person typed in the run's own tab on its sites, or their Back there, was read by the
+  run's next read.
 - **A run's new tab shows its blank page before the step's page goes into it** (`Runner.blankReady`, 10 s at most).
   Navigating a tab whose `about:blank` hadn't committed yet raced it: under load the blank page committed after the
   navigation began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The end-to-end
