@@ -806,7 +806,7 @@ async function drawReads() {
   sw.dataset.off = r.why === "off" ? "0" : "1";
 }
 
-// The page consent's own screen, over the whole panel: what goes to Anthropic, when, and what never does; Allow, or Not now.
+// The page consent's own screen, over the whole panel: what goes to the AI model, when, and what never does; Allow, or Not now.
 // It opens by itself once, and from the banner above Coach's chat or Settings; it's withdrawn in Settings.
 let consentFrom = null; // what had the focus when it opened, to give it back
 

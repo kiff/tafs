@@ -115,7 +115,7 @@
   "page_consent_title": { "message": "Vai ļaut Coach un jūsu tafiem, sūtot ziņu, lasīt priekšā esošo lapu?" },
   "page_consent_what": { "message": "Kad šeit sūtāt ziņu Coach vai tafam kādā no tā vietnēm, līdzi aiziet šī loga priekšā esošās cilnes teksts: tās adrese (bez visa, kas ir aiz ? vai #), virsraksts un vārdi. Lauku vērtības un paroles netiek nolasītas; karšu numuri tiek saīsināti līdz pēdējiem četriem cipariem; atslēgas un apzīmēti noslēpumi tiek maskēti. Tiek maskēti arī vienreizējie kodi, ko lapas teksts tā nosauc angļu, franču, spāņu vai vācu valodā. Tafs, kuram šeit rakstāt, pēc tam var strādāt šajā cilnē, tikai savās vietnēs, un jebkuru citu lapu atver savā cilnē." },
   "page_consent_when": { "message": "Tikai sūtot, tikai šī cilne un nekad bankas, maksājumu, pasta vai veselības vietne vai vietne, ko esat izslēdzis." },
-  "page_consent_never": { "message": "Tas nonāk tafs, kas to nosūta Anthropic Claude, lai tas jums atbildētu, tāpat kā jūsu ziņu. tafs saglabā tikai vietnes nosaukumu, nekad lapu; Coach vai tafa atbildē var būt citāti no tās." },
+  "page_consent_never": { "message": "Tas nonāk tafs, kas to nosūta mākslīgā intelekta modelim Claude, lai tas jums atbildētu, tāpat kā jūsu ziņu. tafs saglabā tikai vietnes nosaukumu, nekad lapu; Coach vai tafa atbildē var būt citāti no tās." },
   "page_consent_change": { "message": "Jebkurā brīdī varat nosūtīt ziņu bez lapas un šeit to pārtraukt, kad vēlaties." },
   "page_consent_allow": { "message": "Atļaut" },
   "page_consent_not_now": { "message": "Ne tagad" },

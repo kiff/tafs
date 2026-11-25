@@ -115,7 +115,7 @@
   "page_consent_title": { "message": "Göndərəndə Coach və tafs-larınız öndəki səhifəni oxusun?" },
   "page_consent_what": { "message": "Burada Coach-a və ya öz saytlarından birində olan taf-a mesaj göndərəndə, bu pəncərədə öndə olan tabın mətni onunla gedir: ünvanı (? və ya # işarəsindən sonrakı hissə olmadan), başlığı və sözləri. Sahələrin dəyərləri və parollar oxunmur; kart nömrələri son dörd rəqəminə qədər qısaldılır; açarlar və adı göstərilmiş gizli məlumatlar maskalanır. Səhifənin mətnində ingilis, fransız, ispan və ya alman dilində belə adlandırılan birdəfəlik kodlar da maskalanır. Burada mesaj yazdığınız taf sonra həmin tabda, yalnız öz saytlarında işləyə bilər, başqa səhifəni isə öz tabında açır." },
   "page_consent_when": { "message": "Yalnız göndərəndə, yalnız həmin tab, və heç vaxt bank, ödəniş, poçt və ya sağlamlıq saytı, ya da söndürdüyünüz sayt deyil." },
-  "page_consent_never": { "message": "O, tafs-a gedir, tafs da sizə cavab vermək üçün onu Anthropic-in Claude-una göndərir, mesajınız kimi. tafs yalnız saytın adını saxlayır, səhifəni heç vaxt; Coach-un və ya taf-ın cavabı ondan sitat gətirə bilər." },
+  "page_consent_never": { "message": "O, tafs-a gedir, tafs da sizə cavab vermək üçün onu Claude süni intellekt modelinə göndərir, mesajınız kimi. tafs yalnız saytın adını saxlayır, səhifəni heç vaxt; Coach-un və ya taf-ın cavabı ondan sitat gətirə bilər." },
   "page_consent_change": { "message": "İstənilən vaxt səhifəsiz mesaj göndərə və bunu burada istədiyiniz zaman dayandıra bilərsiniz." },
   "page_consent_allow": { "message": "İcazə ver" },
   "page_consent_not_now": { "message": "İndi yox" },
