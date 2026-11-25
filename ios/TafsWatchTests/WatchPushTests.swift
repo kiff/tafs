@@ -14,11 +14,13 @@ final class WatchPushTests: XCTestCase {
         var asked: [WatchRequest] = []
         var send: [PhoneReach] = [.reply(WatchReply(.ok, ticket: WatchPushTests.ticket))]
         var chat: [WatchChatLine] = []
+        /// What each read of the answer says: still at work, or (nil) no reply, so only a push moves the turn.
+        var read: WatchReply? = WatchReply(.ok, answering: true)
         func ask(_ request: WatchRequest) async -> WatchReply? { await reach(request).reply }
         func reach(_ request: WatchRequest) async -> PhoneReach {
             asked.append(request)
             switch request.kind {
-            case .coachRead: return .reply(WatchReply(.ok, answering: true))
+            case .coachRead: return read.map(PhoneReach.reply) ?? .failed(.noAnswer)
             case .tafChat: return .reply(WatchReply(.ok, chat: chat))
             case .coachSend: return send.count > 1 ? send.removeFirst() : send.first ?? .failed(.notReachable)
             default: return .reply(WatchReply(.ok))
@@ -59,20 +61,26 @@ final class WatchPushTests: XCTestCase {
     /// "Answering" pushed: the turn says so. A push for a request this watch didn't send changes nothing.
     func testAnsweringPushedAndOtherRequestsIgnored() async {
         let phone = SlowPhone()
+        // The phone's reads get no reply: only the push can say "answering".
+        phone.read = nil
         var pauses = 0
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), pause: {
+        var seen: [CoachModel.Turn.Answer?] = []
+        var model: CoachModel!
+        model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), pause: {
             pauses += 1
             if pauses == 1 {
+                // Another request's answer: not this watch's turn, so nothing moves.
                 WatchPushes.shared.deliver(WatchPush(.ask, ask: "ask_other", reply: WatchReply(.ok, coach: WatchPushTests.rae, answering: false), at: Date()))
+                seen.append(model.turns.last?.answer)
                 WatchPushes.shared.deliver(WatchPush(.ask, ask: "ask_1", reply: WatchReply(.ok, answering: true), at: Date()))
+                seen.append(model.turns.last?.answer)
+                seen.append(model.state == .answering ? .answering : nil)
+                model.leave()
             }
         }, linkPause: { _ in })
         model.review("Pause Rae")
-        let sending = Task { await model.sendReviewed() }
-        while pauses < 2 { await Task.yield() }
-        XCTAssertEqual(model.turns.last?.answer, .answering)
-        model.leave()
-        await sending.value
+        await model.sendReviewed()
+        XCTAssertEqual(seen, [.sent, .answering, .answering])
     }
 
     /// A taf's chat changed on the phone: the chat on the wrist reads it again; another taf's, or Coach's, doesn't.
