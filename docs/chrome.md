@@ -1033,7 +1033,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
     once per panel), and from the banner at the top of Coach's chat ("Coach doesn't read the page you're on", with "Let Coach
     read the page…") or Settings. It says what goes (the tab's address without query or fragment, its title and words; field values and
     passwords aren't read, card numbers are cut to their last four digits, keys and labelled secrets are masked, and so are one-time codes named as one in English, French, Spanish or German in the page's text), when (only on Send, only that tab, never a refused site), where (tafs, then
-    Anthropic's Claude, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
+    the Claude AI model, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
     **Allow** records it at tafs cloud (`POST /v1/me/page-consent {version}`) and here, for this pairing's person, in the
     pairing's own store, so an unpair (which is also the sign-out) takes it. **Both must hold before the tab is touched**
     (`pageForSend`): without them nothing is injected or read, and the words go alone. **Send without the page** sends the
