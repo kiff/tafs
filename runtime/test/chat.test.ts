@@ -1711,6 +1711,18 @@ describe("chats (kiff/tafs#73)", () => {
     expect((await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${old.session}`, { token: "ana" })).status).toBe(404);
   });
 
+  it("sends what an app draws to delete a chat with both chats lists, in the person's language", async () => {
+    const w = world();
+    const words = (lang: "en" | "de") => {
+      const x = wordsIn(lang);
+      return { item: x.chat_delete_item, confirm_title: x.chat_delete_confirm_title, confirm_body: x.chat_delete_confirm_body,
+        confirm_button: x.chat_delete_confirm_button, failed: x.chat_delete_failed };
+    };
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).body.delete).toEqual(words("en"));
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats/archived`, { token: "ana", headers: { "accept-language": "de" } })).body.delete).toEqual(words("de"));
+    expect(words("de").item).not.toBe(words("en").item);
+  });
+
   it("deletes only the person's own chat with that taf, and never one still working or waiting on them", async () => {
     const w = world();
     const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
@@ -1723,6 +1735,9 @@ describe("chats (kiff/tafs#73)", () => {
     const working = await w.agents.api.startRun("t_acme", RAE, "Still going", ANA);
     const busy = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${working.session}`, { token: "ana" });
     expect(busy.status).toBe(409);
+    expect(busy.body.error).toBe(wordsIn("en").chat_delete_busy);
+    const busyFr = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${working.session}`, { token: "ana", headers: { "accept-language": "fr" } });
+    expect(busyFr.body.error).toBe(wordsIn("fr").chat_delete_busy);
     (w.agents.runs.find((x) => x.id === working.id) as { status: string }).status = "PAUSED";
     expect((await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${working.session}`, { token: "ana" })).status).toBe(409);
     expect(w.agents.calls.filter((c) => c.startsWith("deleteSession"))).toEqual([]);

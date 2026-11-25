@@ -1,0 +1,1 @@
+- **Coach never reads a page from a merchant console, the same as the extension.** Stripe, Paddle, Adyen, Square, Braintree and GoCardless are sensitive sites in tafs cloud too, so Coach's page reads refuse exactly what the extension refuses. See [Chrome](docs/chrome.md).

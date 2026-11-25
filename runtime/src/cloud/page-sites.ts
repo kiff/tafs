@@ -17,6 +17,8 @@ export const SENSITIVE = Object.freeze({
     "coinbase.com", "binance.com", "kraken.com", "metamask.io", "blockchain.com", "crypto.com", "ledger.com", "bitstamp.net",
     // payments and money accounts
     "paypal.com", "wise.com", "revolut.com", "n26.com", "venmo.com", "cash.app", "klarna.com", "payoneer.com",
+    // merchant consoles: where a business refunds, pays out and moves its money, outside any Card
+    "stripe.com", "paddle.com", "adyen.com", "squareup.com", "braintreegateway.com", "gocardless.com",
     // health
     "ameli.fr", "nhs.uk", "mychart.com", "healthcare.gov",
   ],

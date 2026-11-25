@@ -890,6 +890,15 @@ export const en = {
   card_step_exact: "Exactly what you sign",
   card_step_give_fingerprint: "Approve with fingerprint",
   card_step_give_face: "Approve with face",
+  // Deleting a conversation (DELETE /v1/tafs/{id}/chats/{session}): sent with the chats list, so the failed line is on the phone
+  // when the network fails; chat_delete_busy is the 409's. Only what the delete removes: messages and attachments, not
+  // delivered files, what it remembers, or the record of what was done.
+  chat_delete_item: "Delete conversation",
+  chat_delete_confirm_title: "Delete this conversation?",
+  chat_delete_confirm_body: "Its messages and the files you added to it are deleted now, for good. Anything a taf saved in “What it remembers” stays until you remove it. What was already done stays done, and you can still see it in your Record.",
+  chat_delete_confirm_button: "Delete",
+  chat_delete_failed: "It wasn't deleted. Check that you're online and try again.",
+  chat_delete_busy: "This conversation is still working or waiting for you. Stop it or answer it first, then delete it.",
   card_step_give_passkey: "Approve with your passkey",
   card_step_sign_passkey: "Your approval signs this with your passkey, whose private key never leaves this computer or your security key. It isn't a payment or a password.",
   cts_tafs_state: "See your tafs",

@@ -1187,10 +1187,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(latest.failed ? { failed: latest.failed } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
-    return { chats: await chats(me, taf, deps) };
+    return { chats: await chats(me, taf, deps), delete: deleteWords(langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "chats" && parts[4] === "archived") {
-    return { chats: await chats(me, taf, deps, true) };
+    return { chats: await chats(me, taf, deps, true), delete: deleteWords(langOf(event)) };
   }
   if (parts.length === 6 && method === "POST" && action === "chats" && parts[5] === "archive") {
     return archive(me, taf, parts[4] ?? "", deps);
@@ -1199,7 +1199,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return unarchive(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 5 && method === "DELETE" && action === "chats" && parts[4] !== "archived") {
-    return deleteChat(me, taf, parts[4] ?? "", deps);
+    return deleteChat(me, taf, parts[4] ?? "", deps, langOf(event));
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
@@ -6853,6 +6853,17 @@ async function ownChatRead(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, k
 }
 
 /**
+ * What an app draws to delete a chat, in the person's language: the menu item, the confirm, and the line for a delete that
+ * didn't go through. Sent with the chats list, so the failed line is on the device when the network is what failed; the
+ * 409's words come with the 409 (chat_delete_busy). A Chrome's list carries none: it can't delete a chat yet.
+ */
+function deleteWords(lang: Lang): { item: string; confirm_title: string; confirm_body: string; confirm_button: string; failed: string } {
+  const w = wordsIn(lang);
+  return { item: w.chat_delete_item, confirm_title: w.chat_delete_confirm_title, confirm_body: w.chat_delete_confirm_body,
+    confirm_button: w.chat_delete_confirm_button, failed: w.chat_delete_failed };
+}
+
+/**
  * The person deletes one of their own chats with a taf or Coach for good: its messages and files (kiff/agents), and what
  * tafs cloud kept by it that holds the chat's content or says something about it: what they wrote that waits to go as
  * their next message there and the runs they wrote to (steer: the chat then drops out of their steer list at its next
@@ -6864,11 +6875,11 @@ async function ownChatRead(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, k
  * and the delete finishes into a thread that's gone: nothing it writes is kept. What happened stays on record: the runs'
  * records, the usage they counted and the KIFF record of every call are not part of a chat. A second delete answers 404.
  */
-async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<unknown> {
+async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Deps, lang: Lang): Promise<unknown> {
   const { session: chat, events } = await ownChatRead(me, taf, session, deps);
   const active = await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, true));
   if (active.some((r) => r.session === chat.id)) {
-    throw new HTTPError(409, "this chat is still working or waits on you; stop it or answer it first");
+    throw new HTTPError(409, wordsIn(lang).chat_delete_busy);
   }
   await agentsCall(() => deps.agents.deleteSession(me.tenantID, chat.id, ownerKey(me)));
   // What tafs cloud kept by this chat: best effort, each ends on its own (30 days at most) if a removal fails.
