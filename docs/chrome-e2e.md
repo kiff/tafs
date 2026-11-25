@@ -140,6 +140,10 @@ yes, and fail the test.
 | The panel's Pause holds the run's steps (`paused_by_owner`) until Resume, and planque hears both, signed | `runs.e2e.test.js` |
 | The person's own click in a run's tab pauses it, and the taf's next act doesn't reach the page | `runs.e2e.test.js` |
 | A hand-over is answered at once as `handed`; the panel shows the taf's words; the person's Done reaches planque signed, its page without any field's value | `runs.e2e.test.js` |
+| In a run's own tab, the person's click on a link pauses the run, and its next read and act are `paused_by_owner`, with nothing of the page | `owntabs.e2e.test.js` |
+| The person drags the run's own tab out of its group: it stays the run's, fenced, its own page read, an open off the run's sites still `site_not_listed` | `owntabs.e2e.test.js` |
+| The person drags a tab of theirs into the run's group: it never becomes the run's (not in its tabs, not fenced), an open of its exact address goes to the run's own tab and nothing they typed in theirs is in a result; the run's Stop and the taf's next run leave it open | `owntabs.e2e.test.js` |
+| Two runs of two tafs (two grants) at once: a tab and a group each; a read of one is `page_changed` in the other; each fill lands in its own tab only; one's close and its taf's next run leave the other's tab, group and fence as they were | `owntabs.e2e.test.js` |
 | Chrome's back/forward cache is on when a test asks for it (the person's Back case below runs with it on and off) | `bfcache.e2e.test.js` |
 
 ## Not covered yet
@@ -161,6 +165,9 @@ yes, and fail the test.
   the person's tab is given back is not checked.
 - **A frame's own reads:** the extension reads no frame, so there is nothing more to mask in one; Coach's page read
   (`aside.js`) in a frame isn't tested either.
+- **A real drag of a tab:** headless Chromium has no tab strip, so the person's drag in or out of a run's group is made with
+  Chrome's own `tabs.group` and `tabs.ungroup`, called from the service worker. It changes Chrome's tabs as a drag does, but no
+  drag event is seen. A drag of a run's tab to another window isn't tested.
 - **Push:** the test build has no push key, so the extension never subscribes.
 - **Coach and the KIFF device** in the side panel: they need tafs cloud and KIFF.
 - **Chrome as people install it:** the tests load the unpacked copy; the Web Store's build and its manifest hash are checked
@@ -200,8 +207,23 @@ yes, and fail the test.
 - **The taf's `back` in a joined tab, after its own click, loaded the person's earlier page** (`joined.e2e.test.js`): Chrome
   skipped the joined page on back and asked for the page the person had before the run. `back` in a joined tab is now always
   `no_back`, and nothing moves.
+- **An address the person typed in a run's own tab, on the run's sites, was read by the run** (`owntabs.e2e.test.js`):
+  `onCommitted` took every commit on the run's sites in a tab of the run's own as the run's. Since 0.2.16 only the run's own
+  work moves its tab; the person's move gives the tab to them, and the run's next read and act answer `given_back`.
+- **The person's Back or Forward in a run's own tab: the run read the page they landed on** (`owntabs.e2e.test.js`): the same
+  cause; the transition now decides, never the trail.
+- **An address the person typed in a run's own tab, off the run's sites, sent their tab to a blank page** (`owntabs.e2e.test.js`):
+  the runner blanked a tab of its own on any off-site navigation. It now does that only for the run's own work; the fence's stop
+  gives the tab to them, and their address goes through once the fence has gone.
+- **A second taf of the same name, under another grant, closed the first taf's kept tab** (`owntabs.e2e.test.js`): a taf's
+  finished run is now kept by its grant (`doneKey`), not its name.
 
 ## Known bugs, as `todo` tests
 
+The "still open" checks after a Stop and after the taf's next run wait for the runner to have let the run's tabs go (its state, and
+Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed time: a close that comes late fails them.
+
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
-failure. None at the moment.
+failure.
+
+None.
