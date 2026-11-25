@@ -896,3 +896,53 @@ test("the page's check before an act gives refuseURL's very code for every addre
   }
   await page.close();
 });
+
+// What the page made unusable is never acted on (0.2.20): a field a disabled fieldset holds, one inside an inert part or under
+// aria-disabled, a read-only field, a disabled choice of a list; and a checked radio can't be "unchecked".
+const UNUSABLE = `<!doctype html><html><head><title>Unusable</title></head><body>
+<fieldset disabled><label for="a">In a disabled fieldset</label><input id="a" type="text"></fieldset>
+<div inert><button id="b">Inert button</button></div>
+<div aria-disabled="true"><button id="c">Aria button</button></div>
+<label for="d">Read only</label><input id="d" type="text" readonly value="kept">
+<label for="e">Notes kept</label><textarea id="e" readonly>kept</textarea>
+<label for="f">Size</label><select id="f"><option>Small</option><option disabled>Medium</option><optgroup label="More" disabled><option>Large</option></optgroup></select>
+<label><input id="g" type="radio" name="r" checked>Yes</label><label><input id="h" type="radio" name="r">No</label>
+<label for="i">Open field</label><input id="i" type="text">
+<script>window.__changes = 0; document.getElementById("f").addEventListener("change", () => window.__changes++);</script>
+</body></html>`;
+
+test("an act on what the page made unusable is refused disabled, and a checked radio isn't unchecked", { skip: !playwright }, async () => {
+  await ctx.route("https://shop.example/unusable", (route) => route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: UNUSABLE }));
+  const page = await ctx.newPage();
+  await page.goto("https://shop.example/unusable");
+  await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
+  await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: PAGE });
+  const act = async (a, label) => {
+    const read = await page.evaluate(() => TafsPage.read());
+    const all = [...read.links, ...read.controls, ...read.fields];
+    const el = all.find((x) => x.label === label);
+    assert.ok(el, label + " in " + JSON.stringify(all.map((x) => x.label)));
+    return page.evaluate(([x, id]) => TafsPage.act(x, id), [{ ...a, ref: el.ref }, read.read_id]);
+  };
+  assert.deepEqual(await act({ kind: "fill", value: "x" }, "In a disabled fieldset"), { ok: false, code: "disabled" });
+  assert.equal(await page.inputValue("#a"), "");
+  assert.deepEqual(await act({ kind: "fill", value: "x" }, "Read only"), { ok: false, code: "disabled" });
+  assert.equal(await page.inputValue("#d"), "kept");
+  assert.deepEqual(await act({ kind: "fill", value: "x" }, "Notes kept"), { ok: false, code: "disabled" });
+  assert.deepEqual(await act({ kind: "select", value: "Medium" }, "Size"), { ok: false, code: "disabled" });
+  assert.deepEqual(await act({ kind: "select", value: "Large" }, "Size"), { ok: false, code: "disabled" }, "a choice in a disabled group");
+  assert.equal(await page.evaluate(() => window.__changes), 0, "no change was told");
+  assert.equal(await page.inputValue("#f"), "Small");
+  assert.deepEqual(await act({ kind: "check", value: "unchecked" }, "Yes"), { ok: false, code: "bad_step" });
+  assert.equal(await page.isChecked("#g"), true);
+  assert.deepEqual(await act({ kind: "check", value: "unchecked" }, "No"), { ok: true }, "an unchecked radio stays as asked");
+  assert.deepEqual(await act({ kind: "fill", value: "typed" }, "Open field"), { ok: true });
+  // The inert and aria-disabled buttons: refused if the read offers them at all.
+  const read = await page.evaluate(() => TafsPage.read());
+  for (const label of ["Inert button", "Aria button"]) {
+    const el = [...read.controls].find((x) => x.label === label);
+    if (el) assert.deepEqual(await page.evaluate(([x, id]) => TafsPage.act(x, id), [{ kind: "click", ref: el.ref }, read.read_id]), { ok: false, code: "disabled" }, label);
+  }
+  await page.close();
+});

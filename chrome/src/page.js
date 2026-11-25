@@ -161,7 +161,7 @@
       } else {
         field.value = M.maskText(clean(el.value, 500));
       }
-      if (el.disabled) field.disabled = true;
+      if (unusable(el)) field.disabled = true;
       out.push(field);
     }
     return out;
@@ -516,6 +516,14 @@
   }
 
   /**
+   * Whether the page made [el] unusable (0.2.20): disabled, a fieldset's disabling included (`:disabled`); inside an `inert` part
+   * of the page; or `aria-disabled="true"` on it or on an element around it. An act on it is refused `disabled`.
+   */
+  function unusable(el) {
+    return el.matches(":disabled") || !!el.closest("[inert]") || !!el.closest('[aria-disabled="true"]');
+  }
+
+  /**
    * Does one act (`{kind, ref, value?}`) planned from read `readId`, or says why not: `{ok: true}` or `{ok: false, code}`.
    * The service worker reads the page back afterwards. Nothing here ever types a saved value: the extension keeps none.
    * `opts.fence`: what the run's fence lets the tab reach (`offFence`); a link or a submit it wouldn't is refused before anything is
@@ -535,8 +543,9 @@
     }
     const el = refs.get(a.ref);
     if (!el || !el.isConnected || prints.get(a.ref) !== printOf(el)) return { ok: false, code: "ref_unknown" };
+    // Unusable before unseen: an inert part of the page is also never on top, and the taf is told the page's own reason.
+    if (unusable(el)) return { ok: false, code: "disabled" };
     if (!visible(el) || !onTop(el)) return { ok: false, code: "not_visible" };
-    if (el.disabled) return { ok: false, code: "disabled" };
     const kind = el.matches("input, textarea, select") ? kindOf(el) : null;
     if (kind === "password" || kind === "card" || kind === "code") return { ok: false, code: "secret_field" };
     if (opts && opts.fence) {
@@ -553,6 +562,8 @@
         break;
       case "fill":
         if (!el.matches("input, textarea") || kind === "checkbox" || kind === "radio") return { ok: false, code: "bad_step" };
+        // A field the page made read-only takes nothing typed, as a disabled one (0.2.20).
+        if (el.readOnly) return { ok: false, code: "disabled" };
         // `keys`: typed one character at a time, with key events, for a field that opens its list as you type (a city, an
         // airport). Never a submit: Enter is a `press` of its own.
         if (a.keys === true) typeInto(el, String(a.value));
@@ -580,6 +591,8 @@
         if (el.tagName !== "SELECT") return { ok: false, code: "bad_step" };
         const option = Array.from(el.options).find((o) => clean(o.text, 100) === a.value || o.value === a.value);
         if (!option) return { ok: false, code: "option_unknown" };
+        // A choice the page disabled (or one in a disabled group) is never chosen, and no change is told (0.2.20).
+        if (option.matches(":disabled")) return { ok: false, code: "disabled" };
         el.value = option.value;
         el.dispatchEvent(new Event("input", { bubbles: true }));
         el.dispatchEvent(new Event("change", { bubbles: true }));
@@ -587,6 +600,9 @@
       }
       case "check":
         if (kind !== "checkbox" && kind !== "radio") return { ok: false, code: "bad_step" };
+        // A radio is unchecked only by choosing another of its group: asking to uncheck a checked one would answer ok and change
+        // nothing (0.2.20).
+        if (kind === "radio" && a.value === "unchecked" && el.checked) return { ok: false, code: "bad_step" };
         if (el.checked !== (a.value !== "unchecked")) press(el);
         break;
       default:

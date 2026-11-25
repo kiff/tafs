@@ -150,7 +150,10 @@ test("a frame from another site in a page of the run's sites is never loaded, an
 function assertFenced(rules, tabId) {
   assert.equal(rules.length, RULES_PER_TAB, JSON.stringify(rules));
   const frames = ["main_frame", "sub_frame"];
-  for (const r of rules) assert.deepEqual([r.condition.tabIds, r.condition.resourceTypes], [[tabId], frames]);
+  for (const r of rules) assert.deepEqual([r.condition.tabIds, r.condition.resourceTypes], [[tabId], r.action.type === "modifyHeaders" ? ["main_frame"] : frames]);
+  // The page's own sandbox, with no allow-modals, above every allow (0.2.20).
+  assert.deepEqual(rules.filter((r) => r.priority === 6).map((r) => [r.action.type, r.action.responseHeaders[0].header]), [["modifyHeaders", "Content-Security-Policy"]]);
+  assert.ok(!rules.find((r) => r.priority === 6).action.responseHeaders[0].value.includes("allow-modals"));
   const at = (p) => rules.filter((r) => r.priority === p);
   assert.deepEqual(at(1).map((r) => [r.action.type, r.condition.requestDomains || r.condition.regexFilter || null]), [["block", null]]);
   assert.deepEqual(at(2).map((r) => [r.action.type, r.condition.requestDomains]), [["allow", SITES]]);
