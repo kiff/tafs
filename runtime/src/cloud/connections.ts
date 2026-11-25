@@ -107,11 +107,12 @@ function browserSites(c: Record<string, unknown>): Pick<AccountConnection, "site
 }
 
 /**
- * The sites a taf gets the page the person sends from, by its KIFF agent: those of its browser connections that hold a
- * sign-in. None for a taf with no browser connection, or one signed for any public site, which gets no page.
+ * The sites a taf gets the page the person sends from, by its KIFF agent: those of its browser connections that are
+ * connected, so signed by the owner (one waiting for their approval lists the sites the taf asked for, nobody's yet).
+ * None for a taf with no such connection, or one signed for any public site, which gets no page.
  */
 export function tafPageSites(conns: AccountConnection[], agent: string): string[] {
-  return conns.filter((c) => c.agent === agent && c.kind === "browser" && c.sites).flatMap((c) => c.sites!);
+  return conns.filter((c) => c.agent === agent && c.kind === "browser" && c.status === "connected" && c.sites).flatMap((c) => c.sites!);
 }
 
 /**

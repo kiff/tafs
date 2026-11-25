@@ -465,6 +465,9 @@ describe("a taf reads the page the person sends it, only on its own sites", () =
     const thread = await handle(event("GET", `/v1/tafs/${RAE}/conversation`), d);
     const messages = (JSON.parse(thread.body) as { messages: Array<{ id: string; reading?: string }> }).messages;
     expect(messages.find((m) => m.id === `${run}.in`)?.reading).toBe("shop.example");
+    // Nor is it in the taf's chat, as the thread reads it back.
+    expect(thread.body).not.toContain("Refunds within 30 days");
+    expect(thread.body).not.toContain("evil.example");
   });
 
   it("refuses the page off its sites, for any public site, with no connection or planque unread, on both routes, and starts nothing", async () => {
@@ -475,6 +478,8 @@ describe("a taf reads the page the person sends it, only on its own sites", () =
       ["signed for any public site", { any_site: true }, PAGE_SENT],
       ["no sites said", {}, PAGE_SENT],
       ["planque unread", "down", PAGE_SENT],
+      ["a connection waiting for the owner's approval", { sites: ["shop.example"], status: "waiting" }, PAGE_SENT],
+      ["a connection that failed", { sites: ["shop.example"], status: "failed" }, PAGE_SENT],
       ["a mail site, even if signed", { sites: ["mail.google.com"] }, { ...PAGE_SENT, url: "https://mail.google.com/mail/u/0/" }],
     ];
     for (const [name, conn, page] of cases) {
@@ -486,5 +491,15 @@ describe("a taf reads the page the person sends it, only on its own sites", () =
     }
     expect(w.agents.runs.filter((x) => x.agent === RAE)).toHaveLength(0);
     expect(w.agents.asides.size).toBe(0);
+  });
+
+  it("a page consent to the words before a taf's message was covered (version 1) drops the page, and the words go alone", async () => {
+    const w = await world();
+    await w.coach.put(pageConsentKey("t_acme", "u_ana"), { at: NOW.toISOString(), version: "1" }, new Date(NOW.getTime() + 86_400_000));
+    const r = await sendTo(withConnections(w, { sites: ["shop.example"] }), { text: "Lis cette page", page: PAGE_SENT });
+    expect(r.status).toBe(200);
+    expect((r.body.message as { reading?: string }).reading).toBeUndefined();
+    expect(w.agents.asides.size).toBe(0);
+    expect(await keptHost(w, r.body.run as string)).toBeUndefined();
   });
 });
