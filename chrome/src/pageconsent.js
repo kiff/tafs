@@ -6,10 +6,10 @@
  */
 
 /**
- * The page consent's words' version: tafs cloud's PAGE_CONSENT_VERSION. Raised when what's read from the page, or who
- * receives it, changes (so everyone is asked again), not for a rewording that stays true: "the Claude AI model" in place of
- * "Anthropic's Claude" kept "2". Moving inference to another provider (Bedrock) changes who receives it: raise it then,
- * here and in tafs cloud together.
+ * The page consent's words' version: tafs cloud's PAGE_CONSENT_VERSION. Raised when its words change, so everyone is asked
+ * again; not for a rewording that stays true ("the Claude AI model" in place of "Anthropic's Claude" kept "2"), and not when
+ * the company running the model changes: these words name only the model, and the AI consent points to who may run it. A
+ * page only ever goes with a turn, and every turn needs that AI consent at its exact version.
  */
 export const PAGE_CONSENT_VERSION = "2";
 
