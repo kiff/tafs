@@ -12,6 +12,10 @@ import { createHash, randomBytes } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { LABEL, b64u, fromB64u, concat, hmac, sha256, sign, verify, publicSPKI, randomId } from "../src/crypto.js";
 import { ALPHABET, LOOKUP_LENGTH, SECRET_LENGTH, extensionProof, hex } from "../src/pairing.js";
+import { readFileSync } from "node:fs";
+
+/** tafs cloud's failed run, as its own contract has it (written by its tests): the fake's `failed` starts from it. */
+const CONTRACT_FAILED = JSON.parse(readFileSync(new URL("../../contracts/conversation-failed.json", import.meta.url), "utf8")).answer.failed;
 
 const ECDSA = { name: "ECDSA", namedCurve: "P-256" };
 
@@ -308,7 +312,10 @@ export class FakePlanque extends EventEmitter {
  * owner had approved it on the phone (`POST /v1/pair/claim`), and its logout. As **tafs cloud**, it keeps the person's page
  * consent (`/v1/me/page-consent`), lists the account's one taf (`GET /v1/tafs`, matched to the connection by its KIFF agent),
  * and answers a message to that taf (`POST /v1/tafs/{id}/messages`) with the agent run it starts (`run`), which planque's steps
- * then name as `agent_run`. Every call must carry the claimed session's bearer. Anything else is 404.
+ * then name as `agent_run`. The taf's chat (`GET …/conversation`) has the person's messages (`<run>.in`, as tafs cloud names
+ * them) and, when a test sets `failNext` (fields over tafs cloud's own `failed`, contracts/conversation-failed.json), the next
+ * message's run failed; a message after it that doesn't fail closes it, as tafs cloud does. Every call must carry the claimed
+ * session's bearer. Anything else is 404.
  *
  * It answers on the fixture sites' HTTPS server (sites.mjs `serve`), for the hosts the extension calls (`api.kiff.dev`,
  * `cloud.tafs.kiff.dev`), which the harness maps to that server: nothing leaves the computer.
@@ -327,6 +334,9 @@ export class FakeCloud {
     this.sends = []; // every message to the taf: {text, page, run}
     this.coachSends = []; // every message to Coach: {text, page, run}
     this.requests = []; // every call, as "METHOD host path"
+    this.thread = []; // the taf's chat, as tafs cloud reads it
+    this.failed = null; // its failed run, as tafs cloud's contract has it
+    this.failNext = null; // fields over the contract's `failed` for the next message's run
   }
 
   /** Serves KIFF's and tafs cloud's hosts on `sites` (a FixtureSites). */
@@ -369,12 +379,16 @@ export class FakeCloud {
       this.coachSends.push({ text: body.text, page: body.page || null, run });
       return send(201, { message: { id: randomId("msg_") }, run });
     }
-    if (taf && taf[1] === this.tafId && taf[2] === "conversation" && req.method === "GET") return send(200, { messages: [], working: null });
+    if (taf && taf[1] === this.tafId && taf[2] === "conversation" && req.method === "GET") return send(200, { messages: this.thread, working: null, ...(this.failed ? { failed: this.failed } : {}) });
     if (taf && taf[1] === this.tafId && taf[2] === "messages" && req.method === "POST") {
       // The agent run this message starts: what the panel's mark and planque's steps name.
       const run = randomId("agr_");
-      this.sends.push({ text: body.text, page: body.page || null, run });
-      return send(201, { message: { id: randomId("msg_") }, run });
+      const id = run + ".in";
+      this.sends.push({ text: body.text, page: body.page || null, run, clientID: body.client_message_id || null });
+      this.thread.push({ id, from: "owner", kind: "message", text: body.text, at: new Date().toISOString(), ...(body.page ? { reading: new URL(body.page.url).hostname } : {}) });
+      this.failed = this.failNext ? { ...CONTRACT_FAILED, ...this.failNext, run } : null;
+      this.failNext = null;
+      return send(201, { message: { id }, run });
     }
     return send(404, { error: "not_found" });
   }

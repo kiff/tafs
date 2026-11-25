@@ -242,3 +242,33 @@ test("a message to a taf carries the page in front as Coach's does, only with wo
   // The chat says which site went with a message, as Coach's does.
   assert.equal((await c.tafThread("taf-a")).messages[0].reading, "fr.wikipedia.org");
 });
+
+// Chrome 0.2.22: a chat's failed run, read from tafs cloud's own contract (contracts/conversation-failed.json, written by its
+// tests), never a copy of it.
+test("a chat's failed run is read with it, Coach's or a taf's, from tafs cloud's contract: its words as sent, and Try again only when offered", async () => {
+  const { readFileSync } = await import("node:fs");
+  const contract = JSON.parse(readFileSync(new URL("../../contracts/conversation-failed.json", import.meta.url), "utf8")).answer;
+  let answer = contract;
+  const fetch = async (url) => {
+    const body = url.endsWith("/v1/setup") ? { setup: { id: "taf-coach" } } : url.includes("/conversation") ? answer : {};
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const c = new Coach({ token: "tok", fetch, base: "https://cloud.test" });
+  for (const t of [await c.tafThread("taf-a"), await c.thread()]) {
+    assert.deepEqual(t.failed, { run: contract.failed.run, code: contract.failed.code, words: contract.failed.words, retry: false });
+    assert.equal(t.working, null);
+    assert.deepEqual(t.messages.map((m) => m.id), [contract.failed.run + ".in"], "the run's own message, by tafs cloud's id");
+  }
+  // tafs cloud's `retry` and `retry_label`, once it sends them.
+  answer = { ...contract, failed: { ...contract.failed, retry: true, retry_label: "  Try again  " } };
+  const t = await c.tafThread("taf-a");
+  assert.equal(t.failed.retry, true);
+  assert.equal(t.failed.retryLabel, "Try again");
+  // None, or one with no words: no line at all. `retry` is true only when it says true.
+  for (const failed of [undefined, null, { run: "r1", words: "  " }, { words: "It failed." }]) {
+    answer = { ...contract, failed };
+    assert.equal((await c.tafThread("taf-a")).failed, null, JSON.stringify(failed));
+  }
+  answer = { ...contract, failed: { run: "r1", code: "failed", words: "It failed.", retry: "yes" } };
+  assert.equal((await c.tafThread("taf-a")).failed.retry, false);
+});

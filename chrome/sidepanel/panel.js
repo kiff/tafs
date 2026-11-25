@@ -1,7 +1,7 @@
 // The side panel: pairing by the phone's code, and while a taf works, what it's doing, with Pause, Resume and Stop. It
 // shows only what the service worker reports; it decides nothing.
 
-import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork, switchDraft, turnOver, stillPending } from "../src/coachchat.js";
+import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork, switchDraft, turnOver, stillPending, lapsed, turnFailed, retryOf, failedKey, whyLine } from "../src/coachchat.js";
 import { render as renderWords } from "../src/chatmd.js";
 import { ACCEPT, prepare, upload, readyIDs, uploading, counted, afterSent } from "../src/attach.js";
 
@@ -356,16 +356,16 @@ async function renderCoach() {
   const atEnd = nearEnd();
   list.textContent = "";
   $("coachEmpty").hidden = r.thread.messages.length > 0 || !!coachPending;
-  for (const m of r.thread.messages.slice(-20)) {
-    const li = document.createElement("li");
-    li.className = m.from;
-    words(li, m);
-    reading(li, m);
-    list.append(li);
-  }
+  drawMessages(list, r.thread, (again) => sendCoach(false, again));
   $("coachPhone").hidden = !r.thread.waitsOnPhone;
-  working = !!r.thread.working;
-  if (coachPending && !stillPending(coachPending, r.thread.messages)) coachPending = null;
+  // A failed turn ends the turn: no working line under it, whatever the chat still says.
+  working = !!r.thread.working && !turnFailed(r.thread);
+  if (coachPending && !stillPending(coachPending, r.thread.messages)) {
+    if (lapsed(coachPending, r.thread.messages)) coachLapsed = true;
+    coachPending = null;
+  }
+  // A message that never reached the chat in 2 minutes is said, never taken away with nothing said.
+  if (coachLapsed) note.textContent = t("coach_error");
   // What was just sent stays on show until the chat has it, and Coach's working line goes under the last message, as in the app.
   if (coachPending) showPending(list, coachPending.words);
   if (coachPending || working) list.append(workingLine(t("coach_working")));
@@ -469,6 +469,7 @@ let openTitle = "";
 /** A new conversation with Coach: nothing of the one before is shown or sent into. */
 function startFresh() {
   view = FRESH;
+  coachLapsed = false;
   openTitle = "";
   $("coachWords").value = "";
   $("coachArchived").open = false;
@@ -493,7 +494,7 @@ function showView(name) {
   $("paired").dataset.view = name;
   closeMenu();
   if (name === "tafView") readTaf();
-  if (name === "coach") drawReads();
+  if (name === "coach" || name === "tafView") drawReads();
   if (name === "chats") drawPast();
   if (name === "settings") drawSettings();
 }
@@ -564,16 +565,21 @@ $("coachNew").onclick = () => {
   drawPast();
 };
 
-async function sendCoach(alone) {
-  const words = $("coachWords").value.trim();
+/**
+ * Sends what's in Coach's box, or [again], the words of a failed turn's Retry: those go as a new message on their own, with no
+ * file, and leave the box and its files as they are.
+ */
+async function sendCoach(alone, again = null) {
+  const words = again != null ? String(again).trim() : $("coachWords").value.trim();
   // Send waits while a file is still going up; a message may be words, files, or both.
-  if (uploading(trayOf(COACH_TRAY))) return;
-  const files = readyIDs(trayOf(COACH_TRAY));
+  if (again == null && uploading(trayOf(COACH_TRAY))) return;
+  const files = again != null ? [] : readyIDs(trayOf(COACH_TRAY));
   if (!words && !files.length) return;
+  coachLapsed = false;
   // Shown at once, as in the app: the person's message at the bottom right and Coach's working line under it, before tafs
   // cloud has answered. The box is cleared now; on a failure the words come back to it, never lost.
   coachPending = { words: words || fileNames(COACH_TRAY), id: null, at: Date.now() };
-  $("coachWords").value = "";
+  if (again == null) $("coachWords").value = "";
   $("coachNote").textContent = "";
   $("coachEmpty").hidden = true;
   const list = $("coachThread");
@@ -593,6 +599,9 @@ async function sendCoach(alone) {
   // From now on it's matched by the id tafs cloud gave it; an answer with none leaves the chat as tafs cloud reads it.
   const id = sentID(r.sent);
   if (coachPending && coachPending.words === (words || coachPending.words)) coachPending = id ? { ...coachPending, id } : null;
+  // The page in front didn't go: the message says why, under it (never silent).
+  const why = id && whyLine(r.notReading, r.host);
+  if (why) notRead.set(id, why);
   // The files it carried are gone from the tray; any that didn't go up stay, with why.
   setTray(COACH_TRAY, afterSent(trayOf(COACH_TRAY), files));
   view = afterSend(view, r.sent);
@@ -616,8 +625,13 @@ let tafWorking = false;
 let tafSentAt = 0;
 let tafIdle = 0;
 let tafTimer = null;
-// The messages sent to a taf from here whose page didn't go, being on none of its sites: message id → the page's host.
+// The messages sent from here whose page in front didn't go, and why (coachchat.js `whyLine`): message id → {key, host?, consent?}.
 const notRead = new Map();
+// The failed turns whose Retry was pressed (coachchat.js `failedKey`): pressed once, it never comes back.
+const retried = new Set();
+// A message that never reached the chat in 2 minutes (coachchat.js `lapsed`): Coach's, or the taf it went to.
+let coachLapsed = false;
+let tafLapsed = null;
 
 const tafName = () => (tafs.find((x) => x.id === tafId) || {}).name || "";
 
@@ -664,22 +678,16 @@ async function readTaf() {
     const list = $("tafThread");
     const atEnd = nearEnd();
     list.textContent = "";
-    for (const m of r.thread.messages.slice(-20)) {
-      const li = document.createElement("li");
-      li.className = m.from;
-      words(li, m);
-      reading(li, m);
-      if (!m.reading && m.id && notRead.has(m.id)) {
-        const line = document.createElement("small");
-        line.className = "reading";
-        line.textContent = t("aside_not_taf_site", notRead.get(m.id));
-        li.append(line);
-      }
-      list.append(li);
-    }
+    drawMessages(list, r.thread, (again) => sendTaf(id, again, []));
     $("tafPhone").hidden = !r.thread.waitsOnPhone;
-    tafWorking = !!r.thread.working;
-    if (tafPending && tafPending.taf === id && !stillPending(tafPending, r.thread.messages)) tafPending = null;
+    // A failed turn ends the turn: no working line under it, whatever the chat still says.
+    tafWorking = !!r.thread.working && !turnFailed(r.thread);
+    if (tafPending && tafPending.taf === id && !stillPending(tafPending, r.thread.messages)) {
+      if (lapsed(tafPending, r.thread.messages)) tafLapsed = id;
+      tafPending = null;
+    }
+    // A message that never reached the chat in 2 minutes is said, never taken away with nothing said.
+    if (tafLapsed === id) note.textContent = t("taf_error", tafName());
     const pending = tafPending && tafPending.taf === id ? tafPending.words : null;
     if (pending) showPending(list, pending);
     if (pending || tafWorking) list.append(workingLine(t("working", tafName())));
@@ -715,6 +723,7 @@ function switchTaf(id) {
   $("tafWords").value = out.text;
   tafId = next;
   drawTray(next);
+  if (next) drawReads();
 }
 
 $("tafPick").onchange = () => {
@@ -732,11 +741,22 @@ $("tafForm").onsubmit = async (e) => {
   if (!to || uploading(trayOf(to))) return;
   const files = readyIDs(trayOf(to));
   if (!words && !files.length) return;
-  const said = words || fileNames(to);
-  // Shown at once, as Coach's are: the message, and the taf's working line under it; the box is cleared now, its words kept
-  // to come back on a failure.
-  tafPending = { taf: to, words: said, id: null, at: Date.now() };
   $("tafWords").value = "";
+  await sendTaf(to, words, files);
+};
+
+/**
+ * Sends [words] and [files] to taf [to]: what was typed in its box (cleared by the caller), or a failed turn's Retry, whose
+ * words go as a new message with no file, leaving the box as it is.
+ */
+async function sendTaf(to, words, files) {
+  words = String(words || "").trim();
+  if (!to || (!words && !files.length)) return;
+  const said = words || fileNames(to);
+  if (tafLapsed === to) tafLapsed = null;
+  // Shown at once, as Coach's are: the message, and the taf's working line under it; its words come back to the box on a
+  // failure.
+  tafPending = { taf: to, words: said, id: null, at: Date.now() };
   $("tafNote").textContent = "";
   showPending($("tafThread"), said);
   $("tafThread").append(workingLine(t("working", tafName())));
@@ -753,14 +773,16 @@ $("tafForm").onsubmit = async (e) => {
   }
   tafSentAt = Date.now();
   const sent = sentID(r.sent);
-  // The page in front was on no site of this taf's: it didn't go, and the message says so under it (never silent).
-  if (sent && r.notReading === "not_taf_site" && r.host) notRead.set(sent, r.host);
+  // The page in front didn't go (no consent, a sensitive site, one switched off, off the taf's sites): the message says why,
+  // under it (never silent).
+  const why = sent && whyLine(r.notReading, r.host);
+  if (why) notRead.set(sent, why);
   if (tafPending && tafPending.taf === to && tafPending.words === said) tafPending = sent ? { ...tafPending, id: sent } : null;
   setTray(to, afterSent(trayOf(to), files));
   // Sent: those words are gone from the taf they went to, and from nowhere else (the chat may have switched meanwhile).
   if (tafId !== to) drafts.delete(to);
   readTaf();
-};
+}
 
 $("coachBack").onclick = () => showCoach(false);
 
@@ -778,18 +800,27 @@ let readsHost = "";
 async function drawReads() {
   const line = $("coachReads");
   if (!line) return;
-  const r = await send({ type: "aside_status", tabId: activeTab, windowId: panelWindow }).catch(() => null);
+  // On the taf's view, the page is checked against that taf's own sites too: off them, it couldn't go.
+  const forTaf = current === "tafView" && tafId ? tafId : null;
+  const r = await send({ type: "aside_status", tabId: activeTab, windowId: panelWindow, ...(forTaf ? { taf: forTaf } : {}) }).catch(() => null);
+  // Another view or taf on show meanwhile: its own read, already asked, draws the banner.
+  if ((current === "tafView" && tafId ? tafId : null) !== forTaf) return;
   const sw = $("coachReadsSwitch");
   readsHost = (r && r.host) || "";
-  // Off until the person allows it (pageconsent.js): the line says so and offers the screen; nothing of a tab is read.
+  // Off until the person allows it (pageconsent.js): while a page that could go is in front, a banner right above the box
+  // says so, before anything is sent, with the button to the consent's screen; it goes once consent is given. Coach's and the
+  // taf's are the same banner; the taf's counts only the taf's own sites. Nothing of a tab is read.
   const consent = Boolean(r && r.consent);
-  $("pageConsentOff").hidden = consent;
+  const ask = Boolean(r) && !consent && Boolean(readsHost) && !r.why;
+  $("pageConsentOff").hidden = !ask;
+  $("tafConsentOff").hidden = !ask || !forTaf;
   $("coachSendAlone").hidden = !consent || !readsHost || Boolean(r && r.why);
   if (!consent) {
     line.hidden = true;
     // The first time Coach could read a page (a page it may read is in front, and Coach is on show), the consent screen
-    // comes up by itself, once per panel; Not now keeps the banner above the chat for later.
-    if (current === "coach" && readsHost && !(r && r.why) && !askedOnce()) openConsent();
+    // comes up by itself, once per panel; Not now keeps the banner above the box for later. A taf's chat has the banner
+    // only: the screen never comes up over a taf's work by itself.
+    if (current === "coach" && ask && !askedOnce()) openConsent();
     return;
   }
   closeConsent(false);
@@ -847,6 +878,7 @@ async function drawSettings() {
 }
 
 $("pageConsentOpen").onclick = () => openConsent();
+$("tafConsentOpen").onclick = () => openConsent();
 $("settingsReadsAllow").onclick = () => openConsent();
 $("pageConsentNotNow").onclick = () => closeConsent();
 $("pageConsentAllow").onclick = async () => {
@@ -879,6 +911,74 @@ chrome.tabs.onUpdated.addListener((id, change) => {
 // it by its id (stillPending).
 let coachPending = null;
 let tafPending = null;
+
+/**
+ * A chat's last 20 messages, as the apps draw them, then its failed run, if any, as its last line: tafs cloud's words, and Try
+ * again when it offers one ([retry] sends the words again).
+ */
+function drawMessages(list, thread, retry) {
+  for (const m of thread.messages.slice(-20)) {
+    const li = document.createElement("li");
+    li.className = m.from;
+    words(li, m);
+    reading(li, m);
+    whyUnder(li, m);
+    list.append(li);
+  }
+  if (thread.failed) list.append(failedLine(thread.failed, thread.messages, retry));
+}
+
+/**
+ * The failed run's line: tafs cloud's words, as text, whatever its code; Try again only when it offers one (coachchat.js
+ * `retryOf`), in its own words (`retry_label`, else the extension's). It's pressed once: it goes at the first press, so a
+ * double click never sends twice, and it doesn't come back when the chat is drawn again.
+ */
+function failedLine(f, messages, retry) {
+  const li = document.createElement("li");
+  li.className = "taf failed";
+  const p = document.createElement("p");
+  p.textContent = f.words;
+  li.append(p);
+  const again = retryOf(f, messages);
+  const label = f.retryLabel || chrome.i18n.getMessage("turn_failed_retry");
+  const key = failedKey(f);
+  if (again && label && !retried.has(key)) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "quiet small retry";
+    b.textContent = label;
+    b.onclick = () => {
+      if (retried.has(key)) return;
+      retried.add(key);
+      b.disabled = true;
+      b.remove();
+      retry(again);
+    };
+    li.append(b);
+  }
+  return li;
+}
+
+/**
+ * Under the person's message, why the page in front didn't go with it (coachchat.js `whyLine`), as it was sent from here; for
+ * no page consent, with the button that opens its screen.
+ */
+function whyUnder(li, m) {
+  if (m.from !== "owner" || m.reading || !m.id || !notRead.has(m.id)) return;
+  const why = notRead.get(m.id);
+  const line = document.createElement("small");
+  line.className = "reading";
+  line.textContent = why.host ? t(why.key, why.host) : t(why.key);
+  if (why.consent) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "quiet small";
+    b.textContent = t("page_consent_turn_on");
+    b.onclick = () => openConsent();
+    line.append(" ", b);
+  }
+  li.append(line);
+}
 
 /** The person's message as it was sent, at the bottom right, until the chat has it. */
 function showPending(list, words) {

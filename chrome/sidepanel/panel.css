@@ -299,7 +299,8 @@ button.iconbtn {
 button.danger {
   color: var(--no);
 }
-/* Coach doesn't read the page: a banner at the top of its chat, with a real button. */
+/* The page doesn't go with a message (no page consent) while one could: a banner right above the box, in Coach's chat and a
+   taf's alike, with a real button to the consent's screen. */
 .banner {
   margin: 8px 0;
   padding: 10px 12px;
@@ -539,4 +540,15 @@ body {
 #tafForm,
 #coach > .dock {
   margin-top: auto;
+}
+/* The banner inside a taf's composer: above the box, never squeezed into its row. */
+#tafForm > .banner {
+  margin: 0 0 8px;
+}
+/* A failed turn (tafs cloud's words): the taf's bubble, marked as not done, with its Retry under the words. */
+.thread li.failed {
+  border-color: var(--no);
+}
+.thread li.failed .retry {
+  margin-top: 6px;
 }

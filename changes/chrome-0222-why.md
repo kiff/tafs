@@ -1,0 +1,5 @@
+- Chrome 0.2.22: the side panel always says what went wrong:
+  - when the page consent isn't given, a banner right above the message box says the page you're on doesn't go, with the button to allow it, in a taf's chat as in Coach's;
+  - a message whose page didn't go says why under it (no consent, a sensitive site, a site you switched off, or one the taf doesn't work on);
+  - a failed answer shows tafs cloud's words as the chat's last line, with Try again when it's offered, pressed once;
+  - a message that never reached the chat is said rather than dropped.
