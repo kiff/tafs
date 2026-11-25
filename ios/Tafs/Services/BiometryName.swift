@@ -29,4 +29,7 @@ enum Biometry {
 extension Biometry {
     /// "Face ID" or "Touch ID" when the device has one, for the setup words.
     static var kind: String? { name == Words.Approval.yourPasscode ? nil : name }
+
+    /// Face ID, for the Card step's "Approve with face" button; else the fingerprint's (Touch ID).
+    static var isFace: Bool { name == Words.Approval.faceId }
 }
