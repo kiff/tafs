@@ -1,0 +1,1 @@
+- **Watch: a taf's chat stays in step with the phone app closed.** tafs cloud tells the person's own phones, by a silent push with the taf's id alone, each time their chat with a taf changes (their message from any device, the taf's answer, pause or end), so the phone puts it to the watch ([watch-ask.md](docs/watch-ask.md#chatting-with-a-taf-tafs_watch_taf_chat)).

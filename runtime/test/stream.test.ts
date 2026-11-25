@@ -916,7 +916,7 @@ describe("a card answered from the old form (kiff/agents' cards wait for their a
 });
 
 describe("Coach's runs announce their pauses", () => {
-  it("a Coach message's run is announced to tafs cloud, a taf's isn't", async () => {
+  it("a Coach message's run is announced to tafs cloud as Coach's; a taf's as the person's chat run (its watch, call 2b)", async () => {
     const w = world();
     const COACH = "taf-c0ac4000000000000000";
     w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-15T09:00:00Z" });
@@ -927,6 +927,9 @@ describe("Coach's runs announce their pauses", () => {
     expect(w.agents.notified.get(coachRun.id)?.url).toBe("https://cloud.test/v1/runs/ended");
     const taf = await stream(w, `/v1/tafs/${RAE}/messages/stream`, { token: "ana", body: { text: "Refund order 42" }, publicURL: "https://cloud.test" });
     expect(taf.error).toBe("");
-    expect(w.agents.notified.has(w.agents.runs.find((r) => r.agent === RAE)!.id)).toBe(false);
+    // Announced too, under a chat ref of its own, never Coach's task or hand-over path.
+    const tafRun = w.agents.runs.find((r) => r.agent === RAE)!;
+    expect(w.agents.notified.get(tafRun.id)?.url).toBe("https://cloud.test/v1/runs/ended");
+    expect(await w.coach.get(`t_acme#taf-chat-ref#${w.agents.notified.get(tafRun.id)!.ref}`)).toMatchObject({ taf: RAE });
   });
 });

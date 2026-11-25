@@ -412,6 +412,43 @@ describe("whether a watch may send to a taf, read before sending (TAFS_WATCH_TAF
   });
 });
 
+describe("a person's chat with a taf tells their phones, for the watch (call 2b)", () => {
+  const chatPushes = (w: ReturnType<typeof world>) => w.pushed.filter((p) => p.payload.change === "taf_chat");
+
+  it("when their message goes in: a silent push with the taf's id alone, to their own phones, never another member's", async () => {
+    const w = world();
+    const r = await w.call("POST", `/v1/tafs/${CAL}/messages`, { text: "Move my 4pm to 6pm" }, {});
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect(chatPushes(w).map((p) => p.token)).toEqual(["fcm-ana", "a".repeat(64)]);
+    for (const p of chatPushes(w)) expect(p.payload).toEqual({ aps: { "content-available": 1 }, change: "taf_chat", taf_id: CAL });
+    expect(JSON.stringify(w.pushed)).not.toContain("Move my");
+  });
+
+  it("when the taf's run answers, pauses or ends: once per run and state, and a note for another taf is dropped", async () => {
+    const w = world();
+    await w.call("POST", `/v1/tafs/${CAL}/messages`, { text: "Move my 4pm to 6pm" }, {});
+    const run = w.agents.runs.find((x) => x.agent === CAL)!;
+    const ref = w.agents.notified.get(run.id)!.ref;
+    w.pushed.length = 0;
+    Object.assign(run, { status: "COMPLETED", output: "Moved it." });
+    expect(JSON.parse((await w.ended(ref, run.id, CAL, "COMPLETED")).body)).toEqual({ taken: true });
+    expect(chatPushes(w).map((p) => p.token)).toEqual(["fcm-ana", "a".repeat(64)]);
+    // kiff/agents' same note again tells nothing more.
+    await w.ended(ref, run.id, CAL, "COMPLETED");
+    expect(chatPushes(w)).toHaveLength(2);
+    // The ref is this taf's chat run's alone.
+    w.pushed.length = 0;
+    expect(JSON.parse((await w.ended(ref, run.id, INBOX, "COMPLETED")).body)).toEqual({ taken: false });
+    expect(w.pushed).toEqual([]);
+  });
+
+  it("never for Coach's chat, whose runs have their own notes", async () => {
+    const w = world();
+    await w.call("POST", `/v1/tafs/${COACH}/messages`, { text: "What can my tafs do?" }, {});
+    expect(chatPushes(w)).toEqual([]);
+  });
+});
+
 describe("the line the watch shows and says", () => {
   it("is one line of plain text, at most 140 characters, cut at a word", () => {
     expect(checkedLine("Moved your call to **18:00**.\nTold the [guests](https://x.test).")).toBe("Moved your call to 18:00. Told the guests.");

@@ -7,7 +7,7 @@ import { type BalanceView, balanceView, type CreditRun, CreditsError, runCredits
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers, membersOf } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification, watchInboxNotification, reconcileDevices, ALERT_CAPABILITIES } from "./push.js";
+import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, tafChatNotification, watchAskNotification, watchInboxNotification, reconcileDevices, ALERT_CAPABILITIES } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -5059,11 +5059,13 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   const said = await withCoachSkills(me, taf, at, text, event, deps);
   // The page's host goes in the message kiff/agents keeps, so a later turn knows this one read it (withPageRead).
   const input = page ? withPageRead(said, page.host) : said;
+  const told = notify ?? await tafChatNotify(event, me, taf, deps);
   const began = deps.now?.() ?? new Date();
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, input, at, ai, notify));
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, input, at, ai, told));
   // Only a run this send started read the page: a card's answer went on in its own run, without it.
   const read = page && startedBy(run, began) ? page.host : undefined;
   if (read) await keepPageRead(me, run.id, read, deps);
+  await tellTafChat(me.tenantID, me.subject, taf, deps);
   return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created, ...(read ? { reading: read } : {}) } };
 }
 
@@ -7039,7 +7041,8 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
       try {
         // Coach's runs are announced when they pause, so a result it shows is
         // handed over by tafs cloud with no phone needed (handOver).
-        const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
+        // Any other taf's chat run says when it answers, so the person's phones tell their watch (tafChatNotify).
+        const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : await tafChatNotify(event, me, taf, deps);
         const said = await withCoachSkills(me, taf, at, text, event, deps);
         // The page's host goes in the message kiff/agents keeps, so a later turn knows this one read it (withPageRead).
         const input = page ? withPageRead(said, page.host) : said;
@@ -7048,6 +7051,7 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
         run = deps.agents.streamRun(me.tenantID, taf.id, input, at, ai, notify);
         first = await run.next();
         timing.mark("first_event");
+        if (!first.done && first.value.event === "run") await tellTafChat(me.tenantID, me.subject, taf, deps);
         // Only a run this send started read the page (startedBy): a card's answer goes on in its own run, without it.
         const started = first.done || first.value.event !== "run" ? undefined : first.value.data as { id?: unknown; created?: unknown } | undefined;
         if (page && started && typeof started.id === "string" && startedBy(started, began)) {
@@ -9754,6 +9758,16 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (note && deps.doors && await doorRunEnded(note, doorContext(deps))) return { taken: true };
   const tenant = note && refTenant(note.ref);
   if (!note || !tenant || !deps.coach) return { taken: false };
+  // A person's chat run with a taf (tafChatNotify): their phones are told the chat changed, once per run and state.
+  const chat = (await deps.coach.get(tafChatRef(tenant, note.ref))) as TafChatRef | undefined;
+  if (chat) {
+    if (chat.taf !== note.agent) return { taken: false };
+    const at = deps.now?.() ?? new Date();
+    if (await deps.coach.once(`${tafChatRef(tenant, note.ref)}#${note.run}#${note.status}`, new Date(at.getTime() + TAF_CHAT_REF_MS))) {
+      await tellTafChat(tenant, chat.person, { id: chat.taf, job: "" }, deps);
+    }
+    return { taken: true };
+  }
   // A watch conversation's Coach run (docs/watch-ask.md): the note's ref was kept for its request.
   const watchAsk = (await deps.coach.get(watchKeys.ref(tenant, note.ref))) as string | undefined;
   if (watchAsk) return { taken: await watchCoachEnded(tenant, watchAsk, note, deps) };
@@ -11821,6 +11835,45 @@ async function watchSaid(me: KIFFIdentity, asks: Ask[], store: CoachStore, deps:
     }));
   }
   return out;
+}
+
+/** A person's chat run with a taf, by its run-ended ref: whose chat, and which taf. */
+interface TafChatRef { person: string; taf: string }
+const tafChatRef = (tenant: string, ref: string) => `${tenant}#taf-chat-ref#${ref}`;
+/** How long a chat run's ref is kept: past any run's end, so a late note still finds it. */
+const TAF_CHAT_REF_MS = 2 * 24 * 3600_000;
+
+/**
+ * Where a person's chat run with a taf (never Coach's: its runs have their own notes) says it answered, paused or ended,
+ * so their phones can tell the watch with the phone app not running (the owner's call 2b). Kept by a ref of the
+ * account's, two days; none without the store or tafs cloud's address.
+ */
+async function tafChatNotify(event: HTTPEvent | undefined, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Notify | undefined> {
+  if (!deps.coach || taf.job === SETUP_JOB) return undefined;
+  const ref = newRef(me.tenantID);
+  const notify = watchNotify(event, ref, deps);
+  if (!notify) return undefined;
+  await deps.coach.put(tafChatRef(me.tenantID, ref), { person: me.subject, taf: taf.id } satisfies TafChatRef, new Date((deps.now?.() ?? new Date()).getTime() + TAF_CHAT_REF_MS));
+  return notify;
+}
+
+/**
+ * A silent push to one person's phones that their chat with a taf changed (tafChatNotification): never Coach's, never
+ * another person's phones, and never in the way of the send, which goes on after a second and a half.
+ */
+async function tellTafChat(tenant: string, person: string, taf: Pick<Taf, "id" | "job">, deps: Deps): Promise<void> {
+  if (taf.job === SETUP_JOB) return;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      tellPersonsPhones(tenant, person, tafChatNotification(taf.id), deps),
+      new Promise((done) => { timer = setTimeout(done, 1500); }),
+    ]);
+  } catch (err) {
+    console.error(`taf chat ${taf.id} not told: ${(err as Error).message}`);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** Where a watch conversation's Coach run says it ended. */
