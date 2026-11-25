@@ -111,3 +111,22 @@ class CutAnswerScreenTest {
     assertEquals(listOf("phone taf/taf_1"), did)
   }
 }
+
+/** The sent message shows whole after Send (the owner's Galaxy Watch 5 re-test: it sat a millimetre above the top edge). */
+class SentFocusTest {
+  private val page = WatchReply.TafPage("taf_1", "Wiki lookup", "Ready", halted = false, job = "Looks a word up")
+  private val sent = WatchModel.TafTurn("Versailles", 0L, AskLine("wa_1", "w_1", AskLine.WORKING, "Wiki lookup", words = "Working", updated = "u", kind = AskLine.TAF))
+
+  @Test fun theChatCentresOnTheLineUnderTheNewestSentMessage() {
+    val open = WatchModel.OpenTaf("taf_1", null, WatchModel.TafRead.Read(page), WatchModel.TafChat(WatchModel.TafChat.History.Read(emptyList()), listOf(sent)))
+    // The name, its state, the day's header, the sent words, then "{taf} is answering": that last is centred, the words just above.
+    assertEquals(4, tafChatFocus(open))
+    assertEquals(tafChatLatest(open) - 1, tafChatFocus(open))
+  }
+
+  @Test fun withNothingSentHereItOpensOnTheNewestMessageAsBefore() {
+    val open = WatchModel.OpenTaf("taf_1", null, WatchModel.TafRead.Read(page),
+      WatchModel.TafChat(WatchModel.TafChat.History.Read(listOf(ChatLine("m1", mine = false, at = "x", text = "Hi")))))
+    assertEquals(tafChatLatest(open), tafChatFocus(open))
+  }
+}

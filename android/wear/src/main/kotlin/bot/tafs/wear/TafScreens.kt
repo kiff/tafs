@@ -84,7 +84,7 @@ internal fun TafScreen(
     // 1A: its chat first, then its page, then its settings; with the switch off, its page and settings as before.
     val page = if (chat) i - 1 else i
     // The chat opens on its newest message, with the send bar under it, as a chat app does; older ones are above (the owner's call).
-    val latest = if (page < 0) tafChatLatest(open) else 0
+    val latest = if (page < 0) tafChatFocus(open) else 0
     val list = rememberScalingLazyListState(initialCenterItemIndex = latest)
     if (page < 0) androidx.compose.runtime.LaunchedEffect(latest) { list.scrollToItem(latest) }
     ScalingLazyColumn(
@@ -245,6 +245,13 @@ internal fun tafChatLatest(open: WatchModel.OpenTaf): Int {
   }
   return n
 }
+
+/**
+ * Where a taf's chat is centred: with a message sent from the watch, the line under its newest one ("{taf} is answering", or its
+ * answer), so the person's words just sent sit whole above it, never cut by the top edge (the owner's Galaxy Watch 5 re-test);
+ * else what comes after the newest message ([tafChatLatest]).
+ */
+internal fun tafChatFocus(open: WatchModel.OpenTaf): Int = tafChatLatest(open).let { if (open.chat.turns.isNotEmpty()) it - 1 else it }
 
 /** The phone's lines of a taf's chat, less those of the messages sent from this watch, which their turns show ([KeptThreads.shownLines]). */
 internal fun shownLines(open: WatchModel.OpenTaf): List<bot.tafs.watchlink.ChatLine> =
