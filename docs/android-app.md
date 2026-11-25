@@ -1766,6 +1766,34 @@ model. Where `LocalFiles` is null (a preview, a test), Account, a taf's page and
   previews cleaned, Delete asked first and gone for everyone), `FilesScreensTest` (the switch off, the entries, the list's
   views, a file, Delete's question, the tablet's two panes).
 
+## Deleting a conversation
+
+The person's own Coach conversations can be deleted for good from Previous conversations (`PreviousConversations`,
+`CoachChats.kt`), on tafs cloud's `DELETE /v1/tafs/{id}/chats/{session}` (docs/api.md). Archiving still takes one out of the
+list and keeps it; deleting is the way to erase it.
+
+- **Where:** a long press on a conversation asks about it by name, Archive (or, under Archived, Put back), and under that the
+  delete item. It opens a second question, again by name: the title, what goes and what stays, Delete and Cancel. Nothing is
+  deleted before that second yes.
+- **The words are tafs cloud's,** in the person's language: each chats-list read (`GET …/chats` and `…/chats/archived`) sends
+  `delete: {item, confirm_title, confirm_body, confirm_button, failed}`, kept in `AppState.coachDeleteWords` from the last read
+  that sent them, so `failed` is on hand when the network isn't. Any word tafs cloud doesn't send (an older cloud) is the app's
+  English stand-in (`DeleteChatWords`, listed in `app/strings/android_kept.json`); there are no keys of the app's own for them.
+- **What the app does with tafs cloud's answer** (`AppModel.deleteCoachChat`), deciding nothing itself:
+  - **200:** the conversation leaves both lists. The one on screen gives way to a new conversation, so its thread leaves the
+    phone and the watch's kept copy of Coach's chat is put empty (`WatchChats.changed`: a chat the watch was given that has left
+    the phone is put empty, once). Files opened from it are cleared from the phone's cache too (`openedFiles`, only a cache, so
+    all of it goes), so no copy outlives "deleted for good".
+  - **404** (never this person's, a job's thread, or already gone): it leaves the lists, with nothing said.
+  - **409** (its run is working or waits on a card): it stays, and the refusal's own `error` is shown; the stand-in only if it
+    has none.
+  - **Anything else, the network included:** it stays, with tafs cloud's `failed` line from the last read, or the stand-in.
+- **Not here yet:** a taf's own chat has no list of conversations on Android to delete from; the route serves it once there is
+  one. Chrome follows on its own.
+- Tests: `CoachConversationsTest` (each answer above, tafs cloud's words and each stand-in, the opened files' cache cleared only on a delete that went through), `WatchKeptPhoneTest` (the watch's
+  copy put empty once), and `CoachChatsMenuTest` on a device (asked again by name in tafs cloud's words, Cancel deletes
+  nothing).
+
 ## From your watch (W11)
 
 The watch's Coach conversations on the phone, one a day, read only, as the iPhone's are (docs/watch-app.md, W11). **On since

@@ -1,0 +1,1 @@
+- **Delete a Coach conversation on Android:** a long press in Previous conversations offers to delete one for good, asked again by name, in tafs cloud's words (English stand-ins only where it sends none). The one on screen gives way to a new conversation, and the watch's copy of it is emptied. One still working or waiting on a card stays, with tafs cloud's line.

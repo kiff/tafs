@@ -53,6 +53,39 @@ class CoachChatsMenuTest {
     assertEquals(listOf("s2"), archived)
   }
 
+  @Test fun deletingAsksAgainByNameInTafsCloudsWordsAndCancelDeletesNothing() {
+    val deleted = mutableListOf<String>()
+    val words = TafsCloud.DeleteWords(menu = "Supprimer la conversation", title = "Supprimer cette conversation ?", button = "Supprimer")
+    rule.setShown {
+      TafsTheme {
+        PreviousConversations(
+          AppState(mode = Mode.kiff, ready = true, coachChats = listOf(first, second), coachDeleteWords = words),
+          CoachChatActions(delete = { deleted += it; true }),
+          onClose = {},
+        )
+      }
+    }
+    rule.onNodeWithText(second.title).performTouchInput { longClick() }
+    rule.waitForIdle()
+    rule.onNodeWithText(words.menu).performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText(words.title).assertExists()
+    // Not sent by tafs cloud: the stand-in.
+    rule.onNodeWithText(bot.tafs.app.model.DeleteChatWords.BODY).assertExists()
+    assertEquals(second.title, rule.onNodeWithTag("delete.chat", useUnmergedTree = true).fetchSemanticsNode().config[SemanticsProperties.Text].joinToString())
+    rule.onNodeWithText(Words.Common.cancel).performClick()
+    rule.waitForIdle()
+    assertEquals(emptyList<String>(), deleted)
+    // Asked again, and said yes: that chat, and only it.
+    rule.onNodeWithText(second.title).performTouchInput { longClick() }
+    rule.waitForIdle()
+    rule.onNodeWithText(words.menu).performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText(words.button).performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("s2"), deleted)
+  }
+
   @Test fun anArchivedChatIsPutBackByName() {
     val back = mutableListOf<String>()
     rule.setShown {

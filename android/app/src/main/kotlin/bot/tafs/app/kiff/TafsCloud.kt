@@ -30,7 +30,14 @@ class CloudError(
   val halted: String? = null,
   /** For `code: "cards_in_force"`: the Cards still in force that tafs cloud names (a Discard, docs/api.md). */
   val cards: List<String> = emptyList(),
-) : Exception(message)
+  /** The refusal's body as tafs cloud sent it, for a route's own words (Delete conversation's 409 `error`). */
+  val raw: ByteArray = ByteArray(0),
+) : Exception(message) {
+  /** One of the refusal's own string fields, or null when it has none. */
+  fun field(name: String): String? = runCatching {
+    (KiffClient.json.parseToJsonElement(String(raw)).jsonObject[name] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+  }.getOrNull()
+}
 
 /**
  * tafs cloud: the calls that start, follow, chat with and remove tafs, which run on kiff/agents; the
@@ -261,18 +268,38 @@ class TafsCloud(
     @kotlinx.serialization.SerialName("set_aside") val setAside: Boolean = false,
   )
 
+  /**
+   * tafs cloud's words for deleting a chat, sent with a chats-list read (`delete`), so they're on hand when the network isn't.
+   * Any it doesn't send is blank, and the app's English stand-ins ([DeleteChatWords]) take its place.
+   */
   @kotlinx.serialization.Serializable
-  private data class Chats(val chats: List<Chat> = emptyList())
+  data class DeleteWords(
+    @kotlinx.serialization.SerialName("item") val menu: String = "",
+    @kotlinx.serialization.SerialName("confirm_title") val title: String = "",
+    @kotlinx.serialization.SerialName("confirm_body") val body: String = "",
+    @kotlinx.serialization.SerialName("confirm_button") val button: String = "",
+    @kotlinx.serialization.SerialName("failed") val failed: String = "",
+  )
+
+  /** A chats-list read: the chats, newest first, and the words for deleting one when tafs cloud sends them. */
+  @kotlinx.serialization.Serializable
+  data class Chats(val chats: List<Chat> = emptyList(), val delete: DeleteWords? = null)
 
   /** The taf's chats, newest first. */
-  suspend fun chats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats").chats
+  suspend fun chats(id: String): List<Chat> = chatsRead(id).chats
+
+  /** The taf's chats with what tafs cloud sends beside them (the words for deleting one). */
+  suspend fun chatsRead(id: String): Chats = get<Chats>("/v1/tafs/${escaped(id)}/chats")
 
   /** A mission's log, newest first, a page at a time (Missions v2.1 §6): [before] is the previous page's `before`. */
   suspend fun missionLog(id: String, before: String? = null): MissionLogPage =
     get("/v1/missions/${escaped(id)}/log" + (before?.let { "?before=" + escaped(it) } ?: ""))
 
   /** The chats the owner archived, to find and reopen one. */
-  suspend fun archivedChats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats/archived").chats
+  suspend fun archivedChats(id: String): List<Chat> = archivedChatsRead(id).chats
+
+  /** The archived chats with what tafs cloud sends beside them. */
+  suspend fun archivedChatsRead(id: String): Chats = get<Chats>("/v1/tafs/${escaped(id)}/chats/archived")
 
   /** Archives a chat: it leaves the list and the thread, on every device. */
   suspend fun archiveChat(id: String, session: String) {
@@ -282,6 +309,15 @@ class TafsCloud(
   /** Puts an archived chat back in the list. */
   suspend fun unarchiveChat(id: String, session: String) {
     send("POST", "/v1/tafs/${escaped(id)}/chats/${escaped(session)}/unarchive", jsonBody())
+  }
+
+  /**
+   * Deletes one of the person's own chats for good (docs/api.md): its messages and files, on every device. tafs cloud decides
+   * whose it is: 404 for one that isn't theirs or is already gone, 409 while its run works or waits on a card, with its words in
+   * the refusal's `error`.
+   */
+  suspend fun deleteChat(id: String, session: String) {
+    send("DELETE", "/v1/tafs/${escaped(id)}/chats/${escaped(session)}")
   }
 
   /** Opens a new conversation with the account's Coach on this taf (kiff/tafs#107): tafs cloud puts the taf's job, Card and latest calls in front of the owner's words. */
@@ -1125,7 +1161,7 @@ class TafsCloud(
       noteRefusal(response.body)
       throw CloudError(
         response.status, refusal(response.body) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.body), field(response.body, "words"),
-        field(response.body, "code"), field(response.body, "halted"), namedCards(response.body),
+        field(response.body, "code"), field(response.body, "halted"), namedCards(response.body), response.body,
       )
     }
     return response.body
