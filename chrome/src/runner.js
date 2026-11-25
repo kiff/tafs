@@ -8,7 +8,7 @@
 // pauses the run.
 
 import { RUN_STATES } from "./runstate.js";
-import { refuseURL, bareURL, joinRefusal, joinedRefusal, fenceDomains, SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED } from "./sites.js";
+import { refuseURL, bareURL, joinRefusal, joinedRefusal, fenceDomains, SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED, LOCAL_SUFFIXES } from "./sites.js";
 import { HAND_MAX_MS, validWords, withoutValues } from "./hand.js";
 
 /**
@@ -50,7 +50,10 @@ function doneKey(run) {
 }
 
 /** How many fence rules a tab takes (`Runner.fence`), and their ids from a tab's first. */
-export const FENCE_RULES = 6 + SENSITIVE_LABELS_URLS.length;
+export const FENCE_RULES = 7 + SENSITIVE_LABELS_URLS.length;
+
+/** An address with user info (`https://x@bank.example/`), which `refuseURL` refuses outright and the label patterns can't see past. */
+const USER_INFO = "^https?://[^/?#]*@";
 
 /** Why the run's fence refuses [url], as `refuseURL` says it: `site_blocked` for a sensitive site or Chrome's own pages. */
 const offWhy = (run, url) => (refuseURL(url, run.sites, run.allowed) || { code: "site_not_listed" }).code;
@@ -58,7 +61,7 @@ const offWhy = (run, url) => (refuseURL(url, run.sites, run.allowed) || { code: 
 /** What the fence lets a tab reach, for page.js's check before an act (`offFence`): the same lists `Runner.fence` gives Chrome. */
 function fenceOf(run) {
   const { granted, allowed } = fenceDomains(run.sites, run.allowed);
-  return { granted, allowed, sensitive: [...SENSITIVE.sites], labels: [...SENSITIVE_LABELS_URLS], never: [...NEVER_OPENED] };
+  return { granted, allowed, sensitive: [...SENSITIVE.sites], labels: SENSITIVE.labels.source, never: [...NEVER_OPENED], local: [...LOCAL_SUFFIXES] };
 }
 const fenceRange = (base) => Array.from({ length: FENCE_RULES }, (_, i) => base + i);
 
@@ -309,7 +312,10 @@ export class Runner {
    *   3. block the sensitive ones: `SENSITIVE.sites` by domain, and any host with a label that names a bank, a government or a
    *      health account (`SENSITIVE_LABELS_URLS`, the same words `sensitive()` tests, over a few patterns Chrome can hold);
    *   4. allow the sensitive sites the phone allowed by name, only within the grant's;
-   *   5. block Chrome's own pages and the Web Store, which no grant opens, and plain http.
+   *   5. block Chrome's own pages and the Web Store, which no grant opens, plain http, and any address with user info
+   *      (`x@` before the host), which `refuseURL` refuses outright.
+   * Their ids, from the tab's first (`fenceRange`): 0 block all, 1 the grant, 2 the sensitive sites, 3 the allowance, 4 Chrome's
+   * own pages, 5 http, 6 user info, then one for each of the label patterns.
    * A domain matches a site and its subdomains, as `within` does, so a grant of example.com never lets bank.example.com through,
    * nor google.com accounts.google.com. A pattern Chrome can't hold fails the fence, so the tab is never left unfenced
    * (`fenceFailed`). onBeforeNavigate stays as the record of a refused move and a backstop, not the guard.
@@ -318,7 +324,7 @@ export class Runner {
     const dnr = this.chrome.declarativeNetRequest;
     if (!dnr) return;
     if (dnr.isRegexSupported && this.labelsHeld === undefined) {
-      const said = await Promise.all(SENSITIVE_LABELS_URLS.map((regex) => Promise.resolve(dnr.isRegexSupported({ regex })).catch(() => null)));
+      const said = await Promise.all([USER_INFO, ...SENSITIVE_LABELS_URLS].map((regex) => Promise.resolve(dnr.isRegexSupported({ regex })).catch(() => null)));
       this.labelsHeld = said.every((x) => x && x.isSupported);
     }
     if (this.labelsHeld === false) throw Object.assign(new Error("Chrome can't hold the sensitive-site pattern"), { code: "browser_unavailable" });
@@ -332,7 +338,8 @@ export class Runner {
     if (allowed.length) rules.push({ id: ids[3], priority: 4, action: { type: "allow" }, condition: { ...on, requestDomains: allowed } });
     rules.push({ id: ids[4], priority: 5, action: { type: "block" }, condition: { ...on, requestDomains: [...NEVER_OPENED] } });
     rules.push({ id: ids[5], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: "^http://" } });
-    SENSITIVE_LABELS_URLS.forEach((regexFilter, i) => rules.push({ id: ids[6 + i], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter } }));
+    rules.push({ id: ids[6], priority: 5, action: { type: "block" }, condition: { ...on, regexFilter: USER_INFO } });
+    SENSITIVE_LABELS_URLS.forEach((regexFilter, i) => rules.push({ id: ids[7 + i], priority: 3, action: { type: "block" }, condition: { ...on, regexFilter } }));
     await dnr.updateSessionRules({ removeRuleIds: ids, addRules: rules });
   }
 

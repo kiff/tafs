@@ -2,7 +2,7 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS, FENCE_RULES } from "../src/runner.js";
-import { SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED, refuseURL } from "../src/sites.js";
+import { SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED, LOCAL_SUFFIXES, refuseURL, fenceDomains } from "../src/sites.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 import { Panels, joinFront, MARK_MS } from "../src/panels.js";
 
@@ -125,6 +125,7 @@ const FENCE = (granted, allowed = []) => [
   ...(allowed.length ? [[4, "allow", allowed]] : []),
   [5, "block", [...NEVER_OPENED]],
   [5, "block", "^http://"],
+  [5, "block", "^https?://[^/?#]*@"],
 ];
 
 test("a run opens in a background window of its own, grouped and named, and reads the page", async () => {
@@ -2157,7 +2158,7 @@ test("an act the page says would leave the run's sites is refused before it fire
   c.setAct({ ok: false, code: "site_not_listed", url: "https://elsewhere.example/ask" });
   const out = await r.handle(started({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }));
   assert.equal(out.error && out.error.code, "site_not_listed");
-  assert.deepEqual(seen[0][2], { fence: { granted: ["shop.example"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE_LABELS_URLS, never: [...NEVER_OPENED] } }, "the page is given what the run's fence lets through");
+  assert.deepEqual(seen[0][2], { fence: { granted: ["shop.example"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE.labels.source, never: [...NEVER_OPENED], local: [...LOCAL_SUFFIXES] } }, "the page is given what the run's fence lets through");
   assert.ok(r.runs.get("run_1").steps.some((x) => x.op === "navigate" && x.url === "https://elsewhere.example/ask" && x.error === "site_not_listed"), "recorded as a refused move");
   assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "still the run's");
   assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/");
@@ -2555,6 +2556,10 @@ const FENCE_URLS = [
   "https://bänk.shop.test/", "https://xn--bnk-sna.shop.test/", "https://www.paypal.com/", "https://paypal.com/",
   "https://notpaypal.com/", "https://127.0.0.1/", "https://localhost/", "https://printer.local/", "https://bank.other.test/",
   "https://shop.test.:443/", "https://shop.test/a/bank/b",
+  // Full addresses: user info, ports, a sensitive word only in the path, query or fragment, case, a trailing dot.
+  "https://x@bank.shop.test/", "https://x:y@shop.test/", "https://shop.test@bank.test/", "https://x@shop.test/", "https://x@example.com/",
+  "https://bank.shop.test:443/", "https://shop.test/?q=bank.", "https://shop.test/#bank.", "https://shop.test/bank.", "https://shop.test/?next=https://bank.test/",
+  "https://SHOP.TEST/Bank", "https://BANK.SHOP.TEST/", "https://bank.shop.test./", "https://x@bank.example.com/", "https://u:p@accounts.google.com/",
 ];
 
 test("Chrome's fence and refuseURL give the same answer for every address, grant and allowance", async () => {

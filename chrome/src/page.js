@@ -488,18 +488,26 @@
   }
 
   /**
-   * Why the run's fence would refuse [url], as the service worker's `refuseURL` and Chrome's own rules say it (runner.js `fence`),
-   * or null: `fence` is {granted, allowed, sensitive, labels, never}. Plain http and a site no grant lists: `site_not_listed`;
-   * Chrome's own pages, and a sensitive site the phone didn't allow by name: `site_blocked`.
+   * Why the run's fence would refuse [url], with the very code the service worker's `refuseURL` gives (sites.js), in its order,
+   * or null: `fence` is {granted, allowed, sensitive, labels, never, local} (runner.js `fenceOf`). Not https, or user info: `bad_url`;
+   * an address or a local name: `address_private`; a name not in ASCII: `bad_url`; Chrome's own pages: `site_blocked`; a site no
+   * grant lists: `site_not_listed`; a sensitive site the phone didn't allow by name: `site_blocked`. A unit test runs this and
+   * `refuseURL` over the same addresses.
    */
   function offFence(url, fence) {
-    const host = url.hostname.toLowerCase().replace(/\.$/, "");
-    if (url.protocol !== "https:") return "site_not_listed";
+    if (url.protocol !== "https:" || !url.hostname || url.username || url.password) return "bad_url";
+    const host = url.hostname.toLowerCase().replace(/[。．｡]/g, ".").replace(/\.$/, "");
+    const labels = host.split(".");
+    const last = labels[labels.length - 1];
+    const number = last !== "" && (last.startsWith("0x") ? /^[0-9a-f]*$/.test(last.slice(2)) : /^[0-9]+$/.test(last));
+    if (/^\[.*\]$/.test(host) || (/^[0-9a-f:]+$/i.test(host) && host.includes(":")) || number) return "address_private";
+    if ([...host].some((c) => c.charCodeAt(0) > 0x7f)) return "bad_url";
+    if (host === "localhost" || !host.includes(".") || (fence.local || []).some((s) => host.endsWith(s))) return "address_private";
     if (within(host, fence.never)) return "site_blocked";
     if (!within(host, fence.granted)) return "site_not_listed";
     let labelled = false;
     try {
-      labelled = (fence.labels || []).some((p) => new RegExp(p, "i").test(url.href));
+      labelled = new RegExp(fence.labels).test(host);
     } catch {
       labelled = true; // a pattern this page can't read: as sensitive, refused
     }
@@ -779,5 +787,5 @@
     return true;
   }
 
-  root.TafsPage = { read, act, kindOf, listen, maskForShot, unmaskShot, outline, unoutline };
+  root.TafsPage = { read, act, kindOf, listen, maskForShot, unmaskShot, outline, unoutline, offFence };
 })(globalThis);

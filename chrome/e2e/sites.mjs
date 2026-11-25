@@ -150,7 +150,8 @@ const ORDERS = {
 export const BANK_WORDS = "Balance on the joint account";
 const BANK = page("Your bank", `<h1>Your bank</h1><p>${BANK_WORDS}: 4 210,00.</p>`);
 /** A page of the run's sites with a link to a sensitive site of the grant (`bank.test`: its "bank" label makes it one). */
-const TO_BANK = (port) => page("Links to the bank", `<h1>Pay your rent</h1><a id="bank" href="https://bank.test:${port}/?from=link">Go to your bank</a>`);
+const TO_BANK = (port) => page("Links to the bank", `<h1>Pay your rent</h1><a id="bank" href="https://bank.test:${port}/?from=link">Go to your bank</a>
+<a id="userinfo" href="https://x@bank.test:${port}/?from=userinfo">Sign in at your bank</a>`);
 
 const FRAMES = (port) => page("Frames", `<h1>Frames</h1>
 <p>The page around the frames.</p>

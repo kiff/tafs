@@ -430,7 +430,9 @@ was done.
   3. **block the sensitive sites:** `SENSITIVE.sites` by domain (and their subdomains), and any host with a label that names a
      bank, a government or a health account (`SENSITIVE_LABELS_URLS`, patterns built from the very words `sensitive()` tests, split so each fits the memory Chrome gives a pattern);
   4. allow the sensitive sites the phone allowed by name, only within a granted site, and exactly that site and its subdomains;
-  5. block Chrome's own pages and the Web Store (which no grant opens, even allowed), and plain `http`.
+  5. block Chrome's own pages and the Web Store (which no grant opens, even allowed), plain `http`, and any address with user
+     info before its host (`https://x@bank.example/`), which `refuseURL` refuses outright and the label patterns couldn't see
+     past.
 
   So a link, a redirect, a form submit or a page's own script to another host, or to a sensitive one under a granted site
   (`bank.example.com` under `example.com`, `accounts.google.com` under `google.com`), is refused by Chrome before the request
@@ -438,8 +440,10 @@ was done.
   ones were stopped only by `onBeforeNavigate`, which raced the request: a sensitive site the phone hadn't allowed could be asked
   for once. A unit test runs the rules and `refuseURL` over the same table of addresses and grants and expects the same answer
   for each; a pattern Chrome says it can't hold (`isRegexSupported`) fails the fence, as below. The run's act heading there is
-  refused `site_blocked`, and the refused move is recorded so; `page.js`'s check before an act in a joined tab reads the same
-  lists (`fenceOf`). **The fence covers navigations only** (`main_frame` and
+  refused `site_blocked`, and the refused move is recorded so. `page.js`'s check before an act in a joined tab (`offFence`) reads
+  the same lists (`fenceOf`) in `refuseURL`'s order and gives its very code (`address_private` for an address or a local name,
+  `bad_url` for user info), which a page test checks address by address. The agreement test runs over full addresses too: user
+  info, ports, a trailing dot, a sensitive word only in the path, query or fragment (never blocked for that). **The fence covers navigations only** (`main_frame` and
   `sub_frame`): what a page of the run's sites sends by a request of its own (a `fetch`, an XHR, a beacon, an image, a WebSocket),
   or a frame the person's page already had open before a run joined it, is that site's own, as when the person types there
   themselves; the extension itself never sends a request elsewhere (`requests.e2e.test.js` pins each case). A tab the run's page opens gets the same rules. The

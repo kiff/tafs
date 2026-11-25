@@ -238,6 +238,9 @@ was refused (`isRegexSupported`: `memoryLimitExceeded`), which would fail the fe
 and each is checked in real Chromium. A fenced tab holds `RULES_PER_TAB` rules here (harness.mjs: runner.js `FENCE_RULES`, less the
 allowance's, as no grant here allows a sensitive site).
 
+**A link with user info to the bank** (`gaps.e2e.test.js`, `/to-bank`'s "Sign in at your bank", 0.2.19): `https://x@bank.test/`
+slipped past the label patterns; the fence's user-info rule stops it, with a warm connection to the bank, which logs nothing.
+
 **Chromium runs in English** (`--lang=en-US`, harness.mjs), whatever the computer's language: the panel's lines are checked word for word.
 
 ## Known bugs, as `todo` tests

@@ -832,9 +832,9 @@ test("an act whose link or form would leave the run's sites is refused before it
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
   await page.addScriptTag({ content: PAGE });
-  const { SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED } = await import("../src/sites.js");
+  const { SENSITIVE, NEVER_OPENED, LOCAL_SUFFIXES } = await import("../src/sites.js");
   // What the run's fence lets through (runner.js fenceOf): shop.example granted, paypal.com granted too, no sensitive site allowed.
-  const sites = { fence: { granted: ["shop.example", "paypal.com"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE_LABELS_URLS, never: [...NEVER_OPENED] } };
+  const sites = { fence: { granted: ["shop.example", "paypal.com"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE.labels.source, never: [...NEVER_OPENED], local: [...LOCAL_SUFFIXES] } };
   const act = async (a, label, where = "links") => {
     const read = await page.evaluate(() => TafsPage.read());
     const all = [...read.links, ...read.controls, ...read.fields];
@@ -859,5 +859,40 @@ test("an act whose link or form would leave the run's sites is refused before it
   // A link under one of the run's sites goes.
   assert.deepEqual(await act({ kind: "click" }, "Help"), { ok: true });
   await page.waitForURL("https://help.shop.example/faq");
+  await page.close();
+});
+
+// The page's own check before an act in the person's tab (offFence) gives the service worker's code for every address: the two read
+// the same lists in the same order (0.2.19). An address, a local name or user info once came back as site_not_listed.
+test("the page's check before an act gives refuseURL's very code for every address", { skip: !playwright }, async () => {
+  const { SENSITIVE, NEVER_OPENED, LOCAL_SUFFIXES, refuseURL, fenceDomains } = await import("../src/sites.js");
+  await ctx.route("https://shop.example/codes", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>codes</p>" }));
+  const page = await ctx.newPage();
+  await page.goto("https://shop.example/codes");
+  await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
+  await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: PAGE });
+  const urls = [
+    "https://shop.example/", "https://help.shop.example/a", "https://elsewhere.example/", "http://shop.example/", "https://x@shop.example/",
+    "https://x:y@shop.example/", "https://shop.example@bank.example/", "https://127.0.0.1/", "https://10.0.0.1/", "https://0x7f.1/",
+    "https://[::1]/", "https://localhost/", "https://printer.local/", "https://intranet/", "https://router.home/", "https://bänk.shop.example/",
+    "https://bank.shop.example/", "https://my-bank.shop.example/", "https://www.paypal.com/", "https://accounts.google.com/",
+    "https://bank.shop.example./", "https://SHOP.EXAMPLE/x", "https://shop.example/?q=bank.", "https://shop.example:8443/",
+    "https://shop.example。/", "https://gov.shop.example/", "https://allowed-bank.shop.example/",
+  ];
+  for (const [sites, allowed] of [[["shop.example", "paypal.com", "google.com"], []], [["shop.example"], ["allowed-bank.shop.example", "bank.elsewhere.example"]]]) {
+    const { granted, allowed: kept } = fenceDomains(sites, allowed);
+    const fence = { granted, allowed: kept, sensitive: [...SENSITIVE.sites], labels: SENSITIVE.labels.source, never: [...NEVER_OPENED], local: [...LOCAL_SUFFIXES] };
+    for (const url of urls) {
+      let parsed = null;
+      try {
+        parsed = new URL(url);
+      } catch {}
+      if (!parsed) continue;
+      const want = (refuseURL(url, sites, allowed) || { code: null }).code;
+      const got = await page.evaluate(([u, f]) => TafsPage.offFence(new URL(u), f), [url, fence]);
+      assert.equal(got, want, url + " under " + JSON.stringify(sites) + " allowing " + JSON.stringify(allowed));
+    }
+  }
   await page.close();
 });

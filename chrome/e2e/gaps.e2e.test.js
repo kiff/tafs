@@ -77,6 +77,25 @@ test("the taf's click on a link to a sensitive site of the grant the phone didn'
   assert.equal(clicked.error.code, "site_blocked");
 });
 
+// An address with user info before the host (`x@bank.test`) slipped past the sensitive-label patterns, which look for a label
+// right after `://` or after a dot or hyphen; the site check refuses any address with user info. Chrome's fence now does too.
+test("the taf's click on a link with user info to the bank: the bank is never asked for anything", { skip }, async () => {
+  const own = await h.context.newPage();
+  await own.goto(h.sites.url("bank.test", "/?case=person-userinfo"));
+  await own.close();
+  const run = newRun("bank-userinfo");
+  const opened = await banked({ op: "open", run, url: h.sites.url("shop.test", "/to-bank?case=userinfo") });
+  assert.equal(opened.ok, true, JSON.stringify(opened.error));
+  const before = bankHits().length;
+  const clicked = await banked({ op: "act", run, read_id: opened.page.read_id, act: { kind: "click", ref: ref(opened.page, "Sign in at your bank", "links") } });
+  await new Promise((r) => setTimeout(r, 1000));
+  await h.fromPanel({ type: "stop", run });
+  assert.ok(!JSON.stringify(clicked).includes(BANK_WORDS), "the bank's page was read");
+  assert.deepEqual(bankHits().slice(before), [], "bank.test was asked for its page");
+  assert.equal(clicked.ok, false);
+  assert.ok(["site_blocked", "bad_url"].includes(clicked.error.code), clicked.error.code);
+});
+
 // ---- Not on this site ----
 
 test("a site the person switched off: their send from the panel goes without its page, and a run's next read of their tab there takes nothing", { skip }, async () => {

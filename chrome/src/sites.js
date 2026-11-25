@@ -10,7 +10,7 @@ export const CODE = Object.freeze({
   siteBlocked: "site_blocked",
 });
 
-const LOCAL_SUFFIXES = [".localhost", ".local", ".internal", ".home", ".lan", ".corp", ".intranet", ".arpa"];
+export const LOCAL_SUFFIXES = Object.freeze([".localhost", ".local", ".internal", ".home", ".lan", ".corp", ".intranet", ".arpa"]);
 const IDEOGRAPHIC_DOTS = /[。．｡]/g;
 
 /** Chrome's own pages and the Web Store: never, for any grant. */

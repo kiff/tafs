@@ -156,8 +156,9 @@ function assertFenced(rules, tabId) {
   assert.deepEqual(at(2).map((r) => [r.action.type, r.condition.requestDomains]), [["allow", SITES]]);
   assert.ok(at(3).length >= 2 && at(3).every((r) => r.action.type === "block"), "the sensitive sites, by name and by label");
   assert.equal(at(4).length, 0, "no sensitive site allowed here");
-  assert.deepEqual(at(5).map((r) => r.action.type), ["block", "block"]);
+  assert.deepEqual(at(5).map((r) => r.action.type), ["block", "block", "block"]);
   assert.ok(at(5).some((r) => r.condition.regexFilter === "^http://"), "plain http");
+  assert.ok(at(5).some((r) => r.condition.regexFilter === "^https?://[^/?#]*@"), "user info");
   assert.ok(at(5).some((r) => (r.condition.requestDomains || []).includes("accounts.google.com")), "Chrome's own pages");
 }
 
