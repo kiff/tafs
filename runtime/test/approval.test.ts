@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AGREE_FIRST, askedInSession, checkDraft, type DecideContext, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
+import { AGREE_FIRST, askedInSession, checkDraft, type DecideContext, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, KIFFS_OWN_TOTAL, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
 import { unpinnedConnection } from "../src/cloud/rules.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
@@ -608,6 +608,52 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     s.grants = [grant({ status: "connected" }, { tools: tools.map(({ resource_argument: _, ...t }) => t) })];
     draft([each([count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+  });
+
+  // E2E 45557276812, Setup: the owner agreed "over €5 a refund asks me, past €50 a day is refused". tafs cloud's check
+  // refused a count on the held Card (count_on_amount), then a day's total on it beside the refused Card's
+  // (day_total_twice); told only to drop them, Coach drafted the held Card with no total, KIFF refused it ("a mandate with
+  // no aggregate bounds nothing"), and Coach told the owner KIFF couldn't hold both rules. The owner picked "refuse over
+  // €5", so nothing was held. Replayed: each refusal names the held Card's one total, KIFF's own count, and the day's total
+  // on the refused Card; the two Cards those answers describe are signed.
+  it("replayed, the refusals that took a held Card's total away name KIFF's own count, and the two Cards they describe are signed", async () => {
+    const s = services();
+    const tools = [{ tool: "list_charges", name: "list_charges", title: "List charges", read_only: true },
+      { tool: "stripe_api_read", name: "read_charge", title: "Read one charge", read_only: true },
+      { tool: "refund_charge", name: "refund_charge", title: "Refund a charge", amount_argument: "amount" }];
+    s.grants = [grant({ status: "connected" }, { tools })];
+    const day = { quantity: "sum(amount)", limit: 5000, window: "calendar_day" };
+    const count = (limit: number) => ({ quantity: "count", limit, window: "calendar_day" });
+    // Over €5 a refund: asks the owner. Past €50 a day: refused. Reads on their own Card, with KIFF's count.
+    const held = (aggregates: unknown[]) => ({ id: "held", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates });
+    const refused = { id: "refused", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge" }], aggregates: [day] };
+    const reads = { id: "reads", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "list_charges" }, { action: "read_charge" }], aggregates: [count(READS_A_DAY)] };
+    const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    const draft = (cards: unknown[]) => { s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards }; };
+    // 1. The run's first refusal: 1,000,000 refunds a day on the held Card.
+    draft([held([count(1_000_000)]), refused, reads]);
+    const first = await ask();
+    expect(first).toMatchObject({ outcome: "answered", note: WORDS.countOnAmount("Refund a charge") });
+    expect(String(first.answer)).toContain(`failed: the draft counts "Refund a charge"'s calls (1000000 per calendar_day) beside its amount limits`);
+    expect(String(first.answer)).toContain(KIFFS_OWN_TOTAL);
+    // 2. Its second: the day's €50 on the held Card too.
+    draft([held([day]), refused, reads]);
+    const second = await ask();
+    expect(second).toMatchObject({ outcome: "answered", note: WORDS.dayTotalTwice("Refund a charge") });
+    expect(String(second.answer)).toContain(`5000 on one whose on_exceed is "owner", and 5000 on one whose on_exceed is "refuse"`);
+    expect(String(second.answer)).toContain(KIFFS_OWN_TOTAL);
+    // What both say: the held Card's total is KIFF's, in its one shape, and the owner's rules stay as agreed.
+    expect(KIFFS_OWN_TOTAL).toContain(`quantity "count", limit 10000, window "calendar_day", no per`);
+    expect(KIFFS_OWN_TOTAL).toContain("The day's total goes once, on the refused Card.");
+    expect(KIFFS_OWN_TOTAL).toContain("never tell them KIFF can't, and never ask them to change a rule for it");
+    // 3. The two Cards they describe: signed, the owner's rules as agreed.
+    draft([held([count(READS_A_DAY)]), refused, reads]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // A count on the refused Card isn't a held Card's total: refused without KIFF's count offered in its place.
+    draft([held([]), { ...refused, aggregates: [day, count(30)] }, reads]);
+    const onRefused = await ask();
+    expect(onRefused).toMatchObject({ outcome: "answered", note: WORDS.countOnAmount("Refund a charge") });
+    expect(String(onRefused.answer)).not.toContain(KIFFS_OWN_TOTAL);
   });
 
   // Eval 43402441612: "one invoice per order, ever" and "up to 10 drafts a day" signed as 1 create_invoice in the Card's

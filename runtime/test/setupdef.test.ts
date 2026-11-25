@@ -256,7 +256,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(COACH_TEXT).toContain("planque's answer gives the taf's agent id");
     expect(COACH_TEXT).toContain("(name, such as \"reembolsos\")");
     // planque names each tool per grant in KIFF (kiff/planque#8): the draft uses those names.
-    expect(COACH_TEXT).toContain("as planque's status lists them (their names in KIFF");
+    expect(COACH_TEXT).toContain("as planque's status lists them, letter for letter");
     expect(COACH_TEXT).not.toContain("a new agent id for the taf");
     // The owner's phone test (#82): no planque to the owner, a failed approval is
     // retried, never "install or set up planque", and a shown plan keeps its steps.

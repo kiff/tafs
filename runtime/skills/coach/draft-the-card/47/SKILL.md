@@ -49,15 +49,16 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   new approval with the grant and the draft. The draft is the agreed rules,
   line for line, never merged ("€50 a day each" stays a line per
   tool, not €200 for all). A limit it can't hold as agreed is a changed rule:
-  show it in a new rules notice and get it agreed first. Each tool's on_exceed is its rule's over (ask: owner), and its line
+  show it in a new rules notice and get it agreed first. Held past each call and refused past the day is two
+  Cards (below), never a changed rule. A refusal that says how is how: do it, never tell the owner KIFF can't. Each tool's on_exceed is its rule's over (ask: owner), and its line
   says it, a read's too. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
-  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A draft answered "failed: … Draft it again" was never shown: do as it says at once, then show the new draft's approval; never show or ask to approve the refused one. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's Card never gets that count: its total is the agreed limit. Name the
-  tools in the draft as planque's status lists them (their names in KIFF, such
-  as post_reply_k3f9). The draft names
+  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A draft answered "failed: … Draft it again" was never shown: do as it says at once, then show the new draft's approval; never show or ask to approve the refused one. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's Card never gets that count, but for a held per-action limit's Card (below): its total is the agreed limit. Name the
+  tools in the draft as planque's status lists them, letter for letter: never add
+  a connection's four letters to a name it lists without them. The draft names
   only the tools planque lists for this taf's own grant, and of those never
-  one you asked for with setup_reads: those are your reads, on your reader Card; the taf never gets them. Never another tool KIFF knows on the account. A tool that moves money always has its amount limited, each call and over a day, each limit on one Card only, the one whose on_exceed its figure's (or rule's) over says: a held per-action limit's Card has no day's total and no count: KIFF keeps its own. Only the limits the owner agreed to: no other ceiling, count or total.
+  one you asked for with setup_reads: those are your reads, on your reader Card; the taf never gets them. Never another tool KIFF knows on the account. A tool that moves money always has its amount limited, each call and over a day, each limit on one Card only, the one whose on_exceed its figure's (or rule's) over says: a held per-action limit's Card has no day's total: its one total is KIFF's count, which you draft (count, 10000, calendar_day, no per; "KIFF adds it"), never on a refused Card or beside another total. Only the limits the owner agreed to: no other ceiling, count or total.
   A tool that writes to anyone outside the company (an email, a reply), or drafts (unless marked outside: false), goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
   starts each such call with "Written by an AI agent on behalf of <writes_for>.".
