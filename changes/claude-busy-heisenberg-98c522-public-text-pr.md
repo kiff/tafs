@@ -1,0 +1,1 @@
+- **The public-text check reads a pull request's own text.** `scripts/public_text.py --text` checks a title, body or review given on stdin, and a status line's words ("READY" with an arrow, "BOARD:") are caught in files and text alike.

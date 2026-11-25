@@ -5,6 +5,7 @@ Those names are matched by the first 16 hex digits of their SHA-256, so this fil
 one: printf %s NAME | sha256sum | cut -c1-16. GitHub logins stay only where they do something: the files in KEEP, with this check and its test.
 
 Run from the repository's root: `python3 scripts/public_text.py`. It prints each line it finds and exits 1, else "clean".
+`--text` checks what's on stdin instead: a pull request's title, body or review.
 """
 
 import hashlib
@@ -23,6 +24,8 @@ SAID = re.compile(
     r"kiff/work\b|\bthe P[M]\b|\bP[M]'s\b|\(P[M][ ,)]|\bP[M] [0-9]{1,2}(:[0-9]{2}| " + MONTH + r")"
     r"|\b(review|probe|ask|point|negatives|read) (on|of)( [A-Za-z0-9/_.-]*#[0-9]+)?\)"
     rf"|\bowner(?:'s|,) [0-9]{{1,2}} {MONTH}\b"
+    # A status line's own words: a hand-off ("READY" with an arrow) or a board's line ("BOARD:").
+    r"|\bREADY\s*(?:→|->)|\bBOARD:"
 )
 WORD = re.compile(r"(?<![\w-])[a-z0-9]+(?:-[a-z0-9]+)*(?![\w-])")
 # Where a login does something: who reviews what, who may merge, and their tests and docs.
@@ -46,7 +49,20 @@ def named(line):
     return None
 
 
+def in_text(lines):
+    """What a pull request's title, body or review says (read from stdin by --text): each line that names us, numbered."""
+    return [f"line {n}: {line.strip()[:160]}" for n, line in enumerate(lines, 1) if named(line)]
+
+
 def main():
+    if sys.argv[1:] == ["--text"]:
+        found = in_text(sys.stdin.read().splitlines())
+        if found:
+            print("This pull request's text names a thread, a lane, its manager or a dated rule; say what changed and why:")
+            print("\n".join(found))
+            return 1
+        print("clean")
+        return 0
     files = subprocess.run(["git", "ls-files", "-z"], capture_output=True, check=True).stdout.decode().split("\0")
     found = []
     for path in files:
