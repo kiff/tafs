@@ -498,7 +498,7 @@ was done.
   read "Stopped a move to" their destination. These records live only in this Chrome (the panel's state, in
   `chrome.storage.session`); none of them is sent to planque, tafs cloud or KIFF.
 - **A refused step says why in words** (0.2.18, `panel.js` `refusedWords`). The card writes the step, then the code's own line
-  from `step_refused_<code>` when there is one: "Read the page · not done: you moved this tab, so it's yours now" (`given_back`),
+  from `step_refused_<code>` when there is one: "Read the page · not done: the tab moved without the taf, so it's yours now" (`given_back`),
   "the page changed first" (`page_changed`), "there's no page to go back to" (`no_back`), "that site isn't one of this taf's"
   (`site_not_listed`), "it's paused until you resume it" (`paused_by_owner`), "no page is open for it" (`no_page`), "Chrome
   couldn't do it" (`browser_unavailable`), in each of the 43 languages. Any other code reads as before, "not done (<code>)".
