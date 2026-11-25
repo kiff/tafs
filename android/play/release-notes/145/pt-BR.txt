@@ -1,0 +1,1 @@
+• O tafs volta a abrir. A versão 1.49.1 fechava assim que era iniciada.
