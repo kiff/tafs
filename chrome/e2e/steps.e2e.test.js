@@ -128,3 +128,17 @@ test("dialogs: a page's confirm() doesn't block the run and is never accepted", 
   // Chromium never showed it: the harness accepts any dialog that reaches it, and none did.
   assert.deepEqual(h.dialogs, []);
 });
+
+test("back: after the taf's click on a link, back returns to the page it clicked on", {
+  skip,
+  todo: "runner.js act back (chrome.tabs.goBack) after a taf's own click does nothing here: the answer is ok with the page the click led to, not the page before it. The likely cause is Chrome's history intervention, which skips on back an entry the page left without a user's activation; a taf's click (page.js press: el.click(), untrusted) gives none.",
+}, async () => {
+  const run = newRun("back");
+  let r = await send({ op: "open", run, url: h.sites.url("news.test", "/hub?case=back") });
+  assert.equal(r.ok, true, JSON.stringify(r.error));
+  r = await send({ op: "act", run, read_id: r.page.read_id, act: { kind: "click", ref: ref(r.page, "Read the long page", "links") } });
+  assert.equal(r.page.url, h.sites.url("news.test", "/long"));
+  r = await send({ op: "act", run, read_id: r.page.read_id, act: { kind: "back" } });
+  assert.equal(r.ok, true, JSON.stringify(r.error));
+  assert.equal(r.page.url, h.sites.url("news.test", "/hub"));
+});
