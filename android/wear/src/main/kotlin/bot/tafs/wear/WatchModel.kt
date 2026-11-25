@@ -29,6 +29,9 @@ internal const val UNREACHABLE_AFTER_MS = 30_000L
  */
 internal val RETRY_BACKOFF_MS = listOf(2_000L, 4_000L, 8_000L)
 
+/** The waits before Your tafs is read again after a read that missed (row 27): three quiet tries, then the kept list stays. */
+internal val TAFS_RETRY_MS = listOf(2_000L, 5_000L, 10_000L)
+
 /** With nothing kept to show, the watch goes on trying this often while it's open, behind its linking screen. */
 internal const val LINKING_RETRY_MS = 15_000L
 
@@ -1335,13 +1338,52 @@ class WatchModel(
     lastFailed = false
     // Your brief, only with the switch on: none, or a phone that can't say (an older one), and Needs you stays, as today.
     val brief = if (briefOn) (ask(WatchRequest.Brief(now())) as? Asked.Answered)?.reply as? WatchReply.Brief else null
-    val tafs = (ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }
+    val read = (ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }
       ?.also { if (it.zone != null) WatchChatTime.use(it.zone) }?.let { TafsRead(it.tafs, it.allHalted) }
     if (_signedOutHere.value) return
+    // A list read that missed (a slow phone, the 10 s passing) never empties the Tafs page: the list the watch had stays, shown and
+    // kept, and [start] reads it again behind it (row 27). Only a list the phone gave replaces it.
+    tafsMissed = read == null
+    val tafs = read ?: lastTafs(kept)
     if (kept && unlocked()) cache?.save(needsYou, tafs)
     show(Shown.Read(needsYou, tafs, brief))
     // The phone answered: a message kept for later goes now.
     sendKept()
+  }
+
+  /** The last read of Your tafs missed: what's shown is the list from before, and [retryTafs] reads it again. */
+  private var tafsMissed = false
+
+  /** The list the watch had: on screen, or as kept, never another account's ([verified]). */
+  private fun lastTafs(kept: Boolean): TafsRead? =
+    (_shown.value as? Shown.Read)?.tafs ?: cache?.takeIf { kept && verified }?.load()?.let { c -> c.tafs?.let { TafsRead(it, c.allHalted) } }
+
+  /**
+   * Your tafs read again after a read that missed, quietly, after each of [backoff]: the first list the phone gives replaces the
+   * one shown and kept. Nothing on screen changes while it tries, and it stops at the first answer, or after the last try.
+   */
+  suspend fun retryTafs(backoff: List<Long> = TAFS_RETRY_MS, wait: suspend (Long) -> Unit = { kotlinx.coroutines.delay(it) }) {
+    for (pause in backoff) {
+      if (!tafsMissed || _signedOutHere.value) return
+      wait(pause)
+      val read = (ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.reply as? WatchReply.Tafs ?: continue
+      tafsChanged(read.tafs, read.allHalted, read.zone)
+      return
+    }
+  }
+
+  /**
+   * Your tafs as the phone holds them now: from a read, or pushed by the phone when its list changes ([bot.tafs.watchlink.KeptTafs],
+   * taken only under the mark held). The Tafs page moves at once, and the kept copy follows.
+   */
+  fun tafsChanged(tafs: List<TafLine>, allHalted: Boolean, zone: String? = null) {
+    if (_signedOutHere.value || !verified) return
+    tafsMissed = false
+    if (zone != null) WatchChatTime.use(zone)
+    val read = TafsRead(tafs, allHalted)
+    val shown = _shown.value as? Shown.Read ?: return
+    _shown.value = shown.copy(tafs = read)
+    if (unlocked()) cache?.save(shown.needsYou, read)
   }
 
   /** Since when the phone hasn't answered, while the last read is still shown. */
@@ -1408,6 +1450,8 @@ class WatchModel(
     readAsks()
     // Row 21: the Inbox's read and dismissed, in step with the person's other watches.
     syncInbox()
+    // Your tafs, again, if their read missed: the page keeps the last list until one comes (row 27).
+    retryTafs(wait = wait)
   }
 
   /**

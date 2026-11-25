@@ -304,6 +304,7 @@ class WatchActivity : ComponentActivity() {
     AskResults.shown = { ask -> runOnUiThread { model.took(ask) } }
     KeptResults.marks = { marks -> runOnUiThread { model.takeMarks(marks) } }
     KeptResults.chats = { tafId, lines -> runOnUiThread { model.tafChatChanged(tafId, lines) } }
+    KeptResults.tafs = { kept -> runOnUiThread { model.tafsChanged(kept.tafs, kept.allHalted, kept.zone) } }
     // The phone signed out while the app is open: everything goes now, then the phone is read again.
     KeptResults.signedOut = { runOnUiThread { model.phoneSignedOut(); lifecycleScope.launch { model.refresh() } } }
     opening = lifecycleScope.launch {
@@ -319,6 +320,7 @@ class WatchActivity : ComponentActivity() {
     AskResults.shown = null
     KeptResults.marks = null
     KeptResults.chats = null
+    KeptResults.tafs = null
     KeptResults.signedOut = null
     opening?.cancel()
     opening = null
