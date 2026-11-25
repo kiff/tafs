@@ -362,7 +362,7 @@ internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null, wh
       item { T(ask.tafName ?: "", 12.sp, Look.coach, FontWeight.Medium, lines = 1) }
       // tafs cloud's checked line (up to 140 characters); with none, its word for the state. Whole, however many lines.
       item {
-        val text = (whole as? WatchModel.Whole.Read)?.text ?: (ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }
+        val text = Plain.of((whole as? WatchModel.Whole.Read)?.text ?: (ask.line ?: ask.words)).ifBlank { Words.Watch.moreOnPhone }
         T(text, 15.sp, Look.onCoachGround, FontWeight.SemiBold, Modifier.width(156.dp).testTag(RESULT_TEXT), lines = Int.MAX_VALUE, lineHeight = 18.sp)
       }
       // tafs cloud says the answer goes on past its line (`more`): Read more reads the whole (`full=1`), shown here and heard by

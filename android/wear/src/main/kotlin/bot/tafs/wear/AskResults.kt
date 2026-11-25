@@ -41,7 +41,8 @@ object AskResults {
    * follows, as on the Apple Watch. Opened, the answer shows whole, from memory.
    */
   internal fun alertText(ask: AskLine): String {
-    val whole = ask.line ?: ask.words
+    // Plain text: a notification draws no markdown either.
+    val whole = Plain.of(ask.line ?: ask.words)
     val kept = bot.tafs.watchlink.Amounts.strip(whole)
     return when {
       kept.isBlank() -> Words.Watch.moreOnPhone

@@ -322,7 +322,7 @@ private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, answere
     Card(onClick = { act.open(ask) }, modifier = Modifier.fillMaxWidth().testTag(INBOX_ITEM + InboxItem.askId(ask.id))) {
       Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         ask.tafName?.let { Text(it, style = MaterialTheme.typography.titleSmall, color = Look.coach, maxLines = 1) }
-        Text((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Text(Plain.of(ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
       }
     }
   }
@@ -384,7 +384,7 @@ private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, calls: Li
           entry.title?.let { Text(it, style = MaterialTheme.typography.titleSmall, color = if (entry.kind == InboxItem.Kind.HELD) Look.held else Look.coach, maxLines = 1) }
         }
         // An answer that was only an amount is kept blank (no amount is kept on the watch): it says the rest is on the phone.
-        Text(entry.line.ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Text(Plain.of(entry.line).ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         if (entry.kind == InboxItem.Kind.HELD && calls != null) {
           if (call == null) {
             Text(Words.Watch.alreadyAnswered, style = MaterialTheme.typography.bodySmall)

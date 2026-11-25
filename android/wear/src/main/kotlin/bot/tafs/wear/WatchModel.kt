@@ -1308,7 +1308,7 @@ class WatchModel(
   }
 
   /** What Hear reads for [ask]: the whole answer once read, else its line or its state. */
-  fun heard(ask: AskLine): String = (_wholes.value[ask.id] as? Whole.Read)?.text ?: ask.line ?: ask.words
+  fun heard(ask: AskLine): String = Plain.of((_wholes.value[ask.id] as? Whole.Read)?.text ?: ask.line ?: ask.words)
 
   /** The asks at work, newest first, for the home screen. */
   fun working(): List<AskLine> = _asks.value.values.filter { !it.ended }.sortedByDescending { it.updated }

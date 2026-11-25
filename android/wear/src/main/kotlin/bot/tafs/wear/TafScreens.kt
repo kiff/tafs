@@ -272,7 +272,8 @@ internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null, time:
       Modifier.background(if (mine) Look.mineGround else Look.neutral, androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-      Text(text, style = MaterialTheme.typography.bodySmall, color = if (mine) Look.onMineGround else Look.text)
+      // The person's own words as they wrote them; a taf's, plain (no markdown on the watch).
+      Text(if (mine) text else Plain.of(text), style = MaterialTheme.typography.bodySmall, color = if (mine) Look.onMineGround else Look.text)
       foot?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = Look.dim) }
     }
     time?.let { if (sent) SentFoot(it, sent = true, Modifier.padding(horizontal = 8.dp)) else MessageTime(it) }
@@ -297,7 +298,7 @@ internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.
     }
     return
   }
-  val shown = (whole as? WatchModel.Whole.Read)?.text ?: ask.line ?: ask.words
+  val shown = Plain.of((whole as? WatchModel.Whole.Read)?.text ?: ask.line ?: ask.words)
   Column(Modifier.fillMaxWidth().padding(horizontal = 6.dp)) {
     Column(
       Modifier.background(Look.neutral, androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
