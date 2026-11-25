@@ -1060,6 +1060,9 @@ computer's passkey, which this Chrome has neither of.
     only into a chat this Chrome began, or a new one), kept with the pairing (`coach_began`, below in "What's kept"), and
     given as the read's `began`. tafs cloud's chat list and thread say nothing of which they are, so a run's chat shown here
     (read-only to the panel) gets Copy only, and so does a chat begun here before 0.2.24 until its next message from here.
+    **To follow:** tafs cloud already decides which chats this Chrome began (`chromeBegan`), so it will say so on a chats row
+    and in the conversation (`turns_only: true` for a run's chat shown here). The panel then reads that, and `coach_began`
+    goes from the extension and from "What's kept".
   - **A run's work, folded** into one line over its answer, "Worked 4.2 s · 3 steps, 1 failed" (tafs cloud's `work` on the
     message, as Android's `Chat.workLine`), which opens to its steps in tafs cloud's words, never a tool's name: a step with
     no words is left out, tries of the same step are one row ("2 tries"), a failed step is left out once something worked
