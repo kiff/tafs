@@ -11,7 +11,7 @@ Let your tafs work in your own Chrome, only on the sites you allow, with every r
 tafs for Chrome lets your tafs work in your own Chrome, only on the sites you allow. Every risky step waits for your approval on your phone.
 
 • Pair this Chrome with your phone: in the tafs app, open Account › Chrome › Pair a Chrome and type the code it shows.
-• A taf works in its own tabs, in a tab group you can see. A taf you message from the side panel can work in the tab you're on instead, if it's one of its sites, and opens any other page in a tab of its own. There it can click and type, only on its own sites. You can pause or stop it at any time, and it pauses when you touch one of its tabs. While it works, a small bar on the page in front of each window lets you pause, stop or go to its tab. It reads nothing from that page.
+• A taf works in its own tabs, in a tab group you can see. A taf you message from the side panel can work in the tab you're on instead, if it's one of its sites, and opens any other page in a tab of its own. In the tab you're on, it can click and type, only on its own sites. You can pause or stop it at any time, and it pauses when you touch one of its tabs. While it works, a small bar on the page in front of each window lets you pause, stop or go to its tab. It reads nothing from that page.
 • Chrome asks once, when you install it, for access to all sites. tafs works only on the sites each task lists, which you approve on your phone.
 • Paying and placing an order always wait for your approval on your phone.
 • It reads a page as text and form fields, with password, card and code fields removed. It never reads your other tabs or your history.
