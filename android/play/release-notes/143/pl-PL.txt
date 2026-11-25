@@ -1,0 +1,3 @@
+• Na tablecie każda strona to jedna wyśrodkowana kolumna, jak na iPadzie.
+• Twój zegarek z Wear OS dostaje odpowiedzi Coacha i Twoich tafów, nawet gdy tafs jest zamknięty na telefonie.
+• „Zezwalaj od teraz” sprawdza każdy warunek zmiany Card, zanim zatwierdzisz ją odciskiem palca.
