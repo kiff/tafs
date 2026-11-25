@@ -862,7 +862,7 @@ computer's passkey, which this Chrome has neither of.
     phone signed at pairing) or one planque lists with its grant's `sites_signed` (the phone's `tafs-chrome/sites/v1`
     signature, the one a run's first step carries), verified here. planque's own `sites` for a connection are never taken; a
     connection planque lists without the signature lets no page go. A page off those sites is never read (checked before the
-    read and again on the address it was read on), the words go alone, the answer says `notReading: "not_taf_site"`, and the
+    read and again on the address it came from), the words go alone, the answer says `notReading: "not_taf_site"`, and the
     chat says "‹site› isn't read: this taf doesn't work on this site" under that message.
   - **tafs cloud takes a page on a taf's messages under the same checks as Coach's.** Until it does, it answers
     `400 page_refused` ("only Coach reads the page you have open"), and the words are sent once more on their own, as Coach's
