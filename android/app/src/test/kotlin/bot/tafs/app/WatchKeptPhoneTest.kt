@@ -77,6 +77,20 @@ class WatchKeptPhoneTest {
   }
 
   /** The phone's Today sheet: a cut answer (`more`) is read whole on a tap (`GET /v1/watch/asks/{id}?full=1`). */
+  @Test fun aChatThatLeftThePhoneIsPutEmptySoTheWatchsCopyGoesToo() {
+    val chats = bot.tafs.app.watch.WatchChats(Kept(), now = { now })
+    val said = bot.tafs.app.model.ChatMessage(java.time.Instant.parse("2026-11-25T01:11:00Z"), bot.tafs.app.model.ChatMessage.From.owner, "Refunds under 50 euros", session = "s1")
+    chats.opened("wiki")
+    // Not read yet: nothing to put, and nothing emptied.
+    assertTrue(chats.changed(emptyMap()).isEmpty())
+    assertEquals(1, chats.changed(mapOf("wiki" to listOf(said))).size)
+    // The conversation was deleted on the phone: its chat left the phone's threads, and the watch's copy is put empty, once.
+    val gone = chats.changed(emptyMap())
+    assertEquals(listOf("/tafs/watch/v1/kept/taf-chat/wiki"), gone.map { it.first })
+    assertTrue(WatchLink.decodeKeptChat(gone.single().second)!!.lines.isEmpty())
+    assertTrue(chats.changed(emptyMap()).isEmpty())
+  }
+
   @Test fun aCutAnswerOnTheTodaySheetIsReadWhole() = runTest {
     val turns = bot.tafs.app.watch.WatchDaysWire.turns(bot.tafs.app.kiff.KiffClient.json.decodeFromString(bot.tafs.app.kiff.WireWatchTurns.serializer(),
       """{"turns":[{"id":"wa_1","said":"Why?","state":"done","line":"Your Chrome isn't reachable…","words":"Done","more":true},{"id":"wa_2","said":"Ok","state":"done","words":"Done"}]}"""))

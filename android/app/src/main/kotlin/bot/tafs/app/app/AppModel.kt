@@ -7,6 +7,7 @@ import bot.tafs.app.kiff.setupView
 import bot.tafs.app.kiff.phoneAlerts
 import bot.tafs.app.kiff.timeZones
 
+import bot.tafs.app.model.DeleteChatWords
 import bot.tafs.app.model.ErrorWords
 import bot.tafs.app.model.Words
 import bot.tafs.app.model.Unsent
@@ -488,6 +489,8 @@ data class AppState(
   /** Coach's past conversations, newest first, and the archived ones (kiff/tafs#97). */
   val coachChats: List<TafsCloud.Chat> = emptyList(),
   val coachArchived: List<TafsCloud.Chat> = emptyList(),
+  /** tafs cloud's words for deleting a conversation, from the last chats-list read that sent them; null until one has. */
+  val coachDeleteWords: TafsCloud.DeleteWords? = null,
   /** News of the tasks Coach handed tafs, until Coach reads it (kiff/tafs#206). */
   val coachLines: List<TafsCloud.CoachLine> = emptyList(),
   /** Coach was asked to open, from a screen without it: the tab screen opens it, then says so. */
@@ -2405,16 +2408,16 @@ class AppModel(
   suspend fun loadCoachChats() {
     val cloudId = _state.value.coachCloudId ?: return
     val generation = accountGeneration
-    val chats = attempt { cloud.chats(cloudId) } ?: return
-    if (generation == accountGeneration) _state.update { it.copy(coachChats = chats) }
+    val read = attempt { cloud.chatsRead(cloudId) } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(coachChats = read.chats, coachDeleteWords = read.delete ?: it.coachDeleteWords) }
   }
 
   /** Reads the conversations the owner archived, under Archived. */
   suspend fun loadArchivedCoachChats() {
     val cloudId = _state.value.coachCloudId ?: return
     val generation = accountGeneration
-    val chats = attempt { cloud.archivedChats(cloudId) } ?: return
-    if (generation == accountGeneration) _state.update { it.copy(coachArchived = chats) }
+    val read = attempt { cloud.archivedChatsRead(cloudId) } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(coachArchived = read.chats, coachDeleteWords = read.delete ?: it.coachDeleteWords) }
   }
 
   /**
@@ -2454,6 +2457,38 @@ class AppModel(
     if (generation != accountGeneration) return false
     _state.update { s -> s.copy(coachArchived = s.coachArchived.filterNot { it.session == session }) }
     loadCoachChats()
+    return true
+  }
+
+  /**
+   * Deletes one of Coach's conversations for good, after the person confirmed it: it leaves both lists, and the one shown gives way
+   * to a new conversation, so the watch's copy of it is emptied too. tafs cloud decides whose it is: one it doesn't have (404:
+   * already gone, or never this person's) leaves the lists quietly. One still working or waiting on a card (409) stays, with the
+   * refusal's own words (its `error`). Any other failure keeps it, with the words the last chats-list read brought, so
+   * they're on hand with no network. The app's English stand-ins ([DeleteChatWords]) only where tafs cloud sent none.
+   */
+  suspend fun deleteCoachChat(session: String): Boolean {
+    val cloudId = _state.value.coachCloudId ?: return false
+    val generation = accountGeneration
+    try {
+      cloud.deleteChat(cloudId, session)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: CloudError) {
+      if (generation != accountGeneration) return false
+      when (e.status) {
+        404 -> {}
+        409 -> { fail(e.field("error") ?: DeleteChatWords.BUSY); return false }
+        else -> { fail(DeleteChatWords.of(_state.value.coachDeleteWords).failed); return false }
+      }
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail(DeleteChatWords.of(_state.value.coachDeleteWords).failed)
+      return false
+    }
+    if (generation != accountGeneration) return false
+    val shown = _state.value.coachChat == session
+    _state.update { s -> s.copy(coachChats = s.coachChats.filterNot { it.session == session }, coachArchived = s.coachArchived.filterNot { it.session == session }) }
+    if (shown) newCoachChat()
     return true
   }
 

@@ -828,7 +828,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
   }
   val coachChats = remember(model) { CoachChatActions(
     newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
-    loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
+    loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat, delete = model::deleteCoachChat,
     giveTools = model::giveCoachTools, notNowTools = model::notNowCoachTools,
   ) }
   // What's open beside a tablet's sidebar, highlighted in it.

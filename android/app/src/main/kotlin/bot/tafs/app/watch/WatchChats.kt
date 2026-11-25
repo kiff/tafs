@@ -63,10 +63,16 @@ class WatchChats(
   /** The taf chats the watch has opened, by the phone's ids. */
   fun openedIds(): Set<String> = watched.toSet()
 
-  /** The items to put for [chats] (the phone's threads by taf): one per watched taf whose lines changed since the last put. */
+  /**
+   * The items to put for [chats] (the phone's threads by taf): one per watched taf whose lines changed since the last put. A chat
+   * the watch was given that has since left the phone (a conversation deleted, or a new one begun in its place) is put empty,
+   * so the watch's copy goes with it; one never given (the phone not yet read) puts nothing.
+   */
   @Synchronized fun changed(chats: Map<String, List<ChatMessage>>): List<Pair<String, ByteArray>> =
     watched.toList().mapNotNull { tafId ->
-      val lines = WatchRelay.chatLines(chats[tafId] ?: return@mapNotNull null, ChatLine.KEPT)
+      val thread = chats[tafId]
+      if (thread == null && sent[tafId].isNullOrEmpty()) return@mapNotNull null
+      val lines = if (thread == null) emptyList() else WatchRelay.chatLines(thread, ChatLine.KEPT)
       if (sent[tafId] == lines) return@mapNotNull null
       sent[tafId] = lines
       val path = WatchLink.keptChatPath(tafId) ?: return@mapNotNull null

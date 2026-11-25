@@ -286,6 +286,108 @@ class CoachConversationsTest {
     assertEquals("Not archived. It isn't working on our side right now. Try again later.", m.state.value.lastError)
   }
 
+  private val twoChats = """{"chats":[{"session":"s4","started":"2026-10-27T09:00:00Z","updated":"2026-10-27T10:00:00Z","title":"Refunds for Acme"},{"session":"s3","started":"2026-10-26T09:00:00Z","updated":"2026-10-26T10:00:00Z","title":"Connect Stripe"}]}"""
+
+  @Test fun aDeletedConversationLeavesBothListsAndTheScreen() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, twoChats)
+    transport.answer("GET /v1/tafs/setup_1/chats/archived", 200, """{"chats":[{"session":"s2","started":"2026-10-25T09:00:00Z","updated":"2026-10-25T10:00:00Z","title":"Old"}]}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s4", 200, """{"messages":[]}""")
+    transport.answer("DELETE /v1/tafs/setup_1/chats/s4", 200, """{"session":"s4","deleted":true}""")
+    transport.answer("DELETE /v1/tafs/setup_1/chats/s2", 200, """{"session":"s2","deleted":true}""")
+    val m = model()
+    m.loadCoachChats()
+    m.loadArchivedCoachChats()
+    m.openCoachChat("s4")
+    assertTrue(m.deleteCoachChat("s4"))
+    assertEquals(listOf("s3"), m.state.value.coachChats.map { it.session })
+    // The one shown was deleted: a new conversation takes its place, and nothing of the old one is left on screen.
+    assertTrue(m.state.value.coachFresh)
+    assertEquals(null, m.state.value.chats[bot.tafs.app.app.COACH_CHAT])
+    // An archived one goes from Archived too.
+    assertTrue(m.deleteCoachChat("s2"))
+    assertTrue(m.state.value.coachArchived.isEmpty())
+    assertEquals(1, transport.requestsTo("DELETE /v1/tafs/setup_1/chats/s4").size)
+  }
+
+  @Test fun oneTafsCloudDoesntHaveLeavesTheListQuietly() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, twoChats)
+    transport.answer("DELETE /v1/tafs/setup_1/chats/s3", 404, """{"error":"no such chat"}""")
+    val m = model()
+    m.loadCoachChats()
+    assertTrue(m.deleteCoachChat("s3"))
+    assertEquals(listOf("s4"), m.state.value.coachChats.map { it.session })
+    assertEquals(null, m.state.value.lastError)
+  }
+
+  @Test fun oneStillWorkingStaysAndSaysToStopOrAnswerItFirst() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, twoChats)
+    transport.answer("DELETE /v1/tafs/setup_1/chats/s4", 409, """{"error":"Arrête-la ou réponds-y d'abord."}""")
+    val m = model()
+    m.loadCoachChats()
+    assertFalse(m.deleteCoachChat("s4"))
+    assertEquals(listOf("s4", "s3"), m.state.value.coachChats.map { it.session })
+    // tafs cloud's own words for it, from the refusal.
+    assertEquals("Arrête-la ou réponds-y d'abord.", m.state.value.lastError)
+  }
+
+  @Test fun aRefusalWithNoWordsOfItsOwnTakesTheStandIn() = runTest {
+    reads()
+    transport.answer("DELETE /v1/tafs/setup_1/chats/s4", 409, "{}")
+    val m = model()
+    assertFalse(m.deleteCoachChat("s4"))
+    assertEquals(bot.tafs.app.model.DeleteChatWords.BUSY, m.state.value.lastError)
+  }
+
+  @Test fun theListsWordsForDeletingAreKeptAndAMissingOneTakesItsStandIn() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, twoChats.dropLast(1) +
+      ""","delete":{"item":"Supprimer la conversation","confirm_title":"Supprimer cette conversation ?","failed":"Elle n'a pas été supprimée."}}""")
+    val m = model()
+    m.loadCoachChats()
+    val words = bot.tafs.app.model.DeleteChatWords.of(m.state.value.coachDeleteWords)
+    assertEquals("Supprimer la conversation", words.menu)
+    assertEquals("Supprimer cette conversation ?", words.title)
+    // Not sent: the stand-ins.
+    assertEquals(bot.tafs.app.model.DeleteChatWords.BODY, words.body)
+    assertEquals(bot.tafs.app.model.DeleteChatWords.BUTTON, words.button)
+    // An archived read without words keeps those the list brought.
+    transport.answer("GET /v1/tafs/setup_1/chats/archived", 200, """{"chats":[]}""")
+    m.loadArchivedCoachChats()
+    assertEquals("Supprimer la conversation", bot.tafs.app.model.DeleteChatWords.of(m.state.value.coachDeleteWords).menu)
+  }
+
+  @Test fun aListWithNoWordsGivesTheStandIns() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, twoChats)
+    val m = model()
+    m.loadCoachChats()
+    assertEquals(null, m.state.value.coachDeleteWords)
+    assertEquals(bot.tafs.app.model.DeleteChatWords.MENU, bot.tafs.app.model.DeleteChatWords.of(m.state.value.coachDeleteWords).menu)
+  }
+
+  @Test fun aDeleteThatDidntGoThroughKeepsItAndSaysSo() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, twoChats.dropLast(1) + ""","delete":{"failed":"Elle n'a pas été supprimée."}}""")
+    transport.drop("DELETE /v1/tafs/setup_1/chats/s4")
+    val m = model()
+    m.loadCoachChats()
+    assertFalse(m.deleteCoachChat("s4"))
+    assertEquals(listOf("s4", "s3"), m.state.value.coachChats.map { it.session })
+    // With no network, the words the last list read brought.
+    assertEquals("Elle n'a pas été supprimée.", m.state.value.lastError)
+  }
+
+  @Test fun aDeleteThatFailedBeforeAnyWordsCameTakesTheStandIn() = runTest {
+    reads()
+    transport.drop("DELETE /v1/tafs/setup_1/chats/s4")
+    val m = model()
+    assertFalse(m.deleteCoachChat("s4"))
+    assertEquals(bot.tafs.app.model.DeleteChatWords.FAILED, m.state.value.lastError)
+  }
+
   @Test fun anArchivedConversationIsPutBack() = runTest {
     reads()
     transport.answer("GET /v1/tafs/setup_1/chats/archived", 200, """{"chats":[{"session":"s2","started":"2026-10-25T09:00:00Z","updated":"2026-10-25T10:00:00Z","title":"Old"}]}""")
