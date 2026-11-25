@@ -77,6 +77,9 @@ internal fun TafScreen(
       act.halt(open.tafId)
     }, cancel = { confirming = false })
   }
+  // While its chat is answering, on screen: the answer followed through the phone, bounded, and stopped when the screen goes.
+  val answering = chat && open.chat.answering
+  androidx.compose.runtime.LaunchedEffect(open.tafId, answering) { if (answering) act.followAnswer(open.tafId) }
   HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
     // 1A: its chat first, then its page, then its settings; with the switch off, its page and settings as before.
     val page = if (chat) i - 1 else i
@@ -188,7 +191,7 @@ private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions,
     header(at)
     // Its own words, with "HH:mm ✓" under them: in the thread only once tafs cloud took it.
     item { ChatBubble(turn.said, mine = true, time = WatchChatTime.time(at), sent = true) }
-    item { TafAnswer(turn, open.name, open.chat.whole[turn.ask.id], act) }
+    item { TafAnswer(turn, open.name, open.chat.whole[turn.ask.id], act, waitedOut = open.chat.waitedOut, onPhone = onPhone(open)) }
   }
   if (open.halted) {
     item { Centred(Words.Halt.Explain.halted, Look.danger) }
@@ -266,12 +269,16 @@ internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null, time:
  * the whole once read, "The rest is on your phone" when it can't be; held, Approve on your phone (the watch never approves).
  */
 @Composable
-internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.Whole?, act: Actions) {
+internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.Whole?, act: Actions, waitedOut: Boolean = false, onPhone: String? = null) {
   val ask = turn.ask
   if (!ask.ended && !ask.held) {
     // Taken: the ✓ under the person's words says it; then "{taf} is answering" until the answer.
     if (ask.state != bot.tafs.watchlink.AskLine.ACCEPTED) {
       Text(Words.Chat.tafIsAnswering(taf), style = MaterialTheme.typography.labelSmall, color = Look.done, modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp))
+    }
+    // Followed for two minutes with no answer yet: it still lands here when it comes; meanwhile, the phone has the chat.
+    if (waitedOut && onPhone != null) {
+      Button(onClick = { act.openOnPhone(onPhone) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) }
     }
     return
   }

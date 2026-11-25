@@ -32,6 +32,12 @@ internal val RETRY_BACKOFF_MS = listOf(2_000L, 4_000L, 8_000L)
 /** The waits before Your tafs is read again after a read that missed (row 27): three quiet tries, then the kept list stays. */
 internal val TAFS_RETRY_MS = listOf(2_000L, 5_000L, 10_000L)
 
+/** While a taf's chat on screen is answering, its asks are read again this often (row 13)… */
+internal const val ANSWER_READ_EVERY_MS = 5_000L
+
+/** …for at most this long: then it stops, and the answer still lands when the phone pushes it. */
+internal const val ANSWER_FOLLOW_MS = 120_000L
+
 /** With nothing kept to show, the watch goes on trying this often while it's open, behind its linking screen. */
 internal const val LINKING_RETRY_MS = 15_000L
 
@@ -324,7 +330,16 @@ class WatchModel(
    * from this watch with the taf's answers, and the answers read in full. Kept as Coach's is ([KeptThreads]), the whole answers
    * read with Read more excepted; never in the Inbox.
    */
-  data class TafChat(val history: History = History.Reading, val turns: List<TafTurn> = emptyList(), val whole: Map<String, Whole> = emptyMap()) {
+  data class TafChat(
+    val history: History = History.Reading,
+    val turns: List<TafTurn> = emptyList(),
+    val whole: Map<String, Whole> = emptyMap(),
+    /** Its answer was followed for [ANSWER_FOLLOW_MS] and hasn't come: it still lands when the phone pushes it, and Open on phone shows. */
+    val waitedOut: Boolean = false,
+  ) {
+    /** A message sent from here that the taf is still answering (not held: that's the phone's). */
+    val answering: Boolean get() = turns.any { !it.ask.ended && !it.ask.held }
+
     sealed interface History {
       data object Reading : History
       data class Read(val lines: List<bot.tafs.watchlink.ChatLine>) : History
@@ -414,6 +429,26 @@ class WatchModel(
 
   /** The asks sent from a taf's chat this session: never Coach's, never in the Inbox. */
   private val tafAsks = mutableSetOf<String>()
+
+  /**
+   * While a taf's chat on screen shows "{taf} is answering": the watch's asks are read again through the phone every [every], so
+   * the answer lands even if the phone's push didn't come (row 13). It stops at once when nothing is being answered, when the chat
+   * closes, or after [limit], with Open on phone beside the answering line; the answer still lands when the phone pushes it. The
+   * screen runs it only while the chat is on it, so a watch put away reads nothing.
+   */
+  suspend fun followAnswer(tafId: String, every: Long = ANSWER_READ_EVERY_MS, limit: Long = ANSWER_FOLLOW_MS, wait: suspend (Long) -> Unit = { kotlinx.coroutines.delay(it) }) {
+    var waited = 0L
+    while (_taf.value?.takeIf { it.tafId == tafId }?.chat?.answering == true) {
+      if (waited >= limit) {
+        _taf.update { open -> open?.takeIf { it.tafId == tafId }?.let { it.copy(chat = it.chat.copy(waitedOut = true)) } ?: open }
+        return
+      }
+      wait(every)
+      waited += every
+      if (_signedOutHere.value || _taf.value?.tafId != tafId) return
+      readAsks()
+    }
+  }
 
   /** Read more on a taf's answer: the whole of it, read from tafs cloud only now, shown in place and kept nowhere. */
   suspend fun readMore(askId: String) {
@@ -951,7 +986,7 @@ class WatchModel(
       _tafChatOff.value = false
       tafAsks += taken.id
       val turn = TafTurn(sending.text, now(), taken)
-      _taf.update { open -> open?.takeIf { it.tafId == sending.tafId }?.let { it.copy(chat = it.chat.copy(turns = it.chat.turns + turn)) } ?: open }
+      _taf.update { open -> open?.takeIf { it.tafId == sending.tafId }?.let { it.copy(chat = it.chat.copy(turns = it.chat.turns + turn, waitedOut = false)) } ?: open }
       saveTaf(sending.tafId)
       voiceNow = null
       return

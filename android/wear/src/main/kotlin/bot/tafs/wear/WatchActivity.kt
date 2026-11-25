@@ -201,6 +201,7 @@ class WatchActivity : ComponentActivity() {
           typeTaf = { taf -> typingFor = taf; type() },
           quickTaf = { taf, text -> model.review(text, tafId = taf) },
           readMore = { id -> lifecycleScope.launch { model.readMore(id) } },
+          followAnswer = { id -> model.followAnswer(id) },
           keep = if (WATCH_V2) model::keepForLater else null,
           deleteKept = model::deleteKept,
           playback = if (WATCH_V2) playback else null,
@@ -460,6 +461,8 @@ internal class Actions(
   val readMore: (String) -> Unit = {},
   /** Read more on an answer's card (Coach's or a taf's) that tafs cloud says goes on, by its request's id. */
   val readWhole: (String) -> Unit = {},
+  /** While a taf's chat on screen is answering: its answer followed through the phone, bounded ([WatchModel.followAnswer]). */
+  val followAnswer: suspend (String) -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */
