@@ -86,7 +86,7 @@ function history(kept: Kept | undefined): Kept["earlier"] {
 
 /*
  * Coach reading the page in front (docs/chrome.md, "Coach reads the page you're on"): a consent of its own, beside the AI
- * consent above, given and withdrawn in the Chrome extension, whose own screen says what goes to Anthropic and when. It
+ * consent above, given and withdrawn in the Chrome extension, whose own screen says what goes to the AI model and when. It
  * gates one thing only: a page sent with a message to Coach, or to a taf on one of its own sites. Without it the page is
  * dropped and never read, kept or logged, and the message goes alone, on the AI consent as ever. Nothing else waits on
  * it: no schedule. A new PAGE_CONSENT_VERSION asks again.
@@ -94,7 +94,9 @@ function history(kept: Kept | undefined): Kept["earlier"] {
 
 /**
  * The page consent's version: raised when what's read from the page, or where it goes, changes. "2": a message to a
- * taf carries the page too (Chrome 0.2.14, `chrome/src/pageconsent.js` in step), so everyone is asked again.
+ * taf carries the page too (Chrome 0.2.14, `chrome/src/pageconsent.js` in step), so everyone is asked again. A rewording
+ * that stays true keeps it ("the Claude AI model" in place of "Anthropic's Claude", tafs#2066). Moving inference to
+ * another provider (Bedrock) changes where it goes: raise it then, here and in the extension together.
  */
 export const PAGE_CONSENT_VERSION = "2";
 
