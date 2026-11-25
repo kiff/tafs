@@ -482,18 +482,37 @@
     }
   }
 
-  /** Whether [url] is https on one of [sites] or under it, as the run's own check reads a host (sites.js `within`). */
-  function onSites(url, sites) {
-    if (url.protocol !== "https:") return false;
+  /** Whether [host] is one of [sites] or under it, as the run's own check reads a host (sites.js `within`). */
+  function within(host, sites) {
+    return (sites || []).some((s) => typeof s === "string" && (host === s || host.endsWith("." + s)));
+  }
+
+  /**
+   * Why the run's fence would refuse [url], as the service worker's `refuseURL` and Chrome's own rules say it (runner.js `fence`),
+   * or null: `fence` is {granted, allowed, sensitive, labels, never}. Plain http and a site no grant lists: `site_not_listed`;
+   * Chrome's own pages, and a sensitive site the phone didn't allow by name: `site_blocked`.
+   */
+  function offFence(url, fence) {
     const host = url.hostname.toLowerCase().replace(/\.$/, "");
-    return sites.some((s) => typeof s === "string" && (host === s || host.endsWith("." + s)));
+    if (url.protocol !== "https:") return "site_not_listed";
+    if (within(host, fence.never)) return "site_blocked";
+    if (!within(host, fence.granted)) return "site_not_listed";
+    let labelled = false;
+    try {
+      labelled = new RegExp(fence.labels, "i").test(url.href);
+    } catch {
+      labelled = true; // a pattern this page can't read: as sensitive, refused
+    }
+    if ((within(host, fence.sensitive) || labelled) && !within(host, fence.allowed)) return "site_blocked";
+    return null;
   }
 
   /**
    * Does one act (`{kind, ref, value?}`) planned from read `readId`, or says why not: `{ok: true}` or `{ok: false, code}`.
    * The service worker reads the page back afterwards. Nothing here ever types a saved value: the extension keeps none.
-   * `opts.sites`: the run's sites; a link or a submit that would leave them is refused `site_not_listed` before anything is done,
-   * with the address it would have gone to (`url`, with no query or fragment).
+   * `opts.fence`: what the run's fence lets the tab reach (`offFence`); a link or a submit it wouldn't is refused before anything is
+   * done (`site_not_listed`, or `site_blocked` for a sensitive site or Chrome's own pages), with the address it would have gone to
+   * (`url`, with no query or fragment).
    */
   function act(a, readId, opts) {
     // The outline that showed where the taf would act (runner.js, before each act) goes as the act starts.
@@ -512,9 +531,10 @@
     if (el.disabled) return { ok: false, code: "disabled" };
     const kind = el.matches("input, textarea, select") ? kindOf(el) : null;
     if (kind === "password" || kind === "card" || kind === "code") return { ok: false, code: "secret_field" };
-    if (opts && Array.isArray(opts.sites)) {
+    if (opts && opts.fence) {
       const to = headsTo(el, a);
-      if (to && !onSites(to, opts.sites)) return { ok: false, code: "site_not_listed", url: bare(to.href) };
+      const why = to && offFence(to, opts.fence);
+      if (why) return { ok: false, code: why, url: bare(to.href) };
     }
     switch (a.kind) {
       case "click":

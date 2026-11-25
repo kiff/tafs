@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS } from "../src/runner.js";
+import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS, FENCE_RULES } from "../src/runner.js";
+import { SENSITIVE, SENSITIVE_LABELS_URL, NEVER_OPENED, refuseURL } from "../src/sites.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 import { Panels, joinFront, MARK_MS } from "../src/panels.js";
 
@@ -110,6 +111,21 @@ function step(extra) {
 }
 
 const runner = (c) => new Runner({ chrome: c, sleep, paired: () => paired });
+
+/** A tab's fence rule ids, from the first one Chrome was given: FENCE_RULES of them, one per place in `Runner.fence`. */
+const fenceIdsFrom = (ids) => Array.from({ length: FENCE_RULES }, (_, i) => Math.min(...ids) + i);
+
+/** The fence Chrome is given for a tab, as [action, requestDomains or regexFilter or null], by priority then id. */
+const fenceShape = (rules) => rules.slice().sort((a, b) => a.priority - b.priority || a.id - b.id).map((x) => [x.priority, x.action.type, x.condition.requestDomains || x.condition.regexFilter || null]);
+const FENCE = (granted, allowed = []) => [
+  [1, "block", null],
+  ...(granted.length ? [[2, "allow", granted]] : []),
+  [3, "block", [...SENSITIVE.sites]],
+  [3, "block", SENSITIVE_LABELS_URL],
+  ...(allowed.length ? [[4, "allow", allowed]] : []),
+  [5, "block", [...NEVER_OPENED]],
+  [5, "block", "^http://"],
+];
 
 test("a run opens in a background window of its own, grouped and named, and reads the page", async () => {
   const c = fakeChrome();
@@ -442,17 +458,16 @@ test("a run's tab is fenced by Chrome's own rules before it loads: only its site
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
   const [, rules] = c.calls.find((x) => x[0] === "dnr");
-  const byPriority = Object.fromEntries(rules.addRules.map((x) => [x.priority, x]));
-  assert.deepEqual(byPriority[1].condition, { tabIds: [tab], resourceTypes: ["main_frame", "sub_frame"] });
-  assert.equal(byPriority[1].action.type, "block");
-  assert.deepEqual(byPriority[2].condition.requestDomains, ["shop.example"]);
-  assert.equal(byPriority[2].action.type, "allow");
-  assert.equal(byPriority[3].condition.regexFilter, "^http://");
+  assert.deepEqual(fenceShape(rules.addRules), FENCE(["shop.example"]));
+  for (const x of rules.addRules) {
+    assert.deepEqual(x.condition.tabIds, [tab]);
+    assert.deepEqual(x.condition.resourceTypes, ["main_frame", "sub_frame"]);
+  }
   const fenced = c.calls.findIndex((x) => x[0] === "dnr");
   const loaded = c.calls.findIndex((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/");
   assert.ok(fenced < loaded, "fenced before the run's page loads");
   await r.stop("run_1");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, rules.addRules.map((x) => x.id));
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, fenceIdsFrom(rules.addRules.map((x) => x.id)));
 });
 
 test("a run's sites are the phone's signed list for the grant, never planque's word, and never grow", async () => {
@@ -701,13 +716,13 @@ test("a fenced tab's rule ids are small whatever the tab id is, a rule's id neve
   await r.handle(step());
   c.setNextTab(1_900_000_000);
   await r.handle(step({ run: "run_2", id: "op2" }));
-  assert.equal(added.length, 6);
+  assert.equal(added.length, 12, "six rules a tab with no sensitive site allowed (FENCE_RULES ids kept for each)");
   assert.ok(added.every((id) => Number.isInteger(id) && id >= 1 && id <= 2 ** 31 - 1), "every rule id is a valid int32");
-  assert.equal(new Set(added).size, 6, "no id repeated across two tabs");
+  assert.equal(new Set(added).size, 12, "no id repeated across two tabs");
   const removals = c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules);
   assert.deepEqual(removals[0][1].removeRuleIds, [77, 78], "rules an earlier service worker left are cleared first");
   await r.stop("run_1");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, added.slice(0, 3), "its own rules, not the other run's");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, fenceIdsFrom(added.slice(0, 6)), "its own rules, not the other run's");
 });
 
 test("a window that can't be set up (the fence refuses) is closed, not left open and blank, and the step says why", async () => {
@@ -1522,7 +1537,8 @@ test("a navigation in a joined tab that leaves its sites is stopped, and a pop-u
   const { c, r } = await joining();
   await r.handle(started());
   const rules = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules;
-  assert.deepEqual(rules.map((x) => [x.action.type, x.condition.tabIds, x.condition.requestDomains || x.condition.regexFilter || null]), [["block", [THEIRS], null], ["allow", [THEIRS], ["shop.example"]], ["block", [THEIRS], "^http://"]], "the same fence as a run's own tab");
+  assert.deepEqual(fenceShape(rules), FENCE(["shop.example"]), "the same fence as a run's own tab");
+  assert.ok(rules.every((x) => x.condition.tabIds.join() === String(THEIRS)));
   c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://evil.example/steal" });
   assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url), "the fence blocks it; the person's page stays");
   c.listeners.created({ sourceTabId: THEIRS, tabId: 555, url: "https://evil.example/" });
@@ -1574,7 +1590,7 @@ test("Stop hands the tab back: out of the group, unfenced, forgotten by the run,
   const rules = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules.map((x) => x.id);
   await r.stop("run_1", false, "person");
   assert.ok(c.calls.some((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS)), "1. it leaves the group");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).at(-1)[1].removeRuleIds, rules, "2. its fence rules go");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).at(-1)[1].removeRuleIds, fenceIdsFrom(rules), "2. its fence rules go");
   assert.equal(r.tabRun.has(THEIRS), false, "3. the run forgets it");
   assert.ok(c.calls.some((x) => x[0] === "bar.hide" && x[1] === THEIRS), "4. its bar goes");
   assert.ok(!c.calls.some((x) => x[0] === "tabs.remove"), "5. it stays open");
@@ -1810,11 +1826,11 @@ test("the person closing a run's tab takes its fence rules with it, even once th
   const popup = c.calls.filter((x) => x[0] === "dnr" && x[1].addRules).at(-1)[1].addRules.map((x) => x.id);
   c.listeners.removed(556);
   await new Promise((go) => setImmediate(go));
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).at(-1)[1].removeRuleIds, popup, "the pop-up's rules go when it closes");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).at(-1)[1].removeRuleIds, fenceIdsFrom(popup), "the pop-up's rules go when it closes");
   // Their last tab closed: its rules go, and the run ends as their Stop.
   c.listeners.removed(tab);
   await new Promise((go) => setImmediate(go));
-  assert.ok(c.calls.some((x) => x[0] === "dnr" && !x[1].addRules && x[1].removeRuleIds.join() === ids.join()), "its three rules are removed");
+  assert.ok(c.calls.some((x) => x[0] === "dnr" && !x[1].addRules && x[1].removeRuleIds.join() === fenceIdsFrom(ids).join()), "its rules are removed");
   assert.equal(r.fenceIds.size, 0, "no fence left");
   assert.equal(r.runs.get("run_1").stopped, true);
 });
@@ -2091,7 +2107,7 @@ test("a navigation the fence blocks in a joined tab outside a step gives the tab
     c.listeners.error({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/account?leak=v", error: "net::ERR_BLOCKED_BY_CLIENT" });
     await new Promise((go) => setTimeout(go, 5));
     const now = c.calls.slice(before);
-    assert.ok(now.some((x) => x[0] === "dnr" && !x[1].addRules && x[1].removeRuleIds.join() === rules.join()), what + ": unfenced");
+    assert.ok(now.some((x) => x[0] === "dnr" && !x[1].addRules && x[1].removeRuleIds.join() === fenceIdsFrom(rules).join()), what + ": unfenced");
     assert.ok(!now.some((x) => x[0] === "tabs.reload" || x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), what + ": the extension asks for nothing, and moves nothing");
     assert.equal(r.runs.get("run_1").joined.has(THEIRS), false, what + ": given back");
     assert.equal(r.tabRun.has(THEIRS), false, what);
@@ -2141,7 +2157,7 @@ test("an act the page says would leave the run's sites is refused before it fire
   c.setAct({ ok: false, code: "site_not_listed", url: "https://elsewhere.example/ask" });
   const out = await r.handle(started({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }));
   assert.equal(out.error && out.error.code, "site_not_listed");
-  assert.deepEqual(seen[0][2], { sites: ["shop.example"] }, "the page is given the run's sites");
+  assert.deepEqual(seen[0][2], { fence: { granted: ["shop.example"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE_LABELS_URL, never: [...NEVER_OPENED] } }, "the page is given what the run's fence lets through");
   assert.ok(r.runs.get("run_1").steps.some((x) => x.op === "navigate" && x.url === "https://elsewhere.example/ask" && x.error === "site_not_listed"), "recorded as a refused move");
   assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "still the run's");
   assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/");
@@ -2157,7 +2173,7 @@ test("an act the page says would leave the run's sites is refused before it fire
 test("the page's own check: a link or a form's submit off the run's sites, by its resolved address; a javascript: link is a control", () => {
   // The rule page.js holds (headsTo, onSites), as sites.js reads a host: https, and the site itself or under it.
   const src = readFileSync(new URL("../src/page.js", import.meta.url), "utf8");
-  for (const piece of ['function headsTo(el, a)', 'el.closest("a[href]")', 'el.hasAttribute("formaction") ? el.formAction : form.action', 'a.kind === "press" && a.value === "Enter"', 'u.protocol === "https:" || u.protocol === "http:" ? u : null', 'url.protocol !== "https:"', 'host === s || host.endsWith("." + s)', 'return { ok: false, code: "site_not_listed", url: bare(to.href) }']) {
+  for (const piece of ['function headsTo(el, a)', 'el.closest("a[href]")', 'el.hasAttribute("formaction") ? el.formAction : form.action', 'a.kind === "press" && a.value === "Enter"', 'u.protocol === "https:" || u.protocol === "http:" ? u : null', 'url.protocol !== "https:"', 'host === s || host.endsWith("." + s)', 'if (why) return { ok: false, code: why, url: bare(to.href) }']) {
     assert.ok(src.includes(piece), piece);
   }
   // It runs before any act touches the page: after the secret-field refusal, before the switch that clicks or submits.
@@ -2492,4 +2508,127 @@ test("a block during the run's own act is the run's refused move, recorded once,
     assert.deepEqual(refused.map((x) => x.url), ["https://other.example/x"], where + ": recorded once");
     assert.equal(run.site, "shop.example", where + ": the run's site isn't where its page tried to go");
   }
+});
+
+// Chrome's fence says what refuseURL says (0.2.19). A small evaluator of declarativeNetRequest's rules, as Chrome applies them to a
+// tab's page request: the matching rule of highest priority wins, an allow beating a block at the same priority; requestDomains
+// match a domain and its subdomains; a regexFilter is tried on the whole address, case-insensitively (RE2's syntax here is a subset
+// JavaScript reads the same). The address is the one Chrome sends: lower case, its host in xn-- form.
+function dnrAllows(rules, tabId, raw) {
+  let u;
+  try {
+    u = new URL(raw);
+  } catch {
+    return false;
+  }
+  const host = u.hostname.toLowerCase().replace(/\.$/, "");
+  const matches = (r) => {
+    const c = r.condition;
+    if (c.tabIds && !c.tabIds.includes(tabId)) return false;
+    if (c.resourceTypes && !c.resourceTypes.includes("main_frame")) return false;
+    if (c.requestDomains && !c.requestDomains.some((d) => host === d || host.endsWith("." + d))) return false;
+    if (c.regexFilter && !new RegExp(c.regexFilter, "i").test(u.href)) return false;
+    return true;
+  };
+  const hit = rules.filter(matches).sort((a, b) => b.priority - a.priority || (a.action.type === "allow" ? -1 : 1))[0];
+  return !!hit && hit.action.type === "allow";
+}
+
+const FENCE_GRANTS = [
+  [["example.com"], []],
+  [["example.com"], ["bank.example.com"]],
+  [["google.com"], []],
+  [["github.io", "co.uk", "shop.test"], []],
+  [["paypal.com"], []],
+  [["paypal.com"], ["paypal.com"]],
+  [["127.0.0.1", "localhost", "printer.local", "shop.test"], []],
+  [["shop.test"], ["bank.other.test", "paypal.com"]],
+  [["shop.test", "bank.shop.test"], []],
+];
+const FENCE_URLS = [
+  "https://example.com/", "https://www.example.com/a?b=c#d", "https://bank.example.com/?from=link", "https://sub.bank.example.com/",
+  "https://my-bank.example.com/", "https://BANK.Example.com/", "https://ebank.example.com/", "https://banking.example.com/",
+  "https://bankrupt.example.com/", "https://banks.example.com/", "https://bank.example.com:8443/x", "https://gov.example.com/",
+  "https://example.com.bank.evil/", "https://bank.example.com.other.test/", "http://example.com/", "http://bank.example.com/",
+  "https://accounts.google.com/", "https://www.google.com/", "https://mail.google.com/", "https://pay.google.com/",
+  "https://x.github.io/", "https://foo.co.uk/", "https://shop.test/", "https://bank.shop.test/", "https://www.bank.shop.test/",
+  "https://bänk.shop.test/", "https://xn--bnk-sna.shop.test/", "https://www.paypal.com/", "https://paypal.com/",
+  "https://notpaypal.com/", "https://127.0.0.1/", "https://localhost/", "https://printer.local/", "https://bank.other.test/",
+  "https://shop.test.:443/", "https://shop.test/a/bank/b",
+];
+
+test("Chrome's fence and refuseURL give the same answer for every address, grant and allowance", async () => {
+  for (const [sites, allowed] of FENCE_GRANTS) {
+    const c = fakeChrome();
+    const r = runner(c);
+    await r.ruleIds(5); // the runner's first fence ids, as Runner.fence takes them
+    await r.fence({ sites, allowed }, 5);
+    const rules = c.calls.filter((x) => x[0] === "dnr" && x[1].addRules).at(-1)[1].addRules;
+    for (const url of FENCE_URLS) {
+      const js = refuseURL(url, sites, allowed) === null;
+      assert.equal(dnrAllows(rules, 5, url), js, `${url} under ${JSON.stringify(sites)} allowing ${JSON.stringify(allowed)}: refuseURL says ${js ? "go" : JSON.stringify(refuseURL(url, sites, allowed))}`);
+    }
+  }
+});
+
+test("the fence's label pattern and sensitive() agree on every host", async () => {
+  const { sensitive } = await import("../src/sites.js");
+  const hosts = ["bank.test", "my-bank.example.com", "bank-of.example", "x.bank", "banking", "ebank.com", "bankrupt.com", "banks.com", "a.gov.uk", "gov",
+    "governor.com", "irs.gov", "first-irs.example", "creditunion.example", "credit-union.example", "credit--union.example", "sante.fr", "santé.fr",
+    "xn--sant-epa.fr", "health.example", "healthy.example", "x.medicaid", "news.test", "example.com", "b-a-n-k.com", "bank1.com"];
+  const re = new RegExp(SENSITIVE_LABELS_URL, "i");
+  for (const h of hosts) {
+    const host = new URL("https://" + h + "/").hostname;
+    const labelled = SENSITIVE.labels.test(host);
+    assert.equal(re.test("https://" + host + "/x"), labelled, host);
+    assert.equal(re.test("https://" + host + ":8443/"), labelled, host + " with a port");
+    assert.equal(re.test("https://" + host), labelled, host + " with no path");
+    if (labelled) assert.equal(sensitive(host), true);
+  }
+});
+
+test("a sensitive-site pattern Chrome can't hold fails the fence: the run's tab is closed before it loads", async () => {
+  const c = fakeChrome();
+  c.declarativeNetRequest.isRegexSupported = async () => ({ isSupported: false, reason: "memoryLimitExceeded" });
+  const r = runner(c);
+  const out = await r.handle(step());
+  assert.ok(out.error, JSON.stringify(out));
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/"), "nothing of the run's loads");
+  assert.ok(!c.calls.some((x) => x[0] === "dnr" && x[1].addRules), "no fence half made");
+  assert.equal(r.runs.get("run_1") && r.runs.get("run_1").tabs.size || 0, 0, "no tab left the run's, unfenced");
+});
+
+test("a fence holds FENCE_RULES ids a tab, all of them go with the tab and at unpairing, and an allowance adds its rule", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step({ sensitive_allowed: undefined }));
+  const tab = r.runs.get("run_1").tab;
+  const first = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1];
+  assert.deepEqual(first.removeRuleIds, fenceIdsFrom(first.addRules.map((x) => x.id)), "every id of the tab's is cleared first");
+  assert.equal(first.addRules.length, FENCE_RULES - 1, "no allowance, no rule for it");
+  await r.fence({ sites: ["example.com"], allowed: ["bank.example.com"] }, tab);
+  const second = c.calls.filter((x) => x[0] === "dnr" && x[1].addRules).at(-1)[1];
+  assert.equal(second.addRules.length, FENCE_RULES);
+  assert.deepEqual(second.addRules.find((x) => x.priority === 4).condition.requestDomains, ["bank.example.com"]);
+  await r.stopAll();
+  const removed = c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).flatMap((x) => x[1].removeRuleIds);
+  for (const id of fenceIdsFrom(first.addRules.map((x) => x.id))) assert.ok(removed.includes(id), "rule " + id + " removed");
+});
+
+test("a taf's act that heads for a sensitive site in its own tab is site_blocked, answered and recorded so", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW, page: { read_id: "rd_b", url: "https://shop.example/", title: "t", text: "", fields: [], controls: [], links: [{ ref: "l1", label: "Bank", href: "https://bank.shop.example/?from=link" }] } });
+  const r = runner(c);
+  const first = await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    const out = await exec(o);
+    // The click starts its navigation: the backstop sees it, and the fence stops it.
+    if (String(o.func || "").includes("TafsPage.act")) c.listeners.before({ tabId: tab, frameId: 0, url: "https://bank.shop.example/?from=link" });
+    return out;
+  };
+  const out = await r.handle(step({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "l1" } }));
+  assert.equal(out.error && out.error.code, "site_blocked", JSON.stringify(out));
+  const refused = r.runs.get("run_1").steps.filter((x) => x.op === "navigate");
+  assert.deepEqual(refused.map((x) => [x.url, x.error]), [["https://bank.shop.example/", "site_blocked"]]);
 });

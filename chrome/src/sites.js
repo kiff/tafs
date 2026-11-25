@@ -113,6 +113,33 @@ export function sensitive(host) {
 }
 
 /**
+ * `SENSITIVE.labels` as a pattern Chrome's fence can hold on a request's address (a declarativeNetRequest `regexFilter`, RE2): the
+ * host, from just after `://` to its port or path, has a label that names a bank, a government or a health account, exactly as
+ * `sensitive()` tests the host. Built from the label words of that one regex, so the two never drift; a test checks they agree.
+ * (`SENSITIVE.sites` go to the fence as domains: they match a site and its subdomains, as `within` does.)
+ */
+export const SENSITIVE_LABELS_URL = (() => {
+  const words = /^\(\^\|\[\.-\]\)\((.*)\)\(\[\.-\]\|\$\)$/.exec(SENSITIVE.labels.source);
+  if (!words) throw new Error("SENSITIVE.labels changed shape: rebuild SENSITIVE_LABELS_URL");
+  return "^https?://(?:[^/?#:]*[.-])?(?:" + words[1] + ")(?:[.-][^/?#:]*)?(?::[0-9]+)?(?:[/?#]|$)";
+})();
+
+/** Chrome's own pages and the Web Store, which no grant opens: for the fence too. */
+export const NEVER_OPENED = Object.freeze([...ALWAYS_BLOCKED]);
+
+/**
+ * What Chrome's fence may let a run's tab reach, exactly as `refuseURL` would: `granted`, the grant's sites that name one site
+ * (`siteOK`), never a local name or an address; `allowed`, the sensitive sites the phone allowed by name, only those within a
+ * granted site (an allowance outside the grant reaches nothing, as in `refuseURL`).
+ */
+export function fenceDomains(sites, allowed = []) {
+  const clean = (s) => String(s || "").toLowerCase().replace(IDEOGRAPHIC_DOTS, ".").replace(/\.$/, "");
+  const granted = [...new Set((Array.isArray(sites) ? sites : []).filter((s) => siteOK(s)).map(clean))].filter((h) => h && !isAddress(h) && !local(h) && ![...h].some((c) => c.charCodeAt(0) > 0x7f));
+  const kept = [...new Set((Array.isArray(allowed) ? allowed : []).map(clean))].filter((h) => h && siteOK(h) && !isAddress(h) && !local(h) && granted.some((g) => within(h, g)));
+  return { granted, allowed: kept };
+}
+
+/**
  * Why `raw` isn't a URL this run may open: `{code, why}`, or null when it may. `sites` are the grant's sites (and their
  * subdomains); `allowed` the sensitive sites the owner allowed by name. An empty `sites` reaches nothing: the extension
  * never takes an all-sites grant.

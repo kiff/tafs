@@ -812,6 +812,9 @@ test("what Coach gets of a page: its masked text, never a field's value, typed t
 const LEAVE = `<!doctype html><html><head><title>Leave</title></head><body>
 <a id="off" href="https://elsewhere.example/a?x=1">Elsewhere</a>
 <a id="sub" href="https://help.shop.example/faq">Help</a>
+<a id="bank" href="https://bank.shop.example/?from=link">Bank</a>
+<a id="mybank" href="https://my-bank.shop.example/">My bank</a>
+<a id="pal" href="https://www.paypal.com/">Pal</a>
 <a id="plain" href="http://shop.example/plain">Plain http</a>
 <a id="wrap" href="https://elsewhere.example/b"><span id="inner">Inside a link</span></a>
 <a id="js" href="javascript:void(window.__js = true)">Script link</a>
@@ -829,7 +832,9 @@ test("an act whose link or form would leave the run's sites is refused before it
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
   await page.addScriptTag({ content: PAGE });
-  const sites = { sites: ["shop.example"] };
+  const { SENSITIVE, SENSITIVE_LABELS_URL, NEVER_OPENED } = await import("../src/sites.js");
+  // What the run's fence lets through (runner.js fenceOf): shop.example granted, paypal.com granted too, no sensitive site allowed.
+  const sites = { fence: { granted: ["shop.example", "paypal.com"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE_LABELS_URL, never: [...NEVER_OPENED] } };
   const act = async (a, label, where = "links") => {
     const read = await page.evaluate(() => TafsPage.read());
     const all = [...read.links, ...read.controls, ...read.fields];
@@ -842,6 +847,10 @@ test("an act whose link or form would leave the run's sites is refused before it
   assert.deepEqual(await act({ kind: "click" }, "Ask elsewhere"), { ok: false, code: "site_not_listed", url: "https://elsewhere.example/ask" }, "a form's action");
   assert.deepEqual(await act({ kind: "click" }, "Over"), { ok: false, code: "site_not_listed", url: "https://elsewhere.example/over" }, "a button's own formaction");
   assert.deepEqual(await act({ kind: "press", value: "Enter" }, "Question"), { ok: false, code: "site_not_listed", url: "https://elsewhere.example/ask" }, "Enter in a field of a form that leaves");
+  // A sensitive site under a granted one, by its label or by name: refused as blocked, never clicked (0.2.19).
+  assert.deepEqual(await act({ kind: "click" }, "Bank"), { ok: false, code: "site_blocked", url: "https://bank.shop.example/" });
+  assert.deepEqual(await act({ kind: "click" }, "My bank"), { ok: false, code: "site_blocked", url: "https://my-bank.shop.example/" });
+  assert.deepEqual(await act({ kind: "click" }, "Pal"), { ok: false, code: "site_blocked", url: "https://www.paypal.com/" }, "a sensitive site the grant lists by name");
   assert.equal(page.url(), "https://shop.example/leave", "nothing went anywhere");
   assert.deepEqual(asked, [], "elsewhere.example was never asked for anything");
   // A plain http link and a javascript: one aren't offered by the read at all.
