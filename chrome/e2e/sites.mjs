@@ -161,6 +161,31 @@ const CONTROLS = page("Locked controls", `<h1>Locked controls</h1>
 </form>
 <p id="out">untouched</p>`);
 
+/**
+ * The rest of the controls: some the person can't use ([inert], aria-disabled, an option of a disabled optgroup), and some they
+ * can, which no lock may catch (readonly on a checkbox, a radio or a select, which browsers ignore; a field in the first legend of
+ * a disabled fieldset, which the fieldset doesn't disable).
+ */
+const SET = (what) => `document.getElementById('out').textContent = '${what}'`;
+const CONTROLS2 = page("More controls", `<h1>More controls</h1>
+<form onsubmit="return false">
+  <div inert><button type="button" onclick="${SET("inert pressed")}">Inert send</button></div>
+  <button type="button" aria-disabled="true" onclick="${SET("aria-disabled pressed")}">Aria send</button>
+  <label for="rc">Keep me posted</label><input id="rc" type="checkbox" readonly>
+  <input type="radio" name="speed" id="rr1" readonly checked><label for="rr1">Slow</label>
+  <input type="radio" name="speed" id="rr2" readonly><label for="rr2">Fast</label>
+  <label for="rs">Colour</label><select id="rs" readonly><option>Red</option><option>Blue</option></select>
+  <fieldset disabled><legend><label for="lg">Legend name</label><input id="lg" type="text"></legend><label for="inside">Inside name</label><input id="inside" type="text"></fieldset>
+  <label for="og">Plan</label><select id="og"><option>Free</option><optgroup label="Paid" disabled><option>Pro</option></optgroup></select>
+</form>
+<p id="out">untouched</p>`);
+
+/** A page of the run's sites that opens a pop-up as it loads; the pop-up raises a confirm as it loads. */
+const POPUP_AT_LOAD = page("A pop-up", `<h1>A pop-up</h1><script>window.open("/at-load-confirm?case=popup")</script>`);
+/** A page whose frame, of the same site, sends the whole tab to another page of the run's sites as it loads. */
+const FRAME_TOP = page("A frame that moves the page", `<h1>A frame that moves the page</h1><iframe src="/frame-top-inner" width="10" height="10"></iframe>`);
+const FRAME_TOP_INNER = page("Inner", `<script>top.location.href = "/article-moved";</script>`);
+
 /** Dialogs a page raises as it loads, before anything of the run's could run in it, and a page that asks before it's left. */
 const AT_LOAD = {
   alert: page("Welcome", `<h1>Welcome</h1>`).replace("<title>Welcome</title>", "<title>Welcome</title><script>alert('Welcome to the shop')</script>"),
@@ -262,6 +287,11 @@ export class FixtureSites {
         "/to-bank": TO_BANK(this.port),
         "/huge": HUGE,
         "/controls": CONTROLS,
+        "/controls2": CONTROLS2,
+        "/popup-at-load": POPUP_AT_LOAD,
+        "/frame-top": FRAME_TOP,
+        "/frame-top-inner": FRAME_TOP_INNER,
+        "/article-moved": page("Moved here", "<h1>Moved here</h1>"),
         ...Object.fromEntries(Object.entries(AT_LOAD).map(([name, body]) => ["/at-load-" + name, body])),
         ...Object.fromEntries(Object.entries(ORDERS).map(([name, body]) => ["/order-" + name, body])),
         "/form": FORM, "/confirm": CONFIRM, "/account": ACCOUNT, "/links": LINKS(this.port), "/frames": FRAMES(this.port), "/inner": INNER(FRAME_PASSWORD),
