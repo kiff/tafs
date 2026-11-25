@@ -18,7 +18,23 @@ data class KeptTurn(val said: WatchModel.Said, val ask: AskLine)
  * One kept thread: when it was last opened on the watch, the phone's lines of it (a taf's chat, as `taf_chat` gives them), and the
  * turns sent from this watch with their asks (Coach's conversation, or a taf's messages sent since its lines were read).
  */
-data class KeptThread(val openedAt: Long, val lines: List<ChatLine> = emptyList(), val turns: List<KeptTurn> = emptyList())
+data class KeptThread(
+  val openedAt: Long,
+  val lines: List<ChatLine> = emptyList(),
+  val turns: List<KeptTurn> = emptyList(),
+  /**
+   * A taf's chat: the asks sent from it on this watch, by id alone, the last [SENT_KEPT], so its answers go to it alone, never the
+   * Inbox, even once the phone's lines hold the turns and they go ([KeptThreads.withLines]).
+   */
+  val sent: List<String> = emptyList(),
+) {
+  companion object {
+    const val SENT_KEPT = 30
+  }
+
+  /** [ids] joined to what was sent from it, newest last, at most [SENT_KEPT]. */
+  fun sending(ids: List<String>): KeptThread = copy(sent = (sent + ids.filterNot { it in sent }).takeLast(SENT_KEPT))
+}
 
 /**
  * Whether the watch keeps its chats on disk: on only in a test version ("-test") until the owner's yes and the Privacy page's
@@ -50,6 +66,13 @@ interface ThreadStore {
 
 /** The rules for what's kept, one place for the open app ([WatchModel]) and the listener ([KeptResults]). */
 object KeptThreads {
+  /**
+   * Whether [askId] is a message sent from a taf's chat on this watch: its answer goes to that chat alone, never the Inbox, however
+   * it arrives (a push, the open's read of the asks, a kept item), as one sent this open already does.
+   */
+  fun inTafChat(threads: Map<String, KeptThread>, askId: String): Boolean =
+    threads.any { (key, thread) -> key != COACH_THREAD && (askId in thread.sent || thread.turns.any { it.ask.id == askId }) }
+
   /**
    * What may stay: threads opened within [UNOPENED_MS] of [now], the [THREADS_MAX] opened last, each its newest [MESSAGES_MAX]
    * messages, with no amount.
@@ -87,7 +110,9 @@ object KeptThreads {
   /** [thread] with the phone's [lines]: the watch's own turns the lines already hold (sent before the newest line) go. */
   fun withLines(thread: KeptThread, lines: List<ChatLine>): KeptThread {
     val newest = lines.mapNotNull { WatchChatTime.instantOf(it.at)?.toEpochMilli() }.maxOrNull()
+    // The turns that go are still this chat's: their ids stay in [KeptThread.sent], so their answers never land in the Inbox.
     return thread.copy(lines = lines, turns = if (newest == null) thread.turns else thread.turns.filter { it.said.at > newest })
+      .sending(thread.turns.map { it.ask.id })
   }
 }
 
@@ -121,7 +146,8 @@ class KeptThreadStore(private val text: EncryptedText) : ThreadStore {
           })
           .put("turns", JSONArray().apply {
             for (turn in t.turns) put(JSONObject().put("said", turn.said.text).put("at", turn.said.at).put("ask", String(WatchLink.encodeResult(turn.ask))))
-          }))
+          })
+          .put("sent", JSONArray(t.sent)))
       }
     }.toString()
 
@@ -140,7 +166,8 @@ class KeptThreadStore(private val text: EncryptedText) : ThreadStore {
               KeptTurn(WatchModel.Said(turn.getString("said"), turn.getLong("at")), ask)
             }
           }
-          key to KeptThread(t.getLong("opened_at"), lines, turns)
+          val sent = t.optJSONArray("sent")?.let { a -> (0 until a.length()).map { a.getString(it) } }.orEmpty()
+          key to KeptThread(t.getLong("opened_at"), lines, turns, sent)
         }.getOrNull()
       }.toMap()
     }

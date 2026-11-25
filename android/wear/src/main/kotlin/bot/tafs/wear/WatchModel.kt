@@ -360,7 +360,7 @@ class WatchModel(
     val listed = (_shown.value as? Shown.Read)?.tafs?.tafs?.firstOrNull { it.tafId == tafId }
     val kept = keptRead()[tafThread(tafId)]
     val chat = kept?.let { k ->
-      tafAsks += k.turns.map { it.ask.id }
+      tafAsks += k.turns.map { it.ask.id } + k.sent
       TafChat(history = if (k.lines.isEmpty()) TafChat.History.Reading else TafChat.History.Read(k.lines), turns = k.turns.map { TafTurn(it.said.text, it.said.at, it.ask) })
     } ?: TafChat()
     _taf.value = OpenTaf(tafId, listed, TafRead.Asking, chat)
@@ -406,8 +406,9 @@ class WatchModel(
   private fun saveTaf(tafId: String) {
     val open = _taf.value?.takeIf { it.tafId == tafId } ?: return
     keptWrite { all ->
+      val before = all[tafThread(tafId)] ?: KeptThread(now())
       all + (tafThread(tafId) to KeptThread(now(), lines = (open.chat.history as? TafChat.History.Read)?.lines.orEmpty(),
-        turns = open.chat.turns.map { KeptTurn(Said(it.said, it.at), it.ask) }))
+        turns = open.chat.turns.map { KeptTurn(Said(it.said, it.at), it.ask) }, sent = before.sent).sending(open.chat.turns.map { it.ask.id }))
     }
   }
 
@@ -668,8 +669,11 @@ class WatchModel(
       // vanishes on a reopen (row 20). One dismissed, here or on another watch, stays away; a lock or a sign-out empties both.
       val stored = store.read()
       val held = _inbox.value.filter { line -> line.id !in dismissed && stored.none { it.id == line.id } }
-      _inbox.value = (stored + held).sortedByDescending { it.at }
-      if (held.isNotEmpty()) store.write(_inbox.value)
+      // A taf's answer is its chat's alone: one an older watch filed here goes.
+      val threads = keptRead()
+      val lines = (stored + held).filterNot { it.kind == InboxItem.Kind.ASK && KeptThreads.inTafChat(threads, it.ref) }
+      _inbox.value = lines.sortedByDescending { it.at }
+      if (held.isNotEmpty() || lines.size != stored.size + held.size) store.write(_inbox.value)
     }
   }
 
@@ -1041,7 +1045,7 @@ class WatchModel(
    */
   fun took(ask: AskLine) {
     if (_signedOutHere.value || !verified) return
-    if (ask.tafChat || ask.id in tafAsks) {
+    if (ask.tafChat || ask.id in tafAsks || KeptThreads.inTafChat(keptRead(), ask.id)) {
       // A taf's chat: its open chat's turn, if it's there; never Coach's asks, the Inbox or a result card.
       _taf.update { open ->
         open?.takeIf { o -> o.chat.turns.any { it.ask.id == ask.id && it.ask.updated <= ask.updated } }
@@ -1281,7 +1285,10 @@ class WatchModel(
    * Every answered ask the watch knows, opened or not, newest first: the Inbox where it can't be kept on this watch (no screen
    * lock), so an answer opened there doesn't vanish from it (row 20). Never a message to a taf.
    */
-  fun answered(): List<AskLine> = _asks.value.values.filter { it.ended && !it.tafChat && it.id !in tafAsks }.sortedByDescending { it.updated }
+  fun answered(): List<AskLine> {
+    val threads = keptRead()
+    return _asks.value.values.filter { it.ended && !it.tafChat && it.id !in tafAsks && !KeptThreads.inTafChat(threads, it.id) }.sortedByDescending { it.updated }
+  }
 
   /** Reads the watch's asks from the phone: those of the last day, as tafs cloud has them. A failed read leaves what's shown. */
   suspend fun readAsks() {

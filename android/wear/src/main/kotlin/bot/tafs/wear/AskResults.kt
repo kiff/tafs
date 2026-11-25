@@ -97,8 +97,12 @@ object KeptResults {
   fun ask(context: Context, ask: AskLine, stores: Stores = Stores.of(context), now: Long = System.currentTimeMillis()) {
     if (AskResults.shown == null && !stores.signedOut && stores.secure) {
       // Whichever kept thread holds it, Coach's or a taf's.
-      stores.thread?.let { thread -> KeptThreads.took(KeptThreads.pruned(thread.read(), now), ask)?.let { thread.write(KeptThreads.pruned(it, now)) } }
-      stores.inbox?.let { inbox -> InboxLines.of(ask, now)?.let { InboxLines.put(inbox.read(), inbox.dismissed(), it) }?.let(inbox::write) }
+      val threads = stores.thread?.let { KeptThreads.pruned(it.read(), now) }.orEmpty()
+      stores.thread?.let { thread -> KeptThreads.took(threads, ask)?.let { thread.write(KeptThreads.pruned(it, now)) } }
+      // A taf's answer goes to its chat alone, as with the app open: never the Inbox.
+      if (!KeptThreads.inTafChat(threads, ask.id)) {
+        stores.inbox?.let { inbox -> InboxLines.of(ask, now)?.let { InboxLines.put(inbox.read(), inbox.dismissed(), it) }?.let(inbox::write) }
+      }
     }
     AskResults.arrived(context, ask)
   }
