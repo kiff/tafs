@@ -142,6 +142,8 @@ final class PhoneLink: NSObject, WCSessionDelegate, @unchecked Sendable {
         Task { @MainActor in
             if push.kind == .account { return Self.account(push) }
             guard WatchAccountMark.shared.ours(push.mark) else { return }
+            // A conversation deleted on the phone: its kept copy goes now, whether or not a screen shows it.
+            if push.kind == .forget { WatchThreads.shared.drop(push.taf ?? WatchThreads.coach) }
             WatchAccountZone.heard(push.reply)
             WatchPushes.shared.deliver(push)
         }
