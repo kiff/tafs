@@ -108,7 +108,7 @@
   "page_consent_title": { "message": "Majú Coach a vaše tafy pri odoslaní čítať stránku vpredu?" },
   "page_consent_what": { "message": "Keď tu pošlete správu Coachovi alebo tafu na niektorom z jeho webov, pôjde s ňou text karty vpredu v tomto okne: jej adresa (bez všetkého za ? alebo #), názov a slová. Hodnoty polí a heslá sa nečítajú; čísla kariet sa skracujú na posledné štyri číslice; kľúče a označené tajomstvá sa maskujú. Maskujú sa aj jednorazové kódy, ktoré text stránky ako také označuje po anglicky, francúzsky, španielsky alebo nemecky. Taf, ktorému tu napíšete, potom môže v tej karte pracovať, len na svojich weboch, a akúkoľvek inú stránku otvorí vo vlastnej karte." },
   "page_consent_when": { "message": "Len pri odoslaní, len tá karta a nikdy stránka banky, platieb, pošty alebo zdravia, ani tá, ktorú ste vypli." },
-  "page_consent_never": { "message": "Ide do tafs, ktorý ho pošle Claudovi od Anthropic, aby vám odpovedal, rovnako ako vašu správu. tafs si ponechá len názov webu, nikdy stránku; odpoveď Coacha ju môže citovať." },
+  "page_consent_never": { "message": "Ide do tafs, ktorý ho pošle Claudovi od Anthropic, aby vám odpovedal, rovnako ako vašu správu. tafs si ponechá len názov webu, nikdy stránku; odpoveď Coacha alebo tafu ju môže citovať." },
   "page_consent_change": { "message": "Správu bez stránky môžete poslať kedykoľvek a tu to môžete kedykoľvek vypnúť." },
   "page_consent_allow": { "message": "Povoliť" },
   "page_consent_not_now": { "message": "Teraz nie" },

@@ -108,7 +108,7 @@
   "page_consent_title": { "message": "Kas Coach ja teie tafid loevad saatmisel eesolevat lehte?" },
   "page_consent_what": { "message": "Kui saadate siin sõnumi Coachile või tafile mõnel tema saidil, läheb sellega kaasa selle akna eesoleva vahekaardi tekst: aadress (ilma ? või # järel olevata), pealkiri ja sõnad. Väljade väärtusi ja paroole ei loeta; kaardinumbritest jäetakse alles ainult neli viimast numbrit; võtmed ja märgistatud saladused maskeeritakse. Maskeeritakse ka ühekordsed koodid, mida lehe tekst inglise, prantsuse, hispaania või saksa keeles sellistena nimetab. Taf, kellele siin kirjutate, võib seejärel sellel vahekaardil töötada, ainult oma saitidel, ja avab iga muu lehe oma vahekaardil." },
   "page_consent_when": { "message": "Ainult saatmisel, ainult see vahekaart ja mitte kunagi panga, makse-, posti- või terviseleht ega leht, mille olete välja lülitanud." },
-  "page_consent_never": { "message": "See läheb tafsile, mis saadab selle teile vastamiseks Anthropicu Claude'ile, nagu teie sõnumigi. tafs hoiab alles ainult saidi nime, mitte kunagi lehte; Coachi vastus võib seda tsiteerida." },
+  "page_consent_never": { "message": "See läheb tafsile, mis saadab selle teile vastamiseks Anthropicu Claude'ile, nagu teie sõnumigi. tafs hoiab alles ainult saidi nime, mitte kunagi lehte; Coachi või tafi vastus võib seda tsiteerida." },
   "page_consent_change": { "message": "Võite igal ajal saata sõnumi ilma leheta ja selle siin millal tahes lõpetada." },
   "page_consent_allow": { "message": "Luba" },
   "page_consent_not_now": { "message": "Mitte praegu" },

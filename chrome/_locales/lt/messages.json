@@ -108,7 +108,7 @@
   "page_consent_title": { "message": "Ar leisti Coach ir jūsų tafs siunčiant skaityti priekyje esantį puslapį?" },
   "page_consent_what": { "message": "Kai čia siunčiate žinutę Coach arba taf vienoje iš jo svetainių, kartu su ja keliauja šio lango priekyje esančio skirtuko tekstas: jo adresas (be to, kas po ? ar #), pavadinimas ir žodžiai. Laukų reikšmės ir slaptažodžiai neskaitomi; kortelių numeriai sutrumpinami iki paskutinių keturių skaitmenų; raktai ir pažymėtos paslaptys užmaskuojami. Užmaskuojami ir vienkartiniai kodai, kuriuos puslapio tekstas taip vadina angliškai, prancūziškai, ispaniškai ar vokiškai. Taf, kuriam čia rašote, tada gali dirbti tame skirtuke, tik savo svetainėse, o bet kurį kitą puslapį atidaro savo skirtuke." },
   "page_consent_when": { "message": "Tik siunčiant, tik tas skirtukas ir niekada ne banko, mokėjimų, pašto ar sveikatos svetainė ar svetainė, kurią išjungėte." },
-  "page_consent_never": { "message": "Jis siunčiamas į tafs, kuri jį perduoda Anthropic Claude, kad šis jums atsakytų, kaip ir jūsų žinutę. tafs išsaugo tik svetainės pavadinimą, niekada puslapio; Coach atsakyme gali būti iš jo citatų." },
+  "page_consent_never": { "message": "Jis siunčiamas į tafs, kuri jį perduoda Anthropic Claude, kad šis jums atsakytų, kaip ir jūsų žinutę. tafs išsaugo tik svetainės pavadinimą, niekada puslapio; Coach arba taf atsakyme gali būti iš jo citatų." },
   "page_consent_change": { "message": "Bet kada galite išsiųsti žinutę be puslapio ir čia tai sustabdyti, kai tik norite." },
   "page_consent_allow": { "message": "Leisti" },
   "page_consent_not_now": { "message": "Ne dabar" },

@@ -108,7 +108,7 @@
   "page_consent_title": { "message": "보낼 때 Coach와 tafs가 앞에 있는 페이지를 읽도록 할까요?" },
   "page_consent_what": { "message": "여기에서 Coach에게, 또는 자신의 사이트에 있는 taf에게 메시지를 보내면, 이 창의 앞에 있는 탭의 텍스트가 함께 갑니다. 주소(? 또는 # 뒤는 제외), 제목, 본문의 단어입니다. 입력란의 값과 비밀번호는 읽지 않으며, 카드 번호는 마지막 네 자리만 남기고, 키와 이름이 붙은 비밀 정보는 가려집니다. 페이지 본문에서 영어, 프랑스어, 스페인어 또는 독일어로 일회용 코드라고 밝힌 코드도 가려집니다. 여기에서 메시지를 보낸 taf는 이후 그 탭에서 자신의 사이트에 한해 일할 수 있으며, 다른 페이지는 자신의 탭에서 엽니다." },
   "page_consent_when": { "message": "보낼 때만, 그 탭만이며, 은행, 결제, 메일, 건강 사이트나 사용자가 끈 사이트는 절대 아닙니다." },
-  "page_consent_never": { "message": "텍스트는 tafs로 가고, tafs는 답변을 위해 이를 Anthropic의 Claude에 보냅니다. 메시지와 같습니다. tafs는 사이트 이름만 보관하고 페이지는 보관하지 않으며, Coach의 답변이 페이지를 인용할 수 있습니다." },
+  "page_consent_never": { "message": "텍스트는 tafs로 가고, tafs는 답변을 위해 이를 Anthropic의 Claude에 보냅니다. 메시지와 같습니다. tafs는 사이트 이름만 보관하고 페이지는 보관하지 않으며, Coach나 taf의 답변이 페이지를 인용할 수 있습니다." },
   "page_consent_change": { "message": "언제든 페이지 없이 메시지를 보낼 수 있고, 원할 때 여기에서 중단할 수 있습니다." },
   "page_consent_allow": { "message": "허용" },
   "page_consent_not_now": { "message": "나중에" },

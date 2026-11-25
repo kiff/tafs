@@ -108,7 +108,7 @@
   "page_consent_title": { "message": "Voleu que Coach i els vostres tafs llegeixin la pàgina de davant quan envieu?" },
   "page_consent_what": { "message": "Quan envieu aquí un missatge a Coach, o a un taf en un dels seus llocs, el text de la pestanya de davant d'aquesta finestra hi va amb ell: la seva adreça (sense res després de ? o #), el títol i les paraules. No es llegeixen els valors dels camps ni les contrasenyes; els números de targeta es retallen als quatre últims dígits; les claus i els secrets etiquetats s'emmascaren. També s'emmascaren els codis d'un sol ús que el text de la pàgina anomena com a tals en anglès, francès, castellà o alemany. Un taf a qui escriviu aquí pot treballar després en aquesta pestanya, només als seus llocs, i obre qualsevol altra pàgina en una pestanya pròpia." },
   "page_consent_when": { "message": "Només quan envieu, només aquella pestanya, i mai un lloc de banc, pagaments, correu o salut, ni un que hàgiu desactivat." },
-  "page_consent_never": { "message": "Va a tafs, que l'envia a Claude d'Anthropic perquè us respongui, com el vostre missatge. tafs només guarda el nom del lloc, mai la pàgina; la resposta de Coach en pot citar parts." },
+  "page_consent_never": { "message": "Va a tafs, que l'envia a Claude d'Anthropic perquè us respongui, com el vostre missatge. tafs només guarda el nom del lloc, mai la pàgina; la resposta de Coach o del taf en pot citar parts." },
   "page_consent_change": { "message": "Podeu enviar un missatge sense la pàgina en qualsevol moment, i aturar-ho aquí quan vulgueu." },
   "page_consent_allow": { "message": "Permet" },
   "page_consent_not_now": { "message": "Ara no" },
