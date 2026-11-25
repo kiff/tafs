@@ -159,6 +159,13 @@
       }
     }
   },
+  "step_refused_given_back": { "message": "edilmedi: bu goýmany süýşürdiňiz, şonuň üçin ol indi siziňki" },
+  "step_refused_page_changed": { "message": "edilmedi: sahypa ondan öň üýtgedi" },
+  "step_refused_no_back": { "message": "edilmedi: yzyna gaýdar ýaly sahypa ýok" },
+  "step_refused_site_not_listed": { "message": "edilmedi: ol saýt bu taf-yň saýtlaryndan däl" },
+  "step_refused_paused_by_owner": { "message": "edilmedi: siz dowam etdirýänçäňiz bes edildi" },
+  "step_refused_no_page": { "message": "edilmedi: onuň üçin açyk sahypa ýok" },
+  "step_refused_browser_unavailable": { "message": "edilmedi: Chrome muny edip bilmedi" },
   "coach_title": {
     "message": "Coach",
     "description": "Side panel title"
