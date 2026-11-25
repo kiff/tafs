@@ -105,6 +105,8 @@ class TafActions(
   val stopChat: suspend (String) -> Unit = {},
   /** A message that wasn't sent: Retry sends it once; Edit gives its words back for the box, or null when it went already. */
   val retryUnsent: (String, ChatMessage) -> Unit = { _, _ -> },
+  /** Try again under a failed run's line (tafs cloud's `retry`): its message, once, as a new one; not sent, the words go back. */
+  val retryFailed: (String, (String) -> Unit) -> Unit = { _, _ -> },
   val editUnsent: (String, ChatMessage) -> String? = { _, _ -> null },
   /** Deletes a message that wasn't sent, for good. */
   val deleteUnsent: (String, ChatMessage) -> Unit = { _, _ -> },

@@ -351,7 +351,14 @@ data class WireCapped(val run: String, val stop: String)
 
 /** A run that ended without an answer, as the thread says it (`failed`). */
 @Serializable
-data class WireRunFailed(val run: String = "", val code: String? = null, val words: String = "")
+data class WireRunFailed(
+  val run: String = "",
+  val code: String? = null,
+  val words: String = "",
+  // Whether tafs cloud says sending the run's message again is safe (nothing it did had an effect), and its words for the button.
+  val retry: Boolean = false,
+  @SerialName("retry_label") val retryLabel: String? = null,
+)
 
 @Serializable
 data class WireThread(

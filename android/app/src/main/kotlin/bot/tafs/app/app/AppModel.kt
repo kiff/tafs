@@ -147,6 +147,15 @@ const val COACH_CHAT = "#coach"
 /** A taf's card that hands a setting to Coach: its words, and a button that opens Coach on the taf with them written in. */
 const val ASK_COACH = "ask_coach"
 
+/** The id of a failed run's line in a chat ([AppState.chatItems]): this, then the run's id. */
+const val FAILED_LINE = "failed|"
+
+/** The codes tafs cloud's `failed` carries (contracts/conversation-failed.json): Try again only ever shows for one of these. */
+val FAILED_RETRY_CODES = setOf("ai_unavailable", "no_credits", "ai_consent_required", "timeout", "failed")
+
+/** Try again under a failed run's line: the person's own words for [run], sent again; [label], tafs cloud's words for the button. */
+data class FailedRetry(val run: String, val text: String, val label: String?)
+
 /**
  * A card a taf's own chat draws: an `ask_coach` card, or the loop card (a `confirm` that carries `loop`), which a run that read one
  * list page after page waits on. Any other card belongs to Coach's chat.
@@ -353,6 +362,8 @@ data class AppState(
    * carries none. The owner reads that the turn didn't happen, never a chat that seems to be working or waiting on them.
    */
   val chatFailed: Map<String, bot.tafs.app.kiff.TafsCloud.RunFailed> = emptyMap(),
+  /** The failed run each chat's Try again was pressed for: pressed once, it sends once, and the button goes for that run. */
+  val chatFailedRetried: Map<String, String> = emptyMap(),
   /** The files picked for each chat's next message, as they go up (docs/attachments.md): by the chat's id. Sent with the message, then cleared. */
   val chatFiles: Map<String, List<PendingFile>> = emptyMap(),
   /** Why a file wasn't added, or couldn't be opened, by chat. */
@@ -1049,7 +1060,25 @@ data class AppState(
     if (live != null && (live.run == null || live.run == failed.run)) return@let items
     // A chat with nothing in it (a new chat) had no run here to fail: the line belongs to the chat it came from.
     val after = items.maxOfOrNull { it.at }?.plusMillis(1) ?: return@let items
-    items + ChatItem.Message(ChatMessage(after, ChatMessage.From.taf, failed.words, "", serverId = "failed|" + failed.run))
+    items + ChatItem.Message(ChatMessage(after, ChatMessage.From.taf, failed.words, "", serverId = FAILED_LINE + failed.run))
+  }
+
+  /**
+   * Try again under a failed run's line ([chatItems]), or null for none. Only when tafs cloud says so (`failed.retry`), for a
+   * code it's known to send, and when the run's own message (`<run>.in`, the person's) is in the chat as plain words: it is sent
+   * again as a new message. Not once it was pressed for this run, nor while the chat is sending or at work. The app decides
+   * nothing about whether it's safe; tafs cloud does.
+   */
+  fun failedRetry(tafId: String): FailedRetry? {
+    val failed = chatFailed[tafId]?.takeIf { it.retry && it.code in FAILED_RETRY_CODES } ?: return null
+    if (chatFailedRetried[tafId] == failed.run || thinking(tafId)) return null
+    // Its line isn't drawn while a run followed live ends with its own (and its own Retry).
+    val live = chatEnded[tafId] as? ChatEnd.Failed
+    if (live != null && (live.run == null || live.run == failed.run)) return null
+    val own = chats[tafId].orEmpty().lastOrNull { it.from == ChatMessage.From.owner && it.serverId == failed.run + ".in" } ?: return null
+    // Words only: a message with files, or a card's answer, isn't the same message sent again as words.
+    if (own.attachments.isNotEmpty() || own.answers != null || own.text.isBlank()) return null
+    return FailedRetry(failed.run, own.text, failed.retryLabel)
   }
 
   /** The digest of [grant]'s profile as planque sends it now, or null for a grant with none. */
@@ -6799,6 +6828,19 @@ class AppModel(
       // One that was tried and refused stays in the thread, marked not sent: it never comes back to the box as well.
       if (!deliverChat(text, tafId, withFiles) && _state.value.chatUnsent[tafId].orEmpty().none { it.message.text == text.trim() }) onNotSent(text)
     }
+  }
+
+  /**
+   * Try again under a failed run's line ([AppState.failedRetry]): the person's words for that run go again as a new message,
+   * once. The button goes as it's pressed, so a second tap finds nothing; not sent, the words stay, as any message's do.
+   */
+  fun retryFailed(tafId: String, onNotSent: (String) -> Unit) {
+    var again: FailedRetry? = null
+    _state.update { s ->
+      again = s.failedRetry(tafId)
+      again?.let { s.copy(chatFailedRetried = s.chatFailedRetried + (tafId to it.run)) } ?: s
+    }
+    again?.let { sendChat(it.text, tafId, false, onNotSent) }
   }
 
   /**

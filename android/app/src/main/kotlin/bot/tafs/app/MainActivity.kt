@@ -663,6 +663,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
       stopChat = model::stopChat,
       connectAgain = model::startConnectAgain,
       retryUnsent = model::retryUnsent,
+      retryFailed = model::retryFailed,
       editUnsent = model::editUnsent,
       deleteUnsent = model::deleteUnsent,
       resumeHalt = model::resumeHalt,

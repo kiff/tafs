@@ -394,6 +394,17 @@ private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, m
                     onReport = if (state.mode == Mode.kiff) ({ reason, note -> actions.report(tafId, item.message, reason, note) }) else null,
                   )
                   if (lastAnswer[item.message.session] == i) ChatFiles(item.message.session)
+                  // A failed run's line: Try again, only when tafs cloud says it's safe (its `retry`), in its words. Once.
+                  state.failedRetry(tafId)?.takeIf { bot.tafs.app.app.FAILED_LINE + it.run == item.message.serverId }?.let { again ->
+                    Text(
+                      again.label ?: Words.Chat.retry,
+                      style = scaled(14, FontWeight.SemiBold, Theme.amberText),
+                      modifier = Modifier.testTag(FAILED_RETRY).tapping {
+                        pinOnSend(again.text)
+                        actions.retryFailed(tafId) { text -> unpin(); following = true; setDraft(text) }
+                      }.padding(vertical = 6.dp),
+                    )
+                  }
                   // Not sent: why, and Retry or Edit, under the words as written (kiff/tafs#476).
                   state.chatUnsent[tafId]?.firstOrNull { it.message == item.message }?.let { unsent ->
                     // Refused for a halt that still holds: Resume, behind the owner's confirmation, in Retry's place.
@@ -725,6 +736,8 @@ private fun MessageTime(message: ChatMessage) {
 }
 
 internal const val DAY_HEADER = "day-header"
+/** Try again under a failed run's line, for tests. */
+internal const val FAILED_RETRY = "failed-retry"
 internal const val MESSAGE_TIME = "message-time"
 
 /** A refused connection's lines, each as tafs cloud wrote it: the step's in the failure colour, then why and what to do next. */
