@@ -819,6 +819,7 @@ export const ko: Words = {
   chat_delete_busy: "이 대화는 아직 작업 중이거나 나를 기다리고 있습니다. 먼저 멈추거나 답한 다음 삭제하세요.",
   card_step_give_passkey: "패스키로 승인",
   card_step_sign_passkey: "내 승인은 패스키로 서명되며, 그 개인 키는 이 컴퓨터나 보안 키 밖으로 나가지 않습니다. 결제나 비밀번호가 아닙니다.",
+  card_step_locked: "먼저 이것을 승인하면 Coach에게 메시지를 쓸 수 있습니다.",
   cts_tafs_state: "내 tafs 보기",
   cts_tafs_state_does: "각 taf와 버전, 진행 중인 실행을 읽습니다.",
   cts_tafs_state_why: "내 계정을 읽습니다.",

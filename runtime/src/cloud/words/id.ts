@@ -815,6 +815,7 @@ export const id: Words = {
   chat_delete_busy: "Percakapan ini masih bekerja atau menunggu Anda. Hentikan atau jawab dulu, lalu hapus.",
   card_step_give_passkey: "Setujui dengan kunci sandi Anda",
   card_step_sign_passkey: "Persetujuan Anda menandatanganinya dengan kunci sandi Anda, yang kunci pribadinya tidak pernah keluar dari komputer ini atau kunci keamanan Anda. Ini bukan pembayaran atau kata sandi.",
+  card_step_locked: "Setujui ini dulu, lalu Anda bisa menulis ke Coach.",
   cts_tafs_state: "Lihat taf Anda",
   cts_tafs_state_does: "Membaca setiap taf, versinya, dan prosesnya yang masih terbuka.",
   cts_tafs_state_why: "Ia membaca akun Anda.",

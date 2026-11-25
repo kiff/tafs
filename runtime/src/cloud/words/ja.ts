@@ -822,6 +822,7 @@ export const ja: Words = {
   chat_delete_busy: "この会話はまだ作業中か、あなたを待っています。先に停止するか回答してから削除してください。",
   card_step_give_passkey: "パスキーで承認",
   card_step_sign_passkey: "承認すると、パスキーで署名されます。その秘密鍵は、このコンピューターやセキュリティキーから外に出ることはありません。支払いやパスワードではありません。",
+  card_step_locked: "先にこれを承認すると、Coachにメッセージを書けます。",
   cts_tafs_state: "tafsを見る",
   cts_tafs_state_does: "各taf、そのバージョンと進行中の実行を読みます。",
   cts_tafs_state_why: "アカウントを読みます。",

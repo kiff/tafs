@@ -815,6 +815,7 @@ export const hu: Words = {
   chat_delete_busy: "Ez a beszélgetés még dolgozik vagy rád vár. Előbb állítsd le vagy válaszolj rá, aztán töröld.",
   card_step_give_passkey: "Jóváhagyás azonosítókulccsal",
   card_step_sign_passkey: "A jóváhagyásod ezt az azonosítókulcsoddal írja alá, amelynek privát kulcsa soha nem hagyja el ezt a számítógépet vagy a biztonsági kulcsodat. Ez nem fizetés és nem jelszó.",
+  card_step_locked: "Előbb hagyd jóvá ezt, utána írhatsz a Coachnak.",
   cts_tafs_state: "A tafjaid megtekintése",
   cts_tafs_state_does: "Elolvassa az egyes tafokat, a verzióikat és a nyitott futásaikat.",
   cts_tafs_state_why: "A fiókodat olvassa.",
