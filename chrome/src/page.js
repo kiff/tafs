@@ -406,8 +406,8 @@
     const x = r.left + r.width / 2;
     const y = r.top + r.height / 2;
     if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false;
-    // The extension's own bar (bar.js) is looked through: it's ours, and the person's buttons, not the page's.
-    const hit = document.elementsFromPoint(x, y).find((h) => !ourBar(h));
+    // The extension's own bar (bar.js) and signs (signs.js) are looked through: they're ours, not the page's.
+    const hit = document.elementsFromPoint(x, y).find((h) => !ours(h));
     return !!hit && (hit === el || el.contains(hit) || (el.labels && Array.from(el.labels).some((l) => l.contains(hit))));
   }
 
@@ -546,6 +546,11 @@
     // Unusable before unseen: an inert part of the page is also never on top, and the taf is told the page's own reason.
     if (unusable(el)) return { ok: false, code: "disabled" };
     if (!visible(el) || !onTop(el)) return { ok: false, code: "not_visible" };
+    // The pointer showed the person where the taf would act (`aim`): the act lands there or not at all. An element that moved
+    // since, or isn't the one pointed at, is refused, and the taf reads the page again.
+    const pointed = aimed;
+    aimed = null;
+    if (pointed && pointed.ref === a.ref && pointed.readId === readId && !sameSpot(pointed, el)) return { ok: false, code: "page_changed" };
     const kind = el.matches("input, textarea, select") ? kindOf(el) : null;
     if (kind === "password" || kind === "card" || kind === "code") return { ok: false, code: "secret_field" };
     if (opts && opts.fence) {
@@ -632,6 +637,8 @@
   // the person using the page. Known by identity (bar.js holds it in this isolated world), never by its name: a page can make
   // an element of that name, and it's then the page's, which pauses the run and blocks an act as any element does.
   const ourBar = (node) => !!(root.TafsBar && root.TafsBar.isOurs(node));
+  // The signs (signs.js) the same way: the glow and the pointer let every pointer through, and are never what's on top.
+  const ours = (node) => ourBar(node) || !!(root.TafsSigns && root.TafsSigns.isOurs(node));
 
   // Dialogs the page raised (alert, confirm, prompt), reported by dialogs.js from the page's world under this tab's token.
   // None blocks: confirm answers no, prompt answers nothing. A read reports the last one; an act after one is refused.
@@ -745,6 +752,8 @@
    */
   function maskForShot() {
     unmaskShot();
+    // The signs (signs.js) aren't in the picture.
+    if (root.TafsSigns) root.TafsSigns.forShot(true);
     shotIncomplete = false;
     const fields = secretFields();
     // A page with a one-time-code field to fill may be an authenticator's setup, whose QR code and seed are the second
@@ -766,42 +775,79 @@
 
   /** Takes the boxes away again. Safe to call twice. */
   function unmaskShot() {
+    if (root.TafsSigns) root.TafsSigns.forShot(false);
     for (const box of shotBoxes) box.remove();
     shotBoxes = [];
     for (const stray of document.querySelectorAll("[data-tafs-shot-mask]")) stray.remove();
     return true;
   }
 
-  let outlineBox = null;
   let outlineTimer = null;
+  // Where the pointer was put before an act (`aim`): the ref, its read, the element and the middle the pointer went to.
+  let aimed = null;
+
+  /** The element a ref names in read `readId`, as an act finds it, or why not. */
+  function elementOf(ref, readId) {
+    if (!current || current.read_id !== readId || current.href !== location.href) return { code: "page_changed" };
+    const el = refs.get(ref);
+    if (!el || !el.isConnected || prints.get(ref) !== printOf(el) || !visible(el)) return { code: "ref_unknown" };
+    return { el };
+  }
+
+  function middleOf(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  /** Whether `el` is the element the pointer went to, still where it went (within 2 px). */
+  function sameSpot(pointed, el) {
+    if (pointed.el !== el) return false;
+    const m = middleOf(el);
+    const p = root.TafsSigns && root.TafsSigns.pointerAt();
+    const near = (a, b) => Math.abs(a.x - b.x) <= 2 && Math.abs(a.y - b.y) <= 2;
+    return near(m, pointed) && (!p || near(m, p));
+  }
 
   /**
    * "Show me" for a hand-over: draws an outline round the field or button `ref` names in read `readId`, and nothing else. It
-   * never scrolls, focuses or clicks (the box lets every pointer through), and goes after a few seconds or when asked.
+   * never scrolls, focuses or clicks (the outline lets every pointer through), and goes after a few seconds or when asked. It's
+   * drawn in the signs' closed layer (signs.js): nothing of it is in the page's own elements.
    */
   function outline(ref, readId) {
     unoutline();
-    if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
-    const el = refs.get(ref);
-    if (!el || !el.isConnected || prints.get(ref) !== printOf(el) || !visible(el)) return { ok: false, code: "ref_unknown" };
-    const r = el.getBoundingClientRect();
-    const box = document.createElement("div");
-    box.setAttribute("data-tafs-outline", "");
-    box.style.cssText = `position:fixed;left:${r.left - 4}px;top:${r.top - 4}px;width:${r.width + 8}px;height:${r.height + 8}px;` +
-      "outline:3px solid #F29A2E;border-radius:6px;pointer-events:none;z-index:2147483647;box-shadow:0 0 0 4px rgba(242,154,46,.25)";
-    document.documentElement.appendChild(box);
-    outlineBox = box;
+    const found = elementOf(ref, readId);
+    if (!found.el) return { ok: false, code: found.code };
+    if (!root.TafsSigns) return { ok: false, code: "page_unresponsive" };
+    root.TafsSigns.ring(found.el.getBoundingClientRect());
     outlineTimer = setTimeout(unoutline, 8000);
+    return { ok: true };
+  }
+
+  /**
+   * Before an act: brings the element `ref` names into view (as the act itself would), outlines it, and moves the pointer to its
+   * middle with `words` ("Clicking"). The act then checks it lands on that same element, still there (`sameSpot`).
+   */
+  function aim(ref, readId, words) {
+    unoutline();
+    aimed = null;
+    const found = elementOf(ref, readId);
+    if (!found.el) return { ok: false, code: found.code };
+    if (!root.TafsSigns) return { ok: false, code: "page_unresponsive" };
+    found.el.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
+    const r = found.el.getBoundingClientRect();
+    root.TafsSigns.ring(r);
+    root.TafsSigns.point(r, words);
+    aimed = { ref, readId, el: found.el, ...middleOf(found.el) };
     return { ok: true };
   }
 
   function unoutline() {
     clearTimeout(outlineTimer);
-    if (outlineBox) outlineBox.remove();
-    outlineBox = null;
+    if (root.TafsSigns) root.TafsSigns.unring();
+    // An outline an older build drew in the page itself.
     for (const stray of document.querySelectorAll("[data-tafs-outline]")) stray.remove();
     return true;
   }
 
-  root.TafsPage = { read, act, kindOf, listen, maskForShot, unmaskShot, outline, unoutline, offFence };
+  root.TafsPage = { read, act, kindOf, listen, maskForShot, unmaskShot, outline, aim, unoutline, offFence };
 })(globalThis);

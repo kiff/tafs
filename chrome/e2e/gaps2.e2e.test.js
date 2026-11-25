@@ -6,7 +6,7 @@
 
 import { test, before, after, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { playwright, start, newRun, ref, until, tabAt, runState, tabInfo, inWorker } from "./harness.mjs";
+import { playwright, start, newRun, ref, until, tabAt, tabIdAt, signsIn, runState, tabInfo, inWorker } from "./harness.mjs";
 import { joining } from "./joining.mjs";
 
 const skip = !playwright;
@@ -113,7 +113,9 @@ test("planque's unsigned stop over the relay ends the run even mid-act: the act 
   const tab = await until(() => tabAt(h, url), "the run's tab");
   // The taf's fill is held for its outline; planque's stop lands in it.
   const held = h.planque.sendStep({ op: "act", run, read_id: opened.page.read_id, act: { kind: "fill", ref: ref(opened.page, "Full name"), value: "typed by the taf" } });
-  await until(() => tab.evaluate(() => !!document.querySelector("[data-tafs-outline]")), "the taf's outline", 5000);
+  const tabId = await until(() => tabIdAt(h, url), "the run's tab id");
+  // The outline is drawn in the extension's own closed layer (signs.js): read where it lives, as the page never can.
+  await until(async () => ((await signsIn(h, tabId)) || {}).ring, "the taf's outline", 5000);
   const said = h.planque.next("run_state", (m) => m.run === run && m.state === "stopped");
   h.planque.stopRun(run);
   const r = await held;

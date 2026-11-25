@@ -280,12 +280,34 @@ async function onlyHere(taf) {
   if (!(await tafsOfThisChrome()).some((t) => t.id === taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
 }
 
-// The floating bar follows the tab in front of each window, and a page that loads again draws it again.
+// The floating bar follows the tab in front of each window, and a page that loads again draws it again; so does a run's own
+// tab, for its glow (signs.js), in front or not.
 chrome.tabs.onActivated.addListener(() => runner.queueBars());
 chrome.windows.onFocusChanged.addListener(() => runner.queueBars());
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
-  if (change.status === "complete" && tab && tab.active) runner.queueBars();
+  if (change.status === "complete" && tab && (tab.active || runner.runOfTab(id))) runner.queueBars();
 });
+
+// A worker that starts again holds no run (they're forgotten as it stops), so no page should still say a taf works there:
+// the bar and the signs a run left in any tab go now.
+chrome.tabs
+  .query({ url: "https://*/*" })
+  .then((tabs) =>
+    Promise.all(
+      (tabs || []).map((t) =>
+        chrome.scripting
+          .executeScript({
+            target: { tabId: t.id },
+            func: () => {
+              if (globalThis.TafsSigns) globalThis.TafsSigns.off();
+              if (globalThis.TafsBar) globalThis.TafsBar.hide();
+            },
+          })
+          .catch(() => {}),
+      ),
+    ),
+  )
+  .catch(() => {});
 
 // Coach reads the page in front (docs/chrome.md, "Coach reads the page you're on"): on the person's send, the tab in front
 // of the panel's own window, once, through aside.js; never on a timer, never another tab, never a site the gate refuses.
