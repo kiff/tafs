@@ -33,6 +33,7 @@ class WatchSignedOut(
     runCatching { drop.drop(WatchLink.KEPT_ASK, prefix = true) }
     runCatching { drop.drop(WatchLink.KEPT_MARKS, prefix = false) }
     runCatching { drop.drop(WatchLink.KEPT_TAF_CHAT, prefix = true) }
+    runCatching { drop.drop(KeptTafsJson.path, prefix = false) }
     runCatching { keep.put(WatchLink.KEPT_SIGNED_OUT, WatchLink.encodeKept(bot.tafs.watchlink.KeptSignedOut(now(), mark?.takeIf(WatchLink::isMark)))) }
   }
 

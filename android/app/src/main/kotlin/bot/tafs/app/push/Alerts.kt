@@ -216,6 +216,9 @@ interface PushPlatform {
   /** Whether notifications are allowed, asking the person if they haven't been asked. */
   suspend fun allowed(): Boolean
 
+  /** Whether notifications are allowed now, asking nothing: the re-check when the person comes back from Settings. */
+  fun enabledNow(): Boolean = false
+
   /** This phone's push token; null when it can't be had. */
   suspend fun token(): String?
 }

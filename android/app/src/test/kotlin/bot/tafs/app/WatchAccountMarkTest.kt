@@ -158,7 +158,7 @@ class WatchAccountMarkTest {
     val mark = AppModel.newWatchMark()
     WatchSignedOut(kept, kept, now = { now }).tell(mark)
     assertEquals(
-      listOf(WatchLink.KEPT_ASK to true, WatchLink.KEPT_MARKS to false, WatchLink.KEPT_TAF_CHAT to true),
+      listOf(WatchLink.KEPT_ASK to true, WatchLink.KEPT_MARKS to false, WatchLink.KEPT_TAF_CHAT to true, bot.tafs.app.watch.KeptTafsJson.path to false),
       kept.dropped,
     )
     val (path, data) = kept.put.single()
