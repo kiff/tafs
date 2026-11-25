@@ -74,10 +74,8 @@ test("a page no cut makes fit the relay's 120 KB is refused `page_too_large`, si
   await h.fromPanel({ type: "stop", run });
 });
 
-test("an act that ran, whose page then grows past any cut, is never answered as a failure: the taf isn't told to click again", {
-  skip,
-  todo: "relay.js answers page_too_large whenever no cut makes the answer fit, an act's answer included: the click ran (the page grew), but the taf is told the step failed, so it may click again. Its own comment says an act that ran is never answered as a failure; the answer should say the act was done, with no page (the taf reads again).",
-}, async () => {
+// Since 0.2.21 an act that ran is answered done, with no page and `page_dropped`: the taf reads again, and never clicks twice.
+test("an act that ran, whose page then grows past any cut, is never answered as a failure: the taf isn't told to click again", { skip }, async () => {
   const run = newRun("grows");
   const url = h.sites.url("shop.test", "/grows?case=grows");
   const opened = await h.planque.sendStep({ op: "open", run, url });
@@ -88,5 +86,29 @@ test("an act that ran, whose page then grows past any cut, is never answered as 
   await h.fromPanel({ type: "stop", run });
   assert.equal(state, "grown", "the click ran");
   assert.ok(Buffer.byteLength(JSON.stringify(r)) <= 128 * 1024);
-  assert.ok(r.ok || (r.error && r.error.code !== "page_too_large"), "the act that ran was answered as a failure: " + JSON.stringify(r.error));
+  assert.equal(r.verified, true, "signed, page_dropped included");
+  assert.equal(r.ok, true, "the act that ran was answered as a failure: " + JSON.stringify(r.error));
+  assert.equal(r.page, null);
+  assert.equal(r.page_dropped, "page_too_large");
+});
+
+// qa-kiff's case: a Submit whose answer is a page past any cut. Clicked once, it posts once; the act is answered done (no page,
+// `page_dropped`), so nothing tells the taf to send it again, and nothing is sent again.
+test("a Submit whose answer grows past any cut, clicked once: one POST, answered done with page_dropped, and nothing sent again", { skip }, async () => {
+  const run = newRun("submit-grows");
+  const url = h.sites.url("shop.test", "/submit-grows?case=submit");
+  const opened = await h.planque.sendStep({ op: "open", run, url });
+  assert.equal(opened.ok, true, JSON.stringify(opened.error));
+  const posts = () => h.sites.posts.filter((x) => x.startsWith("shop.test /submit-grows"));
+  assert.deepEqual(posts(), [], "nothing posted by the open");
+  const r = await h.planque.sendStep({ op: "act", run, read_id: opened.page.read_id, act: { kind: "click", ref: ref(opened.page, "Send it", "controls") } });
+  assert.equal(r.verified, true);
+  assert.equal(r.ok, true, JSON.stringify(r.error));
+  assert.equal(r.page, null);
+  assert.equal(r.page_dropped, "page_too_large");
+  assert.ok(Buffer.byteLength(JSON.stringify(r)) <= 128 * 1024);
+  await new Promise((done) => setTimeout(done, 1500));
+  assert.equal(posts().length, 1, "exactly one POST: " + JSON.stringify(posts()));
+  await h.fromPanel({ type: "stop", run });
+  assert.equal(posts().length, 1, "nothing sent again");
 });

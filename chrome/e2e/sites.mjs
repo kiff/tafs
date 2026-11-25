@@ -209,6 +209,10 @@ const GROWS = (body) => page("A form that grows", `<h1>A form that grows</h1><p 
 <button type="button" id="grow" onclick="document.getElementById('more').innerHTML = document.getElementById('tpl').innerHTML; document.getElementById('state').textContent = 'grown'">Show every option</button>
 <div id="more"></div><template id="tpl">${body}</template>`);
 
+/** A form whose Submit posts to the run's site; the page the post answers with is past what any cut makes fit (NO_FIT). */
+const SUBMIT_FORM = page("Send your order", `<h1>Send your order</h1>
+<form method="post" action="/submit-grows?case=submit"><label for="who">Name</label><input id="who" name="who" type="text"><button type="submit">Send it</button></form>`);
+
 /** A card number in a page's own text: masked in every read, whole or cut. */
 export const CARD_TEXT = "4111 1111 1111 1111";
 /**
@@ -303,6 +307,8 @@ export class FixtureSites {
         "/to-bank": TO_BANK(this.port),
         "/huge": HUGE,
         "/no-fit": NO_FIT,
+        // GET: the form; POST (its Submit): an answer no cut makes fit.
+        "/submit-grows": req.method === "POST" ? NO_FIT : SUBMIT_FORM,
         "/grows": GROWS(NO_FIT.slice(NO_FIT.indexOf("<form"), NO_FIT.lastIndexOf("</form>") + 7)),
         "/controls": CONTROLS,
         "/controls2": CONTROLS2,
