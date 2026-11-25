@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Te groot: hoogstens $SIZE$ voor dit soort bestand", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Dit soort bestand kan niet worden bijgevoegd. Alleen foto's, PDF, tekst, CSV, Markdown, Word of Excel." },
   "attach_too_many": { "message": "Hoogstens 5 bestanden per bericht." },
-  "attach_failed": { "message": "Niet geüpload. Verwijder het en probeer het opnieuw." }
+  "attach_failed": { "message": "Niet geüpload. Verwijder het en probeer het opnieuw." },
+  "working_here": { "message": "$TAF$ is hier bezig", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Klikt" },
+  "pointer_fill": { "message": "Typt" },
+  "pointer_select": { "message": "Kiest" },
+  "pointer_check": { "message": "Vinkt aan" },
+  "pointer_press": { "message": "Drukt op een toets" },
+  "pointer_scroll": { "message": "Scrolt" },
+  "pointer_read": { "message": "Leest" }
 }

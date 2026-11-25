@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Prea mare: cel mult $SIZE$ pentru acest tip de fișier", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Acest tip de fișier nu poate fi atașat. Doar fotografii, PDF, text, CSV, Markdown, Word sau Excel." },
   "attach_too_many": { "message": "Cel mult 5 fișiere într-un mesaj." },
-  "attach_failed": { "message": "Nu s-a încărcat. Eliminați-l și încercați din nou." }
+  "attach_failed": { "message": "Nu s-a încărcat. Eliminați-l și încercați din nou." },
+  "working_here": { "message": "$TAF$ lucrează aici", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Dă clic" },
+  "pointer_fill": { "message": "Scrie" },
+  "pointer_select": { "message": "Alege" },
+  "pointer_check": { "message": "Bifează" },
+  "pointer_press": { "message": "Apasă o tastă" },
+  "pointer_scroll": { "message": "Derulează" },
+  "pointer_read": { "message": "Citește" }
 }

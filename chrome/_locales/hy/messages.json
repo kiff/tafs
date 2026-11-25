@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Չափազանց մեծ է. այս տեսակի ֆայլի համար առավելագույնը $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Այս տեսակի ֆայլը հնարավոր չէ կցել։ Միայն լուսանկարներ, PDF, տեքստ, CSV, Markdown, Word կամ Excel։" },
   "attach_too_many": { "message": "Մեկ հաղորդագրությունում առավելագույնը 5 ֆայլ։" },
-  "attach_failed": { "message": "Չվերբեռնվեց։ Հեռացրեք այն և փորձեք նորից։" }
+  "attach_failed": { "message": "Չվերբեռնվեց։ Հեռացրեք այն և փորձեք նորից։" },
+  "working_here": { "message": "$TAF$-ն աշխատում է այստեղ", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Սեղմում է" },
+  "pointer_fill": { "message": "Մուտքագրում է" },
+  "pointer_select": { "message": "Ընտրում է" },
+  "pointer_check": { "message": "Նշում է" },
+  "pointer_press": { "message": "Ստեղն է սեղմում" },
+  "pointer_scroll": { "message": "Ոլորում է" },
+  "pointer_read": { "message": "Կարդում է" }
 }

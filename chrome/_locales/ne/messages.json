@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "धेरै ठूलो: यस्तो फाइलका लागि बढीमा $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "यस्तो फाइल संलग्न गर्न मिल्दैन। फोटो, PDF, टेक्स्ट, CSV, Markdown, Word वा Excel मात्र।" },
   "attach_too_many": { "message": "एउटा सन्देशमा बढीमा 5 फाइल।" },
-  "attach_failed": { "message": "अपलोड भएन। यसलाई हटाएर फेरि प्रयास गर्नुहोस्।" }
+  "attach_failed": { "message": "अपलोड भएन। यसलाई हटाएर फेरि प्रयास गर्नुहोस्।" },
+  "working_here": { "message": "$TAF$ यहाँ काम गर्दै छ", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "क्लिक गर्दै" },
+  "pointer_fill": { "message": "टाइप गर्दै" },
+  "pointer_select": { "message": "छान्दै" },
+  "pointer_check": { "message": "टिक लगाउँदै" },
+  "pointer_press": { "message": "कुञ्जी थिच्दै" },
+  "pointer_scroll": { "message": "स्क्रोल गर्दै" },
+  "pointer_read": { "message": "पढ्दै" }
 }

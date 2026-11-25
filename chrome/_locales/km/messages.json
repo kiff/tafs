@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "ធំពេក៖ យ៉ាងច្រើន $SIZE$ សម្រាប់ឯកសារប្រភេទនេះ", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "មិនអាចភ្ជាប់ឯកសារប្រភេទនេះបានទេ។ មានតែរូបថត PDF អត្ថបទ CSV Markdown Word ឬ Excel ប៉ុណ្ណោះ។" },
   "attach_too_many": { "message": "យ៉ាងច្រើន 5 ឯកសារក្នុងមួយសារ។" },
-  "attach_failed": { "message": "មិនបានផ្ទុកឡើងទេ។ សូមដកវាចេញ ហើយព្យាយាមម្តងទៀត។" }
+  "attach_failed": { "message": "មិនបានផ្ទុកឡើងទេ។ សូមដកវាចេញ ហើយព្យាយាមម្តងទៀត។" },
+  "working_here": { "message": "$TAF$ កំពុងធ្វើការនៅទីនេះ", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "កំពុងចុច" },
+  "pointer_fill": { "message": "កំពុងវាយ" },
+  "pointer_select": { "message": "កំពុងជ្រើសរើស" },
+  "pointer_check": { "message": "កំពុងធីក" },
+  "pointer_press": { "message": "កំពុងចុចគ្រាប់ចុច" },
+  "pointer_scroll": { "message": "កំពុងរំកិល" },
+  "pointer_read": { "message": "កំពុងអាន" }
 }

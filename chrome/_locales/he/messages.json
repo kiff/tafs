@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "גדול מדי: עד $SIZE$ לסוג קובץ זה", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "אי אפשר לצרף סוג קובץ זה. רק תמונות, PDF, טקסט, CSV, Markdown, Word או Excel." },
   "attach_too_many": { "message": "עד 5 קבצים בהודעה." },
-  "attach_failed": { "message": "ההעלאה נכשלה. הסר אותו ונסה שוב." }
+  "attach_failed": { "message": "ההעלאה נכשלה. הסר אותו ונסה שוב." },
+  "working_here": { "message": "$TAF$ עובד כאן", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "לוחץ" },
+  "pointer_fill": { "message": "מקליד" },
+  "pointer_select": { "message": "בוחר" },
+  "pointer_check": { "message": "מסמן" },
+  "pointer_press": { "message": "לוחץ על מקש" },
+  "pointer_scroll": { "message": "גולל" },
+  "pointer_read": { "message": "קורא" }
 }

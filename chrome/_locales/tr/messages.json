@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Çok büyük: bu tür dosyalar için en fazla $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Bu tür dosya eklenemez. Yalnızca fotoğraf, PDF, metin, CSV, Markdown, Word veya Excel." },
   "attach_too_many": { "message": "Mesaj başına en fazla 5 dosya." },
-  "attach_failed": { "message": "Yüklenmedi. Kaldırıp tekrar deneyin." }
+  "attach_failed": { "message": "Yüklenmedi. Kaldırıp tekrar deneyin." },
+  "working_here": { "message": "$TAF$ burada çalışıyor", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Tıklıyor" },
+  "pointer_fill": { "message": "Yazıyor" },
+  "pointer_select": { "message": "Seçiyor" },
+  "pointer_check": { "message": "İşaretliyor" },
+  "pointer_press": { "message": "Tuşa basıyor" },
+  "pointer_scroll": { "message": "Kaydırıyor" },
+  "pointer_read": { "message": "Okuyor" }
 }
