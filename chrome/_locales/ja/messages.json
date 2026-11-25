@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "大きすぎます：この種類のファイルは $SIZE$ までです", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "この種類のファイルは添付できません。写真、PDF、テキスト、CSV、Markdown、Word、Excel のみです。" },
   "attach_too_many": { "message": "1 件のメッセージにつきファイルは 5 個までです。" },
-  "attach_failed": { "message": "アップロードできませんでした。削除してもう一度お試しください。" }
+  "attach_failed": { "message": "アップロードできませんでした。削除してもう一度お試しください。" },
+  "working_here": { "message": "$TAF$がここで作業中", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "クリック中" },
+  "pointer_fill": { "message": "入力中" },
+  "pointer_select": { "message": "選択中" },
+  "pointer_check": { "message": "チェック中" },
+  "pointer_press": { "message": "キー入力中" },
+  "pointer_scroll": { "message": "スクロール中" },
+  "pointer_read": { "message": "読み取り中" }
 }

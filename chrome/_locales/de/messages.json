@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "Zu groß: höchstens $SIZE$ für diese Art von Datei", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "Diese Art von Datei kann nicht angehängt werden. Nur Fotos, PDF, Text, CSV, Markdown, Word oder Excel." },
   "attach_too_many": { "message": "Höchstens 5 Dateien pro Nachricht." },
-  "attach_failed": { "message": "Nicht hochgeladen. Entferne sie und versuch es noch einmal." }
+  "attach_failed": { "message": "Nicht hochgeladen. Entferne sie und versuch es noch einmal." },
+  "working_here": { "message": "$TAF$ arbeitet hier", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "Klickt" },
+  "pointer_fill": { "message": "Tippt" },
+  "pointer_select": { "message": "Wählt aus" },
+  "pointer_check": { "message": "Hakt an" },
+  "pointer_press": { "message": "Drückt eine Taste" },
+  "pointer_scroll": { "message": "Scrollt" },
+  "pointer_read": { "message": "Liest" }
 }

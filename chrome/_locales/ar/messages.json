@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "كبير جدًا: الحد الأقصى $SIZE$ لهذا النوع من الملفات", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "لا يمكن إرفاق هذا النوع من الملفات. الصور وPDF والنصوص وCSV وMarkdown وWord وExcel فقط." },
   "attach_too_many": { "message": "5 ملفات كحد أقصى في الرسالة الواحدة." },
-  "attach_failed": { "message": "لم يُرفع الملف. أزله وحاول مرة أخرى." }
+  "attach_failed": { "message": "لم يُرفع الملف. أزله وحاول مرة أخرى." },
+  "working_here": { "message": "$TAF$ يعمل هنا", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "ينقر" },
+  "pointer_fill": { "message": "يكتب" },
+  "pointer_select": { "message": "يختار" },
+  "pointer_check": { "message": "يحدد مربعًا" },
+  "pointer_press": { "message": "يضغط مفتاحًا" },
+  "pointer_scroll": { "message": "يمرّر" },
+  "pointer_read": { "message": "يقرأ" }
 }

@@ -1,0 +1,1 @@
+- **Chrome shows what a taf is doing on the page itself.** The extension has the words for a "… is working here" sign on the tab a taf works in, and for the label beside its on-page pointer (Clicking, Typing, Choosing, Ticking, Pressing a key, Scrolling, Reading), in all 43 languages. Words only; the extension shows them in its next build.

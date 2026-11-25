@@ -133,5 +133,13 @@
   "attach_too_big": { "message": "檔案太大：這類檔案最多 $SIZE$", "placeholders": { "size": { "content": "$1" } } },
   "attach_type": { "message": "無法附加這類檔案。僅限相片、PDF、文字、CSV、Markdown、Word 或 Excel。" },
   "attach_too_many": { "message": "每則訊息最多 5 個檔案。" },
-  "attach_failed": { "message": "未上傳成功。請移除後再試一次。" }
+  "attach_failed": { "message": "未上傳成功。請移除後再試一次。" },
+  "working_here": { "message": "$TAF$ 正在這裡工作", "placeholders": {"taf": {"content": "$1" }}},
+  "pointer_click": { "message": "點擊中" },
+  "pointer_fill": { "message": "輸入中" },
+  "pointer_select": { "message": "選擇中" },
+  "pointer_check": { "message": "勾選中" },
+  "pointer_press": { "message": "按鍵中" },
+  "pointer_scroll": { "message": "捲動中" },
+  "pointer_read": { "message": "讀取中" }
 }
