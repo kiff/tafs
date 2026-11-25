@@ -210,29 +210,27 @@ export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly 
     for (const t of g.request.tools ?? []) {
       const name = fold(t.name || t.tool);
       if (!name) continue;
-      const before = fold(t.tool || t.name);
-      // The name a rule gives: KIFF's name with this grant's own suffix off ("send_reminder" for "send_reminder_3qa1" on
-      // grt_3Qa1…), as Coach reads it. A managed app's `tool` is its connector's id, which no rule names (the owner's
-      // phone, 18 Nov: a Gmail write refused three times though every notice named it).
-      const job = jobOf(name, suffix);
-      const covering = cards.filter((raw) => {
-        const card = raw as { grants?: unknown };
-        return Array.isArray(card.grants) && card.grants.some((x) => fold((x as { action?: unknown }).action) === name);
-      });
+      const covering = cards.filter((raw) => covers(raw, name));
       if (!covering.length) continue;
       const shown = t.title || t.name || t.tool || name;
-      const rule = rules.find((r) => fold(r.tool) === before) ?? rules.find((r) => fold(r.tool) === name) ??
-        (job ? rules.find((r) => job.covers(fold(r.tool))) : undefined);
+      const rule = ruleOf(t, suffix, rules);
       if (!rule) {
         if (!t.read_only && !t.setup_reads) return { kind: "missing", tool: shown };
         continue;
       }
       for (const raw of covering) {
-        // What happens past this Card's limits: the `over` of the agreed figures it carries, else the tool's.
+        // What happens past this Card's limits: the `over` of the agreed figures it carries, else the tool's. On a held
+        // Card, a refused call's cap that a refusing Card covering the tool also carries, at the same figure, is that
+        // Card's: KIFF needs every Card on a money tool to bound its amount, and a call past it is refused, since a
+        // refusing Card wins over a held one (cardsFromRules).
+        const held = (raw as { on_exceed?: unknown }).on_exceed !== "refuse";
+        const refusedToo = (l: AgreedLimit, f: Figure) => held && l.window === "call" && (l.over ?? rule.over) === "refuse" &&
+          covering.some((o) => o !== raw && (o as { on_exceed?: unknown }).on_exceed === "refuse" &&
+            figuresOn([o], name).some((g) => sameFigure(l, g) && g.limit === f.limit && f.limit === l.limit));
         const carried = new Set(figuresOn([raw], name)
-          .map((f) => rule.limits?.find((l) => sameFigure(l, f)))
-          .filter((l): l is AgreedLimit => l !== undefined)
-          .map((l) => l.over ?? rule.over));
+          .map((f) => ({ f, l: rule.limits?.find((l) => sameFigure(l, f)) }))
+          .filter((x): x is { f: Figure; l: AgreedLimit } => x.l !== undefined && !refusedToo(x.l, x.f))
+          .map(({ l }) => l.over ?? rule.over));
         if (carried.size > 1) return { kind: "mixed", tool: shown };
         const over = carried.size === 1 ? [...carried][0]! : rule.over;
         const onExceed = (raw as { on_exceed?: unknown }).on_exceed === "refuse" ? "refuse" : "owner";
@@ -249,6 +247,172 @@ export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly 
     }
   }
   return undefined;
+}
+
+/** A tool of a grant's request, as `request.tools` lists it. */
+type GrantTool = NonNullable<ApprovalGrant["request"]["tools"]>[number];
+
+/**
+ * A tool's agreed rule: by planque's name before the suffix, else KIFF's name, else the name a rule gives, KIFF's name
+ * with this grant's own suffix off ("send_reminder" for "send_reminder_3qa1" on grt_3Qa1…), as Coach reads it. A managed
+ * app's `tool` is its connector's id, which no rule names (the owner's phone, 18 Nov: a Gmail write refused three times
+ * though every notice named it).
+ */
+function ruleOf(t: GrantTool, suffix: string, rules: readonly AgreedRule[]): AgreedRule | undefined {
+  const name = fold(t.name || t.tool);
+  const before = fold(t.tool || t.name);
+  const job = jobOf(name, suffix);
+  return rules.find((r) => fold(r.tool) === before) ?? rules.find((r) => fold(r.tool) === name) ??
+    (job ? rules.find((r) => job.covers(fold(r.tool))) : undefined);
+}
+
+/** Whether a drafted Card covers a tool (its KIFF name, folded). */
+function covers(raw: unknown, name: string): boolean {
+  const card = raw as { grants?: unknown };
+  return Array.isArray(card.grants) && card.grants.some((x) => fold((x as { action?: unknown }).action) === name);
+}
+
+/** A Card tafs cloud builds for a money tool: one action, the agreed figures, and what happens past them. */
+export interface MoneyCard {
+  id: string;
+  subject: string;
+  domain: "gateway";
+  grants: [{ action: string; per_action_max?: Array<{ quantity: string; max: number }> }];
+  aggregates: Array<{ quantity: string; limit: number; window: string; per?: string }>;
+  on_exceed: "owner" | "refuse";
+}
+
+/**
+ * Why a money tool's agreed rules give no Cards KIFF signs: a refused limit with no refused total (KIFF needs a total on
+ * every Card), a held Card that would bound no amount, a held Card with no total of its own and no refused day's total
+ * beside it for KIFF's count, or a count of a money tool's calls (its limits are its amounts).
+ */
+export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count";
+
+/** A money tool's Cards, as the agreed rules give them, or why they can't be. `tool` is named as the connection titles it. */
+export type MoneyCards = { tool: string; action: string } & ({ cards: MoneyCard[] } | { unbuilt: MoneyUnbuilt });
+
+const summed = (quantity: string) => quantity.startsWith("sum(");
+
+/**
+ * The Cards a money tool's agreed rules give, built here rather than written by Coach (a phone test, 25 Nov: every
+ * hand-written draft of "every refund held, over €50 refused, €200 a day" was refused by KIFF or by these checks, and
+ * Coach went on to ask the owner to change their rules). A money tool is a write whose rule has a figure on an amount
+ * (`sum(…)`). Its figures go on single-action Cards by what happens past them (the figure's `over`, else the rule's):
+ * - the refused ones on one Card, `on_exceed: "refuse"`: each call's as `per_action_max`, the totals as aggregates;
+ * - the asked ones on another, `on_exceed: "owner"`. KIFF needs every Card on a money tool to bound its own amount, so a
+ *   held Card with no amount figure of its own also carries the refused Card's cap on each call, the same figure: a call
+ *   past it breaches both Cards, and the refusing one wins (KIFF's authorizer: refuse takes precedence), so it is
+ *   refused, never held. The person reads that cap once (home.ts). A held Card with no total of its own carries KIFF's
+ *   count (kiffsOwnCount), beside the refused day's total.
+ * Every other tool is the checks' as before. `agent` is the Cards' subject.
+ */
+export function cardsFromRules(grants: readonly ApprovalGrant[], rules: readonly AgreedRule[], agent: string): MoneyCards[] {
+  const out: MoneyCards[] = [];
+  for (const g of grants) {
+    const suffix = grantSuffix(g.id);
+    for (const t of g.request.tools ?? []) {
+      const action = (t.name || t.tool || "").trim();
+      if (!action || t.read_only || t.setup_reads || out.some((m) => fold(m.action) === fold(action))) continue;
+      const rule = ruleOf(t, suffix, rules);
+      if (!rule?.limits?.some((l) => summed(l.quantity))) continue;
+      const tool = t.title || action;
+      const built = moneyCardsOf(rule, action, agent);
+      out.push(typeof built === "string" ? { tool, action, unbuilt: built } : { tool, action, cards: built });
+    }
+  }
+  return out;
+}
+
+function moneyCardsOf(rule: AgreedRule, action: string, agent: string): MoneyCard[] | MoneyUnbuilt {
+  const limits = rule.limits ?? [];
+  if (limits.some((l) => l.quantity === "count" && l.limit > 0 && !l.per)) return "count";
+  const over = (l: AgreedLimit) => l.over ?? rule.over;
+  const cap = (l: AgreedLimit) => ({ quantity: l.quantity, max: l.limit });
+  const total = (l: AgreedLimit) => ({ quantity: l.quantity, limit: l.limit, window: l.window, ...(l.per ? { per: l.per } : {}) });
+  const card = (kind: "refused" | "held", caps: Array<{ quantity: string; max: number }>, totals: MoneyCard["aggregates"]): MoneyCard => ({
+    id: `${agent}-${action}-${kind}`, subject: agent, domain: "gateway",
+    grants: [{ action, ...(caps.length ? { per_action_max: caps } : {}) }], aggregates: totals,
+    on_exceed: kind === "refused" ? "refuse" : "owner",
+  });
+  const refused = limits.filter((l) => over(l) === "refuse");
+  const asked = limits.filter((l) => over(l) === "ask");
+  const out: MoneyCard[] = [];
+  if (refused.length) {
+    const totals = refused.filter((l) => l.window !== "call").map(total);
+    if (!totals.length) return "refused_total";
+    out.push(card("refused", refused.filter((l) => l.window === "call").map(cap), totals));
+  }
+  if (asked.length) {
+    const caps = asked.filter((l) => l.window === "call").map(cap);
+    const totals = asked.filter((l) => l.window !== "call").map(total);
+    if (![...caps.map((c) => c.quantity), ...totals.map((a) => a.quantity)].some(summed)) {
+      const copied = refused.filter((l) => l.window === "call" && summed(l.quantity)).map(cap);
+      if (!copied.length) return "held_bound";
+      caps.push(...copied);
+    }
+    if (!totals.length) {
+      if (!refused.some((l) => l.window !== "call" && summed(l.quantity) && !l.per)) return "held_total";
+      totals.push({ quantity: "count", limit: KIFF_COUNT_A_DAY, window: "calendar_day" });
+    }
+    out.push(card("held", caps, totals));
+  }
+  return out;
+}
+
+/**
+ * The first money tool whose drafted Cards aren't the ones its agreed rules give (cardsFromRules), or whose rules give
+ * none: every Card covering it, in any order, ids and titles aside. Compared on an allowlist, failing closed: a Card
+ * with any other field, or another subject or domain, isn't one the rules give, whatever it limits (a field the check
+ * didn't read could widen it: a total's extra room raises its ceiling, its measure changes what it counts, and KIFF
+ * checks a money tool's amounts only on a Card in a domain). A Card over this tool and another isn't either. Undefined
+ * when every one matches.
+ */
+export function moneyCardsOff(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[], agent: string): MoneyCards | undefined {
+  for (const m of cardsFromRules(grants, rules, agent)) {
+    if ("unbuilt" in m) return m;
+    const name = fold(m.action);
+    const drafted = cards.filter((raw) => covers(raw, name)).map((c) => limitsKey(c, agent));
+    const built = m.cards.map((c) => limitsKey(c, agent));
+    if (drafted.some((k) => k === undefined)) return m;
+    const [a, b] = [(drafted as string[]).sort(), (built as string[]).sort()];
+    if (a.length !== b.length || a.some((k, i) => k !== b[i])) return m;
+  }
+  return undefined;
+}
+
+/** The fields a money tool's drafted Card may have: the built Cards' own, and a title, which limits nothing. */
+const CARD_FIELDS = new Set(["id", "title", "subject", "domain", "grants", "aggregates", "on_exceed"]);
+const GRANT_FIELDS = new Set(["action", "per_action_max"]);
+const CAP_FIELDS = new Set(["quantity", "max"]);
+const TOTAL_FIELDS = new Set(["quantity", "limit", "window", "per", "measure"]);
+
+/**
+ * What limits a Card, as one string, the same for the same terms whatever their order; undefined for a Card with a
+ * field the allowlist doesn't name, a subject other than `agent`, a domain other than "gateway", an `on_exceed` other
+ * than "owner" or "refuse" (unsaid is "owner", as KIFF reads a new Card's), or a total's `measure` other than KIFF's
+ * default for its quantity (calls count attempts, amounts count effects).
+ */
+function limitsKey(raw: unknown, agent: string): string | undefined {
+  const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+  const within = (v: unknown, fields: ReadonlySet<string>): v is Record<string, unknown> => isObject(v) && Object.keys(v).every((k) => fields.has(k));
+  if (!within(raw, CARD_FIELDS) || raw.subject !== agent || raw.domain !== "gateway") return undefined;
+  if (raw.on_exceed !== undefined && raw.on_exceed !== "owner" && raw.on_exceed !== "refuse") return undefined;
+  if (!Array.isArray(raw.grants) || !Array.isArray(raw.aggregates)) return undefined;
+  const grants: string[] = [];
+  for (const g of raw.grants) {
+    if (!within(g, GRANT_FIELDS) || typeof g.action !== "string") return undefined;
+    const caps = g.per_action_max === undefined ? [] : g.per_action_max;
+    if (!Array.isArray(caps) || !caps.every((c) => within(c, CAP_FIELDS))) return undefined;
+    grants.push(JSON.stringify([fold(g.action), (caps as Array<Record<string, unknown>>).map((c) => JSON.stringify([c.quantity, c.max])).sort()]));
+  }
+  const totals: string[] = [];
+  for (const a of raw.aggregates) {
+    if (!within(a, TOTAL_FIELDS) || typeof a.quantity !== "string") return undefined;
+    if (a.measure !== undefined && a.measure !== (a.quantity.trim() === "count" ? "attempts" : "effects")) return undefined;
+    totals.push(JSON.stringify([a.quantity, a.limit, a.window, a.per ?? null]));
+  }
+  return JSON.stringify([grants.sort(), totals.sort(), raw.on_exceed ?? "owner"]);
 }
 
 /**

@@ -313,6 +313,17 @@ export function distinct(rules: Rule[]): Rule[] {
   return rules.map((r) => ((seen.get(r.label) ?? 0) > 1 ? { ...r, label: `${r.label} · ${toolWords(r.action)}` } : r));
 }
 
+/**
+ * A tool's lines with its cap on each call said once: a held line whose cap a refused line of the same tool also has (a
+ * money tool's held Card carries its refused Card's cap, since KIFF needs every Card on it to limit its amount, and a call
+ * past it is refused: rules.ts, cardsFromRules) shows no cap of its own. Every other line is as it is.
+ */
+export function capOnce(rules: Rule[]): Rule[] {
+  const same = (a: Money | null, b: Money | null) => !!a && !!b && a.minor === b.minor && a.unit === b.unit && a.scale === b.scale;
+  return rules.map((r) => r.outside === "hold" && rules.some((o) => o.outside === "refuse" && o.action === r.action && same(o.per_action, r.per_action))
+    ? { ...r, per_action: null } : r);
+}
+
 /** "bxkwf7vi_list_charges" → "list charges": the grant's prefix (letters and a digit) goes. */
 function toolWords(action: string): string {
   return action.replace(/^(?=[a-z]*\d)[a-z0-9]{6,}_/, "").replace(/_/g, " ");
@@ -502,7 +513,7 @@ export function oneCard(views: CardView[]): CardView {
     active: views.some((v) => v.active),
     live: views.some((v) => v.live),
     expires: ends[0] ?? null,
-    rules: distinct(views.flatMap((v) => v.rules)),
+    rules: distinct(capOnce(views.flatMap((v) => v.rules))),
     total: views.find((v) => v.total)?.total ?? null,
     calls: views.find((v) => v.calls)?.calls ?? null,
     ...(counted.length ? { counted } : {}),
@@ -516,7 +527,7 @@ export function oneCard(views: CardView[]): CardView {
  * doesn't say a mandate's draft); a mandate with its `draft_id` goes with the others of its draft.
  */
 export function summary(cards: Mandate[], lang: Lang = "en", together: string[][] = []): CardSummary {
-  const lines = distinct(cards.flatMap((c) => rules(c, lang)));
+  const lines = distinct(capOnce(cards.flatMap((c) => rules(c, lang))));
   const tools: string[] = [];
   for (const r of lines) if (r.action && !tools.includes(r.label)) tools.push(r.label);
   const used: Record<string, Money> = {};

@@ -369,7 +369,7 @@ describe("Setup's definition on kiff/agents", () => {
     // Only the taf's own tools, and a money tool's amount limited (kiff/tafs#138, item 41).
     expect(flat).toContain("The draft names only the tools planque lists for this taf's own grant, and of those never one you asked for with setup_reads");
     expect(flat).toContain("Never another tool KIFF knows on the account");
-    expect(flat).toContain("A tool that moves money always has its amount limited, each call and over a day");
+    expect(flat).toContain("A tool that moves money has its amount limited, each call and over a day");
     // A write that moves no money is limited by its calls, and never gets a made-up amount.
     expect(flat).toContain("A tool that changes data but moves no money is limited by calls a day (\"up to 20 replies a day\"), never by an amount");
     expect(flat).toContain("A tool that changes data but moves no money (posting a reply, moving a meeting, sharing a file) has no amount argument.");
