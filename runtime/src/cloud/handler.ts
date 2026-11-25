@@ -11177,7 +11177,7 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       const reads = shared(() => proofReads(event, me, deps));
       const [page, removed] = await Promise.all([
         listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), query.get("q") ?? "",
-          { cursor: query.get("cursor") ?? undefined, provider: query.get("provider") ?? undefined }),
+          { cursor: query.get("cursor") ?? undefined, provider: query.get("provider") ?? undefined, lang: langOf(event) }),
         removedTafs(event, me, deps, reads),
       ]);
       // Each app's logo as a path on tafs cloud, and never planque's icon URL: no phone loads anything from a third party.
@@ -11364,7 +11364,7 @@ async function grantSheet(event: HTTPEvent, id: string, me: KIFFIdentity, deps: 
   let app: { name?: string; logo?: string } = {};
   if (typeof entry === "string" && entry) {
     try {
-      const page = await listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), grant.vendor ?? "");
+      const page = await listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), grant.vendor ?? "", { lang: langOf(event) });
       const found = page.apps.find((a) => a.entry === entry);
       if (found) {
         const logos = found.icon ? await nameLogos(deps.coach, [found.icon], new Date()) : new Map<string, string>();
