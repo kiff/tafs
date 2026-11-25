@@ -137,8 +137,9 @@ enum WatchPushRelay {
         guard reading.signedIn, watchListening else { return }
         switch change {
         case "watch_inbox": await inbox(read: { await reading.inboxMarks() }, relay: toWatch)
-        // The changes that reload a taf's chat on the iPhone too (`AppModel.liveChange`).
-        case "taf", "knock": chat(taf, relay: toWatch)
+        // tafs cloud's push for a taf's chat (`taf_chat`, the owner's call 2b: a message from any device, or the taf's run
+        // answered), and the changes that reload a taf's chat on the iPhone too (`AppModel.liveChange`).
+        case "taf_chat", "taf", "knock": chat(taf, relay: toWatch)
         default: return
         }
     }

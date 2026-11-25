@@ -597,7 +597,8 @@ microphone, with "Ask Coach" where the family has room, in the circular, corner,
 The watch follows the phone's thread without asking it each time, and never asks the person to try again.
 
 - **Pushed, in step with the phone (calls 2 and 3).** tafs cloud's silent push wakes the iPhone (`change: watch_ask`,
-  `change: watch_inbox`, and `change: taf` or `knock` for a taf's chat). The iPhone reads the change with its own session
+  `change: watch_inbox`, and `change: taf_chat`, `taf` or `knock` for a taf's chat: `taf_chat` comes with every message
+  in it, from any device, and when its run answers). The iPhone reads the change with its own session
   and hands it to the watch as a `WatchPush` over WatchConnectivity's `transferUserInfo`. That transfer is queued and
   delivered in order, even when tafs isn't open on either device. A push still waiting for an older state of the same
   request or chat is cancelled, so a watch out of reach gets each thread's newest state, not every step. On the watch,
