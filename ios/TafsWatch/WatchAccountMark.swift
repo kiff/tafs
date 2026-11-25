@@ -7,9 +7,10 @@ import UserNotifications
 /// threads, the Inbox, a message kept for later, the tafs it read, and its alerts. So one person's tafs, threads and words
 /// never show, and a message they wrote is never sent, once someone else is signed in on the phone.
 ///
-/// And nothing kept is drawn before this run of the app has heard the phone's mark and it's the kept one (`mayDraw`): a
-/// watch whose phone changed account while it was away shows only what the phone answers now, never the old copy for a
-/// frame.
+/// And nothing kept is drawn before this open of the app has heard the phone's mark and it's the kept one (`mayDraw`), as
+/// on Wear OS: a watch whose phone changed account while it was away shows only what the phone answers now, never the old
+/// copy for a frame. Each time the app is put away the mark has to be heard again (`leave`), so an app still running in the
+/// background through a sign-out and a sign-in as someone else on the phone draws nothing of the first account.
 @MainActor
 final class WatchAccountMark {
     static let shared = WatchAccountMark()
@@ -38,7 +39,7 @@ final class WatchAccountMark {
     private let clearStored: @MainActor () -> Void
     private var wipes: [@MainActor () -> Void] = []
     private var confirms: [@MainActor () -> Void] = []
-    /// This run heard the phone's mark, and it's the one kept.
+    /// This open heard the phone's mark, and it's the one kept.
     private(set) var confirmed = false
     /// How many times what was kept went: for the tests.
     private(set) var wiped = 0
@@ -71,6 +72,10 @@ final class WatchAccountMark {
     /// Whether what's kept may be drawn now. The demo has no phone to hear, and shows its own fixed answers.
     var mayDraw: Bool { confirmed || WatchDemo.on }
 
+    /// The app was put away: until a live reply in the next open carries the kept mark again, nothing kept is drawn. The
+    /// phone may change accounts while the watch is away, and the app may go on running meanwhile.
+    func leave() { confirmed = false }
+
     /// What goes when the account changes: each store and page the app keeps adds its own.
     func onWipe(_ wipe: @escaping @MainActor () -> Void) { wipes.append(wipe) }
 
@@ -78,7 +83,7 @@ final class WatchAccountMark {
     func onConfirm(_ confirm: @escaping @MainActor () -> Void) { confirms.append(confirm) }
 
     /// A live reply's mark, or (`live` false, through `heardAccount`) an account change's, before anything in it is used.
-    /// Returns whether it's the kept account's. Only a live reply confirms the mark for this run: an account change may
+    /// Returns whether it's the kept account's. Only a live reply confirms the mark for this open: an account change may
     /// have waited, so it can wipe and name the new account, but never lets what's kept be drawn.
     @discardableResult
     func heard(_ mark: String?, live: Bool = true) -> Bool {

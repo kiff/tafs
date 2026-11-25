@@ -97,8 +97,31 @@ final class WatchAccountMarkTests: XCTestCase {
         XCTAssertTrue(mark.mayDraw)
         XCTAssertEqual(confirmed, 1)
         mark.heard(Self.a)
-        XCTAssertEqual(confirmed, 1, "once per run")
+        XCTAssertEqual(confirmed, 1, "once per open")
         XCTAssertEqual(box.cleared, 0)
+    }
+
+    /// Per open, as Wear OS: put away, the app draws nothing kept again until a live reply in the next open carries the mark,
+    /// even while it went on running (a sign-out and a sign-in as someone else on the phone, the watch away meanwhile).
+    func testPutAwayTheMarkIsHeardAgainBeforeAnythingKeptIsDrawn() {
+        let box = Box(Self.a)
+        let mark = account(box)
+        var confirmed = 0
+        mark.onConfirm { confirmed += 1 }
+        mark.heard(Self.a)
+        XCTAssertTrue(mark.mayDraw)
+        mark.leave()
+        XCTAssertFalse(mark.mayDraw, "the next open waits for the phone")
+        XCTAssertTrue(mark.heard(Self.a, live: false))
+        XCTAssertFalse(mark.mayDraw, "a push that waited doesn't confirm it")
+        XCTAssertTrue(mark.heard(Self.a))
+        XCTAssertTrue(mark.mayDraw)
+        XCTAssertEqual(confirmed, 2, "confirmed again in this open, so the pages take in what they kept")
+        XCTAssertEqual(box.cleared, 0, "the same account: nothing goes")
+        // Put away again, and the phone now says B: everything of A goes, and nothing of it is drawn first.
+        mark.leave()
+        XCTAssertFalse(mark.heard(Self.b))
+        XCTAssertEqual(box.cleared, 1)
     }
 
     /// Signed in as A, then B on the phone: everything kept goes before B's answer is used, and B's mark is kept.

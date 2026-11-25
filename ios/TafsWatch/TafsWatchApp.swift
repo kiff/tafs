@@ -61,6 +61,8 @@ struct TafsWatchApp: App {
             }
         }
         .onChange(of: scenePhase) { _, phase in
+            // Put away: the next open draws nothing kept until the phone's mark is heard again in it (`WatchAccountMark`).
+            if phase == .background { WatchAccountMark.shared.leave() }
             // Signed out on this watch: nothing is read, and there's nothing to forget.
             if WatchV2.on, signIn.signedOutHere { return }
             // In memory only: what was read goes once the app leaves the screen, and is read

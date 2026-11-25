@@ -681,8 +681,10 @@ and never to tafs cloud directly.
     read, and the watch's alerts) and each page forgets what it showed, before the answer is used;
   - **no mark once one was kept** (signed out, or a reply that doesn't say whose it is) wipes the same way, and nothing
     kept is drawn;
-  - **nothing kept is drawn** before this run of the app has heard the kept mark in a live reply; an account change (a
-    push or the context) can wipe, but never lets what's kept be drawn, since it may have waited;
+  - **nothing kept is drawn** before this open of the app has heard the kept mark in a live reply, as on Wear OS: each
+    time the app is put away the mark must be heard again (`WatchAccountMark.leave`), since the app can go on running
+    while the phone changes accounts; an account change (a push or the context) can wipe, but never lets what's kept be
+    drawn, since it may have waited;
   - **account changes are taken in the order the phone made them** (each carries when): one older than the last change
     or live reply heard is ignored, whichever WatchConnectivity hands over first;
   - **a data push** (a thread's change, the Inbox's marks) never changes the account: it's used only with the kept mark,
