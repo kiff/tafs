@@ -420,7 +420,8 @@ class TafScreensTest {
     compose.waitForIdle()
     compose.onNodeWithText(Words.Watch.settingsOf("Late parcels")).assertExists()
     compose.onAllNodesWithText(Words.Watch.haltThis).assertCountEquals(0)
-    assertEquals(listOf("phone needs-you"), did)
+    // Row 28: that taf, on the phone.
+    assertEquals(listOf("phone taf/taf_1"), did)
   }
 
   @Test fun beforeThePhoneAnswersThePageSaysSoAsV1() {

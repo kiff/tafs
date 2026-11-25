@@ -32,6 +32,8 @@ data class WatchTurn(
   val line: String?,
   val words: String,
   val replyTo: String? = null,
+  /** tafs cloud says the answer went on past its line: the whole is read on a tap ([WatchDaysStore.full]). */
+  val more: Boolean = false,
 ) {
   /** The taf's side: its line when there is one, else tafs cloud's words for the state, whatever the state. Never the app's own. */
   val answer: String get() = line?.ifBlank { null } ?: words
@@ -48,6 +50,9 @@ interface WatchDaysStore {
 
   /** `GET /v1/watch/days/{yyyy-mm-dd}`: that day's turns, oldest first, as tafs cloud orders them. */
   suspend fun day(date: LocalDate): List<WatchTurn>?
+
+  /** `GET /v1/watch/asks/{id}?full=1`: a turn's whole answer, for one tafs cloud says goes on (`more`); null when it gives none. */
+  suspend fun full(id: String): String? = null
 }
 
 /**
@@ -74,6 +79,7 @@ object WatchDaysWire {
       line = t.line?.ifBlank { null },
       words = t.words,
       replyTo = t.replyTo,
+      more = t.more,
     )
   }
 }
@@ -83,6 +89,8 @@ class TafsCloudWatchDaysStore(private val cloud: TafsCloud) : WatchDaysStore {
   override suspend fun days(): WatchDays? = cloud.watchDays()?.let(WatchDaysWire::days)
 
   override suspend fun day(date: LocalDate): List<WatchTurn>? = cloud.watchDay(date.toString())?.let(WatchDaysWire::turns)
+
+  override suspend fun full(id: String): String? = cloud.watchAskFull(id)
 }
 
 /**

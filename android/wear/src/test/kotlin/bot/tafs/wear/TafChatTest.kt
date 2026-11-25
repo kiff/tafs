@@ -1,10 +1,12 @@
 package bot.tafs.wear
 
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -223,6 +225,16 @@ class TafChatScreenTest {
 
   private fun show(open: WatchModel.OpenTaf) = compose.setContent {
     MaterialTheme { TafScreen(open, null, actions, openInbox = {}, chat = true, pager = rememberPagerState { 3 }) }
+  }
+
+  /** The person's own message: "HH:mm ✓" under it once tafs cloud took it, as on the Apple Watch; never the word "Sent". */
+  @Test fun aSentMessageShowsItsTimeAndATick() {
+    val at = java.time.Instant.parse("2026-11-25T01:32:00Z")
+    val sent = turn.copy(at = at.toEpochMilli(), ask = turn.ask.copy(state = AskLine.ACCEPTED, line = null, words = "Sent"))
+    show(WatchModel.OpenTaf("taf_1", null, WatchModel.TafRead.Read(page), WatchModel.TafChat(WatchModel.TafChat.History.Read(emptyList()), listOf(sent))))
+    compose.onNodeWithText(WatchChatTime.time(at)).assertExists()
+    compose.onNodeWithTag(SENT_TICK, useUnmergedTree = true).assertExists().assertContentDescriptionEquals(Words.Watch.sent)
+    compose.onAllNodesWithText(Words.Watch.sent).assertCountEquals(0)
   }
 
   @Test fun aTafOpensItsChatFirstWithMessageTypeAndQuickReply() {

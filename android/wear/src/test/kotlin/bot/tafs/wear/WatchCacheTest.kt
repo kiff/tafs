@@ -76,7 +76,10 @@ class WatchCacheTest {
     assertTrue("kept, marked updating", (m.shown.value as WatchModel.Shown.Read).updating)
     clock += UNREACHABLE_AFTER_MS
     m.refresh()
-    assertEquals(WatchModel.Shown.PhoneUnreachable(), m.shown.value)
+    // Still shown, with the small line and Try again: never a screen of its own over what was read.
+    val shown = m.shown.value as WatchModel.Shown.Read
+    assertEquals(LinkFailure.NotReachable, shown.unreachable)
+    assertFalse(shown.updating)
   }
 
   @Test fun aLockedWatchSignOutAndADayEachClearIt() = runTest {

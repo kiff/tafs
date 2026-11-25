@@ -2723,6 +2723,10 @@ class AppModel(
   suspend fun watchAsks(since: String?): List<bot.tafs.app.kiff.WatchAsk>? =
     if (_state.value.mode != Mode.kiff) null else cloud.watchAsks(since)
 
+  /** The watch's asks and the account's switch for chatting with a taf from the watch (`taf_chat`); null when not signed in. */
+  suspend fun watchAsksRead(since: String?): bot.tafs.app.kiff.WatchAskList? =
+    if (_state.value.mode != Mode.kiff) null else cloud.watchAsksRead(since)
+
   suspend fun removeTaf(tafId: String): String? {
     val s = _state.value
     val taf = s.taf(tafId)

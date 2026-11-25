@@ -738,7 +738,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
       open == AlertPayload.USAGE -> usageOpen = true
       cloudId != null -> {
         // The list may not be read yet: the taf opens once it's there, and an alert for a taf no longer listed opens the list.
-        val taf = state.tafs.firstOrNull { it.cloudId == cloudId }
+        // By its id in tafs cloud (an alert's), or the phone's own (the watch's Open on phone for a taf's chat).
+        val taf = state.tafs.firstOrNull { it.cloudId == cloudId } ?: state.tafs.firstOrNull { it.id == cloudId }
         if (taf == null && state.tafs.isEmpty()) return@LaunchedEffect
         tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = taf?.id
         if (AlertPayload.opensActivity(open)) openOnActivity = taf?.id

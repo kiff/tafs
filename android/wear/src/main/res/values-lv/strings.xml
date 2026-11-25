@@ -96,6 +96,7 @@
     <string name="watch_keep_for_later">Saglabāt vēlākam</string>
     <string name="watch_kept_to_send">Saglabāts šajā pulkstenī. Tas tiks nosūtīts, kad tālrunis atkal būs tuvumā.</string>
     <string name="watch_limit">Ne vairāk kā 30 s</string>
+    <string name="watch_linking">Savieno tafs. Turi tālruni tuvumā un savienotu.</string>
     <string name="watch_listening">Klausās</string>
     <string name="watch_menu">Izvēlne</string>
     <string name="watch_mic_needed">Lai jautātu balsī, atļauj tafs izmantot mikrofonu šajā pulkstenī.</string>

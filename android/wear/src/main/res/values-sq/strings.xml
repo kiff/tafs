@@ -92,6 +92,7 @@
     <string name="watch_keep_for_later">Mbajeni për më vonë</string>
     <string name="watch_kept_to_send">Mbahet në këtë orë. Dërgohet kur telefoni juaj të jetë sërish në rreze.</string>
     <string name="watch_limit">Më së shumti 30 s</string>
+    <string name="watch_linking">Po lidhet tafs. Mbajeni telefonin afër dhe të lidhur.</string>
     <string name="watch_listening">Po dëgjon</string>
     <string name="watch_menu">Menuja</string>
     <string name="watch_mic_needed">Për të pyetur me zë, lejoni mikrofonin për tafs në këtë orë.</string>

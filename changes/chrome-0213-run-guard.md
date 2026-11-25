@@ -1,0 +1,1 @@
+- **Chrome 0.2.13: a run you didn't start from the panel never works in your tab**, even when it continues a run that did: your tab is given back first, and the taf goes on in a tab of its own ([docs/chrome.md](../docs/chrome.md), "A taf works where you are").

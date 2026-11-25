@@ -79,6 +79,7 @@ class WatchPagesTest {
     shown: WatchModel.Shown,
     page: Page = Page.Coach,
     ready: List<AskLine> = emptyList(),
+    answered: List<AskLine> = ready,
     confirmingHaltAll: Boolean = false,
     pages: List<Page> = pages(false),
     voice: WatchModel.Voice? = null,
@@ -89,7 +90,7 @@ class WatchPagesTest {
       MaterialTheme {
         WatchPages(
           shown, outcome = null, confirmingHaltAll = confirmingHaltAll, voice = voice, result = null, working = emptyList(), ready = ready, act = actions,
-          pages = pages, pager = rememberPagerState(initialPage = pages.indexOf(page)) { pages.size }, kept = kept, thread = thread,
+          pages = pages, pager = rememberPagerState(initialPage = pages.indexOf(page)) { pages.size }, kept = kept, thread = thread, answered = answered,
         )
       }
     }
@@ -112,8 +113,62 @@ class WatchPagesTest {
     compose.onNodeWithText(Words.Watch.inboxUnread(2)).performClick()
     compose.waitForIdle()
     compose.onNodeWithText("Reship order #5098").assertExists()
-    compose.onNodeWithText("Support replies · Answered").performClick()
+    // Each answer by its taf and its words, a tap opening it whole.
+    compose.onNodeWithText("Answered").performClick()
     assertEquals(listOf(answered), opened)
+  }
+
+  /** Coach's turn: the person's words with "HH:mm ✓" under them, as on the Apple Watch; never the word "Sent" for it. */
+  @Test fun aSentTurnShowsItsTimeAndATick() {
+    val at = 1_763_244_000_000L
+    val taken = AskLine(id = "ask_9", clientId = "c9", state = AskLine.ACCEPTED, words = "Sent", updated = "2026-11-19T08:00:00Z")
+    show(read, thread = listOf(WatchModel.Said("Move my call to six", at) to taken))
+    compose.onNodeWithText(WatchChatTime.time(java.time.Instant.ofEpochMilli(at))).assertExists()
+    compose.onNodeWithTag(SENT_TICK, useUnmergedTree = true).assertExists().assertContentDescriptionEquals(Words.Watch.sent)
+    compose.onAllNodesWithText(Words.Watch.sent).assertCountEquals(0)
+  }
+
+  /** The state line of an ask at work shows once: in the conversation, not again under the microphone. */
+  @Test fun aTurnsStateLineShowsOnce() {
+    val working = AskLine(id = "ask_2", clientId = "c2", state = AskLine.WORKING, words = "Calendar is on it", updated = "2026-11-19T08:00:00Z")
+    compose.setContent {
+      MaterialTheme {
+        WatchPages(read, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = listOf(working), ready = emptyList(), act = actions,
+          pages = pages(false), thread = listOf(WatchModel.Said("Move my call to six", 1_763_244_000_000L) to working))
+      }
+    }
+    compose.onAllNodesWithText("Calendar is on it", substring = true).assertCountEquals(1)
+  }
+
+  /** A long answer shows whole in the conversation (the owner's test: it was cut at "the computer is…"). */
+  @Test fun aLongAnswerShowsWholeInTheConversation() {
+    val long = "Your Chrome isn't reachable (it's closed, or the computer is asleep). I stopped there and can't give you the first paragraph yet. Once Chrome is open, ask me again."
+    val done = AskLine(id = "ask_3", clientId = "c3", state = AskLine.DONE, tafName = "Wiki lookup", line = long, words = "Done", updated = "2026-11-19T08:00:00Z")
+    compose.setContent { MaterialTheme { androidx.wear.compose.foundation.lazy.ScalingLazyColumn { coachThread(listOf(WatchModel.Said("Why?", 1_763_244_000_000L) to done), actions) } } }
+    val drawn = compose.onNodeWithTag(THREAD_ANSWER + "ask_3").fetchSemanticsNode()
+    val layout = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+    drawn.config[androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult].action?.invoke(layout)
+    assertFalse("not cut with an ellipsis", layout.single().hasVisualOverflow)
+  }
+
+  /** The linking screen, when nothing is kept: the mark in its ring and the line, nothing else. */
+  @Test fun aFirstLinkShowsTheLinkingScreen() {
+    compose.setContent {
+      MaterialTheme {
+        WatchPages(WatchModel.Shown.Asking, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = emptyList(), ready = emptyList(), act = actions,
+          pages = pages(false), linking = true)
+      }
+    }
+    compose.onNodeWithTag(LINKING).assertExists()
+    compose.onNodeWithText(Words.Watch.linking).assertExists()
+    compose.onAllNodesWithText(Words.Watch.askingPhone).assertCountEquals(0)
+  }
+
+  /** Tries spent with something shown: one small line and Try again over it, never a screen of its own. */
+  @Test fun triesSpentShowASmallLineOverWhatsShown() {
+    show(read.copy(unreachable = LinkFailure.NoAnswer))
+    compose.onNodeWithTag(UNREACHABLE_LINE).assertExists()
+    compose.onNodeWithText(Words.Coach.ask).assertExists()
   }
 
   @Test fun theMicrophoneIsNamedForCoach() {
@@ -579,7 +634,7 @@ class WatchPagesTest {
 
   @Test fun theStoreKeepsEachLineAsWritten() {
     val lines = listOf(heldLine, answerLine, InboxItem(InboxItem.askId("wa_03"), InboxItem.Kind.ASK, null, "Done", 3))
-    assertEquals(lines, PreferencesInboxStore.decode(PreferencesInboxStore.encode(lines)))
+    assertEquals(lines, KeptInboxStore.decode(KeptInboxStore.encode(lines)))
   }
 
   // MARK: The batch's pre-review (#1408)

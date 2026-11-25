@@ -47,6 +47,9 @@ android {
       buildConfigField("boolean", "WATCH_V2", "false")
       // The app's own recording (Play and Pause) stays off: the system's recognizer hears the watch's microphone.
       buildConfigField("boolean", "KEEP_AUDIO", "false")
+      // Coach's conversation kept on the watch across opens (docs/watch-wear.md, "What the watch keeps"): on in debug builds,
+      // whose unit tests pass a store where they need one.
+      buildConfigField("boolean", "KEEP_THREADS", "true")
     }
     release {
       // Only an internal build asks for it: a test version ("-test"), a timing version ("-timing": the timings and the link's
@@ -62,6 +65,11 @@ android {
       // keeps no recording (docs/watch-wear.md, "What the watch keeps").
       val audio = defaultConfig.versionName.orEmpty().endsWith("-test") || System.getenv("TAFS_WATCH_AUDIO") == "1"
       buildConfigField("boolean", "KEEP_AUDIO", audio.toString())
+      // Coach's conversation kept on the watch across opens: only in a test version ("-test") or with TAFS_WATCH_THREADS=1, until
+      // the owner's yes and the Privacy page's line (as the Apple Watch's kept threads). Off, the conversation lives in memory
+      // while the app runs, and what the watch keeps is as before (docs/watch-wear.md, "What the watch keeps").
+      val threads = defaultConfig.versionName.orEmpty().endsWith("-test") || System.getenv("TAFS_WATCH_THREADS") == "1"
+      buildConfigField("boolean", "KEEP_THREADS", threads.toString())
       if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
       isMinifyEnabled = true
       isShrinkResources = true

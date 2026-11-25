@@ -63,24 +63,16 @@ interface CacheStore {
 }
 
 /**
- * The cache in the app's private files, encrypted with AES-GCM under a key in the watch's Android Keystore, which never leaves it.
- * A file that won't decrypt (the key gone, a reinstall) reads as none.
+ * Text in the app's private files, encrypted with AES-GCM under a key in the watch's Android Keystore, which never leaves it: the
+ * cache ([name] `watch-cache.bin`), and the Inbox and the kept chats ([EncryptedText]). A file that won't decrypt (the key gone, a
+ * reinstall) throws on [read]; each caller reads that as none. [key] is the Keystore's; a test passes its own.
  */
-class KeystoreCacheStore(context: android.content.Context) : CacheStore {
-  private val file = java.io.File(context.filesDir, "watch-cache.bin")
-
-  private fun key(): javax.crypto.SecretKey {
-    val keystore = java.security.KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-    (keystore.getKey(ALIAS, null) as? javax.crypto.SecretKey)?.let { return it }
-    val generator = javax.crypto.KeyGenerator.getInstance(android.security.keystore.KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
-    generator.init(
-      android.security.keystore.KeyGenParameterSpec.Builder(ALIAS, android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or android.security.keystore.KeyProperties.PURPOSE_DECRYPT)
-        .setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
-        .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
-        .build(),
-    )
-    return generator.generateKey()
-  }
+class KeystoreCacheStore(
+  context: android.content.Context,
+  name: String = "watch-cache.bin",
+  private val key: () -> javax.crypto.SecretKey = ::keystoreKey,
+) : CacheStore {
+  private val file = java.io.File(context.filesDir, name)
 
   override fun read(): String? {
     if (!file.exists()) return null
@@ -101,9 +93,44 @@ class KeystoreCacheStore(context: android.content.Context) : CacheStore {
     file.delete()
   }
 
-  private companion object {
-    const val ALIAS = "tafs.watch.cache"
-    const val TRANSFORMATION = "AES/GCM/NoPadding"
-    const val IV = 12
+  companion object {
+    private const val ALIAS = "tafs.watch.cache"
+    private const val TRANSFORMATION = "AES/GCM/NoPadding"
+    private const val IV = 12
+
+    /** The watch's one key for what it keeps, made in its Android Keystore the first time and never leaving it. */
+    fun keystoreKey(): javax.crypto.SecretKey {
+      val keystore = java.security.KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+      (keystore.getKey(ALIAS, null) as? javax.crypto.SecretKey)?.let { return it }
+      val generator = javax.crypto.KeyGenerator.getInstance(android.security.keystore.KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
+      generator.init(
+        android.security.keystore.KeyGenParameterSpec.Builder(ALIAS, android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or android.security.keystore.KeyProperties.PURPOSE_DECRYPT)
+          .setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
+          .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
+          .build(),
+      )
+      return generator.generateKey()
+    }
+  }
+}
+
+/**
+ * A [CacheStore] read leniently, for what the watch keeps (the Inbox, the kept chats): text that won't read back (the key gone,
+ * a file damaged) is none, and is cleared, never a crash.
+ */
+class EncryptedText(private val store: CacheStore) {
+  fun read(): String? = try {
+    store.read()
+  } catch (_: Exception) {
+    runCatching { store.clear() }
+    null
+  }
+
+  fun write(text: String) {
+    runCatching { store.write(text) }
+  }
+
+  fun clear() {
+    runCatching { store.clear() }
   }
 }

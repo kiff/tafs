@@ -119,6 +119,17 @@ class WatchAskTest {
     assertTrue(transport.requests.last { it.method == "GET" && it.url.contains("/v1/watch/asks") }.url.endsWith("/v1/watch/asks?since=2026-11-16T19%3A00%3A00Z"))
   }
 
+  /** Row 13: tafs cloud's switch for chatting with a taf comes with the asks, so the watch says so before recording. */
+  @Test fun theTafChatSwitchComesWithTheAsks() = runTest {
+    reads()
+    val m = model()
+    transport.answer("GET /v1/watch/asks", 200, """{"asks":[],"taf_chat":false}""")
+    assertEquals(WatchReply.AskList(emptyList(), tafChat = false), WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Asks(now)))
+    // A tafs cloud before it says nothing: the watch learns it from a send's refusal, as before.
+    transport.answer("GET /v1/watch/asks", 200, """{"asks":[]}""")
+    assertEquals(WatchReply.AskList(emptyList(), tafChat = null), WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Asks(now)))
+  }
+
   // MARK: The Inbox's marks (row 21)
 
   /** Read with the phone's session, by id alone: a dismissed id is never also read, and an id the watch can't use is passed over. */
@@ -198,9 +209,9 @@ class WatchAskTest {
     assertTrue(transport.requests.none { it.method == "POST" && it.url.endsWith("/v1/watch/asks") })
   }
 
-  /** tafs cloud's switch off, a taf not the person's to use, or Coach named as a taf: Open on phone, never Coach's chat. */
+  /** A taf not the person's to use, or Coach named as a taf: Open on phone, never Coach's chat. */
   @Test fun aRefusedMessageToATafSaysOpenOnPhoneNeverCoach() = runTest {
-    for (refusal in listOf("""404 {"error":"off","code":"watch_taf_chat_off"}""", """404 {"error":"no","code":"no_taf"}""", """400 {"error":"coach","code":"coach_taf"}""", """404 {"error":"off","code":"watch_off"}""")) {
+    for (refusal in listOf("""404 {"error":"no","code":"no_taf"}""", """400 {"error":"coach","code":"coach_taf"}""", """404 {"error":"off","code":"watch_off"}""")) {
       reads(home = withRefunds)
       val m = model()
       val (status, json) = refusal.split(" ", limit = 2)
@@ -210,6 +221,11 @@ class WatchAskTest {
         WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Ask(now, "w_7f3a9c26", "Hello", tafId = "refunds-1")))
       assertEquals("$refusal reached tafs cloud", posted + 1, transport.requests.count { it.method == "POST" && it.url.endsWith("/v1/watch/asks") })
     }
+    // The account's switch off (row 13): its own reply, so the watch keeps the words and says so; never Coach's chat.
+    reads(home = withRefunds)
+    val m = model()
+    transport.answer("POST /v1/watch/asks", 404, """{"error":"off","code":"watch_taf_chat_off"}""")
+    assertEquals(WatchReply.TafChatOff, WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Ask(now, "w_7f3a9c27", "Hello", tafId = "refunds-1")))
     // The rest as for an ask: the AI consent in the watch's words.
     assertEquals(WatchReply.Failed(bot.tafs.app.model.Words.Watch.askNeedsConsent), WatchRelay.refusedTafMessage(bot.tafs.app.kiff.CloudError(403, "Allow AI use first", code = "ai_consent_required")))
   }
