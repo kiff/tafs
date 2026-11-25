@@ -128,9 +128,10 @@ fun CoachScreen(
             val tools = state.coachTools
             // Coach's box, locked until its tools are approved (docs/coach.md, "Coach's tools step").
             val lock = when {
-              // The Card step is on screen: nothing is typed to Coach until it's approved, and tafs cloud's line says so.
+              // The Card step is on screen: nothing is typed to Coach until it's approved, and tafs cloud's line says so (or the
+              // app's own, when none came).
               state.coachCloudId == null && start != null && start.cardStep(biometry) ->
-                ComposerLock(start.words?.locked.orEmpty())
+                ComposerLock(start.words?.locked?.ifBlank { null } ?: Words.Coach.Tools.writeAfter)
               // Coach exists but its tools themselves are still to give: one locked line, which opens the step (tafs cloud's `row`,
               // or the row's own title, as on the iPhone). When only Cards for newer tools are missing, typing stays open.
               state.coachCloudId != null && tools != null && tools.toGive && tools.connect != null ->

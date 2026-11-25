@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Jepini Coach mjetet e tij</string>
     <string name="coach_tools_giving">Po jepen…</string>
     <string name="coach_tools_title">Mjetet e Coach</string>
+    <string name="coach_tools_write_after">Miratoni fillimisht mjetet e Coach, pastaj mund të shkruani.</string>
     <string name="coach_tools_eyebrow">Mjete</string>
     <string name="coach_tools_not_given">Mjetet e Coach nuk u dhanë. %1$s</string>
     <string name="coach_tools_not_read">Mjetet e Coach nuk u lexuan dot. %1$s</string>

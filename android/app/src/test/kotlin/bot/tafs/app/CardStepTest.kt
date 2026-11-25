@@ -56,6 +56,8 @@ class CardStepTest {
     assertTrue(start.cardStepSigns)
     assertEquals(start.words!!.buttons.fingerprint, start.words!!.give(Words.Approval.Biometry.fingerprint))
     assertTrue("the locked box's line came", start.words!!.locked.isNotBlank())
+    // Without `locked`, still the Card step: the box stays locked under the app's own line, never drawn open.
+    assertTrue("no locked line, still the step", start.words!!.copy(locked = "").cardStep(Words.Approval.Biometry.fingerprint))
   }
 
   @Test fun anyChangeToASignedCardFailsClosed() {

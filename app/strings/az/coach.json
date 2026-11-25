@@ -186,6 +186,7 @@
   "coach.tools.give": "Coach-a alətlərini verin",
   "coach.tools.giving": "Verilir…",
   "coach.tools.title": "Coach-un alətləri",
+  "coach.tools.write_after": "Əvvəlcə Coach-un alətlərini təsdiq edin, sonra yaza bilərsiniz.",
   "coach.tools_eyebrow": "Alətlər",
   "coach.tools_not_given": "Coach-un alətləri verilmədi. {why}",
   "coach.tools_not_read": "Coach-un alətləri oxuna bilmədi. {why}",

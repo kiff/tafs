@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.foundation.layout.height
@@ -25,7 +26,11 @@ import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.Words
 import bot.tafs.app.views.CoachActions
 import bot.tafs.app.views.CoachChatActions
+import bot.tafs.app.views.COMPOSER_LOCKED
 import bot.tafs.app.views.CoachScreen
+import bot.tafs.app.views.ComposerLock
+import bot.tafs.app.views.LocalComposerLock
+import bot.tafs.app.views.TafChatView
 import bot.tafs.app.views.ConnectionActions
 import bot.tafs.app.views.DoorActions
 import bot.tafs.app.views.TafActions
@@ -77,8 +82,11 @@ class CoachToolsStepTest {
     rule.onNodeWithText(Words.Coach.Tools.give).assertExists()
     rule.onNodeWithText(Words.Common.notNow).assertExists().performClick()
     rule.waitForIdle()
-    // Put off: one line opens it again, and the tools' lines no longer sit above the conversation.
+    // Put off: one line opens it again, and the tools' lines no longer sit above the conversation. No `row` came from tafs
+    // cloud, so the locked box says the row's own title, and there's still no box to type in.
     rule.onAllNodesWithText("· Tool line 2").assertCountEquals(0)
+    rule.onAllNodes(hasSetTextAction()).assertCountEquals(0)
+    rule.onNodeWithTag(COMPOSER_LOCKED).assertIsDisplayed()
     rule.onNodeWithText(Words.Coach.Tools.title).assertIsDisplayed().performClick()
     rule.waitForIdle()
     rule.onNodeWithText(Words.Coach.Tools.give).assertExists().performClick()
@@ -115,6 +123,18 @@ class CoachToolsStepTest {
     rule.waitForIdle()
     // Put off: tafs cloud's row.
     rule.onNodeWithText("Coach has no tools yet · Give them").assertIsDisplayed()
+  }
+
+  /** A lock with no words from tafs cloud (the Card step's `locked` left out) still locks: the app's own line, no box. */
+  @Test fun aLockWithNoWordsStaysLockedUnderTheAppsLine() {
+    rule.setShown {
+      TafsTheme {
+        CompositionLocalProvider(LocalComposerLock provides ComposerLock("")) { TafChatView(COACH_CHAT, state(asked = false), actions) }
+      }
+    }
+    rule.onNodeWithTag(COMPOSER_LOCKED).assertIsDisplayed()
+    rule.onNodeWithText(Words.Coach.Tools.writeAfter).assertIsDisplayed()
+    rule.onAllNodes(hasSetTextAction()).assertCountEquals(0)
   }
 
   /** The box and its buttons, in what's left of a phone once the keyboard is up. */

@@ -186,6 +186,7 @@
   "coach.tools.give": "Anna Coachile selle tööriistad",
   "coach.tools.giving": "Andmine…",
   "coach.tools.title": "Coachi tööriistad",
+  "coach.tools.write_after": "Kinnita kõigepealt Coachi tööriistad, siis saad kirjutada.",
   "coach.tools_eyebrow": "Tööriistad",
   "coach.tools_not_given": "Coachi tööriistu ei antud. {why}",
   "coach.tools_not_read": "Coachi tööriistu ei õnnestunud lugeda. {why}",

@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Anna Coachile selle tööriistad</string>
     <string name="coach_tools_giving">Andmine…</string>
     <string name="coach_tools_title">Coachi tööriistad</string>
+    <string name="coach_tools_write_after">Kinnita kõigepealt Coachi tööriistad, siis saad kirjutada.</string>
     <string name="coach_tools_eyebrow">Tööriistad</string>
     <string name="coach_tools_not_given">Coachi tööriistu ei antud. %1$s</string>
     <string name="coach_tools_not_read">Coachi tööriistu ei õnnestunud lugeda. %1$s</string>

@@ -823,6 +823,7 @@
     <string name="coach_tools_give">Coach에게 도구 주기</string>
     <string name="coach_tools_giving">주는 중…</string>
     <string name="coach_tools_title">Coach의 도구</string>
+    <string name="coach_tools_write_after">먼저 Coach의 도구를 승인하면 메시지를 쓸 수 있습니다.</string>
     <string name="coach_tools_eyebrow">도구</string>
     <string name="coach_tools_not_given">Coach에게 도구를 주지 못했습니다. %1$s</string>
     <string name="coach_tools_not_read">Coach의 도구를 읽지 못했습니다. %1$s</string>

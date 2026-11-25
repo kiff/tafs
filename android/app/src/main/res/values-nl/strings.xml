@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Coach zijn tools geven</string>
     <string name="coach_tools_giving">Geven…</string>
     <string name="coach_tools_title">Tools van Coach</string>
+    <string name="coach_tools_write_after">Keur eerst de tools van Coach goed, dan kun je schrijven.</string>
     <string name="coach_tools_eyebrow">Tools</string>
     <string name="coach_tools_not_given">De tools van Coach zijn niet gegeven. %1$s</string>
     <string name="coach_tools_not_read">Kon de tools van Coach niet lezen. %1$s</string>

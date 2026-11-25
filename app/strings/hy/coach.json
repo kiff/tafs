@@ -186,6 +186,7 @@
   "coach.tools.give": "Տվեք Coach-ին իր գործիքները",
   "coach.tools.giving": "Տրվում է…",
   "coach.tools.title": "Coach-ի գործիքները",
+  "coach.tools.write_after": "Նախ հաստատեք Coach-ի գործիքները, հետո կկարողանաք գրել։",
   "coach.tools_eyebrow": "Գործիքներ",
   "coach.tools_not_given": "Coach-ի գործիքները չտրվեցին։ {why}",
   "coach.tools_not_read": "Coach-ի գործիքները չկարողացան կարդացվել։ {why}",

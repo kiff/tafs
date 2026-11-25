@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Give Coach its tools</string>
     <string name="coach_tools_giving">Giving…</string>
     <string name="coach_tools_title">Coach\'s tools</string>
+    <string name="coach_tools_write_after">Approve Coach\'s tools first, then you can write.</string>
     <string name="coach_tools_eyebrow">Tools</string>
     <string name="coach_tools_not_given">Coach\'s tools weren\'t given. %1$s</string>
     <string name="coach_tools_not_read">Couldn\'t read Coach\'s tools. %1$s</string>

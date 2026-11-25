@@ -506,13 +506,15 @@ private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, m
     }
     // Coach takes no typing until its tools are approved (docs/coach.md, "Coach's tools step"): the box gives way to one line
     // in tafs cloud's words, which opens the step where there is one to open.
-    val lock = LocalComposerLock.current?.takeIf { tafId == COACH_CHAT && it.words.isNotBlank() }
+    // A lock never opens the box: with no words, it says the app's own line.
+    val lock = LocalComposerLock.current?.takeIf { tafId == COACH_CHAT }
     if (lock != null) {
+      val words = lock.words.ifBlank { Words.Coach.Tools.writeAfter }
       Text(
-        lock.words,
+        words,
         style = scaled(14, color = if (lock.open != null) Theme.amberText else Theme.soft),
         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-          .let { m -> lock.open?.let { open -> m.tapping(onClickLabel = lock.words, onClick = open) } ?: m }
+          .let { m -> lock.open?.let { open -> m.tapping(onClickLabel = words, onClick = open) } ?: m }
           .padding(horizontal = 16.dp, vertical = 12.dp).testTag(COMPOSER_LOCKED),
       )
       return@Column

@@ -186,6 +186,7 @@
   "coach.tools.give": "Dot Coach tā rīkus",
   "coach.tools.giving": "Nodod…",
   "coach.tools.title": "Coach rīki",
+  "coach.tools.write_after": "Vispirms apstiprini Coach rīkus, tad varēsi rakstīt.",
   "coach.tools_eyebrow": "Rīki",
   "coach.tools_not_given": "Coach rīki netika nodoti. {why}",
   "coach.tools_not_read": "Neizdevās nolasīt Coach rīkus. {why}",

@@ -889,6 +889,7 @@
     <string name="coach_tools_give">Dot Coach tā rīkus</string>
     <string name="coach_tools_giving">Nodod…</string>
     <string name="coach_tools_title">Coach rīki</string>
+    <string name="coach_tools_write_after">Vispirms apstiprini Coach rīkus, tad varēsi rakstīt.</string>
     <string name="coach_tools_eyebrow">Rīki</string>
     <string name="coach_tools_not_given">Coach rīki netika nodoti. %1$s</string>
     <string name="coach_tools_not_read">Neizdevās nolasīt Coach rīkus. %1$s</string>

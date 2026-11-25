@@ -186,6 +186,7 @@
   "coach.tools.give": "Dai a Coach i suoi strumenti",
   "coach.tools.giving": "Assegnazione…",
   "coach.tools.title": "Gli strumenti di Coach",
+  "coach.tools.write_after": "Approva prima gli strumenti di Coach, poi potrai scrivere.",
   "coach.tools_eyebrow": "Strumenti",
   "coach.tools_not_given": "Gli strumenti di Coach non sono stati assegnati. {why}",
   "coach.tools_not_read": "Impossibile leggere gli strumenti di Coach. {why}",

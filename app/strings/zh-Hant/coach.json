@@ -186,6 +186,7 @@
   "coach.tools.give": "發給 Coach 它的工具",
   "coach.tools.giving": "發給中…",
   "coach.tools.title": "Coach 的工具",
+  "coach.tools.write_after": "請先核准 Coach 的工具，之後就能輸入訊息。",
   "coach.tools_eyebrow": "工具",
   "coach.tools_not_given": "未發給 Coach 工具。{why}",
   "coach.tools_not_read": "無法讀取 Coach 的工具。{why}",

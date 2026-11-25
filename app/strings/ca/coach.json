@@ -186,6 +186,7 @@
   "coach.tools.give": "Dona a Coach les seves eines",
   "coach.tools.giving": "Donant…",
   "coach.tools.title": "Eines de Coach",
+  "coach.tools.write_after": "Aprova primer les eines de Coach i després podràs escriure.",
   "coach.tools_eyebrow": "Eines",
   "coach.tools_not_given": "No s'han donat les eines de Coach. {why}",
   "coach.tools_not_read": "No s'han pogut llegir les eines de Coach. {why}",

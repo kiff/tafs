@@ -889,6 +889,7 @@
     <string name="coach_tools_give">Dajte Coachu njegove alate</string>
     <string name="coach_tools_giving">Davanje…</string>
     <string name="coach_tools_title">Coachovi alati</string>
+    <string name="coach_tools_write_after">Najpre odobrite Coachove alate, zatim možete pisati.</string>
     <string name="coach_tools_eyebrow">Alati</string>
     <string name="coach_tools_not_given">Coachovi alati nisu dani. %1$s</string>
     <string name="coach_tools_not_read">Coachove alate nije bilo moguće pročitati. %1$s</string>

@@ -889,6 +889,7 @@
     <string name="coach_tools_give">Dať Coachovi jeho nástroje</string>
     <string name="coach_tools_giving">Odovzdávam…</string>
     <string name="coach_tools_title">Nástroje Coacha</string>
+    <string name="coach_tools_write_after">Najprv schváľte nástroje Coacha, potom môžete písať.</string>
     <string name="coach_tools_eyebrow">Nástroje</string>
     <string name="coach_tools_not_given">Nástroje Coacha sa neodovzdali. %1$s</string>
     <string name="coach_tools_not_read">Nástroje Coacha sa nepodarilo načítať. %1$s</string>

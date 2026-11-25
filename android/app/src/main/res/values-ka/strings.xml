@@ -856,6 +856,7 @@
     <string name="coach_tools_give">მიეცით Coach-ს მისი ინსტრუმენტები</string>
     <string name="coach_tools_giving">ეძლევა…</string>
     <string name="coach_tools_title">Coach-ის ინსტრუმენტები</string>
+    <string name="coach_tools_write_after">ჯერ დაამტკიცეთ Coach-ის ინსტრუმენტები, შემდეგ შეძლებთ წერას.</string>
     <string name="coach_tools_eyebrow">ინსტრუმენტები</string>
     <string name="coach_tools_not_given">Coach-ის ინსტრუმენტები არ მიეცა. %1$s</string>
     <string name="coach_tools_not_read">Coach-ის ინსტრუმენტები ვერ წაიკითხა. %1$s</string>

@@ -922,6 +922,7 @@
     <string name="coach_tools_give">Daj Coachu njegova orodja</string>
     <string name="coach_tools_giving">Predajam…</string>
     <string name="coach_tools_title">Orodja Coacha</string>
+    <string name="coach_tools_write_after">Najprej odobrite orodja Coacha, nato lahko pišete.</string>
     <string name="coach_tools_eyebrow">Orodja</string>
     <string name="coach_tools_not_given">Orodja Coacha niso bila predana. %1$s</string>
     <string name="coach_tools_not_read">Orodij Coacha ni bilo mogoče prebrati. %1$s</string>

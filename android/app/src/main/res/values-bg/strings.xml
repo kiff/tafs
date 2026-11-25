@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Даване на инструментите на Coach</string>
     <string name="coach_tools_giving">Даване…</string>
     <string name="coach_tools_title">Инструментите на Coach</string>
+    <string name="coach_tools_write_after">Първо одобрете инструментите на Coach, след това можете да пишете.</string>
     <string name="coach_tools_eyebrow">Инструменти</string>
     <string name="coach_tools_not_given">Инструментите на Coach не бяха дадени. %1$s</string>
     <string name="coach_tools_not_read">Инструментите на Coach не можаха да бъдат прочетени. %1$s</string>

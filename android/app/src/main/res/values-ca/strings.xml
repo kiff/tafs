@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Dona a Coach les seves eines</string>
     <string name="coach_tools_giving">Donant…</string>
     <string name="coach_tools_title">Eines de Coach</string>
+    <string name="coach_tools_write_after">Aprova primer les eines de Coach i després podràs escriure.</string>
     <string name="coach_tools_eyebrow">Eines</string>
     <string name="coach_tools_not_given">No s\'han donat les eines de Coach. %1$s</string>
     <string name="coach_tools_not_read">No s\'han pogut llegir les eines de Coach. %1$s</string>

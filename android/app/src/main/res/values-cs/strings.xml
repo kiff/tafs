@@ -889,6 +889,7 @@
     <string name="coach_tools_give">Dát Coachovi jeho nástroje</string>
     <string name="coach_tools_giving">Předávám…</string>
     <string name="coach_tools_title">Nástroje Coache</string>
+    <string name="coach_tools_write_after">Nejdřív schvalte nástroje Coache, pak můžete psát.</string>
     <string name="coach_tools_eyebrow">Nástroje</string>
     <string name="coach_tools_not_given">Nástroje Coache se nepředaly. %1$s</string>
     <string name="coach_tools_not_read">Nástroje Coache se nepodařilo načíst. %1$s</string>

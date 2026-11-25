@@ -823,6 +823,7 @@
     <string name="coach_tools_give">Cấp công cụ cho Coach</string>
     <string name="coach_tools_giving">Đang cấp…</string>
     <string name="coach_tools_title">Công cụ của Coach</string>
+    <string name="coach_tools_write_after">Hãy phê duyệt công cụ của Coach trước, sau đó bạn có thể viết.</string>
     <string name="coach_tools_eyebrow">Công cụ</string>
     <string name="coach_tools_not_given">Công cụ của Coach chưa được cấp. %1$s</string>
     <string name="coach_tools_not_read">Không thể đọc công cụ của Coach. %1$s</string>

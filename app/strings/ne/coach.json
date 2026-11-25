@@ -186,6 +186,7 @@
   "coach.tools.give": "Coach लाई यसका उपकरण दिनुहोस्",
   "coach.tools.giving": "दिँदैछ…",
   "coach.tools.title": "Coach का उपकरण",
+  "coach.tools.write_after": "पहिले Coach का उपकरण स्वीकृत गर्नुहोस्, त्यसपछि लेख्न सक्नुहुन्छ।",
   "coach.tools_eyebrow": "उपकरणहरू",
   "coach.tools_not_given": "Coach का उपकरण दिइएन। {why}",
   "coach.tools_not_read": "Coach का उपकरण पढ्न सकिएन। {why}",

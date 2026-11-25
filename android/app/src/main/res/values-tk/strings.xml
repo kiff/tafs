@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Coach-a gurallaryny beriň</string>
     <string name="coach_tools_giving">Berilýär…</string>
     <string name="coach_tools_title">Coach-yň gurallary</string>
+    <string name="coach_tools_write_after">Ilki bilen Coach-yň gurallaryny tassyklaň, soňra ýazyp bilersiňiz.</string>
     <string name="coach_tools_eyebrow">Gurallar</string>
     <string name="coach_tools_not_given">Coach-yň gurallary berilmedi. %1$s</string>
     <string name="coach_tools_not_read">Coach-yň gurallaryny okap bolmady. %1$s</string>

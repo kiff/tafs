@@ -889,6 +889,7 @@
     <string name="coach_tools_give">מתן הכלים ל-Coach</string>
     <string name="coach_tools_giving">נותן…</string>
     <string name="coach_tools_title">הכלים של Coach</string>
+    <string name="coach_tools_write_after">יש לאשר קודם את הכלים של Coach, ואז אפשר לכתוב.</string>
     <string name="coach_tools_eyebrow">כלים</string>
     <string name="coach_tools_not_given">הכלים של Coach לא ניתנו. %1$s</string>
     <string name="coach_tools_not_read">לא ניתן היה לקרוא את הכלים של Coach. %1$s</string>

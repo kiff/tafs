@@ -186,6 +186,7 @@
   "coach.tools.give": "Cấp công cụ cho Coach",
   "coach.tools.giving": "Đang cấp…",
   "coach.tools.title": "Công cụ của Coach",
+  "coach.tools.write_after": "Hãy phê duyệt công cụ của Coach trước, sau đó bạn có thể viết.",
   "coach.tools_eyebrow": "Công cụ",
   "coach.tools_not_given": "Công cụ của Coach chưa được cấp. {why}",
   "coach.tools_not_read": "Không thể đọc công cụ của Coach. {why}",

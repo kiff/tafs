@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Дај му на Coach неговите алатки</string>
     <string name="coach_tools_giving">Се дава…</string>
     <string name="coach_tools_title">Алатки на Coach</string>
+    <string name="coach_tools_write_after">Прво одобри ги алатките на Coach, потоа ќе можеш да пишуваш.</string>
     <string name="coach_tools_eyebrow">Алатки</string>
     <string name="coach_tools_not_given">Алатките на Coach не се дадени. %1$s</string>
     <string name="coach_tools_not_read">Алатките на Coach не можеа да се прочитаат. %1$s</string>

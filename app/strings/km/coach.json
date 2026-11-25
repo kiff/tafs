@@ -186,6 +186,7 @@
   "coach.tools.give": "ឱ្យឧបករណ៍របស់វាទៅ Coach",
   "coach.tools.giving": "កំពុងឱ្យ…",
   "coach.tools.title": "ឧបករណ៍របស់ Coach",
+  "coach.tools.write_after": "សូមអនុម័តឧបករណ៍របស់ Coach ជាមុនសិន បន្ទាប់មកអ្នកអាចសរសេរបាន។",
   "coach.tools_eyebrow": "ឧបករណ៍",
   "coach.tools_not_given": "ឧបករណ៍របស់ Coach មិនត្រូវបានឱ្យទេ។ {why}",
   "coach.tools_not_read": "មិនអាចអានឧបករណ៍របស់ Coach បានទេ។ {why}",

@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Տվեք Coach-ին իր գործիքները</string>
     <string name="coach_tools_giving">Տրվում է…</string>
     <string name="coach_tools_title">Coach-ի գործիքները</string>
+    <string name="coach_tools_write_after">Նախ հաստատեք Coach-ի գործիքները, հետո կկարողանաք գրել։</string>
     <string name="coach_tools_eyebrow">Գործիքներ</string>
     <string name="coach_tools_not_given">Coach-ի գործիքները չտրվեցին։ %1$s</string>
     <string name="coach_tools_not_read">Coach-ի գործիքները չկարողացան կարդացվել։ %1$s</string>

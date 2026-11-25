@@ -186,6 +186,7 @@
   "coach.tools.give": "Dar ao Coach as suas ferramentas",
   "coach.tools.giving": "A dar…",
   "coach.tools.title": "Ferramentas do Coach",
+  "coach.tools.write_after": "Aprove primeiro as ferramentas do Coach e depois poderá escrever.",
   "coach.tools_eyebrow": "Ferramentas",
   "coach.tools_not_given": "As ferramentas do Coach não foram dadas. {why}",
   "coach.tools_not_read": "Não foi possível ler as ferramentas do Coach. {why}",

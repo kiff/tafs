@@ -186,6 +186,7 @@
   "coach.tools.give": "منح Coach أدواته",
   "coach.tools.giving": "جارٍ المنح…",
   "coach.tools.title": "أدوات Coach",
+  "coach.tools.write_after": "وافق على أدوات Coach أولاً، ثم يمكنك الكتابة.",
   "coach.tools_eyebrow": "الأدوات",
   "coach.tools_not_given": "لم تُمنح أدوات Coach. {why}",
   "coach.tools_not_read": "تعذّرت قراءة أدوات Coach. {why}",

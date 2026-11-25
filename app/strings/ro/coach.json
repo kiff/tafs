@@ -186,6 +186,7 @@
   "coach.tools.give": "Dați-i lui Coach instrumentele",
   "coach.tools.giving": "Se dau…",
   "coach.tools.title": "Instrumentele lui Coach",
+  "coach.tools.write_after": "Aprobați mai întâi instrumentele lui Coach, apoi puteți scrie.",
   "coach.tools_eyebrow": "Instrumente",
   "coach.tools_not_given": "Instrumentele lui Coach nu au fost date. {why}",
   "coach.tools_not_read": "Instrumentele lui Coach nu au putut fi citite. {why}",

@@ -856,6 +856,7 @@
     <string name="coach_tools_give">Dai a Coach i suoi strumenti</string>
     <string name="coach_tools_giving">Assegnazione…</string>
     <string name="coach_tools_title">Gli strumenti di Coach</string>
+    <string name="coach_tools_write_after">Approva prima gli strumenti di Coach, poi potrai scrivere.</string>
     <string name="coach_tools_eyebrow">Strumenti</string>
     <string name="coach_tools_not_given">Gli strumenti di Coach non sono stati assegnati. %1$s</string>
     <string name="coach_tools_not_read">Impossibile leggere gli strumenti di Coach. %1$s</string>

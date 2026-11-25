@@ -889,6 +889,7 @@
     <string name="coach_tools_give">Suteikti Coach jo įrankius</string>
     <string name="coach_tools_giving">Suteikiama…</string>
     <string name="coach_tools_title">Coach įrankiai</string>
+    <string name="coach_tools_write_after">Pirmiausia patvirtinkite Coach įrankius, tada galėsite rašyti.</string>
     <string name="coach_tools_eyebrow">Įrankiai</string>
     <string name="coach_tools_not_given">Coach įrankiai nesuteikti. %1$s</string>
     <string name="coach_tools_not_read">Nepavyko nuskaityti Coach įrankių. %1$s</string>

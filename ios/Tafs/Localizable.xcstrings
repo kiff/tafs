@@ -210579,6 +210579,269 @@
         }
       }
     },
+    "coach.tools.write_after": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وافق على أدوات Coach أولاً، ثم يمكنك الكتابة."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Əvvəlcə Coach-un alətlərini təsdiq edin, sonra yaza bilərsiniz."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Първо одобрете инструментите на Coach, след това можете да пишете."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আগে Coach-এর টুল অনুমোদন করুন, তারপর লিখতে পারবেন।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprova primer les eines de Coach i després podràs escriure."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nejdřív schvalte nástroje Coache, pak můžete psát."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genehmige zuerst die Tools von Coach, dann kannst du schreiben."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve Coach's tools first, then you can write."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprueba primero las herramientas de Coach y luego podrás escribir."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kinnita kõigepealt Coachi tööriistad, siis saad kirjutada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuvez d'abord les outils de Coach, puis vous pourrez écrire."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש לאשר קודם את הכלים של Coach, ואז אפשר לכתוב."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पहले Coach के टूल मंज़ूर करें, फिर आप लिख सकते हैं।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najprije odobrite Coachove alate, zatim možete pisati."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Előbb hagyd jóvá a Coach eszközeit, utána írhatsz."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Նախ հաստատեք Coach-ի գործիքները, հետո կկարողանաք գրել։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setujui alat Coach dulu, lalu Anda bisa menulis."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva prima gli strumenti di Coach, poi potrai scrivere."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先にCoachのツールを承認してください。その後、書き込めます。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ჯერ დაამტკიცეთ Coach-ის ინსტრუმენტები, შემდეგ შეძლებთ წერას."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "សូមអនុម័តឧបករណ៍របស់ Coach ជាមុនសិន បន្ទាប់មកអ្នកអាចសរសេរបាន។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "먼저 Coach의 도구를 승인하면 메시지를 쓸 수 있습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ອະນຸມັດເຄື່ອງມືຂອງ Coach ກ່ອນ, ຈາກນັ້ນທ່ານຈຶ່ງຂຽນໄດ້."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pirmiausia patvirtinkite Coach įrankius, tada galėsite rašyti."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vispirms apstiprini Coach rīkus, tad varēsi rakstīt."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прво одобри ги алатките на Coach, потоа ќе можеш да пишуваш."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эхлээд Coach-ийн хэрэгслүүдийг зөвшөөрнө үү, дараа нь бичих боломжтой."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पहिले Coach का उपकरण स्वीकृत गर्नुहोस्, त्यसपछि लेख्न सक्नुहुन्छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keur eerst de tools van Coach goed, dan kun je schrijven."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpierw zatwierdź narzędzia Coacha, potem możesz pisać."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprove primeiro as ferramentas do Coach e depois poderá escrever."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprove primeiro as ferramentas do Coach e depois poderá escrever."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobați mai întâi instrumentele lui Coach, apoi puteți scrie."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najprv schváľte nástroje Coacha, potom môžete písať."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najprej odobrite orodja Coacha, nato lahko pišete."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miratoni fillimisht mjetet e Coach, pastaj mund të shkruani."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpre odobrite Coachove alate, zatim možete pisati."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อนุมัติเครื่องมือของ Coach ก่อน แล้วจึงพิมพ์ได้"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ilki bilen Coach-yň gurallaryny tassyklaň, soňra ýazyp bilersiňiz."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce Coach'un araçlarını onaylayın, sonra yazabilirsiniz."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پہلے Coach کے ٹولز منظور کریں، پھر آپ لکھ سکتے ہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy phê duyệt công cụ của Coach trước, sau đó bạn có thể viết."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請先核准 Coach 的工具，之後就能輸入訊息。"
+          }
+        }
+      }
+    },
     "coach.tools_eyebrow": {
       "extractionState": "manual",
       "localizations": {
