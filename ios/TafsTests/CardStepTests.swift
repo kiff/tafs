@@ -132,6 +132,12 @@ final class CardStepTests: XCTestCase {
         let noFace = full.replacingOccurrences(of: #""face":"Approve with face","#, with: "")
         XCTAssertEqual(start(noFace)?.cardStep(face: true), false, "no button for this phone's way: Start's screen as before")
         XCTAssertEqual(start(noFace)?.cardStep(face: false), true)
+        // No `locked` from tafs cloud: still the Card step, and the box stays locked under the app's own line.
+        let noLocked = full.replacingOccurrences(of: #","locked":"Approve this first, then you can write to Coach.""#, with: "")
+        XCTAssertEqual(start(noLocked)?.cardStep(face: true), true, "no locked line: still the step, still locked")
+        XCTAssertEqual(SetupChatView.cardStepLockedLine(start(noLocked)?.words), Words.Coach.Tools.writeAfter)
+        XCTAssertEqual(SetupChatView.cardStepLockedLine(s?.words), "Approve this first, then you can write to Coach.")
+        XCTAssertEqual(SetupChatView.cardStepLockedLine(nil), Words.Coach.Tools.writeAfter)
         let older = #"{"lead":"l","start":"Start"}"#
         XCTAssertEqual(start(older)?.cardStep(face: true), false, "a tafs cloud from before the Card step")
         XCTAssertEqual(start(older)?.oneScreen, true)

@@ -886,10 +886,12 @@ screen is as before.
   `startSetup` reads the start again and sends it only if its requests are byte for byte the ones shown and their list still
   matches. Otherwise nothing is sent, and the step is drawn again from the new read.
 - **No typing until it's approved.** On the Card step, the message box isn't drawn: words handed over wait in the draft, and
-  tafs cloud's `locked` line (`card_step_locked`) stands in the box's place. Once Coach exists, while its tools themselves
-  are still to give (`tools.connect`), the box is one locked line in tafs cloud's words (the step's `row`) that opens the
-  step (`SetupChatView.lockedComposer`). That box stands in for the tools row above the chat, so the line is drawn
-  once. When only Cards for tools Coach gained since are missing, typing stays open.
+  tafs cloud's `locked` line (`card_step_locked`) stands in the box's place, or the app's own "Approve Coach's tools first,
+  then you can write." (`coach.tools.write_after`, `SetupChatView.cardStepLockedLine`) when none came: the box never opens
+  without a line. Once Coach exists, while its tools themselves are still to give (`tools.connect`), the box is one locked
+  line in tafs cloud's words (the step's `row`, or "Coach's tools" when none came) that opens the step
+  (`SetupChatView.lockedComposer`). That box stands in for the tools row above the chat, so the line is drawn once. When
+  only Cards for tools Coach gained since are missing, typing stays open.
 - **Later approvals of Coach's Cards** (the tools step, once Coach exists): the step lists every tool while the draft may
   carry only the missing Cards. tafs cloud marks the ones it carries (`in_draft`), and only those are compared with the
   draft, both ways, on the same allowlist (`CoachTools.draftSigns`). That check runs at Give, after the byte-for-byte
