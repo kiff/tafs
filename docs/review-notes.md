@@ -9,6 +9,9 @@ sign-in.
 
 ## The notes (English)
 
+**When the AI provider changes,** the "(now …)" in the AI and data line changes with it, here and in both consoles, on the same day as /subprocessors' "In use now" mark (kiff/cloud) and the AI consent's "Right now" line. It's one of the provider switch's steps, beside `AGENTS_MODEL_SOURCE` (kiff/agents, docs/runs.md).
+
+
 ```
 tafs lets a person hand routine jobs to AI agents ("tafs") that work inside limits the person sets. Examples: support tickets, lead follow-up and late parcels. Each taf works within a Card the person issues: what it may do, with which app, and how much. Anything that matters waits in Needs you until the person approves it on their own device (Face ID or Touch ID; on the Mac, Touch ID or the phone). Nothing is sent or changed by a taf past its Card.
 
@@ -19,7 +22,7 @@ How to try it
 
 In-app purchases to review: Solo (a monthly subscription, with its credits included each month) and credit packs of 500, 1,500 and 5,000 (consumable, never expire). Restore Purchases is on the Solo screen. A run of a taf uses credits for the AI it used.
 
-AI and data: Coach and a taf's work use the Claude AI model, made by Anthropic and run for us by Anthropic or one of the cloud providers listed at kiff.dev/subprocessors, which marks the one in use (now Amazon Web Services, in the EU). Nothing is sent until the person allows it on the AI consent screen. Whichever company runs it uses what it gets to answer and deletes it within 30 days, unless it's flagged as breaking that company's usage rules or the law requires keeping it; what tafs itself keeps, and for how long, is on the Privacy page. Sample mode sends nothing.
+AI and data: Coach and a taf's work use the Claude AI model, made by Anthropic and run for us by Anthropic or one of the cloud providers listed at kiff.dev/subprocessors, which marks the one in use (now Amazon Web Services, in the EU). Nothing is sent before the person signs in and sets up a taf, and nothing goes to the AI until they allow it on the AI consent screen. Whichever company runs it uses what it gets to answer and deletes it within 30 days, unless it's flagged as breaking that company's usage rules or the law requires keeping it; what tafs itself keeps, and for how long, is on the Privacy page. The Terms and the Privacy Policy are linked on the sign-in screen and in Settings. Sample mode sends nothing.
 
 Chrome: Account > Chrome pairs the person's own Chrome with the tafs Chrome extension, which is a separate product on the Chrome Web Store. The row appears only where the service offers it and is not needed to review the app.
 
@@ -65,7 +68,7 @@ Wear OS: the watch app needs this app signed in on the paired phone; it has no s
 
 In-app products: Solo (a monthly subscription, with its credits included each month) and credit packs of 500, 1,500 and 5,000 (consumable, never expire). A run of a taf uses credits for the AI it used.
 
-AI and data: Coach and a taf's work use the Claude AI model, made by Anthropic and run for us by Anthropic or one of the cloud providers listed at kiff.dev/subprocessors, which marks the one in use (now Amazon Web Services, in the EU). Nothing is sent until the person allows it on the AI consent screen. Whichever company runs it uses what it gets to answer and deletes it within 30 days, unless it's flagged as breaking that company's usage rules or the law requires keeping it; what tafs itself keeps, and for how long, is on the Privacy page. Speech for the microphone is recognized on the device. Sample mode sends nothing.
+AI and data: Coach and a taf's work use the Claude AI model, made by Anthropic and run for us by Anthropic or one of the cloud providers listed at kiff.dev/subprocessors, which marks the one in use (now Amazon Web Services, in the EU). Nothing is sent before the person signs in and sets up a taf, and nothing goes to the AI until they allow it on the AI consent screen. Whichever company runs it uses what it gets to answer and deletes it within 30 days, unless it's flagged as breaking that company's usage rules or the law requires keeping it; what tafs itself keeps, and for how long, is on the Privacy page. The Terms and the Privacy Policy are linked on the sign-in screen and in Settings. Speech for the microphone is recognized on the device. Sample mode sends nothing.
 
 Chrome: Account > Chrome pairs the person's own Chrome with the tafs Chrome extension, which is a separate product on the Chrome Web Store. The row appears only where the service offers it and is not needed to review the app.
 
