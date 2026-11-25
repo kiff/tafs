@@ -186,7 +186,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | A step handed to the person ("Your turn": the taf asks, the person does it) | done (tafs#1806) | the extension types, clicks and fills nothing; planque's `browse_hand` tools are still to land |
 | A run in the owner's window, its tabs kept as "· done" until that taf's next run | done (tafs#1782, #1813, #1815) | a tab the person moved or is using is never closed |
 | Re-pairing replaces (Your Chrome 1), one fingerprint (5), isolation (6) | done | |
-| A taf on the tab you're on: a message from the side panel joins that tab, and carries the page only on the taf's own signed sites | done (tafs#2024, #2025, #2030) | Chrome 0.2.12–0.2.14, with page consent "2"; the taf reads a joined tab only at its exact address and opens anything else in a tab of its own; tafs cloud checks the sites again and gives a page turn only `browse_open` and `browse_read`. It reaches the Web Store with 0.2.14's package (the store row below) |
+| A taf on the tab you're on: a message from the side panel joins that tab, and carries the page only on the taf's own signed sites | done (tafs#2024, #2025, #2030, #2040, #2048, #2051) | Chrome 0.2.12–0.2.17, with page consent "2"; the taf reads a joined tab only at its exact address and opens anything else in a tab of its own; tafs cloud checks the sites again and gives a page turn only `browse_open` and `browse_read`. Since 0.2.17, in any tab of a run: only the run's own step moves it, and the person's own move hands the tab back to them as it is (`given_back`); the extension never asks for a blocked address again; the fence covers navigations only, and what an allowed site's page sends by itself is that site's own (`requests.e2e.test.js`). planque allows no build from 0.2.12 to 0.2.16, and 0.2.17 once its line is in; it reaches the Web Store with 0.2.17's package (the store row below) |
 | Sealed values (Saved sign-ins) | partial | the extension checks the release; the phone's card that signs `tafs-chrome/release/v1` is designed ([chrome.md](chrome.md), "The phone's release card") and isn't built |
 | Screenshots of a run's acts | partial | built; off (`config.js`) until planque keeps them and the privacy words are live |
 | In the Chrome Web Store | partial | CI builds the package (`chrome-package.yml`); the upload waits on the owner's yes |
@@ -262,7 +262,7 @@ Every finding from the owner's walk-throughs of the Chrome extension, the Galaxy
 | E. Chat as the apps do it: the composer pinned, your message at once with a working line, attachments, microphone | the reference | the reference | the reference; no microphone on Windows or Linux (speech would leave the device) | fixed: pinned composer and your message at once (tafs#2001, and with a short chat tafs#2017), attachments (tafs#2005). Microphone n/a, as on Windows and Linux: Chrome's speech recognition sends the audio off the device |
 | F. Back, New conversation and ⋮ scroll away | n/a: the system's own bar | n/a, same | n/a, same | fixed: a sticky header (tafs#2001) |
 
-**Your tab and the page (Chrome 0.2.12–0.2.14)**
+**Your tab and the page (Chrome 0.2.12–0.2.17)**
 
 | Finding | Chrome extension |
 | :- | :- |
@@ -270,6 +270,11 @@ Every finding from the owner's walk-throughs of the Chrome extension, the Galaxy
 | A step of another run must never work in a tab joined by an earlier one | fixed (tafs#2025, 0.2.13) |
 | A joined tab was sent to another address | fixed for an open: a joined tab is read only at its own address, and any other open goes to the run's own tab (tafs#2030, 0.2.14). An act (a link clicked, a form sent, back) moving a joined tab within the run's sites is the feature: the work happens in your tab, where you see it. The store and Privacy words say so |
 | A taf's message carries the page you're on | fixed: only on that taf's phone-signed sites, under page consent "2", checked again by tafs cloud, and a page turn only reads (tafs#2030) |
+| The person's own Back in a joined tab, to a page they had before the run, was read and acted on | fixed: only the run's own step adds a page the taf may read; any other move hands the tab back (tafs#2040, 0.2.15), and planque passes the taf no page at another address (planque#422) |
+| In a tab of the run's own, an address the person typed, or their Back or Forward, was read | fixed: the same rule in every tab of a run (tafs#2048, 0.2.16) |
+| Two tafs of the same name shared a kept tab and group | fixed: kept by grant, never by name (tafs#2048, 0.2.16) |
+| After the fence stopped a navigation, the extension asked for that address again, unfenced | fixed: it never does, in any tab; the tab goes back to the person as it is, and their own next try loads (tafs#2051, 0.2.17). planque allows no build from 0.2.12 to 0.2.16 (planque#424, #425) |
+| What an allowed site's page sends by itself (a `fetch`, an image, a beacon) after the taf typed there | not a gap: the fence covers navigations only, by design, as when the person types there; the store and Privacy words say so (tafs#2052) |
 
 The other devices have no tab to join: — on each.
 
@@ -296,7 +301,7 @@ Each watch cell moves to done, or to "broken on the owner's check", from the own
 | 2. Plan & usage and Calendar cut off when maximized | fixed by note 1's caps | fixed by note 1's caps | fixed by note 1's caps | fixed (tafs-windows#342) | fixed by note 1's caps |
 | 3. Connect apps: a long status ("Volver a conectar") cut, and Ask Coach over it | fixed: a long button goes under the status (`BesideOrUnder`, tafs#2035) | n/a: a row has one action at a time (Connect, Sign in again or Ask Coach), and every line wraps; drawn whole at 360 dp in es, de, fr, pl and en (`ConnectAppsNarrowTest`) | fixed: the button goes under a worded status (tafs-macos#268) | fixed (tafs-windows#342) | fixed: the status wraps, the button under it (tafs-linux#139) |
 | 4. Account's explanations beside their actions | fixed (tafs#2009) | fixed (tafs#2011) | fixed (tafs-macos#264) | fixed (tafs-windows#342) | fixed (tafs-linux#136) |
-| 5a. Overview cut "1 persona" in a medium window | fixed: two lines, the count held whole (`peopleLine`, tafs#2035) | fixed: who uses a taf, under its name, two lines, the count held whole (`PeopleWords.peopleLine`) | fixed: two lines, the count held whole (tafs-macos#268) | fixed: it wraps (tafs-windows#342) | fixed: two lines, the count held whole (tafs-linux#139) |
+| 5a. Overview cut "1 persona" in a medium window | fixed: two lines, the count held whole (`peopleLine`, tafs#2035) | fixed: who uses a taf, under its name, two lines, the count held whole (`PeopleWords.peopleLine`, tafs#2042; Android 144 on Play's internal track) | fixed: two lines, the count held whole (tafs-macos#268) | fixed: it wraps (tafs-windows#342) | fixed: two lines, the count held whole (tafs-linux#139) |
 | 5b. Connect apps' lines in English in another language | fixed at the source: planque's catalogue in every app language (planque#414), asked in the person's language (tafs#2015) | fixed, same | fixed, same | fixed, same; checked in Spanish | fixed, same |
 
 **Cut answers**
@@ -305,6 +310,13 @@ Each watch cell moves to done, or to "broken on the owner's check", from the own
 | :- | :- | :- |
 | Coach's answer to a watch ask stopped at 140 characters, with nothing to open it | both watches, and the phones' From your watch | fixed in tafs cloud: `?full=1` gives the whole answer (tafs#2020); built on the watches |
 | A taf said its read was cut, in bytes | every taf, on any device | fixed for new tafs: the tafs' shared instructions read on and never talk about size (tafs#2019, `a-browser-taf@6`). **Open** for tafs already set up, until the tafs upgrade runs |
+
+**Coach, from the end-to-end runs (tafs cloud, so every device alike)**
+
+| Finding | State |
+| :- | :- |
+| Coach drafted a held Card with no total, KIFF refused it ("a mandate with no aggregate bounds nothing"), and Coach asked the owner to change their own rule | fixed: the held Card's one total is KIFF's own count, drafted by Coach, and a refusal says how (`draft-the-card@47`, tafs#2045) |
+| Coach added four letters to a tool's name, and KIFF refused it ("not declared") | fixed: tool names copied from planque letter for letter, with no example to build from (`draft-the-card@47`, `set-up-a-taf@15`, tafs#2045, #2047) |
 
 **Open, in one place:**
 1. Tafs set up before tonight keep their old instructions (B, and the cut read) until the tafs upgrade runs. That waits on the owner.
