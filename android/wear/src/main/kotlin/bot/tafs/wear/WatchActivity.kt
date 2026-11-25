@@ -202,6 +202,8 @@ class WatchActivity : ComponentActivity() {
           quickTaf = { taf, text -> model.review(text, tafId = taf) },
           readMore = { id -> lifecycleScope.launch { model.readMore(id) } },
           followAnswer = { id -> model.followAnswer(id) },
+          keepTrying = { model.keepTrying() },
+          rereadTaf = { model.rereadTaf() },
           keep = if (WATCH_V2) model::keepForLater else null,
           deleteKept = model::deleteKept,
           playback = if (WATCH_V2) playback else null,
@@ -463,6 +465,10 @@ internal class Actions(
   val readWhole: (String) -> Unit = {},
   /** While a taf's chat on screen is answering: its answer followed through the phone, bounded ([WatchModel.followAnswer]). */
   val followAnswer: suspend (String) -> Unit = {},
+  /** While a send's linking screen shows: the same words sent again by itself ([WatchModel.keepTrying]). */
+  val keepTrying: suspend () -> Unit = {},
+  /** While a taf's page can't be read: read again by itself, behind its calm linking line. */
+  val rereadTaf: suspend () -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */

@@ -224,6 +224,7 @@ class WatchModelTest {
     assertTrue(phone.asked.isEmpty())
   }
 
+  /** No receipt: the linking screen sends it again by itself (row 30), then Retry, always under the same id. */
   @Test fun noReceiptOffersRetryWithTheSameId() = runTest {
     var answer: Asked = Asked.Unreachable()
     val phone = asker { answer }
@@ -231,16 +232,20 @@ class WatchModelTest {
     val model = WatchModel(phone, now = { t }, unlocked = { true }, newClientId = { "w_0000000${++ids}" })
     model.listen()
     model.heard("Move my call to six")
+    assertEquals(WatchModel.Voice.Linking("Move my call to six", "w_00000001", null), model.voice.value)
+    model.keepTrying(wait = {})
+    assertTrue(phone.asked.filterIsInstance<WatchRequest.Ask>().all { it.clientId == "w_00000001" })
     assertEquals(WatchModel.Voice.Unsure("Move my call to six", "w_00000001", null), model.voice.value)
+    // Retry with still no receipt: the linking screen again, trying by itself.
     answer = Asked.Answered(WatchReply.Unsure)
     model.retry()
-    assertEquals(WatchModel.Voice.Unsure("Move my call to six", "w_00000001", null), model.voice.value)
+    assertEquals(WatchModel.Voice.Linking("Move my call to six", "w_00000001", null), model.voice.value)
+    model.keepTrying(wait = {})
     answer = Asked.Answered(WatchReply.AskTaken(taken))
     model.retry()
     assertEquals(WatchModel.Voice.Sent(taken), model.voice.value)
-    // Three sends, one id: tafs cloud starts it once.
+    // Every send (the watch's own tries and each Retry), one id: tafs cloud starts it once.
     assertEquals(listOf("w_00000001"), phone.asked.filterIsInstance<WatchRequest.Ask>().map { it.clientId }.distinct())
-    assertEquals(3, phone.asked.filterIsInstance<WatchRequest.Ask>().size)
   }
 
   @Test fun theResultOpensItsCardAndAReplyContinuesTheAsk() = runTest {
@@ -588,7 +593,8 @@ class WatchModelTest {
     model.listen()
     model.heard("Move my call to six")
     model.sendReviewed()
-    assertEquals(WatchModel.Voice.Unsure("Move my call to six", "w_00000001", null), model.voice.value)
+    // The linking screen, sending it again by itself: Keep for later is there too.
+    assertEquals(WatchModel.Voice.Linking("Move my call to six", "w_00000001", null), model.voice.value)
     model.keepForLater()
     assertNull(model.voice.value)
     assertEquals(WatchModel.Draft("Move my call to six", "w_00000001", null), model.kept.value)

@@ -32,6 +32,15 @@ internal val RETRY_BACKOFF_MS = listOf(2_000L, 4_000L, 8_000L)
 /** The waits before Your tafs is read again after a read that missed (row 27): three quiet tries, then the kept list stays. */
 internal val TAFS_RETRY_MS = listOf(2_000L, 5_000L, 10_000L)
 
+/** A send with no receipt is sent again by itself after each of these (row 30, call 6)… */
+internal val SEND_RETRY_MS = listOf(2_000L, 5_000L, 10_000L)
+
+/** …then this often… */
+internal const val SEND_RETRY_EVERY_MS = 30_000L
+
+/** …for at most this long, while its linking screen shows: then "Not sure it arrived", with Retry and Keep for later. */
+internal const val SEND_RETRY_FOR_MS = 10 * 60 * 1000L
+
 /** While a taf's chat on screen is answering, its asks are read again this often (row 13)… */
 internal const val ANSWER_READ_EVERY_MS = 5_000L
 
@@ -40,6 +49,9 @@ internal const val ANSWER_FOLLOW_MS = 120_000L
 
 /** With nothing kept to show, the watch goes on trying this often while it's open, behind its linking screen. */
 internal const val LINKING_RETRY_MS = 15_000L
+
+/** A taf's page read again behind its linking line at most this many times, after [RETRY_BACKOFF_MS] (10 minutes in all). */
+internal const val LINKING_TRIES = 40
 
 /** How the watch reaches the phone: one live request and its answer, or nothing when the phone can't be reached. */
 fun interface PhoneLink {
@@ -470,7 +482,8 @@ class WatchModel(
     _taf.value = null
   }
 
-  private suspend fun rereadTaf() {
+  /** The taf's page read again (its calm linking line tries by itself while it shows). */
+  suspend fun rereadTaf() {
     _taf.value?.let { readTaf(it.tafId) }
   }
 
@@ -604,7 +617,13 @@ class WatchModel(
     /** tafs cloud took it: its receipt, then the taf it went to and its state as they change. */
     data class Sent(val ask: AskLine) : Voice
 
-    /** No receipt: it may have arrived. Retry sends the same words with the same id, so nothing is started twice. */
+    /**
+     * No receipt yet, the phone out of reach or slow (row 30, call 6): one calm linking screen while the watch sends the same words
+     * with the same id again by itself ([keepTrying]), so nothing is started twice; it ends on its own when the phone answers.
+     */
+    data class Linking(val text: String, val clientId: String, val replyTo: String?, val tafId: String? = null) : Voice
+
+    /** No receipt after the watch's own tries: it may have arrived. Retry sends the same words with the same id, so nothing is started twice. */
     data class Unsure(val text: String, val clientId: String, val replyTo: String?, val tafId: String? = null) : Voice
 
     /** Not sent, in the phone's words (no AI consent, asking not on yet, the phone signed out…); null: Open on phone. */
@@ -964,6 +983,35 @@ class WatchModel(
     send(Voice.Sending(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), newClientId(), listening.replyTo))
   }
 
+  /**
+   * While the linking screen shows for a send ([Voice.Linking]): the same words with the same id, sent again after each of
+   * [backoff], then every [every], for at most [limit]; then "Not sure it arrived", with Retry and Keep for later. It stops at the
+   * first answer, at Cancel, or when the screen goes (the screen runs it). A locked watch sends nothing meanwhile: it waits.
+   */
+  suspend fun keepTrying(
+    backoff: List<Long> = SEND_RETRY_MS,
+    every: Long = SEND_RETRY_EVERY_MS,
+    limit: Long = SEND_RETRY_FOR_MS,
+    wait: suspend (Long) -> Unit = { kotlinx.coroutines.delay(it) },
+  ) {
+    var waited = 0L
+    var tries = 0
+    while (true) {
+      val linking = _voice.value as? Voice.Linking ?: return
+      val pause = backoff.getOrElse(tries) { every }
+      if (waited + pause > limit) {
+        voiceNow = Voice.Unsure(linking.text, linking.clientId, linking.replyTo, linking.tafId)
+        return
+      }
+      wait(pause)
+      waited += pause
+      tries++
+      if (_voice.value != linking || _signedOutHere.value) return
+      if (!unlocked()) continue
+      send(Voice.Sending(linking.text, linking.clientId, linking.replyTo, linking.tafId), shown = linking)
+    }
+  }
+
   /** Retry, from "Not sure it arrived": the same words, the same id. */
   suspend fun retry() {
     val unsure = _voice.value as? Voice.Unsure ?: return
@@ -974,11 +1022,12 @@ class WatchModel(
     send(Voice.Sending(unsure.text, unsure.clientId, unsure.replyTo, unsure.tafId))
   }
 
-  private suspend fun send(sending: Voice.Sending) {
-    voiceNow = sending
+  /** Sends [sending]; [shown] is the screen meanwhile: Sending, or the linking screen while the watch tries again by itself. */
+  private suspend fun send(sending: Voice.Sending, shown: Voice = sending) {
+    voiceNow = shown
     val asked = ask(WatchRequest.Ask(now(), sending.clientId, sending.text, sending.replyTo, tafId = sending.tafId))
     // Only while this ask is still the one shown: a cancel meanwhile isn't undone by its answer.
-    if (_voice.value != sending) return
+    if (_voice.value != shown) return
     // A taf's chat: the turn shows in that chat, back from the microphone's screen; nothing of it goes to Coach's conversation or
     // the Inbox.
     val taken = ((asked as? Asked.Answered)?.reply as? WatchReply.AskTaken)?.ask
@@ -1020,7 +1069,8 @@ class WatchModel(
           // comes in its place, as in a chat (the owner's call). v1 shows Sent until the answer.
           if (reviewFirst) null else Voice.Sent(reply.ask)
         }
-        WatchReply.Unsure -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo, sending.tafId)
+        // No receipt: the calm linking screen, and the watch sends it again by itself (row 30).
+        WatchReply.Unsure -> Voice.Linking(sending.text, sending.clientId, sending.replyTo, sending.tafId)
         is WatchReply.Failed -> Voice.NotSent(reply.words)
         WatchReply.SignedOut -> Voice.NotSent(Words.Watch.signInOnPhone)
         // A phone with an older tafs doesn't know the ask.
@@ -1028,7 +1078,7 @@ class WatchModel(
         else -> Voice.NotSent(null)
       }
       // No answer in the watch's time: the phone may have sent it.
-      is Asked.Unreachable -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo, sending.tafId)
+      is Asked.Unreachable -> Voice.Linking(sending.text, sending.clientId, sending.replyTo, sending.tafId)
       Asked.NotUnderstood -> Voice.NotSent(null)
     }
   }
@@ -1531,7 +1581,11 @@ class WatchModel(
    * The same id, so tafs cloud starts it at most once if the first send did arrive. One at a time: a newer one replaces it.
    */
   fun keepForLater() {
-    val unsure = _voice.value as? Voice.Unsure ?: return
+    val unsure = when (val v = _voice.value) {
+      is Voice.Unsure -> v
+      is Voice.Linking -> Voice.Unsure(v.text, v.clientId, v.replyTo, v.tafId)
+      else -> return
+    }
     // A message to a taf is never kept on the watch (nothing of a taf's chat is), and a kept message is sent as Coach's:
     // Retry or Cancel only.
     if (unsure.tafId != null) return
@@ -1578,7 +1632,7 @@ class WatchModel(
     voiceNow = when (val v = _voice.value) {
       is Voice.Review -> v.copy(audio = null)
       is Voice.Listening -> v.heard.trim().takeIf { it.isNotEmpty() }?.let { reviewOf(it, v.replyTo) }
-      is Voice.Sending, is Voice.Unsure -> v
+      is Voice.Sending, is Voice.Unsure, is Voice.Linking -> v
       else -> null
     }
     closeCalendar()

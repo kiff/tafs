@@ -149,9 +149,16 @@ private fun ScalingLazyListScope.notReadTaf(open: WatchModel.OpenTaf, act: Actio
   when (val read = open.read) {
     WatchModel.TafRead.Asking -> line(Words.Watch.askingPhone)
     WatchModel.TafRead.SignedOut -> line(Words.Watch.signInOnPhone)
-    is WatchModel.TafRead.PhoneUnreachable -> {
-      line(read.why.line)
-      item { Button(onClick = { act.openTaf(open.tafId) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
+    // The phone out of reach or slow: the calm linking line, and the page read again by itself while it shows (row 30, call 6).
+    is WatchModel.TafRead.PhoneUnreachable -> if (read.why == LinkFailure.NoApp) line(read.why.line) else item {
+      androidx.compose.runtime.LaunchedEffect(open.tafId) {
+        for (pause in RETRY_BACKOFF_MS + List(LINKING_TRIES) { LINKING_RETRY_MS }) {
+          kotlinx.coroutines.delay(pause)
+          act.rereadTaf()
+        }
+      }
+      Text(Words.Watch.linking, style = MaterialTheme.typography.bodySmall, color = Look.dim, textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
     }
     WatchModel.TafRead.UpdatePhone -> line(Words.Watch.updatePhone)
     is WatchModel.TafRead.Failed -> {

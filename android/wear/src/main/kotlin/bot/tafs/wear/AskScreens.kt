@@ -258,6 +258,21 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
         Spacer(Modifier.height(4.dp))
         T(stateLine(voice.ask), 12.sp, Look.dim, modifier = Modifier.width(150.dp), lines = 1)
       }
+      // No receipt yet: one calm linking screen while the watch sends the same words again by itself (row 30, call 6); it ends
+      // on its own when the phone answers. Cancel stays, and Keep for later for Coach's.
+      is WatchModel.Voice.Linking -> Centered(Modifier.testTag(SEND_LINKING)) {
+        androidx.compose.runtime.LaunchedEffect(voice.clientId) { act.keepTrying() }
+        SpinnerAround(64.dp, Look.send) {
+          Box(Modifier.size(44.dp).background(Look.surface, CircleShape), contentAlignment = Alignment.Center) {
+            Glyph(Modifier.size(24.dp)) { micGlyph(Look.send) }
+          }
+        }
+        Spacer(Modifier.height(10.dp))
+        T(Words.Watch.linking, 13.sp, Look.text, modifier = Modifier.width(150.dp), lines = 3, lineHeight = 16.sp)
+        Spacer(Modifier.height(4.dp))
+        act.keep.takeIf { voice.tafId == null }?.let { QuietButton(Words.Watch.keepForLater, it) }
+        QuietButton(Words.Common.cancel, act.closeVoice)
+      }
       is WatchModel.Voice.Unsure -> Centered {
         // v2 adds Keep for later, never for a message to a taf (nothing of a taf's chat is kept on the watch); the face makes
         // room for it without the mark.
@@ -414,3 +429,6 @@ internal fun DoneScreen(words: String, dismiss: () -> Unit) {
 }
 
 internal const val TRANSCRIBING = "transcribing"
+
+/** A send's linking screen, while the watch sends it again by itself. */
+internal const val SEND_LINKING = "send-linking"

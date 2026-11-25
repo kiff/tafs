@@ -329,12 +329,22 @@ private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, answere
   if (shown.needsYou.calls.isEmpty() && answered.isEmpty()) line(Words.Watch.inboxEmpty)
 }
 
-/** The watch's own tries went unanswered (docs/watch-wear.md, Delivery): one small line, why, and Try again; never a screen. */
+/**
+ * The watch's own tries went unanswered (docs/watch-wear.md, Delivery): one small calm line, "Linking tafs. Keep your phone nearby
+ * and connected.", while it goes on reading the phone by itself every [LINKING_RETRY_MS] (row 30, call 6); never a screen, and no
+ * Try again. tafs not on the phone keeps its own line, which no try mends.
+ */
 private fun ScalingLazyListScope.unreachableLine(why: LinkFailure, act: Actions) {
   item {
-    Column(Modifier.fillMaxWidth().testTag(UNREACHABLE_LINE), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-      Text(why.line, style = MaterialTheme.typography.bodySmall, color = Look.dim, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 12.dp))
-      Button(onClick = act.tryAgain, colors = neutralButton()) { Text(Words.Common.tryAgain) }
+    if (why != LinkFailure.NoApp) androidx.compose.runtime.LaunchedEffect(Unit) {
+      while (true) {
+        kotlinx.coroutines.delay(LINKING_RETRY_MS)
+        act.tryAgain()
+      }
+    }
+    Column(Modifier.fillMaxWidth().testTag(UNREACHABLE_LINE), horizontalAlignment = Alignment.CenterHorizontally) {
+      Text(if (why == LinkFailure.NoApp) why.line else Words.Watch.linking, style = MaterialTheme.typography.bodySmall, color = Look.dim,
+        textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 12.dp))
     }
   }
 }
