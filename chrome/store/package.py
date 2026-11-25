@@ -77,7 +77,7 @@ def problems(root=ROOT):
         if normal(target) not in have:
             bad.append(f"{where} names {normal(target)}, which is not in the package")
     for name in have:
-        if name.startswith(("test/", "store/")) or Path(name).name in EXCLUDE_NAMES:
+        if name.startswith(("test/", "e2e/", "store/")) or Path(name).name in EXCLUDE_NAMES:
             bad.append(f"{name} must not be in the package")
     return sorted(set(bad))
 

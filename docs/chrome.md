@@ -959,6 +959,8 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 - `cd chrome && node --test test/*.test.js` runs every test. CI's `chrome.yml` runs them on every change to `chrome/`
   or this page, with Chromium for the page tests.
+- `cd chrome && node --test e2e/*.e2e.test.js` runs the end-to-end tests: the real extension paired with a fake planque
+  and phone, its signed steps run on local sites, in the same CI job ([chrome-e2e.md](chrome-e2e.md)).
 - **`core.test.js`:** canonical JSON, signatures and their labels, DER signatures, the site rules, masking, and the
   guard (mirroring planque's).
 - **`protocol.test.js`:** a step's signature, Chrome, expiry and nonce; answers, hello and welcome; a phone release that
