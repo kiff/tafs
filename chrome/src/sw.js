@@ -1,7 +1,7 @@
 // The service worker (docs/chrome.md): it keeps the pairing, connects to planque when paired, and runs what planque sends
 // through the runner. It wakes on an alarm while it sleeps, connects, and lets the connection drop when no run is on.
 
-import { asideTab, readForCoach } from "./asideread.js";
+import { asideTab, readForCoach, offTafSites } from "./asideread.js";
 import { allowedHere, pageForSend, PAGE_CONSENT_VERSION } from "./pageconsent.js";
 import { config } from "./config.js";
 import { indexedStore, profileId, forgetSavedSignIns } from "./store.js";
@@ -295,13 +295,28 @@ async function asideOff() {
   return ((await chrome.storage.local.get(ASIDE_OFF))[ASIDE_OFF] || []).filter((h) => typeof h === "string");
 }
 
-async function asideStatus(tabId, windowId) {
-  const { host, why } = await asideTab(chrome, tabId, windowId, await asideOff());
-  return { host, why };
+/** The page in front, for the panel's line and its consent screen; for a taf ([taf]), also whether it's on the taf's own sites. */
+async function asideStatus(tabId, windowId, taf = null) {
+  const { tab, host, why } = await asideTab(chrome, tabId, windowId, await asideOff());
+  if (why || !taf || !(await tafsOfThisChrome()).some((t) => t.id === taf)) return { host, why };
+  return { host, why: offTafSites(tab && tab.url, await tafSites(taf)) };
 }
 
 async function asideRead(tabId, windowId, within = null) {
   return readForCoach(chrome, tabId, windowId, await asideOff(), within);
+}
+
+/**
+ * Why the page didn't go, as the panel says it under the message: with no consent, the tab wasn't read, so what's in front is
+ * looked at by its address alone (asideStatus, nothing injected): a page that couldn't have gone anyway (Chrome's own, a
+ * sensitive site, one switched off, off the taf's sites) says that instead, and only a page that could have gone says the
+ * consent is missing.
+ */
+async function whyNotSent(page, tabId, windowId, taf = null) {
+  if (page.why !== "consent") return page;
+  const s = await asideStatus(tabId, windowId, taf).catch(() => null);
+  if (!s) return page;
+  return s.why ? { ...page, why: s.why, host: s.host } : { ...page, host: s.host };
 }
 
 // Coach reads the page in front only with the person's page consent (pageconsent.js), checked before the tab is touched.
@@ -397,7 +412,7 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     taf_send: async () => {
       await onlyHere(m.taf);
       const alone = m.alone === true || !String(m.words || "").trim();
-      const page = await pageForSend({ alone, consent: pageConsentReady, read: async () => asideRead(m.tabId, m.windowId, await tafSites(m.taf)) });
+      const page = await whyNotSent(await pageForSend({ alone, consent: pageConsentReady, read: async () => asideRead(m.tabId, m.windowId, await tafSites(m.taf)) }), m.tabId, m.windowId, m.taf);
       return {
         sent: await panels.sent(m.windowId, m.tabId, (await coach()).sendToTaf(m.taf, m.words, m.clientID, m.attachments, page.page)),
         reading: page.page ? page.host : null,
@@ -416,14 +431,15 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       // never when they chose to send the words alone.
       // Files alone go without the page: a page goes only with words.
       const alone = m.alone === true || !String(m.words || "").trim();
-      const page = await pageForSend({ alone, consent: pageConsentReady, read: () => asideRead(m.tabId, m.windowId) });
+      const page = await whyNotSent(await pageForSend({ alone, consent: pageConsentReady, read: () => asideRead(m.tabId, m.windowId) }), m.tabId, m.windowId);
       return {
         sent: await panels.sent(m.windowId, m.tabId, (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page, attachments: m.attachments })),
         reading: page.page ? page.host : null,
         notReading: page.why || null,
+        host: page.host || null,
       };
     },
-    aside_status: async () => ({ ...(await asideStatus(m.tabId, m.windowId)), consent: await pageConsentReady() }),
+    aside_status: async () => ({ ...(await asideStatus(m.tabId, m.windowId, typeof m.taf === "string" ? m.taf : null)), consent: await pageConsentReady() }),
     page_allow: async () => pageAllow(),
     page_withdraw: async () => pageWithdraw(),
     aside_site: async () => asideSwitch(String(m.host || ""), m.off === true),

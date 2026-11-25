@@ -47,6 +47,10 @@
         <p id="tafPhone" class="note" data-m="approve_on_phone" hidden></p>
         <p id="tafNote" class="note"></p>
         <form id="tafForm" class="composer" hidden>
+          <div id="tafConsentOff" class="banner" hidden>
+            <p data-m="page_consent_off"></p>
+            <button type="button" id="tafConsentOpen" data-m="page_consent_turn_on"></button>
+          </div>
           <ul id="tafFiles" class="files" hidden></ul>
           <div class="box">
             <button type="button" id="tafAttach" class="attach" data-m-label="attach_files">+</button>
@@ -68,10 +72,6 @@
           <h2 data-m="coach_title"></h2>
           <button type="button" id="coachNew" class="quiet small push" data-m="coach_new"></button>
         </div>
-        <div id="pageConsentOff" class="banner" hidden>
-          <p data-m="page_consent_off"></p>
-          <button type="button" id="pageConsentOpen" data-m="page_consent_turn_on"></button>
-        </div>
         <h3 id="coachOpen" hidden></h3>
         <div id="coachEmpty" hidden>
           <p><strong data-m="coach_empty_title"></strong></p>
@@ -81,6 +81,10 @@
         <p id="coachPhone" class="note" data-m="approve_on_phone" hidden></p>
         <p id="coachNote" class="note"></p>
         <div class="dock">
+        <div id="pageConsentOff" class="banner" hidden>
+          <p data-m="page_consent_off"></p>
+          <button type="button" id="pageConsentOpen" data-m="page_consent_turn_on"></button>
+        </div>
         <p id="coachReads" class="note" hidden><span id="coachReadsWords"></span> <button type="button" id="coachReadsSwitch" class="quiet small" hidden></button> <button type="button" id="coachReadsStop" class="quiet small" data-m="page_consent_withdraw"></button></p>
         <form id="coachForm" class="composer">
           <ul id="coachFiles" class="files" hidden></ul>

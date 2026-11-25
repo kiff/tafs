@@ -36,6 +36,16 @@ npm run e2e                               # node --test e2e/*.e2e.test.js
 
 **The fake planque** is built on the extension's own `src/crypto.js` and `src/pairing.js`, so what it signs is checked by
 the extension exactly as planque's would be. Its keys are made for each test file and never kept.
+- **planque's own shapes, once planque writes them** (`test/planque-contracts.mjs`): the welcome, a connections change and
+  a step are built from planque's golden files, `contracts/chrome-welcome.json`, `contracts/chrome-connections.json` and
+  `contracts/chrome-step.json` (`{about, answer}`, as every contract), with this run's signature, nonces, ids, times and
+  sites laid over them. A step takes only planque's envelope; its op's own fields (`op`, `url`, `read_id`, `act`, `hand`,
+  `offset`, `sensitive_allowed`) are the test's. A field the fake sets that planque's file doesn't carry fails the test, so the
+  fake never sends what planque doesn't. The welcome's and connections' files are planque's own, copied byte for byte; their
+  signatures are placeholders, so the fake signs the welcome with its key and the sites with the test phone's
+  (`withPhoneSignature`, `tafs-chrome/sites/v1`), and a unit test checks a connection from the file gives its sites once
+  signed, and none without `sites_signed`. There's no step file yet: the fake builds its own steps, and the unit test that
+  reads one is skipped until `contracts/chrome-step.json` is added, the only change left for it.
 - **As the phone** it makes a pairing code (a 4-character lookup and a 17-character secret from `pairing.js`'s alphabet).
   When the extension posts its offer to `POST /v1/extension/pairings/{lookup}`, it checks the offer's proof of the
   extension's key under the code's secret. It answers the extension's poll with the phone's confirmation: its own key, its
@@ -153,6 +163,7 @@ yes, and fail the test.
 | Two runs of two tafs (two grants) at once: a tab and a group each; a read of one is `page_changed` in the other; each fill lands in its own tab only; one's close and its taf's next run leave the other's tab, group and fence as they were | `owntabs.e2e.test.js` |
 | The side panel after a refusal of a page that isn't the run's: `given_back` (the person moved the tab: one of theirs the run joined, or one of the run's own), `page_changed` (an act on an old read) and `no_back` (the taf's `back`), in a joined tab and in a tab of the run's own. Each is one new line in the run's card, "<step> · not done (<code>)", drawn as refused, with no Your turn left; after `given_back` the tab is in none of the run's tabs and the panel's head no longer marks the taf as the one whose tab is in front; the card's site stays the run's, and the person's own move on the run's sites draws no line. The run's next open after `given_back` is one plain line, in a tab of its own | `panel.e2e.test.js` |
 | The side panel says why a step wasn't done in plain words (0.2.18), never by its code. All seven codes with a line of their own (`given_back`, `page_changed`, `no_back`, `site_not_listed`, `paused_by_owner`, `no_page`, `browser_unavailable`) are made to happen in one real run. Each shows in the run's card as "<the step> · <its line>", word for word from the locale, with Chromium started in English and again in French (`start({lang})`). No line of the card names a code, and no locale's line names its code. `paused_by_owner` is the person's Pause while the taf's outline shows: a step that arrives already paused is refused before it's recorded, so the card says "Paused" and draws no line for it | `panelwords.e2e.test.js` |
+| A problem is always shown (0.2.22). Without the page consent, a banner right above a taf's box says the page doesn't go, on a page of the taf's own sites, before any send; it goes off the taf's sites and comes back, the screen never opens by itself on the taf's chat, and its button opens it. A send without the consent goes alone and the line under the message says why, with the same button; Allow takes the banner away and the next send carries the page; a site switched off says so under the message. The chat's failed run, built from tafs cloud's own contract (`contracts/conversation-failed.json`) with `retry` and `retry_label`, is the chat's last line in its words, under the message whose run failed, with no working line; a double click on Try again sends one new message with the same words and a new client id, the box untouched, and the button never comes back; a run that answers closes the line; an unknown code, or no `retry`, shows its words with no button | `panelwhy.e2e.test.js` |
 | Chrome's back/forward cache is on when a test asks for it (the person's Back case below runs with it on and off) | `bfcache.e2e.test.js` |
 
 ## Not covered yet

@@ -83,7 +83,9 @@ export function tafOfRun(run, tafs) {
  * (runner.endTurn). Empty while the chat says it works, or when it couldn't be read.
  */
 export function turnOver(tafId, thread, runs, tafs) {
-  if (!tafId || !thread || thread.working !== false || thread.waitsOnPhone) return [];
+  if (!tafId || !thread || thread.waitsOnPhone) return [];
+  // A turn that failed is over too, whatever the chat still says of its work (tafs cloud's `failed`, `turnFailed`).
+  if (thread.working !== false && !turnFailed(thread)) return [];
   return (runs || []).filter((r) => r && !r.stopped && !r.paused && !r.hand && (tafOfRun(r, tafs) || {}).id === tafId).map((r) => r.id);
 }
 
@@ -100,7 +102,66 @@ export function stillPending(pending, messages, now = Date.now()) {
   if (!pending || !pending.words) return false;
   if (now - (pending.at || 0) > PENDING_MAX_MS) return false;
   if (!pending.id) return true;
-  return !(messages || []).some((m) => m && m.id === pending.id);
+  return !arrived(pending, messages);
+}
+
+/** Whether the chat has the message just sent, by the id tafs cloud gave it. */
+function arrived(pending, messages) {
+  return (messages || []).some((m) => m && m.id === pending.id);
+}
+
+/**
+ * Whether a message just sent went past PENDING_MAX_MS without the chat ever having it: the panel then says so under the
+ * chat, rather than taking its copy away with nothing said (a problem is always shown).
+ */
+export function lapsed(pending, messages, now = Date.now()) {
+  if (!pending || !pending.words) return false;
+  if (now - (pending.at || 0) <= PENDING_MAX_MS) return false;
+  return !pending.id || !arrived(pending, messages);
+}
+
+/**
+ * Whether the chat's latest run failed (tafs cloud's `failed`, coach.js `failedOf`): the turn is over, and nothing says the
+ * taf works any more.
+ */
+export function turnFailed(thread) {
+  return !!(thread && thread.failed);
+}
+
+/**
+ * The codes of a failed turn the panel knows (kiff/agents'): a failed turn with another code still shows its words, and never
+ * offers Retry, whatever it says.
+ */
+export const FAILED_CODES = Object.freeze(["ai_unavailable", "no_credits", "ai_consent_required", "timeout", "failed"]);
+
+/**
+ * The words Try again sends again for the chat's failed run [failed], or null for none: only when tafs cloud says so
+ * (`retry: true`, set when the failed run did nothing with an effect), for a code the panel knows, and for the person's own
+ * message that started that run, found in the chat by its id (`<run>.in`, as tafs cloud names a run's message); never a guess
+ * at another message. They go as a new message.
+ */
+export function retryOf(failed, messages) {
+  if (!failed || failed.retry !== true || !FAILED_CODES.includes(failed.code) || !failed.run) return null;
+  const m = (messages || []).find((x) => x && x.id === failed.run + ".in" && x.from === "owner");
+  return m && typeof m.text === "string" && m.text.trim() ? m.text : null;
+}
+
+/** What Try again is pressed under, once: the failed run. */
+export function failedKey(failed) {
+  return "run:" + failed.run;
+}
+
+const WHY_LINES = Object.freeze({ sensitive: "aside_sensitive", off: "aside_off_line", not_taf_site: "aside_not_taf_site" });
+
+/**
+ * The line under the person's message when the page in front didn't go with it (sw.js `notReading`), or null for none: no page
+ * consent (with the button that opens it), a sensitive site, a site they switched off, or one off the taf's sites, each with
+ * the site's name. Sent alone by their choice, or no page to read (Chrome's own pages, another window's tab): nothing.
+ */
+export function whyLine(why, host) {
+  if (why === "consent") return { key: "page_consent_off", consent: true };
+  const key = WHY_LINES[why];
+  return key && host ? { key, host: String(host) } : null;
 }
 
 /**

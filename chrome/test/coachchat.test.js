@@ -188,3 +188,56 @@ test("a message just sent stays until the chat has it by its id, never by its wo
   assert.equal(stillPending(sent, [], now + PENDING_MAX_MS + 1), false, "never on show for good");
   assert.equal(stillPending(null, [], now), false);
 });
+
+// Chrome 0.2.22, the owner's walk-through: a problem is always shown to the person, never nothing.
+test("why a page didn't go with a message: a line for no consent (with its button), a sensitive site, one switched off, or off the taf's sites", async () => {
+  const { whyLine } = await import("../src/coachchat.js");
+  assert.deepEqual(whyLine("consent", ""), { key: "page_consent_off", consent: true });
+  assert.deepEqual(whyLine("sensitive", "bank.example"), { key: "aside_sensitive", host: "bank.example" });
+  assert.deepEqual(whyLine("off", "news.example"), { key: "aside_off_line", host: "news.example" });
+  assert.deepEqual(whyLine("not_taf_site", "shop.example"), { key: "aside_not_taf_site", host: "shop.example" });
+  for (const why of ["alone", "not_front", "not_https", "incognito", "store", null, undefined]) assert.equal(whyLine(why, "x.example"), null, String(why));
+  assert.equal(whyLine("sensitive", ""), null, "a site's line needs its name");
+});
+test("a failed run offers Try again only when tafs cloud says so, for a code the panel knows, with the words of the message that started it", async () => {
+  const { retryOf, failedKey, FAILED_CODES } = await import("../src/coachchat.js");
+  const { readFileSync } = await import("node:fs");
+  const contract = JSON.parse(readFileSync(new URL("../../contracts/conversation-failed.json", import.meta.url), "utf8")).answer;
+  const messages = contract.messages;
+  const f = { ...contract.failed, retry: true };
+  assert.deepEqual(FAILED_CODES, ["ai_unavailable", "no_credits", "ai_consent_required", "timeout", "failed"]);
+  assert.equal(retryOf(f, messages), messages[0].text, "the run's own message (`<run>.in`)");
+  for (const code of FAILED_CODES) assert.equal(retryOf({ ...f, code }, messages), messages[0].text, code);
+  assert.equal(retryOf(contract.failed, messages), contract.failed.retry === true ? messages[0].text : null, "the file as it is: Try again only if it says so");
+  assert.equal(retryOf({ ...f, retry: false }, messages), null, "not offered");
+  assert.equal(retryOf({ ...f, code: "provider_cap" }, messages), null, "a code it doesn't know: words only");
+  assert.equal(retryOf({ ...f, run: "run9" }, messages), null, "the run's message isn't in the chat: never a guess at another");
+  assert.equal(retryOf(f, messages.map((m) => ({ ...m, from: "taf" }))), null, "only the person's own message");
+  assert.equal(retryOf(null, messages), null);
+  assert.equal(failedKey(f), "run:" + contract.failed.run);
+});
+
+test("a failed run ends the turn: the runs end and nothing says the taf works, whatever the chat still says", async () => {
+  const { turnFailed } = await import("../src/coachchat.js");
+  const runs = [{ id: "r1", grant: "g_wiki" }];
+  const tafs = [{ id: "t_wiki", grants: ["g_wiki"] }];
+  const failed = { run: "run2", code: "failed", words: "It failed.", retry: false };
+  const thread = { working: "s1", failed, messages: [{ id: "run2.in", from: "owner", text: "Go" }] };
+  assert.equal(turnFailed(thread), true);
+  assert.equal(turnFailed({ ...thread, failed: null }), false);
+  assert.equal(turnFailed(null), false);
+  assert.deepEqual(turnOver("t_wiki", thread, runs, tafs), ["r1"], "over, whatever the chat still says of its work");
+  assert.deepEqual(turnOver("t_wiki", { ...thread, waitsOnPhone: true }, runs, tafs), [], "a step held on the person's phone still waits");
+  assert.deepEqual(turnOver("t_wiki", { ...thread, failed: null }, runs, tafs), [], "still working");
+});
+
+test("a message just sent that the chat never had in 2 minutes has lapsed, and the panel says so", async () => {
+  const { lapsed } = await import("../src/coachchat.js");
+  const now = 1_000_000;
+  const sent = { words: "Go", id: "m1", at: now };
+  assert.equal(lapsed(sent, [], now + PENDING_MAX_MS), false, "not yet");
+  assert.equal(lapsed(sent, [], now + PENDING_MAX_MS + 1), true);
+  assert.equal(lapsed({ ...sent, id: null }, [], now + PENDING_MAX_MS + 1), true, "the send never answered with an id");
+  assert.equal(lapsed(sent, [{ id: "m1", from: "owner", text: "Go" }], now + PENDING_MAX_MS + 1), false, "the chat has it");
+  assert.equal(lapsed(null, [], now), false);
+});

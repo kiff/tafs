@@ -933,8 +933,9 @@ the chat scrolls, and **the composer stays at the bottom**, with a short chat to
 shows at once**, at the bottom right, with the working line under it ("Coach is working…", or the taf's), before tafs cloud has
 answered; it stays until the chat as tafs cloud reads it has that message, by the id tafs cloud gave the send
 (`message.id`, `stillPending`), never by its words, and two minutes at most; on a failure it goes and the words come back to
-the box. The working line goes under the last message while the chat says it
-works. A chat the person is at the end of follows new messages; one scrolled up isn't moved. The pairing's lines ("Paired as
+the box. **One the chat never had in those two minutes is said** (0.2.22, `lapsed`): "That didn't reach ‹taf›. Try again."
+(Coach's own line in Coach's chat) under the chat, never taken away with nothing said. The working line goes under the last
+message while the chat says it works, and never once the chat's latest run failed (below). A chat the person is at the end of follows new messages; one scrolled up isn't moved. The pairing's lines ("Paired as
 …") show on the taf's own view only, so Coach, its conversations and Settings get the room. **Files** go with a message from
 0.2.10 (below, "Files on a message"). No microphone: Chrome's speech recognition would send the voice to Google, which the
 on-device promise rules out. **Settings** holds Coach's page reading (its state, the page consent's screen,
@@ -975,6 +976,32 @@ computer's passkey, which this Chrome has neither of.
     connection planque lists without the signature lets no page go. A page off those sites is never read (checked before the
     read and again on the address it came from), the words go alone, the answer says `notReading: "not_taf_site"`, and the
     chat says "‹site› isn't read: this taf doesn't work on this site" under that message.
+  - **Why a page didn't go is always said, under the message** (0.2.22, `coachchat.js` `whyLine`, `panel.js` `whyUnder`), in
+    Coach's chat and a taf's alike, from the send's `notReading` and `host`: no page consent ("The page you're on doesn't go
+    with your messages.", with **Let Coach and your tafs read the page…**, which opens the consent's screen), a sensitive
+    site, a site the person switched off, or one off the taf's sites, each with the site's name. Sent alone by the person's
+    choice, or with no page that could go (Chrome's own pages, a tab not in front): no line. With no consent the tab isn't
+    read, so the worker looks at what's in front by its address alone (`whyNotSent`, nothing injected): a page that couldn't
+    have gone anyway says its own reason, never the missing consent. The line is kept by this panel for the messages sent from
+    it (tafs cloud records only a page that went).
+  - **The page consent's banner sits right above the box** (0.2.22, `#tafConsentOff`, the same banner as Coach's
+    `#pageConsentOff`): while the consent isn't given and a page the taf could read is in front (on its own sites), before
+    anything is sent, it says "The page you're on doesn't go with your messages." with **Let Coach and your tafs read the
+    page…**, which opens the consent's screen. It follows the tab in front (`aside_status` with the taf: the worker checks
+    the taf's sites) and goes once the consent is given. On a taf's chat the screen never comes up by itself: the banner is
+    the way there.
+- **The chat's failed run is its last line** (0.2.22, `coach.js` `failedOf`, `panel.js` `failedLine`), in Coach's chat and a
+  taf's alike: tafs cloud's `failed: {run, code, words, retry?, retry_label?}` on the conversation read (the latest run ended
+  in an error, [api.md](api.md); contract `contracts/conversation-failed.json`). Its `words` are drawn as text, as sent, once,
+  whatever the code; the turn is over (`turnFailed`: no working line, and the taf's runs here end as when the chat says it
+  isn't working). **Try again** shows only when tafs cloud says `retry: true` (a failed run that did nothing with an effect),
+  for a code the extension knows (`FAILED_CODES`: `ai_unavailable`, `no_credits`, `ai_consent_required`, `timeout`,
+  `failed`; another code shows its words only), and only when the person's message that started that run is in the chat
+  (`<run>.in`, never a guess at another). Its label is tafs cloud's `retry_label`, else the extension's `turn_failed_retry`;
+  with neither, no button. It sends that message's words again as a new message (a new client id, no files), leaves the box
+  as it is, and is pressed once: it goes at the first press, so a double click sends once, and it doesn't come back. A send
+  that fails gives the words back to the box, as any send's failure does. A later run that answers closes the line (tafs
+  cloud drops `failed`).
   - **tafs cloud takes a page on a taf's messages under the same checks as Coach's.** Until it does, it answers
     `400 page_refused` ("only Coach reads the page you have open"), and the words are sent once more on their own, as Coach's
     are (`Coach.postWithPage`): a refused page never holds the message.
@@ -1030,8 +1057,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   - **Only with the person's page consent, off until given** (`src/pageconsent.js`, tafs cloud's `PAGE_CONSENT_VERSION` in
     `runtime/src/cloud/consent.ts`). **The consent is a screen over the whole panel** (`#pageConsent`, a modal dialog, never a
     line to find): it comes up by itself the first time Coach could read a page (Coach on show, a page it may read in front,
-    once per panel), and from the banner at the top of Coach's chat ("Coach doesn't read the page you're on", with "Let Coach
-    read the page…") or Settings. It says what goes (the tab's address without query or fragment, its title and words; field values and
+    once per panel), and from the banner right above the box (0.2.22; at the top of Coach's chat before), shown while a page
+    that could go is in front ("The page you're on doesn't go with your messages.", with "Let Coach and your tafs read the
+    page…"), the same banner above a taf's box, the line under a message that went without the page, or Settings. It says what goes (the tab's address without query or fragment, its title and words; field values and
     passwords aren't read, card numbers are cut to their last four digits, keys and labelled secrets are masked, and so are one-time codes named as one in English, French, Spanish or German in the page's text), when (only on Send, only that tab, never a refused site), where (tafs, then
     the Claude AI model, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
     **Allow** records it at tafs cloud (`POST /v1/me/page-consent {version}`) and here, for this pairing's person, in the

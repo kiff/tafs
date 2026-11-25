@@ -9,6 +9,26 @@ export const CLOUD = "https://cloud.tafs.kiff.dev";
 export const MAX_TEXT = 2000;
 
 /** tafs cloud's Coach routes, as the session's own: `token` is the view-only KIFF session's, `fetch` the browser's. */
+/** A chat's messages as the panel draws them: the person's and the taf's, with their id and the page they carried. */
+function chatMessages(list, withSession) {
+  return (Array.isArray(list) ? list : [])
+    .filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string")
+    .map((m) => ({ from: m.from, text: m.text, at: m.at, ...(withSession ? { session: m.session } : {}), ...(typeof m.id === "string" && m.id ? { id: m.id } : {}), ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}) }));
+}
+
+/**
+ * The chat's failed turn, as tafs cloud reads it (`failed: {run, code, words, retry?, retry_label?}`, contracts/
+ * conversation-failed.json): the latest run ended in an error, said in the person's language. Its `words` are drawn as they
+ * are, whatever the code; `retry` and `retry_label` say whether it offers Try again, and in which words (coachchat.js
+ * `retryOf`). Null when there's none, or no words to show.
+ */
+export function failedOf(t) {
+  const f = t && t.failed;
+  if (!f || typeof f !== "object" || typeof f.run !== "string" || !f.run || typeof f.words !== "string" || !f.words.trim()) return null;
+  const label = typeof f.retry_label === "string" ? f.retry_label.trim().slice(0, 60) : "";
+  return { run: f.run, code: typeof f.code === "string" ? f.code : "", words: f.words, retry: f.retry === true, ...(label ? { retryLabel: label } : {}) };
+}
+
 export class Coach {
   constructor({ token, fetch = globalThis.fetch.bind(globalThis), base = CLOUD, lang = "en" }) {
     Object.assign(this, { token, fetch, base, lang });
@@ -43,8 +63,9 @@ export class Coach {
     if (!id) return null;
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation" + (session ? "/" + encodeURIComponent(session) : ""));
     return {
-      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, session: m.session, ...(typeof m.id === "string" && m.id ? { id: m.id } : {}), ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}) })),
+      messages: chatMessages(t.messages, true),
       working: t.working ? t.working.session : null,
+      failed: failedOf(t),
       // A card that waits on the owner (an approval, a sign-in) is answered on the phone, never here.
       waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
     };
@@ -79,8 +100,9 @@ export class Coach {
   async tafThread(id) {
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation");
     return {
-      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, ...(typeof m.id === "string" && m.id ? { id: m.id } : {}), ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}) })),
+      messages: chatMessages(t.messages, false),
       working: t.working ? t.working.session : null,
+      failed: failedOf(t),
       waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
     };
   }

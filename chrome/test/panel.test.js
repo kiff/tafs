@@ -53,14 +53,14 @@ test("the heads stay at the top, the composer at the bottom, and Coach's page li
   assert.match(css, /header \{\s*position: sticky;\s*top: 0;/, "the panel's head");
   assert.match(css, /\.viewhead \{\s*position: sticky;\s*top: var\(--headh\);/, "a view's own head, under it");
   assert.match(css, /\.dock,\s*#tafForm \{\s*position: sticky;\s*bottom: 0;/, "both composers");
-  assert.match(html, /<div class="dock">\s*<p id="coachReads"[\s\S]*?<form id="coachForm" class="composer">[\s\S]*?<\/form>\s*<\/div>/, "what a send reads stays beside the box");
+  assert.match(html, /<div class="dock">\s*<div id="pageConsentOff" class="banner" hidden>[\s\S]*?<\/div>\s*<p id="coachReads"[\s\S]*?<form id="coachForm" class="composer">[\s\S]*?<\/form>\s*<\/div>/, "what a send reads stays beside the box");
   assert.match(html, /<section id="paired" data-view="tafView" hidden>/);
   assert.match(js, /\$\("paired"\)\.dataset\.view = name;/, "the pairing's lines only on the taf's view");
 });
 
 test("a message shows at once with the working line, stays until the chat has it, and its words come back on a failure", () => {
-  for (const [send, box, pending] of [["sendCoach", "coachWords", "coachPending"], ["tafForm", "tafWords", "tafPending"]]) {
-    const at = js.indexOf(send === "sendCoach" ? "async function sendCoach" : '$("tafForm").onsubmit');
+  for (const [send, box, pending] of [["sendCoach", "coachWords", "coachPending"], ["sendTaf", "tafWords", "tafPending"]]) {
+    const at = js.indexOf("async function " + send + "(");
     const body = js.slice(at, js.indexOf("\n}", at));
     const shown = body.indexOf("showPending(");
     const sent = body.indexOf("await send(");
@@ -86,7 +86,7 @@ test("files are picked with Chrome's own file picker only, shown as chips until 
   assert.doesNotMatch(js, /getUserMedia|getDisplayMedia|captureVisibleTab|showDirectoryPicker|webkitSpeech|SpeechRecognition/);
   assert.match(js, /\$\(input\)\.accept = ACCEPT;/);
   // Send waits while a file goes up; a message may be words, files, or both; the files go by id with it.
-  assert.match(js, /if \(uploading\(trayOf\(COACH_TRAY\)\)\) return;/);
+  assert.match(js, /if \(again == null && uploading\(trayOf\(COACH_TRAY\)\)\) return;/);
   assert.match(js, /if \(!to \|\| uploading\(trayOf\(to\)\)\) return;/);
   assert.match(js, /type: "coach_send", words, alone, attachments: files,/);
   assert.match(js, /type: "taf_send", taf: to, words, attachments: files,/);
@@ -122,11 +122,12 @@ test("the panel's port reads the connect's error and connects again; a press's m
 // Chrome 0.2.14: a taf works on the page you're on, and its chat says which page went with a message, as Coach's does.
 test("a taf's chat shows the page that went with a message, and says when the page was on none of the taf's sites", () => {
   const read = js.slice(js.indexOf("async function readTaf("), js.indexOf("function scheduleTaf("));
-  assert.match(read, /words\(li, m\);\n\s*reading\(li, m\);/, "the same line as Coach's");
-  assert.match(read, /t\("aside_not_taf_site", notRead\.get\(m\.id\)\)/);
-  assert.match(js, /if \(sent && r\.notReading === "not_taf_site" && r\.host\) notRead\.set\(sent, r\.host\);/);
+  assert.match(read, /drawMessages\(list, r\.thread, /, "the same drawing as Coach's");
+  assert.match(js, /words\(li, m\);\n\s*reading\(li, m\);\n\s*whyUnder\(li, m\);/);
+  assert.match(js, /const why = sent && whyLine\(r\.notReading, r\.host\);\n\s*if \(why\) notRead\.set\(sent, why\);/);
   assert.match(js, /function reading\(li, m\) \{[\s\S]*?t\("aside_reading", m\.reading\)/);
-  assert.equal((js.match(/\n\s*reading\(li, m\);/g) || []).length, 2, "drawn by one function, for Coach's chat and a taf's");
+  assert.equal((js.match(/\n\s*reading\(li, m\);/g) || []).length, 1, "drawn by one function, for Coach's chat and a taf's");
+  assert.equal((js.match(/drawMessages\(list, r\.thread, /g) || []).length, 2, "Coach's chat and a taf's");
 });
 
 test("a refused step reads in words: the code's own line when it has one, else the code as it is", () => {
@@ -150,4 +151,59 @@ test("the panel's script parses, with no name declared twice at its top level", 
   const { execFileSync } = await import("node:child_process");
   const { fileURLToPath } = await import("node:url");
   assert.doesNotThrow(() => execFileSync(process.execPath, ["--check", fileURLToPath(new URL("../sidepanel/panel.js", import.meta.url))], { stdio: "pipe" }));
+});
+
+// Chrome 0.2.22, the owner's walk-through: a problem is always shown to the person, never nothing.
+test("a message whose page didn't go says why under it, from the send's answer, with the consent's button when that's why", () => {
+  const under = js.slice(js.indexOf("function whyUnder("), js.indexOf("/** The person's message as it was sent"));
+  assert.match(under, /if \(m\.from !== "owner" \|\| m\.reading \|\| !m\.id \|\| !notRead\.has\(m\.id\)\) return;/, "only the person's own message, sent from here, whose page didn't go");
+  assert.match(under, /line\.textContent = why\.host \? t\(why\.key, why\.host\) : t\(why\.key\);/, "as text");
+  assert.match(under, /if \(why\.consent\) \{[\s\S]*?b\.textContent = t\("page_consent_turn_on"\);\n\s*b\.onclick = \(\) => openConsent\(\);/);
+  // Coach's send says why too: its answer carries the host, as a taf's does.
+  assert.match(js, /const why = id && whyLine\(r\.notReading, r\.host\);\n\s*if \(why\) notRead\.set\(id, why\);/);
+});
+
+test("the page consent's banner sits right above the box, in Coach's chat and a taf's alike, and opens the screen", () => {
+  const dock = /<div class="dock">\s*<div id="pageConsentOff" class="banner" hidden>\s*<p data-m="page_consent_off"><\/p>\s*<button type="button" id="pageConsentOpen" data-m="page_consent_turn_on"><\/button>\s*<\/div>\s*<p id="coachReads"/.exec(html);
+  assert.ok(dock, "Coach's: first in the dock, above the line and the box");
+  const taf = /<form id="tafForm" class="composer" hidden>\s*<div id="tafConsentOff" class="banner" hidden>\s*<p data-m="page_consent_off"><\/p>\s*<button type="button" id="tafConsentOpen" data-m="page_consent_turn_on"><\/button>\s*<\/div>\s*<ul id="tafFiles"/.exec(html);
+  assert.ok(taf, "the taf's: in its composer, above the chips and the box");
+  const coach = html.slice(html.indexOf('<section id="coach"'), html.indexOf('<div class="dock">'));
+  assert.doesNotMatch(coach, /pageConsentOff/, "not at the top of Coach's chat any more");
+  const reads = js.slice(js.indexOf("async function drawReads("), js.indexOf("// The page consent's own screen"));
+  assert.match(reads, /const forTaf = current === "tafView" && tafId \? tafId : null;/);
+  assert.match(reads, /type: "aside_status", tabId: activeTab, windowId: panelWindow, \.\.\.\(forTaf \? \{ taf: forTaf \} : \{\}\)/, "the taf's own sites are checked");
+  assert.match(reads, /const ask = Boolean\(r\) && !consent && Boolean\(readsHost\) && !r\.why;/, "only while a page that could go is in front, and consent isn't given");
+  assert.match(reads, /\$\("pageConsentOff"\)\.hidden = !ask;\n\s*\$\("tafConsentOff"\)\.hidden = !ask \|\| !forTaf;/);
+  // The screen comes up by itself on Coach's chat only; on a taf's, the banner is there instead.
+  assert.match(reads, /if \(current === "coach" && ask && !askedOnce\(\)\) openConsent\(\);/);
+  assert.match(js, /\$\("tafConsentOpen"\)\.onclick = \(\) => openConsent\(\);/);
+  assert.match(js, /if \(name === "coach" \|\| name === "tafView"\) drawReads\(\);/, "drawn again when the taf's chat is shown");
+  assert.match(js, /chrome\.tabs\.onUpdated\.addListener\(\(id, change\) => \{\n\s*if \(id === activeTab && change\.url\) drawReads\(\);/, "and when the tab in front moves");
+});
+
+test("a failed run shows tafs cloud's words as text, as the chat's last line, with Try again only when offered, pressed once", () => {
+  const draw = js.slice(js.indexOf("function drawMessages("), js.indexOf("function whyUnder("));
+  assert.match(draw, /if \(thread\.failed\) list\.append\(failedLine\(thread\.failed, thread\.messages, retry\)\);\n\}/, "the chat's last line");
+  assert.match(draw, /p\.textContent = f\.words;/, "its words, as text, never HTML");
+  assert.doesNotMatch(draw, /innerHTML|f\.code ===|\.code\)/, "never by its code");
+  assert.match(draw, /const again = retryOf\(f, messages\);/);
+  assert.match(draw, /const label = f\.retryLabel \|\| chrome\.i18n\.getMessage\("turn_failed_retry"\);/, "tafs cloud's label, else the extension's; with neither, no button");
+  assert.match(draw, /b\.onclick = \(\) => \{\n\s*if \(retried\.has\(key\)\) return;\n\s*retried\.add\(key\);\n\s*b\.disabled = true;\n\s*b\.remove\(\);\n\s*retry\(again\);/, "once: gone at the first press");
+  assert.match(draw, /if \(again && label && !retried\.has\(key\)\)/, "and not back on the next draw");
+  // Try again sends the words as a new message (a fresh clientID), with no file, and leaves the box alone.
+  assert.match(js, /drawMessages\(list, r\.thread, \(again\) => sendTaf\(id, again, \[\]\)\);/);
+  assert.match(js, /drawMessages\(list, r\.thread, \(again\) => sendCoach\(false, again\)\);/);
+  assert.match(js, /if \(again == null\) \$\("coachWords"\)\.value = "";/);
+  const taf = js.slice(js.indexOf("async function sendTaf("), js.indexOf("\n}", js.indexOf("async function sendTaf(")));
+  assert.doesNotMatch(taf, /\$\("tafWords"\)\.value = "";/, "the box is cleared by the form, never by Try again");
+  assert.match(taf, /clientID: crypto\.randomUUID\(\)/);
+});
+
+test("a failed turn ends the working line, and a message that never reached the chat in 2 minutes is said", () => {
+  for (const [w, pending, lapsedVar, key] of [["working", "coachPending", "coachLapsed", "coach_error"], ["tafWorking", "tafPending", "tafLapsed", "taf_error"]]) {
+    assert.match(js, new RegExp(`${w} = !!r\\.thread\\.working && !turnFailed\\(r\\.thread\\);`), w);
+    assert.match(js, new RegExp(`if \\(lapsed\\(${pending}, r\\.thread\\.messages\\)\\) ${lapsedVar} = `), lapsedVar);
+    assert.match(js, new RegExp(`note\\.textContent = t\\("${key}"`), key);
+  }
 });
