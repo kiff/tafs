@@ -266,11 +266,10 @@ Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
 
-- **An act that ran, whose page then grows past any cut, is answered `page_too_large`** (`coach.e2e.test.js`). `relay.js`
-  answers `page_too_large` whenever no cut makes the answer fit, an act's answer included, though its own comment says an act
-  that ran is never answered as a failure. The taf is told its click failed, and may click again.
-
 None.
+
+Fixed in 0.2.21 (`coach.e2e.test.js`): **an act that ran, whose page then grew past any cut, was answered `page_too_large`**,
+so the taf was told its click failed and might click again. It's answered as done now, with no page, and the taf reads again.
 
 Fixed in 0.2.20 (`gaps2.e2e.test.js`): **a field in a disabled `<fieldset>`, a button inside `[inert]` or marked
 `aria-disabled`, a read-only field, a disabled `<option>` or one of a disabled `<optgroup>`** took the taf's act: refused

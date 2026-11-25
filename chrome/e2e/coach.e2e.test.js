@@ -74,10 +74,7 @@ test("a page no cut makes fit the relay's 120 KB is refused `page_too_large`, si
   await h.fromPanel({ type: "stop", run });
 });
 
-test("an act that ran, whose page then grows past any cut, is never answered as a failure: the taf isn't told to click again", {
-  skip,
-  todo: "relay.js answers page_too_large whenever no cut makes the answer fit, an act's answer included: the click ran (the page grew), but the taf is told the step failed, so it may click again. Its own comment says an act that ran is never answered as a failure; the answer should say the act was done, with no page (the taf reads again).",
-}, async () => {
+test("an act that ran, whose page then grows past any cut, is never answered as a failure: the taf isn't told to click again", { skip }, async () => {
   const run = newRun("grows");
   const url = h.sites.url("shop.test", "/grows?case=grows");
   const opened = await h.planque.sendStep({ op: "open", run, url });
