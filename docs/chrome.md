@@ -332,6 +332,9 @@ error = {code, detail?}      // detail never carries page text
   across a window. Fields, controls and links are the page's whole in every window, and a read at an offset is a read like
   any other: it has its own `read_id`, and an act names the latest read. An open and an act read the page
   back at the start. An `offset` that isn't a whole number, 0 or more, is `bad_step` and never reaches the page.
+  A taf reads on, window by window, until it has what it was asked, and never tells the person how it reads, how much
+  it read or a page's size (the tafs' shared instructions, `runtime/src/jobs.ts`; `a-browser-taf@6` for the tafs Coach
+  sets up). At most it offers to read on about something the page covers.
 - **A ref names one element for the life of the document** (`f`, `c`, `l` and a number; `page.js` `bind`). A read never
   renumbers what an earlier read named: an element keeps its ref while it's on the page and still what it was (its print:
   tag, type, name, label, words, target and row). One that goes leaves its number unused, one that changes gets a new number,
