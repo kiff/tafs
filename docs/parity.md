@@ -247,6 +247,70 @@ Where each app stands: done on the iPhone, iPad and Mac 13+ (tafs#2009), Android
   Text and rows inside the column stay aligned left, and a window narrower than the cap is unchanged. Each app keeps these caps as named constants, in one place, so no page sets its own number.
 - **An explanation sits beside its action.** On Account, Chrome's text goes under the Chrome row, with its button. How sign-in works goes into the sign-in section, said once. How it works is one entry. No section is only an explanation.
 
+## The owner's findings of 24–25 Nov, device by device
+
+Every finding from the owner's walk-throughs of the Chrome extension, the Galaxy Watch 5 and Windows, read again on each repo's main. Each cell is **fixed** (with the change), **n/a** (and why), **built** (a watch's code merged, before the owner's check) or **open** (what's left). "—" means the device has nothing that finding is about.
+
+**Chrome extension (A–F)**
+
+| Finding | iPhone/iPad, Mac 13+ | Android | macOS 12, Windows, Linux | Chrome extension |
+| :- | :- | :- | :- | :- |
+| A. Coach said it never read a page it had read | — | — | — | fixed in tafs cloud: Coach's history says which of its turns read a page, and the host (tafs#2000) |
+| B. A Wikipedia taf refused an article's address | — | — | — | fixed for new tafs: planque opens `https://<language>.wikipedia.org/wiki/<Title>` for a grant on wikipedia.org (planque#411), and `a-browser-taf@5`, `@6` say so (tafs#2002, tafs#2019). **Open** for tafs already set up: they keep their old instructions until the tafs upgrade runs, which waits on the owner |
+| C. The box still said "working" after the taf's last answer | n/a: the panel's own state (the fix is in the extension only) | n/a, same | n/a, same | fixed (tafs#2001, 0.2.9) |
+| D. The tab group kept "· working" after Stop | — | — | — | fixed: "is done" on Stop (tafs#2001) |
+| E. Chat as the apps do it: the composer pinned, your message at once with a working line, attachments, microphone | the reference | the reference | the reference; no microphone on Windows or Linux (speech would leave the device) | fixed: pinned composer and your message at once (tafs#2001, and with a short chat tafs#2017), attachments (tafs#2005). Microphone n/a, as on Windows and Linux: Chrome's speech recognition sends the audio off the device |
+| F. Back, New conversation and ⋮ scroll away | n/a: the system's own bar | n/a, same | n/a, same | fixed: a sticky header (tafs#2001) |
+
+**Your tab and the page (Chrome 0.2.12–0.2.14)**
+
+| Finding | Chrome extension |
+| :- | :- |
+| A run started from the side panel should work in the tab you're on | fixed (tafs#2024, 0.2.12) |
+| A step of another run must never work in a tab joined by an earlier one | fixed (tafs#2025, 0.2.13) |
+| A joined tab was sent to another address | fixed for an open: a joined tab is read only at its own address, and any other open goes to the run's own tab (tafs#2030, 0.2.14). **Open:** an act (a link clicked, a form sent, back) can still move a joined tab within the run's sites |
+| A taf's message carries the page you're on | fixed: only on that taf's phone-signed sites, under page consent "2", checked again by tafs cloud, and a page turn only reads (tafs#2030) |
+
+The other devices have no tab to join: — on each.
+
+**The watch (the owner's 8 calls)**
+
+| Call | Apple Watch | Wear OS | Phones |
+| :- | :- | :- | :- |
+| 1. Kept on the watch, opening at once | built (tafs#2018, #2028) | built (tafs#2021, #2027) | — |
+| 2. One thread with the phone's, live | built | built | fixed: the phones push it (tafs#2018, tafs#2021) |
+| 3. Opens on the newest message | built | built | fixed: both phones' taf chats open at the bottom (`TafChatView`) |
+| 4. Send in the thread, with your time and ✓ | built | built | — |
+| 5. Nothing replaces the chat; Open on phone opens it | built (`WatchOpen`) | built | — |
+| 6. No Try again: retries on their own, one calm "Linking tafs" | built | built | — |
+| 7. An answer you can't miss, with the app put away | built (the iPhone's notification) | built (tafs#2021) | — |
+| 8. The whole answer from its preview | built (`?full=1`, tafs#2020) | built | fixed: the phones' From your watch (tafs#2020) |
+
+Each watch cell moves to done, or to "broken on the owner's check", from the owner's check of the current builds ([Watches](#watches)).
+
+**Windows (notes 1–5)**
+
+| Note | iPhone/iPad, Mac 13+ | Android | macOS 12 | Windows | Linux |
+| :- | :- | :- | :- | :- | :- |
+| 1. One centred column on every page | fixed (tafs#2009) | fixed (tafs#2011, #2013) | fixed (tafs-macos#264) | fixed (tafs-windows#342) | fixed (tafs-linux#136) |
+| 2. Plan & usage and Calendar cut off when maximized | fixed by note 1's caps | fixed by note 1's caps | fixed by note 1's caps | fixed (tafs-windows#342) | fixed by note 1's caps |
+| 3. Connect apps: a long status ("Volver a conectar") cut, and Ask Coach over it | **open**: check a long status in Spanish | **open**: same | **open**: same | fixed (tafs-windows#342) | **open**: same |
+| 4. Account's explanations beside their actions | fixed (tafs#2009) | fixed (tafs#2011) | fixed (tafs-macos#264) | fixed (tafs-windows#342) | fixed (tafs-linux#136) |
+| 5a. Overview cut "1 persona" in a medium window | **open**: check in Spanish | **open**: same | **open**: same | fixed: it wraps (tafs-windows#342) | **open**: same |
+| 5b. Connect apps' lines in English in another language | fixed at the source: planque's catalogue in every app language (planque#414), asked in the person's language (tafs#2015) | fixed, same | fixed, same | fixed, same; checked in Spanish | fixed, same |
+
+**Cut answers**
+
+| Finding | Where | State |
+| :- | :- | :- |
+| Coach's answer to a watch ask stopped at 140 characters, with nothing to open it | both watches, and the phones' From your watch | fixed in tafs cloud: `?full=1` gives the whole answer (tafs#2020); built on the watches |
+| A taf said its read was cut, in bytes | every taf, on any device | fixed for new tafs: the tafs' shared instructions read on and never talk about size (tafs#2019, `a-browser-taf@6`). **Open** for tafs already set up, until the tafs upgrade runs |
+
+**Open, in one place:**
+1. Tafs set up before tonight keep their old instructions (B, and the cut read) until the tafs upgrade runs. That waits on the owner.
+2. Chrome: an act in a joined tab can still move it within the run's sites.
+3. Windows notes 3 and 5a on the other apps: a long Spanish status in Connect apps, and Overview's people count in a medium window, are still to check on iPhone/iPad and Mac 13+, Android, macOS 12 and Linux.
+
 ## Today's cross-device work
 
 What landed on 23 Nov, device by device, read again against each repo's main on 25 Nov. "—" means the feature isn't that device's. What's still open is listed under the table.
