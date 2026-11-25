@@ -15,9 +15,6 @@ import { HAND_MAX_MS, validWords, withoutValues } from "./hand.js";
  * The run's own blank page: where its tab opens and where a refused move is sent. It loads nothing, so the guard lets
  * it be; refusing it sent the tab to about:blank again, and again, which also cancelled the page the step was opening.
  */
-/** How many addresses a tab's trail keeps for `back`. */
-const TRAIL_MAX = 50;
-
 const isBlank = (url) => String(url || "").trim().toLowerCase() === "about:blank";
 
 /** Whether two addresses are the same page, as Chrome writes them: a joined tab already there is read in place, not loaded again. */
@@ -34,6 +31,8 @@ import { randomId } from "./crypto.js";
 import { checkAllowances, checkSites } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
+/** How many addresses a tab's trail keeps for `back`. */
+const TRAIL_MAX = 50;
 const SETTLE_MS = 600;
 /**
  * How long a run's new tab may take to show its blank page before the step's page goes into it (`blankReady`). Navigating a tab
