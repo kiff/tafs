@@ -148,6 +148,7 @@
     <string name="watch_type">Gõ</string>
     <string name="watch_type_hint">Viết cho Coach…</string>
     <string name="watch_update_phone">Hãy cập nhật tafs trên điện thoại của bạn, rồi thử lại.</string>
+    <string name="watch_view_on_phone">Xem trên điện thoại</string>
     <string name="watch_view_only_phone">Điện thoại này chỉ xem được, nên bạn không thể hỏi từ đồng hồ. Hãy đăng nhập trên một điện thoại có thể phê duyệt.</string>
     <string name="watch_voice_text_only">Coach nhận lời của bạn dưới dạng văn bản, không bao giờ nhận giọng nói.</string>
     <string name="watch_what_it_does">Việc nó làm</string>

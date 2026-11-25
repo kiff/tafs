@@ -68,7 +68,10 @@ struct TafsWatchApp: App {
                 coach.checkLock()
             }
             // So it opens at once (row 44, D): kept only with a passcode.
-            if phase == .background || phase == .active { tafs.cache.checkLock() }
+            if phase == .background || phase == .active {
+                tafs.cache.checkLock()
+                WatchThreads.shared.checkLock()
+            }
             if phase == .background {
                 needsYou.leave()
                 tafs.leave()
@@ -103,5 +106,7 @@ struct TafsWatchApp: App {
         needsYou.leave()
         tafs.leave()
         coach.leave()
+        // After the pages forget what they showed, so none is kept again.
+        WatchThreads.shared.clear()
     }
 }

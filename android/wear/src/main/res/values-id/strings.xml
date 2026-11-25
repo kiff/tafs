@@ -148,6 +148,7 @@
     <string name="watch_type">Ketik</string>
     <string name="watch_type_hint">Tulis ke Coach…</string>
     <string name="watch_update_phone">Perbarui tafs di ponsel Anda, lalu coba lagi.</string>
+    <string name="watch_view_on_phone">Lihat di ponsel</string>
     <string name="watch_view_only_phone">Ponsel ini hanya dapat melihat, jadi Anda tidak dapat bertanya dari jam tangan. Masuk di ponsel yang dapat menyetujui.</string>
     <string name="watch_voice_text_only">Coach menerima kata-kata Anda sebagai teks, tidak pernah suara Anda.</string>
     <string name="watch_what_it_does">Yang dilakukannya</string>

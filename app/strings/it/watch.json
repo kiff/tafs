@@ -104,6 +104,7 @@
   "watch.type": "Scrivi",
   "watch.type_hint": "Scrivi a Coach…",
   "watch.update_phone": "Aggiorna tafs sul telefono, poi riprova.",
+  "watch.view_on_phone": "Vedi sul telefono",
   "watch.view_only_phone": "Questo telefono può solo visualizzare, quindi non puoi chiedere dall'orologio. Accedi da un telefono che può approvare.",
   "watch.voice_text_only": "Coach riceve le tue parole come testo, mai la tua voce.",
   "watch.what_it_does": "Cosa fa",

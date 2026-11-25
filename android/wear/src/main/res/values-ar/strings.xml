@@ -178,6 +178,7 @@
     <string name="watch_type">كتابة</string>
     <string name="watch_type_hint">اكتب إلى Coach…</string>
     <string name="watch_update_phone">حدّث tafs على هاتفك ثم حاول مرة أخرى.</string>
+    <string name="watch_view_on_phone">عرض على الهاتف</string>
     <string name="watch_view_only_phone">هذا الهاتف للعرض فقط، لذا لا يمكنك السؤال من الساعة. سجّل الدخول على هاتف يستطيع الموافقة.</string>
     <string name="watch_voice_text_only">يتلقى Coach كلماتك كنص، وليس صوتك أبدًا.</string>
     <string name="watch_what_it_does">ما الذي يفعله</string>

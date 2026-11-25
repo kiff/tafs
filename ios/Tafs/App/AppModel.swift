@@ -7200,10 +7200,14 @@ final class AppModel: ObservableObject {
         case "taf", "halted", "resumed":
             // A refresh reads planque's grants too.
             await refresh()
+        case "taf_chat":
+            // A message in the person's chat with the taf, from any device, or its run answered (the owner's call 2b): only
+            // that chat is read again, where it's open.
+            break
         default:
             return
         }
-        if let tafID, change == "taf" || change == "knock", chats[tafID] != nil { await loadChat(tafID) }
+        if let tafID, change == "taf" || change == "knock" || change == "taf_chat", chats[tafID] != nil { await loadChat(tafID) }
         // Its work too, where its page has read it.
         if let tafID, change == "taf", works[tafID] != nil { await loadWork(tafID) }
     }

@@ -2877,6 +2877,7 @@
     <string name="watch_type">Yaz</string>
     <string name="watch_type_hint">Coach\'a yazın…</string>
     <string name="watch_update_phone">Telefonunuzda tafs\'ı güncelleyin, sonra tekrar deneyin.</string>
+    <string name="watch_view_on_phone">Telefonda görüntüle</string>
     <string name="watch_view_only_phone">Bu telefon yalnızca görüntüleyebilir, bu yüzden saatten soramazsınız. Onay verebilen bir telefonda oturum açın.</string>
     <string name="watch_voice_text_only">Coach sözlerinizi metin olarak alır, sesinizi asla.</string>
     <string name="watch_what_it_does">Ne yapar</string>

@@ -2957,6 +2957,7 @@
     <string name="watch_type">Tastați</string>
     <string name="watch_type_hint">Scrieți-i lui Coach…</string>
     <string name="watch_update_phone">Actualizați tafs pe telefon, apoi încercați din nou.</string>
+    <string name="watch_view_on_phone">Vedeți pe telefon</string>
     <string name="watch_view_only_phone">Acest telefon poate doar vizualiza, așa că nu puteți întreba de pe ceas. Conectați-vă pe un telefon care poate aproba.</string>
     <string name="watch_voice_text_only">Coach primește cuvintele dvs. ca text, niciodată vocea.</string>
     <string name="watch_what_it_does">Ce face</string>

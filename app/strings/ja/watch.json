@@ -99,6 +99,7 @@
   "watch.type": "入力",
   "watch.type_hint": "Coachに書く…",
   "watch.update_phone": "スマートフォンのtafsをアップデートしてから、もう一度お試しください。",
+  "watch.view_on_phone": "スマートフォンで表示",
   "watch.view_only_phone": "このスマートフォンは表示のみのため、ウォッチから質問できません。承認できるスマートフォンでサインインしてください。",
   "watch.voice_text_only": "Coachに届くのはあなたの言葉のテキストだけで、声は届きません。",
   "watch.what_it_does": "できること",

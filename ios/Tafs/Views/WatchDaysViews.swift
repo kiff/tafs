@@ -44,9 +44,11 @@ struct WatchDayView: View {
                 Button(Words.Common.tryAgain) { Task { await model.open(date) } }.listRowBackground(Theme.panel)
             case .loaded(let turns):
                 ForEach(turns) { turn in
-                    WatchTurnRow(turn: turn, zone: model.zone)
-                        .padding(.leading, turn.replyTo == nil ? 0 : 16)
-                        .listRowBackground(Theme.panel)
+                    WatchTurnRow(turn: turn, zone: model.zone, whole: model.whole[turn.id]) {
+                        Task { await model.readMore(turn.id) }
+                    }
+                    .padding(.leading, turn.replyTo == nil ? 0 : 16)
+                    .listRowBackground(Theme.panel)
                 }
             }
         }
@@ -64,6 +66,8 @@ struct WatchDayView: View {
 struct WatchTurnRow: View {
     let turn: TafsCloud.WatchTurn
     var zone: TimeZone = .current
+    var whole: WatchDaysModel.Whole? = nil
+    var readMore: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -75,11 +79,34 @@ struct WatchTurnRow: View {
             Text(verbatim: turn.said).scaledFont(15).foregroundColor(Theme.ink)
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 if let taf = turn.taf { Text(verbatim: taf.name).scaledFont(13, relativeTo: .footnote).bold() }
-                Text(verbatim: turn.outcome).scaledFont(13, relativeTo: .footnote)
+                Text(verbatim: WatchTurnRow.shown(turn, whole: whole)).scaledFont(13, relativeTo: .footnote)
             }
             .foregroundColor(Theme.dim)
+            // Read more (the owner's call 8): the whole answer in place, read only on the tap.
+            if WatchTurnRow.offersMore(turn, whole: whole) {
+                if whole == .reading {
+                    ProgressView()
+                } else {
+                    Button(Words.Watch.readMore, action: readMore)
+                        .scaledFont(13, relativeTo: .footnote)
+                        .buttonStyle(.borderless)
+                }
+            }
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
+    }
+
+    /// The turn's outcome as shown: the whole answer once Read more has it, else tafs cloud's line.
+    static func shown(_ turn: TafsCloud.WatchTurn, whole: WatchDaysModel.Whole?) -> String {
+        if case .read(let all)? = whole { return all }
+        return turn.outcome
+    }
+
+    /// Read more is offered while the line is cut and the whole isn't read yet.
+    static func offersMore(_ turn: TafsCloud.WatchTurn, whole: WatchDaysModel.Whole?) -> Bool {
+        guard turn.more else { return false }
+        if case .read? = whole { return false }
+        return true
     }
 
     /// The time it was said, in the phone's own short form, in `zone` (the account's, as the day is); nil for one tafs

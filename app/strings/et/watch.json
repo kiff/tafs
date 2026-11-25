@@ -104,6 +104,7 @@
   "watch.type": "Kirjuta",
   "watch.type_hint": "Kirjuta Coachile…",
   "watch.update_phone": "Uuenda telefonis tafsi ja proovi uuesti.",
+  "watch.view_on_phone": "Vaata telefonis",
   "watch.view_only_phone": "See telefon saab ainult vaadata, seega ei saa sa kellast küsida. Logi sisse telefonis, mis saab kinnitada.",
   "watch.voice_text_only": "Coach saab sinu sõnad tekstina, mitte kunagi sinu häält.",
   "watch.what_it_does": "Mida see teeb",

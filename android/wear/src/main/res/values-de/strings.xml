@@ -154,6 +154,7 @@
     <string name="watch_type">Tippen</string>
     <string name="watch_type_hint">Schreib an Coach…</string>
     <string name="watch_update_phone">Aktualisiere tafs auf deinem Handy und versuch es dann erneut.</string>
+    <string name="watch_view_on_phone">Auf dem Handy ansehen</string>
     <string name="watch_view_only_phone">Dieses Handy kann nur ansehen, daher kannst du nicht von der Uhr aus fragen. Melde dich auf einem Handy an, das genehmigen kann.</string>
     <string name="watch_voice_text_only">Coach bekommt deine Worte als Text, nie deine Stimme.</string>
     <string name="watch_what_it_does">Was er tut</string>

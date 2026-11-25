@@ -124,6 +124,7 @@
   "watch.type": "كتابة",
   "watch.type_hint": "اكتب إلى Coach…",
   "watch.update_phone": "حدّث tafs على هاتفك ثم حاول مرة أخرى.",
+  "watch.view_on_phone": "عرض على الهاتف",
   "watch.view_only_phone": "هذا الهاتف للعرض فقط، لذا لا يمكنك السؤال من الساعة. سجّل الدخول على هاتف يستطيع الموافقة.",
   "watch.voice_text_only": "يتلقى Coach كلماتك كنص، وليس صوتك أبدًا.",
   "watch.what_it_does": "ما الذي يفعله",

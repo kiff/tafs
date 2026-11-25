@@ -154,6 +154,7 @@
     <string name="watch_type">Бичих</string>
     <string name="watch_type_hint">Coach-д бичих…</string>
     <string name="watch_update_phone">Утсан дээрээ tafs-ыг шинэчлээд дахин оролдоно уу.</string>
+    <string name="watch_view_on_phone">Утсан дээр харах</string>
     <string name="watch_view_only_phone">Энэ утас зөвхөн харах боломжтой тул цагнаасаа асууж чадахгүй. Зөвшөөрч чадах утсан дээр нэвтэрнэ үү.</string>
     <string name="watch_voice_text_only">Coach таны үгийг текст хэлбэрээр авдаг, хэзээ ч дуу хоолойг нь биш.</string>
     <string name="watch_what_it_does">Юу хийдэг</string>

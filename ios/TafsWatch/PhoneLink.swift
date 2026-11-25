@@ -41,6 +41,11 @@ enum PhoneFailure: Error, Equatable, Sendable {
         }
     }
 
+    /// What a screen that tries again by itself says (docs/watch-app.md, "Linking tafs"): one calm line while the phone is
+    /// out of reach, slow or the link is down, with no Try again; tafs missing from the phone is said as it is, since only
+    /// installing it helps.
+    var waiting: String { self == .noApp ? Words.Watch.phoneNoApp : Words.Watch.linking }
+
     /// The send itself failed, so nothing was answered and a read may go once more. Not the limit: it's used up.
     var sendFailed: Bool { self == .notReachable || self == .link }
 }
@@ -117,6 +122,16 @@ final class PhoneLink: NSObject, WCSessionDelegate, @unchecked Sendable {
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
 
+    /// The phone's push (`WatchPush`), queued and delivered in order, even with the app put away: read here, on
+    /// WatchConnectivity's queue, and handed to what's listening on the main actor.
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        guard let push = WatchPush.from(userInfo) else { return }
+        Task { @MainActor in
+            WatchAccountZone.heard(push.reply)
+            WatchPushes.shared.deliver(push)
+        }
+    }
+
     /// WatchConnectivity's error, as the wrist words it.
     static func failure(_ error: Error) -> PhoneFailure {
         switch (error as? WCError)?.code {
@@ -160,7 +175,10 @@ extension PhoneLink: PhoneAsking {
         // Whatever was asked, a signed-out phone drops the account's zone.
         WatchAccountZone.heard(reached.reply)
         // And what the watch kept so it opens at once (row 44, D).
-        if reached.reply?.outcome == .signedOut { WatchCache.shared.clear() }
+        if reached.reply?.outcome == .signedOut {
+            WatchCache.shared.clear()
+            WatchThreads.shared.clear()
+        }
         return reached
     }
 }

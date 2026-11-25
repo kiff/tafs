@@ -42,13 +42,17 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case inboxMarks = "inbox_marks"
         /// Marks Inbox lines read or dismissed (`marks`), by id alone (`POST /v1/watch/inbox`). It changes no one's power.
         case inboxMark = "inbox_mark"
+        /// View on phone (docs/watch-app.md, "View on phone"): the phone opens Coach's chat, or with `taf` that taf's, at
+        /// once when tafs is in front, else with a notification whose tap opens it. Nothing is read or changed.
+        case openOnPhone = "open_on_phone"
 
         /// A read changes nothing, so one whose send failed may go once more (`PhoneRoute`). A write (Refuse, Halt, Halt
         /// all, a Coach message) is never sent twice: a send that failed may still have arrived. Nor is a recording's
         /// `transcribe`: the phone erases the file once it's read, so a second ask would find nothing.
         var isRead: Bool {
             switch self {
-            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks: return true
+            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks, .openOnPhone:
+                return true
             case .refuse, .halt, .haltAll, .coach, .coachSend, .transcribe, .inboxMark: return false
             }
         }
@@ -119,6 +123,7 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .transcribe: return WatchVoice.isID(message)
         case .inboxMarks: return true
         case .inboxMark: return marks?.isComplete ?? false
+        case .openOnPhone: return taf.map { given($0) && $0.count <= Self.tafIDLimit } ?? true
         }
     }
 }
@@ -451,6 +456,48 @@ struct WatchNeedsYou: Codable, Equatable, Sendable {
     var calls: [Call]
     /// When the phone read it.
     var at: Date
+}
+
+/// What the phone hands its watch on its own (docs/watch-app.md, "Kept and pushed"): a watch request's new state, a taf chat
+/// that changed, or the Inbox's marks, as tafs cloud's silent push told the phone and the phone read with its session.
+/// It goes with WatchConnectivity's `transferUserInfo`, queued and delivered in order even while the watch app is put away
+/// or the phone's app is in the background, so the thread on the wrist updates the moment it's shown, with no ask.
+/// Never a session, a key or a held call's details: what the watch already shows of a request, its line and state.
+struct WatchPush: Codable, Equatable, Sendable {
+    enum Kind: String, Codable, Sendable {
+        /// A watch request (Coach's, or a taf's chat) changed: `ask` and the phone's read of it, `reply`.
+        case ask
+        /// A taf's chat changed on the phone or in tafs cloud: `taf`, for a chat on screen to read again.
+        case chat
+        /// The Inbox's lines read and dismissed: `reply.marks`.
+        case inbox
+    }
+
+    /// The `userInfo` key its bytes go under.
+    static let key = "tafs.push"
+
+    var kind: Kind
+    var ask: String?
+    var taf: String?
+    var reply: WatchReply?
+    var at: Date
+
+    init(_ kind: Kind, ask: String? = nil, taf: String? = nil, reply: WatchReply? = nil, at: Date) {
+        self.kind = kind
+        self.ask = ask
+        self.taf = taf
+        self.reply = reply
+        self.at = at
+    }
+
+    /// As `transferUserInfo` takes it: the push's bytes under `key`.
+    var userInfo: [String: Any] { [Self.key: WatchMessage.encode(self)] }
+
+    /// The push in what `transferUserInfo` delivered, or nil for anything else.
+    static func from(_ userInfo: [String: Any]) -> WatchPush? {
+        guard let data = userInfo[key] as? Data else { return nil }
+        return WatchMessage.decode(WatchPush.self, from: data)
+    }
 }
 
 /// The bytes on the wire: JSON, the same on both sides.

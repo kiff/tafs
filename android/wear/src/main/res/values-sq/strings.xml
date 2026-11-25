@@ -154,6 +154,7 @@
     <string name="watch_type">Shkruani</string>
     <string name="watch_type_hint">Shkruajini Coach…</string>
     <string name="watch_update_phone">Përditësoni tafs në telefonin tuaj, pastaj provoni sërish.</string>
+    <string name="watch_view_on_phone">Shihni në telefon</string>
     <string name="watch_view_only_phone">Ky telefon mund vetëm të shikojë, ndaj nuk mund të pyesni nga ora. Hyni në një telefon që mund të miratojë.</string>
     <string name="watch_voice_text_only">Coach i merr fjalët tuaja si tekst, kurrë zërin.</string>
     <string name="watch_what_it_does">Çfarë bën</string>

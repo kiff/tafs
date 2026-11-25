@@ -2957,6 +2957,7 @@
     <string name="watch_type">Napsat</string>
     <string name="watch_type_hint">Napište Coachovi…</string>
     <string name="watch_update_phone">Aktualizujte tafs v telefonu a zkuste to znovu.</string>
+    <string name="watch_view_on_phone">Zobrazit v telefonu</string>
     <string name="watch_view_only_phone">Tento telefon může jen prohlížet, takže se z hodinek ptát nemůžete. Přihlaste se v telefonu, který může schvalovat.</string>
     <string name="watch_voice_text_only">Coach dostane vaše slova jako text, nikdy váš hlas.</string>
     <string name="watch_what_it_does">Co dělá</string>

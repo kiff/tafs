@@ -22,11 +22,14 @@ final class WatchAskPushTests: XCTestCase {
         super.tearDown()
     }
 
+    /// What was handed to the watch, push by push.
+    private var relayed: [WatchPush] = []
+
     private func push(_ id: String, reply: WatchReply, phoneInUse: Bool = false) async -> (posted: [WatchCoachAnswer], reads: Int) {
         var posted: [WatchCoachAnswer] = []
         var reads = 0
         await WatchAskPush.handle(id, pushes: pushes, read: { _ in reads += 1; return reply }, now: { self.t },
-                                  phoneInUse: { phoneInUse }, post: { answer, ticket in
+                                  phoneInUse: { phoneInUse }, relay: { self.relayed.append($0) }, post: { answer, ticket in
                                       XCTAssertEqual(ticket.askID, id)
                                       posted.append(answer)
                                   })
@@ -94,6 +97,36 @@ final class WatchAskPushTests: XCTestCase {
         XCTAssertFalse(held.answering ?? true)
         let pushed = await push("ask_1", reply: held)
         XCTAssertEqual(pushed.posted.first?.approveOnPhone, true)
+    }
+
+    /// Kept and pushed (docs/watch-app.md): every change of a request this iPhone sent is handed to the watch, tafs open or
+    /// not, so the thread on the wrist moves with no read of its own. Never one this iPhone didn't send, or whose answer the
+    /// watch read.
+    func testEachChangeIsHandedToTheWatch() async {
+        pushes.sent("ask_1", at: t)
+        _ = await push("ask_1", reply: WatchReply(.ok, answering: true), phoneInUse: true)
+        _ = await push("ask_1", reply: WatchReply(.ok, coach: done, answering: false), phoneInUse: true)
+        XCTAssertEqual(relayed.map(\.kind), [.ask, .ask])
+        XCTAssertEqual(relayed.map(\.ask), ["ask_1", "ask_1"])
+        XCTAssertEqual(relayed.last?.reply?.coach, done)
+        XCTAssertEqual(relayed.last?.at, t)
+        relayed = []
+        _ = await push("ask_other", reply: WatchReply(.ok, coach: done, answering: false))
+        pushes.sent("ask_seen", at: t)
+        pushes.seen("ask_seen", now: t)
+        _ = await push("ask_seen", reply: WatchReply(.ok, coach: done, answering: false))
+        XCTAssertTrue(relayed.isEmpty)
+    }
+
+    /// The Inbox's marks, read once and handed on; a taf whose chat changed, by its id alone. Nothing without them.
+    func testTheInboxAndAChatAreHandedToTheWatch() async {
+        var handed: [WatchPush] = []
+        let marks = WatchInboxMarks(read: ["ce_1"], dismissed: ["ce_2"])
+        await WatchPushRelay.inbox(read: { WatchReply(.ok, marks: marks) }, now: t) { handed.append($0) }
+        await WatchPushRelay.inbox(read: { WatchReply(.failed) }, now: t) { handed.append($0) }
+        WatchPushRelay.chat("taf-1", now: t) { handed.append($0) }
+        WatchPushRelay.chat(nil, now: t) { handed.append($0) }
+        XCTAssertEqual(handed, [WatchPush(.inbox, reply: WatchReply(.ok, marks: marks), at: t), WatchPush(.chat, taf: "taf-1", at: t)])
     }
 
     /// W3's follow and a request it didn't keep (from before this build) post as before.

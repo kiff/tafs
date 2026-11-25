@@ -140,6 +140,7 @@ final class InboxModel: ObservableObject {
         } else {
             store.write([])
         }
+        WatchPushes.shared.listen(self)
     }
 
     /// How many lines aren't read yet: Coach's home says so.
@@ -322,5 +323,13 @@ final class InboxModel: ObservableObject {
     private func save(_ next: [InboxLine]) {
         lines = next
         store.write(next)
+    }
+}
+
+/// The phone's push of the Inbox's marks (`watch_inbox`): taken as a read's, with no ask.
+extension InboxModel: WatchPushListening {
+    func heard(_ push: WatchPush) {
+        guard push.kind == .inbox, let reply = push.reply, reply.outcome == .ok, let marks = reply.marks else { return }
+        take(marks)
     }
 }

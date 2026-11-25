@@ -63,7 +63,7 @@ final class CoachModelTests: XCTestCase {
         let answer = WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false)
         let phone = Phone(WatchReply(.ok, coach: answer))
         let ids = IDs()
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: ids.next)
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: ids.next, linkPause: { _ in })
         model.draft = "  Pause Rae \n"
         await model.send()
         XCTAssertEqual(phone.asked, [WatchRequest(.coach, made: now, text: "Pause Rae", message: "6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90")])
@@ -75,7 +75,7 @@ final class CoachModelTests: XCTestCase {
     /// (docs/chat.md, "One message, one id"). Other words, or the next message once answered, get another.
     func testTheSameWordsSentAgainKeepTheirIdUntilAnswered() async {
         let phone = Phone(nil)
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next)
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, linkPause: { _ in })
         model.draft = "Pause Rae"
         await model.send()
         await model.send()
@@ -95,7 +95,7 @@ final class CoachModelTests: XCTestCase {
 
     func testNothingIsSentWithoutWords() async {
         let phone = Phone(nil)
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), linkPause: { _ in })
         model.draft = "   "
         await model.send()
         XCTAssertTrue(phone.asked.isEmpty)
@@ -104,7 +104,7 @@ final class CoachModelTests: XCTestCase {
 
     func testWordsOverTheLimitCantBeSent() async {
         let phone = Phone(nil)
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), linkPause: { _ in })
         model.draft = String(repeating: "a", count: WatchRequest.coachLimit + 1)
         XCTAssertFalse(model.canSend)
         await model.send()
@@ -112,7 +112,7 @@ final class CoachModelTests: XCTestCase {
     }
 
     func testARefusalKeepsTheWordsAndSaysWhy() async {
-        let model = CoachModel(phone: Phone(WatchReply(.failed, line: "Before you talk to Coach, allow AI use in tafs on your phone.")), clock: { self.now }, lock: Unlocked())
+        let model = CoachModel(phone: Phone(WatchReply(.failed, line: "Before you talk to Coach, allow AI use in tafs on your phone.")), clock: { self.now }, lock: Unlocked(), linkPause: { _ in })
         model.draft = "Pause Rae"
         await model.send()
         XCTAssertEqual(model.state, .failed("Before you talk to Coach, allow AI use in tafs on your phone."))
@@ -120,7 +120,7 @@ final class CoachModelTests: XCTestCase {
     }
 
     func testTheWordsAndTheAnswerGoWhenTheAppLeavesTheScreen() async {
-        let model = CoachModel(phone: Phone(WatchReply(.ok, line: "The rest is on your phone.")), clock: { self.now }, lock: Unlocked())
+        let model = CoachModel(phone: Phone(WatchReply(.ok, line: "The rest is on your phone.")), clock: { self.now }, lock: Unlocked(), linkPause: { _ in })
         model.draft = "Pause Rae"
         await model.send()
         XCTAssertEqual(model.state, .answered(nil))
@@ -133,7 +133,7 @@ final class CoachModelTests: XCTestCase {
     /// With no passcode, nothing goes to Coach, and the words stay to send once one is set.
     func testWithNoPasscodeCoachSendsNothing() async {
         let phone = Phone(WatchReply(.ok, line: "The rest is on your phone."))
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode())
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode(), linkPause: { _ in })
         model.draft = "Pause Rae until Monday"
         await model.send()
         XCTAssertTrue(phone.asked.isEmpty, "nothing reaches the phone")
@@ -147,7 +147,7 @@ final class CoachModelTests: XCTestCase {
     /// Blank is nothing, and the words are cut at what Coach takes.
     func testWordsWaitInTheReviewUntilSend() async {
         let phone = TwoStepPhone(reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         model.review("   \n")
         XCTAssertFalse(model.reviewing, "blank is nothing")
         model.review(String(repeating: "a", count: WatchRequest.coachLimit + 5))
@@ -168,7 +168,7 @@ final class CoachModelTests: XCTestCase {
     func testTheNextSendRepliesToTheLastRequestUntilTheAppLeaves() async {
         let asked = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_1", sent: nil)
         let phone = TwoStepPhone(send: WatchReply(.ok, ticket: asked), reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         model.review("Pause Rae")
         await model.sendReviewed()
         model.review("Until Monday")
@@ -185,12 +185,13 @@ final class CoachModelTests: XCTestCase {
     /// A Send that doesn't reach Coach keeps the words in the review, to send again under the same id.
     func testAFailedSendStaysInTheReviewWithItsId() async {
         let phone = Phone(nil)
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next)
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, linkPause: { _ in })
         model.review(Words.Watch.Qr.needsMeToday)
         await model.sendReviewed()
         XCTAssertTrue(model.reviewing)
         XCTAssertEqual(model.draft, Words.Watch.Qr.needsMeToday)
-        XCTAssertEqual(model.state, .failed(Words.Watch.phoneNotReachable))
+        XCTAssertEqual(model.state, .failed(Words.Watch.linking), "one calm line, never Try again")
+        XCTAssertEqual(phone.asked.count, CoachModel.linkTries, "sent again by itself, under the same id")
         await model.sendReviewed()
         XCTAssertEqual(Set(phone.asked.map(\.message)).count, 1, "the same words, the same message")
     }
@@ -198,7 +199,7 @@ final class CoachModelTests: XCTestCase {
     /// With no passcode, Send from the review sends nothing and keeps the words.
     func testTheReviewsSendAsksForTheLock() async {
         let phone = Phone(WatchReply(.ok, line: "The rest is on your phone."))
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode())
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode(), linkPause: { _ in })
         model.review("Pause Rae")
         await model.sendReviewed()
         XCTAssertTrue(phone.asked.isEmpty)
@@ -209,7 +210,7 @@ final class CoachModelTests: XCTestCase {
     /// Delete: the words are gone, and nothing was sent.
     func testDeleteSendsNothing() async {
         let phone = Phone(WatchReply(.ok, line: "The rest is on your phone."))
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), linkPause: { _ in })
         model.review("Pause Rae")
         model.delete()
         XCTAssertEqual(model.state, .deleted)
@@ -225,7 +226,7 @@ final class CoachModelTests: XCTestCase {
     /// "Deleted. Nothing was sent."
     func testDeleteAndReRecordWaitWhileASendIsInFlight() async {
         let phone = HeldPhone()
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         model.review("Pause Rae")
         let sending = Task { await model.sendReviewed() }
         while phone.held == nil { await Task.yield() }
@@ -256,7 +257,7 @@ final class CoachModelTests: XCTestCase {
         let partial = WatchCoachAnswer(text: "Pausing", more: false, approveOnPhone: false)
         let phone = TwoStepPhone(reads: [WatchReply(.ok, answering: false), WatchReply(.ok, coach: partial, answering: true),
                                          WatchReply(.ok, coach: Self.rae, answering: false)])
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         var seen: [CoachModel.State] = []
         phone.onRead = { seen.append(model.state) }
         var kept: [(WatchCoachAnswer?, String)] = []
@@ -275,7 +276,7 @@ final class CoachModelTests: XCTestCase {
         let partial = WatchCoachAnswer(text: "Pausing", more: false, approveOnPhone: false)
         let phone = TwoStepPhone(reads: [nil, WatchReply(.failed, line: "tafs couldn't reach KIFF."),
                                          WatchReply(.ok, coach: partial, answering: true)])
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         model.review("Pause Rae")
         await model.sendReviewed()
         XCTAssertEqual(phone.asked.filter { $0.kind == .coachRead }.count, CoachModel.answerReads)
@@ -285,7 +286,7 @@ final class CoachModelTests: XCTestCase {
     /// W2: leaving the screen stops the reads, and nothing is kept for the Inbox from them.
     func testLeavingStopsTheReads() async {
         let phone = TwoStepPhone(reads: [WatchReply(.ok, answering: true)])
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         var kept = 0
         model.onAnswer = { _, _ in kept += 1 }
         var reads = 0
@@ -304,7 +305,7 @@ final class CoachModelTests: XCTestCase {
     /// W2: a phone from before the two steps refuses `coach_send`; the same words then go v1's way, under the same id.
     func testAPhoneFromBeforeTheTwoStepsIsSentV1sWay() async {
         let v1 = V1Phone(refusing: .coachSend, answer: WatchReply(.ok, coach: Self.rae))
-        let older = CoachModel(phone: v1, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let older = CoachModel(phone: v1, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         older.review("Pause Rae")
         await older.sendReviewed()
         XCTAssertEqual(v1.asked.map(\.kind), [.coachSend, .coach])
@@ -319,7 +320,7 @@ final class CoachModelTests: XCTestCase {
     func testTheConversationKeepsEachTurnAndItsAnswer() async {
         let ivo = WatchCoachAnswer(text: "Ivo is paused until Monday.", more: false, approveOnPhone: false)
         let phone = TwoStepPhone(reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         var seen: [CoachModel.Turn.Answer] = []
         phone.onRead = { seen.append(model.turns.last!.answer) }
         model.review("Pause Rae")
@@ -341,7 +342,7 @@ final class CoachModelTests: XCTestCase {
     /// Closing the ask while Coach is at it keeps the conversation, and the answer still lands in it and in the Inbox.
     func testClosingTheAskKeepsTheAnswerOnItsWay() async {
         let phone = TwoStepPhone(reads: [WatchReply(.ok, answering: true), WatchReply(.ok, coach: Self.rae, answering: false)])
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         var kept: [WatchCoachAnswer?] = []
         model.onAnswer = { answer, _ in kept.append(answer) }
         var reads = 0
@@ -362,14 +363,18 @@ final class CoachModelTests: XCTestCase {
     /// Closing the ask while the words are still on their way to the phone keeps them, so a failure can be sent again.
     func testClosingTheAskWhileSendingKeepsTheWords() async {
         let phone = HeldPhone()
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         model.review("Pause Rae")
         let sending = Task { await model.sendReviewed() }
         while phone.held == nil { await Task.yield() }
         model.closeAsk()
-        phone.answer(nil)
+        // Each send the phone doesn't answer goes again by itself, `linkTries` in all.
+        for _ in 0..<CoachModel.linkTries {
+            while phone.held == nil { await Task.yield() }
+            phone.answer(nil)
+        }
         await sending.value
-        XCTAssertEqual(model.state, .failed(Words.Watch.phoneNotReachable))
+        XCTAssertEqual(model.state, .failed(Words.Watch.linking))
         XCTAssertEqual(model.draft, "Pause Rae")
         XCTAssertTrue(model.reviewing)
         XCTAssertTrue(model.turns.isEmpty, "nothing was sent")
@@ -378,7 +383,7 @@ final class CoachModelTests: XCTestCase {
     /// Put away or signed out: the conversation goes. Nothing of it was ever kept on the watch.
     func testLeavingForgetsTheConversation() async {
         let phone = TwoStepPhone(reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         model.review("Pause Rae")
         await model.sendReviewed()
         XCTAssertEqual(model.turns.count, 1)
@@ -423,7 +428,7 @@ final class CoachModelTests: XCTestCase {
     /// the watch keeps nothing of a taf's chat.
     func testATafChatsSendNamesTheTafAndKeepsNothing() async {
         let phone = TwoStepPhone(reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
-        let model = CoachModel(phone: phone, taf: "taf-0a1b2c3d4e5f60718293", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, taf: "taf-0a1b2c3d4e5f60718293", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         var told = 0
         model.onAnswer = { _, _ in told += 1 }
         model.review("Refund A-1052 too")
@@ -438,7 +443,7 @@ final class CoachModelTests: XCTestCase {
     /// A phone from before chatting with a taf: the words stay in the review, and never go to Coach by v1's send.
     func testATafChatNeverFallsBackToCoachOnAnOlderPhone() async {
         let phone = V1Phone(refusing: .coachSend, answer: WatchReply(.ok, coach: Self.rae))
-        let model = CoachModel(phone: phone, taf: "taf-0a1b2c3d4e5f60718293", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, taf: "taf-0a1b2c3d4e5f60718293", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {}, linkPause: { _ in })
         model.review("Hi")
         await model.sendReviewed()
         XCTAssertEqual(model.state, .failed(Words.Watch.openOnPhone))
@@ -494,14 +499,15 @@ final class CoachModelTests: XCTestCase {
     /// the chat they continue are on the watch; the next read that reaches the phone sends them under that same id, so tafs
     /// cloud starts them at most once, and they're a turn at work, gone from the watch.
     func testANotSureSendIsKeptAndGoesUnderItsOwnIdAtTheNextRead() async {
-        let phone = ScriptedPhone(sends: [.failed(.noAnswer), .reply(WatchReply(.ok, ticket: Self.ticket))])
+        let phone = ScriptedPhone(sends: Array(repeating: .failed(.noAnswer), count: CoachModel.linkTries)
+                                  + [.reply(WatchReply(.ok, ticket: Self.ticket))])
         let drafts = Drafts()
         var told: [String] = []
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, drafts: drafts, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, drafts: drafts, pause: {}, linkPause: { _ in })
         model.onAnswer = { _, id in told.append(id) }
         model.review("Pause Rae")
         await model.sendReviewed()
-        XCTAssertEqual(model.state, .failed(Words.Watch.phoneNoAnswer))
+        XCTAssertEqual(model.state, .failed(Words.Watch.linking))
         XCTAssertTrue(model.offersKeep)
         XCTAssertTrue(model.reviewing, "Send stays, to try now")
 
@@ -514,8 +520,8 @@ final class CoachModelTests: XCTestCase {
         XCTAssertFalse(model.offersKeep)
 
         await model.afterRead(Self.loaded)
-        XCTAssertEqual(phone.asked.filter { $0.kind == .coachSend }.map(\.message), [Self.firstMessage, Self.firstMessage],
-                       "one message, one id")
+        XCTAssertEqual(phone.asked.filter { $0.kind == .coachSend }.map(\.message),
+                       Array(repeating: Self.firstMessage, count: CoachModel.linkTries + 1), "one message, one id")
         XCTAssertNil(model.kept)
         XCTAssertNil(drafts.kept, "gone from the watch once taken")
         XCTAssertEqual(model.turns.map(\.said), ["Pause Rae"])
@@ -528,7 +534,7 @@ final class CoachModelTests: XCTestCase {
     func testAKeptMessageContinuesItsChat() async {
         let phone = ScriptedPhone(sends: [.reply(WatchReply(.ok, ticket: Self.ticket)), .failed(.noAnswer)])
         let drafts = Drafts()
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, drafts: drafts, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, drafts: drafts, pause: {}, linkPause: { _ in })
         model.review("Pause Rae")
         await model.sendReviewed()
         model.review("And Ana")
@@ -544,7 +550,7 @@ final class CoachModelTests: XCTestCase {
         let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
         let drafts = Drafts(kept)
         let phone = ScriptedPhone(sends: [.failed(.noAnswer), .reply(WatchReply(.notYet)), .reply(WatchReply(.failed))])
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: drafts, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: drafts, pause: {}, linkPause: { _ in })
         XCTAssertEqual(model.kept, kept, "read from the watch when the app opens")
         await model.afterRead(Self.loaded)
         await model.afterRead(.failed("KIFF"))
@@ -560,11 +566,11 @@ final class CoachModelTests: XCTestCase {
     func testAKeptMessageWaitsForThePhoneAndGoesWithoutAPasscode() async {
         let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
         let phone = ScriptedPhone(sends: [.reply(WatchReply(.ok, ticket: Self.ticket))])
-        let open = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: Drafts(kept), pause: {})
+        let open = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: Drafts(kept), pause: {}, linkPause: { _ in })
         await open.afterRead(.unreachable(.notReachable))
         await open.afterRead(.loading)
         let noPasscodeFile = Drafts(kept)
-        let noPasscode = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode(), drafts: noPasscodeFile, pause: {})
+        let noPasscode = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode(), drafts: noPasscodeFile, pause: {}, linkPause: { _ in })
         await noPasscode.afterRead(Self.loaded)
         XCTAssertTrue(phone.asked.isEmpty)
         XCTAssertEqual(open.kept, kept)
@@ -579,7 +585,7 @@ final class CoachModelTests: XCTestCase {
         let phone = ScriptedPhone(sends: [])
         let drafts = Drafts(kept)
         let lock = SwitchedLock()
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: lock, drafts: drafts, pause: {})
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: lock, drafts: drafts, pause: {}, linkPause: { _ in })
         model.checkLock()
         XCTAssertEqual(model.kept, kept)
         XCTAssertEqual(drafts.kept, kept)
@@ -602,7 +608,7 @@ final class CoachModelTests: XCTestCase {
         let phone = ScriptedPhone(sends: [.reply(WatchReply(.signedOut))])
         for way in 0..<3 {
             let drafts = Drafts(kept)
-            let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: drafts, pause: {})
+            let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), drafts: drafts, pause: {}, linkPause: { _ in })
             switch way {
             case 0: model.deleteKept()
             case 1: await model.afterRead(.signedOut)
@@ -617,7 +623,7 @@ final class CoachModelTests: XCTestCase {
     /// Putting the app away keeps it: the person asked for it to be sent.
     func testPuttingTheAppAwayKeepsIt() {
         let kept = CoachModel.Kept(text: "Pause Rae", message: Self.firstMessage, ticket: nil)
-        let model = CoachModel(phone: ScriptedPhone(sends: []), lock: Unlocked(), drafts: Drafts(kept), pause: {})
+        let model = CoachModel(phone: ScriptedPhone(sends: []), lock: Unlocked(), drafts: Drafts(kept), pause: {}, linkPause: { _ in })
         model.leave()
         XCTAssertEqual(model.kept, kept)
     }
@@ -626,26 +632,26 @@ final class CoachModelTests: XCTestCase {
     /// words the phone answered: Retry or Cancel only.
     func testOnlyCoachsUnansweredSendOffersKeep() async {
         let taf = CoachModel(phone: ScriptedPhone(sends: [.failed(.noAnswer)]), taf: "taf-0a1b2c3d4e5f60718293", clock: { self.now },
-                             lock: Unlocked(), drafts: Drafts(), pause: {})
+                             lock: Unlocked(), drafts: Drafts(), pause: {}, linkPause: { _ in })
         taf.review("Refund A-1052")
         await taf.sendReviewed()
         XCTAssertFalse(taf.offersKeep)
         taf.keepForLater()
         XCTAssertNil(taf.kept)
 
-        let v1 = CoachModel(phone: ScriptedPhone(sends: [.failed(.noAnswer)]), clock: { self.now }, lock: Unlocked(), pause: {})
+        let v1 = CoachModel(phone: ScriptedPhone(sends: [.failed(.noAnswer)]), clock: { self.now }, lock: Unlocked(), pause: {}, linkPause: { _ in })
         v1.review("Pause Rae")
         await v1.sendReviewed()
         XCTAssertFalse(v1.offersKeep, "v1 keeps nothing on the watch")
 
         let answered = CoachModel(phone: ScriptedPhone(sends: [.reply(WatchReply(.failed))]), clock: { self.now }, lock: Unlocked(),
-                                  drafts: Drafts(), pause: {})
+                                  drafts: Drafts(), pause: {}, linkPause: { _ in })
         answered.review("Pause Rae")
         await answered.sendReviewed()
         XCTAssertFalse(answered.offersKeep, "the phone answered: it has the words' fate")
 
         let changed = CoachModel(phone: ScriptedPhone(sends: [.failed(.notReachable)]), clock: { self.now }, lock: Unlocked(),
-                                 drafts: Drafts(), pause: {})
+                                 drafts: Drafts(), pause: {}, linkPause: { _ in })
         changed.review("Pause Rae")
         await changed.sendReviewed()
         XCTAssertTrue(changed.offersKeep, "not reachable is not sure too, as on Wear OS")

@@ -2877,6 +2877,7 @@
     <string name="watch_type">Escrever</string>
     <string name="watch_type_hint">Escrever ao Coach…</string>
     <string name="watch_update_phone">Atualize o tafs no celular e tente novamente.</string>
+    <string name="watch_view_on_phone">Ver no telemóvel</string>
     <string name="watch_view_only_phone">Este celular só pode ver, por isso não pode pedir a partir do relógio. Entre em um celular que possa aprovar.</string>
     <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
     <string name="watch_what_it_does">O que faz</string>

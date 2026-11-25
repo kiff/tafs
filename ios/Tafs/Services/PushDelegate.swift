@@ -22,6 +22,9 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
         didSet { if let onOpen, let waiting = pendingOpen { pendingOpen = nil; onOpen(waiting) } }
     }
     private(set) var pendingOpen: String?
+    /// The app's own delegate, once launched: SwiftUI's adaptor keeps it, and `UIApplication.shared.delegate` is SwiftUI's,
+    /// not this one. View on phone (`WatchOpen`) opens a chat through it while tafs is in front.
+    static weak var current: PushDelegate?
 
     #if targetEnvironment(macCatalyst)
     /// The Mac's menu bar has no document items (Duplicate, Move, Rename, Export): tafs has no
@@ -35,6 +38,7 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        Self.current = self
         // Set before launch ends, so a tap that launched the app is delivered here.
         UNUserNotificationCenter.current().delegate = self
         // Approve and Refuse on a hold's notification (kiff/tafs#210).
@@ -135,7 +139,13 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
             // tafs not open, and only for a request this iPhone sent for its watch (`WatchAskPush`).
             let ask = change == "watch_ask" ? userInfo["ask_id"] as? String : nil
             Task {
-                if let ask { await WatchAskPush.run(ask) } else { await onChange?(change, taf) }
+                if let ask {
+                    await WatchAskPush.run(ask)
+                } else {
+                    // The watch's Inbox and its taf chats stay in step too (docs/watch-app.md, "Kept and pushed").
+                    await WatchPushRelay.run(change: change, taf: taf)
+                    await onChange?(change, taf)
+                }
                 completionHandler(.newData)
             }
             return

@@ -154,6 +154,7 @@
     <string name="watch_type">Писане</string>
     <string name="watch_type_hint">Пишете на Coach…</string>
     <string name="watch_update_phone">Актуализирайте tafs на телефона си и опитайте отново.</string>
+    <string name="watch_view_on_phone">Преглед на телефона</string>
     <string name="watch_view_only_phone">Този телефон може само да преглежда, така че не можете да питате от часовника. Влезте на телефон, който може да одобрява.</string>
     <string name="watch_voice_text_only">Coach получава думите ви като текст, никога гласа ви.</string>
     <string name="watch_what_it_does">Какво прави</string>
