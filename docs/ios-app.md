@@ -860,7 +860,7 @@ screen is as before.
   re-read and before Face ID, and a mismatch signs nothing. Coach's Cards in KIFF's own words come first, unfolded, and the
   tools sit under the fold (`CoachToolsGiven.stepBody`). From a tafs cloud that doesn't mark them, KIFF's words are what's
   shown as signed, as before.
-- Tests: `CardStepTests`: the list matches the draft, a later approval compares only the tools `in_draft`, each change to a signed Card or to the list fails closed, and the
+- Tests: `ContractTests.testTheCardStepReadsAsTafsCloudSendsItAndItsListIsWhatItSigns` (tafs cloud's own first-start answers, the pair and the draft alone, match on the allowlist), `CardStepTests`: the list matches the draft, a later approval compares only the tools `in_draft`, each change to a signed Card or to the list fails closed, and the
   Card step shows only when every line came.
 
 ## The calendar
