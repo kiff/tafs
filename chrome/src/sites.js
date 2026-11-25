@@ -13,8 +13,13 @@ export const CODE = Object.freeze({
 export const LOCAL_SUFFIXES = Object.freeze([".localhost", ".local", ".internal", ".home", ".lan", ".corp", ".intranet", ".arpa"]);
 const IDEOGRAPHIC_DOTS = /[。．｡]/g;
 
-/** Chrome's own pages and the Web Store: never, for any grant. */
-const ALWAYS_BLOCKED = ["chrome.google.com", "chromewebstore.google.com", "accounts.google.com", "myaccount.google.com", "passwords.google.com", "pay.google.com"];
+/**
+ * Never, for any grant: Chrome's own pages and the Web Store, Google's account and pay pages, and KIFF's own (kiff.dev and every
+ * subdomain: its Cards, connections, keys and approvals, and tafs's). A taf never drives the controls it's held by. The
+ * extension's own requests to KIFF, planque and tafs cloud aren't a tab's, so the fence, which holds only the run's tabs, never
+ * touches them.
+ */
+const ALWAYS_BLOCKED = ["chrome.google.com", "chromewebstore.google.com", "accounts.google.com", "myaccount.google.com", "passwords.google.com", "pay.google.com", "kiff.dev"];
 
 /**
  * Sensitive sites, blocked unless allowed one by one. Each entry is a site and its subdomains. The patterns catch what a
@@ -28,6 +33,8 @@ export const SENSITIVE = Object.freeze({
     "coinbase.com", "binance.com", "kraken.com", "metamask.io", "blockchain.com", "crypto.com", "ledger.com", "bitstamp.net",
     // payments and money accounts
     "paypal.com", "wise.com", "revolut.com", "n26.com", "venmo.com", "cash.app", "klarna.com", "payoneer.com",
+    // merchant consoles: where a business refunds, pays out and moves its money, outside any Card
+    "stripe.com", "paddle.com", "adyen.com", "squareup.com", "braintreegateway.com", "gocardless.com",
     // health
     "ameli.fr", "nhs.uk", "mychart.com", "healthcare.gov",
   ],
