@@ -183,25 +183,25 @@ yes, and fail the test.
   group ended as the tab left it, and the open answered `browser_unavailable` and closed the run. A group Chrome ended is made
   again now.
 
+- **The person's own Back to a page they had before the run, on the run's sites, was read by the run** (`joined.e2e.test.js`).
+  The run joined their tab at page B; their Back to page A committed on the run's sites and was taken as the run's own work: the
+  run's next read answered with A, its words and its fields' values, and an act on that read posted A's form. Now only the
+  run's own act, while it waits for its page, moves a joined tab; any other commit there is the person's, and the tab is given
+  back at once: the run's next read and act answer `given_back`, and nothing of A is read.
+- **The person's own Back off the run's sites wasn't given back** (`joined.e2e.test.js`, `bfcache.e2e.test.js`). The joined
+  tab's fence blocked their Back (Chrome flushes its back/forward cache as the fence's rules are added, so the Back is always a
+  new request): Chrome's error page at their address, the tab still the run's, fenced. A failed navigation in a joined tab
+  (`webNavigation.onErrorOccurred`) now gives it back, and, the fence gone, their navigation goes through; the run's next read
+  and act answer `given_back`.
+- **An off-site click or submit in the joined tab replaced the person's page with Chrome's error page**
+  (`joined.e2e.test.js`): the fence stopped the request, but Chrome committed its "blocked" page at the other site's address,
+  with a new history entry. An act whose link or form leaves the run's sites is now refused in the page before it fires
+  (`site_not_listed`), so the person's page stays as it was.
+- **The taf's `back` in a joined tab, after its own click, loaded the person's earlier page** (`joined.e2e.test.js`): Chrome
+  skipped the joined page on back and asked for the page the person had before the run. `back` in a joined tab is now always
+  `no_back`, and nothing moves.
+
 ## Known bugs, as `todo` tests
 
-These tests say what the extension should do and fail today; `node --test` reports them as `todo`, not as failures.
-
-- **The person's own Back to a page they had before the run, on the run's sites, is read by the run** (`joined.e2e.test.js`).
-  The run joined their tab at page B; their Back to page A commits on the run's sites, and the extension takes it as the run's
-  own work: the run's next read answers with A, its words and its fields' values, and an act on that read acts on A (a click on
-  its form's button posted it). A page the person had before the run should be `page_changed`, never read.
-- **The person's own Back off the run's sites isn't given back** (`joined.e2e.test.js`, `bfcache.e2e.test.js`). The joined
-  tab's fence blocks their Back (Chrome flushes its back/forward cache as the fence's rules are added, so the Back is always a
-  new request): Chrome shows its error page at their address, the tab stays in the run's group, fenced and the run's, and the
-  run's read and act answer `site_not_listed`. It should be given back as it is (out of the group, unfenced, forgotten), and the
-  run's next read and act should answer `no_page`.
-- **An off-site click or submit in the joined tab replaces the person's page with Chrome's error page**
-  (`joined.e2e.test.js`). The fence stops the request, and the extension never moves the tab, but Chrome commits its own
-  "blocked" page at the other site's address, with a new history entry, in place of the person's page. Their page should stay
-  as it was.
-- **The taf's `back` in a joined tab, after its own click, loads the person's earlier page and answers `no_back`**
-  (`joined.e2e.test.js`). Chrome skips the joined page on back (the taf's click gave no user activation) and lands on the page
-  the person had before the run, which is asked for again and committed in their tab before the extension goes forward and
-  answers `no_back`. It should return to the joined page, never loading the earlier one. Nothing of the earlier page is read
-  (a test that passes checks that).
+A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
+failure. None at the moment.

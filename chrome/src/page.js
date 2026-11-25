@@ -459,10 +459,43 @@
   }
 
   /**
+   * Where an act on [el] would take the page, as an address, or null when it goes nowhere the page names: a click on a link (or
+   * inside one), a click on a form's submit button (its own `formaction`, else the form's `action`), and Enter in a form's field.
+   * Only http and https: a `javascript:` link, say, is a control, not an address.
+   */
+  function headsTo(el, a) {
+    let to = null;
+    if (a.kind === "click") {
+      const link = el.closest("a[href]");
+      const form = el.form || null;
+      if (link) to = link.href;
+      else if (form && el.matches("button[type=submit], button:not([type]), input[type=submit], input[type=image]")) to = (el.hasAttribute("formaction") ? el.formAction : form.action) || location.href;
+    } else if (a.kind === "press" && a.value === "Enter" && el.matches("input") && el.form) {
+      to = el.form.action || location.href;
+    }
+    if (!to) return null;
+    try {
+      const u = new URL(to, location.href);
+      return u.protocol === "https:" || u.protocol === "http:" ? u : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Whether [url] is https on one of [sites] or under it, as the run's own check reads a host (sites.js `within`). */
+  function onSites(url, sites) {
+    if (url.protocol !== "https:") return false;
+    const host = url.hostname.toLowerCase().replace(/\.$/, "");
+    return sites.some((s) => typeof s === "string" && (host === s || host.endsWith("." + s)));
+  }
+
+  /**
    * Does one act (`{kind, ref, value?}`) planned from read `readId`, or says why not: `{ok: true}` or `{ok: false, code}`.
    * The service worker reads the page back afterwards. Nothing here ever types a saved value: the extension keeps none.
+   * `opts.sites`: the run's sites; a link or a submit that would leave them is refused `site_not_listed` before anything is done,
+   * with the address it would have gone to (`url`, with no query or fragment).
    */
-  function act(a, readId) {
+  function act(a, readId, opts) {
     // The outline that showed where the taf would act (runner.js, before each act) goes as the act starts.
     unoutline();
     if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
@@ -479,6 +512,10 @@
     if (el.disabled) return { ok: false, code: "disabled" };
     const kind = el.matches("input, textarea, select") ? kindOf(el) : null;
     if (kind === "password" || kind === "card" || kind === "code") return { ok: false, code: "secret_field" };
+    if (opts && Array.isArray(opts.sites)) {
+      const to = headsTo(el, a);
+      if (to && !onSites(to, opts.sites)) return { ok: false, code: "site_not_listed", url: bare(to.href) };
+    }
     switch (a.kind) {
       case "click":
         // A link or form that would open a new tab goes in this one, inside the run's fence.

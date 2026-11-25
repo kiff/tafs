@@ -31,6 +31,15 @@ import { randomId } from "./crypto.js";
 import { checkAllowances, checkSites } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
+/**
+ * A navigation Chrome says the person made (`webNavigation`'s transition): Back or Forward, an address typed, a reload, a bookmark,
+ * a search from the address bar. Never a run's, even while one of its acts waits for its page.
+ */
+const PERSONS_TRANSITIONS = new Set(["typed", "reload", "auto_bookmark", "generated", "keyword", "keyword_generated"]);
+function persons(d) {
+  return (Array.isArray(d.transitionQualifiers) && d.transitionQualifiers.includes("forward_back")) || PERSONS_TRANSITIONS.has(d.transitionType);
+}
+
 /** How many addresses a tab's trail keeps for `back`. */
 const TRAIL_MAX = 50;
 const SETTLE_MS = 600;
@@ -133,19 +142,58 @@ export class Runner {
       if (d.frameId !== 0) return;
       const run = this.runOfTab(d.tabId);
       if (!run) return;
-      if (!isBlank(d.url) && refuseURL(d.url, run.sites, run.allowed)) {
-        // A tab of the run's own goes to its blank page. A tab of the person's that joined the run is never moved: a page off the
-        // run's sites committing there is mostly their own Back (from Chrome's cache), and a goBack would move their tab another
-        // step. It's given back to them as it is, and the run's next step finds it no longer the run's. The run's own `back`
-        // puts its tab right itself.
-        if (!run.joined.has(d.tabId)) c.tabs.update(d.tabId, { url: "about:blank" });
-        else if (run.backing !== d.tabId) this.giveBack(run, [d.tabId]).catch(() => {});
+      const off = !isBlank(d.url) && refuseURL(d.url, run.sites, run.allowed);
+      if (run.joined.has(d.tabId)) {
+        // A tab of the person's that joined the run is never moved by the extension. Only the run's own act, while it waits for its
+        // page (`stepping`), may take it to another page, on the run's sites. Any other commit there is the person's (their Back or
+        // Forward, an address typed, a reload, their own click, the page's own redirect): the tab is given back to them as it is,
+        // unfenced and forgotten, and the run's next step answers `page_changed`. One off the run's sites in the act's own wait is
+        // given back too, and the act is refused `site_not_listed`.
+        const ours = run.stepping === d.tabId && !persons(d) && !off;
+        if (!ours) {
+          if (run.stepping === d.tabId && off) run.stepError = "site_not_listed";
+          this.giveBack(run, [d.tabId], run.stepping !== d.tabId || persons(d)).catch(() => {});
+          if (off) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+          return;
+        }
+        this.noteAddress(run, d.tabId, d.url);
+        this.guardDialogs(d.tabId, run).catch(() => {});
+        return;
+      }
+      if (off) {
+        // A tab of the run's own goes to its blank page.
+        c.tabs.update(d.tabId, { url: "about:blank" });
         this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
         return;
       }
       if (!isBlank(d.url)) this.noteAddress(run, d.tabId, d.url);
       this.guardDialogs(d.tabId, run).catch(() => {});
     });
+    // A navigation in a joined tab that fails (above all Chrome's fence, net::ERR_BLOCKED_BY_CLIENT, which shows its error page at
+    // the blocked address and commits nothing) gives the tab back as it is. The person's own (their Back to a page off the run's
+    // sites, say), once the fence is gone, is let through: the tab, no longer the run's, loads the address they asked for, and
+    // nothing else of theirs moves. In a run's act, the act is refused `site_not_listed`.
+    if (c.webNavigation.onErrorOccurred) {
+      c.webNavigation.onErrorOccurred.addListener((d) => {
+        if (d.frameId !== 0) return;
+        const run = this.runOfTab(d.tabId);
+        if (!run || !run.joined.has(d.tabId)) return;
+        const inStep = run.stepping === d.tabId;
+        const blocked = /ERR_BLOCKED_BY_CLIENT/.test(String(d.error || ""));
+        if (inStep) run.stepError = "site_not_listed";
+        if (blocked) this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
+        this.giveBack(run, [d.tabId], !inStep)
+          .then(async () => {
+            if (inStep || !blocked || isBlank(d.url)) return;
+            const tab = await c.tabs.get(d.tabId).catch(() => null);
+            if (!tab) return;
+            // Chrome's error page at their address: loaded again in place. Otherwise their navigation, asked for once more.
+            if (sameAddress(tab.url, d.url)) await c.tabs.reload(d.tabId);
+            else await c.tabs.update(d.tabId, { url: d.url });
+          })
+          .catch(() => {});
+      });
+    }
     // A tab or window a run's page opens joins the run only on its sites; anything else is closed.
     c.webNavigation.onCreatedNavigationTarget.addListener((d) => {
       const run = this.runOfTab(d.sourceTabId);
@@ -170,6 +218,8 @@ export class Runner {
     c.tabs.onRemoved.addListener((tabId) => {
       // Its fence goes with it, whoever's it was and whatever the run knows of it: a rule naming a closed tab is never left behind.
       if (this.fenceIds.has(tabId)) this.unfence(tabId).catch(() => {});
+      // A tab the person took back from a run and has now closed: the run's next step is told so no more.
+      for (const r of this.runs.values()) if (r.taken === tabId) r.taken = null;
       const run = this.runOfTab(tabId);
       if (!run) return;
       run.tabs.delete(tabId);
@@ -248,9 +298,9 @@ export class Runner {
    */
   noteAddress(run, tabId, url) {
     if (run.backing === tabId || !run.tabs.has(tabId)) return;
-    // In a joined tab, a page the person goes to while the run is paused (their own input pauses it) is theirs, not the run's work:
-    // it never joins the trail, so the run can't read it after Resume.
-    if (run.paused && run.joined.has(tabId)) return;
+    // In a joined tab, only the run's own act, while it waits for its page, adds a page (the commit listener gives any other back);
+    // and never while the run is paused.
+    if (run.joined.has(tabId) && (run.stepping !== tabId || run.paused)) return;
     const list = run.trail.get(tabId) || [];
     if (!list.length || !sameAddress(list[list.length - 1], url)) list.push(String(url));
     if (list.length > TRAIL_MAX) list.splice(0, list.length - TRAIL_MAX);
@@ -731,6 +781,9 @@ export class Runner {
         follow: null, // the panel's window, for a run started there: Chrome follows the run's tab while that panel is open
         tab: null,
         trail: new Map(), // tab id → the addresses the run's work took it to (noteAddress), for `back`
+        stepping: null, // the tab an act of the run's is working in, until its page has loaded: a commit there then is the act's
+        stepError: null, // why that act failed in a joined tab, said by the navigation listeners (site_not_listed)
+        taken: null, // the joined tab the person moved while the run was on it: its next read, act or hand-over is given_back
         backing: null, // the tab a `back` is moving now: its commits aren't the run's new pages
         token: randomId(),
         pages: new Map(),
@@ -789,6 +842,10 @@ export class Runner {
   }
 
   async dispatch(run, step) {
+    // The person moved the tab of theirs the run was working in: nothing of that page is the run's. Its next read, act or hand-over
+    // is refused, until it opens a page of its own.
+    if (run.taken != null && (step.op === "read" || step.op === "act" || step.op === "hand")) return { error: { code: "given_back" } };
+    if (step.op === "open") run.taken = null;
     switch (step.op) {
       case "open":
         return this.open(run, step.url);
@@ -928,6 +985,8 @@ export class Runner {
       run.tab = tabId;
       run.tabs.add(tabId);
       if (made.joined) {
+        // A tab the person took back from another run, joined again: that run's word about it goes.
+        for (const r of this.runs.values()) if (r.taken === tabId) r.taken = null;
         run.joined.add(tabId);
         run.trail.set(tabId, [String(url)]);
       }
@@ -1044,9 +1103,14 @@ export class Runner {
     run.follow = null;
   }
 
-  /** [tabs] of the person's that [run] joined go back to them: their bar hidden, forgotten, unfenced, out of the group, still open. */
-  async giveBack(run, tabs) {
+  /**
+   * [tabs] of the person's that [run] joined go back to them: their bar hidden, forgotten, unfenced, out of the group, still open.
+   * `byPerson`: they moved it themselves, so the run's next step that would read or act there answers `given_back` (`taken`),
+   * until it opens a page of its own.
+   */
+  async giveBack(run, tabs, byPerson = false) {
     const joined = tabs.filter((t) => run.joined.has(t));
+    if (byPerson && joined.includes(run.tab)) run.taken = run.tab;
     for (const t of joined) {
       this.tabRun.delete(t);
       run.tabs.delete(t);
@@ -1057,6 +1121,11 @@ export class Runner {
     }
     if (joined.length) await Promise.resolve(this.chrome.tabs.ungroup(joined)).catch(() => {});
     if (run.tab != null && joined.includes(run.tab)) run.tab = [...run.tabs][0] ?? null;
+    // The panel hears the run without that tab at once.
+    if (joined.length) {
+      this.onChange(this.state());
+      this.queueBars();
+    }
   }
 
   /** A further tab of the run's own, in its window and group, fenced before it loads, and the one the run works in from now on. */
@@ -1203,7 +1272,9 @@ export class Runner {
   async back(run) {
     const c = this.chrome;
     const tabId = run.tab;
-    const joined = run.joined.has(tabId);
+    // A joined tab: never. The run only reads it where it joined and acts there; Chrome skips the entries its acts leave, so a back
+    // would land on a page the person had before (and load it again). Nothing moves.
+    if (run.joined.has(tabId)) return { error: { code: "no_back" } };
     const trail = [...(run.trail.get(tabId) || [])];
     if (trail.length < 2) return { error: { code: "no_back" } };
     const want = trail[trail.length - 2];
@@ -1215,14 +1286,6 @@ export class Runner {
       await this.loaded(tabId, from ? from.url || "" : undefined);
       const now = await c.tabs.get(tabId).catch(() => null);
       if (!(now && sameAddress(now.url, want))) {
-        if (joined) {
-          if (now && from && !sameAddress(now.url, from.url)) {
-            await Promise.resolve(c.tabs.goForward(tabId)).catch(() => {});
-            await this.loaded(tabId, now.url || "");
-          }
-          run.trail.set(tabId, trail);
-          return { error: { code: "no_back" } };
-        }
         await c.tabs.update(tabId, { url: want });
         await this.loaded(tabId, now ? now.url || "" : undefined);
       }
@@ -1260,10 +1323,26 @@ export class Runner {
       }
     }
     const before = await this.chrome.tabs.get(run.tab).catch(() => null);
-    const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);
-    if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
-    // A click is never proof of its effect: the page is read back, after the navigation it started has begun and ended.
-    await this.loaded(run.tab, before ? before.url || "" : undefined);
+    const tabId = run.tab;
+    run.stepping = tabId;
+    run.stepError = null;
+    try {
+      // In the person's tab, the run's sites go with the act: a link or a form's submit that would leave them is refused in the page
+      // before it fires, so Chrome never puts its "blocked" page in place of theirs. A tab of the run's own is left to the fence,
+      // which sends it to its blank page.
+      const opts = run.joined.has(tabId) ? { sites: [...run.sites, ...run.allowed] } : null;
+      const done = await this.inTab(tabId, (a, id, o) => globalThis.TafsPage.act(a, id, o), [step.act, step.read_id, opts]);
+      if (done && done.code === "site_not_listed" && done.url) this.record(run, { op: "navigate", url: done.url, error: "site_not_listed" });
+      if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
+      // A click is never proof of its effect: the page is read back, after the navigation it started has begun and ended.
+      await this.loaded(tabId, before ? before.url || "" : undefined);
+      if (run.stepError) return { error: { code: run.stepError } };
+      // The person moved their tab in the act's wait (their Back, say): it's theirs again, and nothing of it is read.
+      if (run.taken != null) return { error: { code: "given_back" } };
+    } finally {
+      run.stepping = null;
+      run.stepError = null;
+    }
     return this.read(run);
   }
 }

@@ -39,10 +39,7 @@ test("Chrome's back/forward cache is on in this Chromium: a Back to a cacheable 
   }
 });
 
-test("with the back/forward cache on, the person's own Back off the run's sites gives their tab back with nothing moved, and the run's next read and act are no_page", {
-  skip,
-  todo: "As with the cache off (joined.e2e.test.js): Chrome flushes its back/forward cache as the fence's session rules are added (CDP Page.backForwardCacheNotUsed: CacheFlushed), so the person's Back is a new request, which the joined tab's fence blocks (net::ERR_BLOCKED_BY_CLIENT, Chrome's error page at their address). runner.js onCommitted never sees a commit off the run's sites, the tab isn't given back (still grouped, its 3 rules), and the run's read and act answer site_not_listed, not no_page.",
-}, async () => {
+test("with the back/forward cache on, the person's own Back off the run's sites gives their tab back with nothing moved, and the run's next read and act are given_back", { skip }, async () => {
   const { owner } = j;
   const A = h.sites.url("other.test", "/account?case=bfcache-own-back&bfcache=1");
   await owner.goto(A);
@@ -61,9 +58,9 @@ test("with the back/forward cache on, the person's own Back off the run's sites 
     assert.equal(owner.url(), A, "their page, not Chrome's error page");
     assert.deepEqual(await j.moves(tabId), [], "nothing moved their tab: no about:blank, no further back");
     const read = await j.step({ op: "read", run, agent_run: agentRun });
-    assert.equal(read.error && read.error.code, "no_page");
+    assert.equal(read.error && read.error.code, "given_back");
     const act = await j.step({ op: "act", run, agent_run: agentRun, read_id: opened.page.read_id, act: { kind: "fill", ref: ref(opened.page, "Question"), value: "typed by the taf" } });
-    assert.equal(act.error && act.error.code, "no_page");
+    assert.equal(act.error && act.error.code, "given_back");
     for (const r of [read, act]) {
       assert.ok(!JSON.stringify(r).includes(PERSON_WORDS));
       assert.ok(!JSON.stringify(r).includes(PERSON_VALUE));

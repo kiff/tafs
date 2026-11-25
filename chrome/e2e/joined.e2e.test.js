@@ -122,34 +122,36 @@ test("the taf's acts in the person's tab stay inside the run's sites: a link on 
   assert.equal((await runState(h, run)).tab, tabId);
   assert.equal(owner.url(), h.sites.url("news.test", "/long?case=hub"));
 
-  // Back on the hub (an open of its address goes to a tab of the run's own, so the person goes back themselves).
+  // The person goes back to the hub themselves: their move, so the tab is theirs again, and the run reads nothing there.
   await owner.goBack();
   assert.equal(owner.url(), url);
+  await until(async () => (await tabInfo(h, tabId)).groupId === -1, "the person's tab given back", 5000);
   r = await step({ op: "read", run, agent_run: agentRun });
-  assert.equal(r.ok, true, JSON.stringify(r.error));
-  assert.equal(r.page.url, h.sites.url("news.test", "/hub"));
+  assert.equal(r.error && r.error.code, "given_back");
+  await h.fromPanel({ type: "stop", run });
 
-  // A form whose action is on another site: Chrome's fence blocks its submit before it's sent. The person's tab is never sent
-  // anywhere by the extension (no about:blank, no tabs.update with an address, no back or forward), and other.test is asked
-  // for nothing. (Whether their page stays as it was is the next test's.)
+  // A form whose action is on another site, in a new run from the panel: refused in the page before it's submitted. The person's
+  // tab is never sent anywhere by the extension (no about:blank, no tabs.update with an address, no back or forward), and
+  // other.test is asked for nothing. (Whether their page stays as it was is the next test's.)
+  const again = await sendFromPanel(url);
+  const run2 = newRun("acts-form");
+  r = await step({ op: "open", run: run2, url, agent_run: again.agentRun });
+  assert.equal(r.ok, true, JSON.stringify(r.error));
   await watchMoves();
   const asked = otherHits().length;
-  r = await step({ op: "act", run, agent_run: agentRun, read_id: r.page.read_id, act: { kind: "click", ref: ref(r.page, "Ask elsewhere", "controls") } });
+  r = await step({ op: "act", run: run2, agent_run: again.agentRun, read_id: r.page.read_id, act: { kind: "click", ref: ref(r.page, "Ask elsewhere", "controls") } });
   assert.notEqual(r.ok, true, "the submit went nowhere the taf can read");
-  await until(async () => (await runState(h, run)).steps.some((x) => x.op === "navigate" && x.url === h.sites.url("other.test", "/") && x.error === "site_not_listed"), "the refused move's record");
+  await until(async () => (await runState(h, run2)).steps.some((x) => x.op === "navigate" && x.url === h.sites.url("other.test", "/") && x.error === "site_not_listed"), "the refused move's record");
   assert.equal(otherHits().length, asked, "other.test was never asked for anything");
   assert.deepEqual(h.sites.posts, []);
-  const tab = await tabInfo(h, tabId);
+  const tab = await tabInfo(h, again.tabId);
   assert.notEqual(tab.url, "about:blank", "the person's tab is never blanked");
-  assert.deepEqual(await moves(tabId), [], "nothing moved the person's tab");
-  assert.equal((await runState(h, run)).tab, tabId);
-  await stopAndGiveBack(run, tabId, tab.url);
+  assert.deepEqual(await moves(again.tabId), [], "nothing moved the person's tab");
+  assert.equal((await runState(h, run2)).tab, again.tabId);
+  await stopAndGiveBack(run2, again.tabId, tab.url);
 });
 
-test("an off-site submit the fence stops in the person's tab leaves their page as it was", {
-  skip,
-  todo: "Chrome's fence (a declarativeNetRequest block of the main frame) doesn't cancel the navigation: Chrome commits its own error page (chrome-error://chromewebdata/, 'blocked by an extension') at the blocked address in the person's tab, in place of their page, and adds a history entry. The tab stays joined, grouped and fenced on that error page, and the act and the next read answer site_not_listed. runner.js onBeforeNavigate (joined: no tabs.update) assumes 'the page they had stays'; it doesn't.",
-}, async () => {
+test("an off-site submit the fence stops in the person's tab leaves their page as it was", { skip }, async () => {
   const url = h.sites.url("news.test", "/hub?case=acts-stay");
   const { agentRun, tabId } = await sendFromPanel(url);
   const run = newRun("acts-stay");
@@ -173,10 +175,7 @@ test("an off-site submit the fence stops in the person's tab leaves their page a
   }
 });
 
-test("the taf's back in the person's tab returns to the page its click left", {
-  skip,
-  todo: "runner.js back: Chrome skips, on back, the history entry the taf's own click left (it had no user activation: page.js press is el.click()), so chrome.tabs.goBack lands on the page the person had before the run joined; that page is requested again (the fixture server's log shows it) and committed in their tab, and only then does back() go forward again and answer no_back. The answer should be the joined page (the hub), and the person's earlier page never loaded.",
-}, async () => {
+test("the taf's back in the person's tab is no_back, even after its own click: nothing moves, and the person's earlier page is never loaded", { skip }, async () => {
   const before = h.sites.url("news.test", "/article?case=back-before");
   await owner.goto(before);
   const url = h.sites.url("news.test", "/hub?case=back");
@@ -190,9 +189,9 @@ test("the taf's back in the person's tab returns to the page its click left", {
     const earlier = loads(before);
     r = await step({ op: "act", run, agent_run: agentRun, read_id: r.page.read_id, act: { kind: "back" } });
     assert.equal(loads(before), earlier, "the person's page before the run was never loaded again");
-    assert.equal(r.ok, true, JSON.stringify(r.error));
-    assert.equal(owner.url(), url, "the person's tab is back on the hub, not on the page they had before it");
-    assert.equal(r.page.url, h.sites.url("news.test", "/hub"));
+    assert.equal(r.ok, false);
+    assert.equal(r.error.code, "no_back", "a run never goes back in the person's tab");
+    assert.equal(owner.url(), h.sites.url("news.test", "/long?case=hub"), "the person's tab stays where the taf's click took it");
   } finally {
     await h.fromPanel({ type: "stop", run });
     await until(async () => (await tabInfo(h, tabId)).groupId === -1, "the person's tab given back");
@@ -270,10 +269,7 @@ for (const host of ["shop.test", "other.test"]) {
   });
 }
 
-test("the person's own Back to a page they had before the run, on the run's sites, is never read: the run's read and act there are page_changed", {
-  skip,
-  todo: "runner.js noteAddress: the webNavigation commit of the person's own Back (to page A, on the run's sites, which they had before the run joined at B) is taken as the run's work and added to the joined tab's trail, so joinedNow finds A in the trail and the run's read answers ok with A's page: its words and its field's value (PERSON_WORDS, PERSON_VALUE) go to planque, and an act on that read acts on A (a click on its Save posted its form: the fixture server logged POST shop.test /account). Only a pause of the person's input keeps such a page out of the trail; a Back pauses nothing.",
-}, async () => {
+test("the person's own Back to a page they had before the run, on the run's sites, is never read: their tab is given back, and the run's read and act there are given_back", { skip }, async () => {
   const A = h.sites.url("shop.test", "/account?case=own-back");
   await owner.goto(A);
   const B = h.sites.url("news.test", "/hub?case=own-back");
@@ -288,12 +284,12 @@ test("the person's own Back to a page they had before the run, on the run's site
     const read = await step({ op: "read", run, agent_run: agentRun });
     nothingOfTheirs(read, "the read");
     assert.equal(read.ok, false);
-    assert.equal(read.error.code, "page_changed");
+    assert.equal(read.error.code, "given_back");
     // An act planned on B's read, and one on whatever read the run could get, reach nothing of A's.
     const act = await step({ op: "act", run, agent_run: agentRun, read_id: opened.page.read_id, act: { kind: "fill", ref: ref(opened.page, "Question"), value: "typed by the taf" } });
     nothingOfTheirs(act, "the act");
     assert.equal(act.ok, false);
-    assert.equal(act.error.code, "page_changed");
+    assert.equal(act.error.code, "given_back");
     assert.equal(await owner.inputValue("#notes"), PERSON_VALUE, "their field is as they left it");
     assert.equal(h.sites.posts.length, posts, "no form was posted");
   } finally {
@@ -302,10 +298,7 @@ test("the person's own Back to a page they had before the run, on the run's site
   }
 });
 
-test("the person's own Back off the run's sites gives their tab back with nothing moved, and the run's next read and act are no_page", {
-  skip,
-  todo: "With Chrome's back/forward cache off (Playwright's default), and in effect with it on too (bfcache.e2e.test.js: Chrome flushes it as the fence's rules are added, 'CacheFlushed'), the person's Back to their page off the run's sites is a new request, and the joined tab's fence blocks it: Chrome shows its error page (net::ERR_BLOCKED_BY_CLIENT) at that address. webNavigation commits nothing there, so runner.js onCommitted's give-back never runs: the tab stays in the run's group, fenced (its 3 rules), the run's; the run's read and act answer site_not_listed, not no_page; and the person's own Back can't load their page until they Stop.",
-}, async () => {
+test("the person's own Back off the run's sites gives their tab back with nothing moved, and the run's next read and act are given_back", { skip }, async () => {
   const A = h.sites.url("other.test", "/account?case=own-back-off");
   await owner.goto(A);
   const B = h.sites.url("news.test", "/hub?case=own-back-off");
@@ -326,9 +319,9 @@ test("the person's own Back off the run's sites gives their tab back with nothin
     assert.equal(loads(A), loadsOfA + 1, "their page loaded for them");
     assert.deepEqual(await moves(tabId), [], "nothing moved their tab: no about:blank, no further back");
     const read = await step({ op: "read", run, agent_run: agentRun });
-    assert.equal(read.error && read.error.code, "no_page");
+    assert.equal(read.error && read.error.code, "given_back");
     const act = await step({ op: "act", run, agent_run: agentRun, read_id: opened.page.read_id, act: { kind: "fill", ref: ref(opened.page, "Question"), value: "typed by the taf" } });
-    assert.equal(act.error && act.error.code, "no_page");
+    assert.equal(act.error && act.error.code, "given_back");
     nothingOfTheirs(read);
     nothingOfTheirs(act);
   } finally {
