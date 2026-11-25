@@ -41,7 +41,7 @@ import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, 
 import { maskedPath, normalHost, onSites, pageSiteRefused } from "./page-sites.js";
 import { maskedCodes } from "./page-codes.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
-import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
+import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveKeys, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { AI_CONSENT_CODE, type AIConsent, type AIConsentView, aiConsentOf, aiConsentView, aiSourceLine, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone, givePageConsent, pageConsentOf, pageConsentView, withdrawPageConsent } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
@@ -132,6 +132,7 @@ import { chromeBegan, chromeMayCall, chromeOf, markChromeChat } from "./chrome-c
  *   POST /v1/tafs/{id}/chats/{session}/archive  hide a chat from the list and the thread (kiff/tafs#82)
  *   GET  /v1/tafs/{id}/chats/archived   the chats the owner archived, to find and reopen one (kiff/tafs#97)
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
+ *   DELETE /v1/tafs/{id}/chats/{session}  the person deletes one of their own chats for good (deleteChat)
  *   POST /v1/tafs/{id}/messages         {text, attachments?, session?, new_chat?, new_chat_after_handover?}: into the live chat, a chosen one, or a new one (a Coach chat that handed a taf over, a new one)
  *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
  *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
@@ -238,7 +239,7 @@ export interface HTTPResult {
 
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
-  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
+  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "deleteSession" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
   "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "unclaimedDrafts" | "getRun" | "runByKey" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "checkTool" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" | "listFiles" | "readDeliveredFile" | "downloadDeliveredFile" | "deleteDeliveredFile" |
@@ -920,6 +921,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const latest = async () => (await chats(me, taf, deps, false, began)).find((c) => !c.set_aside)?.session;
     if (action === "chats" && method === "GET") return { chats: await chats(me, taf, deps, parts.length === 5, began) };
     if (action === "chats" && parts.length === 6 && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
+    if (action === "chats" && parts.length === 5 && method === "DELETE" && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
     if (action === "conversation" && parts.length === 5 && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
     if (action === "conversation" && parts.length === 4) {
       const own = await latest();
@@ -1195,6 +1197,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 6 && method === "POST" && action === "chats" && parts[5] === "unarchive") {
     return unarchive(me, taf, parts[4] ?? "", deps);
+  }
+  if (parts.length === 5 && method === "DELETE" && action === "chats" && parts[4] !== "archived") {
+    return deleteChat(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
@@ -6806,6 +6811,12 @@ function newSession(at: RunAt, run: Run): boolean {
 
 /** One of the person's chats with the taf, by its id: another taf's, a job run's, another person's or none is 404. */
 async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind: "chat" | "trial" = "chat"): Promise<Session> {
+  return (await ownChatRead(me, taf, id, deps, kind)).session;
+}
+
+/** ownChat, with the chat's events kept so far. */
+async function ownChatRead(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind: "chat" | "trial" = "chat"):
+  Promise<Awaited<ReturnType<Deps["agents"]["session"]>>> {
   if (!id) throw new HTTPError(404, "no such chat");
   let read: Awaited<ReturnType<Deps["agents"]["session"]>>;
   try {
@@ -6815,7 +6826,44 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind:
     throw agentsFailure(err);
   }
   if (read.session.agent !== taf.id || read.session.kind !== kind || read.session.only) throw new HTTPError(404, "no such chat");
-  return read.session;
+  return read;
+}
+
+/**
+ * The person deletes one of their own chats with a taf or Coach for good: its messages and files (kiff/agents), and what
+ * tafs cloud kept by it that holds the chat's content or says something about it: what they wrote that waits to go as
+ * their next message there and the runs they wrote to (steer: the chat then drops out of their steer list at its next
+ * settle, as nothing waits in it), the ends of Coach's drives in it and their steps, its set aside, its connections, its
+ * notes for Coach and the reasons kept beside its approval cards. Markers with no content (skills loaded, claims, a
+ * Chrome's or a watch's mark of the chat) end on their own. It is theirs alone (ownChat, and kiff/agents deletes only a
+ * thread its owner continued), never a job's or another person's. A chat whose run is still working or waits on a card is
+ * refused: stop it or answer it first, so no card outlives its chat. A run started by a message sent between that check
+ * and the delete finishes into a thread that's gone: nothing it writes is kept. What happened stays on record: the runs'
+ * records, the usage they counted and the KIFF record of every call are not part of a chat. A second delete answers 404.
+ */
+async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<unknown> {
+  const { session: chat, events } = await ownChatRead(me, taf, session, deps);
+  const active = await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, true));
+  if (active.some((r) => r.session === chat.id)) {
+    throw new HTTPError(409, "this chat is still working or waits on you; stop it or answer it first");
+  }
+  await agentsCall(() => deps.agents.deleteSession(me.tenantID, chat.id, ownerKey(me)));
+  // What tafs cloud kept by this chat: best effort, each ends on its own (30 days at most) if a removal fails.
+  const coach = deps.coach;
+  if (coach) {
+    const approvals = new Set(events.flatMap((e) => {
+      const b = e.kind === "answered" ? e.body as { id?: unknown; type?: unknown } : undefined;
+      return b?.type === "approval" && typeof b.id === "string" ? [b.id] : [];
+    }));
+    const recaps = await coach.get(driveKeys.recaps(me.tenantID, chat.id)).catch(() => undefined);
+    const drives = [...new Set(Array.isArray(recaps) ? recaps.filter((x): x is string => typeof x === "string" && x !== "") : [])];
+    const steer = chatKeys(me, taf, chat.id);
+    const kept = [setAsideKey(me.tenantID, chat.id), chatConnectedKey(me.tenantID, chat.id), coachKeys.chatNotes(me.tenantID, me.subject, chat.id),
+      ...[...approvals].map((id) => approvalNoteKey(me.tenantID, chat.id, id)), steer.held, steer.steered,
+      ...drives.flatMap((d) => [driveKeys.recap(me.tenantID, d), driveKeys.steps(me.tenantID, d)]), driveKeys.recaps(me.tenantID, chat.id)];
+    await Promise.all(kept.map((key) => coach.remove(key).catch((err) => console.error(`delete chat: a kept note stays until it ends: ${(err as Error).message}`))));
+  }
+  return { session: chat.id, deleted: true };
 }
 
 /**

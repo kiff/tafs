@@ -127,6 +127,19 @@ describe("a Chrome sees only the chats begun in it", () => {
     expect((await call(w, "chromeA", "POST", `/v1/tafs/${COACH}/chats/${fromA}/unarchive`)).status).toBe(200);
   });
 
+  // Invariant: a Chrome deletes no chat until its panel offers it (CHROME_ROUTES); the phone deletes its person's own
+  it("deletes no chat from a Chrome, its own included, and the phone deletes one Chrome began", async () => {
+    const w = await world();
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const fromPhone = await say(w, "phone", "From the phone");
+    const fromA = await say(w, "chromeA", "From Chrome A", { new_chat: true });
+    for (const s of [fromPhone, fromA]) expect((await call(w, "chromeA", "DELETE", `/v1/tafs/${COACH}/chats/${s}`)).status).toBe(404);
+    expect(w.agents.calls.filter((c) => c.startsWith("deleteSession"))).toEqual([]);
+    for (const r of w.agents.runs.filter((x) => x.session === fromA)) (r as { status: string }).status = "COMPLETED";
+    expect((await call(w, "phone", "DELETE", `/v1/tafs/${COACH}/chats/${fromA}`)).status).toBe(200);
+    expect(await listed(w, "phone")).toEqual([fromPhone]);
+  });
+
   // Invariant: a chat it didn't begin can't be read or written into by its id: 404, as one that isn't there
   it("answers 404 for another chat's thread or a message into it", async () => {
     const w = await world();
