@@ -1,0 +1,1 @@
+- **Chrome 0.2.18: a step the taf couldn't do says why in plain words** in the side panel, in your language ("not done: you moved this tab, so it's yours now"), instead of a code ([docs/chrome.md](../docs/chrome.md)).

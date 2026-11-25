@@ -82,9 +82,18 @@ const STEP_WORDS = {
   close: () => t("step_closed"),
 };
 
+/**
+ * Why a step wasn't done, in words: the code's own line when there is one (`step_refused_<code>`, "not done: you moved this
+ * tab, so it's yours now"), else the code as it is ("not done (<code>)"). Only a plain code names a key.
+ */
+function refusedWords(code) {
+  const own = /^[a-z_]{1,40}$/.test(String(code)) ? chrome.i18n.getMessage("step_refused_" + code) : "";
+  return own || t("step_refused", code);
+}
+
 function stepLine(s) {
   const words = (STEP_WORDS[s.op] || (() => s.op))(s);
-  return s.error ? words + " · " + t("step_refused", s.error) : words;
+  return s.error ? words + " · " + refusedWords(s.error) : words;
 }
 
 let lastConnections = null;
