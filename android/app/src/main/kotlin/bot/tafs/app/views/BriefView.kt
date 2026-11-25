@@ -62,6 +62,8 @@ import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Taf
 import bot.tafs.app.model.Words
 import kotlinx.coroutines.launch
+import bot.tafs.app.design.PageWidth
+import bot.tafs.app.design.pageColumn
 
 /**
  * "Your brief" (Missions design v2.1 §7, docs/android-app.md, Your brief): decisions first, each with Coach's recommendation and what
@@ -143,11 +145,11 @@ private fun BriefOpened(
     BackToBrief(words, actions.close)
     Box(Modifier.weight(1f).consumeWindowInsets(WindowInsets.statusBars)) {
       when {
-        call != null -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp)) {
+        call != null -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp).pageColumn(PageWidth.Reading)) {
           // The held call's own card, as Needs you draws it: no answer chosen, its own answer flow and fingerprint.
           HeldCallCard(call, state, onAnswerHold)
         }
-        step != null -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp)) {
+        step != null -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp).pageColumn(PageWidth.Reading)) {
           YourStepPanel(step, state)
         }
         else -> needsYou()
@@ -167,7 +169,7 @@ private fun BriefScreen(state: AppState, brief: Brief, actions: BriefActions, on
     modifier = Modifier.fillMaxSize().testTag("brief"),
   ) {
     Column(
-      Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp),
+      Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp).pageColumn(PageWidth.Brief),
       verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
