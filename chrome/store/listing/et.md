@@ -13,10 +13,10 @@ tafs Chrome'ile laseb sinu tafidel töötada sinu enda Chromes, ainult sinu luba
 • Seo see Chrome oma telefoniga: ava tafsi rakenduses Konto › Chrome › Seo Chrome ja sisesta kuvatud kood.
 • Taf töötab oma lehtedel, sinu nähtavas lehtede rühmas. Taf, kellele kirjutad külgpaneelilt, võib selle asemel töötada sinu praegusel lehel, kui see on üks tema saitidest, ja avab iga muu lehe oma vahelehel. Sinu praegusel vahelehel saab see klõpsata ja kirjutada, ainult oma saitidel. Saad selle igal ajal peatada või lõpetada ning see peatub, kui puudutad ühte selle lehte. Töö ajal saad iga akna eesoleval lehel oleva väikese riba kaudu selle peatada, lõpetada või minna selle vahekaardile. Riba ei loe sellelt lehelt midagi.
 • Chrome küsib paigaldamisel ühe korra juurdepääsu kõikidele saitidele. tafs töötab ainult nendel saitidel, mille iga ülesanne loetleb ja mille sa telefonis heaks kiidad.
-• Maksmine ja tellimuse tegemine ootavad alati sinu heakskiitu telefonis.
+• Maksmine ja tellimuse tegemine ootavad alati sinu heakskiitu telefonis. Taf ei saada kunagi ise raha välja (tagasimakset, väljamakset ega ülekannet): kõige rohkem palub see sul seda teha.
 • See loeb lehte tekstina ja vormiväljadena, ilma parooli-, kaardi- ja koodiväljadeta. See ei loe kunagi sinu teisi lehti ega ajalugu.
 • Taf saab anda sulle lehel ühe sammu, näiteks otsingu või kaardinumbri sisestamise. Teed selle ise ja kui see lehte uuesti loeb, jäetakse väljadesse kirjutatu välja.
-• Pankade, rahakottide, paroolihaldurite, maksete, tervise ja riigiasutuste saite ei töödelda kunagi, kui sa ei luba ühte neist ühe ülesande jaoks telefonis.
+• Pankade, rahakottide, paroolihaldurite, maksete, kaupmeeste töölaudade, tervise ja riigiasutuste saite ei töödelda kunagi, kui sa ei luba ühte neist ühe ülesande jaoks telefonis. Taf ei ava kunagi KIFFi enda saite.
 • See ei hoia kunagi sinu paroole. Sisselogimislehel taf peatub ja palub sul ise sisse logida, oma vahelehel.
 • Külgriba näitab selles Chrome'is töötavat tafi ja sa räägid temaga seal, nagu tafsi rakenduses. „Seadista selle saidi jaoks uus taf“ avab Coachi, omas vaates. Kui saadad Coachile sõnumi, loeb ta eesoleva lehe samade eemaldatud väljadega, välja arvatud panga, maksete, posti või tervise saidid ja saidid, mille välja lülitad, ning näitab sinu sõnumi all „Loeb:“ ja saiti. Ainult siis, kui sa seda lubad, ja sama kehtib sõnumi kohta tafile mõnel tema saidil; võid alati saata ka ilma leheta.
 • Sinu valitud failid lähevad tafs cloudi ja Claude'ile, nagu manused tafsi rakendustes.

@@ -13,10 +13,10 @@ tafs Chrome ļauj taviem tafiem strādāt tavā Chrome, tikai tajās vietnēs, k
 • Savieno šo Chrome ar tālruni: tafs lietotnē atver Konts › Chrome › Savienot Chrome pārī un ievadi parādīto kodu.
 • Tafs strādā savās cilnēs, tevis redzamā cilņu grupā. Tafs, kuram raksti no sānu paneļa, var tā vietā strādāt cilnē, kurā esi, ja tā ir viena no tā vietnēm, un jebkuru citu lapu atver savā cilnē. Cilnē, kurā esi, tas var klikšķināt un rakstīt, tikai savās vietnēs. Tu vari to jebkurā brīdī apturēt vai pārtraukt, un tas apstājas, kad pieskaries kādai tā cilnei. Kamēr tas strādā, maza josla katra loga priekšējā lapā ļauj to apturēt, pārtraukt vai pāriet uz tā cilni. Tā no šīs lapas neko nelasa.
 • Chrome instalēšanas laikā vienreiz pieprasa piekļuvi visām vietnēm. tafs strādā tikai vietnēs, ko norāda katrs uzdevums un ko tu apstiprini tālrunī.
-• Maksāšana un pasūtījuma veikšana vienmēr gaida tavu apstiprinājumu tālrunī.
+• Maksāšana un pasūtījuma veikšana vienmēr gaida tavu apstiprinājumu tālrunī. Taf nekad pats nesūta naudu (atmaksu, izmaksu vai pārskaitījumu): lielākais, tas lūdz to izdarīt tev.
 • Tas lasa lapu kā tekstu un veidlapas laukus, bez paroles, kartes un koda laukiem. Tas nekad nelasa tavas citas cilnes vai vēsturi.
 • Tafs var nodot tev vienu soli lapā, piemēram, ierakstīt meklēšanu vai kartes numuru. Tu to izdari pats, un, kad tas lapu lasa vēlreiz, laukos ierakstītais tiek izlaists.
-• Banku, maku, paroļu pārvaldnieku, maksājumu, veselības un valsts iestāžu vietnes nekad netiek apstrādātas, ja vien tu neatļauj vienu no tām vienam uzdevumam tālrunī.
+• Banku, maku, paroļu pārvaldnieku, maksājumu, tirgotāju vadības paneļu, veselības un valsts iestāžu vietnes nekad netiek apstrādātas, ja vien tu neatļauj vienu no tām vienam uzdevumam tālrunī. Taf nekad neatver pašas KIFF vietnes.
 • Tas nekad neglabā tavas paroles. Pierakstīšanās lapā taf apstājas un lūdz tevi pierakstīties pašam, savā cilnē.
 • Sānjosla rāda taf, kas strādā šajā Chrome, un tu ar to runā tur, tāpat kā tafs lietotnē. „Iestatīt jaunu taf šai vietnei“ atver Coach, savā skatā. Kad nosūti Coach ziņu, tas nolasa priekšējo lapu ar tiem pašiem noņemtajiem laukiem, izņemot banku, maksājumu, pasta vai veselības vietnes un tevis izslēgtās vietnes, un zem tavas ziņas rāda „Lasa:“ un vietni. Tikai tad, kad to atļauj, un tāpat ziņai tafam kādā no tā vietnēm; vienmēr vari sūtīt arī bez lapas.
 • Tevis izvēlētie faili nonāk tafs cloud un pie Claude, tāpat kā pielikumi tafs lietotnēs.
