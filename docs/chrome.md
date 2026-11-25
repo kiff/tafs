@@ -733,7 +733,7 @@ the runs (Pause, Resume, Stop, a hand-over) stay below whichever is on show. The
 rounded box with Send inside it on the right, a round ↑ named "Send"; Enter sends and Shift+Enter is a new line (never
 mid-composition in an input method); Coach's "Send without the page" is a small action under it. **As in the app**
 (0.2.9): the panel's head and each view's own head (**← Back**, the view's name, **New conversation**, ⋮) stay at the top while
-the chat scrolls, and **the composer stays at the bottom**, Coach's line about the page it reads with it (`.dock`). **A message
+the chat scrolls, and **the composer stays at the bottom**, with a short chat too (0.2.11: the panel is a full-height column and the composer is pushed to its end), Coach's line about the page it reads with it (`.dock`). **A message
 shows at once**, at the bottom right, with the working line under it ("Coach is working…", or the taf's), before tafs cloud has
 answered; it stays until the chat as tafs cloud reads it has that message, by the id tafs cloud gave the send
 (`message.id`, `stillPending`), never by its words, and two minutes at most; on a failure it goes and the words come back to

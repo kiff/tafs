@@ -515,3 +515,28 @@ header {
     animation: none;
   }
 }
+
+/* 0.2.11: the composer sits at the bottom of the panel even with a short chat, as in the app. The panel is a full-height
+   column, the view on show takes the room that's left, and the composer is pushed to its end. A view's [hidden] still hides it:
+   these rules apply only to the view on show. */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+#paired:not([hidden]),
+#tafView:not([hidden]),
+#coach:not([hidden]) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+#taf {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+#tafForm,
+#coach > .dock {
+  margin-top: auto;
+}
