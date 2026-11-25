@@ -195,6 +195,10 @@ extension PhoneLink: PhoneAsking {
                 }
                 return answer ?? .failure(.noAnswer)
             })
+        // The person's acts go with the account mark this watch holds, so a phone signed in as someone else since does
+        // nothing with them (WatchRequest.Kind.carriesMark).
+        var request = request
+        if request.kind.carriesMark, let kept = WatchAccountMark.shared.kept, WatchMark.isMark(kept) { request.mark = kept }
         let reached = await route.reach(request)
         // Whose answer it is, before anything in it is used: another account's wipes what was kept (`WatchAccountMark`).
         WatchAccountMark.shared.heard(reply: reached.reply)

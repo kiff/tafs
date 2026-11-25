@@ -1,0 +1,1 @@
+- **Apple Watch: the person's acts go only to the sign-in they were made under.** Refuse, Halt, a message to Coach or a taf and an Inbox mark carry the watch's account mark; an iPhone signed in as someone else since answers signed out and does nothing with them, as on Wear OS.

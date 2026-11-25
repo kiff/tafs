@@ -153,6 +153,9 @@ enum WatchRelay {
         // Live only: a request held up somewhere is never acted on late.
         guard abs(now.timeIntervalSince(request.made)) <= WatchRequest.maxAge else { return WatchReply(.stale) }
         guard reading.signedIn else { return WatchReply(.signedOut) }
+        // The person's act, sent under another sign-in's mark (signed in as someone else since the watch last read): nothing
+        // is done with it, and the watch, told signed out, forgets what it kept, as Wear OS's WatchRelay.
+        if request.kind.carriesMark, let mark = request.mark, mark != reading.mark { return WatchReply(.signedOut) }
         switch request.kind {
         case .needsYou:
             do {
