@@ -154,6 +154,16 @@ It's the same route, signature and receipt, with `taf_id` added: `{client_id, te
 - **Not on the watch days.** A message to a taf is in that taf's own chat on the phone, so `/v1/watch/days` leaves it out
   of every day's turns and count.
 - **Logged** as `watch_ask` with the taf's id and `signed: "device"`, never the words.
+- **Live on the watch, with the phone app not running** (the owner's call 2b, 25 Nov). Each time a person's chat with a taf
+  changes, their own phones get a silent push, `{change: "taf_chat", taf_id}`: no words, run or amount, and never another
+  member's phones or Coach's chat. The phone reads that chat with its own session and puts it to the watch.
+  - **When:** a message of theirs goes into the chat, from any device (`POST /v1/tafs/{id}/messages`, its stream, or the
+    watch), and when the run it started answers, pauses or ends.
+  - **How tafs cloud hears the end:** the run is started with a run-ended note to `/v1/runs/ended`, under a ref kept two
+    days with whose chat and which taf it is (`taf-chat-ref#`). A note is told once per run and state. One whose ref names
+    another taf is dropped, and an unknown ref is dropped as any is.
+  - **Never in the way of the send:** the push gets a second and a half, then the answer goes on. A push that fails is
+    logged.
 
 ## Watch days (W11)
 
