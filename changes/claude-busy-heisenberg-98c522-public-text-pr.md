@@ -1,0 +1,1 @@
+- **A pull request's own text is checked too.** Its title, its body and each review go through the same public-text check as the files (`scripts/public_text.py --text`, run by `.github/workflows/public-text-pr.yml`), and a status line's words ("READY" with an arrow, "BOARD:") are caught in both.
