@@ -51,8 +51,8 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   call a taf ready when it can only act.
 - When all is connected, show result: the taf (its agent id, name, job, summary: one short line on what this taf does, in the owner's
   language, never the job's general words, the draft the owner confirmed), its text (never empty): one sentence on what was
-  set up, and tools: the tools' names in KIFF as planque's status lists them
-  (post_reply_k3f9), never their titles or the owner's words for them. Unnamed? Name
+  set up, and tools: the tools' names in KIFF as planque's status lists them,
+  letter for letter, never their titles or the owner's words for them. Unnamed? Name
   it in the owner's language. Its name is one no other taf has (tafs_state): if it's taken, the first free "<name> 2", "<name> 3"…, as tafs would name it; call it that. Decide unscheduled by
   the rule above, for any vendor: a taf whose tools list payments but not the
   requests to refund them is one. Show plan again with every step done or

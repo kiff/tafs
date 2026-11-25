@@ -1,0 +1,1 @@
+- **Coach names a taf's tools exactly as the connection lists them, when it hands the taf over too.** See [Coach](docs/coach.md).
