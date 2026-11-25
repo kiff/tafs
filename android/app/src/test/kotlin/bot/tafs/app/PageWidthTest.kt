@@ -19,6 +19,7 @@ class PageWidthTest {
     assertEquals(720.dp, PageWidth.Reading)
     assertEquals(980.dp, PageWidth.List)
     assertEquals(640.dp, PageWidth.Gallery)
+    assertEquals(1100.dp, PageWidth.Brief)
     assertEquals(1180.dp, PageWidth.Calendar)
   }
 
@@ -41,6 +42,10 @@ class PageWidthTest {
     assertTrue(source("views/HomeView.kt").contains("Modifier.pageColumn(PageWidth.List)"))
     assertTrue(source("views/NeedsYouView.kt").contains("Modifier.pageColumn(PageWidth.Reading)"))
     assertTrue(source("views/CalendarView.kt").contains(".pageColumn(PageWidth.Calendar)"))
+    // The Needs you tab draws the brief when it's on: the brief at its cap, a card opened from it as a reading page.
+    val brief = source("views/BriefView.kt")
+    assertTrue(brief.contains(".pageColumn(PageWidth.Brief)"))
+    assertEquals(2, Regex(Regex.escape(".pageColumn(PageWidth.Reading)")).findAll(brief).count())
     assertTrue(source("views/TafChatView.kt").contains("private val Readable = bot.tafs.app.design.PageWidth.Reading"))
   }
 
