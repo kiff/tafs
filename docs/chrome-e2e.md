@@ -122,7 +122,8 @@ yes, and fail the test.
 | An open off the run's sites is `site_not_listed`; plain http is `bad_url`; an address or a local name is `address_private`; the site is never reached | `refusals.e2e.test.js` |
 | A click on a link off the run's sites is fenced in the tab: the other site never gets the request | `refusals.e2e.test.js` |
 | The fence on every other way off the run's sites, with nothing reaching `other.test`: a 302 redirect (the open is `site_not_listed`; Chrome's error page stays, and a read of it is refused), a form that posts there, a script's `location.assign()` and a `target=_blank` link (the taf's click is `bad_url`, the move is recorded as `navigate`/`site_not_listed` and the run's own tab is on its blank page; no new tab opens), a meta refresh (the same record and blank page), and a frame (blocked; the page reads as usual) | `fence.e2e.test.js` |
-| The fence covers navigations only, after a taf's fill, in a tab of the run's own and in the person's joined tab. A page's own `fetch`, XHR, `sendBeacon`, `<img>` and WebSocket reach `other.test`: they're the site's own. A form submitted into a frame is fenced, and nothing reaches `other.test`. A `postMessage` to an off-site frame reaches nobody in a run's own tab (the frame was fenced before it loaded). In the person's tab, the frame loaded before the run joined, and it sends the value on with a fetch of its own. With no run, the same pages send the value every way, so the fenced cases aren't empty | `requests.e2e.test.js` |
+| The fence covers navigations only, after a taf's fill, in a tab of the run's own and in the person's joined tab. A page's own `fetch`, XHR, `sendBeacon`, `<img>` and WebSocket reach `other.test`: they're the site's own. A form submitted into a frame is fenced, and nothing reaches `other.test`. A `postMessage` to an off-site frame reaches nobody in a run's own tab (the frame was fenced before it loaded). In the person's tab, the frame loaded before the run joined, and it sends the value on with a fetch of its own. With no run, the same pages send the value by all seven ways, so the fenced cases aren't empty | `requests.e2e.test.js` |
+| A sensitive site of the grant (`bank.test`: its "bank" label makes it one) opens only on the paired phone's own signed allowance (`sensitive_allowed`). With none, or with one signed by planque's key instead, the open is `site_blocked`, and the bank is never asked for anything. The person's "Not on this site", switched on mid-run, makes the run's next read of their joined tab `site_blocked`, with nothing read, and their next send from the panel goes without the page. A step replayed after Chrome stopped the service worker gets no answer, and the page isn't opened again. A click whose words say only "Continue" is `payment_step`, and nothing is ordered, on each of: a submit in a schema.org Order, a payment provider's button, the submit of a form with a card field, and a button on a page with a provider's payment frame | `gaps.e2e.test.js` |
 | A run's tab has its three session rules (block every page and frame, allow the run's sites, block `http`) while the run lives; planque's stop and the taf's close take them away, and another run's stay; unpairing (4410) leaves none at all | `fence.e2e.test.js` |
 | The person closing a run's last tab ends the run, and the closed tab's rules go with it | `fence.e2e.test.js` |
 | A fence Chrome refuses (its limit on session rules reached) loads nothing: a run's first tab, or a further tab of a run in the person's tab, closes before its page is asked for, and the step is `browser_unavailable` | `fence.e2e.test.js`, `joined.e2e.test.js` |
@@ -151,12 +152,13 @@ yes, and fail the test.
 
 ## Not covered yet
 
-- **Sensitive sites** and the phone's signed allowance (`sensitive_allowed`): the fixture sites would need a host the
-  sensitive rules match.
-- **A step's own refusals of a payment or a checkout** (`payment_step`), and `press` and `scroll` as acts of their own: covered by
-  the unit and page tests only.
-- **The relay's limits:** a dropped connection opened again, a result cut to fit 120 KB, `page_too_large`, and a step
-  replayed after Chrome stops the service worker. The worker's restart is covered for its fences only, woken by the panel; its
+- **A redirect or a joined tab's move to a sensitive site of the grant** the phone didn't allow: only the taf's click in a
+  tab of the run's own is tested (see the known bugs).
+- **A checkout's own refusals by its words and totals** (`checkout`), and `press` and `scroll` as acts of their own: covered by
+  the unit and page tests only. The refusals by a page's semantics (`places_order`, `payment_frame`) are in `gaps.e2e.test.js`.
+- **The relay's limits:** a dropped connection opened again, a result cut to fit 120 KB, and `page_too_large`. A step replayed
+  after Chrome stops the service worker is covered (`gaps.e2e.test.js`). The worker's restart is covered for its fences and that
+  replay, woken by the panel; its
   wake by the relay's alarm isn't.
 - **A pop-up whose fence Chrome refuses** (a run's page opening a tab on its sites at the session rules' limit): the fixture sites
   have no such link; the run's first tab and a further tab are covered.
@@ -246,4 +248,9 @@ Chrome no longer having the last run's own tab), bounded at 5 s, not for a fixed
 A test that says what the extension should do and fails today is marked `todo`; `node --test` reports it as `todo`, not as a
 failure.
 
-None.
+- **The taf's click on a link to a sensitive site of the grant that the phone didn't allow asks that site for its page**
+  (`gaps.e2e.test.js`). `runner.js` `fence()` allows every site of the grant (`run.sites` and `run.allowed`), including a
+  sensitive one the phone didn't allow, so Chrome lets the main-frame request go. Only `onBeforeNavigate` refuses it
+  (`refuseURL`: `site_blocked`), by sending the run's own tab to `about:blank`, which races the request without stopping it.
+  With a connection to that site already open, it gets the request every time, with the person's cookies. Nothing of its page
+  is read. The act answers `bad_url` and the move is recorded as `site_not_listed`; the real code is `site_blocked`.

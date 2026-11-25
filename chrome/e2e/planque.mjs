@@ -218,6 +218,11 @@ export class FakePlanque extends EventEmitter {
     return { sites, sig: await sign(key, LABEL.sites, { chrome_id: this.chromeId, grant, sites }) };
   }
 
+  /** A sensitive site the phone allows for a grant (`tafs-chrome/sensitive/v1`), signed with `key` (the phone's by default). */
+  async sensitiveAllowed(site, { grant = this.grant, key = this.phoneKeys.privateKey } = {}) {
+    return { site, sig: await sign(key, LABEL.sensitive, { chrome_id: this.chromeId, grant, site }) };
+  }
+
   /**
    * A step as planque signs it: `fields` are the op's own (`op`, `url`, `read_id`, `act`, `hand`, `offset`) and may override any
    * other (`run`, `sites`, `exp`, `chrome_id`, …). `signedSites` are the sites the phone signed (the grant's by default);
