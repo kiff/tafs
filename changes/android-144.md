@@ -1,0 +1,1 @@
+- **Android 144 (1.49.1) for Play's internal track:** on a tablet, the Overview says who uses each taf you manage, as on the iPad. Wear OS stays 0.4.8.
