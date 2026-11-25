@@ -90,8 +90,9 @@ struct SetupChatView: View {
                         DictationBar(dictation: model.dictation)
                     }
                 } else {
-                    // Coach's tools still to give: one line, which opens the step (docs/coach.md).
-                    CoachToolsRow { toolsOpen = true }
+                    // Coach's tools still to give: one line, which opens the step (docs/coach.md). While the box is locked, the
+                    // locked box is that line, so it isn't drawn twice.
+                    if !composerLocked { CoachToolsRow { toolsOpen = true } }
                     // Beside the chat, the plan is in the panel.
                     if !shaping, let plan = model.setupThread.plan { SetupPlan(shown: plan).padding(.horizontal, 12).padding(.top, 8) }
                     thread
