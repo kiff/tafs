@@ -546,11 +546,12 @@
     // Unusable before unseen: an inert part of the page is also never on top, and the taf is told the page's own reason.
     if (unusable(el)) return { ok: false, code: "disabled" };
     if (!visible(el) || !onTop(el)) return { ok: false, code: "not_visible" };
-    // The pointer showed the person where the taf would act (`aim`): the act lands there or not at all. An element that moved
-    // since, or isn't the one pointed at, is refused, and the taf reads the page again.
+    // The pointer showed the person where the taf would act (`aim`): the act lands there or not at all. An act on a ref needs
+    // its own aim, here in the page and not only in the runner's order: no aim, an aim at another ref or read, or an element
+    // that moved since, is refused, and the taf reads the page again.
     const pointed = aimed;
     aimed = null;
-    if (pointed && pointed.ref === a.ref && pointed.readId === readId && !sameSpot(pointed, el)) return { ok: false, code: "page_changed" };
+    if (!pointed || pointed.ref !== a.ref || pointed.readId !== readId || !sameSpot(pointed, el)) return { ok: false, code: "page_changed" };
     const kind = el.matches("input, textarea, select") ? kindOf(el) : null;
     if (kind === "password" || kind === "card" || kind === "code") return { ok: false, code: "secret_field" };
     if (opts && opts.fence) {

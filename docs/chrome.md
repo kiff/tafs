@@ -667,7 +667,8 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
     the same ref and print as the act's own check). If that element has moved by the time of the act, or isn't the one pointed
     at, the act is refused `page_changed` and the taf reads again. **No aim, no act:** if the pointer can't be drawn (the signs
     didn't load, the page doesn't answer, or the aim is refused), the act is refused in the aim's own code, or
-    `page_unresponsive`, and the page is never touched (`Runner`, failing closed).
+    `page_unresponsive`, and the page is never touched (`Runner`, failing closed). The page holds the same rule itself: `TafsPage.act`
+    on a ref acts only after its own `aim` at that ref and read, which the act then uses up, so it never rests on the runner's order.
   - **Reduced motion:** with `prefers-reduced-motion`, nothing moves: the glow doesn't breathe, and the pointer is simply at its target.
   - **Gone at every end.** A pause (the person's, or the run's own), Stop, a run that's done, and a tab the person takes back take
     every sign away at once, with the outline. A worker that starts again holds no run, so it takes the signs and the bar off

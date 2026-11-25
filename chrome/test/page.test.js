@@ -20,6 +20,16 @@ try {
 const MASK = readFileSync(new URL("../src/mask.js", import.meta.url), "utf8");
 const PAGE = readFileSync(new URL("../src/page.js", import.meta.url), "utf8");
 const SIGNS = readFileSync(new URL("../src/signs.js", import.meta.url), "utf8");
+// The runner aims before every act on a ref (Runner, "no aim, no act"), and the page refuses an act it wasn't aimed for. The
+// tests of what an act does aim first, as the runner does: TafsPage.act here aims at the ref, then acts. The tests of the
+// pointer itself load the page without it.
+const AIMED = `(() => {
+  const act = TafsPage.act;
+  TafsPage.act = (a, id, o) => {
+    if (a && a.ref) TafsPage.aim(a.ref, id, "");
+    return act(a, id, o);
+  };
+})();`;
 
 const SHOP = `<!doctype html><html><head><title>Shop · checkout key sk_live_${"a".repeat(24)}</title></head><body>
 <h1>Your account</h1>
@@ -67,6 +77,7 @@ async function open() {
   await page.addScriptTag({ content: MASK });
   await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   return page;
 }
 
@@ -306,6 +317,7 @@ async function openHTML(html) {
   await page.addScriptTag({ content: MASK });
   await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   return page;
 }
 
@@ -666,7 +678,9 @@ async function openWithBar(state = { run: "run_1", words: "Rae is working", here
     document.body.appendChild(low);
   });
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   await page.addScriptTag({ content: BAR });
   assert.deepEqual(await page.evaluate((s) => TafsBar.show(s), state), { ok: true });
   return page;
@@ -803,6 +817,23 @@ async function openWithSigns({ reduced = false } = {}) {
 
 const saysTafs = (page) => page.evaluate(() => [...document.querySelectorAll("*")].some((e) => /tafs/i.test(e.localName + " " + [...e.attributes].map((a) => a.name + "=" + a.value).join(" "))));
 const layerOf = (page) => page.evaluate(() => getComputedStyle(globalThis.__signsRoot.querySelector("style").nextElementSibling).visibility);
+
+test("an act on a ref needs its own aim in the page: none, or an aim at another ref or read, is refused and nothing is clicked", { skip: !playwright }, async () => {
+  const page = await openWithSigns();
+  await page.evaluate(() => { window.__saved = 0; document.getElementById("save").addEventListener("click", (e) => { e.preventDefault(); window.__saved++; }); });
+  const read = await page.evaluate(() => TafsPage.read());
+  const save = read.controls.find((c) => c.label === "Save");
+  const other = read.fields[0];
+  const act = () => page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [save.ref, read.read_id]);
+  assert.deepEqual(await act(), { ok: false, code: "page_changed" }, "no aim at all");
+  await page.evaluate(([r, id]) => TafsPage.aim(r, id, "Typing"), [other.ref, read.read_id]);
+  assert.deepEqual(await act(), { ok: false, code: "page_changed" }, "an aim at another ref");
+  // An aim is spent by the act it was for: a second act needs a second aim.
+  await page.evaluate(([r, id]) => TafsPage.aim(r, id, "Clicking"), [save.ref, read.read_id]);
+  assert.deepEqual(await act(), { ok: true });
+  assert.deepEqual(await act(), { ok: false, code: "page_changed" }, "the aim was used by the first act");
+  assert.equal(await page.evaluate(() => window.__saved), 1, "clicked once, through its aim");
+});
 
 test("before an act the pointer goes to the element's middle with its words, outlined; the act lands there, through the pointer", { skip: !playwright }, async () => {
   const page = await openWithSigns();
@@ -960,7 +991,9 @@ test("an act whose link or form would leave the run's sites is refused before it
   await page.goto("https://shop.example/leave");
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   const { SENSITIVE, NEVER_OPENED, LOCAL_SUFFIXES } = await import("../src/sites.js");
   // What the run's fence lets through (runner.js fenceOf): shop.example granted, paypal.com granted too, no sensitive site allowed.
   const sites = { fence: { granted: ["shop.example", "paypal.com"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE.labels.source, never: [...NEVER_OPENED], local: [...LOCAL_SUFFIXES] } };
@@ -1000,7 +1033,9 @@ test("the page's check before an act gives refuseURL's very code for every addre
   await page.goto("https://shop.example/codes");
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   const urls = [
     "https://shop.example/", "https://help.shop.example/a", "https://elsewhere.example/", "http://shop.example/", "https://x@shop.example/",
     "https://x:y@shop.example/", "https://shop.example@bank.example/", "https://127.0.0.1/", "https://10.0.0.1/", "https://0x7f.1/",
@@ -1048,7 +1083,9 @@ test("an act on what the page made unusable is refused disabled, and a checked r
   await page.goto("https://shop.example/unusable");
   await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
   await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: SIGNS });
   await page.addScriptTag({ content: PAGE });
+  await page.addScriptTag({ content: AIMED });
   const act = async (a, label) => {
     const read = await page.evaluate(() => TafsPage.read());
     const all = [...read.links, ...read.controls, ...read.fields];
