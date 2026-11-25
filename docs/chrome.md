@@ -959,6 +959,8 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 - `cd chrome && node --test test/*.test.js` runs every test. CI's `chrome.yml` runs them on every change to `chrome/`
   or this page, with Chromium for the page tests.
+- **What they prove and what they don't:** [chrome-test-coverage.md](chrome-test-coverage.md) maps each step, act, answer
+  code, person's action and rule to its test and level, and lists the gaps (no test yet loads the extension in Chromium).
 - **`core.test.js`:** canonical JSON, signatures and their labels, DER signatures, the site rules, masking, and the
   guard (mirroring planque's).
 - **`protocol.test.js`:** a step's signature, Chrome, expiry and nonce; answers, hello and welcome; a phone release that

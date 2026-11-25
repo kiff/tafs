@@ -1,0 +1,1 @@
+- **Chrome: what the extension's tests prove, written down.** A new page lists everything a taf can make the extension do, every rule it holds, which test proves each and at which level, and the gaps an end-to-end harness must close; docs only ([chrome-test-coverage.md](docs/chrome-test-coverage.md)).

@@ -31,6 +31,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [connect-apps.md](connect-apps.md) | Connect apps, for the person running tafs: connecting, what you approve, what a taf can do, app events, the Slack door vs an action, disconnecting |
 | [chrome-panel.md](chrome-panel.md) | The Chrome panel (design, not built): watching a taf work, a step handed to the person, approving in the panel with the computer's passkey, never a password alone |
 | [chrome.md](chrome.md) | tafs in your Chrome (behind a switch): the extension, pairing from the phone, the signed steps between it and planque, what it refuses, and its tests (the contract) |
+| [chrome-test-coverage.md](chrome-test-coverage.md) | The Chrome extension's tests: everything a taf can make it do, every rule it holds, which test proves each, and the gaps an end-to-end harness must close |
 | [doors.md](doors.md) | Doors: email, Slack and WhatsApp addresses a taf takes work from |
 | [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |
 | [api.md](api.md) | tafs cloud's HTTP API, every route |
