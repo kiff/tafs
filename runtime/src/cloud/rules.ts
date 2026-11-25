@@ -389,19 +389,51 @@ function moneyCardsOf(rule: AgreedRule, action: string, agent: string, everyCall
  * with any other field, or another subject or domain, isn't one the rules give, whatever it limits (a field the check
  * didn't read could widen it: a total's extra room raises its ceiling, its measure changes what it counts, and KIFF
  * checks a money tool's amounts only on a Card in a domain). A Card over this tool and another isn't either. Undefined
- * when every one matches.
+ * when every one matches. The drafted Cards are read as KIFF shows a draft (GET /v1/me/agent-drafts/{id}), so the words
+ * KIFF writes on each for the owner to read are set aside first (kiffShownAside), and only those.
  */
 export function moneyCardsOff(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[], agent: string, text = ""): MoneyCards | undefined {
   for (const m of cardsFromRules(grants, rules, agent, text)) {
     if ("unbuilt" in m) return m;
     const name = fold(m.action);
-    const drafted = cards.filter((raw) => covers(raw, name)).map((c) => limitsKey(c, agent));
+    const drafted = cards.filter((raw) => covers(raw, name)).map((c) => limitsKey(kiffShownAside(c), agent));
     const built = m.cards.map((c) => limitsKey(c, agent));
     if (drafted.some((k) => k === undefined)) return m;
     const [a, b] = [(drafted as string[]).sort(), (built as string[]).sort()];
     if (a.length !== b.length || a.some((k, i) => k !== b[i])) return m;
   }
   return undefined;
+}
+
+/**
+ * What KIFF writes on a draft's Cards as it shows them, for the owner to read, and never reads back as a term (kiff/cloud,
+ * handlers: draftViewFor, withLines, withTitles, withQuantityOf, withUnits, withUnitGaps; a Card's terms are mandateBody's,
+ * which name none of these): on a Card, its lines, and on a revision what it revises and how that reads now; on a grant,
+ * its tool's title; on a total or a cap, what its quantity counts and its amount's unit, scale and pending use. Without
+ * them set aside, every money draft read from KIFF has a field the allowlist doesn't name, and is refused whatever it
+ * holds, the Cards the refusal prescribes included.
+ */
+const KIFF_SHOWN_ON_CARD = ["lines", "revises", "current", "unchanged"];
+const KIFF_SHOWN_ON_GRANT = ["title"];
+const KIFF_SHOWN_ON_LINE = ["quantity_of", "unit", "scale", "pending_text", "unit_missing", "unit_words"];
+
+/** A drafted Card without what KIFF writes on it as it shows it (KIFF_SHOWN_*), each where KIFF writes it; anything else as it is. */
+function kiffShownAside(raw: unknown): unknown {
+  const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+  const without = (o: Record<string, unknown>, fields: readonly string[]) => Object.fromEntries(Object.entries(o).filter(([k]) => !fields.includes(k)));
+  const lines = (v: unknown) => (Array.isArray(v) ? v.map((l) => (isObject(l) ? without(l, KIFF_SHOWN_ON_LINE) : l)) : v);
+  if (!isObject(raw)) return raw;
+  const card = without(raw, KIFF_SHOWN_ON_CARD);
+  if (Array.isArray(card.grants)) {
+    card.grants = card.grants.map((g) => {
+      if (!isObject(g)) return g;
+      const grant = without(g, KIFF_SHOWN_ON_GRANT);
+      if ("per_action_max" in grant) grant.per_action_max = lines(grant.per_action_max);
+      return grant;
+    });
+  }
+  if ("aggregates" in card) card.aggregates = lines(card.aggregates);
+  return card;
 }
 
 /** The fields a money tool's drafted Card may have: the built Cards' own, and a title, which limits nothing. */
