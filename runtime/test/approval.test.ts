@@ -2974,6 +2974,17 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       rules("rules-1", inherited, true, "Every refund asks you first. Refunds over €5 ask you, and are refused past €50 a day.");
       const r = await tap();
       expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
+      expect(String(r.answer)).toContain("its rule asks, and a figure on it says nothing of its own over");
+      expect(s.checks).toEqual([]);
+    });
+
+    it("words that say every refund asks, over a cap that says it asks, are shown again with the count of 0 a day", async () => {
+      const cap = [{ tool: "refund_charge", over: "ask", limits: [{ ...EACH, over: "ask" }, { ...DAY, over: "refuse" }] }, { tool: "list_charges", over: "refuse" }];
+      const { s, rules, tap } = await setUp("refuse");
+      setFigures(s, 500, [dayTotal(5000)]);
+      rules("rules-1", cap, true, "Every refund asks you first. Refunds over €5 ask you, and are refused past €50 a day.");
+      const r = await tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
       expect(String(r.answer)).toContain("the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks");
       expect(s.checks).toEqual([]);
     });

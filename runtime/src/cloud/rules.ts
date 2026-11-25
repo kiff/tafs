@@ -296,7 +296,7 @@ export interface MoneyCard {
  * every Card), a held Card that would bound no amount, a held Card with no total of its own and no refused day's total
  * beside it for KIFF's count, or a count of a money tool's calls (its limits are its amounts).
  */
-export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count" | "asks_unnamed" | "every_call_unheld";
+export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count" | "asks_unnamed" | "ask_inherited" | "every_call_unheld";
 
 /** A money tool's Cards, as the agreed rules give them, or why they can't be. `tool` is named as the connection titles it. */
 export type MoneyCards = { tool: string; action: string } & ({ cards: MoneyCard[] } | { unbuilt: MoneyUnbuilt });
@@ -343,6 +343,10 @@ function moneyCardsOf(rule: AgreedRule, action: string, agent: string, everyCall
   // asks you first", agreed as `over: "ask"` beside a refused €50 a refund and €200 a day). It's never guessed either way:
   // the rules are shown again with the figure that asks ("every call asks" is a count of 0 a day), or with nothing asking.
   if (rule.over === "ask" && !limits.some((l) => over(l) === "ask")) return "asks_unnamed";
+  // In any language: a rule that asks says what happens past each of its figures. A figure that inherits the rule's ask is
+  // a cap that asks only past it, whatever the words say, so every call under it runs unasked; it's shown again with
+  // each figure's over said, never read as the owner's.
+  if (rule.over === "ask" && limits.some((l) => l.over === undefined)) return "ask_inherited";
   // The notice says every call asks, and this rule asks past a figure, but none of them is a count of 0 a day that asks:
   // a positive cap, or one a figure inherits from the rule's `over`, lets every call under it run unasked.
   if (everyCall && limits.some((l) => over(l) === "ask") &&
@@ -710,12 +714,57 @@ export function saysEveryCallAsks(text: string): boolean {
 
 const between = "[^\\d.;:!?\\n]{1,60}?";
 const EVERY_CALL_ASKS: RegExp[] = [
-  ["every|each", "asks you|asks first|waits for your (?:approval|ok|okay|yes)|needs your (?:approval|ok|okay|yes)"],
-  ["chaque|tout|toute", "vous demande|attend votre (?:accord|approbation|validation|feu vert)|demande votre (?:accord|approbation|validation)"],
-  ["jede|jeder|jedes|jeden", "fragt (?:dich|sie)|wartet auf (?:deine|ihre) (?:zustimmung|freigabe|genehmigung)|braucht (?:deine|ihre) (?:zustimmung|freigabe|genehmigung)"],
-  ["cada|todo|toda", "te pregunta|le pregunta|espera (?:tu|su) (?:aprobación|visto bueno|autorización)|necesita (?:tu|su) (?:aprobación|visto bueno|autorización)"],
-  ["ogni", "ti chiede|le chiede|aspetta la (?:tua|sua) (?:approvazione|conferma)|attende la (?:tua|sua) (?:approvazione|conferma)|richiede la (?:tua|sua) (?:approvazione|conferma)"],
-  ["elke|iedere|ieder", "vraagt (?:je|jou|u)|wacht op (?:je|jouw|uw) (?:goedkeuring|akkoord|ok)|heeft (?:je|jouw|uw) (?:goedkeuring|akkoord) nodig"],
-  ["każdy|każda|każde|każdego|każdej", "pyta (?:cię|ciebie|pana|panią)|czeka na (?:twoją|pana|pani) (?:zgodę|akceptację|zatwierdzenie)|wymaga (?:twojej|pana|pani) (?:zgody|akceptacji|zatwierdzenia)"],
-  ["cada|todo|toda", "(?:lhe |te )?pergunta|espera (?:a sua|pela sua|sua|tua|pela tua) (?:aprovação|autorização)|precisa da (?:sua|tua) (?:aprovação|autorização)"],
+  ["every|each", [
+    "(?:will |must |should |always |first )?asks? (?:you|first)",
+    "(?:will |must |should |always )?waits? for (?:your|you)",
+    "(?:will |must |should )?(?:needs?|requires?) (?:your (?:approval|ok|okay|yes|confirmation)|you to (?:approve|confirm|ok))",
+    "(?:is|are|will be|must be|gets?|has to be) (?:approved|confirmed|okayed|ok'?d|checked) by you",
+    "(?:goes|go|will go|is sent|comes|will come) to you first",
+  ].join("|")],
+  ["chaque|tout|toute", [
+    "vous (?:demande|demandera|sera soumise?|est soumise?|est envoyée?)",
+    "(?:attend|attendra|nécessite|nécessitera|requiert|demande|demandera) votre (?:accord|approbation|validation|feu vert)",
+    "(?:est|sera|doit être) (?:validée?|approuvée?|confirmée?) par vous",
+    "passe (?:d'abord |d’abord )?par vous",
+  ].join("|")],
+  ["jede|jeder|jedes|jeden", [
+    "fragt (?:dich|sie)", "wird (?:dich|sie) (?:zuerst )?fragen",
+    "(?:wartet|wird) auf (?:deine|ihre) (?:zustimmung|freigabe|genehmigung)",
+    "(?:braucht|benötigt|erfordert|muss|wird) (?:deine|ihre) (?:zustimmung|freigabe|genehmigung)",
+    "(?:wird|muss) (?:zuerst )?von (?:dir|ihnen) (?:freigegeben|genehmigt|bestätigt)",
+    "geht (?:zuerst )?an (?:dich|sie)",
+  ].join("|")],
+  ["cada|todo|toda", [
+    "(?:te|le) (?:pregunta|preguntará)",
+    "(?:espera|esperará|necesita|necesitará|requiere|requerirá) (?:tu|su) (?:aprobación|visto bueno|autorización|confirmación)",
+    "(?:es|será|debe ser) (?:aprobad[oa]|confirmad[oa]|autorizad[oa]) por (?:ti|usted)",
+    "(?:pasa|pasará|va) (?:primero )?por (?:ti|usted)",
+  ].join("|")],
+  ["ogni", [
+    "(?:ti|le) (?:chiede|chiederà)",
+    "(?:aspetta|aspetterà|attende|attenderà|richiede|richiederà) la (?:tua|sua) (?:approvazione|conferma|autorizzazione)",
+    "ha bisogno della (?:tua|sua) (?:approvazione|conferma)",
+    "(?:è|sarà|deve essere) (?:approvat[oa]|confermat[oa]|autorizzat[oa]) da te",
+    "passa (?:prima )?da te",
+  ].join("|")],
+  ["elke|iedere|ieder", [
+    "vraagt (?:je|jou|u)", "zal (?:je|jou|u) (?:eerst )?vragen",
+    "(?:wacht|zal wachten) op (?:je|jouw|uw) (?:goedkeuring|akkoord|ok)",
+    "(?:heeft|vereist|vraagt) (?:je|jouw|uw) (?:goedkeuring|akkoord)",
+    "(?:wordt|moet worden|zal worden) (?:eerst )?(?:goedgekeurd|bevestigd) door (?:jou|u)",
+    "gaat (?:eerst )?naar (?:jou|u)",
+  ].join("|")],
+  ["każdy|każda|każde|każdego|każdej", [
+    "pyta (?:cię|ciebie|pana|panią)", "zapyta (?:cię|ciebie|pana|panią)",
+    "(?:czeka|będzie czekać) na (?:twoją|pana|pani) (?:zgodę|akceptację|zatwierdzenie)",
+    "(?:wymaga|potrzebuje|będzie wymagać) (?:twojej|pana|pani) (?:zgody|akceptacji|zatwierdzenia)",
+    "(?:jest|będzie|musi być) (?:najpierw )?(?:zatwierdzan[yae]|zatwierdzon[yae]|akceptowan[yae]) przez (?:ciebie|pana|panią)",
+    "trafia (?:najpierw )?do (?:ciebie|pana|pani)",
+  ].join("|")],
+  ["cada|todo|toda", [
+    "(?:lhe|te) (?:pergunta|perguntará)", "(?:pergunta|perguntará)-(?:lhe|te)",
+    "(?:espera|esperará|aguarda|aguardará|precisa|precisará|requer|exige) (?:da |a |pela )?(?:sua|tua) (?:aprovação|autorização|confirmação)",
+    "(?:é|será|tem de ser|deve ser) (?:aprovad[oa]|confirmad[oa]|autorizad[oa]) por (?:você|ti)",
+    "(?:passa|vai) (?:primeiro )?por (?:você|ti)",
+  ].join("|")],
 ].map(([every, asks]) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])`, "u"));
