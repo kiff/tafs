@@ -127,6 +127,7 @@ yes, and fail the test.
 | Chrome's own fence says what `refuseURL` says (0.2.19). Four kinds of host are blocked by Chrome before anything is asked of them: a bank label under a granted site (`bank.shop.test`), `accounts.google.com` under a `google.com` grant, a site under a listed `github.io`, and an address (`127.0.0.1`). Each is tried by an open, by the taf's click on a link, and by a 302 from a granted page, in a tab of the run's own and in the person's joined tab. Chrome already holds a connection to each target, since the person visited it first and that visit is checked to have reached it. The server logs no request for any of them, and no result carries the target's page. An open answers `refuseURL`'s code: `site_blocked`, `site_not_listed` or `address_private` | `fence219.e2e.test.js` |
 | What leaves for planque when a page is too large, or the relay is down. A read over the relay's 120 KB is cut to fit, says so (`truncated`), and no cut carries the password field's value, a card number in the page's text, or what the person typed. A hand-over's Done pressed while the relay is down reaches planque once the relay is back: once, signed, without what the person typed. A Done whose page is over the cap goes with no page | `leaving.e2e.test.js` |
 | A wrong action, and a stale display: what the rest of the ranked gaps covers. A disabled button's click is `disabled`, an option that isn't there is `option_unknown`, and `check` on a radio chooses it. planque's unsigned `stop` mid-act, while the outline is up, makes the act answer `stopped` with nothing reaching the page, and planque hears `stopped`, signed. A stop with a hand-over open answers it `declined`, and a stop for a run this Chrome doesn't hold changes nothing. A "leave this page?" handler doesn't hold the taf's next open, and no dialog reaches Chromium. A content script's message of a panel's kind changes nothing: `stop`, `pause`, `aside_site`, `page_withdraw`, `unpair`, `taf_send`. Nor does `owner_input` from a tab of no run. After the person takes their joined tab back, the floating bar there no longer says it's the run's tab (`here: false`, read where `TafsBar.show` is given it), and the badge counts the run until it ends, then clears | `gaps2.e2e.test.js` |
+| What is and isn't a lock, and Chrome's own dialog guard. `readonly` on a checkbox, a radio or a select locks nothing, since browsers ignore it, so the taf's check and select go through. An address the person types in a run's own tab gives them a page whose `confirm` as it loads is real and theirs to answer. A frame of the run's site can still send the whole tab to another page of the run's sites | `gaps2.e2e.test.js` |
 | A run's tab has its three session rules (block every page and frame, allow the run's sites, block `http`) while the run lives; planque's stop and the taf's close take them away, and another run's stay; unpairing (4410) leaves none at all | `fence.e2e.test.js` |
 | The person closing a run's last tab ends the run, and the closed tab's rules go with it | `fence.e2e.test.js` |
 | A fence Chrome refuses (its limit on session rules reached) loads nothing: a run's first tab, or a further tab of a run in the person's tab, closes before its page is asked for, and the step is `browser_unavailable` | `fence.e2e.test.js`, `joined.e2e.test.js` |
@@ -259,15 +260,19 @@ failure.
 
 None.
 
-Fixed in 0.2.20 (`gaps2.e2e.test.js`): **a page's `alert` or `confirm` as it loads reached Chromium as a real dialog**: a run's
-own tabs now load under a sandbox with no `allow-modals`, a response header Chrome adds for that tab alone, so Blink drops the
-call from the page's first byte (the at-load confirm test now asserts the page's own answer is no and nothing reached Chromium;
-the read can't say the page asked). **A field in a disabled `<fieldset>`, a read-only field and a disabled `<option>` took the
-taf's act**, and **`unchecked` on a checked radio answered ok**: refused now (`disabled`, `bad_step`). Added: on one site in one
-run, the person's own tab still gets its real confirm at load; a frame that sets `top.location` (as a 3-D Secure frame does)
-still works; and two findings, logged rather than asserted: the person's own typed address in a run's own tab may still load
-sandboxed (the sandbox comes off as their navigation starts, but Chrome doesn't wait), and a page the run loaded stays sandboxed
-after the run lets its tab go.
+Fixed in 0.2.20 (`gaps2.e2e.test.js`): **a page's `alert` or `confirm` as it loads reached Chromium as a real dialog**, in a run's
+tab and in a pop-up its page opened as it loaded. A run's own tabs now load under a sandbox with no `allow-modals`, a response
+header Chrome adds for that tab alone, so Blink drops the call from the page's first byte; the read can't say the page asked. On
+one site in one run, the person's own tab still gets its real `confirm` as it loads, and a frame can still send the tab to another
+page of the run's sites. **A field in a disabled `<fieldset>`, a button inside `[inert]` or marked `aria-disabled`, a read-only
+field, a disabled `<option>` or one of a disabled `<optgroup>`** took the taf's act: refused `disabled` now, while `readonly` on a
+checkbox, a radio or a select, and a field in a disabled fieldset's first legend, stay usable. **`unchecked` on a checked radio**
+answered ok: `bad_step` now.
+
+Logged, not asserted (`FINDING` lines in the run's output), for a decision: an address the person types in a run's own tab may
+still load sandboxed (the sandbox comes off as their navigation starts, but Chrome doesn't wait for the extension; asserted: the
+tab is theirs after, with no rule left, and their next page's `confirm` reaches them); and a page the run loaded stays sandboxed
+after the run lets its tab go, so `confirm()` there answers no until the page is loaded again.
 
 Fixed in 0.2.19: **a link to an address, clicked in the person's joined tab, answered `site_not_listed`**
 (`fence219.e2e.test.js`): `page.js` `offFence()` had no branch for an address, a local name, user info or a name not in ASCII.
