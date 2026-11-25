@@ -340,9 +340,12 @@ export const COACH_TOOL_GROUPS: Array<{ id: "watch" | "run" | "build" | "drive";
  * One of Coach's tools on the step: its words, and what its Card signs, as data, so an app checks the plain list it shows
  * against the signed draft and refuses to ask for a signature when they differ (shown = signed): the tool's action, its
  * Card's id, the Card's limit a day (counted with the other tools on the same Card), and whether past it the call asks
- * the person (`on_exceed: "owner"`; with a limit of 0, every call asks) rather than being refused.
+ * the person (`on_exceed: "owner"`; with a limit of 0, every call asks) rather than being refused. `in_draft` says whether
+ * that Card is in the draft this same answer carries to sign: every one on a first start, only the missing ones when Coach
+ * holds some Cards already, none when only tools are to connect. An app compares the tools `in_draft` with the draft, both
+ * ways.
  */
-export interface CoachStepTool { name: string; does: string; why: string; tool: string; card: string; limit: number; asks: boolean }
+export interface CoachStepTool { name: string; does: string; why: string; tool: string; card: string; limit: number; asks: boolean; in_draft: boolean }
 
 /** The tools step's words, as the apps draw them (docs/coach.md, "Coach's tools step"). */
 export interface CoachToolsStep {
@@ -363,7 +366,7 @@ export interface CoachToolsStep {
  * the other tools on the same Card, and "waits for you" only where the Card holds past its limit or
  * holds every call. It never names a biometric: the phone knows which it asks for, not tafs cloud.
  */
-export function coachToolsStep(lang: Lang = "en", opts: { cardsOnly?: boolean } = {}): CoachToolsStep {
+export function coachToolsStep(lang: Lang = "en", opts: { cardsOnly?: boolean; drafted?: ReadonlySet<string> } = {}): CoachToolsStep {
   const w = wordsIn(lang);
   const all = w as unknown as Record<string, string | undefined>;
   const word = (key: string) => all[key] ?? "";
@@ -385,7 +388,7 @@ export function coachToolsStep(lang: Lang = "en", opts: { cardsOnly?: boolean } 
         const card = COACH_CARDS.find((c) => c.actions.includes(t));
         if (!card) throw new Error(`coach tools step: ${t} is on no Card`);
         return { name: word(`cts_${t}`), does: [word(`cts_${t}_does`), limit(t)].filter(Boolean).join(" "), why: word(`cts_${t}_why`),
-          tool: t, card: card.id, limit: card.limit, asks: card.asks };
+          tool: t, card: card.id, limit: card.limit, asks: card.asks, in_draft: !opts.drafted || opts.drafted.has(card.id) };
       }),
     })),
   };

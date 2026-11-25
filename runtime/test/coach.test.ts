@@ -1207,6 +1207,11 @@ describe("Coach's tools step, at the end of a first Start", () => {
     expect(tools.find((t) => t.tool === "taf_run")).toMatchObject({ card: "coach-reads", limit: 500, asks: false });
     expect(tools.find((t) => t.tool === "version_install")).toMatchObject({ card: "coach-version-install", limit: 0, asks: true });
     expect(tools.find((t) => t.tool === "taf_task")).toMatchObject({ card: "coach-taf-task", limit: 50, asks: true });
+    // A first start drafts every Card, so every tool is in its draft; a read with some Cards held marks only the missing ones.
+    expect(tools.every((t) => t.in_draft)).toBe(true);
+    const partial = coachToolsStep("en", { drafted: new Set(["coach-taf-results"]) }).groups.flatMap((g) => g.tools);
+    expect(partial.filter((t) => t.in_draft).map((t) => t.tool)).toEqual(["taf_results"]);
+    expect(coachToolsStep("en", { drafted: new Set() }).groups.flatMap((g) => g.tools).some((t) => t.in_draft)).toBe(false);
   });
 });
 

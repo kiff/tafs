@@ -2689,6 +2689,7 @@ describe("Setup (kiff/agents#91)", () => {
     expect(cardsOnly.connect).toBeUndefined();
     expect(cardsOnly.card.body).toMatchObject({ agent_id: "setup-acme", label: "Coach" });
     expect(cardsOnly.card.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+    expect((cardsOnly.coach_tools_step.groups as Array<{ tools: Array<{ in_draft: boolean }> }>).flatMap((g) => g.tools).every((t) => t.in_draft)).toBe(true);
     expect(cardsOnly.card.body.cards[1]).toEqual({ id: "coach-taf-task", subject: "setup-acme", domain: "gateway", on_exceed: "owner", hold_expiry: "10m", grants: [{ action: "taf_task" }], aggregates: [{ quantity: "count", limit: 50, window: "calendar_day" }] });
     expect(cardsOnly.card.body.cards[0]).not.toHaveProperty("hold_expiry");
     expect(cardsOnly.card.card_title).toBe("Coach's Card");
@@ -2699,6 +2700,12 @@ describe("Setup (kiff/agents#91)", () => {
     const again = await tools();
     expect(again.card.body.label).toBe("Coach");
     expect(again.card.body.cards.map((c: { id: string }) => c.id)).toEqual([COACH_CARDS[2]!.id]);
+    // The step still lists every tool, and says which ones this draft signs (`in_draft`): those on the Card asked for again,
+    // and no other, so an app compares the draft with what it marks, both ways, never with every tool listed.
+    const stepTools = (again.coach_tools_step.groups as Array<{ tools: Array<{ tool: string; card: string; in_draft: boolean }> }>).flatMap((g) => g.tools);
+    expect(stepTools.length).toBe(COACH_CARDS.flatMap((c) => c.actions).length);
+    expect(stepTools.filter((t) => t.in_draft).map((t) => t.tool).sort()).toEqual([...COACH_CARDS[2]!.actions].sort());
+    expect(stepTools.filter((t) => t.in_draft).every((t) => t.card === COACH_CARDS[2]!.id)).toBe(true);
     // A Card added later (taf_results) is drafted alone, never with the ones Coach holds in force.
     w.account.mandates = coachCards(true).filter((m) => m.id !== "coach-taf-results");
     expect((await tools()).card.body.cards.map((c: { id: string }) => c.id)).toEqual(["coach-taf-results"]);

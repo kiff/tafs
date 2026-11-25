@@ -241,7 +241,8 @@
                 "tool": "tafs_state",
                 "card": "coach-reads",
                 "limit": 500,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Read a run",
@@ -250,7 +251,8 @@
                 "tool": "taf_run",
                 "card": "coach-reads",
                 "limit": 500,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Check a taf",
@@ -259,7 +261,8 @@
                 "tool": "taf_check",
                 "card": "coach-checks",
                 "limit": 200,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               }
             ]
           },
@@ -274,7 +277,8 @@
                 "tool": "taf_task",
                 "card": "coach-taf-task",
                 "limit": 50,
-                "asks": true
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Stop a run",
@@ -283,7 +287,8 @@
                 "tool": "run_stop",
                 "card": "coach-run-stop",
                 "limit": 50,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Pause a schedule",
@@ -292,7 +297,8 @@
                 "tool": "taf_pause",
                 "card": "coach-taf-pause",
                 "limit": 50,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               }
             ]
           },
@@ -307,7 +313,8 @@
                 "tool": "taf_dial",
                 "card": "coach-taf-dial",
                 "limit": 20,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Estimate a taf's credits",
@@ -316,7 +323,8 @@
                 "tool": "taf_estimate",
                 "card": "coach-estimates",
                 "limit": 200,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Read a public page",
@@ -325,7 +333,8 @@
                 "tool": "web_read",
                 "card": "coach-web-reads",
                 "limit": 50,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Label tafs",
@@ -334,7 +343,8 @@
                 "tool": "taf_labels",
                 "card": "coach-labels",
                 "limit": 100,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Gather tafs into a mission",
@@ -343,7 +353,8 @@
                 "tool": "mission_create",
                 "card": "coach-mission-create",
                 "limit": 0,
-                "asks": true
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Change a mission's tafs",
@@ -352,7 +363,8 @@
                 "tool": "mission",
                 "card": "coach-missions",
                 "limit": 50,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Keep your business description",
@@ -361,7 +373,8 @@
                 "tool": "business_context",
                 "card": "coach-business",
                 "limit": 0,
-                "asks": true
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Try a version",
@@ -370,7 +383,8 @@
                 "tool": "version_try",
                 "card": "coach-version-try",
                 "limit": 20,
-                "asks": true
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Install a version",
@@ -379,7 +393,8 @@
                 "tool": "version_install",
                 "card": "coach-version-install",
                 "limit": 0,
-                "asks": true
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Choose where results go",
@@ -388,7 +403,8 @@
                 "tool": "taf_results",
                 "card": "coach-taf-results",
                 "limit": 0,
-                "asks": true
+                "asks": true,
+                "in_draft": true
               },
               {
                 "name": "Draft a door for an application",
@@ -397,7 +413,8 @@
                 "tool": "taf_door_api",
                 "card": "coach-taf-door",
                 "limit": 20,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               }
             ]
           },
@@ -412,7 +429,8 @@
                 "tool": "app_look",
                 "card": "coach-app-look",
                 "limit": 2000,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               },
               {
                 "name": "Use tafs while it drives",
@@ -421,7 +439,8 @@
                 "tool": "app_act",
                 "card": "coach-app-act",
                 "limit": 1000,
-                "asks": false
+                "asks": false,
+                "in_draft": true
               }
             ]
           }
