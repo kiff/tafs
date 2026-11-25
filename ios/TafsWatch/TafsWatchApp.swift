@@ -10,12 +10,13 @@ struct TafsWatchApp: App {
     @StateObject private var tafs = TafsModel(phone: WatchDemo.phone, lock: WatchDemo.lock)
     /// v2 keeps one message for later on the watch (row 8), behind its switch; v1 keeps nothing.
     @StateObject private var coach = CoachModel(phone: WatchDemo.phone, lock: WatchDemo.lock,
-                                                drafts: WatchV2.on && CoachModel.keepForLaterOn ? FileDraftStore() : nil)
+                                                drafts: WatchV2.on && CoachModel.keepForLaterOn ? FileDraftStore() : nil,
+                                                account: WatchDemo.on ? nil : .shared)
     /// v2's Inbox, kept on the watch while it has a passcode (step iv). The demo keeps it in its own folder, emptied at launch.
     @StateObject private var inbox = WatchDemo.on
         ? InboxModel(store: FileInboxStore(url: WatchDemo.folder.appendingPathComponent("inbox.json")), lock: WatchDemo.lock,
                      phone: WatchDemo.phone)
-        : InboxModel(phone: PhoneLink.shared)
+        : InboxModel(phone: PhoneLink.shared, mayDraw: { WatchAccountMark.shared.mayDraw })
     /// v2: signed out on this watch alone (Account's Sign out), kept across restarts; the demo's in its own folder.
     @StateObject private var signIn = WatchDemo.on
         ? WatchSignIn(store: WatchSignIn.FileStore(url: WatchDemo.folder.appendingPathComponent("signed-out")))
@@ -51,6 +52,9 @@ struct TafsWatchApp: App {
             // v2 (W7): Send and the microphone in the app's orange; everything else the system's grey.
             .tint(WatchV2.on ? WatchLook.send : nil)
             // The complication (row 24): Coach's home, listening. Signed out on this watch, nothing opens.
+            // The phone's account changed: everything kept goes, as at sign-out here (`WatchAccountMark`); heard the same,
+            // what was kept is shown.
+            .onAppear(perform: listenToAccount)
             .onOpenURL { url in
                 guard ComplicationLink.isAsk(url), WatchV2.on, !signIn.signedOutHere else { return }
                 coach.askFromComplication()
@@ -96,6 +100,30 @@ struct TafsWatchApp: App {
             }
         }
     }
+
+    /// Once per run: what goes when the phone's account changes, and what comes in once its mark is heard.
+    private func listenToAccount() {
+        guard !Self.listening else { return }
+        Self.listening = true
+        let (inbox, tafs, coach, needsYou) = (self.inbox, self.tafs, self.coach, self.needsYou)
+        WatchAccountMark.shared.onWipe {
+            inbox.clear()
+            tafs.cache.clear()
+            // A message kept for later goes unsent: it was another account's words.
+            coach.deleteKept()
+            needsYou.leave()
+            tafs.leave()
+            coach.leave()
+            // After the pages forget what they showed, so none is kept again.
+            WatchThreads.shared.clear()
+        }
+        WatchAccountMark.shared.onConfirm {
+            inbox.checkLock()
+            coach.accountConfirmed()
+        }
+    }
+
+    @MainActor private static var listening = false
 
     /// Account's Sign out, once confirmed: the Inbox goes and the flag is kept, then each page forgets what it showed.
     private func signOut() {

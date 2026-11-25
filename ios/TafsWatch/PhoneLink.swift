@@ -120,16 +120,37 @@ final class PhoneLink: NSObject, WCSessionDelegate, @unchecked Sendable {
         WCSession.default.activate()
     }
 
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+    /// Started: the phone's last word on its account (the application context) is heard first, so a watch whose phone
+    /// signed out or changed account while it was away wipes before anything else.
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        guard activationState == .activated, let push = WatchPush.from(session.receivedApplicationContext) else { return }
+        Task { @MainActor in Self.account(push) }
+    }
+
+    /// The phone signed in or out (`WatchLink.account`), as the latest application context.
+    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        guard let push = WatchPush.from(applicationContext) else { return }
+        Task { @MainActor in Self.account(push) }
+    }
 
     /// The phone's push (`WatchPush`), queued and delivered in order, even with the app put away: read here, on
-    /// WatchConnectivity's queue, and handed to what's listening on the main actor.
+    /// WatchConnectivity's queue, and handed to what's listening on the main actor. Whose it is comes first: a push with
+    /// another account's mark wipes what was kept, and one with none (the phone signed out) shows nothing.
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
         guard let push = WatchPush.from(userInfo) else { return }
         Task { @MainActor in
+            Self.account(push)
+            guard push.kind != .account, WatchMark.isMark(push.mark) else { return }
             WatchAccountZone.heard(push.reply)
             WatchPushes.shared.deliver(push)
         }
+    }
+
+    /// A push's or the context's mark (`WatchAccountMark`): it may wipe, never confirm, since it may have waited.
+    @MainActor
+    static func account(_ push: WatchPush) {
+        WatchAccountMark.shared.heard(push.mark, live: false)
+        if push.kind == .account, push.mark == nil { WatchAccountZone.forget() }
     }
 
     /// WatchConnectivity's error, as the wrist words it.
@@ -172,6 +193,8 @@ extension PhoneLink: PhoneAsking {
                 return answer ?? .failure(.noAnswer)
             })
         let reached = await route.reach(request)
+        // Whose answer it is, before anything in it is used: another account's wipes what was kept (`WatchAccountMark`).
+        WatchAccountMark.shared.heard(reply: reached.reply)
         // Whatever was asked, a signed-out phone drops the account's zone.
         WatchAccountZone.heard(reached.reply)
         // And what the watch kept so it opens at once (row 44, D).

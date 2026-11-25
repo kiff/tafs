@@ -1228,16 +1228,30 @@ final class TafsCloud {
     struct RunFailed: Equatable {
         let run: String
         let words: String
+        /// Whether sending the person's message again is safe: tafs cloud reads it from what the run did (nothing that
+        /// acted), never from its code. Absent or anything but `true` is no Try again.
+        var retry = false
+        /// The Try again button's words, only with `retry`.
+        var retryLabel: String? = nil
 
-        /// `failed` as the thread sends it: `{run, code, words}`. One with no words, or of another
+        /// `failed` as the thread sends it: `{run, code, words, retry, retry_label}`. One with no words, or of another
         /// shape, is no line, never the thread with it.
         struct Lenient: Decodable {
             let failed: RunFailed?
             init(from decoder: Decoder) throws {
-                struct Wire: Decodable { let run: String?; let words: String? }
+                struct Wire: Decodable {
+                    let run: String?
+                    let words: String?
+                    let retry: Bool?
+                    let retryLabel: String?
+                    enum CodingKeys: String, CodingKey { case run, words, retry, retryLabel = "retry_label" }
+                }
                 let w = try? Wire(from: decoder)
                 let words = w?.words?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                failed = words.isEmpty ? nil : RunFailed(run: w?.run ?? "", words: words)
+                let retry = w?.retry == true
+                let label = w?.retryLabel?.trimmingCharacters(in: .whitespacesAndNewlines)
+                failed = words.isEmpty ? nil : RunFailed(run: w?.run ?? "", words: words, retry: retry,
+                                                         retryLabel: retry && label?.isEmpty == false ? label : nil)
             }
         }
     }

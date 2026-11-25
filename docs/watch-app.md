@@ -670,6 +670,21 @@ and never to tafs cloud directly.
   when the phone says it's signed out. (This comes with the complication.)
 - **Never:** a token, a key, or an amount, a merchant or a person's name in a log, on the watch
   or in the relay.
+- **Whose it is (the account mark, as Wear OS's):** everything above that stays on disk is one account's. The iPhone
+  makes a random mark at each sign-in (`PhoneWatchMark`; 32 hex digits from nothing about the account, kept in the
+  Keychain beside the session, gone at sign-out) and puts it on every reply (`WatchReply.mark`) and every push
+  (`WatchPush.mark`). A push read under a session that has since ended is never handed on. At sign-in and at sign-out the
+  phone cancels every push still waiting, tells the watch at once and as the application context (which a watch out of
+  reach gets as soon as it's back), and takes its own alerts away, delivered and waiting. The watch keeps the last mark it
+  heard (`WatchAccountMark`), and checks each reply, push and context before using it:
+  - **another account's mark** wipes everything kept (the threads, the Inbox, a message kept for later, Your tafs as last
+    read, and the watch's alerts) and each page forgets what it showed, before the answer is used;
+  - **no mark once one was kept** (signed out, or a reply that doesn't say whose it is) wipes the same way, and nothing
+    kept is drawn;
+  - **nothing kept is drawn** before this run of the app has heard the kept mark in a live reply; a push or the context
+    can wipe, but never lets what's kept be drawn, since it may have waited;
+  - **a message kept for later carries its mark**, and is sent only under that same mark: under another, or none, it's
+  deleted unsent, so one person's words never become a turn in someone else's Coach (`WatchAccountMarkTests`).
 
 ## Before the watch app: what the phone's notifications already do
 

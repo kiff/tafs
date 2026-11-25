@@ -11,6 +11,8 @@ final class WatchRelayTests: XCTestCase {
     /// A reading that counts what it's asked, and has nothing to sign with.
     private final class Reading: WatchReading {
         var signedIn = true
+        /// This session's mark for the watch; none in the tests that don't look at it.
+        var mark: String?
         var reads = 0
         var fails = false
         var refused: [String] = []
@@ -155,6 +157,44 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(reading.reads, 1)
         // The reply survives the wire as it was.
         XCTAssertEqual(WatchMessage.decode(WatchReply.self, from: WatchMessage.encode(reply)), reply)
+    }
+
+    /// Whose answer it is (`WatchMark`): every reply carries the session's mark while signed in, a refusal included, and
+    /// none once signed out, so the watch wipes one account's data before it shows another's.
+    func testEveryReplyCarriesTheSessionsMarkAndSignedOutNone() async {
+        let reading = Reading(at: now)
+        let mark = WatchMark.make()
+        reading.mark = mark
+        let read = await send(WatchRequest(.needsYou, made: now), reading: reading)
+        XCTAssertEqual(read.outcome, .ok)
+        XCTAssertEqual(read.mark, mark)
+        let refused = await raw("not json", reading: reading)
+        XCTAssertEqual(refused.outcome, .refused)
+        XCTAssertEqual(refused.mark, mark)
+        XCTAssertEqual(WatchMessage.decode(WatchReply.self, from: WatchMessage.encode(read))?.mark, mark, "on the wire")
+        reading.signedIn = false
+        let out = await send(WatchRequest(.needsYou, made: now), reading: reading)
+        XCTAssertEqual(out.outcome, .signedOut)
+        XCTAssertNil(out.mark)
+    }
+
+    /// The phone's mark: new at each sign-in, made for a session from before marks, gone at sign-out, and never anything
+    /// but its own shape.
+    func testThePhonesMarkIsNewAtEachSignInAndGoesAtSignOut() {
+        final class Box: @unchecked Sendable { var value: String? }
+        let box = Box()
+        let store = PhoneWatchMark.Store(load: { box.value }, save: { box.value = $0 }, delete: { box.value = nil })
+        XCTAssertNil(PhoneWatchMark.stored(store))
+        let made = PhoneWatchMark.current(store)
+        XCTAssertTrue(WatchMark.isMark(made), "a session from before marks gets one")
+        XCTAssertEqual(PhoneWatchMark.current(store), made)
+        let next = PhoneWatchMark.began(store)
+        XCTAssertNotEqual(next, made, "a new sign-in, a new mark, whoever it is")
+        XCTAssertEqual(PhoneWatchMark.stored(store), next)
+        PhoneWatchMark.ended(store)
+        XCTAssertNil(PhoneWatchMark.stored(store))
+        box.value = "t_01"
+        XCTAssertNil(PhoneWatchMark.stored(store), "not a mark the phone made")
     }
 
     func testAnApprovalIsNeverAnswered() async {

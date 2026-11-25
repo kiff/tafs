@@ -106,9 +106,11 @@ enum WatchAskPush {
     static func run(_ id: String) async {
         let reading = KeptWatchReading()
         guard reading.signedIn else { return }
+        // Whose read this is: a push read under this session never reaches a watch after it ends (`WatchLink.push`).
+        let mark = reading.mark
         let taf = WatchAskPushes().entry(id)?.taf
         await handle(id, read: { await reading.readAsk($0) }, phoneInUse: { CoachFollow.phoneActive },
-                     relay: { WatchPushRelay.toWatch($0) },
+                     relay: { WatchPushRelay.toWatch($0, mark: mark) },
                      post: { answer, ticket in
                          await CoachFollow.notify(answer, ticket: ticket, taf: await reading.tafName(taf))
                      })
@@ -135,11 +137,12 @@ enum WatchPushRelay {
     static func run(change: String, taf: String?) async {
         let reading = KeptWatchReading()
         guard reading.signedIn, watchListening else { return }
+        let mark = reading.mark
         switch change {
-        case "watch_inbox": await inbox(read: { await reading.inboxMarks() }, relay: toWatch)
+        case "watch_inbox": await inbox(read: { await reading.inboxMarks() }, relay: { toWatch($0, mark: mark) })
         // tafs cloud's push for a taf's chat (`taf_chat`, the owner's call 2b: a message from any device, or the taf's run
         // answered), and the changes that reload a taf's chat on the iPhone too (`AppModel.liveChange`).
-        case "taf_chat", "taf", "knock": chat(taf, relay: toWatch)
+        case "taf_chat", "taf", "knock": chat(taf, relay: { toWatch($0, mark: mark) })
         default: return
         }
     }
@@ -153,9 +156,11 @@ enum WatchPushRelay {
         #endif
     }
 
-    /// Hands a push to the watch (`WatchLink.push`); nothing on a Mac.
-    static func toWatch(_ push: WatchPush) {
+    /// Hands a push to the watch (`WatchLink.push`) with the mark of the session it was read under; nothing on a Mac.
+    static func toWatch(_ push: WatchPush, mark: String?) {
         #if canImport(WatchConnectivity) && !targetEnvironment(macCatalyst)
+        var push = push
+        push.mark = mark
         WatchLink.shared.push(push)
         #endif
     }

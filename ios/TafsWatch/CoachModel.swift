@@ -45,6 +45,9 @@ final class CoachModel: ObservableObject {
         let text: String
         let message: String
         let ticket: WatchCoachTicket?
+        /// Whose words these are (`WatchMark`): the phone's mark when they were kept. Sent only while the phone answers with
+        /// the same mark; under another, or none, they go unsent.
+        var mark: String? = nil
     }
 
     /// Read more (a taf's chat): the whole answer, fetched only on the tap and held only while the chat is open.
@@ -133,6 +136,9 @@ final class CoachModel: ObservableObject {
     private let drafts: DraftStore?
     /// A kept message on its way: the next read doesn't send it again meanwhile.
     private var sendingKept = false
+    /// Whose data the watch keeps (`WatchAccountMark`): a kept message is shown and sent only under its own account's mark.
+    /// None in the tests that don't use it.
+    private let account: WatchAccountMark?
 
     /// v2 (W2): how many times the watch reads Coach's answer before the rest is on the phone: the first `quickReads`
     /// 1.5 s apart, then 3 s apart (two pauses), so 4 × 1.5 s + 8 × 3 s = 30 s. Coach's turns take seconds, so the slower
@@ -146,8 +152,9 @@ final class CoachModel: ObservableObject {
          linkPause: @escaping (Int) async -> Void = { attempt in
              try? await Task.sleep(nanoseconds: UInt64(1 << min(attempt, 3)) * 1_000_000_000)
          },
-         threads: WatchThreads = .shared) {
+         threads: WatchThreads = .shared, account: WatchAccountMark? = nil) {
         self.phone = phone
+        self.account = account
         self.threads = threads
         self.linkPause = linkPause
         self.taf = taf
@@ -156,7 +163,7 @@ final class CoachModel: ObservableObject {
         self.newID = newID
         self.drafts = drafts
         self.pause = pause
-        kept = taf == nil ? drafts?.read() : nil
+        kept = taf == nil ? readKept() : nil
         // As the Inbox: nothing of it stays on a watch without a passcode.
         checkLock()
         WatchPushes.shared.listen(self)
@@ -462,7 +469,8 @@ final class CoachModel: ObservableObject {
     /// a time: a newer one replaces it. The review closes.
     func keepForLater() {
         guard offersKeep, let sending, sending.words == words else { return }
-        let message = Kept(text: sending.words, message: sending.id.uuidString.lowercased(), ticket: lastTicket)
+        let message = Kept(text: sending.words, message: sending.id.uuidString.lowercased(), ticket: lastTicket,
+                           mark: account?.kept)
         drafts?.write(message)
         kept = message
         draft = ""
@@ -470,6 +478,19 @@ final class CoachModel: ObservableObject {
         reviewing = false
         unsure = false
         state = .writing
+    }
+
+    /// The message kept for later, as it may be shown: only once this run heard the phone's mark, and only its account's.
+    private func readKept() -> Kept? {
+        guard let message = drafts?.read() else { return nil }
+        guard let account else { return message }
+        return account.mayDraw && message.mark != nil && message.mark == account.kept ? message : nil
+    }
+
+    /// The phone's mark was heard and it's the kept one (`WatchAccountMark.onConfirm`): what was kept is shown now.
+    func accountConfirmed() {
+        if taf == nil, kept == nil { kept = readKept() }
+        reopen()
     }
 
     /// Delete on what was kept: nothing is sent. Also on Sign out here, and when the phone says it's signed out.
@@ -492,9 +513,19 @@ final class CoachModel: ObservableObject {
     /// Sends what was kept, from a watch with a passcode only, as Coach's Send. Taken, it's gone from the watch and is a turn
     /// of the conversation at work; anything else leaves it for the next read, never sent twice under two ids.
     func sendKept() async {
+        // Words kept under another account, or before marks, go unsent once the phone's mark is heard.
+        if let account, account.confirmed, let stored = drafts?.read(), stored.mark == nil || stored.mark != account.kept {
+            return deleteKept()
+        }
         // A file the watch couldn't read when the app opened (it was locked) is read again now.
-        if kept == nil { kept = drafts?.read() }
+        if kept == nil { kept = readKept() }
         guard let message = kept, !sendingKept, lock.isSecure else { return }
+        // Only under the account it was written for: never before this run has heard the phone's mark, and never as someone
+        // else. Under another account, or none, it goes unsent.
+        if let account {
+            guard account.confirmed else { return }
+            guard message.mark != nil, message.mark == account.kept else { return deleteKept() }
+        }
         sendingKept = true
         defer { sendingKept = false }
         let reached = await phone.reach(WatchRequest(.coachSend, made: clock(), text: message.text, message: message.message,
@@ -586,7 +617,7 @@ extension CoachModel: WatchPushListening {
             // A taf's chat changed on the phone or in tafs cloud: read again, as when it opens.
             guard let taf, push.taf == taf else { return }
             Task { await loadHistory() }
-        case .inbox:
+        case .inbox, .account:
             return
         }
     }

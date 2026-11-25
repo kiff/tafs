@@ -9,7 +9,7 @@ import Foundation
 /// details, a session or a key.
 ///
 /// **At rest:** one file in Application Support with complete file protection, so it can't be read while the watch is locked.
-/// **Cleared:** on either sign-out (on the phone or on this watch); whenever the app opens or is put away on a watch with no
+/// **Cleared:** on either sign-out (on the phone or on this watch), and when the phone's account changes (`WatchAccountMark`); whenever the app opens or is put away on a watch with no
 /// passcode, when nothing is kept at all; and a thread not opened for `unused` goes.
 ///
 /// Behind `on` (on): the privacy page's Apple Watch paragraph says the watch keeps the last 30 messages of up to 20 threads,
@@ -34,14 +34,19 @@ final class WatchThreads {
     /// Coach's thread's key.
     nonisolated static let coach = "coach"
 
-    static let shared = WatchThreads()
+    /// The app's: kept threads are drawn and written only under the phone's own mark, heard in this run (`WatchAccountMark`).
+    static let shared = WatchThreads(mayDraw: { WatchAccountMark.shared.mayDraw })
 
     let url: URL
     private let on: Bool
     private let lock: WristLock
     private let clock: () -> Date
+    /// Whether what's kept belongs to the account the phone has now: until this run has heard so, nothing is read or written.
+    private let mayDraw: () -> Bool
 
-    init(url: URL? = nil, on: Bool = WatchThreads.on, lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init) {
+    init(url: URL? = nil, on: Bool = WatchThreads.on, lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init,
+         mayDraw: @escaping () -> Bool = { true }) {
+        self.mayDraw = mayDraw
         self.url = url ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("tafs.watch_threads")
         self.on = on
@@ -54,6 +59,7 @@ final class WatchThreads {
     func lines(_ key: String) -> [WatchChatLine] {
         guard on else { return [] }
         guard lock.isSecure else { clear(); return [] }
+        guard mayDraw() else { return [] }
         return read().first { $0.key == key }?.lines ?? []
     }
 
@@ -61,6 +67,7 @@ final class WatchThreads {
     func keep(_ key: String, _ lines: [WatchChatLine]) {
         guard on else { return }
         guard lock.isSecure else { clear(); return }
+        guard mayDraw() else { return }
         var threads = read().filter { $0.key != key }
         let kept = lines.suffix(Self.mostLines).map { line -> WatchChatLine in
             var line = line

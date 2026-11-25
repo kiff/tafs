@@ -126,9 +126,13 @@ final class InboxModel: ObservableObject {
     private let phone: PhoneAsking?
     /// The last mark sent, so a test can wait for it.
     private(set) var marking: Task<Void, Never>?
+    /// Whether what's kept belongs to the account the phone has now (`WatchAccountMark.mayDraw`): until this run has heard
+    /// so, the kept lines aren't shown, and come in once it has (`checkLock`).
+    private let mayDraw: () -> Bool
 
     init(store: InboxStore = FileInboxStore(), lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init,
-         phone: PhoneAsking? = nil) {
+         phone: PhoneAsking? = nil, mayDraw: @escaping () -> Bool = { true }) {
+        self.mayDraw = mayDraw
         self.store = store
         self.lock = lock
         self.clock = clock
@@ -136,7 +140,7 @@ final class InboxModel: ObservableObject {
         kept = lock.isSecure
         dismissed = store.dismissed()
         if kept {
-            lines = store.lines().sorted { $0.at > $1.at }
+            if mayDraw() { lines = store.lines().sorted { $0.at > $1.at } }
         } else {
             store.write([])
         }
@@ -156,6 +160,7 @@ final class InboxModel: ObservableObject {
     /// What the file holds that this model doesn't yet: a model made while the file couldn't be read (the watch locked)
     /// starts empty, and takes the kept lines and ids in once it can, before anything it writes could leave them out.
     private func adoptStored() {
+        guard mayDraw() else { return }
         dismissed.formUnion(store.dismissed())
         let missing = store.lines().filter { stored in !lines.contains { $0.id == stored.id } }
         let next = (lines + missing).filter { !dismissed.contains($0.id) }.sorted { $0.at > $1.at }

@@ -49,6 +49,8 @@ protocol WatchReading {
     func inboxMark(_ marks: WatchInboxMarks) async -> WatchReply
     /// View on phone: opens Coach's chat, or the taf's, on this phone (`WatchOpen`).
     func openOnPhone(taf: String?) async -> WatchReply
+    /// This session's mark for the watch (`WatchMark`, `PhoneWatchMark`), on every reply; none when signed out.
+    var mark: String? { get }
 }
 
 extension WatchReading {
@@ -72,6 +74,8 @@ extension WatchReading {
     func inboxMark(_ marks: WatchInboxMarks) async -> WatchReply { WatchReply(.notYet) }
     /// A reader that opens nothing.
     func openOnPhone(taf: String?) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader with no session of its own (the tests' readers): no mark.
+    var mark: String? { nil }
 }
 
 /// Answers the watch's requests (docs/watch-app.md, "The relay"). It answers only the kinds
@@ -133,7 +137,16 @@ enum WatchRelay {
         return groups.joined(separator: separator)
     }
 
+    /// The answer to the watch's request, with whose it is (`WatchMark`): every reply carries the session's mark while the
+    /// phone is signed in, so the watch can tell an answer for another account from one for its own, and none once it's
+    /// signed out.
     static func answer(_ data: Data, now: Date, reading: WatchReading) async -> WatchReply {
+        var reply = await answered(data, now: now, reading: reading)
+        reply.mark = reply.outcome == .signedOut ? nil : reading.mark
+        return reply
+    }
+
+    private static func answered(_ data: Data, now: Date, reading: WatchReading) async -> WatchReply {
         guard let request = WatchMessage.decode(WatchRequest.self, from: data), request.isComplete else {
             return WatchReply(.refused)
         }
@@ -274,6 +287,9 @@ struct KeptWatchReading: WatchReading {
     }
 
     var signedIn: Bool { kiff.token != nil }
+
+    /// The kept session's mark; none without a session.
+    var mark: String? { signedIn ? PhoneWatchMark.current() : nil }
 
     func needsYou(now: Date) async throws -> WatchNeedsYou {
         async let home = try? cloud.home()
@@ -723,12 +739,26 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     /// reach for an hour gets each thread's newest state, not every step of it.
     func push(_ push: WatchPush) {
         guard watchListening else { return }
+        // Read under a session that has since ended or changed: never handed on as the account's now.
+        guard push.mark != nil, push.mark == PhoneWatchMark.stored() else { return }
         let session = WCSession.default
         for waiting in session.outstandingUserInfoTransfers {
             guard let old = WatchPush.from(waiting.userInfo), old.kind == push.kind, old.ask == push.ask, old.taf == push.taf,
                   old.at <= push.at else { continue }
             waiting.cancel()
         }
+        session.transferUserInfo(push.userInfo)
+    }
+
+    /// The phone signed in (a new session's mark) or out (none): every push still waiting goes, since each was read under the
+    /// session before, and the watch is told at once (queued) and as the application context, which WatchConnectivity
+    /// keeps as the latest and hands a watch that was out of reach as soon as it's back, ahead of a long queue.
+    func account(_ mark: String?) {
+        guard watchListening else { return }
+        let session = WCSession.default
+        for waiting in session.outstandingUserInfoTransfers { waiting.cancel() }
+        let push = WatchPush(.account, at: Date(), mark: mark)
+        try? session.updateApplicationContext(push.userInfo)
         session.transferUserInfo(push.userInfo)
     }
 

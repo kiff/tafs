@@ -1018,6 +1018,10 @@ final class AppModel: ObservableObject {
     /// the app says so from the start and never asks for Face ID or Touch ID for an approval KIFF would refuse.
     func useSession(_ token: String, tenant: String? = nil, viewOnly: Bool = false) async {
         Keychain.save(token, for: Self.tokenAccount)
+        // A new session's mark for the watch, whoever signed in: the watch wipes what it kept for the one before, and the
+        // alerts of the one before go (`PhoneWatchMark`).
+        PhoneWatchMark.removeAlerts()
+        PhoneWatchMark.tellWatch(PhoneWatchMark.began())
         if let tenant {
             Keychain.save(tenant, for: Self.tenantAccount)
             Keychain.save("1", for: Self.keyedAccount)
@@ -2026,6 +2030,10 @@ final class AppModel: ObservableObject {
     func forgetSession() {
         DriveSession.shared.stop("signed_out")
         Keychain.delete(Self.tokenAccount)
+        // The watch keeps nothing of this account, and is told now, not at its next ask; the account's alerts go.
+        PhoneWatchMark.ended()
+        PhoneWatchMark.tellWatch(nil)
+        PhoneWatchMark.removeAlerts()
         Keychain.delete(Self.tenantAccount)
         Keychain.delete(Self.keyedAccount)
         Keychain.delete(Self.approvalKeyedAccount)
@@ -5920,6 +5928,10 @@ final class AppModel: ObservableObject {
         /// Why the failed run stopped, in tafs cloud's words, when its `end` sends them
         /// (`ai_unavailable`): said as they are, with Retry.
         var failedWhy: String?
+        /// Retry sends the message again with no word from tafs cloud: only where nothing of it ran (an approval that came
+        /// after its run ended, or a switch that stopped it while it waited). A run that failed on its own needs tafs
+        /// cloud's `failed.retry` (`chatRetryLabel`).
+        var retryAsIs = false
         /// The run at work, as tafs cloud says, for writing to it.
         var workingRun: String?
         /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says
@@ -6069,6 +6081,7 @@ final class AppModel: ObservableObject {
         if ended != nil { chatStates[tafID]?.awaiting = nil }
         if ended == "ERROR" {
             chatStates[tafID]?.ended = .failed(retry: text)
+            chatStates[tafID]?.retryAsIs = false
             chatStates[tafID]?.endedRun = chatStates[tafID]?.live?.run
             chatStates[tafID]?.wentThrough = didBefore
             chatStates[tafID]?.failedWhy = whyFailed
@@ -6295,6 +6308,7 @@ final class AppModel: ObservableObject {
         guard let text = chats[tafID]?.last(where: { $0.from == .owner })?.text, !text.isEmpty else { return }
         chatStates[tafID, default: ChatState()].awaiting = nil
         chatStates[tafID]?.ended = .failed(retry: text)
+        chatStates[tafID]?.retryAsIs = true
         chatStates[tafID]?.endedRun = nil
         chatStates[tafID]?.wentThrough = []
         chatStates[tafID]?.failedWhy = words
@@ -6312,14 +6326,27 @@ final class AppModel: ObservableObject {
         guard let text = owner.last(where: { sessions.contains($0.session) })?.text, !text.isEmpty else { return }
         chatStates[tafID, default: ChatState()].awaiting = nil
         chatStates[tafID]?.ended = .failed(retry: text)
+        chatStates[tafID]?.retryAsIs = true
         chatStates[tafID]?.endedRun = nil
         chatStates[tafID]?.wentThrough = []
         chatStates[tafID]?.failedWhy = words
     }
 
-    /// Retry on a run that failed part-way: its message is sent again.
+    /// The words of the button under a failed run's line, or none: no button. A run that failed on its own offers it only
+    /// when tafs cloud's thread says sending its message again is safe (`failed.retry`, for that run: nothing it did
+    /// acted), in tafs cloud's words, so a run that acted part-way is never done twice with one tap. As Android's
+    /// `failedRetry`.
+    func chatRetryLabel(_ tafID: UUID) -> String? {
+        let state = chatState(tafID)
+        guard case .failed? = state.ended else { return nil }
+        if state.retryAsIs { return Words.Chat.retry }
+        guard let failed = state.runFailed, failed.retry, state.endedRun == nil || state.endedRun == failed.run else { return nil }
+        return failed.retryLabel ?? Words.Chat.retry
+    }
+
+    /// Retry on a run that failed: its message is sent again, only where `chatRetryLabel` offers it.
     func retryChatRun(_ tafID: UUID) async {
-        guard case .failed(let text) = chatStates[tafID]?.ended else { return }
+        guard chatRetryLabel(tafID) != nil, case .failed(let text) = chatStates[tafID]?.ended else { return }
         chatStates[tafID]?.ended = nil
         chatStates[tafID]?.endedRun = nil
         await submitChat(text, to: tafID)
@@ -9317,9 +9344,17 @@ final class AppModel: ObservableObject {
         return setupThread.ownerWords(message.text)
     }
 
-    /// Retry on a run that failed part-way: its message is sent again.
+    /// The words of the button under Coach's failed run, or none: only where tafs cloud's thread says sending the message
+    /// again is safe (`failed.retry`, for that run), as a taf's chat (`chatRetryLabel`).
+    var setupRetryLabel: String? {
+        guard case .failed? = setupEnded, let failed = setupThread.failed, failed.retry,
+              setupEndedRun == nil || setupEndedRun == failed.run else { return nil }
+        return failed.retryLabel ?? Words.Chat.retry
+    }
+
+    /// Retry on Coach's run that failed: its message is sent again, only where `setupRetryLabel` offers it.
     func retrySetupRun() async {
-        guard case .failed(let text) = setupEnded else { return }
+        guard setupRetryLabel != nil, case .failed(let text) = setupEnded else { return }
         setupEnded = nil
         await submitSetup(text)
     }

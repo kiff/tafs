@@ -718,9 +718,12 @@ struct SetupChatView: View {
                 Text(Words.Coach.stoppedPartWayBeforeFinished)
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Spacer()
-                Button(Words.Chat.retry) { Task { await model.retrySetupRun() } }
-                    .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
-                    .disabled(model.setupSending)
+                // Only where tafs cloud says it's safe to send the message again (`setupRetryLabel`).
+                if let label = model.setupRetryLabel {
+                    Button(label) { Task { await model.retrySetupRun() } }
+                        .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                        .disabled(model.setupSending)
+                }
             }
             .padding(12)
             .background(Theme.no.opacity(0.10))
