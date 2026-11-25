@@ -87,7 +87,7 @@ describe("a money tool's Cards are built from the rules the owner agreed (cardsF
     expect(dayTotalTwice(stripe, cards)).toBeUndefined();
   });
 
-  // qa-kiff's case: a refund the held Card would hold but over €50 is refused, never held for the owner.
+  // KIFF's Cards are conjunctive: a refund the held Card would hold but over €50 is refused, never held for the owner.
   it("conjunctive: within the held Card but over €50 is refused; under €50 waits for the owner; past €200 a day is refused", () => {
     const cards = [readsCard, REFUSED, HELD];
     expect(kiffDecides(cards, "create_refund", 6000)).toBe("refused");
