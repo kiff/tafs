@@ -32,6 +32,12 @@ import { checkAllowances, checkSites } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
+/**
+ * How long a run's new tab may take to show its blank page before the step's page goes into it (`blankReady`). Navigating a tab
+ * whose about:blank hasn't committed yet races it: under load the blank page commits after the navigation began and aborts it
+ * (net::ERR_ABORTED), and the tab is left "unloaded" on about:blank.
+ */
+const BLANK_WAIT_MS = 10_000;
 // After an act, how long the tab gets to start the navigation the act began (a click's page change begins a moment after the click),
 // as 100 ms looks. A click that navigates nothing costs this and no more.
 const NAV_WAIT_MS = 1000;
@@ -839,6 +845,8 @@ export class Runner {
       this.greying.delete(taf);
       const front = await this.frontTab(run, url);
       const made = front || (await this.runTab());
+      // A tab of the run's own shows its blank page before anything goes into it (BLANK_WAIT_MS); the person's tab already shows theirs.
+      if (!front) await this.blankReady(made.tabId);
       // Stop or close landed while the tab was being made: nothing of the run's is left open, least of all among the owner's tabs.
       if (run.stopped) {
         await this.discard(made);
@@ -974,6 +982,7 @@ export class Runner {
     run.tabs.add(tab.id);
     this.tabRun.set(tab.id, run.id);
     run.tab = tab.id;
+    await this.blankReady(tab.id);
     await this.fence(run, tab.id);
     if (run.groupId != null) await Promise.resolve(c.tabs.group({ groupId: run.groupId, tabIds: [tab.id] })).catch(() => {});
   }
@@ -1000,6 +1009,15 @@ export class Runner {
     }
     const own = await c.windows.create({ url: "about:blank", focused: false, type: "normal" });
     return { windowId: own.id, tabId: own.tabs[0].id, own: true };
+  }
+
+  /** Waits while a new tab is still loading its about:blank, BLANK_WAIT_MS at most, so the step's navigation never races it. */
+  async blankReady(tabId) {
+    for (let waited = 0; waited < BLANK_WAIT_MS; waited += 50) {
+      const tab = await this.chrome.tabs.get(tabId).catch(() => null);
+      if (!tab || tab.status !== "loading") return;
+      await this.sleep(50);
+    }
   }
 
   /** Closes what runTab made, for a run that was stopped before it took it: the tab, or the window of the run's own. */

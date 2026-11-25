@@ -455,6 +455,10 @@ was done.
   itself (`about:blank`, where a run's tab opens and where a refused move goes) is never refused: refusing it sent the
   tab to `about:blank` again and again, which also cancelled the page the step was opening, so the step timed out. A step
   line whose address can't be read draws with no site, never an error.
+- **A run's new tab shows its blank page before the step's page goes into it** (`Runner.blankReady`, 10 s at most).
+  Navigating a tab whose `about:blank` hadn't committed yet raced it: under load the blank page committed after the
+  navigation began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The end-to-end
+  test `races.e2e.test.js` reproduces that load (one renderer for every page, the person's page busy).
 - **A run's tabs get two scripts:**
   - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
     reported, a confirm answers no, and a "leave this page?" handler is dropped.

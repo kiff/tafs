@@ -1,0 +1,1 @@
+- **tafs in your Chrome: a run's first page no longer fails now and then under load.** A run's new tab now shows its blank page before the step's page goes into it, so a busy computer can't abort the step's navigation and make the open wait 30 s and fail ([docs/chrome.md](docs/chrome.md)).
