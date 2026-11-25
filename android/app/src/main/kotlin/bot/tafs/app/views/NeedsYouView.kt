@@ -67,6 +67,8 @@ import bot.tafs.app.model.HeldCall
 import java.time.Duration
 import java.time.Instant
 import kotlinx.coroutines.delay
+import bot.tafs.app.design.PageWidth
+import bot.tafs.app.design.pageColumn
 
 /** While a call waits: nothing the call asks for happens until someone approves it. */
 val NOTHING_SENT get() = Words.NeedsYou.nothingSent
@@ -219,7 +221,7 @@ fun NeedsYouView(
     modifier = modifier.fillMaxSize(),
   ) {
   LazyColumn(
-    Modifier.fillMaxSize().statusBarsPadding(),
+    Modifier.pageColumn(PageWidth.Reading).fillMaxSize().statusBarsPadding(),
     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
     verticalArrangement = Arrangement.spacedBy(10.dp),
   ) {

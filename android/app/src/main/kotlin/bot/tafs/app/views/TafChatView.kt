@@ -112,7 +112,7 @@ import kotlin.math.sin
 import kotlinx.coroutines.launch
 
 /** The chat's widest column: about 75 characters of text. */
-private val Readable = 720.dp
+private val Readable = bot.tafs.app.design.PageWidth.Reading
 
 /** The row a run at work is drawn in: the dots, then its answer as it's written. */
 private const val WORKING = "working"

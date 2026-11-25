@@ -38,6 +38,8 @@ import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.model.OverviewWords
 import bot.tafs.app.model.shortTime
+import bot.tafs.app.design.PageWidth
+import bot.tafs.app.design.pageColumn
 
 /**
  * Overview, on a tablet (as iOS's `OverviewView`): today across the tafs the person uses or oversees. What needs them, then a
@@ -62,7 +64,7 @@ fun OverviewView(
     state.tafs.filter { it.cloudId != null && state.reports[it.id] == null }.forEach { loadReport(it.id) }
   }
   Column(
-    Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(24.dp).widthIn(max = 980.dp),
+    Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(24.dp).pageColumn(PageWidth.List),
     verticalArrangement = Arrangement.spacedBy(20.dp),
   ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {

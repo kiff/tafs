@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import bot.tafs.app.design.PageWidth
+import bot.tafs.app.design.pageColumn
 
 // Every sheet, dialog and menu of the app opens through one of these (docs/drive.md): each is a window of its own, so each is
 // guarded while Coach drives, its dismissal checked, and Coach's back closes it. DriveWindowsTest fails the build on a raw
@@ -56,6 +58,8 @@ fun DriveSheet(
    * screen. Beside the sidebar the sheet is part of the page, so the screen that shows it secures the activity's window too.
    */
   secure: Boolean = false,
+  /** How wide the page may be on a wide window (docs/parity.md, "One layout on every app"): centred, at most this. */
+  maxWidth: androidx.compose.ui.unit.Dp = bot.tafs.app.design.PageWidth.Reading,
   content: @Composable ColumnScope.() -> Unit,
 ) {
   if (LocalSheetBeside.current) {
@@ -65,11 +69,14 @@ fun DriveSheet(
       modifier.fillMaxSize().background(containerColor).statusBarsPadding().padding(top = 12.dp)
         .testTag("beside-sidebar"),
     ) {
-      androidx.compose.runtime.CompositionLocalProvider(LocalSheetBeside provides false, LocalDrawnBeside provides true) { content() }
+      // The page's column, capped and centred: beside the sidebar on a big screen is where a full-width page reads half empty.
+      Column(Modifier.weight(1f).pageColumn(maxWidth)) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalSheetBeside provides false, LocalDrawnBeside provides true) { content() }
+      }
     }
     return
   }
-  ModalSheet(onDismissRequest, sheetState, containerColor, modifier, sheetGesturesEnabled, secure, content)
+  ModalSheet(onDismissRequest, sheetState, containerColor, modifier, sheetGesturesEnabled, secure, maxWidth, content)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,11 +88,13 @@ private fun ModalSheet(
   modifier: Modifier,
   sheetGesturesEnabled: Boolean,
   secure: Boolean,
+  maxWidth: androidx.compose.ui.unit.Dp,
   content: @Composable ColumnScope.() -> Unit,
 ) = ModalBottomSheet(
   onDismissRequest = driveDismissal(onDismissRequest),
   modifier = modifier,
   sheetState = sheetState,
+  sheetMaxWidth = maxWidth,
   sheetGesturesEnabled = sheetGesturesEnabled,
   containerColor = containerColor,
   properties = androidx.compose.material3.ModalBottomSheetProperties(

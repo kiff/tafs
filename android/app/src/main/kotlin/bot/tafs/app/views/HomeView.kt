@@ -69,6 +69,8 @@ import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Money
 import bot.tafs.app.model.Taf
 import bot.tafs.app.model.UsageWords
+import bot.tafs.app.design.PageWidth
+import bot.tafs.app.design.pageColumn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,7 +133,7 @@ fun HomeView(
     var labelId by remember { mutableStateOf<String?>(null) }
     val label = chosenLabel(state.labels, labelId)
     LazyColumn(
-      Modifier.fillMaxSize().statusBarsPadding(),
+      Modifier.pageColumn(PageWidth.List).fillMaxSize().statusBarsPadding(),
       contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
       verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
