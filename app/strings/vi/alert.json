@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Hãy trả lời trước {zone}. Không có gì được gửi cho đến khi bạn phê duyệt.",
   "alert.answered": "Một taf đã trả lời ai đó",
   "alert.approve_once": "Phê duyệt một lần…",
+  "alert.blocked.body": "{device} này không hỏi nữa, nên cảnh báo cho tafs đang tắt trong Cài đặt. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn.",
+  "alert.blocked.body_android": "Android không hỏi nữa, nên cảnh báo cho tafs đang tắt trong cài đặt điện thoại của bạn. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn, trên điện thoại này và trên đồng hồ. Đồng hồ của bạn vẫn nhận cập nhật dù thế nào.",
+  "alert.blocked.body_watch": "iPhone của bạn không hỏi nữa, nên cảnh báo cho tafs đang tắt trong Cài đặt. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn, trên iPhone này và trên đồng hồ. Đồng hồ của bạn vẫn nhận cập nhật dù thế nào.",
+  "alert.blocked.title": "Bật cảnh báo cho tafs",
   "alert.by_email": "Qua email",
   "alert.example": "Ví dụ",
   "alert.foot.cant_answer_holds": "Thông báo được gửi tới những người có thể trả lời các yêu cầu đang giữ. Vai trò của bạn trong tài khoản này thì không.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Thông báo chưa bật cho điện thoại này. {why}",
   "alert.not_refused": "Chưa từ chối",
   "alert.not_sent": "Một phản hồi chưa được gửi",
+  "alert.now_on": "Cảnh báo đã bật.",
   "alert.on_this_device": "Thông báo trên {device} này",
+  "alert.open_notification_settings": "Mở cài đặt thông báo",
+  "alert.open_settings": "Mở Cài đặt",
   "alert.open_tafs_answer_kiff_did": "Hãy mở tafs để trả lời: KIFF không cho biết bạn đã thấy phiên bản nào của nó.",
   "alert.open_tafs_answer_phone_can": "Hãy mở tafs để trả lời: điện thoại này không thể ký từ thông báo.",
   "alert.prompt": "Nhận thông báo khi một taf cần bạn",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Không khả dụng",
   "alert.status.off": "Tắt",
   "alert.status.on": "Bật",
+  "alert.still_off": "Cảnh báo vẫn đang tắt.",
   "alert.still_on_after_sign_out.body": "tafs không tắt được chúng ({why}). Hãy thử lại, hoặc vẫn đăng xuất rồi tắt thông báo cho tafs trong Cài đặt.",
   "alert.still_on_after_sign_out.title": "{device} này có thể vẫn nhận cảnh báo của tài khoản này",
   "alert.taf_needs_you": "{taf} cần bạn",
@@ -42,6 +50,8 @@
     "other": "{count} tafs ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs không kết nối được KIFF để từ chối. Hãy mở tafs để trả lời.",
+  "alert.watch_first.body": "Để xem phê duyệt và câu trả lời dưới dạng cảnh báo, trên điện thoại này và trên đồng hồ, hãy bật cảnh báo cho tafs. Đồng hồ của bạn vẫn tiếp tục nhận cập nhật kể cả khi bạn không bật.",
+  "alert.watch_first.title": "Đồng hồ của bạn đang dùng tafs",
   "alert.what_alerts": "Điều gì báo cho bạn",
   "alert.with_sound": "Có âm thanh"
 }

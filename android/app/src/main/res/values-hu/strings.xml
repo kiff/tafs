@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Válaszolj eddig: %3$s. Semmi sem megy ki, amíg jóvá nem hagyod.</string>
     <string name="alert_answered">Egy taf válaszolt valakinek</string>
     <string name="alert_approve_once">Jóváhagyás egyszer…</string>
+    <string name="alert_blocked_body">Ez az eszköz (%1$s) már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a Beállításokban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád.</string>
+    <string name="alert_blocked_body_android">Az Android már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a telefon beállításaiban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád, ezen a telefonon és az órádon. Az órád így is megkapja a frissítéseit.</string>
+    <string name="alert_blocked_body_watch">Az iPhone-od már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a Beállításokban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád, ezen az iPhone-on és az órádon. Az órád így is megkapja a frissítéseit.</string>
+    <string name="alert_blocked_title">Kapcsold be a tafs riasztásait</string>
     <string name="alert_by_email">E-mailben</string>
     <string name="alert_example">Példa</string>
     <string name="alert_foot_cant_answer_holds">Az értesítések azokhoz mennek, akik válaszolhatnak a visszatartott hívásokra. A szerepköröd ebben a fiókban erre nem jogosult.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Az értesítések ezen a telefonon még nincsenek bekapcsolva. %1$s</string>
     <string name="alert_not_refused">Nincs elutasítva</string>
     <string name="alert_not_sent">Egy válasz nem ment el</string>
+    <string name="alert_now_on">A riasztások be vannak kapcsolva.</string>
     <string name="alert_on_this_device">Értesítések ezen az eszközön (%1$s)</string>
+    <string name="alert_open_notification_settings">Értesítési beállítások megnyitása</string>
+    <string name="alert_open_settings">Beállítások megnyitása</string>
     <string name="alert_open_tafs_answer_kiff_did">Nyisd meg a tafst a válaszhoz: a KIFF nem jelezte, melyik verzióját láttad.</string>
     <string name="alert_open_tafs_answer_phone_can">Nyisd meg a tafst a válaszhoz: ez a telefon az értesítésből nem tudja aláírni.</string>
     <string name="alert_prompt">Kapj értesítést, ha egy tafnak szüksége van rád</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nem érhető el</string>
     <string name="alert_status_off">Ki</string>
     <string name="alert_status_on">Be</string>
+    <string name="alert_still_off">A riasztások még mindig ki vannak kapcsolva.</string>
     <string name="alert_still_on_after_sign_out_body">A tafs nem tudta kikapcsolni őket (%1$s). Próbáld újra, vagy jelentkezz ki mégis, és kapcsold ki a tafs értesítéseit a Beállításokban.</string>
     <string name="alert_still_on_after_sign_out_title">Ez az eszköz (%1$s) talán továbbra is megkapja ennek a fióknak az értesítéseit</string>
     <string name="alert_taf_needs_you">%1$s rád vár</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">A tafs nem érte el a KIFF-et az elutasításhoz. Nyisd meg a tafst a válaszhoz.</string>
+    <string name="alert_watch_first_body">Ha a jóváhagyásokat és a válaszokat riasztásként szeretnéd látni ezen a telefonon és az órádon, kapcsold be a tafs riasztásait. Az órád akkor is megkapja a frissítéseit, ha nem teszed meg.</string>
+    <string name="alert_watch_first_title">Az órád a tafst használja</string>
     <string name="alert_what_alerts">Mire kapsz értesítést</string>
     <string name="alert_with_sound">Hanggal</string>
     <string name="app_name">tafs</string>

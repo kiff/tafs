@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Odgovorite do: %3$s. Ništa se ne šalje dok ne odobrite.</string>
     <string name="alert_answered">Taf je nekome odgovorio</string>
     <string name="alert_approve_once">Odobrite jednom…</string>
+    <string name="alert_blocked_body">Ovaj uređaj (%1$s) više ne pita, pa su obaveštenja za tafs isključena u Podešavanjima. Uključite ih tamo da bi odobrenja i odgovori stizali do vas.</string>
+    <string name="alert_blocked_body_android">Android više ne pita, pa su obaveštenja za tafs isključena u podešavanjima telefona. Uključite ih tamo da bi odobrenja i odgovori stizali do vas, na ovaj telefon i na sat. Sat ionako dobija svoja ažuriranja.</string>
+    <string name="alert_blocked_body_watch">Vaš iPhone više ne pita, pa su obaveštenja za tafs isključena u Podešavanjima. Uključite ih tamo da bi odobrenja i odgovori stizali do vas, na ovaj iPhone i na sat. Sat ionako dobija svoja ažuriranja.</string>
+    <string name="alert_blocked_title">Uključite obaveštenja za tafs</string>
     <string name="alert_by_email">E-poštom</string>
     <string name="alert_example">Primer</string>
     <string name="alert_foot_cant_answer_holds">Obaveštenja idu ljudima koji smeju da odgovaraju na zadržane pozive. Vaša uloga na ovom nalogu ne sme.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Obaveštenja još nisu uključena za ovaj telefon. %1$s</string>
     <string name="alert_not_refused">Nije odbijeno</string>
     <string name="alert_not_sent">Odgovor nije poslat</string>
+    <string name="alert_now_on">Obaveštenja su uključena.</string>
     <string name="alert_on_this_device">Obaveštenja na ovom uređaju (%1$s)</string>
+    <string name="alert_open_notification_settings">Otvori podešavanja obaveštenja</string>
+    <string name="alert_open_settings">Otvori Podešavanja</string>
     <string name="alert_open_tafs_answer_kiff_did">Otvorite tafs da odgovorite: KIFF nije rekao koju ste verziju videli.</string>
     <string name="alert_open_tafs_answer_phone_can">Otvorite tafs da odgovorite: ovaj telefon to ne može da potpiše iz obaveštenja.</string>
     <string name="alert_prompt">Primite obaveštenje kad taf treba vas</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nedostupno</string>
     <string name="alert_status_off">Isključeno</string>
     <string name="alert_status_on">Uključeno</string>
+    <string name="alert_still_off">Obaveštenja su i dalje isključena.</string>
     <string name="alert_still_on_after_sign_out_body">tafs nije mogao da ih isključi (%1$s). Pokušajte ponovo ili se ipak odjavite i isključite obaveštenja za tafs u Podešavanjima.</string>
     <string name="alert_still_on_after_sign_out_title">Ovaj uređaj (%1$s) možda i dalje prima obaveštenja ovog naloga</string>
     <string name="alert_taf_needs_you">Taf %1$s čeka vas</string>
@@ -47,6 +55,8 @@
         <item quantity="other">%1$s tafova ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs nije mogao da dopre do KIFF-a da to odbije. Otvorite tafs da odgovorite.</string>
+    <string name="alert_watch_first_body">Da biste odobrenja i odgovore videli kao obaveštenja, na ovom telefonu i na satu, uključite obaveštenja za tafs. Sat i dalje dobija svoja ažuriranja i ako to ne uradite.</string>
+    <string name="alert_watch_first_title">Vaš sat koristi tafs</string>
     <string name="alert_what_alerts">Šta vas obaveštava</string>
     <string name="alert_with_sound">Sa zvukom</string>
     <string name="app_name">tafs</string>

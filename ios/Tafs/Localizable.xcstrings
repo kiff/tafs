@@ -2932,6 +2932,1058 @@
         }
       }
     },
+    "alert.blocked.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد هذا الجهاز (%1$@) يسأل، لذا فإن تنبيهات tafs متوقفة في الإعدادات. شغّلها هناك لتصلك الموافقات والإجابات."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihaz (%1$@) artıq soruşmur, buna görə tafs bildirişləri Ayarlarda söndürülüb. Təsdiqlər və cavablar sizə çatsın deyə onları orada aktiv edin."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Този %1$@ вече не пита, затова известията за tafs са изключени в Настройки. Включете ги там, за да ви стигат одобренията и отговорите."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই %1$@ আর জিজ্ঞাসা করে না, তাই সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন আপনার কাছে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquest dispositiu (%1$@) ja no ho pregunta, així que les alertes de tafs estan desactivades a Configuració. Activa-les allà perquè les aprovacions i les respostes t'arribin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento %1$@ se už neptá, takže upozornění pro tafs jsou v Nastavení vypnutá. Zapněte je tam, aby vám schválení a odpovědi chodily."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses %1$@ fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your %1$@ no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ ya no pregunta, así que las alertas de tafs están desactivadas en Ajustes. Actívalas ahí para que las aprobaciones y respuestas te lleguen."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See seade (%1$@) enam ei küsi, seega on tafsi teavitused seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ ne pose plus la question, donc les alertes de tafs sont désactivées dans Réglages. Activez-les là pour que les approbations et les réponses vous parviennent."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ההתקן הזה (%1$@) כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह %1$@ अब नहीं पूछता, इसलिए सेटिंग्स में tafs के अलर्ट बंद हैं। उन्हें वहाँ चालू करें ताकि मंज़ूरियाँ और जवाब आप तक पहुँचें।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovaj %1$@ više ne pita, pa su obavijesti za tafs isključene u Postavkama. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez az eszköz (%1$@) már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a Beállításokban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Այս սարքը (%1$@) այլևս չի հարցնում, ուստի tafs-ի ծանուցումներն անջատված են Կարգավորումներում։ Միացրեք դրանք այնտեղ, որպեսզի հաստատումներն ու պատասխանները հասնեն ձեզ։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ini tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di Pengaturan. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo %1$@ non lo chiede più, quindi gli avvisi di tafs sono disattivati in Impostazioni. Attivali lì perché approvazioni e risposte ti raggiungano."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この%1$@ではもう確認されないため、設定でtafsの通知がオフになっています。承認や回答が届くよう、そこで通知をオンにしてください。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ეს მოწყობილობა (%1$@) აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ នេះលែងសួរទៀតហើយ ដូច្នេះការជូនដំណឹងសម្រាប់ tafs ត្រូវបានបិទក្នុងការកំណត់។ បើកវានៅទីនោះ ដើម្បីឱ្យការអនុម័ត និងចម្លើយទៅដល់អ្នក។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 %1$@에서는 더 이상 묻지 않아 설정에서 tafs 알림이 꺼져 있습니다. 승인과 답변을 받으려면 설정에서 알림을 켜세요."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ນີ້ບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šis įrenginys (%1$@) daugiau nebeklausia, todėl tafs pranešimai nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šī ierīce (%1$@) vairs nejautā, tāpēc tafs paziņojumi iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Овој %1$@ повеќе не прашува, па известувањата за tafs се исклучени во Поставки. Вклучи ги таму за одобренијата и одговорите да стигнуваат до тебе."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ %1$@ дахин асуухгүй тул Тохиргоонд tafs-ын мэдэгдэл унтраастай байна. Зөвшөөрөл, хариулт танд ирэхийн тулд тэнд асаана уу."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो %1$@ ले अब सोध्दैन, त्यसैले सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ तपाईंसम्म आइपुगून् भनेर त्यहाँ खोल्नुहोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze %1$@ vraagt het niet meer, dus meldingen voor tafs staan uit in Instellingen. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten %1$@ już nie pyta, więc alerty tafs są wyłączone w Ustawieniach. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ já não pergunta, por isso os alertas do tafs estão desativados em Definições. Ative-os lá para que as aprovações e as respostas cheguem até si."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ não pergunta mais, por isso os alertas do tafs estão desativados em Ajustes. Ative-os lá para que as aprovações e as respostas cheguem até você."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest dispozitiv (%1$@) nu mai întreabă, așa că alertele tafs sunt dezactivate în Configurări. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento %1$@ sa už nepýta, takže upozornenia pre tafs sú v Nastaveniach vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta %1$@ ne sprašuje več, zato so opozorila za tafs v Nastavitvah izklopljena. Vklopite jih tam, da bodo odobritve in odgovori prihajali do vas."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjo pajisje (%1$@) nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara te Cilësimet. Aktivizojini atje që miratimet dhe përgjigjet t'ju arrijnë."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovaj uređaj (%1$@) više ne pita, pa su obaveštenja za tafs isključena u Podešavanjima. Uključite ih tamo da bi odobrenja i odgovori stizali do vas."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@เครื่องนี้ไม่ถามอีกแล้ว การแจ้งเตือนสำหรับ tafs จึงปิดอยู่ในการตั้งค่า เปิดที่นั่นเพื่อให้การอนุมัติและคำตอบมาถึงคุณ"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu %1$@ indi soramaýar, şonuň üçin tafs duýduryşlary Sazlamalarda öçürilen. Tassyklamalar we jogaplar size ýetip gelsin diýip, olary şol ýerde açyň."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu %1$@ cihazı artık sormuyor, bu yüzden tafs uyarıları Ayarlar'da kapalı. Onaylar ve yanıtlar size ulaşsın diye onları orada açın."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ %1$@ اب نہیں پوچھتا، اس لیے سیٹنگز میں tafs کے الرٹس بند ہیں۔ انہیں وہاں چالو کریں تاکہ منظوریاں اور جوابات آپ تک پہنچیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ này không hỏi nữa, nên cảnh báo cho tafs đang tắt trong Cài đặt. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這部%1$@不會再詢問，因此 tafs 的通知在「設定」中為關閉。請在那裡開啟，讓核准與回答傳到您手上。"
+          }
+        }
+      }
+    },
+    "alert.blocked.body_android": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد Android يسأل، لذا فإن تنبيهات tafs متوقفة في إعدادات هاتفك. شغّلها هناك لتصلك الموافقات والإجابات على هذا الهاتف وعلى ساعتك. تصل التحديثات إلى ساعتك في كل الأحوال."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android artıq soruşmur, buna görə tafs bildirişləri telefonunuzun ayarlarında söndürülüb. Təsdiqlər və cavablar bu telefona və saatınıza çatsın deyə onları orada aktiv edin. Saatınız yeniləmələrini hər halda alır."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android вече не пита, затова известията за tafs са изключени в настройките на телефона ви. Включете ги там, за да ви стигат одобренията и отговорите на този телефон и на часовника ви. Часовникът ви получава актуализациите си и без това."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android আর জিজ্ঞাসা করে না, তাই আপনার ফোনের সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন এই ফোনে ও আপনার ঘড়িতে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন। আপনার ঘড়ি যেকোনোভাবেই আপডেট পায়।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android ja no ho pregunta, així que les alertes de tafs estan desactivades a la configuració del telèfon. Activa-les allà perquè les aprovacions i les respostes t'arribin, en aquest telèfon i al rellotge. El rellotge rep les actualitzacions igualment."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android se už neptá, takže upozornění pro tafs jsou v nastavení telefonu vypnutá. Zapněte je tam, aby vám schválení a odpovědi chodily do tohoto telefonu i do hodinek. Hodinky dostávají aktualizace tak jako tak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen deines Telefons aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen, auf diesem Telefon und auf deiner Uhr. Deine Uhr bekommt ihre Updates so oder so."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android no longer asks, so alerts for tafs are off in your phone's settings. Turn them on there so approvals and answers reach you, on this phone and on your watch. Your watch gets its updates either way."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android ya no pregunta, así que las alertas de tafs están desactivadas en los ajustes del teléfono. Actívalas ahí para que las aprobaciones y respuestas te lleguen, en este teléfono y en tu reloj. Tu reloj recibe sus actualizaciones de todos modos."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android enam ei küsi, seega on tafsi teavitused telefoni seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni, selles telefonis ja kellas. Kell saab oma uuendused igal juhul."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android ne pose plus la question, donc les alertes de tafs sont désactivées dans les réglages du téléphone. Activez-les là pour que les approbations et les réponses vous parviennent, sur ce téléphone et sur votre montre. Votre montre reçoit ses mises à jour de toute façon."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות הטלפון. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך, בטלפון הזה ובשעון. השעון מקבל את העדכונים שלו בכל מקרה."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android अब नहीं पूछता, इसलिए आपके फ़ोन की सेटिंग में tafs के अलर्ट बंद हैं। उन्हें वहाँ चालू करें ताकि मंज़ूरियाँ और जवाब इस फ़ोन पर और आपकी घड़ी पर पहुँचें। आपकी घड़ी को अपडेट हर हाल में मिलते हैं।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android više ne pita, pa su obavijesti za tafs isključene u postavkama telefona. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas, na ovaj telefon i na sat. Sat ionako prima svoja ažuriranja."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az Android már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a telefon beállításaiban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád, ezen a telefonon és az órádon. Az órád így is megkapja a frissítéseit."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android-ն այլևս չի հարցնում, ուստի tafs-ի ծանուցումներն անջատված են ձեր հեռախոսի կարգավորումներում։ Միացրեք դրանք այնտեղ, որպեսզի հաստատումներն ու պատասխանները հասնեն ձեզ՝ այս հեռախոսին և ձեր ժամացույցին։ Ձեր ժամացույցն ամեն դեպքում ստանում է իր թարմացումները։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di pengaturan ponsel Anda. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda, di ponsel ini dan di jam tangan Anda. Jam tangan Anda tetap menerima pembaruannya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android non lo chiede più, quindi gli avvisi di tafs sono disattivati nelle impostazioni del telefono. Attivali lì perché approvazioni e risposte ti raggiungano, su questo telefono e sul tuo orologio. L'orologio riceve comunque i suoi aggiornamenti."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Androidはもう確認しないため、スマートフォンの設定でtafsの通知がオフになっています。承認や回答がこのスマートフォンとウォッチに届くよう、そこで通知をオンにしてください。ウォッチはどちらの場合も更新を受け取ります。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია ტელეფონის პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ ამ ტელეფონზე და საათზე. საათი განახლებებს ნებისმიერ შემთხვევაში იღებს."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android លែងសួរទៀតហើយ ដូច្នេះការជូនដំណឹងសម្រាប់ tafs ត្រូវបានបិទក្នុងការកំណត់ទូរសព្ទរបស់អ្នក។ បើកវានៅទីនោះ ដើម្បីឱ្យការអនុម័ត និងចម្លើយទៅដល់អ្នក នៅលើទូរសព្ទនេះ និងនាឡិការបស់អ្នក។ នាឡិការបស់អ្នកនៅតែទទួលបានបច្ចុប្បន្នភាពរបស់វា។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android가 더 이상 묻지 않아 휴대폰 설정에서 tafs 알림이 꺼져 있습니다. 승인과 답변이 이 휴대폰과 시계로 오도록 설정에서 알림을 켜세요. 시계는 어느 쪽이든 업데이트를 받습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android ບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າໂທລະສັບຂອງທ່ານ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ, ໃນໂທລະສັບນີ້ ແລະ ໃນໂມງຂອງທ່ານ. ໂມງຂອງທ່ານຍັງໄດ້ຮັບການອັບເດດຢູ່ດີ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android daugiau nebeklausia, todėl tafs pranešimai telefono nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų, šiame telefone ir laikrodyje. Laikrodis savo naujinius gauna bet kuriuo atveju."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android vairs nejautā, tāpēc tafs paziņojumi tālruņa iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu, šajā tālrunī un pulkstenī. Pulkstenis savus atjauninājumus saņem jebkurā gadījumā."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android повеќе не прашува, па известувањата за tafs се исклучени во поставките на телефонот. Вклучи ги таму за одобренијата и одговорите да стигнуваат до тебе, на овој телефон и на часовникот. Часовникот ги добива ажурирањата во секој случај."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android дахин асуухгүй тул утасны тохиргоонд tafs-ын мэдэгдэл унтраастай байна. Зөвшөөрөл, хариулт энэ утас болон цагт тань ирэхийн тулд тэнд асаана уу. Цаг тань шинэчлэлтээ ямар ч байсан авна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android ले अब सोध्दैन, त्यसैले तपाईंको फोनको सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ यो फोन र तपाईंको घडीमा आइपुगून् भनेर त्यहाँ खोल्नुहोस्। तपाईंको घडीले जसरी पनि अपडेट पाउँछ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android vraagt het niet meer, dus meldingen voor tafs staan uit in de instellingen van je telefoon. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken, op deze telefoon en op je horloge. Je horloge krijgt zijn updates hoe dan ook."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android już nie pyta, więc alerty tafs są wyłączone w ustawieniach telefonu. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały, na tym telefonie i na zegarku. Zegarek i tak dostaje swoje aktualizacje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Android já não pergunta, por isso os alertas do tafs estão desativados nas definições do telefone. Ative-os lá para que as aprovações e as respostas cheguem até si, neste telefone e no seu relógio. O relógio recebe as atualizações de qualquer forma."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Android não pergunta mais, por isso os alertas do tafs estão desativados nas configurações do telefone. Ative-os lá para que as aprovações e as respostas cheguem até você, neste telefone e no seu relógio. O relógio recebe as atualizações de qualquer forma."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android nu mai întreabă, așa că alertele tafs sunt dezactivate în setările telefonului. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs., pe acest telefon și pe ceas. Ceasul își primește actualizările oricum."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android sa už nepýta, takže upozornenia pre tafs sú v nastaveniach telefónu vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili do tohto telefónu aj do hodiniek. Hodinky dostávajú aktualizácie tak či tak."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android ne sprašuje več, zato so opozorila za tafs v nastavitvah telefona izklopljena. Vklopite jih tam, da bodo odobritve in odgovori prihajali do vas, na ta telefon in na uro. Ura svoje posodobitve dobi v vsakem primeru."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara në cilësimet e telefonit. Aktivizojini atje që miratimet dhe përgjigjet t'ju arrijnë, në këtë telefon dhe në orën tuaj. Ora i merr përditësimet e saj gjithsesi."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android više ne pita, pa su obaveštenja za tafs isključena u podešavanjima telefona. Uključite ih tamo da bi odobrenja i odgovori stizali do vas, na ovaj telefon i na sat. Sat ionako dobija svoja ažuriranja."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android ไม่ถามอีกแล้ว การแจ้งเตือนสำหรับ tafs จึงปิดอยู่ในการตั้งค่าโทรศัพท์ของคุณ เปิดที่นั่นเพื่อให้การอนุมัติและคำตอบมาถึงคุณ ทั้งบนโทรศัพท์เครื่องนี้และบนนาฬิกา นาฬิกาของคุณได้รับการอัปเดตอยู่แล้วไม่ว่ากรณีใด"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android indi soramaýar, şonuň üçin tafs duýduryşlary telefonyňyzyň sazlamalarynda öçürilen. Tassyklamalar we jogaplar size, bu telefonda we sagadyňyzda ýetip gelsin diýip, olary şol ýerde açyň. Sagadyňyz täzelenmelerini islendik ýagdaýda alýar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android artık sormuyor, bu yüzden tafs uyarıları telefonunuzun ayarlarında kapalı. Onaylar ve yanıtlar size, bu telefonda ve saatinizde ulaşsın diye onları orada açın. Saatiniz güncellemelerini her durumda alır."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android اب نہیں پوچھتا، اس لیے آپ کے فون کی سیٹنگز میں tafs کے الرٹس بند ہیں۔ انہیں وہاں چالو کریں تاکہ منظوریاں اور جوابات اس فون اور آپ کی گھڑی پر پہنچیں۔ آپ کی گھڑی کو اپڈیٹس ہر صورت ملتے ہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android không hỏi nữa, nên cảnh báo cho tafs đang tắt trong cài đặt điện thoại của bạn. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn, trên điện thoại này và trên đồng hồ. Đồng hồ của bạn vẫn nhận cập nhật dù thế nào."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android 不會再詢問，因此 tafs 的通知在手機設定中為關閉。請在那裡開啟，讓核准與回答傳到這部手機和您的手錶。無論如何，手錶都會收到更新。"
+          }
+        }
+      }
+    },
+    "alert.blocked.body_watch": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد جهاز iPhone الخاص بك يسأل، لذا فإن تنبيهات tafs متوقفة في الإعدادات. شغّلها هناك لتصلك الموافقات والإجابات على هذا الـ iPhone وعلى ساعتك. تصل التحديثات إلى ساعتك في كل الأحوال."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone-unuz artıq soruşmur, buna görə tafs bildirişləri Ayarlarda söndürülüb. Təsdiqlər və cavablar bu iPhone-a və saatınıza çatsın deyə onları orada aktiv edin. Saatınız yeniləmələrini hər halda alır."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вашият iPhone вече не пита, затова известията за tafs са изключени в Настройки. Включете ги там, за да ви стигат одобренията и отговорите на този iPhone и на часовника ви. Часовникът ви получава актуализациите си и без това."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আপনার iPhone আর জিজ্ঞাসা করে না, তাই সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন এই iPhone-এ ও আপনার ঘড়িতে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন। আপনার ঘড়ি যেকোনোভাবেই আপডেট পায়।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El teu iPhone ja no ho pregunta, així que les alertes de tafs estan desactivades a Configuració. Activa-les allà perquè les aprovacions i les respostes t'arribin, en aquest iPhone i al rellotge. El rellotge rep les actualitzacions igualment."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Váš iPhone se už neptá, takže upozornění pro tafs jsou v Nastavení vypnutá. Zapněte je tam, aby vám schválení a odpovědi chodily do tohoto iPhonu i do hodinek. Hodinky dostávají aktualizace tak jako tak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein iPhone fragt nicht mehr, deshalb sind die Benachrichtigungen für tafs in den Einstellungen aus. Schalte sie dort ein, damit dich Genehmigungen und Antworten erreichen, auf diesem iPhone und auf deiner Uhr. Deine Uhr bekommt ihre Updates so oder so."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your iPhone no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you, on this iPhone and on your watch. Your watch gets its updates either way."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu iPhone ya no pregunta, así que las alertas de tafs están desactivadas en Ajustes. Actívalas ahí para que las aprobaciones y respuestas te lleguen, en este iPhone y en tu reloj. Tu reloj recibe sus actualizaciones de todos modos."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sinu iPhone enam ei küsi, seega on tafsi teavitused seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni, selles iPhone'is ja kellas. Kell saab oma uuendused igal juhul."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre iPhone ne pose plus la question, donc les alertes de tafs sont désactivées dans Réglages. Activez-les là pour que les approbations et les réponses vous parviennent, sur cet iPhone et sur votre montre. Votre montre reçoit ses mises à jour de toute façon."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ה-iPhone שלך כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך, ב-iPhone הזה ובשעון. השעון מקבל את העדכונים שלו בכל מקרה."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आपका iPhone अब नहीं पूछता, इसलिए सेटिंग्स में tafs के अलर्ट बंद हैं। उन्हें वहाँ चालू करें ताकि मंज़ूरियाँ और जवाब इस iPhone पर और आपकी घड़ी पर पहुँचें। आपकी घड़ी को अपडेट हर हाल में मिलते हैं।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaš iPhone više ne pita, pa su obavijesti za tafs isključene u Postavkama. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas, na ovaj iPhone i na sat. Sat ionako prima svoja ažuriranja."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az iPhone-od már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a Beállításokban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád, ezen az iPhone-on és az órádon. Az órád így is megkapja a frissítéseit."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ձեր iPhone-ն այլևս չի հարցնում, ուստի tafs-ի ծանուցումներն անջատված են Կարգավորումներում։ Միացրեք դրանք այնտեղ, որպեսզի հաստատումներն ու պատասխանները հասնեն ձեզ՝ այս iPhone-ին և ձեր ժամացույցին։ Ձեր ժամացույցն ամեն դեպքում ստանում է իր թարմացումները։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone Anda tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di Pengaturan. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda, di iPhone ini dan di jam tangan Anda. Jam tangan Anda tetap menerima pembaruannya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo iPhone non lo chiede più, quindi gli avvisi di tafs sono disattivati in Impostazioni. Attivali lì perché approvazioni e risposte ti raggiungano, su questo iPhone e sul tuo orologio. L'orologio riceve comunque i suoi aggiornamenti."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhoneではもう確認されないため、設定でtafsの通知がオフになっています。承認や回答がこのiPhoneとウォッチに届くよう、そこで通知をオンにしてください。ウォッチはどちらの場合も更新を受け取ります。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "თქვენი iPhone აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ ამ iPhone-ზე და საათზე. საათი განახლებებს ნებისმიერ შემთხვევაში იღებს."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone របស់អ្នកលែងសួរទៀតហើយ ដូច្នេះការជូនដំណឹងសម្រាប់ tafs ត្រូវបានបិទក្នុងការកំណត់។ បើកវានៅទីនោះ ដើម្បីឱ្យការអនុម័ត និងចម្លើយទៅដល់អ្នក នៅលើ iPhone នេះ និងនាឡិការបស់អ្នក។ នាឡិការបស់អ្នកនៅតែទទួលបានបច្ចុប្បន្នភាពរបស់វា។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone에서 더 이상 묻지 않아 설정에서 tafs 알림이 꺼져 있습니다. 승인과 답변이 이 iPhone과 시계로 오도록 설정에서 알림을 켜세요. 시계는 어느 쪽이든 업데이트를 받습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone ຂອງທ່ານບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ, ໃນ iPhone ນີ້ ແລະ ໃນໂມງຂອງທ່ານ. ໂມງຂອງທ່ານຍັງໄດ້ຮັບການອັບເດດຢູ່ດີ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jūsų iPhone daugiau nebeklausia, todėl tafs pranešimai nustatymuose išjungti. Įjunkite juos ten, kad patvirtinimai ir atsakymai jus pasiektų, šiame iPhone ir laikrodyje. Laikrodis savo naujinius gauna bet kuriuo atveju."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tavs iPhone vairs nejautā, tāpēc tafs paziņojumi iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu, šajā iPhone un pulkstenī. Pulkstenis savus atjauninājumus saņem jebkurā gadījumā."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Твојот iPhone повеќе не прашува, па известувањата за tafs се исклучени во Поставки. Вклучи ги таму за одобренијата и одговорите да стигнуваат до тебе, на овој iPhone и на часовникот. Часовникот ги добива ажурирањата во секој случај."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Таны iPhone дахин асуухгүй тул Тохиргоонд tafs-ын мэдэгдэл унтраастай байна. Зөвшөөрөл, хариулт энэ iPhone болон цагт тань ирэхийн тулд тэнд асаана уу. Цаг тань шинэчлэлтээ ямар ч байсан авна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "तपाईंको iPhone ले अब सोध्दैन, त्यसैले सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ यो iPhone र तपाईंको घडीमा आइपुगून् भनेर त्यहाँ खोल्नुहोस्। तपाईंको घडीले जसरी पनि अपडेट पाउँछ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je iPhone vraagt het niet meer, dus meldingen voor tafs staan uit in Instellingen. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken, op deze iPhone en op je horloge. Je horloge krijgt zijn updates hoe dan ook."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój iPhone już nie pyta, więc alerty tafs są wyłączone w Ustawieniach. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały, na tym iPhonie i na zegarku. Zegarek i tak dostaje swoje aktualizacje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu iPhone já não pergunta, por isso os alertas do tafs estão desativados em Definições. Ative-os lá para que as aprovações e as respostas cheguem até si, neste iPhone e no seu relógio. O relógio recebe as atualizações de qualquer forma."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu iPhone não pergunta mais, por isso os alertas do tafs estão desativados em Ajustes. Ative-os lá para que as aprovações e as respostas cheguem até você, neste iPhone e no seu relógio. O relógio recebe as atualizações de qualquer forma."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone-ul dvs. nu mai întreabă, așa că alertele tafs sunt dezactivate în Configurări. Activați-le acolo ca aprobările și răspunsurile să ajungă la dvs., pe acest iPhone și pe ceas. Ceasul își primește actualizările oricum."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Váš iPhone sa už nepýta, takže upozornenia pre tafs sú v Nastaveniach vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili do tohto iPhonu aj do hodiniek. Hodinky dostávajú aktualizácie tak či tak."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaš iPhone ne sprašuje več, zato so opozorila za tafs v Nastavitvah izklopljena. Vklopite jih tam, da bodo odobritve in odgovori prihajali do vas, na ta iPhone in na uro. Ura svoje posodobitve dobi v vsakem primeru."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone-i juaj nuk pyet më, ndaj njoftimet për tafs janë të çaktivizuara te Cilësimet. Aktivizojini atje që miratimet dhe përgjigjet t'ju arrijnë, në këtë iPhone dhe në orën tuaj. Ora i merr përditësimet e saj gjithsesi."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaš iPhone više ne pita, pa su obaveštenja za tafs isključena u Podešavanjima. Uključite ih tamo da bi odobrenja i odgovori stizali do vas, na ovaj iPhone i na sat. Sat ionako dobija svoja ažuriranja."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone ของคุณไม่ถามอีกแล้ว การแจ้งเตือนสำหรับ tafs จึงปิดอยู่ในการตั้งค่า เปิดที่นั่นเพื่อให้การอนุมัติและคำตอบมาถึงคุณ ทั้งบน iPhone เครื่องนี้และบนนาฬิกา นาฬิกาของคุณได้รับการอัปเดตอยู่แล้วไม่ว่ากรณีใด"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone-yňyz indi soramaýar, şonuň üçin tafs duýduryşlary Sazlamalarda öçürilen. Tassyklamalar we jogaplar size, bu iPhone-da we sagadyňyzda ýetip gelsin diýip, olary şol ýerde açyň. Sagadyňyz täzelenmelerini islendik ýagdaýda alýar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone'unuz artık sormuyor, bu yüzden tafs uyarıları Ayarlar'da kapalı. Onaylar ve yanıtlar size, bu iPhone'da ve saatinizde ulaşsın diye onları orada açın. Saatiniz güncellemelerini her durumda alır."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آپ کا iPhone اب نہیں پوچھتا، اس لیے سیٹنگز میں tafs کے الرٹس بند ہیں۔ انہیں وہاں چالو کریں تاکہ منظوریاں اور جوابات اس iPhone اور آپ کی گھڑی پر پہنچیں۔ آپ کی گھڑی کو اپڈیٹس ہر صورت ملتے ہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone của bạn không hỏi nữa, nên cảnh báo cho tafs đang tắt trong Cài đặt. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn, trên iPhone này và trên đồng hồ. Đồng hồ của bạn vẫn nhận cập nhật dù thế nào."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的 iPhone 不會再詢問，因此 tafs 的通知在「設定」中為關閉。請在那裡開啟，讓核准與回答傳到這部 iPhone 和您的手錶。無論如何，手錶都會收到更新。"
+          }
+        }
+      }
+    },
+    "alert.blocked.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شغّل التنبيهات لـ tafs"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs üçün bildirişləri aktiv edin"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включете известията за tafs"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs-এর অ্যালার্ট চালু করুন"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa les alertes de tafs"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapněte upozornění pro tafs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen für tafs einschalten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on alerts for tafs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa las alertas de tafs"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lülita tafsi teavitused sisse"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer les alertes de tafs"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הפעלת התראות של tafs"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs के अलर्ट चालू करें"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključite obavijesti za tafs"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsold be a tafs riasztásait"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Միացրեք tafs-ի ծանուցումները"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktifkan peringatan untuk tafs"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attiva gli avvisi di tafs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafsの通知をオンにする"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ჩართეთ tafs-ის შეტყობინებები"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បើកការជូនដំណឹងសម្រាប់ tafs"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs 알림 켜기"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເປີດການແຈ້ງເຕືອນສຳລັບ tafs"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Įjunkite tafs pranešimus"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ieslēdz tafs paziņojumus"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вклучи известувања за tafs"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs-ын мэдэгдлийг асаах"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs को सूचना खोल्नुहोस्"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldingen voor tafs aanzetten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włącz alerty tafs"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ative os alertas do tafs"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ative os alertas do tafs"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activați alertele tafs"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapnite upozornenia pre tafs"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vklopite opozorila za tafs"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivizoni njoftimet për tafs"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključite obaveštenja za tafs"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดการแจ้งเตือนสำหรับ tafs"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs üçin duýduryşlary açyň"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs için uyarıları açın"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs کے الرٹس چالو کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bật cảnh báo cho tafs"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟 tafs 的通知"
+          }
+        }
+      }
+    },
     "alert.by_email": {
       "extractionState": "manual",
       "localizations": {
@@ -6877,6 +7929,269 @@
         }
       }
     },
+    "alert.now_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التنبيهات قيد التشغيل."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirişlər aktivdir."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Известията са включени."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অ্যালার্ট চালু আছে।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les alertes estan activades."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upozornění jsou zapnutá."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen sind an."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts are on."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las alertas están activadas."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teavitused on sees."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les alertes sont activées."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ההתראות מופעלות."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अलर्ट चालू हैं।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obavijesti su uključene."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A riasztások be vannak kapcsolva."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ծանուցումները միացված են։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peringatan aktif."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gli avvisi sono attivi."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通知はオンです。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "შეტყობინებები ჩართულია."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ការជូនដំណឹងបានបើក។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림이 켜져 있습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ການແຈ້ງເຕືອນເປີດຢູ່."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pranešimai įjungti."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paziņojumi ir ieslēgti."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Известувањата се вклучени."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мэдэгдэл асаалттай байна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सूचना खुला छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldingen staan aan."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerty są włączone."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os alertas estão ativados."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os alertas estão ativados."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alertele sunt activate."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upozornenia sú zapnuté."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opozorila so vklopljena."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Njoftimet janë aktive."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obaveštenja su uključena."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดการแจ้งเตือนแล้ว"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duýduryşlar açyk."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uyarılar açık."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرٹس چالو ہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cảnh báo đã bật."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通知已開啟。"
+          }
+        }
+      }
+    },
     "alert.on_this_device": {
       "extractionState": "manual",
       "localizations": {
@@ -7136,6 +8451,532 @@
           "stringUnit": {
             "state": "translated",
             "value": "這部%1$@上的通知"
+          }
+        }
+      }
+    },
+    "alert.open_notification_settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح إعدادات الإشعارات"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildiriş ayarlarını açın"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отваряне на настройките за известия"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বিজ্ঞপ্তি সেটিংস খুলুন"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obre la configuració de notificacions"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otevřít nastavení oznámení"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungseinstellungen öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open notification settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir ajustes de notificaciones"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ava teavituste seaded"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les réglages des notifications"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פתיחת הגדרות ההתראות"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सूचना सेटिंग खोलें"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvori postavke obavijesti"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Értesítési beállítások megnyitása"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Բացել ծանուցումների կարգավորումները"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka pengaturan notifikasi"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri le impostazioni delle notifiche"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通知設定を開く"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "შეტყობინებების პარამეტრების გახსნა"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បើកការកំណត់ការជូនដំណឹង"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림 설정 열기"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເປີດການຕັ້ງຄ່າການແຈ້ງເຕືອນ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atidaryti pranešimų nustatymus"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atvērt paziņojumu iestatījumus"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отвори поставки за известувања"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мэдэгдлийн тохиргоог нээх"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सूचना सेटिङ खोल्नुहोस्"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldingsinstellingen openen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz ustawienia powiadomień"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir definições de notificações"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir configurações de notificação"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți setările notificărilor"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvoriť nastavenia upozornení"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpri nastavitve obvestil"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hap cilësimet e njoftimeve"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvori podešavanja obaveštenja"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดการตั้งค่าการแจ้งเตือน"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildiriş sazlamalaryny açyň"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirim ayarlarını aç"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اطلاع کی سیٹنگز کھولیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở cài đặt thông báo"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟通知設定"
+          }
+        }
+      }
+    },
+    "alert.open_settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح الإعدادات"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarları açın"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отваряне на Настройки"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সেটিংস খুলুন"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obre Configuració"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otevřít Nastavení"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Ajustes"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ava Seaded"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir Réglages"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פתיחת ההגדרות"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सेटिंग्स खोलें"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvori Postavke"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítások megnyitása"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Բացել Կարգավորումները"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka Pengaturan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri Impostazioni"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定を開く"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "პარამეტრების გახსნა"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បើកការកំណត់"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정 열기"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເປີດການຕັ້ງຄ່າ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atidaryti Nustatymus"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atvērt Iestatījumus"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отвори Поставки"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тохиргоог нээх"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सेटिङ खोल्नुहोस्"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instellingen openen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz Ustawienia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Definições"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Ajustes"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Configurări"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvoriť Nastavenia"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpri Nastavitve"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hap Cilësimet"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvori Podešavanja"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดการตั้งค่า"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sazlamalary açyň"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'ı aç"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سیٹنگز کھولیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở Cài đặt"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟「設定」"
           }
         }
       }
@@ -10559,6 +12400,269 @@
         }
       }
     },
+    "alert.still_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تزال التنبيهات متوقفة."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirişlər hələ də söndürülüb."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Известията все още са изключени."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অ্যালার্ট এখনও বন্ধ।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les alertes encara estan desactivades."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upozornění jsou stále vypnutá."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen sind noch aus."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts are still off."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las alertas siguen desactivadas."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teavitused on endiselt väljas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les alertes sont toujours désactivées."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ההתראות עדיין כבויות."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अलर्ट अब भी बंद हैं।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obavijesti su i dalje isključene."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A riasztások még mindig ki vannak kapcsolva."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ծանուցումները դեռ անջատված են։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peringatan masih nonaktif."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gli avvisi sono ancora disattivati."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通知はまだオフです。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "შეტყობინებები ჯერ კიდევ გამორთულია."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ការជូនដំណឹងនៅតែបិទ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림이 아직 꺼져 있습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ການແຈ້ງເຕືອນຍັງປິດຢູ່."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pranešimai vis dar išjungti."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paziņojumi joprojām ir izslēgti."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Известувањата сè уште се исклучени."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мэдэгдэл унтраастай хэвээр байна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सूचना अझै बन्द छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldingen staan nog uit."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerty są nadal wyłączone."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os alertas continuam desativados."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os alertas continuam desativados."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alertele sunt încă dezactivate."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upozornenia sú stále vypnuté."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opozorila so še vedno izklopljena."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Njoftimet janë ende të çaktivizuara."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obaveštenja su i dalje isključena."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การแจ้งเตือนยังปิดอยู่"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duýduryşlar heniz öçük."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uyarılar hâlâ kapalı."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرٹس ابھی بھی بند ہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cảnh báo vẫn đang tắt."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通知仍為關閉。"
+          }
+        }
+      }
+    },
     "alert.still_on_after_sign_out.body": {
       "extractionState": "manual",
       "localizations": {
@@ -12201,6 +14305,532 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ taf ›"
+          }
+        }
+      }
+    },
+    "alert.watch_first.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لترى الموافقات والإجابات كتنبيهات على هذا الهاتف وعلى ساعتك، شغّل التنبيهات لـ tafs. ستظل ساعتك تتلقى تحديثاتها حتى إن لم تفعل."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Təsdiqləri və cavabları bu telefonda və saatınızda bildiriş kimi görmək üçün tafs bildirişlərini aktiv edin. Aktiv etməsəniz də, saatınız yeniləmələrini almağa davam edəcək."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За да виждате одобренията и отговорите като известия на този телефон и на часовника си, включете известията за tafs. Часовникът ви ще продължи да получава актуализациите си, дори и да не го направите."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই ফোনে ও আপনার ঘড়িতে অনুমোদন ও উত্তর অ্যালার্ট হিসেবে দেখতে tafs-এর অ্যালার্ট চালু করুন। চালু না করলেও আপনার ঘড়ি আপডেট পেতে থাকবে।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per veure les aprovacions i les respostes com a alertes, en aquest telèfon i al rellotge, activa les alertes de tafs. El rellotge continuarà rebent les actualitzacions encara que no ho facis."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chcete-li vidět schválení a odpovědi jako upozornění v tomto telefonu i v hodinkách, zapněte upozornění pro tafs. Hodinky budou dostávat aktualizace, i když to neuděláte."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um Genehmigungen und Antworten als Benachrichtigungen zu sehen, auf diesem Telefon und auf deiner Uhr, schalte die Benachrichtigungen für tafs ein. Deine Uhr bekommt ihre Updates auch, wenn du es nicht tust."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To see approvals and answers as alerts, on this phone and on your watch, turn on alerts for tafs. Your watch keeps getting its updates even if you don't."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para ver las aprobaciones y respuestas como alertas, en este teléfono y en tu reloj, activa las alertas de tafs. Tu reloj seguirá recibiendo sus actualizaciones aunque no lo hagas."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Et näha kinnitusi ja vastuseid teavitustena selles telefonis ja kellas, lülita tafsi teavitused sisse. Kell saab oma uuendusi ka siis, kui sa seda ei tee."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour voir les approbations et les réponses en alertes, sur ce téléphone et sur votre montre, activez les alertes de tafs. Votre montre continue de recevoir ses mises à jour même si vous ne le faites pas."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כדי לראות אישורים ותשובות כהתראות, בטלפון הזה ובשעון, יש להפעיל את ההתראות של tafs. השעון ימשיך לקבל את העדכונים שלו גם בלי זה."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस फ़ोन पर और अपनी घड़ी पर मंज़ूरियाँ और जवाब अलर्ट के रूप में देखने के लिए tafs के अलर्ट चालू करें। चालू न करें तब भी आपकी घड़ी को अपडेट मिलते रहेंगे।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da biste odobrenja i odgovore vidjeli kao obavijesti, na ovom telefonu i na satu, uključite obavijesti za tafs. Sat će i dalje primati svoja ažuriranja i ako to ne učinite."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha a jóváhagyásokat és a válaszokat riasztásként szeretnéd látni ezen a telefonon és az órádon, kapcsold be a tafs riasztásait. Az órád akkor is megkapja a frissítéseit, ha nem teszed meg."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Հաստատումներն ու պատասխանները ծանուցումների տեսքով այս հեռախոսում և ձեր ժամացույցում տեսնելու համար միացրեք tafs-ի ծանուցումները։ Ձեր ժամացույցը կշարունակի ստանալ իր թարմացումները, նույնիսկ եթե չմիացնեք։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untuk melihat persetujuan dan jawaban sebagai peringatan, di ponsel ini dan di jam tangan Anda, aktifkan peringatan untuk tafs. Jam tangan Anda tetap menerima pembaruannya meski Anda tidak mengaktifkannya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per vedere approvazioni e risposte come avvisi, su questo telefono e sull'orologio, attiva gli avvisi di tafs. L'orologio continua a ricevere i suoi aggiornamenti anche se non lo fai."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "承認や回答をこのスマートフォンとウォッチで通知として受け取るには、tafsの通知をオンにしてください。オンにしなくても、ウォッチは更新を受け取り続けます。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "დადასტურებებისა და პასუხების შეტყობინებებად სანახავად ამ ტელეფონზე და საათზე, ჩართეთ tafs-ის შეტყობინებები. საათი განახლებებს მაინც მიიღებს, თუნდაც არ ჩართოთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ដើម្បីមើលការអនុម័ត និងចម្លើយជាការជូនដំណឹង នៅលើទូរសព្ទនេះ និងនាឡិការបស់អ្នក សូមបើកការជូនដំណឹងសម្រាប់ tafs។ នាឡិការបស់អ្នកនៅតែទទួលបានបច្ចុប្បន្នភាព ទោះបីអ្នកមិនបើកក៏ដោយ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 휴대폰과 시계에서 승인과 답변을 알림으로 보려면 tafs 알림을 켜세요. 켜지 않아도 시계는 계속 업데이트를 받습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເພື່ອເບິ່ງການອະນຸມັດ ແລະ ຄຳຕອບເປັນການແຈ້ງເຕືອນ, ໃນໂທລະສັບນີ້ ແລະ ໃນໂມງຂອງທ່ານ, ໃຫ້ເປີດການແຈ້ງເຕືອນສຳລັບ tafs. ໂມງຂອງທ່ານຍັງຈະໄດ້ຮັບການອັບເດດ ເຖິງທ່ານບໍ່ເປີດກໍຕາມ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kad matytumėte patvirtinimus ir atsakymus kaip pranešimus šiame telefone ir laikrodyje, įjunkite tafs pranešimus. Laikrodis toliau gaus savo naujinius, net jei to nepadarysite."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lai redzētu apstiprinājumus un atbildes kā paziņojumus šajā tālrunī un pulkstenī, ieslēdz tafs paziņojumus. Pulkstenis turpinās saņemt savus atjauninājumus, pat ja to nedarīsi."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За да ги гледаш одобренијата и одговорите како известувања, на овој телефон и на часовникот, вклучи ги известувањата за tafs. Часовникот ќе продолжи да ги добива ажурирањата и ако не го направиш тоа."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зөвшөөрөл, хариултыг энэ утас болон цагтаа мэдэгдэл хэлбэрээр харахын тулд tafs-ын мэдэгдлийг асаана уу. Асаахгүй байсан ч цаг тань шинэчлэлтээ авсаар байна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्वीकृति र जवाफलाई यो फोन र तपाईंको घडीमा सूचनाको रूपमा हेर्न tafs को सूचना खोल्नुहोस्। नखोले पनि तपाईंको घडीले अपडेट पाइरहनेछ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zet meldingen voor tafs aan om goedkeuringen en antwoorden als melding te zien, op deze telefoon en op je horloge. Je horloge blijft zijn updates krijgen, ook als je dat niet doet."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aby widzieć zatwierdzenia i odpowiedzi jako alerty, na tym telefonie i na zegarku, włącz alerty tafs. Zegarek będzie dostawać swoje aktualizacje, nawet jeśli tego nie zrobisz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para ver as aprovações e as respostas como alertas, neste telefone e no seu relógio, ative os alertas do tafs. O relógio continua a receber as atualizações mesmo que não o faça."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para ver as aprovações e as respostas como alertas, neste telefone e no seu relógio, ative os alertas do tafs. O relógio continua recebendo as atualizações mesmo que você não ative."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ca să vedeți aprobările și răspunsurile ca alerte, pe acest telefon și pe ceas, activați alertele tafs. Ceasul va primi în continuare actualizările, chiar dacă nu o faceți."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ak chcete vidieť schválenia a odpovede ako upozornenia v tomto telefóne aj v hodinkách, zapnite upozornenia pre tafs. Hodinky budú dostávať aktualizácie, aj keď to neurobíte."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Če želite odobritve in odgovore videti kot opozorila na tem telefonu in na uri, vklopite opozorila za tafs. Ura bo še naprej dobivala svoje posodobitve, tudi če tega ne storite."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Për të parë miratimet dhe përgjigjet si njoftime, në këtë telefon dhe në orën tuaj, aktivizoni njoftimet për tafs. Ora do të vazhdojë t'i marrë përditësimet edhe nëse nuk e bëni."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da biste odobrenja i odgovore videli kao obaveštenja, na ovom telefonu i na satu, uključite obaveštenja za tafs. Sat i dalje dobija svoja ažuriranja i ako to ne uradite."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "หากต้องการเห็นการอนุมัติและคำตอบเป็นการแจ้งเตือน บนโทรศัพท์เครื่องนี้และบนนาฬิกา ให้เปิดการแจ้งเตือนสำหรับ tafs นาฬิกาของคุณยังคงได้รับการอัปเดตแม้คุณไม่เปิด"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tassyklamalary we jogaplary bu telefonda we sagadyňyzda duýduryş hökmünde görmek üçin tafs duýduryşlaryny açyň. Açmasaňyz hem, sagadyňyz täzelenmelerini almagy dowam etdirer."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onayları ve yanıtları bu telefonda ve saatinizde uyarı olarak görmek için tafs uyarılarını açın. Açmasanız da saatiniz güncellemelerini almaya devam eder."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس فون اور اپنی گھڑی پر منظوریاں اور جوابات الرٹس کے طور پر دیکھنے کے لیے tafs کے الرٹس چالو کریں۔ چالو نہ کریں تب بھی آپ کی گھڑی کو اپڈیٹس ملتے رہیں گے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Để xem phê duyệt và câu trả lời dưới dạng cảnh báo, trên điện thoại này và trên đồng hồ, hãy bật cảnh báo cho tafs. Đồng hồ của bạn vẫn tiếp tục nhận cập nhật kể cả khi bạn không bật."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "若要在這部手機和手錶上以通知查看核准與回答，請開啟 tafs 的通知。即使不開啟，手錶仍會持續收到更新。"
+          }
+        }
+      }
+    },
+    "alert.watch_first.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ساعتك تستخدم tafs"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saatınız tafs-dan istifadə edir"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Часовникът ви използва tafs"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আপনার ঘড়ি tafs ব্যবহার করছে"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El teu rellotge fa servir tafs"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaše hodinky používají tafs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Uhr nutzt tafs"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your watch is using tafs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu reloj está usando tafs"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sinu kell kasutab tafsi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre montre utilise tafs"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "השעון שלך משתמש ב-tafs"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आपकी घड़ी tafs इस्तेमाल कर रही है"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaš sat koristi tafs"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az órád a tafst használja"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ձեր ժամացույցն օգտագործում է tafs"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jam tangan Anda memakai tafs"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo orologio usa tafs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウォッチがtafsを使っています"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "თქვენი საათი იყენებს tafs-ს"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "នាឡិការបស់អ្នកកំពុងប្រើ tafs"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시계에서 tafs를 사용하고 있습니다"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ໂມງຂອງທ່ານກຳລັງໃຊ້ tafs"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jūsų laikrodis naudoja tafs"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tavs pulkstenis izmanto tafs"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Твојот часовник користи tafs"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Таны цаг tafs ашиглаж байна"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "तपाईंको घडीले tafs प्रयोग गर्दैछ"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je horloge gebruikt tafs"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój zegarek używa tafs"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu relógio está a usar o tafs"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu relógio está usando o tafs"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ceasul dvs. folosește tafs"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaše hodinky používajú tafs"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaša ura uporablja tafs"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ora juaj po përdor tafs"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaš sat koristi tafs"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นาฬิกาของคุณกำลังใช้ tafs"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sagadyňyz tafs ulanýar"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saatiniz tafs kullanıyor"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آپ کی گھڑی tafs استعمال کر رہی ہے"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đồng hồ của bạn đang dùng tafs"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的手錶正在使用 tafs"
           }
         }
       }

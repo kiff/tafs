@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Answer by {zone}. Nothing is sent until you approve.",
   "alert.answered": "A taf answered someone",
   "alert.approve_once": "Approve once…",
+  "alert.blocked.body": "Your {device} no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you.",
+  "alert.blocked.body_android": "Android no longer asks, so alerts for tafs are off in your phone's settings. Turn them on there so approvals and answers reach you, on this phone and on your watch. Your watch gets its updates either way.",
+  "alert.blocked.body_watch": "Your iPhone no longer asks, so alerts for tafs are off in Settings. Turn them on there so approvals and answers reach you, on this iPhone and on your watch. Your watch gets its updates either way.",
+  "alert.blocked.title": "Turn on alerts for tafs",
   "alert.by_email": "By email",
   "alert.example": "Example",
   "alert.foot.cant_answer_holds": "Alerts go to the people who may answer held calls. Your role on this account can't.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Alerts aren't on for this phone yet. {why}",
   "alert.not_refused": "Not refused",
   "alert.not_sent": "A reply wasn't sent",
+  "alert.now_on": "Alerts are on.",
   "alert.on_this_device": "Alerts on this {device}",
+  "alert.open_notification_settings": "Open notification settings",
+  "alert.open_settings": "Open Settings",
   "alert.open_tafs_answer_kiff_did": "Open tafs to answer it: KIFF didn't say which version of it you saw.",
   "alert.open_tafs_answer_phone_can": "Open tafs to answer it: this phone can't sign it from the notification.",
   "alert.prompt": "Get an alert when a taf needs you",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Not available",
   "alert.status.off": "Off",
   "alert.status.on": "On",
+  "alert.still_off": "Alerts are still off.",
   "alert.still_on_after_sign_out.body": "tafs couldn't turn them off ({why}). Try again, or sign out anyway and turn off notifications for tafs in Settings.",
   "alert.still_on_after_sign_out.title": "This {device} may still get this account's alerts",
   "alert.taf_needs_you": "{taf} needs you",
@@ -43,6 +51,8 @@
     "other": "{count} tafs ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs couldn't reach KIFF to refuse it. Open tafs to answer it.",
+  "alert.watch_first.body": "To see approvals and answers as alerts, on this phone and on your watch, turn on alerts for tafs. Your watch keeps getting its updates even if you don't.",
+  "alert.watch_first.title": "Your watch is using tafs",
   "alert.what_alerts": "What alerts you",
   "alert.with_sound": "With sound"
 }

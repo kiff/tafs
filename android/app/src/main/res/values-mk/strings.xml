@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Одговори до %3$s. Ништо не се испраќа додека не одобриш.</string>
     <string name="alert_answered">Еден taf одговори на некого</string>
     <string name="alert_approve_once">Одобри еднаш…</string>
+    <string name="alert_blocked_body">Овој %1$s повеќе не прашува, па известувањата за tafs се исклучени во Поставки. Вклучи ги таму за одобренијата и одговорите да стигнуваат до тебе.</string>
+    <string name="alert_blocked_body_android">Android повеќе не прашува, па известувањата за tafs се исклучени во поставките на телефонот. Вклучи ги таму за одобренијата и одговорите да стигнуваат до тебе, на овој телефон и на часовникот. Часовникот ги добива ажурирањата во секој случај.</string>
+    <string name="alert_blocked_body_watch">Твојот iPhone повеќе не прашува, па известувањата за tafs се исклучени во Поставки. Вклучи ги таму за одобренијата и одговорите да стигнуваат до тебе, на овој iPhone и на часовникот. Часовникот ги добива ажурирањата во секој случај.</string>
+    <string name="alert_blocked_title">Вклучи известувања за tafs</string>
     <string name="alert_by_email">По е-пошта</string>
     <string name="alert_example">Пример</string>
     <string name="alert_foot_cant_answer_holds">Известувањата одат до луѓето што смеат да одговараат на задржани барања. Твојата улога на оваа сметка не смее.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Известувањата сè уште не се вклучени за овој телефон. %1$s</string>
     <string name="alert_not_refused">Не е одбиено</string>
     <string name="alert_not_sent">Одговорот не е испратен</string>
+    <string name="alert_now_on">Известувањата се вклучени.</string>
     <string name="alert_on_this_device">Известувања на овој %1$s</string>
+    <string name="alert_open_notification_settings">Отвори поставки за известувања</string>
+    <string name="alert_open_settings">Отвори Поставки</string>
     <string name="alert_open_tafs_answer_kiff_did">Отвори tafs за да одговориш: KIFF не рече која негова верзија си ја видел.</string>
     <string name="alert_open_tafs_answer_phone_can">Отвори tafs за да одговориш: овој телефон не може да го потпише од известувањето.</string>
     <string name="alert_prompt">Добивај известување кога на некој taf му си потребен</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Недостапно</string>
     <string name="alert_status_off">Исклучено</string>
     <string name="alert_status_on">Вклучено</string>
+    <string name="alert_still_off">Известувањата сè уште се исклучени.</string>
     <string name="alert_still_on_after_sign_out_body">tafs не можеше да ги исклучи (%1$s). Обиди се повторно или сепак одјави се и исклучи ги известувањата за tafs во Поставки.</string>
     <string name="alert_still_on_after_sign_out_title">Овој %1$s можеби сè уште ќе ги добива известувањата на оваа сметка</string>
     <string name="alert_taf_needs_you">%1$s те чека</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafови ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs не можеше да стигне до KIFF за да го одбие. Отвори tafs за да одговориш.</string>
+    <string name="alert_watch_first_body">За да ги гледаш одобренијата и одговорите како известувања, на овој телефон и на часовникот, вклучи ги известувањата за tafs. Часовникот ќе продолжи да ги добива ажурирањата и ако не го направиш тоа.</string>
+    <string name="alert_watch_first_title">Твојот часовник користи tafs</string>
     <string name="alert_what_alerts">Што те известува</string>
     <string name="alert_with_sound">Со звук</string>
     <string name="app_name">tafs</string>

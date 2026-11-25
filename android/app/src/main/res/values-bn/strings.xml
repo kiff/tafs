@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s। %3$s-এর মধ্যে উত্তর দিন। আপনি অনুমোদন না করা পর্যন্ত কিছু পাঠানো হয় না।</string>
     <string name="alert_answered">একটি taf কাউকে উত্তর দিয়েছে</string>
     <string name="alert_approve_once">একবার অনুমোদন করুন…</string>
+    <string name="alert_blocked_body">এই %1$s আর জিজ্ঞাসা করে না, তাই সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন আপনার কাছে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন।</string>
+    <string name="alert_blocked_body_android">Android আর জিজ্ঞাসা করে না, তাই আপনার ফোনের সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন এই ফোনে ও আপনার ঘড়িতে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন। আপনার ঘড়ি যেকোনোভাবেই আপডেট পায়।</string>
+    <string name="alert_blocked_body_watch">আপনার iPhone আর জিজ্ঞাসা করে না, তাই সেটিংসে tafs-এর অ্যালার্ট বন্ধ আছে। অনুমোদন ও উত্তর যেন এই iPhone-এ ও আপনার ঘড়িতে পৌঁছায়, সেজন্য সেখানে সেগুলো চালু করুন। আপনার ঘড়ি যেকোনোভাবেই আপডেট পায়।</string>
+    <string name="alert_blocked_title">tafs-এর অ্যালার্ট চালু করুন</string>
     <string name="alert_by_email">ইমেইলে</string>
     <string name="alert_example">উদাহরণ</string>
     <string name="alert_foot_cant_answer_holds">অ্যালার্ট তাঁদের কাছে যায় যাঁরা ধরে রাখা কল-এর উত্তর দিতে পারেন। এই অ্যাকাউন্টে আপনার ভূমিকা তা পারে না।</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">এই ফোনের জন্য অ্যালার্ট এখনও চালু নেই। %1$s</string>
     <string name="alert_not_refused">প্রত্যাখ্যান হয়নি</string>
     <string name="alert_not_sent">একটি উত্তর পাঠানো হয়নি</string>
+    <string name="alert_now_on">অ্যালার্ট চালু আছে।</string>
     <string name="alert_on_this_device">এই %1$s-এ অ্যালার্ট</string>
+    <string name="alert_open_notification_settings">বিজ্ঞপ্তি সেটিংস খুলুন</string>
+    <string name="alert_open_settings">সেটিংস খুলুন</string>
     <string name="alert_open_tafs_answer_kiff_did">উত্তর দিতে tafs খুলুন: আপনি এর কোন সংস্করণ দেখেছেন তা KIFF বলেনি।</string>
     <string name="alert_open_tafs_answer_phone_can">উত্তর দিতে tafs খুলুন: এই ফোন নোটিফিকেশন থেকে এতে সই করতে পারে না।</string>
     <string name="alert_prompt">কোনো taf-এর আপনাকে দরকার হলে অ্যালার্ট পান</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">পাওয়া যাচ্ছে না</string>
     <string name="alert_status_off">বন্ধ</string>
     <string name="alert_status_on">চালু</string>
+    <string name="alert_still_off">অ্যালার্ট এখনও বন্ধ।</string>
     <string name="alert_still_on_after_sign_out_body">tafs সেগুলো বন্ধ করতে পারেনি (%1$s)। আবার চেষ্টা করুন, অথবা তবুও সাইন আউট করে সেটিংসে tafs-এর নোটিফিকেশন বন্ধ করুন।</string>
     <string name="alert_still_on_after_sign_out_title">এই %1$s হয়তো এখনও এই অ্যাকাউন্টের অ্যালার্ট পাবে</string>
     <string name="alert_taf_needs_you">%1$s-এর আপনাকে দরকার</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$sটি taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">প্রত্যাখ্যান করতে tafs KIFF-এ পৌঁছাতে পারেনি। উত্তর দিতে tafs খুলুন।</string>
+    <string name="alert_watch_first_body">এই ফোনে ও আপনার ঘড়িতে অনুমোদন ও উত্তর অ্যালার্ট হিসেবে দেখতে tafs-এর অ্যালার্ট চালু করুন। চালু না করলেও আপনার ঘড়ি আপডেট পেতে থাকবে।</string>
+    <string name="alert_watch_first_title">আপনার ঘড়ি tafs ব্যবহার করছে</string>
     <string name="alert_what_alerts">কীসে আপনাকে অ্যালার্ট করে</string>
     <string name="alert_with_sound">শব্দ সহ</string>
     <string name="app_name">tafs</string>

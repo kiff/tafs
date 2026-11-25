@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Yanıt süresi: %3$s. Siz onaylayana kadar hiçbir şey gönderilmez.</string>
     <string name="alert_answered">Bir taf birine yanıt verdi</string>
     <string name="alert_approve_once">Bir kez onayla…</string>
+    <string name="alert_blocked_body">Bu %1$s cihazı artık sormuyor, bu yüzden tafs uyarıları Ayarlar\'da kapalı. Onaylar ve yanıtlar size ulaşsın diye onları orada açın.</string>
+    <string name="alert_blocked_body_android">Android artık sormuyor, bu yüzden tafs uyarıları telefonunuzun ayarlarında kapalı. Onaylar ve yanıtlar size, bu telefonda ve saatinizde ulaşsın diye onları orada açın. Saatiniz güncellemelerini her durumda alır.</string>
+    <string name="alert_blocked_body_watch">iPhone\'unuz artık sormuyor, bu yüzden tafs uyarıları Ayarlar\'da kapalı. Onaylar ve yanıtlar size, bu iPhone\'da ve saatinizde ulaşsın diye onları orada açın. Saatiniz güncellemelerini her durumda alır.</string>
+    <string name="alert_blocked_title">tafs için uyarıları açın</string>
     <string name="alert_by_email">E-postayla</string>
     <string name="alert_example">Örnek</string>
     <string name="alert_foot_cant_answer_holds">Uyarılar, tutulan çağrıları yanıtlayabilenlere gider. Bu hesaptaki rolünüz yanıtlayamaz.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Uyarılar bu telefon için henüz açık değil. %1$s</string>
     <string name="alert_not_refused">Reddedilmedi</string>
     <string name="alert_not_sent">Bir yanıt gönderilmedi</string>
+    <string name="alert_now_on">Uyarılar açık.</string>
     <string name="alert_on_this_device">Bu %1$s üzerindeki uyarılar</string>
+    <string name="alert_open_notification_settings">Bildirim ayarlarını aç</string>
+    <string name="alert_open_settings">Ayarlar\'ı aç</string>
     <string name="alert_open_tafs_answer_kiff_did">Yanıtlamak için tafs\'ı açın: KIFF hangi sürümünü gördüğünüzü söylemedi.</string>
     <string name="alert_open_tafs_answer_phone_can">Yanıtlamak için tafs\'ı açın: bu telefon bildirimden imzalayamıyor.</string>
     <string name="alert_prompt">Bir taf\'ın size ihtiyacı olduğunda uyarı alın</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Kullanılamıyor</string>
     <string name="alert_status_off">Kapalı</string>
     <string name="alert_status_on">Açık</string>
+    <string name="alert_still_off">Uyarılar hâlâ kapalı.</string>
     <string name="alert_still_on_after_sign_out_body">tafs bunları kapatamadı (%1$s). Tekrar deneyin ya da yine de oturumu kapatıp Ayarlar\'dan tafs bildirimlerini kapatın.</string>
     <string name="alert_still_on_after_sign_out_title">Bu %1$s bu hesabın uyarılarını almaya devam edebilir</string>
     <string name="alert_taf_needs_you">%1$s sizi bekliyor</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs reddetmek için KIFF\'e ulaşamadı. Yanıtlamak için tafs\'ı açın.</string>
+    <string name="alert_watch_first_body">Onayları ve yanıtları bu telefonda ve saatinizde uyarı olarak görmek için tafs uyarılarını açın. Açmasanız da saatiniz güncellemelerini almaya devam eder.</string>
+    <string name="alert_watch_first_title">Saatiniz tafs kullanıyor</string>
     <string name="alert_what_alerts">Sizi ne uyarır</string>
     <string name="alert_with_sound">Sesli</string>
     <string name="app_name">tafs</string>

@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s។ ឆ្លើយមុន %3$s។ គ្មានអ្វីត្រូវបានផ្ញើទេ រហូតដល់អ្នកអនុម័ត។</string>
     <string name="alert_answered">taf បានឆ្លើយទៅនរណាម្នាក់</string>
     <string name="alert_approve_once">អនុម័តម្តង…</string>
+    <string name="alert_blocked_body">%1$s នេះលែងសួរទៀតហើយ ដូច្នេះការជូនដំណឹងសម្រាប់ tafs ត្រូវបានបិទក្នុងការកំណត់។ បើកវានៅទីនោះ ដើម្បីឱ្យការអនុម័ត និងចម្លើយទៅដល់អ្នក។</string>
+    <string name="alert_blocked_body_android">Android លែងសួរទៀតហើយ ដូច្នេះការជូនដំណឹងសម្រាប់ tafs ត្រូវបានបិទក្នុងការកំណត់ទូរសព្ទរបស់អ្នក។ បើកវានៅទីនោះ ដើម្បីឱ្យការអនុម័ត និងចម្លើយទៅដល់អ្នក នៅលើទូរសព្ទនេះ និងនាឡិការបស់អ្នក។ នាឡិការបស់អ្នកនៅតែទទួលបានបច្ចុប្បន្នភាពរបស់វា។</string>
+    <string name="alert_blocked_body_watch">iPhone របស់អ្នកលែងសួរទៀតហើយ ដូច្នេះការជូនដំណឹងសម្រាប់ tafs ត្រូវបានបិទក្នុងការកំណត់។ បើកវានៅទីនោះ ដើម្បីឱ្យការអនុម័ត និងចម្លើយទៅដល់អ្នក នៅលើ iPhone នេះ និងនាឡិការបស់អ្នក។ នាឡិការបស់អ្នកនៅតែទទួលបានបច្ចុប្បន្នភាពរបស់វា។</string>
+    <string name="alert_blocked_title">បើកការជូនដំណឹងសម្រាប់ tafs</string>
     <string name="alert_by_email">តាមអ៊ីមែល</string>
     <string name="alert_example">ឧទាហរណ៍</string>
     <string name="alert_foot_cant_answer_holds">ការជូនដំណឹងទៅដល់អ្នកដែលអាចឆ្លើយការហៅដែលត្រូវបានផ្អាកទុក។ តួនាទីរបស់អ្នកលើគណនីនេះមិនអាចទេ។</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">ការជូនដំណឹងមិនទាន់បើកសម្រាប់ទូរសព្ទនេះនៅឡើយទេ។ %1$s</string>
     <string name="alert_not_refused">មិនបានបដិសេធ</string>
     <string name="alert_not_sent">ចម្លើយមិនត្រូវបានផ្ញើទេ</string>
+    <string name="alert_now_on">ការជូនដំណឹងបានបើក។</string>
     <string name="alert_on_this_device">ការជូនដំណឹងនៅលើ %1$s នេះ</string>
+    <string name="alert_open_notification_settings">បើកការកំណត់ការជូនដំណឹង</string>
+    <string name="alert_open_settings">បើកការកំណត់</string>
     <string name="alert_open_tafs_answer_kiff_did">បើក tafs ដើម្បីឆ្លើយ៖ KIFF មិនបានប្រាប់ថាអ្នកបានឃើញកំណែណារបស់វាទេ។</string>
     <string name="alert_open_tafs_answer_phone_can">បើក tafs ដើម្បីឆ្លើយ៖ ទូរសព្ទនេះមិនអាចចុះហត្ថលេខាពីការជូនដំណឹងបានទេ។</string>
     <string name="alert_prompt">ទទួលការជូនដំណឹងនៅពេល taf ត្រូវការអ្នក</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">មិនមាន</string>
     <string name="alert_status_off">បិទ</string>
     <string name="alert_status_on">បើក</string>
+    <string name="alert_still_off">ការជូនដំណឹងនៅតែបិទ។</string>
     <string name="alert_still_on_after_sign_out_body">tafs មិនអាចបិទវាបានទេ (%1$s)។ សូមព្យាយាមម្តងទៀត ឬចាកចេញទោះយ៉ាងណាក៏ដោយ ហើយបិទការជូនដំណឹងសម្រាប់ tafs ក្នុងការកំណត់។</string>
     <string name="alert_still_on_after_sign_out_title">%1$s នេះប្រហែលនៅតែទទួលការជូនដំណឹងរបស់គណនីនេះ</string>
     <string name="alert_taf_needs_you">%1$s ត្រូវការអ្នក</string>
@@ -45,6 +53,8 @@
         <item quantity="other">taf %1$s ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs មិនអាចទៅដល់ KIFF ដើម្បីបដិសេធបានទេ។ បើក tafs ដើម្បីឆ្លើយ។</string>
+    <string name="alert_watch_first_body">ដើម្បីមើលការអនុម័ត និងចម្លើយជាការជូនដំណឹង នៅលើទូរសព្ទនេះ និងនាឡិការបស់អ្នក សូមបើកការជូនដំណឹងសម្រាប់ tafs។ នាឡិការបស់អ្នកនៅតែទទួលបានបច្ចុប្បន្នភាព ទោះបីអ្នកមិនបើកក៏ដោយ។</string>
+    <string name="alert_watch_first_title">នាឡិការបស់អ្នកកំពុងប្រើ tafs</string>
     <string name="alert_what_alerts">អ្វីដែលជូនដំណឹងអ្នក</string>
     <string name="alert_with_sound">មានសំឡេង</string>
     <string name="app_name">tafs</string>

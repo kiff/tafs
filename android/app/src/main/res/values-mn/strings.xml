@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. %3$s-ээс өмнө хариулна уу. Та зөвшөөрөхгүй бол юу ч илгээгдэхгүй.</string>
     <string name="alert_answered">Taf хэн нэгэнд хариуллаа</string>
     <string name="alert_approve_once">Нэг удаа зөвшөөрөх…</string>
+    <string name="alert_blocked_body">Энэ %1$s дахин асуухгүй тул Тохиргоонд tafs-ын мэдэгдэл унтраастай байна. Зөвшөөрөл, хариулт танд ирэхийн тулд тэнд асаана уу.</string>
+    <string name="alert_blocked_body_android">Android дахин асуухгүй тул утасны тохиргоонд tafs-ын мэдэгдэл унтраастай байна. Зөвшөөрөл, хариулт энэ утас болон цагт тань ирэхийн тулд тэнд асаана уу. Цаг тань шинэчлэлтээ ямар ч байсан авна.</string>
+    <string name="alert_blocked_body_watch">Таны iPhone дахин асуухгүй тул Тохиргоонд tafs-ын мэдэгдэл унтраастай байна. Зөвшөөрөл, хариулт энэ iPhone болон цагт тань ирэхийн тулд тэнд асаана уу. Цаг тань шинэчлэлтээ ямар ч байсан авна.</string>
+    <string name="alert_blocked_title">tafs-ын мэдэгдлийг асаах</string>
     <string name="alert_by_email">Имэйлээр</string>
     <string name="alert_example">Жишээ</string>
     <string name="alert_foot_cant_answer_holds">Мэдэгдэл түр барьсан дуудлагад хариулах эрхтэй хүмүүст очдог. Энэ бүртгэл дэх таны үүрэг эрхгүй.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Мэдэгдэл энэ утсанд одоохондоо асаагүй байна. %1$s</string>
     <string name="alert_not_refused">Татгалзаагүй</string>
     <string name="alert_not_sent">Хариу илгээгдсэнгүй</string>
+    <string name="alert_now_on">Мэдэгдэл асаалттай байна.</string>
     <string name="alert_on_this_device">Энэ %1$s дээрх мэдэгдэл</string>
+    <string name="alert_open_notification_settings">Мэдэгдлийн тохиргоог нээх</string>
+    <string name="alert_open_settings">Тохиргоог нээх</string>
     <string name="alert_open_tafs_answer_kiff_did">Хариулахын тулд tafs-ыг нээнэ үү: KIFF таныг аль хувилбарыг харснаа хэлээгүй.</string>
     <string name="alert_open_tafs_answer_phone_can">Хариулахын тулд tafs-ыг нээнэ үү: энэ утас мэдэгдлээс гарын үсэг зурж чадахгүй.</string>
     <string name="alert_prompt">Taf таныг хэрэгтэй үед мэдэгдэл авах</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Боломжгүй</string>
     <string name="alert_status_off">Унтраасан</string>
     <string name="alert_status_on">Асаасан</string>
+    <string name="alert_still_off">Мэдэгдэл унтраастай хэвээр байна.</string>
     <string name="alert_still_on_after_sign_out_body">tafs тэдгээрийг унтрааж чадсангүй (%1$s). Дахин оролдох эсвэл ямар ч байсан гараад, Тохиргоонд tafs-ийн мэдэгдлийг унтраана уу.</string>
     <string name="alert_still_on_after_sign_out_title">Энэ %1$s энэ бүртгэлийн мэдэгдлийг үргэлжлүүлэн авч магадгүй</string>
     <string name="alert_taf_needs_you">%1$s таныг хүлээж байна</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs татгалзахын тулд KIFF-д хүрч чадсангүй. Хариулахын тулд tafs-ыг нээнэ үү.</string>
+    <string name="alert_watch_first_body">Зөвшөөрөл, хариултыг энэ утас болон цагтаа мэдэгдэл хэлбэрээр харахын тулд tafs-ын мэдэгдлийг асаана уу. Асаахгүй байсан ч цаг тань шинэчлэлтээ авсаар байна.</string>
+    <string name="alert_watch_first_title">Таны цаг tafs ашиглаж байна</string>
     <string name="alert_what_alerts">Юуны талаар мэдэгдэх</string>
     <string name="alert_with_sound">Дуутай</string>
     <string name="app_name">tafs</string>

@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Válaszolj eddig: {zone}. Semmi sem megy ki, amíg jóvá nem hagyod.",
   "alert.answered": "Egy taf válaszolt valakinek",
   "alert.approve_once": "Jóváhagyás egyszer…",
+  "alert.blocked.body": "Ez az eszköz ({device}) már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a Beállításokban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád.",
+  "alert.blocked.body_android": "Az Android már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a telefon beállításaiban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád, ezen a telefonon és az órádon. Az órád így is megkapja a frissítéseit.",
+  "alert.blocked.body_watch": "Az iPhone-od már nem kérdez rá, ezért a tafs riasztásai ki vannak kapcsolva a Beállításokban. Kapcsold be őket ott, hogy a jóváhagyások és a válaszok eljussanak hozzád, ezen az iPhone-on és az órádon. Az órád így is megkapja a frissítéseit.",
+  "alert.blocked.title": "Kapcsold be a tafs riasztásait",
   "alert.by_email": "E-mailben",
   "alert.example": "Példa",
   "alert.foot.cant_answer_holds": "Az értesítések azokhoz mennek, akik válaszolhatnak a visszatartott hívásokra. A szerepköröd ebben a fiókban erre nem jogosult.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Az értesítések ezen a telefonon még nincsenek bekapcsolva. {why}",
   "alert.not_refused": "Nincs elutasítva",
   "alert.not_sent": "Egy válasz nem ment el",
+  "alert.now_on": "A riasztások be vannak kapcsolva.",
   "alert.on_this_device": "Értesítések ezen az eszközön ({device})",
+  "alert.open_notification_settings": "Értesítési beállítások megnyitása",
+  "alert.open_settings": "Beállítások megnyitása",
   "alert.open_tafs_answer_kiff_did": "Nyisd meg a tafst a válaszhoz: a KIFF nem jelezte, melyik verzióját láttad.",
   "alert.open_tafs_answer_phone_can": "Nyisd meg a tafst a válaszhoz: ez a telefon az értesítésből nem tudja aláírni.",
   "alert.prompt": "Kapj értesítést, ha egy tafnak szüksége van rád",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Nem érhető el",
   "alert.status.off": "Ki",
   "alert.status.on": "Be",
+  "alert.still_off": "A riasztások még mindig ki vannak kapcsolva.",
   "alert.still_on_after_sign_out.body": "A tafs nem tudta kikapcsolni őket ({why}). Próbáld újra, vagy jelentkezz ki mégis, és kapcsold ki a tafs értesítéseit a Beállításokban.",
   "alert.still_on_after_sign_out.title": "Ez az eszköz ({device}) talán továbbra is megkapja ennek a fióknak az értesítéseit",
   "alert.taf_needs_you": "{taf} rád vár",
@@ -43,6 +51,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "A tafs nem érte el a KIFF-et az elutasításhoz. Nyisd meg a tafst a válaszhoz.",
+  "alert.watch_first.body": "Ha a jóváhagyásokat és a válaszokat riasztásként szeretnéd látni ezen a telefonon és az órádon, kapcsold be a tafs riasztásait. Az órád akkor is megkapja a frissítéseit, ha nem teszed meg.",
+  "alert.watch_first.title": "Az órád a tafst használja",
   "alert.what_alerts": "Mire kapsz értesítést",
   "alert.with_sound": "Hanggal"
 }

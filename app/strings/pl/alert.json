@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Odpowiedz do {zone}. Nic nie zostanie wysłane, dopóki nie zatwierdzisz.",
   "alert.answered": "Taf komuś odpowiedział",
   "alert.approve_once": "Zatwierdź raz…",
+  "alert.blocked.body": "Ten {device} już nie pyta, więc alerty tafs są wyłączone w Ustawieniach. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały.",
+  "alert.blocked.body_android": "Android już nie pyta, więc alerty tafs są wyłączone w ustawieniach telefonu. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały, na tym telefonie i na zegarku. Zegarek i tak dostaje swoje aktualizacje.",
+  "alert.blocked.body_watch": "Twój iPhone już nie pyta, więc alerty tafs są wyłączone w Ustawieniach. Włącz je tam, aby zatwierdzenia i odpowiedzi do Ciebie docierały, na tym iPhonie i na zegarku. Zegarek i tak dostaje swoje aktualizacje.",
+  "alert.blocked.title": "Włącz alerty tafs",
   "alert.by_email": "Przez e-mail",
   "alert.example": "Przykład",
   "alert.foot.cant_answer_holds": "Alerty trafiają do osób, które mogą odpowiadać na oczekujące wywołania. Twoja rola na tym koncie nie może.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Alerty nie są jeszcze włączone na tym telefonie. {why}",
   "alert.not_refused": "Nie odrzucono",
   "alert.not_sent": "Odpowiedź nie została wysłana",
+  "alert.now_on": "Alerty są włączone.",
   "alert.on_this_device": "Alerty na tym urządzeniu ({device})",
+  "alert.open_notification_settings": "Otwórz ustawienia powiadomień",
+  "alert.open_settings": "Otwórz Ustawienia",
   "alert.open_tafs_answer_kiff_did": "Otwórz tafs, aby odpowiedzieć: KIFF nie podał, którą jego wersję widzisz.",
   "alert.open_tafs_answer_phone_can": "Otwórz tafs, aby odpowiedzieć: ten telefon nie może tego podpisać z powiadomienia.",
   "alert.prompt": "Otrzymuj alert, gdy taf czeka na Ciebie",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Niedostępne",
   "alert.status.off": "Wyłączone",
   "alert.status.on": "Włączone",
+  "alert.still_off": "Alerty są nadal wyłączone.",
   "alert.still_on_after_sign_out.body": "tafs nie mógł ich wyłączyć ({why}). Spróbuj ponownie albo mimo to wyloguj się i wyłącz powiadomienia tafs w Ustawieniach.",
   "alert.still_on_after_sign_out.title": "Ten {device} może nadal dostawać alerty tego konta",
   "alert.taf_needs_you": "{taf} czeka na Ciebie",
@@ -45,6 +53,8 @@
     "other": "{count} tafs ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs nie mógł połączyć się z KIFF, aby to odrzucić. Otwórz tafs, aby odpowiedzieć.",
+  "alert.watch_first.body": "Aby widzieć zatwierdzenia i odpowiedzi jako alerty, na tym telefonie i na zegarku, włącz alerty tafs. Zegarek będzie dostawać swoje aktualizacje, nawet jeśli tego nie zrobisz.",
+  "alert.watch_first.title": "Twój zegarek używa tafs",
   "alert.what_alerts": "Co Cię powiadamia",
   "alert.with_sound": "Z dźwiękiem"
 }

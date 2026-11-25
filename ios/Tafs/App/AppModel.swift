@@ -1,6 +1,7 @@
 import CryptoKit
 import Foundation
 import SwiftUI
+import UserNotifications
 
 /// The app's state: the tafs, what waits for the owner, and the record.
 ///
@@ -110,6 +111,8 @@ final class AppModel: ObservableObject {
             UserDefaults.standard.set(false, forKey: alertsEnabledKey)
             alertsReady = false
             phoneAlerts = nil
+            // Alerts off, a watch still served: it keeps its silent pushes, with no alert.
+            await registerBackgroundOnly(token, gen: gen)
             await loadPhoneAlerts()
         } catch { if gen == accountGeneration { phoneAlertsError = error.localizedDescription } }
     }
@@ -2480,19 +2483,30 @@ final class AppModel: ObservableObject {
     /// Tells tafs cloud this phone's token again (tokens change), with a secret it hasn't
     /// confirmed yet if there is one, and learns whether the account's alerts are set up.
     func syncPush() async {
-        guard mode == .kiff, let token = pushToken else { return }
+        guard mode == .kiff else { return }
+        guard let token = pushToken else {
+            // No token yet, and alerts not on: a phone that serves a watch asks iOS for one anyway, for the silent pushes its
+            // watch's threads move with (iOS gives it with no permission). It arrives at `pushTokenArrived`, which comes back here.
+            if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool != true, servesWatch() { requestPushToken?() }
+            return
+        }
         let gen = accountGeneration
         let handoff = pendingHandoff
         if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool == false {
             alertsReady = false
             if let handoff, (try? await cloud.keepAlerts(handoff.target)) != nil, gen == accountGeneration { pendingHandoff = nil }
+            await registerBackgroundOnly(token, gen: gen)
             return
         }
         if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool != true && handoff == nil {
             // A different account must not inherit this phone's earlier alert consent.
             let previous = try? await cloud.phoneAlerts(token)
             guard gen == accountGeneration else { return }
-            guard previous?.enabled == true else { alertsReady = false; return }
+            guard previous?.enabled == true else {
+                alertsReady = false
+                await registerBackgroundOnly(token, gen: gen)
+                return
+            }
             UserDefaults.standard.set(true, forKey: alertsEnabledKey)
         }
         guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target, kinds: savedAlertKinds) else {
@@ -2502,6 +2516,71 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return }
         if handoff != nil { pendingHandoff = nil }
         applyPush(status)
+    }
+
+    /// Whether this phone serves an Apple Watch that has tafs: then, with alerts off, it still takes its watch's silent pushes.
+    /// False on a Mac and on an iPad. A test's own.
+    var servesWatch: @MainActor () -> Bool = { WatchPushRelay.watchListening }
+
+    /// Alerts off on a phone that serves a watch (row 13, as Android's): tafs cloud keeps its token for background pushes only
+    /// (`alerts: false`): every silent change its watch's threads move with, and never a visible alert, nor an alert target.
+    /// Nothing with no watch. A failure leaves it for the next sync.
+    private func registerBackgroundOnly(_ token: String, gen: Int) async {
+        guard servesWatch(), gen == accountGeneration else { return }
+        _ = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, alerts: false)
+    }
+
+    // MARK: Guidance on alerts (the owner's call, row 13; as Android's)
+
+    /// What tafs says about alerts: notifications blocked in Settings, with the way there and a check on return; and, once per
+    /// phone, that its watch is using tafs.
+    enum AlertsPrompt: Equatable { case blocked, watchFirst }
+    @Published var alertsPrompt: AlertsPrompt?
+    /// After Open Settings: whether alerts are on now, said once on return.
+    @Published var alertsRecheck: String?
+    /// Opened Settings from the blocked prompt: checked again when tafs is back.
+    private var awaitingNotificationSettings = false
+    /// iOS's notification permission for tafs now; nil where there's none to read (the app's own).
+    var notificationAuthorization: (@MainActor () async -> UNAuthorizationStatus)?
+    /// Opens tafs's own notification settings (the app's own).
+    var openNotificationSettings: (@MainActor () -> Void)?
+    /// The watch has asked this phone something: set by the relay, read here.
+    nonisolated static let watchUsedKey = "watch.used"
+    /// The watch prompt was shown on this phone: never again.
+    nonisolated static let watchPromptShownKey = "alerts.watch_prompt_shown"
+
+    /// The blocked prompt's words: with the watch's line only on a phone that serves one.
+    var alertsBlockedBody: String {
+        servesWatch() ? Words.Alert.Blocked.bodyWatch : Words.Alert.Blocked.body(device: "\(ThisDevice.kind)")
+    }
+
+    /// Open Settings: to tafs's own switch, and the permission is read again on return.
+    func goToNotificationSettings() {
+        alertsPrompt = nil
+        awaitingNotificationSettings = true
+        openNotificationSettings?()
+    }
+
+    /// Back in tafs: after Open Settings, whether alerts are on now, said once, and turned on when they may be. And the watch
+    /// prompt, once per phone, when its watch has used tafs and alerts aren't on.
+    func checkAlertsOnReturn() async {
+        guard mode == .kiff, !Screenshots.enabled else { return }
+        if awaitingNotificationSettings {
+            awaitingNotificationSettings = false
+            let status = await notificationAuthorization?()
+            if status == .authorized || status == .provisional {
+                alertsRecheck = Words.Alert.nowOn
+                await turnOnAlerts()
+            } else {
+                alertsRecheck = Words.Alert.stillOff
+            }
+            return
+        }
+        let defaults = UserDefaults.standard
+        guard alertsPrompt == nil, alertsReady != true, defaults.bool(forKey: Self.watchUsedKey),
+              !defaults.bool(forKey: Self.watchPromptShownKey) else { return }
+        defaults.set(true, forKey: Self.watchPromptShownKey)
+        alertsPrompt = .watchFirst
     }
 
     /// Sound for alerts on this device (Settings, Notifications & haptics; the 901 test). Off,
@@ -2541,6 +2620,11 @@ final class AppModel: ObservableObject {
         defer { turningOnAlerts = false }
         let gen = accountGeneration
 
+        // iOS no longer asks once it was refused: say so, with the way to tafs's own switch, rather than a line to act on alone.
+        if await notificationAuthorization?() == .denied {
+            alertsPrompt = .blocked
+            return false
+        }
         guard await askNotificationPermission?() ?? false else {
             lastError = Words.Alert.allowNotifications
             return false

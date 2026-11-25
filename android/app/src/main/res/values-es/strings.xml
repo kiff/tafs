@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Responde antes de %3$s. No se envía nada hasta que apruebes.</string>
     <string name="alert_answered">Un taf respondió a alguien</string>
     <string name="alert_approve_once">Aprobar una vez…</string>
+    <string name="alert_blocked_body">Este %1$s ya no pregunta, así que las alertas de tafs están desactivadas en Ajustes. Actívalas ahí para que las aprobaciones y respuestas te lleguen.</string>
+    <string name="alert_blocked_body_android">Android ya no pregunta, así que las alertas de tafs están desactivadas en los ajustes del teléfono. Actívalas ahí para que las aprobaciones y respuestas te lleguen, en este teléfono y en tu reloj. Tu reloj recibe sus actualizaciones de todos modos.</string>
+    <string name="alert_blocked_body_watch">Tu iPhone ya no pregunta, así que las alertas de tafs están desactivadas en Ajustes. Actívalas ahí para que las aprobaciones y respuestas te lleguen, en este iPhone y en tu reloj. Tu reloj recibe sus actualizaciones de todos modos.</string>
+    <string name="alert_blocked_title">Activa las alertas de tafs</string>
     <string name="alert_by_email">Por correo</string>
     <string name="alert_example">Ejemplo</string>
     <string name="alert_foot_cant_answer_holds">Las alertas van a las personas que pueden responder a las llamadas retenidas. Tu rol en esta cuenta no puede.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Las alertas aún no están activadas en este teléfono. %1$s</string>
     <string name="alert_not_refused">No rechazada</string>
     <string name="alert_not_sent">Una respuesta no se envió</string>
+    <string name="alert_now_on">Las alertas están activadas.</string>
     <string name="alert_on_this_device">Alertas en este %1$s</string>
+    <string name="alert_open_notification_settings">Abrir ajustes de notificaciones</string>
+    <string name="alert_open_settings">Abrir Ajustes</string>
     <string name="alert_open_tafs_answer_kiff_did">Abre tafs para responder: KIFF no indicó qué versión viste.</string>
     <string name="alert_open_tafs_answer_phone_can">Abre tafs para responder: este teléfono no puede firmarla desde la notificación.</string>
     <string name="alert_prompt">Recibe una alerta cuando un taf te necesite</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">No disponible</string>
     <string name="alert_status_off">Desactivado</string>
     <string name="alert_status_on">Activado</string>
+    <string name="alert_still_off">Las alertas siguen desactivadas.</string>
     <string name="alert_still_on_after_sign_out_body">tafs no pudo desactivarlas (%1$s). Vuelve a intentarlo, o cierra sesión de todos modos y desactiva las notificaciones de tafs en Ajustes.</string>
     <string name="alert_still_on_after_sign_out_title">Este %1$s podría seguir recibiendo las alertas de esta cuenta</string>
     <string name="alert_taf_needs_you">%1$s te necesita</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs no pudo contactar con KIFF para rechazarla. Abre tafs para responder.</string>
+    <string name="alert_watch_first_body">Para ver las aprobaciones y respuestas como alertas, en este teléfono y en tu reloj, activa las alertas de tafs. Tu reloj seguirá recibiendo sus actualizaciones aunque no lo hagas.</string>
+    <string name="alert_watch_first_title">Tu reloj está usando tafs</string>
     <string name="alert_what_alerts">Qué te avisa</string>
     <string name="alert_with_sound">Con sonido</string>
     <string name="app_name">tafs</string>

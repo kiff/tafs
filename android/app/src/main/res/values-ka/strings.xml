@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. უპასუხეთ ამ დრომდე: %3$s. არაფერი იგზავნება, სანამ არ დაამტკიცებთ.</string>
     <string name="alert_answered">taf-მა ვიღაცას უპასუხა</string>
     <string name="alert_approve_once">დაამტკიცეთ ერთხელ…</string>
+    <string name="alert_blocked_body">ეს მოწყობილობა (%1$s) აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ.</string>
+    <string name="alert_blocked_body_android">Android აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია ტელეფონის პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ ამ ტელეფონზე და საათზე. საათი განახლებებს ნებისმიერ შემთხვევაში იღებს.</string>
+    <string name="alert_blocked_body_watch">თქვენი iPhone აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ ამ iPhone-ზე და საათზე. საათი განახლებებს ნებისმიერ შემთხვევაში იღებს.</string>
+    <string name="alert_blocked_title">ჩართეთ tafs-ის შეტყობინებები</string>
     <string name="alert_by_email">ელფოსტით</string>
     <string name="alert_example">მაგალითი</string>
     <string name="alert_foot_cant_answer_holds">შეტყობინებები მიდის მათთან, ვისაც შეუძლია დაკავებულ ზარებზე პასუხი. ამ ანგარიშზე თქვენს როლს არ შეუძლია.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">ამ ტელეფონისთვის შეტყობინებები ჯერ ჩართული არ არის. %1$s</string>
     <string name="alert_not_refused">უარი არ ითქვა</string>
     <string name="alert_not_sent">პასუხი არ გაიგზავნა</string>
+    <string name="alert_now_on">შეტყობინებები ჩართულია.</string>
     <string name="alert_on_this_device">შეტყობინებები ამ მოწყობილობაზე (%1$s)</string>
+    <string name="alert_open_notification_settings">შეტყობინებების პარამეტრების გახსნა</string>
+    <string name="alert_open_settings">პარამეტრების გახსნა</string>
     <string name="alert_open_tafs_answer_kiff_did">გახსენით tafs, რომ უპასუხოთ: KIFF-მა არ თქვა, რომელი ვერსია ნახეთ.</string>
     <string name="alert_open_tafs_answer_phone_can">გახსენით tafs, რომ უპასუხოთ: ამ ტელეფონს შეტყობინებიდან ხელმოწერა არ შეუძლია.</string>
     <string name="alert_prompt">მიიღეთ შეტყობინება, როცა taf-ს თქვენი დახმარება სჭირდება</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">მიუწვდომელია</string>
     <string name="alert_status_off">გამორთულია</string>
     <string name="alert_status_on">ჩართულია</string>
+    <string name="alert_still_off">შეტყობინებები ჯერ კიდევ გამორთულია.</string>
     <string name="alert_still_on_after_sign_out_body">tafs-მა ვერ გამორთო ისინი (%1$s). სცადეთ ხელახლა, ან მაინც გადით და პარამეტრებში გამორთეთ tafs-ის შეტყობინებები.</string>
     <string name="alert_still_on_after_sign_out_title">ამ მოწყობილობას (%1$s) შეიძლება კვლავ მოუვიდეს ამ ანგარიშის შეტყობინებები</string>
     <string name="alert_taf_needs_you">%1$s-ს თქვენი დახმარება სჭირდება</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs-ს KIFF-თან დაკავშირება ვერ მოხერხდა უარის სათქმელად. გახსენით tafs, რომ უპასუხოთ.</string>
+    <string name="alert_watch_first_body">დადასტურებებისა და პასუხების შეტყობინებებად სანახავად ამ ტელეფონზე და საათზე, ჩართეთ tafs-ის შეტყობინებები. საათი განახლებებს მაინც მიიღებს, თუნდაც არ ჩართოთ.</string>
+    <string name="alert_watch_first_title">თქვენი საათი იყენებს tafs-ს</string>
     <string name="alert_what_alerts">რა გაცნობებთ</string>
     <string name="alert_with_sound">ხმით</string>
     <string name="app_name">tafs</string>

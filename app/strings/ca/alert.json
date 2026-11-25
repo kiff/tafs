@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Respon abans de {zone}. No s'envia res fins que ho aprovis.",
   "alert.answered": "Un taf ha respost algú",
   "alert.approve_once": "Aprova una vegada…",
+  "alert.blocked.body": "Aquest dispositiu ({device}) ja no ho pregunta, així que les alertes de tafs estan desactivades a Configuració. Activa-les allà perquè les aprovacions i les respostes t'arribin.",
+  "alert.blocked.body_android": "Android ja no ho pregunta, així que les alertes de tafs estan desactivades a la configuració del telèfon. Activa-les allà perquè les aprovacions i les respostes t'arribin, en aquest telèfon i al rellotge. El rellotge rep les actualitzacions igualment.",
+  "alert.blocked.body_watch": "El teu iPhone ja no ho pregunta, així que les alertes de tafs estan desactivades a Configuració. Activa-les allà perquè les aprovacions i les respostes t'arribin, en aquest iPhone i al rellotge. El rellotge rep les actualitzacions igualment.",
+  "alert.blocked.title": "Activa les alertes de tafs",
   "alert.by_email": "Per correu electrònic",
   "alert.example": "Exemple",
   "alert.foot.cant_answer_holds": "Les alertes arriben a qui pot respondre les crides retingudes. El teu rol en aquest compte no ho pot fer.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Les alertes encara no estan activades en aquest telèfon. {why}",
   "alert.not_refused": "No rebutjat",
   "alert.not_sent": "No s'ha enviat una resposta",
+  "alert.now_on": "Les alertes estan activades.",
   "alert.on_this_device": "Alertes en aquest dispositiu ({device})",
+  "alert.open_notification_settings": "Obre la configuració de notificacions",
+  "alert.open_settings": "Obre Configuració",
   "alert.open_tafs_answer_kiff_did": "Obre tafs per respondre: KIFF no ha dit quina versió has vist.",
   "alert.open_tafs_answer_phone_can": "Obre tafs per respondre: aquest telèfon no ho pot signar des de la notificació.",
   "alert.prompt": "Rep una alerta quan un taf et necessiti",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "No disponible",
   "alert.status.off": "Desactivat",
   "alert.status.on": "Activat",
+  "alert.still_off": "Les alertes encara estan desactivades.",
   "alert.still_on_after_sign_out.body": "tafs no les ha pogut desactivar ({why}). Torna-ho a provar, o tanca la sessió igualment i desactiva les notificacions de tafs als Ajustos.",
   "alert.still_on_after_sign_out.title": "Aquest dispositiu ({device}) encara pot rebre les alertes d'aquest compte",
   "alert.taf_needs_you": "{taf} et necessita",
@@ -43,6 +51,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs no ha pogut arribar a KIFF per rebutjar. Obre tafs per respondre.",
+  "alert.watch_first.body": "Per veure les aprovacions i les respostes com a alertes, en aquest telèfon i al rellotge, activa les alertes de tafs. El rellotge continuarà rebent les actualitzacions encara que no ho facis.",
+  "alert.watch_first.title": "El teu rellotge fa servir tafs",
   "alert.what_alerts": "Què t'avisa",
   "alert.with_sound": "Amb so"
 }

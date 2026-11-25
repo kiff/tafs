@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s。請於%3$s前回覆。在您核准之前不會傳送任何內容。</string>
     <string name="alert_answered">有 taf 回覆了某人</string>
     <string name="alert_approve_once">核准一次…</string>
+    <string name="alert_blocked_body">這部%1$s不會再詢問，因此 tafs 的通知在「設定」中為關閉。請在那裡開啟，讓核准與回答傳到您手上。</string>
+    <string name="alert_blocked_body_android">Android 不會再詢問，因此 tafs 的通知在手機設定中為關閉。請在那裡開啟，讓核准與回答傳到這部手機和您的手錶。無論如何，手錶都會收到更新。</string>
+    <string name="alert_blocked_body_watch">您的 iPhone 不會再詢問，因此 tafs 的通知在「設定」中為關閉。請在那裡開啟，讓核准與回答傳到這部 iPhone 和您的手錶。無論如何，手錶都會收到更新。</string>
+    <string name="alert_blocked_title">開啟 tafs 的通知</string>
     <string name="alert_by_email">透過電子郵件</string>
     <string name="alert_example">範例</string>
     <string name="alert_foot_cant_answer_holds">通知會傳給可回覆已保留呼叫的人。您在此帳號中的角色無法這麼做。</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">這部手機的通知尚未開啟。%1$s</string>
     <string name="alert_not_refused">尚未拒絕</string>
     <string name="alert_not_sent">有一則回覆未傳送</string>
+    <string name="alert_now_on">通知已開啟。</string>
     <string name="alert_on_this_device">這部%1$s上的通知</string>
+    <string name="alert_open_notification_settings">開啟通知設定</string>
+    <string name="alert_open_settings">開啟「設定」</string>
     <string name="alert_open_tafs_answer_kiff_did">請開啟 tafs 回覆：KIFF 未說明您看到的是哪個版本。</string>
     <string name="alert_open_tafs_answer_phone_can">請開啟 tafs 回覆：這部手機無法從通知中簽署。</string>
     <string name="alert_prompt">當 taf 需要您時收到通知</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">無法使用</string>
     <string name="alert_status_off">關閉</string>
     <string name="alert_status_on">開啟</string>
+    <string name="alert_still_off">通知仍為關閉。</string>
     <string name="alert_still_on_after_sign_out_body">tafs 無法關閉通知（%1$s）。請再試一次，或仍然登出，然後在「設定」中關閉 tafs 的通知。</string>
     <string name="alert_still_on_after_sign_out_title">這部%1$s可能仍會收到此帳號的通知</string>
     <string name="alert_taf_needs_you">%1$s 需要您</string>
@@ -45,6 +53,8 @@
         <item quantity="other">%1$s 個 taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs 無法連線至 KIFF 進行拒絕。請開啟 tafs 回覆。</string>
+    <string name="alert_watch_first_body">若要在這部手機和手錶上以通知查看核准與回答，請開啟 tafs 的通知。即使不開啟，手錶仍會持續收到更新。</string>
+    <string name="alert_watch_first_title">您的手錶正在使用 tafs</string>
     <string name="alert_what_alerts">哪些事項會通知您</string>
     <string name="alert_with_sound">有聲音</string>
     <string name="app_name">tafs</string>

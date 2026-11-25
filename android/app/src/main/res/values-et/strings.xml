@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Vasta hiljemalt %3$s. Midagi ei saadeta enne, kui kinnitad.</string>
     <string name="alert_answered">Taf vastas kellelegi</string>
     <string name="alert_approve_once">Kinnita üks kord…</string>
+    <string name="alert_blocked_body">See seade (%1$s) enam ei küsi, seega on tafsi teavitused seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni.</string>
+    <string name="alert_blocked_body_android">Android enam ei küsi, seega on tafsi teavitused telefoni seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni, selles telefonis ja kellas. Kell saab oma uuendused igal juhul.</string>
+    <string name="alert_blocked_body_watch">Sinu iPhone enam ei küsi, seega on tafsi teavitused seadetes välja lülitatud. Lülita need seal sisse, et kinnitused ja vastused jõuaksid sinuni, selles iPhone\'is ja kellas. Kell saab oma uuendused igal juhul.</string>
+    <string name="alert_blocked_title">Lülita tafsi teavitused sisse</string>
     <string name="alert_by_email">E-posti teel</string>
     <string name="alert_example">Näide</string>
     <string name="alert_foot_cant_answer_holds">Teavitused lähevad inimestele, kes tohivad kinni peetud päringutele vastata. Sinu roll sellel kontol ei tohi.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Teavitused pole selles telefonis veel sees. %1$s</string>
     <string name="alert_not_refused">Ei keeldutud</string>
     <string name="alert_not_sent">Vastust ei saadetud</string>
+    <string name="alert_now_on">Teavitused on sees.</string>
     <string name="alert_on_this_device">Teavitused selles seadmes (%1$s)</string>
+    <string name="alert_open_notification_settings">Ava teavituste seaded</string>
+    <string name="alert_open_settings">Ava Seaded</string>
     <string name="alert_open_tafs_answer_kiff_did">Vastamiseks ava tafs: KIFF ei öelnud, millist selle versiooni sa nägid.</string>
     <string name="alert_open_tafs_answer_phone_can">Vastamiseks ava tafs: see telefon ei saa seda teavitusest allkirjastada.</string>
     <string name="alert_prompt">Saa teavitus, kui taf vajab sind</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Pole saadaval</string>
     <string name="alert_status_off">Väljas</string>
     <string name="alert_status_on">Sees</string>
+    <string name="alert_still_off">Teavitused on endiselt väljas.</string>
     <string name="alert_still_on_after_sign_out_body">tafs ei saanud neid välja lülitada (%1$s). Proovi uuesti või logi siiski välja ja lülita seadetes tafsi teavitused välja.</string>
     <string name="alert_still_on_after_sign_out_title">See %1$s võib endiselt saada selle konto teavitusi</string>
     <string name="alert_taf_needs_you">%1$s vajab sind</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafi ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs ei jõudnud keeldumiseks KIFFini. Vastamiseks ava tafs.</string>
+    <string name="alert_watch_first_body">Et näha kinnitusi ja vastuseid teavitustena selles telefonis ja kellas, lülita tafsi teavitused sisse. Kell saab oma uuendusi ka siis, kui sa seda ei tee.</string>
+    <string name="alert_watch_first_title">Sinu kell kasutab tafsi</string>
     <string name="alert_what_alerts">Mis sind teavitab</string>
     <string name="alert_with_sound">Heliga</string>
     <string name="app_name">tafs</string>
