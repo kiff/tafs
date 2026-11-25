@@ -181,3 +181,32 @@ export function asideRefusal(tab, { windowId, off = [] } = {}) {
   if ((off || []).includes(host)) return "off";
   return null;
 }
+
+// A step's code for why the person's own tab may not be a run's (asideRefusal's reasons): a page that isn't https is a bad URL;
+// Chrome's store, a private tab, a sensitive or mail site, or a site the person switched off is blocked.
+const JOINED_CODE = { not_https: CODE.badURL, store: CODE.siteBlocked, incognito: CODE.siteBlocked, sensitive: CODE.siteBlocked, off: CODE.siteBlocked };
+
+/**
+ * Why the person's tab, joined to a run (docs/chrome.md, "A taf works where you are"), may not be worked on now: a step's code, or
+ * null. Both gates at once: the run's own (`refuseURL`: the phone's signed sites, the sensitive sites it allowed) and Coach's
+ * (`asideRefusal`: never a private tab, the store, a bank, payment, mail or health site, even one the phone allowed, nor a site the
+ * person switched off).
+ */
+export function joinedRefusal(tab, { sites, allowed = [], off = [] } = {}) {
+  if (!tab) return "no_page";
+  const run = refuseURL(String(tab.url || ""), sites, allowed);
+  if (run) return run.code;
+  const why = asideRefusal({ ...tab, active: true, windowId: -1 }, { windowId: -1, off });
+  return why ? JOINED_CODE[why] || CODE.siteBlocked : null;
+}
+
+/**
+ * Why the tab in front of the panel's window may not join a run, or null when it may: it must be that window's active tab
+ * ([windowId]), not pinned, and pass `joinedRefusal`. A tab in any other window, a private one, Chrome's own pages or a page
+ * that isn't https never joins.
+ */
+export function joinRefusal(tab, { windowId, sites, allowed = [], off = [] } = {}) {
+  if (!tab || !tab.active || typeof windowId !== "number" || tab.windowId !== windowId) return "not_front";
+  if (tab.pinned) return "pinned";
+  return joinedRefusal(tab, { sites, allowed, off });
+}

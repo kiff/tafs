@@ -17,6 +17,7 @@ import { HandAnswers, handMessage } from "./hand.js";
 import { RunStates, runStateMessage } from "./runstate.js";
 import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
+import { Panels, joinFront } from "./panels.js";
 
 const WAKE = "tafs-wake";
 
@@ -64,7 +65,16 @@ const doneStore = {
   get: async () => (await chrome.storage.session.get("doneTabs")).doneTabs || {},
   set: (done) => chrome.storage.session.set({ doneTabs: done }),
 };
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, shots, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}), onRunState: (s) => runStates.add(s).then((added) => added && sendRunStates(s.run)).catch(() => {}) });
+// The side panels open in this Chrome, by window, and the runs the person started from one (panels.js): a taf works in the tab in
+// front of that panel's window only for such a run, and only with the page consent, checked here before the tab is looked at.
+const panels = new Panels();
+chrome.runtime.onConnect.addListener((port) => panels.connect(port, chrome.runtime.id));
+const panel = {
+  front: ({ agentRun }) => joinFront({ panels, agentRun, consent: pageConsentReady, off: asideOff }),
+  isOpen: (windowId) => panels.isOpen(windowId),
+  off: () => asideOff(),
+};
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, shots, panel, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}), onRunState: (s) => runStates.add(s).then((added) => added && sendRunStates(s.run)).catch(() => {}) });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
@@ -372,9 +382,11 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       await onlyHere(m.taf);
       return { thread: await (await coach()).tafThread(m.taf) };
     },
+    // A send from the panel marks the run tafs cloud starts for it (its answer's `run`), with the panel's window and the tab in
+    // front: that run, and no other, may work in that tab (panels.js).
     taf_send: async () => {
       await onlyHere(m.taf);
-      return { sent: await (await coach()).sendToTaf(m.taf, m.words, m.clientID, m.attachments) };
+      return { sent: await panels.sent(m.windowId, m.tabId, (await coach()).sendToTaf(m.taf, m.words, m.clientID, m.attachments)) };
     },
     // A file the person picked in the panel, declared as the session (Coach's when no taf is named): the answer says where the
     // panel uploads its bytes itself (attach.js). Only a taf of this Chrome, as for its chat.
@@ -389,7 +401,7 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       const alone = m.alone === true || !String(m.words || "").trim();
       const page = await pageForSend({ alone, consent: pageConsentReady, read: () => asideRead(m.tabId, m.windowId) });
       return {
-        sent: await (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page, attachments: m.attachments }),
+        sent: await panels.sent(m.windowId, m.tabId, (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page, attachments: m.attachments })),
         reading: page.page ? page.host : null,
         notReading: page.why || null,
       };

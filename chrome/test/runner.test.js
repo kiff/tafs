@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS } from "../src/runner.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
+import { Panels, joinFront, MARK_MS } from "../src/panels.js";
 
 // The paired phone: it signs each grant's sites (tafs-chrome/sites/v1) and sensitive allowances.
 const phone = await newKeyPair();
@@ -1290,4 +1291,285 @@ test("the turn over never ends a run that's paused, waits on the person, or has 
   r.tails.delete("run_1");
   assert.deepEqual(await r.endTurn("nope"), { ended: false }, "a run it doesn't hold");
   assert.deepEqual(await r.endTurn("run_1"), { ended: true });
+});
+
+// A taf works where the person is (docs/chrome.md, "A taf works where you are"): a run the person started from the side panel
+// joins the tab in front of that panel's window. The panel is open in window 3; the person's tab, 42, is in front of it.
+const THEIRS = 42;
+
+/** A panel's port to the worker, from the extension's own page. */
+function panelPort(windowId) {
+  const on = {};
+  const port = { name: "panel", sender: { id: "ext" }, onMessage: { addListener: (f) => (on.msg = f) }, onDisconnect: { addListener: (f) => (on.gone = f) } };
+  return { port, open: () => on.msg({ windowId }), close: () => on.gone() };
+}
+
+/**
+ * A Chrome with the person's tab in front of window 3 (`tab` changes it), the side panel open there, and the worker's panels: the
+ * person sent from that panel, and tafs cloud's answer named run "kr_1" (`mark: false`: no send). `consent` is the page consent.
+ */
+async function joining({ tab = {}, consent = true, off = [], mark = true, clock = { at: 1_000_000 }, page = null } = {}) {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW, page });
+  const theirs = { id: THEIRS, windowId: 3, active: true, incognito: false, pinned: false, groupId: -1, url: "https://shop.example/basket", ...tab };
+  c.tabsMap.set(THEIRS, theirs.url);
+  c.looked = []; // every tab the runner asked Chrome about
+  const get = c.tabs.get;
+  c.tabs.get = async (id) => {
+    c.looked.push(id);
+    return id === THEIRS ? { ...theirs, status: "complete", url: c.tabsMap.get(id), groupId: c.groupsMap.get(id) ?? theirs.groupId } : get(id);
+  };
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    if (String(o.func || "").includes("TafsBar.hide")) c.calls.push(["bar.hide", o.target.tabId]);
+    return exec(o);
+  };
+  const panels = new Panels({ now: () => clock.at, sleep: async () => {} });
+  const p = panelPort(3);
+  panels.connect(p.port, "ext");
+  p.open();
+  if (mark) await panels.sent(3, THEIRS, Promise.resolve({ run: "kr_1" }));
+  const asked = { consent: 0 };
+  const panel = {
+    front: ({ agentRun }) => joinFront({ panels, agentRun, consent: async () => (asked.consent++, consent), off: async () => off }),
+    isOpen: (w) => panels.isOpen(w),
+    off: async () => off,
+  };
+  // A page that answers is never outrun by the step timeout here (the bar wrapper above adds a turn).
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired, panel, now: () => clock.at });
+  return { c, r, panels, port: p, asked, clock };
+}
+
+const started = (extra) => step({ agent_run: "kr_1", ...extra });
+// Every call that names tab [id]: a script in it, an update, a close, a group, a fence rule.
+const touched = (c, id) => c.calls.filter((x) => (x[0] === "tabs.group" ? x[1].tabIds.includes(id) : x[0] === "dnr" ? (x[1].addRules || []).some((y) => (y.condition.tabIds || []).includes(id)) : [].concat(x[1]).includes(id) || x[2] === id));
+
+test("a run the person started from the side panel works in the tab in front: it joins the group, fenced first, read through page.js, and Chrome follows it", async () => {
+  const { c, r } = await joining();
+  const out = await r.handle(started());
+  assert.ok(out.page, JSON.stringify(out));
+  assert.equal(out.page.url, "https://shop.example/");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.create" || x[0] === "windows.create"), "no tab or window of its own");
+  const fenced = c.calls.findIndex((x) => x[0] === "dnr" && x[1].addRules && x[1].addRules[0].condition.tabIds[0] === THEIRS);
+  const grouped = c.calls.findIndex((x) => x[0] === "tabs.group");
+  assert.ok(fenced >= 0 && fenced < grouped, "fenced before anything else");
+  assert.deepEqual(c.calls[grouped][1], { tabIds: [THEIRS], createProperties: { windowId: 3 } });
+  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.update" && x[2].url), ["tabs.update", THEIRS, { url: "https://shop.example/", active: true }], "Chrome follows the action");
+  assert.ok(!c.calls.some((x) => x[0] === "windows.update"), "never raises or focuses a window");
+  // What's read goes through the same read as any run's tab: mask.js and page.js, then TafsPage.read, in that tab.
+  assert.ok(c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js" && x[2] === THEIRS));
+  assert.ok(c.calls.some((x) => x[0] === "page" && x[1] === "read"));
+  assert.deepEqual(r.state()[0].tabs, [THEIRS]);
+});
+
+test("the tab in front already at the asked address is read in place, not loaded again", async () => {
+  const { c, r } = await joining({ tab: { url: "https://shop.example/" } });
+  assert.ok((await r.handle(started())).page);
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url), "not loaded again");
+  assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].active === true));
+});
+
+test("a scheduled run with the panel open and an allowed tab in front gets its own tab; so does a step naming no run, or another", async () => {
+  for (const [what, extra] of [["no agent_run (a schedule, an event, the phone, today's planque)", {}], ["another run's agent_run", { agent_run: "kr_other" }], ["an empty agent_run", { agent_run: "" }]]) {
+    const { c, r, asked } = await joining();
+    assert.ok((await r.handle(step(extra))).page, what);
+    assert.deepEqual(c.calls.find((x) => x[0] === "tabs.create")[1], { windowId: 3, url: "about:blank", active: false }, what + ": its own tab, in the background, as before");
+    assert.deepEqual(touched(c, THEIRS), [], what + ": the person's tab is never touched");
+    assert.ok(!c.looked.includes(THEIRS), what + ": nor even looked at");
+    assert.equal(asked.consent, 0, what + ": no mark, nothing asked");
+    assert.equal(c.calls.find((x) => x[0] === "tabs.update" && x[2].url)[2].active, undefined, what + ": Chrome doesn't follow a run nobody started from the panel");
+  }
+});
+
+test("a mark is taken by the first run that names it, once; an expired one, or a closed panel's, joins nothing", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  await r.stop("run_1", false, "person");
+  await r.handle(started({ run: "run_2", id: "op2" }));
+  assert.ok(c.calls.some((x) => x[0] === "tabs.create"), "a second run naming the same agent_run opens its own tab");
+  assert.equal(r.runs.get("run_2").joined.size, 0);
+
+  const late = await joining();
+  late.clock.at += MARK_MS + 1;
+  await late.r.handle(started());
+  assert.deepEqual(touched(late.c, THEIRS), [], "a mark older than two minutes joins nothing");
+
+  const closed = await joining();
+  closed.port.close();
+  await closed.r.handle(started());
+  assert.deepEqual(touched(closed.c, THEIRS), [], "the panel closed: its mark went with it");
+});
+
+test("a mark from window A never lets a run join a tab in window B", async () => {
+  // The person moved the tab to another window since their send, or it isn't the one in front any more.
+  for (const tab of [{ windowId: 8 }, { active: false }]) {
+    const { c, r } = await joining({ tab });
+    await r.handle(started());
+    assert.deepEqual(touched(c, THEIRS), [], JSON.stringify(tab));
+    assert.ok(c.calls.some((x) => x[0] === "tabs.create"), "its own tab");
+  }
+});
+
+test("the tab in front never joins off the run's sites, on a refused site, private, pinned, in a group of the person's, or not https", async () => {
+  const both = await signedSites(["shop.example", "paypal.com"]);
+  for (const [what, tab, off] of [
+    ["off the run's sites", { url: "https://elsewhere.example/" }],
+    ["a payment site, even listed", { url: "https://www.paypal.com/" }],
+    ["mail", { url: "https://mail.shop.example/inbox" }],
+    ["the Web Store", { url: "https://chromewebstore.google.com/detail/x" }],
+    ["a site the person switched off", {}, ["shop.example"]],
+    ["a private tab", { incognito: true }],
+    ["Chrome's own page", { url: "chrome://settings" }],
+    ["plain http", { url: "http://shop.example/" }],
+    ["pinned", { pinned: true }],
+    ["in a group of the person's own", { groupId: 99 }],
+  ]) {
+    const { c, r } = await joining({ tab, off: off || [] });
+    await r.handle(started({ sites: ["shop.example", "paypal.com"], sites_signed: both }));
+    assert.deepEqual(touched(c, THEIRS), [], what);
+    assert.ok(c.calls.some((x) => x[0] === "tabs.create"), what + ": its own tab");
+  }
+});
+
+test("without the page consent, the worker never lets the tab in front join, and never looks at it: the run opens its own tab as today", async () => {
+  const { c, r, asked } = await joining({ consent: false });
+  assert.ok((await r.handle(started())).page);
+  assert.equal(asked.consent, 1, "the consent is asked, by the worker");
+  assert.ok(!c.looked.includes(THEIRS), "the tab isn't looked at");
+  assert.deepEqual(touched(c, THEIRS), []);
+  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.create")[1], { windowId: 3, url: "about:blank", active: false });
+});
+
+test("a navigation in a joined tab that leaves its sites is stopped, and a pop-up off them is closed", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  const rules = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules;
+  assert.deepEqual(rules.map((x) => [x.action.type, x.condition.tabIds, x.condition.requestDomains || x.condition.regexFilter || null]), [["block", [THEIRS], null], ["allow", [THEIRS], ["shop.example"]], ["block", [THEIRS], "^http://"]], "the same fence as a run's own tab");
+  c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://evil.example/steal" });
+  assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url === "about:blank"));
+  c.listeners.created({ sourceTabId: THEIRS, tabId: 555, url: "https://evil.example/" });
+  assert.ok(c.calls.some((x) => x[0] === "tabs.remove" && x[1] === 555));
+  c.listeners.created({ sourceTabId: THEIRS, tabId: 556, url: "https://shop.example/help" });
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.remove" && x[1] === 556));
+  assert.ok(c.calls.some((x) => x[0] === "tabs.group" && x[1].tabIds[0] === 556 && x[1].groupId === 7), "a pop-up on its sites joins the same group");
+});
+
+test("every step checks the joined tab again: a page it may no longer show is refused, and an open goes on in a tab of the run's own", async () => {
+  const { c, r } = await joining({ page: PLAIN });
+  const off = [];
+  r.panel.off = async () => off;
+  const first = await r.handle(started());
+  // The person switched the site off in the panel since.
+  off.push("shop.example");
+  const scripts = c.calls.filter((x) => x[0] === "executeScript").length;
+  assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "site_blocked");
+  assert.equal((await r.handle(started({ id: "op3", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }))).error.code, "site_blocked");
+  assert.equal(c.calls.filter((x) => x[0] === "executeScript").length, scripts, "nothing ran in their tab");
+  // The person's tab moved off the run's sites (a page the fence let through before the grant changed, say): refused too.
+  off.length = 0;
+  c.tabsMap.set(THEIRS, "https://elsewhere.example/");
+  assert.equal((await r.handle(started({ id: "op4", op: "read" }))).error.code, "site_not_listed");
+  // An open: the run's own tab, in the same window and group, fenced; the person's tab is left where it is.
+  const out = await r.handle(started({ id: "op5", op: "open", url: "https://shop.example/other" }));
+  assert.ok(out.page, JSON.stringify(out));
+  const made = c.calls.find((x) => x[0] === "tabs.create");
+  assert.deepEqual(made[1], { windowId: 3, url: "about:blank", active: false });
+  const own = r.runs.get("run_1").tab;
+  assert.notEqual(own, THEIRS);
+  assert.ok(c.calls.some((x) => x[0] === "tabs.group" && x[1].groupId === 7 && x[1].tabIds[0] === own));
+  assert.ok(c.calls.some((x) => x[0] === "dnr" && x[1].addRules && x[1].addRules[0].condition.tabIds[0] === own));
+  assert.equal(c.tabsMap.get(THEIRS), "https://elsewhere.example/", "the person's tab stays on its page");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url).at(-1), ["tabs.update", own, { url: "https://shop.example/other", active: true }], "Chrome follows to the new tab");
+});
+
+test("the person typing, clicking or scrolling in the joined tab pauses the run", async () => {
+  const { r } = await joining();
+  await r.handle(started());
+  r.ownerInput(THEIRS);
+  assert.equal(r.runs.get("run_1").paused, "owner");
+  assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "paused_by_owner");
+});
+
+test("Stop hands the tab back: out of the group, unfenced, forgotten by the run, its bar gone, still open", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  const rules = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules.map((x) => x.id);
+  await r.stop("run_1", false, "person");
+  assert.ok(c.calls.some((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS)), "1. it leaves the group");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).at(-1)[1].removeRuleIds, rules, "2. its fence rules go");
+  assert.equal(r.tabRun.has(THEIRS), false, "3. the run forgets it");
+  assert.ok(c.calls.some((x) => x[0] === "bar.hide" && x[1] === THEIRS), "4. its bar goes");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.remove"), "5. it stays open");
+  // A late step from planque is told stopped, and never reaches the tab.
+  const before = c.calls.length;
+  assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "stopped");
+  c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/" });
+  r.ownerInput(THEIRS);
+  assert.deepEqual(c.calls.slice(before), [], "the late step, their navigation and their input are theirs again");
+  assert.deepEqual(await r.doneTabs(), { Rae: { tabs: [], window: null, group: 7 } }, "not kept as the taf's");
+});
+
+test("a joined tab is never closed by the extension: not at unpairing, an idle end, the turn over, the close step, planque's stop, nor the taf's next run", async () => {
+  const settle = () => new Promise((go) => setImmediate(go));
+  const ends = {
+    unpair: (r) => r.stopAll(),
+    idle: async (r, clock) => {
+      await settle();
+      clock.at += RUN_IDLE_MS + 1;
+      await r.sweep();
+    },
+    turn_over: async (r, clock) => {
+      await settle();
+      clock.at += TURN_QUIET_MS + 1;
+      assert.deepEqual(await r.endTurn("run_1"), { ended: true });
+    },
+    close: (r) => r.handle(started({ id: "op9", op: "close" })),
+    planque_stop: (r) => r.stop("run_1"),
+  };
+  for (const [what, end] of Object.entries(ends)) {
+    const { c, r, clock } = await joining();
+    await r.handle(started());
+    await end(r, clock);
+    assert.ok(!c.calls.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), what + ": never closed");
+    assert.equal(r.tabRun.has(THEIRS), false, what + ": no longer the run's");
+    // The taf's next run (nobody started it from the panel: its own tab), then unpairing.
+    await r.handle(step({ run: "run_n", id: "opn" }));
+    await r.stop("run_n");
+    await r.stopAll();
+    assert.ok(!c.calls.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), what + ": nor by the next run or unpairing");
+    assert.ok(c.calls.some((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS)), what + ": at most it leaves the group");
+  }
+});
+
+test("one group per taf per window: the taf's done group there works again, and its old tabs aren't the new run's", async () => {
+  const { c, r } = await joining({ mark: false });
+  c.tabGroups.get = async (id) => ({ id, windowId: 3 });
+  // A first run nobody started from the panel: its own tab, in group 7, then done.
+  await r.handle(step());
+  const old = r.runs.get("run_1").tab;
+  await r.stop("run_1");
+  // The person sends from the panel; the run it starts joins their tab, in the same group, which says it works again.
+  const panels = new Panels({ now: () => 1, sleep: async () => {} });
+  const p = panelPort(3);
+  panels.connect(p.port, "ext");
+  p.open();
+  await panels.sent(3, THEIRS, { run: "kr_2" });
+  r.panel = { front: ({ agentRun }) => joinFront({ panels, agentRun, consent: async () => true }), isOpen: (w) => panels.isOpen(w), off: async () => [] };
+  const before = c.calls.length;
+  await r.handle(step({ run: "run_2", id: "op2", agent_run: "kr_2" }));
+  const made = c.calls.slice(before);
+  assert.deepEqual(made.filter((x) => x[0] === "tabs.group").map((x) => x[1]), [{ groupId: 7, tabIds: [THEIRS] }], "into the taf's group, no new one");
+  assert.deepEqual(made.find((x) => x[0] === "tabGroups.update").slice(1), [7, { title: "tafs · Rae", color: "orange", collapsed: false }]);
+  // A group worked in again is no consent for the tabs left in it: the old one is the run's no more, and nothing runs there.
+  assert.equal(r.tabRun.has(old), false);
+  assert.deepEqual(r.state().find((x) => x.id === "run_2").tabs, [THEIRS]);
+  assert.ok(!made.some((x) => x[0] === "executeScript" && x[2] === old), "nothing runs in the old tab");
+  assert.ok(made.some((x) => x[0] === "tabs.remove" && x[1].includes(old)), "the old tab, still where its run left it, closes as before");
+});
+
+test("Chrome follows the run only while the panel is open in its window", async () => {
+  const { c, r, port } = await joining();
+  await r.handle(started());
+  port.close();
+  await r.handle(started({ id: "op2", url: "https://shop.example/next" }));
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url).at(-1), ["tabs.update", THEIRS, { url: "https://shop.example/next" }], "the panel closed: no tab is brought to the front");
 });
