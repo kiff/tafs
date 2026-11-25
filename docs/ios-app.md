@@ -820,6 +820,33 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   phone. That list, those Cards and that memory are gone. A held `version_install` of Coach's
   reads as an install once tafs cloud says the tools are given.
 
+## Deleting a conversation
+
+The person's own Coach conversations can be deleted for good from Previous conversations and from Archived
+(`SetupChatsList`, `ArchivedSetupChats` in `SetupChatView.swift`), on tafs cloud's `DELETE /v1/tafs/{id}/chats/{session}`
+([api.md](api.md)). Archive still takes one out of the list and keeps it; Delete erases it.
+
+- **Only in tafs cloud's words.** Each chats-list read (`GET …/chats` and `…/chats/archived`) sends
+  `delete: {item, confirm_title, confirm_body, confirm_button, failed}` in the person's language. The app keeps the last
+  complete set (`AppModel.chatDeleteWords`), so `failed` is on hand when the network isn't. It has no words of its own for
+  this: until a read brings all five lines, Delete isn't offered.
+- **Where:** a swipe on a conversation shows Archive (or Put back) and the delete item. That opens a question: the title,
+  the conversation's name, what goes and what stays, then Delete and Cancel. Nothing is deleted before that yes.
+- **What the app does with tafs cloud's answer** (`AppModel.deleteSetupChat`), deciding nothing itself:
+  - **200:** it leaves both lists, and the one on screen gives way to a new conversation. Attachments opened from chats
+    are a cache on the phone (`openedFiles`), so all of it goes, and no copy outlives "deleted for good".
+  - **404** (never this person's, or already gone): it leaves the lists, with nothing said.
+  - **409** (its run is working or waits on a card): it stays, with the refusal's own words.
+  - **Anything else, the network included:** it stays, with `failed` from the last read.
+- **The Apple Watch:** its kept Coach thread (`WatchThreads`, `"coach"`) can hold a phone conversation's turns: when the
+  watch's own requests are switched off, its words go to Coach's current chat. So after every delete that goes through,
+  the phone tells the watch to drop that kept copy (`WatchPush.forget`, `AppModel.forgetOnWatch`). The watch drops it at
+  once, with a screen open or not (`PhoneLink`, `WatchThreads.drop`), and Coach's screen there forgets what it drew. It's
+  only a cache, read again on the next visit. The watch's own conversations (watch requests) can't be deleted yet.
+- **Not here yet:** a taf's own chat (iOS lists no past conversations for one). The route serves it once there's a list.
+- Tests: `SetupTests.testDeletingAConversationForGood` (no words → no Delete, each answer above, the archived list, the
+  opened copy removed, the watch told once per delete that went through), `WatchThreadsTests.testADeleteOnThePhoneDropsThatThreadAlone`.
+
 ## The Card step
 
 Coach's first approval signs its Cards: what it may do and how much a day. Before that signature, Start's screen is the Card

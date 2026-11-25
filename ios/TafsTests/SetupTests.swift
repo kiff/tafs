@@ -2544,6 +2544,100 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Delete conversation (docs/ios-app.md, "Deleting a conversation"): offered only in tafs cloud's words, sent with a
+    /// chats-list read. A delete that goes through leaves both lists and the screen; 404 leaves quietly; 409 stays with the
+    /// refusal's own words; anything else stays with tafs cloud's `failed` line, which was read before the network went.
+    func testDeletingAConversationForGood() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        let chats = """
+        {"session":"s_3","started":"2026-10-19T10:00:00.000Z","updated":"2026-10-19T10:05:00.000Z","title":"Refunds"},
+        {"session":"s_2","started":"2026-10-18T10:00:00.000Z","updated":"2026-10-18T10:05:00.000Z","title":"Answer customer questions"},
+        {"session":"s_1","started":"2026-10-17T09:00:00.000Z","updated":"2026-10-17T09:30:00.000Z","title":"Connect my Stripe"}
+        """
+        // An older tafs cloud sends no words: no Delete.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, #"{"chats":[\#(chats)]}"#)
+        await model.loadSetup()
+        await model.loadSetupChats()
+        XCTAssertNil(model.chatDeleteWords, "no words from tafs cloud, no Delete")
+        let notAsked = await model.deleteSetupChat("s_2")
+        XCTAssertEqual(notAsked, .notAsked)
+        XCTAssertTrue(sent("DELETE", "cloud.test", "/v1/tafs/taf-setup/chats/s_2").isEmpty, "nothing asked without the words")
+
+        // Words with a blank line don't count either.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, """
+        {"chats":[\(chats)],"delete":{"item":"Delete conversation","confirm_title":"","confirm_body":"b","confirm_button":"Delete","failed":"f"}}
+        """)
+        await model.loadSetupChats()
+        XCTAssertNil(model.chatDeleteWords)
+
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, """
+        {"chats":[\(chats)],"delete":{"item":"Gespräch löschen","confirm_title":"Dieses Gespräch löschen?","confirm_body":"Seine Nachrichten …","confirm_button":"Löschen","failed":"Es wurde nicht gelöscht."}}
+        """)
+        await model.loadSetupChats()
+        XCTAssertEqual(model.chatDeleteWords?.item, "Gespräch löschen", "tafs cloud's words, in the person's language")
+        XCTAssertEqual(model.chatDeleteWords?.confirmButton, "Löschen")
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s_2"] = (200, """
+        {"messages":[{"at":"2026-10-18T10:00:00.000Z","from":"owner","kind":"message","text":"Answer customer questions","session":"s_2"}],"components":[]}
+        """)
+        await model.openSetupChat("s_2")
+
+        // A copy of an attachment opened from it goes with it.
+        try FileManager.default.createDirectory(at: AppModel.openedFiles, withIntermediateDirectories: true)
+        let copy = AppModel.openedFiles.appendingPathComponent("f_1.txt")
+        try Data("x".utf8).write(to: copy)
+
+        // The watch is told to drop its kept Coach thread, once per delete that went through.
+        var watchTold = 0
+        let tellWatch = AppModel.forgetOnWatch
+        AppModel.forgetOnWatch = { watchTold += 1 }
+        defer { AppModel.forgetOnWatch = tellWatch }
+
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_2"] = (200, #"{"session":"s_2","deleted":true}"#)
+        StubProtocol.sent = []
+        let gone = await model.deleteSetupChat("s_2")
+        XCTAssertEqual(watchTold, 1, "the watch drops its kept copy")
+        XCTAssertEqual(gone, .gone)
+        XCTAssertEqual(sent("DELETE", "cloud.test", "/v1/tafs/taf-setup/chats/s_2").count, 1)
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_3", "s_1"])
+        XCTAssertNil(model.setupChat, "the deleted one isn't shown")
+        XCTAssertTrue(model.setupFresh, "a new conversation instead")
+        XCTAssertTrue(model.setupThread.messages.isEmpty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: copy.path), "no opened copy outlives it")
+
+        // 404: already gone, or never this person's. It leaves the list, with nothing said.
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_3"] = (404, #"{"error":"no such chat"}"#)
+        let quiet = await model.deleteSetupChat("s_3")
+        XCTAssertEqual(quiet, .gone)
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_1"])
+
+        // 409: still working or waiting on a card. It stays, with the refusal's own words.
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_1"] = (409, #"{"error":"Dieses Gespräch arbeitet noch oder wartet auf dich."}"#)
+        let busy = await model.deleteSetupChat("s_1")
+        XCTAssertEqual(busy, .kept("Dieses Gespräch arbeitet noch oder wartet auf dich."))
+        XCTAssertEqual(watchTold, 2, "404 told it once more; a 409 tells it nothing")
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_1"], "still listed")
+
+        // Anything else: it stays, with tafs cloud's `failed` line from the last read.
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_1"] = (503, #"{"error":"down"}"#)
+        let failed = await model.deleteSetupChat("s_1")
+        XCTAssertEqual(failed, .kept("Es wurde nicht gelöscht."))
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_1"])
+
+        // From Archived too, and an archived read that brings no words keeps the ones on hand.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats/archived"] = (200, """
+        {"chats":[{"session":"s_9","started":"2026-10-10T10:00:00.000Z","updated":"2026-10-10T10:05:00.000Z","title":"Old"}]}
+        """)
+        await model.loadArchivedSetupChats()
+        XCTAssertEqual(model.chatDeleteWords?.item, "Gespräch löschen")
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_9"] = (200, #"{"session":"s_9","deleted":true}"#)
+        let archivedGone = await model.deleteSetupChat("s_9")
+        XCTAssertEqual(archivedGone, .gone)
+        XCTAssertTrue(model.archivedSetupChats.isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     // A sign-in and the hand-over carry Setup's own words, in the owner's language;
     // without them the app's English stays (kiff/tafs#75).
     func testCardsCarryTheirOwnWords() throws {
