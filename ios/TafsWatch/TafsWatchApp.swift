@@ -62,6 +62,8 @@ struct TafsWatchApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             // Put away: the next open draws nothing kept until the phone's mark is heard again in it (`WatchAccountMark`).
+            // A lowered wrist (`.inactive`) is the same open, as on Wear OS: nothing new is drawn meanwhile, the screen keeps
+            // only what it showed, and once watchOS returns to the clock or the app is left, it's `.background`.
             if phase == .background { WatchAccountMark.shared.leave() }
             // Signed out on this watch: nothing is read, and there's nothing to forget.
             if WatchV2.on, signIn.signedOutHere { return }
