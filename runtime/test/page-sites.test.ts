@@ -21,6 +21,7 @@ describe("the sites Coach never reads a page from, at tafs cloud", () => {
       "https://owa.example.com/owa/", "https://poczta.onet.pl/", "https://www.paypal.com./", "https://online.bank.example/",
       "https://impots.gouv.fr/", "https://www.nhs.uk/", "https://chromewebstore.google.com/detail/x",
       "https://chrome.google.com/webstore/x", "https://mail。google。com/",
+      "https://dashboard.stripe.com/payments", "https://ca-live.adyen.com/", "https://stripe.example/",
       "https://shop.example/", "https://shop.example./orders", "https://mailchimp.com/", "https://www.royalmail.com/",
     ]) {
       const u = new URL(url);
