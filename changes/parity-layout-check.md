@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: long words keep their room.** In Connect apps, a long button ("Volver a iniciar sesión", "Preguntar a Coach") goes under the status, or under the app's name on a phone, instead of squeezing the status or cutting the name. In the Overview, who uses a taf may take two lines and "1 persona" is never cut ([docs/ios-app.md](docs/ios-app.md)).
