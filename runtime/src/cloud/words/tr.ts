@@ -807,7 +807,6 @@ export const tr: Words = {
   card_step_exact: "Tam olarak imzaladığınız şey",
   card_step_give_fingerprint: "Parmak iziyle onayla",
   card_step_give_face: "Yüzle onayla",
-  card_step_give_passcode: "Parolayla onayla",
   cts_tafs_state: "Taf'larınızı görün",
   cts_tafs_state_does: "Her taf'ı, sürümlerini ve açık çalıştırmalarını okur.",
   cts_tafs_state_why: "Hesabınızı okur.",

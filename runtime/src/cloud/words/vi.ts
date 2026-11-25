@@ -807,7 +807,6 @@ export const vi: Words = {
   card_step_exact: "Đúng những gì bạn ký",
   card_step_give_fingerprint: "Phê duyệt bằng vân tay",
   card_step_give_face: "Phê duyệt bằng khuôn mặt",
-  card_step_give_passcode: "Phê duyệt bằng mật mã",
   cts_tafs_state: "Xem các taf của bạn",
   cts_tafs_state_does: "Đọc từng taf, các phiên bản và các lượt chạy đang mở của nó.",
   cts_tafs_state_why: "Nó đọc tài khoản của bạn.",

@@ -807,7 +807,6 @@ export const lv: Words = {
   card_step_exact: "Tieši tas, ko tu paraksti",
   card_step_give_fingerprint: "Apstiprināt ar pirksta nospiedumu",
   card_step_give_face: "Apstiprināt ar seju",
-  card_step_give_passcode: "Apstiprināt ar kodu",
   cts_tafs_state: "Skatīt tavus taf",
   cts_tafs_state_does: "Lasa katru taf, tā versijas un atvērtās izpildes.",
   cts_tafs_state_why: "Tas lasa tavu kontu.",

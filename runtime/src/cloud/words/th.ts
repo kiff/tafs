@@ -807,7 +807,6 @@ export const th: Words = {
   card_step_exact: "สิ่งที่คุณลงนามทั้งหมด",
   card_step_give_fingerprint: "อนุมัติด้วยลายนิ้วมือ",
   card_step_give_face: "อนุมัติด้วยใบหน้า",
-  card_step_give_passcode: "อนุมัติด้วยรหัสผ่าน",
   cts_tafs_state: "ดู taf ของคุณ",
   cts_tafs_state_does: "อ่านแต่ละ taf เวอร์ชันของมัน และการรันที่ยังเปิดอยู่",
   cts_tafs_state_why: "มันอ่านบัญชีของคุณ",

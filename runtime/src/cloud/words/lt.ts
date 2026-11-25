@@ -807,7 +807,6 @@ export const lt: Words = {
   card_step_exact: "Tiksliai tai, ką pasirašote",
   card_step_give_fingerprint: "Patvirtinti piršto atspaudu",
   card_step_give_face: "Patvirtinti veidu",
-  card_step_give_passcode: "Patvirtinti kodu",
   cts_tafs_state: "Žiūrėti jūsų taf",
   cts_tafs_state_does: "Skaito kiekvieną taf, jo versijas ir atvirus vykdymus.",
   cts_tafs_state_why: "Jis skaito jūsų paskyrą.",

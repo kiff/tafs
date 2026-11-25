@@ -879,7 +879,8 @@ export const en = {
   cts_up_to_shared: (n: string, other: string) => `Up to ${n} a day, counted with “${other}”.`,
   cts_always_asks: "Each one waits for your approval.",
   // The guidance before Coach's first approval (its Cards): what it allows, what still waits, what the approval signs, how to stop.
-  // The tools and limits under it come from the Cards themselves (coachToolsStep). The app picks the button by the device's lock.
+  // The tools and limits under it come from the Cards themselves (coachToolsStep). The app picks the button by its biometric:
+  // an approval is never signed with the screen lock or a passcode, so there is no passcode button.
   card_step_title: "Let Coach build tafs with you",
   card_step_allows: "This lets Coach look at your tafs, run them, and draft and try new versions, each within the daily limits below. Only while you turn on a drive, it can also see and use the app on this device.",
   card_step_asks: "Installing a version, choosing where a taf's results go, gathering tafs into a mission and saving your business description always wait for you in Needs you. Giving a taf a task or trying a version waits for you past its daily limit; anything else past its limit is refused.",
@@ -888,7 +889,6 @@ export const en = {
   card_step_exact: "Exactly what you sign",
   card_step_give_fingerprint: "Approve with fingerprint",
   card_step_give_face: "Approve with face",
-  card_step_give_passcode: "Approve with passcode",
   cts_tafs_state: "See your tafs",
   cts_tafs_state_does: "Read each taf, its versions and its open runs.",
   cts_tafs_state_why: "It reads your account.",

@@ -807,7 +807,6 @@ export const id: Words = {
   card_step_exact: "Persis yang Anda tanda tangani",
   card_step_give_fingerprint: "Setujui dengan sidik jari",
   card_step_give_face: "Setujui dengan wajah",
-  card_step_give_passcode: "Setujui dengan kode sandi",
   cts_tafs_state: "Lihat taf Anda",
   cts_tafs_state_does: "Membaca setiap taf, versinya, dan prosesnya yang masih terbuka.",
   cts_tafs_state_why: "Ia membaca akun Anda.",

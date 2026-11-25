@@ -807,7 +807,6 @@ export const et: Words = {
   card_step_exact: "Täpselt see, mida allkirjastad",
   card_step_give_fingerprint: "Kinnita sõrmejäljega",
   card_step_give_face: "Kinnita näoga",
-  card_step_give_passcode: "Kinnita pääsukoodiga",
   cts_tafs_state: "Vaata oma tafe",
   cts_tafs_state_does: "Loeb iga tafi, selle versioone ja avatud käivitusi.",
   cts_tafs_state_why: "See loeb sinu kontot.",

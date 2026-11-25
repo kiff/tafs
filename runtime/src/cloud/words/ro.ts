@@ -807,7 +807,6 @@ export const ro: Words = {
   card_step_exact: "Exact ce semnați",
   card_step_give_fingerprint: "Aprobați cu amprenta",
   card_step_give_face: "Aprobați cu fața",
-  card_step_give_passcode: "Aprobați cu codul",
   cts_tafs_state: "Vedeți tafurile dvs.",
   cts_tafs_state_does: "Citește fiecare taf, versiunile lui și rulările deschise.",
   cts_tafs_state_why: "Citește contul dvs.",

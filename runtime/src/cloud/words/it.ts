@@ -814,7 +814,6 @@ export const it: Words = {
   card_step_exact: "Esattamente ciò che firmi",
   card_step_give_fingerprint: "Approva con l'impronta",
   card_step_give_face: "Approva con il volto",
-  card_step_give_passcode: "Approva con il codice",
   cts_tafs_state: "Vedere i tuoi tafs",
   cts_tafs_state_does: "Leggere ogni taf, le sue versioni e le sue esecuzioni aperte.",
   cts_tafs_state_why: "Legge il tuo account.",

@@ -814,7 +814,6 @@ export const ja: Words = {
   card_step_exact: "署名する内容そのもの",
   card_step_give_fingerprint: "指紋で承認",
   card_step_give_face: "顔で承認",
-  card_step_give_passcode: "パスコードで承認",
   cts_tafs_state: "tafsを見る",
   cts_tafs_state_does: "各taf、そのバージョンと進行中の実行を読みます。",
   cts_tafs_state_why: "アカウントを読みます。",

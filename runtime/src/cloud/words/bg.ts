@@ -807,7 +807,6 @@ export const bg: Words = {
   card_step_exact: "Точно това, което подписвате",
   card_step_give_fingerprint: "Одобряване с пръстов отпечатък",
   card_step_give_face: "Одобряване с лице",
-  card_step_give_passcode: "Одобряване с код за достъп",
   cts_tafs_state: "Вижте вашите tafs",
   cts_tafs_state_does: "Чете всеки taf, неговите версии и отворените му изпълнения.",
   cts_tafs_state_why: "Чете вашия акаунт.",

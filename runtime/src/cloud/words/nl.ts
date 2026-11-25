@@ -814,7 +814,6 @@ export const nl: Words = {
   card_step_exact: "Precies wat je ondertekent",
   card_step_give_fingerprint: "Goedkeuren met vingerafdruk",
   card_step_give_face: "Goedkeuren met gezicht",
-  card_step_give_passcode: "Goedkeuren met toegangscode",
   cts_tafs_state: "Je tafs zien",
   cts_tafs_state_does: "Elke taf lezen, met zijn versies en zijn open runs.",
   cts_tafs_state_why: "Hij leest je account.",

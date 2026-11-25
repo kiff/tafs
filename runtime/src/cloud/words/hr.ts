@@ -807,7 +807,6 @@ export const hr: Words = {
   card_step_exact: "Točno ono što potpisujete",
   card_step_give_fingerprint: "Odobri otiskom prsta",
   card_step_give_face: "Odobri licem",
-  card_step_give_passcode: "Odobri šifrom",
   cts_tafs_state: "Pogledati vaše tafove",
   cts_tafs_state_does: "Čita svaki taf, njegove verzije i otvorena izvođenja.",
   cts_tafs_state_why: "Čita vaš račun.",

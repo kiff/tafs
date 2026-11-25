@@ -215,7 +215,6 @@ export const ptBR: Words = {
   card_step_exact: "Exatamente o que você assina",
   card_step_give_fingerprint: "Aprovar com impressão digital",
   card_step_give_face: "Aprovar com o rosto",
-  card_step_give_passcode: "Aprovar com código",
   cr_solo_used_up: "Solo · os créditos deste período e seus pacotes foram usados",
   cr_solo_warn_pack: (pct) => `${pct} dos créditos deste período foram usados. Um pacote permite que seus tafs continuem para além disso.`,
   cr_solo_warn_wait: (pct, day) => `${pct} dos créditos deste período foram usados. Depois, seus tafs esperam até o período recomeçar em ${day}.`,
