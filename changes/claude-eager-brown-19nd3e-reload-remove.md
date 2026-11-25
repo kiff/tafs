@@ -1,0 +1,1 @@
+- **Chrome: the words for the reload notice (tafs#2063) are taken out again, in all 43 languages.** The dialog sandbox they were for was dropped (0.2.21 isn't built), so nothing would show them, and no unused text ships in a store build. At the release fold, this entry and tafs#2063's cancel out.
