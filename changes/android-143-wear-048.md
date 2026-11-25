@@ -1,0 +1,1 @@
+- **Android 143 (1.49.0) and Wear OS 0.4.8 (400,000,013) for Play's internal track:** a tablet's pages as one centred column; the watch keeps its chats and opens on them at once, gets answers with tafs closed on the phone, sends in a taf's chat and reads a whole answer; "Allow this from now on" checks every term before the fingerprint approves.

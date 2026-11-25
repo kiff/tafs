@@ -1,0 +1,3 @@
+• En una tablet, cada página es una columna centrada, como en el iPad.
+• Tu reloj Wear OS recibe las respuestas de Coach y de tus tafs aunque tafs esté cerrado en tu celular.
+• «Permitir a partir de ahora» comprueba cada condición del cambio de la Card antes de que tu huella lo apruebe.

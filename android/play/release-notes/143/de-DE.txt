@@ -1,0 +1,3 @@
+• Auf einem Tablet ist jede Seite eine zentrierte Spalte, wie auf dem iPad.
+• Deine Wear-OS-Uhr bekommt die Antworten von Coach und deinen tafs, auch wenn tafs auf deinem Handy geschlossen ist.
+• „Ab jetzt erlauben“ prüft jede Bedingung der Card-Änderung, bevor dein Fingerabdruck sie bestätigt.

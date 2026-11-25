@@ -1,0 +1,3 @@
+• No tablet, cada página é uma coluna centralizada, como no iPad.
+• Seu relógio Wear OS recebe as respostas do Coach e dos seus tafs mesmo com o tafs fechado no celular.
+• "Permitir a partir de agora" confere cada condição da mudança do Card antes de sua impressão digital aprová-la.
