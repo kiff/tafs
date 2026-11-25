@@ -18,12 +18,17 @@ final class WatchAccountMark {
     struct Store {
         var load: () -> String?
         var save: (String?) -> Void
+        /// When the account last changed as the phone said it (`heardAccount`), so an older word can't undo a newer one.
+        var loadAt: () -> Date? = { nil }
+        var saveAt: (Date) -> Void = { _ in }
 
         static func defaults(_ defaults: UserDefaults = .standard, key: String = "tafs.watch.mark") -> Store {
             Store(load: { defaults.string(forKey: key) },
                   save: { mark in
                       if let mark { defaults.set(mark, forKey: key) } else { defaults.removeObject(forKey: key) }
-                  })
+                  },
+                  loadAt: { defaults.object(forKey: key + ".at") as? Date },
+                  saveAt: { defaults.set($0, forKey: key + ".at") })
         }
     }
 
@@ -37,10 +42,17 @@ final class WatchAccountMark {
     private(set) var confirmed = false
     /// How many times what was kept went: for the tests.
     private(set) var wiped = 0
+    /// The watch's clock, for when a live reply was heard.
+    private let now: () -> Date
+    /// When the account last changed, or was last heard live: an account change older than this is ignored.
+    private var lastChange: Date?
 
-    init(store: Store = .defaults(), clearStored: @escaping () -> Void = WatchAccountMark.clearAllStored) {
+    init(store: Store = .defaults(), clearStored: @escaping () -> Void = WatchAccountMark.clearAllStored,
+         now: @escaping () -> Date = Date.init) {
         self.store = store
         self.clearStored = clearStored
+        self.now = now
+        lastChange = store.loadAt()
     }
 
     /// The app's own files and alerts (`clearStored`).
@@ -65,11 +77,13 @@ final class WatchAccountMark {
     /// What can be drawn once the mark is confirmed: the pages take in what they kept.
     func onConfirm(_ confirm: @escaping () -> Void) { confirms.append(confirm) }
 
-    /// A reply's or a push's mark, before anything in it is used. Returns whether it's the kept account's. Only a live reply
-    /// (`live`) confirms the mark for this run: a push or the application context may have waited, so it can wipe and
-    /// name the new account, but never lets what's kept be drawn.
+    /// A live reply's mark, or (`live` false, through `heardAccount`) an account change's, before anything in it is used.
+    /// Returns whether it's the kept account's. Only a live reply confirms the mark for this run: an account change may
+    /// have waited, so it can wipe and name the new account, but never lets what's kept be drawn.
     @discardableResult
     func heard(_ mark: String?, live: Bool = true) -> Bool {
+        // A live reply is the phone's account now: an account change sent before it, handled after, is older.
+        if live { noteChange(now()) }
         let kept = store.load()
         guard WatchMark.isMark(mark), let mark else {
             // No mark: signed out on the phone, or a reply that doesn't say whose it is. Once a mark was kept, that's a
@@ -93,6 +107,28 @@ final class WatchAccountMark {
         store.save(mark)
         confirmed = live
         return false
+    }
+
+    /// An account change the phone sent (`WatchPush.Kind.account`, as a push or as the application context), made at `at`:
+    /// used only when it's newer than the last change or live reply heard, since WatchConnectivity orders neither against
+    /// the other. It may wipe, never confirm.
+    func heardAccount(_ mark: String?, at: Date) {
+        if let lastChange, at <= lastChange { return }
+        noteChange(at)
+        heard(mark, live: false)
+    }
+
+    /// Whether a data push (a thread's change, the Inbox's marks) is the kept account's, so it may be used. A data push
+    /// never changes the account: one with another mark, or none, may have waited on the watch since before a switch, and
+    /// is dropped, with no wipe and nothing kept.
+    func ours(_ mark: String?) -> Bool {
+        WatchMark.isMark(mark) && mark == store.load()
+    }
+
+    private func noteChange(_ at: Date) {
+        if let lastChange, lastChange >= at { return }
+        lastChange = at
+        store.saveAt(at)
     }
 
     /// The phone's reply, as `PhoneLink` hands it on: no reply (the phone not in reach) says nothing about the account.

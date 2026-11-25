@@ -5928,9 +5928,10 @@ final class AppModel: ObservableObject {
         /// Why the failed run stopped, in tafs cloud's words, when its `end` sends them
         /// (`ai_unavailable`): said as they are, with Retry.
         var failedWhy: String?
-        /// Retry sends the message again with no word from tafs cloud: only where nothing of it ran (an approval that came
-        /// after its run ended, or a switch that stopped it while it waited). A run that failed on its own needs tafs
-        /// cloud's `failed.retry` (`chatRetryLabel`).
+        /// Retry sends the message again with no word from tafs cloud: for an approval that came after its run ended, and a
+        /// switch that stopped a run while it waited, as before (and as Android). The held call itself never ran, but steps
+        /// before it may have, and Retry sends the whole message again: gating these on tafs cloud's `retry` too is a
+        /// change of its own. A run that failed on its own needs tafs cloud's `failed.retry` (`chatRetryLabel`).
         var retryAsIs = false
         /// The run at work, as tafs cloud says, for writing to it.
         var workingRun: String?

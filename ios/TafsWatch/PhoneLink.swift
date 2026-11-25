@@ -134,23 +134,26 @@ final class PhoneLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     }
 
     /// The phone's push (`WatchPush`), queued and delivered in order, even with the app put away: read here, on
-    /// WatchConnectivity's queue, and handed to what's listening on the main actor. Whose it is comes first: a push with
-    /// another account's mark wipes what was kept, and one with none (the phone signed out) shows nothing.
+    /// WatchConnectivity's queue, and handed to what's listening on the main actor. Whose it is comes first: an account
+    /// change is applied when it's the newest heard; a data push is used only when it's the kept account's, and otherwise
+    /// dropped, since it may have waited on the watch since before a switch.
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
         guard let push = WatchPush.from(userInfo) else { return }
         Task { @MainActor in
-            Self.account(push)
-            guard push.kind != .account, WatchMark.isMark(push.mark) else { return }
+            if push.kind == .account { return Self.account(push) }
+            guard WatchAccountMark.shared.ours(push.mark) else { return }
             WatchAccountZone.heard(push.reply)
             WatchPushes.shared.deliver(push)
         }
     }
 
-    /// A push's or the context's mark (`WatchAccountMark`): it may wipe, never confirm, since it may have waited.
+    /// The phone signed in or out (`WatchAccountMark.heardAccount`): it may wipe, never confirm, and an older change than
+    /// the last one heard is ignored.
     @MainActor
     static func account(_ push: WatchPush) {
-        WatchAccountMark.shared.heard(push.mark, live: false)
-        if push.kind == .account, push.mark == nil { WatchAccountZone.forget() }
+        guard push.kind == .account else { return }
+        WatchAccountMark.shared.heardAccount(push.mark, at: push.at)
+        if push.mark == nil { WatchAccountZone.forget() }
     }
 
     /// WatchConnectivity's error, as the wrist words it.

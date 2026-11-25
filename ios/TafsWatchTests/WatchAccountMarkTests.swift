@@ -13,12 +13,15 @@ final class WatchAccountMarkTests: XCTestCase {
     /// The kept mark, in memory, and how many times the files went.
     private final class Box {
         var mark: String?
+        var at: Date?
         var cleared = 0
         init(_ mark: String? = nil) { self.mark = mark }
     }
 
-    private func account(_ box: Box) -> WatchAccountMark {
-        WatchAccountMark(store: .init(load: { box.mark }, save: { box.mark = $0 }), clearStored: { box.cleared += 1 })
+    private func account(_ box: Box, now: Date? = nil) -> WatchAccountMark {
+        let clock = now ?? self.now
+        return WatchAccountMark(store: .init(load: { box.mark }, save: { box.mark = $0 }, loadAt: { box.at }, saveAt: { box.at = $0 }),
+                                clearStored: { box.cleared += 1 }, now: { clock })
     }
 
     /// The watch's file for Keep for later, in memory.
@@ -124,6 +127,57 @@ final class WatchAccountMarkTests: XCTestCase {
         mark.heard(Self.b)
         XCTAssertTrue(mark.mayDraw)
         XCTAssertEqual(box.cleared, 1)
+    }
+
+    /// A data push that waited on the watch since before a switch never brings the old account back: with B kept from
+    /// the context, a thread's push marked A isn't used, nothing is wiped, and B stays kept.
+    func testADataPushFromTheOldAccountIsDroppedNotKept() {
+        let box = Box(Self.a)
+        let mark = account(box)
+        mark.heard(Self.a)
+        mark.heardAccount(Self.b, at: now.addingTimeInterval(60))
+        XCTAssertEqual(box.mark, Self.b)
+        XCTAssertEqual(box.cleared, 1)
+        XCTAssertFalse(mark.ours(Self.a), "A's push: dropped")
+        XCTAssertEqual(box.mark, Self.b, "and B stays kept")
+        XCTAssertEqual(box.cleared, 1, "with no wipe")
+        XCTAssertTrue(mark.ours(Self.b))
+        XCTAssertFalse(mark.ours(nil), "a push with no mark is no one's")
+    }
+
+    /// Account changes are taken in the order the phone made them, whichever WatchConnectivity hands over first: the
+    /// context B at t2, then an older push A at t1, leaves B. A live reply counts as the newest word too.
+    func testAnOlderAccountChangeIsIgnored() {
+        let box = Box(Self.a)
+        let mark = account(box, now: now)
+        let t1 = now.addingTimeInterval(100)
+        let t2 = now.addingTimeInterval(200)
+        mark.heardAccount(Self.b, at: t2)
+        XCTAssertEqual(box.mark, Self.b)
+        mark.heardAccount(Self.a, at: t1)
+        XCTAssertEqual(box.mark, Self.b, "the older change is ignored")
+        XCTAssertEqual(box.cleared, 1)
+        mark.heardAccount(nil, at: t2)
+        XCTAssertEqual(box.mark, Self.b, "not newer either")
+        // Kept across runs: a new run ignores the same old change.
+        let next = account(box, now: now)
+        next.heardAccount(Self.a, at: t1)
+        XCTAssertEqual(box.mark, Self.b)
+        // A sign-out after it applies.
+        next.heardAccount(nil, at: t2.addingTimeInterval(1))
+        XCTAssertNil(box.mark)
+        XCTAssertEqual(box.cleared, 2)
+    }
+
+    /// A live reply is the phone's account now: an account change made before it, handled after, is ignored.
+    func testAnAccountChangeOlderThanALiveReplyIsIgnored() {
+        let box = Box(Self.a)
+        let mark = account(box, now: now)
+        mark.heard(Self.b)
+        XCTAssertEqual(box.mark, Self.b)
+        mark.heardAccount(Self.a, at: now.addingTimeInterval(-30))
+        XCTAssertEqual(box.mark, Self.b)
+        XCTAssertTrue(mark.mayDraw)
     }
 
     /// No mark once one was kept (the phone signed out, or a reply that doesn't say whose it is) fails closed: everything
