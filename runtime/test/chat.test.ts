@@ -4,6 +4,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, chatTitle, handle, HELD_FULL_WORDS, type HTTPEvent, MEMORY, NOT_SENT_WORDS, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { keys as coachKeys } from "../src/cloud/coach.js";
+import { driveKeys } from "../src/cloud/drive.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { withReplyLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { contract } from "./contract.js";
@@ -1687,9 +1688,13 @@ describe("chats (kiff/tafs#73)", () => {
       body: { id: "c_approve", type: "approval", answer: "failed: rules not agreed" } });
     const until = new Date(NOW.getTime() + 86_400_000);
     const kept = [`t_acme#set-aside#${old.session}`, `t_acme#coach-connected#${old.session}`, coachKeys.chatNotes("t_acme", "u_ana", old.session),
-      `t_acme#approval-note#${old.session}#c_approve`];
+      `t_acme#approval-note#${old.session}#c_approve`, `t_acme#steer-held#${RAE}#u_ana#${old.session}`, `t_acme#steer-chat#${RAE}#u_ana#${old.session}`,
+      driveKeys.recap("t_acme", "drv_1"), driveKeys.steps("t_acme", "drv_1")];
     const other = `t_acme#approval-note#other-session#c_approve`;
-    for (const key of [...kept, other]) await w.coach.put(key, { note: "x" }, until);
+    for (const key of [...kept, other, driveKeys.recap("t_acme", "drv_2")]) await w.coach.put(key, { note: "x" }, until);
+    // The chat's drives, as its thread finds their ends; another chat's drive stays.
+    await w.coach.put(driveKeys.recaps("t_acme", old.session), ["drv_1"], until);
+    kept.push(driveKeys.recaps("t_acme", old.session));
 
     const r = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${old.session}`, { token: "ana" });
     expect(r.status).toBe(200);
@@ -1697,6 +1702,7 @@ describe("chats (kiff/tafs#73)", () => {
     expect(w.agents.calls).toContain(`deleteSession ${old.session} member:u_ana`);
     for (const key of kept) expect(await w.coach.get(key)).toBeUndefined();
     expect(await w.coach.get(other)).toEqual({ note: "x" });
+    expect(await w.coach.get(driveKeys.recap("t_acme", "drv_2"))).toEqual({ note: "x" });
     // Gone from the list and by its id; the run's record stays.
     expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).body.chats).toEqual([]);
     expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${old.session}`, { token: "ana" })).status).toBe(404);
