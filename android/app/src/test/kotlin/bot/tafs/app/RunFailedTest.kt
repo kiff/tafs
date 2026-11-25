@@ -197,7 +197,7 @@ class RunFailedTest {
     val back = mutableListOf<String>()
     m.retryFailed(COACH_CHAT) { back += it }
     m.retryFailed(COACH_CHAT) { back += it }
-    testScheduler.advanceUntilIdle()
+    testScheduler.runCurrent()
     val sends = transport.requestsTo("POST /v1/tafs/setup_1/messages").map { String(it.body!!) }
     assertEquals(1, sends.size)
     assertTrue(sends.single().contains("Connect my Stripe"))
