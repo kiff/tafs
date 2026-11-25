@@ -70,8 +70,11 @@ class TafsCloud(
     val failed: RunFailed? = null,
   )
 
-  /** A run that ended without an answer, in tafs cloud's words (never the agent's). */
-  data class RunFailed(val run: String, val words: String)
+  /**
+   * A run that ended without an answer, in tafs cloud's words (never the agent's). [retry]: tafs cloud says sending the run's
+   * message again is safe (nothing it did had an effect); [retryLabel], its words for that button. The app decides neither.
+   */
+  data class RunFailed(val run: String, val words: String, val code: String? = null, val retry: Boolean = false, val retryLabel: String? = null)
 
   /** The account's Setup (Coach), or null before it is started. */
   suspend fun setup(): CloudSetup? = get<SetupResponse>("/v1/setup").setup
@@ -209,7 +212,8 @@ class TafsCloud(
       },
       steering = wire.steering?.let { runCatching { KiffClient.json.decodeFromJsonElement(WireSteering.serializer(), it) }.getOrNull() },
       failed = wire.failed?.let { runCatching { KiffClient.json.decodeFromJsonElement(WireRunFailed.serializer(), it) }.getOrNull() }
-        ?.takeIf { it.words.isNotBlank() }?.let { RunFailed(it.run, it.words.trim()) },
+        ?.takeIf { it.words.isNotBlank() }
+        ?.let { RunFailed(it.run, it.words.trim(), it.code, it.retry, it.retryLabel?.trim()?.takeIf { label -> it.retry && label.isNotEmpty() }) },
     )
   }
 

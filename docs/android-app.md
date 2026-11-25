@@ -28,6 +28,13 @@ shows none. One refused line per run: a run
 followed live already ends with its own line, with Retry (`ChatEnd.Failed`, which keeps the stream's run), so the thread's line
 for that same run isn't added; another run's still is. `contracts/conversation-failed.json`, tafs cloud's own answer, is read in
 the same test. iOS draws it by the same rules in a taf's chat (`TafsCloud.RunFailed`, `AppModel.chatItems`) and in Coach's (`AppModel.setupRunFailedLine`).
+**Try again under that line** only when tafs cloud says so: `failed.retry` is `true` (nothing the run did had an effect,
+tafs cloud's rule, never the app's), the code is one of the five it sends (`ai_unavailable`, `no_credits`,
+`ai_consent_required`, `timeout`, `failed`), and the run's own message (`<run>.in`, the person's, as plain words with no files
+and not a card's answer) is in the chat. Its label is tafs cloud's `retry_label`; with none, the app's Retry. Pressed, the
+message goes again as a new message, once: the button goes for that run (`AppState.failedRetry`, `AppModel.retryFailed`). Not
+while the chat is sending or at work. Without `retry`, or for a code it doesn't know, the line is words only. The same rule as
+Chrome's side panel (0.2.22); iOS follows.
 
 <p>
   <img src="screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">

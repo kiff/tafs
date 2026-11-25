@@ -5,8 +5,15 @@ import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.ChatMessage
+import bot.tafs.app.app.FAILED_LINE
 import java.time.Instant
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -112,5 +119,92 @@ class RunFailedTest {
     val m = read(answer.toString())
     assertEquals(sentWords, (last(m) as ChatItem.Message).message.text)
     assertNull(m.state.value.chatWorking[COACH_CHAT])
+  }
+
+  // MARK: Try again, only when tafs cloud says so (`failed.retry`)
+
+  private val contract = java.io.File("../../contracts/conversation-failed.json").readText()
+
+  /** The contract's conversation, with its `failed` changed by [edit]. */
+  private fun answerWith(edit: (MutableMap<String, JsonElement>) -> Unit = {}): String {
+    val answer = (Json.parseToJsonElement(contract) as JsonObject)["answer"] as JsonObject
+    val failed = (answer["failed"] as JsonObject).toMutableMap().also(edit)
+    return JsonObject(answer + ("failed" to JsonObject(failed))).toString()
+  }
+
+  private fun sentFailed(): JsonObject = ((Json.parseToJsonElement(contract) as JsonObject)["answer"] as JsonObject)["failed"] as JsonObject
+
+  private suspend fun readIn(thread: String, scope: kotlinx.coroutines.CoroutineScope): AppModel {
+    transport.answer(conversation, 200, thread)
+    secrets.save("at_1", AppModel.TOKEN)
+    secrets.save("t_01", AppModel.TENANT)
+    secrets.save("1", AppModel.KEYED)
+    val m = testModel(transport = transport, secrets = secrets, clock = { t0 }, start = false, scope = scope).also { it.restore() }
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    return m
+  }
+
+  /** The contract's own `retry` and `retry_label`: Try again under its line, in tafs cloud's words, with the run's own message. */
+  @Test fun theContractsRetryIsTryAgainInTafsCloudsWords() = runTest {
+    reads()
+    val sent = sentFailed()
+    assertEquals(true, sent["retry"]?.jsonPrimitive?.boolean)
+    val m = readIn(answerWith(), backgroundScope)
+    val again = m.state.value.failedRetry(COACH_CHAT)!!
+    assertEquals(sent["run"]!!.jsonPrimitive.content, again.run)
+    assertEquals(sent["retry_label"]!!.jsonPrimitive.content, again.label)
+    // The person's own message for that run (`<run>.in`), as the contract has it.
+    assertEquals("Connect my Stripe", again.text)
+    // It's under the failed run's line, which is the chat's last.
+    assertEquals(FAILED_LINE + again.run, (last(m) as ChatItem.Message).message.serverId)
+  }
+
+  @Test fun noRetryFromTafsCloudIsNoTryAgain() = runTest {
+    reads()
+    val off = readIn(answerWith { it["retry"] = JsonPrimitive(false); it.remove("retry_label") }, backgroundScope)
+    assertNull(off.state.value.failedRetry(COACH_CHAT))
+    // The line is still there, in its words.
+    assertEquals(sentFailed()["words"]!!.jsonPrimitive.content, (last(off) as ChatItem.Message).message.text)
+    transport.answer(conversation, 200, answerWith { it.remove("retry"); it.remove("retry_label") })
+    off.loadChat(COACH_CHAT)
+    assertNull(off.state.value.failedRetry(COACH_CHAT))
+  }
+
+  @Test fun aCodeTafsCloudIsntKnownToSendIsWordsOnly() = runTest {
+    reads()
+    val m = readIn(answerWith { it["code"] = JsonPrimitive("something_new") }, backgroundScope)
+    assertNull(m.state.value.failedRetry(COACH_CHAT))
+    assertEquals(sentFailed()["words"]!!.jsonPrimitive.content, (last(m) as ChatItem.Message).message.text)
+  }
+
+  @Test fun withoutTheRunsOwnMessageThereIsNothingToSendAgain() = runTest {
+    reads()
+    val m = readIn(answerWith { it["run"] = JsonPrimitive("run7") }, backgroundScope)
+    assertNull(m.state.value.failedRetry(COACH_CHAT))
+  }
+
+  @Test fun noLabelFromTafsCloudLeavesTheAppsOwnWord() = runTest {
+    reads()
+    val m = readIn(answerWith { it.remove("retry_label") }, backgroundScope)
+    assertNull(m.state.value.failedRetry(COACH_CHAT)!!.label)
+  }
+
+  @Test fun tryAgainPressedTwiceSendsTheMessageOnceAsANewOne() = runTest {
+    reads()
+    transport.answer("POST /v1/tafs/setup_1/messages", 200, """{"session":"s2","new_session":false}""")
+    val m = readIn(answerWith(), backgroundScope)
+    val back = mutableListOf<String>()
+    m.retryFailed(COACH_CHAT) { back += it }
+    m.retryFailed(COACH_CHAT) { back += it }
+    testScheduler.advanceUntilIdle()
+    val sends = transport.requestsTo("POST /v1/tafs/setup_1/messages").map { String(it.body!!) }
+    assertEquals(1, sends.size)
+    assertTrue(sends.single().contains("Connect my Stripe"))
+    // A new message: never under the failed run's own id.
+    assertTrue(!sends.single().contains("run2.in"))
+    assertTrue(back.isEmpty())
+    // Pressed, it's gone for that run, even when the thread still says it failed.
+    assertNull(m.state.value.failedRetry(COACH_CHAT))
   }
 }
