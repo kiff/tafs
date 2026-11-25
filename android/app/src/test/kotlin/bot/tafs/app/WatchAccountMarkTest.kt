@@ -52,6 +52,42 @@ class WatchAccountMarkTest {
 
   private suspend fun WatchRelay.marked(r: WatchRequest) = WatchLink.encode(r).let { (path, data) -> answerMarked(path, data) }
 
+  private val accepted = """{"ask":{"id":"wa_01","client_id":"w_7f3a9c21","state":"accepted","words":"Sent","at":"2026-11-16T19:00:00Z","updated":"2026-11-16T19:00:00Z"}}"""
+
+  private fun asksSent() = transport.requests.count { it.method == "POST" && it.url.endsWith("/v1/watch/asks") }
+
+  /** An act sent under another sign-in's mark is answered signed out, and nothing reaches tafs cloud; its own mark goes through. */
+  @Test fun anActUnderAnotherSignInsMarkIsRefusedAndNothingIsSent() = runTest {
+    val m = signedIn()
+    transport.answer("GET /v1/me/ai-consent", 200, """{"consent":{"given":true,"version":"1","words":{"title":"Your data and the AI","lines":["tafs uses AI."],"allow":"Allow","not_now":"Not now","withdraw":"Withdraw","given":"AI use: allowed"}}}""")
+    transport.answer("POST /v1/watch/asks", 200, accepted)
+    val relay = WatchRelay(model = { m }, now = { now })
+    val ask = WatchRequest.Ask(now, "w_7f3a9c21", "Refund order A-1")
+    // Kept under A; the phone is on another sign-in now.
+    val (path, data) = WatchLink.encode(ask, AppModel.newWatchMark())
+    val (reply, mark) = relay.answerMarked(path, data)
+    assertEquals(WatchReply.SignedOut, reply)
+    assertNull("signed out carries no mark", mark)
+    assertEquals(0, asksSent())
+    // Under the phone's own mark, it goes.
+    val (ownPath, ownData) = WatchLink.encode(ask, m.watchMark())
+    assertTrue(relay.answerMarked(ownPath, ownData).first is WatchReply.AskTaken)
+    assertEquals(1, asksSent())
+    // An old-style request, with no mark: as before marks.
+    val (oldPath, oldData) = WatchLink.encode(ask.copy(clientId = "w_7f3a9c22"))
+    assertTrue(relay.answerMarked(oldPath, oldData).first is WatchReply.AskTaken)
+    assertEquals(2, asksSent())
+  }
+
+  /** A request with a mark, to a phone with no session of its own: signed out, nothing done. */
+  @Test fun aMarkedRequestWithNoSessionIsSignedOut() = runTest {
+    val (path, data) = WatchLink.encode(WatchRequest.Refuse(now, "hold_1"), AppModel.newWatchMark())
+    assertEquals(WatchReply.SignedOut, WatchRelay(model = { null }, now = { now }).answer(path, data))
+    val sample = testModel(transport = transport, secrets = secrets, start = false, scope = backgroundScope).also { it.startSample() }
+    assertEquals(WatchReply.SignedOut, WatchRelay(model = { sample }, now = { now }).answer(path, data))
+    assertTrue(transport.requests.none { it.method == "POST" })
+  }
+
   @Test fun aSignedInPhoneHasOneRandomMarkAndPutsItOnEveryReply() = runTest {
     val m = signedIn()
     val mark = m.watchMark()

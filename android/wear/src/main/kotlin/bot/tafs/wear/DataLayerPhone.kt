@@ -27,8 +27,10 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
     send = { node, path, data -> messages.sendRequest(node, path, data).await() },
   )
 
-  override suspend fun ask(request: WatchRequest): Asked {
-    val (path, data) = WatchLink.encode(request)
+  override suspend fun ask(request: WatchRequest): Asked = ask(request, null)
+
+  override suspend fun ask(request: WatchRequest, mark: String?): Asked {
+    val (path, data) = WatchLink.encode(request, mark)
     // Measured for the internal timing builds only (LinkTrace): the lookup, the send and how it ended, never the reply's words.
     val started = android.os.SystemClock.elapsedRealtime()
     var lookupMs: Long? = null

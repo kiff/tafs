@@ -490,6 +490,18 @@ object WatchLink {
 
   fun isMark(mark: String?): Boolean = mark != null && MARK.matches(mark)
 
+  /**
+   * The requests that carry the person's words or acts (Ask, a taf's message and a message kept for later included; Coach; Refuse;
+   * Halt; an Inbox mark), which the watch sends with the account mark it holds, to a phone that has shown it knows marks. A phone
+   * whose own mark differs, or that has no session, answers [WatchReply.SignedOut] and does nothing with it, so a message meant for
+   * one sign-in never reaches another. No read carries one: a read is the same for anyone.
+   */
+  fun carriesMark(request: WatchRequest): Boolean = request is WatchRequest.Ask || request is WatchRequest.Coach ||
+    request is WatchRequest.Refuse || request is WatchRequest.Halt || request is WatchRequest.InboxMark
+
+  /** The paths of [carriesMark]'s requests: the only bodies that may hold [MARK_KEY]; any other refuses it, as any unknown field. */
+  private val MARKED_PATHS = setOf(ASK, COACH, REFUSE, HALT, INBOX_MARK)
+
   /** A taf's id on the phone, as a kept item's path may name it. */
   private val TAF_ID = Regex("^[A-Za-z0-9_.:-]{1,128}$")
   const val BRIEF = PREFIX + "brief"
@@ -583,6 +595,17 @@ object WatchLink {
   /** A recording's id, as the watch makes it: as an ask's own id. */
   fun isVoiceId(id: String): Boolean = CLIENT_ID.matches(id)
 
+  /**
+   * The watch's side: the path and body for [request], with [mark] in it ([MARK_KEY]) when the request is one that carries it
+   * ([carriesMark]) and the watch knows the phone reads marks; otherwise exactly as before marks.
+   */
+  fun encode(request: WatchRequest, mark: String?): Pair<String, ByteArray> {
+    val (path, body) = encode(request)
+    if (!isMark(mark) || !carriesMark(request)) return path to body
+    val fields = json.parseToJsonElement(body.decodeToString()).jsonObject
+    return path to JsonObject(fields + (MARK_KEY to JsonPrimitive(mark))).toString().encodeToByteArray()
+  }
+
   /** The watch's side: the path and body for [request]. */
   fun encode(request: WatchRequest): Pair<String, ByteArray> {
     val (path, body) = when (request) {
@@ -615,7 +638,8 @@ object WatchLink {
 
   /** What the phone did with a message: the one request it may act on, or why it refused it. */
   sealed interface Accepted {
-    data class Yes(val request: WatchRequest) : Accepted
+    /** The request, and the account mark it was sent under ([MARK_KEY]); none from a watch before marks, or on a read. */
+    data class Yes(val request: WatchRequest, val mark: String? = null) : Accepted
     data class No(val reason: NotAccepted) : Accepted
   }
 
@@ -624,7 +648,19 @@ object WatchLink {
    * above pass, each exactly as [encode] writes it, made within [MAX_AGE_MS] of [nowMs].
    */
   fun accept(path: String, data: ByteArray, nowMs: Long): Accepted {
-    val text = runCatching { data.decodeToString(throwOnInvalidSequence = true) }.getOrNull() ?: return Accepted.No(NotAccepted.MALFORMED)
+    val raw = runCatching { data.decodeToString(throwOnInvalidSequence = true) }.getOrNull() ?: return Accepted.No(NotAccepted.MALFORMED)
+    // The account mark, on the requests that may carry it only: taken out, checked, and the rest read as strictly as before.
+    var mark: String? = null
+    val text = if (path !in MARKED_PATHS) raw else try {
+      val fields = json.parseToJsonElement(raw).jsonObject
+      if (MARK_KEY !in fields) raw else {
+        mark = (fields[MARK_KEY] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull?.takeIf(::isMark)
+          ?: return Accepted.No(NotAccepted.MALFORMED)
+        JsonObject(fields - MARK_KEY).toString()
+      }
+    } catch (_: IllegalArgumentException) {
+      return Accepted.No(NotAccepted.MALFORMED)
+    }
     val request = try {
       when (path) {
         NEEDS_YOU -> WatchRequest.NeedsYou(json.decodeFromString(Read.serializer(), text).madeAt)
@@ -660,7 +696,7 @@ object WatchLink {
     if (!wellFormed(request)) return Accepted.No(NotAccepted.MALFORMED)
     if (nowMs - request.madeAt > MAX_AGE_MS) return Accepted.No(NotAccepted.TOO_OLD)
     if (request.madeAt - nowMs > MAX_SKEW_MS) return Accepted.No(NotAccepted.FROM_THE_FUTURE)
-    return Accepted.Yes(request)
+    return Accepted.Yes(request, mark)
   }
 
   private fun wellFormed(request: WatchRequest): Boolean = when (request) {

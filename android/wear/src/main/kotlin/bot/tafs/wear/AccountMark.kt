@@ -57,9 +57,17 @@ object AccountMark {
     else -> Seen.Changed
   }
 
-  /** A kept item from the phone is taken in only when it's the held sign-in's, or while the watch holds none. */
-  fun keptTaken(stored: String?, mark: String?): Boolean = stored == null || mark == stored
+  /**
+   * A kept item from the phone is taken in only when its mark is the one held. One with a mark, while the watch holds none, is
+   * dropped (the next checked read brings it back); only an item with no mark (a phone before marks) is taken while it holds
+   * none. A kept item never sets or changes the mark held: only a checked reply does.
+   */
+  fun keptTaken(stored: String?, mark: String?): Boolean = if (mark == null) stored == null else mark == stored
 
-  /** The phone's signed-out item wipes unless it names another sign-in than the one held: a late one never wipes the next. */
-  fun signedOutWipes(stored: String?, mark: String?): Boolean = stored == null || mark == null || mark == stored
+  /**
+   * The phone's signed-out item wipes only the sign-in it names, or any while the watch holds none. It sits at one path, so the
+   * Data Layer keeps only the newest; and whatever order it arrives in, one naming an earlier sign-in than the one held (or none,
+   * once one is held) wipes nothing, so a late one never touches the next account. It only ever deletes: nothing comes back.
+   */
+  fun signedOutWipes(stored: String?, mark: String?): Boolean = stored == null || mark == stored
 }

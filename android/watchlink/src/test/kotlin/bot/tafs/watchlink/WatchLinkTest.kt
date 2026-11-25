@@ -276,6 +276,41 @@ class WatchLinkTest {
     assertEquals(WatchLink.Marked(WatchReply.SignedOut, null), WatchLink.decodeMarked(WatchLink.encodeReply(WatchReply.SignedOut, "bad")))
   }
 
+  /** The watch's acts carry the mark it holds, the phone reads it out; a read never does, and an old request is as before. */
+  @Test fun actsCarryTheMarkReadsDontAndAnOldRequestIsUnchanged() {
+    val now = 1_763_244_000_000L
+    val acts = listOf(
+      WatchRequest.Ask(now, "w_7f3a9c21", "Move my call to six"),
+      WatchRequest.Ask(now, "w_7f3a9c22", "Hi", tafId = "taf_1"),
+      WatchRequest.Coach(now, "Hello"),
+      WatchRequest.Refuse(now, "hold_1"),
+      WatchRequest.Halt(now, null),
+      WatchRequest.InboxMark(now, read = listOf("hold_1")),
+    )
+    for (act in acts) {
+      val (path, data) = WatchLink.encode(act, markA)
+      assertEquals(act.toString(), WatchLink.Accepted.Yes(act, markA), WatchLink.accept(path, data, now))
+      // Without one, as before marks.
+      val (oldPath, oldData) = WatchLink.encode(act)
+      assertEquals(WatchLink.Accepted.Yes(act, null), WatchLink.accept(oldPath, oldData, now))
+      assertEquals(oldData.decodeToString(), WatchLink.encode(act, null).second.decodeToString())
+    }
+    // A read never carries it, and a read's body with one is refused as any unknown field.
+    val read = WatchRequest.NeedsYou(now)
+    assertEquals(WatchLink.encode(read).second.decodeToString(), WatchLink.encode(read, markA).second.decodeToString())
+    assertEquals(
+      WatchLink.Accepted.No(NotAccepted.MALFORMED),
+      WatchLink.accept(WatchLink.NEEDS_YOU, """{"made_at":$now,"account_mark":"$markA"}""".encodeToByteArray(), now),
+    )
+    // Something that isn't a mark is refused, never read as none.
+    for (bad in listOf("\"short\"", "3", "null", "\"has space in it......\"")) {
+      assertEquals(bad, WatchLink.Accepted.No(NotAccepted.MALFORMED),
+        WatchLink.accept(WatchLink.COACH, """{"made_at":$now,"text":"Hi","account_mark":$bad}""".encodeToByteArray(), now))
+    }
+    assertEquals(true, WatchLink.carriesMark(acts.first()))
+    assertEquals(false, WatchLink.carriesMark(WatchRequest.Tafs(now)))
+  }
+
   /** What the phone keeps for the watch carries the mark too; the signed-out item names the mark it dropped. */
   @Test fun keptItemsCarryTheMarkAndTheSignedOutItemNamesItsOwn() {
     val ask = AskLine("wa_01", "w_00000001", AskLine.DONE, words = "Done", updated = "2026-11-16T19:00:00Z")

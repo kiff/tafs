@@ -38,6 +38,12 @@ fun interface PhoneLink {
   suspend fun ask(request: WatchRequest): Asked
 
   /**
+   * [ask], with the account [mark] the watch holds, for a request that carries the person's words or acts
+   * ([bot.tafs.watchlink.WatchLink.carriesMark]): a phone on another sign-in answers signed out and does nothing with it.
+   */
+  suspend fun ask(request: WatchRequest, mark: String?): Asked = ask(request)
+
+  /**
    * A recording the watch's recognizer gave up on, to the phone over its own channel (row 44, A): the only audio that leaves the
    * watch, and only to the paired phone, which turns it into text there ([WatchRequest.Transcribe]). Whether it all went.
    */
@@ -664,14 +670,27 @@ class WatchModel(
    * sign-in's mark wipes everything kept first, then the reply is the new one's; held and missing, everything kept goes and the
    * reply isn't shown (it comes back as no answer). The same mark lets what's kept be drawn.
    */
-  private suspend fun ask(request: WatchRequest): Asked = heard(phone.ask(request))
+  private suspend fun ask(request: WatchRequest): Asked {
+    // To a phone that has shown it knows marks (the last reply this open checked carried the one held): the sign-in this act is
+    // meant for, so a phone that has changed since refuses it. A phone before marks never sees the field.
+    val mark = marks?.read()?.takeIf { verified && bot.tafs.watchlink.WatchLink.carriesMark(request) }
+    return heard(phone.ask(request, mark))
+  }
 
   private fun heard(asked: Asked): Asked {
     val store = marks ?: return asked
     val answered = asked as? Asked.Answered ?: return asked
     val reply = answered.reply
-    // Signed out has its own wipe; a reply with nothing of an account proves nothing.
-    if (reply == WatchReply.SignedOut || AccountMark.neutral(reply)) return asked
+    // Signed out, to any request (an act sent under another sign-in's mark included): everything of the account goes now.
+    if (reply == WatchReply.SignedOut) {
+      wipeAccount()
+      store.clear()
+      verified = true
+      _shown.value = Shown.SignedOut
+      return asked
+    }
+    // A reply with nothing of an account proves nothing.
+    if (AccountMark.neutral(reply)) return asked
     when (AccountMark.seen(store.read(), answered.mark)) {
       AccountMark.Seen.Legacy -> takeInKept()
       AccountMark.Seen.First -> { store.write(answered.mark!!); takeInKept() }

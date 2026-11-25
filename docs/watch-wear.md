@@ -750,14 +750,24 @@ watch doesn't know is shown as Open on phone, never guessed at.
     conversation, the Inbox, a taf's kept chat, a message kept for later) until a reply in this open carried that same mark. **So
     opened with the phone out of reach, the watch shows its linking screen, then that the phone isn't reachable, not the last
     read** as it did before marks: the phone may have changed accounts meanwhile. Pushed items from the phone are taken in only
-    when they carry the mark held (`AccountMark.keptTaken`).
+    when they carry the mark held (`AccountMark.keptTaken`): one with a mark, while the watch holds none, is dropped, and the
+    next checked read brings it back; only an item with no mark (a phone before marks) is taken while the watch holds none. A
+    kept item never sets or changes the mark held; only a checked reply does.
   - **A message kept for later** keeps the mark it was kept under, and is sent only once a reply in this open said it's that
     same sign-in; another's, it's deleted unsent.
+  - **The watch's acts carry the mark too** (`WatchLink.carriesMark`): an ask (a taf's message and a message kept for later
+    included), a message to Coach, Refuse, Halt and an Inbox mark go with the mark the watch holds, once a reply this open has
+    carried it, so a phone before marks never sees the field. A phone whose own mark differs, or with no session, answers signed
+    out and does nothing with it, and the watch wipes. So an act meant for one sign-in never reaches another, even if the phone
+    changes between the watch's check and the send. Reads carry none; on any other request the field is refused, as any
+    unknown field.
   - **The phone tells the watch at sign-out** (`WatchSignedOut`): it takes back what it kept for the watch (`kept/ask/`,
     `kept/inbox-marks`, `kept/taf-chat/`) and puts `kept/signed-out` with the mark it dropped. The watch takes it only from a
     phone connected to it now, as it does replies, and wipes without asking, the app open or closed, notifications included. If
-    the watch was off, the item is still in the Data Layer when it comes back on, and is taken the same way then. One naming an
-    earlier sign-in than the one the watch holds is late, and wipes nothing.
+    the watch was off, the item is still in the Data Layer when it comes back on, and is taken the same way then. It wipes only
+    the sign-in it names, or anything while the watch holds no mark. It sits at one path, so only the newest is kept, and in
+    whatever order it arrives, one naming an earlier sign-in (or none, once a mark is held) wipes nothing of the account read
+    since. It only ever deletes, so nothing comes back.
   - The Apple Watch follows with the same rule (docs/parity.md).
 
   In memory only, for the app's life, and kept when it's put away so it comes back as it was (`WatchModel.putAway`): the reads

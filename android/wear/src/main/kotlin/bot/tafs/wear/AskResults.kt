@@ -131,6 +131,21 @@ object KeptResults {
     runCatching { context.getSystemService(NotificationManager::class.java)?.cancelAll() }
   }
 
+  /**
+   * One kept item from the phone, by its [path]: the app open or closed. Only what the sign-in the watch holds kept for it is taken
+   * in ([AccountMark.keptTaken]); the signed-out item only from the paired phone, connected now ([fromPhone]), as its replies are.
+   * Present when the watch comes back on after being off, it's taken the same way then.
+   */
+  fun kept(context: Context, path: String, bytes: ByteArray?, stores: Stores, fromPhone: () -> Boolean) {
+    val held = stores.marks?.read()
+    when {
+      path == WatchLink.KEPT_SIGNED_OUT -> if (fromPhone()) bytes?.let(WatchLink::decodeKeptSignedOut)?.let { signedOut(context, it, stores) }
+      WatchLink.keptAskId(path) != null -> bytes?.let(WatchLink::decodeKeptAsk)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.ask?.takeIf { it.id == WatchLink.keptAskId(path) }?.let { ask(context, it, stores) }
+      path == WatchLink.KEPT_MARKS -> bytes?.let(WatchLink::decodeKeptMarks)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { marks(bot.tafs.watchlink.WatchReply.InboxMarks(it.read, it.dismissed), stores) }
+      WatchLink.keptChatTaf(path) != null -> bytes?.let(WatchLink::decodeKeptChat)?.takeIf { it.tafId == WatchLink.keptChatTaf(path) && AccountMark.keptTaken(held, it.mark) }?.let { chat(it.tafId, it.lines, stores) }
+    }
+  }
+
   /** Kept marks: into the Inbox kept on the watch (the app closed) or the app's model (open). */
   fun marks(marks: bot.tafs.watchlink.WatchReply.InboxMarks, stores: Stores) {
     KeptResults.marks?.let { return it(marks) }
@@ -215,17 +230,7 @@ class AskResultService : WearableListenerService() {
     for ((uri, bytes) in changed) {
       val path = uri.path ?: continue
       if (!path.startsWith(WatchLink.KEPT)) continue
-      val stores = KeptResults.Stores.of(this)
-      // Only what the sign-in the watch holds kept for it (AccountMark.keptTaken): another's, or one with no mark once it holds one, is dropped.
-      val held = stores.marks?.read()
-      when {
-        // The phone signed out: from the paired phone only, connected now, as its replies are. Present when the watch comes back
-        // on after being off, it's taken the same way then.
-        path == WatchLink.KEPT_SIGNED_OUT -> if (fromPhone(uri)) bytes?.let(WatchLink::decodeKeptSignedOut)?.let { KeptResults.signedOut(this, it, stores) }
-        WatchLink.keptAskId(path) != null -> bytes?.let(WatchLink::decodeKeptAsk)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.ask?.takeIf { it.id == WatchLink.keptAskId(path) }?.let { KeptResults.ask(this, it, stores) }
-        path == WatchLink.KEPT_MARKS -> bytes?.let(WatchLink::decodeKeptMarks)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { KeptResults.marks(bot.tafs.watchlink.WatchReply.InboxMarks(it.read, it.dismissed), stores) }
-        WatchLink.keptChatTaf(path) != null -> bytes?.let(WatchLink::decodeKeptChat)?.takeIf { it.tafId == WatchLink.keptChatTaf(path) && AccountMark.keptTaken(held, it.mark) }?.let { KeptResults.chat(it.tafId, it.lines, stores) }
-      }
+      KeptResults.kept(this, path, bytes, KeptResults.Stores.of(this)) { fromPhone(uri) }
       // Kept now: the item goes, on the watch and the phone, so nothing waits in the Data Layer once it's here.
       runCatching { data.deleteDataItems(uri) }
     }

@@ -298,9 +298,37 @@ class AccountMarkTest {
     KeptResults.signedOut(context, KeptSignedOut(t, markA), stores())
     assertEquals("Keep this for A", drafts.draft?.text)
     assertEquals(markB, marks.mark)
-    // One naming no mark (an older phone) wipes, as its sign-out says.
+    // Nor one naming none, once a mark is held: the phone that gave the watch its mark names it when it signs out.
+    KeptResults.signedOut(context, KeptSignedOut(t, null), stores())
+    assertEquals("Keep this for A", drafts.draft?.text)
+    // Holding none (a phone before marks), its sign-out wipes, as before.
+    marks.mark = null
     KeptResults.signedOut(context, KeptSignedOut(t, null), stores())
     nothingOfAKept()
+  }
+
+  /** A watch holding no mark takes nothing marked from the phone: an item marked A, then the phone's first reply marked B. */
+  @Test fun aKeptItemMarkedAIsNotTakenWhileNoMarkIsHeldThenBShowsNothingOfA() = runTest {
+    val m = model(Phone(asB))
+    val drawnOfA = watch(m)
+    // The phone kept A's answer for the watch before the watch ever held a mark: with the app open (into the model)...
+    val item = bot.tafs.watchlink.WatchLink.encodeKept(bot.tafs.watchlink.KeptAsk(t, askA, markA))
+    AskResults.shown = { m.took(it) }
+    try {
+      KeptResults.kept(context, bot.tafs.watchlink.WatchLink.keptAskPath("wa_a"), item, stores()) { true }
+    } finally {
+      AskResults.shown = null
+    }
+    // ...and with it closed (into the stores).
+    KeptResults.kept(context, bot.tafs.watchlink.WatchLink.keptAskPath("wa_a"), item, stores()) { true }
+    // A signed-out item from a phone not connected now is ignored, whatever it says.
+    KeptResults.kept(context, bot.tafs.watchlink.WatchLink.KEPT_SIGNED_OUT, bot.tafs.watchlink.WatchLink.encodeKept(KeptSignedOut(t, null)), stores()) { false }
+    m.refresh()
+    m.reload()
+    assertEquals(emptyList<String>(), drawnOfA)
+    assertTrue(m.thread().none { it.second.id == "wa_a" })
+    nothingOfAKept()
+    assertEquals("the reply set the mark, never the item", markB, marks.mark)
   }
 
   /** A message kept for later goes only to the sign-in it was kept under, even if the stores disagree. */
@@ -318,9 +346,56 @@ class AccountMarkTest {
     assertFalse(phone.asked.any { it is WatchRequest.Ask })
   }
 
+  /**
+   * The phone as it answers a marked act: on another sign-in, signed out, and nothing reaches tafs cloud. It switches to [next]
+   * once it has answered Your tafs: after the watch verified A, before the kept message is sent.
+   */
+  private inner class SwitchingPhone(var current: String, val next: String? = null) : PhoneLink {
+    val toCloud = mutableListOf<WatchRequest>()
+    val marksSent = mutableListOf<String?>()
+    override suspend fun ask(request: WatchRequest): Asked = ask(request, null)
+    override suspend fun ask(request: WatchRequest, mark: String?): Asked {
+      marksSent += mark
+      if (mark != null && mark != current) return Asked.Answered(WatchReply.SignedOut)
+      val answer = (if (current == markA) asA else asB)(request)
+      if (request is WatchRequest.Ask) toCloud += request
+      if (request is WatchRequest.Tafs && next != null) current = next
+      return answer
+    }
+  }
+
+  /** The race closed: a message kept under A, the phone switched to B between the watch's check and the send. */
+  @Test fun aKeptMessageFromAIsRefusedByAPhoneThatSwitchedToBAfterTheCheck() = runTest {
+    keptFromA()
+    val phone = SwitchingPhone(markA, next = markB)
+    val m = model(phone)
+    m.refresh()
+    assertTrue("the act went with A's mark", markA in phone.marksSent)
+    assertTrue("nothing reached tafs cloud", phone.toCloud.isEmpty())
+    assertEquals(WatchModel.Shown.SignedOut, m.shown.value)
+    nothingOfAKept()
+    assertNull(drafts.draft)
+    assertNull(marks.mark)
+  }
+
+  /** A phone before marks never sees the field: the watch sends none until a reply has carried one. */
+  @Test fun aPhoneBeforeMarksNeverSeesTheField() = runTest {
+    keptFromA()
+    marks.mark = null
+    drafts.draft = WatchModel.Draft("Keep this", "w_000000cc", null, null)
+    val sent = mutableListOf<String?>()
+    val phone = object : PhoneLink {
+      override suspend fun ask(request: WatchRequest): Asked = ask(request, null)
+      override suspend fun ask(request: WatchRequest, mark: String?): Asked { sent += mark; return readsAs(null, needsYouA, tafsA)(request) }
+    }
+    model(phone).refresh()
+    assertTrue(sent.isNotEmpty())
+    assertTrue(sent.all { it == null })
+  }
+
   @Test fun theRulesForKeptItems() {
-    assertTrue(AccountMark.keptTaken(null, null))
-    assertTrue(AccountMark.keptTaken(null, markA))
+    assertTrue("a phone before marks", AccountMark.keptTaken(null, null))
+    assertFalse("marked, while none is held", AccountMark.keptTaken(null, markA))
     assertTrue(AccountMark.keptTaken(markA, markA))
     assertFalse("another sign-in's", AccountMark.keptTaken(markA, markB))
     assertFalse("none, once one is held", AccountMark.keptTaken(markA, null))

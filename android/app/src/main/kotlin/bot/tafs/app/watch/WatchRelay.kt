@@ -76,10 +76,13 @@ class WatchRelay(
   }
 
   suspend fun answer(path: String, data: ByteArray): WatchReply {
-    val request = when (val accepted = WatchLink.accept(path, data, now())) {
+    val (request, mark) = when (val accepted = WatchLink.accept(path, data, now())) {
       is WatchLink.Accepted.No -> return WatchReply.Refused(accepted.reason)
-      is WatchLink.Accepted.Yes -> accepted.request
+      is WatchLink.Accepted.Yes -> accepted.request to accepted.mark
     }
+    // Sent under a sign-in's mark (the person's words or acts, WatchLink.carriesMark): only to that same sign-in. Another's, or no
+    // session at all, is answered as signed out, which makes the watch forget what it kept, and nothing is done with it.
+    if (mark != null && signedIn()?.watchMark() != mark) return WatchReply.SignedOut
     return when (request) {
       is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief -> {
         val model = signedIn() ?: return WatchReply.SignedOut
