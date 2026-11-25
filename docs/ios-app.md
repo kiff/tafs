@@ -227,6 +227,8 @@ the app in sample mode.
   - **the detail pane is the app's cream, edge to edge,** at every width and in split view: the
     Overview's centred 980-point column stretches to the pane, and every list in it (Connect apps, an app's
     connections, a connection, what a Card counted) hides its grey for `screenBackground`;
+  - **the Overview's table** shows who uses a taf under its name ("Support · 3 people") on up to two lines, the count held
+    together (`OverviewView.peopleLine`): a medium window moves "1 persona" down whole, never "1 per…".
   - **the Overview's Needs you** lists the held calls, then, when Needs you counts more (a Coach chat,
     a step, "Did this happen?", Card units, as tafs cloud's `needs_you.count` does), one line in its
     words that opens Needs you (`OverviewView.showsRest`). So "Needs you · 3" beside "No tafs yet"
@@ -690,6 +692,10 @@ The same rows as Android, from the same tafs cloud fields (`GET /v1/connect/apps
   in the header and every row. The App column gets its room first (200 points at least), so names read whole in
   portrait and landscape: the other three are 150, 130 and 230 points while there's room, then give way together
   down to 96, 84 and 180. A name is one line, cut at its end only as a last resort, never broken inside a word.
+- **The button beside or under (`BesideOrUnder`):** Connect, Sign in again or Ask Coach sits beside the words while they
+  keep room to read (110 points in the table's Status column, 150 on a phone), else under them at the trailing edge. So
+  a long label ("Volver a iniciar sesión", "Preguntar a Coach") never squeezes a status to a sliver or cuts an app's
+  name, on a phone, an iPad or a Mac.
 - **An app's name is tafs cloud's `name`, else its `title`** (`App.displayName`), with `subtitle` under it when sent,
   in a smaller, softer style on up to two lines: a reviewed entry reads as "Qonto", with "Invoicing: reads, and
   invoice drafts from quotes" under it; a managed app keeps its name ("Gmail") with nothing under it. Both are read

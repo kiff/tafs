@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 @testable import Tafs
 
 /// Connect apps' rows, from the same tafs cloud fields as Android's (docs/ios-app.md): the person's
@@ -163,6 +164,47 @@ final class ConnectRowTests: XCTestCase {
                        "each app once; another app whose name starts the same stays")
         XCTAssertEqual(ConnectRow.keys(list[0]), ["stripe"])
         XCTAssertEqual(ConnectRow.keys(list[2]), ["qontokey", "qonto"])
+    }
+
+    /// A Spanish row whose app needs signing in again (the owner's Windows note 3, checked on iPhone, iPad and Mac): the
+    /// button "Volver a iniciar sesión" goes under the status wherever beside it would leave the status a sliver, and a short
+    /// "Connect" stays beside. Widths measured as the button draws them (15 pt medium, 16 pt padding each side).
+    func testALongSignInAgainNeverSqueezesTheStatus() {
+        func button(_ label: String) -> CGFloat {
+            let font = UIFont.systemFont(ofSize: 15, weight: .medium)
+            return ceil((label as NSString).size(withAttributes: [.font: font]).width) + 32
+        }
+        let spanish = button("Volver a iniciar sesión"), english = button("Connect"), askCoach = button("Preguntar a Coach")
+        // The Status column at its least and at its widest (an iPad beside a sidebar, a wide Mac window).
+        for status in [ConnectColumns.least[2], ConnectColumns.wide[2]] {
+            XCTAssertTrue(BesideOrUnder.under(total: status, button: spanish, spacing: 8, textLeast: BesideOrUnder.tableLeast),
+                          "\(status) pt: Volver a iniciar sesión goes under the status")
+            XCTAssertTrue(BesideOrUnder.under(total: status, button: askCoach, spacing: 8, textLeast: BesideOrUnder.tableLeast),
+                          "\(status) pt: Preguntar a Coach goes under the status")
+        }
+        XCTAssertFalse(BesideOrUnder.under(total: ConnectColumns.wide[2], button: english, spacing: 8, textLeast: BesideOrUnder.tableLeast),
+                       "Connect stays beside the status")
+        // A phone's row (an iPhone SE's 375 pt, less the list's insets): the name keeps its room, or the button goes under.
+        let row: CGFloat = 375 - 40
+        XCTAssertFalse(BesideOrUnder.under(total: row, button: english, spacing: 12, textLeast: BesideOrUnder.rowLeast),
+                       "Connect stays beside the name on a phone")
+        // Wherever it's beside, the words keep at least their least.
+        for total in stride(from: CGFloat(120), through: 600, by: 10) {
+            for b in [english, spanish, askCoach] where !BesideOrUnder.under(total: total, button: b, spacing: 8, textLeast: 110) {
+                XCTAssertGreaterThanOrEqual(total - b - 8, 110)
+            }
+        }
+    }
+
+    /// Overview's "who uses it" (the owner's Windows note 5a, checked on iPad and Mac): the count is held together, so a
+    /// medium window moves "1 persona" to the next line whole instead of cutting it.
+    func testTheOverviewsPeopleCountIsNeverSplit() {
+        let line = OverviewView.peopleLine(names: ["Rae"], count: 1)
+        XCTAssertTrue(line.hasPrefix("Rae · "))
+        let count = String(line.dropFirst("Rae · ".count))
+        XCTAssertEqual(count, Words.People.count(count: 1).replacingOccurrences(of: " ", with: "\u{00A0}"))
+        XCTAssertFalse(count.contains(" "), "no breaking space inside the count")
+        XCTAssertEqual(OverviewView.peopleLine(names: ["Support", "Ana"], count: 3).components(separatedBy: " · ").first, "Support, Ana")
     }
 
     /// iPad's table gives the App column its room first, so "Gmail", "Google Sheets" or "LinkedIn"
