@@ -42,7 +42,7 @@ export async function until(check, what, timeout = 10_000) {
  * `cloud`: the fake tafs cloud and KIFF answer the extension too (planque.mjs `FakeCloud`), so the side panel can send to the
  * taf and a run can join the person's tab. Without it, both names fail to resolve, and the extension has no Coach.
  */
-export async function start({ pair = true, cloud = false, args = [], bfcache = false } = {}) {
+export async function start({ pair = true, cloud = false, args = [], bfcache = false, lang = "en-US" } = {}) {
   const h = { dialogs: [], cleanup: [] };
   h.sites = await new FixtureSites().start();
   h.cleanup.push(() => h.sites.stop());
@@ -63,6 +63,8 @@ export async function start({ pair = true, cloud = false, args = [], bfcache = f
     headless: true,
     channel: "chromium",
     ignoreHTTPSErrors: true,
+    // On Linux Chromium takes its interface language, which chrome.i18n follows, from the environment as well as from --lang.
+    env: { ...process.env, LANGUAGE: lang.replace("-", "_"), LANG: lang.replace("-", "_") + ".UTF-8" },
     // Playwright turns Chrome's back/forward cache off (`--disable-back-forward-cache`); `bfcache` leaves it on, as people have it.
     ...(bfcache ? { ignoreDefaultArgs: ["--disable-back-forward-cache"] } : {}),
     args: [
@@ -73,8 +75,8 @@ export async function start({ pair = true, cloud = false, args = [], bfcache = f
       "--ignore-certificate-errors",
       // Straight to 127.0.0.1, whatever proxy the computer has set.
       "--no-proxy-server",
-      // The extension's words in English whatever the computer's language: the panel's lines are checked word for word.
-      "--lang=en-US",
+      // The extension's words in English whatever the computer's language (or in `lang`): the panel's lines are checked word for word.
+      "--lang=" + lang,
       ...args,
     ],
   });
