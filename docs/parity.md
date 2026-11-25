@@ -19,8 +19,8 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Windows | done 50, not for it 8 | the 58 iPad view files |
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
-| Wear OS | built 25, partial 3, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | built 23, partial 4, not started 1, not for it 4 | the [Watches](#watches) table |
+| Wear OS | built 26, partial 3, not for it 4 | the [Watches](#watches) table |
+| Apple Watch | built 23, partial 4, not started 2, not for it 4 | the [Watches](#watches) table |
 | Chrome extension | done 10, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
@@ -231,6 +231,7 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 30 | Saying the phone can't be reached, with retries on their own | built | built | the owner's call: no Try again. One calm "Linking tafs. Keep your phone nearby and connected." (`watch.linking`) on the first link, retries with backoff (tafs#2021, tafs#2018) |
 | 31 | Working without the phone | not for it | not for it | the phone holds the session and the keys |
 | 32 | In the store | partial | partial | Apple Watch: only the TestFlight build carries it. Wear: the internal track; production is the owner's |
+| 33 | One account's data never shows under another's: a change of the phone's sign-in, or a sign-out the watch didn't hear, wipes what it kept | not started | built | Wear OS: the phone's random account mark on every reply and kept item, checked before anything is drawn and failing closed, and `kept/signed-out` at sign-out (docs/watch-wear.md). Apple Watch follows with the same rule |
 
 ## One layout on every app
 

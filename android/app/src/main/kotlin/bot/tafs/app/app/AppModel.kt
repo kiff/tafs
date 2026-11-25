@@ -1497,6 +1497,8 @@ class AppModel(
    */
   suspend fun useSession(token: String, tenant: String? = null) {
     secrets.save(token, TOKEN)
+    // A new sign-in, a new mark for the watch: a watch that sees it change forgets what it kept of the earlier one.
+    secrets.save(newWatchMark(), WATCH_MARK)
     if (tenant != null) {
       secrets.save(tenant, TENANT)
       secrets.save("1", KEYED)
@@ -2022,6 +2024,10 @@ class AppModel(
     secrets.delete(TENANT)
     secrets.delete(KEYED)
     secrets.delete(APPROVAL_KEYED)
+    // The watch forgets this account too, now or when it's next in reach.
+    val mark = secrets.load(WATCH_MARK)
+    secrets.delete(WATCH_MARK)
+    runCatching { watchSignedOut?.invoke(mark) }
     forgetApprovalKey()
     kiff.token = null
     // KIFF ends this session's approval window at sign-out.
@@ -3089,6 +3095,22 @@ class AppModel(
 
   /** Alerts were turned on on this phone: only then is it registered at launch, so a phone that never asked is never alerted. */
   private fun alertsWanted(): Boolean = secrets.load(ALERTS_ON) == "1"
+
+  /**
+   * The watch's account mark for this sign-in (docs/watch-wear.md, "What the watch keeps"): random, made at sign-in (or here, for
+   * a session from before marks) and dropped at sign-out, so it tells the watch only whether it's still the same sign-in. None
+   * while signed out or in the sample.
+   */
+  fun watchMark(): String? {
+    if (_state.value.mode != Mode.kiff || secrets.load(TOKEN) == null) return null
+    return secrets.load(WATCH_MARK) ?: newWatchMark().also { secrets.save(it, WATCH_MARK) }
+  }
+
+  /**
+   * Told at every sign-out, with the mark it dropped (none in the sample): the app passes it on to the watch at once
+   * ([bot.tafs.app.watch.WatchSignedOut]), so a watch out of reach forgets the account too. Never fails a sign-out.
+   */
+  var watchSignedOut: ((String?) -> Unit)? = null
 
   private fun applyPush(status: PushStatus) {
     _state.update { it.copy(canAnswerHolds = status.answers, alertsReady = status.alerts && pendingHandoff() == null) }
@@ -10027,6 +10049,14 @@ class AppModel(
     const val TENANT = "kiff.tenant"
     const val KEYED = "kiff.session-keyed"
     const val APPROVAL_KEYED = "kiff.session-approval-keyed"
+    /** The watch's account mark for this sign-in ([watchMark]). */
+    const val WATCH_MARK = "tafs.watch-mark"
+
+    /** A new account mark: 16 random bytes, base64url, never derived from the account. */
+    fun newWatchMark(): String {
+      val bytes = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
+      return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+    }
 
     /** What the fingerprint prompt says when Approve again proves this phone holds its new key. */
     val RELINK_REASON get() = Words.SignIn.Relink.prompt

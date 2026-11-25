@@ -32,13 +32,14 @@ class WearRelayService : WearableListenerService() {
       val connected = runCatching { Wearable.getNodeClient(this@WearRelayService).connectedNodes.await().any { it.id == nodeId } }.getOrDefault(false)
       // Not connected now is answered as a path this phone doesn't serve: the watch's words are the same (Open on phone), and
       // a new reason would be one an older watch can't read. In logs, UNKNOWN_PATH from here means "not a connected node".
-      val reply = if (!connected) bot.tafs.watchlink.WatchReply.Refused(bot.tafs.watchlink.NotAccepted.UNKNOWN_PATH)
+      val (reply, mark) = if (!connected) bot.tafs.watchlink.WatchReply.Refused(bot.tafs.watchlink.NotAccepted.UNKNOWN_PATH) to null
       else runCatching {
         WatchRelay(model = { app.restoredModel(onScreen = false) }, floor = floor, voice = voice(), transcriber = OnDeviceTranscriber(applicationContext), background = app.background, chats = app.watchChats)
-          .answer(path, request)
+          .answerMarked(path, request)
       }
-        .getOrElse { bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone) }
-      answer.trySetResult(WatchLink.encodeReply(reply))
+        .getOrElse { bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone) to null }
+      // With this sign-in's account mark: a watch that sees it change forgets what it kept of the one before.
+      answer.trySetResult(WatchLink.encodeReply(reply, mark))
     }.invokeOnCompletion {
       // Cancelled before it answered (the service went away, even before the work began): the watch hears Open on phone,
       // never silence until its own limit.

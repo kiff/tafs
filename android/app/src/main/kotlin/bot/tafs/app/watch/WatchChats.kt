@@ -24,6 +24,8 @@ class WatchChats(
   private val zone: () -> String? = { null },
   /** Where the taf ids the watch opened are kept across the phone's restarts (ids only); in memory in a test. */
   private val store: OpenedStore = OpenedStore.Memory(),
+  /** The phone's account mark now ([bot.tafs.app.app.AppModel.watchMark]), on each kept chat; none in a test that doesn't look. */
+  private val mark: () -> String? = { null },
 ) {
   private val watched = java.util.Collections.synchronizedSet(store.read().toMutableSet())
   private val sent = mutableMapOf<String, List<ChatLine>>()
@@ -68,8 +70,15 @@ class WatchChats(
       if (sent[tafId] == lines) return@mapNotNull null
       sent[tafId] = lines
       val path = WatchLink.keptChatPath(tafId) ?: return@mapNotNull null
-      path to WatchLink.encodeKept(KeptChat(now(), tafId, lines, zone()))
+      path to WatchLink.encodeKept(KeptChat(now(), tafId, lines, zone(), mark()))
     }
+
+  /** Signed out on the phone: the chats the watch opened are the account's, so they're forgotten with it. */
+  @Synchronized fun forget() {
+    watched.clear()
+    sent.clear()
+    store.write(emptySet())
+  }
 
   /** Follows the phone's threads in [scope] (the app's), putting each change for the watch. */
   fun follow(chats: Flow<Map<String, List<ChatMessage>>>, scope: CoroutineScope) {

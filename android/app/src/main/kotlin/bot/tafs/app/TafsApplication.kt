@@ -2,6 +2,7 @@ package bot.tafs.app
 
 import android.app.Application
 import android.content.pm.ApplicationInfo
+import kotlinx.coroutines.launch
 import bot.tafs.app.billing.NoPlayStore
 import bot.tafs.app.billing.PlayBillingStore
 import bot.tafs.app.billing.Purchases
@@ -101,7 +102,13 @@ class TafsApplication : Application() {
       bot.tafs.app.app.SampleStore(java.io.File(filesDir, "sample.json")), signer, kiff, cloud, secrets, deviceName = deviceName,
       push = push, planque = planque, vendorSignIn = vendorSignIn, appSignInTab = appSignInTab, purchases = purchases, playBilling = playBilling,
       openedFiles = java.io.File(cacheDir, "attachments"),
-    )
+    ).also { model ->
+      // Signed out: the watch forgets the account, now or when it's next in reach (docs/watch-wear.md, "What the watch keeps").
+      model.watchSignedOut = { mark ->
+        watchChats.forget()
+        background.launch { bot.tafs.app.watch.WatchSignedOut.of(this@TafsApplication).tell(mark) }
+      }
+    }
   }
 
   /**
@@ -117,7 +124,7 @@ class TafsApplication : Application() {
    */
   val watchChats: bot.tafs.app.watch.WatchChats by lazy {
     bot.tafs.app.watch.WatchChats(bot.tafs.app.watch.DataLayerKeep(this), zone = { bot.tafs.app.model.zone.id },
-      store = bot.tafs.app.watch.WatchChats.OpenedStore.Preferences(this))
+      store = bot.tafs.app.watch.WatchChats.OpenedStore.Preferences(this), mark = { model.watchMark() })
       .also { it.follow(bot.tafs.app.watch.WatchChats.of(model.state), background) }
   }
 

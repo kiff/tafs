@@ -53,6 +53,13 @@ class WatchActivity : ComponentActivity() {
       // Coach's conversation, kept across opens (docs/watch-wear.md, "What the watch keeps").
       // Behind its switch until the owner's yes and the Privacy page's line ([KEEP_THREADS]).
       thread = if (WATCH_V2 && KEEP_THREADS) KeptThreadStore.of(this) else null,
+      // The phone's account mark: what's kept is drawn only once a reply this open says it's the same sign-in (AccountMark).
+      marks = PreferencesMarkStore(this),
+      // An account wiped: its answers' notifications and any recording go with it.
+      wiped = {
+        runCatching { getSystemService(android.app.NotificationManager::class.java)?.cancelAll() }
+        runCatching { VoiceFiles.dir(this).deleteRecursively() }
+      },
     )
   }
 
@@ -297,6 +304,8 @@ class WatchActivity : ComponentActivity() {
     AskResults.shown = { ask -> runOnUiThread { model.took(ask) } }
     KeptResults.marks = { marks -> runOnUiThread { model.takeMarks(marks) } }
     KeptResults.chats = { tafId, lines -> runOnUiThread { model.tafChatChanged(tafId, lines) } }
+    // The phone signed out while the app is open: everything goes now, then the phone is read again.
+    KeptResults.signedOut = { runOnUiThread { model.phoneSignedOut(); lifecycleScope.launch { model.refresh() } } }
     opening = lifecycleScope.launch {
       // What's kept shows at once; the phone is read behind it, tried again by itself when it's slow (docs/watch-wear.md).
       model.start()
@@ -310,6 +319,7 @@ class WatchActivity : ComponentActivity() {
     AskResults.shown = null
     KeptResults.marks = null
     KeptResults.chats = null
+    KeptResults.signedOut = null
     opening?.cancel()
     opening = null
     listener.cancel()
