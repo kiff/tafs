@@ -2371,7 +2371,7 @@ final class AppModel: ObservableObject {
                 return false
             }
             // The Card step asks for no signature when its plain list isn't exactly what the draft signs (shown = signed).
-            if let start = coachStart, start.cardStep(face: Biometry.isFace), !start.cardStepSigns {
+            if let start = coachStart, start.cardStep(face: Biometry.isFace), !start.cardStepSigns || !start.batchSigns(mcp: coachMCP) {
                 coachToolsError = Words.Version.outOfDateCard
                 return false
             }
@@ -2416,7 +2416,7 @@ final class AppModel: ObservableObject {
         // Only the step that was shown is signed: tafs cloud's read now must be byte for byte the batch, the
         // Cards' draft and the pair the person read. On any difference nothing is signed; the step is drawn
         // again from this read (above), and the person reads it and gives again.
-        guard let shown, Self.toolsBodies(shown) == Self.toolsBodies(tools), tools.draftSigns else {
+        guard let shown, Self.toolsBodies(shown) == Self.toolsBodies(tools), tools.draftSigns, tools.batchSigns(mcp: coachMCP) else {
             coachToolsError = Words.Version.outOfDateCard
             return false
         }
@@ -9106,7 +9106,7 @@ final class AppModel: ObservableObject {
                     // plain list equal to the draft. On any difference nothing is sent, and the step is drawn again from
                     // this read for the person to read and approve again.
                     if let shown = coachStart, shown.cardStep(face: Biometry.isFace),
-                       Self.startBodies(shown) != Self.startBodies(start) || !start.cardStepSigns {
+                       Self.startBodies(shown) != Self.startBodies(start) || !start.cardStepSigns || !start.batchSigns(mcp: coachMCP) {
                         coachStart = start
                         setupError = Words.Version.outOfDateCard
                         return false
@@ -9143,6 +9143,10 @@ final class AppModel: ObservableObject {
     /// batch answered, then tafs cloud claims the draft's key. With every tool connected, the draft
     /// goes alone. A draft KIFF refuses after the batch went in is started again from the next read,
     /// which carries the draft alone, under a new Face ID: never the pair again.
+    /// Coach's own control server, as this app reaches tafs cloud: the address every connection of Coach's tools batch must
+    /// name (`CardStepCheck.batchMatches`).
+    var coachMCP: String { cloud.baseURL.appendingPathComponent("v1/mcp").absoluteString }
+
     /// What a first start signs, as the bytes tafs cloud wrote: each request's method, path and body, in order.
     static func startBodies(_ start: TafsCloud.CoachStart) -> [Data] {
         start.requests.flatMap { [Data($0.id.utf8), Data($0.method.utf8), Data($0.path.utf8), $0.body] }

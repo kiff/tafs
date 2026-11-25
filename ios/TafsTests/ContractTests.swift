@@ -46,6 +46,8 @@ final class ContractTests: XCTestCase {
             XCTAssertTrue(start.cardStep(face: false), "\(file): the Card step's words, for Touch ID")
             XCTAssertFalse(start.words?.locked.isEmpty ?? true, "\(file): the locked line")
             XCTAssertTrue(start.cardStepSigns, "\(file): the plain list is what the draft signs")
+            XCTAssertTrue(start.batchSigns(mcp: "https://tafs.test/v1/mcp"), "\(file): the batch connects only the step's tools, at tafs cloud")
+            XCTAssertFalse(start.connect != nil && start.batchSigns(mcp: "https://other.test/v1/mcp"), "\(file): never another tafs cloud's")
         }
         let tools = try XCTUnwrap(TafsCloud.CoachTools.read(try answer("setup-coach.json")), "setup-coach.json: no tools read")
         XCTAssertTrue(tools.draftSigns, "tools to connect, no Card drafted: nothing to compare")

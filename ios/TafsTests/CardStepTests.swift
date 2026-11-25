@@ -136,4 +136,43 @@ final class CardStepTests: XCTestCase {
         XCTAssertEqual(start(older)?.cardStep(face: true), false, "a tafs cloud from before the Card step")
         XCTAssertEqual(start(older)?.oneScreen, true)
     }
+
+    /// The tools batch the same approval signs, held to the step: each connection one of its tools, as Coach's own control
+    /// server at this app's tafs cloud, with only the keys tafs cloud writes.
+    func testTheToolsBatchConnectsOnlyTheStepsToolsAtThisAppsTafsCloud() {
+        let mcp = "https://cloud.test/v1/mcp"
+        func batch(_ edit: (inout [[String: Any]]) -> Void = { _ in }) -> Data {
+            var connections: [[String: Any]] = [
+                ["name": "tafs_state", "url": mcp, "tool": "tafs_state", "mode": "verify", "audience": mcp, "control": true,
+                 "idempotency_argument": "tafs_op", "read_only": true],
+                ["name": "taf_task", "url": mcp, "tool": "taf_task", "mode": "verify", "audience": mcp, "control": true,
+                 "idempotency_argument": "tafs_op"],
+            ]
+            edit(&connections)
+            return try! JSONSerialization.data(withJSONObject: ["connections": connections])
+        }
+        let shown = decoded(step)
+        XCTAssertTrue(TafsCloud.CardStepCheck.batchMatches(step: shown, batch: batch(), mcp: mcp))
+        let changes: [(String, (inout [[String: Any]]) -> Void)] = [
+            ("a tool the step doesn't show", { $0[1]["tool"] = "taf_delete"; $0[1]["name"] = "taf_delete" }),
+            ("a name that isn't its tool", { $0[1]["name"] = "something_else" }),
+            ("another server", { $0[1]["url"] = "https://elsewhere.example/v1/mcp" }),
+            ("another audience", { $0[1]["audience"] = "https://elsewhere.example/v1/mcp" }),
+            ("not the control server", { $0[1]["control"] = false }),
+            ("control as a number", { $0[1]["control"] = 1 }),
+            ("another mode", { $0[1]["mode"] = "trust" }),
+            ("no idempotency argument", { $0[1].removeValue(forKey: "idempotency_argument") }),
+            ("read_only as false", { $0[0]["read_only"] = false }),
+            ("a key tafs cloud doesn't write", { $0[1]["headers"] = ["Authorization": "x"] }),
+            ("a tool twice", { $0.append($0[0]) }),
+            ("nothing to connect", { $0.removeAll() }),
+        ]
+        for (why, change) in changes {
+            XCTAssertFalse(TafsCloud.CardStepCheck.batchMatches(step: shown, batch: batch(change), mcp: mcp), why)
+        }
+        XCTAssertFalse(TafsCloud.CardStepCheck.batchMatches(step: shown, batch: batch(), mcp: "https://tafs.other/v1/mcp"),
+                       "the batch names another tafs cloud than this app's")
+        XCTAssertTrue(TafsCloud.CardStepCheck.batchMatches(step: shown, batch: batch { $0[1]["replace"] = true }, mcp: mcp),
+                      "replacing an earlier connection, as tafs cloud marks it")
+    }
 }
