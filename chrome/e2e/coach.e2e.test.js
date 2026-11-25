@@ -92,7 +92,7 @@ test("an act that ran, whose page then grows past any cut, is never answered as 
   assert.equal(r.page_dropped, "page_too_large");
 });
 
-// qa-kiff's case: a Submit whose answer is a page past any cut. Clicked once, it posts once; the act is answered done (no page,
+// A Submit whose answer is a page past any cut. Clicked once, it posts once; the act is answered done (no page,
 // `page_dropped`), so nothing tells the taf to send it again, and nothing is sent again.
 test("a Submit whose answer grows past any cut, clicked once: one POST, answered done with page_dropped, and nothing sent again", { skip }, async () => {
   const run = newRun("submit-grows");
