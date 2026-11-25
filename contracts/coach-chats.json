@@ -8,6 +8,13 @@
         "updated": "2026-10-16T12:01:01.000Z",
         "title": "Set up refunds for my shop"
       }
-    ]
+    ],
+    "delete": {
+      "item": "Delete conversation",
+      "confirm_title": "Delete this conversation?",
+      "confirm_body": "Its messages and the files you added to it are deleted now, for good. Anything a taf saved in “What it remembers” stays until you remove it. What was already done stays done, and you can still see it in your Record.",
+      "confirm_button": "Delete",
+      "failed": "It wasn't deleted. Check that you're online and try again."
+    }
   }
 }
