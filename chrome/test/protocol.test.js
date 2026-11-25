@@ -644,7 +644,7 @@ test("an answer over the relay's limit is cut to fit and says what was cut; an a
   relay.close();
 });
 
-test("a page that fits no way is page_too_large, signed", async () => {
+test("a read whose page fits no way is page_too_large, signed: nothing happened, so trying again repeats nothing", async () => {
   const p = await planque();
   // Fields are never cut (an act names them): a page whose fields alone are over the limit can't be sent.
   const fields = Array.from({ length: 200 }, (_, i) => ({ ref: "f" + (i + 1), label: "y".repeat(800), kind: "text" }));
@@ -658,6 +658,43 @@ test("a page that fits no way is page_too_large, signed", async () => {
   assert.ok(JSON.stringify(answer).length < MAX_RESULT_BYTES);
   const { sig, type, ...body } = answer;
   assert.equal(await verify(await pub(ext), LABEL.result, body, sig), true);
+  relay.close();
+});
+
+test("an act or a hand-over that ran, whose page fits no way, is answered done with page_dropped, never as a failure", async () => {
+  // A taf told its click failed may click Submit again: the step's effect happened, so the answer says so, and the taf reads
+  // again (that read may well be page_too_large, honestly: nothing happened there).
+  const fields = Array.from({ length: 200 }, (_, i) => ({ ref: "f" + (i + 1), label: "y".repeat(800), kind: "text" }));
+  for (const op of ["act", "hand"]) {
+    const p = await planque();
+    const big = { active: false, handle: async () => ({ page: { read_id: "rd_2", url: "https://shop.example/grown", text: "x", fields } }), stop: async () => {} };
+    const { relay, ext, ws } = await relayWith(p, { runner: big });
+    await handshake(p, ws);
+    const s = step({ op });
+    await ws.deliver({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) });
+    const answer = ws.sent.at(-1);
+    assert.equal(answer.ok, true, op);
+    assert.equal(answer.error, null, op);
+    assert.equal(answer.page, null, op);
+    assert.equal(answer.page_dropped, "page_too_large", op);
+    assert.ok(JSON.stringify(answer).length < MAX_RESULT_BYTES, op);
+    const { sig, type, ...body } = answer;
+    assert.equal(await verify(await pub(ext), LABEL.result, body, sig), true, op + ": page_dropped is in what's signed");
+    relay.close();
+  }
+});
+
+test("an act the runner refused is answered with its refusal, whatever its size; only a step that ran gets page_dropped", async () => {
+  const p = await planque();
+  const refused = { active: false, handle: async () => ({ error: { code: "site_not_listed", detail: "not one of this grant's sites" } }), stop: async () => {} };
+  const { relay, ws } = await relayWith(p, { runner: refused });
+  await handshake(p, ws);
+  const s = step({ op: "act" });
+  await ws.deliver({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) });
+  const answer = ws.sent.at(-1);
+  assert.equal(answer.ok, false);
+  assert.equal(answer.error.code, "site_not_listed");
+  assert.equal("page_dropped" in answer, false);
   relay.close();
 });
 
