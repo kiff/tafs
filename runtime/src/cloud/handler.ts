@@ -2290,6 +2290,7 @@ function validZone(zone: string): boolean {
  * start"): its title, its four lines (what it allows, what always asks, how the approval signs, how to stop it), the label
  * of the fold that holds KIFF's own words for the Cards, and the button for each way the device approves, whole sentences
  * so each language's grammar holds. A device that approves with a passkey (a computer) says `sign_passkey` for `sign`.
+ * `locked` is the line in place of Coach's message box until the step is approved: nothing is written to Coach before it.
  */
 function startWords(lang: Lang): StartWords {
   const w = wordsIn(lang);
@@ -2298,7 +2299,7 @@ function startWords(lang: Lang): StartWords {
     lead: w.start_lead, start: w.start_button, title: w.card_step_title,
     lines: { allows: w.card_step_allows, asks: w.card_step_asks, sign: w.card_step_sign, stop: w.card_step_stop },
     exact: w.card_step_exact, buttons: { fingerprint: w.card_step_give_fingerprint, face: w.card_step_give_face, passkey: w.card_step_give_passkey },
-    sign_passkey: w.card_step_sign_passkey,
+    sign_passkey: w.card_step_sign_passkey, locked: w.card_step_locked,
   };
 }
 
@@ -2311,6 +2312,7 @@ export interface StartWords {
   exact: string;
   buttons: { fingerprint: string; face: string; passkey: string };
   sign_passkey: string;
+  locked: string;
 }
 
 /** `plan_needed` with its words when KIFF says the account has no plan; nothing when it has one or can't be read. */

@@ -2556,7 +2556,7 @@ describe("Setup (kiff/agents#91)", () => {
       expect(first.words).toEqual({ lead: en.start_lead, start: en.start_button, title: en.card_step_title,
         lines: { allows: en.card_step_allows, asks: en.card_step_asks, sign: en.card_step_sign, stop: en.card_step_stop },
         exact: en.card_step_exact, buttons: { fingerprint: en.card_step_give_fingerprint, face: en.card_step_give_face, passkey: en.card_step_give_passkey },
-        sign_passkey: en.card_step_sign_passkey });
+        sign_passkey: en.card_step_sign_passkey, locked: en.card_step_locked });
       // Shown = signed: each tool the step lists is on the Card the draft signs, with that Card's limit and what happens past
       // it, and the step lists every action the draft's Cards grant, so an app can compare the two and refuse when they differ.
       type Signed = { id: string; on_exceed: string; grants: Array<{ action: string }>; aggregates: Array<{ quantity: string; limit: number; window: string }> };

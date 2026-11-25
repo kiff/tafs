@@ -690,7 +690,7 @@ Answering a held call is never a tool.
 A first Start ends on one step that asks for Coach's tools, with their own fingerprint. tafs cloud
 writes its words, in the person's language, on `GET /v1/setup`'s `tools.coach_tools_step` while the
 tools are `to_give` (`coachToolsStep` in `coach.ts`):
-`{title, intro, groups: [{name, line, tools: [{name, does, why, tool, card, limit, asks}]}], details, give, not_now, row}`.
+`{title, intro, groups: [{name, line, tools: [{name, does, why, tool, card, limit, asks, in_draft}]}], details, give, not_now, row}`.
 
 - **Four groups, always shown:** watch your tafs, run them for you, build new versions, help while you
   drive. Each group has one line. The thirteen tools sit under them, under `details`, which is folded by
@@ -706,10 +706,13 @@ tools are `to_give` (`coachToolsStep` in `coach.ts`):
 - **What each tool's Card signs, as data:** `tool` (the action), `card` (its Card's id), `limit` (the Card's count a
   day) and `asks` (past the limit, or for every call at 0, the call waits for the person). They come from `COACH_CARDS`, as
   the draft signs them, so an app compares the plain list it shows with the signed body (`requests[draft].body.cards`) and
-  doesn't ask for the signature when they differ. A test holds each tool to its Card, and every action the Cards grant to a
-  tool on the step, in every language.
+  doesn't ask for the signature when they differ. `in_draft` marks the tools whose Cards this answer's draft carries: every
+  one on a first start, only the missing ones on a later read, none when only tools are to connect; the app compares those
+  with the draft, so a later approval is held to what's shown as the first is. A test holds each tool to its Card, and every
+  action the Cards grant to a tool on the step, in every language.
 - **The Card step's words** come with `start.words` ([api.md](api.md)): its title, four lines, the fold's label over KIFF's
-  own words, and a whole-sentence button for each way a device approves.
+  own words, a whole-sentence button for each way a device approves, and `locked`, the line in place of Coach's message box
+  until the step is approved.
 - **One confirmation** gives the tools on either phone. The words never name a biometric (fingerprint,
   Face ID): the phone knows which it asks for, and tafs cloud doesn't.
 - **Buttons:** `give` and `not_now`. After **Not now**, the Coach screen keeps one line, `row`, which
