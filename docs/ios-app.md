@@ -847,6 +847,52 @@ The person's own Coach conversations can be deleted for good from Previous conve
 - Tests: `SetupTests.testDeletingAConversationForGood` (no words → no Delete, each answer above, the archived list, the
   opened copy removed, the watch told once per delete that went through), `WatchThreadsTests.testADeleteOnThePhoneDropsThatThreadAlone`.
 
+## The Card step
+
+Coach's first approval signs its Cards: what it may do and how much a day. Before that signature, Start's screen is the Card
+step (tafs#2091's words, sent by tafs cloud in `start.words`, docs/coach.md). It's drawn only when every line of it came,
+the button for this device's way of approving included (`CoachStart.cardStep(face:)`). Anything missing, and Start's
+screen is as before.
+
+- **What it shows** (`SetupChatView.cardStepScreen`, `CardStepList`):
+  - the title, then what the approval allows, what always waits for the person, how it signs (a key kept on this device)
+    and how to stop it (Halt);
+  - the plain list: each group of Coach's tools, each tool with what it does and its limit a day;
+  - under "Exactly what you sign", folded, Coach's Cards in KIFF's own words, as signed;
+  - one button, the whole sentence for this phone's way, read when the step is drawn: "Approve with face" (Face ID) or
+    "Approve with fingerprint" (Touch ID). A device with neither, or with it off for tafs, gets no button at all
+    (`ApprovalGate` says what to set up instead), and Give signs and sends nothing (`giveCoachTools`): the approval key
+    needs Face ID or Touch ID, never the passcode.
+- **Shown = signed, failing closed** (`TafsCloud.CardStepCheck`). Each tool in the list carries what its Card signs: `tool`,
+  `card`, `limit` and `asks`. These are compared with the draft the button signs (`requests[draft].body.cards`). Each signed
+  Card is read on an allowlist:
+  - its `id`;
+  - `subject`, which must be the draft's own agent;
+  - `domain`, which must be `gateway`;
+  - `on_exceed`, `owner` or `refuse`, with a hold's `hold_expiry` only on `owner`;
+  - grants that name an `action` and nothing else;
+  - exactly one aggregate, a `count` a `calendar_day`, with a whole `limit`.
+
+  Anything else is a mismatch: a per-call cap, extra room, a measure, another window, a second aggregate, an environment or
+  resources, a Card or an action on one side only, a tool listed twice, or a limit or `asks` that differs. On a mismatch
+  there's no button, and the step says it changed (`Words.Version.outOfDateCard`).
+- **Only what it showed is sent.** At the tap, before Face ID, the check runs again (`giveCoachTools`). After Face ID,
+  `startSetup` reads the start again and sends it only if its requests are byte for byte the ones shown and their list still
+  matches. Otherwise nothing is sent, and the step is drawn again from the new read.
+- **No typing until it's approved.** On the Card step, the message box isn't drawn: words handed over wait in the draft, and
+  tafs cloud's `locked` line (`card_step_locked`) stands in the box's place. Once Coach exists, while its tools themselves
+  are still to give (`tools.connect`), the box is one locked line in tafs cloud's words (the step's `row`) that opens the
+  step (`SetupChatView.lockedComposer`). That box stands in for the tools row above the chat, so the line is drawn
+  once. When only Cards for tools Coach gained since are missing, typing stays open.
+- **Later approvals of Coach's Cards** (the tools step, once Coach exists): the step lists every tool while the draft may
+  carry only the missing Cards. tafs cloud marks the ones it carries (`in_draft`), and only those are compared with the
+  draft, both ways, on the same allowlist (`CoachTools.draftSigns`). That check runs at Give, after the byte-for-byte
+  re-read and before Face ID, and a mismatch signs nothing. Coach's Cards in KIFF's own words come first, unfolded, and the
+  tools sit under the fold (`CoachToolsGiven.stepBody`). From a tafs cloud that doesn't mark them, KIFF's words are what's
+  shown as signed, as before.
+- Tests: `ContractTests.testTheCardStepReadsAsTafsCloudSendsItAndItsListIsWhatItSigns` (tafs cloud's own first-start answers, the pair and the draft alone, match on the allowlist), `CardStepTests`: the list matches the draft, a later approval compares only the tools `in_draft`, each change to a signed Card or to the list fails closed, and the
+  Card step shows only when every line came.
+
 ## The calendar
 
 The tafs' scheduled work still to come (kiff/tafs#534), opened from the sidebar's

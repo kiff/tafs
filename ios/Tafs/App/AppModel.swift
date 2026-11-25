@@ -2364,6 +2364,17 @@ final class AppModel: ObservableObject {
         // Before Coach exists, its tools are given by starting it: one Face ID for both.
         if setupTaf == nil, coachStart?.startable == true {
             guard !givingCoachTools else { return false }
+            // A device that can't approve (no Face ID or Touch ID, or it's off for tafs) signs nothing: the approval key
+            // needs one, never the passcode. Its words say what to do, and nothing is asked or sent.
+            if approvalBlocked {
+                coachToolsError = approvalReadiness.short(kind: Biometry.kind)
+                return false
+            }
+            // The Card step asks for no signature when its plain list isn't exactly what the draft signs (shown = signed).
+            if let start = coachStart, start.cardStep(face: Biometry.isFace), !start.cardStepSigns {
+                coachToolsError = Words.Version.outOfDateCard
+                return false
+            }
             givingCoachTools = true
             defer { givingCoachTools = false }
             coachToolsError = nil
@@ -2405,7 +2416,7 @@ final class AppModel: ObservableObject {
         // Only the step that was shown is signed: tafs cloud's read now must be byte for byte the batch, the
         // Cards' draft and the pair the person read. On any difference nothing is signed; the step is drawn
         // again from this read (above), and the person reads it and gives again.
-        guard let shown, Self.toolsBodies(shown) == Self.toolsBodies(tools) else {
+        guard let shown, Self.toolsBodies(shown) == Self.toolsBodies(tools), tools.draftSigns else {
             coachToolsError = Words.Version.outOfDateCard
             return false
         }
@@ -9150,6 +9161,15 @@ final class AppModel: ObservableObject {
                         setupError = approvalKeyRefused()
                         return false
                     }
+                    // After a Card step, only what it showed is sent: this read's batch and draft, byte for byte, and its
+                    // plain list equal to the draft. On any difference nothing is sent, and the step is drawn again from
+                    // this read for the person to read and approve again.
+                    if let shown = coachStart, shown.cardStep(face: Biometry.isFace),
+                       Self.startBodies(shown) != Self.startBodies(start) || !start.cardStepSigns {
+                        coachStart = start
+                        setupError = Words.Version.outOfDateCard
+                        return false
+                    }
                     // One Face ID, the one just asked: Coach's tools and its draft with its Cards.
                     coachStart = start
                     setupTaf = try await startCoachTogether(start, tenant: tenant, gen: gen)
@@ -9182,6 +9202,11 @@ final class AppModel: ObservableObject {
     /// batch answered, then tafs cloud claims the draft's key. With every tool connected, the draft
     /// goes alone. A draft KIFF refuses after the batch went in is started again from the next read,
     /// which carries the draft alone, under a new Face ID: never the pair again.
+    /// What a first start signs, as the bytes tafs cloud wrote: each request's method, path and body, in order.
+    static func startBodies(_ start: TafsCloud.CoachStart) -> [Data] {
+        start.requests.flatMap { [Data($0.id.utf8), Data($0.method.utf8), Data($0.path.utf8), $0.body] }
+    }
+
     private func startCoachTogether(_ start: TafsCloud.CoachStart, tenant: String, gen: Int) async throws -> TafsCloud.CloudTaf? {
         guard let draftRequest = start.draft else { return nil }
         let draft: KIFFClient.AgentDraft

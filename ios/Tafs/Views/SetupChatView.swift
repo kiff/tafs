@@ -72,7 +72,16 @@ struct SetupChatView: View {
                 // `-screen coach-chat` draws the sample conversation, over the sample, which has no Coach to start.
                 if !model.setupStarted && !Screenshots.coachChat {
                     intro
-                    if model.setupHanded && !model.approvalBlocked {
+                    // No typing before Coach's tools are approved (the Card step): the words handed over wait in the draft,
+                    // and the box's place says so, in tafs cloud's words.
+                    if cardStepShown, let locked = model.coachStart?.words?.locked, !locked.isEmpty {
+                        Text(locked).scaledFont(14, weight: .semibold).foregroundColor(Theme.dim)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16).padding(.vertical, 12)
+                            .background(Theme.panel)
+                            .accessibilityIdentifier("coach-composer-locked")
+                    } else if model.setupHanded && !model.approvalBlocked && !cardStepShown {
                         // Words first (docs/ios-app.md): what was handed over waits in the
                         // box, and Send starts Coach behind its one prompt, then sends. A
                         // phone that can't approve yet gets no box: the intro says why, and
@@ -81,8 +90,9 @@ struct SetupChatView: View {
                         DictationBar(dictation: model.dictation)
                     }
                 } else {
-                    // Coach's tools still to give: one line, which opens the step (docs/coach.md).
-                    CoachToolsRow { toolsOpen = true }
+                    // Coach's tools still to give: one line, which opens the step (docs/coach.md). While the box is locked, the
+                    // locked box is that line, so it isn't drawn twice.
+                    if !composerLocked { CoachToolsRow { toolsOpen = true } }
                     // Beside the chat, the plan is in the panel.
                     if !shaping, let plan = model.setupThread.plan { SetupPlan(shown: plan).padding(.horizontal, 12).padding(.top, 8) }
                     thread
@@ -90,8 +100,12 @@ struct SetupChatView: View {
                         Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                             .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
                     }
-                    composer
-                    DictationBar(dictation: model.dictation)
+                    if composerLocked {
+                        lockedComposer
+                    } else {
+                        composer
+                        DictationBar(dictation: model.dictation)
+                    }
                 }
             }
             if shaping {
@@ -150,11 +164,87 @@ struct SetupChatView: View {
 
     @ViewBuilder
     private var intro: some View {
-        if let start = model.coachStart, start.oneScreen, let words = start.words {
+        if let start = model.coachStart, start.cardStep(face: Biometry.isFace), let words = start.words {
+            cardStepScreen(start, words)
+        } else if let start = model.coachStart, start.oneScreen, let words = start.words {
             startScreen(start, words)
         } else {
             introBefore
         }
+    }
+
+    /// Start's screen is the Card step (tafs#2091's words, sent by tafs cloud).
+    private var cardStepShown: Bool { model.coachStart?.cardStep(face: Biometry.isFace) == true && !model.setupStarted }
+
+    /// Coach takes no typing until its tools are approved (docs/ios-app.md, "The Card step"): while the tools themselves are
+    /// still to give, the box is one line that opens the step, in tafs cloud's words.
+    private var composerLocked: Bool {
+        guard let tools = model.coachTools, tools.toGive else { return false }
+        return tools.connect != nil || tools.together?.connect != nil
+    }
+
+    private var lockedComposer: some View {
+        Button { toolsOpen = true } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "lock.fill").scaledFont(13).foregroundColor(Theme.dim).accessibilityHidden(true)
+                Text(model.coachTools.map(CoachToolsRow.words) ?? Words.Coach.Tools.title)
+                    .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 16)
+            .frame(minHeight: 52)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.drivablePlain)
+        .background(Theme.panel)
+        .accessibilityIdentifier("coach-composer-locked")
+    }
+
+    /// The Card step (docs/ios-app.md): what the approval allows, what always waits for the person, how it signs and how to
+    /// stop it; then the plain list, each tool with its limit; then KIFF's own words for the Cards under "Exactly what you
+    /// sign", folded. Its one button signs what's drawn, and only when the plain list is exactly what the draft signs
+    /// (`CardStepCheck`): otherwise there's no button, and the step says it changed.
+    private func cardStepScreen(_ start: TafsCloud.CoachStart, _ words: TafsCloud.CoachStart.Words) -> some View {
+        let signs = start.cardStepSigns
+        return VStack(alignment: .leading, spacing: 12) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    if sizeClass == .regular { Illustration.coachStarting.frame(maxWidth: .infinity).padding(.bottom, 8) }
+                    Text(words.title).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.coach)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+                    ForEach([words.allows, words.asks, words.sign, words.stop], id: \.self) { said in
+                        Text(said).scaledFont(15).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    CardStepList(start: start, exact: words.exact)
+                    if !signs {
+                        Text(Words.Version.outOfDateCard).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else if let error = model.coachToolsError ?? model.setupError ?? model.lastError {
+                        Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if signs {
+                // The one confirmation: the person's, never a drive's. A phone that can't approve yet reads why instead.
+                ApprovalGate {
+                    Button {
+                        Task { _ = await model.giveCoachTools() }
+                    } label: {
+                        Label(model.givingCoachTools || model.startingSetup ? Words.Common.starting : words.give(face: Biometry.isFace),
+                              systemImage: Biometry.symbol)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(model.givingCoachTools || model.startingSetup || model.mode != .kiff)
+                    .accessibilityIdentifier("coach-card-step-give")
+                }
+            }
+        }
+        .padding(20)
     }
 
     /// Start's own screen, from tafs cloud's first start (docs/ios-app.md): its one line, then

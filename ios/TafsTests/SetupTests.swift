@@ -280,6 +280,28 @@ final class SetupTests: XCTestCase {
     /// With Start's own words (`start.words`), Start's screen draws them and what's signed, so
     /// Send signs and starts Coach under the one Face ID, then goes on to send: no step opens.
     /// Without a line or a button, it's the step as before.
+    /// The Card step on a phone with no Face ID or Touch ID: the approval key needs one, never the passcode, so Give asks for
+    /// nothing and sends nothing, and says what to do in the readiness's own words.
+    func testAPhoneThatCantApproveSignsNothingAtTheCardStep() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON())
+        await model.loadSetup()
+        XCTAssertEqual(model.coachStart?.startable, true)
+        model.readApprovalReadiness = { .noneEnrolled }
+        model.checkApprovalReadiness()
+        XCTAssertTrue(model.approvalBlocked)
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertFalse(given)
+        XCTAssertEqual(signer.prompts, [], "no prompt")
+        XCTAssertTrue(sent("POST", "mcp.test", "/v1/connections/batch").isEmpty, "nothing sent")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts").isEmpty)
+        XCTAssertEqual(model.coachToolsError, ApprovalReadiness.noneEnrolled.short(kind: Biometry.kind))
+        model.readApprovalReadiness = { .ready }
+        model.checkApprovalReadiness()
+    }
+
     func testStartsOwnWordsMakeOneScreenAndSendSignsAndSends() async throws {
         let worded = Self.startJSON().replacingOccurrences(of: #""coach_tools_step":"#,
             with: #""words":{"lead":"Start sets up approvals and gives Coach its tools.","start":"Start","does":"One fingerprint, on this device."},"coach_tools_step":"#)
@@ -365,6 +387,8 @@ final class SetupTests: XCTestCase {
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: session)
         let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session)
         let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: StubVendor())
+        // Ready whatever runs the tests, as `model(signer:)`: a Mac with no Touch ID isn't, and the signer here is a stub.
+        model.readApprovalReadiness = { .ready }; model.checkApprovalReadiness()
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)

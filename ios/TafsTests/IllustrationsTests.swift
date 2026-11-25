@@ -59,8 +59,8 @@ final class IllustrationsTests: XCTestCase {
         }
         XCTAssertTrue(try source("Views/ShareViews.swift").contains("if sizeClass == .regular { Illustration.overview"))
         let coach = try source("Views/SetupChatView.swift")
-        XCTAssertEqual(coach.components(separatedBy: "if sizeClass == .regular { Illustration.coachStarting").count - 1, 2,
-                       "both of Coach's starts, at a regular width only")
+        XCTAssertEqual(coach.components(separatedBy: "if sizeClass == .regular { Illustration.coachStarting").count - 1, 3,
+                       "each of Coach's starts (before tafs cloud's words, with them, and the Card step), at a regular width only")
         XCTAssertTrue(coach.contains("if model.tafs.count <= 1 { Illustration.coachFirst }"))
         XCTAssertTrue(try source("Views/HaltScreen.swift").contains("if tafID == nil, h.state == .halted {"))
     }
