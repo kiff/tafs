@@ -277,6 +277,10 @@ describe("a failed run's code", () => {
       words: "This account has reached today's AI limit, so this stopped and used none of your credits. It goes on at Fri 01:00." });
     expect(runFailure(account, "en", { zone: "America/New_York", now })!.words).toBe(
       "This account has reached today's AI limit, so this stopped and used none of your credits. It goes on at 19:00.");
+    // Each language says the time with its own "at" (whenIn): never an English weekday or a bare time in a German line.
+    expect(runFailure(account, "de", { zone: "Europe/Paris", now })!.words).toBe(
+      "Dieses Konto hat das heutige KI-Limit erreicht, deshalb wurde das gestoppt, ohne deine Credits zu verbrauchen. Es geht am Fr um 01:00 weiter.");
+    expect(runFailure(account, "fr", { zone: "America/New_York", now })!.words).toContain("Cela reprend à 19:00.");
     const service = { ...account, code: "ai_limit_service" };
     expect(runFailure(service, "en", { zone: "Europe/Paris", now })!.words).toBe(
       "tafs has reached today's AI capacity, so this stopped and used none of your credits. It's on our side, not yours: it goes on at Fri 01:00.");

@@ -149,7 +149,7 @@ export function runFailure(r: { status?: unknown; error?: unknown; code?: unknow
   const limit = LIMIT_WORDS[r.code];
   const resets = typeof r.resets_at === "string" ? new Date(r.resets_at) : undefined;
   if (limit && resets && !Number.isNaN(resets.getTime())) {
-    const time = timeIn(resets, when.zone ?? "UTC", when.now ?? new Date(), lang);
+    const time = whenIn(resets, when.zone ?? "UTC", when.now ?? new Date(), lang);
     return { code: r.code, words: wordsIn(lang)[sentAny(r.tally) ? limit[1] : limit[0]](time) };
   }
   // A code tafs cloud knows is worded from its own catalog, in the person's language; any other passes
