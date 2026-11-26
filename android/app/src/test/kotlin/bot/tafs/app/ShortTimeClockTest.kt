@@ -48,7 +48,7 @@ class ShortTimeClockTest {
   }
 
   @Test fun onATwentyFourHourDeviceTheLanguagesOwnSeparatorMatchesTheChatStamp() {
-    // Finnish writes 22.22: the decision line follows the language's pattern, as the chat stamp does (legal-i18n's review).
+    // Finnish writes 22.22: the decision line follows the language's pattern, as the chat stamp does.
     RuntimeEnvironment.setQualifiers("fi")
     Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
     AccountTime.is24Hour = true
