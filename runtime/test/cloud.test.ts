@@ -2573,8 +2573,12 @@ describe("Setup (kiff/agents#91)", () => {
       for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
         expect(wordsIn(lang).start_lead, lang).not.toMatch(/\b(once|einmal|une fois|una vez|una volta|uma vez|één keer|raz)\b/i);
       }
-      // Why the first message asks for the person, under Start (the owner's iPad feedback, 26 Nov): what it gives, and why.
-      expect(en.start_first_send).toBe("Your first message starts Coach. It asks for your fingerprint or face once, to give Coach its Card, so nothing moves without you.");
+      // Why starting Coach asks for the person (the owner's iPad feedback, 26 Nov): on the Card step both apps draw, in its
+      // sign line; on the older Start screen, in `does`. Each says why, and neither says the first message starts Coach,
+      // since on the Card step its button does.
+      expect(en.card_step_sign).toMatch(/^Your approval uses your fingerprint or face, so nothing moves without you\. /);
+      expect(en.start_first_send).toBe("Coach asks for your fingerprint, face or passkey before it starts, to give Coach its Card, so nothing moves without you.");
+      expect(en.start_first_send).not.toMatch(/first message/i);
       for (const lang of FULL_LANGUAGES) expect(wordsIn(lang).start_first_send, lang).toContain("Coach");
       // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
       // (#852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
