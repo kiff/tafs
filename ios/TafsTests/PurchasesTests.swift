@@ -296,6 +296,14 @@ final class PurchasesTests: XCTestCase {
         let on = await model.subscribeSolo()
         XCTAssertFalse(on, "KIFF still reads the plan as team")
         XCTAssertNotEqual(model.planMessage, Words.Billing.soloOn)
+        // Recorded, but Plan & usage couldn't be read again: the page says why rather than nothing.
+        StubProtocol.responses["GET /v1/me/usage"] = (503, #"{"error":"usage unavailable"}"#)
+        store.bought = store.purchaseNamed(10, product: "bot.tafs.solo.monthly")
+        let unread = await model.subscribeSolo()
+        XCTAssertFalse(unread)
+        XCTAssertNotNil(model.planMessage, "a recorded Solo whose read failed says so")
+        XCTAssertEqual(model.planMessage, model.usageError)
+        StubProtocol.responses["GET /v1/me/usage"] = (200, Self.read)
         store.bought = nil
         store.pending = true
         let pending = await model.subscribeSolo()

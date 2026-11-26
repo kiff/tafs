@@ -4785,7 +4785,12 @@ final class AppModel: ObservableObject {
     @discardableResult
     func subscribeSolo() async -> Bool {
         guard let store = usage?.store else { return false }
-        guard await buy(store.soloProduct, request: nil) == .done, usage?.plan == "solo" else { return false }
+        guard await buy(store.soloProduct, request: nil) == .done else { return false }
+        guard usage?.plan == "solo" else {
+            // Bought and recorded, but Plan & usage couldn't be read again: say why, never a silent page.
+            if planMessage == nil, let why = usageError { planMessage = why }
+            return false
+        }
         planMessage = Words.Billing.soloOn
         return true
     }
