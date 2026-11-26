@@ -131,7 +131,7 @@ Privacy: https://kiff.dev/privacy
 
 **Short description** (71/80): Hand off refunds, disputes and invoices to AI agents. You keep control.
 
-**Full description** (2985/4000):
+**Full description** (3013/4000):
 
 ```
 They taf. You kiff.
@@ -157,7 +157,7 @@ WHAT YOU SEE
 • Record: everything your tafs did, newest first, with a receipt for each action that went through.
 • Chat: ask a taf what it did, or tell it what to do differently, and watch its work as it goes.
 • You decide what really happened: when an app can't confirm a payment went through, tafs asks you "Did this happen?" Nothing is counted as done on a guess.
-• On a Wear OS watch, the tafs tile shows how many held calls need you, and opens tafs on the watch.
+• On a Wear OS watch, the tafs tile shows how many held calls need you while the watch is unlocked, and opens tafs on the watch.
 
 YOUR DATA
 The taf never sees your passwords or tokens. Approvals are signed with a key kept in your phone's secure hardware. Halt stops one taf, or all of them, with one tap. No ads, no trackers. Delete your account in the app, under Account, or see kiff.dev/tafs/privacy#rights.
@@ -232,7 +232,7 @@ Datenschutz: https://kiff.dev/de/privacy
 
 **Short description** (79/80): KI-Agenten für Erstattungen, Streitfälle und Rechnungen. Du hast die Kontrolle.
 
-**Full description** (3569/4000):
+**Full description** (3600/4000):
 
 ```
 They taf. You kiff.
@@ -258,7 +258,7 @@ WAS DU SIEHST
 • Protokoll: alles, was deine tafs getan haben, das Neueste zuerst, mit einem Beleg für jede Aktion, die durchging.
 • Chat: Frag einen taf, was er getan hat, oder sag ihm, was er anders machen soll, und verfolge seine Arbeit live.
 • Du entscheidest, was wirklich passiert ist: Wenn eine App nicht bestätigen kann, dass eine Zahlung durchging, fragt dich tafs „Ist das passiert?“ Nichts zählt auf Verdacht als erledigt.
-• Auf einer Wear-OS-Uhr zeigt die tafs-Kachel, wie viele zurückgehaltene Aufrufe dich brauchen, und öffnet tafs auf der Uhr.
+• Auf einer Wear-OS-Uhr zeigt die tafs-Kachel, solange die Uhr entsperrt ist, wie viele zurückgehaltene Aufrufe dich brauchen, und öffnet tafs auf der Uhr.
 
 DEINE DATEN
 Der taf sieht nie deine Passwörter oder Tokens. Genehmigungen werden mit einem Schlüssel signiert, der in der Sicherheitshardware deines Handys liegt. Mit Anhalten stoppst du einen taf oder alle mit einem Tippen. Keine Werbung, keine Tracker. Lösch dein Konto in der App unter „Konto“, oder siehe kiff.dev/de/tafs/privacy#rights.
@@ -333,7 +333,7 @@ Confidentialité: https://kiff.dev/fr/privacy
 
 **Short description** (76/80): Confiez remboursements, litiges et factures à des agents IA. Gardez la main.
 
-**Full description** (3675/4000):
+**Full description** (3709/4000):
 
 ```
 They taf. You kiff.
@@ -359,7 +359,7 @@ CE QUE VOUS VOYEZ
 • Registre : tout ce que vos tafs ont fait, du plus récent au plus ancien, avec un reçu pour chaque action passée.
 • Chat : demandez à un taf ce qu'il a fait, ou dites-lui quoi faire autrement, et suivez son travail en direct.
 • Vous décidez de ce qui s'est vraiment passé : quand une app ne peut pas confirmer qu'un paiement est passé, tafs vous demande « Est-ce arrivé ? » Rien n'est compté comme fait sur une supposition.
-• Sur une montre Wear OS, la vignette tafs indique combien d'appels retenus vous attendent, et ouvre tafs sur la montre.
+• Sur une montre Wear OS, la vignette tafs indique combien d'appels retenus vous attendent quand la montre est déverrouillée, et ouvre tafs sur la montre.
 
 VOS DONNÉES
 Le taf ne voit jamais vos mots de passe ni vos jetons. Les approbations sont signées avec une clé conservée dans le matériel sécurisé de votre téléphone. Bloquer arrête un taf, ou tous, d'un geste. Pas de publicité, pas de traceurs. Supprimez votre compte dans l'app, depuis Compte, ou voir kiff.dev/fr/tafs/privacy#rights.
@@ -434,7 +434,7 @@ Privacidad: https://kiff.dev/es/privacy
 
 **Short description** (78/80): Delega reembolsos, disputas y facturas en agentes de IA. Tú tienes el control.
 
-**Full description** (3367/4000):
+**Full description** (3403/4000):
 
 ```
 They taf. You kiff.
@@ -460,7 +460,7 @@ LO QUE VES
 • Registro: todo lo que hicieron tus tafs, lo más reciente primero, con un recibo por cada acción que salió adelante.
 • Chat: pregunta a un taf qué hizo, o dile qué hacer de otra forma, y sigue su trabajo mientras avanza.
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que un pago se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
-• En un reloj Wear OS, la tarjeta de tafs muestra cuántas llamadas retenidas te necesitan y abre tafs en el reloj.
+• En un reloj Wear OS, la tarjeta de tafs muestra cuántas llamadas retenidas te necesitan mientras el reloj está desbloqueado y abre tafs en el reloj.
 
 TUS DATOS
 El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en la app, en Cuenta, o consulta kiff.dev/es/tafs/privacy#rights.
@@ -535,7 +535,7 @@ Privacy: https://kiff.dev/it/privacy
 
 **Short description** (79/80): Affida rimborsi, contestazioni e fatture ad agenti IA. Il controllo resta a te.
 
-**Full description** (3497/4000):
+**Full description** (3527/4000):
 
 ```
 They taf. You kiff.
@@ -561,7 +561,7 @@ COSA VEDI
 • Registro: tutto ciò che hanno fatto i tuoi tafs, dal più recente, con una ricevuta per ogni azione andata a buon fine.
 • Chat: chiedi a un taf cosa ha fatto, o digli cosa fare in modo diverso, e segui il suo lavoro mentre procede.
 • Decidi tu cosa è successo davvero: quando un'app non riesce a confermare che un pagamento è andato a buon fine, tafs ti chiede «È successo?». Niente viene considerato fatto per supposizione.
-• Su un orologio Wear OS, il riquadro di tafs mostra quante chiamate trattenute ti aspettano e apre tafs sull'orologio.
+• Su un orologio Wear OS, il riquadro di tafs mostra quante chiamate trattenute ti aspettano mentre l'orologio è sbloccato e apre tafs sull'orologio.
 
 I TUOI DATI
 Il taf non vede mai le tue password né i tuoi token. Le approvazioni sono firmate con una chiave custodita nell'hardware sicuro del tuo telefono. Blocca ferma un taf, o tutti, con un tocco. Niente pubblicità, niente tracker. Elimina il tuo account nell'app, da Account, oppure vedi kiff.dev/it/tafs/privacy#rights.
@@ -636,7 +636,7 @@ Privacidade: https://kiff.dev/pt/privacy
 
 **Short description** (74/80): Entregue reembolsos, disputas e faturas a agentes de IA. O controlo é seu.
 
-**Full description** (3449/4000):
+**Full description** (3486/4000):
 
 ```
 They taf. You kiff.
@@ -662,7 +662,7 @@ O QUE VÊ
 • Registo: tudo o que os seus tafs fizeram, do mais recente para o mais antigo, com um recibo por cada ação que avançou.
 • Chat: pergunte a um taf o que fez, ou diga-lhe o que fazer de outra forma, e acompanhe o trabalho enquanto decorre.
 • Decide o que aconteceu mesmo: quando uma app não consegue confirmar que um pagamento foi feito, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por palpite.
-• Num relógio Wear OS, o mosaico do tafs mostra quantas chamadas retidas precisam de si e abre o tafs no relógio.
+• Num relógio Wear OS, o mosaico do tafs mostra quantas chamadas retidas precisam de si enquanto o relógio está desbloqueado e abre o tafs no relógio.
 
 OS SEUS DADOS
 O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta na app, em Conta, ou consulte kiff.dev/pt/tafs/privacy#rights.
@@ -864,7 +864,7 @@ Privacy: https://kiff.dev/nl/privacy
 
 **Short description** (79/80): Geef terugbetalingen, geschillen en facturen aan AI-agents. Jij houdt controle.
 
-**Full description** (3506/4000):
+**Full description** (3540/4000):
 
 ```
 They taf. You kiff.
@@ -890,7 +890,7 @@ WAT JE ZIET
 • Logboek: alles wat je tafs gedaan hebben, het nieuwste eerst, met een bewijs voor elke actie die doorging.
 • Chat: vraag een taf wat het gedaan heeft, of zeg het wat het anders moet doen, en volg zijn werk terwijl het gebeurt.
 • Jij bepaalt wat er echt gebeurd is: als een app niet kan bevestigen dat een betaling is gelukt, vraagt tafs je „Is dit gebeurd?” Niets telt op goed geluk als gedaan.
-• Op een Wear OS-horloge toont de tafs-tegel hoeveel vastgehouden aanroepen op jou wachten, en opent tafs op het horloge.
+• Op een Wear OS-horloge toont de tafs-tegel hoeveel vastgehouden aanroepen op jou wachten zolang het horloge ontgrendeld is, en opent tafs op het horloge.
 
 JE GEGEVENS
 Het taf ziet nooit je wachtwoorden of tokens. Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon. Stilzetten zet één taf, of allemaal, stil met één tik. Geen advertenties, geen trackers. Verwijder je account in de app, onder Account, of zie kiff.dev/nl/tafs/privacy#rights.
@@ -965,7 +965,7 @@ Prywatność: https://kiff.dev/pl/privacy
 
 **Short description** (70/80): Oddaj zwroty, spory i faktury agentom AI. Kontrola zostaje przy Tobie.
 
-**Full description** (3406/4000):
+**Full description** (3436/4000):
 
 ```
 They taf. You kiff.
@@ -991,7 +991,7 @@ CO WIDZISZ
 • Rejestr: wszystko, co zrobiły Twoje tafs, od najnowszych, z potwierdzeniem dla każdej akcji, która przeszła.
 • Czat: zapytaj tafa, co zrobił, albo powiedz mu, co ma robić inaczej, i śledź jego pracę na bieżąco.
 • To Ty decydujesz, co naprawdę się stało: gdy aplikacja nie może potwierdzić, że płatność przeszła, tafs pyta Cię „Czy to się wydarzyło?”. Nic nie jest uznawane za wykonane na podstawie domysłów.
-• Na zegarku z Wear OS kafelek tafs pokazuje, ile oczekujących wywołań czeka na Ciebie, i otwiera tafs na zegarku.
+• Na zegarku z Wear OS kafelek tafs pokazuje, ile oczekujących wywołań czeka na Ciebie, gdy zegarek jest odblokowany, i otwiera tafs na zegarku.
 
 TWOJE DANE
 Taf nigdy nie widzi Twoich haseł ani tokenów. Zatwierdzenia są podpisywane kluczem przechowywanym w bezpiecznym sprzęcie Twojego telefonu. Zablokuj zatrzymuje jednego tafa albo wszystkie jednym dotknięciem. Bez reklam, bez trackerów. Usuń konto w aplikacji, w sekcji Konto, albo zobacz kiff.dev/pl/tafs/privacy#rights.
@@ -1071,7 +1071,7 @@ tafs 서비스 약관: https://kiff.dev/ko/terms
 
 **Short description** (46/80): 환불, 분쟁, 청구서 업무를 AI 에이전트에게 맡기세요. 통제는 계속 내가 합니다.
 
-**Full description** (1826/4000):
+**Full description** (1840/4000):
 
 ```
 They taf. You kiff.
@@ -1097,7 +1097,7 @@ tafs로 이런 업무를 맡기세요. Coach에게 업무를 내 말로 설명�
 • 기록: 내 taf가 한 모든 일을 최신순으로, 처리된 작업마다 영수증과 함께.
 • 채팅: taf에게 무엇을 했는지 묻거나 다르게 할 일을 알려 주고, 일하는 과정을 지켜보세요.
 • 실제로 일어난 일은 내가 정합니다: 앱이 결제 완료를 확인하지 못하면 tafs가 "이 일이 일어났나요?"라고 묻습니다. 추측으로 완료 처리되는 일은 없습니다.
-• Wear OS 워치에서는 tafs 타일이 확인을 기다리는 보류된 호출 수를 보여 주고, 워치에서 tafs를 엽니다.
+• Wear OS 워치에서는 워치 잠금이 해제된 동안 tafs 타일이 확인을 기다리는 보류된 호출 수를 보여 주고, 워치에서 tafs를 엽니다.
 
 내 데이터
 taf는 내 비밀번호나 토큰을 절대 보지 않습니다. 승인은 휴대폰의 보안 하드웨어에 보관된 키로 서명됩니다. 차단을 한 번 탭하면 taf 하나 또는 전체가 멈춥니다. 광고도 추적기도 없습니다. 계정은 앱의 계정 화면에서 삭제하거나 kiff.dev/tafs/privacy#rights를 참고하세요.
@@ -1177,7 +1177,7 @@ tafs利用規約: https://kiff.dev/ja/terms
 
 **Short description** (43/80): 返金、カードの異議申し立て、請求書の仕事をAIエージェントにまかせて、主導権は自分に。
 
-**Full description** (1704/4000):
+**Full description** (1717/4000):
 
 ```
 They taf. You kiff.
@@ -1203,7 +1203,7 @@ tafsなら、こうした仕事をまかせられます。Coachに仕事を自�
 • 記録：tafがしたことすべてを新しい順に。実行された操作にはそれぞれレシートが付きます。
 • チャット：tafに何をしたかを聞いたり、やり方を変えるよう伝えたりして、作業の様子を見守れます。
 • 実際に起きたことは自分で決めます：アプリが支払いの完了を確認できないとき、tafsは「これは実行されましたか？」と尋ねます。推測で完了扱いにすることはありません。
-• Wear OS のウォッチでは、tafs のタイルが確認を待っている保留中の呼び出しの件数を表示し、ウォッチで tafs を開きます。
+• Wear OS のウォッチでは、ロックが解除されている間、tafs のタイルが確認を待っている保留中の呼び出しの件数を表示し、ウォッチで tafs を開きます。
 
 データについて
 tafがパスワードやトークンを見ることはありません。承認は、スマートフォンのセキュアなハードウェアに保管された鍵で署名されます。遮断をワンタップすれば、tafを1つ、またはすべて止められます。広告もトラッカーもありません。アカウントはアプリの「アカウント」で削除できます。kiff.dev/ja/tafs/privacy#rights もご覧ください。
@@ -1230,7 +1230,7 @@ local price. It goes into Play Console when this market opens. The App Store's e
 
 **Short description** (78/80): Delega reembolsos, disputas y facturas en agentes de IA. Tú tienes el control.
 
-**Full description** (3394/4000):
+**Full description** (3430/4000):
 
 ```
 They taf. You kiff.
@@ -1256,7 +1256,7 @@ LO QUE VES
 • Registro: todo lo que hicieron tus tafs, lo más reciente primero, con un recibo por cada acción que salió adelante.
 • Chat: pregúntale a un taf qué hizo, o dile qué hacer de otra forma, y sigue su trabajo mientras avanza.
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que un pago se hizo, tafs te pregunta “¿Ocurrió esto?”. Nada se da por hecho a ciegas.
-• En un reloj Wear OS, la tarjeta de tafs muestra cuántas llamadas retenidas te necesitan y abre tafs en el reloj.
+• En un reloj Wear OS, la tarjeta de tafs muestra cuántas llamadas retenidas te necesitan mientras el reloj está desbloqueado y abre tafs en el reloj.
 
 TUS DATOS
 El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Elimina tu cuenta en la app, en Cuenta, o consulta kiff.dev/es/tafs/privacy#rights.
@@ -1283,7 +1283,7 @@ charges the local price. It goes into Play Console when this market opens. The A
 
 **Short description** (73/80): Delegue reembolsos, disputas e faturas a agentes de IA. O controle é seu.
 
-**Full description** (3465/4000):
+**Full description** (3502/4000):
 
 ```
 They taf. You kiff.
@@ -1309,7 +1309,7 @@ O QUE VOCÊ VÊ
 • Registro: tudo o que seus tafs fizeram, do mais recente para o mais antigo, com um recibo para cada ação que foi adiante.
 • Chat: pergunte a um taf o que ele fez, ou diga como fazer de outro jeito, e acompanhe o trabalho enquanto ele acontece.
 • Você decide o que aconteceu de verdade: quando um app não consegue confirmar que um pagamento foi feito, o tafs pergunta “Isto aconteceu?”. Nada é dado como feito às cegas.
-• Em um relógio Wear OS, o bloco do tafs mostra quantas chamadas retidas precisam de você e abre o tafs no relógio.
+• Em um relógio Wear OS, o bloco do tafs mostra quantas chamadas retidas precisam de você enquanto o relógio está desbloqueado e abre o tafs no relógio.
 
 SEUS DADOS
 O taf nunca vê suas senhas nem seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu celular. Bloquear interrompe um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Exclua sua conta no app, em Conta, ou veja kiff.dev/pt/tafs/privacy#rights.
