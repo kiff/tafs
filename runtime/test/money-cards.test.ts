@@ -318,6 +318,7 @@ describe("words that say every call asks hold the rule to a count of 0 a day tha
       // A comma straight before a word that opens a condition goes on with the clause, as German and Polish always write it.
       "Jede Erstattung fragt dich zuerst, wenn sie über 5 € liegt.", "Każdy zwrot pyta cię najpierw, gdy przekracza 5 €.",
       "Every refund asks you first, when it's over €5.", "Chaque remboursement attend votre accord, s'il dépasse 5 €.",
+      "Every refund asks you first, once it's over €5.",
     ]) expect(saysEveryCallAsks(text), text).toBe(false);
   });
 
@@ -337,6 +338,9 @@ describe("words that say every call asks hold the rule to a count of 0 a day tha
       // bring them back.
       "Every refund asks you first, over €200 a day is refused.",
       "Every refund asks you first, more than €200 a day is refused.",
+      "Every refund asks you first, above 200 EUR a day is refused.",
+      // "once" after a comma opens a condition only before what it's about.
+      "Every refund asks you first, once a day at 9.",
       "Chaque remboursement vous demande d'abord, plus de 200 € par jour sont refusés.",
       "Chaque remboursement attend votre accord, plus de 200 € par jour est refusé.",
       "Jede Erstattung fragt dich zuerst, über 200 € am Tag wird abgelehnt.",

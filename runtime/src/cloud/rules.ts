@@ -769,7 +769,8 @@ const CLAUSE_JOINS = ["and|but|while", "et|mais", "und|aber", "y|pero", "e|ma", 
 // there by rule, and the others often do, so a comma ends the look only when what follows isn't one of these. A comma
 // before "over …" or anything else still ends it, so "…, over a day refunds stop at 50 EUR" stays every call.
 const CONDITIONS = [
-  "when|whenever|if|once", "quand|si|s'il|s’il|dès que|dès qu'il|dès qu’il|lorsque|lorsqu'il|lorsqu’il", "wenn|falls|sobald",
+  // "once" opens a condition only before what it's about ("…, once it's over 5 EUR"), not in "…, once a day at 9".
+  "when|whenever|if|once(?= (?:it|they|its|the|that|this|a refund|a payment)(?![\\p{L}\\p{N}]))", "quand|si|s'il|s’il|dès que|dès qu'il|dès qu’il|lorsque|lorsqu'il|lorsqu’il", "wenn|falls|sobald",
   "cuando|si|una vez que", "quando|se|una volta che", "als|wanneer|zodra", "gdy|jeśli|jeżeli|kiedy", "quando|se|caso",
 ];
 const figureAfter = (thresholds: string, joins: string, conditions: string) =>
