@@ -12,6 +12,11 @@ name: Mac TestFlight
 
 on:
   workflow_dispatch:
+    inputs:
+      cloud_mac_label:
+        description: "The cloud Mac only (CLOUD_MAC on): the one-time label of the runner registered for this dispatch, release- and 16 or more random hex characters (docs/mac-app.md, The cloud Mac). Empty otherwise."
+        type: string
+        default: ""
 
 concurrency:
   group: mac-testflight
@@ -21,8 +26,25 @@ permissions:
   contents: read
 
 jobs:
+  # With CLOUD_MAC on, the upload runs on a runner registered for this dispatch alone, by a one-time label the dispatch
+  # names (docs/mac-app.md, "The cloud Mac"). Without a well-formed one, this stops the run at once, so nothing waits for a
+  # runner and no label is guessed.
+  cloud-mac-label:
+    if: vars.CLOUD_MAC == 'on'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: The dispatch names a one-time label
+        env:
+          LABEL: ${{ inputs.cloud_mac_label }}
+        run: |
+          [[ "$LABEL" =~ ^release-[0-9a-f]{16,64}$ ]] || { echo "::error::With CLOUD_MAC on, dispatch with cloud_mac_label: release- and 16 to 64 random hex characters, made for this dispatch (docs/mac-app.md, The cloud Mac)"; exit 1; }
+
   testflight:
-    runs-on: ${{ vars.CLOUD_MAC == 'on' && fromJSON(vars.CLOUD_MAC_RUNNER) || 'macos-26' }}
+    needs: [cloud-mac-label]
+    if: ${{ !cancelled() && needs.cloud-mac-label.result != 'failure' }}
+    # The runner registered for this dispatch carries exactly this label, and only it (cloud-mac-label checks its form).
+    runs-on: ${{ vars.CLOUD_MAC == 'on' && inputs.cloud_mac_label || 'macos-26' }}
     timeout-minutes: 60
     # The signing secrets (DIST_P12, MAC_INSTALLER_P12, ASC_KEY_P8) are this environment's, which deploys
     # only from main and v* tags: a workflow pushed on another branch can't read them (docs/mac-app.md).

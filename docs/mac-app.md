@@ -81,12 +81,18 @@ The two App Store uploads (`ios.yml`'s `testflight` and `mac-testflight.yml`) ca
 cloud instead of GitHub's `macos-26`, while the hosted image lacks a released Xcode 27. Every other macOS job stays
 on GitHub's runners.
 
-- **Switched by repository variables**, which only an admin can change and a pull request can't: `CLOUD_MAC` set to
-  `on`, and `CLOUD_MAC_RUNNER` holding the runner, as `runs-on` takes it (its group and labels). With `CLOUD_MAC`
-  unset, both jobs run on `macos-26` exactly as before. It's turned off again when the Mac is released.
-- **The runner** is registered for one job at a time, in a runner group that admits only these two workflows at
-  `main`. The job also stops itself on a self-hosted runner unless it runs from `main`, before any secret is read.
-  So a tag's upload runs on GitHub's runners or waits for `CLOUD_MAC` to be off.
+- **Switched by a repository variable**, which only an admin can change and a pull request can't: `CLOUD_MAC` set to
+  `on`, only for the dispatch, and off right after. With it unset, both jobs run on `macos-26` exactly as before.
+- **A runner for one dispatch, by a one-time label.** The dispatch names `cloud_mac_label`: `release-` and 16 to 64
+  random hex characters, made for that dispatch alone. `runs-on` is that label, and a first job (`cloud-mac-label`)
+  stops the run at once if it's missing or malformed. The runner is registered with that label, for one job, only once
+  the upload job is queued, so it's online for seconds; afterwards, which job it ran is checked against the run. This
+  is a repository runner: until an organization runner group pinned to these two workflows at `main` exists, nothing
+  else limits which workflow can name the label, and the signing secrets still reach only `main` and `v*` tags (the
+  `apple-release` environment). That group replaces the label once it's set up.
+- **The job also stops itself on a self-hosted runner unless it runs from `main`**, before any secret is read. So a
+  tag's upload runs on GitHub's runners, or stops while `CLOUD_MAC` is on.
+- **Fork pull requests' workflows need an approval** for every outside contributor while this is used.
 - **The job's user has no sudo.** Before each job, the Mac's admin selects the Xcode (a released 27.x, signed by
   Apple) and installs a pinned xcodegen that the job's user can only read. The job then picks that Xcode with
   `DEVELOPER_DIR` instead of `sudo xcode-select`, and uses the installed xcodegen instead of `brew install`. It
