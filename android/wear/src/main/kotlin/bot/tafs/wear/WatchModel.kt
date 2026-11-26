@@ -731,6 +731,13 @@ class WatchModel(
    * an ask newer than the one in memory replacing it, so the app shows what's there without a read.
    */
   fun reload() {
+    // Signed out on this watch from another of its screens (a second copy of the app, opened from the tile or a notification):
+    // this one follows the watch's own flag before it draws anything, so a sign-out never comes undone by itself (row 18).
+    if (signIn?.signedOut() == true && !_signedOutHere.value) {
+      _signedOutHere.value = true
+      forget()
+      return
+    }
     if (_signedOutHere.value || !verified) return
     keptRead()[COACH_THREAD]?.turns?.forEach { turn ->
       val before = _asks.value[turn.ask.id]

@@ -181,6 +181,22 @@ class AccountModelTest {
     assertTrue("the phone is told nothing: it stays signed in", phone.asked.isEmpty())
   }
 
+  /** Row 18: signed out from one copy of the app, another copy (opened earlier from the tile) follows it when it comes back. */
+  @Test fun aSignOutFromAnotherCopyOfTheAppHoldsWhenThisOneComesBack() = runTest {
+    val signIn = SignIn()
+    val phone = Phone(::reads)
+    val earlier = v2(phone, signIn = signIn)
+    earlier.refresh()
+    assertTrue(earlier.shown.value is WatchModel.Shown.Read)
+    v2(phone, signIn = signIn).signOutHere()
+    // Back to the front: it reads the watch's own flag before drawing anything, and nothing of the account stays.
+    earlier.reload()
+    assertTrue(earlier.signedOutHere.value)
+    val asked = phone.asked.size
+    earlier.refresh()
+    assertEquals("it asks the phone nothing", asked, phone.asked.size)
+  }
+
   @Test fun signedOutOnTheWatchItReadsAndSendsNothingUntilSignedInThere() = runTest {
     val phone = Phone(::reads)
     val signIn = SignIn()
