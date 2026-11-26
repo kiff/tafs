@@ -11,6 +11,9 @@ import com.google.firebase.messaging.RemoteMessage
 class TafsMessagingService : FirebaseMessagingService() {
   override fun onMessageReceived(message: RemoteMessage) {
     val notifier = AlertNotifier(applicationContext)
+    // A held call came or went: Needs you is read again and kept for the watch by a job, the app open or not (docs/watch-wear.md,
+    // Delivery). The watch's own alert and Inbox line come from that, never from this notification.
+    if (AlertPayload.heldCall(message.data)) bot.tafs.app.watch.WatchResultsWork.needsYou(applicationContext)
     when (val alert = AlertPayload.parse(message.data)) {
       is Alert.Show -> {
         notifier.show(alert)

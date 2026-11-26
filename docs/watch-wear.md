@@ -573,6 +573,12 @@ reach" for all of them. The four lines are:
 Every screen that says the phone gave no answer shows its own reason (`Asked.Unreachable.why`), with Try again
 (`WatchModelTest`, `AccountScreensTest`).
 
+**A held call reaches the wrist with the phone's app in the background.** A held call's alert, or its answer (a push with a
+`hold_id`, `AlertPayload.heldCall`), starts a job (`WatchResultsWork.needsYou`) that restores the session if it must, reads Needs
+you again and keeps `kept/needs-you` for the watch (`WatchResults.needsYou`), so the watch's Inbox line, tile and alert follow
+the phone's alert with no app open. Before, only an open app's read did (finding 2, `HeldPushWatchTest`). A watch that hasn't
+used tafs in this sign-in is never told, and nothing is put when Needs you hasn't changed.
+
 **Following a held call in logcat** (`HeldLog`, tag `tafs.held`, every build from Android 148 and Wear 0.4.11), so a held call that never shows on the wrist can
 be traced on a Play-signed pair with `adb logcat -s tafs.held`. Each step writes one line with counts and seconds only, never a
 taf's name, what it wants, an amount, a reason, an id or the account mark:

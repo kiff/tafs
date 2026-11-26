@@ -17,7 +17,7 @@ import bot.tafs.app.push.AlertChannel
 import bot.tafs.app.push.AlertNotifier
 
 /**
- * The phone's job for a `watch_ask` or `watch_inbox` push (docs/watch-wear.md, Delivery): an expedited one-time job, one chain
+ * The phone's job for a `watch_ask`, `watch_inbox` or `taf_chat` push, or a held call's alert or answer (docs/watch-wear.md, Delivery): an expedited one-time job, one chain
  * per ask (a second push for the same ask runs after the first, so its last state is the one kept). It runs outside Firebase's
  * few seconds, so a phone that must restore its session first still keeps the answer for the watch. It ends once the item is put; a read that fails is
  * tried again by WorkManager, a few times, with its own backoff.
@@ -31,6 +31,7 @@ class WatchResultsWork(context: Context, params: WorkerParameters) : CoroutineWo
       when {
         askId != null -> results.ask(askId)
         tafChat != null -> results.tafChat(tafChat)
+        inputData.getBoolean(NEEDS_YOU, false) -> results.needsYou()
         else -> results.inbox()
       }
       Result.success()
@@ -57,6 +58,7 @@ class WatchResultsWork(context: Context, params: WorkerParameters) : CoroutineWo
   companion object {
     private const val ASK_ID = "ask_id"
     private const val TAF_CHAT = "taf_chat"
+    private const val NEEDS_YOU = "needs_you"
     private const val MAX_TRIES = 3
     private const val NOTIFICATION_ID = 0x7a75
 
@@ -65,6 +67,9 @@ class WatchResultsWork(context: Context, params: WorkerParameters) : CoroutineWo
 
     /** The Inbox's marks changed: its job, after any still to run. */
     fun inbox(context: Context) = enqueue(context, "watch-inbox", workDataOf())
+
+    /** A held call came or went: Needs you read again for the watch, after any such job still to run. */
+    fun needsYou(context: Context) = enqueue(context, "watch-needs-you", workDataOf(NEEDS_YOU to true))
 
     /** A taf's chat changed (by its id in tafs cloud): its job, after any for the same taf still to run. */
     fun tafChat(context: Context, cloudId: String) = enqueue(context, "watch-taf-chat:$cloudId", workDataOf(TAF_CHAT to cloudId))
