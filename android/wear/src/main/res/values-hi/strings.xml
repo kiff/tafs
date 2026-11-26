@@ -83,6 +83,7 @@
         <item quantity="one">%1$s रोकी गई कॉल को आपकी ज़रूरत है</item>
         <item quantity="other">%1$s रोकी गई कॉल को आपकी ज़रूरत है</item>
     </plurals>
+    <string name="watch_held_channel">रोकी गई कॉल</string>
     <string name="watch_inbox_empty">कुछ नया नहीं। Coach के उत्तर और आपके taf के अलर्ट यहाँ आते हैं।</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Inbox में %1$s अपठित</item>
@@ -107,6 +108,7 @@
     <string name="watch_nothing_sent_until">आपके मंज़ूर करने तक कुछ नहीं भेजा जाता।</string>
     <string name="watch_nothing_waits">आपके लिए कुछ इंतज़ार में नहीं है।</string>
     <string name="watch_open_on_phone">फ़ोन पर खोलें</string>
+    <string name="watch_opened_on_phone">फ़ोन पर खुल गया</string>
     <string name="watch_page_brief">ब्रीफ़</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">थमा हुआ: इसका निर्धारित समय बंद है। यह अब भी आपके भेजे का उत्तर देता है।</string>

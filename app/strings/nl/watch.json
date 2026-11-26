@@ -33,6 +33,7 @@
     "one": "{count} vastgehouden aanroep wacht op jou",
     "other": "{count} vastgehouden aanroepen wachten op jou"
   },
+  "watch.held_channel": "Vastgehouden aanroepen",
   "watch.inbox_empty": "Niets nieuws. Hier komen de antwoorden van Coach en de meldingen van je tafs.",
   "watch.inbox_unread": {
     "one": "{count} ongelezen in je Inbox",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Er wordt niets verstuurd tot je goedkeurt.",
   "watch.nothing_waits": "Er wacht niets op je.",
   "watch.open_on_phone": "Openen op telefoon",
+  "watch.opened_on_phone": "Geopend op je telefoon",
   "watch.page.brief": "Overzicht",
   "watch.page.inbox": "Inbox",
   "watch.paused_still_answers": "Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.",

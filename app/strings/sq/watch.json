@@ -33,6 +33,7 @@
     "one": "{count} thirrje e mbajtur ju pret",
     "other": "{count} thirrje të mbajtura ju presin"
   },
+  "watch.held_channel": "Thirrje të mbajtura",
   "watch.inbox_empty": "Asgjë e re. Përgjigjet e Coach dhe njoftimet e tafs-eve tuaj vijnë këtu.",
   "watch.inbox_unread": {
     "one": "{count} e palexuar në Kutinë hyrëse",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Asgjë nuk dërgohet derisa të miratoni.",
   "watch.nothing_waits": "Asgjë nuk ju pret.",
   "watch.open_on_phone": "Hapni në telefon",
+  "watch.opened_on_phone": "U hap në telefon",
   "watch.page.brief": "Përmbledhja",
   "watch.page.inbox": "Kutia hyrëse",
   "watch.paused_still_answers": "Pezulluar: orari i tij është joaktiv. Ende u përgjigjet atyre që dërgoni.",

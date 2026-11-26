@@ -5601,6 +5601,8 @@ enum Words {
         static var hear: String { Words.line("watch.hear") }
         /// {count} held calls need you
         static func heldCalls(count: Int) -> String { Words.count("watch.held_calls", count) }
+        /// Held calls
+        static var heldChannel: String { Words.line("watch.held_channel") }
         /// Nothing new. Coach's replies and your tafs' alerts land here.
         static var inboxEmpty: String { Words.line("watch.inbox_empty") }
         /// {count} unread in Inbox
@@ -5637,6 +5639,8 @@ enum Words {
         static var nothingWaits: String { Words.line("watch.nothing_waits") }
         /// Open on phone
         static var openOnPhone: String { Words.line("watch.open_on_phone") }
+        /// Opened on your phone
+        static var openedOnPhone: String { Words.line("watch.opened_on_phone") }
         enum Page {
             /// Brief
             static var brief: String { Words.line("watch.page.brief") }

@@ -1415,8 +1415,9 @@ class WatchModel(
       is Asked.Answered -> when (val reply = asked.reply) {
         is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also {
           tile?.saw(reply.count, now())
-          // Each held call is a line in the Inbox, kept until dismissed.
-          for (call in reply.calls) inboxPut(InboxItem(InboxItem.heldId(call.holdId), InboxItem.Kind.HELD, call.taf, call.wants, now()))
+          // Each held call is a line in the Inbox, with no amount kept; one the phone no longer lists (answered, refused or run out,
+          // row 29) goes, so a Refuse is never offered on a call KIFF has dropped ([HeldCalls.inbox], as the phone's push does).
+          if ((inboxStore != null || reviewFirst) && unlocked()) HeldCalls.inbox(_inbox.value, dismissed, reply.calls, now())?.let(::saveInbox)
           pruneDismissed("held:", reply.calls.map { InboxItem.heldId(it.holdId) }.toSet())
         }
         is WatchReply.SignedOut -> {
@@ -1481,6 +1482,23 @@ class WatchModel(
     val shown = _shown.value as? Shown.Read ?: return
     _shown.value = shown.copy(tafs = read)
     if (unlocked()) cache?.save(shown.needsYou, read)
+  }
+
+  /**
+   * Needs you as the phone pushed it when a call was held or ended (`kept/needs-you`, taken only under the mark held): the count
+   * on the tile and on screen, each held call's line at the top of the Inbox, and an ended one gone, at once and without asking.
+   * The pushed lines carry no amount or reason; a call already shown keeps the ones its live read gave.
+   */
+  fun needsYouPushed(count: Int, words: String, calls: List<HeldLine>) {
+    if (_signedOutHere.value || !verified) return
+    tile?.saw(count, now())
+    (_shown.value as? Shown.Read)?.let { read ->
+      val known = read.needsYou.calls.associateBy { it.holdId }
+      val merged = calls.map { call -> known[call.holdId]?.let { call.copy(amount = it.amount, reason = it.reason) } ?: call }
+      _shown.value = read.copy(needsYou = NeedsYouRead(count, words, merged))
+    }
+    if ((inboxStore != null || reviewFirst) && unlocked()) HeldCalls.inbox(_inbox.value, dismissed, calls, now())?.let(::saveInbox)
+    pruneDismissed("held:", calls.map { InboxItem.heldId(it.holdId) }.toSet())
   }
 
   /** Since when the phone hasn't answered, while the last read is still shown. */

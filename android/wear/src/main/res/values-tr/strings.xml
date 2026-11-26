@@ -83,6 +83,7 @@
         <item quantity="one">%1$s tutulan çağrı sizi bekliyor</item>
         <item quantity="other">%1$s tutulan çağrı sizi bekliyor</item>
     </plurals>
+    <string name="watch_held_channel">Tutulan çağrılar</string>
     <string name="watch_inbox_empty">Yeni bir şey yok. Coach\'un yanıtları ve tafs\'larınızın uyarıları buraya düşer.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Gelen kutusunda %1$s okunmamış</item>
@@ -107,6 +108,7 @@
     <string name="watch_nothing_sent_until">Siz onaylayana kadar hiçbir şey gönderilmez.</string>
     <string name="watch_nothing_waits">Sizi bekleyen bir şey yok.</string>
     <string name="watch_open_on_phone">Telefonda aç</string>
+    <string name="watch_opened_on_phone">Telefonunuzda açıldı</string>
     <string name="watch_page_brief">Özet</string>
     <string name="watch_page_inbox">Gelen kutusu</string>
     <string name="watch_paused_still_answers">Duraklatıldı: zamanlaması kapalı. Gönderdiklerinize yine yanıt verir.</string>

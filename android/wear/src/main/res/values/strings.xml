@@ -83,6 +83,7 @@
         <item quantity="one">%1$s held call needs you</item>
         <item quantity="other">%1$s held calls need you</item>
     </plurals>
+    <string name="watch_held_channel">Held calls</string>
     <string name="watch_inbox_empty">Nothing new. Coach\'s replies and your tafs\' alerts land here.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s unread in Inbox</item>
@@ -107,6 +108,7 @@
     <string name="watch_nothing_sent_until">Nothing is sent until you approve.</string>
     <string name="watch_nothing_waits">Nothing waits for you.</string>
     <string name="watch_open_on_phone">Open on phone</string>
+    <string name="watch_opened_on_phone">Opened on your phone</string>
     <string name="watch_page_brief">Brief</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Paused: its schedule is off. It still answers what you send.</string>

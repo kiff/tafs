@@ -2817,6 +2817,7 @@
         <item quantity="one">%1$s задържана заявка ви чака</item>
         <item quantity="other">%1$s задържани заявки ви чакат</item>
     </plurals>
+    <string name="watch_held_channel">Задържани заявки</string>
     <string name="watch_inbox_empty">Нищо ново. Отговорите на Coach и известията от вашите tafs идват тук.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s непрочетено във Входящи</item>
@@ -2841,6 +2842,7 @@
     <string name="watch_nothing_sent_until">Нищо не се изпраща, докато не одобрите.</string>
     <string name="watch_nothing_waits">Нищо не ви чака.</string>
     <string name="watch_open_on_phone">Отваряне на телефона</string>
+    <string name="watch_opened_on_phone">Отворено на телефона</string>
     <string name="watch_page_brief">Резюме</string>
     <string name="watch_page_inbox">Входящи</string>
     <string name="watch_paused_still_answers">На пауза: графикът му е изключен. Все пак отговаря на това, което изпращате.</string>

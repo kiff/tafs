@@ -33,6 +33,7 @@
     "one": "{count} visszatartott hívás vár rád",
     "other": "{count} visszatartott hívás vár rád"
   },
+  "watch.held_channel": "Visszatartott hívások",
   "watch.inbox_empty": "Nincs semmi új. A Coach válaszai és a tafjaid riasztásai ide érkeznek.",
   "watch.inbox_unread": {
     "one": "{count} olvasatlan a Bejövőben",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Semmi sem megy el, amíg jóvá nem hagyod.",
   "watch.nothing_waits": "Semmi sem vár rád.",
   "watch.open_on_phone": "Megnyitás a telefonon",
+  "watch.opened_on_phone": "Megnyitva a telefonodon",
   "watch.page.brief": "Összefoglaló",
   "watch.page.inbox": "Bejövő",
   "watch.paused_still_answers": "Szüneteltetve: az ütemezése ki van kapcsolva. Arra, amit küldesz, továbbra is válaszol.",

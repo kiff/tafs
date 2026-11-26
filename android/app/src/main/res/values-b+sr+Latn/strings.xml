@@ -2894,6 +2894,7 @@
         <item quantity="few">%1$s zadržana poziva čekaju vas</item>
         <item quantity="other">%1$s zadržanih poziva čeka vas</item>
     </plurals>
+    <string name="watch_held_channel">Zadržani pozivi</string>
     <string name="watch_inbox_empty">Ništa novo. Ovdje stižu Coachovi odgovori i obaveštenja vaših tafova.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Nepročitano u Pristiglima: %1$s</item>
@@ -2920,6 +2921,7 @@
     <string name="watch_nothing_sent_until">Ništa se ne šalje dok ne odobrite.</string>
     <string name="watch_nothing_waits">Ništa ne čeka vas.</string>
     <string name="watch_open_on_phone">Otvorite na telefonu</string>
+    <string name="watch_opened_on_phone">Otvoreno na telefonu</string>
     <string name="watch_page_brief">Sažetak</string>
     <string name="watch_page_inbox">Pristigle</string>
     <string name="watch_paused_still_answers">Pauzirano: njegov je raspored isključen. I dalje odgovara na ono šta pošaljete.</string>

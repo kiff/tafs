@@ -33,6 +33,7 @@
     "one": "{count} रोकिएको कलले तपाईंलाई पर्खिरहेको छ",
     "other": "{count} रोकिएका कलले तपाईंलाई पर्खिरहेका छन्"
   },
+  "watch.held_channel": "रोकिएका कलहरू",
   "watch.inbox_empty": "केही नयाँ छैन। Coach का जवाफ र तपाईंका taf का सूचना यहाँ आइपुग्छन्।",
   "watch.inbox_unread": {
     "one": "इनबक्समा {count} नपढिएको",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "तपाईंले स्वीकृत नगरेसम्म केही पठाइँदैन।",
   "watch.nothing_waits": "तपाईंलाई कुनै कुराले पर्खिरहेको छैन।",
   "watch.open_on_phone": "फोनमा खोल्नुहोस्",
+  "watch.opened_on_phone": "फोनमा खोलियो",
   "watch.page.brief": "सारांश",
   "watch.page.inbox": "इनबक्स",
   "watch.paused_still_answers": "पज गरिएको: यसको तालिका बन्द छ। तपाईंले पठाएकालाई यसले अझै जवाफ दिन्छ।",

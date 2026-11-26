@@ -2817,6 +2817,7 @@
         <item quantity="one">%1$s llamada retenida te necesita</item>
         <item quantity="other">%1$s llamadas retenidas te necesitan</item>
     </plurals>
+    <string name="watch_held_channel">Llamadas retenidas</string>
     <string name="watch_inbox_empty">Nada nuevo. Aquí llegan las respuestas de Coach y los avisos de tus tafs.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s sin leer en la Bandeja</item>
@@ -2841,6 +2842,7 @@
     <string name="watch_nothing_sent_until">No se envía nada hasta que apruebes.</string>
     <string name="watch_nothing_waits">Nada te espera.</string>
     <string name="watch_open_on_phone">Abrir en el teléfono</string>
+    <string name="watch_opened_on_phone">Abierto en tu teléfono</string>
     <string name="watch_page_brief">Resumen</string>
     <string name="watch_page_inbox">Bandeja</string>
     <string name="watch_paused_still_answers">En pausa: su programación está detenida. Aun así responde a lo que envías.</string>

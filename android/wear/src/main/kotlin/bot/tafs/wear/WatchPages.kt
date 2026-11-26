@@ -356,11 +356,19 @@ private fun ScalingLazyListScope.unreachableLine(why: LinkFailure, act: Actions)
  */
 @Composable
 internal fun LinkingScreen() {
+  // Drawn only after LINKING_SHOWN_AFTER_MS: a phone that confirms the sign-in sooner opens on what's kept with no flash of it. It
+  // changes when the screen shows, never what's drawn: nothing kept is drawn before the phone's reply, as before.
+  var after by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+  androidx.compose.runtime.LaunchedEffect(Unit) {
+    kotlinx.coroutines.delay(LINKING_SHOWN_AFTER_MS)
+    after = true
+  }
   Column(
     Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black).padding(horizontal = 20.dp).testTag(LINKING),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
   ) {
+    if (!after) return@Column
     SpinnerAround(76.dp, Look.coach) {
       androidx.compose.foundation.Image(
         androidx.compose.ui.res.painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(96.dp),
@@ -458,4 +466,7 @@ private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions,
 
 internal const val UPDATING = "updating"
 internal const val LINKING = "linking"
+
+/** How long the linking screen stays black before its line shows: a quick reply from the phone shows none of it. */
+internal const val LINKING_SHOWN_AFTER_MS = 500L
 internal const val UNREACHABLE_LINE = "unreachable-line"

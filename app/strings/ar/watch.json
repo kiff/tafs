@@ -41,6 +41,7 @@
     "many": "{count} استدعاءً معلّقًا بانتظارك",
     "other": "{count} استدعاء معلّق بانتظارك"
   },
+  "watch.held_channel": "الاستدعاءات المعلّقة",
   "watch.inbox_empty": "لا جديد. تصل هنا ردود Coach وتنبيهات tafs لديك.",
   "watch.inbox_unread": {
     "zero": "لا غير مقروء في «الوارد»",
@@ -73,6 +74,7 @@
   "watch.nothing_sent_until": "لا يُرسل شيء حتى توافق.",
   "watch.nothing_waits": "لا شيء بانتظارك.",
   "watch.open_on_phone": "فتح على الهاتف",
+  "watch.opened_on_phone": "فُتح على هاتفك",
   "watch.page.brief": "الملخص",
   "watch.page.inbox": "الوارد",
   "watch.paused_still_answers": "متوقف مؤقتًا: جدوله متوقف. ما زال يردّ على ما ترسله.",

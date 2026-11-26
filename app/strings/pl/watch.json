@@ -37,6 +37,7 @@
     "one": "{count} oczekujące wywołanie czeka na Ciebie",
     "other": "{count} oczekującego wywołania czeka na Ciebie"
   },
+  "watch.held_channel": "Oczekujące wywołania",
   "watch.inbox_empty": "Nic nowego. Tu trafiają odpowiedzi Coacha i alerty Twoich tafs.",
   "watch.inbox_unread": {
     "few": "Nieprzeczytane w Skrzynce: {count}",
@@ -65,6 +66,7 @@
   "watch.nothing_sent_until": "Nic nie zostanie wysłane, dopóki nie zatwierdzisz.",
   "watch.nothing_waits": "Nic na Ciebie nie czeka.",
   "watch.open_on_phone": "Otwórz na telefonie",
+  "watch.opened_on_phone": "Otwarto na telefonie",
   "watch.page.brief": "Podsumowanie",
   "watch.page.inbox": "Skrzynka",
   "watch.paused_still_answers": "Wstrzymane: harmonogram jest wyłączony. Taf nadal odpowiada na to, co wysyłasz.",

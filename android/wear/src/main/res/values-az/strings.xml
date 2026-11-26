@@ -83,6 +83,7 @@
         <item quantity="one">%1$s saxlanılan çağırış sizi gözləyir</item>
         <item quantity="other">%1$s saxlanılan çağırış sizi gözləyir</item>
     </plurals>
+    <string name="watch_held_channel">Saxlanılan çağırışlar</string>
     <string name="watch_inbox_empty">Yeni heç nə yoxdur. Coach-un cavabları və taf-larınızın bildirişləri burada görünür.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Gələnlərdə %1$s oxunmamış</item>
@@ -107,6 +108,7 @@
     <string name="watch_nothing_sent_until">Siz təsdiq edənə qədər heç nə göndərilmir.</string>
     <string name="watch_nothing_waits">Sizi heç nə gözləmir.</string>
     <string name="watch_open_on_phone">Telefonda açın</string>
+    <string name="watch_opened_on_phone">Telefonunuzda açıldı</string>
     <string name="watch_page_brief">Xülasə</string>
     <string name="watch_page_inbox">Gələnlər</string>
     <string name="watch_paused_still_answers">Fasilədədir: cədvəli söndürülüb. O, hələ də göndərdiklərinizə cavab verir.</string>

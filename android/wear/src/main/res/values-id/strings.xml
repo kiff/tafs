@@ -80,6 +80,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">%1$s panggilan yang ditahan menunggu Anda</item>
     </plurals>
+    <string name="watch_held_channel">Panggilan yang ditahan</string>
     <string name="watch_inbox_empty">Tidak ada yang baru. Balasan Coach dan peringatan tafs Anda masuk di sini.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">%1$s belum dibaca di Kotak Masuk</item>
@@ -102,6 +103,7 @@
     <string name="watch_nothing_sent_until">Tidak ada yang dikirim sampai Anda menyetujui.</string>
     <string name="watch_nothing_waits">Tidak ada yang menunggu Anda.</string>
     <string name="watch_open_on_phone">Buka di ponsel</string>
+    <string name="watch_opened_on_phone">Dibuka di ponsel Anda</string>
     <string name="watch_page_brief">Ringkasan</string>
     <string name="watch_page_inbox">Kotak Masuk</string>
     <string name="watch_paused_still_answers">Dijeda: jadwalnya mati. Ia tetap menjawab apa yang Anda kirim.</string>

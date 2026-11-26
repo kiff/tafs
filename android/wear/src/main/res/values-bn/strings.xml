@@ -83,6 +83,7 @@
         <item quantity="one">ধরে রাখা %1$sটি কল আপনার অপেক্ষায়</item>
         <item quantity="other">ধরে রাখা %1$sটি কল আপনার অপেক্ষায়</item>
     </plurals>
+    <string name="watch_held_channel">ধরে রাখা কল</string>
     <string name="watch_inbox_empty">নতুন কিছু নেই। Coach-এর উত্তর ও আপনার taf-এর অ্যালার্ট এখানে আসে।</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">ইনবক্সে %1$sটি অপঠিত</item>
@@ -107,6 +108,7 @@
     <string name="watch_nothing_sent_until">আপনি অনুমোদন না করা পর্যন্ত কিছু পাঠানো হয় না।</string>
     <string name="watch_nothing_waits">আপনার অপেক্ষায় কিছু নেই।</string>
     <string name="watch_open_on_phone">ফোনে খুলুন</string>
+    <string name="watch_opened_on_phone">ফোনে খোলা হয়েছে</string>
     <string name="watch_page_brief">সারসংক্ষেপ</string>
     <string name="watch_page_inbox">ইনবক্স</string>
     <string name="watch_paused_still_answers">বিরতিতে আছে: এর সূচি বন্ধ। আপনি যা পাঠান তার উত্তর এটি এখনও দেয়।</string>

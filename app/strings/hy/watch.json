@@ -33,6 +33,7 @@
     "one": "{count} պահված զանգ սպասում է ձեզ",
     "other": "{count} պահված զանգ սպասում է ձեզ"
   },
+  "watch.held_channel": "Պահված զանգեր",
   "watch.inbox_empty": "Նոր ոչինչ չկա։ Coach-ի պատասխանները և ձեր taf-երի ծանուցումները հայտնվում են այստեղ։",
   "watch.inbox_unread": {
     "one": "{count} չկարդացված մուտքայինում",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Ոչինչ չի ուղարկվում, մինչև չհաստատեք։",
   "watch.nothing_waits": "Ոչինչ չի սպասում ձեզ։",
   "watch.open_on_phone": "Բացեք հեռախոսում",
+  "watch.opened_on_phone": "Բացվեց հեռախոսում",
   "watch.page.brief": "Ամփոփում",
   "watch.page.inbox": "Մուտքային",
   "watch.paused_still_answers": "Դադարեցված է․ նրա ժամանակացույցը անջատված է։ Այն դեռ պատասխանում է նրան, ինչ ուղարկում եք։",

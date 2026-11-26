@@ -86,6 +86,7 @@
         <item quantity="few">%1$s pozdržané volania čakajú na vás</item>
         <item quantity="other">%1$s pozdržaných volaní čaká na vás</item>
     </plurals>
+    <string name="watch_held_channel">Pozdržané volania</string>
     <string name="watch_inbox_empty">Nič nové. Sem chodia odpovede Coacha a upozornenia vašich tafov.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s neprečítaná v Doručených</item>
@@ -112,6 +113,7 @@
     <string name="watch_nothing_sent_until">Nič sa neodošle, kým neschválite.</string>
     <string name="watch_nothing_waits">Nič na vás nečaká.</string>
     <string name="watch_open_on_phone">Otvoriť v telefóne</string>
+    <string name="watch_opened_on_phone">Otvorené v telefóne</string>
     <string name="watch_page_brief">Prehľad</string>
     <string name="watch_page_inbox">Doručené</string>
     <string name="watch_paused_still_answers">Pozastavené: jeho plán je vypnutý. Na to, čo pošlete, stále odpovedá.</string>

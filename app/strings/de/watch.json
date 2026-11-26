@@ -33,6 +33,7 @@
     "one": "{count} zurückgehaltener Aufruf braucht dich",
     "other": "{count} zurückgehaltene Aufrufe brauchen dich"
   },
+  "watch.held_channel": "Zurückgehaltene Aufrufe",
   "watch.inbox_empty": "Nichts Neues. Hier landen die Antworten von Coach und die Hinweise deiner tafs.",
   "watch.inbox_unread": {
     "one": "{count} ungelesen im Eingang",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Nichts wird gesendet, bevor du genehmigst.",
   "watch.nothing_waits": "Nichts wartet auf dich.",
   "watch.open_on_phone": "Auf dem Handy öffnen",
+  "watch.opened_on_phone": "Auf deinem Telefon geöffnet",
   "watch.page.brief": "Briefing",
   "watch.page.inbox": "Eingang",
   "watch.paused_still_answers": "Pausiert: Sein Zeitplan ist aus. Was du sendest, beantwortet er trotzdem.",

@@ -33,6 +33,7 @@
     "one": "{count} chamada retida precisa de si",
     "other": "{count} chamadas retidas precisam de si"
   },
+  "watch.held_channel": "Chamadas retidas",
   "watch.inbox_empty": "Nada de novo. As respostas do Coach e os alertas dos seus tafs chegam aqui.",
   "watch.inbox_unread": {
     "one": "{count} por ler na Caixa de entrada",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Nada é enviado até aprovar.",
   "watch.nothing_waits": "Nada espera por si.",
   "watch.open_on_phone": "Abrir no telemóvel",
+  "watch.opened_on_phone": "Aberto no telemóvel",
   "watch.page.brief": "Resumo",
   "watch.page.inbox": "Caixa de entrada",
   "watch.paused_still_answers": "Em pausa: o agendamento está parado. Ainda assim responde ao que envia.",

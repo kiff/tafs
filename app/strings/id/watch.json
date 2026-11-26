@@ -31,6 +31,7 @@
   "watch.held_calls": {
     "other": "{count} panggilan yang ditahan menunggu Anda"
   },
+  "watch.held_channel": "Panggilan yang ditahan",
   "watch.inbox_empty": "Tidak ada yang baru. Balasan Coach dan peringatan tafs Anda masuk di sini.",
   "watch.inbox_unread": {
     "other": "{count} belum dibaca di Kotak Masuk"
@@ -53,6 +54,7 @@
   "watch.nothing_sent_until": "Tidak ada yang dikirim sampai Anda menyetujui.",
   "watch.nothing_waits": "Tidak ada yang menunggu Anda.",
   "watch.open_on_phone": "Buka di ponsel",
+  "watch.opened_on_phone": "Dibuka di ponsel Anda",
   "watch.page.brief": "Ringkasan",
   "watch.page.inbox": "Kotak Masuk",
   "watch.paused_still_answers": "Dijeda: jadwalnya mati. Ia tetap menjawab apa yang Anda kirim.",

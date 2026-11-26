@@ -33,6 +33,7 @@
     "one": "{count} түр барьсан дуудлага таныг хүлээж байна",
     "other": "{count} түр барьсан дуудлага таныг хүлээж байна"
   },
+  "watch.held_channel": "Түр барьсан дуудлагууд",
   "watch.inbox_empty": "Шинэ зүйл алга. Coach-ийн хариу болон таны taf-уудын мэдэгдэл энд ирнэ.",
   "watch.inbox_unread": {
     "one": "Ирсэн дотор {count} уншаагүй",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Та зөвшөөрөхгүй бол юу ч илгээгдэхгүй.",
   "watch.nothing_waits": "Таныг юу ч хүлээхгүй байна.",
   "watch.open_on_phone": "Утсан дээр нээх",
+  "watch.opened_on_phone": "Утсан дээр нээгдлээ",
   "watch.page.brief": "Товчлол",
   "watch.page.inbox": "Ирсэн",
   "watch.paused_still_answers": "Түр зогссон: хуваарь нь унтраастай. Таны илгээснийг одоо ч хариулна.",

@@ -31,6 +31,7 @@
   "watch.held_calls": {
     "other": "{count} lượt gọi đang giữ cần bạn"
   },
+  "watch.held_channel": "Lượt gọi đang giữ",
   "watch.inbox_empty": "Chưa có gì mới. Phản hồi của Coach và thông báo từ các taf của bạn sẽ đến đây.",
   "watch.inbox_unread": {
     "other": "{count} chưa đọc trong Hộp thư"
@@ -53,6 +54,7 @@
   "watch.nothing_sent_until": "Không có gì được gửi cho đến khi bạn phê duyệt.",
   "watch.nothing_waits": "Không có gì đang chờ bạn.",
   "watch.open_on_phone": "Mở trên điện thoại",
+  "watch.opened_on_phone": "Đã mở trên điện thoại",
   "watch.page.brief": "Tóm tắt",
   "watch.page.inbox": "Hộp thư",
   "watch.paused_still_answers": "Đã tạm dừng: lịch của nó đã tắt. Nó vẫn trả lời những gì bạn gửi.",

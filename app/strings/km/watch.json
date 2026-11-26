@@ -31,6 +31,7 @@
   "watch.held_calls": {
     "other": "ការហៅដែលផ្អាកទុក {count} ត្រូវការអ្នក"
   },
+  "watch.held_channel": "ការហៅដែលផ្អាកទុក",
   "watch.inbox_empty": "គ្មានអ្វីថ្មីទេ។ ចម្លើយរបស់ Coach និងការជូនដំណឹងពី taf របស់អ្នកមកដល់ទីនេះ។",
   "watch.inbox_unread": {
     "other": "មិនទាន់អាន {count} ក្នុងប្រអប់សារចូល"
@@ -53,6 +54,7 @@
   "watch.nothing_sent_until": "គ្មានអ្វីត្រូវបានផ្ញើទេ រហូតដល់អ្នកអនុម័ត។",
   "watch.nothing_waits": "គ្មានអ្វីរង់ចាំអ្នកទេ។",
   "watch.open_on_phone": "បើកនៅលើទូរសព្ទ",
+  "watch.opened_on_phone": "បានបើកនៅលើទូរសព្ទ",
   "watch.page.brief": "សេចក្តីសង្ខេប",
   "watch.page.inbox": "ប្រអប់សារចូល",
   "watch.paused_still_answers": "បានផ្អាក៖ កាលវិភាគរបស់វាបិទ។ វានៅតែឆ្លើយអ្វីដែលអ្នកផ្ញើ។",

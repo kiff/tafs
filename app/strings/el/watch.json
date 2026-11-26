@@ -33,6 +33,7 @@
     "one": "{count} κλήση σε αναμονή σε χρειάζεται",
     "other": "{count} κλήσεις σε αναμονή σε χρειάζονται"
   },
+  "watch.held_channel": "Κλήσεις σε αναμονή",
   "watch.inbox_empty": "Τίποτα νέο. Οι απαντήσεις του Coach και οι ειδοποιήσεις των tafs σου έρχονται εδώ.",
   "watch.inbox_unread": {
     "one": "{count} μη αναγνωσμένο στα Εισερχόμενα",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Τίποτα δεν στέλνεται μέχρι να εγκρίνεις.",
   "watch.nothing_waits": "Τίποτα δεν σε περιμένει.",
   "watch.open_on_phone": "Άνοιγμα στο τηλέφωνο",
+  "watch.opened_on_phone": "Άνοιξε στο τηλέφωνό σου",
   "watch.page.brief": "Σύνοψη",
   "watch.page.inbox": "Εισερχόμενα",
   "watch.paused_still_answers": "Σε παύση: το χρονοπρόγραμμά του είναι ανενεργό. Απαντά ακόμα σε ό,τι στέλνεις.",

@@ -2740,6 +2740,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">保留中の呼び出し%1$s件が確認を待っています</item>
     </plurals>
+    <string name="watch_held_channel">保留中の呼び出し</string>
     <string name="watch_inbox_empty">新着はありません。Coachの返信とtafの通知がここに届きます。</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">受信トレイに未読%1$s件</item>
@@ -2762,6 +2763,7 @@
     <string name="watch_nothing_sent_until">承認するまで何も送信されません。</string>
     <string name="watch_nothing_waits">待機中の項目はありません。</string>
     <string name="watch_open_on_phone">スマートフォンで開く</string>
+    <string name="watch_opened_on_phone">スマートフォンで開きました</string>
     <string name="watch_page_brief">ブリーフィング</string>
     <string name="watch_page_inbox">受信トレイ</string>
     <string name="watch_paused_still_answers">一時停止中：スケジュールはオフです。送ったメッセージには引き続き答えます。</string>

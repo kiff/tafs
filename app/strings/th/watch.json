@@ -31,6 +31,7 @@
   "watch.held_calls": {
     "other": "{count} การเรียกที่พักไว้ต้องการคุณ"
   },
+  "watch.held_channel": "การเรียกที่พักไว้",
   "watch.inbox_empty": "ไม่มีอะไรใหม่ คำตอบของ Coach และการแจ้งเตือนจาก taf ของคุณจะมาที่นี่",
   "watch.inbox_unread": {
     "other": "{count} ยังไม่ได้อ่านในกล่องข้อความ"
@@ -53,6 +54,7 @@
   "watch.nothing_sent_until": "จะไม่มีอะไรถูกส่งจนกว่าคุณจะอนุมัติ",
   "watch.nothing_waits": "ไม่มีอะไรรอคุณอยู่",
   "watch.open_on_phone": "เปิดบนโทรศัพท์",
+  "watch.opened_on_phone": "เปิดบนโทรศัพท์แล้ว",
   "watch.page.brief": "สรุป",
   "watch.page.inbox": "กล่องข้อความ",
   "watch.paused_still_answers": "หยุดชั่วคราว: กำหนดการของมันปิดอยู่ มันยังตอบสิ่งที่คุณส่ง",

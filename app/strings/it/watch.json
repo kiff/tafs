@@ -33,6 +33,7 @@
     "one": "{count} chiamata trattenuta ti aspetta",
     "other": "{count} chiamate trattenute ti aspettano"
   },
+  "watch.held_channel": "Chiamate trattenute",
   "watch.inbox_empty": "Niente di nuovo. Qui arrivano le risposte di Coach e gli avvisi dei tuoi tafs.",
   "watch.inbox_unread": {
     "one": "{count} da leggere in In arrivo",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Non viene inviato nulla finché non approvi.",
   "watch.nothing_waits": "Niente ti aspetta.",
   "watch.open_on_phone": "Apri sul telefono",
+  "watch.opened_on_phone": "Aperto sul telefono",
   "watch.page.brief": "Riepilogo",
   "watch.page.inbox": "In arrivo",
   "watch.paused_still_answers": "In pausa: la sua pianificazione è ferma. Risponde comunque a ciò che invii.",

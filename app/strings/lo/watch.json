@@ -31,6 +31,7 @@
   "watch.held_calls": {
     "other": "ການໂທທີ່ພັກໄວ້ {count} ຕ້ອງການທ່ານ"
   },
+  "watch.held_channel": "ການໂທທີ່ພັກໄວ້",
   "watch.inbox_empty": "ບໍ່ມີຫຍັງໃໝ່. ຄຳຕອບຂອງ Coach ແລະ ການແຈ້ງເຕືອນຈາກ taf ຂອງທ່ານມາຮອດບ່ອນນີ້.",
   "watch.inbox_unread": {
     "other": "ຍັງບໍ່ໄດ້ອ່ານ {count} ໃນກ່ອງຂໍ້ຄວາມ"
@@ -53,6 +54,7 @@
   "watch.nothing_sent_until": "ບໍ່ມີຫຍັງຖືກສົ່ງຈົນກວ່າທ່ານຈະອະນຸມັດ.",
   "watch.nothing_waits": "ບໍ່ມີຫຍັງລໍຖ້າທ່ານ.",
   "watch.open_on_phone": "ເປີດໃນໂທລະສັບ",
+  "watch.opened_on_phone": "ເປີດຢູ່ໂທລະສັບແລ້ວ",
   "watch.page.brief": "ບົດສະຫຼຸບ",
   "watch.page.inbox": "ກ່ອງຂໍ້ຄວາມ",
   "watch.paused_still_answers": "ຢຸດຊົ່ວຄາວ: ຕາຕະລາງຂອງມັນປິດ. ມັນຍັງຕອບສິ່ງທີ່ທ່ານສົ່ງ.",

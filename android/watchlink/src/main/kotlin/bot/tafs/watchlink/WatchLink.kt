@@ -333,6 +333,22 @@ data class KeptTafs(
 )
 
 /**
+ * Needs you as the phone holds it now, the lines [WatchReply.NeedsYou] gives, kept for the watch as a Data Layer item
+ * ([WatchLink.KEPT_NEEDS_YOU]) when its held calls or count change on the phone (a call held, answered, refused or run out), so a
+ * held call reaches the wrist without the watch asking: its count, its line at the top of the Inbox, and Refuse or Approve on
+ * your phone. Put on change only, never on a timer.
+ */
+@Serializable
+data class KeptNeedsYou(
+  @SerialName("put_at") val putAt: Long,
+  val count: Int = 0,
+  val words: String = "",
+  val calls: List<HeldLine> = emptyList(),
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
+
+/**
  * The phone signed out ([WatchLink.KEPT_SIGNED_OUT]): put at every sign-out, so a watch out of reach then still forgets the
  * account when it's next in reach, without asking. [mark] is the account mark the phone dropped, so a late one never wipes the
  * account the watch has read since.
@@ -495,6 +511,9 @@ object WatchLink {
 
   /** The person's tafs as the phone holds them now ([KeptTafs]), put when the list changes there. */
   const val KEPT_TAFS = KEPT + "tafs"
+
+  /** Needs you as the phone holds it now ([KeptNeedsYou]), put when its held calls or count change there. */
+  const val KEPT_NEEDS_YOU = KEPT + "needs-you"
 
   /**
    * The key of the phone's account mark: random, made at each sign-in on the phone and dropped at sign-out, never derived from
@@ -796,6 +815,11 @@ object WatchLink {
 
   fun decodeKeptTafs(data: ByteArray): KeptTafs? =
     runCatching { replies.decodeFromString(KeptTafs.serializer(), data.decodeToString()) }.getOrNull()
+
+  fun encodeKept(kept: KeptNeedsYou): ByteArray = replies.encodeToString(KeptNeedsYou.serializer(), kept).encodeToByteArray()
+
+  fun decodeKeptNeedsYou(data: ByteArray): KeptNeedsYou? =
+    runCatching { replies.decodeFromString(KeptNeedsYou.serializer(), data.decodeToString()) }.getOrNull()
 
   fun encodeKept(kept: KeptSignedOut): ByteArray = replies.encodeToString(KeptSignedOut.serializer(), kept).encodeToByteArray()
 

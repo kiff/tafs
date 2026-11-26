@@ -33,6 +33,7 @@
     "one": "{count} saklanan çagyryş size zerur",
     "other": "{count} saklanan çagyryş size zerur"
   },
+  "watch.held_channel": "Saklanan çagyryşlar",
   "watch.inbox_empty": "Täze zat ýok. Coach-yň jogaplary we tafs-laryňyzyň duýduryşlary şu ýere düşýär.",
   "watch.inbox_unread": {
     "one": "Inbox-da {count} okalmadyk",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Siz tassyklamaňyzça hiç zat iberilmeýär.",
   "watch.nothing_waits": "Size hiç zat garaşmaýar.",
   "watch.open_on_phone": "Telefonda açyň",
+  "watch.opened_on_phone": "Telefonyňyzda açyldy",
   "watch.page.brief": "Gysgaça maglumat",
   "watch.page.inbox": "Inbox",
   "watch.paused_still_answers": "Bes edildi: onuň tertibi öçük. Ol henizem iberýän zadyňyza jogap berýär.",

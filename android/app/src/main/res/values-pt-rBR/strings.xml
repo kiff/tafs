@@ -2817,6 +2817,7 @@
         <item quantity="one">%1$s chamada retida precisa de você</item>
         <item quantity="other">%1$s chamadas retidas precisam de você</item>
     </plurals>
+    <string name="watch_held_channel">Chamadas retidas</string>
     <string name="watch_inbox_empty">Nada de novo. As respostas do Coach e os alertas dos seus tafs chegam aqui.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s por ler na Caixa de entrada</item>
@@ -2841,6 +2842,7 @@
     <string name="watch_nothing_sent_until">Nada é enviado até aprovar.</string>
     <string name="watch_nothing_waits">Nada espera por você.</string>
     <string name="watch_open_on_phone">Abrir no celular</string>
+    <string name="watch_opened_on_phone">Aberto no telemóvel</string>
     <string name="watch_page_brief">Resumo</string>
     <string name="watch_page_inbox">Caixa de entrada</string>
     <string name="watch_paused_still_answers">Em pausa: o agendamento está parado. Ainda assim responde ao que envia.</string>

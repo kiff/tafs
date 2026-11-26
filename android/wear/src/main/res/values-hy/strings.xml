@@ -83,6 +83,7 @@
         <item quantity="one">%1$s պահված զանգ սպասում է ձեզ</item>
         <item quantity="other">%1$s պահված զանգ սպասում է ձեզ</item>
     </plurals>
+    <string name="watch_held_channel">Պահված զանգեր</string>
     <string name="watch_inbox_empty">Նոր ոչինչ չկա։ Coach-ի պատասխանները և ձեր taf-երի ծանուցումները հայտնվում են այստեղ։</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s չկարդացված մուտքայինում</item>
@@ -107,6 +108,7 @@
     <string name="watch_nothing_sent_until">Ոչինչ չի ուղարկվում, մինչև չհաստատեք։</string>
     <string name="watch_nothing_waits">Ոչինչ չի սպասում ձեզ։</string>
     <string name="watch_open_on_phone">Բացեք հեռախոսում</string>
+    <string name="watch_opened_on_phone">Բացվեց հեռախոսում</string>
     <string name="watch_page_brief">Ամփոփում</string>
     <string name="watch_page_inbox">Մուտքային</string>
     <string name="watch_paused_still_answers">Դադարեցված է․ նրա ժամանակացույցը անջատված է։ Այն դեռ պատասխանում է նրան, ինչ ուղարկում եք։</string>

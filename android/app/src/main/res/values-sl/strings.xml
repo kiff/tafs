@@ -2971,6 +2971,7 @@
         <item quantity="few">%1$s zadržani klici čakajo na vas</item>
         <item quantity="other">%1$s zadržanih klicev čaka na vas</item>
     </plurals>
+    <string name="watch_held_channel">Zadržani klici</string>
     <string name="watch_inbox_empty">Nič novega. Sem pridejo odgovori Coacha in opozorila vaših tafov.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s neprebrano v Nabiralniku</item>
@@ -2999,6 +3000,7 @@
     <string name="watch_nothing_sent_until">Nič se ne pošlje, dokler ne odobrite.</string>
     <string name="watch_nothing_waits">Nič ne čaka na vas.</string>
     <string name="watch_open_on_phone">Odpri v telefonu</string>
+    <string name="watch_opened_on_phone">Odprto v telefonu</string>
     <string name="watch_page_brief">Pregled</string>
     <string name="watch_page_inbox">Nabiralnik</string>
     <string name="watch_paused_still_answers">Začasno ustavljeno: njegov urnik je izklopljen. Še vedno odgovarja na to, kar pošljete.</string>

@@ -33,6 +33,7 @@
     "one": "{count} задържана заявка ви чака",
     "other": "{count} задържани заявки ви чакат"
   },
+  "watch.held_channel": "Задържани заявки",
   "watch.inbox_empty": "Нищо ново. Отговорите на Coach и известията от вашите tafs идват тук.",
   "watch.inbox_unread": {
     "one": "{count} непрочетено във Входящи",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Нищо не се изпраща, докато не одобрите.",
   "watch.nothing_waits": "Нищо не ви чака.",
   "watch.open_on_phone": "Отваряне на телефона",
+  "watch.opened_on_phone": "Отворено на телефона",
   "watch.page.brief": "Резюме",
   "watch.page.inbox": "Входящи",
   "watch.paused_still_answers": "На пауза: графикът му е изключен. Все пак отговаря на това, което изпращате.",

@@ -2894,6 +2894,7 @@
         <item quantity="few">%1$s sulaikytos užklausos laukia jūsų</item>
         <item quantity="other">%1$s sulaikytų užklausų laukia jūsų</item>
     </plurals>
+    <string name="watch_held_channel">Sulaikytos užklausos</string>
     <string name="watch_inbox_empty">Nieko naujo. Čia patenka Coach atsakymai ir jūsų taf pranešimai.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s neskaityta gautuosiuose</item>
@@ -2920,6 +2921,7 @@
     <string name="watch_nothing_sent_until">Niekas nesiunčiama, kol nepatvirtinsite.</string>
     <string name="watch_nothing_waits">Niekas jūsų nelaukia.</string>
     <string name="watch_open_on_phone">Atidaryti telefone</string>
+    <string name="watch_opened_on_phone">Atidaryta telefone</string>
     <string name="watch_page_brief">Suvestinė</string>
     <string name="watch_page_inbox">Gautieji</string>
     <string name="watch_paused_still_answers">Pristabdyta: tvarkaraštis išjungtas. Jis vis tiek atsako į tai, ką siunčiate.</string>

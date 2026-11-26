@@ -37,6 +37,7 @@
     "few": "{count} zadržani klici čakajo na vas",
     "other": "{count} zadržanih klicev čaka na vas"
   },
+  "watch.held_channel": "Zadržani klici",
   "watch.inbox_empty": "Nič novega. Sem pridejo odgovori Coacha in opozorila vaših tafov.",
   "watch.inbox_unread": {
     "one": "{count} neprebrano v Nabiralniku",
@@ -65,6 +66,7 @@
   "watch.nothing_sent_until": "Nič se ne pošlje, dokler ne odobrite.",
   "watch.nothing_waits": "Nič ne čaka na vas.",
   "watch.open_on_phone": "Odpri v telefonu",
+  "watch.opened_on_phone": "Odprto v telefonu",
   "watch.page.brief": "Pregled",
   "watch.page.inbox": "Nabiralnik",
   "watch.paused_still_answers": "Začasno ustavljeno: njegov urnik je izklopljen. Še vedno odgovarja na to, kar pošljete.",

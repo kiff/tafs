@@ -107,9 +107,16 @@ class TafsApplication : Application() {
       model.watchSignedOut = { mark ->
         watchChats.forget()
         watchTafs.forget()
+        watchNeedsYou.forget()
         background.launch { bot.tafs.app.watch.WatchSignedOut.of(this@TafsApplication).tell(mark) }
       }
     }
+  }
+
+  /** Needs you, kept for the watch as it changes ([bot.tafs.app.watch.WatchNeedsYou]): a held call reaches the wrist at once. */
+  val watchNeedsYou: bot.tafs.app.watch.WatchNeedsYou by lazy {
+    bot.tafs.app.watch.WatchNeedsYou(bot.tafs.app.watch.DataLayerKeep(this), mark = { model.watchMark() })
+      .also { it.follow(model.state, background) }
   }
 
   /** The taf list, kept for the watch as it changes ([bot.tafs.app.watch.WatchTafs]), once the watch has used tafs. */

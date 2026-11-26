@@ -83,6 +83,7 @@
         <item quantity="one">%1$s დაკავებული ზარი გელოდებათ</item>
         <item quantity="other">%1$s დაკავებული ზარი გელოდებათ</item>
     </plurals>
+    <string name="watch_held_channel">დაკავებული ზარები</string>
     <string name="watch_inbox_empty">ახალი არაფერია. Coach-ის პასუხები და თქვენი taf-ების შეტყობინებები აქ ჩნდება.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s წაუკითხავი შემოსულებში</item>
@@ -107,6 +108,7 @@
     <string name="watch_nothing_sent_until">არაფერი იგზავნება, სანამ არ დაამტკიცებთ.</string>
     <string name="watch_nothing_waits">არაფერი გელოდებათ.</string>
     <string name="watch_open_on_phone">გახსენით ტელეფონზე</string>
+    <string name="watch_opened_on_phone">გაიხსნა ტელეფონზე</string>
     <string name="watch_page_brief">მიმოხილვა</string>
     <string name="watch_page_inbox">შემოსულები</string>
     <string name="watch_paused_still_answers">დაპაუზებულია: მისი განრიგი გამორთულია. ის მაინც პასუხობს, რასაც გაუგზავნით.</string>

@@ -31,6 +31,7 @@
   "watch.held_calls": {
     "other": "保留中の呼び出し{count}件が確認を待っています"
   },
+  "watch.held_channel": "保留中の呼び出し",
   "watch.inbox_empty": "新着はありません。Coachの返信とtafの通知がここに届きます。",
   "watch.inbox_unread": {
     "other": "受信トレイに未読{count}件"
@@ -53,6 +54,7 @@
   "watch.nothing_sent_until": "承認するまで何も送信されません。",
   "watch.nothing_waits": "待機中の項目はありません。",
   "watch.open_on_phone": "スマートフォンで開く",
+  "watch.opened_on_phone": "スマートフォンで開きました",
   "watch.page.brief": "ブリーフィング",
   "watch.page.inbox": "受信トレイ",
   "watch.paused_still_answers": "一時停止中：スケジュールはオフです。送ったメッセージには引き続き答えます。",

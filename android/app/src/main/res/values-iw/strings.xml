@@ -2894,6 +2894,7 @@
         <item quantity="two">שתי קריאות מוחזקות זקוקות לך</item>
         <item quantity="other">%1$s קריאות מוחזקות זקוקות לך</item>
     </plurals>
+    <string name="watch_held_channel">קריאות מוחזקות</string>
     <string name="watch_inbox_empty">אין חדש. התשובות של Coach וההתראות של ה-taf שלך מגיעות לכאן.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">אחד שלא נקרא בדואר נכנס</item>
@@ -2920,6 +2921,7 @@
     <string name="watch_nothing_sent_until">שום דבר לא נשלח עד שתאשר.</string>
     <string name="watch_nothing_waits">שום דבר לא ממתין לך.</string>
     <string name="watch_open_on_phone">פתיחה בטלפון</string>
+    <string name="watch_opened_on_phone">נפתח בטלפון</string>
     <string name="watch_page_brief">סיכום</string>
     <string name="watch_page_inbox">דואר נכנס</string>
     <string name="watch_paused_still_answers">מושהה: התזמון שלו כבוי. הוא עדיין עונה למה שאתה שולח.</string>

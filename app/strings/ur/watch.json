@@ -33,6 +33,7 @@
     "one": "{count} روکی گئی کال کو آپ کی ضرورت ہے",
     "other": "{count} روکی گئی کالوں کو آپ کی ضرورت ہے"
   },
+  "watch.held_channel": "روکی گئی کالیں",
   "watch.inbox_empty": "کچھ نیا نہیں۔ Coach کے جوابات اور آپ کے tafs کے الرٹس یہاں آتے ہیں۔",
   "watch.inbox_unread": {
     "one": "ان باکس میں {count} نہ پڑھا ہوا",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "جب تک آپ منظور نہ کریں کچھ نہیں بھیجا جاتا۔",
   "watch.nothing_waits": "کچھ آپ کا منتظر نہیں۔",
   "watch.open_on_phone": "فون پر کھولیں",
+  "watch.opened_on_phone": "فون پر کھل گیا",
   "watch.page.brief": "بریف",
   "watch.page.inbox": "ان باکس",
   "watch.paused_still_answers": "رکا ہوا: اس کا شیڈول بند ہے۔ آپ جو بھیجیں اس کا جواب پھر بھی دیتا ہے۔",

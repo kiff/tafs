@@ -35,6 +35,7 @@
     "few": "{count} zadržana poziva čekaju vas",
     "other": "{count} zadržanih poziva čeka vas"
   },
+  "watch.held_channel": "Zadržani pozivi",
   "watch.inbox_empty": "Ništa novo. Ovdje stižu Coachovi odgovori i obavijesti vaših tafova.",
   "watch.inbox_unread": {
     "one": "Nepročitano u Pristiglima: {count}",
@@ -61,6 +62,7 @@
   "watch.nothing_sent_until": "Ništa se ne šalje dok ne odobrite.",
   "watch.nothing_waits": "Ništa ne čeka vas.",
   "watch.open_on_phone": "Otvorite na telefonu",
+  "watch.opened_on_phone": "Otvoreno na telefonu",
   "watch.page.brief": "Sažetak",
   "watch.page.inbox": "Pristigle",
   "watch.paused_still_answers": "Pauzirano: njegov je raspored isključen. I dalje odgovara na ono što pošaljete.",

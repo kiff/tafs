@@ -80,6 +80,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">%1$s 次已保留的呼叫需要您</item>
     </plurals>
+    <string name="watch_held_channel">已保留的呼叫</string>
     <string name="watch_inbox_empty">沒有新內容。Coach 的回覆和您的 taf 的通知會顯示在這裡。</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">收件匣中有 %1$s 則未讀</item>
@@ -102,6 +103,7 @@
     <string name="watch_nothing_sent_until">在您核准之前不會傳送任何內容。</string>
     <string name="watch_nothing_waits">沒有需要您處理的項目。</string>
     <string name="watch_open_on_phone">在手機上開啟</string>
+    <string name="watch_opened_on_phone">已在手機上開啟</string>
     <string name="watch_page_brief">摘要</string>
     <string name="watch_page_inbox">收件匣</string>
     <string name="watch_paused_still_answers">已暫停：它的排程已關閉。它仍會回覆您傳送的內容。</string>

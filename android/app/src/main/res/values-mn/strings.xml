@@ -2817,6 +2817,7 @@
         <item quantity="one">%1$s түр барьсан дуудлага таныг хүлээж байна</item>
         <item quantity="other">%1$s түр барьсан дуудлага таныг хүлээж байна</item>
     </plurals>
+    <string name="watch_held_channel">Түр барьсан дуудлагууд</string>
     <string name="watch_inbox_empty">Шинэ зүйл алга. Coach-ийн хариу болон таны taf-уудын мэдэгдэл энд ирнэ.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Ирсэн дотор %1$s уншаагүй</item>
@@ -2841,6 +2842,7 @@
     <string name="watch_nothing_sent_until">Та зөвшөөрөхгүй бол юу ч илгээгдэхгүй.</string>
     <string name="watch_nothing_waits">Таныг юу ч хүлээхгүй байна.</string>
     <string name="watch_open_on_phone">Утсан дээр нээх</string>
+    <string name="watch_opened_on_phone">Утсан дээр нээгдлээ</string>
     <string name="watch_page_brief">Товчлол</string>
     <string name="watch_page_inbox">Ирсэн</string>
     <string name="watch_paused_still_answers">Түр зогссон: хуваарь нь унтраастай. Таны илгээснийг одоо ч хариулна.</string>

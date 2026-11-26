@@ -35,6 +35,7 @@
     "few": "{count} sulaikytos užklausos laukia jūsų",
     "other": "{count} sulaikytų užklausų laukia jūsų"
   },
+  "watch.held_channel": "Sulaikytos užklausos",
   "watch.inbox_empty": "Nieko naujo. Čia patenka Coach atsakymai ir jūsų taf pranešimai.",
   "watch.inbox_unread": {
     "one": "{count} neskaityta gautuosiuose",
@@ -61,6 +62,7 @@
   "watch.nothing_sent_until": "Niekas nesiunčiama, kol nepatvirtinsite.",
   "watch.nothing_waits": "Niekas jūsų nelaukia.",
   "watch.open_on_phone": "Atidaryti telefone",
+  "watch.opened_on_phone": "Atidaryta telefone",
   "watch.page.brief": "Suvestinė",
   "watch.page.inbox": "Gautieji",
   "watch.paused_still_answers": "Pristabdyta: tvarkaraštis išjungtas. Jis vis tiek atsako į tai, ką siunčiate.",

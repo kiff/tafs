@@ -2740,6 +2740,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">ការហៅដែលផ្អាកទុក %1$s ត្រូវការអ្នក</item>
     </plurals>
+    <string name="watch_held_channel">ការហៅដែលផ្អាកទុក</string>
     <string name="watch_inbox_empty">គ្មានអ្វីថ្មីទេ។ ចម្លើយរបស់ Coach និងការជូនដំណឹងពី taf របស់អ្នកមកដល់ទីនេះ។</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">មិនទាន់អាន %1$s ក្នុងប្រអប់សារចូល</item>
@@ -2762,6 +2763,7 @@
     <string name="watch_nothing_sent_until">គ្មានអ្វីត្រូវបានផ្ញើទេ រហូតដល់អ្នកអនុម័ត។</string>
     <string name="watch_nothing_waits">គ្មានអ្វីរង់ចាំអ្នកទេ។</string>
     <string name="watch_open_on_phone">បើកនៅលើទូរសព្ទ</string>
+    <string name="watch_opened_on_phone">បានបើកនៅលើទូរសព្ទ</string>
     <string name="watch_page_brief">សេចក្តីសង្ខេប</string>
     <string name="watch_page_inbox">ប្រអប់សារចូល</string>
     <string name="watch_paused_still_answers">បានផ្អាក៖ កាលវិភាគរបស់វាបិទ។ វានៅតែឆ្លើយអ្វីដែលអ្នកផ្ញើ។</string>

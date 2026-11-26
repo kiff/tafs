@@ -33,6 +33,7 @@
     "one": "{count} задржано барање те чека",
     "other": "{count} задржани барања те чекаат"
   },
+  "watch.held_channel": "Задржани барања",
   "watch.inbox_empty": "Нема ништо ново. Одговорите на Coach и известувањата од твоите tafови пристигнуваат тука.",
   "watch.inbox_unread": {
     "one": "{count} непрочитано во Приемно сандаче",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Ништо не се испраќа додека не одобриш.",
   "watch.nothing_waits": "Ништо не те чека.",
   "watch.open_on_phone": "Отвори на телефонот",
+  "watch.opened_on_phone": "Отворено на телефонот",
   "watch.page.brief": "Преглед",
   "watch.page.inbox": "Приемно сандаче",
   "watch.paused_still_answers": "Паузиран: неговиот распоред е исклучен. Сè уште одговара на она што ќе му испратиш.",

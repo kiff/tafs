@@ -33,6 +33,7 @@
     "one": "{count} crida retinguda et necessita",
     "other": "{count} crides retingudes et necessiten"
   },
+  "watch.held_channel": "Crides retingudes",
   "watch.inbox_empty": "No hi ha res de nou. Les respostes de Coach i les alertes dels teus taf arriben aquí.",
   "watch.inbox_unread": {
     "one": "{count} sense llegir a la safata d'entrada",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "No s'envia res fins que ho aprovis.",
   "watch.nothing_waits": "No t'espera res.",
   "watch.open_on_phone": "Obre al telèfon",
+  "watch.opened_on_phone": "Obert al telèfon",
   "watch.page.brief": "Resum",
   "watch.page.inbox": "Safata d'entrada",
   "watch.paused_still_answers": "En pausa: la seva programació està desactivada. Encara respon el que li envies.",

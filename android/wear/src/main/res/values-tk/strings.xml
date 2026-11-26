@@ -83,6 +83,7 @@
         <item quantity="one">%1$s saklanan çagyryş size zerur</item>
         <item quantity="other">%1$s saklanan çagyryş size zerur</item>
     </plurals>
+    <string name="watch_held_channel">Saklanan çagyryşlar</string>
     <string name="watch_inbox_empty">Täze zat ýok. Coach-yň jogaplary we tafs-laryňyzyň duýduryşlary şu ýere düşýär.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Inbox-da %1$s okalmadyk</item>
@@ -107,6 +108,7 @@
     <string name="watch_nothing_sent_until">Siz tassyklamaňyzça hiç zat iberilmeýär.</string>
     <string name="watch_nothing_waits">Size hiç zat garaşmaýar.</string>
     <string name="watch_open_on_phone">Telefonda açyň</string>
+    <string name="watch_opened_on_phone">Telefonyňyzda açyldy</string>
     <string name="watch_page_brief">Gysgaça maglumat</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Bes edildi: onuň tertibi öçük. Ol henizem iberýän zadyňyza jogap berýär.</string>

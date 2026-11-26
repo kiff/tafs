@@ -163,6 +163,42 @@ class AccountMarkTest {
     return ofA
   }
 
+  /** A held call pushed while the app is open (`kept/needs-you`): nothing before this open has heard the mark; then at once. */
+  @Test fun aPushedHeldCallIsDrawnOnlyOnceThisOpenHeardTheMark() = runTest {
+    keptFromA()
+    inbox.items = emptyList()
+    val phone = Phone { Asked.Unreachable() }
+    val m = model(phone)
+    val refund = HeldLine("hold_2", "Refunds A", "Refund order A-2", null, null, refusable = true)
+    m.needsYouPushed(2, "2 held calls need you", listOf(heldA, refund))
+    assertTrue("not before a reply in this open carried the mark", m.inbox.value.isEmpty())
+    phone.answers = asA
+    m.refresh()
+    m.needsYouPushed(2, "2 held calls need you", listOf(heldA, refund))
+    assertEquals("the pushed call first", "held:hold_2", m.inbox.value.first().id)
+    val read = m.shown.value as WatchModel.Shown.Read
+    assertEquals(2, read.needsYou.count)
+    // A call the live read already showed keeps its amount and reason; the pushed one has none.
+    assertEquals(heldA.amount, read.needsYou.calls.first { it.holdId == "hold_a" }.amount)
+    assertEquals(2, tile.kept?.first)
+    // Answered on the phone: the push lists it no more, and its line goes.
+    m.needsYouPushed(1, "1 held call needs you", listOf(heldA))
+    assertTrue(m.inbox.value.none { it.id == "held:hold_2" })
+  }
+
+  /** Row 29: a hold that ran out (or was answered) leaves the Inbox at the watch's next read, never a Refuse on a dropped call. */
+  @Test fun anEndedHoldLeavesTheInboxAtTheNextRead() = runTest {
+    keptFromA()
+    val phone = Phone(asA)
+    val m = model(phone)
+    m.refresh()
+    assertTrue(m.inbox.value.any { it.id == "held:hold_a" })
+    phone.answers = readsAs(markA, WatchReply.NeedsYou(0, "Nothing is waiting.", emptyList()), tafsA)
+    m.refresh()
+    assertTrue("the ended hold is gone", m.inbox.value.none { it.id == "held:hold_a" })
+    assertEquals(0, (m.shown.value as WatchModel.Shown.Read).needsYou.count)
+  }
+
   @Test fun theSameMarkKeepsWhatWasKeptAndDrawsIt() = runTest {
     keptFromA()
     val phone = Phone(asA)

@@ -83,6 +83,7 @@
         <item quantity="one">%1$s chiamata trattenuta ti aspetta</item>
         <item quantity="other">%1$s chiamate trattenute ti aspettano</item>
     </plurals>
+    <string name="watch_held_channel">Chiamate trattenute</string>
     <string name="watch_inbox_empty">Niente di nuovo. Qui arrivano le risposte di Coach e gli avvisi dei tuoi tafs.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s da leggere in In arrivo</item>
@@ -107,6 +108,7 @@
     <string name="watch_nothing_sent_until">Non viene inviato nulla finché non approvi.</string>
     <string name="watch_nothing_waits">Niente ti aspetta.</string>
     <string name="watch_open_on_phone">Apri sul telefono</string>
+    <string name="watch_opened_on_phone">Aperto sul telefono</string>
     <string name="watch_page_brief">Riepilogo</string>
     <string name="watch_page_inbox">In arrivo</string>
     <string name="watch_paused_still_answers">In pausa: la sua pianificazione è ferma. Risponde comunque a ciò che invii.</string>

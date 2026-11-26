@@ -2817,6 +2817,7 @@
         <item quantity="one">%1$s thirrje e mbajtur ju pret</item>
         <item quantity="other">%1$s thirrje të mbajtura ju presin</item>
     </plurals>
+    <string name="watch_held_channel">Thirrje të mbajtura</string>
     <string name="watch_inbox_empty">Asgjë e re. Përgjigjet e Coach dhe njoftimet e tafs-eve tuaj vijnë këtu.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s e palexuar në Kutinë hyrëse</item>
@@ -2841,6 +2842,7 @@
     <string name="watch_nothing_sent_until">Asgjë nuk dërgohet derisa të miratoni.</string>
     <string name="watch_nothing_waits">Asgjë nuk ju pret.</string>
     <string name="watch_open_on_phone">Hapni në telefon</string>
+    <string name="watch_opened_on_phone">U hap në telefon</string>
     <string name="watch_page_brief">Përmbledhja</string>
     <string name="watch_page_inbox">Kutia hyrëse</string>
     <string name="watch_paused_still_answers">Pezulluar: orari i tij është joaktiv. Ende u përgjigjet atyre që dërgoni.</string>

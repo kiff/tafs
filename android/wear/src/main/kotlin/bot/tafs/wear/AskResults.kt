@@ -136,6 +136,28 @@ object KeptResults {
     WatchCache(cache, now).saveTafs(kept.tafs, kept.allHalted)
   }
 
+  /** The open app's model, while it's on screen: Needs you as the phone holds it now ([WatchModel.needsYouPushed]). */
+  @Volatile var needsYou: ((bot.tafs.watchlink.KeptNeedsYou) -> Unit)? = null
+
+  /**
+   * Needs you as the phone pushed it when a call was held or ended (`kept/needs-you`): into the open app at once, or, closed, the
+   * Inbox's held lines (new first, ended ones gone) and the tile's count, on a watch that keeps them (a screen lock, unlocked);
+   * then the watch's own alert for a held call new to it ([HeldCalls.alert]). Locked, nothing is kept, and the alert says only
+   * how many. The watch never approves: the call opens on Needs you, with Refuse and Approve on your phone.
+   */
+  fun needsYou(context: Context, kept: bot.tafs.watchlink.KeptNeedsYou, stores: Stores, now: Long = System.currentTimeMillis()) {
+    needsYou?.let { return it(kept) }
+    if (stores.signedOut) return
+    val inbox = stores.inbox?.takeIf { stores.secure }
+    val fresh = inbox?.let { HeldCalls.fresh(it.read(), it.dismissed(), kept.calls) }
+    if (stores.secure) {
+      stores.tile?.let { TileCount(it).saw(kept.count, now) }
+      inbox?.let { store -> HeldCalls.inbox(store.read(), store.dismissed(), kept.calls, now)?.let(store::write) }
+    }
+    NeedsYouTileService.update(context)
+    HeldCalls.alert(context, kept.calls, fresh)
+  }
+
   /** The open app's model, while it's on screen: the phone signed out ([WatchModel.phoneSignedOut]). */
   @Volatile var signedOut: (() -> Unit)? = null
 
@@ -162,6 +184,7 @@ object KeptResults {
       WatchLink.keptAskId(path) != null -> bytes?.let(WatchLink::decodeKeptAsk)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.ask?.takeIf { it.id == WatchLink.keptAskId(path) }?.let { ask(context, it, stores) }
       path == WatchLink.KEPT_MARKS -> bytes?.let(WatchLink::decodeKeptMarks)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { marks(bot.tafs.watchlink.WatchReply.InboxMarks(it.read, it.dismissed), stores) }
       path == WatchLink.KEPT_TAFS -> bytes?.let(WatchLink::decodeKeptTafs)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { tafList(it, stores) }
+      path == WatchLink.KEPT_NEEDS_YOU -> bytes?.let(WatchLink::decodeKeptNeedsYou)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { needsYou(context, it, stores) }
       WatchLink.keptChatTaf(path) != null -> bytes?.let(WatchLink::decodeKeptChat)?.takeIf { it.tafId == WatchLink.keptChatTaf(path) && AccountMark.keptTaken(held, it.mark) }?.let { chat(it.tafId, it.lines, stores) }
     }
   }

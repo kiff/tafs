@@ -2817,6 +2817,7 @@
         <item quantity="one">%1$s visszatartott hívás vár rád</item>
         <item quantity="other">%1$s visszatartott hívás vár rád</item>
     </plurals>
+    <string name="watch_held_channel">Visszatartott hívások</string>
     <string name="watch_inbox_empty">Nincs semmi új. A Coach válaszai és a tafjaid riasztásai ide érkeznek.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s olvasatlan a Bejövőben</item>
@@ -2841,6 +2842,7 @@
     <string name="watch_nothing_sent_until">Semmi sem megy el, amíg jóvá nem hagyod.</string>
     <string name="watch_nothing_waits">Semmi sem vár rád.</string>
     <string name="watch_open_on_phone">Megnyitás a telefonon</string>
+    <string name="watch_opened_on_phone">Megnyitva a telefonodon</string>
     <string name="watch_page_brief">Összefoglaló</string>
     <string name="watch_page_inbox">Bejövő</string>
     <string name="watch_paused_still_answers">Szüneteltetve: az ütemezése ki van kapcsolva. Arra, amit küldesz, továbbra is válaszol.</string>

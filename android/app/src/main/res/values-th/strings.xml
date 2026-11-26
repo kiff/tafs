@@ -2740,6 +2740,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">%1$s การเรียกที่พักไว้ต้องการคุณ</item>
     </plurals>
+    <string name="watch_held_channel">การเรียกที่พักไว้</string>
     <string name="watch_inbox_empty">ไม่มีอะไรใหม่ คำตอบของ Coach และการแจ้งเตือนจาก taf ของคุณจะมาที่นี่</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">%1$s ยังไม่ได้อ่านในกล่องข้อความ</item>
@@ -2762,6 +2763,7 @@
     <string name="watch_nothing_sent_until">จะไม่มีอะไรถูกส่งจนกว่าคุณจะอนุมัติ</string>
     <string name="watch_nothing_waits">ไม่มีอะไรรอคุณอยู่</string>
     <string name="watch_open_on_phone">เปิดบนโทรศัพท์</string>
+    <string name="watch_opened_on_phone">เปิดบนโทรศัพท์แล้ว</string>
     <string name="watch_page_brief">สรุป</string>
     <string name="watch_page_inbox">กล่องข้อความ</string>
     <string name="watch_paused_still_answers">หยุดชั่วคราว: กำหนดการของมันปิดอยู่ มันยังตอบสิ่งที่คุณส่ง</string>

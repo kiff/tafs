@@ -3020,6 +3020,7 @@ object Words {
     val haltingAll: String get() = Res.s(R.string.watch_halting_all)
     val hear: String get() = Res.s(R.string.watch_hear)
     fun heldCalls(count: Int): String = Res.p(R.plurals.watch_held_calls, count, Res.number(count))
+    val heldChannel: String get() = Res.s(R.string.watch_held_channel)
     val inboxEmpty: String get() = Res.s(R.string.watch_inbox_empty)
     fun inboxUnread(count: Int): String = Res.p(R.plurals.watch_inbox_unread, count, Res.number(count))
     val itsSettings: String get() = Res.s(R.string.watch_its_settings)
@@ -3038,6 +3039,7 @@ object Words {
     val nothingSentUntil: String get() = Res.s(R.string.watch_nothing_sent_until)
     val nothingWaits: String get() = Res.s(R.string.watch_nothing_waits)
     val openOnPhone: String get() = Res.s(R.string.watch_open_on_phone)
+    val openedOnPhone: String get() = Res.s(R.string.watch_opened_on_phone)
     object Page {
       val brief: String get() = Res.s(R.string.watch_page_brief)
       val inbox: String get() = Res.s(R.string.watch_page_inbox)

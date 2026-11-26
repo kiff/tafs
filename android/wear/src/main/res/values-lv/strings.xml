@@ -86,6 +86,7 @@
         <item quantity="one">%1$s aizturēts izsaukums gaida tevi</item>
         <item quantity="other">%1$s aizturēti izsaukumi gaida tevi</item>
     </plurals>
+    <string name="watch_held_channel">Aizturētie izsaukumi</string>
     <string name="watch_inbox_empty">Nekā jauna. Šeit nonāk Coach atbildes un tavu taf paziņojumi.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="zero">Iesūtnē nelasīti: %1$s</item>
@@ -112,6 +113,7 @@
     <string name="watch_nothing_sent_until">Nekas netiek nosūtīts, kamēr tu neapstiprini.</string>
     <string name="watch_nothing_waits">Nekas tevi negaida.</string>
     <string name="watch_open_on_phone">Atvērt tālrunī</string>
+    <string name="watch_opened_on_phone">Atvērts tavā tālrunī</string>
     <string name="watch_page_brief">Kopsavilkums</string>
     <string name="watch_page_inbox">Iesūtne</string>
     <string name="watch_paused_still_answers">Iepauzēts: tā grafiks ir izslēgts. Tas joprojām atbild uz to, ko tu sūti.</string>

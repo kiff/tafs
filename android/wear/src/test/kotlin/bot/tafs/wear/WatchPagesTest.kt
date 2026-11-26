@@ -11,6 +11,8 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -159,9 +161,36 @@ class WatchPagesTest {
           pages = pages(false), linking = true)
       }
     }
+    compose.mainClock.advanceTimeBy(LINKING_SHOWN_AFTER_MS + 100)
     compose.onNodeWithTag(LINKING).assertExists()
     compose.onNodeWithText(Words.Watch.linking).assertExists()
     compose.onAllNodesWithText(Words.Watch.askingPhone).assertCountEquals(0)
+  }
+
+  /** Open on phone says what it did (row 28): the phone opened tafs, or it wasn't reached; nothing before it's pressed. */
+  @Test fun openOnPhoneSaysWhatItDid() {
+    assertEquals("Opened on your phone", openedLine(true))
+    assertEquals(Words.Watch.checkPhoneTitle, openedLine(false))
+    assertNull(openedLine(null))
+    // Drawn with nothing to say, it shows no dialog and takes nothing from the screen under it.
+    compose.setContent { MaterialTheme { OpenedOnPhone(null) {} } }
+    compose.onAllNodes(androidx.compose.ui.test.isDialog()).assertCountEquals(0)
+  }
+
+  /** A phone that confirms within LINKING_SHOWN_AFTER_MS shows no linking line at all: the screen stays black until then. */
+  @Test fun theLinkingLineWaitsHalfASecond() {
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      MaterialTheme {
+        WatchPages(WatchModel.Shown.Asking, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = emptyList(), ready = emptyList(), act = actions,
+          pages = pages(false), linking = true)
+      }
+    }
+    compose.mainClock.advanceTimeByFrame()
+    compose.onNodeWithTag(LINKING).assertExists()
+    compose.onAllNodesWithText(Words.Watch.linking).assertCountEquals(0)
+    compose.mainClock.advanceTimeBy(LINKING_SHOWN_AFTER_MS + 100)
+    compose.onNodeWithText(Words.Watch.linking).assertExists()
   }
 
   /** Tries spent with something shown: one small line and Try again over it, never a screen of its own. */

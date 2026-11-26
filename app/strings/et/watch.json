@@ -33,6 +33,7 @@
     "one": "{count} kinni peetud päring vajab sind",
     "other": "{count} kinni peetud päringut vajab sind"
   },
+  "watch.held_channel": "Kinni peetud päringud",
   "watch.inbox_empty": "Midagi uut pole. Siia jõuavad Coachi vastused ja sinu tafide teavitused.",
   "watch.inbox_unread": {
     "one": "{count} lugemata postkastis",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Midagi ei saadeta enne, kui kinnitad.",
   "watch.nothing_waits": "Miski ei oota sind.",
   "watch.open_on_phone": "Ava telefonis",
+  "watch.opened_on_phone": "Avatud sinu telefonis",
   "watch.page.brief": "Kokkuvõte",
   "watch.page.inbox": "Postkast",
   "watch.paused_still_answers": "Pausil: selle ajakava on väljas. See vastab ikka sellele, mida saadad.",

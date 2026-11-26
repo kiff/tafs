@@ -13,6 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.wear.compose.material3.confirmationDialogCurvedText
+import androidx.wear.compose.material3.openOnPhoneDialogCurvedText
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
@@ -256,6 +259,9 @@ class WatchActivity : ComponentActivity() {
             signedOutHere = signedOutHere, calendar = calendar, account = account, thread = thread, answered = answered, linking = linking, tafChatOff = tafChatOff, wholes = wholes)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing, whole = result?.let { wholes[it.id] })
+        // Open on phone, said on the watch (row 28): the platform's own confirmation, in tafs's words, then back where it was.
+        val openedNow by opened.collectAsState()
+        OpenedOnPhone(openedNow) { opened.value = null }
       }
     }
     handle(intent)
@@ -308,6 +314,7 @@ class WatchActivity : ComponentActivity() {
     KeptResults.marks = { marks -> runOnUiThread { model.takeMarks(marks) } }
     KeptResults.chats = { tafId, lines -> runOnUiThread { model.tafChatChanged(tafId, lines) } }
     KeptResults.tafs = { kept -> runOnUiThread { model.tafsChanged(kept.tafs, kept.allHalted, kept.zone) } }
+    KeptResults.needsYou = { kept -> runOnUiThread { model.needsYouPushed(kept.count, kept.words, kept.calls) } }
     // The phone signed out while the app is open: everything goes now, then the phone is read again.
     KeptResults.signedOut = { runOnUiThread { model.phoneSignedOut(); lifecycleScope.launch { model.refresh() } } }
     opening = lifecycleScope.launch {
@@ -324,6 +331,7 @@ class WatchActivity : ComponentActivity() {
     KeptResults.marks = null
     KeptResults.chats = null
     KeptResults.tafs = null
+    KeptResults.needsYou = null
     KeptResults.signedOut = null
     opening?.cancel()
     opening = null
@@ -360,9 +368,20 @@ class WatchActivity : ComponentActivity() {
   }
 
   /** Opens tafs on the phone, at [where] (`needs-you`): approvals, and anything longer than the watch draws, are the phone's. */
+  /**
+   * Open on phone's outcome, as the watch's own confirmation over whatever screen it was pressed on, which stays: true, the phone
+   * opened tafs there ("Opened on your phone"); false, it wasn't reached ("Check your phone"); null, nothing to say.
+   */
+  private val opened = kotlinx.coroutines.flow.MutableStateFlow<Boolean?>(null)
+
   private fun openOnPhone(where: String) {
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(WatchLink.OPEN_ON_PHONE + where)).addCategory(Intent.CATEGORY_BROWSABLE)
-    runCatching { RemoteActivityHelper(this).startRemoteActivity(intent) }
+    val started = runCatching { RemoteActivityHelper(this).startRemoteActivity(intent) }.getOrNull()
+    if (started == null) {
+      opened.value = false
+      return
+    }
+    started.addListener({ opened.value = runCatching { started.get() }.isSuccess }, mainExecutor)
   }
 
   companion object {
@@ -382,6 +401,39 @@ class WatchActivity : ComponentActivity() {
     private fun ms(v: Long?): String = v?.toString() ?: "–"
   }
 }
+
+/**
+ * What Open on phone did, said on the watch (row 28): opened ([opened] true), the platform's Open on phone confirmation with
+ * "Opened on your phone"; not reached (false), its failure confirmation with "Check your phone". Each goes by itself.
+ */
+@Composable
+internal fun OpenedOnPhone(opened: Boolean?, done: () -> Unit) {
+  val openedStyle = androidx.wear.compose.material3.OpenOnPhoneDialogDefaults.curvedTextStyle
+  val failedStyle = androidx.wear.compose.material3.ConfirmationDialogDefaults.curvedTextStyle
+  val openedWords = openedLine(true).orEmpty()
+  val failedWords = openedLine(false).orEmpty()
+  androidx.wear.compose.material3.OpenOnPhoneDialog(
+    visible = opened == true, onDismissRequest = done,
+    curvedText = { openOnPhoneDialogCurvedText(openedWords, openedStyle) },
+    modifier = Modifier.testTag(OPENED_ON_PHONE),
+  )
+  androidx.wear.compose.material3.FailureConfirmationDialog(
+    visible = opened == false, onDismissRequest = done,
+    curvedText = { confirmationDialogCurvedText(failedWords, failedStyle) },
+    modifier = Modifier.testTag(OPEN_ON_PHONE_FAILED),
+  )
+}
+
+/** What Open on phone's confirmation says: opened, "Opened on your phone"; not reached, "Check your phone"; nothing to say, null. */
+internal fun openedLine(opened: Boolean?): String? = when (opened) {
+  true -> Words.Watch.openedOnPhone
+  false -> Words.Watch.checkPhoneTitle
+  null -> null
+}
+
+/** The Open on phone confirmations, for the screen tests. */
+internal const val OPENED_ON_PHONE = "opened-on-phone"
+internal const val OPEN_ON_PHONE_FAILED = "open-on-phone-failed"
 
 /** What the screen can do: everything that reaches the phone goes through [WatchModel]. */
 internal class Actions(

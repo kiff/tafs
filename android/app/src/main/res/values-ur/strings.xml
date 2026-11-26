@@ -2817,6 +2817,7 @@
         <item quantity="one">%1$s روکی گئی کال کو آپ کی ضرورت ہے</item>
         <item quantity="other">%1$s روکی گئی کالوں کو آپ کی ضرورت ہے</item>
     </plurals>
+    <string name="watch_held_channel">روکی گئی کالیں</string>
     <string name="watch_inbox_empty">کچھ نیا نہیں۔ Coach کے جوابات اور آپ کے tafs کے الرٹس یہاں آتے ہیں۔</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">ان باکس میں %1$s نہ پڑھا ہوا</item>
@@ -2841,6 +2842,7 @@
     <string name="watch_nothing_sent_until">جب تک آپ منظور نہ کریں کچھ نہیں بھیجا جاتا۔</string>
     <string name="watch_nothing_waits">کچھ آپ کا منتظر نہیں۔</string>
     <string name="watch_open_on_phone">فون پر کھولیں</string>
+    <string name="watch_opened_on_phone">فون پر کھل گیا</string>
     <string name="watch_page_brief">بریف</string>
     <string name="watch_page_inbox">ان باکس</string>
     <string name="watch_paused_still_answers">رکا ہوا: اس کا شیڈول بند ہے۔ آپ جو بھیجیں اس کا جواب پھر بھی دیتا ہے۔</string>

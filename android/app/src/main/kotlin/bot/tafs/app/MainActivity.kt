@@ -163,6 +163,7 @@ class MainActivity : FragmentActivity() {
     }
     // The taf list kept for the watch follows the screen's changes too (a taf added or halted here), once the watch uses tafs.
     app.watchTafs
+    app.watchNeedsYou
     // The prompt for approving shows on this activity while it is on screen.
     app.authenticator.attach(this)
     // So does Google Play's purchase sheet, where buying is on.

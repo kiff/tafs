@@ -33,6 +33,7 @@
     "one": "{count} saxlanılan çağırış sizi gözləyir",
     "other": "{count} saxlanılan çağırış sizi gözləyir"
   },
+  "watch.held_channel": "Saxlanılan çağırışlar",
   "watch.inbox_empty": "Yeni heç nə yoxdur. Coach-un cavabları və taf-larınızın bildirişləri burada görünür.",
   "watch.inbox_unread": {
     "one": "Gələnlərdə {count} oxunmamış",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "Siz təsdiq edənə qədər heç nə göndərilmir.",
   "watch.nothing_waits": "Sizi heç nə gözləmir.",
   "watch.open_on_phone": "Telefonda açın",
+  "watch.opened_on_phone": "Telefonunuzda açıldı",
   "watch.page.brief": "Xülasə",
   "watch.page.inbox": "Gələnlər",
   "watch.paused_still_answers": "Fasilədədir: cədvəli söndürülüb. O, hələ də göndərdiklərinizə cavab verir.",

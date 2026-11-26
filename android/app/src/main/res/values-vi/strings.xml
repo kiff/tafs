@@ -2740,6 +2740,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">%1$s lượt gọi đang giữ cần bạn</item>
     </plurals>
+    <string name="watch_held_channel">Lượt gọi đang giữ</string>
     <string name="watch_inbox_empty">Chưa có gì mới. Phản hồi của Coach và thông báo từ các taf của bạn sẽ đến đây.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">%1$s chưa đọc trong Hộp thư</item>
@@ -2762,6 +2763,7 @@
     <string name="watch_nothing_sent_until">Không có gì được gửi cho đến khi bạn phê duyệt.</string>
     <string name="watch_nothing_waits">Không có gì đang chờ bạn.</string>
     <string name="watch_open_on_phone">Mở trên điện thoại</string>
+    <string name="watch_opened_on_phone">Đã mở trên điện thoại</string>
     <string name="watch_page_brief">Tóm tắt</string>
     <string name="watch_page_inbox">Hộp thư</string>
     <string name="watch_paused_still_answers">Đã tạm dừng: lịch của nó đã tắt. Nó vẫn trả lời những gì bạn gửi.</string>

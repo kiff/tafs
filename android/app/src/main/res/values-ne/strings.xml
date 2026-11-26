@@ -2817,6 +2817,7 @@
         <item quantity="one">%1$s रोकिएको कलले तपाईंलाई पर्खिरहेको छ</item>
         <item quantity="other">%1$s रोकिएका कलले तपाईंलाई पर्खिरहेका छन्</item>
     </plurals>
+    <string name="watch_held_channel">रोकिएका कलहरू</string>
     <string name="watch_inbox_empty">केही नयाँ छैन। Coach का जवाफ र तपाईंका taf का सूचना यहाँ आइपुग्छन्।</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">इनबक्समा %1$s नपढिएको</item>
@@ -2841,6 +2842,7 @@
     <string name="watch_nothing_sent_until">तपाईंले स्वीकृत नगरेसम्म केही पठाइँदैन।</string>
     <string name="watch_nothing_waits">तपाईंलाई कुनै कुराले पर्खिरहेको छैन।</string>
     <string name="watch_open_on_phone">फोनमा खोल्नुहोस्</string>
+    <string name="watch_opened_on_phone">फोनमा खोलियो</string>
     <string name="watch_page_brief">सारांश</string>
     <string name="watch_page_inbox">इनबक्स</string>
     <string name="watch_paused_still_answers">पज गरिएको: यसको तालिका बन्द छ। तपाईंले पठाएकालाई यसले अझै जवाफ दिन्छ।</string>

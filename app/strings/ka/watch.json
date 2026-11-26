@@ -33,6 +33,7 @@
     "one": "{count} დაკავებული ზარი გელოდებათ",
     "other": "{count} დაკავებული ზარი გელოდებათ"
   },
+  "watch.held_channel": "დაკავებული ზარები",
   "watch.inbox_empty": "ახალი არაფერია. Coach-ის პასუხები და თქვენი taf-ების შეტყობინებები აქ ჩნდება.",
   "watch.inbox_unread": {
     "one": "{count} წაუკითხავი შემოსულებში",
@@ -57,6 +58,7 @@
   "watch.nothing_sent_until": "არაფერი იგზავნება, სანამ არ დაამტკიცებთ.",
   "watch.nothing_waits": "არაფერი გელოდებათ.",
   "watch.open_on_phone": "გახსენით ტელეფონზე",
+  "watch.opened_on_phone": "გაიხსნა ტელეფონზე",
   "watch.page.brief": "მიმოხილვა",
   "watch.page.inbox": "შემოსულები",
   "watch.paused_still_answers": "დაპაუზებულია: მისი განრიგი გამორთულია. ის მაინც პასუხობს, რასაც გაუგზავნით.",
