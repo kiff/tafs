@@ -780,6 +780,7 @@ export const sk: Words = {
   start_lead: "Spustenie dá Coachovi nástroje nižšie. Schvaľuješ ich na tomto zariadení.",
   start_button: "Spustiť",
   plan_needed: "Vyber tarif, aby si to mohol spustiť.",
+  handover_not_finished: "odovzdanie od Coacha nebolo dokončené",
   cts_title: "Dajte Coach jeho nástroje",
   cts_intro: "Coach ich potrebuje, aby sa staral o vaše tafy.",
   cts_details: "Každý nástroj a jeho limity",
