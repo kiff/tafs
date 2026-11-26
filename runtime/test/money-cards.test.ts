@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countOnAmountWrite, dayTotalTwice, type ApprovalGrant } from "../src/cloud/approval.js";
+import { countOnAmountWrite, dayTotalTwice, MONEY_UNBUILT, type ApprovalGrant } from "../src/cloud/approval.js";
 import { cardsFromRules, moneyCardsOff, rulesAgreement, rulesMismatch, rulesUnnamedFigures, saysEveryCallAsks, type AgreedRule, type MoneyCard } from "../src/cloud/rules.js";
 
 // A phone test, 25 Nov: "every refund waits for you, a refund over €50 is refused, €200
@@ -299,6 +299,44 @@ describe("words that say every call asks hold the rule to a count of 0 a day tha
       "A refund over 50 EUR is refused. Every call is pinned to test mode.", "Listing and reading payments is open.",
       "Chaque remboursement de plus de 50 EUR attend votre accord.",
     ]) expect(saysEveryCallAsks(text), text).toBe(false);
+  });
+
+  // An Eval, 26 Nov: the owner said "a single refund over 5 euros should come to me to approve on my phone first", and the
+  // notice put the figure after the verb. Read as every call, the rules were held to a count of 0 a day that asks, and the
+  // follow-up's €4 refund was held. A threshold word with a figure after the verb, in the same clause, is a figure that asks.
+  it("a figure after the verb, past a threshold word, is a figure that asks, in each language", () => {
+    for (const text of [
+      "Every refund asks you first when it's over 5 EUR.", "Every refund asks you first if it is over €5.",
+      "Every refund asks you first if over €5.", "Each refund waits for your approval when it's above 5 euros.",
+      "Each refund needs your approval on your phone once it's over 5 EUR; 50 EUR a day at most.",
+      "Every refund goes to you first when it exceeds 5 EUR.", "Each refund is approved by you if it's more than €5.",
+      "Chaque remboursement vous demande d'abord au-delà de 5 €.", "Chaque remboursement attend votre accord s'il dépasse 5 €.",
+      "Jede Erstattung fragt dich zuerst wenn sie über 5 € liegt.", "Jede Erstattung wartet auf deine Zustimmung ab 5 €.",
+      "Cada reembolso te pregunta primero cuando supera 5 €.", "Ogni rimborso ti chiede prima se supera 5 €.",
+      "Elke terugbetaling vraagt je eerst als die boven 5 € komt.", "Każdy zwrot pyta cię najpierw gdy przekracza 5 €.",
+      "Cada reembolso pergunta-lhe primeiro quando passar de 5 €.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(false);
+  });
+
+  it("a figure that is another rule's, after a comma, an \"and\" or a stop, still leaves every call read", () => {
+    for (const text of [
+      "Every refund asks you first, and refunds over €200 a day are refused.",
+      "Every refund asks you first and refunds over €200 a day are refused.",
+      "Every refund asks you first, up to €50 a day.", "Every refund asks you first up to €50 a day.",
+      "Every refund asks you first. A refund over 50 EUR is refused.",
+      "Chaque remboursement attend votre accord, et au-delà de 200 € par jour il est refusé.",
+      "Jede Erstattung fragt dich zuerst und über 200 € am Tag wird abgelehnt.",
+      // After a comma, a threshold reads as another clause: every call, so the rules are shown again (the safe side).
+      "Every refund asks you first, when it's over €5.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(true);
+  });
+
+  it("the refusal names the words as what's off, keeps the owner's figure, and the count of 0 only for every call", () => {
+    const words = MONEY_UNBUILT.every_call_unheld;
+    expect(words).toContain("keep their figure and rule");
+    expect(words).toContain("before the verb");
+    expect(words).toContain("Only if the owner said every call asks");
+    expect(words).not.toContain("or words that say which calls ask");
   });
 
   it("under words that say every call asks, a figure inheriting ask, or a positive cap that asks, gives no Cards", () => {

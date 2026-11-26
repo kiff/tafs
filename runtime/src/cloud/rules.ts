@@ -736,7 +736,8 @@ export function unpinnedConnection(grants: readonly ApprovalGrant[], lines: read
  * Whether a rules notice's words say every call asks the owner: "every refund asks you first", "chaque remboursement attend
  * votre accord". Read in the languages tafs cloud speaks to Coach in most (en, fr, de, es, it, nl, pl, pt), as each says it:
  * a word for every or each, then the verb that asks, with no digit between them, since "every refund over 50 EUR asks" is a
- * figure that asks, not every call. Used only to hold a money rule that asks to a count of 0 a day (moneyCardsOf); words in
+ * figure that asks, not every call; nor after the verb behind a word that sets a threshold in the same clause ("every refund
+ * asks you first when it's over 5 EUR"), up to a comma or the language's "and" or "but". Used only to hold a money rule that asks to a count of 0 a day (moneyCardsOf); words in
  * another language aren't read, and the rule's own figures stand, as before.
  */
 export function saysEveryCallAsks(text: string): boolean {
@@ -745,6 +746,26 @@ export function saysEveryCallAsks(text: string): boolean {
 }
 
 const between = "[^\\d.;:!?\\n]{1,60}?";
+// Words that set a threshold, in the same order as the languages below: one of them with a figure after the verb, in the
+// same clause, is a figure that asks, not every call ("every refund asks you first when it's over 5 EUR"; an Eval, 26 Nov,
+// read it as every call, the rules were held to a count of 0 a day, and a €4 refund was held). "up to €50 a day" names no
+// threshold, so "every refund asks you first up to €50 a day" still reads as every call.
+const THRESHOLDS = [
+  "when|whenever|if|once|over|above|past|beyond|more than|greater than|exceeds?|exceeding",
+  "quand|si|s'il|s’il|dès que|dès qu'il|dès qu’il|lorsque|lorsqu'il|lorsqu’il|au-delà de|au-dessus de|plus de|dépasse|dépassant|supérieure? à",
+  "wenn|falls|sobald|über|ab|mehr als|übersteigt|oberhalb von|höher als",
+  "cuando|si|una vez que|más de|por encima de|supera|superior a|a partir de",
+  "quando|se|oltre|sopra|più di|supera|superiore a|una volta che",
+  "als|wanneer|zodra|boven|meer dan|vanaf|overschrijdt|hoger dan",
+  "gdy|jeśli|jeżeli|kiedy|powyżej|ponad|więcej niż|przekracza|przekroczy",
+  "quando|se|acima de|mais de|ultrapassa|ultrapassar|superior a|passar de|a partir de",
+];
+// Where the clause after the verb ends for that look: a comma, or the language's "and" or "but", as well as a stop. So
+// "every refund asks you first, and refunds over €200 a day are refused" still reads as every call: that figure is another
+// rule's.
+const CLAUSE_JOINS = ["and|but|while", "et|mais", "und|aber", "y|pero", "e|ma", "en|maar", "i|a|ale", "e|mas"];
+const figureAfter = (thresholds: string, joins: string) =>
+  `(?!(?:(?!(?<![\\p{L}\\p{N}])(?:${joins})(?![\\p{L}\\p{N}]))[^.,;:!?\\n]){0,80}?(?<![\\p{L}\\p{N}])(?:${thresholds})(?![\\p{L}\\p{N}])[^\\d.,;:!?\\n]{0,30}?\\d)`;
 const EVERY_CALL_ASKS: RegExp[] = [
   ["every|each", [
     "(?:will |must |should |always |first )?asks? (?:you|first)",
@@ -799,4 +820,4 @@ const EVERY_CALL_ASKS: RegExp[] = [
     "(?:é|será|tem de ser|deve ser) (?:aprovad[oa]|confirmad[oa]|autorizad[oa]) por (?:você|ti)",
     "(?:passa|vai) (?:primeiro )?por (?:você|ti)",
   ].join("|")],
-].map(([every, asks]) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])`, "u"));
+].map(([every, asks], i) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])${figureAfter(THRESHOLDS[i]!, CLAUSE_JOINS[i]!)}`, "u"));
