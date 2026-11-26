@@ -710,7 +710,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     Object.assign(stored, { status: "ERROR", error: words, code: "ai_unavailable" });
     const r = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
     // A code tafs cloud knows is worded from its own catalog, whole, in the person's language (docs/languages.md).
-    expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [], code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable } });
+    expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [], code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable, retry: false } });
     const german = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET", language: "de-AT,de;q=0.9,en;q=0.5" });
     expect(german.events.at(-1)!.data).toMatchObject({ code: "ai_unavailable", words: wordsIn("de").code_ai_unavailable });
     // A day's AI limit ends with tafs cloud's words and when it goes on (kiff/agents' resets_at).
@@ -718,7 +718,21 @@ describe("a message streamed (kiff/tafs#60)", () => {
     const limited = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
     expect(limited.events.at(-1)!.data).toMatchObject({ code: "ai_limit_service" });
     expect(String(limited.events.at(-1)!.data.words)).toMatch(/^tafs has reached today's AI capacity, .* it goes on at .*\d\d:\d\d\.$/);
+    // `retry` is the thread's rule (retryOffered): a run that did nothing may be sent again, but not at a day's AI
+    // limit before it starts again, nor with no time to read; once it has, it may.
+    const end = async () => (await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" })).events.at(-1)!.data;
+    Object.assign(stored, { sent: 0, turns: 0 });
+    expect((await end()).retry).toBe(false);
+    Object.assign(stored, { resets_at: undefined });
+    expect((await end()).retry).toBe(false);
+    Object.assign(stored, { code: "ai_limit_account", resets_at: "2000-01-01T00:00:00Z" });
+    expect((await end()).retry).toBe(true);
     Object.assign(stored, { code: "ai_unavailable", resets_at: undefined });
+    expect((await end()).retry).toBe(true);
+    // One that acted can't be sent again, whatever its code.
+    Object.assign(stored, { sent: 1 });
+    expect((await end()).retry).toBe(false);
+    Object.assign(stored, { sent: undefined, turns: undefined });
     // One it doesn't know passes kiff/agents' words through, whole: all three sentences, never cut to two.
     Object.assign(stored, { code: "new_code" });
     const unknown = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET", language: "de" });
@@ -726,12 +740,12 @@ describe("a message streamed (kiff/tafs#60)", () => {
     // A failure with no code ends as before: kiff/agents' error text isn't passed on as words.
     Object.assign(stored, { error: "anthropic: 500 internal", code: undefined });
     const plain = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
-    expect(plain.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [] } });
+    expect(plain.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [], retry: false } });
     // A code that isn't one (spaces, capitals, too long) isn't passed on either.
     for (const bad of ["AI Unavailable", "x".repeat(41), ""]) {
       Object.assign(stored, { error: words, code: bad });
       const odd = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
-      expect(odd.events.at(-1)!.data).toEqual({ status: "ERROR", stop: "", done: [] });
+      expect(odd.events.at(-1)!.data).toEqual({ status: "ERROR", stop: "", done: [], retry: false });
     }
   });
 
@@ -749,7 +763,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
       ],
     });
     const r = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
-    expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [{ tool: "create_refund", resource: "ch_3001", invocation: "tc-1" }, { tool: "send_email" }] } });
+    expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [{ tool: "create_refund", resource: "ch_3001", invocation: "tc-1" }, { tool: "send_email" }], retry: false } });
     expect(r.raw).not.toContain("ch_secret");
     expect(r.raw).not.toContain("secret words");
   });

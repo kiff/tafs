@@ -15,7 +15,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, relevantNow, stateOf, summary } from "./home.js";
 import { AGENTS_MAX_INPUT, heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { failedLine, failureCode, retrySafe, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
+import { failedLine, failureCode, retryOffered, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
@@ -4063,11 +4063,8 @@ interface Failed {
 function failedOf(r: Run, lang: Lang, zone = "UTC", now = new Date()): Failed {
   const w = wordsIn(lang);
   const code = failureCode(r);
-  // At a day's AI limit, sending it again before the limit starts again would only stop at it again: no Try again
-  // until kiff/agents' resets_at, nor when it gives none to read.
-  const resets = Date.parse(r.resets_at ?? "");
-  const limited = (code === "ai_limit_account" || code === "ai_limit_service") && !(resets <= now.getTime());
-  const retry = !limited && retrySafe(r);
+  // Safe to send again, and could work: not at a day's AI limit before it starts again (retryOffered).
+  const retry = retryOffered(r, now);
   // Each reason's line, and its partway line once the run had acted: that one claims nothing about credits or "before
   // it changed anything", and offers no Try again. A kiff/agents code tafs cloud doesn't word passes its words on.
   const lines: Record<string, [string, string]> = {
@@ -7870,7 +7867,9 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         // A run kiff/agents stopped with a code (`ai_unavailable`) ends with it and its words, for the apps to show as
         // they are; any other failure as before.
         const coded = runFailure(d, lang, { zone, now: new Date(now()) });
-        return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done), ...(coded ?? {}) } : {}) });
+        // `retry`: whether the app offers Try again, by the thread's own rule (retryOffered), so both say the same.
+        return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR"
+          ? { done: wentThrough(d.done), ...(coded ?? {}), retry: retryOffered(d as Parameters<typeof retryOffered>[0], new Date(now())) } : {}) });
       }
       default:
         return undefined;

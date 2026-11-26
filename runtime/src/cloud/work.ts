@@ -191,6 +191,19 @@ export function retrySafe(r: { tally?: Run["tally"]; done?: unknown[]; sent?: nu
   return (r.turns ?? 0) === 0 || r.tally !== undefined;
 }
 
+/**
+ * Whether a failed run offers Try again (the thread's `failed.retry`, the stream's `end.retry`): only when sending it
+ * again is safe (retrySafe) and could work. At a day's AI limit (`ai_limit_account`, `ai_limit_service`) it would only
+ * stop at the limit again, so not before kiff/agents' `resets_at`, nor when it gives none to read.
+ */
+export function retryOffered(r: Parameters<typeof retrySafe>[0] & { code?: unknown; resets_at?: unknown }, now: Date): boolean {
+  if (r.code === "ai_limit_account" || r.code === "ai_limit_service") {
+    const resets = Date.parse(typeof r.resets_at === "string" ? r.resets_at : "");
+    if (!(resets <= now.getTime())) return false;
+  }
+  return retrySafe(r);
+}
+
 /** kiff/agents' words for a run whose invocation stopped mid-work: what it did isn't all recorded. */
 const FAILED_LEASE = new Set(["its lease ran out: the invocation crashed or timed out"]);
 
