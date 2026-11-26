@@ -1,0 +1,1 @@
+- **Android: Coach's fingerprint prompts say why.** Under "Start Coach", "Give Coach its Card" and "Connect your apps", the system prompt now reads "Coach can act only within what you approve." See [The Android app](docs/android-app.md).

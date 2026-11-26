@@ -1396,6 +1396,11 @@ new sign-in. Whether the phone can approve is read each time the app comes back
 to do ([approvals.md](approvals.md#set-up-approvals-on-this-device)). A debug build on a phone with no screen lock signs without asking, as the iOS
 Simulator does; a release never does.
 
+**The prompt says why before it asks.** Under the title (the step's own words), Coach's prompts (Start Coach, Give Coach its
+Card, Connect your apps) carry `coach.prompt.why`, "Coach can act only within what you approve.", as the system prompt's
+description (`promptDescription`, `PromptDescriptionTest`). Any other approval keeps its title alone. Words only: when the
+prompt is asked and the approval key it unlocks are unchanged.
+
 **A prompt that didn't sign** says what happened, and nothing is sent. `BiometricAuthenticator` reads how the prompt ended:
 Cancel, back, or the system closing it (`ERROR_USER_CANCELED`, `ERROR_NEGATIVE_BUTTON`, `ERROR_CANCELED`) is a closed
 prompt (`PromptClosed`); a lockout, a timeout or a sensor error is not. `AppModel.notSigned` then says:

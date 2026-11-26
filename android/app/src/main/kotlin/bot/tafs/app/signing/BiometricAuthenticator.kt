@@ -70,6 +70,7 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
     )
     val info = BiometricPrompt.PromptInfo.Builder()
       .setTitle(reason)
+      .apply { promptDescription(reason)?.let(::setDescription) }
       .setAllowedAuthenticators(ALLOWED)
       .build()
     prompt.authenticate(info)
@@ -99,6 +100,7 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
     // A strong biometric only: the screen lock never approves, so the prompt offers Cancel in its place.
     val info = BiometricPrompt.PromptInfo.Builder()
       .setTitle(reason)
+      .apply { promptDescription(reason)?.let(::setDescription) }
       .setAllowedAuthenticators(BIOMETRIC_STRONG)
       .setNegativeButtonText(Words.Common.cancel)
       .build()
@@ -146,3 +148,12 @@ object Biometry {
     return name(strong, pm.hasSystemFeature(PackageManager.FEATURE_FACE), pm.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT))
   }
 }
+
+/**
+ * The line under a prompt's title: why the fingerprint is asked, said first (the owner's ask). On Coach's own prompts (Start Coach,
+ * Give Coach its Card, Connect your apps), `coach.prompt.why`: "Coach can act only within what you approve." A whole sentence of
+ * its own, so no language has two strings glued together. Any other approval keeps its title alone. Words only: when the prompt is
+ * asked, and the approval key it unlocks, are unchanged.
+ */
+internal fun promptDescription(reason: String): String? =
+  Words.Coach.Prompt.why.takeIf { reason in setOf(Words.Coach.Prompt.start, Words.Coach.Prompt.giveCard, Words.Coach.Prompt.connectTools) }
