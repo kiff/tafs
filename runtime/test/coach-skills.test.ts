@@ -44,7 +44,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@7", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@36", "did-this-happen@1", "draft-the-card@52", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@21", "set-up-a-taf@15", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@7", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@36", "did-this-happen@1", "draft-the-card@53", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@22", "set-up-a-taf@15", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -79,8 +79,9 @@ describe("Coach's skills, as files", () => {
       // went from the rules to the draft with no setup read). connect-an-app at 2,150 and draft-the-card at 2,260: before and
       // during a sign-in, Coach never says what it covers, in a message or an option, and a dedicated mailbox's reason stays
       // its own (Eval 45762771656, 26 Nov, Plan words Gmail run 1: "Connect your Gmail; its sign-in covers the whole mailbox"
-      // as a button).
-      const budget: Record<string, number> = { "set-up-a-taf": 2000, "connect-an-app": 2150, "draft-the-card": 2260, "name-the-tools": 1900 };
+      // as a button). draft-the-card at 2,280: a row number never names the item of a per-item limit, since planque takes
+      // only a string argument (Eval 45774332687, 26 Nov, replay-intros run 2: `row` as the resource, planque's 400).
+      const budget: Record<string, number> = { "set-up-a-taf": 2000, "connect-an-app": 2150, "draft-the-card": 2280, "name-the-tools": 1900 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -290,7 +291,9 @@ describe("Coach's core", () => {
     expect(tools).toContain('Type each argument as its schema does: plain, array (`type: "array", schema: {type: "array", items: {type: "string"}}`)');
     // Eval 44876949969 (replay-intros, 21 Nov): the row number again, then the sheet it had pinned (a pin isn't one of the
     // tool's arguments), and a row's values as additionalProperties alone, refused 5 times (name-the-tools@20).
-    expect(tools).toContain("A row number, or an argument you pinned, is never `resource_argument`: with no other string argument, leave it out and limit the tool by calls a day.");
+    // Eval 45774332687 (replay-intros run 2, 26 Nov): `row` as the resource once more, planque's 400 ("resource_argument row
+    // must be one of the tool's string arguments"), from a per-item limit on the sheet (name-the-tools@22, draft-the-card@53).
+    expect(tools).toContain("A row number, or an argument you pinned, is never `resource_argument` (planque refuses it): with no other string argument, leave it out and limit the tool by calls a day.");
     expect(tools).toContain("An object argument (a row's values) names in properties each field the taf writes (the columns the job marks), never additionalProperties alone.");
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(connect).toContain("If planque or KIFF refused the request itself (a name taken, an argument), change what it named, never resend it unchanged, and show the approval of a new planque request.");
@@ -492,7 +495,7 @@ describe("Coach's core", () => {
   // so the taf could invoice one order and never another. KIFF counts a total for each item (per).
   it("drafts a limit for each item as a total per its resource argument, never a lifetime cap on the tool", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
-    expect(body).toContain('A limit for each item ("one invoice per order, ever") is a total with per: the tool\'s resource_argument (lifetime, or rolling_7d), beside the day\'s total.');
+    expect(body).toContain('A limit for each item ("one invoice per order, ever") is a total with per: the tool\'s resource_argument (lifetime, or rolling_7d), beside the day\'s total. A row number never names the item: planque takes only a string argument. With none, it goes in the taf\'s instructions');
     // A tool with no resource argument: KIFF would refuse a per naming an argument it doesn't declare (#851).
     expect(body).toContain("With none, it goes in the taf's instructions, and the rules say KIFF can't count it.");
     expect(body).toContain("Never a lifetime total on the tool: it stops after one item.");
@@ -543,7 +546,7 @@ describe("Coach's core", () => {
 
   // An Eval, 26 Nov (billing, run 2): Coach showed the rules notice and the key's approval with the draft, with no confirm
   // between them. tafs cloud refused the draft (rules_unagreed), and the card after the notice was an approval, never the
-  // confirm that agrees to it (draft-the-card@52).
+  // confirm that agrees to it (draft-the-card@53).
   it("shows the rules notice's confirm right after it, and nothing else until the owner agrees", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(body).toContain("The confirm comes right after its notice, in the same turn, and nothing follows them until the owner taps Agree: no planque request, no tools, no draft, no approval.");
@@ -669,15 +672,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   });
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@52", "halting@1", "name-the-tools@21", "set-up-a-taf@15", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@52", "improve-a-taf@4", "name-the-tools@21"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@53", "halting@1", "name-the-tools@22", "set-up-a-taf@15", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@53", "improve-a-taf@4", "name-the-tools@22"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@52", "halting@1", "name-the-tools@21", "set-up-a-taf@15", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@52", "halting@1", "improve-a-taf@4", "name-the-tools@21"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@53", "halting@1", "name-the-tools@22", "set-up-a-taf@15", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@53", "halting@1", "improve-a-taf@4", "name-the-tools@22"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });

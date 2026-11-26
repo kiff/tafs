@@ -1,0 +1,1 @@
+- **Coach no longer names a sheet's row number as what a write acts on.** A limit for each item needs an argument that names the item, which a row number never is; with none, the limit goes in the taf's instructions, so its request isn't refused first. See [Coach](docs/coach.md).

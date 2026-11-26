@@ -68,7 +68,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   (contesting a claim on a payment, reminding a customer of an invoice) moves
   no money here. It has no amount argument, and its Card limits its calls a
   day. Name what each tool that changes things acts on
-  (resource_argument): the item it takes (a ticket, a payment), as one of its string arguments, required. When it takes several, keep the one its read takes. A row number, or an argument you pinned, is never `resource_argument`: with no other string argument, leave it out and limit the tool by calls a day. An object argument (a row's values) names in properties each field the taf writes (the columns the job marks), never additionalProperties alone. For a tool that
+  (resource_argument): the item it takes (a ticket, a payment), as one of its string arguments, required. When it takes several, keep the one its read takes. A row number, or an argument you pinned, is never `resource_argument` (planque refuses it): with no other string argument, leave it out and limit the tool by calls a day. An object argument (a row's values) names in properties each field the taf writes (the columns the job marks), never additionalProperties alone. For a tool that
   moves money, name the read that says its unit (unit_lookup: that read's
   name, the read's argument that takes the same id, and where its answer gives it): KIFF refuses a call in another unit. Ask for a taf's tools once, complete (read_only, pins,
   arguments): each change is one more approval. Mark tools that
