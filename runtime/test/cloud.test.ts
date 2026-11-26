@@ -7,7 +7,7 @@ import { FULL_LANGUAGES, LANGUAGES, withLanguage, wordsIn } from "../src/cloud/w
 import { ja } from "../src/cloud/words/ja.js";
 import { ko } from "../src/cloud/words/ko.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
-import { sweepBriefs, approvalWaits, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { sweepBriefs, approvalWaits, COACH_FIXES, retriedResults, type ThreadComponent, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -5164,6 +5164,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w2.agents.access.set("u_ana", { cards_manage: true });
     await note2();
     expect(answer2()?.answer).toMatchObject({ failed: expect.stringContaining("kickoff") });
+    // A field Coach wrote: Coach's to fix, so the answer says so and the owner never reads it (retriedResults).
+    expect((answer2()?.answer as { failed: string }).failed.startsWith(COACH_FIXES)).toBe(true);
     expect(w2.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
     // A result that names a starter job under the owner's own summary would run that job's
     // kickoff and instructions, not the one agreed: answered failed, in words, and no taf exists.
@@ -5422,7 +5424,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     ];
     w.agents.events.set(session, seen(JSON.stringify({ results: [{ id: "a" }], meta: { pages: [] } })));
     await note();
-    expect(answer()?.answer).toEqual({ failed: `the check's items, ${items}, isn't a list in what the reads you made answered: their lists are at results, meta.pages. Take items (and its cursor and id, inside each item) from a read you've seen, and hand over again` });
+    expect(answer()?.answer).toEqual({ failed: `${COACH_FIXES}the check's items, ${items}, isn't a list in what the reads you made answered: their lists are at results, meta.pages. Take items (and its cursor and id, inside each item) from a read you've seen, and hand over again` });
     expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
     expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft"))).toBe(false);
   });
@@ -8028,5 +8030,50 @@ describe("GET /v1/brief and Later", () => {
     const { w, ask } = setUp();
     w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, removing: true } as never);
     expect((await ask("GET", "/v1/brief")).body).toMatchObject({ decisions: [], rest: { count: 0 } });
+  });
+});
+
+// A demo, 26 Nov: "Order rows wasn't set up: check.items is where the list is…" showed in red on the first result card, then
+// Coach's second result card made the taf. A failure in a field Coach wrote is Coach's to fix, never the owner's to read.
+describe("a result whose hand-over failed on a field Coach wrote, as the apps read it", () => {
+  const at = "2026-11-26T02:34:20Z";
+  const result = (id: string, seq: number, outcome: unknown, when = at): ThreadComponent => ({
+    at: when, session: "s1", run: "r1", seq,
+    component: { type: "result", id, taf: { agent: "order-rows-x", name: "Order rows" } },
+    answer: { state: "answered", words: "", at: when, outcome: outcome as never },
+  });
+  const fixed = { failed: `${COACH_FIXES}check.items is where the list is in the read's result` };
+
+  it("reads as set up once a later result made the same taf", () => {
+    const shown = [result("result-1", 1, fixed), result("result-2", 2, { taf_id: "taf_1" }, "2026-11-26T02:34:28Z")];
+    retriedResults(shown, new Date("2026-11-26T02:35:00Z"), "en");
+    expect(shown[0]!.answer!.outcome).toEqual({ taf_id: "taf_1" });
+    expect(shown[1]!.answer!.outcome).toEqual({ taf_id: "taf_1" });
+  });
+
+  it("reads as setting up within the hand-over's hold, with nothing failed shown", () => {
+    const shown = [result("result-1", 1, fixed)];
+    retriedResults(shown, new Date("2026-11-26T02:40:00Z"), "en");
+    expect(shown[0]!.answer!.outcome).toBeUndefined();
+  });
+
+  it("with no retry past the hold, says in the reader's language that it wasn't finished, and to ask Coach", () => {
+    for (const [lang, words] of [["en", "ask Coach in this chat what happened"], ["fr", "demandez à Coach dans ce chat ce qui s'est passé"]] as const) {
+      const shown = [result("result-1", 1, fixed)];
+      retriedResults(shown, new Date("2026-11-26T02:45:00Z"), lang);
+      expect(shown[0]!.answer!.outcome).toEqual({ failed: words });
+      expect(JSON.stringify(shown)).not.toContain("check.items");
+    }
+  });
+
+  it("leaves the owner's own failures, and another taf's later result, as they are", () => {
+    const owner = { failed: "your role on this KIFF account can't manage Cards now" };
+    const other: ThreadComponent = { ...result("result-2", 2, { taf_id: "taf_2" }), component: { type: "result", id: "result-2", taf: { agent: "other-x", name: "Other" } } };
+    const shown = [result("result-1", 1, owner), other];
+    retriedResults(shown, new Date("2026-11-26T03:00:00Z"), "en");
+    expect(shown[0]!.answer!.outcome).toEqual(owner);
+    const lone = [result("result-1", 1, fixed), other];
+    retriedResults(lone, new Date("2026-11-26T03:00:00Z"), "en");
+    expect(lone[0]!.answer!.outcome).toEqual({ failed: "ask Coach in this chat what happened" });
   });
 });

@@ -780,6 +780,7 @@ export const tr: Words = {
   start_lead: "Başlat, Coach'a aşağıdaki araçları verir. Onları bu cihazda siz onaylarsınız.",
   start_button: "Başlat",
   plan_needed: "Başlatmak için bir plan seçin.",
+  handover_not_finished: "ne olduğunu bu sohbette Coach'a sorun",
   cts_title: "Coach'a araçlarını verin",
   cts_intro: "Coach'un taf'larınıza göz kulak olması için bunlara ihtiyacı var.",
   cts_details: "Her araç ve sınırları",

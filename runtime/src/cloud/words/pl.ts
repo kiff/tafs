@@ -787,6 +787,7 @@ export const pl: Words = {
   start_lead: "Zacznij daje Coachowi narzędzia poniżej. Zatwierdzasz je na tym urządzeniu.",
   start_button: "Zacznij",
   plan_needed: "Wybierz plan, aby go uruchomić.",
+  handover_not_finished: "zapytaj Coacha na tym czacie, co się stało",
   cts_title: "Daj Coachowi jego narzędzia",
   cts_intro: "Coach potrzebuje ich, żeby zajmować się Twoimi tafami.",
   cts_details: "Każde narzędzie i jego limity",

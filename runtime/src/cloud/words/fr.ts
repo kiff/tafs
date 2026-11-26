@@ -787,6 +787,7 @@ export const fr: Words = {
   start_lead: "Commencer donne à Coach les outils ci-dessous. Vous les approuvez sur cet appareil.",
   start_button: "Commencer",
   plan_needed: "Choisissez un forfait pour le lancer.",
+  handover_not_finished: "demandez à Coach dans ce chat ce qui s'est passé",
   cts_title: "Donner ses outils à Coach",
   cts_intro: "Coach en a besoin pour s'occuper de vos tafs.",
   cts_details: "Chaque outil et ses limites",

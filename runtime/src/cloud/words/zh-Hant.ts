@@ -780,6 +780,7 @@ export const zhHant: Words = {
   start_lead: "啟動會把下列工具交給 Coach。您在這部裝置上核准它們。",
   start_button: "啟動",
   plan_needed: "請選擇方案以啟動。",
+  handover_not_finished: "請在這個聊天中問 Coach 發生了什麼事",
   cts_title: "把工具交給 Coach",
   cts_intro: "Coach 需要這些工具來照看您的 taf。",
   cts_details: "每項工具及其上限",

@@ -780,6 +780,7 @@ export const lt: Words = {
   start_lead: "Pradėjus Coach gauna žemiau esančius įrankius. Juos patvirtini šiame įrenginyje.",
   start_button: "Pradėti",
   plan_needed: "Pasirink planą, kad pradėtum.",
+  handover_not_finished: "paklausk Coach šiame pokalbyje, kas nutiko",
   cts_title: "Suteikite Coach jo įrankius",
   cts_intro: "Coach jų reikia, kad prižiūrėtų jūsų taf.",
   cts_details: "Kiekvienas įrankis ir jo ribos",

@@ -780,6 +780,7 @@ export const id: Words = {
   start_lead: "Mulai memberi Coach alat di bawah ini. Anda menyetujuinya di perangkat ini.",
   start_button: "Mulai",
   plan_needed: "Pilih paket untuk memulainya.",
+  handover_not_finished: "tanyakan kepada Coach di obrolan ini apa yang terjadi",
   cts_title: "Beri Coach alatnya",
   cts_intro: "Coach membutuhkannya untuk mengurus taf Anda.",
   cts_details: "Setiap alat dan batasnya",
