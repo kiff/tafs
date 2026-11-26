@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ApprovalGrant } from "../src/cloud/approval.js";
-import { LIMITS_MAX, RULES_MAX, grantSuffix, rulesAgreement, rulesMismatch, rulesUnnamedFigures, rulesUnsaid } from "../src/cloud/rules.js";
+import { LIMITS_MAX, RULES_MAX, grantSuffix, readsCountDropped, rulesAgreement, rulesMismatch, rulesUnnamedFigures, rulesUnsaid } from "../src/cloud/rules.js";
 
 /** A conversation's events, as kiff/agents records them, in order. */
 const notice = (id: string, rules: unknown, run = "r1") => ({ kind: "component", run, body: { type: "notice", id, tone: "info", text: "The rules", rules } });
@@ -345,6 +345,20 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(rulesUnsaid(rule([{ ...DAY, limit: 100000 }]), "Bis 1.000,00 € am Tag.")).toEqual([]);
     expect(rulesUnsaid(rule([{ quantity: "count", window: "calendar_day", limit: 1000 }]), "At most 1,000 a day.")).toEqual([]);
     expect(rulesUnsaid(rule(), "Refunds up to €5 each.")).toEqual(["refund_charge sum(amount) calendar_day 5000"]);
+  });
+
+  it("KIFF's count is dropped from a rule only reads map to; a rule a write maps to too keeps it", () => {
+    const kiffs = { quantity: "count", window: "calendar_day", limit: 10000, over: "refuse" as const };
+    const grant = (tools: unknown[]) => ({ id: "grt_k3aaaaaa", request: { tools } }) as never;
+    const reads = [{ tool: "list_orders", over: "refuse" as const, limits: [kiffs] }];
+    expect(readsCountDropped(reads, [grant([{ tool: "list_orders", name: "list_orders_k3", read_only: true }])])).toEqual([{ tool: "list_orders", over: "refuse" }]);
+    // One rule, found by the connector's id for a read and a write alike: the write's 10,000 stays the owner's.
+    const shared = [{ tool: "shop", over: "refuse" as const, limits: [kiffs] }];
+    const both = grant([{ tool: "shop", name: "list_orders_k3", read_only: true }, { tool: "shop", name: "create_order_k3" }]);
+    expect(readsCountDropped(shared, [both])).toEqual(shared);
+    // Another figure on a read rule stays.
+    const mixed = [{ tool: "list_orders", over: "refuse" as const, limits: [kiffs, { quantity: "count", window: "calendar_day", limit: 500 }] }];
+    expect(readsCountDropped(mixed, [grant([{ tool: "list_orders", name: "list_orders_k3", read_only: true }])])).toEqual([{ tool: "list_orders", over: "refuse", limits: [{ quantity: "count", window: "calendar_day", limit: 500 }] }]);
   });
 
   it("1 is said in words only as a one that is never an article, beside its language's per word; anything unsure is unsaid", () => {

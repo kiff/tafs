@@ -267,15 +267,18 @@ export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly 
  * "refuse past 10,000 sends a day" stays theirs. A read rule left with no figure keeps its `over`.
  */
 export function readsCountDropped(rules: readonly AgreedRule[], grants: readonly ApprovalGrant[]): AgreedRule[] {
+  // A rule a write maps to too (one found by a connector's or job's name) keeps its figures: a write's own 10,000 stays the
+  // owner's.
   const reads = new Set<AgreedRule>();
+  const writes = new Set<AgreedRule>();
   for (const g of grants) {
     const suffix = grantSuffix(g.id);
     for (const t of g.request.tools ?? []) {
-      if (!t.read_only && !t.setup_reads) continue;
       const rule = ruleOf(t, suffix, rules);
-      if (rule) reads.add(rule);
+      if (rule) (t.read_only || t.setup_reads ? reads : writes).add(rule);
     }
   }
+  for (const w of writes) reads.delete(w);
   const kiffs = (l: AgreedLimit) => l.quantity === "count" && l.window === "calendar_day" && l.per === undefined && l.limit === KIFF_COUNT_A_DAY;
   return rules.map((r) => {
     if (!reads.has(r) || !r.limits?.some(kiffs)) return r;
