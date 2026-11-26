@@ -355,7 +355,11 @@ them to this person, and only once KIFF's usage names their Play products and th
 KIFF records each purchase before Play is told it's done, and Restore purchases sends again what
 wasn't. The panel's title is **Choose a plan** while Solo is offered (`buy.solo`), and **Add
 credits** once it runs. Under Solo's terms, the balance's `buy.coach` says what Coach's help
-includes, tafs cloud's sentence as kiff.dev says it; none sent, no line.
+includes, tafs cloud's sentence as kiff.dev says it; none sent, no line. Above the packs, while
+packs are offered and Play lists at least one, a line says what they're for, as iOS's Add credits
+does (`packsExplainer`, `billing.pack_adds_credits_once_never`): "Packs are for when a month's
+credits run out. A pack adds credits once, and they never expire. Each month's credits are used
+first, then the packs'."
 - **Restore purchases** shows only while Play knows a purchase not finished yet, or couldn't say, or
   after one KIFF didn't record (`AppState.restoreShown`, read with Play's offers). Launch and sign-in
   already send what's unfinished, so an account that bought nothing has no Restore. A restore that

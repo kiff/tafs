@@ -129,6 +129,13 @@ internal fun BalancePanel(state: AppState, actions: AccountActions) {
 }
 
 /**
+ * The line above the packs: what they're for (when a month's credits run out) and that they never expire, as iOS's Add credits
+ * says. Only while packs are offered and Play lists at least one of them, so it never stands over an empty list.
+ */
+internal fun packsExplainer(packsOffered: Boolean, store: bot.tafs.app.kiff.UsageStore, listed: Set<String>): String? =
+  Words.Billing.packAddsCreditsOnceNever.takeIf { packsOffered && store.repeatPacks.any { it.googleProduct in listed } }
+
+/**
  * Buying through Google Play, as the balance offers it to this person (`buy`): Solo, with every term, and packs of credits, which
  * never expire, each at Play's price. Each purchase goes to KIFF before Play is told it's done; Restore sends what wasn't.
  */
@@ -175,6 +182,8 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
       }
       PurchaseNoteLine(state, id, actions)
     }
+    // What packs are for, above them, as on iOS: only once a month's credits run out, and they never expire (the owner's item).
+    packsExplainer(offer.offers("packs"), store, state.storeProducts.keys)?.let { Text(it, style = scaled(13, color = Theme.soft)) }
     if (offer.offers("packs")) store.repeatPacks.forEach { pack ->
       val id = pack.googleProduct ?: return@forEach
       val product = state.storeProducts[id] ?: return@forEach
