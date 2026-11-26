@@ -3143,7 +3143,7 @@
     <string name="watch_menu">القائمة</string>
     <string name="watch_mic_needed">للسؤال بالصوت، اسمح للميكروفون لـ tafs على هذه الساعة.</string>
     <string name="watch_more_on_phone">الباقي على هاتفك.</string>
-    <string name="watch_needs_lock">للرفض أو التجميد من هذه الساعة، اضبط قفل الشاشة عليها وافتحها.</string>
+    <string name="watch_needs_lock">للإرسال أو الرفض أو التجميد من هذه الساعة، اضبط قفل الشاشة عليها وافتحها.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="zero">لا شيء بانتظارك</item>
         <item quantity="one">واحد بانتظارك</item>

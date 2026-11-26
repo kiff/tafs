@@ -47,7 +47,7 @@
   "watch.menu": "Menú",
   "watch.mic_needed": "Per preguntar amb la veu, permet que tafs faci servir el micròfon en aquest rellotge.",
   "watch.more_on_phone": "La resta és al telèfon.",
-  "watch.needs_lock": "Per rebutjar o bloquejar des d'aquest rellotge, configura-hi un bloqueig de pantalla i desbloqueja'l.",
+  "watch.needs_lock": "Per enviar, rebutjar o bloquejar des d'aquest rellotge, configura-hi un bloqueig de pantalla i desbloqueja'l.",
   "watch.needs_you_count": {
     "one": "{count} et necessita",
     "other": "{count} et necessiten"

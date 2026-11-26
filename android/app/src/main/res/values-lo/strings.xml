@@ -2753,7 +2753,7 @@
     <string name="watch_menu">ເມນູ</string>
     <string name="watch_mic_needed">ເພື່ອຖາມດ້ວຍສຽງ ໃຫ້ອະນຸຍາດໄມໂຄຣໂຟນສຳລັບ tafs ໃນໂມງນີ້.</string>
     <string name="watch_more_on_phone">ສ່ວນທີ່ເຫຼືອຢູ່ໃນໂທລະສັບຂອງທ່ານ.</string>
-    <string name="watch_needs_lock">ເພື່ອປະຕິເສດ ຫຼື ຢຸດຈາກໂມງນີ້ ໃຫ້ຕັ້ງການລັອກໜ້າຈໍໃນມັນ ແລ້ວປົດລັອກ.</string>
+    <string name="watch_needs_lock">ເພື່ອສົ່ງ, ປະຕິເສດ ຫຼື ຢຸດຈາກໂມງນີ້ ໃຫ້ຕັ້ງການລັອກໜ້າຈໍໃນມັນ ແລ້ວປົດລັອກ.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">%1$s ຕ້ອງການທ່ານ</item>
     </plurals>

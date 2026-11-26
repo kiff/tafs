@@ -2909,7 +2909,7 @@
     <string name="watch_menu">Meniu</string>
     <string name="watch_mic_needed">Kad galėtumėte klausti balsu, šiame laikrodyje leiskite tafs naudoti mikrofoną.</string>
     <string name="watch_more_on_phone">Visa kita – telefone.</string>
-    <string name="watch_needs_lock">Kad galėtumėte atmesti ar sustabdyti iš šio laikrodžio, nustatykite jo ekrano užraktą ir jį atrakinkite.</string>
+    <string name="watch_needs_lock">Kad galėtumėte siųsti, atmesti ar sustabdyti iš šio laikrodžio, nustatykite jo ekrano užraktą ir jį atrakinkite.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s laukia jūsų</item>
         <item quantity="few">%1$s laukia jūsų</item>

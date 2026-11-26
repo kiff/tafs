@@ -20,8 +20,8 @@ drawn smaller, and has no sign-in of its own.
   and signs the only answers the watch may ask for: Refuse and Halt.
 - **No keys and no tokens on the watch.** A lost watch can read and stop things, never approve.
 - **Sending needs a passcode on the watch.** Refuse, Halt, Halt all and Coach send nothing from a
-  watch with no passcode, and it says so ("To refuse or halt from this watch, set a screen lock on it
-  and unlock it.", `watch.needs_lock`), as on Wear OS. A locked watch doesn't show the app at all.
+  watch with no passcode, and it says so ("To send, refuse or halt from this watch, set a screen lock on
+  it and unlock it.", `watch.needs_lock`), as on Wear OS. A locked watch doesn't show the app at all.
   Reading Needs you and your tafs needs no passcode (`WristLock`).
 - **Standalone** (a cellular watch with its phone away) isn't in v1.
 

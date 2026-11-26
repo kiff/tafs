@@ -2831,7 +2831,7 @@
     <string name="watch_menu">Меню</string>
     <string name="watch_mic_needed">За да питате с глас, разрешете микрофона за tafs на този часовник.</string>
     <string name="watch_more_on_phone">Останалото е на телефона ви.</string>
-    <string name="watch_needs_lock">За да отказвате или спирате от този часовник, задайте заключване на екрана му и го отключете.</string>
+    <string name="watch_needs_lock">За да изпращате, отказвате или спирате от този часовник, задайте заключване на екрана му и го отключете.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s ви чака</item>
         <item quantity="other">%1$s ви чакат</item>

@@ -2753,7 +2753,7 @@
     <string name="watch_menu">ម៉ឺនុយ</string>
     <string name="watch_mic_needed">ដើម្បីសួរដោយសំឡេង សូមអនុញ្ញាតមីក្រូហ្វូនសម្រាប់ tafs នៅលើនាឡិកានេះ។</string>
     <string name="watch_more_on_phone">ផ្នែកដែលនៅសល់នៅលើទូរសព្ទរបស់អ្នក។</string>
-    <string name="watch_needs_lock">ដើម្បីបដិសេធ ឬបញ្ឈប់ពីនាឡិកានេះ សូមកំណត់ការចាក់សោអេក្រង់នៅលើវា ហើយដោះសោវា។</string>
+    <string name="watch_needs_lock">ដើម្បីផ្ញើ បដិសេធ ឬបញ្ឈប់ពីនាឡិកានេះ សូមកំណត់ការចាក់សោអេក្រង់នៅលើវា ហើយដោះសោវា។</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">%1$s ត្រូវការអ្នក</item>
     </plurals>

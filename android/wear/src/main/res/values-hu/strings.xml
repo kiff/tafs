@@ -97,7 +97,7 @@
     <string name="watch_menu">Menü</string>
     <string name="watch_mic_needed">A hangalapú kérdezéshez engedélyezd a mikrofont a tafs számára ezen az órán.</string>
     <string name="watch_more_on_phone">A többi a telefonodon van.</string>
-    <string name="watch_needs_lock">Ahhoz, hogy erről az óráról elutasíthass vagy leállíthass, állíts be rajta képernyőzárat, és oldd fel.</string>
+    <string name="watch_needs_lock">Ahhoz, hogy erről az óráról küldhess, elutasíthass vagy leállíthass, állíts be rajta képernyőzárat, és oldd fel.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s rád vár</item>
         <item quantity="other">%1$s rád vár</item>

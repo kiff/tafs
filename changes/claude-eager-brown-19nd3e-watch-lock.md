@@ -1,0 +1,1 @@
+- **The watch's screen-lock line names sending too.** On a watch with no screen lock, the line now reads "To send, refuse or halt from this watch, set a screen lock on it and unlock it.", in every app language, since sending to Coach or a taf needs the lock as refusing and halting do.
