@@ -65,6 +65,13 @@ protocol StoreFront: AnyObject {
     /// Brings back this Apple account's purchases: Solo while it's active, and any not
     /// finished.
     func restore() async throws -> [StorePurchase]
+    /// Each time the App Store's storefront changes while the app runs (another country, or
+    /// the sandbox account a TestFlight build buys with), its id.
+    func storefronts() -> AsyncStream<String>
+}
+
+extension StoreFront {
+    func storefronts() -> AsyncStream<String> { AsyncStream { $0.finish() } }
 }
 
 /// Buying Solo and task packs in the app, through the App Store.
@@ -84,6 +91,11 @@ final class Purchases: ObservableObject {
     /// Called once KIFF has recorded a purchase, so the screens read the account again.
     var recorded: (@MainActor () async -> Void)?
     private var listening: Task<Void, Never>?
+    private var watchingStorefront: Task<Void, Never>?
+    /// Every product the app asked for, so a change of storefront reads them all again.
+    private var known: [String] = []
+    /// The screenshots' sample products: never read from the App Store or dropped.
+    private var samples: Set<String> = []
 
     init(front: StoreFront = AppStoreFront()) {
         self.front = front
@@ -100,6 +112,13 @@ final class Purchases: ObservableObject {
                 _ = await self.deliver(p, requestID: nil)
             }
         }
+        let fronts = front.storefronts()
+        watchingStorefront = Task { [weak self] in
+            for await _ in fronts {
+                guard let self else { return }
+                await self.storefrontChanged()
+            }
+        }
     }
 
     /// Sends the purchases not finished yet: once signed in, at each launch and sign-in.
@@ -110,19 +129,35 @@ final class Purchases: ObservableObject {
     func stop() {
         listening?.cancel()
         listening = nil
+        watchingStorefront?.cancel()
+        watchingStorefront = nil
     }
 
     /// Shows these products as the App Store's, for the screenshots of the purchase screens:
     /// a simulator has no App Store to read prices from.
     func showSample(_ list: [StoreProduct]) {
-        for p in list { products[p.id] = p }
+        for p in list { products[p.id] = p; samples.insert(p.id) }
     }
 
-    /// Reads the products' names and prices from the App Store.
+    /// Reads the products' names and prices from the App Store, every time: Plan & usage reads
+    /// them as it opens, so a price is never one kept from another storefront. The price shown
+    /// must be the one Apple's sheet will charge (App Review 3.1.2): on 26 Nov a TestFlight iPad
+    /// showed "9,99 $US" read under one storefront while the sheet said "12,49 €" under another.
     func load(_ ids: [String]) async {
-        let missing = ids.filter { products[$0] == nil }
-        guard !missing.isEmpty, let read = try? await front.products(missing) else { return }
+        for id in ids where !known.contains(id) { known.append(id) }
+        let wanted = ids.filter { !samples.contains($0) }
+        guard !wanted.isEmpty, let read = try? await front.products(wanted) else { return }
+        // A product the App Store no longer returns is dropped, never shown at an earlier read's price.
+        let returned = Set(read.map(\.id))
+        for id in wanted where !returned.contains(id) { products[id] = nil }
         for p in read { products[p.id] = p }
+    }
+
+    /// The storefront changed: every price shown is dropped at once, so none from the old one
+    /// is ever offered, and read again in the new one. A product it doesn't sell stays unpriced.
+    func storefrontChanged() async {
+        products = products.filter { samples.contains($0.key) }
+        await load(known)
     }
 
     /// Buys a product for the account, answering a member's request when there is one.
@@ -239,6 +274,16 @@ final class AppStoreFront: StoreFront {
             return (nil, false)
         @unknown default:
             return (nil, false)
+        }
+    }
+
+    func storefronts() -> AsyncStream<String> {
+        AsyncStream { continuation in
+            let task = Task.detached {
+                for await storefront in Storefront.updates { continuation.yield(storefront.id) }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
         }
     }
 

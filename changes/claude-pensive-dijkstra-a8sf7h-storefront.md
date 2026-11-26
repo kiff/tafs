@@ -1,0 +1,1 @@
+- **The iPhone and iPad show the App Store price of the storefront that sells.** Plan & usage reads Solo's and the packs' prices from the App Store each time it opens, and again when the App Store's country changes, so the price shown always matches Apple's purchase sheet ([ios-app.md](docs/ios-app.md)).
