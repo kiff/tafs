@@ -259,7 +259,7 @@ enum WatchSignInAsk {
     /// The `userInfo` key the watch's id goes under.
     nonisolated static let idKey = "watch_sign_in"
 
-    static func category() -> UNNotificationCategory {
+    nonisolated static func category() -> UNNotificationCategory {
         let allow = UNNotificationAction(identifier: allow, title: Words.Watch.signInAllow, options: [.authenticationRequired])
         let deny = UNNotificationAction(identifier: deny, title: Words.Watch.signInDeny, options: [.destructive])
         return UNNotificationCategory(identifier: categoryID, actions: [allow, deny], intentIdentifiers: [], options: [])
@@ -289,7 +289,7 @@ enum WatchSignInAsk {
 
     /// The owner's answer, as the watch takes it: Allow or Deny for that id. Any other action (a tap that opens tafs, a
     /// dismissal) answers nothing, and the watch stays signed out.
-    static func answer(action: String, id: String, now: Date = Date()) -> WatchPush? {
+    nonisolated static func answer(action: String, id: String, now: Date = Date()) -> WatchPush? {
         guard WatchVoice.isID(id), action == allow || action == deny else { return nil }
         return WatchPush(.signIn, signIn: WatchSignInAnswer(id: id.lowercased(), allowed: action == allow), at: now)
     }
