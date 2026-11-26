@@ -727,6 +727,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
       sendAgain = model::sendAgain,
       askCoachAbout = model::askCoachAbout,
       openPlan = { usageOpen = true },
+      dismissPlanPrompt = model::dismissPlanPrompt,
       setPromise = model::setPromise,
       openRequest = model::openRequest,
       setPaused = model::setPaused,

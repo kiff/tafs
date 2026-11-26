@@ -488,7 +488,11 @@ above. The app shows the words. Builds from before this show `words` as for any 
     assumed currency (Android: `BalanceRaise.limitNow`).
 - **Settings' Plan card** shows `plan_line` in `plan_tone`'s colour, and opens Plan & usage.
   **Home** shows `home_line` when it's set. Both are read with each refresh.
-- **A chat or Run now refused** for credits shows its `words`, with no button.
+- **A chat or Run now refused** for credits shows its `words`, with no button, except a chat
+  refused for `no_plan` (Coach's included). On Android, its `words` stay as a prompt above the box,
+  with **Choose a plan** (Plan & usage; from Coach, Coach closes on the way) and **Not now**, until
+  the person taps one or sends again (kiff/tafs#2190). The owner's words go back in the box, as for
+  every credits refusal. The words are tafs cloud's; the app adds only the two buttons. iOS follows.
 - **Asking an admin** stays where it was (`AskAdminView` on iPhone and iPad, `TaskRequests` on
   Android): for a raise on Company, and for a pack on Solo. An admin answers a request for a raise
   with the raise, and one for a pack by buying it for that request. Decline stays signed (on

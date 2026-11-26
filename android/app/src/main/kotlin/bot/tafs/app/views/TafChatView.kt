@@ -84,6 +84,8 @@ import bot.tafs.app.design.MarkdownText
 import bot.tafs.app.design.Mascot
 import bot.tafs.app.design.TafAvatar
 import bot.tafs.app.design.Theme
+import bot.tafs.app.design.OutlineButton
+import bot.tafs.app.design.Panel
 import bot.tafs.app.design.brandBackground
 import bot.tafs.app.design.scaled
 import bot.tafs.app.app.AppModel
@@ -501,7 +503,12 @@ private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, m
       }
     }
 
-    state.chatErrors[tafId]?.let { error ->
+    // Refused for no plan: tafs cloud's words stay as a prompt, with Plan & usage one tap away, until the person acts on it or
+    // dismisses it (kiff/tafs#2190). Coach's goes there from Coach's own sheet, which closes on the way.
+    val planPrompt = state.planPrompt(tafId)
+    if (planPrompt != null) {
+      PlanPrompt(planPrompt, onPlan = if (tafId == COACH_CHAT) actions.coach.openPlan else actions.openPlan, onDismiss = { actions.dismissPlanPrompt(tafId) })
+    } else state.chatErrors[tafId]?.let { error ->
       Text(error, style = scaled(13, color = Theme.no), modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 4.dp))
     }
     // Coach takes no typing until its tools are approved (docs/coach.md, "Coach's tools step"): the box gives way to one line
@@ -1059,3 +1066,16 @@ internal fun PageTurnText(text: String, asks: Boolean, live: Boolean = false) {
  * scheme) or goes over plain http on a tap. That question then has no Open.
  */
 internal fun linkAsks(url: String, pageTurn: Boolean): Boolean = pageTurn || !linkOpens(url)
+
+/** A chat refused for no plan: tafs cloud's words, Choose a plan (Plan & usage), and Not now. */
+@Composable
+private fun PlanPrompt(words: String, onPlan: () -> Unit, onDismiss: () -> Unit) {
+  Panel(Modifier.padding(horizontal = 12.dp).padding(bottom = 6.dp).testTag(PLAN_PROMPT), stroke = Theme.amberText.copy(alpha = 0.45f)) {
+    Text(words, style = scaled(14, FontWeight.SemiBold, Theme.amberText))
+    OutlineButton(Words.Usage.choosePlan, onPlan, Modifier.fillMaxWidth(), color = Theme.amberText)
+    TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text(Words.Common.notNow, style = scaled(14, color = Theme.soft)) }
+  }
+}
+
+/** The prompt a chat refused for no plan shows, for tests. */
+internal const val PLAN_PROMPT = "plan-prompt"

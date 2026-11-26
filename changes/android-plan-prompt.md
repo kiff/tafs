@@ -1,0 +1,1 @@
+- **Android: a chat refused for no plan keeps its words as a prompt.** Coach's or a taf's chat refused with `no_plan` shows tafs cloud's words above the box with **Choose a plan** (Plan & usage) and **Not now**, until one is tapped or the next send (kiff/tafs#2190; docs/accounts.md).
