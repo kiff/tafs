@@ -1,3 +1,6 @@
-• Held calls reach your watch at once.
-• A watch signed out stays out until you allow it here.
-• The update banner never offers a Restart that does nothing.
+• New languages, among them Korean, Japanese, Turkish, Hindi and Urdu.
+• Files: what your tafs make is in Account › Files for 30 days.
+• Tablet: one sidebar, Coach beside your work, any orientation.
+• Chrome: pair it with one fingerprint. Sign in with a code sent by email.
+• Your watch gets its answers even when tafs is closed, keeps no amounts, and stays signed out until you allow it here.
+• Delete a Coach conversation for good.
