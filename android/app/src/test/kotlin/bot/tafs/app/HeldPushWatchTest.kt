@@ -45,4 +45,13 @@ class HeldPushWatchTest {
     assertFalse(results.needsYou())
     assertTrue(kept.put.isEmpty())
   }
+
+  @Test fun aSignInThatChangesWhileReadingPutsNothing() = runTest {
+    val kept = Kept()
+    var mark = "AAAAAAAAAAAAAAAAAAAAAA"
+    val results = WatchResults(readAsk = { null }, readMarks = { null }, keep = kept, mark = { mark },
+      readNeedsYou = { mark = "BBBBBBBBBBBBBBBBBBBBBB"; WatchLink.KEPT_NEEDS_YOU to ByteArray(1) })
+    assertFalse(results.needsYou())
+    assertTrue(kept.put.isEmpty())
+  }
 }

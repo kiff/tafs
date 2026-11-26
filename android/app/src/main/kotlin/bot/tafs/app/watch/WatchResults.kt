@@ -107,7 +107,9 @@ class WatchResults(
    * so the wrist hears of it with the phone's app in the background too. Whether it was put.
    */
   suspend fun needsYou(): Boolean {
-    val (path, data) = readNeedsYou() ?: return false
+    // As the other jobs: nothing is put when the sign-in changed while it was read.
+    val (item, _) = marked { readNeedsYou() } ?: return false
+    val (path, data) = item
     keep.put(path, data)
     return true
   }
