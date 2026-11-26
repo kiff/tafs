@@ -48,7 +48,7 @@
   "watch.menu": "Menu",
   "watch.mic_needed": "Pour demander à la voix, autorisez le micro pour tafs sur cette montre.",
   "watch.more_on_phone": "La suite est sur votre téléphone.",
-  "watch.needs_lock": "Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l'écran et déverrouillez-la.",
+  "watch.needs_lock": "Pour envoyer, refuser ou bloquer depuis cette montre, définissez un verrouillage de l'écran et déverrouillez-la.",
   "watch.needs_you_count": {
     "one": "{count} vous attend",
     "other": "{count} vous attendent"

@@ -2988,7 +2988,7 @@
     <string name="watch_menu">Meni</string>
     <string name="watch_mic_needed">Za glasovna vprašanja dovolite tafs uporabo mikrofona na tej uri.</string>
     <string name="watch_more_on_phone">Ostalo je v telefonu.</string>
-    <string name="watch_needs_lock">Za zavračanje ali ustavljanje s te ure nastavite na njej zaklepanje zaslona in jo odklenite.</string>
+    <string name="watch_needs_lock">Za pošiljanje, zavračanje ali ustavljanje s te ure nastavite na njej zaklepanje zaslona in jo odklenite.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s čaka na vas</item>
         <item quantity="two">%1$s čakata na vas</item>

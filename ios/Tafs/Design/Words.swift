@@ -5625,7 +5625,7 @@ enum Words {
         static var micNeeded: String { Words.line("watch.mic_needed") }
         /// The rest is on your phone.
         static var moreOnPhone: String { Words.line("watch.more_on_phone") }
-        /// To refuse or halt from this watch, set a screen lock on it and unlock it.
+        /// To send, refuse or halt from this watch, set a screen lock on it and unlock it.
         static var needsLock: String { Words.line("watch.needs_lock") }
         /// {count} need you
         static func needsYouCount(count: Int) -> String { Words.count("watch.needs_you_count", count) }

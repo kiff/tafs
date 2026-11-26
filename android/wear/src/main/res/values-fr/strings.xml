@@ -98,7 +98,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Pour demander à la voix, autorisez le micro pour tafs sur cette montre.</string>
     <string name="watch_more_on_phone">La suite est sur votre téléphone.</string>
-    <string name="watch_needs_lock">Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l\'écran et déverrouillez-la.</string>
+    <string name="watch_needs_lock">Pour envoyer, refuser ou bloquer depuis cette montre, définissez un verrouillage de l\'écran et déverrouillez-la.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s vous attend</item>
         <item quantity="other">%1$s vous attendent</item>

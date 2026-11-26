@@ -2832,7 +2832,7 @@
     <string name="watch_menu">მენიუ</string>
     <string name="watch_mic_needed">ხმით სათხოვნელად ამ საათზე tafs-ს მიეცით მიკროფონის უფლება.</string>
     <string name="watch_more_on_phone">დანარჩენი თქვენს ტელეფონზეა.</string>
-    <string name="watch_needs_lock">ამ საათიდან უარის სათქმელად ან გასაჩერებლად დააყენეთ მასზე ეკრანის ჩაკეტვა და განბლოკეთ.</string>
+    <string name="watch_needs_lock">ამ საათიდან გასაგზავნად, უარის სათქმელად ან გასაჩერებლად დააყენეთ მასზე ეკრანის ჩაკეტვა და განბლოკეთ.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s გელოდებათ</item>
         <item quantity="other">%1$s გელოდებათ</item>

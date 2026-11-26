@@ -98,7 +98,7 @@
     <string name="watch_menu">Menü</string>
     <string name="watch_mic_needed">Um per Stimme zu fragen, erlaube tafs das Mikrofon auf dieser Uhr.</string>
     <string name="watch_more_on_phone">Der Rest ist auf deinem Handy.</string>
-    <string name="watch_needs_lock">Um mit dieser Uhr abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.</string>
+    <string name="watch_needs_lock">Um mit dieser Uhr zu senden, abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s braucht dich</item>
         <item quantity="other">%1$s brauchen dich</item>

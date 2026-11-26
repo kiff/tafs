@@ -98,7 +98,7 @@
     <string name="watch_menu">মেনু</string>
     <string name="watch_mic_needed">কণ্ঠ দিয়ে জিজ্ঞেস করতে এই ঘড়িতে tafs-কে মাইক্রোফোনের অনুমতি দিন।</string>
     <string name="watch_more_on_phone">বাকিটা আপনার ফোনে।</string>
-    <string name="watch_needs_lock">এই ঘড়ি থেকে প্রত্যাখ্যান বা থামাতে এতে একটি স্ক্রিন লক সেট করুন এবং আনলক করুন।</string>
+    <string name="watch_needs_lock">এই ঘড়ি থেকে পাঠাতে, প্রত্যাখ্যান করতে বা থামাতে এতে একটি স্ক্রিন লক সেট করুন এবং আনলক করুন।</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$sটির আপনাকে দরকার</item>
         <item quantity="other">%1$sটির আপনাকে দরকার</item>

@@ -20,8 +20,8 @@ drawn smaller, and has no sign-in of its own.
   and signs the only answers the watch may ask for: Refuse and Halt.
 - **No keys and no tokens on the watch.** A lost watch can read and stop things, never approve.
 - **Sending needs a passcode on the watch.** Refuse, Halt, Halt all and Coach send nothing from a
-  watch with no passcode, and it says so ("To refuse or halt from this watch, set a screen lock on it
-  and unlock it.", `watch.needs_lock`), as on Wear OS. A locked watch doesn't show the app at all.
+  watch with no passcode, and it says so ("To send, refuse or halt from this watch, set a screen lock on
+  it and unlock it.", `watch.needs_lock`), as on Wear OS. A locked watch doesn't show the app at all.
   Reading Needs you and your tafs needs no passcode (`WristLock`).
 - **Standalone** (a cellular watch with its phone away) isn't in v1.
 
@@ -716,8 +716,13 @@ and never to tafs cloud directly.
     read, and the watch's alerts) and each page forgets what it showed, before the answer is used;
   - **no mark once one was kept** (signed out, or a reply that doesn't say whose it is) wipes the same way, and nothing
     kept is drawn;
-  - **nothing kept is drawn** before this run of the app has heard the kept mark in a live reply; an account change (a
-    push or the context) can wipe, but never lets what's kept be drawn, since it may have waited;
+  - **nothing kept is drawn** before this open of the app has heard the kept mark in a live reply, as on Wear OS: each
+    time the app is put away the mark must be heard again (`WatchAccountMark.leave`), since the app can go on running
+    while the phone changes accounts. A lowered wrist keeps the open for up to two minutes (`WatchAccountMark.phase`,
+    `inactiveKeeps`), so a glance stays as it was; back after longer, it's a new open, since watchOS can keep an app
+    inactive on screen for up to an hour, and the phone can change accounts in it. A new open's pages forget what they
+    showed and read again; an account change (a push or the context) can wipe, but never lets what's kept be
+    drawn, since it may have waited;
   - **account changes are taken in the order the phone made them** (each carries when): one older than the last change
     or live reply heard is ignored, whichever WatchConnectivity hands over first;
   - **a data push** (a thread's change, the Inbox's marks) never changes the account: it's used only with the kept mark,

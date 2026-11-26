@@ -102,7 +102,7 @@
     <string name="watch_menu">תפריט</string>
     <string name="watch_mic_needed">כדי לשאול בקול, יש לאפשר ל-tafs להשתמש במיקרופון בשעון הזה.</string>
     <string name="watch_more_on_phone">השאר בטלפון שלך.</string>
-    <string name="watch_needs_lock">כדי לדחות או לעצור מהשעון הזה, יש להגדיר בו נעילת מסך ולפתוח אותו.</string>
+    <string name="watch_needs_lock">כדי לשלוח, לדחות או לעצור מהשעון הזה, יש להגדיר בו נעילת מסך ולפתוח אותו.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">אחד זקוק לך</item>
         <item quantity="two">שניים זקוקים לך</item>

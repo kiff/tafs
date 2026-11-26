@@ -98,7 +98,7 @@
     <string name="watch_menu">Ընտրացանկ</string>
     <string name="watch_mic_needed">Ձայնով հարցնելու համար այս ժամացույցում թույլ տվեք tafs-ին օգտագործել խոսափողը։</string>
     <string name="watch_more_on_phone">Մնացածը ձեր հեռախոսում է։</string>
-    <string name="watch_needs_lock">Այս ժամացույցից մերժելու կամ կանգնեցնելու համար դրա վրա կարգավորեք էկրանի կողպում և ապակողպեք այն։</string>
+    <string name="watch_needs_lock">Այս ժամացույցից ուղարկելու, մերժելու կամ կանգնեցնելու համար դրա վրա կարգավորեք էկրանի կողպում և ապակողպեք այն։</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s-ը սպասում է ձեզ</item>
         <item quantity="other">%1$s-ը սպասում է ձեզ</item>

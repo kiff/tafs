@@ -19,7 +19,7 @@
   "watch.linking": "Vinculando o tafs. Mantenha o celular por perto e conectado.",
   "watch.listening": "Ouvindo",
   "watch.more_on_phone": "O resto está no celular.",
-  "watch.needs_lock": "Para recusar ou bloquear a partir deste relógio, defina um bloqueio de tela e desbloqueie-o.",
+  "watch.needs_lock": "Para enviar, recusar ou bloquear a partir deste relógio, defina um bloqueio de tela e desbloqueie-o.",
   "watch.needs_you_count": {
     "one": "{count} precisa de você",
     "other": "{count} precisam de você"

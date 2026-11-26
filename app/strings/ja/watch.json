@@ -45,7 +45,7 @@
   "watch.menu": "メニュー",
   "watch.mic_needed": "音声で質問するには、このウォッチでtafsのマイク使用を許可してください。",
   "watch.more_on_phone": "残りはスマートフォンにあります。",
-  "watch.needs_lock": "このウォッチから拒否や遮断をするには、画面ロックを設定してロックを解除してください。",
+  "watch.needs_lock": "このウォッチから送信、拒否、遮断をするには、画面ロックを設定してロックを解除してください。",
   "watch.needs_you_count": {
     "other": "要確認{count}件"
   },

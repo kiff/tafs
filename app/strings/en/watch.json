@@ -48,7 +48,7 @@
   "watch.menu": "Menu",
   "watch.mic_needed": "To ask by voice, allow the microphone for tafs on this watch.",
   "watch.more_on_phone": "The rest is on your phone.",
-  "watch.needs_lock": "To refuse or halt from this watch, set a screen lock on it and unlock it.",
+  "watch.needs_lock": "To send, refuse or halt from this watch, set a screen lock on it and unlock it.",
   "watch.needs_you_count": {
     "one": "{count} needs you",
     "other": "{count} need you"

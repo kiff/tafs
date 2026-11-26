@@ -48,7 +48,7 @@
   "watch.menu": "Menü",
   "watch.mic_needed": "A hangalapú kérdezéshez engedélyezd a mikrofont a tafs számára ezen az órán.",
   "watch.more_on_phone": "A többi a telefonodon van.",
-  "watch.needs_lock": "Ahhoz, hogy erről az óráról elutasíthass vagy leállíthass, állíts be rajta képernyőzárat, és oldd fel.",
+  "watch.needs_lock": "Ahhoz, hogy erről az óráról küldhess, elutasíthass vagy leállíthass, állíts be rajta képernyőzárat, és oldd fel.",
   "watch.needs_you_count": {
     "one": "{count} rád vár",
     "other": "{count} rád vár"

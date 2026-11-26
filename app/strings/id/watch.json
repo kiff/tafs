@@ -45,7 +45,7 @@
   "watch.menu": "Menu",
   "watch.mic_needed": "Untuk bertanya dengan suara, izinkan mikrofon untuk tafs di jam tangan ini.",
   "watch.more_on_phone": "Selebihnya ada di ponsel Anda.",
-  "watch.needs_lock": "Untuk menolak atau membekukan dari jam tangan ini, atur kunci layar di jam tangan dan buka kuncinya.",
+  "watch.needs_lock": "Untuk mengirim, menolak, atau membekukan dari jam tangan ini, atur kunci layar di jam tangan dan buka kuncinya.",
   "watch.needs_you_count": {
     "other": "{count} menunggu Anda"
   },

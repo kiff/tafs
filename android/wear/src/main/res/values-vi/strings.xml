@@ -94,7 +94,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Để hỏi bằng giọng nói, hãy cho phép micrô cho tafs trên đồng hồ này.</string>
     <string name="watch_more_on_phone">Phần còn lại ở trên điện thoại của bạn.</string>
-    <string name="watch_needs_lock">Để từ chối hoặc đóng băng từ đồng hồ này, hãy đặt khóa màn hình cho nó và mở khóa.</string>
+    <string name="watch_needs_lock">Để gửi, từ chối hoặc đóng băng từ đồng hồ này, hãy đặt khóa màn hình cho nó và mở khóa.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">%1$s việc cần bạn</item>
     </plurals>

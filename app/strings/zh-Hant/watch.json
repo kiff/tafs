@@ -45,7 +45,7 @@
   "watch.menu": "選單",
   "watch.mic_needed": "若要用語音詢問，請在這支手錶上允許 tafs 使用麥克風。",
   "watch.more_on_phone": "其餘內容在您的手機上。",
-  "watch.needs_lock": "若要從這支手錶拒絕或凍結，請先設定螢幕鎖定並解鎖。",
+  "watch.needs_lock": "若要從這支手錶傳送、拒絕或凍結，請先設定螢幕鎖定並解鎖。",
   "watch.needs_you_count": {
     "other": "{count} 項需要您"
   },

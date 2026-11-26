@@ -2754,7 +2754,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Untuk bertanya dengan suara, izinkan mikrofon untuk tafs di jam tangan ini.</string>
     <string name="watch_more_on_phone">Selebihnya ada di ponsel Anda.</string>
-    <string name="watch_needs_lock">Untuk menolak atau membekukan dari jam tangan ini, atur kunci layar di jam tangan dan buka kuncinya.</string>
+    <string name="watch_needs_lock">Untuk mengirim, menolak, atau membekukan dari jam tangan ini, atur kunci layar di jam tangan dan buka kuncinya.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">%1$s menunggu Anda</item>
     </plurals>

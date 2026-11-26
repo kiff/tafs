@@ -48,7 +48,7 @@
   "watch.menu": "Menyu",
   "watch.mic_needed": "Səslə soruşmaq üçün bu saatda tafs-a mikrofon icazəsi verin.",
   "watch.more_on_phone": "Qalanı telefonunuzdadır.",
-  "watch.needs_lock": "Bu saatdan rədd etmək və ya dondurmaq üçün onda ekran kilidi qurun və kilidini açın.",
+  "watch.needs_lock": "Bu saatdan göndərmək, rədd etmək və ya dondurmaq üçün onda ekran kilidi qurun və kilidini açın.",
   "watch.needs_you_count": {
     "one": "{count} sizi gözləyir",
     "other": "{count} sizi gözləyir"

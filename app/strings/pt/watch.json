@@ -48,7 +48,7 @@
   "watch.menu": "Menu",
   "watch.mic_needed": "Para pedir por voz, autorize o microfone para o tafs neste relógio.",
   "watch.more_on_phone": "O resto está no telemóvel.",
-  "watch.needs_lock": "Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.",
+  "watch.needs_lock": "Para enviar, recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.",
   "watch.needs_you_count": {
     "one": "{count} precisa de si",
     "other": "{count} precisam de si"

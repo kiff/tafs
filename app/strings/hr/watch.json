@@ -51,7 +51,7 @@
   "watch.menu": "Izbornik",
   "watch.mic_needed": "Da pitate glasom, dopustite mikrofon za tafs na ovom satu.",
   "watch.more_on_phone": "Ostalo je na vašem telefonu.",
-  "watch.needs_lock": "Da odbijete ili blokirate s ovog sata, postavite na njemu zaključavanje zaslona i otključajte ga.",
+  "watch.needs_lock": "Da šaljete, odbijete ili blokirate s ovog sata, postavite na njemu zaključavanje zaslona i otključajte ga.",
   "watch.needs_you_count": {
     "one": "{count} čeka vas",
     "few": "{count} čekaju vas",

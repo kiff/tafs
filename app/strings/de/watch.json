@@ -48,7 +48,7 @@
   "watch.menu": "Menü",
   "watch.mic_needed": "Um per Stimme zu fragen, erlaube tafs das Mikrofon auf dieser Uhr.",
   "watch.more_on_phone": "Der Rest ist auf deinem Handy.",
-  "watch.needs_lock": "Um mit dieser Uhr abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.",
+  "watch.needs_lock": "Um mit dieser Uhr zu senden, abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.",
   "watch.needs_you_count": {
     "one": "{count} braucht dich",
     "other": "{count} brauchen dich"

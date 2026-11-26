@@ -2754,7 +2754,7 @@
     <string name="watch_menu">메뉴</string>
     <string name="watch_mic_needed">음성으로 물으려면 이 워치에서 tafs의 마이크 사용을 허용하세요.</string>
     <string name="watch_more_on_phone">나머지는 휴대폰에 있습니다.</string>
-    <string name="watch_needs_lock">이 워치에서 거절하거나 차단하려면 화면 잠금을 설정하고 잠금을 해제하세요.</string>
+    <string name="watch_needs_lock">이 워치에서 보내거나 거절하거나 차단하려면 화면 잠금을 설정하고 잠금을 해제하세요.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">확인 필요 %1$s개</item>
     </plurals>

@@ -48,7 +48,7 @@
   "watch.menu": "Menüü",
   "watch.mic_needed": "Häälega küsimiseks luba selles kellas tafsile mikrofon.",
   "watch.more_on_phone": "Ülejäänu on telefonis.",
-  "watch.needs_lock": "Sellest kellast keeldumiseks või peatamiseks sea sellele ekraanilukk ja ava see.",
+  "watch.needs_lock": "Sellest kellast saatmiseks, keeldumiseks või peatamiseks sea sellele ekraanilukk ja ava see.",
   "watch.needs_you_count": {
     "one": "{count} vajab sind",
     "other": "{count} vajab sind"
