@@ -573,6 +573,18 @@ reach" for all of them. The four lines are:
 Every screen that says the phone gave no answer shows its own reason (`Asked.Unreachable.why`), with Try again
 (`WatchModelTest`, `AccountScreensTest`).
 
+**Following a held call in logcat** (`HeldLog`, tag `tafs.held`, every build), so a held call that never shows on the wrist can
+be traced on a Play-signed pair with `adb logcat -s tafs.held`. Each step writes one line with counts and seconds only, never a
+taf's name, what it wants, an amount, a reason, an id or the account mark:
+- the phone: what it put as `kept/needs-you` (the count, the number of calls, each hold's seconds left, whether a mark went),
+  or why it put nothing (signed out, nothing read yet, the watch not served in this sign-in); a put that failed, by its error's
+  name; its answer to the watch's Needs you; and its answer to the watch's brief, with how many held calls the brief names;
+- the watch: each `kept/needs-you` heard, the mark's standing against the one held (`same`, `other`, `phone-none`,
+  `watch-none`) and whether it was taken; what it kept with the app closed (the live calls, whether unlocked, how many new);
+  and, open, what the app took (signed out here, the mark heard, a read on screen).
+
+`HeldLogTest` holds the line's shape and that it carries none of the words above.
+
 ## How the watch talks to KIFF and tafs cloud: through the phone
 
 The watch holds **no keys, no session and no KIFF client**. It sends the phone a request over the Data Layer, the phone

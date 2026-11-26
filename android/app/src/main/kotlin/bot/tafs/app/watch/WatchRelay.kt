@@ -11,6 +11,7 @@ import bot.tafs.watchlink.Amounts
 import bot.tafs.watchlink.AskLine
 import bot.tafs.watchlink.CardLine
 import bot.tafs.watchlink.EventLine
+import bot.tafs.watchlink.HeldLog
 import bot.tafs.watchlink.DecisionLine
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
@@ -105,8 +106,14 @@ class WatchRelay(
           state.mode != Mode.kiff -> WatchReply.SignedOut
           // Nothing read yet: "not now", never an empty list or a count of 0 that the watch would draw as the truth.
           !state.listLoaded || state.listUnread -> WatchReply.Failed(Words.Watch.openOnPhone)
-          request is WatchRequest.NeedsYou -> needsYou(state)
-          request is WatchRequest.Brief -> brief(state)
+          request is WatchRequest.NeedsYou -> needsYou(state).also {
+            WatchNeedsYou.log(HeldLog.line("phone answered needs-you", it.count, it.calls, now()))
+          }
+          request is WatchRequest.Brief -> brief(state).also { reply ->
+            // With a brief, the watch draws it in Needs you's place: how many of the held calls it names is logged too.
+            val named = (reply as? WatchReply.Brief)?.decisions?.count { it.holdId != null }
+            WatchNeedsYou.log(HeldLog.skipped("phone answered brief", if (reply is WatchReply.Brief) "a brief" else "none", "held" to state.held.size, "held_in_brief" to named))
+          }
           else -> tafs(state)
         }
       }

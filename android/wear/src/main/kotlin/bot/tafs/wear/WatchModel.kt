@@ -3,6 +3,7 @@ package bot.tafs.wear
 import bot.tafs.watchlink.AskLine
 import bot.tafs.watchlink.DecisionLine
 import bot.tafs.watchlink.HeldLine
+import bot.tafs.watchlink.HeldLog
 import bot.tafs.watchlink.NotAccepted
 import bot.tafs.watchlink.TafLine
 import bot.tafs.watchlink.WatchReply
@@ -1553,6 +1554,7 @@ class WatchModel(
    * The pushed lines carry no amount or reason; a call already shown keeps the ones its live read gave.
    */
   fun needsYouPushed(count: Int, words: String, calls: List<HeldLine>) {
+    KeptResults.heldLog(HeldLog.line("watch app took", count, calls, now(), "signed_out" to _signedOutHere.value, "mark_heard" to verified, "shown" to (_shown.value is Shown.Read)))
     if (_signedOutHere.value || !verified) return
     tile?.saw(count, now(), calls.mapNotNull { it.endsAt })
     (_shown.value as? Shown.Read)?.let { read ->

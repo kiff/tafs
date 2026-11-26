@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import bot.tafs.watchlink.AskLine
+import bot.tafs.watchlink.HeldLog
 import bot.tafs.watchlink.WatchLink
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
@@ -147,7 +148,7 @@ object KeptResults {
    */
   fun needsYou(context: Context, kept: bot.tafs.watchlink.KeptNeedsYou, stores: Stores, now: Long = System.currentTimeMillis()) {
     needsYou?.let { return it(kept) }
-    if (stores.signedOut) return
+    if (stores.signedOut) return heldLog(HeldLog.skipped("watch kept nothing", "signed out on the watch"))
     val inbox = stores.inbox?.takeIf { stores.secure }
     val fresh = inbox?.let { HeldCalls.fresh(it.read(), it.dismissed(), HeldCalls.live(kept.calls, now)) }
     if (stores.secure) {
@@ -156,6 +157,12 @@ object KeptResults {
     }
     NeedsYouTileService.update(context)
     HeldCalls.alert(context, kept.calls, fresh, now)
+    heldLog(HeldLog.line("watch kept (app closed)", kept.count, HeldCalls.live(kept.calls, now), now, "unlocked" to stores.secure, "new" to (fresh?.size ?: 0)))
+  }
+
+  /** One line about held calls in logcat ([HeldLog]): counts and seconds only. */
+  fun heldLog(line: String) {
+    runCatching { android.util.Log.i(HeldLog.TAG, line) }
   }
 
   /** The open app's model, while it's on screen: the phone's answer to a sign-in ask ([WatchModel.signInAnswered]). */
@@ -216,7 +223,11 @@ object KeptResults {
       WatchLink.keptAskId(path) != null -> bytes?.let(WatchLink::decodeKeptAsk)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.ask?.takeIf { it.id == WatchLink.keptAskId(path) }?.let { ask(context, it, stores) }
       path == WatchLink.KEPT_MARKS -> bytes?.let(WatchLink::decodeKeptMarks)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { marks(bot.tafs.watchlink.WatchReply.InboxMarks(it.read, it.dismissed), stores) }
       path == WatchLink.KEPT_TAFS -> bytes?.let(WatchLink::decodeKeptTafs)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { tafList(it, stores) }
-      path == WatchLink.KEPT_NEEDS_YOU -> bytes?.let(WatchLink::decodeKeptNeedsYou)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { needsYou(context, it, stores) }
+      path == WatchLink.KEPT_NEEDS_YOU -> bytes?.let(WatchLink::decodeKeptNeedsYou)?.let { kept ->
+        val taken = AccountMark.keptTaken(held, kept.mark)
+        heldLog(HeldLog.line("watch heard kept/needs-you", kept.count, kept.calls, System.currentTimeMillis(), "mark" to HeldLog.mark(held, kept.mark), "taken" to taken))
+        if (taken) needsYou(context, kept, stores)
+      }
       WatchLink.keptChatTaf(path) != null -> bytes?.let(WatchLink::decodeKeptChat)?.takeIf { it.tafId == WatchLink.keptChatTaf(path) && AccountMark.keptTaken(held, it.mark) }?.let { chat(it.tafId, it.lines, stores) }
     }
   }
