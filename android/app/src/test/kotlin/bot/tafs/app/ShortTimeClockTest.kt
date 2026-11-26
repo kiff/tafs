@@ -47,6 +47,14 @@ class ShortTimeClockTest {
     assertEquals("22:22", messageTime(at, is24 = true))
   }
 
+  @Test fun onATwentyFourHourDeviceTheLanguagesOwnSeparatorMatchesTheChatStamp() {
+    // Finnish writes 22.22: the decision line follows the language's pattern, as the chat stamp does (legal-i18n's review).
+    RuntimeEnvironment.setQualifiers("fi")
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    AccountTime.is24Hour = true
+    assertEquals(messageTime(at, is24 = true), shortTime(at))
+  }
+
   @Test fun beforeTheSettingIsReadTimesStay24Hour() {
     AccountTime.is24Hour = null
     assertEquals("22:22", shortTime(at))

@@ -31,8 +31,9 @@ val zone: ZoneId get() = AccountTime.accountZone ?: ZoneId.systemDefault()
  * chat's. A line already stored with its time keeps the style it was written in.
  */
 fun shortTime(at: Instant): String =
-  if (AccountTime.is24Hour == false) messageTime(at, is24 = false)
-  else DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()).format(at.atZone(zone))
+  AccountTime.is24Hour?.let { messageTime(at, is24 = it) }
+    // Not read yet (tests, the watch): 24-hour, as before.
+    ?: DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()).format(at.atZone(zone))
 
 /** A date as "28 Oct 2026", as iOS's abbreviated date style. */
 fun shownDate(at: Instant): String = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()).format(at.atZone(zone))
