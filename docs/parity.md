@@ -19,8 +19,8 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Windows | done 50, not for it 8 | the 58 iPad view files |
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
-| Wear OS | built 26, partial 3, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | built 24, partial 4, not started 1, not for it 4 | the [Watches](#watches) table |
+| Wear OS | built 26, partial 4, not for it 4 | the [Watches](#watches) table |
+| Apple Watch | built 25, partial 4, not started 1, not for it 4 | the [Watches](#watches) table |
 | Chrome extension | done 10, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
@@ -234,8 +234,9 @@ A watch row is **done** only once the owner has seen it work: on their Galaxy Wa
 | 29 | The all-clear picture | built; an ended hold stayed in the Inbox (found 26 Nov, as on Wear 0.4.9); it leaves since tafs#2129, and Needs you's list, brief and counts drop it at its end on the watch's clock since tafs#2133 | broken on the owner's check of Wear 0.4.9 (26 Nov: an ended hold stayed in the Inbox with Refuse); rebuilt in 0.4.10, on the internal track since 26 Nov (tafs#2131: a call the phone no longer lists leaves) | |
 | 30 | Saying the phone can't be reached, with retries on their own | built | built | the owner's call: no Try again. One calm "Linking tafs. Keep your phone nearby and connected." (`watch.linking`) on the first link, retries with backoff (tafs#2021, tafs#2018) Wear 0.4.9: a send with no receipt shows the calm linking screen and sends again by itself under the same id (no Retry until 10 minutes pass); the pages' and a taf page's small line is the calm one, retrying by itself; the Apple Watch follows. |
 | 31 | Working without the phone | not for it | not for it | the phone holds the session and the keys |
-| 32 | In the store | partial | partial | Apple Watch: only the TestFlight build carries it. Wear: the internal track; production is the owner's |
+| 32 | In the store | partial | partial | Apple Watch: only the TestFlight build carries it. Wear: the internal track; production is the owner's, and Wear 0.4.0 sent for production was rejected on 26 Nov (row 34) |
 | 33 | One account's data never shows under another's: a change of the phone's sign-in, or a sign-out the watch didn't hear, wipes what it kept | built (tafs#2092: the mark checked before anything is drawn, Retry only where safe; tafs#2097: the person's acts go only to the sign-in they were made under) | built (tafs#2093) | Wear OS: the phone's random account mark on every reply and kept item, checked before anything is drawn and failing closed, and `kept/signed-out` at sign-out (docs/watch-wear.md). Apple Watch: the same rule (docs/watch-app.md), in iOS 1.0.1. Both read built until the owner's check |
+| 34 | Shows where you are in a scrolling screen, and fits a round or small screen at the default and largest text size | built (read in the code, 26 Nov: every scrolling screen is a SwiftUI `List` or `ScrollView`, which draw watchOS's own scroll indicator by the Digital Crown, and none hides it; the paged screens are vertical `TabView`s with their page dots; text uses the system's text styles, which follow the watch's text size, and nothing is drawn outside the safe area) | partial: Google Play's Wear quality review rejected Wear 0.4.0 (version code 400000005) on 26 Nov: no scroll indicator on a scrolling screen (true of all 13 in 0.4.10 too), and text cut at a round screen's edges at the default size. The fix puts every scrolling screen in Wear's `ScreenScaffold` (its scroll indicator and its padding for round screens), checked on the round emulator at the default and largest size | Google Play's Wear app quality rules, which also ask the listing to name the tile (row 24). Apple Watch: the largest text size is still to be seen in the simulator |
 
 ## One layout on every app
 
