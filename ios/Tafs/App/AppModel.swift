@@ -6050,6 +6050,9 @@ final class AppModel: ObservableObject {
         /// Why the failed run stopped, in tafs cloud's words, when its `end` sends them
         /// (`ai_unavailable`): said as they are, with Retry.
         var failedWhy: String?
+        /// Whether sending the failed run's message again is safe, as its stream's `end` said (`retry`): false hides Try
+        /// again at once, before the thread is read; nil (a tafs cloud that doesn't say) leaves it to the thread.
+        var endedRetry: Bool?
         /// Retry sends the message again with no word from tafs cloud: for an approval that came after its run ended, and a
         /// switch that stopped a run while it waited, as before (and as Android). The held call itself never ran, but steps
         /// before it may have, and Retry sends the whole message again: gating these on tafs cloud's `retry` too is a
@@ -6130,6 +6133,7 @@ final class AppModel: ObservableObject {
         var ended: String?
         var didBefore: [TafsCloud.DoneCall] = []
         var whyFailed: String?
+        var retryAfter: Bool?
         do {
             for try await e in events {
                 guard gen == accountGeneration else { return }
@@ -6179,10 +6183,11 @@ final class AppModel: ObservableObject {
                             self.chatStates[tafID]?.heldKeys[exception] = Self.heldKey(call)
                         }
                     }
-                case .end(let status, let stop, let done, _, let words):
+                case .end(let status, let stop, let done, _, let words, let retry):
                     ended = status
                     didBefore = done
                     whyFailed = words
+                    retryAfter = retry
                     chatStates[tafID]?.live?.activity = nil
                     if Self.capStops.contains(stop) { chatStates[tafID]?.capped = stop }
                 case .component, .broken:
@@ -6208,6 +6213,7 @@ final class AppModel: ObservableObject {
             chatStates[tafID]?.endedRun = chatStates[tafID]?.live?.run
             chatStates[tafID]?.wentThrough = didBefore
             chatStates[tafID]?.failedWhy = whyFailed
+            chatStates[tafID]?.endedRetry = retryAfter
         }
         if ended == "CANCELLED" { chatStates[tafID]?.ended = .stopped }
         // What the run didn't read, and what waited for it, is tafs cloud's to send now
@@ -6463,6 +6469,8 @@ final class AppModel: ObservableObject {
         let state = chatState(tafID)
         guard case .failed? = state.ended else { return nil }
         if state.retryAsIs { return Words.Chat.retry }
+        // The stream's own word first: false is no Try again, whatever the thread said before.
+        if state.endedRetry == false { return nil }
         guard let failed = state.runFailed, failed.retry, state.endedRun == nil || state.endedRun == failed.run else { return nil }
         return failed.retryLabel ?? Words.Chat.retry
     }
@@ -8331,7 +8339,7 @@ final class AppModel: ObservableObject {
     enum RunEnd: Equatable { case stopped, failed(retry: String) }
     @Published private(set) var setupEnded: RunEnd? {
         // Its words belong to the failure they came with: any other end, or none, has none.
-        didSet { if case .failed? = setupEnded {} else { setupEndedWhy = nil } }
+        didSet { if case .failed? = setupEnded {} else { setupEndedWhy = nil; setupEndedRetry = nil } }
     }
     /// The run whose stream ended `failed` here (`setupEnded`), as the stream named it; nil when it named none. The thread's
     /// `failed` for that run isn't said again; another run's still is (`setupRunFailedLine`).
@@ -8339,6 +8347,9 @@ final class AppModel: ObservableObject {
     /// tafs cloud's words for why Coach's run followed here stopped, from the stream's end (a daily AI limit, the provider):
     /// nil when it sent none.
     @Published private(set) var setupEndedWhy: String?
+    /// Whether sending Coach's failed message again is safe, as its stream's `end` said: false hides Try again at once;
+    /// nil leaves it to the thread's `failed.retry` (`setupRetryLabel`).
+    private var setupEndedRetry: Bool?
 
     /// The line under a Coach run that failed here: tafs cloud's words for why, from the stream's end or, once the thread
     /// is read, its `failed` for that run, as a taf's chat says them (`failedWords(why:)`); the app's own "stopped part-way"
@@ -9551,7 +9562,7 @@ final class AppModel: ObservableObject {
     /// The words of the button under Coach's failed run, or none: only where tafs cloud's thread says sending the message
     /// again is safe (`failed.retry`, for that run), as a taf's chat (`chatRetryLabel`).
     var setupRetryLabel: String? {
-        guard case .failed? = setupEnded, let failed = setupThread.failed, failed.retry,
+        guard case .failed? = setupEnded, setupEndedRetry != false, let failed = setupThread.failed, failed.retry,
               setupEndedRun == nil || setupEndedRun == failed.run else { return nil }
         return failed.retryLabel ?? Words.Chat.retry
     }
@@ -9712,6 +9723,7 @@ final class AppModel: ObservableObject {
         var conversation = conversation
         var ended: String?
         var whyFailed: String?
+        var retryAfter: Bool?
         // Coach paused on a card its person answers: Needs you is read once then, so its row
         // and badge come while the chat is still open, not after it closes.
         var waitsOnYou = false
@@ -9754,9 +9766,10 @@ final class AppModel: ObservableObject {
                     guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                     setupLive?.newPart()
                     setupLiveBefore = Set(setupThread.items.map(\.id))
-                case .end(let status, _, _, _, let words):
+                case .end(let status, _, _, _, let words, let retry):
                     ended = status
                     whyFailed = words
+                    retryAfter = retry
                     if status == "PAUSED" { waitsOnYou = true }
                 case .held:
                     setupLive?.ended(nil, .held)
@@ -9772,6 +9785,7 @@ final class AppModel: ObservableObject {
             setupEnded = .failed(retry: text)
             setupEndedRun = setupLive?.run
             setupEndedWhy = whyFailed
+            setupEndedRetry = retryAfter
         }
         if ended == "CANCELLED" { setupEnded = .stopped }
         // The recorded answer first, then the live one goes: no gap between them.

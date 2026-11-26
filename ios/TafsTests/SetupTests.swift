@@ -1765,6 +1765,43 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// The stream's `end` carries `retry` (the thread's `failed.retry` rule): false hides Try again at once, even where an
+    /// older read of the thread said the run was safe to send again; absent, the thread decides. And the end's `retry` is
+    /// read from tafs cloud's event as it's sent.
+    func testCoachsTryAgainFollowsTheStreamEndsRetry() async throws {
+        XCTAssertEqual(TafsCloud.streamEvent("end", data: Data(#"{"status":"ERROR","stop":"error","code":"ai_limit_account","words":"Limit.","retry":false}"#.utf8)),
+                       .end(status: "ERROR", stop: "error", code: "ai_limit_account", words: "Limit.", retry: false))
+        XCTAssertEqual(TafsCloud.streamEvent("end", data: Data(#"{"status":"ERROR","stop":"error"}"#.utf8)),
+                       .end(status: "ERROR", stop: "error"), "an end with no retry leaves it to the thread")
+
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        // The thread says run r9 is safe to send again.
+        let read = #"{"messages":[{"at":"2026-11-26T17:47:00.000Z","from":"owner","kind":"message","text":"Connect my Stripe","session":"s1"}],"components":[],"failed":{"run":"r9","words":"It stopped.","retry":true,"retry_label":"Try again"}}"#
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, read)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, read)
+        await model.loadSetup()
+        var retry: Bool? = false
+        model.streamOpener = { _, _ in
+            let r = retry
+            return AsyncThrowingStream { c in
+                c.yield(.session("s1", newSession: false, run: "r9"))
+                c.yield(.end(status: "ERROR", stop: "error", code: "ai_limit_account", words: "Limit.", retry: r))
+                c.finish()
+            }
+        }
+        _ = await model.sendSetup("Connect my Stripe")
+        await model.setupStream?.value
+        XCTAssertNil(model.setupRetryLabel, "the end said retry false: no Try again, whatever the thread says")
+
+        retry = nil
+        _ = await model.sendSetup("Connect my Stripe")
+        await model.setupStream?.value
+        XCTAssertEqual(model.setupRetryLabel, "Try again", "no word on the end: the thread's retry for that run")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// A run that fails says so, and offers Retry, which sends its message again, only where tafs cloud's thread says it's
     /// safe (`failed.retry`); with no such word there's no Retry and nothing is sent. A stopped run is marked stopped
     /// (#58 B1, B8).
