@@ -333,6 +333,16 @@ describe("words that say every call asks hold the rule to a count of 0 a day tha
       "Every refund asks you first, and over a day refunds stop at 200 EUR.",
       "Every refund asks you first, over a day refunds stop at 50 EUR.",
       "Każdy zwrot czeka na twoją zgodę, a zwroty powyżej 200 € dziennie są odrzucane.",
+      // Each read as a cap when any threshold word continued the clause after a comma: pinned, so a later widening can't
+      // bring them back.
+      "Every refund asks you first, over €200 a day is refused.",
+      "Every refund asks you first, more than €200 a day is refused.",
+      "Chaque remboursement vous demande d'abord, plus de 200 € par jour sont refusés.",
+      "Chaque remboursement attend votre accord, plus de 200 € par jour est refusé.",
+      "Jede Erstattung fragt dich zuerst, über 200 € am Tag wird abgelehnt.",
+      "Jede Erstattung fragt dich zuerst, mehr als 200 € am Tag werden abgelehnt.",
+      "Jede Erstattung fragt dich zuerst, ab 200 € am Tag wird abgelehnt.",
+      "Każdy zwrot czeka na twoją zgodę, powyżej 200 € dziennie zwroty są odrzucane.",
       "Jede Erstattung fragt dich zuerst, und über 200 € am Tag wird abgelehnt.",
     ]) expect(saysEveryCallAsks(text), text).toBe(true);
   });
