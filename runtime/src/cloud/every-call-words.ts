@@ -15,6 +15,8 @@
 // likely to write, and th, lo and km the shortest lists. A missed phrase reads as not said, as before, and the skill's rule
 // ("every call asks" is a count of 0 a calendar day that asks) stays the guard in every language. hy, ka, mn, km, lo, tk and
 // ne want a native speaker's read before any real customer.
+// Thai and Lao end a sentence with a space, not a sign, so in th and lo the figure guard's 30 characters can look back into
+// the sentence before. That errs towards not reading every call: it fails open, as a missed phrase does.
 
 /** A language written with spaces: its words for every, and the forms that ask. */
 export const EVERY_CALL_SPACED: Record<string, [string, string[]]> = {
