@@ -136,6 +136,43 @@ object KeptResults {
     WatchCache(cache, now).saveTafs(kept.tafs, kept.allHalted)
   }
 
+  /** The open app's model, while it's on screen: Needs you as the phone holds it now ([WatchModel.needsYouPushed]). */
+  @Volatile var needsYou: ((bot.tafs.watchlink.KeptNeedsYou) -> Unit)? = null
+
+  /**
+   * Needs you as the phone pushed it when a call was held or ended (`kept/needs-you`): into the open app at once, or, closed, the
+   * Inbox's held lines (new first, ended ones gone) and the tile's count, on a watch that keeps them (a screen lock, unlocked);
+   * then the watch's own alert for a held call new to it ([HeldCalls.alert]). Locked, nothing is kept, and the alert says only
+   * how many. The watch never approves: the call opens on Needs you, with Refuse and Approve on your phone.
+   */
+  fun needsYou(context: Context, kept: bot.tafs.watchlink.KeptNeedsYou, stores: Stores, now: Long = System.currentTimeMillis()) {
+    needsYou?.let { return it(kept) }
+    if (stores.signedOut) return
+    val inbox = stores.inbox?.takeIf { stores.secure }
+    val fresh = inbox?.let { HeldCalls.fresh(it.read(), it.dismissed(), HeldCalls.live(kept.calls, now)) }
+    if (stores.secure) {
+      stores.tile?.let { TileCount(it).saw(kept.count, now, kept.calls.mapNotNull { c -> c.endsAt }) }
+      inbox?.let { store -> HeldCalls.inbox(store.read(), store.dismissed(), kept.calls, now)?.let(store::write) }
+    }
+    NeedsYouTileService.update(context)
+    HeldCalls.alert(context, kept.calls, fresh, now)
+  }
+
+  /** The open app's model, while it's on screen: the phone's answer to a sign-in ask ([WatchModel.signInAnswered]). */
+  @Volatile var signIn: ((bot.tafs.watchlink.KeptSignIn) -> Unit)? = null
+
+  /**
+   * The phone's Allow or Deny for this watch's sign-in ask (row 18): into the open app, or, closed, the watch's own flag. Only the
+   * ask waiting, within [SIGN_IN_ASK_MS], is taken; Allow clears the flag, and the next open starts empty and reads fresh.
+   */
+  fun signInAnswer(context: Context, answer: bot.tafs.watchlink.KeptSignIn, now: Long = System.currentTimeMillis()) {
+    signIn?.let { return it(answer) }
+    val store = PreferencesWatchSignIn(context)
+    val (id, at) = store.asked() ?: return
+    if (answer.ask != id || now - at > SIGN_IN_ASK_MS) return
+    if (answer.allowed) store.signIn() else store.forgetAsk()
+  }
+
   /** The open app's model, while it's on screen: the phone signed out ([WatchModel.phoneSignedOut]). */
   @Volatile var signedOut: (() -> Unit)? = null
 
@@ -159,9 +196,12 @@ object KeptResults {
     val held = stores.marks?.read()
     when {
       path == WatchLink.KEPT_SIGNED_OUT -> if (fromPhone()) bytes?.let(WatchLink::decodeKeptSignedOut)?.let { signedOut(context, it, stores) }
+      // Only from the paired phone, connected now, as its replies are.
+      path == WatchLink.KEPT_SIGN_IN -> if (fromPhone()) bytes?.let(WatchLink::decodeKeptSignIn)?.let { signInAnswer(context, it) }
       WatchLink.keptAskId(path) != null -> bytes?.let(WatchLink::decodeKeptAsk)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.ask?.takeIf { it.id == WatchLink.keptAskId(path) }?.let { ask(context, it, stores) }
       path == WatchLink.KEPT_MARKS -> bytes?.let(WatchLink::decodeKeptMarks)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { marks(bot.tafs.watchlink.WatchReply.InboxMarks(it.read, it.dismissed), stores) }
       path == WatchLink.KEPT_TAFS -> bytes?.let(WatchLink::decodeKeptTafs)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { tafList(it, stores) }
+      path == WatchLink.KEPT_NEEDS_YOU -> bytes?.let(WatchLink::decodeKeptNeedsYou)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { needsYou(context, it, stores) }
       WatchLink.keptChatTaf(path) != null -> bytes?.let(WatchLink::decodeKeptChat)?.takeIf { it.tafId == WatchLink.keptChatTaf(path) && AccountMark.keptTaken(held, it.mark) }?.let { chat(it.tafId, it.lines, stores) }
     }
   }
@@ -210,7 +250,7 @@ object KeptResults {
         marks = PreferencesMarkStore(context),
         cache = if (WATCH_V2) KeystoreCacheStore(context) else null,
         drafts = if (WATCH_V2) PreferencesDraftStore(context) else null,
-        tile = PreferencesTileStore(context),
+        tile = EncryptedTileStore.of(context),
         others = { VoiceFiles.dir(context).deleteRecursively() },
         // The Inbox's own rule: kept only on a watch with a screen lock, unlocked now. A locked watch gets the notification's
         // locked words only, and the app takes the answer in at its next open, from the phone's read.

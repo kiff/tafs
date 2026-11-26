@@ -2716,6 +2716,7 @@
     <string name="watch_ask">សួរ tafs</string>
     <string name="watch_ask_needs_consent">មុនពេលសួរ tafs សូមអនុញ្ញាតការប្រើ AI ក្នុង tafs នៅលើទូរសព្ទរបស់អ្នក។</string>
     <string name="watch_ask_not_on">ការសួរពីនាឡិការបស់អ្នកមិនទាន់បើកនៅឡើយ។</string>
+    <string name="watch_ask_phone_sign_in">ស្នើទូរសព្ទរបស់អ្នកឱ្យចូលគណនីនាឡិកានេះ</string>
     <string name="watch_ask_text_only">tafs ទទួលពាក្យរបស់អ្នកជាអត្ថបទ មិនដែលជាសំឡេងរបស់អ្នកទេ។</string>
     <string name="watch_asking_phone">កំពុងសួរទូរសព្ទរបស់អ្នក…</string>
     <string name="watch_calendar_today">ប្រតិទិនថ្ងៃនេះ</string>
@@ -2727,6 +2728,7 @@
     <string name="watch_deleted_nothing_sent">បានលុប។ គ្មានអ្វីត្រូវបានផ្ញើទេ។</string>
     <string name="watch_didnt_catch">ស្តាប់មិនបាន។ ចុចដើម្បីព្យាយាមម្តងទៀត។</string>
     <string name="watch_dismiss">បដិសេធចោល</string>
+    <string name="watch_edit_words">ប៉ះអត្ថបទដើម្បីកែ</string>
     <string name="watch_glance_description">មានប៉ុន្មានត្រូវការអ្នក មិនដែលបង្ហាញថាអ្វី ឬនរណាទេ។</string>
     <string name="watch_halt_all_q">បញ្ឈប់ taf ទាំងអស់របស់អ្នកឬ?</string>
     <plurals name="watch_halt_now_count">
@@ -2740,6 +2742,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">ការហៅដែលផ្អាកទុក %1$s ត្រូវការអ្នក</item>
     </plurals>
+    <string name="watch_held_channel">ការហៅដែលផ្អាកទុក</string>
     <string name="watch_inbox_empty">គ្មានអ្វីថ្មីទេ។ ចម្លើយរបស់ Coach និងការជូនដំណឹងពី taf របស់អ្នកមកដល់ទីនេះ។</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">មិនទាន់អាន %1$s ក្នុងប្រអប់សារចូល</item>
@@ -2762,6 +2765,7 @@
     <string name="watch_nothing_sent_until">គ្មានអ្វីត្រូវបានផ្ញើទេ រហូតដល់អ្នកអនុម័ត។</string>
     <string name="watch_nothing_waits">គ្មានអ្វីរង់ចាំអ្នកទេ។</string>
     <string name="watch_open_on_phone">បើកនៅលើទូរសព្ទ</string>
+    <string name="watch_opened_on_phone">បានបើកនៅលើទូរសព្ទ</string>
     <string name="watch_page_brief">សេចក្តីសង្ខេប</string>
     <string name="watch_page_inbox">ប្រអប់សារចូល</string>
     <string name="watch_paused_still_answers">បានផ្អាក៖ កាលវិភាគរបស់វាបិទ។ វានៅតែឆ្លើយអ្វីដែលអ្នកផ្ញើ។</string>
@@ -2784,6 +2788,7 @@
     <string name="watch_recent_chats">ការសន្ទនាថ្មីៗ</string>
     <string name="watch_recording">កំពុងថត</string>
     <string name="watch_recording_not_received">ការថតមិនបានទៅដល់ទូរសព្ទរបស់អ្នកទេ។ សូមព្យាយាមម្តងទៀត ឬវាយជំនួស។</string>
+    <string name="watch_refuse_on_phone">មិនទាន់បដិសេធទេ។ សូមបដិសេធនៅលើទូរសព្ទ។</string>
     <string name="watch_refused">បានបដិសេធ។ គ្មានអ្វីត្រូវបានផ្ញើទេ។</string>
     <string name="watch_reply">ឆ្លើយតប</string>
     <string name="watch_rerecord">ថតម្តងទៀត</string>
@@ -2792,14 +2797,20 @@
     <string name="watch_resume_on_phone">បន្តនៅលើទូរសព្ទរបស់អ្នក</string>
     <string name="watch_retry">ព្យាយាមម្តងទៀត</string>
     <string name="watch_review">ពិនិត្យមុនផ្ញើ</string>
+    <string name="watch_seconds_left">នៅសល់ %1$s វិ</string>
     <string name="watch_sending">កំពុងផ្ញើ…</string>
     <string name="watch_sent">បានផ្ញើ</string>
     <string name="watch_settings_of">%1$s · ការកំណត់</string>
+    <string name="watch_sign_in_allow">អនុញ្ញាត</string>
+    <string name="watch_sign_in_denied">មិនបានចូលគណនីទេ។ នាឡិកានេះនៅតែចាកចេញ។</string>
+    <string name="watch_sign_in_deny">បដិសេធ</string>
     <string name="watch_sign_in_on_phone">ចូលទៅ tafs នៅលើទូរសព្ទរបស់អ្នកជាមុនសិន។</string>
+    <string name="watch_sign_in_watch_q">ចូលគណនីនាឡិកានេះជាអ្នកឬ?</string>
     <string name="watch_sign_out_q">ចាកចេញនៅលើនាឡិកានេះឬ?</string>
     <string name="watch_sign_out_sub">ទូរសព្ទរបស់អ្នកនៅតែចូល។ នាឡិកានេះភ្លេច taf ការសន្ទនា និងប្រអប់សារចូលរបស់អ្នក។</string>
     <string name="watch_signed_in">បានចូល</string>
     <string name="watch_signed_out_here">បានចាកចេញនៅលើនាឡិកានេះ។ ទូរសព្ទរបស់អ្នកនៅតែចូល។</string>
+    <string name="watch_stopped_at_limit">បានឈប់នៅដែនកំណត់ %1$s។ អ្វីដែលបានឮនៅខាងក្រោម។</string>
     <string name="watch_swipe_settings">អូសទៅឆ្វេងដើម្បីមើលការកំណត់របស់វា</string>
     <string name="watch_tap_start">ចុចចាប់ផ្តើម រួចនិយាយ។ ពាក្យរបស់អ្នកបង្ហាញនៅទីនេះនៅពេលអ្នកនិយាយ។</string>
     <string name="watch_timing">ស្តាប់ %1$s ms · បង្កាន់ដៃ %2$s ms · លទ្ធផល %3$s ms</string>
@@ -2811,6 +2822,7 @@
     <string name="watch_view_on_phone">មើលនៅលើទូរសព្ទ</string>
     <string name="watch_view_only_phone">ទូរសព្ទនេះអាចមើលតែប៉ុណ្ណោះ ដូច្នេះអ្នកមិនអាចសួរពីនាឡិកាបានទេ។ ចូលនៅលើទូរសព្ទដែលអាចអនុម័តបាន។</string>
     <string name="watch_voice_text_only">Coach ទទួលពាក្យរបស់អ្នកជាអត្ថបទ មិនដែលជាសំឡេងរបស់អ្នកទេ។</string>
+    <string name="watch_waiting_for_phone">កំពុងរង់ចាំទូរសព្ទរបស់អ្នក…</string>
     <string name="watch_what_it_does">អ្វីដែលវាធ្វើ</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s កំពុងធ្វើការ</item>

@@ -16,9 +16,15 @@ enum class UpdateStage {
   None, Available, Downloading, Ready;
 
   companion object {
-    /** The stage from Play's answer: its availability, whether a flexible update is allowed, and an install under way. */
+    /**
+     * The stage from Play's answer: its availability, whether a flexible update is allowed, and an install under way. Ready only
+     * when Play also says the update is there: a "downloaded" left over from an update Play no longer has (already installed,
+     * or withdrawn) would offer a Restart that can do nothing (`ERROR_DOWNLOAD_NOT_PRESENT`).
+     */
     fun of(availability: Int, flexibleAllowed: Boolean, installStatus: Int): UpdateStage = when {
-      installStatus == InstallStatus.DOWNLOADED -> Ready
+      installStatus == InstallStatus.DOWNLOADED ->
+        if (availability == UpdateAvailability.UPDATE_AVAILABLE || availability == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) Ready
+        else None
       installStatus == InstallStatus.DOWNLOADING || installStatus == InstallStatus.PENDING -> Downloading
       availability == UpdateAvailability.UPDATE_AVAILABLE && flexibleAllowed -> Available
       else -> None
@@ -38,18 +44,22 @@ class PlayUpdates(private val manager: AppUpdateManager) {
   val stage: StateFlow<UpdateStage> = _stage
 
   private val listener = InstallStateUpdatedListener { state ->
-    _stage.value = UpdateStage.of(UpdateAvailability.UNKNOWN, false, state.installStatus())
+    // Downloaded: Play is asked whether the update is still there before Restart is offered.
+    if (state.installStatus() == InstallStatus.DOWNLOADED) check()
+    else _stage.value = UpdateStage.of(UpdateAvailability.UNKNOWN, false, state.installStatus())
   }
 
   init {
     manager.registerListener(listener)
   }
 
-  /** Asks Play again, as the app comes to the front. */
+  /** Asks Play again, as the app comes to the front. When Play can't answer, nothing is offered. */
   fun check() {
-    manager.appUpdateInfo.addOnSuccessListener { info ->
-      _stage.value = UpdateStage.of(info.updateAvailability(), info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE), info.installStatus())
-    }
+    manager.appUpdateInfo
+      .addOnSuccessListener { info ->
+        _stage.value = UpdateStage.of(info.updateAvailability(), info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE), info.installStatus())
+      }
+      .addOnFailureListener { _stage.value = UpdateStage.None }
   }
 
   /** Update: Play's own confirmation, then the download in the background. */
@@ -61,9 +71,12 @@ class PlayUpdates(private val manager: AppUpdateManager) {
     }
   }
 
-  /** Restart: Play installs what it downloaded and opens tafs again. */
+  /**
+   * Restart: Play installs what it downloaded and opens tafs again. When it can't (nothing downloaded, -7, or Play already up to
+   * date), the row follows Play's answer again, so it never stays on a Restart that does nothing.
+   */
   fun restart() {
-    manager.completeUpdate()
+    manager.completeUpdate().addOnCompleteListener { check() }
   }
 
   fun close() {

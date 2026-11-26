@@ -1086,9 +1086,13 @@ class WatchModelTest {
 
   private fun signIn() = object : WatchSignIn {
     var out = false
+    var waiting: Pair<String, Long>? = null
     override fun signedOut() = out
-    override fun signOut() { out = true }
-    override fun signIn() { out = false }
+    override fun signOut() { out = true; waiting = null }
+    override fun signIn() { out = false; waiting = null }
+    override fun asked() = waiting
+    override fun ask(id: String, at: Long) { waiting = id to at }
+    override fun forgetAsk() { waiting = null }
   }
 
   /** No screen lock: the Inbox isn't kept, and the screen shows what the phone answered now instead of "Nothing new". */
@@ -1140,7 +1144,9 @@ class WatchModelTest {
     model.refresh()
     model.refuse("hold_1")
     assertNull(model.outcome.value)
-    model.signInHere()
+    // Signed in again (the phone's Allow for this watch's ask, row 18): the old outcome never shows.
+    signIn.ask("w_00000003", t)
+    model.signInAnswered(bot.tafs.watchlink.KeptSignIn(t, "w_00000003", allowed = true))
     assertNull("never shown after Sign in", model.outcome.value)
   }
 

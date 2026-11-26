@@ -2791,6 +2791,7 @@
     <string name="watch_ask">Vraag tafs</string>
     <string name="watch_ask_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je tafs iets vraagt.</string>
     <string name="watch_ask_not_on">Vragen vanaf je horloge staat nog niet aan.</string>
+    <string name="watch_ask_phone_sign_in">Vraag je telefoon om dit horloge in te loggen</string>
     <string name="watch_ask_text_only">tafs krijgt je woorden als tekst, nooit je stem.</string>
     <string name="watch_asking_phone">Je telefoon vragen…</string>
     <string name="watch_calendar_today">Agenda van vandaag</string>
@@ -2802,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Verwijderd. Er is niets verstuurd.</string>
     <string name="watch_didnt_catch">Niet verstaan. Tik om het opnieuw te proberen.</string>
     <string name="watch_dismiss">Negeren</string>
+    <string name="watch_edit_words">Tik op de tekst om hem te wijzigen</string>
     <string name="watch_glance_description">Hoeveel er op je wachten, nooit wat of wie.</string>
     <string name="watch_halt_all_q">Al je tafs stilzetten?</string>
     <plurals name="watch_halt_now_count">
@@ -2817,6 +2819,7 @@
         <item quantity="one">%1$s vastgehouden aanroep wacht op jou</item>
         <item quantity="other">%1$s vastgehouden aanroepen wachten op jou</item>
     </plurals>
+    <string name="watch_held_channel">Vastgehouden aanroepen</string>
     <string name="watch_inbox_empty">Niets nieuws. Hier komen de antwoorden van Coach en de meldingen van je tafs.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s ongelezen in je Inbox</item>
@@ -2841,6 +2844,7 @@
     <string name="watch_nothing_sent_until">Er wordt niets verstuurd tot je goedkeurt.</string>
     <string name="watch_nothing_waits">Er wacht niets op je.</string>
     <string name="watch_open_on_phone">Openen op telefoon</string>
+    <string name="watch_opened_on_phone">Geopend op je telefoon</string>
     <string name="watch_page_brief">Overzicht</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.</string>
@@ -2864,6 +2868,7 @@
     <string name="watch_recent_chats">Recente chats</string>
     <string name="watch_recording">Opnemen</string>
     <string name="watch_recording_not_received">De opname is niet op je telefoon aangekomen. Probeer het opnieuw, of typ het.</string>
+    <string name="watch_refuse_on_phone">Niet geweigerd. Weiger het op je telefoon.</string>
     <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
     <string name="watch_reply">Antwoorden</string>
     <string name="watch_rerecord">Opnieuw opnemen</string>
@@ -2872,14 +2877,20 @@
     <string name="watch_resume_on_phone">Hervat op je telefoon</string>
     <string name="watch_retry">Opnieuw</string>
     <string name="watch_review">Controleer voor je verstuurt</string>
+    <string name="watch_seconds_left">Nog %1$s s</string>
     <string name="watch_sending">Versturen…</string>
     <string name="watch_sent">Verstuurd</string>
     <string name="watch_settings_of">%1$s · instellingen</string>
+    <string name="watch_sign_in_allow">Toestaan</string>
+    <string name="watch_sign_in_denied">Niet ingelogd. Dit horloge blijft uitgelogd.</string>
+    <string name="watch_sign_in_deny">Weigeren</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
+    <string name="watch_sign_in_watch_q">Dit horloge inloggen als jij?</string>
     <string name="watch_sign_out_q">Uitloggen op dit horloge?</string>
     <string name="watch_sign_out_sub">Je telefoon blijft ingelogd. Dit horloge vergeet je tafs, chats en Inbox.</string>
     <string name="watch_signed_in">Ingelogd</string>
     <string name="watch_signed_out_here">Uitgelogd op dit horloge. Je telefoon blijft ingelogd.</string>
+    <string name="watch_stopped_at_limit">Gestopt bij de limiet van %1$s. Wat er gehoord is, staat hieronder.</string>
     <string name="watch_swipe_settings">Veeg naar links voor zijn instellingen</string>
     <string name="watch_tap_start">Tik op Starten en spreek. Je woorden verschijnen hier terwijl je praat.</string>
     <string name="watch_timing">Luisteren %1$s ms · ontvangst %2$s ms · resultaat %3$s ms</string>
@@ -2891,6 +2902,7 @@
     <string name="watch_view_on_phone">Bekijken op telefoon</string>
     <string name="watch_view_only_phone">Deze telefoon kan alleen bekijken, dus je kunt niets vragen vanaf je horloge. Log in op een telefoon die kan goedkeuren.</string>
     <string name="watch_voice_text_only">Coach krijgt je woorden als tekst, nooit je stem.</string>
+    <string name="watch_waiting_for_phone">Wachten op je telefoon…</string>
     <string name="watch_what_it_does">Wat hij doet</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s bezig</item>

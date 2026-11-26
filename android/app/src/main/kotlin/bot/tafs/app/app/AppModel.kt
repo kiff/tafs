@@ -633,6 +633,11 @@ data class AppState(
   val watchAlertsOffer: Boolean = false,
   /** The watch has used tafs in this sign-in: the phone keeps the taf list for it (`kept/tafs`) and takes its background pushes. */
   val watchServed: Boolean = false,
+  /**
+   * A watch signed out on itself asks to be signed in again (watch row 18), by its ask id: "Sign this watch in as you?" waits for
+   * this phone's person, Allow or Deny, behind the phone's own lock. Nothing goes to the watch without Allow. Null: none waits.
+   */
+  val watchSignInAsk: String? = null,
   /** The re-check's outcome, said once under the dialog's place: alerts on now, or still off. */
   val alertsRecheckLine: String? = null,
   /**
@@ -3233,6 +3238,30 @@ class AppModel(
    * ([bot.tafs.app.watch.WatchSignedOut]), so a watch out of reach forgets the account too. Never fails a sign-out.
    */
   var watchSignedOut: ((String?) -> Unit)? = null
+
+  /** A watch's sign-in ask arrived ([askWatchSignIn]): the app tells its person, with the app closed too. */
+  var watchSignInAsked: (() -> Unit)? = null
+
+  /** The person answered a watch's sign-in ask: the answer goes to the watch, for that ask alone, with the account mark. */
+  var watchSignInAnswered: ((ask: String, allowed: Boolean, mark: String?) -> Unit)? = null
+
+  /**
+   * A watch signed out on itself asks to be signed in again (watch row 18): asked of this phone's person, never answered by the
+   * phone alone. Signed out here, or in the sample, nothing is asked. The newest ask replaces one still waiting.
+   */
+  fun askWatchSignIn(ask: String): Boolean {
+    if (_state.value.mode != Mode.kiff) return false
+    _state.update { it.copy(watchSignInAsk = ask) }
+    runCatching { watchSignInAsked?.invoke() }
+    return true
+  }
+
+  /** Allow or Deny, the person's own tap: the watch hears it for that ask alone. Allow signs it in again, and it starts empty. */
+  fun answerWatchSignIn(allowed: Boolean) {
+    val ask = _state.value.watchSignInAsk ?: return
+    _state.update { it.copy(watchSignInAsk = null) }
+    runCatching { watchSignInAnswered?.invoke(ask, allowed, if (allowed) watchMark() else null) }
+  }
 
   private fun applyPush(status: PushStatus) {
     _state.update { it.copy(canAnswerHolds = status.answers, alertsReady = status.alerts && pendingHandoff() == null) }

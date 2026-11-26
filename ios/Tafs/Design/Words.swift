@@ -5561,6 +5561,8 @@ enum Words {
         static var askNeedsConsent: String { Words.line("watch.ask_needs_consent") }
         /// Asking from your watch isn't on yet.
         static var askNotOn: String { Words.line("watch.ask_not_on") }
+        /// Ask your phone to sign this watch in
+        static var askPhoneSignIn: String { Words.line("watch.ask_phone_sign_in") }
         /// tafs gets your words as text, never your voice.
         static var askTextOnly: String { Words.line("watch.ask_text_only") }
         /// Asking your phone…
@@ -5583,6 +5585,8 @@ enum Words {
         static var didntCatch: String { Words.line("watch.didnt_catch") }
         /// Dismiss
         static var dismiss: String { Words.line("watch.dismiss") }
+        /// Tap the words to change them
+        static var editWords: String { Words.line("watch.edit_words") }
         /// How many need you, never what or who.
         static var glanceDescription: String { Words.line("watch.glance_description") }
         /// Halt all your tafs?
@@ -5601,6 +5605,8 @@ enum Words {
         static var hear: String { Words.line("watch.hear") }
         /// {count} held calls need you
         static func heldCalls(count: Int) -> String { Words.count("watch.held_calls", count) }
+        /// Held calls
+        static var heldChannel: String { Words.line("watch.held_channel") }
         /// Nothing new. Coach's replies and your tafs' alerts land here.
         static var inboxEmpty: String { Words.line("watch.inbox_empty") }
         /// {count} unread in Inbox
@@ -5637,6 +5643,8 @@ enum Words {
         static var nothingWaits: String { Words.line("watch.nothing_waits") }
         /// Open on phone
         static var openOnPhone: String { Words.line("watch.open_on_phone") }
+        /// Opened on your phone
+        static var openedOnPhone: String { Words.line("watch.opened_on_phone") }
         enum Page {
             /// Brief
             static var brief: String { Words.line("watch.page.brief") }
@@ -5681,6 +5689,8 @@ enum Words {
         static var recording: String { Words.line("watch.recording") }
         /// The recording didn't reach your phone. Try again, or type instead.
         static var recordingNotReceived: String { Words.line("watch.recording_not_received") }
+        /// Not refused. Refuse it on your phone.
+        static var refuseOnPhone: String { Words.line("watch.refuse_on_phone") }
         /// Refused. Nothing was sent.
         static var refused: String { Words.line("watch.refused") }
         /// Reply
@@ -5697,14 +5707,24 @@ enum Words {
         static var retry: String { Words.line("watch.retry") }
         /// Check before sending
         static var review: String { Words.line("watch.review") }
+        /// {seconds} s left
+        static func secondsLeft(seconds: String) -> String { Words.line("watch.seconds_left", seconds) }
         /// Sending…
         static var sending: String { Words.line("watch.sending") }
         /// Sent
         static var sent: String { Words.line("watch.sent") }
         /// {taf} · settings
         static func settingsOf(taf: String) -> String { Words.line("watch.settings_of", taf) }
+        /// Allow
+        static var signInAllow: String { Words.line("watch.sign_in_allow") }
+        /// Not signed in. This watch stays signed out.
+        static var signInDenied: String { Words.line("watch.sign_in_denied") }
+        /// Deny
+        static var signInDeny: String { Words.line("watch.sign_in_deny") }
         /// Sign in to tafs on your phone first.
         static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Sign this watch in as you?
+        static var signInWatchQ: String { Words.line("watch.sign_in_watch_q") }
         /// Sign out on this watch?
         static var signOutQ: String { Words.line("watch.sign_out_q") }
         /// Your phone stays signed in. This watch forgets your tafs, chats and inbox.
@@ -5713,6 +5733,8 @@ enum Words {
         static var signedIn: String { Words.line("watch.signed_in") }
         /// Signed out on this watch. Your phone stays signed in.
         static var signedOutHere: String { Words.line("watch.signed_out_here") }
+        /// Stopped at the {limit} limit. What was heard is below.
+        static func stoppedAtLimit(limit: String) -> String { Words.line("watch.stopped_at_limit", limit) }
         /// Swipe left for its settings
         static var swipeSettings: String { Words.line("watch.swipe_settings") }
         /// Tap Start, then speak. Your words show here as you talk.
@@ -5735,6 +5757,8 @@ enum Words {
         static var viewOnlyPhone: String { Words.line("watch.view_only_phone") }
         /// Coach gets your words as text, never your voice.
         static var voiceTextOnly: String { Words.line("watch.voice_text_only") }
+        /// Waiting for your phone…
+        static var waitingForPhone: String { Words.line("watch.waiting_for_phone") }
         /// What it does
         static var whatItDoes: String { Words.line("watch.what_it_does") }
         /// {count} working

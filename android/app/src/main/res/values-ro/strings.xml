@@ -2866,6 +2866,7 @@
     <string name="watch_ask">Întrebați tafs</string>
     <string name="watch_ask_needs_consent">Înainte să întrebați tafs, permiteți utilizarea AI în tafs pe telefon.</string>
     <string name="watch_ask_not_on">Întrebările de pe ceas nu sunt încă activate.</string>
+    <string name="watch_ask_phone_sign_in">Cereți telefonului să conecteze acest ceas</string>
     <string name="watch_ask_text_only">tafs primește cuvintele dvs. ca text, niciodată vocea.</string>
     <string name="watch_asking_phone">Se întreabă telefonul…</string>
     <string name="watch_calendar_today">Calendarul de azi</string>
@@ -2877,6 +2878,7 @@
     <string name="watch_deleted_nothing_sent">Șters. Nu s-a trimis nimic.</string>
     <string name="watch_didnt_catch">Nu am înțeles. Atingeți pentru a reîncerca.</string>
     <string name="watch_dismiss">Respingeți</string>
+    <string name="watch_edit_words">Atingeți textul pentru a-l modifica</string>
     <string name="watch_glance_description">Câte vă așteaptă, niciodată ce sau cine.</string>
     <string name="watch_halt_all_q">Opriți toate tafurile?</string>
     <plurals name="watch_halt_now_count">
@@ -2894,6 +2896,7 @@
         <item quantity="few">%1$s apeluri reținute vă așteaptă</item>
         <item quantity="other">%1$s de apeluri reținute vă așteaptă</item>
     </plurals>
+    <string name="watch_held_channel">Apeluri reținute</string>
     <string name="watch_inbox_empty">Nimic nou. Răspunsurile lui Coach și alertele tafurilor ajung aici.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s necitit în Mesajele primite</item>
@@ -2920,6 +2923,7 @@
     <string name="watch_nothing_sent_until">Nimic nu se trimite până nu aprobați.</string>
     <string name="watch_nothing_waits">Nimic nu vă așteaptă.</string>
     <string name="watch_open_on_phone">Deschideți pe telefon</string>
+    <string name="watch_opened_on_phone">Deschis pe telefon</string>
     <string name="watch_page_brief">Rezumat</string>
     <string name="watch_page_inbox">Mesajele primite</string>
     <string name="watch_paused_still_answers">Întrerupt: programul său este dezactivat. Totuși răspunde la ce îi trimiteți.</string>
@@ -2944,6 +2948,7 @@
     <string name="watch_recent_chats">Conversații recente</string>
     <string name="watch_recording">Se înregistrează</string>
     <string name="watch_recording_not_received">Înregistrarea nu a ajuns pe telefon. Încercați din nou sau tastați în schimb.</string>
+    <string name="watch_refuse_on_phone">Nu a fost refuzat. Refuzați-l pe telefon.</string>
     <string name="watch_refused">Refuzat. Nu s-a trimis nimic.</string>
     <string name="watch_reply">Răspundeți</string>
     <string name="watch_rerecord">Reînregistrați</string>
@@ -2952,14 +2957,20 @@
     <string name="watch_resume_on_phone">Reluați pe telefon</string>
     <string name="watch_retry">Reîncercați</string>
     <string name="watch_review">Verificați înainte de trimitere</string>
+    <string name="watch_seconds_left">Mai sunt %1$s s</string>
     <string name="watch_sending">Se trimite…</string>
     <string name="watch_sent">Trimis</string>
     <string name="watch_settings_of">%1$s · setări</string>
+    <string name="watch_sign_in_allow">Permiteți</string>
+    <string name="watch_sign_in_denied">Neconectat. Acest ceas rămâne deconectat.</string>
+    <string name="watch_sign_in_deny">Refuzați</string>
     <string name="watch_sign_in_on_phone">Mai întâi conectați-vă la tafs pe telefon.</string>
+    <string name="watch_sign_in_watch_q">Conectați acest ceas cu contul dvs.?</string>
     <string name="watch_sign_out_q">Vă deconectați pe acest ceas?</string>
     <string name="watch_sign_out_sub">Telefonul rămâne conectat. Acest ceas uită tafurile, conversațiile și mesajele primite.</string>
     <string name="watch_signed_in">Conectat</string>
     <string name="watch_signed_out_here">Deconectat pe acest ceas. Telefonul rămâne conectat.</string>
+    <string name="watch_stopped_at_limit">Oprit la limita de %1$s. Ce s-a auzit este mai jos.</string>
     <string name="watch_swipe_settings">Glisați la stânga pentru setările sale</string>
     <string name="watch_tap_start">Atingeți Pornire, apoi vorbiți. Cuvintele dvs. apar aici pe măsură ce vorbiți.</string>
     <string name="watch_timing">Ascultare %1$s ms · chitanță %2$s ms · rezultat %3$s ms</string>
@@ -2971,6 +2982,7 @@
     <string name="watch_view_on_phone">Vedeți pe telefon</string>
     <string name="watch_view_only_phone">Acest telefon poate doar vizualiza, așa că nu puteți întreba de pe ceas. Conectați-vă pe un telefon care poate aproba.</string>
     <string name="watch_voice_text_only">Coach primește cuvintele dvs. ca text, niciodată vocea.</string>
+    <string name="watch_waiting_for_phone">Se așteaptă telefonul…</string>
     <string name="watch_what_it_does">Ce face</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s lucrează</item>

@@ -11,6 +11,8 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -159,9 +161,63 @@ class WatchPagesTest {
           pages = pages(false), linking = true)
       }
     }
+    compose.mainClock.advanceTimeBy(LINKING_SHOWN_AFTER_MS + 100)
     compose.onNodeWithTag(LINKING).assertExists()
     compose.onNodeWithText(Words.Watch.linking).assertExists()
     compose.onAllNodesWithText(Words.Watch.askingPhone).assertCountEquals(0)
+  }
+
+  /** Row 10: Coach's Read more, in the thread, opens the answer and reads it whole in one tap. */
+  @Test fun coachsReadMoreOpensTheWholeInOneTap() {
+    val ask = AskLine("wa_7", "w_7", AskLine.DONE, line = "Wiki lookup is ready. Version 3 is live…", words = "Done", updated = "2026-11-26T00:28:00Z", more = true)
+    var opened = 0
+    var more = 0
+    compose.setContent { MaterialTheme { CoachTurn(WatchModel.Said("Which tafs are ready", 0L), ask, onOpen = { opened++ }, onReadMore = { more++ }) } }
+    compose.onNodeWithTag(THREAD_MORE + "wa_7").performClick()
+    assertEquals(1, more)
+    assertEquals("Read more isn't the plain open", 0, opened)
+  }
+
+  /** Row 25: while recording, the seconds left before the limit stops it. */
+  @Test fun recordingShowsTheSecondsLeft() {
+    compose.setContent { MaterialTheme { VoiceScreenV2(WatchModel.Voice.Listening("Move my call", null, since = 1_000L), actions, now = { 13_000L }) } }
+    compose.onNodeWithText(Words.Watch.secondsLeft("18")).assertExists()
+  }
+
+  /** Edit before sending: tapping the words opens them in a field with the keyboard; nothing is sent. */
+  @Test fun tappingTheReviewsWordsOpensThemToEdit() {
+    compose.setContent { MaterialTheme { VoiceScreenV2(WatchModel.Voice.Review("What do people in bucharamanga eat", null), actions) } }
+    compose.onNodeWithText(Words.Watch.editWords).assertExists()
+    compose.onNodeWithTag(REVIEW_WORDS).performClick()
+    compose.waitForIdle()
+    compose.onNodeWithTag(REVIEW_EDIT).assertExists()
+    assertTrue("nothing sent", did.none { it == "send" })
+  }
+
+  /** Open on phone says what it did (row 28): the phone opened tafs, or it wasn't reached; nothing before it's pressed. */
+  @Test fun openOnPhoneSaysWhatItDid() {
+    assertEquals("Opened on your phone", openedLine(true))
+    assertEquals(Words.Watch.checkPhoneTitle, openedLine(false))
+    assertNull(openedLine(null))
+    // Drawn with nothing to say, it shows no dialog and takes nothing from the screen under it.
+    compose.setContent { MaterialTheme { OpenedOnPhone(null) {} } }
+    compose.onAllNodes(androidx.compose.ui.test.isDialog()).assertCountEquals(0)
+  }
+
+  /** A phone that confirms within LINKING_SHOWN_AFTER_MS shows no linking line at all: the screen stays black until then. */
+  @Test fun theLinkingLineWaitsHalfASecond() {
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      MaterialTheme {
+        WatchPages(WatchModel.Shown.Asking, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = emptyList(), ready = emptyList(), act = actions,
+          pages = pages(false), linking = true)
+      }
+    }
+    compose.mainClock.advanceTimeByFrame()
+    compose.onNodeWithTag(LINKING).assertExists()
+    compose.onAllNodesWithText(Words.Watch.linking).assertCountEquals(0)
+    compose.mainClock.advanceTimeBy(LINKING_SHOWN_AFTER_MS + 100)
+    compose.onNodeWithText(Words.Watch.linking).assertExists()
   }
 
   /** Tries spent with something shown: one small line and Try again over it, never a screen of its own. */
@@ -244,7 +300,8 @@ class WatchPagesTest {
     show(read, voice = WatchModel.Voice.Ready("ask_1"))
     compose.onNodeWithText("${Words.Watch.ready} · 30 s").assertExists()
     compose.onNodeWithText(Words.Watch.tapStart).assertExists()
-    compose.onNodeWithText("0:00 / 0:30").assertExists()
+    // Before Start, the limit; while recording, the seconds left (row 25).
+    compose.onNodeWithText("0:30").assertExists()
     // Start is its own control: the brand's round button with the microphone, never Stop's.
     compose.onAllNodesWithTag(RECORD_STOP).assertCountEquals(0)
     compose.onNodeWithTag(RECORD_START).assertContentDescriptionEquals(Words.Coach.start).performClick()

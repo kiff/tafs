@@ -474,6 +474,26 @@ class WatchModel(
     setWhole(askId, whole)
   }
 
+  /**
+   * Read more on a cut line of the phone's thread (watch row 10): the phone reads that message whole, by its id, from the taf's
+   * chat it holds ([WatchRequest.LineFull]); shown in place, never kept. Not readable: the rest is on the phone, with Open on phone.
+   */
+  suspend fun readMoreLine(lineId: String) {
+    val open = _taf.value ?: return
+    val key = lineKey(lineId)
+    if (open.chat.whole[key] is Whole.Read) return
+    setLineWhole(open.tafId, key, Whole.Reading)
+    val whole = when (val asked = ask(WatchRequest.LineFull(now(), open.tafId, lineId))) {
+      is Asked.Answered -> (asked.reply as? WatchReply.AskFull)?.let { Whole.Read(it.text) } ?: Whole.OnPhone
+      else -> Whole.OnPhone
+    }
+    setLineWhole(open.tafId, key, whole)
+  }
+
+  private fun setLineWhole(tafId: String, key: String, whole: Whole) {
+    _taf.update { open -> open?.takeIf { it.tafId == tafId }?.let { o -> o.copy(chat = o.chat.copy(whole = o.chat.whole + (key to whole))) } ?: open }
+  }
+
   private fun setWhole(askId: String, whole: Whole) {
     _taf.update { open -> open?.takeIf { o -> o.chat.turns.any { t -> t.ask.id == askId } }?.let { o -> o.copy(chat = o.chat.copy(whole = o.chat.whole + (askId to whole))) } ?: open }
   }
@@ -711,6 +731,14 @@ class WatchModel(
    * an ask newer than the one in memory replacing it, so the app shows what's there without a read.
    */
   fun reload() {
+    dropEnded()
+    // Signed out on this watch from another of its screens (a second copy of the app, opened from the tile or a notification):
+    // this one follows the watch's own flag before it draws anything, so a sign-out never comes undone by itself (row 18).
+    if (signIn?.signedOut() == true && !_signedOutHere.value) {
+      _signedOutHere.value = true
+      forget()
+      return
+    }
     if (_signedOutHere.value || !verified) return
     keptRead()[COACH_THREAD]?.turns?.forEach { turn ->
       val before = _asks.value[turn.ask.id]
@@ -903,10 +931,29 @@ class WatchModel(
    */
   val tafChatOff: StateFlow<Boolean> = _tafChatOff.asStateFlow()
 
-  private fun reviewOf(text: String, replyTo: String?, audio: VoiceAudio? = null): Voice.Review {
+  /** The recording the 30 s limit stopped, by when it started: its review says it was cut there (row 25). */
+  private var limitHit: Long? = null
+
+  /** The limit stopped the recording that started at [since]: its words still go to the review, which says so. */
+  fun reachedLimit(since: Long) {
+    if ((_voice.value as? Voice.Listening)?.since == since) limitHit = since
+  }
+
+  private fun reviewOf(text: String, replyTo: String?, audio: VoiceAudio? = null, cut: Boolean = false): Voice.Review {
     val taf = messaging?.let { id -> _taf.value?.takeIf { it.tafId == id } }
-    val notice = if (taf != null && _tafChatOff.value) Words.Watch.askNotOn else null
+    val notice = if (taf != null && _tafChatOff.value) Words.Watch.askNotOn else if (cut) Words.Watch.stoppedAtLimit(limitShort()) else null
     return Voice.Review(text.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), replyTo, audio, tafId = taf?.tafId, tafName = taf?.name, notice = notice)
+  }
+
+  /**
+   * The review's words changed by the person (edit before sending): the same message, to the same chat, with their words. The
+   * recording no longer says them, so it goes. Blank keeps the words as they were.
+   */
+  fun editReview(text: String) {
+    val review = _voice.value as? Voice.Review ?: return
+    val words = text.trim()
+    if (words.isEmpty() || words == review.text) return
+    voiceNow = review.copy(text = words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), audio = null, notice = null)
   }
 
   /** v2: words typed or a quick reply picked, to check before Send, as words heard are. Blank is nothing. */
@@ -977,7 +1024,10 @@ class WatchModel(
     if (words.isEmpty()) return heardNothing()
     heardAt = now()
     if (reviewFirst) {
-      voiceNow = reviewOf(words, listening.replyTo, audio)
+      // Stopped by the limit, mid-sentence perhaps: what was heard is kept, and the review says where it was cut.
+      val cut = listening.since != null && listening.since == limitHit
+      limitHit = null
+      voiceNow = reviewOf(words, listening.replyTo, audio, cut)
       return
     }
     send(Voice.Sending(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), newClientId(), listening.replyTo))
@@ -1414,9 +1464,10 @@ class WatchModel(
     val needsYou = when (asked) {
       is Asked.Answered -> when (val reply = asked.reply) {
         is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also {
-          tile?.saw(reply.count, now())
-          // Each held call is a line in the Inbox, kept until dismissed.
-          for (call in reply.calls) inboxPut(InboxItem(InboxItem.heldId(call.holdId), InboxItem.Kind.HELD, call.taf, call.wants, now()))
+          tile?.saw(reply.count, now(), reply.calls.mapNotNull { it.endsAt })
+          // Each held call is a line in the Inbox, with no amount kept; one the phone no longer lists (answered, refused or run out,
+          // row 29) goes, so a Refuse is never offered on a call KIFF has dropped ([HeldCalls.inbox], as the phone's push does).
+          if ((inboxStore != null || reviewFirst) && unlocked()) HeldCalls.inbox(_inbox.value, dismissed, reply.calls, now())?.let(::saveInbox)
           pruneDismissed("held:", reply.calls.map { InboxItem.heldId(it.holdId) }.toSet())
         }
         is WatchReply.SignedOut -> {
@@ -1481,6 +1532,39 @@ class WatchModel(
     val shown = _shown.value as? Shown.Read ?: return
     _shown.value = shown.copy(tafs = read)
     if (unlocked()) cache?.save(shown.needsYou, read)
+  }
+
+  /**
+   * Needs you as the phone pushed it when a call was held or ended (`kept/needs-you`, taken only under the mark held): the count
+   * on the tile and on screen, each held call's line at the top of the Inbox, and an ended one gone, at once and without asking.
+   * The pushed lines carry no amount or reason; a call already shown keeps the ones its live read gave.
+   */
+  fun needsYouPushed(count: Int, words: String, calls: List<HeldLine>) {
+    if (_signedOutHere.value || !verified) return
+    tile?.saw(count, now(), calls.mapNotNull { it.endsAt })
+    (_shown.value as? Shown.Read)?.let { read ->
+      val known = read.needsYou.calls.associateBy { it.holdId }
+      val live = HeldCalls.live(calls, now())
+      val merged = live.map { call -> known[call.holdId]?.let { call.copy(amount = it.amount, reason = it.reason) } ?: call }
+      _shown.value = read.copy(needsYou = NeedsYouRead((count - (calls.size - live.size)).coerceAtLeast(0), words, merged))
+    }
+    if ((inboxStore != null || reviewFirst) && unlocked()) HeldCalls.inbox(_inbox.value, dismissed, calls, now())?.let(::saveInbox)
+    pruneDismissed("held:", calls.map { InboxItem.heldId(it.holdId) }.toSet())
+  }
+
+  /**
+   * Held calls whose hold has ended, gone on the watch's own clock (row 29): from the Inbox and from Needs you as shown, with no
+   * word from the phone, so Refuse is never offered on a call KIFF has dropped. On every open, push and read.
+   */
+  fun dropEnded() {
+    val at = now()
+    HeldCalls.dropEnded(_inbox.value, at)?.let(::saveInbox)
+    (_shown.value as? Shown.Read)?.let { read ->
+      val live = HeldCalls.live(read.needsYou.calls, at)
+      if (live.size != read.needsYou.calls.size) {
+        _shown.value = read.copy(needsYou = read.needsYou.copy(count = (read.needsYou.count - (read.needsYou.calls.size - live.size)).coerceAtLeast(0), calls = live))
+      }
+    }
   }
 
   /** Since when the phone hasn't answered, while the last read is still shown. */
@@ -1756,10 +1840,50 @@ class WatchModel(
     today = null
   }
 
-  /** Sign in, on this watch again: the phone is still signed in, so the watch only reads it again (the caller refreshes). */
-  fun signInHere() {
+  /** Signing in again, asked of the phone's person (row 18): waiting on them, denied, or the phone not reached. */
+  sealed interface SignInAsk {
+    data object Waiting : SignInAsk
+    data object Denied : SignInAsk
+    data class NotReached(val why: LinkFailure) : SignInAsk
+  }
+
+  private val _signInAsk = MutableStateFlow<SignInAsk?>(if (signIn?.asked() != null) SignInAsk.Waiting else null)
+  val signInAsk: StateFlow<SignInAsk?> = _signInAsk.asStateFlow()
+
+  /**
+   * "Ask your phone to sign this watch in" (row 18): the phone asks its person, behind its own lock, "Sign this watch in as you?".
+   * A tap on the watch alone never signs it in: only the phone's Allow for this ask does ([signInAnswered]).
+   */
+  suspend fun askSignIn() {
+    if (!_signedOutHere.value) return
+    val id = newClientId()
+    signIn?.ask(id, now())
+    _signInAsk.value = SignInAsk.Waiting
+    val asked = phone.ask(WatchRequest.SignInAsk(now(), id))
+    val sent = asked is Asked.Answered && asked.reply is WatchReply.Done
+    if (!sent) {
+      signIn?.forgetAsk()
+      _signInAsk.value = SignInAsk.NotReached((asked as? Asked.Unreachable)?.why ?: LinkFailure.Link)
+    }
+  }
+
+  /**
+   * The phone's answer to this watch's sign-in ask (`kept/sign-in`, from the paired phone only). Taken only for the ask waiting,
+   * within [SIGN_IN_ASK_MS]; any other is ignored. Allow: signed in again, empty, so the caller reads fresh (true). Deny: it stays
+   * signed out, and says so.
+   */
+  fun signInAnswered(answer: bot.tafs.watchlink.KeptSignIn): Boolean {
+    val (id, at) = signIn?.asked() ?: return false
+    if (answer.ask != id || now() - at > SIGN_IN_ASK_MS) return false
+    signIn?.forgetAsk()
+    if (!answer.allowed) {
+      _signInAsk.value = SignInAsk.Denied
+      return false
+    }
     signIn?.signIn()
+    _signInAsk.value = null
     _signedOutHere.value = false
+    return true
   }
 }
 
@@ -1809,3 +1933,9 @@ fun randomClientId(): String {
 object SeenAsks {
   val ids: MutableSet<String> = java.util.Collections.synchronizedSet(mutableSetOf())
 }
+
+/** Where a phone-thread line's whole is kept in a taf's chat (`TafChat.whole`): apart from the watch's own asks' ids. */
+internal fun lineKey(lineId: String) = "line:$lineId"
+
+/** How long a sign-in ask waits for the phone's answer (row 18): a later Allow signs nothing in. */
+internal const val SIGN_IN_ASK_MS = 10 * 60_000L

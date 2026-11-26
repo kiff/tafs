@@ -27,6 +27,7 @@ class WearRelayService : WearableListenerService() {
     val app = application as TafsApplication
     // The taf list follows the phone's for the watch from now on (`kept/tafs`), once the watch has used tafs in this sign-in.
     app.watchTafs
+    app.watchNeedsYou
     val answer = TaskCompletionSource<ByteArray>()
     val failed = { WatchLink.encodeReply(bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone)) }
     scope.launch {

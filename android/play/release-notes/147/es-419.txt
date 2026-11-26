@@ -1,0 +1,3 @@
+• Las llamadas retenidas llegan a tu reloj al instante.
+• Un reloj sin sesión sigue así hasta que lo permitas aquí.
+• El aviso de actualización ya no ofrece un reinicio que no hace nada.

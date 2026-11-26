@@ -2791,6 +2791,7 @@
     <string name="watch_ask">tafs-аас асуух</string>
     <string name="watch_ask_needs_consent">tafs-аас асуухаасаа өмнө утсан дээрээ tafs-д хиймэл оюун ашиглахыг зөвшөөрнө үү.</string>
     <string name="watch_ask_not_on">Цагнаасаа асуух нь одоохондоо асаагүй байна.</string>
+    <string name="watch_ask_phone_sign_in">Энэ цагийг нэвтрүүлэхийг утаснаасаа хүсэх</string>
     <string name="watch_ask_text_only">tafs таны үгийг текст хэлбэрээр авдаг, хэзээ ч дуу хоолойг нь биш.</string>
     <string name="watch_asking_phone">Утаснаасаа асууж байна…</string>
     <string name="watch_calendar_today">Өнөөдрийн хуанли</string>
@@ -2802,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Устгасан. Юу ч илгээгдээгүй.</string>
     <string name="watch_didnt_catch">Сонсож авсангүй. Дахин оролдохын тулд товшино уу.</string>
     <string name="watch_dismiss">Хаах</string>
+    <string name="watch_edit_words">Өөрчлөхийн тулд текст дээр дарна уу</string>
     <string name="watch_glance_description">Хэд нь таныг хүлээж байгааг харуулна, юу эсвэл хэн гэдгийг хэзээ ч биш.</string>
     <string name="watch_halt_all_q">Таны бүх taf-ыг зогсоох уу?</string>
     <plurals name="watch_halt_now_count">
@@ -2817,6 +2819,7 @@
         <item quantity="one">%1$s түр барьсан дуудлага таныг хүлээж байна</item>
         <item quantity="other">%1$s түр барьсан дуудлага таныг хүлээж байна</item>
     </plurals>
+    <string name="watch_held_channel">Түр барьсан дуудлагууд</string>
     <string name="watch_inbox_empty">Шинэ зүйл алга. Coach-ийн хариу болон таны taf-уудын мэдэгдэл энд ирнэ.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Ирсэн дотор %1$s уншаагүй</item>
@@ -2841,6 +2844,7 @@
     <string name="watch_nothing_sent_until">Та зөвшөөрөхгүй бол юу ч илгээгдэхгүй.</string>
     <string name="watch_nothing_waits">Таныг юу ч хүлээхгүй байна.</string>
     <string name="watch_open_on_phone">Утсан дээр нээх</string>
+    <string name="watch_opened_on_phone">Утсан дээр нээгдлээ</string>
     <string name="watch_page_brief">Товчлол</string>
     <string name="watch_page_inbox">Ирсэн</string>
     <string name="watch_paused_still_answers">Түр зогссон: хуваарь нь унтраастай. Таны илгээснийг одоо ч хариулна.</string>
@@ -2864,6 +2868,7 @@
     <string name="watch_recent_chats">Сүүлийн чатууд</string>
     <string name="watch_recording">Бичиж байна</string>
     <string name="watch_recording_not_received">Бичлэг таны утсанд хүрсэнгүй. Дахин оролдох эсвэл оронд нь бичнэ үү.</string>
+    <string name="watch_refuse_on_phone">Татгалзаагүй. Утсан дээрээ татгалзана уу.</string>
     <string name="watch_refused">Татгалзсан. Юу ч илгээгдээгүй.</string>
     <string name="watch_reply">Хариулах</string>
     <string name="watch_rerecord">Дахин бичих</string>
@@ -2872,14 +2877,20 @@
     <string name="watch_resume_on_phone">Утсан дээрээ үргэлжлүүлэх</string>
     <string name="watch_retry">Дахин оролдох</string>
     <string name="watch_review">Илгээхээс өмнө шалгах</string>
+    <string name="watch_seconds_left">%1$s сек үлдсэн</string>
     <string name="watch_sending">Илгээж байна…</string>
     <string name="watch_sent">Илгээсэн</string>
     <string name="watch_settings_of">%1$s · тохиргоо</string>
+    <string name="watch_sign_in_allow">Зөвшөөрөх</string>
+    <string name="watch_sign_in_denied">Нэвтрээгүй. Энэ цаг гарсан хэвээр байна.</string>
+    <string name="watch_sign_in_deny">Татгалзах</string>
     <string name="watch_sign_in_on_phone">Эхлээд утсан дээрээ tafs-д нэвтэрнэ үү.</string>
+    <string name="watch_sign_in_watch_q">Энэ цагийг таны нэрээр нэвтрүүлэх үү?</string>
     <string name="watch_sign_out_q">Энэ цагнаас гарах уу?</string>
     <string name="watch_sign_out_sub">Таны утас нэвтэрсэн хэвээр үлдэнэ. Энэ цаг таны taf-ууд, чат болон ирсэн зүйлсийг мартана.</string>
     <string name="watch_signed_in">Нэвтэрсэн</string>
     <string name="watch_signed_out_here">Энэ цагнаас гарсан. Таны утас нэвтэрсэн хэвээр байна.</string>
+    <string name="watch_stopped_at_limit">%1$s хязгаарт зогслоо. Сонсогдсон зүйл доор байна.</string>
     <string name="watch_swipe_settings">Тохиргоог нь үзэхийн тулд зүүн тийш шудрана уу</string>
     <string name="watch_tap_start">Эхлэх-ийг товшоод ярина уу. Таны үгс ярих бүрт энд харагдана.</string>
     <string name="watch_timing">Сонсох %1$s мс · баримт %2$s мс · үр дүн %3$s мс</string>
@@ -2891,6 +2902,7 @@
     <string name="watch_view_on_phone">Утсан дээр харах</string>
     <string name="watch_view_only_phone">Энэ утас зөвхөн харах боломжтой тул цагнаасаа асууж чадахгүй. Зөвшөөрч чадах утсан дээр нэвтэрнэ үү.</string>
     <string name="watch_voice_text_only">Coach таны үгийг текст хэлбэрээр авдаг, хэзээ ч дуу хоолойг нь биш.</string>
+    <string name="watch_waiting_for_phone">Таны утсыг хүлээж байна…</string>
     <string name="watch_what_it_does">Юу хийдэг</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s ажиллаж байна</item>
