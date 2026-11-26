@@ -65,6 +65,8 @@ class PlanPromptTest {
     compose.setContent { TafsTheme { TafChatView("refunds-1", state, actions) } }
     compose.onNodeWithTag(PLAN_PROMPT).assertExists()
     compose.onNodeWithText(words).assertExists()
+    // What Solo gives, in Plan & usage's own words (kiff/tafs#2190).
+    compose.onNodeWithText(Words.Billing.tafsKiffOnePersonEvery).assertExists()
     compose.onNodeWithText(Words.Usage.choosePlan).performClick()
     assertEquals(listOf("dismiss refunds-1", "plan"), calls)
   }

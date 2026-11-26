@@ -490,9 +490,9 @@ above. The app shows the words. Builds from before this show `words` as for any 
   **Home** shows `home_line` when it's set. Both are read with each refresh.
 - **A chat or Run now refused** for credits shows its `words`, with no button, except a chat
   refused for `no_plan` (Coach's included). On Android, its `words` stay as a prompt above the box,
-  with **Choose a plan** (Plan & usage; from Coach, Coach closes on the way) and **Not now**, until
+  with what Solo gives (`billing.tafs_kiff_one_person_every`, Plan & usage's own line), **Choose a plan** (Plan & usage; from Coach, Coach closes on the way) and **Not now**, until
   the person taps either, which puts it away, or sends again (kiff/tafs#2190). The owner's words go back in the box, as for
-  every credits refusal. The words are tafs cloud's; the app adds only the two buttons. iOS follows.
+  every credits refusal. The words are tafs cloud's; the app adds Plan & usage's Solo line and the two buttons. iOS follows.
 - **Asking an admin** stays where it was (`AskAdminView` on iPhone and iPad, `TaskRequests` on
   Android): for a raise on Company, and for a pack on Solo. An admin answers a request for a raise
   with the raise, and one for a pack by buying it for that request. Decline stays signed (on
