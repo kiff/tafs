@@ -427,6 +427,24 @@ final class CoachModel: ObservableObject {
         }
     }
 
+    /// Read more on a cut line from before this visit (row 10, as Wear OS's `line-full`): the taf's message whole, read through
+    /// the phone only on the tap and shown in place, held only while the chat is open (`whole`, by the line's id). Only a taf's
+    /// own line in a taf's chat; anything else, or a phone that can't give it, leaves "The rest is on your phone."
+    func readMoreLine(_ id: String) async {
+        guard let taf, let line = history.first(where: { $0.id == id }), !line.mine, line.more else { whole[id] = .onPhone; return }
+        if case .reading? = whole[id] { return }
+        if case .read? = whole[id] { return }
+        let visit = self.visit
+        whole[id] = .reading
+        let reply = await phone.ask(WatchRequest(.lineFull, made: clock(), taf: taf, message: id))
+        guard visit == self.visit else { return }
+        if let reply, reply.outcome == .ok, let answer = reply.coach, !answer.text.isEmpty {
+            whole[id] = .read(answer)
+        } else {
+            whole[id] = .onPhone
+        }
+    }
+
     /// View on phone (docs/watch-app.md, "View on phone"): the phone opens this chat, Coach's or the taf's, in front or with a
     /// notification. Nothing on the watch changes, and nothing is said if the phone isn't in reach: the row stays to tap again.
     func openOnPhone() async {

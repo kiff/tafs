@@ -156,6 +156,9 @@ final class DemoPhone: PhoneAsking {
         case .openOnPhone:
             // The demo has no phone to open.
             return WatchReply(.ok)
+        case .lineFull:
+            // A cut line of the demo's taf chat, whole.
+            return WatchReply(.ok, coach: WatchCoachAnswer.whole(Self.longAnswer, approveOnPhone: false))
         }
     }
 

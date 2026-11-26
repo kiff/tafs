@@ -31,12 +31,20 @@ final class NeedsYouModel: ObservableObject {
     /// Sending needs a passcode on this watch (`WristLock`).
     private let lock: WristLock
 
+    /// The wait until the next held call's end, when it's dropped (`dropEnded`). Real time on the watch; a test steps the
+    /// clock and calls `dropEnded` itself.
+    private let sleep: @Sendable (TimeInterval) async -> Void
+    /// The wait for the next end, while Needs you is read.
+    private var endTimer: Task<Void, Never>?
+
     init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock(),
-         briefOn: Bool = NeedsYouModel.briefOnWatch) {
+         briefOn: Bool = NeedsYouModel.briefOnWatch,
+         sleep: @escaping @Sendable (TimeInterval) async -> Void = { try? await Task.sleep(nanoseconds: UInt64(max(0, $0) * 1_000_000_000)) }) {
         self.phone = phone
         self.clock = clock
         self.lock = lock
         self.briefOn = briefOn
+        self.sleep = sleep
         WatchPushes.shared.listen(self)
     }
 
@@ -55,7 +63,7 @@ final class NeedsYouModel: ObservableObject {
         }
         switch reply.outcome {
         case .ok:
-            if let needsYou = reply.needsYou { state = .loaded(needsYou) } else { state = .failed(Words.Watch.phoneCouldNotReachCloud) }
+            if let needsYou = reply.needsYou { state = .loaded(needsYou); dropEnded() } else { state = .failed(Words.Watch.phoneCouldNotReachCloud) }
             if briefOn, case .loaded = state { await loadBrief() }
         case .signedOut:
             state = .signedOut
@@ -116,8 +124,38 @@ final class NeedsYouModel: ObservableObject {
         _ = await phone.reach(WatchRequest(.openOnPhone, made: clock(), hold: hold))
     }
 
+    /// A held call past its end on this watch's own clock leaves Needs you, once for everything that reads it (the list, the
+    /// brief's Refuse, `beyondBrief`, Coach's home count), and isn't counted, as the Inbox leaves it, before the phone's next
+    /// push or read. Then it waits for the next end and does it again.
+    func dropEnded() {
+        endTimer?.cancel()
+        endTimer = nil
+        guard case .loaded(let page) = state else { return }
+        let now = clock()
+        let shown = Self.shown(page, now: now)
+        if shown != page { state = .loaded(shown) }
+        guard let next = shown.calls.compactMap(\.ends).filter({ $0 > now }).min() else { return }
+        let sleep = self.sleep
+        endTimer = Task { [weak self] in
+            await sleep(next.timeIntervalSince(now))
+            guard !Task.isCancelled else { return }
+            self?.dropEnded()
+        }
+    }
+
+    /// Needs you as shown now: a held call past its end on this watch's own clock is left out, and out of the count, as the
+    /// Inbox leaves it (`InboxModel.took`), even before the phone's next push or read.
+    static func shown(_ needsYou: WatchNeedsYou, now: Date) -> WatchNeedsYou {
+        var shown = needsYou
+        shown.calls = needsYou.calls.filter { call in call.ends.map { $0 > now } ?? true }
+        shown.count = max(0, needsYou.count - (needsYou.calls.count - shown.calls.count))
+        return shown
+    }
+
     /// The app left the screen: what was read goes.
     func leave() {
+        endTimer?.cancel()
+        endTimer = nil
         state = .loading
         brief = nil
         answers = [:]
@@ -136,6 +174,7 @@ extension NeedsYouModel: WatchPushListening {
         page.count = holds.count
         page.at = holds.at
         state = .loaded(page)
+        dropEnded()
         if !listed.isSubset(of: shown) { Task { await load() } }
     }
 }
