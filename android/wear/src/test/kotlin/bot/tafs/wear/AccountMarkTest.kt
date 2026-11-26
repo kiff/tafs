@@ -480,6 +480,81 @@ class AccountMarkTest {
     assertTrue(sent.all { it == null })
   }
 
+  private class SignIn : WatchSignIn {
+    var out = false
+    var waiting: Pair<String, Long>? = null
+    override fun signedOut() = out
+    override fun signOut() { out = true; waiting = null }
+    override fun signIn() { out = false; waiting = null }
+    override fun asked() = waiting
+    override fun ask(id: String, at: Long) { waiting = id to at }
+    override fun forgetAsk() { waiting = null }
+  }
+
+  private fun signedOutModel(signIn: SignIn) = WatchModel(
+    Phone(asA), now = { t }, unlocked = { true }, secure = { true }, tile = TileCount(tile), newClientId = { "w_000000bb" },
+    reviewFirst = true, drafts = drafts, inboxStore = inbox, cache = cache, thread = thread, marks = marks, wiped = { wipes++ },
+    signIn = signIn,
+  ).also { it.signOutHere() }
+
+  /**
+   * Row 18, as on the Apple Watch (tafs#2132): the phone's Allow signs the watch in only with the phone's account mark, and that mark
+   * is heard as a checked reply's is. Another sign-in's wipes what's kept first and becomes the one held; the same one wipes nothing.
+   */
+  @Test fun anAllowSignsInOnlyWithThePhonesMarkAndHearsIt() = runTest {
+    marks.mark = markA
+    val signIn = SignIn()
+    val m = signedOutModel(signIn)
+    // No mark, or one that isn't a mark: still signed out, and the watch says it couldn't talk to the phone.
+    for (bad in listOf(null, "not a mark")) {
+      signIn.ask("w_000000s1", t)
+      assertFalse(m.signInAnswered(bot.tafs.watchlink.KeptSignIn(t, "w_000000s1", allowed = true, mark = bad)))
+      assertTrue(m.signedOutHere.value)
+      assertTrue(m.signInAsk.value is WatchModel.SignInAsk.NotReached)
+      assertNull("the ask is spent", signIn.asked())
+    }
+    // B's Allow: A's mark goes, everything kept is wiped first, and B's is held.
+    val before = wipes
+    signIn.ask("w_000000s2", t)
+    assertTrue(m.signInAnswered(bot.tafs.watchlink.KeptSignIn(t, "w_000000s2", allowed = true, mark = markB)))
+    assertFalse(m.signedOutHere.value)
+    assertEquals(markB, marks.mark)
+    assertEquals(before + 1, wipes)
+    // The same sign-in again: nothing more is wiped.
+    m.signOutHere()
+    val after = wipes
+    signIn.ask("w_000000s3", t)
+    assertTrue(m.signInAnswered(bot.tafs.watchlink.KeptSignIn(t, "w_000000s3", allowed = true, mark = markB)))
+    assertEquals(after, wipes)
+    assertEquals(markB, marks.mark)
+  }
+
+  /** The same with the app closed (the kept item reaches [KeptResults]): a missing mark keeps it signed out; another's wipes first. */
+  @Test fun anAllowWithTheAppClosedNeedsTheMarkToo() {
+    val signIn = SignIn().apply { out = true }
+    keptFromA()
+    // No mark: still signed out, nothing of A touched, the ask spent.
+    signIn.ask("w_000000s4", t)
+    KeptResults.signInAnswer(context, bot.tafs.watchlink.KeptSignIn(t, "w_000000s4", allowed = true), stores(), now = t, store = signIn)
+    assertTrue(signIn.out)
+    assertNull(signIn.asked())
+    assertEquals(markA, marks.mark)
+    assertEquals("Keep this for A", drafts.draft?.text)
+    // B's Allow: A's kept items go, B's mark is held, and the watch is signed in.
+    signIn.ask("w_000000s5", t)
+    KeptResults.signInAnswer(context, bot.tafs.watchlink.KeptSignIn(t, "w_000000s5", allowed = true, mark = markB), stores(), now = t, store = signIn)
+    assertFalse(signIn.out)
+    nothingOfAKept()
+    assertEquals(markB, marks.mark)
+    // A's own Allow keeps what's A's.
+    keptFromA()
+    signIn.out = true
+    signIn.ask("w_000000s6", t)
+    KeptResults.signInAnswer(context, bot.tafs.watchlink.KeptSignIn(t, "w_000000s6", allowed = true, mark = markA), stores(), now = t, store = signIn)
+    assertFalse(signIn.out)
+    assertEquals("Keep this for A", drafts.draft?.text)
+  }
+
   @Test fun theRulesForKeptItems() {
     assertTrue("a phone before marks", AccountMark.keptTaken(null, null))
     assertFalse("marked, while none is held", AccountMark.keptTaken(null, markA))

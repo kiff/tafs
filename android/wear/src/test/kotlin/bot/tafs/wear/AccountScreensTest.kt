@@ -85,7 +85,7 @@ class AccountModelTest {
 
   /** The phone's person allowed this watch's sign-in ask (row 18): the only way back in. */
   private fun WatchModel.allowedBy(signIn: SignIn) =
-    signInAnswered(bot.tafs.watchlink.KeptSignIn(t, signIn.asked()!!.first, allowed = true))
+    signInAnswered(bot.tafs.watchlink.KeptSignIn(t, signIn.asked()!!.first, allowed = true, mark = "AAAAAAAAAAAAAAAAAAAAAA"))
 
   private class Recording : VoiceAudio {
     var deleted = 0
