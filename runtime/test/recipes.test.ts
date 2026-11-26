@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { RECIPES } from "../src/recipes.js";
-import { CATEGORIES, categoriesIn, connectsOf, connectsToday, CONNECTS_TODAY, labelsIn, recipesFor, vendorOf, withApps } from "../src/cloud/recipes.js";
+import { CATEGORIES, categoriesIn, connectsOf, connectsToday, CONNECTS_TODAY, labelsIn, recipesFor, vendorOf, welcomeVideo, withApps } from "../src/cloud/recipes.js";
 import type { CatalogApp } from "../src/cloud/connect.js";
 import { baseLanguage, FULL_LANGUAGES, LANGUAGES } from "../src/cloud/words/index.js";
 // The generator is plain JavaScript, so the script and the test parse the files the same way.
@@ -345,5 +345,19 @@ Bezahle meine Rechnungen unter 100 EUR.
     }
     expect("Save it in Google Drive, otherwise wait").toMatch(brands);
     expect("otherwise wait").not.toMatch(brands);
+  });
+});
+
+// The first-run welcome's video link (the owner's first-run decision, 26 Nov): the apps show "Watch the 2-minute video" only
+// when tafs cloud sends a URL, so nothing goes out until the setting holds one, and only an https one.
+describe("the welcome video's address", () => {
+  it("sends nothing while the setting is empty, unset or not an https URL", () => {
+    for (const setting of [undefined, "", "   ", "kiff.dev/tafs/video", "http://kiff.dev/tafs/video", "javascript:alert(1)", "https://user:pw@kiff.dev/v", "not a url"]) {
+      expect(welcomeVideo(setting), String(setting)).toEqual({});
+    }
+  });
+  it("sends an https URL as it is", () => {
+    expect(welcomeVideo("https://kiff.dev/tafs/video")).toEqual({ video_url: "https://kiff.dev/tafs/video" });
+    expect(welcomeVideo("  https://www.youtube.com/watch?v=abc123  ")).toEqual({ video_url: "https://www.youtube.com/watch?v=abc123" });
   });
 });

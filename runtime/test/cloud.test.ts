@@ -468,6 +468,22 @@ describe("tafs cloud", () => {
     expect((await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "fr" } })).body.home)
       .toEqual({ shown: false, words: "Pas encore de tafs. Dites à Coach quel travail un taf doit faire.", own_words: { title: "Dites-la avec vos mots", line: "Coach construit le taf avec vous." } });
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: true } })).body.suggestions.show).toBe(true);
+    // The welcome video: with no setting, no `video_url` at all (above, the answers are whole); with one, on every answer,
+    // a list with recipes and an empty one alike, so How tafs works links it whatever the list holds.
+    expect(fresh.body).not.toHaveProperty("video_url");
+    expect(live.body).not.toHaveProperty("video_url");
+    vi.stubEnv("TAFS_WELCOME_VIDEO_URL", "https://kiff.dev/tafs/video");
+    try {
+      expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body.video_url).toBe("https://kiff.dev/tafs/video");
+      expect((await call(w, "GET", "/v1/recipes", { token: "viewer" })).body.video_url).toBe("https://kiff.dev/tafs/video");
+      await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: false } });
+      expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body).toMatchObject({ recipes: [], video_url: "https://kiff.dev/tafs/video" });
+      await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: true } });
+      vi.stubEnv("TAFS_WELCOME_VIDEO_URL", "");
+      expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body).not.toHaveProperty("video_url");
+    } finally {
+      vi.unstubAllEnvs();
+    }
     expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body.shown).toBe(true);
   });
 

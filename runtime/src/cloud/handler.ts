@@ -29,7 +29,7 @@ import { allowOffer } from "./allow.js";
 import { type CatalogApp, ConnectError, listApps, type Proof, startApp, validLogin } from "./connect.js";
 import { sheetOf, takesKey } from "./sheet.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
-import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
+import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, welcomeVideo, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
 import { extensionOrigin, extensionPreflight, withExtensionCORS } from "./extension-cors.js";
@@ -142,7 +142,7 @@ import { chromeBegan, chromeMayCall, chromeOf, chromeRunChats, chromeRunsOf, mar
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve; 409 not_needed for a taf that doesn't use the app
  *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
  *   POST /v1/connect/grants/{grant}/check  {draft, shown_draft, can?, conversation?}: Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code, whether the chat's read checks the card (checked_on_read), and, with no conversation (the card's, its events) to read them from, that the agreed rules weren't checked (rules_unchecked) (docs/api.md)
- *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
+ *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off; with the welcome video's video_url once TAFS_WELCOME_VIDEO_URL is set
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
  *   GET  /v1/me/suggestions             the account's "Show suggestions" setting, with its words
@@ -11800,14 +11800,15 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
   // Shown only while the account has no live taf and the setting is on (the owner's decision): else the
   // list is empty and the words say why, so the apps draw only what comes.
   const suggestions = await suggestionsOf(me, deps, lang);
-  if (suggestions.reason !== "on") return noRecipes(suggestions, lang, manages);
+  // The welcome video goes with every answer, an empty list's too: How tafs works links it whatever the list holds.
+  if (suggestions.reason !== "on") return { ...noRecipes(suggestions, lang, manages), ...welcomeVideo() };
   const read = await wholeCatalog(event, me, deps);
   const catalog = read?.apps;
   const connects = connectsOf(read, provedFromCatalog());
   const view = recipesFor(catalog, lang, manages, connects);
   const logos = await nameLogos(deps.coach, iconsFor(view.recipes, catalog), new Date());
   const running = manages ? (await runningRecipes(me, deps)).running : undefined;
-  return { ...view, recipes: withApps(view.recipes, catalog, logos, running, connects) };
+  return { ...view, recipes: withApps(view.recipes, catalog, logos, running, connects), ...welcomeVideo() };
 }
 
 /**
