@@ -431,13 +431,13 @@ enum Words {
         static var notSignedIn: String { Words.line("billing.not_signed_in") }
         /// Nothing to restore.
         static var nothingToRestore: String { Words.line("billing.nothing_to_restore") }
-        /// One person: tafs, with credits included each period.
+        /// For one person: 500 credits every month for your tafs' runs, with Coach included to set up about 4 new jobs a month. A month's credits don't carry over; packs add more when you run out, and never expire.
         static var onePersonTafsKiffYour: String { Words.line("billing.one_person_tafs_kiff_your") }
         /// Only someone who manages the account's billing buys credits.
         static var onlySomeoneWhoManagesAccount: String { Words.line("billing.only_someone_who_manages_account") }
         /// Open tafs to buy.
         static var openTafsToBuy: String { Words.line("billing.open_tafs_to_buy") }
-        /// A pack adds credits once, and they never expire. Each period's included credits are used first, then the packs'.
+        /// Packs are for when a month's credits run out. A pack adds credits once, and they never expire. Each month's credits are used first, then the packs'.
         static var packAddsCreditsOnceNever: String { Words.line("billing.pack_adds_credits_once_never") }
         /// The purchase is waiting for approval. Your credits are added once it's done.
         static var pendingCredits: String { Words.line("billing.pending_credits") }
@@ -489,7 +489,7 @@ enum Words {
         static func soloSubscriptionOneChargedYour(period: String, price: String, period2: String) -> String { Words.line("billing.solo_subscription_one_charged_your", period, price, period2) }
         /// Starts with {trial} free.
         static func startsFree(trial: String) -> String { Words.line("billing.starts_free", trial) }
-        /// Tafs for one person, every month.
+        /// For one person: 500 credits a month, Coach included.
         static var tafsKiffOnePersonEvery: String { Words.line("billing.tafs_kiff_one_person_every") }
         /// Get Company on kiff.dev
         static var teamOnWeb: String { Words.line("billing.team_on_web") }

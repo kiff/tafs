@@ -218,10 +218,10 @@
     <string name="billing_not_restored">Худалдан авалтыг сэргээж чадсангүй: %1$s</string>
     <string name="billing_not_signed_in">Нэвтрээгүй байна.</string>
     <string name="billing_nothing_to_restore">Сэргээх зүйл алга.</string>
-    <string name="billing_one_person_tafs_kiff_your">Нэг хүн: tafs, үе бүрт кредит багтсан.</string>
+    <string name="billing_one_person_tafs_kiff_your">Нэг хүнд: таны tafs-ийн ажиллалтуудад сар бүр 500 кредит, мөн сард ойролцоогоор 4 шинэ ажил тохируулах Coach багтсан. Сарын кредит дараагийн сард шилжихгүй; дуусахад багцууд нэмж өгдөг бөгөөд тэдгээрийн хугацаа хэзээ ч дуусдаггүй.</string>
     <string name="billing_only_someone_who_manages_account">Зөвхөн бүртгэлийн төлбөрийг удирддаг хүн кредит худалдаж авна.</string>
     <string name="billing_open_tafs_to_buy">Худалдаж авахын тулд tafs-ыг нээнэ үү.</string>
-    <string name="billing_pack_adds_credits_once_never">Багц кредитийг нэг удаа нэмдэг бөгөөд тэдгээр хэзээ ч дуусдаггүй. Үе бүрийн багтсан кредит эхэлж, дараа нь багцуудынх ашиглагдана.</string>
+    <string name="billing_pack_adds_credits_once_never">Багц нь сарын кредит дуусах үед зориулагдсан. Багц кредитийг нэг удаа нэмдэг бөгөөд тэдгээрийн хугацаа хэзээ ч дуусдаггүй. Сар бүрийн кредит эхэлж, дараа нь багцуудынх ашиглагдана.</string>
     <string name="billing_pending_credits">Худалдан авалт зөвшөөрлийг хүлээж байна. Дууссаны дараа таны кредит нэмэгдэнэ.</string>
     <string name="billing_plan_could_not_read_kiff">Багцыг KIFF-ээс уншиж чадсангүй: %1$s</string>
     <string name="billing_play_cant_sell">Google Play энэ утсан дээр зарж чадахгүй тул энд юу ч худалдаж авах боломжгүй.</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo одоогоор App Store-оос боломжгүй байна.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo бол %1$s-ийн захиалга, үнэ %2$s, таны Apple бүртгэлээс төлөгдөнө. Та цуцлах хүртэл %3$s бүр сунгагдана.</string>
     <string name="billing_starts_free">%1$s үнэгүй эхэлнэ.</string>
-    <string name="billing_tafs_kiff_one_person_every">Нэг хүнд зориулсан taf-ууд, сар бүр.</string>
+    <string name="billing_tafs_kiff_one_person_every">Нэг хүнд: сард 500 кредит, Coach багтсан.</string>
     <string name="billing_team_on_web">kiff.dev дээр Company авах</string>
     <string name="billing_terms_use">Ашиглалтын нөхцөл</string>
     <string name="billing_test_purchase_credits">Туршилтын худалдан авалт энэ бүртгэлд кредит нэмэхгүй.</string>

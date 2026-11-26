@@ -232,10 +232,10 @@
     <string name="billing_not_restored">Nakupov ni bilo mogoče obnoviti: %1$s</string>
     <string name="billing_not_signed_in">Niste prijavljeni.</string>
     <string name="billing_nothing_to_restore">Ni česa obnoviti.</string>
-    <string name="billing_one_person_tafs_kiff_your">Ena oseba: tafs s krediti, vključenimi v vsako obdobje.</string>
+    <string name="billing_one_person_tafs_kiff_your">Za eno osebo: vsak mesec 500 kreditov za zagone vaših tafov, Coach pa je vključen za nastavitev približno 4 novih opravil na mesec. Krediti enega meseca se ne prenesejo; paketi dodajo več, ko vam jih zmanjka, in nikoli ne potečejo.</string>
     <string name="billing_only_someone_who_manages_account">Kredite kupuje samo, kdor upravlja obračun računa.</string>
     <string name="billing_open_tafs_to_buy">Za nakup odprite tafs.</string>
-    <string name="billing_pack_adds_credits_once_never">Paket enkrat doda kredite in ti nikoli ne potečejo. Najprej se porabijo krediti, vključeni v obdobje, nato tisti iz paketov.</string>
+    <string name="billing_pack_adds_credits_once_never">Paketi so za primer, ko zmanjka kreditov meseca. Paket enkrat doda kredite in ti nikoli ne potečejo. Najprej se porabijo krediti vsakega meseca, nato tisti iz paketov.</string>
     <string name="billing_pending_credits">Nakup čaka na odobritev. Krediti se dodajo, ko bo opravljen.</string>
     <string name="billing_plan_could_not_read_kiff">Paketa ni bilo mogoče prebrati iz KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play v tem telefonu ne more prodajati, zato tu ni mogoče nič kupiti.</string>
@@ -259,7 +259,7 @@
     <string name="billing_solo_not_available_app_store">Solo trenutno ni na voljo v App Storu.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo je naročnina za en %1$s po %2$s, ki se zaračuna vašemu računu Apple. Podaljša se vsak %3$s, dokler je ne prekličete.</string>
     <string name="billing_starts_free">Začne se z %1$s brezplačno.</string>
-    <string name="billing_tafs_kiff_one_person_every">Tafs za eno osebo, vsak mesec.</string>
+    <string name="billing_tafs_kiff_one_person_every">Za eno osebo: 500 kreditov na mesec, Coach vključen.</string>
     <string name="billing_team_on_web">Pridobi Company na kiff.dev</string>
     <string name="billing_terms_use">Pogoji uporabe</string>
     <string name="billing_test_purchase_credits">Testni nakupi temu računu ne dodajo kreditov.</string>

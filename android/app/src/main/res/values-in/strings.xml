@@ -211,10 +211,10 @@
     <string name="billing_not_restored">Pembelian tidak dapat dipulihkan: %1$s</string>
     <string name="billing_not_signed_in">Belum masuk.</string>
     <string name="billing_nothing_to_restore">Tidak ada yang dipulihkan.</string>
-    <string name="billing_one_person_tafs_kiff_your">Satu orang: tafs, dengan kredit yang termasuk di setiap periode.</string>
+    <string name="billing_one_person_tafs_kiff_your">Untuk satu orang: 500 kredit setiap bulan untuk proses taf Anda, dengan Coach termasuk untuk mengatur sekitar 4 pekerjaan baru sebulan. Kredit sebulan tidak terbawa; paket menambah lebih banyak saat kredit Anda habis, dan tidak pernah kedaluwarsa.</string>
     <string name="billing_only_someone_who_manages_account">Hanya orang yang mengelola penagihan akun yang membeli kredit.</string>
     <string name="billing_open_tafs_to_buy">Buka tafs untuk membeli.</string>
-    <string name="billing_pack_adds_credits_once_never">Paket menambahkan kredit sekali, dan kredit itu tidak pernah kedaluwarsa. Kredit yang termasuk di setiap periode dipakai lebih dulu, lalu kredit paket.</string>
+    <string name="billing_pack_adds_credits_once_never">Paket untuk saat kredit sebulan habis. Paket menambahkan kredit sekali, dan kredit itu tidak pernah kedaluwarsa. Kredit setiap bulan dipakai lebih dulu, lalu kredit paket.</string>
     <string name="billing_pending_credits">Pembelian menunggu persetujuan. Kredit Anda ditambahkan setelah selesai.</string>
     <string name="billing_plan_could_not_read_kiff">Paket tidak dapat dibaca dari KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play tidak dapat menjual di ponsel ini, jadi tidak ada yang dapat dibeli di sini.</string>
@@ -238,7 +238,7 @@
     <string name="billing_solo_not_available_app_store">Solo tidak tersedia dari App Store saat ini.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo adalah langganan seharga %2$s / %1$s, ditagihkan ke akun Apple Anda. Diperpanjang di akhir setiap periode (%3$s) sampai Anda membatalkan.</string>
     <string name="billing_starts_free">Dimulai dengan %1$s gratis.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs untuk satu orang, setiap bulan.</string>
+    <string name="billing_tafs_kiff_one_person_every">Untuk satu orang: 500 kredit sebulan, termasuk Coach.</string>
     <string name="billing_team_on_web">Dapatkan Company di kiff.dev</string>
     <string name="billing_terms_use">Ketentuan Penggunaan</string>
     <string name="billing_test_purchase_credits">Pembelian uji coba tidak menambahkan kredit ke akun ini.</string>
