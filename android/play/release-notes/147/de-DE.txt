@@ -1,3 +1,6 @@
-• Zurückgehaltene Aufrufe erreichen deine Uhr sofort.
-• Eine abgemeldete Uhr bleibt abgemeldet, bis du es hier erlaubst.
-• Das Update-Banner bietet keinen Neustart mehr an, der nichts tut.
+• Neue Sprachen, darunter Koreanisch, Japanisch, Türkisch, Hindi und Urdu.
+• Dateien: Was deine tafs erstellen, steht 30 Tage in Konto › Dateien.
+• Tablet: eine Seitenleiste, Coach neben der Arbeit, in jeder Ausrichtung.
+• Chrome: mit einem Fingerabdruck koppeln.
+• TalkBack nennt jede Schaltfläche, jeden Tab und jede Auswahl und sagt, was ausgewählt ist.
+• Lösche ein Gespräch mit Coach endgültig.

@@ -1,3 +1,6 @@
-• Les appels retenus arrivent tout de suite sur votre montre.
-• Une montre déconnectée le reste jusqu'à ce que vous l'autorisiez ici.
-• La bannière de mise à jour ne propose plus un redémarrage qui ne fait rien.
+• Nouvelles langues, dont coréen, japonais, turc, hindi et ourdou.
+• Fichiers : ce que font vos tafs reste 30 jours dans Compte › Fichiers.
+• Tablette : une barre latérale, Coach à côté de votre travail, toute orientation.
+• Chrome : associez-le d'une seule empreinte.
+• TalkBack nomme chaque bouton, onglet et choix, et indique celui qui est sélectionné.
+• Supprimez définitivement une conversation avec Coach.

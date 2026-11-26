@@ -1,3 +1,6 @@
-• Le chiamate trattenute arrivano subito all'orologio.
-• Un orologio scollegato resta tale finché non lo consenti qui.
-• Il banner di aggiornamento non propone più un riavvio che non fa nulla.
+• Nuove lingue, tra cui coreano, giapponese, turco, hindi e urdu.
+• File: ciò che creano i tuoi taf è in Account › File, per 30 giorni.
+• Tablet: una barra laterale, Coach accanto al tuo lavoro, in ogni orientamento.
+• Chrome: associalo con una sola impronta.
+• TalkBack nomina ogni pulsante, scheda e opzione, e dice quale è selezionata.
+• Elimina per sempre una conversazione con Coach.

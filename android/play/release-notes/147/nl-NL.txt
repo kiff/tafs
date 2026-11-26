@@ -1,3 +1,6 @@
-• Vastgehouden aanroepen komen meteen op je horloge.
-• Een uitgelogd horloge blijft uitgelogd tot je het hier toestaat.
-• De updatebalk biedt geen herstart meer aan die niets doet.
+• Nieuwe talen, waaronder Koreaans, Japans, Turks, Hindi en Urdu.
+• Bestanden: wat je tafs maken, staat 30 dagen in Account › Bestanden.
+• Tablet: één zijbalk, Coach naast je werk, in elke stand.
+• Chrome: koppel het met één vingerafdruk.
+• TalkBack noemt elke knop, elk tabblad en elke keuze, en zegt welke geselecteerd is.
+• Verwijder een gesprek met Coach voorgoed.
