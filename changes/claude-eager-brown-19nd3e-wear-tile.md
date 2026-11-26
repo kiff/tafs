@@ -1,0 +1,1 @@
+- **Store listing:** the Play description names the Wear OS tile (how many held calls need you; it opens tafs on the watch), in every Play language ([store-listing.md](docs/store-listing.md)).
