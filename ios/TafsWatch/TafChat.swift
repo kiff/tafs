@@ -62,7 +62,8 @@ struct TafChatPage: View {
             let days = chat.history.map(\.at) + chat.turns.map(\.at)
             ForEach(Array(chat.history.enumerated()), id: \.element.id) { i, line in
                 if ChatTime.startsDay(days, at: i, calendar: chat.calendar) { WatchChatDay(date: line.at, calendar: chat.calendar) }
-                TafChatLineRow(line: line, zone: chat.zone) { Task { await chat.openOnPhone() } }
+                TafChatLineRow(line: line, zone: chat.zone, viewOnPhone: { Task { await chat.openOnPhone() } },
+                               readMore: { Task { await chat.readMoreLine(line.id) } }, whole: chat.whole[line.id])
             }
             ForEach(Array(chat.turns.enumerated()), id: \.element.id) { i, turn in
                 if ChatTime.startsDay(days, at: chat.history.count + i, calendar: chat.calendar) { WatchChatDay(date: turn.at, calendar: chat.calendar) }
@@ -129,11 +130,15 @@ struct WatchChatDay: View {
     }
 }
 
-/// A turn from before this visit: yours orange on the right, the taf's green on the left, the rest on the phone if cut.
+/// A turn from before this visit: yours orange on the right, the taf's green on the left. A taf's cut line has Read more in a
+/// taf's chat (row 10, one tap, read then and shown in place), with View on phone still under it; else the rest is on the phone.
 struct TafChatLineRow: View {
     let line: WatchChatLine
     var zone: TimeZone = .current
     var viewOnPhone: () -> Void = {}
+    /// Read more on this line, where the chat can read it (a taf's); none in Coach's, whose lines are this watch's own.
+    var readMore: (() -> Void)? = nil
+    var whole: CoachModel.Whole? = nil
 
     var body: some View {
         if line.mine && !line.more {
@@ -146,11 +151,24 @@ struct TafChatLineRow: View {
 
     private var bubble: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: line.text)
+            Text(verbatim: Self.shown(line, whole: whole))
                 .font(.footnote)
             if line.more {
-                Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
-                ViewOnPhone(open: viewOnPhone)
+                switch Self.foot(line, whole: whole, canRead: readMore != nil) {
+                case .readMore?:
+                    Button(Words.Watch.readMore) { readMore?() }
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(WatchLook.coach)
+                        .buttonStyle(.plain)
+                    ViewOnPhone(open: viewOnPhone)
+                case .reading?:
+                    ProgressView().frame(width: 14, height: 14)
+                case .onPhone?:
+                    Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
+                    ViewOnPhone(open: viewOnPhone)
+                case nil:
+                    ViewOnPhone(open: viewOnPhone)
+                }
             }
             // When it was sent (row 44, C), small, under its words.
             Text(ChatTime.time(line.at, zone: zone)).font(.caption2).monospacedDigit().opacity(0.75)
@@ -161,6 +179,26 @@ struct TafChatLineRow: View {
         .background(line.mine ? WatchLook.mineGround : WatchLook.tafGround, in: RoundedRectangle(cornerRadius: 12))
         .frame(maxWidth: .infinity, alignment: line.mine ? .trailing : .leading)
         .listRowBackground(Color.clear)
+    }
+}
+
+extension TafChatLineRow {
+    /// The line's words as shown: the whole once Read more has it, else its first part.
+    static func shown(_ line: WatchChatLine, whole: CoachModel.Whole?) -> String {
+        if case .read(let all)? = whole { return all.text }
+        return line.text
+    }
+
+    /// Under a cut line: Read more (a taf's line, where the chat can read it, not read yet), the wait, "The rest is on your
+    /// phone." where it couldn't be read or can't be, or nothing more once it's whole.
+    static func foot(_ line: WatchChatLine, whole: CoachModel.Whole?, canRead: Bool) -> TafTurnRow.Foot? {
+        guard line.more else { return nil }
+        switch whole {
+        case .read?: return nil
+        case .reading?: return .reading
+        case .onPhone?: return .onPhone
+        case nil: return canRead && !line.mine ? .readMore : .onPhone
+        }
     }
 }
 
