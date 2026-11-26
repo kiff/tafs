@@ -159,6 +159,12 @@ object AlertPayload {
     else -> AlertChannel.OTHER
   }
 
+  /**
+   * Whether a message is about a held call (its `hold_id`): its alert, or its answer. Either changes Needs you, so the phone reads it
+   * again for the watch (finding 2: with the app in the background, a held call's alert reached the phone but never the wrist).
+   */
+  fun heldCall(data: Map<String, String>): Boolean = !data["hold_id"].isNullOrBlank()
+
   /** What a message asks of the phone; null for one it doesn't understand, so a message of a newer kind never breaks the phone. */
   fun parse(data: Map<String, String>, now: Instant = Instant.now()): Alert? {
     // A step handed to its owner is tagged by its hand-off, so its reminder replaces its first alert and no other.

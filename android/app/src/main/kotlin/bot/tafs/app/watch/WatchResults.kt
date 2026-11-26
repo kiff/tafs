@@ -66,6 +66,11 @@ class WatchResults(
   private val zone: () -> String? = { null },
   /** The phone's account mark now ([bot.tafs.app.app.AppModel.watchMark]); none in a test that doesn't look. */
   private val mark: suspend () -> String? = { null },
+  /**
+   * Needs you read again, as the item to keep for the watch ([WatchNeedsYou.changed]): null when the phone isn't signed in, the
+   * watch hasn't used tafs in this sign-in, or Needs you is as last put.
+   */
+  private val readNeedsYou: suspend () -> Pair<String, ByteArray>? = { null },
 ) {
   /** [read], with the account mark it was read under: none when the sign-in changed while it was read, so nothing is put. */
   private suspend fun <T> marked(read: suspend () -> T?): Pair<T, String?>? {
@@ -97,6 +102,18 @@ class WatchResults(
     return true
   }
 
+  /**
+   * A held call came or went (its alert, or its answer, finding 2): Needs you read again and kept for the watch, its app open or not,
+   * so the wrist hears of it with the phone's app in the background too. Whether it was put.
+   */
+  suspend fun needsYou(): Boolean {
+    // As the other jobs: nothing is put when the sign-in changed while it was read.
+    val (item, _) = marked { readNeedsYou() } ?: return false
+    val (path, data) = item
+    keep.put(path, data)
+    return true
+  }
+
   /** Reads the Inbox's marks and keeps them for the watch. Whether they were put. */
   suspend fun inbox(): Boolean {
     val (marks, mark) = marked { readMarks() } ?: return false
@@ -117,6 +134,15 @@ class WatchResults(
       opened = { app.watchChats.openedIds() },
       zone = { bot.tafs.app.model.zone.id },
       mark = { app.restoredModel(onScreen = false).watchMark() },
+      readNeedsYou = {
+        val model = app.restoredModel(onScreen = false)
+        // Only a watch that has used tafs in this sign-in is told: no read for a phone with none.
+        if (!model.state.value.watchServed) null
+        else {
+          model.refresh()
+          app.watchNeedsYou.changed(model.state.value)
+        }
+      },
     )
   }
 }

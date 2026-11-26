@@ -1,0 +1,1 @@
+- **Android and Wear OS: a held call reaches the watch with the phone's app closed.** Its alert, or its answer, now makes the phone read Needs you again and pass it to the watch, so the watch's Inbox line, tile and alert come at once, not when the app is next opened. See [The Wear OS watch](docs/watch-wear.md).
