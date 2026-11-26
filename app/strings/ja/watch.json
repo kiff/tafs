@@ -7,6 +7,7 @@
   "watch.ask": "tafsに質問",
   "watch.ask_needs_consent": "tafsに質問する前に、スマートフォンのtafsでAIの使用を許可してください。",
   "watch.ask_not_on": "ウォッチからの質問はまだオンになっていません。",
+  "watch.ask_phone_sign_in": "スマートフォンにこのウォッチへのサインインを依頼",
   "watch.ask_text_only": "tafsに届くのはあなたの言葉のテキストだけで、声は届きません。",
   "watch.asking_phone": "スマートフォンに問い合わせています…",
   "watch.calendar_today": "今日のカレンダー",
@@ -86,7 +87,11 @@
   "watch.sending": "送信しています…",
   "watch.sent": "送信済み",
   "watch.settings_of": "{taf}・設定",
+  "watch.sign_in_allow": "許可",
+  "watch.sign_in_denied": "サインインしていません。このウォッチはサインアウトしたままです。",
+  "watch.sign_in_deny": "拒否",
   "watch.sign_in_on_phone": "先にスマートフォンでtafsにサインインしてください。",
+  "watch.sign_in_watch_q": "このウォッチにあなたとしてサインインしますか？",
   "watch.sign_out_q": "このウォッチでサインアウトしますか？",
   "watch.sign_out_sub": "スマートフォンはサインインしたままです。このウォッチはtafs、チャット、受信トレイを消去します。",
   "watch.signed_in": "サインイン済み",
@@ -102,6 +107,7 @@
   "watch.view_on_phone": "スマートフォンで表示",
   "watch.view_only_phone": "このスマートフォンは表示のみのため、ウォッチから質問できません。承認できるスマートフォンでサインインしてください。",
   "watch.voice_text_only": "Coachに届くのはあなたの言葉のテキストだけで、声は届きません。",
+  "watch.waiting_for_phone": "スマートフォンを待っています…",
   "watch.what_it_does": "できること",
   "watch.working_count": {
     "other": "{count}件作業中"

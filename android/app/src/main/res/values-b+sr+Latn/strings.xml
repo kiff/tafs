@@ -2866,6 +2866,7 @@
     <string name="watch_ask">Pitajte tafs</string>
     <string name="watch_ask_needs_consent">Pre nego šta pitate tafs, dozvolite upotrebu AI-ja u tafsu na telefonu.</string>
     <string name="watch_ask_not_on">Pitanja sa sata još nisu uključena.</string>
+    <string name="watch_ask_phone_sign_in">Zatražite od telefona da prijavi ovaj sat</string>
     <string name="watch_ask_text_only">tafs dobiva vaše reči kao tekst, nikad vaš glas.</string>
     <string name="watch_asking_phone">Pitanje vašem telefonu…</string>
     <string name="watch_calendar_today">Današnji kalendar</string>
@@ -2955,7 +2956,11 @@
     <string name="watch_sending">Slanje…</string>
     <string name="watch_sent">Poslano</string>
     <string name="watch_settings_of">%1$s · podešavanja</string>
+    <string name="watch_sign_in_allow">Dozvoli</string>
+    <string name="watch_sign_in_denied">Nije prijavljeno. Ovaj sat ostaje odjavljen.</string>
+    <string name="watch_sign_in_deny">Odbij</string>
     <string name="watch_sign_in_on_phone">Prvo se prijavite u tafs na telefonu.</string>
+    <string name="watch_sign_in_watch_q">Prijaviti ovaj sat kao vas?</string>
     <string name="watch_sign_out_q">Odjaviti se na ovom satu?</string>
     <string name="watch_sign_out_sub">Vaš telefon ostaje prijavljen. Ovaj sat zaboravlja vaše tafove, razgovore i pristigle.</string>
     <string name="watch_signed_in">Prijavljeni</string>
@@ -2971,6 +2976,7 @@
     <string name="watch_view_on_phone">Pogledajte na telefonu</string>
     <string name="watch_view_only_phone">Ovaj telefon može samo pregledavati pa ne možete pitati sa sata. Prijavite se na telefonu koji može odobravati.</string>
     <string name="watch_voice_text_only">Coach dobiva vaše reči kao tekst, nikad vaš glas.</string>
+    <string name="watch_waiting_for_phone">Čeka se vaš telefon…</string>
     <string name="watch_what_it_does">Šta radi</string>
     <plurals name="watch_working_count">
         <item quantity="one">Radi: %1$s</item>

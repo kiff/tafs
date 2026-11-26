@@ -2791,6 +2791,7 @@
     <string name="watch_ask">tafs-dan soruşun</string>
     <string name="watch_ask_needs_consent">tafs-dan soruşmazdan əvvəl telefonunuzda tafs-da süni intellektin istifadəsinə icazə verin.</string>
     <string name="watch_ask_not_on">Saatdan soruşmaq hələ aktiv deyil.</string>
+    <string name="watch_ask_phone_sign_in">Bu saatın girişi üçün telefonunuzdan icazə istəyin</string>
     <string name="watch_ask_text_only">tafs sözlərinizi mətn kimi alır, səsinizi heç vaxt.</string>
     <string name="watch_asking_phone">Telefonunuzdan soruşulur…</string>
     <string name="watch_calendar_today">Bu günün təqvimi</string>
@@ -2875,7 +2876,11 @@
     <string name="watch_sending">Göndərilir…</string>
     <string name="watch_sent">Göndərildi</string>
     <string name="watch_settings_of">%1$s · parametrlər</string>
+    <string name="watch_sign_in_allow">İcazə ver</string>
+    <string name="watch_sign_in_denied">Giriş edilmədi. Bu saat çıxışda qalır.</string>
+    <string name="watch_sign_in_deny">Rədd et</string>
     <string name="watch_sign_in_on_phone">Əvvəlcə telefonunuzda tafs-a daxil olun.</string>
+    <string name="watch_sign_in_watch_q">Bu saata öz adınızla daxil olunsun?</string>
     <string name="watch_sign_out_q">Bu saatda çıxış edilsin?</string>
     <string name="watch_sign_out_sub">Telefonunuz daxil olmuş qalır. Bu saat taf-larınızı, söhbətlərinizi və gələnlər qutusunu unudur.</string>
     <string name="watch_signed_in">Daxil olunub</string>
@@ -2891,6 +2896,7 @@
     <string name="watch_view_on_phone">Telefonda baxın</string>
     <string name="watch_view_only_phone">Bu telefon yalnız baxa bilir, ona görə saatdan soruşa bilməzsiniz. Təsdiq edə bilən telefonda daxil olun.</string>
     <string name="watch_voice_text_only">Coach sözlərinizi mətn kimi alır, səsinizi heç vaxt.</string>
+    <string name="watch_waiting_for_phone">Telefonunuz gözlənilir…</string>
     <string name="watch_what_it_does">Nə edir</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s işləyir</item>

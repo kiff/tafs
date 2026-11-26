@@ -58,6 +58,7 @@
     <string name="watch_ask">Opýtať sa tafs</string>
     <string name="watch_ask_needs_consent">Kým sa opýtate tafs, povoľte v tafs v telefóne používanie AI.</string>
     <string name="watch_ask_not_on">Pýtanie z hodiniek zatiaľ nie je zapnuté.</string>
+    <string name="watch_ask_phone_sign_in">Požiadajte telefón, aby prihlásil tieto hodinky</string>
     <string name="watch_ask_text_only">tafs dostane vaše slová ako text, nikdy váš hlas.</string>
     <string name="watch_asking_phone">Pýtam sa telefónu…</string>
     <string name="watch_calendar_today">Dnešný kalendár</string>
@@ -147,7 +148,11 @@
     <string name="watch_sending">Odosielam…</string>
     <string name="watch_sent">Odoslané</string>
     <string name="watch_settings_of">%1$s · nastavenia</string>
+    <string name="watch_sign_in_allow">Povoliť</string>
+    <string name="watch_sign_in_denied">Neprihlásené. Tieto hodinky zostávajú odhlásené.</string>
+    <string name="watch_sign_in_deny">Zamietnuť</string>
     <string name="watch_sign_in_on_phone">Najprv sa v telefóne prihláste do tafs.</string>
+    <string name="watch_sign_in_watch_q">Prihlásiť tieto hodinky ako vás?</string>
     <string name="watch_sign_out_q">Odhlásiť sa na týchto hodinkách?</string>
     <string name="watch_sign_out_sub">Telefón zostane prihlásený. Tieto hodinky zabudnú vaše tafy, chaty a Doručené.</string>
     <string name="watch_signed_in">Prihlásené</string>
@@ -163,6 +168,7 @@
     <string name="watch_view_on_phone">Zobraziť v telefóne</string>
     <string name="watch_view_only_phone">Tento telefón môže len prezerať, takže sa z hodiniek pýtať nemôžete. Prihláste sa v telefóne, ktorý môže schvaľovať.</string>
     <string name="watch_voice_text_only">Coach dostane vaše slová ako text, nikdy váš hlas.</string>
+    <string name="watch_waiting_for_phone">Čaká sa na telefón…</string>
     <string name="watch_what_it_does">Čo robí</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s pracuje</item>

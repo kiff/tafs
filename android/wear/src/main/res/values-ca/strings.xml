@@ -57,6 +57,7 @@
     <string name="watch_ask">Pregunta a tafs</string>
     <string name="watch_ask_needs_consent">Abans de preguntar a tafs, permet l\'ús de la IA a tafs al telèfon.</string>
     <string name="watch_ask_not_on">Preguntar des del rellotge encara no està activat.</string>
+    <string name="watch_ask_phone_sign_in">Demana al telèfon que iniciï la sessió en aquest rellotge</string>
     <string name="watch_ask_text_only">tafs rep les teves paraules com a text, mai la teva veu.</string>
     <string name="watch_asking_phone">Preguntant al telèfon…</string>
     <string name="watch_calendar_today">El calendari d\'avui</string>
@@ -141,7 +142,11 @@
     <string name="watch_sending">Enviant…</string>
     <string name="watch_sent">Enviat</string>
     <string name="watch_settings_of">%1$s · ajustos</string>
+    <string name="watch_sign_in_allow">Permet</string>
+    <string name="watch_sign_in_denied">No s\'ha iniciat la sessió. Aquest rellotge continua amb la sessió tancada.</string>
+    <string name="watch_sign_in_deny">Denega</string>
     <string name="watch_sign_in_on_phone">Primer inicia la sessió a tafs al telèfon.</string>
+    <string name="watch_sign_in_watch_q">Vols iniciar la sessió en aquest rellotge com a tu?</string>
     <string name="watch_sign_out_q">Tancar la sessió en aquest rellotge?</string>
     <string name="watch_sign_out_sub">El teu telèfon manté la sessió iniciada. Aquest rellotge oblida els teus taf, xats i safata d\'entrada.</string>
     <string name="watch_signed_in">Sessió iniciada</string>
@@ -157,6 +162,7 @@
     <string name="watch_view_on_phone">Mira-ho al telèfon</string>
     <string name="watch_view_only_phone">Aquest telèfon només pot veure, així que no pots preguntar des del rellotge. Inicia la sessió en un telèfon que pugui aprovar.</string>
     <string name="watch_voice_text_only">Coach rep les teves paraules com a text, mai la teva veu.</string>
+    <string name="watch_waiting_for_phone">S\'espera el telèfon…</string>
     <string name="watch_what_it_does">El que fa</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s treballant</item>

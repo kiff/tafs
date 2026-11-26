@@ -2791,6 +2791,7 @@
     <string name="watch_ask">tafs\'a sor</string>
     <string name="watch_ask_needs_consent">tafs\'a sormadan önce telefonunuzdaki tafs\'ta yapay zekâ kullanımına izin verin.</string>
     <string name="watch_ask_not_on">Saatinizden sorma henüz açık değil.</string>
+    <string name="watch_ask_phone_sign_in">Telefonunuzdan bu saatte oturum açmasını isteyin</string>
     <string name="watch_ask_text_only">tafs sözlerinizi metin olarak alır, sesinizi asla.</string>
     <string name="watch_asking_phone">Telefonunuza soruluyor…</string>
     <string name="watch_calendar_today">Bugünün takvimi</string>
@@ -2875,7 +2876,11 @@
     <string name="watch_sending">Gönderiliyor…</string>
     <string name="watch_sent">Gönderildi</string>
     <string name="watch_settings_of">%1$s · ayarlar</string>
+    <string name="watch_sign_in_allow">İzin ver</string>
+    <string name="watch_sign_in_denied">Oturum açılmadı. Bu saat oturumu kapalı kalır.</string>
+    <string name="watch_sign_in_deny">Reddet</string>
     <string name="watch_sign_in_on_phone">Önce telefonunuzda tafs\'ta oturum açın.</string>
+    <string name="watch_sign_in_watch_q">Bu saatte sizin adınıza oturum açılsın mı?</string>
     <string name="watch_sign_out_q">Bu saatte oturum kapatılsın mı?</string>
     <string name="watch_sign_out_sub">Telefonunuzda oturum açık kalır. Bu saat tafs\'larınızı, sohbetlerinizi ve gelen kutunuzu unutur.</string>
     <string name="watch_signed_in">Oturum açık</string>
@@ -2891,6 +2896,7 @@
     <string name="watch_view_on_phone">Telefonda görüntüle</string>
     <string name="watch_view_only_phone">Bu telefon yalnızca görüntüleyebilir, bu yüzden saatten soramazsınız. Onay verebilen bir telefonda oturum açın.</string>
     <string name="watch_voice_text_only">Coach sözlerinizi metin olarak alır, sesinizi asla.</string>
+    <string name="watch_waiting_for_phone">Telefonunuz bekleniyor…</string>
     <string name="watch_what_it_does">Ne yapar</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s çalışıyor</item>

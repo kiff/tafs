@@ -2716,6 +2716,7 @@
     <string name="watch_ask">Tanya tafs</string>
     <string name="watch_ask_needs_consent">Sebelum bertanya ke tafs, izinkan penggunaan AI di tafs pada ponsel Anda.</string>
     <string name="watch_ask_not_on">Bertanya dari jam tangan Anda belum aktif.</string>
+    <string name="watch_ask_phone_sign_in">Minta ponsel Anda memasukkan jam tangan ini</string>
     <string name="watch_ask_text_only">tafs menerima kata-kata Anda sebagai teks, tidak pernah suara Anda.</string>
     <string name="watch_asking_phone">Bertanya ke ponsel Anda…</string>
     <string name="watch_calendar_today">Kalender hari ini</string>
@@ -2795,7 +2796,11 @@
     <string name="watch_sending">Mengirim…</string>
     <string name="watch_sent">Terkirim</string>
     <string name="watch_settings_of">%1$s · pengaturan</string>
+    <string name="watch_sign_in_allow">Izinkan</string>
+    <string name="watch_sign_in_denied">Tidak masuk. Jam tangan ini tetap keluar.</string>
+    <string name="watch_sign_in_deny">Tolak</string>
     <string name="watch_sign_in_on_phone">Masuk ke tafs di ponsel Anda terlebih dahulu.</string>
+    <string name="watch_sign_in_watch_q">Masukkan jam tangan ini sebagai Anda?</string>
     <string name="watch_sign_out_q">Keluar di jam tangan ini?</string>
     <string name="watch_sign_out_sub">Ponsel Anda tetap masuk. Jam tangan ini melupakan tafs, obrolan, dan kotak masuk Anda.</string>
     <string name="watch_signed_in">Sudah masuk</string>
@@ -2811,6 +2816,7 @@
     <string name="watch_view_on_phone">Lihat di ponsel</string>
     <string name="watch_view_only_phone">Ponsel ini hanya dapat melihat, jadi Anda tidak dapat bertanya dari jam tangan. Masuk di ponsel yang dapat menyetujui.</string>
     <string name="watch_voice_text_only">Coach menerima kata-kata Anda sebagai teks, tidak pernah suara Anda.</string>
+    <string name="watch_waiting_for_phone">Menunggu ponsel Anda…</string>
     <string name="watch_what_it_does">Yang dilakukannya</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s bekerja</item>

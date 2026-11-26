@@ -56,6 +56,7 @@
     <string name="watch_ask">詢問 tafs</string>
     <string name="watch_ask_needs_consent">詢問 tafs 之前，請先在手機上的 tafs 中允許使用 AI。</string>
     <string name="watch_ask_not_on">尚未開啟從手錶詢問的功能。</string>
+    <string name="watch_ask_phone_sign_in">請手機登入這支手錶</string>
     <string name="watch_ask_text_only">tafs 收到的是您的文字，絕不會收到您的語音。</string>
     <string name="watch_asking_phone">正在詢問您的手機…</string>
     <string name="watch_calendar_today">今天的行事曆</string>
@@ -135,7 +136,11 @@
     <string name="watch_sending">傳送中…</string>
     <string name="watch_sent">已傳送</string>
     <string name="watch_settings_of">%1$s · 設定</string>
+    <string name="watch_sign_in_allow">允許</string>
+    <string name="watch_sign_in_denied">尚未登入。這支手錶仍維持登出。</string>
+    <string name="watch_sign_in_deny">拒絕</string>
     <string name="watch_sign_in_on_phone">請先在手機上登入 tafs。</string>
+    <string name="watch_sign_in_watch_q">要以您的身分登入這支手錶嗎？</string>
     <string name="watch_sign_out_q">要在這支手錶上登出嗎？</string>
     <string name="watch_sign_out_sub">您的手機仍保持登入。這支手錶會忘記您的 taf、對話和收件匣。</string>
     <string name="watch_signed_in">已登入</string>
@@ -151,6 +156,7 @@
     <string name="watch_view_on_phone">在手機上查看</string>
     <string name="watch_view_only_phone">這部手機僅能檢視，因此您無法從手錶詢問。請在可以核准的手機上登入。</string>
     <string name="watch_voice_text_only">Coach 收到的是您的文字，絕不會收到您的語音。</string>
+    <string name="watch_waiting_for_phone">正在等候您的手機…</string>
     <string name="watch_what_it_does">它做什麼</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s 項處理中</item>

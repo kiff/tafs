@@ -2866,6 +2866,7 @@
     <string name="watch_ask">Klausti tafs</string>
     <string name="watch_ask_needs_consent">Prieš klausdami tafs, telefone leiskite tafs naudoti AI.</string>
     <string name="watch_ask_not_on">Klausimai iš laikrodžio dar neįjungti.</string>
+    <string name="watch_ask_phone_sign_in">Paprašykite telefono prijungti šį laikrodį</string>
     <string name="watch_ask_text_only">tafs gauna jūsų žodžius kaip tekstą, niekada ne jūsų balsą.</string>
     <string name="watch_asking_phone">Klausiama telefono…</string>
     <string name="watch_calendar_today">Šiandienos kalendorius</string>
@@ -2955,7 +2956,11 @@
     <string name="watch_sending">Siunčiama…</string>
     <string name="watch_sent">Išsiųsta</string>
     <string name="watch_settings_of">%1$s · nustatymai</string>
+    <string name="watch_sign_in_allow">Leisti</string>
+    <string name="watch_sign_in_denied">Neprijungta. Šis laikrodis lieka atjungtas.</string>
+    <string name="watch_sign_in_deny">Atmesti</string>
     <string name="watch_sign_in_on_phone">Pirmiausia prisijunkite prie tafs telefone.</string>
+    <string name="watch_sign_in_watch_q">Prijungti šį laikrodį jūsų vardu?</string>
     <string name="watch_sign_out_q">Atsijungti šiame laikrodyje?</string>
     <string name="watch_sign_out_sub">Telefonas lieka prisijungęs. Šis laikrodis pamirš jūsų taf, pokalbius ir gautuosius.</string>
     <string name="watch_signed_in">Prisijungta</string>
@@ -2971,6 +2976,7 @@
     <string name="watch_view_on_phone">Peržiūrėti telefone</string>
     <string name="watch_view_only_phone">Šis telefonas gali tik peržiūrėti, todėl iš laikrodžio klausti negalima. Prisijunkite telefone, kuris gali tvirtinti.</string>
     <string name="watch_voice_text_only">Coach gauna jūsų žodžius kaip tekstą, niekada ne jūsų balsą.</string>
+    <string name="watch_waiting_for_phone">Laukiama jūsų telefono…</string>
     <string name="watch_what_it_does">Ką jis daro</string>
     <plurals name="watch_working_count">
         <item quantity="one">Dirba: %1$s</item>

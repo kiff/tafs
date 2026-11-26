@@ -7,6 +7,7 @@
   "watch.ask": "សួរ tafs",
   "watch.ask_needs_consent": "មុនពេលសួរ tafs សូមអនុញ្ញាតការប្រើ AI ក្នុង tafs នៅលើទូរសព្ទរបស់អ្នក។",
   "watch.ask_not_on": "ការសួរពីនាឡិការបស់អ្នកមិនទាន់បើកនៅឡើយ។",
+  "watch.ask_phone_sign_in": "ស្នើទូរសព្ទរបស់អ្នកឱ្យចូលគណនីនាឡិកានេះ",
   "watch.ask_text_only": "tafs ទទួលពាក្យរបស់អ្នកជាអត្ថបទ មិនដែលជាសំឡេងរបស់អ្នកទេ។",
   "watch.asking_phone": "កំពុងសួរទូរសព្ទរបស់អ្នក…",
   "watch.calendar_today": "ប្រតិទិនថ្ងៃនេះ",
@@ -86,7 +87,11 @@
   "watch.sending": "កំពុងផ្ញើ…",
   "watch.sent": "បានផ្ញើ",
   "watch.settings_of": "{taf} · ការកំណត់",
+  "watch.sign_in_allow": "អនុញ្ញាត",
+  "watch.sign_in_denied": "មិនបានចូលគណនីទេ។ នាឡិកានេះនៅតែចាកចេញ។",
+  "watch.sign_in_deny": "បដិសេធ",
   "watch.sign_in_on_phone": "ចូលទៅ tafs នៅលើទូរសព្ទរបស់អ្នកជាមុនសិន។",
+  "watch.sign_in_watch_q": "ចូលគណនីនាឡិកានេះជាអ្នកឬ?",
   "watch.sign_out_q": "ចាកចេញនៅលើនាឡិកានេះឬ?",
   "watch.sign_out_sub": "ទូរសព្ទរបស់អ្នកនៅតែចូល។ នាឡិកានេះភ្លេច taf ការសន្ទនា និងប្រអប់សារចូលរបស់អ្នក។",
   "watch.signed_in": "បានចូល",
@@ -102,6 +107,7 @@
   "watch.view_on_phone": "មើលនៅលើទូរសព្ទ",
   "watch.view_only_phone": "ទូរសព្ទនេះអាចមើលតែប៉ុណ្ណោះ ដូច្នេះអ្នកមិនអាចសួរពីនាឡិកាបានទេ។ ចូលនៅលើទូរសព្ទដែលអាចអនុម័តបាន។",
   "watch.voice_text_only": "Coach ទទួលពាក្យរបស់អ្នកជាអត្ថបទ មិនដែលជាសំឡេងរបស់អ្នកទេ។",
+  "watch.waiting_for_phone": "កំពុងរង់ចាំទូរសព្ទរបស់អ្នក…",
   "watch.what_it_does": "អ្វីដែលវាធ្វើ",
   "watch.working_count": {
     "other": "{count} កំពុងធ្វើការ"

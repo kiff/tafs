@@ -57,6 +57,7 @@
     <string name="watch_ask">Pedir ao tafs</string>
     <string name="watch_ask_needs_consent">Antes de pedir ao tafs, autorize o uso de IA no tafs no celular.</string>
     <string name="watch_ask_not_on">Pedir a partir do relógio ainda não está ativo.</string>
+    <string name="watch_ask_phone_sign_in">Peça ao seu celular para conectar este relógio</string>
     <string name="watch_ask_text_only">O tafs recebe as suas palavras como texto, nunca a sua voz.</string>
     <string name="watch_asking_phone">Perguntando ao celular…</string>
     <string name="watch_calendar_today">Calendário de hoje</string>
@@ -141,7 +142,11 @@
     <string name="watch_sending">Enviando…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_settings_of">%1$s · configurações</string>
+    <string name="watch_sign_in_allow">Permitir</string>
+    <string name="watch_sign_in_denied">Não conectado. Este relógio continua desconectado.</string>
+    <string name="watch_sign_in_deny">Recusar</string>
     <string name="watch_sign_in_on_phone">Primeiro, entre no tafs no celular.</string>
+    <string name="watch_sign_in_watch_q">Conectar este relógio com a sua conta?</string>
     <string name="watch_sign_out_q">Sair deste relógio?</string>
     <string name="watch_sign_out_sub">O celular continua conectado à sua conta. Este relógio esquece os seus tafs, chats e Caixa de entrada.</string>
     <string name="watch_signed_in">Conectado</string>
@@ -157,6 +162,7 @@
     <string name="watch_view_on_phone">Ver no telemóvel</string>
     <string name="watch_view_only_phone">Este celular só pode ver, por isso não pode pedir a partir do relógio. Entre em um celular que possa aprovar.</string>
     <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
+    <string name="watch_waiting_for_phone">Aguardando seu celular…</string>
     <string name="watch_what_it_does">O que faz</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s a trabalhar</item>

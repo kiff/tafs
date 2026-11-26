@@ -2791,6 +2791,7 @@
     <string name="watch_ask">Küsi tafsilt</string>
     <string name="watch_ask_needs_consent">Enne tafsilt küsimist luba telefonis tafsis tehisintellekti (AI) kasutamine.</string>
     <string name="watch_ask_not_on">Kellast küsimine pole veel sees.</string>
+    <string name="watch_ask_phone_sign_in">Palu oma telefonil see kell sisse logida</string>
     <string name="watch_ask_text_only">tafs saab sinu sõnad tekstina, mitte kunagi sinu häält.</string>
     <string name="watch_asking_phone">Küsin telefonilt…</string>
     <string name="watch_calendar_today">Tänane kalender</string>
@@ -2875,7 +2876,11 @@
     <string name="watch_sending">Saatmine…</string>
     <string name="watch_sent">Saadetud</string>
     <string name="watch_settings_of">%1$s · seaded</string>
+    <string name="watch_sign_in_allow">Luba</string>
+    <string name="watch_sign_in_denied">Sisse ei logitud. See kell jääb välja logituks.</string>
+    <string name="watch_sign_in_deny">Keela</string>
     <string name="watch_sign_in_on_phone">Logi kõigepealt telefonis tafsi sisse.</string>
+    <string name="watch_sign_in_watch_q">Kas logida see kell sinuna sisse?</string>
     <string name="watch_sign_out_q">Kas logida selles kellas välja?</string>
     <string name="watch_sign_out_sub">Telefon jääb sisse logituks. See kell unustab sinu tafid, vestlused ja postkasti.</string>
     <string name="watch_signed_in">Sisse logitud</string>
@@ -2891,6 +2896,7 @@
     <string name="watch_view_on_phone">Vaata telefonis</string>
     <string name="watch_view_only_phone">See telefon saab ainult vaadata, seega ei saa sa kellast küsida. Logi sisse telefonis, mis saab kinnitada.</string>
     <string name="watch_voice_text_only">Coach saab sinu sõnad tekstina, mitte kunagi sinu häält.</string>
+    <string name="watch_waiting_for_phone">Ootan sinu telefoni…</string>
     <string name="watch_what_it_does">Mida see teeb</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s töötab</item>
