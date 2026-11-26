@@ -861,7 +861,7 @@ export const en = {
   start_button: "Start",
   // Why starting Coach asks for the person, on the older Start screen (start.words.does); the Card step says it in card_step_sign.
   // True on both paths: there, the button starts Coach, not the first message.
-  start_first_send: "Coach asks for your fingerprint, face or passkey before it starts, to give Coach its Card, so nothing moves without you.",
+  start_first_send: "Coach asks for your fingerprint, face or passkey before it starts, to give Coach its Card, so it can act only within what you approve.",
   plan_needed: "Choose a plan to start it.",
   /** A result Coach handed over that a field of its own kept from being made, past the hand-over's hold: after "{name} wasn't set up:". */
   handover_not_finished: "Coach's hand-over wasn't finished",
@@ -892,7 +892,7 @@ export const en = {
   card_step_allows: "This lets Coach look at your tafs, run them, and draft and try new versions, each within the daily limits below. Only while you turn on a drive, it can also see and use the app on this device.",
   card_step_asks: "Installing a version, choosing where a taf's results go, making a mission and saving your business description always wait for you in Needs you. Giving a taf a task or trying a version waits for you past its daily limit; anything else past its limit is refused.",
   // Shown on a device that approves with a fingerprint or face; a passkey's device shows card_step_sign_passkey instead.
-  card_step_sign: "Your approval uses your fingerprint or face, so nothing moves without you. It signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
+  card_step_sign: "Your approval uses your fingerprint or face, so Coach can act only within what you approve here. It signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
   card_step_stop: "Halt stops Coach and every taf at once, with one tap.",
   card_step_exact: "Exactly what you sign",
   card_step_give_fingerprint: "Approve with fingerprint",
