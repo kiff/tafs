@@ -262,6 +262,11 @@ the app in sample mode.
     sends product ids only. Plan & usage reads them again each time it opens, and a change of the App
     Store's storefront (`Storefront.updates`) drops every price at once and reads them again, so a price
     from another storefront is never shown beside Apple's sheet (`Purchases.load`, `storefrontChanged`).
+  - **After a purchase.** Solo's page closes and Plan & usage says "Solo is on…" (`billing.solo_on`) only
+    once KIFF reads the plan as Solo after the purchase (`AppModel.subscribeSolo`), never on the App
+    Store's "purchased" alone; pending, not recorded or cancelled keeps Solo's page with its message.
+    Add credits says what credits buy (`billing.credits_buy`) above what packs are for, and each pack's
+    whole row is its button, off until the App Store has priced it.
   - **Restore purchases** stays on Solo's screen and Add credits, as the App Store asks. A
     restore that finds nothing says "Nothing to restore.", never "Purchases restored."
     (`PurchaseOutcome.nothingToRestore`).

@@ -502,7 +502,8 @@ final class DriveTests: XCTestCase {
         ("Views/TafDetailView.swift", #"Button("Remove for good")"#),
         ("Views/TafDetailView.swift", #"Button(ConnectionFixWords.endWord(grant))"#),
         ("Views/UsageView.swift", #"Button("Approve") {"#),
-        ("Views/PlanViews.swift", #"Button(purchases.products[pack.appleProduct]?.displayPrice"#),
+        // A pack's row is one button, the whole row (its line and its price).
+        ("Views/PlanViews.swift", #"await model.buyPack(pack)"#),
         ("Views/PlanViews.swift", #"Button(SoloView.action(product))"#),
         ("Views/HaltScreen.swift", #"Button(busy ? "Halting…""#),
         ("Views/HaltScreen.swift", #"Button("Halt again")"#),

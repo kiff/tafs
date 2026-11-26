@@ -1,0 +1,1 @@
+- **iPhone and iPad: buying says what happened and what you get.** After Solo is bought, its page closes and Plan & usage says "Solo is on" once KIFF has it; Add credits says what credits pay for, and a whole pack row buys, not only its price ([ios-app.md](docs/ios-app.md)).
