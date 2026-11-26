@@ -51,7 +51,7 @@ describe("the words that say every call asks, in every app language", () => {
     }
   });
 
-  // legal-i18n's sentences: "<figure> a day and every … asks you" in each of the 20 figure-after languages, and in each of the
+  // "<figure> a day and every … asks you" in each of the 20 figure-after languages, and in each of the
   // 16 guarded ones with its own "and" (ja and zh-Hant with 、/，).
   it("reads \"<figure> a day and every … asks you\" as every call in every language, the guarded ones by their own \"and\"", () => {
     for (const text of [
