@@ -113,7 +113,9 @@ final class NeedsYouModel: ObservableObject {
     /// read still lists it (`WatchRequest.Kind.openOnPhone`). Only the hold's id goes, with the account mark; nothing is signed
     /// or answered here, and nothing on the watch changes. Not in reach, nothing is said: the button stays to tap again.
     func approveOnPhone(_ hold: String) async {
-        _ = await phone.reach(WatchRequest(.openOnPhone, made: clock(), hold: hold))
+        let reached = await phone.reach(WatchRequest(.openOnPhone, made: clock(), hold: hold))
+        // Row 28: "Opened on your phone" on that call's button for a moment.
+        WatchOpenedNotice.shared.heard(reached.reply, for: hold)
     }
 
     /// The app left the screen: what was read goes.

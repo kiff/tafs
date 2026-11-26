@@ -141,6 +141,24 @@ final class TafChatTests: XCTestCase {
         XCTAssertEqual(phone.asked.count, before, "Coach's model reads no taf's chat")
     }
 
+    /// Row 28: View on phone says "Opened on your phone" for a moment once the phone answers that it opened the chat; not
+    /// reached, nothing.
+    func testViewOnPhoneSaysItOpened() async {
+        WatchOpenedNotice.shared.reset()
+        defer { WatchOpenedNotice.shared.reset() }
+        final class Opens: PhoneAsking {
+            var reply: WatchReply?
+            func ask(_ request: WatchRequest) async -> WatchReply? { reply }
+        }
+        let phone = Opens()
+        let model = CoachModel(phone: phone, taf: Self.tafID, clock: { self.now }, lock: Unlocked(), pause: {})
+        await model.openOnPhone()
+        XCTAssertNil(WatchOpenedNotice.shared.key)
+        phone.reply = WatchReply(.ok)
+        await model.openOnPhone()
+        XCTAssertEqual(WatchOpenedNotice.shared.key, WatchOpenedNotice.chat)
+    }
+
     /// On once the privacy paragraph is live; tafs cloud's switch still gates each account.
     func testTheSwitchIsOn() {
         XCTAssertTrue(WatchTafChat.on)
