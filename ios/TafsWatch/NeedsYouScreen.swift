@@ -27,9 +27,7 @@ struct NeedsYouScreen: View {
             if let brief = model.brief {
                 BriefList(brief: brief, model: model, needsYou: needsYou)
             }
-        case .loaded(let read):
-            // A held call past its end on the watch's own clock goes, and isn't counted.
-            let needsYou = NeedsYouModel.shown(read, now: Date())
+        case .loaded(let needsYou):
             List {
                 Section {
                     if Self.allClear(needsYou.count) {

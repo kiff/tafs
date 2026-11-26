@@ -95,6 +95,47 @@ final class NeedsYouModelTests: XCTestCase {
         XCTAssertEqual(NeedsYouModel.shown(page, now: now + 601).count, 2)
     }
 
+    /// The ended hold leaves the model itself, so everything that reads it agrees: the list, the brief's Refuse,
+    /// `beyondBrief`, and Coach's home count (`WatchPage.unread`). The watch's clock, stepped past the end, drops it.
+    func testAnEndedHoldLeavesTheBriefAndTheCountsToo() async {
+        final class Clock { var now = Date(timeIntervalSinceReferenceDate: 813_667_500) }
+        let clock = Clock()
+        let start = clock.now
+        let page = WatchNeedsYou(count: 3, calls: [
+            .init(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00", reason: "Over €150.00 each", answerBy: "10:51",
+                  ends: start + 300),
+            .init(id: "ce_2", taf: "Rae", what: "Refund order 4503, €90.00", reason: "Over €50.00 each", answerBy: "10:55",
+                  ends: start + 600),
+        ], at: start)
+        let decision = WatchBrief.Decision(id: "d1", question: "Refund order 4502?", taf: "Rae", deadline: nil, urgent: false,
+                                           cantWait: nil, refKind: "hold", refID: "ce_1", holdID: "ce_1")
+        let brief = WatchBrief(title: "Your brief", when: nil, urgent: nil, decisions: [decision], more: nil, done: nil,
+                               doneCases: [], rest: nil)
+        final class Phones: PhoneAsking {
+            let page: WatchNeedsYou
+            let brief: WatchBrief
+            init(_ page: WatchNeedsYou, _ brief: WatchBrief) { self.page = page; self.brief = brief }
+            func ask(_ request: WatchRequest) async -> WatchReply? {
+                request.kind == .brief ? WatchReply(.ok, brief: brief) : WatchReply(.ok, needsYou: page)
+            }
+        }
+        // The real wait is an hour here: the test steps the clock and drops the ended hold itself.
+        let model = NeedsYouModel(phone: Phones(page, brief), clock: { clock.now }, lock: Unlocked(), briefOn: true,
+                                  sleep: { _ in try? await Task.sleep(nanoseconds: 3_600_000_000_000) })
+        await model.load()
+        XCTAssertTrue(model.refusable(decision))
+        XCTAssertEqual(model.beyondBrief, 2, "ce_2, and the one other thing that waits")
+        XCTAssertEqual(WatchPage.unread(model.state), 2)
+        clock.now = start + 301
+        model.dropEnded()
+        XCTAssertFalse(model.refusable(decision), "no Refuse on an ended hold, in the brief either")
+        XCTAssertEqual(model.beyondBrief, 2, "the ended hold's count went with it, so the rest is counted as before")
+        XCTAssertEqual(WatchPage.unread(model.state), 1)
+        guard case .loaded(let shown) = model.state else { return XCTFail() }
+        XCTAssertEqual(shown.calls.map(\.id), ["ce_2"])
+        XCTAssertEqual(shown.count, 2)
+    }
+
     func testThePhoneOutOfReachIsSaidAsSuch() async {
         let model = NeedsYouModel(phone: Phone(nil), clock: { self.now }, lock: Unlocked())
         await model.load()
