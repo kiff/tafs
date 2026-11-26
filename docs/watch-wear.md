@@ -616,7 +616,10 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   which come from the live read when the call is opened. The watch (`HeldCalls`, `KeptResults.needsYou`) puts each call at the
   top of the Inbox and on the tile's count (and redraws the tile), alerts a call new to it in its own channel ("Held calls",
   `watch.held_channel`; a locked watch says only how many), and drops a call the phone no longer lists, as its own read now
-  does. Taken only under the mark held, drawn only once this open has heard it. Refuse stays behind the watch's lock, Approve
+  does. Each call carries its hold's end (`ends_at`): past it, the watch drops the call on its own clock, with no word from the
+  phone (its line, its alert, which times out then, and its share of the tile's count). The end is used in memory, never
+  written to the Inbox file; the tile keeps the end times beside its count, so it can drop them with the app closed. Taken only
+  under the mark held, drawn only once this open has heard it. Refuse stays behind the watch's lock, Approve
   on your phone a hand-off; a Refuse the phone can't make from here says "Not refused. Refuse it on your phone."
   (`watch.refuse_on_phone`).
 - **The watch's reads answer within its 10 s** (`WatchRelay`; `WatchFastReadTest`). Holding a read, the phone answers Needs you

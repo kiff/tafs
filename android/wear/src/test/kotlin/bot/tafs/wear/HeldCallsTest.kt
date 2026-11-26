@@ -42,9 +42,12 @@ class HeldCallsTest {
 
   private class Tile : TileCount.Store {
     var kept: Pair<Int, Long>? = null
+    var endsKept: List<Long> = emptyList()
     override fun read() = kept
     override fun write(count: Int, at: Long) { kept = count to at }
-    override fun clear() { kept = null }
+    override fun clear() { kept = null; endsKept = emptyList() }
+    override fun ends() = endsKept
+    override fun writeEnds(ends: List<Long>) { endsKept = ends }
   }
 
   private class Marks(var mark: String?) : MarkStore {
@@ -65,6 +68,31 @@ class HeldCallsTest {
     assertEquals(listOf("ask:wa_1"), HeldCalls.inbox(first, emptySet(), emptyList(), t + 9)!!.map { it.id })
     // Taken away on the watch: it never comes back while the phone still lists it.
     assertNull(HeldCalls.inbox(listOf(ask), setOf("held:hold_1"), listOf(refund), t))
+  }
+
+  /**
+   * Row 29 on the watch's own clock: a call ending at +300 s is gone at +301 s with no new push from the phone (its line, its
+   * alert and its share of the tile's count). The end is used in memory only: the Inbox file never holds it.
+   */
+  @Test fun aHoldThatEndsLeavesOnTheWatchsOwnClock() {
+    val ending = refund.copy(endsAt = t + 300_000)
+    val inbox = HeldCalls.inbox(listOf(ask), emptySet(), listOf(ending), t)!!
+    assertEquals("held:hold_1", inbox.first().id)
+    assertEquals(listOf("ask:wa_1"), HeldCalls.dropEnded(inbox, t + 301_000)!!.map { it.id })
+    assertTrue("never drawn once ended", HeldCalls.live(listOf(ending), t + 301_000).isEmpty())
+    assertTrue("not in the Inbox file", !KeptInboxStore.encode(inbox).contains((t + 300_000).toString()))
+    // The tile: its count leaves the ended call out on its own.
+    val tile = Tile()
+    TileCount(tile).saw(1, t, listOf(t + 300_000))
+    assertEquals(1, TileCount(tile).shown(unlocked = true, now = t + 299_000)?.count)
+    assertEquals(0, TileCount(tile).shown(unlocked = true, now = t + 301_000)?.count)
+    // The alert times out at the end by itself.
+    val stores = KeptResults.Stores(thread = null, inbox = Inbox(), secure = true, signedOut = false, marks = Marks(markA), tile = Tile())
+    KeptResults.needsYou(context, KeptNeedsYou(t, 1, "", listOf(ending), markA), stores, now = t)
+    assertEquals(300_000L, alerts().single().notification.timeoutAfter)
+    // A push that comes after the end shows nothing of it.
+    KeptResults.needsYou(context, KeptNeedsYou(t + 301_000, 1, "", listOf(ending), markA), KeptResults.Stores(thread = null, inbox = Inbox(), secure = true, signedOut = false, marks = Marks(markA), tile = Tile()), now = t + 301_000)
+    assertTrue("its alert is gone", alerts().none { it.tag == "held:hold_1" })
   }
 
   @Test fun onlyACallNewToTheWatchIsFresh() {

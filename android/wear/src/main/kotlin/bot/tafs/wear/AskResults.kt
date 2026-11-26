@@ -149,13 +149,13 @@ object KeptResults {
     needsYou?.let { return it(kept) }
     if (stores.signedOut) return
     val inbox = stores.inbox?.takeIf { stores.secure }
-    val fresh = inbox?.let { HeldCalls.fresh(it.read(), it.dismissed(), kept.calls) }
+    val fresh = inbox?.let { HeldCalls.fresh(it.read(), it.dismissed(), HeldCalls.live(kept.calls, now)) }
     if (stores.secure) {
-      stores.tile?.let { TileCount(it).saw(kept.count, now) }
+      stores.tile?.let { TileCount(it).saw(kept.count, now, kept.calls.mapNotNull { c -> c.endsAt }) }
       inbox?.let { store -> HeldCalls.inbox(store.read(), store.dismissed(), kept.calls, now)?.let(store::write) }
     }
     NeedsYouTileService.update(context)
-    HeldCalls.alert(context, kept.calls, fresh)
+    HeldCalls.alert(context, kept.calls, fresh, now)
   }
 
   /** The open app's model, while it's on screen: the phone's answer to a sign-in ask ([WatchModel.signInAnswered]). */

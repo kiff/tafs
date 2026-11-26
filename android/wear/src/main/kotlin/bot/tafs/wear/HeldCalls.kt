@@ -19,15 +19,24 @@ object HeldCalls {
    * refused or run out, on any device) gone. Lines taken away ([dismissed]) never come back. Null when nothing changes.
    */
   fun inbox(items: List<InboxItem>, dismissed: Set<String>, calls: List<HeldLine>, at: Long): List<InboxItem>? {
-    val listed = calls.map { InboxItem.heldId(it.holdId) }.toSet()
-    var next = items.filterNot { it.kind == InboxItem.Kind.HELD && it.id !in listed }
-    for (call in calls) InboxLines.put(next, dismissed, line(call, at))?.let { next = it }
+    val listed = live(calls, at).map { InboxItem.heldId(it.holdId) }.toSet()
+    var next = items.filterNot { it.kind == InboxItem.Kind.HELD && (it.id !in listed || ended(it, at)) }
+    for (call in live(calls, at)) InboxLines.put(next, dismissed, line(call, at))?.let { next = it }
     return next.takeIf { it != items }
   }
 
-  /** A held call's Inbox line: its taf and what it wants, with no amount in it ([bot.tafs.watchlink.Amounts]). */
+  /** A held call's Inbox line: its taf and what it wants, with no amount in it ([bot.tafs.watchlink.Amounts]), and its end. */
   fun line(call: HeldLine, at: Long): InboxItem =
-    InboxItem(InboxItem.heldId(call.holdId), InboxItem.Kind.HELD, call.taf, bot.tafs.watchlink.Amounts.strip(call.wants).trim(), at)
+    InboxItem(InboxItem.heldId(call.holdId), InboxItem.Kind.HELD, call.taf, bot.tafs.watchlink.Amounts.strip(call.wants).trim(), at, endsAt = call.endsAt)
+
+  /** The calls whose hold hasn't ended at [now], on the watch's own clock (row 29): an ended one is never drawn or counted. */
+  fun live(calls: List<HeldLine>, now: Long): List<HeldLine> = calls.filter { (it.endsAt ?: Long.MAX_VALUE) > now }
+
+  private fun ended(item: InboxItem, now: Long) = (item.endsAt ?: Long.MAX_VALUE) <= now
+
+  /** The Inbox without held lines whose hold has ended at [now]; null when none has. */
+  fun dropEnded(items: List<InboxItem>, now: Long): List<InboxItem>? =
+    items.filterNot { it.kind == InboxItem.Kind.HELD && ended(it, now) }.takeIf { it.size != items.size }
 
   internal const val CHANNEL = "held"
 
@@ -44,8 +53,9 @@ object HeldCalls {
    * says only how many held calls need you, and buzzes only when that number goes up. Opened, the app reads Needs you from the
    * phone, where Refuse (behind the watch's lock) and Approve on your phone are. The watch never approves.
    */
-  fun alert(context: Context, calls: List<HeldLine>, fresh: Set<String>?) {
+  fun alert(context: Context, all: List<HeldLine>, fresh: Set<String>?, now: Long = System.currentTimeMillis()) {
     val manager = context.getSystemService(NotificationManager::class.java) ?: return
+    val calls = live(all, now)
     val listed = calls.map { tag(it.holdId) }.toSet()
     val active = runCatching { manager.activeNotifications.toList() }.getOrDefault(emptyList())
     for (shown in active) if (shown.tag?.startsWith("held:") == true && shown.tag !in listed) runCatching { manager.cancel(shown.tag, ID) }
@@ -65,7 +75,10 @@ object HeldCalls {
       .setContentText(Words.Watch.heldCalls(calls.size)).setContentIntent(open).setAutoCancel(true)
     if (fresh == null) {
       val before = active.firstOrNull { it.tag == COUNT_TAG }?.notification?.extras?.getInt(EXTRA_COUNT) ?: 0
+      // Gone by itself once the last of them ends.
+      val last = calls.mapNotNull { it.endsAt }.takeIf { it.size == calls.size }?.maxOrNull()
       val alert = count().setPriority(NotificationCompat.PRIORITY_HIGH).setOnlyAlertOnce(calls.size <= before)
+        .apply { last?.let { setTimeoutAfter((it - now).coerceAtLeast(1)) } }
         .setExtras(android.os.Bundle().apply { putInt(EXTRA_COUNT, calls.size) }).build()
       runCatching { manager.notify(COUNT_TAG, ID, alert) }
       return
@@ -84,6 +97,8 @@ object HeldCalls {
         .setOnlyAlertOnce(true)
         .setContentIntent(open)
         .setAutoCancel(true)
+        // Gone by itself when the hold ends, with no word from the phone (row 29).
+        .apply { call.endsAt?.let { setTimeoutAfter((it - now).coerceAtLeast(1)) } }
         .build()
       runCatching { manager.notify(tag(call.holdId), ID, shown) }
     }

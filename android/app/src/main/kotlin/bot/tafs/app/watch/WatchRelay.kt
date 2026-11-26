@@ -493,6 +493,7 @@ class WatchRelay(
           amount = call.proposed.amount?.formatted,
           reason = call.reason.takeIf { it.isNotBlank() }?.let(bot.tafs.app.kiff.KiffMapping::visible),
           refusable = refusableFromWrist(state, call),
+          endsAt = call.expiresAt.toEpochMilli(),
         )
       },
     )

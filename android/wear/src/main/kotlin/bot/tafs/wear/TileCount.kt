@@ -11,21 +11,30 @@ class TileCount(private val store: Store) {
     fun read(): Pair<Int, Long>?
     fun write(count: Int, at: Long)
     fun clear()
+
+    /** When each held call in the count ends (ms): past it, the count drops it on the watch's own clock. Times, nothing else. */
+    fun ends(): List<Long> = emptyList()
+
+    fun writeEnds(ends: List<Long>) = Unit
   }
 
   data class Shown(val count: Int, val at: Long)
 
-  fun saw(count: Int, at: Long) = store.write(count, at)
+  fun saw(count: Int, at: Long, ends: List<Long> = emptyList()) {
+    store.write(count, at)
+    store.writeEnds(ends)
+  }
 
   fun signedOut() = store.clear()
 
   /** What the tile may show now: the count only while the watch has a screen lock and is unlocked; otherwise nothing, and it's forgotten. */
-  fun shown(unlocked: Boolean): Shown? {
+  fun shown(unlocked: Boolean, now: Long = System.currentTimeMillis()): Shown? {
     if (!unlocked) {
       store.clear()
       return null
     }
-    return store.read()?.let { (count, at) -> Shown(count, at) }
+    // A held call whose hold has ended no longer counts, though the phone hasn't said so yet (row 29).
+    return store.read()?.let { (count, at) -> Shown((count - store.ends().count { it <= now }).coerceAtLeast(0), at) }
   }
 }
 
@@ -40,6 +49,12 @@ class PreferencesTileStore(context: android.content.Context) : TileCount.Store {
     prefs.edit().putInt(COUNT, count).putLong(AT, at).apply()
   }
 
+  override fun ends(): List<Long> = prefs.getString(ENDS, null)?.split(',')?.mapNotNull { it.toLongOrNull() }.orEmpty()
+
+  override fun writeEnds(ends: List<Long>) {
+    prefs.edit().putString(ENDS, ends.joinToString(",")).apply()
+  }
+
   override fun clear() {
     prefs.edit().clear().apply()
   }
@@ -47,5 +62,6 @@ class PreferencesTileStore(context: android.content.Context) : TileCount.Store {
   private companion object {
     const val COUNT = "count"
     const val AT = "at"
+    const val ENDS = "ends"
   }
 }

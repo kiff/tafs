@@ -731,6 +731,7 @@ class WatchModel(
    * an ask newer than the one in memory replacing it, so the app shows what's there without a read.
    */
   fun reload() {
+    dropEnded()
     // Signed out on this watch from another of its screens (a second copy of the app, opened from the tile or a notification):
     // this one follows the watch's own flag before it draws anything, so a sign-out never comes undone by itself (row 18).
     if (signIn?.signedOut() == true && !_signedOutHere.value) {
@@ -1463,7 +1464,7 @@ class WatchModel(
     val needsYou = when (asked) {
       is Asked.Answered -> when (val reply = asked.reply) {
         is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also {
-          tile?.saw(reply.count, now())
+          tile?.saw(reply.count, now(), reply.calls.mapNotNull { it.endsAt })
           // Each held call is a line in the Inbox, with no amount kept; one the phone no longer lists (answered, refused or run out,
           // row 29) goes, so a Refuse is never offered on a call KIFF has dropped ([HeldCalls.inbox], as the phone's push does).
           if ((inboxStore != null || reviewFirst) && unlocked()) HeldCalls.inbox(_inbox.value, dismissed, reply.calls, now())?.let(::saveInbox)
@@ -1540,14 +1541,30 @@ class WatchModel(
    */
   fun needsYouPushed(count: Int, words: String, calls: List<HeldLine>) {
     if (_signedOutHere.value || !verified) return
-    tile?.saw(count, now())
+    tile?.saw(count, now(), calls.mapNotNull { it.endsAt })
     (_shown.value as? Shown.Read)?.let { read ->
       val known = read.needsYou.calls.associateBy { it.holdId }
-      val merged = calls.map { call -> known[call.holdId]?.let { call.copy(amount = it.amount, reason = it.reason) } ?: call }
-      _shown.value = read.copy(needsYou = NeedsYouRead(count, words, merged))
+      val live = HeldCalls.live(calls, now())
+      val merged = live.map { call -> known[call.holdId]?.let { call.copy(amount = it.amount, reason = it.reason) } ?: call }
+      _shown.value = read.copy(needsYou = NeedsYouRead((count - (calls.size - live.size)).coerceAtLeast(0), words, merged))
     }
     if ((inboxStore != null || reviewFirst) && unlocked()) HeldCalls.inbox(_inbox.value, dismissed, calls, now())?.let(::saveInbox)
     pruneDismissed("held:", calls.map { InboxItem.heldId(it.holdId) }.toSet())
+  }
+
+  /**
+   * Held calls whose hold has ended, gone on the watch's own clock (row 29): from the Inbox and from Needs you as shown, with no
+   * word from the phone, so Refuse is never offered on a call KIFF has dropped. On every open, push and read.
+   */
+  fun dropEnded() {
+    val at = now()
+    HeldCalls.dropEnded(_inbox.value, at)?.let(::saveInbox)
+    (_shown.value as? Shown.Read)?.let { read ->
+      val live = HeldCalls.live(read.needsYou.calls, at)
+      if (live.size != read.needsYou.calls.size) {
+        _shown.value = read.copy(needsYou = read.needsYou.copy(count = (read.needsYou.count - (read.needsYou.calls.size - live.size)).coerceAtLeast(0), calls = live))
+      }
+    }
   }
 
   /** Since when the phone hasn't answered, while the last read is still shown. */

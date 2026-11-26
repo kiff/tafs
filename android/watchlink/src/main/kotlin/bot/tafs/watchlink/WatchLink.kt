@@ -472,6 +472,11 @@ data class HeldLine(
   val reason: String? = null,
   /** Whether the wrist may refuse it; an approval is always the phone's. */
   val refusable: Boolean,
+  /**
+   * When KIFF's hold ends, in milliseconds since 1970: past it, the watch drops the call on its own clock (its line, alert and
+   * count), with no word from the phone. None from an older phone.
+   */
+  @SerialName("ends_at") val endsAt: Long? = null,
 )
 
 /** A taf in one line: its name, its state in tafs cloud's words, and whether it is halted. */
