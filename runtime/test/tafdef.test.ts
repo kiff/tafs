@@ -87,6 +87,20 @@ describe("a taf's definition on kiff/agents", () => {
     expect(SHARED_INSTRUCTIONS).toContain("Say you did something (sent, added, asked Coach, raised a limit)\nonly when a call of yours in this run did it: never an action you meant to\ntake, or one you only describe.");
   });
 
+  // A chat that went quiet: the next message opened a new chat, which showed none of the refunds made in the last
+  // one, and the taf said the day's refunds had gone through "by other means". A question about a time is answered
+  // from a record that covers it, never from one chat's memory.
+  it("tells the taf to answer what was done over a time from a record that covers it, never from this chat alone", () => {
+    expect(SHARED_INSTRUCTIONS).toContain("A chat shows only what was done in it.");
+    expect(SHARED_INSTRUCTIONS).toContain("answer from a record that covers that time: your Card's\nuse from kiff_card, or the app's own list through your reads. Say which you\nread.");
+    expect(SHARED_INSTRUCTIONS).toContain("Never say something was done another way, or by someone else, because\nthis chat doesn't show it");
+    // kiff_card gives a window's limit and what remains, in the Card's unit, never a list (kiff/agents tool/kiff/room.go).
+    expect(SHARED_INSTRUCTIONS).toContain("what\nwas used is the limit minus what remains, in the Card's unit (an amount is\noften in cents: 4000 is €40.00), for that window only.");
+    expect(SHARED_INSTRUCTIONS).toContain("A time no window covers\n(a week, on a Card that counts a day) needs the app's list.");
+    // Every taf carries it, in its chat and its runs.
+    for (const job of JOBS) expect(systemPrompt(job)).toContain("A chat shows only what was done in it.");
+  });
+
   it("names its KIFF key by reference, never the key", () => {
     expect(definition(ID, jobById("refunds")).key_ref).toBe(`kiff/${ID}`);
   });

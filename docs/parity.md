@@ -369,6 +369,7 @@ The chat is one thing drawn in several places: Coach's chat and a taf's on the p
 | Try again under a failed turn, only on tafs cloud's `failed.retry` | not yet: Retry shows on every failed run | done (tafs#2084) | done (0.2.22) |
 | Delete a conversation for good | done for iOS 1.0.1 (tafs#2107) | done (tafs#2099) | not yet: the panel's chats can't delete; a deleted chat leaves the panel with it (no copy kept by the extension) |
 | A run that worked in this Chrome, started by you from another device: its message, steps and answer | — | — | done (kiff/cloud#169, planque#439, tafs#2119; the Privacy line kiff/cloud#167): only that run's turn, never the rest of its chat, read as the person; it leaves when the chat is deleted, the Chrome is unpaired, or its connection moves to another Chrome; an existing Chrome pairs once more. No extension release: the panel's chats list carries it |
+| Asked what was done over a time, a taf answers from a record that covers it (its Card's use, or the app's own list) and says which it read; a chat shows only what was done in it | done once each taf's definition is rewritten (tafs cloud: `SHARED_INSTRUCTIONS`) | done, the same | done, the same: the panel's taf chats run the same taf |
 
 ## 25 Nov, device by device
 
