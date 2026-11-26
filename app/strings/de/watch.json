@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Gelöscht. Nichts wurde gesendet.",
   "watch.didnt_catch": "Nicht verstanden. Tippe, um es erneut zu versuchen.",
   "watch.dismiss": "Verwerfen",
+  "watch.edit_words": "Tippe auf den Text, um ihn zu ändern",
   "watch.glance_description": "Wie viele dich brauchen, nie was oder wer.",
   "watch.halt_all_q": "Alle deine tafs anhalten?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Auf dem Handy fortsetzen",
   "watch.retry": "Erneut senden",
   "watch.review": "Vor dem Senden prüfen",
+  "watch.seconds_left": "Noch {seconds} s",
   "watch.sending": "Wird gesendet…",
   "watch.sent": "Gesendet",
   "watch.settings_of": "{taf} · Einstellungen",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Dein Handy bleibt angemeldet. Diese Uhr vergisst deine tafs, Chats und deinen Eingang.",
   "watch.signed_in": "Angemeldet",
   "watch.signed_out_here": "Auf dieser Uhr abgemeldet. Dein Handy bleibt angemeldet.",
+  "watch.stopped_at_limit": "Bei {limit} gestoppt. Das Gehörte steht unten.",
   "watch.swipe_settings": "Nach links wischen für seine Einstellungen",
   "watch.tap_start": "Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.",
   "watch.timing": "Zuhören {listen} ms · Bestätigung {receipt} ms · Ergebnis {result} ms",

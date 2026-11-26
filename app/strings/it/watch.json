@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Eliminato. Non è stato inviato nulla.",
   "watch.didnt_catch": "Non ho capito. Tocca per riprovare.",
   "watch.dismiss": "Ignora",
+  "watch.edit_words": "Tocca il testo per modificarlo",
   "watch.glance_description": "Quanti ti aspettano, mai cosa né chi.",
   "watch.halt_all_q": "Bloccare tutti i tuoi tafs?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Riprendi sul telefono",
   "watch.retry": "Riprova",
   "watch.review": "Controlla prima di inviare",
+  "watch.seconds_left": "Ancora {seconds} s",
   "watch.sending": "Invio…",
   "watch.sent": "Inviato",
   "watch.settings_of": "{taf} · impostazioni",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Il telefono resta connesso. Questo orologio dimentica i tuoi tafs, le chat e In arrivo.",
   "watch.signed_in": "Accesso effettuato",
   "watch.signed_out_here": "Sessione chiusa su questo orologio. Il telefono resta connesso.",
+  "watch.stopped_at_limit": "Fermato al limite di {limit}. Quello che è stato sentito è qui sotto.",
   "watch.swipe_settings": "Scorri a sinistra per le sue impostazioni",
   "watch.tap_start": "Tocca Avvia, poi parla. Le tue parole compaiono qui mentre parli.",
   "watch.timing": "Ascolto {listen} ms · ricevuta {receipt} ms · risultato {result} ms",

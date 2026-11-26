@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Đã xóa. Chưa gửi gì cả.",
   "watch.didnt_catch": "Không nghe rõ. Chạm để thử lại.",
   "watch.dismiss": "Bỏ qua",
+  "watch.edit_words": "Chạm vào chữ để sửa",
   "watch.glance_description": "Có bao nhiêu việc cần bạn, không bao giờ nói là gì hay của ai.",
   "watch.halt_all_q": "Đóng băng mọi taf của bạn?",
   "watch.halt_now_count": {
@@ -86,6 +87,7 @@
   "watch.resume_on_phone": "Tiếp tục trên điện thoại",
   "watch.retry": "Thử lại",
   "watch.review": "Kiểm tra trước khi gửi",
+  "watch.seconds_left": "Còn {seconds} giây",
   "watch.sending": "Đang gửi…",
   "watch.sent": "Đã gửi",
   "watch.settings_of": "{taf} · cài đặt",
@@ -94,6 +96,7 @@
   "watch.sign_out_sub": "Điện thoại của bạn vẫn đăng nhập. Đồng hồ này sẽ quên các taf, cuộc trò chuyện và hộp thư của bạn.",
   "watch.signed_in": "Đã đăng nhập",
   "watch.signed_out_here": "Đã đăng xuất trên đồng hồ này. Điện thoại của bạn vẫn đăng nhập.",
+  "watch.stopped_at_limit": "Đã dừng ở giới hạn {limit}. Nội dung nghe được ở bên dưới.",
   "watch.swipe_settings": "Vuốt trái để xem cài đặt của nó",
   "watch.tap_start": "Chạm Bắt đầu, rồi nói. Lời của bạn hiện ở đây khi bạn nói.",
   "watch.timing": "Nghe {listen} ms · biên nhận {receipt} ms · kết quả {result} ms",

@@ -68,6 +68,7 @@
     <string name="watch_deleted_nothing_sent">मेटियो। केही पठाइएन।</string>
     <string name="watch_didnt_catch">बुझिएन। फेरि प्रयास गर्न ट्याप गर्नुहोस्।</string>
     <string name="watch_dismiss">हटाउनुहोस्</string>
+    <string name="watch_edit_words">परिवर्तन गर्न पाठमा ट्याप गर्नुहोस्</string>
     <string name="watch_glance_description">कतिले तपाईंलाई पर्खिरहेका छन्, के वा को हो भन्ने कहिल्यै होइन।</string>
     <string name="watch_halt_all_q">तपाईंका सबै taf रोक्ने?</string>
     <plurals name="watch_halt_now_count">
@@ -141,6 +142,7 @@
     <string name="watch_resume_on_phone">आफ्नो फोनमा फेरि सुरु गर्नुहोस्</string>
     <string name="watch_retry">फेरि प्रयास गर्नुहोस्</string>
     <string name="watch_review">पठाउनुअघि जाँच्नुहोस्</string>
+    <string name="watch_seconds_left">%1$s से बाँकी</string>
     <string name="watch_sending">पठाइँदैछ…</string>
     <string name="watch_sent">पठाइयो</string>
     <string name="watch_settings_of">%1$s · सेटिङ</string>
@@ -149,6 +151,7 @@
     <string name="watch_sign_out_sub">तपाईंको फोन साइन इन रहन्छ। यो घडीले तपाईंका taf, च्याट र इनबक्स बिर्सन्छ।</string>
     <string name="watch_signed_in">साइन इन गरियो</string>
     <string name="watch_signed_out_here">यो घडीमा साइन आउट भयो। तपाईंको फोन साइन इन रहन्छ।</string>
+    <string name="watch_stopped_at_limit">%1$s सीमामा रोकियो। सुनिएको तल छ।</string>
     <string name="watch_swipe_settings">यसका सेटिङका लागि बायाँतिर स्वाइप गर्नुहोस्</string>
     <string name="watch_tap_start">सुरु गर्नुहोस् ट्याप गरेर बोल्नुहोस्। तपाईंले बोल्दा शब्दहरू यहाँ देखिन्छन्।</string>
     <string name="watch_timing">सुन्ने %1$s ms · रसिद %2$s ms · नतिजा %3$s ms</string>

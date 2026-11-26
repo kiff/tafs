@@ -68,6 +68,7 @@
     <string name="watch_deleted_nothing_sent">Устгасан. Юу ч илгээгдээгүй.</string>
     <string name="watch_didnt_catch">Сонсож авсангүй. Дахин оролдохын тулд товшино уу.</string>
     <string name="watch_dismiss">Хаах</string>
+    <string name="watch_edit_words">Өөрчлөхийн тулд текст дээр дарна уу</string>
     <string name="watch_glance_description">Хэд нь таныг хүлээж байгааг харуулна, юу эсвэл хэн гэдгийг хэзээ ч биш.</string>
     <string name="watch_halt_all_q">Таны бүх taf-ыг зогсоох уу?</string>
     <plurals name="watch_halt_now_count">
@@ -141,6 +142,7 @@
     <string name="watch_resume_on_phone">Утсан дээрээ үргэлжлүүлэх</string>
     <string name="watch_retry">Дахин оролдох</string>
     <string name="watch_review">Илгээхээс өмнө шалгах</string>
+    <string name="watch_seconds_left">%1$s сек үлдсэн</string>
     <string name="watch_sending">Илгээж байна…</string>
     <string name="watch_sent">Илгээсэн</string>
     <string name="watch_settings_of">%1$s · тохиргоо</string>
@@ -149,6 +151,7 @@
     <string name="watch_sign_out_sub">Таны утас нэвтэрсэн хэвээр үлдэнэ. Энэ цаг таны taf-ууд, чат болон ирсэн зүйлсийг мартана.</string>
     <string name="watch_signed_in">Нэвтэрсэн</string>
     <string name="watch_signed_out_here">Энэ цагнаас гарсан. Таны утас нэвтэрсэн хэвээр байна.</string>
+    <string name="watch_stopped_at_limit">%1$s хязгаарт зогслоо. Сонсогдсон зүйл доор байна.</string>
     <string name="watch_swipe_settings">Тохиргоог нь үзэхийн тулд зүүн тийш шудрана уу</string>
     <string name="watch_tap_start">Эхлэх-ийг товшоод ярина уу. Таны үгс ярих бүрт энд харагдана.</string>
     <string name="watch_timing">Сонсох %1$s мс · баримт %2$s мс · үр дүн %3$s мс</string>

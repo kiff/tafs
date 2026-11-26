@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Deleted. Nothing was sent.",
   "watch.didnt_catch": "Didn't catch that. Tap to try again.",
   "watch.dismiss": "Dismiss",
+  "watch.edit_words": "Tap the words to change them",
   "watch.glance_description": "How many need you, never what or who.",
   "watch.halt_all_q": "Halt all your tafs?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Resume on your phone",
   "watch.retry": "Retry",
   "watch.review": "Check before sending",
+  "watch.seconds_left": "{seconds} s left",
   "watch.sending": "Sending…",
   "watch.sent": "Sent",
   "watch.settings_of": "{taf} · settings",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Your phone stays signed in. This watch forgets your tafs, chats and inbox.",
   "watch.signed_in": "Signed in",
   "watch.signed_out_here": "Signed out on this watch. Your phone stays signed in.",
+  "watch.stopped_at_limit": "Stopped at the {limit} limit. What was heard is below.",
   "watch.swipe_settings": "Swipe left for its settings",
   "watch.tap_start": "Tap Start, then speak. Your words show here as you talk.",
   "watch.timing": "Listen {listen} ms · receipt {receipt} ms · result {result} ms",

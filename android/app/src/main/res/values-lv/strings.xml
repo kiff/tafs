@@ -2877,6 +2877,7 @@
     <string name="watch_deleted_nothing_sent">Dzēsts. Nekas netika nosūtīts.</string>
     <string name="watch_didnt_catch">Nesadzirdēju. Pieskaries, lai mēģinātu vēlreiz.</string>
     <string name="watch_dismiss">Paslēpt</string>
+    <string name="watch_edit_words">Pieskaries tekstam, lai to mainītu</string>
     <string name="watch_glance_description">Cik daudz gaida tevi, nekad ne kas vai kurš.</string>
     <string name="watch_halt_all_q">Apturēt visus tavus taf?</string>
     <plurals name="watch_halt_now_count">
@@ -2955,6 +2956,7 @@
     <string name="watch_resume_on_phone">Turpini tālrunī</string>
     <string name="watch_retry">Mēģināt vēlreiz</string>
     <string name="watch_review">Pārbaudīt pirms sūtīšanas</string>
+    <string name="watch_seconds_left">Atlikušas %1$s s</string>
     <string name="watch_sending">Sūta…</string>
     <string name="watch_sent">Nosūtīts</string>
     <string name="watch_settings_of">%1$s · iestatījumi</string>
@@ -2963,6 +2965,7 @@
     <string name="watch_sign_out_sub">Tālrunis paliek pierakstījies. Šis pulkstenis aizmirst tavus taf, sarunas un iesūtni.</string>
     <string name="watch_signed_in">Pierakstījies</string>
     <string name="watch_signed_out_here">Izrakstījies šajā pulkstenī. Tālrunis paliek pierakstījies.</string>
+    <string name="watch_stopped_at_limit">Apturēts pie %1$s ierobežojuma. Dzirdētais ir zemāk.</string>
     <string name="watch_swipe_settings">Pavelc pa kreisi, lai redzētu iestatījumus</string>
     <string name="watch_tap_start">Pieskaries “Sākt”, tad runā. Tavi vārdi parādās šeit, kamēr runā.</string>
     <string name="watch_timing">Klausīšanās %1$s ms · saņemšana %2$s ms · rezultāts %3$s ms</string>

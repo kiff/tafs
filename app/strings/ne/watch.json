@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "मेटियो। केही पठाइएन।",
   "watch.didnt_catch": "बुझिएन। फेरि प्रयास गर्न ट्याप गर्नुहोस्।",
   "watch.dismiss": "हटाउनुहोस्",
+  "watch.edit_words": "परिवर्तन गर्न पाठमा ट्याप गर्नुहोस्",
   "watch.glance_description": "कतिले तपाईंलाई पर्खिरहेका छन्, के वा को हो भन्ने कहिल्यै होइन।",
   "watch.halt_all_q": "तपाईंका सबै taf रोक्ने?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "आफ्नो फोनमा फेरि सुरु गर्नुहोस्",
   "watch.retry": "फेरि प्रयास गर्नुहोस्",
   "watch.review": "पठाउनुअघि जाँच्नुहोस्",
+  "watch.seconds_left": "{seconds} से बाँकी",
   "watch.sending": "पठाइँदैछ…",
   "watch.sent": "पठाइयो",
   "watch.settings_of": "{taf} · सेटिङ",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "तपाईंको फोन साइन इन रहन्छ। यो घडीले तपाईंका taf, च्याट र इनबक्स बिर्सन्छ।",
   "watch.signed_in": "साइन इन गरियो",
   "watch.signed_out_here": "यो घडीमा साइन आउट भयो। तपाईंको फोन साइन इन रहन्छ।",
+  "watch.stopped_at_limit": "{limit} सीमामा रोकियो। सुनिएको तल छ।",
   "watch.swipe_settings": "यसका सेटिङका लागि बायाँतिर स्वाइप गर्नुहोस्",
   "watch.tap_start": "सुरु गर्नुहोस् ट्याप गरेर बोल्नुहोस्। तपाईंले बोल्दा शब्दहरू यहाँ देखिन्छन्।",
   "watch.timing": "सुन्ने {listen} ms · रसिद {receipt} ms · नतिजा {result} ms",

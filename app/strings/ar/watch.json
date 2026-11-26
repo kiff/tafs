@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "تم الحذف. لم يُرسل شيء.",
   "watch.didnt_catch": "لم أسمع ذلك. اضغط للمحاولة مرة أخرى.",
   "watch.dismiss": "تجاهل",
+  "watch.edit_words": "انقر على النص لتغييره",
   "watch.glance_description": "كم منها بانتظارك، دون أن تُعرف ما هي أو من.",
   "watch.halt_all_q": "تجميد جميع tafs لديك؟",
   "watch.halt_now_count": {
@@ -111,6 +112,7 @@
   "watch.resume_on_phone": "استئناف على هاتفك",
   "watch.retry": "إعادة المحاولة",
   "watch.review": "راجع قبل الإرسال",
+  "watch.seconds_left": "يتبقى {seconds} ث",
   "watch.sending": "جارٍ الإرسال…",
   "watch.sent": "أُرسل",
   "watch.settings_of": "{taf} · الإعدادات",
@@ -119,6 +121,7 @@
   "watch.sign_out_sub": "يبقى هاتفك مسجّل الدخول. وتنسى هذه الساعة tafs لديك ومحادثاتك ووارداتك.",
   "watch.signed_in": "تم تسجيل الدخول",
   "watch.signed_out_here": "تم تسجيل الخروج على هذه الساعة. ويبقى هاتفك مسجّل الدخول.",
+  "watch.stopped_at_limit": "توقف عند حد {limit}. ما سُمع موجود أدناه.",
   "watch.swipe_settings": "اسحب لإعداداته",
   "watch.tap_start": "اضغط «بدء» ثم تحدّث. تظهر كلماتك هنا أثناء حديثك.",
   "watch.timing": "الاستماع {listen} م ث · الإيصال {receipt} م ث · النتيجة {result} م ث",

@@ -68,6 +68,7 @@
     <string name="watch_deleted_nothing_sent">Deleted. Nothing was sent.</string>
     <string name="watch_didnt_catch">Didn\'t catch that. Tap to try again.</string>
     <string name="watch_dismiss">Dismiss</string>
+    <string name="watch_edit_words">Tap the words to change them</string>
     <string name="watch_glance_description">How many need you, never what or who.</string>
     <string name="watch_halt_all_q">Halt all your tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -141,6 +142,7 @@
     <string name="watch_resume_on_phone">Resume on your phone</string>
     <string name="watch_retry">Retry</string>
     <string name="watch_review">Check before sending</string>
+    <string name="watch_seconds_left">%1$s s left</string>
     <string name="watch_sending">Sending…</string>
     <string name="watch_sent">Sent</string>
     <string name="watch_settings_of">%1$s · settings</string>
@@ -149,6 +151,7 @@
     <string name="watch_sign_out_sub">Your phone stays signed in. This watch forgets your tafs, chats and inbox.</string>
     <string name="watch_signed_in">Signed in</string>
     <string name="watch_signed_out_here">Signed out on this watch. Your phone stays signed in.</string>
+    <string name="watch_stopped_at_limit">Stopped at the %1$s limit. What was heard is below.</string>
     <string name="watch_swipe_settings">Swipe left for its settings</string>
     <string name="watch_tap_start">Tap Start, then speak. Your words show here as you talk.</string>
     <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>

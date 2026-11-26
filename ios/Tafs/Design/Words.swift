@@ -5583,6 +5583,8 @@ enum Words {
         static var didntCatch: String { Words.line("watch.didnt_catch") }
         /// Dismiss
         static var dismiss: String { Words.line("watch.dismiss") }
+        /// Tap the words to change them
+        static var editWords: String { Words.line("watch.edit_words") }
         /// How many need you, never what or who.
         static var glanceDescription: String { Words.line("watch.glance_description") }
         /// Halt all your tafs?
@@ -5703,6 +5705,8 @@ enum Words {
         static var retry: String { Words.line("watch.retry") }
         /// Check before sending
         static var review: String { Words.line("watch.review") }
+        /// {seconds} s left
+        static func secondsLeft(seconds: String) -> String { Words.line("watch.seconds_left", seconds) }
         /// Sending…
         static var sending: String { Words.line("watch.sending") }
         /// Sent
@@ -5719,6 +5723,8 @@ enum Words {
         static var signedIn: String { Words.line("watch.signed_in") }
         /// Signed out on this watch. Your phone stays signed in.
         static var signedOutHere: String { Words.line("watch.signed_out_here") }
+        /// Stopped at the {limit} limit. What was heard is below.
+        static func stoppedAtLimit(limit: String) -> String { Words.line("watch.stopped_at_limit", limit) }
         /// Swipe left for its settings
         static var swipeSettings: String { Words.line("watch.swipe_settings") }
         /// Tap Start, then speak. Your words show here as you talk.

@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "削除しました。何も送信されていません。",
   "watch.didnt_catch": "聞き取れませんでした。タップしてもう一度お試しください。",
   "watch.dismiss": "閉じる",
+  "watch.edit_words": "文字をタップすると変更できます",
   "watch.glance_description": "要確認の件数だけを表示し、内容や相手は表示しません。",
   "watch.halt_all_q": "すべてのtafを遮断しますか？",
   "watch.halt_now_count": {
@@ -86,6 +87,7 @@
   "watch.resume_on_phone": "スマートフォンで再開してください",
   "watch.retry": "再試行",
   "watch.review": "送信前に確認",
+  "watch.seconds_left": "残り{seconds}秒",
   "watch.sending": "送信しています…",
   "watch.sent": "送信済み",
   "watch.settings_of": "{taf}・設定",
@@ -94,6 +96,7 @@
   "watch.sign_out_sub": "スマートフォンはサインインしたままです。このウォッチはtafs、チャット、受信トレイを消去します。",
   "watch.signed_in": "サインイン済み",
   "watch.signed_out_here": "このウォッチでサインアウトしました。スマートフォンはサインインしたままです。",
+  "watch.stopped_at_limit": "上限の{limit}で停止しました。聞き取った内容は下にあります。",
   "watch.swipe_settings": "左にスワイプして設定を表示",
   "watch.tap_start": "「開始」をタップしてから話してください。話している間、言葉がここに表示されます。",
   "watch.timing": "聞き取り {listen}ms・領収書 {receipt}ms・結果 {result}ms",

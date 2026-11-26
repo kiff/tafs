@@ -2877,6 +2877,7 @@
     <string name="watch_deleted_nothing_sent">Smazáno. Nic se neodeslalo.</string>
     <string name="watch_didnt_catch">Nerozuměl jsem. Klepnutím to zkusíte znovu.</string>
     <string name="watch_dismiss">Zavřít</string>
+    <string name="watch_edit_words">Klepnutím na text ho změníte</string>
     <string name="watch_glance_description">Kolik jich na vás čeká, nikdy co ani kdo.</string>
     <string name="watch_halt_all_q">Zastavit všechny vaše tafy?</string>
     <plurals name="watch_halt_now_count">
@@ -2955,6 +2956,7 @@
     <string name="watch_resume_on_phone">Obnovte v telefonu</string>
     <string name="watch_retry">Zkusit znovu</string>
     <string name="watch_review">Zkontrolovat před odesláním</string>
+    <string name="watch_seconds_left">Zbývá %1$s s</string>
     <string name="watch_sending">Odesílám…</string>
     <string name="watch_sent">Odesláno</string>
     <string name="watch_settings_of">%1$s · nastavení</string>
@@ -2963,6 +2965,7 @@
     <string name="watch_sign_out_sub">Telefon zůstane přihlášený. Tyto hodinky zapomenou vaše tafy, chaty a Doručené.</string>
     <string name="watch_signed_in">Přihlášeno</string>
     <string name="watch_signed_out_here">Odhlášeno na těchto hodinkách. Telefon zůstává přihlášený.</string>
+    <string name="watch_stopped_at_limit">Zastaveno na limitu %1$s. Co bylo slyšet, je níže.</string>
     <string name="watch_swipe_settings">Přejeďte doleva pro jeho nastavení</string>
     <string name="watch_tap_start">Klepněte na Start a mluvte. Vaše slova se tu zobrazují, jak mluvíte.</string>
     <string name="watch_timing">Poslech %1$s ms · potvrzení %2$s ms · výsledek %3$s ms</string>

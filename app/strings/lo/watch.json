@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "ລຶບແລ້ວ. ບໍ່ມີຫຍັງຖືກສົ່ງ.",
   "watch.didnt_catch": "ຟັງບໍ່ທັນ. ແຕະເພື່ອລອງໃໝ່.",
   "watch.dismiss": "ປິດ",
+  "watch.edit_words": "ແຕະຂໍ້ຄວາມເພື່ອແກ້ໄຂ",
   "watch.glance_description": "ມີຈັກອັນທີ່ຕ້ອງການທ່ານ, ບໍ່ເຄີຍບອກວ່າຫຍັງ ຫຼື ໃຜ.",
   "watch.halt_all_q": "ຢຸດທຸກ taf ຂອງທ່ານບໍ?",
   "watch.halt_now_count": {
@@ -86,6 +87,7 @@
   "watch.resume_on_phone": "ສືບຕໍ່ໃນໂທລະສັບຂອງທ່ານ",
   "watch.retry": "ລອງໃໝ່",
   "watch.review": "ກວດກ່ອນສົ່ງ",
+  "watch.seconds_left": "ເຫຼືອ {seconds} ວິ",
   "watch.sending": "ກຳລັງສົ່ງ…",
   "watch.sent": "ສົ່ງແລ້ວ",
   "watch.settings_of": "{taf} · ການຕັ້ງຄ່າ",
@@ -94,6 +96,7 @@
   "watch.sign_out_sub": "ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່. ໂມງນີ້ລືມ taf, ການສົນທະນາ ແລະ ກ່ອງຂໍ້ຄວາມຂອງທ່ານ.",
   "watch.signed_in": "ເຂົ້າສູ່ລະບົບແລ້ວ",
   "watch.signed_out_here": "ອອກຈາກລະບົບໃນໂມງນີ້ແລ້ວ. ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່.",
+  "watch.stopped_at_limit": "ຢຸດທີ່ຂີດຈຳກັດ {limit}. ສິ່ງທີ່ໄດ້ຍິນຢູ່ລຸ່ມນີ້.",
   "watch.swipe_settings": "ປັດຊ້າຍເພື່ອເບິ່ງການຕັ້ງຄ່າຂອງມັນ",
   "watch.tap_start": "ແຕະ ເລີ່ມ ແລ້ວເວົ້າ. ຄຳເວົ້າຂອງທ່ານສະແດງຢູ່ທີ່ນີ້ໃນຂະນະທີ່ທ່ານເວົ້າ.",
   "watch.timing": "ຟັງ {listen} ms · ໃບຮັບເງິນ {receipt} ms · ຜົນ {result} ms",

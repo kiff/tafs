@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "ลบแล้ว ยังไม่ได้ส่งอะไร",
   "watch.didnt_catch": "ฟังไม่ทัน แตะเพื่อลองอีกครั้ง",
   "watch.dismiss": "ปิด",
+  "watch.edit_words": "แตะข้อความเพื่อแก้ไข",
   "watch.glance_description": "มีกี่เรื่องที่ต้องการคุณ ไม่บอกว่าอะไรหรือใคร",
   "watch.halt_all_q": "ระงับ taf ทั้งหมดของคุณหรือไม่",
   "watch.halt_now_count": {
@@ -86,6 +87,7 @@
   "watch.resume_on_phone": "ทำต่อบนโทรศัพท์ของคุณ",
   "watch.retry": "ลองอีกครั้ง",
   "watch.review": "ตรวจสอบก่อนส่ง",
+  "watch.seconds_left": "เหลือ {seconds} วิ",
   "watch.sending": "กำลังส่ง…",
   "watch.sent": "ส่งแล้ว",
   "watch.settings_of": "{taf} · การตั้งค่า",
@@ -94,6 +96,7 @@
   "watch.sign_out_sub": "โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่ นาฬิกาเรือนนี้จะลืม taf แชต และกล่องข้อความของคุณ",
   "watch.signed_in": "เข้าสู่ระบบแล้ว",
   "watch.signed_out_here": "ออกจากระบบบนนาฬิกาเรือนนี้แล้ว โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่",
+  "watch.stopped_at_limit": "หยุดที่ขีดจำกัด {limit} สิ่งที่ได้ยินอยู่ด้านล่าง",
   "watch.swipe_settings": "ปัดซ้ายเพื่อดูการตั้งค่าของมัน",
   "watch.tap_start": "แตะเริ่ม แล้วพูด ถ้อยคำของคุณจะแสดงที่นี่ขณะที่คุณพูด",
   "watch.timing": "ฟัง {listen} ms · ใบเสร็จ {receipt} ms · ผลลัพธ์ {result} ms",

@@ -2802,6 +2802,7 @@
     <string name="watch_deleted_nothing_sent">Eliminado. No se envió nada.</string>
     <string name="watch_didnt_catch">No lo he entendido. Toca para volver a intentarlo.</string>
     <string name="watch_dismiss">Descartar</string>
+    <string name="watch_edit_words">Toca el texto para cambiarlo</string>
     <string name="watch_glance_description">Cuántos te necesitan, nunca qué ni quién.</string>
     <string name="watch_halt_all_q">¿Bloquear todos tus tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -2875,6 +2876,7 @@
     <string name="watch_resume_on_phone">Reanudar en tu teléfono</string>
     <string name="watch_retry">Reintentar</string>
     <string name="watch_review">Revisa antes de enviar</string>
+    <string name="watch_seconds_left">Quedan %1$s s</string>
     <string name="watch_sending">Enviando…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_settings_of">%1$s · ajustes</string>
@@ -2883,6 +2885,7 @@
     <string name="watch_sign_out_sub">Tu teléfono sigue con la sesión iniciada. Este reloj olvida tus tafs, chats y bandeja.</string>
     <string name="watch_signed_in">Sesión iniciada</string>
     <string name="watch_signed_out_here">Sesión cerrada en este reloj. Tu teléfono sigue con la sesión iniciada.</string>
+    <string name="watch_stopped_at_limit">Se detuvo en el límite de %1$s. Lo que se oyó está abajo.</string>
     <string name="watch_swipe_settings">Desliza a la izquierda para sus ajustes</string>
     <string name="watch_tap_start">Toca Empezar y habla. Tus palabras aparecen aquí mientras hablas.</string>
     <string name="watch_timing">Escucha %1$s ms · acuse %2$s ms · resultado %3$s ms</string>

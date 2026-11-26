@@ -2727,6 +2727,7 @@
     <string name="watch_deleted_nothing_sent">ລຶບແລ້ວ. ບໍ່ມີຫຍັງຖືກສົ່ງ.</string>
     <string name="watch_didnt_catch">ຟັງບໍ່ທັນ. ແຕະເພື່ອລອງໃໝ່.</string>
     <string name="watch_dismiss">ປິດ</string>
+    <string name="watch_edit_words">ແຕະຂໍ້ຄວາມເພື່ອແກ້ໄຂ</string>
     <string name="watch_glance_description">ມີຈັກອັນທີ່ຕ້ອງການທ່ານ, ບໍ່ເຄີຍບອກວ່າຫຍັງ ຫຼື ໃຜ.</string>
     <string name="watch_halt_all_q">ຢຸດທຸກ taf ຂອງທ່ານບໍ?</string>
     <plurals name="watch_halt_now_count">
@@ -2795,6 +2796,7 @@
     <string name="watch_resume_on_phone">ສືບຕໍ່ໃນໂທລະສັບຂອງທ່ານ</string>
     <string name="watch_retry">ລອງໃໝ່</string>
     <string name="watch_review">ກວດກ່ອນສົ່ງ</string>
+    <string name="watch_seconds_left">ເຫຼືອ %1$s ວິ</string>
     <string name="watch_sending">ກຳລັງສົ່ງ…</string>
     <string name="watch_sent">ສົ່ງແລ້ວ</string>
     <string name="watch_settings_of">%1$s · ການຕັ້ງຄ່າ</string>
@@ -2803,6 +2805,7 @@
     <string name="watch_sign_out_sub">ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່. ໂມງນີ້ລືມ taf, ການສົນທະນາ ແລະ ກ່ອງຂໍ້ຄວາມຂອງທ່ານ.</string>
     <string name="watch_signed_in">ເຂົ້າສູ່ລະບົບແລ້ວ</string>
     <string name="watch_signed_out_here">ອອກຈາກລະບົບໃນໂມງນີ້ແລ້ວ. ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່.</string>
+    <string name="watch_stopped_at_limit">ຢຸດທີ່ຂີດຈຳກັດ %1$s. ສິ່ງທີ່ໄດ້ຍິນຢູ່ລຸ່ມນີ້.</string>
     <string name="watch_swipe_settings">ປັດຊ້າຍເພື່ອເບິ່ງການຕັ້ງຄ່າຂອງມັນ</string>
     <string name="watch_tap_start">ແຕະ ເລີ່ມ ແລ້ວເວົ້າ. ຄຳເວົ້າຂອງທ່ານສະແດງຢູ່ທີ່ນີ້ໃນຂະນະທີ່ທ່ານເວົ້າ.</string>
     <string name="watch_timing">ຟັງ %1$s ms · ໃບຮັບເງິນ %2$s ms · ຜົນ %3$s ms</string>

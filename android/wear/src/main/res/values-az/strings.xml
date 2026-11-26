@@ -68,6 +68,7 @@
     <string name="watch_deleted_nothing_sent">Silindi. Heç nə göndərilmədi.</string>
     <string name="watch_didnt_catch">Başa düşülmədi. Yenidən cəhd etmək üçün toxunun.</string>
     <string name="watch_dismiss">Bağlayın</string>
+    <string name="watch_edit_words">Dəyişmək üçün mətnə toxunun</string>
     <string name="watch_glance_description">Neçəsi sizi gözləyir, nə olduğunu və ya kim olduğunu yox.</string>
     <string name="watch_halt_all_q">Bütün taf-larınız dondurulsun?</string>
     <plurals name="watch_halt_now_count">
@@ -141,6 +142,7 @@
     <string name="watch_resume_on_phone">Telefonunuzda davam etdirin</string>
     <string name="watch_retry">Yenidən cəhd edin</string>
     <string name="watch_review">Göndərməzdən əvvəl yoxlayın</string>
+    <string name="watch_seconds_left">%1$s san qaldı</string>
     <string name="watch_sending">Göndərilir…</string>
     <string name="watch_sent">Göndərildi</string>
     <string name="watch_settings_of">%1$s · parametrlər</string>
@@ -149,6 +151,7 @@
     <string name="watch_sign_out_sub">Telefonunuz daxil olmuş qalır. Bu saat taf-larınızı, söhbətlərinizi və gələnlər qutusunu unudur.</string>
     <string name="watch_signed_in">Daxil olunub</string>
     <string name="watch_signed_out_here">Bu saatda çıxış edildi. Telefonunuz daxil olmuş qalır.</string>
+    <string name="watch_stopped_at_limit">%1$s limitində dayandı. Eşidilənlər aşağıdadır.</string>
     <string name="watch_swipe_settings">Parametrləri üçün sola çəkin</string>
     <string name="watch_tap_start">«Başlayın» düyməsinə toxunun, sonra danışın. Sözləriniz danışdıqca burada görünür.</string>
     <string name="watch_timing">Dinləmə %1$s ms · qəbz %2$s ms · nəticə %3$s ms</string>

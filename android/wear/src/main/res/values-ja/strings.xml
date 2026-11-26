@@ -67,6 +67,7 @@
     <string name="watch_deleted_nothing_sent">削除しました。何も送信されていません。</string>
     <string name="watch_didnt_catch">聞き取れませんでした。タップしてもう一度お試しください。</string>
     <string name="watch_dismiss">閉じる</string>
+    <string name="watch_edit_words">文字をタップすると変更できます</string>
     <string name="watch_glance_description">要確認の件数だけを表示し、内容や相手は表示しません。</string>
     <string name="watch_halt_all_q">すべてのtafを遮断しますか？</string>
     <plurals name="watch_halt_now_count">
@@ -135,6 +136,7 @@
     <string name="watch_resume_on_phone">スマートフォンで再開してください</string>
     <string name="watch_retry">再試行</string>
     <string name="watch_review">送信前に確認</string>
+    <string name="watch_seconds_left">残り%1$s秒</string>
     <string name="watch_sending">送信しています…</string>
     <string name="watch_sent">送信済み</string>
     <string name="watch_settings_of">%1$s・設定</string>
@@ -143,6 +145,7 @@
     <string name="watch_sign_out_sub">スマートフォンはサインインしたままです。このウォッチはtafs、チャット、受信トレイを消去します。</string>
     <string name="watch_signed_in">サインイン済み</string>
     <string name="watch_signed_out_here">このウォッチでサインアウトしました。スマートフォンはサインインしたままです。</string>
+    <string name="watch_stopped_at_limit">上限の%1$sで停止しました。聞き取った内容は下にあります。</string>
     <string name="watch_swipe_settings">左にスワイプして設定を表示</string>
     <string name="watch_tap_start">「開始」をタップしてから話してください。話している間、言葉がここに表示されます。</string>
     <string name="watch_timing">聞き取り %1$sms・領収書 %2$sms・結果 %3$sms</string>

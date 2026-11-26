@@ -2802,6 +2802,7 @@
     <string name="watch_deleted_nothing_sent">Supprimé. Rien n\'a été envoyé.</string>
     <string name="watch_didnt_catch">Pas compris. Touchez pour réessayer.</string>
     <string name="watch_dismiss">Ignorer</string>
+    <string name="watch_edit_words">Touchez le texte pour le modifier</string>
     <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
     <string name="watch_halt_all_q">Bloquer tous vos tafs ?</string>
     <plurals name="watch_halt_now_count">
@@ -2875,6 +2876,7 @@
     <string name="watch_resume_on_phone">Reprendre sur votre téléphone</string>
     <string name="watch_retry">Réessayer</string>
     <string name="watch_review">Vérifiez avant d\'envoyer</string>
+    <string name="watch_seconds_left">Encore %1$s s</string>
     <string name="watch_sending">Envoi…</string>
     <string name="watch_sent">Envoyé</string>
     <string name="watch_settings_of">%1$s · réglages</string>
@@ -2883,6 +2885,7 @@
     <string name="watch_sign_out_sub">Votre téléphone reste connecté. Cette montre oublie vos tafs, vos chats et votre boîte de réception.</string>
     <string name="watch_signed_in">Connecté</string>
     <string name="watch_signed_out_here">Déconnecté de cette montre. Votre téléphone reste connecté.</string>
+    <string name="watch_stopped_at_limit">Arrêté à la limite de %1$s. Ce qui a été entendu est ci-dessous.</string>
     <string name="watch_swipe_settings">Balayez vers la gauche pour ses réglages</string>
     <string name="watch_tap_start">Touchez Démarrer, puis parlez. Vos mots s\'affichent ici pendant que vous parlez.</string>
     <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>

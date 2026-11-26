@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "삭제했습니다. 아무것도 보내지 않았습니다.",
   "watch.didnt_catch": "잘 듣지 못했습니다. 탭하여 다시 시도하세요.",
   "watch.dismiss": "닫기",
+  "watch.edit_words": "텍스트를 탭하여 수정하세요",
   "watch.glance_description": "확인이 필요한 개수만 표시하며, 무엇인지 누구인지는 표시하지 않습니다.",
   "watch.halt_all_q": "모든 taf를 차단할까요?",
   "watch.halt_now_count": {
@@ -86,6 +87,7 @@
   "watch.resume_on_phone": "휴대폰에서 재개하세요",
   "watch.retry": "다시 시도",
   "watch.review": "보내기 전에 확인",
+  "watch.seconds_left": "{seconds}초 남음",
   "watch.sending": "보내는 중…",
   "watch.sent": "보냄",
   "watch.settings_of": "{taf} · 설정",
@@ -94,6 +96,7 @@
   "watch.sign_out_sub": "휴대폰은 로그인 상태로 유지됩니다. 이 워치는 taf, 채팅, 받은편지함을 지웁니다.",
   "watch.signed_in": "로그인됨",
   "watch.signed_out_here": "이 워치에서 로그아웃했습니다. 휴대폰은 로그인 상태로 유지됩니다.",
+  "watch.stopped_at_limit": "제한 시간 {limit}에 멈췄습니다. 들은 내용은 아래에 있습니다.",
   "watch.swipe_settings": "왼쪽으로 밀어 설정 보기",
   "watch.tap_start": "시작을 탭한 후 말하세요. 말하는 동안 내 말이 여기에 표시됩니다.",
   "watch.timing": "듣기 {listen}ms · 영수증 {receipt}ms · 결과 {result}ms",

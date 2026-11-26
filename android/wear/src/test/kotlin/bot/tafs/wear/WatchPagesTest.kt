@@ -167,6 +167,22 @@ class WatchPagesTest {
     compose.onAllNodesWithText(Words.Watch.askingPhone).assertCountEquals(0)
   }
 
+  /** Row 25: while recording, the seconds left before the limit stops it. */
+  @Test fun recordingShowsTheSecondsLeft() {
+    compose.setContent { MaterialTheme { VoiceScreenV2(WatchModel.Voice.Listening("Move my call", null, since = 1_000L), actions, now = { 13_000L }) } }
+    compose.onNodeWithText(Words.Watch.secondsLeft("18")).assertExists()
+  }
+
+  /** Edit before sending: tapping the words opens them in a field with the keyboard; nothing is sent. */
+  @Test fun tappingTheReviewsWordsOpensThemToEdit() {
+    compose.setContent { MaterialTheme { VoiceScreenV2(WatchModel.Voice.Review("What do people in bucharamanga eat", null), actions) } }
+    compose.onNodeWithText(Words.Watch.editWords).assertExists()
+    compose.onNodeWithTag(REVIEW_WORDS).performClick()
+    compose.waitForIdle()
+    compose.onNodeWithTag(REVIEW_EDIT).assertExists()
+    assertTrue("nothing sent", did.none { it == "send" })
+  }
+
   /** Open on phone says what it did (row 28): the phone opened tafs, or it wasn't reached; nothing before it's pressed. */
   @Test fun openOnPhoneSaysWhatItDid() {
     assertEquals("Opened on your phone", openedLine(true))
@@ -273,7 +289,8 @@ class WatchPagesTest {
     show(read, voice = WatchModel.Voice.Ready("ask_1"))
     compose.onNodeWithText("${Words.Watch.ready} · 30 s").assertExists()
     compose.onNodeWithText(Words.Watch.tapStart).assertExists()
-    compose.onNodeWithText("0:00 / 0:30").assertExists()
+    // Before Start, the limit; while recording, the seconds left (row 25).
+    compose.onNodeWithText("0:30").assertExists()
     // Start is its own control: the brand's round button with the microphone, never Stop's.
     compose.onAllNodesWithTag(RECORD_STOP).assertCountEquals(0)
     compose.onNodeWithTag(RECORD_START).assertContentDescriptionEquals(Words.Coach.start).performClick()

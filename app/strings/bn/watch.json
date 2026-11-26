@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "মুছে ফেলা হয়েছে। কিছু পাঠানো হয়নি।",
   "watch.didnt_catch": "বোঝা যায়নি। আবার চেষ্টা করতে ট্যাপ করুন।",
   "watch.dismiss": "বাতিল করুন",
+  "watch.edit_words": "বদলাতে লেখায় ট্যাপ করুন",
   "watch.glance_description": "কতগুলোর আপনাকে দরকার, কী বা কে তা নয়।",
   "watch.halt_all_q": "আপনার সব taf থামাবেন?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "আপনার ফোনে আবার চালু করুন",
   "watch.retry": "আবার চেষ্টা করুন",
   "watch.review": "পাঠানোর আগে দেখে নিন",
+  "watch.seconds_left": "{seconds} সে বাকি",
   "watch.sending": "পাঠানো হচ্ছে…",
   "watch.sent": "পাঠানো হয়েছে",
   "watch.settings_of": "{taf} · সেটিংস",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "আপনার ফোন সাইন ইন করা থাকে। এই ঘড়ি আপনার taf, চ্যাট ও ইনবক্স ভুলে যায়।",
   "watch.signed_in": "সাইন ইন করা",
   "watch.signed_out_here": "এই ঘড়িতে সাইন আউট করা হয়েছে। আপনার ফোন সাইন ইন করা থাকে।",
+  "watch.stopped_at_limit": "{limit} সীমায় থেমেছে। যা শোনা গেছে তা নিচে আছে।",
   "watch.swipe_settings": "এর সেটিংসের জন্য বাঁয়ে সোয়াইপ করুন",
   "watch.tap_start": "«শুরু করুন» চাপুন, তারপর বলুন। আপনি বলার সঙ্গে সঙ্গে আপনার কথা এখানে দেখা যায়।",
   "watch.timing": "শোনা {listen} ms · রসিদ {receipt} ms · ফলাফল {result} ms",

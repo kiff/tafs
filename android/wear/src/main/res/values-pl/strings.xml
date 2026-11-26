@@ -70,6 +70,7 @@
     <string name="watch_deleted_nothing_sent">Usunięto. Nic nie zostało wysłane.</string>
     <string name="watch_didnt_catch">Nie udało się zrozumieć. Dotknij, aby spróbować ponownie.</string>
     <string name="watch_dismiss">Odrzuć</string>
+    <string name="watch_edit_words">Dotknij tekstu, aby go zmienić</string>
     <string name="watch_glance_description">Ile czeka na Ciebie, nigdy co ani kto.</string>
     <string name="watch_halt_all_q">Zablokować wszystkie Twoje tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -153,6 +154,7 @@
     <string name="watch_resume_on_phone">Wznów na telefonie</string>
     <string name="watch_retry">Ponów</string>
     <string name="watch_review">Sprawdź przed wysłaniem</string>
+    <string name="watch_seconds_left">Zostało %1$s s</string>
     <string name="watch_sending">Wysyłanie…</string>
     <string name="watch_sent">Wysłano</string>
     <string name="watch_settings_of">%1$s · ustawienia</string>
@@ -161,6 +163,7 @@
     <string name="watch_sign_out_sub">Telefon pozostaje zalogowany. Ten zegarek zapomina Twoje tafs, czaty i Skrzynkę.</string>
     <string name="watch_signed_in">Zalogowano</string>
     <string name="watch_signed_out_here">Wylogowano na tym zegarku. Telefon pozostaje zalogowany.</string>
+    <string name="watch_stopped_at_limit">Zatrzymano na limicie %1$s. To, co usłyszano, jest poniżej.</string>
     <string name="watch_swipe_settings">Przesuń w lewo, by zobaczyć ustawienia</string>
     <string name="watch_tap_start">Dotknij Start i mów. Twoje słowa pojawiają się tu na bieżąco.</string>
     <string name="watch_timing">Słuchanie %1$s ms · potwierdzenie %2$s ms · wynik %3$s ms</string>

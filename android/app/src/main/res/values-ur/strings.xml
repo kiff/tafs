@@ -2802,6 +2802,7 @@
     <string name="watch_deleted_nothing_sent">حذف ہو گیا۔ کچھ نہیں بھیجا گیا۔</string>
     <string name="watch_didnt_catch">سمجھ نہیں آیا۔ دوبارہ کوشش کے لیے ٹیپ کریں۔</string>
     <string name="watch_dismiss">ہٹائیں</string>
+    <string name="watch_edit_words">بدلنے کے لیے متن پر ٹیپ کریں</string>
     <string name="watch_glance_description">کتنوں کو آپ کی ضرورت ہے، کیا یا کون نہیں۔</string>
     <string name="watch_halt_all_q">اپنے تمام tafs کو halt کریں؟</string>
     <plurals name="watch_halt_now_count">
@@ -2875,6 +2876,7 @@
     <string name="watch_resume_on_phone">اپنے فون پر دوبارہ چلائیں</string>
     <string name="watch_retry">دوبارہ کوشش</string>
     <string name="watch_review">بھیجنے سے پہلے جانچیں</string>
+    <string name="watch_seconds_left">%1$s سیکنڈ باقی</string>
     <string name="watch_sending">بھیجا جا رہا ہے…</string>
     <string name="watch_sent">بھیج دیا</string>
     <string name="watch_settings_of">%1$s · ترتیبات</string>
@@ -2883,6 +2885,7 @@
     <string name="watch_sign_out_sub">آپ کا فون سائن اِن رہتا ہے۔ یہ گھڑی آپ کے tafs، چیٹس اور ان باکس بھول جاتی ہے۔</string>
     <string name="watch_signed_in">سائن اِن ہے</string>
     <string name="watch_signed_out_here">اس گھڑی پر سائن آؤٹ ہو گیا۔ آپ کا فون سائن اِن رہتا ہے۔</string>
+    <string name="watch_stopped_at_limit">%1$s کی حد پر رک گیا۔ جو سنا گیا وہ نیچے ہے۔</string>
     <string name="watch_swipe_settings">اس کی ترتیبات کے لیے بائیں سوائپ کریں</string>
     <string name="watch_tap_start">شروع پر ٹیپ کریں، پھر بولیں۔ بولتے وقت آپ کے الفاظ یہاں دکھائی دیتے ہیں۔</string>
     <string name="watch_timing">سننا %1$s ms · رسید %2$s ms · نتیجہ %3$s ms</string>

@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "U fshi. Asgjë nuk u dërgua.",
   "watch.didnt_catch": "Nuk e kapa. Prekni për të provuar sërish.",
   "watch.dismiss": "Hidheni poshtë",
+  "watch.edit_words": "Prekni tekstin për ta ndryshuar",
   "watch.glance_description": "Sa ju presin, kurrë çfarë apo kush.",
   "watch.halt_all_q": "Të bllokohen të gjithë tafs-et tuaj?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Vazhdoni në telefonin tuaj",
   "watch.retry": "Provoni sërish",
   "watch.review": "Kontrolloni para dërgimit",
+  "watch.seconds_left": "Edhe {seconds} s",
   "watch.sending": "Po dërgohet…",
   "watch.sent": "U dërgua",
   "watch.settings_of": "{taf} · cilësimet",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Telefoni juaj mbetet i hyrë. Kjo orë harron tafs-et, bisedat dhe kutinë tuaj hyrëse.",
   "watch.signed_in": "I hyrë",
   "watch.signed_out_here": "Dolët nga kjo orë. Telefoni juaj mbetet i hyrë.",
+  "watch.stopped_at_limit": "U ndal te kufiri prej {limit}. Ajo që u dëgjua është më poshtë.",
   "watch.swipe_settings": "Rrëshqitni majtas për cilësimet e tij",
   "watch.tap_start": "Prekni Fillo, pastaj flisni. Fjalët tuaja shfaqen këtu ndërsa flisni.",
   "watch.timing": "Dëgjimi {listen} ms · dëftesa {receipt} ms · rezultati {result} ms",

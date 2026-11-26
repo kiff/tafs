@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Избришано. Ништо не е испратено.",
   "watch.didnt_catch": "Не разбрав. Допри за да се обидеш повторно.",
   "watch.dismiss": "Отфрли",
+  "watch.edit_words": "Допри го текстот за да го смениш",
   "watch.glance_description": "Колку те чекаат, никогаш што или кој.",
   "watch.halt_all_q": "Да ги запреш сите твои tafови?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Продолжи на твојот телефон",
   "watch.retry": "Обиди се повторно",
   "watch.review": "Провери пред испраќање",
+  "watch.seconds_left": "Уште {seconds} с",
   "watch.sending": "Се испраќа…",
   "watch.sent": "Испратено",
   "watch.settings_of": "{taf} · поставки",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Твојот телефон останува најавен. Овој часовник ги заборава твоите tafови, разговори и приемно сандаче.",
   "watch.signed_in": "Најавен",
   "watch.signed_out_here": "Одјавен на овој часовник. Твојот телефон останува најавен.",
+  "watch.stopped_at_limit": "Запре на ограничувањето од {limit}. Она што се слушна е подолу.",
   "watch.swipe_settings": "Повлечи налево за неговите поставки",
   "watch.tap_start": "Допри Започни, па зборувај. Твоите зборови се прикажуваат тука додека зборуваш.",
   "watch.timing": "Слушање {listen} ms · признаница {receipt} ms · резултат {result} ms",

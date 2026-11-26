@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Usunięto. Nic nie zostało wysłane.",
   "watch.didnt_catch": "Nie udało się zrozumieć. Dotknij, aby spróbować ponownie.",
   "watch.dismiss": "Odrzuć",
+  "watch.edit_words": "Dotknij tekstu, aby go zmienić",
   "watch.glance_description": "Ile czeka na Ciebie, nigdy co ani kto.",
   "watch.halt_all_q": "Zablokować wszystkie Twoje tafs?",
   "watch.halt_now_count": {
@@ -101,6 +102,7 @@
   "watch.resume_on_phone": "Wznów na telefonie",
   "watch.retry": "Ponów",
   "watch.review": "Sprawdź przed wysłaniem",
+  "watch.seconds_left": "Zostało {seconds} s",
   "watch.sending": "Wysyłanie…",
   "watch.sent": "Wysłano",
   "watch.settings_of": "{taf} · ustawienia",
@@ -109,6 +111,7 @@
   "watch.sign_out_sub": "Telefon pozostaje zalogowany. Ten zegarek zapomina Twoje tafs, czaty i Skrzynkę.",
   "watch.signed_in": "Zalogowano",
   "watch.signed_out_here": "Wylogowano na tym zegarku. Telefon pozostaje zalogowany.",
+  "watch.stopped_at_limit": "Zatrzymano na limicie {limit}. To, co usłyszano, jest poniżej.",
   "watch.swipe_settings": "Przesuń w lewo, by zobaczyć ustawienia",
   "watch.tap_start": "Dotknij Start i mów. Twoje słowa pojawiają się tu na bieżąco.",
   "watch.timing": "Słuchanie {listen} ms · potwierdzenie {receipt} ms · wynik {result} ms",

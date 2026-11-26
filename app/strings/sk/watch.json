@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Odstránené. Nič sa neodoslalo.",
   "watch.didnt_catch": "Nerozumel som. Ťuknutím to skúsite znova.",
   "watch.dismiss": "Zavrieť",
+  "watch.edit_words": "Ťuknutím na text ho zmeníte",
   "watch.glance_description": "Koľko ich na vás čaká, nikdy čo ani kto.",
   "watch.halt_all_q": "Zastaviť všetky vaše tafy?",
   "watch.halt_now_count": {
@@ -96,6 +97,7 @@
   "watch.resume_on_phone": "Obnovte v telefóne",
   "watch.retry": "Skúsiť znova",
   "watch.review": "Skontrolovať pred odoslaním",
+  "watch.seconds_left": "Zostáva {seconds} s",
   "watch.sending": "Odosielam…",
   "watch.sent": "Odoslané",
   "watch.settings_of": "{taf} · nastavenia",
@@ -104,6 +106,7 @@
   "watch.sign_out_sub": "Telefón zostane prihlásený. Tieto hodinky zabudnú vaše tafy, chaty a Doručené.",
   "watch.signed_in": "Prihlásené",
   "watch.signed_out_here": "Odhlásené na týchto hodinkách. Telefón zostáva prihlásený.",
+  "watch.stopped_at_limit": "Zastavené na limite {limit}. Čo bolo počuť, je nižšie.",
   "watch.swipe_settings": "Potiahnite doľava pre jeho nastavenia",
   "watch.tap_start": "Ťuknite na Štart a hovorte. Vaše slová sa tu zobrazujú, ako hovoríte.",
   "watch.timing": "Počúvanie {listen} ms · potvrdenie {receipt} ms · výsledok {result} ms",

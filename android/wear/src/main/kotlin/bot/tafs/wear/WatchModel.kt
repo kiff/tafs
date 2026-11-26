@@ -923,10 +923,29 @@ class WatchModel(
    */
   val tafChatOff: StateFlow<Boolean> = _tafChatOff.asStateFlow()
 
-  private fun reviewOf(text: String, replyTo: String?, audio: VoiceAudio? = null): Voice.Review {
+  /** The recording the 30 s limit stopped, by when it started: its review says it was cut there (row 25). */
+  private var limitHit: Long? = null
+
+  /** The limit stopped the recording that started at [since]: its words still go to the review, which says so. */
+  fun reachedLimit(since: Long) {
+    if ((_voice.value as? Voice.Listening)?.since == since) limitHit = since
+  }
+
+  private fun reviewOf(text: String, replyTo: String?, audio: VoiceAudio? = null, cut: Boolean = false): Voice.Review {
     val taf = messaging?.let { id -> _taf.value?.takeIf { it.tafId == id } }
-    val notice = if (taf != null && _tafChatOff.value) Words.Watch.askNotOn else null
+    val notice = if (taf != null && _tafChatOff.value) Words.Watch.askNotOn else if (cut) Words.Watch.stoppedAtLimit(limitShort()) else null
     return Voice.Review(text.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), replyTo, audio, tafId = taf?.tafId, tafName = taf?.name, notice = notice)
+  }
+
+  /**
+   * The review's words changed by the person (edit before sending): the same message, to the same chat, with their words. The
+   * recording no longer says them, so it goes. Blank keeps the words as they were.
+   */
+  fun editReview(text: String) {
+    val review = _voice.value as? Voice.Review ?: return
+    val words = text.trim()
+    if (words.isEmpty() || words == review.text) return
+    voiceNow = review.copy(text = words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), audio = null, notice = null)
   }
 
   /** v2: words typed or a quick reply picked, to check before Send, as words heard are. Blank is nothing. */
@@ -997,7 +1016,10 @@ class WatchModel(
     if (words.isEmpty()) return heardNothing()
     heardAt = now()
     if (reviewFirst) {
-      voiceNow = reviewOf(words, listening.replyTo, audio)
+      // Stopped by the limit, mid-sentence perhaps: what was heard is kept, and the review says where it was cut.
+      val cut = listening.since != null && listening.since == limitHit
+      limitHit = null
+      voiceNow = reviewOf(words, listening.replyTo, audio, cut)
       return
     }
     send(Voice.Sending(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), newClientId(), listening.replyTo))

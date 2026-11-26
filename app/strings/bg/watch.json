@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Изтрито. Нищо не беше изпратено.",
   "watch.didnt_catch": "Не разбрах. Докоснете, за да опитате отново.",
   "watch.dismiss": "Отхвърляне",
+  "watch.edit_words": "Докоснете текста, за да го промените",
   "watch.glance_description": "Колко ви чакат, никога какво или кой.",
   "watch.halt_all_q": "Спиране на всички ваши tafs?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Възобновяване на телефона",
   "watch.retry": "Нов опит",
   "watch.review": "Проверка преди изпращане",
+  "watch.seconds_left": "Остават {seconds} с",
   "watch.sending": "Изпращане…",
   "watch.sent": "Изпратено",
   "watch.settings_of": "{taf} · настройки",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Телефонът ви остава влязъл. Този часовник забравя вашите tafs, чатове и входящи.",
   "watch.signed_in": "Влезли сте",
   "watch.signed_out_here": "Излязохте на този часовник. Телефонът ви остава влязъл.",
+  "watch.stopped_at_limit": "Спряно при лимита от {limit}. Чутото е по-долу.",
   "watch.swipe_settings": "Плъзнете наляво за настройките му",
   "watch.tap_start": "Докоснете „Старт“ и говорете. Думите ви се появяват тук, докато говорите.",
   "watch.timing": "Слушане {listen} ms · разписка {receipt} ms · резултат {result} ms",

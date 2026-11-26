@@ -72,6 +72,7 @@
     <string name="watch_deleted_nothing_sent">تم الحذف. لم يُرسل شيء.</string>
     <string name="watch_didnt_catch">لم أسمع ذلك. اضغط للمحاولة مرة أخرى.</string>
     <string name="watch_dismiss">تجاهل</string>
+    <string name="watch_edit_words">انقر على النص لتغييره</string>
     <string name="watch_glance_description">كم منها بانتظارك، دون أن تُعرف ما هي أو من.</string>
     <string name="watch_halt_all_q">تجميد جميع tafs لديك؟</string>
     <plurals name="watch_halt_now_count">
@@ -165,6 +166,7 @@
     <string name="watch_resume_on_phone">استئناف على هاتفك</string>
     <string name="watch_retry">إعادة المحاولة</string>
     <string name="watch_review">راجع قبل الإرسال</string>
+    <string name="watch_seconds_left">يتبقى %1$s ث</string>
     <string name="watch_sending">جارٍ الإرسال…</string>
     <string name="watch_sent">أُرسل</string>
     <string name="watch_settings_of">%1$s · الإعدادات</string>
@@ -173,6 +175,7 @@
     <string name="watch_sign_out_sub">يبقى هاتفك مسجّل الدخول. وتنسى هذه الساعة tafs لديك ومحادثاتك ووارداتك.</string>
     <string name="watch_signed_in">تم تسجيل الدخول</string>
     <string name="watch_signed_out_here">تم تسجيل الخروج على هذه الساعة. ويبقى هاتفك مسجّل الدخول.</string>
+    <string name="watch_stopped_at_limit">توقف عند حد %1$s. ما سُمع موجود أدناه.</string>
     <string name="watch_swipe_settings">اسحب لإعداداته</string>
     <string name="watch_tap_start">اضغط «بدء» ثم تحدّث. تظهر كلماتك هنا أثناء حديثك.</string>
     <string name="watch_timing">الاستماع %1$s م ث · الإيصال %2$s م ث · النتيجة %3$s م ث</string>

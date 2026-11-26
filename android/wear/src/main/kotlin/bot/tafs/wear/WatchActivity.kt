@@ -171,6 +171,7 @@ class WatchActivity : ComponentActivity() {
         androidx.compose.runtime.LaunchedEffect(listeningSince) {
           if (WATCH_V2 && listeningSince != null) {
             kotlinx.coroutines.delay(LISTEN_LIMIT_MS)
+            model.reachedLimit(listeningSince)
             listener.stop()
           }
         }
@@ -205,6 +206,7 @@ class WatchActivity : ComponentActivity() {
           quickTaf = { taf, text -> model.review(text, tafId = taf) },
           readMore = { id -> lifecycleScope.launch { model.readMore(id) } },
           readMoreLine = { id -> lifecycleScope.launch { model.readMoreLine(id) } },
+          editReview = model::editReview,
           followAnswer = { id -> model.followAnswer(id) },
           keepTrying = { model.keepTrying() },
           rereadTaf = { model.rereadTaf() },
@@ -516,6 +518,8 @@ internal class Actions(
   val readMore: (String) -> Unit = {},
   /** Read more on a cut line of the phone's thread, by its id (row 10). */
   val readMoreLine: (String) -> Unit = {},
+  /** Edit before sending: the review's words, as the person changed them. */
+  val editReview: (String) -> Unit = {},
   /** Read more on an answer's card (Coach's or a taf's) that tafs cloud says goes on, by its request's id. */
   val readWhole: (String) -> Unit = {},
   /** While a taf's chat on screen is answering: its answer followed through the phone, bounded ([WatchModel.followAnswer]). */

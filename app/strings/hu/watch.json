@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Törölve. Semmi sem ment el.",
   "watch.didnt_catch": "Nem értettem. Koppints az újrapróbáláshoz.",
   "watch.dismiss": "Elvetés",
+  "watch.edit_words": "Koppints a szövegre a módosításhoz",
   "watch.glance_description": "Hány vár rád, soha nem az, hogy mi vagy ki.",
   "watch.halt_all_q": "Leállítod az összes tafodat?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Folytatás a telefonodon",
   "watch.retry": "Újra",
   "watch.review": "Ellenőrzés küldés előtt",
+  "watch.seconds_left": "Még {seconds} mp",
   "watch.sending": "Küldés…",
   "watch.sent": "Elküldve",
   "watch.settings_of": "{taf} · beállítások",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "A telefonod bejelentkezve marad. Ez az óra elfelejti a tafjaidat, csevegéseidet és a Bejövőt.",
   "watch.signed_in": "Bejelentkezve",
   "watch.signed_out_here": "Kijelentkeztél ezen az órán. A telefonod bejelentkezve marad.",
+  "watch.stopped_at_limit": "Leállt a(z) {limit} korlátnál. Az elhangzottak lent vannak.",
   "watch.swipe_settings": "Húzd balra a beállításaiért",
   "watch.tap_start": "Koppints az Indításra, majd beszélj. A szavaid beszéd közben itt jelennek meg.",
   "watch.timing": "Figyelés {listen} ms · nyugta {receipt} ms · eredmény {result} ms",

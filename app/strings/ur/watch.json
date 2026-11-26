@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "حذف ہو گیا۔ کچھ نہیں بھیجا گیا۔",
   "watch.didnt_catch": "سمجھ نہیں آیا۔ دوبارہ کوشش کے لیے ٹیپ کریں۔",
   "watch.dismiss": "ہٹائیں",
+  "watch.edit_words": "بدلنے کے لیے متن پر ٹیپ کریں",
   "watch.glance_description": "کتنوں کو آپ کی ضرورت ہے، کیا یا کون نہیں۔",
   "watch.halt_all_q": "اپنے تمام tafs کو halt کریں؟",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "اپنے فون پر دوبارہ چلائیں",
   "watch.retry": "دوبارہ کوشش",
   "watch.review": "بھیجنے سے پہلے جانچیں",
+  "watch.seconds_left": "{seconds} سیکنڈ باقی",
   "watch.sending": "بھیجا جا رہا ہے…",
   "watch.sent": "بھیج دیا",
   "watch.settings_of": "{taf} · ترتیبات",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "آپ کا فون سائن اِن رہتا ہے۔ یہ گھڑی آپ کے tafs، چیٹس اور ان باکس بھول جاتی ہے۔",
   "watch.signed_in": "سائن اِن ہے",
   "watch.signed_out_here": "اس گھڑی پر سائن آؤٹ ہو گیا۔ آپ کا فون سائن اِن رہتا ہے۔",
+  "watch.stopped_at_limit": "{limit} کی حد پر رک گیا۔ جو سنا گیا وہ نیچے ہے۔",
   "watch.swipe_settings": "اس کی ترتیبات کے لیے بائیں سوائپ کریں",
   "watch.tap_start": "شروع پر ٹیپ کریں، پھر بولیں۔ بولتے وقت آپ کے الفاظ یہاں دکھائی دیتے ہیں۔",
   "watch.timing": "سننا {listen} ms · رسید {receipt} ms · نتیجہ {result} ms",

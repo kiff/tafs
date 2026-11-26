@@ -199,6 +199,36 @@ class AccountMarkTest {
     assertEquals(0, (m.shown.value as WatchModel.Shown.Read).needsYou.count)
   }
 
+  /** Row 25: a recording the 30 s limit stopped keeps what was heard, and its review says it was cut there; Stop doesn't. */
+  @Test fun aRecordingStoppedByTheLimitSaysSoAndKeepsTheWords() = runTest {
+    val m = model(Phone(asA))
+    assertTrue(m.talk())
+    val since = (m.voice.value as WatchModel.Voice.Listening).since!!
+    m.reachedLimit(since)
+    m.heard("I want to know what people in Bucaramanga eat on holiday, is it something that people do or")
+    val review = m.voice.value as WatchModel.Voice.Review
+    assertTrue(review.text.endsWith("people do or"))
+    assertEquals(Words.Watch.stoppedAtLimit(limitShort()), review.notice)
+    // Stopped by the person: no word of a limit.
+    m.closeVoice()
+    assertTrue(m.talk())
+    m.heard("Which tafs are ready")
+    assertNull((m.voice.value as WatchModel.Voice.Review).notice)
+  }
+
+  /** Edit before sending: the review's words changed in place, the recording dropped; blank keeps them as they were. */
+  @Test fun theReviewsWordsCanBeEditedBeforeSending() = runTest {
+    val m = model(Phone(asA))
+    assertTrue(m.talk())
+    m.heard("What do people in bucharamanga eat")
+    m.editReview("What do people in Bucaramanga eat")
+    val review = m.voice.value as WatchModel.Voice.Review
+    assertEquals("What do people in Bucaramanga eat", review.text)
+    assertNull("the recording no longer says it", review.audio)
+    m.editReview("   ")
+    assertEquals("What do people in Bucaramanga eat", (m.voice.value as WatchModel.Voice.Review).text)
+  }
+
   @Test fun theSameMarkKeepsWhatWasKeptAndDrawsIt() = runTest {
     keptFromA()
     val phone = Phone(asA)

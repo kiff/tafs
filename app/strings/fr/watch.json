@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Supprimé. Rien n'a été envoyé.",
   "watch.didnt_catch": "Pas compris. Touchez pour réessayer.",
   "watch.dismiss": "Ignorer",
+  "watch.edit_words": "Touchez le texte pour le modifier",
   "watch.glance_description": "Combien vous attendent, jamais quoi ni qui.",
   "watch.halt_all_q": "Bloquer tous vos tafs ?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Reprendre sur votre téléphone",
   "watch.retry": "Réessayer",
   "watch.review": "Vérifiez avant d'envoyer",
+  "watch.seconds_left": "Encore {seconds} s",
   "watch.sending": "Envoi…",
   "watch.sent": "Envoyé",
   "watch.settings_of": "{taf} · réglages",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Votre téléphone reste connecté. Cette montre oublie vos tafs, vos chats et votre boîte de réception.",
   "watch.signed_in": "Connecté",
   "watch.signed_out_here": "Déconnecté de cette montre. Votre téléphone reste connecté.",
+  "watch.stopped_at_limit": "Arrêté à la limite de {limit}. Ce qui a été entendu est ci-dessous.",
   "watch.swipe_settings": "Balayez vers la gauche pour ses réglages",
   "watch.tap_start": "Touchez Démarrer, puis parlez. Vos mots s'affichent ici pendant que vous parlez.",
   "watch.timing": "Écoute {listen} ms · accusé {receipt} ms · résultat {result} ms",

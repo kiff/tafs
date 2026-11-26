@@ -69,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">נמחק. שום דבר לא נשלח.</string>
     <string name="watch_didnt_catch">לא הובן. יש ללחוץ כדי לנסות שוב.</string>
     <string name="watch_dismiss">ביטול</string>
+    <string name="watch_edit_words">יש להקיש על הטקסט כדי לשנות אותו</string>
     <string name="watch_glance_description">כמה זקוקים לך, אף פעם לא מה או מי.</string>
     <string name="watch_halt_all_q">לעצור את כל ה-taf שלך?</string>
     <plurals name="watch_halt_now_count">
@@ -147,6 +148,7 @@
     <string name="watch_resume_on_phone">חידוש בטלפון</string>
     <string name="watch_retry">ניסיון חוזר</string>
     <string name="watch_review">בדיקה לפני שליחה</string>
+    <string name="watch_seconds_left">נותרו %1$s שנ׳</string>
     <string name="watch_sending">שולח…</string>
     <string name="watch_sent">נשלח</string>
     <string name="watch_settings_of">%1$s · הגדרות</string>
@@ -155,6 +157,7 @@
     <string name="watch_sign_out_sub">הטלפון שלך נשאר מחובר. השעון הזה שוכח את ה-taf, השיחות והדואר הנכנס שלך.</string>
     <string name="watch_signed_in">מחובר</string>
     <string name="watch_signed_out_here">יצאת בשעון הזה. הטלפון שלך נשאר מחובר.</string>
+    <string name="watch_stopped_at_limit">נעצר במגבלה של %1$s. מה שנשמע מופיע למטה.</string>
     <string name="watch_swipe_settings">החלקה ימינה להגדרות שלו</string>
     <string name="watch_tap_start">יש ללחוץ על «התחלה» ואז לדבר. המילים שלך מוצגות כאן תוך כדי דיבור.</string>
     <string name="watch_timing">האזנה %1$s אלפיות שנייה · קבלה %2$s אלפיות שנייה · תוצאה %3$s אלפיות שנייה</string>

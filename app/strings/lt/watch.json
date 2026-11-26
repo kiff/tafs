@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Ištrinta. Niekas neišsiųsta.",
   "watch.didnt_catch": "Nesupratau. Palieskite ir bandykite dar kartą.",
   "watch.dismiss": "Paslėpti",
+  "watch.edit_words": "Palieskite tekstą, kad jį pakeistumėte",
   "watch.glance_description": "Kiek užklausų jūsų laukia, bet niekada – kokios ar nuo ko.",
   "watch.halt_all_q": "Sustabdyti visus jūsų taf?",
   "watch.halt_now_count": {
@@ -96,6 +97,7 @@
   "watch.resume_on_phone": "Tęskite telefone",
   "watch.retry": "Bandyti dar kartą",
   "watch.review": "Patikrinti prieš siunčiant",
+  "watch.seconds_left": "Liko {seconds} s",
   "watch.sending": "Siunčiama…",
   "watch.sent": "Išsiųsta",
   "watch.settings_of": "{taf} · nustatymai",
@@ -104,6 +106,7 @@
   "watch.sign_out_sub": "Telefonas lieka prisijungęs. Šis laikrodis pamirš jūsų taf, pokalbius ir gautuosius.",
   "watch.signed_in": "Prisijungta",
   "watch.signed_out_here": "Atsijungta šiame laikrodyje. Telefonas lieka prisijungęs.",
+  "watch.stopped_at_limit": "Sustabdyta ties {limit} riba. Tai, kas išgirsta, yra žemiau.",
   "watch.swipe_settings": "Braukite kairėn – jo nustatymai",
   "watch.tap_start": "Palieskite „Pradėti“ ir kalbėkite. Jūsų žodžiai čia rodomi kalbant.",
   "watch.timing": "Klausymas {listen} ms · gavimas {receipt} ms · rezultatas {result} ms",

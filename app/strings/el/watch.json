@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Διαγράφηκε. Δεν στάλθηκε τίποτα.",
   "watch.didnt_catch": "Δεν το έπιασα. Πάτησε για να δοκιμάσεις ξανά.",
   "watch.dismiss": "Παράβλεψη",
+  "watch.edit_words": "Πάτησε το κείμενο για να το αλλάξεις",
   "watch.glance_description": "Πόσα σε χρειάζονται, ποτέ τι ή ποιος.",
   "watch.halt_all_q": "Σταμάτημα όλων των tafs σου;",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Συνέχισε στο τηλέφωνο",
   "watch.retry": "Ξανά",
   "watch.review": "Έλεγξε πριν την αποστολή",
+  "watch.seconds_left": "Απομένουν {seconds} δ",
   "watch.sending": "Αποστολή…",
   "watch.sent": "Στάλθηκε",
   "watch.settings_of": "{taf} · ρυθμίσεις",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Το τηλέφωνό σου μένει συνδεδεμένο. Αυτό το ρολόι ξεχνά τα tafs, τις συνομιλίες και τα εισερχόμενά σου.",
   "watch.signed_in": "Συνδεδεμένο",
   "watch.signed_out_here": "Αποσυνδέθηκες σε αυτό το ρολόι. Το τηλέφωνό σου μένει συνδεδεμένο.",
+  "watch.stopped_at_limit": "Σταμάτησε στο όριο των {limit}. Ό,τι ακούστηκε είναι παρακάτω.",
   "watch.swipe_settings": "Σύρε αριστερά για τις ρυθμίσεις του",
   "watch.tap_start": "Πάτησε «Έναρξη» και μίλα. Τα λόγια σου εμφανίζονται εδώ καθώς μιλάς.",
   "watch.timing": "Ακρόαση {listen} ms · απόδειξη {receipt} ms · αποτέλεσμα {result} ms",

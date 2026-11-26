@@ -67,6 +67,7 @@
     <string name="watch_deleted_nothing_sent">ลบแล้ว ยังไม่ได้ส่งอะไร</string>
     <string name="watch_didnt_catch">ฟังไม่ทัน แตะเพื่อลองอีกครั้ง</string>
     <string name="watch_dismiss">ปิด</string>
+    <string name="watch_edit_words">แตะข้อความเพื่อแก้ไข</string>
     <string name="watch_glance_description">มีกี่เรื่องที่ต้องการคุณ ไม่บอกว่าอะไรหรือใคร</string>
     <string name="watch_halt_all_q">ระงับ taf ทั้งหมดของคุณหรือไม่</string>
     <plurals name="watch_halt_now_count">
@@ -135,6 +136,7 @@
     <string name="watch_resume_on_phone">ทำต่อบนโทรศัพท์ของคุณ</string>
     <string name="watch_retry">ลองอีกครั้ง</string>
     <string name="watch_review">ตรวจสอบก่อนส่ง</string>
+    <string name="watch_seconds_left">เหลือ %1$s วิ</string>
     <string name="watch_sending">กำลังส่ง…</string>
     <string name="watch_sent">ส่งแล้ว</string>
     <string name="watch_settings_of">%1$s · การตั้งค่า</string>
@@ -143,6 +145,7 @@
     <string name="watch_sign_out_sub">โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่ นาฬิกาเรือนนี้จะลืม taf แชต และกล่องข้อความของคุณ</string>
     <string name="watch_signed_in">เข้าสู่ระบบแล้ว</string>
     <string name="watch_signed_out_here">ออกจากระบบบนนาฬิกาเรือนนี้แล้ว โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่</string>
+    <string name="watch_stopped_at_limit">หยุดที่ขีดจำกัด %1$s สิ่งที่ได้ยินอยู่ด้านล่าง</string>
     <string name="watch_swipe_settings">ปัดซ้ายเพื่อดูการตั้งค่าของมัน</string>
     <string name="watch_tap_start">แตะเริ่ม แล้วพูด ถ้อยคำของคุณจะแสดงที่นี่ขณะที่คุณพูด</string>
     <string name="watch_timing">ฟัง %1$s ms · ใบเสร็จ %2$s ms · ผลลัพธ์ %3$s ms</string>

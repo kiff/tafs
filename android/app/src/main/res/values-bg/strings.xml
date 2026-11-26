@@ -2802,6 +2802,7 @@
     <string name="watch_deleted_nothing_sent">Изтрито. Нищо не беше изпратено.</string>
     <string name="watch_didnt_catch">Не разбрах. Докоснете, за да опитате отново.</string>
     <string name="watch_dismiss">Отхвърляне</string>
+    <string name="watch_edit_words">Докоснете текста, за да го промените</string>
     <string name="watch_glance_description">Колко ви чакат, никога какво или кой.</string>
     <string name="watch_halt_all_q">Спиране на всички ваши tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -2875,6 +2876,7 @@
     <string name="watch_resume_on_phone">Възобновяване на телефона</string>
     <string name="watch_retry">Нов опит</string>
     <string name="watch_review">Проверка преди изпращане</string>
+    <string name="watch_seconds_left">Остават %1$s с</string>
     <string name="watch_sending">Изпращане…</string>
     <string name="watch_sent">Изпратено</string>
     <string name="watch_settings_of">%1$s · настройки</string>
@@ -2883,6 +2885,7 @@
     <string name="watch_sign_out_sub">Телефонът ви остава влязъл. Този часовник забравя вашите tafs, чатове и входящи.</string>
     <string name="watch_signed_in">Влезли сте</string>
     <string name="watch_signed_out_here">Излязохте на този часовник. Телефонът ви остава влязъл.</string>
+    <string name="watch_stopped_at_limit">Спряно при лимита от %1$s. Чутото е по-долу.</string>
     <string name="watch_swipe_settings">Плъзнете наляво за настройките му</string>
     <string name="watch_tap_start">Докоснете „Старт“ и говорете. Думите ви се появяват тук, докато говорите.</string>
     <string name="watch_timing">Слушане %1$s ms · разписка %2$s ms · резултат %3$s ms</string>

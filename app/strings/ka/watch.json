@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "წაიშალა. არაფერი გაიგზავნა.",
   "watch.didnt_catch": "ვერ გავიგე. შეეხეთ ხელახლა საცდელად.",
   "watch.dismiss": "უარყოფა",
+  "watch.edit_words": "შესაცვლელად შეეხეთ ტექსტს",
   "watch.glance_description": "რამდენი გელოდებათ, არასოდეს რა ან ვინ.",
   "watch.halt_all_q": "გაჩერდეს თქვენი ყველა taf?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "განაახლეთ თქვენს ტელეფონზე",
   "watch.retry": "სცადეთ ხელახლა",
   "watch.review": "შეამოწმეთ გაგზავნამდე",
+  "watch.seconds_left": "დარჩა {seconds} წმ",
   "watch.sending": "იგზავნება…",
   "watch.sent": "გაიგზავნა",
   "watch.settings_of": "{taf} · პარამეტრები",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "თქვენი ტელეფონი შესული რჩება. ეს საათი ივიწყებს თქვენს taf-ებს, ჩატებს და შემოსულებს.",
   "watch.signed_in": "შესულია",
   "watch.signed_out_here": "ამ საათზე გამოხვედით. თქვენი ტელეფონი შესული რჩება.",
+  "watch.stopped_at_limit": "შეჩერდა {limit} ლიმიტზე. მოსმენილი ქვემოთაა.",
   "watch.swipe_settings": "გადაიტანეთ მარცხნივ მისი პარამეტრებისთვის",
   "watch.tap_start": "შეეხეთ „დაწყებას“, შემდეგ ისაუბრეთ. თქვენი სიტყვები აქ ჩანს საუბრისას.",
   "watch.timing": "მოსმენა {listen} მწ · ქვითარი {receipt} მწ · შედეგი {result} მწ",

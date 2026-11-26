@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Silindi. Heç nə göndərilmədi.",
   "watch.didnt_catch": "Başa düşülmədi. Yenidən cəhd etmək üçün toxunun.",
   "watch.dismiss": "Bağlayın",
+  "watch.edit_words": "Dəyişmək üçün mətnə toxunun",
   "watch.glance_description": "Neçəsi sizi gözləyir, nə olduğunu və ya kim olduğunu yox.",
   "watch.halt_all_q": "Bütün taf-larınız dondurulsun?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Telefonunuzda davam etdirin",
   "watch.retry": "Yenidən cəhd edin",
   "watch.review": "Göndərməzdən əvvəl yoxlayın",
+  "watch.seconds_left": "{seconds} san qaldı",
   "watch.sending": "Göndərilir…",
   "watch.sent": "Göndərildi",
   "watch.settings_of": "{taf} · parametrlər",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Telefonunuz daxil olmuş qalır. Bu saat taf-larınızı, söhbətlərinizi və gələnlər qutusunu unudur.",
   "watch.signed_in": "Daxil olunub",
   "watch.signed_out_here": "Bu saatda çıxış edildi. Telefonunuz daxil olmuş qalır.",
+  "watch.stopped_at_limit": "{limit} limitində dayandı. Eşidilənlər aşağıdadır.",
   "watch.swipe_settings": "Parametrləri üçün sola çəkin",
   "watch.tap_start": "«Başlayın» düyməsinə toxunun, sonra danışın. Sözləriniz danışdıqca burada görünür.",
   "watch.timing": "Dinləmə {listen} ms · qəbz {receipt} ms · nəticə {result} ms",

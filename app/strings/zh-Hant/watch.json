@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "已刪除。未傳送任何內容。",
   "watch.didnt_catch": "沒有聽清楚。輕點以再試一次。",
   "watch.dismiss": "略過",
+  "watch.edit_words": "點一下文字即可修改",
   "watch.glance_description": "有多少項需要您，但不會顯示是什麼或是誰。",
   "watch.halt_all_q": "要凍結您的所有 taf 嗎？",
   "watch.halt_now_count": {
@@ -86,6 +87,7 @@
   "watch.resume_on_phone": "在手機上繼續",
   "watch.retry": "重試",
   "watch.review": "傳送前請先檢查",
+  "watch.seconds_left": "剩下 {seconds} 秒",
   "watch.sending": "傳送中…",
   "watch.sent": "已傳送",
   "watch.settings_of": "{taf} · 設定",
@@ -94,6 +96,7 @@
   "watch.sign_out_sub": "您的手機仍保持登入。這支手錶會忘記您的 taf、對話和收件匣。",
   "watch.signed_in": "已登入",
   "watch.signed_out_here": "已在這支手錶上登出。您的手機仍保持登入。",
+  "watch.stopped_at_limit": "已在 {limit} 上限停止。聽到的內容在下方。",
   "watch.swipe_settings": "向左滑動以查看它的設定",
   "watch.tap_start": "輕點「開始」，然後說話。您說的話會在說話時顯示在這裡。",
   "watch.timing": "聆聽 {listen} 毫秒 · 收據 {receipt} 毫秒 · 結果 {result} 毫秒",

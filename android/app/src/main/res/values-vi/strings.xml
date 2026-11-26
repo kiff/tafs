@@ -2727,6 +2727,7 @@
     <string name="watch_deleted_nothing_sent">Đã xóa. Chưa gửi gì cả.</string>
     <string name="watch_didnt_catch">Không nghe rõ. Chạm để thử lại.</string>
     <string name="watch_dismiss">Bỏ qua</string>
+    <string name="watch_edit_words">Chạm vào chữ để sửa</string>
     <string name="watch_glance_description">Có bao nhiêu việc cần bạn, không bao giờ nói là gì hay của ai.</string>
     <string name="watch_halt_all_q">Đóng băng mọi taf của bạn?</string>
     <plurals name="watch_halt_now_count">
@@ -2795,6 +2796,7 @@
     <string name="watch_resume_on_phone">Tiếp tục trên điện thoại</string>
     <string name="watch_retry">Thử lại</string>
     <string name="watch_review">Kiểm tra trước khi gửi</string>
+    <string name="watch_seconds_left">Còn %1$s giây</string>
     <string name="watch_sending">Đang gửi…</string>
     <string name="watch_sent">Đã gửi</string>
     <string name="watch_settings_of">%1$s · cài đặt</string>
@@ -2803,6 +2805,7 @@
     <string name="watch_sign_out_sub">Điện thoại của bạn vẫn đăng nhập. Đồng hồ này sẽ quên các taf, cuộc trò chuyện và hộp thư của bạn.</string>
     <string name="watch_signed_in">Đã đăng nhập</string>
     <string name="watch_signed_out_here">Đã đăng xuất trên đồng hồ này. Điện thoại của bạn vẫn đăng nhập.</string>
+    <string name="watch_stopped_at_limit">Đã dừng ở giới hạn %1$s. Nội dung nghe được ở bên dưới.</string>
     <string name="watch_swipe_settings">Vuốt trái để xem cài đặt của nó</string>
     <string name="watch_tap_start">Chạm Bắt đầu, rồi nói. Lời của bạn hiện ở đây khi bạn nói.</string>
     <string name="watch_timing">Nghe %1$s ms · biên nhận %2$s ms · kết quả %3$s ms</string>

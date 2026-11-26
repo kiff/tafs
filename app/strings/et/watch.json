@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Kustutatud. Midagi ei saadetud.",
   "watch.didnt_catch": "Ei saanud aru. Puuduta, et uuesti proovida.",
   "watch.dismiss": "Kõrvalda",
+  "watch.edit_words": "Muutmiseks puuduta teksti",
   "watch.glance_description": "Mitu vajab sind, mitte kunagi mida või kes.",
   "watch.halt_all_q": "Kas peatada kõik sinu tafid?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Jätka telefonis",
   "watch.retry": "Proovi uuesti",
   "watch.review": "Kontrolli enne saatmist",
+  "watch.seconds_left": "Jäänud {seconds} s",
   "watch.sending": "Saatmine…",
   "watch.sent": "Saadetud",
   "watch.settings_of": "{taf} · seaded",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Telefon jääb sisse logituks. See kell unustab sinu tafid, vestlused ja postkasti.",
   "watch.signed_in": "Sisse logitud",
   "watch.signed_out_here": "Selles kellas välja logitud. Telefon jääb sisse logituks.",
+  "watch.stopped_at_limit": "Peatus piiril {limit}. Kuuldu on allpool.",
   "watch.swipe_settings": "Seadete jaoks pühi vasakule",
   "watch.tap_start": "Puuduta Alusta ja räägi. Sinu sõnad ilmuvad siia rääkimise ajal.",
   "watch.timing": "Kuulamine {listen} ms · kviitung {receipt} ms · tulemus {result} ms",

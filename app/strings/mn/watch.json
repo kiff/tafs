@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Устгасан. Юу ч илгээгдээгүй.",
   "watch.didnt_catch": "Сонсож авсангүй. Дахин оролдохын тулд товшино уу.",
   "watch.dismiss": "Хаах",
+  "watch.edit_words": "Өөрчлөхийн тулд текст дээр дарна уу",
   "watch.glance_description": "Хэд нь таныг хүлээж байгааг харуулна, юу эсвэл хэн гэдгийг хэзээ ч биш.",
   "watch.halt_all_q": "Таны бүх taf-ыг зогсоох уу?",
   "watch.halt_now_count": {
@@ -91,6 +92,7 @@
   "watch.resume_on_phone": "Утсан дээрээ үргэлжлүүлэх",
   "watch.retry": "Дахин оролдох",
   "watch.review": "Илгээхээс өмнө шалгах",
+  "watch.seconds_left": "{seconds} сек үлдсэн",
   "watch.sending": "Илгээж байна…",
   "watch.sent": "Илгээсэн",
   "watch.settings_of": "{taf} · тохиргоо",
@@ -99,6 +101,7 @@
   "watch.sign_out_sub": "Таны утас нэвтэрсэн хэвээр үлдэнэ. Энэ цаг таны taf-ууд, чат болон ирсэн зүйлсийг мартана.",
   "watch.signed_in": "Нэвтэрсэн",
   "watch.signed_out_here": "Энэ цагнаас гарсан. Таны утас нэвтэрсэн хэвээр байна.",
+  "watch.stopped_at_limit": "{limit} хязгаарт зогслоо. Сонсогдсон зүйл доор байна.",
   "watch.swipe_settings": "Тохиргоог нь үзэхийн тулд зүүн тийш шудрана уу",
   "watch.tap_start": "Эхлэх-ийг товшоод ярина уу. Таны үгс ярих бүрт энд харагдана.",
   "watch.timing": "Сонсох {listen} мс · баримт {receipt} мс · үр дүн {result} мс",

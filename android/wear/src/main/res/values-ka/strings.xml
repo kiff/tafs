@@ -68,6 +68,7 @@
     <string name="watch_deleted_nothing_sent">წაიშალა. არაფერი გაიგზავნა.</string>
     <string name="watch_didnt_catch">ვერ გავიგე. შეეხეთ ხელახლა საცდელად.</string>
     <string name="watch_dismiss">უარყოფა</string>
+    <string name="watch_edit_words">შესაცვლელად შეეხეთ ტექსტს</string>
     <string name="watch_glance_description">რამდენი გელოდებათ, არასოდეს რა ან ვინ.</string>
     <string name="watch_halt_all_q">გაჩერდეს თქვენი ყველა taf?</string>
     <plurals name="watch_halt_now_count">
@@ -141,6 +142,7 @@
     <string name="watch_resume_on_phone">განაახლეთ თქვენს ტელეფონზე</string>
     <string name="watch_retry">სცადეთ ხელახლა</string>
     <string name="watch_review">შეამოწმეთ გაგზავნამდე</string>
+    <string name="watch_seconds_left">დარჩა %1$s წმ</string>
     <string name="watch_sending">იგზავნება…</string>
     <string name="watch_sent">გაიგზავნა</string>
     <string name="watch_settings_of">%1$s · პარამეტრები</string>
@@ -149,6 +151,7 @@
     <string name="watch_sign_out_sub">თქვენი ტელეფონი შესული რჩება. ეს საათი ივიწყებს თქვენს taf-ებს, ჩატებს და შემოსულებს.</string>
     <string name="watch_signed_in">შესულია</string>
     <string name="watch_signed_out_here">ამ საათზე გამოხვედით. თქვენი ტელეფონი შესული რჩება.</string>
+    <string name="watch_stopped_at_limit">შეჩერდა %1$s ლიმიტზე. მოსმენილი ქვემოთაა.</string>
     <string name="watch_swipe_settings">გადაიტანეთ მარცხნივ მისი პარამეტრებისთვის</string>
     <string name="watch_tap_start">შეეხეთ „დაწყებას“, შემდეგ ისაუბრეთ. თქვენი სიტყვები აქ ჩანს საუბრისას.</string>
     <string name="watch_timing">მოსმენა %1$s მწ · ქვითარი %2$s მწ · შედეგი %3$s მწ</string>

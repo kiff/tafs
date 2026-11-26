@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "បានលុប។ គ្មានអ្វីត្រូវបានផ្ញើទេ។",
   "watch.didnt_catch": "ស្តាប់មិនបាន។ ចុចដើម្បីព្យាយាមម្តងទៀត។",
   "watch.dismiss": "បដិសេធចោល",
+  "watch.edit_words": "ប៉ះអត្ថបទដើម្បីកែ",
   "watch.glance_description": "មានប៉ុន្មានត្រូវការអ្នក មិនដែលបង្ហាញថាអ្វី ឬនរណាទេ។",
   "watch.halt_all_q": "បញ្ឈប់ taf ទាំងអស់របស់អ្នកឬ?",
   "watch.halt_now_count": {
@@ -86,6 +87,7 @@
   "watch.resume_on_phone": "បន្តនៅលើទូរសព្ទរបស់អ្នក",
   "watch.retry": "ព្យាយាមម្តងទៀត",
   "watch.review": "ពិនិត្យមុនផ្ញើ",
+  "watch.seconds_left": "នៅសល់ {seconds} វិ",
   "watch.sending": "កំពុងផ្ញើ…",
   "watch.sent": "បានផ្ញើ",
   "watch.settings_of": "{taf} · ការកំណត់",
@@ -94,6 +96,7 @@
   "watch.sign_out_sub": "ទូរសព្ទរបស់អ្នកនៅតែចូល។ នាឡិកានេះភ្លេច taf ការសន្ទនា និងប្រអប់សារចូលរបស់អ្នក។",
   "watch.signed_in": "បានចូល",
   "watch.signed_out_here": "បានចាកចេញនៅលើនាឡិកានេះ។ ទូរសព្ទរបស់អ្នកនៅតែចូល។",
+  "watch.stopped_at_limit": "បានឈប់នៅដែនកំណត់ {limit}។ អ្វីដែលបានឮនៅខាងក្រោម។",
   "watch.swipe_settings": "អូសទៅឆ្វេងដើម្បីមើលការកំណត់របស់វា",
   "watch.tap_start": "ចុចចាប់ផ្តើម រួចនិយាយ។ ពាក្យរបស់អ្នកបង្ហាញនៅទីនេះនៅពេលអ្នកនិយាយ។",
   "watch.timing": "ស្តាប់ {listen} ms · បង្កាន់ដៃ {receipt} ms · លទ្ធផល {result} ms",

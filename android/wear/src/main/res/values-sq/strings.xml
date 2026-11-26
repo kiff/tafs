@@ -68,6 +68,7 @@
     <string name="watch_deleted_nothing_sent">U fshi. Asgjë nuk u dërgua.</string>
     <string name="watch_didnt_catch">Nuk e kapa. Prekni për të provuar sërish.</string>
     <string name="watch_dismiss">Hidheni poshtë</string>
+    <string name="watch_edit_words">Prekni tekstin për ta ndryshuar</string>
     <string name="watch_glance_description">Sa ju presin, kurrë çfarë apo kush.</string>
     <string name="watch_halt_all_q">Të bllokohen të gjithë tafs-et tuaj?</string>
     <plurals name="watch_halt_now_count">
@@ -141,6 +142,7 @@
     <string name="watch_resume_on_phone">Vazhdoni në telefonin tuaj</string>
     <string name="watch_retry">Provoni sërish</string>
     <string name="watch_review">Kontrolloni para dërgimit</string>
+    <string name="watch_seconds_left">Edhe %1$s s</string>
     <string name="watch_sending">Po dërgohet…</string>
     <string name="watch_sent">U dërgua</string>
     <string name="watch_settings_of">%1$s · cilësimet</string>
@@ -149,6 +151,7 @@
     <string name="watch_sign_out_sub">Telefoni juaj mbetet i hyrë. Kjo orë harron tafs-et, bisedat dhe kutinë tuaj hyrëse.</string>
     <string name="watch_signed_in">I hyrë</string>
     <string name="watch_signed_out_here">Dolët nga kjo orë. Telefoni juaj mbetet i hyrë.</string>
+    <string name="watch_stopped_at_limit">U ndal te kufiri prej %1$s. Ajo që u dëgjua është më poshtë.</string>
     <string name="watch_swipe_settings">Rrëshqitni majtas për cilësimet e tij</string>
     <string name="watch_tap_start">Prekni Fillo, pastaj flisni. Fjalët tuaja shfaqen këtu ndërsa flisni.</string>
     <string name="watch_timing">Dëgjimi %1$s ms · dëftesa %2$s ms · rezultati %3$s ms</string>

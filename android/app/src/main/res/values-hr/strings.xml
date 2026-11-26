@@ -2877,6 +2877,7 @@
     <string name="watch_deleted_nothing_sent">Izbrisano. Ništa nije poslano.</string>
     <string name="watch_didnt_catch">Nisam razumio. Dodirnite da pokušate ponovno.</string>
     <string name="watch_dismiss">Odbacite</string>
+    <string name="watch_edit_words">Dodirnite tekst da biste ga promijenili</string>
     <string name="watch_glance_description">Koliko ih čeka vas, nikad što ni tko.</string>
     <string name="watch_halt_all_q">Blokirati sve vaše tafove?</string>
     <plurals name="watch_halt_now_count">
@@ -2955,6 +2956,7 @@
     <string name="watch_resume_on_phone">Nastavite na telefonu</string>
     <string name="watch_retry">Pokušajte ponovno</string>
     <string name="watch_review">Provjerite prije slanja</string>
+    <string name="watch_seconds_left">Još %1$s s</string>
     <string name="watch_sending">Slanje…</string>
     <string name="watch_sent">Poslano</string>
     <string name="watch_settings_of">%1$s · postavke</string>
@@ -2963,6 +2965,7 @@
     <string name="watch_sign_out_sub">Vaš telefon ostaje prijavljen. Ovaj sat zaboravlja vaše tafove, razgovore i pristigle.</string>
     <string name="watch_signed_in">Prijavljeni</string>
     <string name="watch_signed_out_here">Odjavljeni na ovom satu. Vaš telefon ostaje prijavljen.</string>
+    <string name="watch_stopped_at_limit">Zaustavljeno na ograničenju od %1$s. Što se čulo, nalazi se ispod.</string>
     <string name="watch_swipe_settings">Prijeđite ulijevo za njegove postavke</string>
     <string name="watch_tap_start">Dodirnite Pokrenite, zatim govorite. Vaše se riječi prikazuju ovdje dok govorite.</string>
     <string name="watch_timing">Slušanje %1$s ms · potvrda %2$s ms · rezultat %3$s ms</string>

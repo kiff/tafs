@@ -68,6 +68,7 @@
     <string name="watch_deleted_nothing_sent">মুছে ফেলা হয়েছে। কিছু পাঠানো হয়নি।</string>
     <string name="watch_didnt_catch">বোঝা যায়নি। আবার চেষ্টা করতে ট্যাপ করুন।</string>
     <string name="watch_dismiss">বাতিল করুন</string>
+    <string name="watch_edit_words">বদলাতে লেখায় ট্যাপ করুন</string>
     <string name="watch_glance_description">কতগুলোর আপনাকে দরকার, কী বা কে তা নয়।</string>
     <string name="watch_halt_all_q">আপনার সব taf থামাবেন?</string>
     <plurals name="watch_halt_now_count">
@@ -141,6 +142,7 @@
     <string name="watch_resume_on_phone">আপনার ফোনে আবার চালু করুন</string>
     <string name="watch_retry">আবার চেষ্টা করুন</string>
     <string name="watch_review">পাঠানোর আগে দেখে নিন</string>
+    <string name="watch_seconds_left">%1$s সে বাকি</string>
     <string name="watch_sending">পাঠানো হচ্ছে…</string>
     <string name="watch_sent">পাঠানো হয়েছে</string>
     <string name="watch_settings_of">%1$s · সেটিংস</string>
@@ -149,6 +151,7 @@
     <string name="watch_sign_out_sub">আপনার ফোন সাইন ইন করা থাকে। এই ঘড়ি আপনার taf, চ্যাট ও ইনবক্স ভুলে যায়।</string>
     <string name="watch_signed_in">সাইন ইন করা</string>
     <string name="watch_signed_out_here">এই ঘড়িতে সাইন আউট করা হয়েছে। আপনার ফোন সাইন ইন করা থাকে।</string>
+    <string name="watch_stopped_at_limit">%1$s সীমায় থেমেছে। যা শোনা গেছে তা নিচে আছে।</string>
     <string name="watch_swipe_settings">এর সেটিংসের জন্য বাঁয়ে সোয়াইপ করুন</string>
     <string name="watch_tap_start">«শুরু করুন» চাপুন, তারপর বলুন। আপনি বলার সঙ্গে সঙ্গে আপনার কথা এখানে দেখা যায়।</string>
     <string name="watch_timing">শোনা %1$s ms · রসিদ %2$s ms · ফলাফল %3$s ms</string>

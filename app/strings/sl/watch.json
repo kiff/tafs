@@ -18,6 +18,7 @@
   "watch.deleted_nothing_sent": "Izbrisano. Nič ni bilo poslano.",
   "watch.didnt_catch": "Nisem razumel. Tapnite za nov poskus.",
   "watch.dismiss": "Opusti",
+  "watch.edit_words": "Tapnite besedilo, da ga spremenite",
   "watch.glance_description": "Koliko vas jih potrebuje, nikoli kaj ali kdo.",
   "watch.halt_all_q": "Ustavim vse vaše tafe?",
   "watch.halt_now_count": {
@@ -101,6 +102,7 @@
   "watch.resume_on_phone": "Nadaljujte v telefonu",
   "watch.retry": "Poskusi znova",
   "watch.review": "Preveri pred pošiljanjem",
+  "watch.seconds_left": "Še {seconds} s",
   "watch.sending": "Pošiljam…",
   "watch.sent": "Poslano",
   "watch.settings_of": "{taf} · nastavitve",
@@ -109,6 +111,7 @@
   "watch.sign_out_sub": "Telefon ostane prijavljen. Ta ura pozabi vaše tafe, klepete in Nabiralnik.",
   "watch.signed_in": "Prijavljeni",
   "watch.signed_out_here": "Odjavljeni na tej uri. Telefon ostane prijavljen.",
+  "watch.stopped_at_limit": "Ustavljeno pri omejitvi {limit}. Kar je bilo slišano, je spodaj.",
   "watch.swipe_settings": "Podrsajte levo za njegove nastavitve",
   "watch.tap_start": "Tapnite Začni in govorite. Vaše besede se prikazujejo tukaj, medtem ko govorite.",
   "watch.timing": "Poslušanje {listen} ms · potrdilo {receipt} ms · rezultat {result} ms",
