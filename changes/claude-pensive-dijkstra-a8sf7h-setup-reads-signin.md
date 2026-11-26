@@ -1,0 +1,1 @@
+- **Coach no longer tells you what a sign-in covers before its card does, nor reads an app connected by key before its rules.** The sign-in's card, from the connection service, shows what it covers. A sign-in's own setup read stays before the rules, and a setup by key shows one approval per app, with its tools and Card. See [Coach](docs/coach.md).

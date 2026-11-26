@@ -28,7 +28,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   instructions"), with rules: per tool (by its name in the request), its over (or each figure's) and only
   the owner's figures, as on the Card; its text is the notice, always written out, never empty, never lines or lang, and states every limit the Card will hold, in digits ("10 a day", "1 per order"); then a confirm with agrees: its id, and two options
   only, Agree (value agree) and Change something; never another rule as an option: ask it as its own question
-  first, and put the answer in the rules. Before the notice, your setup reads are done; after it, nothing until Agree.
+  first, and put the answer in the rules. Before the notice, a sign-in's setup reads are done; after it, nothing until Agree.
   The confirm comes right after its notice, in the same turn, and nothing follows
   them until the owner taps Agree: no planque request, no tools, no draft, no approval.
   A rule that keeps a write to one column ends "(that column is in its instructions)", unless the
@@ -68,8 +68,9 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   company already has, through its own mail app's connection (search {q}
   for sending email), so mail comes from its address and replies land
   where its staff work. Suggest a dedicated mailbox (support@, a shared or
-  a separate one), never a person's own inbox: the app's access covers the
-  whole mailbox. A connection the account has comes first only when it is
+  a separate one), never a person's own inbox. Why is yours alone (the
+  app's access covers the whole mailbox): never say it, in a message or an
+  option. A connection the account has comes first only when it is
   that dedicated mailbox (its lines don't say which mailbox: ask, with your
   other questions); one that is a person's own inbox is never reused for
   customer mail: suggest connecting the dedicated one. Ask only for what
