@@ -246,3 +246,58 @@ enum WatchOpen {
         try? await UNUserNotificationCenter.current().add(request)
     }
 }
+
+/// Ask your phone to sign this watch in (docs/watch-app.md, "Sign out on this watch"; row 18): a watch signed out on itself
+/// asks, and this phone's owner answers. The question is a notification, "Sign this watch in as you?", with **Allow**, which
+/// iOS lets through only once the phone is unlocked (`.authenticationRequired`), and **Deny**. A tap that only opens tafs
+/// answers nothing. Only Allow signs the watch in, by the id it asked with, under this phone's mark now.
+@MainActor
+enum WatchSignInAsk {
+    static let categoryID = "watch-sign-in"
+    static let allow = "watch-sign-in.allow"
+    static let deny = "watch-sign-in.deny"
+    /// The `userInfo` key the watch's id goes under.
+    static let idKey = "watch_sign_in"
+
+    static func category() -> UNNotificationCategory {
+        let allow = UNNotificationAction(identifier: allow, title: Words.Watch.signInAllow, options: [.authenticationRequired])
+        let deny = UNNotificationAction(identifier: deny, title: Words.Watch.signInDeny, options: [.destructive])
+        return UNNotificationCategory(identifier: categoryID, actions: [allow, deny], intentIdentifiers: [], options: [])
+    }
+
+    /// The question: nothing of the account in it, only the watch's id, so a locked phone's screen shows no more.
+    static func content(_ id: String) -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+        content.title = "tafs"
+        content.body = Words.Watch.signInWatchQ
+        content.sound = .default
+        content.categoryIdentifier = categoryID
+        content.userInfo = [idKey: id]
+        return content
+    }
+
+    /// Asks the owner, one question per ask: a second ask replaces any still waiting.
+    static func post(_ id: String) async {
+        let center = UNUserNotificationCenter.current()
+        let waiting = await center.pendingNotificationRequests().filter { $0.content.categoryIdentifier == categoryID }.map(\.identifier)
+        center.removePendingNotificationRequests(withIdentifiers: waiting)
+        let delivered = await center.deliveredNotifications().filter { $0.request.content.categoryIdentifier == categoryID }
+        center.removeDeliveredNotifications(withIdentifiers: delivered.map(\.request.identifier))
+        let request = UNNotificationRequest(identifier: "watch-sign-in-" + id, content: content(id), trigger: nil)
+        try? await center.add(request)
+    }
+
+    /// The owner's answer, as the watch takes it: Allow or Deny for that id. Any other action (a tap that opens tafs, a
+    /// dismissal) answers nothing, and the watch stays signed out.
+    static func answer(action: String, id: String, now: Date = Date()) -> WatchPush? {
+        guard WatchVoice.isID(id), action == allow || action == deny else { return nil }
+        return WatchPush(.signIn, signIn: WatchSignInAnswer(id: id.lowercased(), allowed: action == allow), at: now)
+    }
+
+    /// Hands the answer to the watch with this phone's mark now; nothing while this phone is signed out.
+    static func respond(action: String, id: String) {
+        let reading = KeptWatchReading()
+        guard reading.signedIn, let push = answer(action: action, id: id) else { return }
+        WatchPushRelay.toWatch(push, mark: reading.mark)
+    }
+}

@@ -52,6 +52,9 @@ protocol WatchReading {
     /// Approve on your phone: Needs you at the held call `hold`, when this phone's own fresh read lists it, else Needs you
     /// with nothing chosen (`WatchOpen.holdDestination`). Nothing is signed: that's the phone's card, behind Face ID.
     func openHold(_ hold: String) async -> WatchReply
+    /// Ask your phone to sign this watch in (row 18): asks this phone's owner, with Allow behind the phone's lock
+    /// (`WatchSignInAsk`). Nothing is sent to the watch now; only the owner's Allow signs it in.
+    func askWatchSignIn(_ id: String) async -> WatchReply
     /// This session's mark for the watch (`WatchMark`, `PhoneWatchMark`), on every reply; none when signed out.
     var mark: String? { get }
 }
@@ -78,6 +81,8 @@ extension WatchReading {
     /// A reader that opens nothing.
     func openOnPhone(taf: String?) async -> WatchReply { WatchReply(.notYet) }
     func openHold(_ hold: String) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader that asks no one: the watch stays signed out.
+    func askWatchSignIn(_ id: String) async -> WatchReply { WatchReply(.notYet) }
     /// A reader with no session of its own (the tests' readers): no mark.
     var mark: String? { nil }
 }
@@ -210,6 +215,9 @@ enum WatchRelay {
         case .inboxMark:
             guard let marks = request.marks else { return WatchReply(.refused) }
             return await reading.inboxMark(marks)
+        case .signInWatch:
+            // A watch signed out on itself asks to be signed in again: only this phone's owner says yes, behind its lock.
+            return await reading.askWatchSignIn(request.message?.lowercased() ?? "")
         case .openOnPhone:
             // Approve on your phone: only the hold's id, and only under this phone's own account (the mark, above).
             if let hold = request.hold { return await reading.openHold(hold) }
@@ -263,6 +271,11 @@ struct KeptWatchReading: WatchReading {
 
     func openOnPhone(taf: String?) async -> WatchReply {
         await WatchOpen.run(WatchOpen.destination(taf: taf))
+        return WatchReply(.ok)
+    }
+
+    func askWatchSignIn(_ id: String) async -> WatchReply {
+        await WatchSignInAsk.post(id)
         return WatchReply(.ok)
     }
 

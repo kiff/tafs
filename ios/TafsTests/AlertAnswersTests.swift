@@ -41,6 +41,30 @@ final class AlertAnswersTests: XCTestCase {
         XCTAssertTrue(refuse.options.contains(.destructive))
     }
 
+    /// Row 18: a watch's Ask your phone to sign this watch in. The question carries only the watch's id. Allow is let through
+    /// only once the phone is unlocked; Deny is a plain no; any other action (a tap that opens tafs) answers nothing. Only Allow
+    /// and Deny, for a real id, go to the watch.
+    func testAWatchsSignInAskIsAllowedOnlyBehindThePhonesLock() throws {
+        let category = try XCTUnwrap(AlertAnswers.categories().first { $0.identifier == WatchSignInAsk.categoryID })
+        XCTAssertEqual(category.actions.map(\.identifier), [WatchSignInAsk.allow, WatchSignInAsk.deny])
+        XCTAssertTrue(category.actions[0].options.contains(.authenticationRequired), "Allow needs the phone unlocked")
+        XCTAssertEqual(category.actions[0].title, Words.Watch.signInAllow)
+        XCTAssertTrue(category.actions[1].options.contains(.destructive))
+        let id = UUID().uuidString.lowercased()
+        let content = WatchSignInAsk.content(id)
+        XCTAssertEqual(content.body, Words.Watch.signInWatchQ)
+        XCTAssertEqual(content.categoryIdentifier, WatchSignInAsk.categoryID)
+        XCTAssertEqual(content.userInfo.count, 1, "the id alone")
+        XCTAssertEqual(content.userInfo[WatchSignInAsk.idKey] as? String, id)
+        let now = Date(timeIntervalSinceReferenceDate: 813_667_500)
+        XCTAssertEqual(WatchSignInAsk.answer(action: WatchSignInAsk.allow, id: id, now: now),
+                       WatchPush(.signIn, signIn: WatchSignInAnswer(id: id, allowed: true), at: now))
+        XCTAssertEqual(WatchSignInAsk.answer(action: WatchSignInAsk.deny, id: id, now: now)?.signIn?.allowed, false)
+        XCTAssertNil(WatchSignInAsk.answer(action: UNNotificationDefaultActionIdentifier, id: id), "opening tafs answers nothing")
+        XCTAssertNil(WatchSignInAsk.answer(action: UNNotificationDismissActionIdentifier, id: id))
+        XCTAssertNil(WatchSignInAsk.answer(action: WatchSignInAsk.allow, id: "not an id"))
+    }
+
     func testAHoldsNotificationOpensThatHoldWithTheChosenAnswer() {
         XCTAssertEqual(AlertAnswers.request(from: AlertAnswers.destination(hold: "ce_1")), .init(kiffID: "ce_1", answer: nil))
         XCTAssertEqual(AlertAnswers.request(from: AlertAnswers.destination(hold: "ce_1", answer: "approve")), .init(kiffID: "ce_1", answer: "approve"))

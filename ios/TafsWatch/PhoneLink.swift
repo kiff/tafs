@@ -141,6 +141,9 @@ final class PhoneLink: NSObject, WCSessionDelegate, @unchecked Sendable {
         guard let push = WatchPush.from(userInfo) else { return }
         Task { @MainActor in
             if push.kind == .account { return Self.account(push) }
+            // The phone owner's answer to Ask your phone to sign this watch in: heard while signed out, and only for the id
+            // the watch asked with (`WatchSignIn.heard`).
+            if push.kind == .signIn { return WatchPushes.shared.deliver(push) }
             // Signed out on this watch: nothing of the account comes in, held calls included, until the person taps Sign in
             // with your phone here (`WatchSignIn`). Only the account's change above may still wipe.
             guard WatchSignIn.takesData(signedOutHere: WatchSignIn.FileStore().signedOut()) else { return }

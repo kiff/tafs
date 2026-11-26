@@ -22,7 +22,7 @@ enum AlertAnswers {
         let hold = UNNotificationCategory(identifier: holdCategory, actions: [approve, refuse], intentIdentifiers: [],
                                           hiddenPreviewsBodyPlaceholder: Words.Alert.needsYou, options: [])
         let halt = UNNotificationCategory(identifier: haltCategory, actions: [], intentIdentifiers: [], options: [])
-        return [hold, halt]
+        return [hold, halt, WatchSignInAsk.category()]
     }
 
     /// Where a hold's notification opens: that hold, with the answer chosen on it if any.

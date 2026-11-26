@@ -335,11 +335,24 @@ Nothing leaves the watch before Send:
   and inbox."). It's on this watch alone: nothing is sent to the phone, and it works with the phone out of reach. The watch
   forgets everything it holds: its Inbox (the ids taken away too) and what each page showed. It keeps one flag, an empty file
   `tafs.signed_out_here` in its Application Support, and shows only "Signed out on this watch. Your phone stays signed in."
-  with **Sign in with your phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing, and the
+  with **Ask your phone to sign this watch in**, across restarts, until the phone's owner says yes (row 18, below). Meanwhile it reads and sends nothing, and the
   phone's pushes, which keep coming since the phone isn't told, are dropped as they arrive: a thread, the Inbox's marks or a
   held call is never kept again (`WatchSignIn.takesData`, in `PhoneLink` and the Inbox's `mayDraw`). Nothing from the phone
-  signs it back in; only the phone's own sign-out or account change is still heard, since it can only wipe. Sign in
-  takes the flag away and reads the phone again. The privacy text names the flag ("…and whether you signed out on the
+  signs it back in; only the phone's own sign-out or account change is still heard, since it can only wipe.
+- **Signing this watch in again needs the phone's yes** (row 18, since 26 Nov; `WatchSignIn.askPhone`,
+  `WatchSignInAsk`; tested in `WatchSignInTests`, `AlertAnswersTests`, `WatchInboxMarksTests`). A watch is signed out so that
+  whoever holds it next can't use the account, so a tap on the watch alone never signs it in:
+  - **The watch** sends `sign_in_watch` with a one-time id and nothing of the account, and shows "Waiting for your phone…".
+    The flag stays.
+  - **The phone** asks its owner with a notification, "Sign this watch in as you?". **Allow** is let through only once the
+    phone is unlocked (`.authenticationRequired`); **Deny** is a plain no. A tap that only opens tafs answers nothing.
+    A signed-out phone asks no one.
+  - **Only Allow signs it in:** the phone's answer (`WatchPush.Kind.signIn`) is taken only for the id the watch asked with,
+    within ten minutes (`answerWithin`), and with a mark the phone makes. Its mark is heard as an account change, so another
+    account's wipes first. Then the flag goes and the watch reads fresh: nothing from before the sign-out comes back.
+  - **Deny** says "Not signed in. This watch stays signed out." Out of reach, a phone signed out, or an older phone: the
+    watch says why and stays signed out. An app ended mid-ask asks again.
+  - **The demo** has no phone, so its watch signs in on the tap. The privacy text names the flag ("…and whether you signed out on the
   watch"), which ships with the switch.
 - **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`,
   `watch.sign_out_q`, `watch.sign_out_sub`, `watch.signed_out_here`; the phone's `calendar.today`, `calendar.previous_day`,

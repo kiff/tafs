@@ -700248,6 +700248,17 @@
         }
       }
     },
+    "watch.ask_phone_sign_in": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask your phone to sign this watch in"
+          }
+        }
+      }
+    },
     "watch.ask_text_only": {
       "extractionState": "manual",
       "localizations": {
@@ -720050,6 +720061,39 @@
         }
       }
     },
+    "watch.sign_in_allow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow"
+          }
+        }
+      }
+    },
+    "watch.sign_in_denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not signed in. This watch stays signed out."
+          }
+        }
+      }
+    },
+    "watch.sign_in_deny": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deny"
+          }
+        }
+      }
+    },
     "watch.sign_in_on_phone": {
       "extractionState": "manual",
       "localizations": {
@@ -720309,6 +720353,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "請先在手機上登入 tafs。"
+          }
+        }
+      }
+    },
+    "watch.sign_in_watch_q": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign this watch in as you?"
           }
         }
       }
@@ -724254,6 +724309,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Coach 收到的是您的文字，絕不會收到您的語音。"
+          }
+        }
+      }
+    },
+    "watch.waiting_for_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for your phone…"
           }
         }
       }

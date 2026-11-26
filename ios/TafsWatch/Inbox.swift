@@ -386,7 +386,7 @@ extension InboxModel: WatchPushListening {
         case .needsYou:
             guard let holds = push.holds else { return }
             took(holds)
-        case .ask, .chat, .account, .forget:
+        case .ask, .chat, .account, .forget, .signIn:
             return
         }
     }

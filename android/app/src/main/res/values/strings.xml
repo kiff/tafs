@@ -2791,6 +2791,7 @@
     <string name="watch_ask">Ask tafs</string>
     <string name="watch_ask_needs_consent">Before you ask tafs, allow AI use in tafs on your phone.</string>
     <string name="watch_ask_not_on">Asking from your watch isn\'t on yet.</string>
+    <string name="watch_ask_phone_sign_in">Ask your phone to sign this watch in</string>
     <string name="watch_ask_text_only">tafs gets your words as text, never your voice.</string>
     <string name="watch_asking_phone">Asking your phone…</string>
     <string name="watch_calendar_today">Today\'s calendar</string>
@@ -2875,7 +2876,11 @@
     <string name="watch_sending">Sending…</string>
     <string name="watch_sent">Sent</string>
     <string name="watch_settings_of">%1$s · settings</string>
+    <string name="watch_sign_in_allow">Allow</string>
+    <string name="watch_sign_in_denied">Not signed in. This watch stays signed out.</string>
+    <string name="watch_sign_in_deny">Deny</string>
     <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
+    <string name="watch_sign_in_watch_q">Sign this watch in as you?</string>
     <string name="watch_sign_out_q">Sign out on this watch?</string>
     <string name="watch_sign_out_sub">Your phone stays signed in. This watch forgets your tafs, chats and inbox.</string>
     <string name="watch_signed_in">Signed in</string>
@@ -2891,6 +2896,7 @@
     <string name="watch_view_on_phone">View on phone</string>
     <string name="watch_view_only_phone">This phone can only view, so you can\'t ask from the watch. Sign in on a phone that can approve.</string>
     <string name="watch_voice_text_only">Coach gets your words as text, never your voice.</string>
+    <string name="watch_waiting_for_phone">Waiting for your phone…</string>
     <string name="watch_what_it_does">What it does</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s working</item>
