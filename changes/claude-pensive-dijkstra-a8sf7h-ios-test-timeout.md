@@ -1,0 +1,1 @@
+- CI: the iOS unit and UI tests may run for 45 minutes, not 30. They take 20 to 29 minutes on GitHub's macOS runners, so a slow runner was cancelled with no test failing, and a release dispatch with it.
