@@ -646,13 +646,14 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   // Evals 45762771656 and 45774332687, 26 Nov (route, "hands a request to the one taf", 2 then 1 of 3): "Set up an interview
   // with the candidate from this morning for Friday" was answered "Hiring or Calendar could do that", and "Refund the order
   // from yesterday" was answered by Coach itself ("I can't refund the order myself…"), in 316 characters. A taf whose
-  // `can` names the request's job takes it, one only near it doesn't count, and Coach never does or refuses it itself;
+  // `can` names the request's job takes it, one only near it doesn't count, and Coach never does, refuses or sets it up itself;
   // "several" is two tafs that each name it as their own, said in that one line (ask-a-taf@3).
   it("hands a request to the taf whose own job names it, never answers it itself, and says several in one line", () => {
     const body = COACH_SKILLS.find((k) => k.name === "ask-a-taf")!.body.replace(/\s+/g, " ");
-    expect(body).toContain("and you never do the request yourself or say you can't: a taf does it, or none does.");
-    expect(body).toContain("A taf can do it when its `can` names the request's own job: an interview with a candidate is the taf that schedules interviews, not one that books meetings; a refund of an order is the taf that refunds orders. A taf whose job is only near the request doesn't count.");
-    expect(body).toContain("More than one taf could do it, only when two or more tafs' `can` each name the request's job as their own (both answer customers)");
+    expect(body).toContain("and you never do the request yourself, say you can't, or offer to set a taf up: a taf does it, or none does.");
+    expect(body).toContain("A taf can do it when its `can` names the request's own job: renewing a domain is the taf that manages domains, not one that pays bills; a refund of a booking is the taf that refunds bookings, not one that books trips. A taf whose job is only near the request doesn't count.");
+    expect(body).toContain("More than one taf could do it, only when two or more tafs' `can` each name the request's job as their own (both post to the shop's social accounts)");
+    // The examples are jobs outside the Eval's ten Route tafs, so Route measures whether the rule carries, not a match.
     expect(body).toContain("That line and nothing else: no question, nothing each one does.");
   });
 

@@ -51,9 +51,9 @@ message carries.
 - **Only the tafs the person may use.** `tafs_state` in a watch conversation lists only those KIFF says they may use.
 - **No guessing.** A request no taf can do, or more than one could, is never handed to a taf: it ends `done`, with Coach's
   sentence saying so (`no_taf` only when Coach said nothing). One taf can do it when its `can` names the request's own
-  job (an interview with a candidate is the taf that schedules interviews, not one that books meetings); one whose job is
-  only near it doesn't count, so "more than one" is two tafs that each name it as their own. Coach never does or refuses
-  the request itself (`ask-a-taf@3`).
+  job (renewing a domain is the taf that manages domains, not one that pays bills); one whose job is only near it
+  doesn't count, so "more than one" is two tafs that each name it as their own. Coach never does, refuses or sets up the
+  request itself (`ask-a-taf@3`). The skill's examples are jobs outside the Eval's Route tafs, so Route measures the rule.
 - **Handed over only as the request's own.** A watch conversation's `taf_task` finds its request from the chat kiff/agents
   names (`agent_session`). KIFF keeps a tool's schema from when it was connected, so a Coach connection made before
   `taf_task` asked for its chat never names one: then, while one of the person's requests is choosing its taf (Coach's
