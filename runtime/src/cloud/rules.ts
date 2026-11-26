@@ -26,6 +26,7 @@
  * agreed figures it carries (the tool's for one that carries none), so two figures with different answers are never on
  * one Card: one Card has one `on_exceed`.
  */
+import { EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "./every-call-words.js";
 import type { ApprovalGrant } from "./approval.js";
 
 export interface AgreedLimit { quantity: string; window: string; limit: number; over?: "ask" | "refuse"; per?: string }
@@ -859,3 +860,15 @@ const EVERY_CALL_ASKS: RegExp[] = [
     "(?:passa|vai) (?:primeiro )?por (?:você|ti)",
   ].join("|")],
 ].map(([every, asks], i) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])${figureAfter(THRESHOLDS[i]!, CLAUSE_JOINS[i]!, CONDITIONS[i]!)}`, "u"));
+
+// The other 35 app languages, and pt-BR's own forms (every-call-words.ts): never after a figure earlier in the same clause,
+// since many put "over €5" before the noun; a gap that may be empty (Mongolian's "бүр" sits right before the verb); and, in
+// scripts written without spaces, no word boundaries, within 40 characters of one clause.
+const noFigureBefore = "(?<!\\d[^\\d.,;:!?\\n、，。．！？]{0,30})";
+const betweenOrNone = "[^\\d.;:!?\\n]{0,60}?";
+EVERY_CALL_ASKS.push(
+  ...Object.values(EVERY_CALL_SPACED).map(([every, asks]) =>
+    new RegExp(`${noFigureBefore}(?<![\\p{L}\\p{N}])(?:${every})\\s${betweenOrNone}(?:${asks.join("|")})(?![\\p{L}\\p{N}])`, "u")),
+  ...Object.values(EVERY_CALL_UNSPACED).map(([every, asks]) =>
+    new RegExp(`${noFigureBefore}(?:${every})[^\\d。．！？!?.\\n]{0,40}?(?:${asks.join("|")})`, "u")),
+);
