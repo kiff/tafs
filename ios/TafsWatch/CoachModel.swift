@@ -448,7 +448,8 @@ final class CoachModel: ObservableObject {
     /// View on phone (docs/watch-app.md, "View on phone"): the phone opens this chat, Coach's or the taf's, in front or with a
     /// notification. Nothing on the watch changes, and nothing is said if the phone isn't in reach: the row stays to tap again.
     func openOnPhone() async {
-        _ = await phone.reach(WatchRequest(.openOnPhone, made: clock(), taf: taf))
+        let reached = await phone.reach(WatchRequest(.openOnPhone, made: clock(), taf: taf))
+        WatchOpenedNotice.shared.heard(reached.reply, for: WatchOpenedNotice.chat)
     }
 
     /// v2: the ask closed with the app still open. Words not sent go; a Send on its way carries on, and its answer lands in

@@ -658,7 +658,9 @@ The watch follows the phone's thread without asking it each time, and never asks
 - **View on phone (call 5).** Where the rest of an answer is on the phone, or a call waits to be approved there, View on phone
   sits inline (`ViewOnPhone`). The watch can't bring an app to the front of the iPhone. So it asks the phone
   (`open_on_phone`), and the phone opens the chat if tafs is in front. Otherwise the phone posts "From your watch", and a tap
-  opens the chat (`WatchOpen`). Nothing is read or changed.
+  opens the chat (`WatchOpen`). Nothing is read or changed. Once the phone answers that it did, View on phone says
+  **"Opened on your phone"** for a moment (row 28, as Wear OS's confirmation; `WatchOpenedNotice`), and so does Approve on
+  your phone, on that held call. Not reached, nothing is said and the button stays.
 - **Linking tafs, never Try again (call 6).** When the phone is out of reach, slow to answer, or the link fails, the watch
   says one calm line: "Linking tafs. Keep your phone nearby and connected." (`PhoneFailure.waiting`). Then it reads again by
   itself after 3 s, then twice as long each time, every 30 s at most (`WatchRetry`). A Send the phone didn't answer goes
