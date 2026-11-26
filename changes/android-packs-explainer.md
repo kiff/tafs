@@ -1,0 +1,1 @@
+- **Android: Plan & usage says what credit packs are for.** Above the packs, a line says they're for when a month's credits run out, add credits once and never expire, as on iPhone. See [The Android app](docs/android-app.md).
