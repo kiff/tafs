@@ -1,0 +1,1 @@
+- **Android: every time of day follows the phone's 12- or 24-hour clock.** The decision line under a held call, "next run at" and "halted since" now match the chat's own stamps, so a screen never shows "11:21 PM" beside "23:22" (kiff/tafs#2195; docs/chat.md).

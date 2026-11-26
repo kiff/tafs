@@ -290,6 +290,8 @@ class MainActivity : FragmentActivity() {
 
   override fun onResume() {
     super.onResume()
+    // The clock setting may have changed while tafs was away.
+    bot.tafs.app.model.AccountTime.is24Hour = android.text.format.DateFormat.is24HourFormat(this)
     // Back from Android's notification settings, where a dialog sent the person: alerts turn on if they're allowed now.
     lifecycleScope.launch { app.model.recheckAlerts() }
     app.vendorSignIn.resumed(lifecycleScope)
