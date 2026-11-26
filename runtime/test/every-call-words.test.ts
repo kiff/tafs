@@ -20,6 +20,21 @@ describe("the words that say every call asks, in every app language", () => {
     });
   }
 
+  // A figure in the script's own digits is a figure, and a clause ends at the script's own punctuation (، ؛ ؟ ۔ । ॥).
+  it("reads a figure in each script's own digits, and stops a clause at each script's own punctuation", () => {
+    for (const text of [
+      "كل استرداد فوق ٥ يورو يسألك أولاً.", "۵ یورو سے زیادہ ہر رقم کی واپسی آپ سے پوچھتی ہے۔",
+      "५ € से ऊपर का हर रिफ़ंड आपसे पूछता है।", "हर ५ € से ऊपर का रिफ़ंड आपसे पूछता है।",
+      "५ यूरोभन्दा माथिको हरेक फिर्ता तपाईंलाई सोध्छ।", "৫ ইউরোর বেশি প্রতিটি রিফান্ড আপনাকে জিজ্ঞাসা করে।",
+      "５ユーロを超えるすべての返金はあなたに確認します。", "超過５歐元的每筆退款都需要您的核准。",
+      "การคืนเงินทุกรายการที่เกิน ๕ ยูโรถามคุณก่อน", "រាល់ការសងប្រាក់លើស ៥ អឺរ៉ូសួរអ្នក", "ທຸກການຄືນເງິນເກີນ ໕ ເອີໂຣຖາມທ່ານ",
+    ]) expect(saysEveryCallAsks(text), text).toBe(false);
+    for (const text of [
+      "प्रति दिन 50 € तक। हर रिफ़ंड पहले आपसे पूछता है।", "روزانہ 50 یورو تک۔ ہر رقم کی واپسی آپ سے پوچھتی ہے۔",
+      "حتى 50 يورو يوميًا، وكل استرداد يسألك أولاً.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(true);
+  });
+
   it("keeps the eight languages' figure cases as they were", () => {
     for (const text of [
       "Every refund over 50 EUR asks you first.", "Each refund past €5 waits for your approval.",
