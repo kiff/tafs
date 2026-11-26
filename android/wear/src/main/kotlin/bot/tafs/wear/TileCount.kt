@@ -1,12 +1,12 @@
 package bot.tafs.wear
 
 /**
- * The one thing the watch keeps on disk (docs/watch-wear.md): Needs you's count and when it was read, for the tile. Never a
- * held call, an amount, a name or a taf. It's cleared when the phone says it's signed out, and whenever the watch is locked or
+ * The tile's count (docs/watch-wear.md): Needs you's count, when it was read and when each held call in it ends, kept encrypted
+ * ([EncryptedTileStore]). Never a held call's taf or words, an amount or a name. It's cleared when the phone says it's signed out, and whenever the watch is locked or
  * has no screen lock: Wear OS locks a watch taken off the wrist, so a count never shows off it.
  */
 class TileCount(private val store: Store) {
-  /** Where the count is kept: the watch's own preferences, or a map in a test. */
+  /** Where the count is kept: the watch's encrypted file, or a map in a test. */
   interface Store {
     fun read(): Pair<Int, Long>?
     fun write(count: Int, at: Long)
@@ -33,35 +33,65 @@ class TileCount(private val store: Store) {
       store.clear()
       return null
     }
-    // A held call whose hold has ended no longer counts, though the phone hasn't said so yet (row 29).
-    return store.read()?.let { (count, at) -> Shown((count - store.ends().count { it <= now }).coerceAtLeast(0), at) }
+    val (count, at) = store.read() ?: return null
+    // A held call whose hold has ended no longer counts, though the phone hasn't said so yet (row 29); its time goes with it.
+    val ends = store.ends()
+    val passed = ends.count { it <= now }
+    if (passed == 0) return Shown(count, at)
+    val left = (count - passed).coerceAtLeast(0)
+    store.write(left, at)
+    store.writeEnds(ends.filter { it > now })
+    return Shown(left, at)
   }
 }
 
-/** [TileCount.Store] in the watch's preferences: two numbers, nothing else. */
-class PreferencesTileStore(context: android.content.Context) : TileCount.Store {
-  private val prefs = context.getSharedPreferences("tafs.tile", android.content.Context.MODE_PRIVATE)
-
-  override fun read(): Pair<Int, Long>? =
-    if (prefs.contains(COUNT)) prefs.getInt(COUNT, 0) to prefs.getLong(AT, 0) else null
-
-  override fun write(count: Int, at: Long) {
-    prefs.edit().putInt(COUNT, count).putLong(AT, at).apply()
+/**
+ * [TileCount.Store] in the app's private files (`watch-tile.bin`), encrypted at rest as the Inbox is ([KeystoreCacheStore]: AES-GCM
+ * under the watch's Keystore key), as the Privacy page says of the tile: one JSON object, the count, when it was read and when each
+ * held call in it ends (bare times, no taf or call). What won't decrypt reads as nothing and is cleared. 0.4.9's plain
+ * `tafs.tile` preferences ([legacy]) are read once, written encrypted, and cleared.
+ */
+class EncryptedTileStore(private val text: EncryptedText, legacy: android.content.SharedPreferences? = null) : TileCount.Store {
+  init {
+    if (legacy != null && legacy.contains(COUNT)) {
+      save(legacy.getInt(COUNT, 0), legacy.getLong(AT, 0), emptyList())
+      legacy.edit().clear().commit()
+    }
   }
 
-  override fun ends(): List<Long> = prefs.getString(ENDS, null)?.split(',')?.mapNotNull { it.toLongOrNull() }.orEmpty()
+  private fun load(): Triple<Int, Long, List<Long>>? = runCatching {
+    val o = org.json.JSONObject(text.read() ?: return null)
+    val ends = o.optJSONArray(ENDS)?.let { a -> (0 until a.length()).map { a.getLong(it) } }.orEmpty()
+    Triple(o.getInt(COUNT), o.getLong(AT), ends)
+  }.getOrElse {
+    text.clear()
+    null
+  }
+
+  private fun save(count: Int, at: Long, ends: List<Long>) {
+    text.write(org.json.JSONObject().put(COUNT, count).put(AT, at).put(ENDS, org.json.JSONArray(ends)).toString())
+  }
+
+  override fun read(): Pair<Int, Long>? = load()?.let { (count, at, _) -> count to at }
+
+  override fun write(count: Int, at: Long) = save(count, at, load()?.third.orEmpty())
+
+  override fun ends(): List<Long> = load()?.third.orEmpty()
 
   override fun writeEnds(ends: List<Long>) {
-    prefs.edit().putString(ENDS, ends.joinToString(",")).apply()
+    val (count, at, _) = load() ?: return
+    save(count, at, ends)
   }
 
-  override fun clear() {
-    prefs.edit().clear().apply()
-  }
+  override fun clear() = text.clear()
 
-  private companion object {
-    const val COUNT = "count"
-    const val AT = "at"
-    const val ENDS = "ends"
+  companion object {
+    private const val COUNT = "count"
+    private const val AT = "at"
+    private const val ENDS = "ends"
+
+    /** The real one: encrypted under the watch's Keystore key, taking in 0.4.9's plain `tafs.tile` once. */
+    fun of(context: android.content.Context): EncryptedTileStore =
+      EncryptedTileStore(EncryptedText(KeystoreCacheStore(context, "watch-tile.bin")), context.getSharedPreferences("tafs.tile", android.content.Context.MODE_PRIVATE))
   }
 }

@@ -85,8 +85,10 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
   the watch face; the app asks for the watch's lock first, as any ask does. It shows the count only while the watch has a screen lock and is unlocked,
   decided at each draw the system asks for, not the instant the lock changes. Found locked (Wear OS locks a watch taken off
   the wrist) or with no lock at a draw, it shows tafs's name, and the count is forgotten. The
-  count and its time are **the only things the watch writes to disk** (`TileCount`, preferences `tafs.tile`); the phone saying
-  it's signed out clears them too (`TileCountTest`).
+  count, its time and, from 0.4.10, the end time of each held call in it are kept encrypted (`EncryptedTileStore`,
+  `watch-tile.bin`, AES-GCM under the watch's Keystore key, as the Inbox is; 0.4.9's plain `tafs.tile` preferences are taken in
+  once and cleared). A call whose end has passed leaves the count, and its time the file. The phone saying it's signed out
+  clears them too (`TileCountTest`, `KeptAtRestTest`).
 
 - **Ask tafs** (`WatchModel.voice`, `WatchRelay.ask`, tafs cloud's side in [watch-ask.md](watch-ask.md)). The watch never says
   "Coach": it asks tafs, and tafs cloud picks the one taf that can do it.
@@ -618,7 +620,7 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   `watch.held_channel`; a locked watch says only how many), and drops a call the phone no longer lists, as its own read now
   does. Each call carries its hold's end (`ends_at`): past it, the watch drops the call on its own clock, with no word from the
   phone (its line, its alert, which times out then, and its share of the tile's count). The end is used in memory, never
-  written to the Inbox file; the tile keeps the end times beside its count, so it can drop them with the app closed. Taken only
+  written to the Inbox file; the tile keeps the end times beside its count, encrypted, so it can drop them with the app closed. Taken only
   under the mark held, drawn only once this open has heard it. Refuse stays behind the watch's lock, Approve
   on your phone a hand-off; a Refuse the phone can't make from here says "Not refused. Refuse it on your phone."
   (`watch.refuse_on_phone`).
@@ -784,7 +786,7 @@ watch doesn't know is shown as Open on phone, never guessed at.
   `Res.s` and `Res.p` set each text value apart in a right-to-left language (U+2068 … U+2069, `watchlink`'s `Bidi`, the
   one rule both apps fill their lines through), so a Latin taf name or an amount keeps its own direction in the sentence
   (`RtlWordsTest`). A count is written in the language's own digits, as on the phone.
-- **What the watch keeps:** in v1, on disk, only Needs you's count and its time, for the tile (`tafs.tile`), cleared on
+- **What the watch keeps:** in v1, on disk, only Needs you's count and its time, for the tile (encrypted from 0.4.10, `watch-tile.bin`), cleared on
   sign-out and when the watch comes off the wrist; the lists, Your tafs and the asks and their results stay in memory. v2 (behind
   `WATCH_V2`) keeps more, all in the app's private storage:
   - `tafs.draft`: one message kept for later, its text, ask id and the ask it continues; gone on Delete, once it's sent and

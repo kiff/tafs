@@ -250,7 +250,7 @@ object KeptResults {
         marks = PreferencesMarkStore(context),
         cache = if (WATCH_V2) KeystoreCacheStore(context) else null,
         drafts = if (WATCH_V2) PreferencesDraftStore(context) else null,
-        tile = PreferencesTileStore(context),
+        tile = EncryptedTileStore.of(context),
         others = { VoiceFiles.dir(context).deleteRecursively() },
         // The Inbox's own rule: kept only on a watch with a screen lock, unlocked now. A locked watch gets the notification's
         // locked words only, and the app takes the answer in at its next open, from the phone's read.
