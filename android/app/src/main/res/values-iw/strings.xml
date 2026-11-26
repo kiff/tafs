@@ -225,10 +225,10 @@
     <string name="billing_not_restored">לא ניתן היה לשחזר רכישות: %1$s</string>
     <string name="billing_not_signed_in">לא נכנסת לחשבון.</string>
     <string name="billing_nothing_to_restore">אין מה לשחזר.</string>
-    <string name="billing_one_person_tafs_kiff_your">אדם אחד: tafs, עם קרדיטים כלולים בכל תקופה.</string>
+    <string name="billing_one_person_tafs_kiff_your">לאדם אחד: 500 קרדיטים בכל חודש לריצות של ה-tafs שלך, כולל Coach כדי להגדיר כ-4 משימות חדשות בחודש. הקרדיטים של חודש לא עוברים לחודש הבא; חבילות מוסיפות עוד כשהם נגמרים, והן לא פגות.</string>
     <string name="billing_only_someone_who_manages_account">רק מי שמנהל את החיוב של החשבון קונה קרדיטים.</string>
     <string name="billing_open_tafs_to_buy">יש לפתוח את tafs כדי לקנות.</string>
-    <string name="billing_pack_adds_credits_once_never">חבילה מוסיפה קרדיטים פעם אחת, והם לא פגים. הקרדיטים הכלולים בכל תקופה נצרכים קודם, ואחריהם אלה של החבילות.</string>
+    <string name="billing_pack_adds_credits_once_never">חבילות מיועדות למקרה שהקרדיטים של החודש נגמרים. חבילה מוסיפה קרדיטים פעם אחת, והם לא פגים. הקרדיטים של כל חודש נצרכים קודם, ואחריהם אלה של החבילות.</string>
     <string name="billing_pending_credits">הרכישה ממתינה לאישור. הקרדיטים שלך יתווספו כשהיא תושלם.</string>
     <string name="billing_plan_could_not_read_kiff">לא ניתן היה לקרוא את התוכנית מ-KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play לא יכול למכור בטלפון הזה, ולכן אי אפשר לקנות כאן כלום.</string>
@@ -252,7 +252,7 @@
     <string name="billing_solo_not_available_app_store">Solo לא זמין כרגע ב-App Store.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo הוא מנוי של %1$s אחד ב-%2$s, המחויב בחשבון Apple שלך. הוא מתחדש כל %3$s עד שתבטל.</string>
     <string name="billing_starts_free">מתחיל עם %1$s חינם.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs לאדם אחד, כל חודש.</string>
+    <string name="billing_tafs_kiff_one_person_every">לאדם אחד: 500 קרדיטים בחודש, כולל Coach.</string>
     <string name="billing_team_on_web">מעבר ל-Company ב-kiff.dev</string>
     <string name="billing_terms_use">תנאי שימוש</string>
     <string name="billing_test_purchase_credits">רכישות בדיקה לא מוסיפות קרדיטים לחשבון הזה.</string>

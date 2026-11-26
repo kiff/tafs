@@ -218,10 +218,10 @@
     <string name="billing_not_restored">შეძენების აღდგენა ვერ მოხერხდა: %1$s</string>
     <string name="billing_not_signed_in">არ ხართ შესული.</string>
     <string name="billing_nothing_to_restore">აღსადგენი არაფერია.</string>
-    <string name="billing_one_person_tafs_kiff_your">ერთი ადამიანი: tafs, თითოეულ პერიოდში ჩართული კრედიტებით.</string>
+    <string name="billing_one_person_tafs_kiff_your">ერთი ადამიანისთვის: ყოველთვიურად 500 კრედიტი თქვენი tafs-ის გაშვებებისთვის, Coach-ით, რომლითაც თვეში დაახლოებით 4 ახალი სამუშაოს დაყენება შეგიძლიათ. თვის კრედიტები შემდეგ თვეზე არ გადადის; როცა ამოიწურება, პაკეტები მეტს ამატებს, და მათ ვადა არასოდეს გასდის.</string>
     <string name="billing_only_someone_who_manages_account">კრედიტებს მხოლოდ ის ყიდულობს, ვინც ანგარიშის ბილინგს მართავს.</string>
     <string name="billing_open_tafs_to_buy">გახსენით tafs საყიდლად.</string>
-    <string name="billing_pack_adds_credits_once_never">პაკეტი კრედიტებს ერთხელ ამატებს და ისინი არასოდეს იწურება. ჯერ გამოიყენება ყოველი პერიოდის ჩართული კრედიტები, შემდეგ პაკეტებისა.</string>
+    <string name="billing_pack_adds_credits_once_never">პაკეტები განკუთვნილია იმ შემთხვევისთვის, როცა თვის კრედიტები ამოიწურება. პაკეტი კრედიტებს ერთხელ ამატებს, და მათ ვადა არასოდეს გასდის. ჯერ გამოიყენება ყოველი თვის კრედიტები, შემდეგ პაკეტებისა.</string>
     <string name="billing_pending_credits">შეძენა დამტკიცებას ელოდება. თქვენი კრედიტები დაემატება, როგორც კი დასრულდება.</string>
     <string name="billing_plan_could_not_read_kiff">გეგმა KIFF-დან ვერ წაიკითხა: %1$s</string>
     <string name="billing_play_cant_sell">Google Play-ს ამ ტელეფონზე გაყიდვა არ შეუძლია, ამიტომ აქ ვერაფერს იყიდით.</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo ახლა App Store-დან მიუწვდომელია.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo არის გამოწერა ერთი პერიოდისთვის (%1$s) %2$s-ად, რომელიც თქვენს Apple ანგარიშს ჩამოეჭრება. ახლდება ყოველ პერიოდში (%3$s), სანამ არ გააუქმებთ.</string>
     <string name="billing_starts_free">იწყება უფასოდ: %1$s.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs ერთი ადამიანისთვის, ყოველ თვე.</string>
+    <string name="billing_tafs_kiff_one_person_every">ერთი ადამიანისთვის: თვეში 500 კრედიტი, Coach-ით.</string>
     <string name="billing_team_on_web">მიიღეთ Company kiff.dev-ზე</string>
     <string name="billing_terms_use">გამოყენების პირობები</string>
     <string name="billing_test_purchase_credits">სატესტო შეძენები ამ ანგარიშს კრედიტებს არ უმატებს.</string>

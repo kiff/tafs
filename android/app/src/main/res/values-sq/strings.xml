@@ -218,10 +218,10 @@
     <string name="billing_not_restored">Blerjet nuk u rikthyen dot: %1$s</string>
     <string name="billing_not_signed_in">Nuk keni hyrë.</string>
     <string name="billing_nothing_to_restore">Nuk ka çfarë të rikthehet.</string>
-    <string name="billing_one_person_tafs_kiff_your">Një person: tafs, me kredite të përfshira në çdo periudhë.</string>
+    <string name="billing_one_person_tafs_kiff_your">Për një person: 500 kredite çdo muaj për ekzekutimet e tafs-ve tuaja, me Coach të përfshirë për të konfiguruar rreth 4 punë të reja në muaj. Kreditet e një muaji nuk kalojnë në muajin tjetër; paketat shtojnë më shumë kur mbarojnë, dhe nuk skadojnë kurrë.</string>
     <string name="billing_only_someone_who_manages_account">Kreditet i blen vetëm dikush që menaxhon faturimin e llogarisë.</string>
     <string name="billing_open_tafs_to_buy">Hapni tafs për të blerë.</string>
-    <string name="billing_pack_adds_credits_once_never">Një paketë shton kredite një herë, dhe ato nuk skadojnë kurrë. Fillimisht përdoren kreditet e përfshira të çdo periudhe, pastaj ato të paketave.</string>
+    <string name="billing_pack_adds_credits_once_never">Paketat janë për kur mbarojnë kreditet e muajit. Një paketë shton kredite një herë, dhe ato nuk skadojnë kurrë. Fillimisht përdoren kreditet e çdo muaji, pastaj ato të paketave.</string>
     <string name="billing_pending_credits">Blerja pret miratimin. Kreditet tuaja shtohen sapo të përfundojë.</string>
     <string name="billing_plan_could_not_read_kiff">Plani nuk u lexua dot nga KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play nuk mund të shesë në këtë telefon, ndaj këtu nuk mund të blihet asgjë.</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo nuk ofrohet tani nga App Store.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo është një abonim për një periudhë (%1$s) me %2$s, i ngarkuar në llogarinë tuaj Apple. Rinovohet çdo periudhë (%3$s) derisa ta anuloni.</string>
     <string name="billing_starts_free">Fillon me: %1$s falas.</string>
-    <string name="billing_tafs_kiff_one_person_every">Tafs për një person, çdo muaj.</string>
+    <string name="billing_tafs_kiff_one_person_every">Për një person: 500 kredite në muaj, me Coach të përfshirë.</string>
     <string name="billing_team_on_web">Merrni Company në kiff.dev</string>
     <string name="billing_terms_use">Kushtet e përdorimit</string>
     <string name="billing_test_purchase_credits">Blerjet provë nuk shtojnë kredite në këtë llogari.</string>

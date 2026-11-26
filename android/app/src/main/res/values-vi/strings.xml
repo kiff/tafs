@@ -211,10 +211,10 @@
     <string name="billing_not_restored">Không thể khôi phục các giao dịch mua: %1$s</string>
     <string name="billing_not_signed_in">Chưa đăng nhập.</string>
     <string name="billing_nothing_to_restore">Không có gì để khôi phục.</string>
-    <string name="billing_one_person_tafs_kiff_your">Một người: tafs, kèm tín dụng có sẵn mỗi kỳ.</string>
+    <string name="billing_one_person_tafs_kiff_your">Cho một người: 500 tín dụng mỗi tháng cho các lần chạy của taf, kèm Coach để thiết lập khoảng 4 việc mới mỗi tháng. Tín dụng của một tháng không chuyển sang tháng sau; gói thêm tín dụng khi bạn hết, và không bao giờ hết hạn.</string>
     <string name="billing_only_someone_who_manages_account">Chỉ người quản lý thanh toán của tài khoản mới mua được tín dụng.</string>
     <string name="billing_open_tafs_to_buy">Hãy mở tafs để mua.</string>
-    <string name="billing_pack_adds_credits_once_never">Một gói thêm tín dụng một lần và chúng không bao giờ hết hạn. Tín dụng có sẵn mỗi kỳ được dùng trước, rồi đến tín dụng của các gói.</string>
+    <string name="billing_pack_adds_credits_once_never">Gói dùng khi tín dụng của tháng đã hết. Một gói thêm tín dụng một lần và chúng không bao giờ hết hạn. Tín dụng của mỗi tháng được dùng trước, rồi đến tín dụng của các gói.</string>
     <string name="billing_pending_credits">Giao dịch mua đang chờ phê duyệt. Tín dụng của bạn được thêm khi hoàn tất.</string>
     <string name="billing_plan_could_not_read_kiff">Không thể đọc gói từ KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play không thể bán trên điện thoại này nên không thể mua gì ở đây.</string>
@@ -238,7 +238,7 @@
     <string name="billing_solo_not_available_app_store">Hiện Solo không có trên App Store.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo là gói đăng ký %2$s / %1$s, tính vào tài khoản Apple của bạn. Tự gia hạn vào cuối mỗi kỳ (%3$s) cho đến khi bạn hủy.</string>
     <string name="billing_starts_free">Bắt đầu với %1$s miễn phí.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs cho một người, mỗi tháng.</string>
+    <string name="billing_tafs_kiff_one_person_every">Cho một người: 500 tín dụng mỗi tháng, kèm Coach.</string>
     <string name="billing_team_on_web">Đăng ký Company trên kiff.dev</string>
     <string name="billing_terms_use">Điều khoản sử dụng</string>
     <string name="billing_test_purchase_credits">Giao dịch mua thử không cộng tín dụng vào tài khoản này.</string>

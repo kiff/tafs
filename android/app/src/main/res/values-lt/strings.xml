@@ -225,10 +225,10 @@
     <string name="billing_not_restored">Nepavyko atkurti pirkinių: %1$s</string>
     <string name="billing_not_signed_in">Neprisijungta.</string>
     <string name="billing_nothing_to_restore">Nėra ką atkurti.</string>
-    <string name="billing_one_person_tafs_kiff_your">Vienam asmeniui: tafs su kiekvienam laikotarpiui įskaičiuotais kreditais.</string>
+    <string name="billing_one_person_tafs_kiff_your">Vienam asmeniui: kas mėnesį 500 kreditų jūsų tafų paleidimams, o Coach įskaičiuotas – maždaug 4 naujiems darbams per mėnesį nustatyti. Mėnesio kreditai neperkeliami; paketai prideda daugiau, kai kreditai baigiasi, ir nenustoja galioti.</string>
     <string name="billing_only_someone_who_manages_account">Kreditus perka tik tas, kas tvarko paskyros atsiskaitymus.</string>
     <string name="billing_open_tafs_to_buy">Atidarykite tafs, kad nusipirktumėte.</string>
-    <string name="billing_pack_adds_credits_once_never">Paketas prideda kreditų vieną kartą, ir jie nenustoja galioti. Pirmiausia naudojami laikotarpio įskaičiuoti kreditai, paskui – paketų.</string>
+    <string name="billing_pack_adds_credits_once_never">Paketai skirti tada, kai baigiasi mėnesio kreditai. Paketas prideda kreditų vieną kartą, ir jie nenustoja galioti. Pirmiausia naudojami mėnesio kreditai, paskui – paketų.</string>
     <string name="billing_pending_credits">Pirkinys laukia patvirtinimo. Kreditai bus pridėti, kai jis bus užbaigtas.</string>
     <string name="billing_plan_could_not_read_kiff">Nepavyko nuskaityti plano iš KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play šiame telefone negali parduoti, todėl čia nieko nusipirkti negalima.</string>
@@ -252,7 +252,7 @@
     <string name="billing_solo_not_available_app_store">Solo šiuo metu App Store neprieinamas.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo – %2$s per %1$s prenumerata, mokama iš jūsų Apple paskyros. Ji atnaujinama kas %3$s, kol jos neatšauksite.</string>
     <string name="billing_starts_free">Pradžioje nemokamai: %1$s.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs vienam asmeniui, kas mėnesį.</string>
+    <string name="billing_tafs_kiff_one_person_every">Vienam asmeniui: 500 kreditų per mėnesį, Coach įskaičiuotas.</string>
     <string name="billing_team_on_web">Gauti Company svetainėje kiff.dev</string>
     <string name="billing_terms_use">Naudojimo sąlygos</string>
     <string name="billing_test_purchase_credits">Bandomieji pirkiniai neprideda kreditų prie šios paskyros.</string>

@@ -225,10 +225,10 @@
     <string name="billing_not_restored">Achizițiile nu au putut fi restaurate: %1$s</string>
     <string name="billing_not_signed_in">Nu sunteți conectat.</string>
     <string name="billing_nothing_to_restore">Nimic de restaurat.</string>
-    <string name="billing_one_person_tafs_kiff_your">O persoană: tafs, cu credite incluse în fiecare perioadă.</string>
+    <string name="billing_one_person_tafs_kiff_your">Pentru o persoană: 500 de credite în fiecare lună pentru rulările tafs-urilor dvs., cu Coach inclus pentru a configura aproximativ 4 sarcini noi pe lună. Creditele unei luni nu se reportează; pachetele adaugă mai multe când rămâneți fără credite și nu expiră niciodată.</string>
     <string name="billing_only_someone_who_manages_account">Doar cine gestionează facturarea contului cumpără credite.</string>
     <string name="billing_open_tafs_to_buy">Deschideți tafs pentru a cumpăra.</string>
-    <string name="billing_pack_adds_credits_once_never">Un pachet adaugă credite o singură dată, iar acestea nu expiră niciodată. Mai întâi se folosesc creditele incluse în fiecare perioadă, apoi cele din pachete.</string>
+    <string name="billing_pack_adds_credits_once_never">Pachetele sunt pentru când se termină creditele unei luni. Un pachet adaugă credite o singură dată, iar acestea nu expiră niciodată. Mai întâi se folosesc creditele fiecărei luni, apoi cele din pachete.</string>
     <string name="billing_pending_credits">Achiziția așteaptă aprobarea. Creditele se adaugă când se finalizează.</string>
     <string name="billing_plan_could_not_read_kiff">Planul nu a putut fi citit din KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play nu poate vinde pe acest telefon, așa că nu se poate cumpăra nimic aici.</string>
@@ -252,7 +252,7 @@
     <string name="billing_solo_not_available_app_store">Solo nu este disponibil momentan în App Store.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo este un abonament pe %1$s la %2$s, debitat din contul Apple. Se reînnoiește în fiecare %3$s până îl anulați.</string>
     <string name="billing_starts_free">Începe cu %1$s gratuit.</string>
-    <string name="billing_tafs_kiff_one_person_every">Tafs pentru o persoană, în fiecare lună.</string>
+    <string name="billing_tafs_kiff_one_person_every">Pentru o persoană: 500 de credite pe lună, Coach inclus.</string>
     <string name="billing_team_on_web">Obțineți Company pe kiff.dev</string>
     <string name="billing_terms_use">Condiții de utilizare</string>
     <string name="billing_test_purchase_credits">Achizițiile de test nu adaugă credite la acest cont.</string>

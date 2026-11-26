@@ -211,10 +211,10 @@
     <string name="billing_not_restored">購入を復元できませんでした：%1$s</string>
     <string name="billing_not_signed_in">サインインしていません。</string>
     <string name="billing_nothing_to_restore">復元するものはありません。</string>
-    <string name="billing_one_person_tafs_kiff_your">1人用：期間ごとにクレジットが含まれるtafs。</string>
+    <string name="billing_one_person_tafs_kiff_your">1人用：毎月500クレジットを taf の実行に使え、Coach も含まれていて毎月約4件の新しい仕事をセットアップできます。その月のクレジットは繰り越されません。足りなくなったらパックで追加でき、パックに有効期限はありません。</string>
     <string name="billing_only_someone_who_manages_account">クレジットを購入できるのは、アカウントの請求を管理する人だけです。</string>
     <string name="billing_open_tafs_to_buy">購入するにはtafsを開いてください。</string>
-    <string name="billing_pack_adds_credits_once_never">パックはクレジットを1回追加し、有効期限はありません。各期間に含まれるクレジットを先に使い、その後パックのクレジットを使います。</string>
+    <string name="billing_pack_adds_credits_once_never">パックは、その月のクレジットを使い切ったときのためのものです。パックはクレジットを1回追加し、有効期限はありません。毎月のクレジットを先に使い、その後パックのクレジットを使います。</string>
     <string name="billing_pending_credits">購入は承認待ちです。完了するとクレジットが追加されます。</string>
     <string name="billing_plan_could_not_read_kiff">KIFFからプランを読み込めませんでした：%1$s</string>
     <string name="billing_play_cant_sell">このスマートフォンではGoogle Playが販売できないため、ここでは何も購入できません。</string>
@@ -238,7 +238,7 @@
     <string name="billing_solo_not_available_app_store">現在、App StoreではSoloをご利用いただけません。</string>
     <string name="billing_solo_subscription_one_charged_your">Soloは%2$sの%1$s単位のサブスクリプションで、Apple IDに請求されます。解約するまで%3$sごとに更新されます。</string>
     <string name="billing_starts_free">%1$s無料で始まります。</string>
-    <string name="billing_tafs_kiff_one_person_every">1人用のtafs、毎月。</string>
+    <string name="billing_tafs_kiff_one_person_every">1人用：毎月500クレジット、Coach付き。</string>
     <string name="billing_team_on_web">kiff.devでCompanyを始める</string>
     <string name="billing_terms_use">利用規約</string>
     <string name="billing_test_purchase_credits">テスト購入ではこのアカウントにクレジットは追加されません。</string>

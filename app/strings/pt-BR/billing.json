@@ -4,9 +4,12 @@
   "billing.contact_support": "O KIFF não consegue adicionar esta compra a esta conta. Você pagou por ela, então entre em contato com o suporte em support@kiff.dev e resolveremos isso.",
   "billing.conversation_goes_plan_tools_being": "À medida que a conversa avança, o plano, os apps a conectar e o Card do taf aparecem aqui.",
   "billing.not_signed_in": "Você não entrou na sua conta.",
+  "billing.one_person_tafs_kiff_your": "Para uma pessoa: 500 créditos todo mês para as execuções dos seus tafs, com o Coach incluído para configurar cerca de 4 trabalhos novos por mês. Os créditos de um mês não passam para o seguinte; os pacotes adicionam mais quando eles acabam, e nunca expiram.",
   "billing.only_someone_who_manages_account": "Só quem gerencia o faturamento da conta compra créditos.",
+  "billing.pack_adds_credits_once_never": "Os pacotes são para quando os créditos de um mês acabam. Um pacote adiciona créditos uma vez, e eles nunca expiram. Os créditos de cada mês são usados primeiro, depois os dos pacotes.",
   "billing.pending_credits": "A compra está aguardando aprovação. Os seus créditos são adicionados quando ela for concluída.",
   "billing.play_unreachable": "Não foi possível contatar o Google Play. Tente novamente.",
   "billing.solo_subscription_one_charged_your": "O Solo é uma assinatura por {period}, a {price}, cobrada na sua conta Apple. É renovada a cada {period_2} até você cancelar.",
+  "billing.tafs_kiff_one_person_every": "Para uma pessoa: 500 créditos por mês, Coach incluído.",
   "billing.team_on_web": "Assinar o Company em kiff.dev"
 }

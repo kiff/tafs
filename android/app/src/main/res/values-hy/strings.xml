@@ -218,10 +218,10 @@
     <string name="billing_not_restored">Գնումները չկարողացան վերականգնվել՝ %1$s</string>
     <string name="billing_not_signed_in">Մուտք գործած չեք։</string>
     <string name="billing_nothing_to_restore">Վերականգնելու ոչինչ չկա։</string>
-    <string name="billing_one_person_tafs_kiff_your">Մեկ մարդ․ tafs՝ յուրաքանչյուր ժամանակահատվածում ներառված կրեդիտներով։</string>
+    <string name="billing_one_person_tafs_kiff_your">Մեկ մարդու համար՝ ամեն ամիս 500 կրեդիտ ձեր tafs-երի գործարկումների համար, իսկ Coach-ը ներառված է՝ ամսական մոտ 4 նոր աշխատանք կարգավորելու համար։ Ամսվա կրեդիտները հաջորդ ամիս չեն փոխանցվում, իսկ երբ վերջանում են, փաթեթներն ավելացնում են ևս, և դրանք երբեք չեն սպառվում։</string>
     <string name="billing_only_someone_who_manages_account">Կրեդիտներ գնում է միայն նա, ով կառավարում է հաշվի վճարումները։</string>
     <string name="billing_open_tafs_to_buy">Բացեք tafs-ը՝ գնելու համար։</string>
-    <string name="billing_pack_adds_credits_once_never">Փաթեթը կրեդիտներ է ավելացնում մեկ անգամ, և դրանք երբեք չեն սպառվում։ Առաջինը օգտագործվում են յուրաքանչյուր ժամանակահատվածի ներառված կրեդիտները, ապա՝ փաթեթներինը։</string>
+    <string name="billing_pack_adds_credits_once_never">Փաթեթները նախատեսված են այն դեպքի համար, երբ ամսվա կրեդիտները վերջանում են։ Փաթեթը կրեդիտներ է ավելացնում մեկ անգամ, և դրանք երբեք չեն սպառվում։ Առաջինը օգտագործվում են յուրաքանչյուր ամսվա կրեդիտները, ապա՝ փաթեթներինը։</string>
     <string name="billing_pending_credits">Գնումը սպասում է հաստատման։ Ձեր կրեդիտները կավելանան, հենց ավարտվի։</string>
     <string name="billing_plan_could_not_read_kiff">Պլանը չկարողացավ կարդացվել KIFF-ից՝ %1$s</string>
     <string name="billing_play_cant_sell">Google Play-ը չի կարող վաճառել այս հեռախոսում, ուստի այստեղ ոչինչ չի կարելի գնել։</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo-ն հիմա հասանելի չէ App Store-ից։</string>
     <string name="billing_solo_subscription_one_charged_your">Solo-ն բաժանորդագրություն է մեկ ժամանակահատվածով (%1$s) %2$s-ով, որը գանձվում է ձեր Apple հաշվից։ Նորացվում է յուրաքանչյուր ժամանակահատվածում (%3$s), մինչև չեղարկեք։</string>
     <string name="billing_starts_free">Սկսվում է անվճար՝ %1$s։</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs մեկ մարդու համար, ամեն ամիս։</string>
+    <string name="billing_tafs_kiff_one_person_every">Մեկ մարդու համար՝ ամսական 500 կրեդիտ, Coach-ը ներառված է։</string>
     <string name="billing_team_on_web">Ստացեք Company-ն kiff.dev-ում</string>
     <string name="billing_terms_use">Օգտագործման պայմաններ</string>
     <string name="billing_test_purchase_credits">Փորձնական գնումները կրեդիտներ չեն ավելացնում այս հաշվին։</string>

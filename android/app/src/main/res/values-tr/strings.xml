@@ -218,10 +218,10 @@
     <string name="billing_not_restored">Satın almalar geri yüklenemedi: %1$s</string>
     <string name="billing_not_signed_in">Oturum açılmadı.</string>
     <string name="billing_nothing_to_restore">Geri yüklenecek bir şey yok.</string>
-    <string name="billing_one_person_tafs_kiff_your">Bir kişi: tafs, her dönem dahil kredilerle.</string>
+    <string name="billing_one_person_tafs_kiff_your">Bir kişi için: taf\'larınızın çalıştırmaları için her ay 500 kredi; Coach da dahildir ve ayda yaklaşık 4 yeni işi kurmaya yeter. Bir ayın kredileri devretmez; krediniz bittiğinde paketler daha fazlasını ekler ve süreleri hiç dolmaz.</string>
     <string name="billing_only_someone_who_manages_account">Kredileri yalnızca hesabın faturalandırmasını yöneten biri satın alır.</string>
     <string name="billing_open_tafs_to_buy">Satın almak için tafs\'ı açın.</string>
-    <string name="billing_pack_adds_credits_once_never">Bir paket bir kez kredi ekler ve bu krediler asla sona ermez. Önce her dönemin dahil kredileri, sonra paketlerinki kullanılır.</string>
+    <string name="billing_pack_adds_credits_once_never">Paketler, bir ayın kredileri bittiğinde içindir. Bir paket bir kez kredi ekler ve bu krediler asla sona ermez. Önce her ayın kredileri, sonra paketlerinki kullanılır.</string>
     <string name="billing_pending_credits">Satın alma onay bekliyor. Tamamlanır tamamlanmaz kredileriniz eklenir.</string>
     <string name="billing_plan_could_not_read_kiff">Plan KIFF\'ten okunamadı: %1$s</string>
     <string name="billing_play_cant_sell">Google Play bu telefonda satış yapamıyor, bu yüzden burada hiçbir şey satın alınamaz.</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo şu anda App Store\'dan kullanılamıyor.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo, %2$s / %1$s tutarında bir aboneliktir ve Apple hesabınızdan tahsil edilir. Siz iptal edene kadar her dönem sonunda (%3$s) yenilenir.</string>
     <string name="billing_starts_free">%1$s ücretsiz başlar.</string>
-    <string name="billing_tafs_kiff_one_person_every">Bir kişi için tafs, her ay.</string>
+    <string name="billing_tafs_kiff_one_person_every">Bir kişi için: ayda 500 kredi, Coach dahil.</string>
     <string name="billing_team_on_web">kiff.dev\'de Company\'ye geçin</string>
     <string name="billing_terms_use">Kullanım Şartları</string>
     <string name="billing_test_purchase_credits">Test satın almaları bu hesaba kredi eklemez.</string>

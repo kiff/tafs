@@ -218,10 +218,10 @@
     <string name="billing_not_restored">Não foi possível restaurar as compras: %1$s</string>
     <string name="billing_not_signed_in">Sem sessão iniciada.</string>
     <string name="billing_nothing_to_restore">Não há compras para restaurar.</string>
-    <string name="billing_one_person_tafs_kiff_your">Uma pessoa: tafs, com créditos incluídos em cada período.</string>
+    <string name="billing_one_person_tafs_kiff_your">Para uma pessoa: 500 créditos todos os meses para as execuções dos seus tafs, com o Coach incluído para configurar cerca de 4 novos trabalhos por mês. Os créditos de um mês não passam para o seguinte; os pacotes acrescentam mais quando ficar sem eles, e nunca expiram.</string>
     <string name="billing_only_someone_who_manages_account">Só quem gere a faturação da conta compra créditos.</string>
     <string name="billing_open_tafs_to_buy">Abra o tafs para comprar.</string>
-    <string name="billing_pack_adds_credits_once_never">Um pacote adiciona créditos uma vez, e estes nunca expiram. Os créditos incluídos em cada período são usados primeiro, depois os dos pacotes.</string>
+    <string name="billing_pack_adds_credits_once_never">Os pacotes são para quando os créditos de um mês se esgotam. Um pacote adiciona créditos uma vez, e estes nunca expiram. Os créditos de cada mês são usados primeiro, depois os dos pacotes.</string>
     <string name="billing_pending_credits">A compra está à espera de aprovação. Os seus créditos são adicionados quando estiver concluída.</string>
     <string name="billing_plan_could_not_read_kiff">Não foi possível ler o plano a partir do KIFF: %1$s</string>
     <string name="billing_play_cant_sell">O Google Play não pode vender neste telefone, por isso não é possível comprar nada aqui.</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">O Solo não está disponível na App Store neste momento.</string>
     <string name="billing_solo_subscription_one_charged_your">O Solo é uma subscrição por %1$s, a %2$s, cobrada na sua conta Apple. Renova-se a cada %3$s até a cancelar.</string>
     <string name="billing_starts_free">Começa com %1$s grátis.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs para uma pessoa, todos os meses.</string>
+    <string name="billing_tafs_kiff_one_person_every">Para uma pessoa: 500 créditos por mês, Coach incluído.</string>
     <string name="billing_team_on_web">Obter o Company em kiff.dev</string>
     <string name="billing_terms_use">Termos de Utilização</string>
     <string name="billing_test_purchase_credits">As compras de teste não adicionam créditos a esta conta.</string>

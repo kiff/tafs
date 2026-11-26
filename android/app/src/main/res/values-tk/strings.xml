@@ -218,10 +218,10 @@
     <string name="billing_not_restored">Satyn almalar dikeldilip bilinmedi: %1$s</string>
     <string name="billing_not_signed_in">Girilmedi.</string>
     <string name="billing_nothing_to_restore">Dikeltmäge hiç zat ýok.</string>
-    <string name="billing_one_person_tafs_kiff_your">Bir adam: tafs, her döwürde goşulan kredit bilen.</string>
+    <string name="billing_one_person_tafs_kiff_your">Bir adam üçin: tafs-laryňyzyň işlemeleri üçin her aý 500 kredit, aýda takmynan 4 täze işi sazlamak üçin Coach hem goşulan. Aýyň kredidi indiki aýa geçmeýär; gutaranda paketler has köp goşýar we olaryň möhleti hiç haçan gutarmaýar.</string>
     <string name="billing_only_someone_who_manages_account">Kredit diňe hasabyň töleglerini dolandyrýan adam satyn alyp biler.</string>
     <string name="billing_open_tafs_to_buy">Satyn almak üçin tafs-y açyň.</string>
-    <string name="billing_pack_adds_credits_once_never">Paket kredidi bir gezek goşýar we olaryň möhleti hiç haçan gutarmaýar. Her döwrüň goşulan kredidi ilki ulanylýar, soňra paketleriňki.</string>
+    <string name="billing_pack_adds_credits_once_never">Paketler aýyň kredidi gutaranda üçin. Paket kredidi bir gezek goşýar we olaryň möhleti hiç haçan gutarmaýar. Her aýyň kredidi ilki ulanylýar, soňra paketleriňki.</string>
     <string name="billing_pending_credits">Satyn alma tassyklama garaşýar. Ol gutarandan soň kreditleriňiz goşulýar.</string>
     <string name="billing_plan_could_not_read_kiff">Meýilnama KIFF-den okalyp bilinmedi: %1$s</string>
     <string name="billing_play_cant_sell">Google Play bu telefonda satyp bilmeýär, şonuň üçin bu ýerde hiç zat satyn alyp bolmaýar.</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo häzir App Store-dan elýeterli däl.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo %2$s bahadan bir %1$s abunadyr, Apple hasabyňyzdan alynýar. Ol siz ýatyrýançaňyz her %3$s täzelenýär.</string>
     <string name="billing_starts_free">%1$s mugt başlaýar.</string>
-    <string name="billing_tafs_kiff_one_person_every">Bir adam üçin tafs, her aý.</string>
+    <string name="billing_tafs_kiff_one_person_every">Bir adam üçin: aýda 500 kredit, Coach goşulan.</string>
     <string name="billing_team_on_web">Company-ni kiff.dev-de alyň</string>
     <string name="billing_terms_use">Ulanyş şertleri</string>
     <string name="billing_test_purchase_credits">Synag satyn almalary bu hasaba kredit goşmaýar.</string>

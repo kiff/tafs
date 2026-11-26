@@ -218,10 +218,10 @@
     <string name="billing_not_restored">Alışlar bərpa edilə bilmədi: %1$s</string>
     <string name="billing_not_signed_in">Daxil olmamısınız.</string>
     <string name="billing_nothing_to_restore">Bərpa ediləcək heç nə yoxdur.</string>
-    <string name="billing_one_person_tafs_kiff_your">Bir nəfər: tafs, hər dövrə daxil olan kreditlərlə.</string>
+    <string name="billing_one_person_tafs_kiff_your">Bir nəfər üçün: tafs-larınızın işləri üçün hər ay 500 kredit, ayda təxminən 4 yeni iş qurmaq üçün Coach da daxildir. Ayın kreditləri növbəti aya keçmir; kreditlər bitəndə paketlər daha çox əlavə edir və onların müddəti heç vaxt bitmir.</string>
     <string name="billing_only_someone_who_manages_account">Kreditləri yalnız hesabın ödənişlərini idarə edən alır.</string>
     <string name="billing_open_tafs_to_buy">Almaq üçün tafs-ı açın.</string>
-    <string name="billing_pack_adds_credits_once_never">Paket kreditləri bir dəfə əlavə edir və onlar heç vaxt bitmir. Əvvəlcə hər dövrün daxil olan kreditləri, sonra paketlərinki istifadə olunur.</string>
+    <string name="billing_pack_adds_credits_once_never">Paketlər ayın kreditləri bitəndə üçündür. Paket kreditləri bir dəfə əlavə edir və onların müddəti heç vaxt bitmir. Əvvəlcə hər ayın kreditləri, sonra paketlərinki istifadə olunur.</string>
     <string name="billing_pending_credits">Alış təsdiq gözləyir. Kreditləriniz bitən kimi əlavə olunur.</string>
     <string name="billing_plan_could_not_read_kiff">Plan KIFF-dən oxuna bilmədi: %1$s</string>
     <string name="billing_play_cant_sell">Google Play bu telefonda satış edə bilmir, ona görə burada heç nə alına bilməz.</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo hazırda App Store-dan mövcud deyil.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo bir dövr (%1$s) üçün %2$s məbləğində abunəlikdir, Apple hesabınızdan tutulur. Siz ləğv edənə qədər hər dövr (%3$s) yenilənir.</string>
     <string name="billing_starts_free">Pulsuz başlayır: %1$s.</string>
-    <string name="billing_tafs_kiff_one_person_every">Bir nəfər üçün tafs, hər ay.</string>
+    <string name="billing_tafs_kiff_one_person_every">Bir nəfər üçün: ayda 500 kredit, Coach daxil.</string>
     <string name="billing_team_on_web">Company-ni kiff.dev-də əldə edin</string>
     <string name="billing_terms_use">İstifadə şərtləri</string>
     <string name="billing_test_purchase_credits">Sınaq alışları bu hesaba kredit əlavə etmir.</string>
