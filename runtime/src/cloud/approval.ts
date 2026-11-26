@@ -295,7 +295,9 @@ export const MONEY_UNBUILT: Record<MoneyUnbuilt, string> = {
   held_total: "its held limits have no total, and no refused day's total on the amount stands beside them for KIFF's own count: the rules need a day's total on the amount",
   count: "the rules count its calls, and a money tool is limited by its amounts: each call's and a day's total, no count of calls but 0 (every call asks)",
   asks_unnamed: "its rule says its calls ask the owner, but no figure asks, so no Card can hold it: if every call asks, the rules need a count of 0 a calendar day that asks (count, 0, calendar_day, over ask); if none asks, the rule's over is refuse",
-  every_call_unheld: "the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks, so calls under its figures would run unasked: the rules need that count (count, 0, calendar_day, over ask), beside its refused figures, or words that say which calls ask",
+  // The words, not the owner's rule, are what's off when the owner set a figure past which calls ask (an Eval, 26 Nov: "Every
+  // refund asks you first when it's over 5 EUR" was read as every call, Coach took the count of 0, and a €4 refund was held).
+  every_call_unheld: "the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks, so calls under its figures would run unasked. If the owner set a figure past which calls ask, keep their figure and rule: say the figure before the verb in the notice (\"every refund over €5 asks you first\", not \"every refund asks you first when it's over €5\"). Only if the owner said every call asks, the rules need that count (count, 0, calendar_day, over ask), beside its refused figures",
 };
 
 /** Said with every money refusal: what a refusal names is what the rules need, never a rule the owner can't have. */
