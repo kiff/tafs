@@ -801,7 +801,10 @@
     <string name="coach_prompt_connect_tools">დააკავშირეთ თქვენი აპები</string>
     <string name="coach_prompt_connect_tools_mac">დააკავშირეთ თქვენი აპები</string>
     <string name="coach_prompt_give_card">მიეცით Coach-ს მისი Card</string>
+    <string name="coach_prompt_give_card_why">მიეცით Coach-ს მისი Card, რომ იმოქმედოს მხოლოდ იმის ფარგლებში, რასაც დაამტკიცებთ.</string>
+    <string name="coach_prompt_give_card_why_mac">მიეცით Coach-ს მისი Card, რომ იმოქმედოს მხოლოდ იმის ფარგლებში, რასაც დაამტკიცებთ</string>
     <string name="coach_prompt_start">დაიწყეთ Coach</string>
+    <string name="coach_prompt_why">Coach-ს შეუძლია იმოქმედოს მხოლოდ იმის ფარგლებში, რასაც დაამტკიცებთ.</string>
     <string name="coach_puts_words_message_box">მის სიტყვებს აგდებს შეტყობინების ველში</string>
     <string name="coach_questions_answered_of">%1$s %2$s-დან უპასუხეს</string>
     <string name="coach_questions_chat_about">ისაუბრეთ ამაზე</string>

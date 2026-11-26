@@ -801,7 +801,10 @@
     <string name="coach_prompt_connect_tools">Свързване на приложенията ви</string>
     <string name="coach_prompt_connect_tools_mac">свързване на приложенията ви</string>
     <string name="coach_prompt_give_card">Даване на Card на Coach</string>
+    <string name="coach_prompt_give_card_why">Даване на Card на Coach, за да може да действа само в рамките на това, което одобрите.</string>
+    <string name="coach_prompt_give_card_why_mac">даване на Card на Coach, за да може да действа само в рамките на това, което одобрите</string>
     <string name="coach_prompt_start">Стартиране на Coach</string>
+    <string name="coach_prompt_why">Coach може да действа само в рамките на това, което одобрите.</string>
     <string name="coach_puts_words_message_box">Поставя думите си в полето за съобщение</string>
     <string name="coach_questions_answered_of">%1$s от %2$s с отговор</string>
     <string name="coach_questions_chat_about">Обсъждане</string>

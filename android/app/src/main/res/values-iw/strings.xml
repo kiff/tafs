@@ -834,7 +834,10 @@
     <string name="coach_prompt_connect_tools">חיבור האפליקציות שלך</string>
     <string name="coach_prompt_connect_tools_mac">חיבור האפליקציות שלך</string>
     <string name="coach_prompt_give_card">מתן ה-Card ל-Coach</string>
+    <string name="coach_prompt_give_card_why">מתן ה-Card ל-Coach, כדי שיוכל לפעול רק במסגרת מה שאישרת.</string>
+    <string name="coach_prompt_give_card_why_mac">מתן ה-Card ל-Coach, כדי שיוכל לפעול רק במסגרת מה שאישרת</string>
     <string name="coach_prompt_start">התחלת Coach</string>
+    <string name="coach_prompt_why">Coach יכול לפעול רק במסגרת מה שאישרת.</string>
     <string name="coach_puts_words_message_box">מכניס את המילים שלו לתיבת ההודעה</string>
     <string name="coach_questions_answered_of">נענו %1$s מתוך %2$s</string>
     <string name="coach_questions_chat_about">שיחה על זה</string>

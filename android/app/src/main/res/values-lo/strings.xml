@@ -768,7 +768,10 @@
     <string name="coach_prompt_connect_tools">ເຊື່ອມຕໍ່ແອັບຂອງທ່ານ</string>
     <string name="coach_prompt_connect_tools_mac">ເຊື່ອມຕໍ່ແອັບຂອງທ່ານ</string>
     <string name="coach_prompt_give_card">ໃຫ້ Coach ມີ Card ຂອງມັນ</string>
+    <string name="coach_prompt_give_card_why">ໃຫ້ Coach ມີ Card ຂອງມັນ ເພື່ອໃຫ້ມັນເຮັດໄດ້ພຽງແຕ່ພາຍໃນສິ່ງທີ່ທ່ານອະນຸມັດ.</string>
+    <string name="coach_prompt_give_card_why_mac">ໃຫ້ Coach ມີ Card ຂອງມັນ ເພື່ອໃຫ້ມັນເຮັດໄດ້ພຽງແຕ່ພາຍໃນສິ່ງທີ່ທ່ານອະນຸມັດ</string>
     <string name="coach_prompt_start">ເລີ່ມ Coach</string>
+    <string name="coach_prompt_why">Coach ເຮັດໄດ້ພຽງແຕ່ພາຍໃນສິ່ງທີ່ທ່ານອະນຸມັດ.</string>
     <string name="coach_puts_words_message_box">ໃສ່ຄຳເວົ້າຂອງມັນໃນຊ່ອງຂໍ້ຄວາມ</string>
     <string name="coach_questions_answered_of">ຕອບແລ້ວ %1$s ຈາກ %2$s</string>
     <string name="coach_questions_chat_about">ສົນທະນາກ່ຽວກັບສິ່ງນີ້</string>

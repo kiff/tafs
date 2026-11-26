@@ -768,7 +768,10 @@
     <string name="coach_prompt_connect_tools">앱 연결</string>
     <string name="coach_prompt_connect_tools_mac">앱 연결</string>
     <string name="coach_prompt_give_card">Coach에게 Card 주기</string>
+    <string name="coach_prompt_give_card_why">승인한 범위 안에서만 움직일 수 있도록 Coach에게 Card를 줍니다.</string>
+    <string name="coach_prompt_give_card_why_mac">승인한 범위 안에서만 움직일 수 있도록 Coach에게 Card 주기</string>
     <string name="coach_prompt_start">Coach 시작</string>
+    <string name="coach_prompt_why">Coach는 승인한 범위 안에서만 움직일 수 있습니다.</string>
     <string name="coach_puts_words_message_box">메시지 입력란에 문구를 넣습니다</string>
     <string name="coach_questions_answered_of">%2$s개 중 %1$s개 답변함</string>
     <string name="coach_questions_chat_about">이것에 대해 채팅</string>

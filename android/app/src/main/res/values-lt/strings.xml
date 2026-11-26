@@ -834,7 +834,10 @@
     <string name="coach_prompt_connect_tools">Prijunkite savo programėles</string>
     <string name="coach_prompt_connect_tools_mac">prijunkite savo programėles</string>
     <string name="coach_prompt_give_card">Suteikite Coach jo Card</string>
+    <string name="coach_prompt_give_card_why">Suteikite Coach jo Card, kad jis galėtų veikti tik tiek, kiek patvirtinate.</string>
+    <string name="coach_prompt_give_card_why_mac">suteikite Coach jo Card, kad jis galėtų veikti tik tiek, kiek patvirtinate</string>
     <string name="coach_prompt_start">Paleisti Coach</string>
+    <string name="coach_prompt_why">Coach gali veikti tik tiek, kiek patvirtinate.</string>
     <string name="coach_puts_words_message_box">Įrašo savo žodžius į žinutės laukelį</string>
     <string name="coach_questions_answered_of">Atsakyta %1$s iš %2$s</string>
     <string name="coach_questions_chat_about">Aptarti pokalbyje</string>

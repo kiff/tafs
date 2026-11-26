@@ -834,7 +834,10 @@
     <string name="coach_prompt_connect_tools">Připojit vaše aplikace</string>
     <string name="coach_prompt_connect_tools_mac">připojit vaše aplikace</string>
     <string name="coach_prompt_give_card">Dát Coachovi jeho Card</string>
+    <string name="coach_prompt_give_card_why">Dát Coachovi jeho Card, aby mohl jednat jen v rámci toho, co schválíte.</string>
+    <string name="coach_prompt_give_card_why_mac">dát Coachovi jeho Card, aby mohl jednat jen v rámci toho, co schválíte</string>
     <string name="coach_prompt_start">Spustit Coache</string>
+    <string name="coach_prompt_why">Coach může jednat jen v rámci toho, co schválíte.</string>
     <string name="coach_puts_words_message_box">Vloží jeho slova do pole zprávy</string>
     <string name="coach_questions_answered_of">Zodpovězeno %1$s z %2$s</string>
     <string name="coach_questions_chat_about">Probrat to v chatu</string>

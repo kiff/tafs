@@ -834,7 +834,10 @@
     <string name="coach_prompt_connect_tools">Conectați-vă aplicațiile</string>
     <string name="coach_prompt_connect_tools_mac">conectați-vă aplicațiile</string>
     <string name="coach_prompt_give_card">Dați-i lui Coach Cardul său</string>
+    <string name="coach_prompt_give_card_why">Dați-i lui Coach Cardul său, ca să poată acționa doar în limitele a ceea ce aprobați.</string>
+    <string name="coach_prompt_give_card_why_mac">dați-i lui Coach Cardul său, ca să poată acționa doar în limitele a ceea ce aprobați</string>
     <string name="coach_prompt_start">Porniți Coach</string>
+    <string name="coach_prompt_why">Coach poate acționa doar în limitele a ceea ce aprobați.</string>
     <string name="coach_puts_words_message_box">Pune cuvintele în caseta de mesaj</string>
     <string name="coach_questions_answered_of">%1$s din %2$s cu răspuns</string>
     <string name="coach_questions_chat_about">Discutați despre asta</string>

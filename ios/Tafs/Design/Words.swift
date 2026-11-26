@@ -1518,8 +1518,14 @@ enum Words {
             static var connectToolsMac: String { Words.line("coach.prompt.connect_tools_mac") }
             /// Give Coach its Card
             static var giveCard: String { Words.line("coach.prompt.give_card") }
+            /// Give Coach its Card, so it can act only within what you approve.
+            static var giveCardWhy: String { Words.line("coach.prompt.give_card_why") }
+            /// give Coach its Card, so it can act only within what you approve
+            static var giveCardWhyMac: String { Words.line("coach.prompt.give_card_why_mac") }
             /// Start Coach
             static var start: String { Words.line("coach.prompt.start") }
+            /// Coach can act only within what you approve.
+            static var why: String { Words.line("coach.prompt.why") }
         }
         /// Puts its words in the message box
         static var putsWordsMessageBox: String { Words.line("coach.puts_words_message_box") }

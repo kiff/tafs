@@ -821,7 +821,10 @@ object Words {
       val connectTools: String get() = Res.s(R.string.coach_prompt_connect_tools)
       val connectToolsMac: String get() = Res.s(R.string.coach_prompt_connect_tools_mac)
       val giveCard: String get() = Res.s(R.string.coach_prompt_give_card)
+      val giveCardWhy: String get() = Res.s(R.string.coach_prompt_give_card_why)
+      val giveCardWhyMac: String get() = Res.s(R.string.coach_prompt_give_card_why_mac)
       val start: String get() = Res.s(R.string.coach_prompt_start)
+      val why: String get() = Res.s(R.string.coach_prompt_why)
     }
     val putsWordsMessageBox: String get() = Res.s(R.string.coach_puts_words_message_box)
     object Questions {

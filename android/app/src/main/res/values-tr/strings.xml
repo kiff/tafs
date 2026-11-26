@@ -801,7 +801,10 @@
     <string name="coach_prompt_connect_tools">Uygulamalarınızı bağlayın</string>
     <string name="coach_prompt_connect_tools_mac">uygulamalarınızı bağlayın</string>
     <string name="coach_prompt_give_card">Coach\'a Card\'ını verin</string>
+    <string name="coach_prompt_give_card_why">Yalnızca onayladığınız sınırlar içinde hareket edebilmesi için Coach\'a Card\'ını verin.</string>
+    <string name="coach_prompt_give_card_why_mac">yalnızca onayladığınız sınırlar içinde hareket edebilmesi için Coach\'a Card\'ını verin</string>
     <string name="coach_prompt_start">Coach\'u başlat</string>
+    <string name="coach_prompt_why">Coach yalnızca onayladığınız sınırlar içinde hareket edebilir.</string>
     <string name="coach_puts_words_message_box">Sözlerini mesaj kutusuna koyar</string>
     <string name="coach_questions_answered_of">%2$s sorudan %1$s yanıtlandı</string>
     <string name="coach_questions_chat_about">Bunu konuşun</string>
