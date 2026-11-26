@@ -148,7 +148,7 @@ object KeptResults {
    */
   fun needsYou(context: Context, kept: bot.tafs.watchlink.KeptNeedsYou, stores: Stores, now: Long = System.currentTimeMillis()) {
     needsYou?.let { return it(kept) }
-    if (stores.signedOut) return heldLog(HeldLog.skipped("watch kept nothing", "signed out on the watch"))
+    if (stores.signedOut) return heldLog(HeldLog.skipped(HeldLog.WATCH_KEPT_NOTHING, HeldLog.SIGNED_OUT_HERE))
     val inbox = stores.inbox?.takeIf { stores.secure }
     val fresh = inbox?.let { HeldCalls.fresh(it.read(), it.dismissed(), HeldCalls.live(kept.calls, now)) }
     if (stores.secure) {
@@ -157,7 +157,7 @@ object KeptResults {
     }
     NeedsYouTileService.update(context)
     HeldCalls.alert(context, kept.calls, fresh, now)
-    heldLog(HeldLog.line("watch kept (app closed)", kept.count, HeldCalls.live(kept.calls, now), now, "unlocked" to stores.secure, "new" to (fresh?.size ?: 0)))
+    heldLog(HeldLog.line(HeldLog.WATCH_KEPT, kept.count, HeldCalls.live(kept.calls, now), now, "unlocked" to stores.secure, "new" to (fresh?.size ?: 0)))
   }
 
   /** One line about held calls in logcat ([HeldLog]): counts and seconds only. */
@@ -225,7 +225,7 @@ object KeptResults {
       path == WatchLink.KEPT_TAFS -> bytes?.let(WatchLink::decodeKeptTafs)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { tafList(it, stores) }
       path == WatchLink.KEPT_NEEDS_YOU -> bytes?.let(WatchLink::decodeKeptNeedsYou)?.let { kept ->
         val taken = AccountMark.keptTaken(held, kept.mark)
-        heldLog(HeldLog.line("watch heard kept/needs-you", kept.count, kept.calls, System.currentTimeMillis(), "mark" to HeldLog.mark(held, kept.mark), "taken" to taken))
+        heldLog(HeldLog.line(HeldLog.WATCH_HEARD, kept.count, kept.calls, System.currentTimeMillis(), "mark" to HeldLog.mark(held, kept.mark), "taken" to taken))
         if (taken) needsYou(context, kept, stores)
       }
       WatchLink.keptChatTaf(path) != null -> bytes?.let(WatchLink::decodeKeptChat)?.takeIf { it.tafId == WatchLink.keptChatTaf(path) && AccountMark.keptTaken(held, it.mark) }?.let { chat(it.tafId, it.lines, stores) }

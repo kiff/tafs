@@ -92,7 +92,7 @@ class WatchRelay(
       is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief -> {
         val started = now()
         // A phone woken by the watch restores its session first, which reads tafs cloud and KIFF and can take longer than the
-        // watch waits (15 s measured on a Galaxy S23): it goes on in the background, and the watch hears "not now" in time and
+        // watch waits (15 s measured on a Galaxy S23): it goes on in the background, and the watch hears HeldLog.NOT_NOW in time and
         // keeps what it shows, rather than a timeout. The next ask finds it done.
         val restored = kotlinx.coroutines.withTimeoutOrNull(firstReadWaitMs) { Restored(signedIn()) }
           ?: return WatchReply.Failed(Words.Watch.openOnPhone)
@@ -104,15 +104,15 @@ class WatchRelay(
         val state = model.state.value
         when {
           state.mode != Mode.kiff -> WatchReply.SignedOut
-          // Nothing read yet: "not now", never an empty list or a count of 0 that the watch would draw as the truth.
+          // Nothing read yet: HeldLog.NOT_NOW, never an empty list or a count of 0 that the watch would draw as the truth.
           !state.listLoaded || state.listUnread -> WatchReply.Failed(Words.Watch.openOnPhone)
           request is WatchRequest.NeedsYou -> needsYou(state).also {
-            WatchNeedsYou.log(HeldLog.line("phone answered needs-you", it.count, it.calls, now()))
+            WatchNeedsYou.log(HeldLog.line(HeldLog.PHONE_ANSWERED, it.count, it.calls, now()))
           }
           request is WatchRequest.Brief -> brief(state).also { reply ->
             // With a brief, the watch draws it in Needs you's place: how many of the held calls it names is logged too.
             val named = (reply as? WatchReply.Brief)?.decisions?.count { it.holdId != null }
-            WatchNeedsYou.log(HeldLog.skipped("phone answered brief", if (reply is WatchReply.Brief) "a brief" else "none", "held" to state.held.size, "held_in_brief" to named))
+            WatchNeedsYou.log(HeldLog.skipped(HeldLog.PHONE_BRIEF, if (reply is WatchReply.Brief) HeldLog.A_BRIEF else HeldLog.NO_BRIEF, "held" to state.held.size, "held_in_brief" to named))
           }
           else -> tafs(state)
         }

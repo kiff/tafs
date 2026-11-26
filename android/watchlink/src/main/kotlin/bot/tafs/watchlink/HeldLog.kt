@@ -8,6 +8,21 @@ package bot.tafs.watchlink
 object HeldLog {
   const val TAG = "tafs.held"
 
+  // Each step's name, shared by both apps, so neither holds its own words for the log (they are never shown on a screen).
+  const val PHONE_PUT = "phone put kept/needs-you"
+  const val PHONE_PUT_NOTHING = "phone put nothing"
+  const val NOT_NOW = "not now"
+  const val PHONE_PUT_FAILED = "phone put failed"
+  const val PHONE_ANSWERED = "phone answered needs-you"
+  const val PHONE_BRIEF = "phone answered brief"
+  const val A_BRIEF = "a brief"
+  const val NO_BRIEF = "none"
+  const val WATCH_HEARD = "watch heard kept/needs-you"
+  const val WATCH_KEPT_NOTHING = "watch kept nothing"
+  const val SIGNED_OUT_HERE = "signed out on the watch"
+  const val WATCH_KEPT = "watch kept (app closed)"
+  const val WATCH_APP_TOOK = "watch app took"
+
   /**
    * `<step>: count=<n> calls=<n> ends_in_s=[<s>,…]` and any [notes] after it (`mark=held`, `secure=no`). A hold with no end (an
    * older phone) is `?`; one already ended is negative.

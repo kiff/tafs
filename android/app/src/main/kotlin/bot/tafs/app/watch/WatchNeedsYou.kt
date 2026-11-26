@@ -31,7 +31,7 @@ class WatchNeedsYou(
   /** The item to put for [state], or null: nothing read yet, signed out, the watch not served, or Needs you as last put. */
   @Synchronized fun changed(state: AppState): Pair<String, ByteArray>? {
     if (state.mode != Mode.kiff || !state.listLoaded || !state.watchServed) {
-      log(HeldLog.skipped("phone put nothing", "not now", "signed_in" to (state.mode == Mode.kiff), "read" to state.listLoaded, "watch_served" to state.watchServed, "held" to state.held.size))
+      log(HeldLog.skipped(HeldLog.PHONE_PUT_NOTHING, HeldLog.NOT_NOW, "signed_in" to (state.mode == Mode.kiff), "read" to state.listLoaded, "watch_served" to state.watchServed, "held" to state.held.size))
       return null
     }
     val needsYou = WatchRelay.needsYou(state)
@@ -42,7 +42,7 @@ class WatchNeedsYou(
     // person opens the call, shown while unlocked and never kept.
     val calls = needsYou.calls.map { it.copy(amount = null, reason = null) }
     val kept = KeptNeedsYou(now(), needsYou.count, needsYou.words, calls, mark()?.takeIf(WatchLink::isMark))
-    log(HeldLog.line("phone put kept/needs-you", kept.count, calls, kept.putAt, "mark" to (kept.mark != null)))
+    log(HeldLog.line(HeldLog.PHONE_PUT, kept.count, calls, kept.putAt, "mark" to (kept.mark != null)))
     return WatchLink.KEPT_NEEDS_YOU to WatchLink.encodeKept(kept)
   }
 
@@ -61,7 +61,7 @@ class WatchNeedsYou(
         }
         .collect { state ->
           changed(state)?.let { (path, data) ->
-            runCatching { keep.put(path, data) }.onFailure { log(HeldLog.skipped("phone put failed", it.javaClass.simpleName)) }
+            runCatching { keep.put(path, data) }.onFailure { log(HeldLog.skipped(HeldLog.PHONE_PUT_FAILED, it.javaClass.simpleName)) }
           }
         }
     }
