@@ -116,6 +116,15 @@ final class NeedsYouModel: ObservableObject {
         _ = await phone.reach(WatchRequest(.openOnPhone, made: clock(), hold: hold))
     }
 
+    /// Needs you as shown now: a held call past its end on this watch's own clock is left out, and out of the count, as the
+    /// Inbox leaves it (`InboxModel.took`), even before the phone's next push or read.
+    static func shown(_ needsYou: WatchNeedsYou, now: Date) -> WatchNeedsYou {
+        var shown = needsYou
+        shown.calls = needsYou.calls.filter { call in call.ends.map { $0 > now } ?? true }
+        shown.count = max(0, needsYou.count - (needsYou.calls.count - shown.calls.count))
+        return shown
+    }
+
     /// The app left the screen: what was read goes.
     func leave() {
         state = .loading

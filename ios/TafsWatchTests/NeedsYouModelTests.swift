@@ -80,6 +80,21 @@ final class NeedsYouModelTests: XCTestCase {
         XCTAssertEqual(phone.asked.count, 2, "put away: nothing read")
     }
 
+    /// Needs you as shown leaves out a held call past its end on the watch's own clock, and its count, as the Inbox does,
+    /// before the phone's next push or read. A call with no end from an older phone stays.
+    func testAHeldCallPastItsEndIsntShownOrCounted() {
+        let page = WatchNeedsYou(count: 4, calls: [
+            .init(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00", reason: "Over €150.00 each", answerBy: "10:51", ends: now + 300),
+            .init(id: "ce_2", taf: "Rae", what: "Refund order 4503, €90.00", reason: "Over €50.00 each", answerBy: "10:55", ends: now + 600),
+            .init(id: "ce_3", taf: "Rae", what: "Refund order 4504, €70.00", reason: "Over €50.00 each", answerBy: "11:00"),
+        ], at: now)
+        XCTAssertEqual(NeedsYouModel.shown(page, now: now), page)
+        let later = NeedsYouModel.shown(page, now: now + 301)
+        XCTAssertEqual(later.calls.map(\.id), ["ce_2", "ce_3"])
+        XCTAssertEqual(later.count, 3)
+        XCTAssertEqual(NeedsYouModel.shown(page, now: now + 601).count, 2)
+    }
+
     func testThePhoneOutOfReachIsSaidAsSuch() async {
         let model = NeedsYouModel(phone: Phone(nil), clock: { self.now }, lock: Unlocked())
         await model.load()

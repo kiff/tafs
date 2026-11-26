@@ -117,6 +117,11 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   - **The last turns:** the chat opens on the last six turns of the person's own chat with the taf (`taf_chat`), read
     through the phone from `GET /v1/tafs/{id}/conversation` for a taf it lists, messages only, each cut as an answer is.
     This visit's turns show below them, once. Nothing is kept on the watch.
+  - **Read more on a line from before this visit (row 10, as Wear OS's `line-full`):** a taf's cut line has Read more, with
+    View on phone still under it. One tap asks the phone for that message whole (`line_full`: the taf and the line's id,
+    `CoachModel.readMoreLine`). The phone reads the taf's chat with its own session and answers the taf's words only, never
+    the person's, at most 16 KB (`KeptWatchReading.wholeLine`). It's shown in place, once, and forgotten when the app leaves.
+    The person's own cut line, Coach's chat, or a phone that can't give it: "The rest is on your phone."
   - **"From your watch" on the phone (W11)** leaves out a message to a taf (`kind: "taf"`): it's already in
     that taf's own chat on the phone.
   - **The words:** `watch.paused_still_answers` ("Paused: its schedule is off. It still answers what you send.", true to
@@ -252,6 +257,8 @@ Nothing leaves the watch before Send:
   shows only while Needs you holds the call, in memory, and is never kept on the watch. Coach's answer comes in read, since
   the person saw it arrive, and is kept with its amounts taken out the same way (`WatchAmount.strip`, which the phone's
   summary uses too), so no line kept on the watch has an amount; on screen it shows whole, in memory. Coach's home counts the unread lines ("2 unread in Inbox"), and shows no line with none.
+- **Needs you on screen** leaves out a held call past its end on the watch's own clock, and its count, as the Inbox does,
+  before the phone's next push or read (`NeedsYouModel.shown`).
 - **Opened, it's read.** A held call shows whole while Needs you still holds it, with Refuse and Approve on your phone as Needs
   you has them; else "Already answered, or it ended.". Coach's answer shows whole.
 - **Approve on your phone** is a button wherever a held call is shown whole (Needs you, the Inbox, the brief's held call). It
