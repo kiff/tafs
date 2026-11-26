@@ -253,11 +253,11 @@ enum WatchOpen {
 /// answers nothing. Only Allow signs the watch in, by the id it asked with, under this phone's mark now.
 @MainActor
 enum WatchSignInAsk {
-    static let categoryID = "watch-sign-in"
-    static let allow = "watch-sign-in.allow"
-    static let deny = "watch-sign-in.deny"
+    nonisolated static let categoryID = "watch-sign-in"
+    nonisolated static let allow = "watch-sign-in.allow"
+    nonisolated static let deny = "watch-sign-in.deny"
     /// The `userInfo` key the watch's id goes under.
-    static let idKey = "watch_sign_in"
+    nonisolated static let idKey = "watch_sign_in"
 
     static func category() -> UNNotificationCategory {
         let allow = UNNotificationAction(identifier: allow, title: Words.Watch.signInAllow, options: [.authenticationRequired])
