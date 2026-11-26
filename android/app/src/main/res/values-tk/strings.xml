@@ -198,6 +198,7 @@
     <string name="billing_cancel_any_time_least_day">Islendik wagt, täzelenmeden azyndan bir gün öň, Apple hasabyňyzyň Abunalarynda ýatyryň.</string>
     <string name="billing_contact_support">KIFF bu satyn almany bu hasaba goşup bilmeýär. Siz ony tölediňiz, şonuň üçin support@kiff.dev salgysynda goldaw bilen habarlaşyň, biz ony çözeris.</string>
     <string name="billing_conversation_goes_plan_tools_being">Gürrüň dowam edende, meýilnama, birikdirilýän programmalar we taf-yň Card-y bu ýerde görünýär.</string>
+    <string name="billing_credits_buy">Kredit tafs-laryňyzyň işlemelerini tölemek üçin; täze zat ýok mahaly asuda barlag hiç birini ulanmaýar. Solo aýda takmynan 4 täze işi sazlamak üçin Coach-y öz içine alýar.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s gün</item>
         <item quantity="other">%1$s gün</item>
@@ -243,6 +244,7 @@
     <string name="billing_solo_free_then">%1$s mugt, soňra %2$s %3$s.</string>
     <string name="billing_solo_subscribe_for">%1$s bilen abuna boluň</string>
     <string name="billing_solo_not_available_app_store">Solo häzir App Store-dan elýeterli däl.</string>
+    <string name="billing_solo_on">Solo açyk: tafs-laryňyzyň işlemeleri üçin her aý 500 kredit, Coach goşulan.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo %2$s bahadan bir %1$s abunadyr, Apple hasabyňyzdan alynýar. Ol siz ýatyrýançaňyz her %3$s täzelenýär.</string>
     <string name="billing_starts_free">%1$s mugt başlaýar.</string>
     <string name="billing_tafs_kiff_one_person_every">Bir adam üçin: aýda 500 kredit, Coach goşulan.</string>

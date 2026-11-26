@@ -195,6 +195,7 @@
     <string name="billing_cancel_any_time_least_day">ຍົກເລີກໄດ້ທຸກເວລາ ຢ່າງໜ້ອຍໜຶ່ງມື້ກ່ອນມັນຕໍ່ອາຍຸ ໃນການສະໝັກຂອງບັນຊີ Apple ຂອງທ່ານ.</string>
     <string name="billing_contact_support">KIFF ເພີ່ມການຊື້ນີ້ໃສ່ບັນຊີນີ້ບໍ່ໄດ້. ທ່ານໄດ້ຈ່າຍເງິນແລ້ວ ສະນັ້ນຕິດຕໍ່ຝ່າຍສະໜັບສະໜູນທີ່ support@kiff.dev ແລ້ວພວກເຮົາຈະແກ້ໄຂ.</string>
     <string name="billing_conversation_goes_plan_tools_being">ເມື່ອການສົນທະນາດຳເນີນໄປ ແຜນ, ແອັບທີ່ກຳລັງເຊື່ອມຕໍ່ ແລະ Card ຂອງ taf ຈະສະແດງຢູ່ທີ່ນີ້.</string>
+    <string name="billing_credits_buy">ເຄຣດິດຈ່າຍສຳລັບການເຮັດວຽກຂອງ tafs ຂອງທ່ານ; ການກວດສອບແບບງຽບໆ ເມື່ອບໍ່ມີຫຍັງໃໝ່ ບໍ່ໃຊ້ເຄຣດິດເລີຍ. Solo ລວມ Coach ເພື່ອຕັ້ງວຽກໃໝ່ປະມານ 4 ວຽກຕໍ່ເດືອນ.</string>
     <plurals name="billing_length_days">
         <item quantity="other">%1$s ມື້</item>
     </plurals>
@@ -236,6 +237,7 @@
     <string name="billing_solo_free_then">ຟຣີ %1$s, ຈາກນັ້ນ %2$s ຕໍ່%3$s.</string>
     <string name="billing_solo_subscribe_for">ສະໝັກໃນລາຄາ %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo ບໍ່ມີຈາກ App Store ດຽວນີ້.</string>
+    <string name="billing_solo_on">Solo ເປີດແລ້ວ: 500 ເຄຣດິດທຸກເດືອນສຳລັບການເຮັດວຽກຂອງ tafs ຂອງທ່ານ, ລວມ Coach.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo ແມ່ນການສະໝັກໜຶ່ງ%1$s ລາຄາ %2$s ເກັບຈາກບັນຊີ Apple ຂອງທ່ານ. ມັນຕໍ່ອາຍຸທຸກ%3$s ຈົນກວ່າທ່ານຍົກເລີກ.</string>
     <string name="billing_starts_free">ເລີ່ມຟຣີ %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">ສຳລັບຄົນໜຶ່ງ: 500 ເຄຣດິດຕໍ່ເດືອນ, ລວມ Coach.</string>

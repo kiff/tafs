@@ -201,6 +201,7 @@
     <string name="billing_cancel_any_time_least_day">Atšaukite bet kada, ne vėliau kaip likus dienai iki atnaujinimo, savo Apple paskyros prenumeratose.</string>
     <string name="billing_contact_support">KIFF negali pridėti šio pirkinio prie šios paskyros. Už jį sumokėjote, todėl parašykite pagalbai adresu support@kiff.dev ir mes tai sutvarkysime.</string>
     <string name="billing_conversation_goes_plan_tools_being">Pokalbiui vykstant, čia rodomas planas, jungiamos programėlės ir taf Card.</string>
+    <string name="billing_credits_buy">Kreditais mokama už jūsų tafų paleidimus; rami patikra, kai nėra nieko naujo, nenaudoja nė vieno. Solo apima Coach, kad nustatytumėte maždaug 4 naujus darbus per mėnesį.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s diena</item>
         <item quantity="few">%1$s dienos</item>
@@ -250,6 +251,7 @@
     <string name="billing_solo_free_then">Nemokamai: %1$s, vėliau %2$s per %3$s.</string>
     <string name="billing_solo_subscribe_for">Prenumeruoti už %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo šiuo metu App Store neprieinamas.</string>
+    <string name="billing_solo_on">Solo įjungtas: kas mėnesį 500 kreditų jūsų tafų paleidimams, Coach įskaičiuotas.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo – %2$s per %1$s prenumerata, mokama iš jūsų Apple paskyros. Ji atnaujinama kas %3$s, kol jos neatšauksite.</string>
     <string name="billing_starts_free">Pradžioje nemokamai: %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">Vienam asmeniui: 500 kreditų per mėnesį, Coach įskaičiuotas.</string>

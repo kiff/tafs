@@ -198,6 +198,7 @@
     <string name="billing_cancel_any_time_least_day">Tühista igal ajal, vähemalt päev enne uuenemist, oma Apple\'i konto tellimustes (Subscriptions).</string>
     <string name="billing_contact_support">KIFF ei saa seda ostu sellele kontole lisada. Sa maksid selle eest, seega kirjuta toele aadressil support@kiff.dev ja me lahendame selle.</string>
     <string name="billing_conversation_goes_plan_tools_being">Vestluse käigus kuvatakse siin plaan, ühendatavad rakendused ja tafi Card.</string>
+    <string name="billing_credits_buy">Krediidid maksavad sinu tafide käivituste eest; vaikne kontroll, kui midagi uut pole, ei kasuta ühtegi. Solo sisaldab Coachi, et seadistada umbes 4 uut tööd kuus.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s päev</item>
         <item quantity="other">%1$s päeva</item>
@@ -243,6 +244,7 @@
     <string name="billing_solo_free_then">%1$s tasuta, seejärel %2$s / %3$s.</string>
     <string name="billing_solo_subscribe_for">Telli hinnaga %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo pole praegu App Store\'is saadaval.</string>
+    <string name="billing_solo_on">Solo on sees: igal kuul 500 krediiti sinu tafide käivitusteks, Coach kaasas.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo on tellimus, üks %1$s hinnaga %2$s, mis võetakse sinu Apple\'i kontolt. See uueneb iga %3$s, kuni tühistad.</string>
     <string name="billing_starts_free">Alguses %1$s tasuta.</string>
     <string name="billing_tafs_kiff_one_person_every">Ühele inimesele: 500 krediiti kuus, Coach kaasas.</string>

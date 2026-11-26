@@ -198,6 +198,7 @@
     <string name="billing_cancel_any_time_least_day">Anuloni në çdo kohë, të paktën një ditë para se të rinovohet, te Abonimet e llogarisë suaj Apple.</string>
     <string name="billing_contact_support">KIFF nuk mund ta shtojë këtë blerje në këtë llogari. Ju e keni paguar, ndaj kontaktoni mbështetjen te support@kiff.dev dhe do ta zgjidhim.</string>
     <string name="billing_conversation_goes_plan_tools_being">Gjatë bisedës, plani, aplikacionet që po lidhen dhe Card-i i taf-it shfaqen këtu.</string>
+    <string name="billing_credits_buy">Kreditet paguajnë ekzekutimet e tafs-ve tuaja; një kontroll i qetë, kur nuk ka asgjë të re, nuk përdor asnjë. Solo përfshin Coach për të konfiguruar rreth 4 punë të reja në muaj.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s ditë</item>
         <item quantity="other">%1$s ditë</item>
@@ -243,6 +244,7 @@
     <string name="billing_solo_free_then">Falas për: %1$s, pastaj %2$s për: %3$s.</string>
     <string name="billing_solo_subscribe_for">Abonohuni për %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo nuk ofrohet tani nga App Store.</string>
+    <string name="billing_solo_on">Solo është aktiv: 500 kredite çdo muaj për ekzekutimet e tafs-ve tuaja, me Coach të përfshirë.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo është një abonim për një periudhë (%1$s) me %2$s, i ngarkuar në llogarinë tuaj Apple. Rinovohet çdo periudhë (%3$s) derisa ta anuloni.</string>
     <string name="billing_starts_free">Fillon me: %1$s falas.</string>
     <string name="billing_tafs_kiff_one_person_every">Për një person: 500 kredite në muaj, me Coach të përfshirë.</string>

@@ -195,6 +195,7 @@
     <string name="billing_cancel_any_time_least_day">បោះបង់គ្រប់ពេល យ៉ាងតិចមួយថ្ងៃមុនពេលវាបន្ត ក្នុងការជាវរបស់គណនី Apple របស់អ្នក។</string>
     <string name="billing_contact_support">KIFF មិនអាចបន្ថែមការទិញនេះទៅគណនីនេះបានទេ។ អ្នកបានបង់ប្រាក់សម្រាប់វា ដូច្នេះសូមទាក់ទងផ្នែកជំនួយនៅ support@kiff.dev ហើយយើងនឹងដោះស្រាយ។</string>
     <string name="billing_conversation_goes_plan_tools_being">នៅពេលការសន្ទនាដំណើរការ គម្រោង កម្មវិធីដែលកំពុងភ្ជាប់ និង Card របស់ taf បង្ហាញនៅទីនេះ។</string>
+    <string name="billing_credits_buy">ក្រេឌីតបង់សម្រាប់ការដំណើរការរបស់ tafs របស់អ្នក ហើយការពិនិត្យស្ងាត់ៗ នៅពេលគ្មានអ្វីថ្មី មិនប្រើក្រេឌីតទេ។ Solo រួមបញ្ចូល Coach ដើម្បីរៀបចំការងារថ្មីប្រហែល 4 ក្នុងមួយខែ។</string>
     <plurals name="billing_length_days">
         <item quantity="other">%1$s ថ្ងៃ</item>
     </plurals>
@@ -236,6 +237,7 @@
     <string name="billing_solo_free_then">ឥតគិតថ្លៃ %1$s បន្ទាប់មក %2$s ក្នុងមួយ%3$s។</string>
     <string name="billing_solo_subscribe_for">ជាវក្នុងតម្លៃ %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo មិនមានពី App Store ឥឡូវនេះទេ។</string>
+    <string name="billing_solo_on">Solo បានបើកហើយ៖ ក្រេឌីត 500 រៀងរាល់ខែ សម្រាប់ការដំណើរការរបស់ tafs របស់អ្នក រួមទាំង Coach។</string>
     <string name="billing_solo_subscription_one_charged_your">Solo គឺជាការជាវរយៈពេលមួយ%1$s តម្លៃ %2$s គិតលើគណនី Apple របស់អ្នក។ វាបន្តរាល់%3$s រហូតដល់អ្នកបោះបង់។</string>
     <string name="billing_starts_free">ចាប់ផ្តើមដោយឥតគិតថ្លៃ %1$s។</string>
     <string name="billing_tafs_kiff_one_person_every">សម្រាប់មនុស្សម្នាក់៖ ក្រេឌីត 500 ក្នុងមួយខែ រួមទាំង Coach។</string>

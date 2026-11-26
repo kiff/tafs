@@ -201,6 +201,7 @@
     <string name="billing_cancel_any_time_least_day">Otkažite bilo kad, najmanje dan pre obnavljanja, u Pretplatama svog Apple naloga.</string>
     <string name="billing_contact_support">KIFF ne može da doda ovu kupovinu na ovaj nalog. Platili ste je, pa se obratite podršci na support@kiff.dev i rešićemo to.</string>
     <string name="billing_conversation_goes_plan_tools_being">Kako razgovor teče, ovde se prikazuju plan, aplikacije koje se povezuju i Card tafa.</string>
+    <string name="billing_credits_buy">Krediti plaćaju izvršavanja vaših tafs-ova; mirna provera, kad nema ničeg novog, ne troši nijedan. Solo uključuje Coacha za podešavanje oko 4 nova posla mesečno.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s dan</item>
         <item quantity="few">%1$s dana</item>
@@ -250,6 +251,7 @@
     <string name="billing_solo_free_then">Besplatno: %1$s, zatim %2$s na: %3$s.</string>
     <string name="billing_solo_subscribe_for">Pretplatite se za %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo trenutno nije dostupan iz App Store-a.</string>
+    <string name="billing_solo_on">Solo je uključen: 500 kredita svakog meseca za izvršavanja vaših tafs-ova, Coach uključen.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo je pretplata na jedan period (%1$s) po ceni od %2$s, koja se naplaćuje vašem Apple nalogu. Obnavlja se na svaki period (%3$s) dok je ne otkažete.</string>
     <string name="billing_starts_free">Počinje sa: %1$s besplatno.</string>
     <string name="billing_tafs_kiff_one_person_every">Za jednu osobu: 500 kredita mesečno, Coach uključen.</string>

@@ -413,6 +413,8 @@ enum Words {
         static var contactSupport: String { Words.line("billing.contact_support") }
         /// As the conversation goes, the plan, the apps being connected and the taf's Card show here.
         static var conversationGoesPlanToolsBeing: String { Words.line("billing.conversation_goes_plan_tools_being") }
+        /// Credits pay for your tafs' runs; a quiet check, when nothing is new, uses none. Solo includes Coach to set up about 4 new jobs a month.
+        static var creditsBuy: String { Words.line("billing.credits_buy") }
         enum Length {
             /// {count} days
             static func days(count: Int) -> String { Words.count("billing.length.days", count) }
@@ -485,6 +487,8 @@ enum Words {
         }
         /// Solo isn't available from the App Store right now.
         static var soloNotAvailableAppStore: String { Words.line("billing.solo_not_available_app_store") }
+        /// Solo is on: 500 credits every month for your tafs' runs, Coach included.
+        static var soloOn: String { Words.line("billing.solo_on") }
         /// Solo is a subscription of one {period} at {price}, charged to your Apple account. It renews every {period_2} until you cancel.
         static func soloSubscriptionOneChargedYour(period: String, price: String, period2: String) -> String { Words.line("billing.solo_subscription_one_charged_your", period, price, period2) }
         /// Starts with {trial} free.

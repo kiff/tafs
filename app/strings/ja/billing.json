@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "更新の1日前までなら、Apple IDのサブスクリプションでいつでも解約できます。",
   "billing.contact_support": "KIFFはこの購入をこのアカウントに追加できません。お支払い済みですので、support@kiff.devまでお問い合わせください。対応いたします。",
   "billing.conversation_goes_plan_tools_being": "会話が進むにつれて、プラン、接続中のアプリ、tafのCardがここに表示されます。",
+  "billing.credits_buy": "クレジットはtafの実行に使われます。新しいことがないときの静かな確認では使われません。Soloには、毎月約4件の新しい仕事をセットアップできるCoachが含まれます。",
   "billing.length.days": {
     "other": "{count}日"
   },
@@ -64,6 +65,7 @@
   "billing.solo.free_then": "{trial}無料、その後{price}/{period}。",
   "billing.solo.subscribe_for": "{price}で登録",
   "billing.solo_not_available_app_store": "現在、App StoreではSoloをご利用いただけません。",
+  "billing.solo_on": "Soloが有効になりました：毎月500クレジットをtafの実行に使え、Coachも含まれます。",
   "billing.solo_subscription_one_charged_your": "Soloは{price}の{period}単位のサブスクリプションで、Apple IDに請求されます。解約するまで{period_2}ごとに更新されます。",
   "billing.starts_free": "{trial}無料で始まります。",
   "billing.tafs_kiff_one_person_every": "1人用：毎月500クレジット、Coach付き。",

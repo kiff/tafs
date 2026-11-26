@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "Сунгагдахаас дор хаяж нэг өдрийн өмнө Apple бүртгэлийнхээ Захиалгууд хэсгээс хэдийд ч цуцлаж болно.",
   "billing.contact_support": "KIFF энэ худалдан авалтыг энэ бүртгэлд нэмж чадахгүй. Та үүний төлбөрийг төлсөн тул support@kiff.dev хаягаар дэмжлэгтэй холбогдоно уу, бид шийднэ.",
   "billing.conversation_goes_plan_tools_being": "Яриа үргэлжлэх тусам төлөвлөгөө, холбож буй аппууд болон taf-ын Card энд харагдана.",
+  "billing.credits_buy": "Кредитээр таны tafs-ийн ажиллалтуудын төлбөрийг төлдөг; шинэ зүйлгүй үеийн чимээгүй шалгалт нэгийг ч зарцуулдаггүй. Solo нь сард ойролцоогоор 4 шинэ ажил тохируулах Coach-ийг багтаадаг.",
   "billing.length.days": {
     "one": "{count} өдөр",
     "other": "{count} өдөр"
@@ -68,6 +69,7 @@
   "billing.solo.free_then": "{trial} үнэгүй, дараа нь {period}-д {price}.",
   "billing.solo.subscribe_for": "{price}-аар захиалах",
   "billing.solo_not_available_app_store": "Solo одоогоор App Store-оос боломжгүй байна.",
+  "billing.solo_on": "Solo идэвхжлээ: таны tafs-ийн ажиллалтуудад сар бүр 500 кредит, Coach багтсан.",
   "billing.solo_subscription_one_charged_your": "Solo бол {period}-ийн захиалга, үнэ {price}, таны Apple бүртгэлээс төлөгдөнө. Та цуцлах хүртэл {period_2} бүр сунгагдана.",
   "billing.starts_free": "{trial} үнэгүй эхэлнэ.",
   "billing.tafs_kiff_one_person_every": "Нэг хүнд: сард 500 кредит, Coach багтсан.",

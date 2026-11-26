@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "Atcel jebkurā laikā, vismaz dienu pirms atjaunošanas, sava Apple konta sadaļā Abonementi.",
   "billing.contact_support": "KIFF nevar pievienot šo pirkumu šim kontam. Tu par to samaksāji, tāpēc sazinies ar atbalstu: support@kiff.dev, un mēs to atrisināsim.",
   "billing.conversation_goes_plan_tools_being": "Sarunas gaitā šeit parādās plāns, pievienojamās lietotnes un taf Card.",
+  "billing.credits_buy": "Kredīti apmaksā tavu tafu palaišanas; mierīga pārbaude, kad nekā jauna nav, neizmanto nevienu. Solo ietver Coach, lai iestatītu aptuveni 4 jaunus darbus mēnesī.",
   "billing.length.days": {
     "zero": "{count} dienas",
     "one": "{count} diena",
@@ -72,6 +73,7 @@
   "billing.solo.free_then": "{trial} bez maksas, pēc tam {price} {period}.",
   "billing.solo.subscribe_for": "Abonēt par {price}",
   "billing.solo_not_available_app_store": "Solo pašlaik nav pieejams App Store.",
+  "billing.solo_on": "Solo ir ieslēgts: katru mēnesi 500 kredītu tavu tafu palaišanām, Coach iekļauts.",
   "billing.solo_subscription_one_charged_your": "Solo ir abonements par {price} reizi {period}, ko iekasē no tava Apple konta. Tas atjaunojas reizi {period_2}, līdz tu to atcel.",
   "billing.starts_free": "Sākumā {trial} bez maksas.",
   "billing.tafs_kiff_one_person_every": "Vienai personai: 500 kredītu mēnesī, Coach iekļauts.",

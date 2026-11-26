@@ -201,6 +201,7 @@
     <string name="billing_cancel_any_time_least_day">Zrušiť môžete kedykoľvek, najneskôr deň pred obnovením, v Predplatnom svojho účtu Apple.</string>
     <string name="billing_contact_support">KIFF nemôže tento nákup pridať k tomuto účtu. Zaplatili ste zaň, takže napíšte podpore na support@kiff.dev a vyriešime to.</string>
     <string name="billing_conversation_goes_plan_tools_being">Ako rozhovor pokračuje, zobrazuje sa tu plán, pripájané aplikácie a Card tafu.</string>
+    <string name="billing_credits_buy">Kredity platia behy vašich tafov; pokojná kontrola, keď nie je nič nové, nespotrebuje žiadne. Solo zahŕňa Coacha na nastavenie asi 4 nových úloh mesačne.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s deň</item>
         <item quantity="few">%1$s dni</item>
@@ -250,6 +251,7 @@
     <string name="billing_solo_free_then">Zadarmo na %1$s, potom %2$s za %3$s.</string>
     <string name="billing_solo_subscribe_for">Predplatiť za %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo teraz v App Store nie je dostupné.</string>
+    <string name="billing_solo_on">Solo je zapnuté: každý mesiac 500 kreditov na behy vašich tafov, Coach v cene.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo je predplatné na jeden %1$s za %2$s, účtované na váš účet Apple. Obnovuje sa každý %3$s, kým ho nezrušíte.</string>
     <string name="billing_starts_free">Začína %1$s zadarmo.</string>
     <string name="billing_tafs_kiff_one_person_every">Pre jedného človeka: 500 kreditov mesačne, Coach v cene.</string>

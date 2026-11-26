@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "אפשר לבטל בכל עת, לפחות יום לפני החידוש, במנויים של חשבון Apple שלך.",
   "billing.contact_support": "KIFF לא יכול להוסיף את הרכישה הזו לחשבון הזה. שילמת עליה, ולכן יש לפנות לתמיכה ב-support@kiff.dev ונסדר את זה.",
   "billing.conversation_goes_plan_tools_being": "ככל שהשיחה מתקדמת, התוכנית, האפליקציות שמתחברות וה-Card של ה-taf מוצגים כאן.",
+  "billing.credits_buy": "הקרדיטים משלמים על הריצות של ה-tafs שלך; בדיקה שקטה, כשאין שום דבר חדש, לא משתמשת באף אחד. Solo כולל את Coach כדי להגדיר כ-4 משימות חדשות בחודש.",
   "billing.length.days": {
     "one": "יום אחד",
     "two": "יומיים",
@@ -72,6 +73,7 @@
   "billing.solo.free_then": "חינם ל-{trial}, ואז {price} ל{period}.",
   "billing.solo.subscribe_for": "מנוי ב-{price}",
   "billing.solo_not_available_app_store": "Solo לא זמין כרגע ב-App Store.",
+  "billing.solo_on": "Solo פעיל: 500 קרדיטים בכל חודש לריצות של ה-tafs שלך, כולל Coach.",
   "billing.solo_subscription_one_charged_your": "Solo הוא מנוי של {period} אחד ב-{price}, המחויב בחשבון Apple שלך. הוא מתחדש כל {period_2} עד שתבטל.",
   "billing.starts_free": "מתחיל עם {trial} חינם.",
   "billing.tafs_kiff_one_person_every": "לאדם אחד: 500 קרדיטים בחודש, כולל Coach.",

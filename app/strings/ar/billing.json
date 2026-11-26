@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "يمكنك الإلغاء في أي وقت، قبل التجديد بيوم على الأقل، من «الاشتراكات» في حساب Apple الخاص بك.",
   "billing.contact_support": "لا يستطيع KIFF إضافة هذه العملية إلى هذا الحساب. لقد دفعت ثمنها، فتواصل مع الدعم على support@kiff.dev وسنحل الأمر.",
   "billing.conversation_goes_plan_tools_being": "مع تقدّم المحادثة، تظهر هنا الخطة والتطبيقات التي يجري ربطها وCard الخاصة بالـ taf.",
+  "billing.credits_buy": "تدفع الأرصدة ثمن تشغيلات tafs الخاصة بك؛ والفحص الهادئ، حين لا يوجد جديد، لا يستهلك شيئًا. يتضمن Solo خدمة Coach لإعداد نحو 4 مهام جديدة شهريًا.",
   "billing.length.days": {
     "zero": "لا أيام",
     "one": "يوم واحد",
@@ -84,6 +85,7 @@
   "billing.solo.free_then": "مجانًا لمدة {trial}، ثم {price} / {period}.",
   "billing.solo.subscribe_for": "الاشتراك بـ {price}",
   "billing.solo_not_available_app_store": "Solo غير متاح من App Store الآن.",
+  "billing.solo_on": "تم تفعيل Solo: 500 رصيد كل شهر لتشغيلات tafs الخاصة بك، مع Coach.",
   "billing.solo_subscription_one_charged_your": "Solo اشتراك بسعر {price} / {period}، يُخصم من حساب Apple الخاص بك. يتجدد في نهاية كل فترة ({period_2}) حتى تلغيه.",
   "billing.starts_free": "يبدأ بفترة مجانية: {trial}.",
   "billing.tafs_kiff_one_person_every": "لشخص واحد: 500 رصيد شهريًا، مع Coach.",
