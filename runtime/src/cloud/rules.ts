@@ -26,6 +26,7 @@
  * agreed figures it carries (the tool's for one that carries none), so two figures with different answers are never on
  * one Card: one Card has one `on_exceed`.
  */
+import { EVERY_CALL_CONDITIONS, EVERY_CALL_JOINS, EVERY_CALL_THRESHOLDS } from "./every-call-thresholds.js";
 import { EVERY_CALL_CLAUSE_STARTS, EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "./every-call-words.js";
 import type { ApprovalGrant } from "./approval.js";
 
@@ -771,8 +772,9 @@ export function unpinnedConnection(grants: readonly ApprovalGrant[], lines: read
  * another language aren't read, and the rule's own figures stand, as before.
  */
 export function saysEveryCallAsks(text: string): boolean {
-  // Turkish and Azerbaijani İ lower-cases to i with a combining dot (U+0307): dropped, so "SİZE" reads as "size".
-  const folded = text.normalize("NFC").toLowerCase().replace(/\u0307/g, "");
+  // Turkish and Azerbaijani İ lower-cases to i with a combining dot (U+0307): dropped, so "SİZE" reads as "size". Catalan's
+  // l·l is read as ll, so its middle dot (U+00B7, which is also the Greek semicolon after NFC) never ends a clause.
+  const folded = text.normalize("NFC").toLowerCase().replace(/\u0307/g, "").replace(/l\u00b7l/g, "ll");
   return EVERY_CALL_ASKS.some((re) => re.test(folded));
 }
 
@@ -868,15 +870,30 @@ const EVERY_CALL_ASKS: RegExp[] = [
 // clause. Elsewhere the gap's refusal of a digit already keeps "every refund over €5 asks you" a cap, and a guard would miss
 // "€50 a day and every refund asks you first".
 // A figure in any script's digits (٥, ५, ５…), and a clause's end in its own punctuation too: ، ؛ ؟ ۔ । ॥, Armenian ։,
-// Khmer ។ ៕, full-width ； ：, and the Greek semicolon (U+0387).
-const CLAUSE_ENDS = "،؛؟۔।॥։។៕；：\\u0387";
+// Khmer ។ ៕, full-width ； ：, and the Greek semicolon (U+0387, which NFC writes as U+00B7, the form read here).
+const CLAUSE_ENDS = "،؛؟۔।॥։។៕；：\\u00b7";
 // The guard: no figure within 30 characters before "every", unless a stop or the language's "and" or "but" comes between.
 const noFigureBefore = (starts: string) => `(?<!\\p{Nd}(?:(?!${starts})[^\\p{Nd}.,;:!?\\n、，。．！？${CLAUSE_ENDS}]){0,30})`;
 const betweenOrNone = `[^\\p{Nd}.;:!?\\n${CLAUSE_ENDS}]{0,60}?`;
 const guardFor = (lang: string) => (EVERY_CALL_CLAUSE_STARTS[lang] ? noFigureBefore(EVERY_CALL_CLAUSE_STARTS[lang]!) : "");
+// After the verb: a figure behind a word that sets a threshold, in the same clause, is a cap, not every call ("every refund
+// asks you first when it's over 5 EUR"), as figureAfter reads it for the eight (every-call-thresholds.ts). The look ends at
+// a stop, at a comma unless a word that opens a condition follows it, and at the language's "and" or "but". Words are
+// matched whole, except in scripts written without spaces. ja and ko have none: their condition comes before the verb,
+// where the figure already sits between "every" and the verb.
+const UNSPACED_THRESHOLDS = new Set(["zh-Hant", "th", "lo", "km"]);
+const COMMAS = ",،、，";
+const STOPS = `.;:!?\\n。．！？；：${CLAUSE_ENDS}`;
+const thresholdAfter = (lang: string) => {
+  const t = EVERY_CALL_THRESHOLDS[lang];
+  if (!t) return "";
+  const whole = (w: string) => (UNSPACED_THRESHOLDS.has(lang) ? `(?:${w})` : `(?<![\\p{L}\\p{N}])(?:${w})(?![\\p{L}\\p{N}])`);
+  const cond = EVERY_CALL_CONDITIONS[lang]!, join = EVERY_CALL_JOINS[lang]!;
+  return `(?!(?:(?!${join})(?:[^${COMMAS}${STOPS}]|[${COMMAS}](?=\\s*${whole(cond)}))){0,80}?${whole(t)}[^\\p{Nd}${COMMAS}${STOPS}]{0,30}?\\p{Nd})`;
+};
 EVERY_CALL_ASKS.push(
   ...Object.entries(EVERY_CALL_SPACED).map(([lang, [every, asks]]) =>
-    new RegExp(`${guardFor(lang)}(?<![\\p{L}\\p{N}])(?:${every})\\s${betweenOrNone}(?:${asks.join("|")})(?![\\p{L}\\p{N}])`, "u")),
+    new RegExp(`${guardFor(lang)}(?<![\\p{L}\\p{N}])(?:${every})\\s${betweenOrNone}(?:${asks.join("|")})(?![\\p{L}\\p{N}])${thresholdAfter(lang)}`, "u")),
   ...Object.entries(EVERY_CALL_UNSPACED).map(([lang, [every, asks]]) =>
-    new RegExp(`${guardFor(lang)}(?:${every})[^\\p{Nd}。．！？!?.\\n${CLAUSE_ENDS}]{0,40}?(?:${asks.join("|")})`, "u")),
+    new RegExp(`${guardFor(lang)}(?:${every})[^\\p{Nd}。．！？!?.\\n${CLAUSE_ENDS}]{0,40}?(?:${asks.join("|")})${thresholdAfter(lang)}`, "u")),
 );
