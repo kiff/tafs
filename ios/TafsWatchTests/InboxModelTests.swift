@@ -388,8 +388,9 @@ final class InboxModelTests: XCTestCase {
         inbox.dismiss("held:h_2")
         inbox.clearRead()
         await inbox.marking?.value
+        // Clear read sends the read lines in the Inbox's order: the held call on top, then Coach's answer.
         XCTAssertEqual(phone.sent, [WatchInboxMarks(read: ["h_1"]), WatchInboxMarks(dismissed: ["h_2"]),
-                                    WatchInboxMarks(dismissed: ["m-1", "h_1"])],
+                                    WatchInboxMarks(dismissed: ["h_1", "m-1"])],
                        "once each, in order; Coach's answer comes in read, so opening it marks nothing")
         XCTAssertTrue(inbox.lines.isEmpty)
     }
