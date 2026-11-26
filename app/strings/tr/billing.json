@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "Yenilenmesinden en az bir gün önce, Apple hesabınızın Abonelikler bölümünden istediğiniz zaman iptal edin.",
   "billing.contact_support": "KIFF bu satın almayı bu hesaba ekleyemiyor. Ödemeyi yaptınız, bu yüzden support@kiff.dev adresinden destekle iletişime geçin, çözelim.",
   "billing.conversation_goes_plan_tools_being": "Sohbet ilerledikçe plan, bağlanan uygulamalar ve taf'ın Card'ı burada görünür.",
+  "billing.credits_buy": "Krediler taf'larınızın çalıştırmalarını öder; yeni bir şey olmadığında yapılan sessiz bir kontrol hiç kullanmaz. Solo, ayda yaklaşık 4 yeni işi kurmak için Coach'u içerir.",
   "billing.length.days": {
     "one": "{count} gün",
     "other": "{count} gün"
@@ -68,6 +69,7 @@
   "billing.solo.free_then": "{trial} ücretsiz, sonra {price} / {period}.",
   "billing.solo.subscribe_for": "{price} karşılığında abone ol",
   "billing.solo_not_available_app_store": "Solo şu anda App Store'dan kullanılamıyor.",
+  "billing.solo_on": "Solo açık: taf'larınızın çalıştırmaları için her ay 500 kredi, Coach dahil.",
   "billing.solo_subscription_one_charged_your": "Solo, {price} / {period} tutarında bir aboneliktir ve Apple hesabınızdan tahsil edilir. Siz iptal edene kadar her dönem sonunda ({period_2}) yenilenir.",
   "billing.starts_free": "{trial} ücretsiz başlar.",
   "billing.tafs_kiff_one_person_every": "Bir kişi için: ayda 500 kredi, Coach dahil.",

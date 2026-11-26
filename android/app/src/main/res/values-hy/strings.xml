@@ -198,6 +198,7 @@
     <string name="billing_cancel_any_time_least_day">Չեղարկեք ցանկացած ժամանակ՝ նորացումից առնվազն մեկ օր առաջ, ձեր Apple հաշվի Բաժանորդագրություններում։</string>
     <string name="billing_contact_support">KIFF-ը չի կարող ավելացնել այս գնումը այս հաշվին։ Դուք վճարել եք դրա համար, ուստի դիմեք աջակցությանը՝ support@kiff.dev, և մենք կլուծենք։</string>
     <string name="billing_conversation_goes_plan_tools_being">Զրույցի ընթացքում այստեղ երևում են պլանը, միացվող հավելվածները և taf-ի Card-ը։</string>
+    <string name="billing_credits_buy">Կրեդիտներով վճարվում են ձեր tafs-երի գործարկումները, իսկ հանգիստ ստուգումը, երբ նոր բան չկա, ոչ մեկը չի ծախսում։ Solo-ն ներառում է Coach-ը՝ ամսական մոտ 4 նոր աշխատանք կարգավորելու համար։</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s օր</item>
         <item quantity="other">%1$s օր</item>
@@ -243,6 +244,7 @@
     <string name="billing_solo_free_then">Անվճար՝ %1$s, ապա %2$s %3$s-ի համար։</string>
     <string name="billing_solo_subscribe_for">Բաժանորդագրվեք %1$s-ով</string>
     <string name="billing_solo_not_available_app_store">Solo-ն հիմա հասանելի չէ App Store-ից։</string>
+    <string name="billing_solo_on">Solo-ն միացված է՝ ամեն ամիս 500 կրեդիտ ձեր tafs-երի գործարկումների համար, Coach-ը ներառված է։</string>
     <string name="billing_solo_subscription_one_charged_your">Solo-ն բաժանորդագրություն է մեկ ժամանակահատվածով (%1$s) %2$s-ով, որը գանձվում է ձեր Apple հաշվից։ Նորացվում է յուրաքանչյուր ժամանակահատվածում (%3$s), մինչև չեղարկեք։</string>
     <string name="billing_starts_free">Սկսվում է անվճար՝ %1$s։</string>
     <string name="billing_tafs_kiff_one_person_every">Մեկ մարդու համար՝ ամսական 500 կրեդիտ, Coach-ը ներառված է։</string>

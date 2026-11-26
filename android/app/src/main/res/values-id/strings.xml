@@ -195,6 +195,7 @@
     <string name="billing_cancel_any_time_least_day">Batalkan kapan saja, minimal sehari sebelum diperpanjang, di Langganan akun Apple Anda.</string>
     <string name="billing_contact_support">KIFF tidak dapat menambahkan pembelian ini ke akun ini. Anda sudah membayarnya, jadi hubungi dukungan di support@kiff.dev dan kami akan menyelesaikannya.</string>
     <string name="billing_conversation_goes_plan_tools_being">Seiring percakapan berjalan, paket, aplikasi yang sedang dihubungkan, dan Card taf muncul di sini.</string>
+    <string name="billing_credits_buy">Kredit membayar proses taf Anda; pemeriksaan tenang, saat tidak ada yang baru, tidak memakai apa pun. Solo mencakup Coach untuk mengatur sekitar 4 pekerjaan baru sebulan.</string>
     <plurals name="billing_length_days">
         <item quantity="other">%1$s hari</item>
     </plurals>
@@ -236,6 +237,7 @@
     <string name="billing_solo_free_then">Gratis selama %1$s, lalu %2$s / %3$s.</string>
     <string name="billing_solo_subscribe_for">Berlangganan seharga %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo tidak tersedia dari App Store saat ini.</string>
+    <string name="billing_solo_on">Solo aktif: 500 kredit setiap bulan untuk proses taf Anda, termasuk Coach.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo adalah langganan seharga %2$s / %1$s, ditagihkan ke akun Apple Anda. Diperpanjang di akhir setiap periode (%3$s) sampai Anda membatalkan.</string>
     <string name="billing_starts_free">Dimulai dengan %1$s gratis.</string>
     <string name="billing_tafs_kiff_one_person_every">Untuk satu orang: 500 kredit sebulan, termasuk Coach.</string>

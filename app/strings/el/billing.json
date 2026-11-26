@@ -22,6 +22,7 @@
   "billing.cancel_any_time_least_day": "Ακύρωσε οποιαδήποτε στιγμή, τουλάχιστον μία ημέρα πριν την ανανέωση, στις Συνδρομές του λογαριασμού σου Apple.",
   "billing.contact_support": "Η KIFF δεν μπορεί να προσθέσει αυτή την αγορά σε αυτόν τον λογαριασμό. Την έχεις πληρώσει, οπότε επικοινώνησε με την υποστήριξη στο support@kiff.dev και θα το τακτοποιήσουμε.",
   "billing.conversation_goes_plan_tools_being": "Καθώς προχωρά η συζήτηση, εδώ εμφανίζονται το σχέδιο, οι εφαρμογές που συνδέονται και η Card του taf.",
+  "billing.credits_buy": "Οι μονάδες πληρώνουν τις εκτελέσεις των tafs σας· ένας ήσυχος έλεγχος, όταν δεν υπάρχει κάτι νέο, δεν χρησιμοποιεί καμία. Το Solo περιλαμβάνει το Coach για να ρυθμίσετε περίπου 4 νέες εργασίες τον μήνα.",
   "billing.length.days": {
     "one": "{count} ημέρα",
     "other": "{count} ημέρες"
@@ -67,6 +68,7 @@
   "billing.solo.free_then": "Δωρεάν για {trial}, μετά {price} ανά {period}.",
   "billing.solo.subscribe_for": "Συνδρομή με {price}",
   "billing.solo_not_available_app_store": "Το Solo δεν είναι διαθέσιμο στο App Store αυτή τη στιγμή.",
+  "billing.solo_on": "Το Solo είναι ενεργό: 500 μονάδες κάθε μήνα για τις εκτελέσεις των tafs σας, με το Coach.",
   "billing.solo_subscription_one_charged_your": "Το Solo είναι συνδρομή {price} ανά {period}, με χρέωση στον λογαριασμό σου Apple. Ανανεώνεται κάθε {period_2} μέχρι να την ακυρώσεις.",
   "billing.starts_free": "Ξεκινά με {trial} δωρεάν.",
   "billing.tafs_kiff_one_person_every": "Για ένα άτομο: 500 μονάδες τον μήνα, με το Coach.",

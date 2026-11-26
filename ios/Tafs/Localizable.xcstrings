@@ -51265,6 +51265,269 @@
         }
       }
     },
+    "billing.credits_buy": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تدفع الأرصدة ثمن تشغيلات tafs الخاصة بك؛ والفحص الهادئ، حين لا يوجد جديد، لا يستهلك شيئًا. يتضمن Solo خدمة Coach لإعداد نحو 4 مهام جديدة شهريًا."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kreditlər tafs-larınızın işlərini ödəyir; yeni heç nə olmadıqda sakit yoxlama heç birini istifadə etmir. Solo ayda təxminən 4 yeni iş qurmaq üçün Coach-u da əhatə edir."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кредитите плащат изпълненията на вашите tafs; спокойна проверка, когато няма нищо ново, не ползва нито един. Solo включва Coach за настройване на около 4 нови задачи на месец."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ক্রেডিট দিয়ে আপনার tafs-এর রানের খরচ মেটে; নতুন কিছু না থাকলে শান্ত যাচাইয়ে কোনো ক্রেডিট লাগে না। Solo-তে Coach আছে, মাসে প্রায় ৪টি নতুন কাজ সেট আপ করার জন্য।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Els crèdits paguen les execucions dels teus tafs; una comprovació tranquil·la, quan no hi ha res de nou, no en fa servir cap. Solo inclou Coach per configurar unes 4 feines noves al mes."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kredity platí běhy vašich tafů; klidná kontrola, když není nic nového, nespotřebuje žádné. Solo zahrnuje Coache na nastavení asi 4 nových úloh měsíčně."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credits bezahlen die Läufe deiner tafs; eine ruhige Prüfung, wenn nichts neu ist, braucht keine. Solo enthält Coach, um etwa 4 neue Aufgaben im Monat einzurichten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credits pay for your tafs' runs; a quiet check, when nothing is new, uses none. Solo includes Coach to set up about 4 new jobs a month."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los créditos pagan las ejecuciones de tus tafs; una comprobación tranquila, cuando no hay nada nuevo, no usa ninguno. Solo incluye Coach para configurar unos 4 trabajos nuevos al mes."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krediidid maksavad sinu tafide käivituste eest; vaikne kontroll, kui midagi uut pole, ei kasuta ühtegi. Solo sisaldab Coachi, et seadistada umbes 4 uut tööd kuus."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les crédits paient les exécutions de vos tafs ; une vérification calme, quand rien n'est nouveau, n'en utilise aucun. Solo inclut Coach pour mettre en place environ 4 nouvelles tâches par mois."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הקרדיטים משלמים על הריצות של ה-tafs שלך; בדיקה שקטה, כשאין שום דבר חדש, לא משתמשת באף אחד. Solo כולל את Coach כדי להגדיר כ-4 משימות חדשות בחודש."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "क्रेडिट से आपके tafs के रन का भुगतान होता है; जब कुछ नया न हो, तब शांत जाँच में कोई क्रेडिट नहीं लगता। Solo में Coach शामिल है, जिससे हर महीने लगभग 4 नए काम सेट किए जा सकें।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krediti plaćaju izvođenja vaših tafova; mirna provjera, kad nema ničeg novog, ne troši nijedan. Solo uključuje Coacha za postavljanje oko 4 nova posla mjesečno."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kreditekből fizeted a tafjaid futásait; egy csendes ellenőrzés, ha nincs semmi új, nem használ el egyet sem. A Solo tartalmazza a Coachot, havonta kb. 4 új feladat beállításához."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Կրեդիտներով վճարվում են ձեր tafs-երի գործարկումները, իսկ հանգիստ ստուգումը, երբ նոր բան չկա, ոչ մեկը չի ծախսում։ Solo-ն ներառում է Coach-ը՝ ամսական մոտ 4 նոր աշխատանք կարգավորելու համար։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kredit membayar proses taf Anda; pemeriksaan tenang, saat tidak ada yang baru, tidak memakai apa pun. Solo mencakup Coach untuk mengatur sekitar 4 pekerjaan baru sebulan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I crediti pagano le esecuzioni dei tuoi tafs; un controllo tranquillo, quando non c'è nulla di nuovo, non ne usa. Solo include Coach per configurare circa 4 nuovi lavori al mese."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クレジットはtafの実行に使われます。新しいことがないときの静かな確認では使われません。Soloには、毎月約4件の新しい仕事をセットアップできるCoachが含まれます。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "კრედიტებით იხდით თქვენი tafs-ის გაშვებებს; მშვიდი შემოწმება, როცა ახალი არაფერია, არცერთს არ ხარჯავს. Solo მოიცავს Coach-ს, რომლითაც თვეში დაახლოებით 4 ახალი სამუშაოს დაყენება შეგიძლიათ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ក្រេឌីតបង់សម្រាប់ការដំណើរការរបស់ tafs របស់អ្នក ហើយការពិនិត្យស្ងាត់ៗ នៅពេលគ្មានអ្វីថ្មី មិនប្រើក្រេឌីតទេ។ Solo រួមបញ្ចូល Coach ដើម្បីរៀបចំការងារថ្មីប្រហែល 4 ក្នុងមួយខែ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "크레딧은 taf 실행에 쓰입니다. 새로운 것이 없을 때의 조용한 확인에는 쓰이지 않습니다. Solo에는 한 달에 새 일 약 4개를 설정할 수 있는 Coach가 포함됩니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເຄຣດິດຈ່າຍສຳລັບການເຮັດວຽກຂອງ tafs ຂອງທ່ານ; ການກວດສອບແບບງຽບໆ ເມື່ອບໍ່ມີຫຍັງໃໝ່ ບໍ່ໃຊ້ເຄຣດິດເລີຍ. Solo ລວມ Coach ເພື່ອຕັ້ງວຽກໃໝ່ປະມານ 4 ວຽກຕໍ່ເດືອນ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kreditais mokama už jūsų tafų paleidimus; rami patikra, kai nėra nieko naujo, nenaudoja nė vieno. Solo apima Coach, kad nustatytumėte maždaug 4 naujus darbus per mėnesį."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kredīti apmaksā tavu tafu palaišanas; mierīga pārbaude, kad nekā jauna nav, neizmanto nevienu. Solo ietver Coach, lai iestatītu aptuveni 4 jaunus darbus mēnesī."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кредитите ги плаќаат извршувањата на вашите tafs; мирна проверка, кога нема ништо ново, не троши ниту еден. Solo го вклучува Coach за поставување околу 4 нови работи месечно."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кредитээр таны tafs-ийн ажиллалтуудын төлбөрийг төлдөг; шинэ зүйлгүй үеийн чимээгүй шалгалт нэгийг ч зарцуулдаггүй. Solo нь сард ойролцоогоор 4 шинэ ажил тохируулах Coach-ийг багтаадаг."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "क्रेडिटले तपाईंका tafs का चलाइहरूको भुक्तानी गर्छ; केही नयाँ नहुँदा शान्त जाँचले कुनै क्रेडिट खर्च गर्दैन। Solo मा महिनामा करिब ४ नयाँ काम सेट गर्न Coach समावेश छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credits betalen de runs van je tafs; een rustige check, als er niets nieuws is, gebruikt er geen. Solo bevat Coach om zo'n 4 nieuwe taken per maand in te stellen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kredyty opłacają uruchomienia Twoich tafów; spokojne sprawdzenie, gdy nic nowego nie ma, nie zużywa żadnych. Solo obejmuje Coacha, by skonfigurować około 4 nowych zadań miesięcznie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os créditos pagam as execuções dos seus tafs; uma verificação calma, quando não há nada de novo, não usa nenhum. O Solo inclui o Coach para configurar cerca de 4 novos trabalhos por mês."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os créditos pagam as execuções dos seus tafs; uma verificação tranquila, quando não há nada novo, não usa nenhum. O Solo inclui o Coach para configurar cerca de 4 trabalhos novos por mês."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creditele plătesc rulările tafs-urilor dvs.; o verificare liniștită, când nu e nimic nou, nu folosește niciunul. Solo include Coach pentru a configura aproximativ 4 sarcini noi pe lună."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kredity platia behy vašich tafov; pokojná kontrola, keď nie je nič nové, nespotrebuje žiadne. Solo zahŕňa Coacha na nastavenie asi 4 nových úloh mesačne."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krediti plačajo zagone vaših tafov; mirno preverjanje, ko ni nič novega, ne porabi nobenega. Solo vključuje Coacha za nastavitev približno 4 novih opravil na mesec."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kreditet paguajnë ekzekutimet e tafs-ve tuaja; një kontroll i qetë, kur nuk ka asgjë të re, nuk përdor asnjë. Solo përfshin Coach për të konfiguruar rreth 4 punë të reja në muaj."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krediti plaćaju izvršavanja vaših tafs-ova; mirna provera, kad nema ničeg novog, ne troši nijedan. Solo uključuje Coacha za podešavanje oko 4 nova posla mesečno."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เครดิตใช้จ่ายสำหรับการทำงานของ taf ของคุณ การตรวจสอบเงียบ ๆ เมื่อไม่มีอะไรใหม่ไม่ใช้เครดิตเลย Solo รวม Coach สำหรับตั้งค่างานใหม่ประมาณ 4 งานต่อเดือน"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kredit tafs-laryňyzyň işlemelerini tölemek üçin; täze zat ýok mahaly asuda barlag hiç birini ulanmaýar. Solo aýda takmynan 4 täze işi sazlamak üçin Coach-y öz içine alýar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krediler taf'larınızın çalıştırmalarını öder; yeni bir şey olmadığında yapılan sessiz bir kontrol hiç kullanmaz. Solo, ayda yaklaşık 4 yeni işi kurmak için Coach'u içerir."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کریڈٹس سے آپ کے tafs کے رنز کی ادائیگی ہوتی ہے؛ جب کچھ نیا نہ ہو تو خاموش جانچ میں کوئی کریڈٹ نہیں لگتا۔ Solo میں Coach شامل ہے تاکہ ہر ماہ تقریباً 4 نئے کام سیٹ کیے جا سکیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tín dụng trả cho các lần chạy của taf; một lần kiểm tra yên lặng, khi không có gì mới, không dùng tín dụng nào. Solo bao gồm Coach để thiết lập khoảng 4 việc mới mỗi tháng."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "點數用於支付您的 taf 執行；沒有新事項時的安靜檢查不會用到點數。Solo 包含 Coach，足以每月設定約 4 項新工作。"
+          }
+        }
+      }
+    },
     "billing.length.days|few": {
       "extractionState": "manual",
       "localizations": {
@@ -61264,6 +61527,269 @@
           "stringUnit": {
             "state": "translated",
             "value": "App Store 目前未提供 Solo。"
+          }
+        }
+      }
+    },
+    "billing.solo_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تفعيل Solo: 500 رصيد كل شهر لتشغيلات tafs الخاصة بك، مع Coach."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo aktivdir: tafs-larınızın işləri üçün hər ay 500 kredit, Coach daxil."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo е включен: 500 кредита всеки месец за изпълненията на вашите tafs, Coach е включен."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo চালু হয়েছে: আপনার tafs-এর রানের জন্য প্রতি মাসে ৫০০ ক্রেডিট, Coach সহ।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo està actiu: 500 crèdits cada mes per a les execucions dels teus tafs, Coach inclòs."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo je zapnuté: každý měsíc 500 kreditů na běhy vašich tafů, Coach v ceně."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo ist aktiv: jeden Monat 500 Credits für die Läufe deiner tafs, Coach inklusive."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo is on: 500 credits every month for your tafs' runs, Coach included."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo está activo: 500 créditos cada mes para las ejecuciones de tus tafs, Coach incluido."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo on sees: igal kuul 500 krediiti sinu tafide käivitusteks, Coach kaasas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo est actif : 500 crédits chaque mois pour les exécutions de vos tafs, Coach inclus."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo פעיל: 500 קרדיטים בכל חודש לריצות של ה-tafs שלך, כולל Coach."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo चालू है: आपके tafs के रन के लिए हर महीने 500 क्रेडिट, Coach शामिल।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo je uključen: 500 kredita svaki mjesec za izvođenja vaših tafova, Coach uključen."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Solo be van kapcsolva: havonta 500 kredit a tafjaid futásaira, a Coach is benne van."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo-ն միացված է՝ ամեն ամիս 500 կրեդիտ ձեր tafs-երի գործարկումների համար, Coach-ը ներառված է։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo aktif: 500 kredit setiap bulan untuk proses taf Anda, termasuk Coach."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo è attivo: 500 crediti ogni mese per le esecuzioni dei tuoi tafs, Coach incluso."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soloが有効になりました：毎月500クレジットをtafの実行に使え、Coachも含まれます。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo ჩართულია: ყოველთვიურად 500 კრედიტი თქვენი tafs-ის გაშვებებისთვის, Coach-ით."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo បានបើកហើយ៖ ក្រេឌីត 500 រៀងរាល់ខែ សម្រាប់ការដំណើរការរបស់ tafs របស់អ្នក រួមទាំង Coach។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo가 켜졌습니다: taf 실행에 쓸 500크레딧을 매월 드리며, Coach가 포함됩니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo ເປີດແລ້ວ: 500 ເຄຣດິດທຸກເດືອນສຳລັບການເຮັດວຽກຂອງ tafs ຂອງທ່ານ, ລວມ Coach."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo įjungtas: kas mėnesį 500 kreditų jūsų tafų paleidimams, Coach įskaičiuotas."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo ir ieslēgts: katru mēnesi 500 kredītu tavu tafu palaišanām, Coach iekļauts."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo е вклучен: 500 кредити секој месец за извршувањата на вашите tafs, Coach е вклучен."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo идэвхжлээ: таны tafs-ийн ажиллалтуудад сар бүр 500 кредит, Coach багтсан."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo सुरु भयो: तपाईंका tafs का चलाइहरूका लागि हरेक महिना ५०० क्रेडिट, Coach समावेश।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo staat aan: elke maand 500 credits voor de runs van je tafs, Coach inbegrepen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo jest włączone: 500 kredytów co miesiąc na uruchomienia Twoich tafów, Coach w cenie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Solo está ativo: 500 créditos todos os meses para as execuções dos seus tafs, Coach incluído."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Solo está ativo: 500 créditos todo mês para as execuções dos seus tafs, Coach incluído."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo este activ: 500 de credite în fiecare lună pentru rulările tafs-urilor dvs., Coach inclus."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo je zapnuté: každý mesiac 500 kreditov na behy vašich tafov, Coach v cene."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo je vklopljen: vsak mesec 500 kreditov za zagone vaših tafov, Coach vključen."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo është aktiv: 500 kredite çdo muaj për ekzekutimet e tafs-ve tuaja, me Coach të përfshirë."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo je uključen: 500 kredita svakog meseca za izvršavanja vaših tafs-ova, Coach uključen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo เปิดใช้แล้ว: 500 เครดิตทุกเดือนสำหรับการทำงานของ taf ของคุณ รวม Coach"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo açyk: tafs-laryňyzyň işlemeleri üçin her aý 500 kredit, Coach goşulan."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo açık: taf'larınızın çalıştırmaları için her ay 500 kredi, Coach dahil."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo چالو ہے: آپ کے tafs کے رنز کے لیے ہر ماہ 500 کریڈٹس، Coach شامل۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo đã bật: 500 tín dụng mỗi tháng cho các lần chạy của taf, kèm Coach."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo 已啟用：每月 500 點，供您的 taf 執行使用，包含 Coach。"
           }
         }
       }

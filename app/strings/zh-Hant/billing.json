@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "可隨時取消，請至少在續訂前一天，於您的 Apple 帳號的「訂閱」中取消。",
   "billing.contact_support": "KIFF 無法將此購買加入此帳號。您已完成付款，請聯絡 support@kiff.dev，我們會為您處理。",
   "billing.conversation_goes_plan_tools_being": "隨著對話進行，方案、正在連接的 App 以及 taf 的 Card 會顯示在這裡。",
+  "billing.credits_buy": "點數用於支付您的 taf 執行；沒有新事項時的安靜檢查不會用到點數。Solo 包含 Coach，足以每月設定約 4 項新工作。",
   "billing.length.days": {
     "other": "{count} 天"
   },
@@ -64,6 +65,7 @@
   "billing.solo.free_then": "免費{trial}，之後 {price} / {period}。",
   "billing.solo.subscribe_for": "以 {price} 訂閱",
   "billing.solo_not_available_app_store": "App Store 目前未提供 Solo。",
+  "billing.solo_on": "Solo 已啟用：每月 500 點，供您的 taf 執行使用，包含 Coach。",
   "billing.solo_subscription_one_charged_your": "Solo 為 {price} / {period} 的訂閱，費用會從您的 Apple 帳號扣款。每期結束時（{period_2}）自動續訂，直到您取消為止。",
   "billing.starts_free": "從免費{trial}開始。",
   "billing.tafs_kiff_one_person_every": "供一個人使用：每月 500 點，包含 Coach。",

@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "Можете да анулирате по всяко време, поне един ден преди подновяването, в „Абонаменти“ на акаунта си в Apple.",
   "billing.contact_support": "KIFF не може да добави тази покупка към този акаунт. Платили сте я, затова пишете ни на support@kiff.dev и ще го оправим.",
   "billing.conversation_goes_plan_tools_being": "С напредването на разговора тук се показват планът, свързваните приложения и Card на taf.",
+  "billing.credits_buy": "Кредитите плащат изпълненията на вашите tafs; спокойна проверка, когато няма нищо ново, не ползва нито един. Solo включва Coach за настройване на около 4 нови задачи на месец.",
   "billing.length.days": {
     "one": "{count} ден",
     "other": "{count} дни"
@@ -68,6 +69,7 @@
   "billing.solo.free_then": "Безплатно за {trial}, после {price} на {period}.",
   "billing.solo.subscribe_for": "Абонамент за {price}",
   "billing.solo_not_available_app_store": "Solo не е наличен в App Store в момента.",
+  "billing.solo_on": "Solo е включен: 500 кредита всеки месец за изпълненията на вашите tafs, Coach е включен.",
   "billing.solo_subscription_one_charged_your": "Solo е абонамент за един {period} на цена {price}, таксуван в акаунта ви в Apple. Подновява се всеки {period_2}, докато не го анулирате.",
   "billing.starts_free": "Започва с {trial} безплатно.",
   "billing.tafs_kiff_one_person_every": "За един човек: 500 кредита на месец, Coach е включен.",

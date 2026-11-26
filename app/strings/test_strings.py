@@ -221,7 +221,7 @@ class SharedWords(unittest.TestCase):
             if found:
                 want = found.group(1)
         for lang, lines in self.lines.items():
-            for key in ("billing.tafs_kiff_one_person_every", "billing.one_person_tafs_kiff_your"):
+            for key in ("billing.tafs_kiff_one_person_every", "billing.one_person_tafs_kiff_your", "billing.solo_on"):
                 line = lines.get(key)
                 if not isinstance(line, str):
                     continue

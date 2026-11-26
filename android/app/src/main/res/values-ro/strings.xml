@@ -201,6 +201,7 @@
     <string name="billing_cancel_any_time_least_day">Puteți anula oricând, cu cel puțin o zi înainte de reînnoire, în Abonamentele contului Apple.</string>
     <string name="billing_contact_support">KIFF nu poate adăuga această achiziție la acest cont. Ați plătit-o, așa că scrieți-ne la support@kiff.dev și rezolvăm.</string>
     <string name="billing_conversation_goes_plan_tools_being">Pe măsură ce conversația avansează, aici apar planul, aplicațiile care se conectează și Cardul tafului.</string>
+    <string name="billing_credits_buy">Creditele plătesc rulările tafs-urilor dvs.; o verificare liniștită, când nu e nimic nou, nu folosește niciunul. Solo include Coach pentru a configura aproximativ 4 sarcini noi pe lună.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s zi</item>
         <item quantity="few">%1$s zile</item>
@@ -250,6 +251,7 @@
     <string name="billing_solo_free_then">Gratuit %1$s, apoi %2$s pe %3$s.</string>
     <string name="billing_solo_subscribe_for">Abonați-vă pentru %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo nu este disponibil momentan în App Store.</string>
+    <string name="billing_solo_on">Solo este activ: 500 de credite în fiecare lună pentru rulările tafs-urilor dvs., Coach inclus.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo este un abonament pe %1$s la %2$s, debitat din contul Apple. Se reînnoiește în fiecare %3$s până îl anulați.</string>
     <string name="billing_starts_free">Începe cu %1$s gratuit.</string>
     <string name="billing_tafs_kiff_one_person_every">Pentru o persoană: 500 de credite pe lună, Coach inclus.</string>

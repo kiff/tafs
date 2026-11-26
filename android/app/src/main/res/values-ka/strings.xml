@@ -198,6 +198,7 @@
     <string name="billing_cancel_any_time_least_day">გააუქმეთ ნებისმიერ დროს, განახლებამდე მინიმუმ ერთი დღით ადრე, თქვენი Apple ანგარიშის გამოწერებში.</string>
     <string name="billing_contact_support">KIFF-ს ამ შეძენის ამ ანგარიშზე დამატება არ შეუძლია. თქვენ გადაიხადეთ, ამიტომ მიმართეთ მხარდაჭერას support@kiff.dev-ზე და გადავწყვეტთ.</string>
     <string name="billing_conversation_goes_plan_tools_being">საუბრის მიმდინარეობისას აქ ჩანს გეგმა, დასაკავშირებელი აპები და taf-ის Card.</string>
+    <string name="billing_credits_buy">კრედიტებით იხდით თქვენი tafs-ის გაშვებებს; მშვიდი შემოწმება, როცა ახალი არაფერია, არცერთს არ ხარჯავს. Solo მოიცავს Coach-ს, რომლითაც თვეში დაახლოებით 4 ახალი სამუშაოს დაყენება შეგიძლიათ.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s დღე</item>
         <item quantity="other">%1$s დღე</item>
@@ -243,6 +244,7 @@
     <string name="billing_solo_free_then">უფასოდ: %1$s, შემდეგ %2$s ამ პერიოდში: %3$s.</string>
     <string name="billing_solo_subscribe_for">გამოიწერეთ %1$s-ად</string>
     <string name="billing_solo_not_available_app_store">Solo ახლა App Store-დან მიუწვდომელია.</string>
+    <string name="billing_solo_on">Solo ჩართულია: ყოველთვიურად 500 კრედიტი თქვენი tafs-ის გაშვებებისთვის, Coach-ით.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo არის გამოწერა ერთი პერიოდისთვის (%1$s) %2$s-ად, რომელიც თქვენს Apple ანგარიშს ჩამოეჭრება. ახლდება ყოველ პერიოდში (%3$s), სანამ არ გააუქმებთ.</string>
     <string name="billing_starts_free">იწყება უფასოდ: %1$s.</string>
     <string name="billing_tafs_kiff_one_person_every">ერთი ადამიანისთვის: თვეში 500 კრედიტი, Coach-ით.</string>

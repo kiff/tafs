@@ -198,6 +198,7 @@
     <string name="billing_cancel_any_time_least_day">नवीकरणभन्दा कम्तीमा एक दिन अघि, आफ्नो Apple खाताका सदस्यताहरूमा जुनसुकै बेला रद्द गर्नुहोस्।</string>
     <string name="billing_contact_support">KIFF ले यो खरिद यस खातामा थप्न सक्दैन। तपाईंले यसको भुक्तानी गर्नुभएको छ, त्यसैले support@kiff.dev मा सहायतासँग सम्पर्क गर्नुहोस् र हामी मिलाउँछौँ।</string>
     <string name="billing_conversation_goes_plan_tools_being">कुराकानी अघि बढ्दै जाँदा योजना, जडान हुँदै गरेका एप र taf को Card यहाँ देखिन्छन्।</string>
+    <string name="billing_credits_buy">क्रेडिटले तपाईंका tafs का चलाइहरूको भुक्तानी गर्छ; केही नयाँ नहुँदा शान्त जाँचले कुनै क्रेडिट खर्च गर्दैन। Solo मा महिनामा करिब ४ नयाँ काम सेट गर्न Coach समावेश छ।</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s दिन</item>
         <item quantity="other">%1$s दिन</item>
@@ -243,6 +244,7 @@
     <string name="billing_solo_free_then">%1$s निःशुल्क, त्यसपछि प्रति %3$s %2$s।</string>
     <string name="billing_solo_subscribe_for">%1$s मा सदस्यता लिनुहोस्</string>
     <string name="billing_solo_not_available_app_store">Solo अहिले App Store बाट उपलब्ध छैन।</string>
+    <string name="billing_solo_on">Solo सुरु भयो: तपाईंका tafs का चलाइहरूका लागि हरेक महिना ५०० क्रेडिट, Coach समावेश।</string>
     <string name="billing_solo_subscription_one_charged_your">Solo एक %1$s को सदस्यता हो, %2$s मा, तपाईंको Apple खातामा शुल्क लाग्छ। तपाईंले रद्द नगरेसम्म प्रत्येक %3$s नवीकरण हुन्छ।</string>
     <string name="billing_starts_free">%1$s निःशुल्कबाट सुरु हुन्छ।</string>
     <string name="billing_tafs_kiff_one_person_every">एक व्यक्तिका लागि: महिनामा ५०० क्रेडिट, Coach समावेश।</string>

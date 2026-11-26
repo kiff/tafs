@@ -198,6 +198,7 @@
     <string name="billing_cancel_any_time_least_day">Cancel any time, at least a day before it renews, in your Apple account\'s Subscriptions.</string>
     <string name="billing_contact_support">KIFF can\'t add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we\'ll sort it out.</string>
     <string name="billing_conversation_goes_plan_tools_being">As the conversation goes, the plan, the apps being connected and the taf\'s Card show here.</string>
+    <string name="billing_credits_buy">Credits pay for your tafs\' runs; a quiet check, when nothing is new, uses none. Solo includes Coach to set up about 4 new jobs a month.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s day</item>
         <item quantity="other">%1$s days</item>
@@ -243,6 +244,7 @@
     <string name="billing_solo_free_then">Free for %1$s, then %2$s a %3$s.</string>
     <string name="billing_solo_subscribe_for">Subscribe for %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo isn\'t available from the App Store right now.</string>
+    <string name="billing_solo_on">Solo is on: 500 credits every month for your tafs\' runs, Coach included.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo is a subscription of one %1$s at %2$s, charged to your Apple account. It renews every %3$s until you cancel.</string>
     <string name="billing_starts_free">Starts with %1$s free.</string>
     <string name="billing_tafs_kiff_one_person_every">For one person: 500 credits a month, Coach included.</string>

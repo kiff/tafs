@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "Bármikor lemondhatod, legalább egy nappal a megújulás előtt, az Apple-fiókod Előfizetések részében.",
   "billing.contact_support": "A KIFF nem tudja hozzáadni ezt a vásárlást ehhez a fiókhoz. Kifizetted, ezért írj az ügyfélszolgálatnak: support@kiff.dev, és elrendezzük.",
   "billing.conversation_goes_plan_tools_being": "A beszélgetés során itt jelenik meg a terv, a csatlakoztatott alkalmazások és a taf Cardja.",
+  "billing.credits_buy": "A kreditekből fizeted a tafjaid futásait; egy csendes ellenőrzés, ha nincs semmi új, nem használ el egyet sem. A Solo tartalmazza a Coachot, havonta kb. 4 új feladat beállításához.",
   "billing.length.days": {
     "one": "{count} nap",
     "other": "{count} nap"
@@ -68,6 +69,7 @@
   "billing.solo.free_then": "{trial} ingyen, utána {price} / {period}.",
   "billing.solo.subscribe_for": "Előfizetés: {price}",
   "billing.solo_not_available_app_store": "A Solo most nem érhető el az App Store-ban.",
+  "billing.solo_on": "A Solo be van kapcsolva: havonta 500 kredit a tafjaid futásaira, a Coach is benne van.",
   "billing.solo_subscription_one_charged_your": "A Solo egy {period} időtartamú előfizetés {price} áron, az Apple-fiókodra terhelve. Minden új {period_2} elején megújul, amíg le nem mondod.",
   "billing.starts_free": "{trial} ingyenesen indul.",
   "billing.tafs_kiff_one_person_every": "Egy személynek: havi 500 kredit, a Coach is benne van.",

@@ -198,6 +198,7 @@
     <string name="billing_cancel_any_time_least_day">Je kunt altijd opzeggen, minstens een dag voor de verlenging, in Abonnementen van je Apple-account.</string>
     <string name="billing_contact_support">KIFF kan deze aankoop niet aan dit account toevoegen. Je hebt ervoor betaald, dus neem contact op met support via support@kiff.dev en we lossen het op.</string>
     <string name="billing_conversation_goes_plan_tools_being">Naarmate het gesprek vordert, verschijnen hier het plan, de apps die worden gekoppeld en de Card van het taf.</string>
+    <string name="billing_credits_buy">Credits betalen de runs van je tafs; een rustige check, als er niets nieuws is, gebruikt er geen. Solo bevat Coach om zo\'n 4 nieuwe taken per maand in te stellen.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s dag</item>
         <item quantity="other">%1$s dagen</item>
@@ -243,6 +244,7 @@
     <string name="billing_solo_free_then">Gratis gedurende %1$s, daarna %2$s per %3$s.</string>
     <string name="billing_solo_subscribe_for">Abonneren voor %1$s</string>
     <string name="billing_solo_not_available_app_store">Solo is nu niet beschikbaar in de App Store.</string>
+    <string name="billing_solo_on">Solo staat aan: elke maand 500 credits voor de runs van je tafs, Coach inbegrepen.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo is een abonnement van één %1$s voor %2$s, in rekening gebracht bij je Apple-account. Het wordt elke %3$s verlengd tot je opzegt.</string>
     <string name="billing_starts_free">Begint met %1$s gratis.</string>
     <string name="billing_tafs_kiff_one_person_every">Voor één persoon: 500 credits per maand, Coach inbegrepen.</string>

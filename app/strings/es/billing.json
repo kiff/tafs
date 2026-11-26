@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "Cancela cuando quieras, al menos un día antes de la renovación, en Suscripciones de tu cuenta de Apple.",
   "billing.contact_support": "KIFF no puede añadir esta compra a esta cuenta. La pagaste, así que escribe a soporte en support@kiff.dev y lo resolveremos.",
   "billing.conversation_goes_plan_tools_being": "A medida que avanza la conversación, aquí aparecen el plan, las apps que se conectan y la Card del taf.",
+  "billing.credits_buy": "Los créditos pagan las ejecuciones de tus tafs; una comprobación tranquila, cuando no hay nada nuevo, no usa ninguno. Solo incluye Coach para configurar unos 4 trabajos nuevos al mes.",
   "billing.length.days": {
     "one": "{count} día",
     "other": "{count} días"
@@ -68,6 +69,7 @@
   "billing.solo.free_then": "Gratis durante {trial}, luego {price} por {period}.",
   "billing.solo.subscribe_for": "Suscribirse por {price}",
   "billing.solo_not_available_app_store": "Solo no está disponible en App Store ahora mismo.",
+  "billing.solo_on": "Solo está activo: 500 créditos cada mes para las ejecuciones de tus tafs, Coach incluido.",
   "billing.solo_subscription_one_charged_your": "Solo es una suscripción de un {period} por {price}, que se cobra en tu cuenta de Apple. Se renueva cada {period_2} hasta que la canceles.",
   "billing.starts_free": "Empieza con {trial} gratis.",
   "billing.tafs_kiff_one_person_every": "Para una persona: 500 créditos al mes, Coach incluido.",

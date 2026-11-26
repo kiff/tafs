@@ -195,6 +195,7 @@
     <string name="billing_cancel_any_time_least_day">Hủy bất cứ lúc nào, ít nhất một ngày trước khi gia hạn, trong mục Gói đăng ký của tài khoản Apple của bạn.</string>
     <string name="billing_contact_support">KIFF không thể thêm giao dịch mua này vào tài khoản này. Bạn đã thanh toán, vì vậy hãy liên hệ bộ phận hỗ trợ tại support@kiff.dev và chúng tôi sẽ giải quyết.</string>
     <string name="billing_conversation_goes_plan_tools_being">Khi cuộc trò chuyện tiến triển, gói, các ứng dụng đang được kết nối và Card của taf hiện ở đây.</string>
+    <string name="billing_credits_buy">Tín dụng trả cho các lần chạy của taf; một lần kiểm tra yên lặng, khi không có gì mới, không dùng tín dụng nào. Solo bao gồm Coach để thiết lập khoảng 4 việc mới mỗi tháng.</string>
     <plurals name="billing_length_days">
         <item quantity="other">%1$s ngày</item>
     </plurals>
@@ -236,6 +237,7 @@
     <string name="billing_solo_free_then">Miễn phí %1$s, sau đó %2$s / %3$s.</string>
     <string name="billing_solo_subscribe_for">Đăng ký với giá %1$s</string>
     <string name="billing_solo_not_available_app_store">Hiện Solo không có trên App Store.</string>
+    <string name="billing_solo_on">Solo đã bật: 500 tín dụng mỗi tháng cho các lần chạy của taf, kèm Coach.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo là gói đăng ký %2$s / %1$s, tính vào tài khoản Apple của bạn. Tự gia hạn vào cuối mỗi kỳ (%3$s) cho đến khi bạn hủy.</string>
     <string name="billing_starts_free">Bắt đầu với %1$s miễn phí.</string>
     <string name="billing_tafs_kiff_one_person_every">Cho một người: 500 tín dụng mỗi tháng, kèm Coach.</string>

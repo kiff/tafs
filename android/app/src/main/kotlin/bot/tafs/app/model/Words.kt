@@ -229,6 +229,7 @@ object Words {
     val cancelAnyTimeLeastDay: String get() = Res.s(R.string.billing_cancel_any_time_least_day)
     val contactSupport: String get() = Res.s(R.string.billing_contact_support)
     val conversationGoesPlanToolsBeing: String get() = Res.s(R.string.billing_conversation_goes_plan_tools_being)
+    val creditsBuy: String get() = Res.s(R.string.billing_credits_buy)
     object Length {
       fun days(count: Int): String = Res.p(R.plurals.billing_length_days, count, Res.number(count))
       fun months(count: Int): String = Res.p(R.plurals.billing_length_months, count, Res.number(count))
@@ -268,6 +269,7 @@ object Words {
       fun subscribeFor(price: String): String = Res.s(R.string.billing_solo_subscribe_for, price)
     }
     val soloNotAvailableAppStore: String get() = Res.s(R.string.billing_solo_not_available_app_store)
+    val soloOn: String get() = Res.s(R.string.billing_solo_on)
     fun soloSubscriptionOneChargedYour(period: String, price: String, period2: String): String = Res.s(R.string.billing_solo_subscription_one_charged_your, period, price, period2)
     fun startsFree(trial: String): String = Res.s(R.string.billing_starts_free, trial)
     val tafsKiffOnePersonEvery: String get() = Res.s(R.string.billing_tafs_kiff_one_person_every)

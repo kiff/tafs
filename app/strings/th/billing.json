@@ -23,6 +23,7 @@
   "billing.cancel_any_time_least_day": "ยกเลิกได้ทุกเมื่ออย่างน้อยหนึ่งวันก่อนต่ออายุ ในการสมัครใช้งานของบัญชี Apple ของคุณ",
   "billing.contact_support": "KIFF เพิ่มการซื้อนี้ในบัญชีนี้ไม่ได้ คุณชำระเงินแล้ว โปรดติดต่อฝ่ายสนับสนุนที่ support@kiff.dev แล้วเราจะแก้ไขให้",
   "billing.conversation_goes_plan_tools_being": "เมื่อการสนทนาดำเนินไป แพ็กเกจ แอปที่กำลังเชื่อมต่อ และ Card ของ taf จะแสดงที่นี่",
+  "billing.credits_buy": "เครดิตใช้จ่ายสำหรับการทำงานของ taf ของคุณ การตรวจสอบเงียบ ๆ เมื่อไม่มีอะไรใหม่ไม่ใช้เครดิตเลย Solo รวม Coach สำหรับตั้งค่างานใหม่ประมาณ 4 งานต่อเดือน",
   "billing.length.days": {
     "other": "{count} วัน"
   },
@@ -64,6 +65,7 @@
   "billing.solo.free_then": "ฟรี {trial} จากนั้น {price} / {period}",
   "billing.solo.subscribe_for": "สมัครใช้งานในราคา {price}",
   "billing.solo_not_available_app_store": "ขณะนี้ Solo ยังไม่มีใน App Store",
+  "billing.solo_on": "Solo เปิดใช้แล้ว: 500 เครดิตทุกเดือนสำหรับการทำงานของ taf ของคุณ รวม Coach",
   "billing.solo_subscription_one_charged_your": "Solo เป็นการสมัครใช้งาน {price} / {period} เรียกเก็บจากบัญชี Apple ของคุณ ต่ออายุอัตโนมัติเมื่อสิ้นสุดแต่ละรอบ ({period_2}) จนกว่าคุณจะยกเลิก",
   "billing.starts_free": "เริ่มต้นฟรี {trial}",
   "billing.tafs_kiff_one_person_every": "สำหรับหนึ่งคน: 500 เครดิตต่อเดือน รวม Coach",
