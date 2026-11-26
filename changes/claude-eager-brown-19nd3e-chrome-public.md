@@ -1,0 +1,1 @@
+- Chrome store listing: unpairing keeps a random profile id and the sites switched off for Coach (only uninstalling deletes all), and Coach skips the page on sites the extension recognises as bank, payment, mail or health sites, in all 43 languages.
