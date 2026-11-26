@@ -573,7 +573,7 @@ reach" for all of them. The four lines are:
 Every screen that says the phone gave no answer shows its own reason (`Asked.Unreachable.why`), with Try again
 (`WatchModelTest`, `AccountScreensTest`).
 
-**Following a held call in logcat** (`HeldLog`, tag `tafs.held`, every build), so a held call that never shows on the wrist can
+**Following a held call in logcat** (`HeldLog`, tag `tafs.held`, every build from Android 148 and Wear 0.4.11), so a held call that never shows on the wrist can
 be traced on a Play-signed pair with `adb logcat -s tafs.held`. Each step writes one line with counts and seconds only, never a
 taf's name, what it wants, an amount, a reason, an id or the account mark:
 - the phone: what it put as `kept/needs-you` (the count, the number of calls, each hold's seconds left, whether a mark went),
@@ -800,7 +800,7 @@ watch doesn't know is shown as Open on phone, never guessed at.
 
 ## The rules it's built to
 
-- **Every screen that scrolls shows where you are, and fits a round face** (Wear OS app quality; parity row 34). Each list is a
+- **Every screen that scrolls shows where you are, and fits a round face** (0.4.11; Wear OS app quality; parity row 34). Each list is a
   `WatchList`: Wear's `ScreenScaffold` draws its scroll indicator at the edge, and the list is held in from the face's edge, the
   sides at 5.2 % of the width and the top and foot at 10 % of the height unless the screen sets its own (`roundPadding`). Screens
   laid out as one piece (Not sure it arrived, Not sent, Transcribing, Deleted: `Centered`) stay centred while they fit, and at a

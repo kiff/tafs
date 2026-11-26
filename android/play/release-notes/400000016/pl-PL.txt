@@ -1,0 +1,3 @@
+• Każda lista pokazuje podczas przewijania, gdzie jesteś.
+• Ekrany mieszczą się na okrągłych zegarkach, nawet przy największym tekście, i nic nie chowa się pod kropkami stron.
+• Kafelek tafs pokazuje, ile oczekujących wywołań czeka na Ciebie, gdy zegarek jest odblokowany.

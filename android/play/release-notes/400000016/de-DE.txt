@@ -1,0 +1,3 @@
+• Jede Liste zeigt beim Scrollen, wo du bist.
+• Die Bildschirme passen auf runde Uhren, auch bei größter Schrift, und nichts liegt unter den Seitenpunkten.
+• Die tafs-Kachel zeigt, solange die Uhr entsperrt ist, wie viele zurückgehaltene Aufrufe dich brauchen.

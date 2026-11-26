@@ -1,0 +1,1 @@
+• Internamente: trabajo previo para que las llamadas retenidas lleguen a tu reloj de forma más fiable.

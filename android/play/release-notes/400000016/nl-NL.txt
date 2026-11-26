@@ -1,0 +1,3 @@
+• Elke lijst laat tijdens het scrollen zien waar je bent.
+• Schermen passen op ronde horloges, ook met de grootste tekst, en niets valt onder de paginapunten.
+• De tafs-tegel toont hoeveel vastgehouden aanroepen op jou wachten zolang het horloge ontgrendeld is.

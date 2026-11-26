@@ -1,0 +1,3 @@
+• Ogni elenco mostra dove sei mentre scorre.
+• Le schermate stanno negli orologi rotondi, anche con il testo più grande, e niente resta sotto i punti di pagina.
+• Il riquadro di tafs mostra quante chiamate trattenute ti aspettano mentre l'orologio è sbloccato.

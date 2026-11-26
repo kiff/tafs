@@ -1,0 +1,1 @@
+- **Android 148 (1.50.1) and Wear OS 0.4.11:** the release carrying the Wear scroll indicator and round-screen fit, and the held-call log. See [The Wear OS watch](docs/watch-wear.md).

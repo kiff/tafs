@@ -1,0 +1,3 @@
+• Cada lista muestra dónde estás mientras se desplaza.
+• Las pantallas caben en relojes redondos, incluso con el texto más grande, y nada queda bajo los puntos de página.
+• La tarjeta de tafs muestra cuántas llamadas retenidas te necesitan mientras el reloj está desbloqueado.

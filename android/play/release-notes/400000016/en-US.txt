@@ -1,0 +1,3 @@
+• Every list shows where you are while it scrolls.
+• Screens fit round watches, even at the largest text size, and nothing sits under the page dots.
+• The tafs tile shows how many held calls need you while the watch is unlocked.

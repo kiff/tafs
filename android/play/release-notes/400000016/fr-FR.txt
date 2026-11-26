@@ -1,0 +1,3 @@
+• Chaque liste montre où vous en êtes pendant le défilement.
+• Les écrans tiennent sur les montres rondes, même avec le plus grand texte, et rien ne passe sous les points de page.
+• La vignette tafs indique combien d'appels retenus vous attendent quand la montre est déverrouillée.

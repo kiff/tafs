@@ -1,0 +1,3 @@
+• Cada lista mostra onde está enquanto se desloca.
+• Os ecrãs cabem em relógios redondos, mesmo com o maior tamanho de texto, e nada fica por baixo dos pontos de página.
+• O mosaico do tafs mostra quantas chamadas retidas precisam de si enquanto o relógio está desbloqueado.
