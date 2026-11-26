@@ -1,0 +1,1 @@
+- **Docs:** the watches' parity table has a row for showing where you are in a scrolling screen and fitting a round or small screen at every text size: built on the Apple Watch, and partial on Wear OS until its scroll indicator and round-screen fix ships ([parity.md](docs/parity.md#watches)).
