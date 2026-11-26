@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Kustutatud. Midagi ei saadetud.",
   "watch.didnt_catch": "Ei saanud aru. Puuduta, et uuesti proovida.",
   "watch.dismiss": "Kõrvalda",
+  "watch.edit_words": "Muutmiseks puuduta teksti",
   "watch.glance_description": "Mitu vajab sind, mitte kunagi mida või kes.",
   "watch.halt_all_q": "Kas peatada kõik sinu tafid?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} kinni peetud päring vajab sind",
     "other": "{count} kinni peetud päringut vajab sind"
   },
+  "watch.held_channel": "Kinni peetud päringud",
   "watch.inbox_empty": "Midagi uut pole. Siia jõuavad Coachi vastused ja sinu tafide teavitused.",
   "watch.inbox_unread": {
     "one": "{count} lugemata postkastis",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Midagi ei saadeta enne, kui kinnitad.",
   "watch.nothing_waits": "Miski ei oota sind.",
   "watch.open_on_phone": "Ava telefonis",
+  "watch.opened_on_phone": "Avatud sinu telefonis",
   "watch.page.brief": "Kokkuvõte",
   "watch.page.inbox": "Postkast",
   "watch.paused_still_answers": "Pausil: selle ajakava on väljas. See vastab ikka sellele, mida saadad.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Viimased vestlused",
   "watch.recording": "Salvestan",
   "watch.recording_not_received": "Salvestis ei jõudnud telefoni. Proovi uuesti või kirjuta hoopis.",
+  "watch.refuse_on_phone": "Ei keeldutud. Keeldu sellest oma telefonis.",
   "watch.refused": "Keeldutud. Midagi ei saadetud.",
   "watch.reply": "Vasta",
   "watch.rerecord": "Salvesta uuesti",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Jätka telefonis",
   "watch.retry": "Proovi uuesti",
   "watch.review": "Kontrolli enne saatmist",
+  "watch.seconds_left": "Jäänud {seconds} s",
   "watch.sending": "Saatmine…",
   "watch.sent": "Saadetud",
   "watch.settings_of": "{taf} · seaded",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Telefon jääb sisse logituks. See kell unustab sinu tafid, vestlused ja postkasti.",
   "watch.signed_in": "Sisse logitud",
   "watch.signed_out_here": "Selles kellas välja logitud. Telefon jääb sisse logituks.",
+  "watch.stopped_at_limit": "Peatus piiril {limit}. Kuuldu on allpool.",
   "watch.swipe_settings": "Seadete jaoks pühi vasakule",
   "watch.tap_start": "Puuduta Alusta ja räägi. Sinu sõnad ilmuvad siia rääkimise ajal.",
   "watch.timing": "Kuulamine {listen} ms · kviitung {receipt} ms · tulemus {result} ms",

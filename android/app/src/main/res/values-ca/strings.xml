@@ -2803,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Eliminat. No s\'ha enviat res.</string>
     <string name="watch_didnt_catch">No t\'he entès. Toca per tornar-ho a provar.</string>
     <string name="watch_dismiss">Descarta</string>
+    <string name="watch_edit_words">Toca el text per canviar-lo</string>
     <string name="watch_glance_description">Quants et necessiten, mai què ni qui.</string>
     <string name="watch_halt_all_q">Bloquejar tots els teus taf?</string>
     <plurals name="watch_halt_now_count">
@@ -2818,6 +2819,7 @@
         <item quantity="one">%1$s crida retinguda et necessita</item>
         <item quantity="other">%1$s crides retingudes et necessiten</item>
     </plurals>
+    <string name="watch_held_channel">Crides retingudes</string>
     <string name="watch_inbox_empty">No hi ha res de nou. Les respostes de Coach i les alertes dels teus taf arriben aquí.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s sense llegir a la safata d\'entrada</item>
@@ -2842,6 +2844,7 @@
     <string name="watch_nothing_sent_until">No s\'envia res fins que ho aprovis.</string>
     <string name="watch_nothing_waits">No t\'espera res.</string>
     <string name="watch_open_on_phone">Obre al telèfon</string>
+    <string name="watch_opened_on_phone">Obert al telèfon</string>
     <string name="watch_page_brief">Resum</string>
     <string name="watch_page_inbox">Safata d\'entrada</string>
     <string name="watch_paused_still_answers">En pausa: la seva programació està desactivada. Encara respon el que li envies.</string>
@@ -2865,6 +2868,7 @@
     <string name="watch_recent_chats">Xats recents</string>
     <string name="watch_recording">Gravant</string>
     <string name="watch_recording_not_received">L\'enregistrament no ha arribat al teu telèfon. Torna-ho a provar, o escriu en lloc d\'això.</string>
+    <string name="watch_refuse_on_phone">No s\'ha rebutjat. Rebutja-ho al telèfon.</string>
     <string name="watch_refused">Rebutjat. No s\'ha enviat res.</string>
     <string name="watch_reply">Respon</string>
     <string name="watch_rerecord">Torna a gravar</string>
@@ -2873,6 +2877,7 @@
     <string name="watch_resume_on_phone">Reprèn al telèfon</string>
     <string name="watch_retry">Torna-ho a provar</string>
     <string name="watch_review">Revisa abans d\'enviar</string>
+    <string name="watch_seconds_left">Queden %1$s s</string>
     <string name="watch_sending">Enviant…</string>
     <string name="watch_sent">Enviat</string>
     <string name="watch_settings_of">%1$s · ajustos</string>
@@ -2885,6 +2890,7 @@
     <string name="watch_sign_out_sub">El teu telèfon manté la sessió iniciada. Aquest rellotge oblida els teus taf, xats i safata d\'entrada.</string>
     <string name="watch_signed_in">Sessió iniciada</string>
     <string name="watch_signed_out_here">S\'ha tancat la sessió en aquest rellotge. El teu telèfon manté la sessió iniciada.</string>
+    <string name="watch_stopped_at_limit">S\'ha aturat al límit de %1$s. El que s\'ha sentit és a sota.</string>
     <string name="watch_swipe_settings">Llisca cap a l\'esquerra per veure\'n els ajustos</string>
     <string name="watch_tap_start">Toca Comença i després parla. Les teves paraules es mostren aquí mentre parles.</string>
     <string name="watch_timing">Escolta %1$s ms · rebut %2$s ms · resultat %3$s ms</string>

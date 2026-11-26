@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Eliminado. No se envió nada.",
   "watch.didnt_catch": "No lo he entendido. Toca para volver a intentarlo.",
   "watch.dismiss": "Descartar",
+  "watch.edit_words": "Toca el texto para cambiarlo",
   "watch.glance_description": "Cuántos te necesitan, nunca qué ni quién.",
   "watch.halt_all_q": "¿Bloquear todos tus tafs?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} llamada retenida te necesita",
     "other": "{count} llamadas retenidas te necesitan"
   },
+  "watch.held_channel": "Llamadas retenidas",
   "watch.inbox_empty": "Nada nuevo. Aquí llegan las respuestas de Coach y los avisos de tus tafs.",
   "watch.inbox_unread": {
     "one": "{count} sin leer en la Bandeja",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "No se envía nada hasta que apruebes.",
   "watch.nothing_waits": "Nada te espera.",
   "watch.open_on_phone": "Abrir en el teléfono",
+  "watch.opened_on_phone": "Abierto en tu teléfono",
   "watch.page.brief": "Resumen",
   "watch.page.inbox": "Bandeja",
   "watch.paused_still_answers": "En pausa: su programación está detenida. Aun así responde a lo que envías.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Chats recientes",
   "watch.recording": "Grabando",
   "watch.recording_not_received": "La grabación no llegó a tu teléfono. Vuelve a intentarlo o escribe.",
+  "watch.refuse_on_phone": "No se ha rechazado. Recházalo en tu teléfono.",
   "watch.refused": "Rechazada. No se envió nada.",
   "watch.reply": "Responder",
   "watch.rerecord": "Volver a grabar",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Reanudar en tu teléfono",
   "watch.retry": "Reintentar",
   "watch.review": "Revisa antes de enviar",
+  "watch.seconds_left": "Quedan {seconds} s",
   "watch.sending": "Enviando…",
   "watch.sent": "Enviado",
   "watch.settings_of": "{taf} · ajustes",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Tu teléfono sigue con la sesión iniciada. Este reloj olvida tus tafs, chats y bandeja.",
   "watch.signed_in": "Sesión iniciada",
   "watch.signed_out_here": "Sesión cerrada en este reloj. Tu teléfono sigue con la sesión iniciada.",
+  "watch.stopped_at_limit": "Se detuvo en el límite de {limit}. Lo que se oyó está abajo.",
   "watch.swipe_settings": "Desliza a la izquierda para sus ajustes",
   "watch.tap_start": "Toca Empezar y habla. Tus palabras aparecen aquí mientras hablas.",
   "watch.timing": "Escucha {listen} ms · acuse {receipt} ms · resultado {result} ms",

@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "已刪除。未傳送任何內容。",
   "watch.didnt_catch": "沒有聽清楚。輕點以再試一次。",
   "watch.dismiss": "略過",
+  "watch.edit_words": "點一下文字即可修改",
   "watch.glance_description": "有多少項需要您，但不會顯示是什麼或是誰。",
   "watch.halt_all_q": "要凍結您的所有 taf 嗎？",
   "watch.halt_now_count": {
@@ -32,6 +33,7 @@
   "watch.held_calls": {
     "other": "{count} 次已保留的呼叫需要您"
   },
+  "watch.held_channel": "已保留的呼叫",
   "watch.inbox_empty": "沒有新內容。Coach 的回覆和您的 taf 的通知會顯示在這裡。",
   "watch.inbox_unread": {
     "other": "收件匣中有 {count} 則未讀"
@@ -54,6 +56,7 @@
   "watch.nothing_sent_until": "在您核准之前不會傳送任何內容。",
   "watch.nothing_waits": "沒有需要您處理的項目。",
   "watch.open_on_phone": "在手機上開啟",
+  "watch.opened_on_phone": "已在手機上開啟",
   "watch.page.brief": "摘要",
   "watch.page.inbox": "收件匣",
   "watch.paused_still_answers": "已暫停：它的排程已關閉。它仍會回覆您傳送的內容。",
@@ -76,6 +79,7 @@
   "watch.recent_chats": "最近的對話",
   "watch.recording": "錄音中",
   "watch.recording_not_received": "錄音未傳到您的手機。請再試一次，或改用輸入。",
+  "watch.refuse_on_phone": "未拒絕。請在手機上拒絕。",
   "watch.refused": "已拒絕。未傳送任何內容。",
   "watch.reply": "回覆",
   "watch.rerecord": "重新錄音",
@@ -84,6 +88,7 @@
   "watch.resume_on_phone": "在手機上繼續",
   "watch.retry": "重試",
   "watch.review": "傳送前請先檢查",
+  "watch.seconds_left": "剩下 {seconds} 秒",
   "watch.sending": "傳送中…",
   "watch.sent": "已傳送",
   "watch.settings_of": "{taf} · 設定",
@@ -96,6 +101,7 @@
   "watch.sign_out_sub": "您的手機仍保持登入。這支手錶會忘記您的 taf、對話和收件匣。",
   "watch.signed_in": "已登入",
   "watch.signed_out_here": "已在這支手錶上登出。您的手機仍保持登入。",
+  "watch.stopped_at_limit": "已在 {limit} 上限停止。聽到的內容在下方。",
   "watch.swipe_settings": "向左滑動以查看它的設定",
   "watch.tap_start": "輕點「開始」，然後說話。您說的話會在說話時顯示在這裡。",
   "watch.timing": "聆聽 {listen} 毫秒 · 收據 {receipt} 毫秒 · 結果 {result} 毫秒",

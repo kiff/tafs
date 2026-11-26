@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Izbrisano. Nič ni bilo poslano.",
   "watch.didnt_catch": "Nisem razumel. Tapnite za nov poskus.",
   "watch.dismiss": "Opusti",
+  "watch.edit_words": "Tapnite besedilo, da ga spremenite",
   "watch.glance_description": "Koliko vas jih potrebuje, nikoli kaj ali kdo.",
   "watch.halt_all_q": "Ustavim vse vaše tafe?",
   "watch.halt_now_count": {
@@ -38,6 +39,7 @@
     "few": "{count} zadržani klici čakajo na vas",
     "other": "{count} zadržanih klicev čaka na vas"
   },
+  "watch.held_channel": "Zadržani klici",
   "watch.inbox_empty": "Nič novega. Sem pridejo odgovori Coacha in opozorila vaših tafov.",
   "watch.inbox_unread": {
     "one": "{count} neprebrano v Nabiralniku",
@@ -66,6 +68,7 @@
   "watch.nothing_sent_until": "Nič se ne pošlje, dokler ne odobrite.",
   "watch.nothing_waits": "Nič ne čaka na vas.",
   "watch.open_on_phone": "Odpri v telefonu",
+  "watch.opened_on_phone": "Odprto v telefonu",
   "watch.page.brief": "Pregled",
   "watch.page.inbox": "Nabiralnik",
   "watch.paused_still_answers": "Začasno ustavljeno: njegov urnik je izklopljen. Še vedno odgovarja na to, kar pošljete.",
@@ -91,6 +94,7 @@
   "watch.recent_chats": "Nedavni klepeti",
   "watch.recording": "Snemam",
   "watch.recording_not_received": "Posnetek ni prišel do telefona. Poskusite znova ali tipkajte.",
+  "watch.refuse_on_phone": "Ni zavrnjeno. Zavrnite v telefonu.",
   "watch.refused": "Zavrnjeno. Nič ni bilo poslano.",
   "watch.reply": "Odgovori",
   "watch.rerecord": "Posnemi znova",
@@ -99,6 +103,7 @@
   "watch.resume_on_phone": "Nadaljujte v telefonu",
   "watch.retry": "Poskusi znova",
   "watch.review": "Preveri pred pošiljanjem",
+  "watch.seconds_left": "Še {seconds} s",
   "watch.sending": "Pošiljam…",
   "watch.sent": "Poslano",
   "watch.settings_of": "{taf} · nastavitve",
@@ -111,6 +116,7 @@
   "watch.sign_out_sub": "Telefon ostane prijavljen. Ta ura pozabi vaše tafe, klepete in Nabiralnik.",
   "watch.signed_in": "Prijavljeni",
   "watch.signed_out_here": "Odjavljeni na tej uri. Telefon ostane prijavljen.",
+  "watch.stopped_at_limit": "Ustavljeno pri omejitvi {limit}. Kar je bilo slišano, je spodaj.",
   "watch.swipe_settings": "Podrsajte levo za njegove nastavitve",
   "watch.tap_start": "Tapnite Začni in govorite. Vaše besede se prikazujejo tukaj, medtem ko govorite.",
   "watch.timing": "Poslušanje {listen} ms · potrdilo {receipt} ms · rezultat {result} ms",

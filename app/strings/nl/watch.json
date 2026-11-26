@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Verwijderd. Er is niets verstuurd.",
   "watch.didnt_catch": "Niet verstaan. Tik om het opnieuw te proberen.",
   "watch.dismiss": "Negeren",
+  "watch.edit_words": "Tik op de tekst om hem te wijzigen",
   "watch.glance_description": "Hoeveel er op je wachten, nooit wat of wie.",
   "watch.halt_all_q": "Al je tafs stilzetten?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} vastgehouden aanroep wacht op jou",
     "other": "{count} vastgehouden aanroepen wachten op jou"
   },
+  "watch.held_channel": "Vastgehouden aanroepen",
   "watch.inbox_empty": "Niets nieuws. Hier komen de antwoorden van Coach en de meldingen van je tafs.",
   "watch.inbox_unread": {
     "one": "{count} ongelezen in je Inbox",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Er wordt niets verstuurd tot je goedkeurt.",
   "watch.nothing_waits": "Er wacht niets op je.",
   "watch.open_on_phone": "Openen op telefoon",
+  "watch.opened_on_phone": "Geopend op je telefoon",
   "watch.page.brief": "Overzicht",
   "watch.page.inbox": "Inbox",
   "watch.paused_still_answers": "Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Recente chats",
   "watch.recording": "Opnemen",
   "watch.recording_not_received": "De opname is niet op je telefoon aangekomen. Probeer het opnieuw, of typ het.",
+  "watch.refuse_on_phone": "Niet geweigerd. Weiger het op je telefoon.",
   "watch.refused": "Geweigerd. Er is niets verstuurd.",
   "watch.reply": "Antwoorden",
   "watch.rerecord": "Opnieuw opnemen",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Hervat op je telefoon",
   "watch.retry": "Opnieuw",
   "watch.review": "Controleer voor je verstuurt",
+  "watch.seconds_left": "Nog {seconds} s",
   "watch.sending": "Versturen…",
   "watch.sent": "Verstuurd",
   "watch.settings_of": "{taf} · instellingen",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Je telefoon blijft ingelogd. Dit horloge vergeet je tafs, chats en Inbox.",
   "watch.signed_in": "Ingelogd",
   "watch.signed_out_here": "Uitgelogd op dit horloge. Je telefoon blijft ingelogd.",
+  "watch.stopped_at_limit": "Gestopt bij de limiet van {limit}. Wat er gehoord is, staat hieronder.",
   "watch.swipe_settings": "Veeg naar links voor zijn instellingen",
   "watch.tap_start": "Tik op Starten en spreek. Je woorden verschijnen hier terwijl je praat.",
   "watch.timing": "Luisteren {listen} ms · ontvangst {receipt} ms · resultaat {result} ms",

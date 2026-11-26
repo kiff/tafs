@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AGREE_FIRST, askedInSession, checkDraft, type DecideContext, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, KIFFS_OWN_TOTAL, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
+import { AGREE_FIRST, askedInSession, checkDraft, type DecideContext, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, KIFFS_OWN_TOTAL, MONEY_NEVER_CANT, MONEY_UNBUILT, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
 import { unpinnedConnection } from "../src/cloud/rules.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
@@ -2980,7 +2980,8 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     });
 
     // The apple@ rebuild's words, "Every refund asks you first", over a figure that inherits the rule's ask: no Cards
-    // KIFF signs hold every refund asking, so Approve shows the rules again, whatever Card Coach drafted.
+    // KIFF signs hold every refund asking, so Approve shows the rules again, whatever Card Coach drafted. The words are
+    // every_call_unheld's: an inherited ask alone is read as the rule's (an Eval, 26 Nov, below).
     it("words that say every refund asks, over a cap that asks, are shown again: no Card holds every refund", async () => {
       const inherited = [{ tool: "refund_charge", over: "ask", limits: [EACH, { ...DAY, over: "refuse" }] }, { tool: "list_charges", over: "refuse" }];
       const { s, rules, tap } = await setUp("refuse");
@@ -2988,7 +2989,34 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       rules("rules-1", inherited, true, "Every refund asks you first. Refunds over €5 ask you, and are refused past €50 a day.");
       const r = await tap();
       expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
-      expect(String(r.answer)).toContain("its rule asks, and a figure on it says nothing of its own over");
+      expect(String(r.answer)).toContain("the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks");
+      expect(String(r.answer)).toContain(MONEY_NEVER_CANT);
+      expect(s.checks).toEqual([]);
+    });
+
+    // A refusal is what Coach tells the owner from: it names only what the rules need, never a rule the owner can't have
+    // (an Eval, 26 Nov: "would let every call under it run unasked" became "can't be set to run by themselves under €5").
+    it("no money refusal says the owner can't have a rule, and each one tells Coach never to", () => {
+      for (const [code, text] of Object.entries(MONEY_UNBUILT)) {
+        expect(text, code).not.toMatch(/can['’]?t|cannot|can not|impossible|not possible|couldn['’]?t/i);
+      }
+      expect(MONEY_NEVER_CANT).toContain("Never tell the owner a rule can't be set");
+    });
+
+    // An Eval, 26 Nov, run 2: the owner agreed "up to €5 each, by itself; over €5 asks you first", with the €5 cap inheriting
+    // the rule's ask. It was refused (ask_inherited), the refusal steered Coach to tell the owner such a cap couldn't be
+    // set, and a €4 refund meant to run by itself was held. Now those rules give the two Cards, prescribed as such.
+    it("a cap that inherits the rule's ask, under words that say it runs by itself below it, gives the two Cards", async () => {
+      const said = "Refund a charge: up to €5 each, by itself; over €5 asks you first; past €50 a day it is refused.";
+      const inherited = [{ tool: "refund_charge", over: "ask", limits: [EACH, { ...DAY, over: "refuse" }] }, { tool: "list_charges", over: "refuse" }];
+      const { s, rules, tap } = await setUp("refuse");
+      setFigures(s, 500, [dayTotal(5000)]);
+      rules("rules-1", inherited, true, said);
+      const r = await tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).not.toContain("no Cards KIFF signs");
+      expect(String(r.answer)).toContain('"on_exceed":"owner"');
+      expect(String(r.answer)).toContain('"per_action_max":[{"quantity":"sum(amount)","max":500}]');
       expect(s.checks).toEqual([]);
     });
 

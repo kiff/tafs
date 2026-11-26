@@ -1,0 +1,3 @@
+• As chamadas retidas chegam de imediato ao seu relógio.
+• Um relógio sem sessão continua assim até o permitir aqui.
+• O aviso de atualização já não propõe um reinício que não faz nada.

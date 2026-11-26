@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Usunięto. Nic nie zostało wysłane.",
   "watch.didnt_catch": "Nie udało się zrozumieć. Dotknij, aby spróbować ponownie.",
   "watch.dismiss": "Odrzuć",
+  "watch.edit_words": "Dotknij tekstu, aby go zmienić",
   "watch.glance_description": "Ile czeka na Ciebie, nigdy co ani kto.",
   "watch.halt_all_q": "Zablokować wszystkie Twoje tafs?",
   "watch.halt_now_count": {
@@ -38,6 +39,7 @@
     "one": "{count} oczekujące wywołanie czeka na Ciebie",
     "other": "{count} oczekującego wywołania czeka na Ciebie"
   },
+  "watch.held_channel": "Oczekujące wywołania",
   "watch.inbox_empty": "Nic nowego. Tu trafiają odpowiedzi Coacha i alerty Twoich tafs.",
   "watch.inbox_unread": {
     "few": "Nieprzeczytane w Skrzynce: {count}",
@@ -66,6 +68,7 @@
   "watch.nothing_sent_until": "Nic nie zostanie wysłane, dopóki nie zatwierdzisz.",
   "watch.nothing_waits": "Nic na Ciebie nie czeka.",
   "watch.open_on_phone": "Otwórz na telefonie",
+  "watch.opened_on_phone": "Otwarto na telefonie",
   "watch.page.brief": "Podsumowanie",
   "watch.page.inbox": "Skrzynka",
   "watch.paused_still_answers": "Wstrzymane: harmonogram jest wyłączony. Taf nadal odpowiada na to, co wysyłasz.",
@@ -91,6 +94,7 @@
   "watch.recent_chats": "Ostatnie czaty",
   "watch.recording": "Nagrywanie",
   "watch.recording_not_received": "Nagranie nie dotarło do telefonu. Spróbuj ponownie albo wpisz tekst.",
+  "watch.refuse_on_phone": "Nie odrzucono. Odrzuć to na telefonie.",
   "watch.refused": "Odrzucono. Nic nie zostało wysłane.",
   "watch.reply": "Odpowiedz",
   "watch.rerecord": "Nagraj ponownie",
@@ -99,6 +103,7 @@
   "watch.resume_on_phone": "Wznów na telefonie",
   "watch.retry": "Ponów",
   "watch.review": "Sprawdź przed wysłaniem",
+  "watch.seconds_left": "Zostało {seconds} s",
   "watch.sending": "Wysyłanie…",
   "watch.sent": "Wysłano",
   "watch.settings_of": "{taf} · ustawienia",
@@ -111,6 +116,7 @@
   "watch.sign_out_sub": "Telefon pozostaje zalogowany. Ten zegarek zapomina Twoje tafs, czaty i Skrzynkę.",
   "watch.signed_in": "Zalogowano",
   "watch.signed_out_here": "Wylogowano na tym zegarku. Telefon pozostaje zalogowany.",
+  "watch.stopped_at_limit": "Zatrzymano na limicie {limit}. To, co usłyszano, jest poniżej.",
   "watch.swipe_settings": "Przesuń w lewo, by zobaczyć ustawienia",
   "watch.tap_start": "Dotknij Start i mów. Twoje słowa pojawiają się tu na bieżąco.",
   "watch.timing": "Słuchanie {listen} ms · potwierdzenie {receipt} ms · wynik {result} ms",

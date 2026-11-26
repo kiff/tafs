@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "წაიშალა. არაფერი გაიგზავნა.",
   "watch.didnt_catch": "ვერ გავიგე. შეეხეთ ხელახლა საცდელად.",
   "watch.dismiss": "უარყოფა",
+  "watch.edit_words": "შესაცვლელად შეეხეთ ტექსტს",
   "watch.glance_description": "რამდენი გელოდებათ, არასოდეს რა ან ვინ.",
   "watch.halt_all_q": "გაჩერდეს თქვენი ყველა taf?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} დაკავებული ზარი გელოდებათ",
     "other": "{count} დაკავებული ზარი გელოდებათ"
   },
+  "watch.held_channel": "დაკავებული ზარები",
   "watch.inbox_empty": "ახალი არაფერია. Coach-ის პასუხები და თქვენი taf-ების შეტყობინებები აქ ჩნდება.",
   "watch.inbox_unread": {
     "one": "{count} წაუკითხავი შემოსულებში",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "არაფერი იგზავნება, სანამ არ დაამტკიცებთ.",
   "watch.nothing_waits": "არაფერი გელოდებათ.",
   "watch.open_on_phone": "გახსენით ტელეფონზე",
+  "watch.opened_on_phone": "გაიხსნა ტელეფონზე",
   "watch.page.brief": "მიმოხილვა",
   "watch.page.inbox": "შემოსულები",
   "watch.paused_still_answers": "დაპაუზებულია: მისი განრიგი გამორთულია. ის მაინც პასუხობს, რასაც გაუგზავნით.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "ბოლო ჩატები",
   "watch.recording": "იწერება",
   "watch.recording_not_received": "ჩანაწერი თქვენს ტელეფონამდე ვერ მივიდა. სცადეთ ხელახლა ან აკრიფეთ.",
+  "watch.refuse_on_phone": "არ უარყოფილა. უარყავით ტელეფონზე.",
   "watch.refused": "უარყოფილია. არაფერი გაიგზავნა.",
   "watch.reply": "პასუხი",
   "watch.rerecord": "ხელახლა ჩაწერა",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "განაახლეთ თქვენს ტელეფონზე",
   "watch.retry": "სცადეთ ხელახლა",
   "watch.review": "შეამოწმეთ გაგზავნამდე",
+  "watch.seconds_left": "დარჩა {seconds} წმ",
   "watch.sending": "იგზავნება…",
   "watch.sent": "გაიგზავნა",
   "watch.settings_of": "{taf} · პარამეტრები",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "თქვენი ტელეფონი შესული რჩება. ეს საათი ივიწყებს თქვენს taf-ებს, ჩატებს და შემოსულებს.",
   "watch.signed_in": "შესულია",
   "watch.signed_out_here": "ამ საათზე გამოხვედით. თქვენი ტელეფონი შესული რჩება.",
+  "watch.stopped_at_limit": "შეჩერდა {limit} ლიმიტზე. მოსმენილი ქვემოთაა.",
   "watch.swipe_settings": "გადაიტანეთ მარცხნივ მისი პარამეტრებისთვის",
   "watch.tap_start": "შეეხეთ „დაწყებას“, შემდეგ ისაუბრეთ. თქვენი სიტყვები აქ ჩანს საუბრისას.",
   "watch.timing": "მოსმენა {listen} მწ · ქვითარი {receipt} მწ · შედეგი {result} მწ",

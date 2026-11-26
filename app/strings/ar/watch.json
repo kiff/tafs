@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "تم الحذف. لم يُرسل شيء.",
   "watch.didnt_catch": "لم أسمع ذلك. اضغط للمحاولة مرة أخرى.",
   "watch.dismiss": "تجاهل",
+  "watch.edit_words": "انقر على النص لتغييره",
   "watch.glance_description": "كم منها بانتظارك، دون أن تُعرف ما هي أو من.",
   "watch.halt_all_q": "تجميد جميع tafs لديك؟",
   "watch.halt_now_count": {
@@ -42,6 +43,7 @@
     "many": "{count} استدعاءً معلّقًا بانتظارك",
     "other": "{count} استدعاء معلّق بانتظارك"
   },
+  "watch.held_channel": "الاستدعاءات المعلّقة",
   "watch.inbox_empty": "لا جديد. تصل هنا ردود Coach وتنبيهات tafs لديك.",
   "watch.inbox_unread": {
     "zero": "لا غير مقروء في «الوارد»",
@@ -74,6 +76,7 @@
   "watch.nothing_sent_until": "لا يُرسل شيء حتى توافق.",
   "watch.nothing_waits": "لا شيء بانتظارك.",
   "watch.open_on_phone": "فتح على الهاتف",
+  "watch.opened_on_phone": "فُتح على هاتفك",
   "watch.page.brief": "الملخص",
   "watch.page.inbox": "الوارد",
   "watch.paused_still_answers": "متوقف مؤقتًا: جدوله متوقف. ما زال يردّ على ما ترسله.",
@@ -101,6 +104,7 @@
   "watch.recent_chats": "المحادثات الأخيرة",
   "watch.recording": "جارٍ التسجيل",
   "watch.recording_not_received": "لم يصل التسجيل إلى هاتفك. حاول مرة أخرى، أو اكتب بدلًا من ذلك.",
+  "watch.refuse_on_phone": "لم يُرفض. ارفضه من هاتفك.",
   "watch.refused": "مرفوض. لم يُرسل شيء.",
   "watch.reply": "رد",
   "watch.rerecord": "إعادة التسجيل",
@@ -109,6 +113,7 @@
   "watch.resume_on_phone": "استئناف على هاتفك",
   "watch.retry": "إعادة المحاولة",
   "watch.review": "راجع قبل الإرسال",
+  "watch.seconds_left": "يتبقى {seconds} ث",
   "watch.sending": "جارٍ الإرسال…",
   "watch.sent": "أُرسل",
   "watch.settings_of": "{taf} · الإعدادات",
@@ -121,6 +126,7 @@
   "watch.sign_out_sub": "يبقى هاتفك مسجّل الدخول. وتنسى هذه الساعة tafs لديك ومحادثاتك ووارداتك.",
   "watch.signed_in": "تم تسجيل الدخول",
   "watch.signed_out_here": "تم تسجيل الخروج على هذه الساعة. ويبقى هاتفك مسجّل الدخول.",
+  "watch.stopped_at_limit": "توقف عند حد {limit}. ما سُمع موجود أدناه.",
   "watch.swipe_settings": "اسحب لإعداداته",
   "watch.tap_start": "اضغط «بدء» ثم تحدّث. تظهر كلماتك هنا أثناء حديثك.",
   "watch.timing": "الاستماع {listen} م ث · الإيصال {receipt} م ث · النتيجة {result} م ث",

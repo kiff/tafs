@@ -2728,6 +2728,7 @@
     <string name="watch_deleted_nothing_sent">已刪除。未傳送任何內容。</string>
     <string name="watch_didnt_catch">沒有聽清楚。輕點以再試一次。</string>
     <string name="watch_dismiss">略過</string>
+    <string name="watch_edit_words">點一下文字即可修改</string>
     <string name="watch_glance_description">有多少項需要您，但不會顯示是什麼或是誰。</string>
     <string name="watch_halt_all_q">要凍結您的所有 taf 嗎？</string>
     <plurals name="watch_halt_now_count">
@@ -2741,6 +2742,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">%1$s 次已保留的呼叫需要您</item>
     </plurals>
+    <string name="watch_held_channel">已保留的呼叫</string>
     <string name="watch_inbox_empty">沒有新內容。Coach 的回覆和您的 taf 的通知會顯示在這裡。</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">收件匣中有 %1$s 則未讀</item>
@@ -2763,6 +2765,7 @@
     <string name="watch_nothing_sent_until">在您核准之前不會傳送任何內容。</string>
     <string name="watch_nothing_waits">沒有需要您處理的項目。</string>
     <string name="watch_open_on_phone">在手機上開啟</string>
+    <string name="watch_opened_on_phone">已在手機上開啟</string>
     <string name="watch_page_brief">摘要</string>
     <string name="watch_page_inbox">收件匣</string>
     <string name="watch_paused_still_answers">已暫停：它的排程已關閉。它仍會回覆您傳送的內容。</string>
@@ -2785,6 +2788,7 @@
     <string name="watch_recent_chats">最近的對話</string>
     <string name="watch_recording">錄音中</string>
     <string name="watch_recording_not_received">錄音未傳到您的手機。請再試一次，或改用輸入。</string>
+    <string name="watch_refuse_on_phone">未拒絕。請在手機上拒絕。</string>
     <string name="watch_refused">已拒絕。未傳送任何內容。</string>
     <string name="watch_reply">回覆</string>
     <string name="watch_rerecord">重新錄音</string>
@@ -2793,6 +2797,7 @@
     <string name="watch_resume_on_phone">在手機上繼續</string>
     <string name="watch_retry">重試</string>
     <string name="watch_review">傳送前請先檢查</string>
+    <string name="watch_seconds_left">剩下 %1$s 秒</string>
     <string name="watch_sending">傳送中…</string>
     <string name="watch_sent">已傳送</string>
     <string name="watch_settings_of">%1$s · 設定</string>
@@ -2805,6 +2810,7 @@
     <string name="watch_sign_out_sub">您的手機仍保持登入。這支手錶會忘記您的 taf、對話和收件匣。</string>
     <string name="watch_signed_in">已登入</string>
     <string name="watch_signed_out_here">已在這支手錶上登出。您的手機仍保持登入。</string>
+    <string name="watch_stopped_at_limit">已在 %1$s 上限停止。聽到的內容在下方。</string>
     <string name="watch_swipe_settings">向左滑動以查看它的設定</string>
     <string name="watch_tap_start">輕點「開始」，然後說話。您說的話會在說話時顯示在這裡。</string>
     <string name="watch_timing">聆聽 %1$s 毫秒 · 收據 %2$s 毫秒 · 結果 %3$s 毫秒</string>

@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "បានលុប។ គ្មានអ្វីត្រូវបានផ្ញើទេ។",
   "watch.didnt_catch": "ស្តាប់មិនបាន។ ចុចដើម្បីព្យាយាមម្តងទៀត។",
   "watch.dismiss": "បដិសេធចោល",
+  "watch.edit_words": "ប៉ះអត្ថបទដើម្បីកែ",
   "watch.glance_description": "មានប៉ុន្មានត្រូវការអ្នក មិនដែលបង្ហាញថាអ្វី ឬនរណាទេ។",
   "watch.halt_all_q": "បញ្ឈប់ taf ទាំងអស់របស់អ្នកឬ?",
   "watch.halt_now_count": {
@@ -32,6 +33,7 @@
   "watch.held_calls": {
     "other": "ការហៅដែលផ្អាកទុក {count} ត្រូវការអ្នក"
   },
+  "watch.held_channel": "ការហៅដែលផ្អាកទុក",
   "watch.inbox_empty": "គ្មានអ្វីថ្មីទេ។ ចម្លើយរបស់ Coach និងការជូនដំណឹងពី taf របស់អ្នកមកដល់ទីនេះ។",
   "watch.inbox_unread": {
     "other": "មិនទាន់អាន {count} ក្នុងប្រអប់សារចូល"
@@ -54,6 +56,7 @@
   "watch.nothing_sent_until": "គ្មានអ្វីត្រូវបានផ្ញើទេ រហូតដល់អ្នកអនុម័ត។",
   "watch.nothing_waits": "គ្មានអ្វីរង់ចាំអ្នកទេ។",
   "watch.open_on_phone": "បើកនៅលើទូរសព្ទ",
+  "watch.opened_on_phone": "បានបើកនៅលើទូរសព្ទ",
   "watch.page.brief": "សេចក្តីសង្ខេប",
   "watch.page.inbox": "ប្រអប់សារចូល",
   "watch.paused_still_answers": "បានផ្អាក៖ កាលវិភាគរបស់វាបិទ។ វានៅតែឆ្លើយអ្វីដែលអ្នកផ្ញើ។",
@@ -76,6 +79,7 @@
   "watch.recent_chats": "ការសន្ទនាថ្មីៗ",
   "watch.recording": "កំពុងថត",
   "watch.recording_not_received": "ការថតមិនបានទៅដល់ទូរសព្ទរបស់អ្នកទេ។ សូមព្យាយាមម្តងទៀត ឬវាយជំនួស។",
+  "watch.refuse_on_phone": "មិនទាន់បដិសេធទេ។ សូមបដិសេធនៅលើទូរសព្ទ។",
   "watch.refused": "បានបដិសេធ។ គ្មានអ្វីត្រូវបានផ្ញើទេ។",
   "watch.reply": "ឆ្លើយតប",
   "watch.rerecord": "ថតម្តងទៀត",
@@ -84,6 +88,7 @@
   "watch.resume_on_phone": "បន្តនៅលើទូរសព្ទរបស់អ្នក",
   "watch.retry": "ព្យាយាមម្តងទៀត",
   "watch.review": "ពិនិត្យមុនផ្ញើ",
+  "watch.seconds_left": "នៅសល់ {seconds} វិ",
   "watch.sending": "កំពុងផ្ញើ…",
   "watch.sent": "បានផ្ញើ",
   "watch.settings_of": "{taf} · ការកំណត់",
@@ -96,6 +101,7 @@
   "watch.sign_out_sub": "ទូរសព្ទរបស់អ្នកនៅតែចូល។ នាឡិកានេះភ្លេច taf ការសន្ទនា និងប្រអប់សារចូលរបស់អ្នក។",
   "watch.signed_in": "បានចូល",
   "watch.signed_out_here": "បានចាកចេញនៅលើនាឡិកានេះ។ ទូរសព្ទរបស់អ្នកនៅតែចូល។",
+  "watch.stopped_at_limit": "បានឈប់នៅដែនកំណត់ {limit}។ អ្វីដែលបានឮនៅខាងក្រោម។",
   "watch.swipe_settings": "អូសទៅឆ្វេងដើម្បីមើលការកំណត់របស់វា",
   "watch.tap_start": "ចុចចាប់ផ្តើម រួចនិយាយ។ ពាក្យរបស់អ្នកបង្ហាញនៅទីនេះនៅពេលអ្នកនិយាយ។",
   "watch.timing": "ស្តាប់ {listen} ms · បង្កាន់ដៃ {receipt} ms · លទ្ធផល {result} ms",

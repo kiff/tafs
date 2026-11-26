@@ -2953,6 +2953,7 @@
     <string name="watch_deleted_nothing_sent">Usunięto. Nic nie zostało wysłane.</string>
     <string name="watch_didnt_catch">Nie udało się zrozumieć. Dotknij, aby spróbować ponownie.</string>
     <string name="watch_dismiss">Odrzuć</string>
+    <string name="watch_edit_words">Dotknij tekstu, aby go zmienić</string>
     <string name="watch_glance_description">Ile czeka na Ciebie, nigdy co ani kto.</string>
     <string name="watch_halt_all_q">Zablokować wszystkie Twoje tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -2972,6 +2973,7 @@
         <item quantity="many">%1$s oczekujących wywołań czeka na Ciebie</item>
         <item quantity="other">%1$s oczekującego wywołania czeka na Ciebie</item>
     </plurals>
+    <string name="watch_held_channel">Oczekujące wywołania</string>
     <string name="watch_inbox_empty">Nic nowego. Tu trafiają odpowiedzi Coacha i alerty Twoich tafs.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Nieprzeczytane w Skrzynce: %1$s</item>
@@ -3000,6 +3002,7 @@
     <string name="watch_nothing_sent_until">Nic nie zostanie wysłane, dopóki nie zatwierdzisz.</string>
     <string name="watch_nothing_waits">Nic na Ciebie nie czeka.</string>
     <string name="watch_open_on_phone">Otwórz na telefonie</string>
+    <string name="watch_opened_on_phone">Otwarto na telefonie</string>
     <string name="watch_page_brief">Podsumowanie</string>
     <string name="watch_page_inbox">Skrzynka</string>
     <string name="watch_paused_still_answers">Wstrzymane: harmonogram jest wyłączony. Taf nadal odpowiada na to, co wysyłasz.</string>
@@ -3025,6 +3028,7 @@
     <string name="watch_recent_chats">Ostatnie czaty</string>
     <string name="watch_recording">Nagrywanie</string>
     <string name="watch_recording_not_received">Nagranie nie dotarło do telefonu. Spróbuj ponownie albo wpisz tekst.</string>
+    <string name="watch_refuse_on_phone">Nie odrzucono. Odrzuć to na telefonie.</string>
     <string name="watch_refused">Odrzucono. Nic nie zostało wysłane.</string>
     <string name="watch_reply">Odpowiedz</string>
     <string name="watch_rerecord">Nagraj ponownie</string>
@@ -3033,6 +3037,7 @@
     <string name="watch_resume_on_phone">Wznów na telefonie</string>
     <string name="watch_retry">Ponów</string>
     <string name="watch_review">Sprawdź przed wysłaniem</string>
+    <string name="watch_seconds_left">Zostało %1$s s</string>
     <string name="watch_sending">Wysyłanie…</string>
     <string name="watch_sent">Wysłano</string>
     <string name="watch_settings_of">%1$s · ustawienia</string>
@@ -3045,6 +3050,7 @@
     <string name="watch_sign_out_sub">Telefon pozostaje zalogowany. Ten zegarek zapomina Twoje tafs, czaty i Skrzynkę.</string>
     <string name="watch_signed_in">Zalogowano</string>
     <string name="watch_signed_out_here">Wylogowano na tym zegarku. Telefon pozostaje zalogowany.</string>
+    <string name="watch_stopped_at_limit">Zatrzymano na limicie %1$s. To, co usłyszano, jest poniżej.</string>
     <string name="watch_swipe_settings">Przesuń w lewo, by zobaczyć ustawienia</string>
     <string name="watch_tap_start">Dotknij Start i mów. Twoje słowa pojawiają się tu na bieżąco.</string>
     <string name="watch_timing">Słuchanie %1$s ms · potwierdzenie %2$s ms · wynik %3$s ms</string>

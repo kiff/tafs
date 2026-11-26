@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Ջնջվեց։ Ոչինչ չուղարկվեց։",
   "watch.didnt_catch": "Չհասկացա։ Հպեք՝ նորից փորձելու համար։",
   "watch.dismiss": "Մերժել",
+  "watch.edit_words": "Հպեք տեքստին՝ այն փոխելու համար",
   "watch.glance_description": "Քանիսն են սպասում ձեզ, երբեք ինչը կամ ովքեր։",
   "watch.halt_all_q": "Կանգնեցնե՞լ ձեր բոլոր taf-երը։",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} պահված զանգ սպասում է ձեզ",
     "other": "{count} պահված զանգ սպասում է ձեզ"
   },
+  "watch.held_channel": "Պահված զանգեր",
   "watch.inbox_empty": "Նոր ոչինչ չկա։ Coach-ի պատասխանները և ձեր taf-երի ծանուցումները հայտնվում են այստեղ։",
   "watch.inbox_unread": {
     "one": "{count} չկարդացված մուտքայինում",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Ոչինչ չի ուղարկվում, մինչև չհաստատեք։",
   "watch.nothing_waits": "Ոչինչ չի սպասում ձեզ։",
   "watch.open_on_phone": "Բացեք հեռախոսում",
+  "watch.opened_on_phone": "Բացվեց հեռախոսում",
   "watch.page.brief": "Ամփոփում",
   "watch.page.inbox": "Մուտքային",
   "watch.paused_still_answers": "Դադարեցված է․ նրա ժամանակացույցը անջատված է։ Այն դեռ պատասխանում է նրան, ինչ ուղարկում եք։",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Վերջին զրույցները",
   "watch.recording": "Ձայնագրվում է",
   "watch.recording_not_received": "Ձայնագրությունը չհասավ ձեր հեռախոսին։ Փորձեք նորից կամ մուտքագրեք։",
+  "watch.refuse_on_phone": "Չի մերժվել։ Մերժեք այն հեռախոսում։",
   "watch.refused": "Մերժված է։ Ոչինչ չուղարկվեց։",
   "watch.reply": "Պատասխանել",
   "watch.rerecord": "Նորից ձայնագրել",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Վերսկսեք ձեր հեռախոսով",
   "watch.retry": "Փորձեք նորից",
   "watch.review": "Ստուգեք ուղարկելուց առաջ",
+  "watch.seconds_left": "Մնաց {seconds} վ",
   "watch.sending": "Ուղարկվում է…",
   "watch.sent": "Ուղարկվեց",
   "watch.settings_of": "{taf} · կարգավորումներ",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Ձեր հեռախոսը մնում է մուտք գործած։ Այս ժամացույցը մոռանում է ձեր taf-երը, զրույցները և մուտքայինը։",
   "watch.signed_in": "Մուտք գործած է",
   "watch.signed_out_here": "Այս ժամացույցից դուրս եկաք։ Ձեր հեռախոսը մնում է մուտք գործած։",
+  "watch.stopped_at_limit": "Կանգնեց {limit} սահմանին։ Լսվածը ներքևում է։",
   "watch.swipe_settings": "Սահեցրեք ձախ՝ նրա կարգավորումների համար",
   "watch.tap_start": "Հպեք «Սկսել», ապա խոսեք։ Ձեր բառերը երևում են այստեղ խոսելիս։",
   "watch.timing": "Լսում {listen} մվ · անդորրագիր {receipt} մվ · արդյունք {result} մվ",

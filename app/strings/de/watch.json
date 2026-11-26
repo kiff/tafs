@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Gelöscht. Nichts wurde gesendet.",
   "watch.didnt_catch": "Nicht verstanden. Tippe, um es erneut zu versuchen.",
   "watch.dismiss": "Verwerfen",
+  "watch.edit_words": "Tippe auf den Text, um ihn zu ändern",
   "watch.glance_description": "Wie viele dich brauchen, nie was oder wer.",
   "watch.halt_all_q": "Alle deine tafs anhalten?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} zurückgehaltener Aufruf braucht dich",
     "other": "{count} zurückgehaltene Aufrufe brauchen dich"
   },
+  "watch.held_channel": "Zurückgehaltene Aufrufe",
   "watch.inbox_empty": "Nichts Neues. Hier landen die Antworten von Coach und die Hinweise deiner tafs.",
   "watch.inbox_unread": {
     "one": "{count} ungelesen im Eingang",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Nichts wird gesendet, bevor du genehmigst.",
   "watch.nothing_waits": "Nichts wartet auf dich.",
   "watch.open_on_phone": "Auf dem Handy öffnen",
+  "watch.opened_on_phone": "Auf deinem Telefon geöffnet",
   "watch.page.brief": "Briefing",
   "watch.page.inbox": "Eingang",
   "watch.paused_still_answers": "Pausiert: Sein Zeitplan ist aus. Was du sendest, beantwortet er trotzdem.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Letzte Chats",
   "watch.recording": "Aufnahme läuft",
   "watch.recording_not_received": "Die Aufnahme ist nicht auf deinem Handy angekommen. Versuch es erneut oder tippe stattdessen.",
+  "watch.refuse_on_phone": "Nicht abgelehnt. Lehne es auf deinem Telefon ab.",
   "watch.refused": "Abgelehnt. Nichts wurde gesendet.",
   "watch.reply": "Antworten",
   "watch.rerecord": "Neu aufnehmen",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Auf dem Handy fortsetzen",
   "watch.retry": "Erneut senden",
   "watch.review": "Vor dem Senden prüfen",
+  "watch.seconds_left": "Noch {seconds} s",
   "watch.sending": "Wird gesendet…",
   "watch.sent": "Gesendet",
   "watch.settings_of": "{taf} · Einstellungen",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Dein Handy bleibt angemeldet. Diese Uhr vergisst deine tafs, Chats und deinen Eingang.",
   "watch.signed_in": "Angemeldet",
   "watch.signed_out_here": "Auf dieser Uhr abgemeldet. Dein Handy bleibt angemeldet.",
+  "watch.stopped_at_limit": "Bei {limit} gestoppt. Das Gehörte steht unten.",
   "watch.swipe_settings": "Nach links wischen für seine Einstellungen",
   "watch.tap_start": "Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.",
   "watch.timing": "Zuhören {listen} ms · Bestätigung {receipt} ms · Ergebnis {result} ms",

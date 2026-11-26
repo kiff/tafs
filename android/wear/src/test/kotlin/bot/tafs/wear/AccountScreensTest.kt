@@ -74,10 +74,18 @@ class AccountModelTest {
 
   private class SignIn : WatchSignIn {
     var out = false
+    var waiting: Pair<String, Long>? = null
     override fun signedOut() = out
-    override fun signOut() { out = true }
-    override fun signIn() { out = false }
+    override fun signOut() { out = true; waiting = null }
+    override fun signIn() { out = false; waiting = null }
+    override fun asked() = waiting
+    override fun ask(id: String, at: Long) { waiting = id to at }
+    override fun forgetAsk() { waiting = null }
   }
+
+  /** The phone's person allowed this watch's sign-in ask (row 18): the only way back in. */
+  private fun WatchModel.allowedBy(signIn: SignIn) =
+    signInAnswered(bot.tafs.watchlink.KeptSignIn(t, signIn.asked()!!.first, allowed = true))
 
   private class Recording : VoiceAudio {
     var deleted = 0
@@ -181,6 +189,22 @@ class AccountModelTest {
     assertTrue("the phone is told nothing: it stays signed in", phone.asked.isEmpty())
   }
 
+  /** Row 18: signed out from one copy of the app, another copy (opened earlier from the tile) follows it when it comes back. */
+  @Test fun aSignOutFromAnotherCopyOfTheAppHoldsWhenThisOneComesBack() = runTest {
+    val signIn = SignIn()
+    val phone = Phone(::reads)
+    val earlier = v2(phone, signIn = signIn)
+    earlier.refresh()
+    assertTrue(earlier.shown.value is WatchModel.Shown.Read)
+    v2(phone, signIn = signIn).signOutHere()
+    // Back to the front: it reads the watch's own flag before drawing anything, and nothing of the account stays.
+    earlier.reload()
+    assertTrue(earlier.signedOutHere.value)
+    val asked = phone.asked.size
+    earlier.refresh()
+    assertEquals("it asks the phone nothing", asked, phone.asked.size)
+  }
+
   @Test fun signedOutOnTheWatchItReadsAndSendsNothingUntilSignedInThere() = runTest {
     val phone = Phone(::reads)
     val signIn = SignIn()
@@ -207,11 +231,53 @@ class AccountModelTest {
     assertTrue(again.signedOutHere.value)
     again.refresh()
     assertTrue(phone.asked.isEmpty())
-    // Sign in, here: the watch reads the phone again.
-    again.signInHere()
+    // Sign in again: asked of the phone's person, and only their Allow signs the watch in.
+    signIn.ask("w_00000002", t)
+    assertTrue(again.allowedBy(signIn))
     assertFalse(signIn.out)
     again.refresh()
     assertTrue(again.shown.value is WatchModel.Shown.Read)
+  }
+
+  /**
+   * Row 18: a tap on the watch alone never signs it in. The ask goes to the phone, which asks its person; only their Allow for this
+   * ask, within ten minutes, signs the watch in. Deny, another ask's answer, or a late one leave it signed out.
+   */
+  @Test fun signingInAgainNeedsThePhonesAllowForThisAsk() = runTest {
+    val signIn = SignIn()
+    val phone = Phone { r -> if (r is WatchRequest.SignInAsk) Asked.Answered(WatchReply.Done("Waiting for your phone")) else reads(r) }
+    val model = v2(phone, signIn = signIn)
+    model.signOutHere()
+    model.askSignIn()
+    val ask = (phone.asked.single { it is WatchRequest.SignInAsk } as WatchRequest.SignInAsk).ask
+    assertTrue("still signed out while the phone asks", model.signedOutHere.value)
+    assertEquals(WatchModel.SignInAsk.Waiting, model.signInAsk.value)
+    // Another ask's answer, or a late one: nothing.
+    assertFalse(model.signInAnswered(bot.tafs.watchlink.KeptSignIn(t, "w_someoneelse", allowed = true)))
+    signIn.ask(ask, t - SIGN_IN_ASK_MS - 1)
+    assertFalse(model.signInAnswered(bot.tafs.watchlink.KeptSignIn(t, ask, allowed = true)))
+    assertTrue(model.signedOutHere.value)
+    // Deny: it stays signed out, and says so.
+    signIn.ask(ask, t)
+    assertFalse(model.signInAnswered(bot.tafs.watchlink.KeptSignIn(t, ask, allowed = false)))
+    assertTrue(model.signedOutHere.value)
+    assertEquals(WatchModel.SignInAsk.Denied, model.signInAsk.value)
+    // Allow for the ask waiting: signed in again, with nothing from before.
+    model.askSignIn()
+    assertTrue(model.allowedBy(signIn))
+    assertFalse(model.signedOutHere.value)
+    assertTrue(model.inbox.value.isEmpty() && model.asks.value.isEmpty() && model.kept.value == null)
+  }
+
+  /** The phone not reached: nothing waits, and the watch says why. */
+  @Test fun aSignInAskThePhoneDoesntGetSaysWhy() = runTest {
+    val signIn = SignIn()
+    val model = v2(Phone { Asked.Unreachable() }, signIn = signIn)
+    model.signOutHere()
+    model.askSignIn()
+    assertTrue(model.signInAsk.value is WatchModel.SignInAsk.NotReached)
+    assertNull(signIn.asked())
+    assertTrue(model.signedOutHere.value)
   }
 
   @Test fun anAnswerThatLandsAfterSigningOutOnTheWatchIsDropped() = runTest {
@@ -221,7 +287,6 @@ class AccountModelTest {
     model.refresh()
     assertEquals(WatchModel.Shown.Asking, model.shown.value)
     assertNull(tile.kept)
-    model.signInHere()
     model.readAccount()
     assertNull(model.account.value)
   }
@@ -416,7 +481,7 @@ class AccountScreensTest {
     compose.onNodeWithText(Words.Watch.signedOutHere).assertExists()
     compose.onAllNodesWithText(Words.Coach.ask).assertCountEquals(0)
     compose.onAllNodesWithText("Reship order #5098").assertCountEquals(0)
-    compose.onNodeWithText(Words.SignIn.withPhone).performClick()
+    compose.onNodeWithText(Words.Watch.askPhoneSignIn).performClick()
     assertEquals(listOf("sign in"), did)
   }
 }

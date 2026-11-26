@@ -1,0 +1,4 @@
+• Les appels retenus s'affichent tout de suite : alerte, tuile et boîte de réception.
+• Lire la suite sur toute longue réponse ; Ouvrir sur le téléphone confirme l'ouverture.
+• Touchez vos mots pour les corriger avant l'envoi ; l'enregistreur montre les secondes restantes.
+• Reconnecter la montre demande l'autorisation de votre téléphone.

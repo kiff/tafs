@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Pozuldy. Hiç zat iberilmedi.",
   "watch.didnt_catch": "Eşitmedim. Täzeden synanyşmak üçin basyň.",
   "watch.dismiss": "Ýapyň",
+  "watch.edit_words": "Üýtgetmek üçin tekste basyň",
   "watch.glance_description": "Näçesi size zerur, hiç haçan näme ýa-da kim däl.",
   "watch.halt_all_q": "Ähli tafs-laryňyzy togtadýarsyňyzmy?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} saklanan çagyryş size zerur",
     "other": "{count} saklanan çagyryş size zerur"
   },
+  "watch.held_channel": "Saklanan çagyryşlar",
   "watch.inbox_empty": "Täze zat ýok. Coach-yň jogaplary we tafs-laryňyzyň duýduryşlary şu ýere düşýär.",
   "watch.inbox_unread": {
     "one": "Inbox-da {count} okalmadyk",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Siz tassyklamaňyzça hiç zat iberilmeýär.",
   "watch.nothing_waits": "Size hiç zat garaşmaýar.",
   "watch.open_on_phone": "Telefonda açyň",
+  "watch.opened_on_phone": "Telefonyňyzda açyldy",
   "watch.page.brief": "Gysgaça maglumat",
   "watch.page.inbox": "Inbox",
   "watch.paused_still_answers": "Bes edildi: onuň tertibi öçük. Ol henizem iberýän zadyňyza jogap berýär.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Soňky söhbetdeşlikler",
   "watch.recording": "Ýazylýar",
   "watch.recording_not_received": "Ýazgy telefonyňyza ýetmedi. Täzeden synanyşyň, ýa-da ýerine ýazyň.",
+  "watch.refuse_on_phone": "Ret edilmedi. Ony telefonyňyzda ret ediň.",
   "watch.refused": "Ret edildi. Hiç zat iberilmedi.",
   "watch.reply": "Jogap beriň",
   "watch.rerecord": "Täzeden ýazyň",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Telefonyňyzda dowam etdiriň",
   "watch.retry": "Täzeden synanyşyň",
   "watch.review": "Ibermezden öň barlaň",
+  "watch.seconds_left": "{seconds} sek galdy",
   "watch.sending": "Iberilýär…",
   "watch.sent": "Iberildi",
   "watch.settings_of": "{taf} · sazlamalar",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Telefonyňyz girilen galýar. Bu sagat tafs-laryňyzy, söhbetdeşlikleriňizi we inbox-yňyzy unudýar.",
   "watch.signed_in": "Girildi",
   "watch.signed_out_here": "Bu sagatda çykyldy. Telefonyňyz girilen galýar.",
+  "watch.stopped_at_limit": "{limit} çäginde togtady. Eşidilen aşakda.",
   "watch.swipe_settings": "Sazlamalary üçin çepe süýşüriň",
   "watch.tap_start": "Başla basyň, soňra gürläň. Sözleriňiz gürleýşiňiz bilen şu ýerde görünýär.",
   "watch.timing": "Diňlemek {listen} ms · kwitansiýa {receipt} ms · netije {result} ms",

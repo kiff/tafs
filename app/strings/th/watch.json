@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "ลบแล้ว ยังไม่ได้ส่งอะไร",
   "watch.didnt_catch": "ฟังไม่ทัน แตะเพื่อลองอีกครั้ง",
   "watch.dismiss": "ปิด",
+  "watch.edit_words": "แตะข้อความเพื่อแก้ไข",
   "watch.glance_description": "มีกี่เรื่องที่ต้องการคุณ ไม่บอกว่าอะไรหรือใคร",
   "watch.halt_all_q": "ระงับ taf ทั้งหมดของคุณหรือไม่",
   "watch.halt_now_count": {
@@ -32,6 +33,7 @@
   "watch.held_calls": {
     "other": "{count} การเรียกที่พักไว้ต้องการคุณ"
   },
+  "watch.held_channel": "การเรียกที่พักไว้",
   "watch.inbox_empty": "ไม่มีอะไรใหม่ คำตอบของ Coach และการแจ้งเตือนจาก taf ของคุณจะมาที่นี่",
   "watch.inbox_unread": {
     "other": "{count} ยังไม่ได้อ่านในกล่องข้อความ"
@@ -54,6 +56,7 @@
   "watch.nothing_sent_until": "จะไม่มีอะไรถูกส่งจนกว่าคุณจะอนุมัติ",
   "watch.nothing_waits": "ไม่มีอะไรรอคุณอยู่",
   "watch.open_on_phone": "เปิดบนโทรศัพท์",
+  "watch.opened_on_phone": "เปิดบนโทรศัพท์แล้ว",
   "watch.page.brief": "สรุป",
   "watch.page.inbox": "กล่องข้อความ",
   "watch.paused_still_answers": "หยุดชั่วคราว: กำหนดการของมันปิดอยู่ มันยังตอบสิ่งที่คุณส่ง",
@@ -76,6 +79,7 @@
   "watch.recent_chats": "แชตล่าสุด",
   "watch.recording": "กำลังบันทึกเสียง",
   "watch.recording_not_received": "การบันทึกเสียงไปไม่ถึงโทรศัพท์ของคุณ ลองอีกครั้ง หรือพิมพ์แทน",
+  "watch.refuse_on_phone": "ยังไม่ได้ปฏิเสธ ปฏิเสธบนโทรศัพท์ของคุณ",
   "watch.refused": "ปฏิเสธแล้ว ยังไม่ได้ส่งอะไร",
   "watch.reply": "ตอบ",
   "watch.rerecord": "บันทึกใหม่",
@@ -84,6 +88,7 @@
   "watch.resume_on_phone": "ทำต่อบนโทรศัพท์ของคุณ",
   "watch.retry": "ลองอีกครั้ง",
   "watch.review": "ตรวจสอบก่อนส่ง",
+  "watch.seconds_left": "เหลือ {seconds} วิ",
   "watch.sending": "กำลังส่ง…",
   "watch.sent": "ส่งแล้ว",
   "watch.settings_of": "{taf} · การตั้งค่า",
@@ -96,6 +101,7 @@
   "watch.sign_out_sub": "โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่ นาฬิกาเรือนนี้จะลืม taf แชต และกล่องข้อความของคุณ",
   "watch.signed_in": "เข้าสู่ระบบแล้ว",
   "watch.signed_out_here": "ออกจากระบบบนนาฬิกาเรือนนี้แล้ว โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่",
+  "watch.stopped_at_limit": "หยุดที่ขีดจำกัด {limit} สิ่งที่ได้ยินอยู่ด้านล่าง",
   "watch.swipe_settings": "ปัดซ้ายเพื่อดูการตั้งค่าของมัน",
   "watch.tap_start": "แตะเริ่ม แล้วพูด ถ้อยคำของคุณจะแสดงที่นี่ขณะที่คุณพูด",
   "watch.timing": "ฟัง {listen} ms · ใบเสร็จ {receipt} ms · ผลลัพธ์ {result} ms",

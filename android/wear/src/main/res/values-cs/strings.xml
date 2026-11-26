@@ -70,6 +70,7 @@
     <string name="watch_deleted_nothing_sent">Smazáno. Nic se neodeslalo.</string>
     <string name="watch_didnt_catch">Nerozuměl jsem. Klepnutím to zkusíte znovu.</string>
     <string name="watch_dismiss">Zavřít</string>
+    <string name="watch_edit_words">Klepnutím na text ho změníte</string>
     <string name="watch_glance_description">Kolik jich na vás čeká, nikdy co ani kdo.</string>
     <string name="watch_halt_all_q">Zastavit všechny vaše tafy?</string>
     <plurals name="watch_halt_now_count">
@@ -87,6 +88,7 @@
         <item quantity="few">%1$s zadržená volání čekají na vás</item>
         <item quantity="other">%1$s zadržených volání čeká na vás</item>
     </plurals>
+    <string name="watch_held_channel">Zadržená volání</string>
     <string name="watch_inbox_empty">Nic nového. Sem chodí odpovědi Coache a upozornění vašich tafů.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s nepřečtená v Doručených</item>
@@ -113,6 +115,7 @@
     <string name="watch_nothing_sent_until">Nic se neodešle, dokud neschválíte.</string>
     <string name="watch_nothing_waits">Nic na vás nečeká.</string>
     <string name="watch_open_on_phone">Otevřít v telefonu</string>
+    <string name="watch_opened_on_phone">Otevřeno v telefonu</string>
     <string name="watch_page_brief">Přehled</string>
     <string name="watch_page_inbox">Doručené</string>
     <string name="watch_paused_still_answers">Pozastaveno: jeho plán je vypnutý. Na to, co pošlete, pořád odpovídá.</string>
@@ -137,6 +140,7 @@
     <string name="watch_recent_chats">Nedávné chaty</string>
     <string name="watch_recording">Nahrávám</string>
     <string name="watch_recording_not_received">Nahrávka se do telefonu nedostala. Zkuste to znovu, nebo to napište.</string>
+    <string name="watch_refuse_on_phone">Neodmítnuto. Odmítněte to v telefonu.</string>
     <string name="watch_refused">Odmítnuto. Nic se neodeslalo.</string>
     <string name="watch_reply">Odpovědět</string>
     <string name="watch_rerecord">Nahrát znovu</string>
@@ -145,6 +149,7 @@
     <string name="watch_resume_on_phone">Obnovte v telefonu</string>
     <string name="watch_retry">Zkusit znovu</string>
     <string name="watch_review">Zkontrolovat před odesláním</string>
+    <string name="watch_seconds_left">Zbývá %1$s s</string>
     <string name="watch_sending">Odesílám…</string>
     <string name="watch_sent">Odesláno</string>
     <string name="watch_settings_of">%1$s · nastavení</string>
@@ -157,6 +162,7 @@
     <string name="watch_sign_out_sub">Telefon zůstane přihlášený. Tyto hodinky zapomenou vaše tafy, chaty a Doručené.</string>
     <string name="watch_signed_in">Přihlášeno</string>
     <string name="watch_signed_out_here">Odhlášeno na těchto hodinkách. Telefon zůstává přihlášený.</string>
+    <string name="watch_stopped_at_limit">Zastaveno na limitu %1$s. Co bylo slyšet, je níže.</string>
     <string name="watch_swipe_settings">Přejeďte doleva pro jeho nastavení</string>
     <string name="watch_tap_start">Klepněte na Start a mluvte. Vaše slova se tu zobrazují, jak mluvíte.</string>
     <string name="watch_timing">Poslech %1$s ms · potvrzení %2$s ms · výsledek %3$s ms</string>

@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Eliminato. Non è stato inviato nulla.",
   "watch.didnt_catch": "Non ho capito. Tocca per riprovare.",
   "watch.dismiss": "Ignora",
+  "watch.edit_words": "Tocca il testo per modificarlo",
   "watch.glance_description": "Quanti ti aspettano, mai cosa né chi.",
   "watch.halt_all_q": "Bloccare tutti i tuoi tafs?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} chiamata trattenuta ti aspetta",
     "other": "{count} chiamate trattenute ti aspettano"
   },
+  "watch.held_channel": "Chiamate trattenute",
   "watch.inbox_empty": "Niente di nuovo. Qui arrivano le risposte di Coach e gli avvisi dei tuoi tafs.",
   "watch.inbox_unread": {
     "one": "{count} da leggere in In arrivo",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Non viene inviato nulla finché non approvi.",
   "watch.nothing_waits": "Niente ti aspetta.",
   "watch.open_on_phone": "Apri sul telefono",
+  "watch.opened_on_phone": "Aperto sul telefono",
   "watch.page.brief": "Riepilogo",
   "watch.page.inbox": "In arrivo",
   "watch.paused_still_answers": "In pausa: la sua pianificazione è ferma. Risponde comunque a ciò che invii.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Chat recenti",
   "watch.recording": "Registrazione",
   "watch.recording_not_received": "La registrazione non è arrivata al telefono. Riprova, oppure scrivi.",
+  "watch.refuse_on_phone": "Non rifiutato. Rifiutalo dal telefono.",
   "watch.refused": "Rifiutata. Non è stato inviato nulla.",
   "watch.reply": "Rispondi",
   "watch.rerecord": "Registra di nuovo",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Riprendi sul telefono",
   "watch.retry": "Riprova",
   "watch.review": "Controlla prima di inviare",
+  "watch.seconds_left": "Ancora {seconds} s",
   "watch.sending": "Invio…",
   "watch.sent": "Inviato",
   "watch.settings_of": "{taf} · impostazioni",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Il telefono resta connesso. Questo orologio dimentica i tuoi tafs, le chat e In arrivo.",
   "watch.signed_in": "Accesso effettuato",
   "watch.signed_out_here": "Sessione chiusa su questo orologio. Il telefono resta connesso.",
+  "watch.stopped_at_limit": "Fermato al limite di {limit}. Quello che è stato sentito è qui sotto.",
   "watch.swipe_settings": "Scorri a sinistra per le sue impostazioni",
   "watch.tap_start": "Tocca Avvia, poi parla. Le tue parole compaiono qui mentre parli.",
   "watch.timing": "Ascolto {listen} ms · ricevuta {receipt} ms · risultato {result} ms",

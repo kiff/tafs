@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Deleted. Nothing was sent.",
   "watch.didnt_catch": "Didn't catch that. Tap to try again.",
   "watch.dismiss": "Dismiss",
+  "watch.edit_words": "Tap the words to change them",
   "watch.glance_description": "How many need you, never what or who.",
   "watch.halt_all_q": "Halt all your tafs?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} held call needs you",
     "other": "{count} held calls need you"
   },
+  "watch.held_channel": "Held calls",
   "watch.inbox_empty": "Nothing new. Coach's replies and your tafs' alerts land here.",
   "watch.inbox_unread": {
     "one": "{count} unread in Inbox",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Nothing is sent until you approve.",
   "watch.nothing_waits": "Nothing waits for you.",
   "watch.open_on_phone": "Open on phone",
+  "watch.opened_on_phone": "Opened on your phone",
   "watch.page.brief": "Brief",
   "watch.page.inbox": "Inbox",
   "watch.paused_still_answers": "Paused: its schedule is off. It still answers what you send.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Recent chats",
   "watch.recording": "Recording",
   "watch.recording_not_received": "The recording didn't reach your phone. Try again, or type instead.",
+  "watch.refuse_on_phone": "Not refused. Refuse it on your phone.",
   "watch.refused": "Refused. Nothing was sent.",
   "watch.reply": "Reply",
   "watch.rerecord": "Re-record",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Resume on your phone",
   "watch.retry": "Retry",
   "watch.review": "Check before sending",
+  "watch.seconds_left": "{seconds} s left",
   "watch.sending": "Sending…",
   "watch.sent": "Sent",
   "watch.settings_of": "{taf} · settings",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Your phone stays signed in. This watch forgets your tafs, chats and inbox.",
   "watch.signed_in": "Signed in",
   "watch.signed_out_here": "Signed out on this watch. Your phone stays signed in.",
+  "watch.stopped_at_limit": "Stopped at the {limit} limit. What was heard is below.",
   "watch.swipe_settings": "Swipe left for its settings",
   "watch.tap_start": "Tap Start, then speak. Your words show here as you talk.",
   "watch.timing": "Listen {listen} ms · receipt {receipt} ms · result {result} ms",

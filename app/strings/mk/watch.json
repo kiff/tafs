@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Избришано. Ништо не е испратено.",
   "watch.didnt_catch": "Не разбрав. Допри за да се обидеш повторно.",
   "watch.dismiss": "Отфрли",
+  "watch.edit_words": "Допри го текстот за да го смениш",
   "watch.glance_description": "Колку те чекаат, никогаш што или кој.",
   "watch.halt_all_q": "Да ги запреш сите твои tafови?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} задржано барање те чека",
     "other": "{count} задржани барања те чекаат"
   },
+  "watch.held_channel": "Задржани барања",
   "watch.inbox_empty": "Нема ништо ново. Одговорите на Coach и известувањата од твоите tafови пристигнуваат тука.",
   "watch.inbox_unread": {
     "one": "{count} непрочитано во Приемно сандаче",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Ништо не се испраќа додека не одобриш.",
   "watch.nothing_waits": "Ништо не те чека.",
   "watch.open_on_phone": "Отвори на телефонот",
+  "watch.opened_on_phone": "Отворено на телефонот",
   "watch.page.brief": "Преглед",
   "watch.page.inbox": "Приемно сандаче",
   "watch.paused_still_answers": "Паузиран: неговиот распоред е исклучен. Сè уште одговара на она што ќе му испратиш.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Неодамнешни разговори",
   "watch.recording": "Снимам",
   "watch.recording_not_received": "Снимката не стигна до твојот телефон. Обиди се повторно, или пиши наместо тоа.",
+  "watch.refuse_on_phone": "Не е одбиено. Одбиј го на телефонот.",
   "watch.refused": "Одбиено. Ништо не е испратено.",
   "watch.reply": "Одговори",
   "watch.rerecord": "Сними повторно",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Продолжи на твојот телефон",
   "watch.retry": "Обиди се повторно",
   "watch.review": "Провери пред испраќање",
+  "watch.seconds_left": "Уште {seconds} с",
   "watch.sending": "Се испраќа…",
   "watch.sent": "Испратено",
   "watch.settings_of": "{taf} · поставки",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Твојот телефон останува најавен. Овој часовник ги заборава твоите tafови, разговори и приемно сандаче.",
   "watch.signed_in": "Најавен",
   "watch.signed_out_here": "Одјавен на овој часовник. Твојот телефон останува најавен.",
+  "watch.stopped_at_limit": "Запре на ограничувањето од {limit}. Она што се слушна е подолу.",
   "watch.swipe_settings": "Повлечи налево за неговите поставки",
   "watch.tap_start": "Допри Започни, па зборувај. Твоите зборови се прикажуваат тука додека зборуваш.",
   "watch.timing": "Слушање {listen} ms · признаница {receipt} ms · резултат {result} ms",

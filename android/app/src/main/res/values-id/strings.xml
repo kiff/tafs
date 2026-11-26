@@ -2728,6 +2728,7 @@
     <string name="watch_deleted_nothing_sent">Dihapus. Tidak ada yang dikirim.</string>
     <string name="watch_didnt_catch">Tidak terdengar. Ketuk untuk mencoba lagi.</string>
     <string name="watch_dismiss">Abaikan</string>
+    <string name="watch_edit_words">Ketuk teks untuk mengubahnya</string>
     <string name="watch_glance_description">Berapa yang menunggu Anda, bukan apa atau siapa.</string>
     <string name="watch_halt_all_q">Bekukan semua tafs Anda?</string>
     <plurals name="watch_halt_now_count">
@@ -2741,6 +2742,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">%1$s panggilan yang ditahan menunggu Anda</item>
     </plurals>
+    <string name="watch_held_channel">Panggilan yang ditahan</string>
     <string name="watch_inbox_empty">Tidak ada yang baru. Balasan Coach dan peringatan tafs Anda masuk di sini.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">%1$s belum dibaca di Kotak Masuk</item>
@@ -2763,6 +2765,7 @@
     <string name="watch_nothing_sent_until">Tidak ada yang dikirim sampai Anda menyetujui.</string>
     <string name="watch_nothing_waits">Tidak ada yang menunggu Anda.</string>
     <string name="watch_open_on_phone">Buka di ponsel</string>
+    <string name="watch_opened_on_phone">Dibuka di ponsel Anda</string>
     <string name="watch_page_brief">Ringkasan</string>
     <string name="watch_page_inbox">Kotak Masuk</string>
     <string name="watch_paused_still_answers">Dijeda: jadwalnya mati. Ia tetap menjawab apa yang Anda kirim.</string>
@@ -2785,6 +2788,7 @@
     <string name="watch_recent_chats">Obrolan terbaru</string>
     <string name="watch_recording">Merekam</string>
     <string name="watch_recording_not_received">Rekaman tidak sampai ke ponsel Anda. Coba lagi, atau ketik saja.</string>
+    <string name="watch_refuse_on_phone">Tidak ditolak. Tolak di ponsel Anda.</string>
     <string name="watch_refused">Ditolak. Tidak ada yang dikirim.</string>
     <string name="watch_reply">Balas</string>
     <string name="watch_rerecord">Rekam ulang</string>
@@ -2793,6 +2797,7 @@
     <string name="watch_resume_on_phone">Lanjutkan di ponsel Anda</string>
     <string name="watch_retry">Coba lagi</string>
     <string name="watch_review">Periksa sebelum mengirim</string>
+    <string name="watch_seconds_left">Tersisa %1$s dtk</string>
     <string name="watch_sending">Mengirim…</string>
     <string name="watch_sent">Terkirim</string>
     <string name="watch_settings_of">%1$s · pengaturan</string>
@@ -2805,6 +2810,7 @@
     <string name="watch_sign_out_sub">Ponsel Anda tetap masuk. Jam tangan ini melupakan tafs, obrolan, dan kotak masuk Anda.</string>
     <string name="watch_signed_in">Sudah masuk</string>
     <string name="watch_signed_out_here">Keluar di jam tangan ini. Ponsel Anda tetap masuk.</string>
+    <string name="watch_stopped_at_limit">Berhenti di batas %1$s. Yang terdengar ada di bawah.</string>
     <string name="watch_swipe_settings">Geser ke kiri untuk pengaturannya</string>
     <string name="watch_tap_start">Ketuk Mulai, lalu bicara. Kata-kata Anda muncul di sini saat Anda berbicara.</string>
     <string name="watch_timing">Mendengarkan %1$s md · tanda terima %2$s md · hasil %3$s md</string>

@@ -2728,6 +2728,7 @@
     <string name="watch_deleted_nothing_sent">삭제했습니다. 아무것도 보내지 않았습니다.</string>
     <string name="watch_didnt_catch">잘 듣지 못했습니다. 탭하여 다시 시도하세요.</string>
     <string name="watch_dismiss">닫기</string>
+    <string name="watch_edit_words">텍스트를 탭하여 수정하세요</string>
     <string name="watch_glance_description">확인이 필요한 개수만 표시하며, 무엇인지 누구인지는 표시하지 않습니다.</string>
     <string name="watch_halt_all_q">모든 taf를 차단할까요?</string>
     <plurals name="watch_halt_now_count">
@@ -2741,6 +2742,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">보류된 호출 %1$s개가 확인을 기다립니다</item>
     </plurals>
+    <string name="watch_held_channel">보류된 호출</string>
     <string name="watch_inbox_empty">새 항목이 없습니다. Coach의 답장과 taf의 알림이 여기에 표시됩니다.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">받은편지함에 읽지 않은 항목 %1$s개</item>
@@ -2763,6 +2765,7 @@
     <string name="watch_nothing_sent_until">승인할 때까지 아무것도 보내지 않습니다.</string>
     <string name="watch_nothing_waits">기다리는 항목이 없습니다.</string>
     <string name="watch_open_on_phone">휴대폰에서 열기</string>
+    <string name="watch_opened_on_phone">휴대전화에서 열었습니다</string>
     <string name="watch_page_brief">브리핑</string>
     <string name="watch_page_inbox">받은편지함</string>
     <string name="watch_paused_still_answers">일시 중지됨: 일정이 꺼져 있습니다. 보내는 메시지에는 계속 답합니다.</string>
@@ -2785,6 +2788,7 @@
     <string name="watch_recent_chats">최근 채팅</string>
     <string name="watch_recording">녹음 중</string>
     <string name="watch_recording_not_received">녹음이 휴대폰에 전달되지 않았습니다. 다시 시도하거나 직접 입력하세요.</string>
+    <string name="watch_refuse_on_phone">거절되지 않았습니다. 휴대전화에서 거절하세요.</string>
     <string name="watch_refused">거절했습니다. 아무것도 보내지 않았습니다.</string>
     <string name="watch_reply">답장</string>
     <string name="watch_rerecord">다시 녹음</string>
@@ -2793,6 +2797,7 @@
     <string name="watch_resume_on_phone">휴대폰에서 재개하세요</string>
     <string name="watch_retry">다시 시도</string>
     <string name="watch_review">보내기 전에 확인</string>
+    <string name="watch_seconds_left">%1$s초 남음</string>
     <string name="watch_sending">보내는 중…</string>
     <string name="watch_sent">보냄</string>
     <string name="watch_settings_of">%1$s · 설정</string>
@@ -2805,6 +2810,7 @@
     <string name="watch_sign_out_sub">휴대폰은 로그인 상태로 유지됩니다. 이 워치는 taf, 채팅, 받은편지함을 지웁니다.</string>
     <string name="watch_signed_in">로그인됨</string>
     <string name="watch_signed_out_here">이 워치에서 로그아웃했습니다. 휴대폰은 로그인 상태로 유지됩니다.</string>
+    <string name="watch_stopped_at_limit">제한 시간 %1$s에 멈췄습니다. 들은 내용은 아래에 있습니다.</string>
     <string name="watch_swipe_settings">왼쪽으로 밀어 설정 보기</string>
     <string name="watch_tap_start">시작을 탭한 후 말하세요. 말하는 동안 내 말이 여기에 표시됩니다.</string>
     <string name="watch_timing">듣기 %1$sms · 영수증 %2$sms · 결과 %3$sms</string>

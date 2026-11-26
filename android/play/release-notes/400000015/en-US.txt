@@ -1,0 +1,4 @@
+• Held calls show at once: an alert, the tile's count and your Inbox.
+• Read more on any long answer; Open on phone says it opened.
+• Tap your words to fix them before sending; the recorder shows the seconds left.
+• Signing this watch in again needs your phone's Allow.

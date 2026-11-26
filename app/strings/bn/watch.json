@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "মুছে ফেলা হয়েছে। কিছু পাঠানো হয়নি।",
   "watch.didnt_catch": "বোঝা যায়নি। আবার চেষ্টা করতে ট্যাপ করুন।",
   "watch.dismiss": "বাতিল করুন",
+  "watch.edit_words": "বদলাতে লেখায় ট্যাপ করুন",
   "watch.glance_description": "কতগুলোর আপনাকে দরকার, কী বা কে তা নয়।",
   "watch.halt_all_q": "আপনার সব taf থামাবেন?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "ধরে রাখা {count}টি কল আপনার অপেক্ষায়",
     "other": "ধরে রাখা {count}টি কল আপনার অপেক্ষায়"
   },
+  "watch.held_channel": "ধরে রাখা কল",
   "watch.inbox_empty": "নতুন কিছু নেই। Coach-এর উত্তর ও আপনার taf-এর অ্যালার্ট এখানে আসে।",
   "watch.inbox_unread": {
     "one": "ইনবক্সে {count}টি অপঠিত",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "আপনি অনুমোদন না করা পর্যন্ত কিছু পাঠানো হয় না।",
   "watch.nothing_waits": "আপনার অপেক্ষায় কিছু নেই।",
   "watch.open_on_phone": "ফোনে খুলুন",
+  "watch.opened_on_phone": "ফোনে খোলা হয়েছে",
   "watch.page.brief": "সারসংক্ষেপ",
   "watch.page.inbox": "ইনবক্স",
   "watch.paused_still_answers": "বিরতিতে আছে: এর সূচি বন্ধ। আপনি যা পাঠান তার উত্তর এটি এখনও দেয়।",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "সাম্প্রতিক চ্যাট",
   "watch.recording": "রেকর্ড হচ্ছে",
   "watch.recording_not_received": "রেকর্ডিং আপনার ফোনে পৌঁছায়নি। আবার চেষ্টা করুন, অথবা এর বদলে টাইপ করুন।",
+  "watch.refuse_on_phone": "প্রত্যাখ্যান হয়নি। ফোনে প্রত্যাখ্যান করুন।",
   "watch.refused": "প্রত্যাখ্যাত। কিছু পাঠানো হয়নি।",
   "watch.reply": "উত্তর দিন",
   "watch.rerecord": "আবার রেকর্ড করুন",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "আপনার ফোনে আবার চালু করুন",
   "watch.retry": "আবার চেষ্টা করুন",
   "watch.review": "পাঠানোর আগে দেখে নিন",
+  "watch.seconds_left": "{seconds} সে বাকি",
   "watch.sending": "পাঠানো হচ্ছে…",
   "watch.sent": "পাঠানো হয়েছে",
   "watch.settings_of": "{taf} · সেটিংস",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "আপনার ফোন সাইন ইন করা থাকে। এই ঘড়ি আপনার taf, চ্যাট ও ইনবক্স ভুলে যায়।",
   "watch.signed_in": "সাইন ইন করা",
   "watch.signed_out_here": "এই ঘড়িতে সাইন আউট করা হয়েছে। আপনার ফোন সাইন ইন করা থাকে।",
+  "watch.stopped_at_limit": "{limit} সীমায় থেমেছে। যা শোনা গেছে তা নিচে আছে।",
   "watch.swipe_settings": "এর সেটিংসের জন্য বাঁয়ে সোয়াইপ করুন",
   "watch.tap_start": "«শুরু করুন» চাপুন, তারপর বলুন। আপনি বলার সঙ্গে সঙ্গে আপনার কথা এখানে দেখা যায়।",
   "watch.timing": "শোনা {listen} ms · রসিদ {receipt} ms · ফলাফল {result} ms",

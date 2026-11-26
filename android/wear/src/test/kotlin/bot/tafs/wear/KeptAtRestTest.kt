@@ -5,6 +5,7 @@ import bot.tafs.watchlink.AskLine
 import bot.tafs.watchlink.ChatLine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,6 +63,32 @@ class KeptAtRestTest {
     file("threads.bin").writeBytes(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17))
     assertTrue(KeptThreadStore(text("threads.bin")).read().isEmpty())
     assertFalse(file("threads.bin").exists())
+  }
+
+  /** The tile's count, when it was read and its held calls' end times: encrypted at rest, as the Privacy page says of the tile. */
+  @Test fun theTilesCountIsStoredEncryptedAndReadsBack() {
+    val count = TileCount(EncryptedTileStore(text("tile.bin")))
+    count.saw(7, t, listOf(t + 300_000))
+    val stored = String(file("tile.bin").readBytes(), Charsets.ISO_8859_1)
+    assertFalse("no count or time at rest", stored.contains("\"count\"") || stored.contains(t.toString()) || stored.contains((t + 300_000).toString()))
+    val again = EncryptedTileStore(text("tile.bin"))
+    assertEquals(7 to t, again.read())
+    assertEquals(listOf(t + 300_000), again.ends())
+    // Once the end has passed, the count drops it, and its time goes from the file.
+    assertEquals(6, TileCount(again).shown(unlocked = true, now = t + 301_000)?.count)
+    assertTrue(EncryptedTileStore(text("tile.bin")).ends().isEmpty())
+    // Locked, or no screen lock: nothing shown, and the file goes.
+    assertNull(TileCount(again).shown(unlocked = false))
+    assertFalse(file("tile.bin").exists())
+  }
+
+  /** 0.4.9's plain tile count: taken in once, written encrypted, and the plain copy cleared. */
+  @Test fun aPlainTileCountFromBeforeIsTakenInOnceAndCleared() {
+    val legacy = context.getSharedPreferences("tafs.tile.test", android.content.Context.MODE_PRIVATE)
+    legacy.edit().putInt("count", 3).putLong("at", t).commit()
+    val store = EncryptedTileStore(text("tile-migrated.bin"), legacy)
+    assertEquals(3 to t, store.read())
+    assertTrue("the plain copy is gone", legacy.all.isEmpty())
   }
 
   /** 0.4.7's Inbox, in plain preferences: taken in once, written encrypted, and the plain copy cleared. */

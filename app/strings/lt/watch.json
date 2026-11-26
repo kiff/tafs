@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Ištrinta. Niekas neišsiųsta.",
   "watch.didnt_catch": "Nesupratau. Palieskite ir bandykite dar kartą.",
   "watch.dismiss": "Paslėpti",
+  "watch.edit_words": "Palieskite tekstą, kad jį pakeistumėte",
   "watch.glance_description": "Kiek užklausų jūsų laukia, bet niekada – kokios ar nuo ko.",
   "watch.halt_all_q": "Sustabdyti visus jūsų taf?",
   "watch.halt_now_count": {
@@ -36,6 +37,7 @@
     "few": "{count} sulaikytos užklausos laukia jūsų",
     "other": "{count} sulaikytų užklausų laukia jūsų"
   },
+  "watch.held_channel": "Sulaikytos užklausos",
   "watch.inbox_empty": "Nieko naujo. Čia patenka Coach atsakymai ir jūsų taf pranešimai.",
   "watch.inbox_unread": {
     "one": "{count} neskaityta gautuosiuose",
@@ -62,6 +64,7 @@
   "watch.nothing_sent_until": "Niekas nesiunčiama, kol nepatvirtinsite.",
   "watch.nothing_waits": "Niekas jūsų nelaukia.",
   "watch.open_on_phone": "Atidaryti telefone",
+  "watch.opened_on_phone": "Atidaryta telefone",
   "watch.page.brief": "Suvestinė",
   "watch.page.inbox": "Gautieji",
   "watch.paused_still_answers": "Pristabdyta: tvarkaraštis išjungtas. Jis vis tiek atsako į tai, ką siunčiate.",
@@ -86,6 +89,7 @@
   "watch.recent_chats": "Naujausi pokalbiai",
   "watch.recording": "Įrašoma",
   "watch.recording_not_received": "Įrašas nepasiekė telefono. Bandykite dar kartą arba rašykite.",
+  "watch.refuse_on_phone": "Neatmesta. Atmeskite tai telefone.",
   "watch.refused": "Atmesta. Niekas neišsiųsta.",
   "watch.reply": "Atsakyti",
   "watch.rerecord": "Įrašyti iš naujo",
@@ -94,6 +98,7 @@
   "watch.resume_on_phone": "Tęskite telefone",
   "watch.retry": "Bandyti dar kartą",
   "watch.review": "Patikrinti prieš siunčiant",
+  "watch.seconds_left": "Liko {seconds} s",
   "watch.sending": "Siunčiama…",
   "watch.sent": "Išsiųsta",
   "watch.settings_of": "{taf} · nustatymai",
@@ -106,6 +111,7 @@
   "watch.sign_out_sub": "Telefonas lieka prisijungęs. Šis laikrodis pamirš jūsų taf, pokalbius ir gautuosius.",
   "watch.signed_in": "Prisijungta",
   "watch.signed_out_here": "Atsijungta šiame laikrodyje. Telefonas lieka prisijungęs.",
+  "watch.stopped_at_limit": "Sustabdyta ties {limit} riba. Tai, kas išgirsta, yra žemiau.",
   "watch.swipe_settings": "Braukite kairėn – jo nustatymai",
   "watch.tap_start": "Palieskite „Pradėti“ ir kalbėkite. Jūsų žodžiai čia rodomi kalbant.",
   "watch.timing": "Klausymas {listen} ms · gavimas {receipt} ms · rezultatas {result} ms",

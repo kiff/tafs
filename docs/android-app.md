@@ -1066,8 +1066,11 @@ When Play's track has a newer tafs, Home says so in one line under the account's
 (`push/AppUpdates.kt`, Play's flexible in-app update): **Update** opens Play's own confirmation and downloads it in the
 background, the line says it's downloading, then **Restart** installs it and opens tafs again. Play is asked each
 time the app comes to the front; it decides what's newer and installs it, and the app decides no version. A build Play
-didn't install (a debug build, an emulator without Play) is never offered one. Test it on the internal track: install an
-older build from the track, publish a newer one, open tafs.
+didn't install (a debug build, an emulator without Play) is never offered one. **Restart** shows only while Play says the
+update is still there (`UPDATE_AVAILABLE`, or one already under way, with the download finished): a "downloaded" left over
+from an update Play no longer has offers nothing. When Restart can't install (nothing downloaded, Play's -7, or Play already
+up to date), the line follows Play's answer again, so it never stays on a Restart that does nothing. Test it on the internal
+track: install an older build from the track, publish a newer one, open tafs.
 
 ## Alerts
 

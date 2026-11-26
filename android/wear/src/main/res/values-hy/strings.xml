@@ -69,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">Ջնջվեց։ Ոչինչ չուղարկվեց։</string>
     <string name="watch_didnt_catch">Չհասկացա։ Հպեք՝ նորից փորձելու համար։</string>
     <string name="watch_dismiss">Մերժել</string>
+    <string name="watch_edit_words">Հպեք տեքստին՝ այն փոխելու համար</string>
     <string name="watch_glance_description">Քանիսն են սպասում ձեզ, երբեք ինչը կամ ովքեր։</string>
     <string name="watch_halt_all_q">Կանգնեցնե՞լ ձեր բոլոր taf-երը։</string>
     <plurals name="watch_halt_now_count">
@@ -84,6 +85,7 @@
         <item quantity="one">%1$s պահված զանգ սպասում է ձեզ</item>
         <item quantity="other">%1$s պահված զանգ սպասում է ձեզ</item>
     </plurals>
+    <string name="watch_held_channel">Պահված զանգեր</string>
     <string name="watch_inbox_empty">Նոր ոչինչ չկա։ Coach-ի պատասխանները և ձեր taf-երի ծանուցումները հայտնվում են այստեղ։</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s չկարդացված մուտքայինում</item>
@@ -108,6 +110,7 @@
     <string name="watch_nothing_sent_until">Ոչինչ չի ուղարկվում, մինչև չհաստատեք։</string>
     <string name="watch_nothing_waits">Ոչինչ չի սպասում ձեզ։</string>
     <string name="watch_open_on_phone">Բացեք հեռախոսում</string>
+    <string name="watch_opened_on_phone">Բացվեց հեռախոսում</string>
     <string name="watch_page_brief">Ամփոփում</string>
     <string name="watch_page_inbox">Մուտքային</string>
     <string name="watch_paused_still_answers">Դադարեցված է․ նրա ժամանակացույցը անջատված է։ Այն դեռ պատասխանում է նրան, ինչ ուղարկում եք։</string>
@@ -131,6 +134,7 @@
     <string name="watch_recent_chats">Վերջին զրույցները</string>
     <string name="watch_recording">Ձայնագրվում է</string>
     <string name="watch_recording_not_received">Ձայնագրությունը չհասավ ձեր հեռախոսին։ Փորձեք նորից կամ մուտքագրեք։</string>
+    <string name="watch_refuse_on_phone">Չի մերժվել։ Մերժեք այն հեռախոսում։</string>
     <string name="watch_refused">Մերժված է։ Ոչինչ չուղարկվեց։</string>
     <string name="watch_reply">Պատասխանել</string>
     <string name="watch_rerecord">Նորից ձայնագրել</string>
@@ -139,6 +143,7 @@
     <string name="watch_resume_on_phone">Վերսկսեք ձեր հեռախոսով</string>
     <string name="watch_retry">Փորձեք նորից</string>
     <string name="watch_review">Ստուգեք ուղարկելուց առաջ</string>
+    <string name="watch_seconds_left">Մնաց %1$s վ</string>
     <string name="watch_sending">Ուղարկվում է…</string>
     <string name="watch_sent">Ուղարկվեց</string>
     <string name="watch_settings_of">%1$s · կարգավորումներ</string>
@@ -151,6 +156,7 @@
     <string name="watch_sign_out_sub">Ձեր հեռախոսը մնում է մուտք գործած։ Այս ժամացույցը մոռանում է ձեր taf-երը, զրույցները և մուտքայինը։</string>
     <string name="watch_signed_in">Մուտք գործած է</string>
     <string name="watch_signed_out_here">Այս ժամացույցից դուրս եկաք։ Ձեր հեռախոսը մնում է մուտք գործած։</string>
+    <string name="watch_stopped_at_limit">Կանգնեց %1$s սահմանին։ Լսվածը ներքևում է։</string>
     <string name="watch_swipe_settings">Սահեցրեք ձախ՝ նրա կարգավորումների համար</string>
     <string name="watch_tap_start">Հպեք «Սկսել», ապա խոսեք։ Ձեր բառերը երևում են այստեղ խոսելիս։</string>
     <string name="watch_timing">Լսում %1$s մվ · անդորրագիր %2$s մվ · արդյունք %3$s մվ</string>

@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Eliminat. No s'ha enviat res.",
   "watch.didnt_catch": "No t'he entès. Toca per tornar-ho a provar.",
   "watch.dismiss": "Descarta",
+  "watch.edit_words": "Toca el text per canviar-lo",
   "watch.glance_description": "Quants et necessiten, mai què ni qui.",
   "watch.halt_all_q": "Bloquejar tots els teus taf?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} crida retinguda et necessita",
     "other": "{count} crides retingudes et necessiten"
   },
+  "watch.held_channel": "Crides retingudes",
   "watch.inbox_empty": "No hi ha res de nou. Les respostes de Coach i les alertes dels teus taf arriben aquí.",
   "watch.inbox_unread": {
     "one": "{count} sense llegir a la safata d'entrada",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "No s'envia res fins que ho aprovis.",
   "watch.nothing_waits": "No t'espera res.",
   "watch.open_on_phone": "Obre al telèfon",
+  "watch.opened_on_phone": "Obert al telèfon",
   "watch.page.brief": "Resum",
   "watch.page.inbox": "Safata d'entrada",
   "watch.paused_still_answers": "En pausa: la seva programació està desactivada. Encara respon el que li envies.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Xats recents",
   "watch.recording": "Gravant",
   "watch.recording_not_received": "L'enregistrament no ha arribat al teu telèfon. Torna-ho a provar, o escriu en lloc d'això.",
+  "watch.refuse_on_phone": "No s'ha rebutjat. Rebutja-ho al telèfon.",
   "watch.refused": "Rebutjat. No s'ha enviat res.",
   "watch.reply": "Respon",
   "watch.rerecord": "Torna a gravar",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Reprèn al telèfon",
   "watch.retry": "Torna-ho a provar",
   "watch.review": "Revisa abans d'enviar",
+  "watch.seconds_left": "Queden {seconds} s",
   "watch.sending": "Enviant…",
   "watch.sent": "Enviat",
   "watch.settings_of": "{taf} · ajustos",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "El teu telèfon manté la sessió iniciada. Aquest rellotge oblida els teus taf, xats i safata d'entrada.",
   "watch.signed_in": "Sessió iniciada",
   "watch.signed_out_here": "S'ha tancat la sessió en aquest rellotge. El teu telèfon manté la sessió iniciada.",
+  "watch.stopped_at_limit": "S'ha aturat al límit de {limit}. El que s'ha sentit és a sota.",
   "watch.swipe_settings": "Llisca cap a l'esquerra per veure'n els ajustos",
   "watch.tap_start": "Toca Comença i després parla. Les teves paraules es mostren aquí mentre parles.",
   "watch.timing": "Escolta {listen} ms · rebut {receipt} ms · resultat {result} ms",

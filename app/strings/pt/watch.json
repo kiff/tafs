@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Eliminado. Nada foi enviado.",
   "watch.didnt_catch": "Não percebi. Toque para tentar novamente.",
   "watch.dismiss": "Ignorar",
+  "watch.edit_words": "Toque no texto para o alterar",
   "watch.glance_description": "Quantos precisam de si, nunca o quê nem quem.",
   "watch.halt_all_q": "Bloquear todos os seus tafs?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} chamada retida precisa de si",
     "other": "{count} chamadas retidas precisam de si"
   },
+  "watch.held_channel": "Chamadas retidas",
   "watch.inbox_empty": "Nada de novo. As respostas do Coach e os alertas dos seus tafs chegam aqui.",
   "watch.inbox_unread": {
     "one": "{count} por ler na Caixa de entrada",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Nada é enviado até aprovar.",
   "watch.nothing_waits": "Nada espera por si.",
   "watch.open_on_phone": "Abrir no telemóvel",
+  "watch.opened_on_phone": "Aberto no telemóvel",
   "watch.page.brief": "Resumo",
   "watch.page.inbox": "Caixa de entrada",
   "watch.paused_still_answers": "Em pausa: o agendamento está parado. Ainda assim responde ao que envia.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Chats recentes",
   "watch.recording": "A gravar",
   "watch.recording_not_received": "A gravação não chegou ao telemóvel. Tente novamente ou escreva.",
+  "watch.refuse_on_phone": "Não foi recusado. Recuse-o no telemóvel.",
   "watch.refused": "Recusado. Nada foi enviado.",
   "watch.reply": "Responder",
   "watch.rerecord": "Gravar de novo",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Retomar no telemóvel",
   "watch.retry": "Repetir",
   "watch.review": "Verifique antes de enviar",
+  "watch.seconds_left": "Faltam {seconds} s",
   "watch.sending": "A enviar…",
   "watch.sent": "Enviado",
   "watch.settings_of": "{taf} · definições",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "O telemóvel continua com sessão iniciada. Este relógio esquece os seus tafs, chats e Caixa de entrada.",
   "watch.signed_in": "Sessão iniciada",
   "watch.signed_out_here": "Sessão terminada neste relógio. O telemóvel continua com sessão iniciada.",
+  "watch.stopped_at_limit": "Parou no limite de {limit}. O que foi ouvido está abaixo.",
   "watch.swipe_settings": "Deslize para a esquerda para as definições",
   "watch.tap_start": "Toque em Começar e fale. As suas palavras aparecem aqui enquanto fala.",
   "watch.timing": "Escuta {listen} ms · receção {receipt} ms · resultado {result} ms",

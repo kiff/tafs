@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Silindi. Hiçbir şey gönderilmedi.",
   "watch.didnt_catch": "Anlayamadım. Tekrar denemek için dokunun.",
   "watch.dismiss": "Kapat",
+  "watch.edit_words": "Değiştirmek için metne dokunun",
   "watch.glance_description": "Kaç tanesinin sizi beklediği; ne olduğu veya kim olduğu asla.",
   "watch.halt_all_q": "Tüm tafs'larınız dondurulsun mu?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} tutulan çağrı sizi bekliyor",
     "other": "{count} tutulan çağrı sizi bekliyor"
   },
+  "watch.held_channel": "Tutulan çağrılar",
   "watch.inbox_empty": "Yeni bir şey yok. Coach'un yanıtları ve tafs'larınızın uyarıları buraya düşer.",
   "watch.inbox_unread": {
     "one": "Gelen kutusunda {count} okunmamış",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Siz onaylayana kadar hiçbir şey gönderilmez.",
   "watch.nothing_waits": "Sizi bekleyen bir şey yok.",
   "watch.open_on_phone": "Telefonda aç",
+  "watch.opened_on_phone": "Telefonunuzda açıldı",
   "watch.page.brief": "Özet",
   "watch.page.inbox": "Gelen kutusu",
   "watch.paused_still_answers": "Duraklatıldı: zamanlaması kapalı. Gönderdiklerinize yine yanıt verir.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Son sohbetler",
   "watch.recording": "Kaydediyor",
   "watch.recording_not_received": "Kayıt telefonunuza ulaşmadı. Tekrar deneyin veya yazın.",
+  "watch.refuse_on_phone": "Reddedilmedi. Telefonunuzda reddedin.",
   "watch.refused": "Reddedildi. Hiçbir şey gönderilmedi.",
   "watch.reply": "Yanıtla",
   "watch.rerecord": "Yeniden kaydet",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Telefonunuzda sürdürün",
   "watch.retry": "Tekrar dene",
   "watch.review": "Göndermeden önce kontrol edin",
+  "watch.seconds_left": "{seconds} sn kaldı",
   "watch.sending": "Gönderiliyor…",
   "watch.sent": "Gönderildi",
   "watch.settings_of": "{taf} · ayarlar",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "Telefonunuzda oturum açık kalır. Bu saat tafs'larınızı, sohbetlerinizi ve gelen kutunuzu unutur.",
   "watch.signed_in": "Oturum açık",
   "watch.signed_out_here": "Bu saatte oturum kapatıldı. Telefonunuzda oturum açık kalır.",
+  "watch.stopped_at_limit": "{limit} sınırında durdu. Duyulanlar aşağıda.",
   "watch.swipe_settings": "Ayarları için sola kaydırın",
   "watch.tap_start": "Başlat'a dokunun, sonra konuşun. Sözleriniz konuştukça burada görünür.",
   "watch.timing": "Dinleme {listen} ms · makbuz {receipt} ms · sonuç {result} ms",

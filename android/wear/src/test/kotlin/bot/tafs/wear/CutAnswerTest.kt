@@ -1,5 +1,7 @@
 package bot.tafs.wear
 
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -79,6 +81,7 @@ class CutAnswerScreenTest {
     openOnPhone = { did += "phone $it" }, tryAgain = {}, refuse = {}, halt = {}, askHaltAll = {}, confirmHaltAll = {}, cancelHaltAll = {},
     listen = {}, closeVoice = {}, retry = {}, open = {}, hear = {}, reply = {}, closeResult = {}, dismiss = {},
     readMore = { did += "more $it" },
+    readMoreLine = { did += "line $it" },
   )
   private val page = WatchReply.TafPage("taf_1", "Wiki lookup", "Ready", halted = false, job = "Looks a word up")
 
@@ -86,12 +89,29 @@ class CutAnswerScreenTest {
     MaterialTheme { TafScreen(WatchModel.OpenTaf("taf_1", null, WatchModel.TafRead.Read(page), chat), null, actions, openInbox = {}, chat = true, pager = rememberPagerState { 3 }) }
   }
 
-  @Test fun aCutLineFromThePhoneOffersOpenOnPhone() {
-    show(WatchModel.TafChat(WatchModel.TafChat.History.Read(listOf(
-      ChatLine("m1", mine = true, at = "2026-11-25T17:06:02Z", text = "Versailles"),
-      ChatLine("m2", mine = false, at = "2026-11-25T17:06:30Z", text = "Searching went straight to…", more = true),
-    ))))
+  private val cutLines = listOf(
+    ChatLine("m1", mine = true, at = "2026-11-25T17:06:02Z", text = "Versailles"),
+    ChatLine("m2", mine = false, at = "2026-11-25T17:06:30Z", text = "Searching went straight to…", more = true),
+  )
+
+  /** Row 10: a taf's cut answer from the phone's thread gets Read more (one tap), with Open on phone still under it. */
+  @Test fun aCutLineFromThePhoneOffersReadMoreAndOpenOnPhone() {
+    show(WatchModel.TafChat(WatchModel.TafChat.History.Read(cutLines)))
+    compose.onNodeWithTag(LINE_READ_MORE + "m2").performScrollTo().performClick()
+    compose.onAllNodesWithText(Words.Watch.openOnPhone)[0].performScrollTo().performClick()
+    assertEquals(listOf("line m2", "phone taf/taf_1"), did)
+  }
+
+  @Test fun aCutLineReadWholeShowsItAllInPlace() {
+    show(WatchModel.TafChat(WatchModel.TafChat.History.Read(cutLines), whole = mapOf(lineKey("m2") to WatchModel.Whole.Read("Searching went straight to the Palace of Versailles."))))
+    compose.onNodeWithText("Searching went straight to the Palace of Versailles.").assertExists()
+    compose.onAllNodesWithText(Words.Watch.readMore).assertCountEquals(0)
+  }
+
+  @Test fun aCutLineThatCouldntBeReadSaysTheRestIsOnThePhone() {
+    show(WatchModel.TafChat(WatchModel.TafChat.History.Read(cutLines), whole = mapOf(lineKey("m2") to WatchModel.Whole.OnPhone)))
     compose.onNodeWithText(Words.Watch.moreOnPhone).assertExists()
+    compose.onAllNodesWithText(Words.Watch.readMore).assertCountEquals(0)
     compose.onAllNodesWithText(Words.Watch.openOnPhone)[0].performScrollTo().performClick()
     assertEquals(listOf("phone taf/taf_1"), did)
   }

@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Șters. Nu s-a trimis nimic.",
   "watch.didnt_catch": "Nu am înțeles. Atingeți pentru a reîncerca.",
   "watch.dismiss": "Respingeți",
+  "watch.edit_words": "Atingeți textul pentru a-l modifica",
   "watch.glance_description": "Câte vă așteaptă, niciodată ce sau cine.",
   "watch.halt_all_q": "Opriți toate tafurile?",
   "watch.halt_now_count": {
@@ -36,6 +37,7 @@
     "few": "{count} apeluri reținute vă așteaptă",
     "other": "{count} de apeluri reținute vă așteaptă"
   },
+  "watch.held_channel": "Apeluri reținute",
   "watch.inbox_empty": "Nimic nou. Răspunsurile lui Coach și alertele tafurilor ajung aici.",
   "watch.inbox_unread": {
     "one": "{count} necitit în Mesajele primite",
@@ -62,6 +64,7 @@
   "watch.nothing_sent_until": "Nimic nu se trimite până nu aprobați.",
   "watch.nothing_waits": "Nimic nu vă așteaptă.",
   "watch.open_on_phone": "Deschideți pe telefon",
+  "watch.opened_on_phone": "Deschis pe telefon",
   "watch.page.brief": "Rezumat",
   "watch.page.inbox": "Mesajele primite",
   "watch.paused_still_answers": "Întrerupt: programul său este dezactivat. Totuși răspunde la ce îi trimiteți.",
@@ -86,6 +89,7 @@
   "watch.recent_chats": "Conversații recente",
   "watch.recording": "Se înregistrează",
   "watch.recording_not_received": "Înregistrarea nu a ajuns pe telefon. Încercați din nou sau tastați în schimb.",
+  "watch.refuse_on_phone": "Nu a fost refuzat. Refuzați-l pe telefon.",
   "watch.refused": "Refuzat. Nu s-a trimis nimic.",
   "watch.reply": "Răspundeți",
   "watch.rerecord": "Reînregistrați",
@@ -94,6 +98,7 @@
   "watch.resume_on_phone": "Reluați pe telefon",
   "watch.retry": "Reîncercați",
   "watch.review": "Verificați înainte de trimitere",
+  "watch.seconds_left": "Mai sunt {seconds} s",
   "watch.sending": "Se trimite…",
   "watch.sent": "Trimis",
   "watch.settings_of": "{taf} · setări",
@@ -106,6 +111,7 @@
   "watch.sign_out_sub": "Telefonul rămâne conectat. Acest ceas uită tafurile, conversațiile și mesajele primite.",
   "watch.signed_in": "Conectat",
   "watch.signed_out_here": "Deconectat pe acest ceas. Telefonul rămâne conectat.",
+  "watch.stopped_at_limit": "Oprit la limita de {limit}. Ce s-a auzit este mai jos.",
   "watch.swipe_settings": "Glisați la stânga pentru setările sale",
   "watch.tap_start": "Atingeți Pornire, apoi vorbiți. Cuvintele dvs. apar aici pe măsură ce vorbiți.",
   "watch.timing": "Ascultare {listen} ms · chitanță {receipt} ms · rezultat {result} ms",

@@ -2728,6 +2728,7 @@
     <string name="watch_deleted_nothing_sent">削除しました。何も送信されていません。</string>
     <string name="watch_didnt_catch">聞き取れませんでした。タップしてもう一度お試しください。</string>
     <string name="watch_dismiss">閉じる</string>
+    <string name="watch_edit_words">文字をタップすると変更できます</string>
     <string name="watch_glance_description">要確認の件数だけを表示し、内容や相手は表示しません。</string>
     <string name="watch_halt_all_q">すべてのtafを遮断しますか？</string>
     <plurals name="watch_halt_now_count">
@@ -2741,6 +2742,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">保留中の呼び出し%1$s件が確認を待っています</item>
     </plurals>
+    <string name="watch_held_channel">保留中の呼び出し</string>
     <string name="watch_inbox_empty">新着はありません。Coachの返信とtafの通知がここに届きます。</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">受信トレイに未読%1$s件</item>
@@ -2763,6 +2765,7 @@
     <string name="watch_nothing_sent_until">承認するまで何も送信されません。</string>
     <string name="watch_nothing_waits">待機中の項目はありません。</string>
     <string name="watch_open_on_phone">スマートフォンで開く</string>
+    <string name="watch_opened_on_phone">スマートフォンで開きました</string>
     <string name="watch_page_brief">ブリーフィング</string>
     <string name="watch_page_inbox">受信トレイ</string>
     <string name="watch_paused_still_answers">一時停止中：スケジュールはオフです。送ったメッセージには引き続き答えます。</string>
@@ -2785,6 +2788,7 @@
     <string name="watch_recent_chats">最近のチャット</string>
     <string name="watch_recording">録音中</string>
     <string name="watch_recording_not_received">録音がスマートフォンに届きませんでした。もう一度お試しいただくか、入力してください。</string>
+    <string name="watch_refuse_on_phone">拒否されていません。スマートフォンで拒否してください。</string>
     <string name="watch_refused">拒否しました。何も送信されていません。</string>
     <string name="watch_reply">返信</string>
     <string name="watch_rerecord">録音し直す</string>
@@ -2793,6 +2797,7 @@
     <string name="watch_resume_on_phone">スマートフォンで再開してください</string>
     <string name="watch_retry">再試行</string>
     <string name="watch_review">送信前に確認</string>
+    <string name="watch_seconds_left">残り%1$s秒</string>
     <string name="watch_sending">送信しています…</string>
     <string name="watch_sent">送信済み</string>
     <string name="watch_settings_of">%1$s・設定</string>
@@ -2805,6 +2810,7 @@
     <string name="watch_sign_out_sub">スマートフォンはサインインしたままです。このウォッチはtafs、チャット、受信トレイを消去します。</string>
     <string name="watch_signed_in">サインイン済み</string>
     <string name="watch_signed_out_here">このウォッチでサインアウトしました。スマートフォンはサインインしたままです。</string>
+    <string name="watch_stopped_at_limit">上限の%1$sで停止しました。聞き取った内容は下にあります。</string>
     <string name="watch_swipe_settings">左にスワイプして設定を表示</string>
     <string name="watch_tap_start">「開始」をタップしてから話してください。話している間、言葉がここに表示されます。</string>
     <string name="watch_timing">聞き取り %1$sms・領収書 %2$sms・結果 %3$sms</string>

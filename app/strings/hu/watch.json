@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Törölve. Semmi sem ment el.",
   "watch.didnt_catch": "Nem értettem. Koppints az újrapróbáláshoz.",
   "watch.dismiss": "Elvetés",
+  "watch.edit_words": "Koppints a szövegre a módosításhoz",
   "watch.glance_description": "Hány vár rád, soha nem az, hogy mi vagy ki.",
   "watch.halt_all_q": "Leállítod az összes tafodat?",
   "watch.halt_now_count": {
@@ -34,6 +35,7 @@
     "one": "{count} visszatartott hívás vár rád",
     "other": "{count} visszatartott hívás vár rád"
   },
+  "watch.held_channel": "Visszatartott hívások",
   "watch.inbox_empty": "Nincs semmi új. A Coach válaszai és a tafjaid riasztásai ide érkeznek.",
   "watch.inbox_unread": {
     "one": "{count} olvasatlan a Bejövőben",
@@ -58,6 +60,7 @@
   "watch.nothing_sent_until": "Semmi sem megy el, amíg jóvá nem hagyod.",
   "watch.nothing_waits": "Semmi sem vár rád.",
   "watch.open_on_phone": "Megnyitás a telefonon",
+  "watch.opened_on_phone": "Megnyitva a telefonodon",
   "watch.page.brief": "Összefoglaló",
   "watch.page.inbox": "Bejövő",
   "watch.paused_still_answers": "Szüneteltetve: az ütemezése ki van kapcsolva. Arra, amit küldesz, továbbra is válaszol.",
@@ -81,6 +84,7 @@
   "watch.recent_chats": "Legutóbbi csevegések",
   "watch.recording": "Felvétel",
   "watch.recording_not_received": "A felvétel nem érkezett meg a telefonodra. Próbáld újra, vagy írj inkább.",
+  "watch.refuse_on_phone": "Nincs elutasítva. Utasítsd el a telefonodon.",
   "watch.refused": "Elutasítva. Semmi sem ment el.",
   "watch.reply": "Válasz",
   "watch.rerecord": "Újrafelvétel",
@@ -89,6 +93,7 @@
   "watch.resume_on_phone": "Folytatás a telefonodon",
   "watch.retry": "Újra",
   "watch.review": "Ellenőrzés küldés előtt",
+  "watch.seconds_left": "Még {seconds} mp",
   "watch.sending": "Küldés…",
   "watch.sent": "Elküldve",
   "watch.settings_of": "{taf} · beállítások",
@@ -101,6 +106,7 @@
   "watch.sign_out_sub": "A telefonod bejelentkezve marad. Ez az óra elfelejti a tafjaidat, csevegéseidet és a Bejövőt.",
   "watch.signed_in": "Bejelentkezve",
   "watch.signed_out_here": "Kijelentkeztél ezen az órán. A telefonod bejelentkezve marad.",
+  "watch.stopped_at_limit": "Leállt a(z) {limit} korlátnál. Az elhangzottak lent vannak.",
   "watch.swipe_settings": "Húzd balra a beállításaiért",
   "watch.tap_start": "Koppints az Indításra, majd beszélj. A szavaid beszéd közben itt jelennek meg.",
   "watch.timing": "Figyelés {listen} ms · nyugta {receipt} ms · eredmény {result} ms",

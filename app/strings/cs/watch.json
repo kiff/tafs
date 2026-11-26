@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Smazáno. Nic se neodeslalo.",
   "watch.didnt_catch": "Nerozuměl jsem. Klepnutím to zkusíte znovu.",
   "watch.dismiss": "Zavřít",
+  "watch.edit_words": "Klepnutím na text ho změníte",
   "watch.glance_description": "Kolik jich na vás čeká, nikdy co ani kdo.",
   "watch.halt_all_q": "Zastavit všechny vaše tafy?",
   "watch.halt_now_count": {
@@ -36,6 +37,7 @@
     "few": "{count} zadržená volání čekají na vás",
     "other": "{count} zadržených volání čeká na vás"
   },
+  "watch.held_channel": "Zadržená volání",
   "watch.inbox_empty": "Nic nového. Sem chodí odpovědi Coache a upozornění vašich tafů.",
   "watch.inbox_unread": {
     "one": "{count} nepřečtená v Doručených",
@@ -62,6 +64,7 @@
   "watch.nothing_sent_until": "Nic se neodešle, dokud neschválíte.",
   "watch.nothing_waits": "Nic na vás nečeká.",
   "watch.open_on_phone": "Otevřít v telefonu",
+  "watch.opened_on_phone": "Otevřeno v telefonu",
   "watch.page.brief": "Přehled",
   "watch.page.inbox": "Doručené",
   "watch.paused_still_answers": "Pozastaveno: jeho plán je vypnutý. Na to, co pošlete, pořád odpovídá.",
@@ -86,6 +89,7 @@
   "watch.recent_chats": "Nedávné chaty",
   "watch.recording": "Nahrávám",
   "watch.recording_not_received": "Nahrávka se do telefonu nedostala. Zkuste to znovu, nebo to napište.",
+  "watch.refuse_on_phone": "Neodmítnuto. Odmítněte to v telefonu.",
   "watch.refused": "Odmítnuto. Nic se neodeslalo.",
   "watch.reply": "Odpovědět",
   "watch.rerecord": "Nahrát znovu",
@@ -94,6 +98,7 @@
   "watch.resume_on_phone": "Obnovte v telefonu",
   "watch.retry": "Zkusit znovu",
   "watch.review": "Zkontrolovat před odesláním",
+  "watch.seconds_left": "Zbývá {seconds} s",
   "watch.sending": "Odesílám…",
   "watch.sent": "Odesláno",
   "watch.settings_of": "{taf} · nastavení",
@@ -106,6 +111,7 @@
   "watch.sign_out_sub": "Telefon zůstane přihlášený. Tyto hodinky zapomenou vaše tafy, chaty a Doručené.",
   "watch.signed_in": "Přihlášeno",
   "watch.signed_out_here": "Odhlášeno na těchto hodinkách. Telefon zůstává přihlášený.",
+  "watch.stopped_at_limit": "Zastaveno na limitu {limit}. Co bylo slyšet, je níže.",
   "watch.swipe_settings": "Přejeďte doleva pro jeho nastavení",
   "watch.tap_start": "Klepněte na Start a mluvte. Vaše slova se tu zobrazují, jak mluvíte.",
   "watch.timing": "Poslech {listen} ms · potvrzení {receipt} ms · výsledek {result} ms",

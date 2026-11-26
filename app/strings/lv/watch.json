@@ -19,6 +19,7 @@
   "watch.deleted_nothing_sent": "Dzēsts. Nekas netika nosūtīts.",
   "watch.didnt_catch": "Nesadzirdēju. Pieskaries, lai mēģinātu vēlreiz.",
   "watch.dismiss": "Paslēpt",
+  "watch.edit_words": "Pieskaries tekstam, lai to mainītu",
   "watch.glance_description": "Cik daudz gaida tevi, nekad ne kas vai kurš.",
   "watch.halt_all_q": "Apturēt visus tavus taf?",
   "watch.halt_now_count": {
@@ -36,6 +37,7 @@
     "one": "{count} aizturēts izsaukums gaida tevi",
     "other": "{count} aizturēti izsaukumi gaida tevi"
   },
+  "watch.held_channel": "Aizturētie izsaukumi",
   "watch.inbox_empty": "Nekā jauna. Šeit nonāk Coach atbildes un tavu taf paziņojumi.",
   "watch.inbox_unread": {
     "zero": "Iesūtnē nelasīti: {count}",
@@ -62,6 +64,7 @@
   "watch.nothing_sent_until": "Nekas netiek nosūtīts, kamēr tu neapstiprini.",
   "watch.nothing_waits": "Nekas tevi negaida.",
   "watch.open_on_phone": "Atvērt tālrunī",
+  "watch.opened_on_phone": "Atvērts tavā tālrunī",
   "watch.page.brief": "Kopsavilkums",
   "watch.page.inbox": "Iesūtne",
   "watch.paused_still_answers": "Iepauzēts: tā grafiks ir izslēgts. Tas joprojām atbild uz to, ko tu sūti.",
@@ -86,6 +89,7 @@
   "watch.recent_chats": "Nesenās sarunas",
   "watch.recording": "Ieraksta",
   "watch.recording_not_received": "Ieraksts nesasniedza tālruni. Mēģini vēlreiz vai raksti.",
+  "watch.refuse_on_phone": "Nav atteikts. Atsaki to savā tālrunī.",
   "watch.refused": "Atteikts. Nekas netika nosūtīts.",
   "watch.reply": "Atbildēt",
   "watch.rerecord": "Ierakstīt vēlreiz",
@@ -94,6 +98,7 @@
   "watch.resume_on_phone": "Turpini tālrunī",
   "watch.retry": "Mēģināt vēlreiz",
   "watch.review": "Pārbaudīt pirms sūtīšanas",
+  "watch.seconds_left": "Atlikušas {seconds} s",
   "watch.sending": "Sūta…",
   "watch.sent": "Nosūtīts",
   "watch.settings_of": "{taf} · iestatījumi",
@@ -106,6 +111,7 @@
   "watch.sign_out_sub": "Tālrunis paliek pierakstījies. Šis pulkstenis aizmirst tavus taf, sarunas un iesūtni.",
   "watch.signed_in": "Pierakstījies",
   "watch.signed_out_here": "Izrakstījies šajā pulkstenī. Tālrunis paliek pierakstījies.",
+  "watch.stopped_at_limit": "Apturēts pie {limit} ierobežojuma. Dzirdētais ir zemāk.",
   "watch.swipe_settings": "Pavelc pa kreisi, lai redzētu iestatījumus",
   "watch.tap_start": "Pieskaries “Sākt”, tad runā. Tavi vārdi parādās šeit, kamēr runā.",
   "watch.timing": "Klausīšanās {listen} ms · saņemšana {receipt} ms · rezultāts {result} ms",
