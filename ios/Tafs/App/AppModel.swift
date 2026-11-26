@@ -8329,10 +8329,25 @@ final class AppModel: ObservableObject {
     /// How Setup's last run ended, when the owner should know: they stopped it, or it
     /// failed part-way, with the message that started it to send again.
     enum RunEnd: Equatable { case stopped, failed(retry: String) }
-    @Published private(set) var setupEnded: RunEnd?
+    @Published private(set) var setupEnded: RunEnd? {
+        // Its words belong to the failure they came with: any other end, or none, has none.
+        didSet { if case .failed? = setupEnded {} else { setupEndedWhy = nil } }
+    }
     /// The run whose stream ended `failed` here (`setupEnded`), as the stream named it; nil when it named none. The thread's
     /// `failed` for that run isn't said again; another run's still is (`setupRunFailedLine`).
     private var setupEndedRun: String?
+    /// tafs cloud's words for why Coach's run followed here stopped, from the stream's end (a daily AI limit, the provider):
+    /// nil when it sent none.
+    @Published private(set) var setupEndedWhy: String?
+
+    /// The line under a Coach run that failed here: tafs cloud's words for why, from the stream's end or, once the thread
+    /// is read, its `failed` for that run, as a taf's chat says them (`failedWords(why:)`); the app's own "stopped part-way"
+    /// only when tafs cloud sent none. A daily AI limit then says so, and when it ends, instead of a vague stop.
+    var setupFailedLine: String {
+        if let why = setupEndedWhy?.trimmingCharacters(in: .whitespacesAndNewlines), !why.isEmpty { return why }
+        if let failed = setupThread.failed, setupEndedRun == nil || setupEndedRun == failed.run { return failed.words }
+        return Words.Coach.stoppedPartWayBeforeFinished
+    }
 
     /// A run of Coach's that ended without an answer: tafs cloud's words (the thread's `failed`), as Coach's chat's last line,
     /// by a taf's chat's rules (`runFailedLine`, Android's `chatItems`):
@@ -9696,6 +9711,7 @@ final class AppModel: ObservableObject {
         // The answer follows the new chat tafs cloud started for the message (`followNewSetupChat`).
         var conversation = conversation
         var ended: String?
+        var whyFailed: String?
         // Coach paused on a card its person answers: Needs you is read once then, so its row
         // and badge come while the chat is still open, not after it closes.
         var waitsOnYou = false
@@ -9738,8 +9754,9 @@ final class AppModel: ObservableObject {
                     guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                     setupLive?.newPart()
                     setupLiveBefore = Set(setupThread.items.map(\.id))
-                case .end(let status, _, _, _, _):
+                case .end(let status, _, _, _, let words):
                     ended = status
+                    whyFailed = words
                     if status == "PAUSED" { waitsOnYou = true }
                 case .held:
                     setupLive?.ended(nil, .held)
@@ -9754,6 +9771,7 @@ final class AppModel: ObservableObject {
         if ended == "ERROR" {
             setupEnded = .failed(retry: text)
             setupEndedRun = setupLive?.run
+            setupEndedWhy = whyFailed
         }
         if ended == "CANCELLED" { setupEnded = .stopped }
         // The recorded answer first, then the live one goes: no gap between them.

@@ -811,7 +811,8 @@ struct SetupChatView: View {
                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
         case .failed?:
             HStack(spacing: 10) {
-                Text(Words.Coach.stoppedPartWayBeforeFinished)
+                // tafs cloud's words for why when it sent them (a daily AI limit and when it ends, the provider), else the app's.
+                Text(model.setupFailedLine)
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 // Only where tafs cloud says it's safe to send the message again (`setupRetryLabel`).

@@ -1714,6 +1714,8 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(model.setupEnded, .failed(retry: "Connect my Stripe"))
         XCTAssertEqual(model.setupThread.failed?.run, "r2")
         XCTAssertNil(model.setupRunFailedLine, "one refused line per run")
+        // That one line says tafs cloud's words for the run, from the thread, never only "stopped part-way".
+        XCTAssertEqual(model.setupFailedLine, "Our AI provider isn't serving us right now.")
 
         // Another run's failure, read later, is still said.
         thread(failedR2.replacingOccurrences(of: #""run":"r2""#, with: #""run":"r3""#))
@@ -1725,6 +1727,41 @@ final class SetupTests: XCTestCase {
         await model.loadSetupThread()
         XCTAssertNil(model.setupThread.failed)
         XCTAssertNil(model.setupRunFailedLine)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A Coach run followed live that stopped at a daily AI limit says so in tafs cloud's words from the stream's end (its
+    /// code and words), and when it goes on, not a vague "stopped part-way". With no words from tafs cloud, the app's own
+    /// line; a new message, or a stop, takes the words away.
+    func testCoachsLiveRunThatStoppedAtADailyLimitSaysSo() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        let read = #"{"messages":[{"at":"2026-11-26T17:47:00.000Z","from":"owner","kind":"message","text":"Connect my Stripe","session":"s1"}],"components":[]}"#
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, read)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, read)
+        await model.loadSetup()
+        let limit = "This account has reached today's AI limit, so this stopped and used none of your credits. It goes on at 01:00."
+        var ending: (String?, String?) = ("ai_limit_account", limit)
+        model.streamOpener = { _, _ in
+            let (code, words) = ending
+            return AsyncThrowingStream { c in
+                c.yield(.session("s1", newSession: false, run: "r9"))
+                c.yield(.end(status: "ERROR", stop: "error", code: code, words: words))
+                c.finish()
+            }
+        }
+        _ = await model.sendSetup("Connect my Stripe")
+        await model.setupStream?.value
+        XCTAssertEqual(model.setupEnded, .failed(retry: "Connect my Stripe"))
+        XCTAssertEqual(model.setupFailedLine, limit, "tafs cloud's words for the limit, as they are")
+        XCTAssertNil(model.setupRetryLabel, "no word from tafs cloud that sending again is safe: no Try again")
+
+        // tafs cloud sent no words for why: the app's own line.
+        ending = ("", nil)
+        _ = await model.sendSetup("Connect my Stripe")
+        await model.setupStream?.value
+        XCTAssertEqual(model.setupFailedLine, Words.Coach.stoppedPartWayBeforeFinished)
         Keychain.delete(AppModel.planqueAccount)
     }
 
