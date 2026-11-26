@@ -21,6 +21,23 @@ no() { echo "the CodeBuild build doesn't count: $*"; exit 1; }
 
 name=$(jq -r .name "$project")
 [ "$name" = agents-eval ] || no "the project is $name, not agents-eval"
+
+# The project is kiff/agents' own definition (infra/codebuild/eval-codebuild.sh
+# setup), not one edited since: its source, buildspec, role, limit, image and
+# variables' names. A project changed once, then a build that matches it,
+# counts for nothing either.
+pinned() { # pinned LABEL JQ WANT: the project's value under JQ is WANT
+  local got
+  got=$(jq -cS "$2" "$project")
+  [ "$got" = "$3" ] || no "the project differs from kiff/agents' definition in its $1 ($got)"
+}
+pinned source '.source | {type, location, buildspec}' '{"buildspec":"infra/codebuild/buildspec.yml","location":"https://github.com/kiff/agents.git","type":"GITHUB"}'
+pinned role '.serviceRole | test(":role/agents-eval-codebuild$")' 'true'
+pinned "time limit" '.timeoutInMinutes' '285'
+pinned image '.environment | {type, image, computeType, privilegedMode}' '{"computeType":"BUILD_GENERAL1_MEDIUM","image":"aws/codebuild/standard:7.0","privilegedMode":false,"type":"LINUX_CONTAINER"}'
+pinned variables '[.environment.environmentVariables[] | {name, type}] | sort_by(.name)' '[{"name":"AWS_REGION","type":"PLAINTEXT"},{"name":"EVAL_STRIPE_ACCOUNT","type":"PLAINTEXT"},{"name":"REPORTS","type":"PLAINTEXT"},{"name":"TAFS_YOUR_STEP","type":"PLAINTEXT"}]'
+pinned "reports bucket" '[.environment.environmentVariables[] | select(.name == "REPORTS" or .name == "AWS_REGION") | .value] | sort' '["eu-west-1","kiff-agents-eval-reports"]'
+pinned extras '[(.secondarySources // [] | length), (.fileSystemLocations // [] | length), (.vpcConfig.vpcId // ""), (.cache.type // "NO_CACHE")]' '[0,0,"","NO_CACHE"]'
 [ "$(jq -r .projectName "$build")" = "$name" ] || no "it isn't a build of $name"
 [ "$(jq -r .id "$build")" = "$newest" ] || no "it isn't the project's newest build ($newest)"
 [ "$(jq -r .buildStatus "$build")" = SUCCEEDED ] || no "it ended $(jq -r .buildStatus "$build")"
@@ -42,6 +59,10 @@ same "log group" '.logsConfig.cloudWatchLogs.groupName // .logs.groupName'
 [ "$(jq -r '(.secondarySources // []) | length' "$build")" = 0 ] || no "it had a second source"
 [ "$(jq -r '(.secondarySourceVersions // []) | length' "$build")" = 0 ] || no "it had a second source version"
 [ "$(jq -r '.buildBatchArn // ""' "$build")" = "" ] || no "it was part of a batch"
+[ "$(jq -r '.debugSession.sessionEnabled // false' "$build")" = false ] || no "it had a debug session"
+[ "$(jq -r '.cache.type // "NO_CACHE"' "$build")" = NO_CACHE ] || no "it had a cache"
+[ "$(jq -r '(.fileSystemLocations // []) | length' "$build")" = 0 ] || no "it had a file system"
+[ "$(jq -r '.vpcConfig.vpcId // ""' "$build")" = "" ] || no "it ran in a VPC"
 
 sha=$(jq -r '.resolvedSourceVersion // ""' "$build")
 [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || no "it names no commit"

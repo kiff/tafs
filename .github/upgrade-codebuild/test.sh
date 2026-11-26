@@ -51,6 +51,29 @@ refused "its log group isn't the project's" project.json "$(build '.logs.groupNa
 refused "it had a second source" project.json "$(build '.secondarySources = [{"type":"S3"}]' b13)"
 refused "it was part of a batch" project.json "$(build '.buildBatchArn = "arn:aws:codebuild:eu-west-1:000000000000:build-batch/x"' b14)"
 refused "it names no commit" project.json "$(build '.resolvedSourceVersion = "main"' b15)"
+# Settings outside the comparison above: a debug session, a cache, a file system, a VPC.
+refused "it had a debug session" project.json "$(build '.debugSession = {"sessionEnabled": true}' b16)"
+refused "it had a cache" project.json "$(build '.cache = {"type": "S3", "location": "bucket/x"}' b17)"
+refused "it had a file system" project.json "$(build '.fileSystemLocations = [{"type": "EFS"}]' b18)"
+refused "it ran in a VPC" project.json "$(build '.vpcConfig = {"vpcId": "vpc-1"}' b19)"
+# The project itself edited, with a build that matches it: refused all the same.
+proj() { jq "$1" project.json > "$tmp/$2"; jq "$1" build.json > "$tmp/$2.build"; }
+proj '.source.buildspec = "version: 0.2\nphases: {build: {commands: [true]}}"' p2
+refused "the project differs from kiff/agents' definition in its source" "$tmp/p2" "$tmp/p2.build"
+proj '.serviceRole = "arn:aws:iam::000000000000:role/admin"' p3
+refused "the project differs from kiff/agents' definition in its role" "$tmp/p3" "$tmp/p3.build"
+proj '.timeoutInMinutes = 480' p4
+refused "the project differs from kiff/agents' definition in its time limit" "$tmp/p4" "$tmp/p4.build"
+proj '.environment.image = "someone/image:latest"' p5
+refused "the project differs from kiff/agents' definition in its image" "$tmp/p5" "$tmp/p5.build"
+proj '.environment.environmentVariables += [{"name":"AGENTS_MODEL_SOURCE","value":"anthropic","type":"PLAINTEXT"}]' p6
+refused "the project differs from kiff/agents' definition in its variables" "$tmp/p6" "$tmp/p6.build"
+proj '(.environment.environmentVariables[] | select(.name == "REPORTS") | .value) = "elsewhere"' p7
+refused "the project differs from kiff/agents' definition in its reports bucket" "$tmp/p7" "$tmp/p7.build"
+proj '.environment.environmentVariables[0].type = "SECRETS_MANAGER"' p8
+refused "the project differs from kiff/agents' definition in its variables" "$tmp/p8" "$tmp/p8.build"
+proj '.secondarySources = [{"type": "S3"}]' p9
+refused "the project differs from kiff/agents' definition in its extras" "$tmp/p9" "$tmp/p9.build"
 # Older than the latest Eval on GitHub: a later red there isn't passed over.
 refused "it started before the latest Eval on GitHub" project.json build.json "$id" 2026-11-27T02:00:00Z
 
