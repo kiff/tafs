@@ -258,6 +258,32 @@ export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly 
   return undefined;
 }
 
+/**
+ * The agreed rules as the checks read them for these grants: on a read tool (`read_only` or `setup_reads`), a figure of
+ * exactly KIFF's own count (KIFF_COUNT_A_DAY a calendar day, for no item) is KIFF's, whatever its `over`. Reads refuse past
+ * KIFF's count anyway, so Coach may write it with `over: "refuse"`; read as the owner's, it was asked for in each read
+ * tool's words, and the notice's one 10,000 line per read tool then didn't match the reads Card's one count (an Eval,
+ * 26 Nov, run 2: "it merges the two limits into one count"). Writes and money keep their figures as agreed, so an owner's
+ * "refuse past 10,000 sends a day" stays theirs. A read rule left with no figure keeps its `over`.
+ */
+export function readsCountDropped(rules: readonly AgreedRule[], grants: readonly ApprovalGrant[]): AgreedRule[] {
+  const reads = new Set<AgreedRule>();
+  for (const g of grants) {
+    const suffix = grantSuffix(g.id);
+    for (const t of g.request.tools ?? []) {
+      if (!t.read_only && !t.setup_reads) continue;
+      const rule = ruleOf(t, suffix, rules);
+      if (rule) reads.add(rule);
+    }
+  }
+  const kiffs = (l: AgreedLimit) => l.quantity === "count" && l.window === "calendar_day" && l.per === undefined && l.limit === KIFF_COUNT_A_DAY;
+  return rules.map((r) => {
+    if (!reads.has(r) || !r.limits?.some(kiffs)) return r;
+    const kept = r.limits.filter((l) => !kiffs(l));
+    return kept.length ? { ...r, limits: kept } : { tool: r.tool, over: r.over };
+  });
+}
+
 /** A tool of a grant's request, as `request.tools` lists it. */
 type GrantTool = NonNullable<ApprovalGrant["request"]["tools"]>[number];
 

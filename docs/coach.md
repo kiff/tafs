@@ -435,7 +435,9 @@ things (`runtime/src/cloud/approval.ts`):
   no `per`), which a notice may list as "KIFF adds it", is never the owner's figure: it is dropped
   from the agreed rules as they're read, so it's neither held to the notice's words nor required on a
   Card (Eval 45062249364: read as agreed, it made Setup agree to it, then require it on the refund's
-  Card, until Coach changed the owner's rule). The same notice shown again with another figure
+  Card, until Coach changed the owner's rule). On a read tool, that count is KIFF's whatever `over` it carries
+  (`readsCountDropped`): reads refuse past it anyway, and read as the owner's per-tool figure it was asked for in each read
+  tool's words, against the reads Card's one count (an Eval, 26 Nov). A write's own 10,000 that refuses stays the owner's. The same notice shown again with another figure
   is other rules, and blocks the draft until agreed. At the check, each agreed figure is on a
   Card covering the tool with exactly that figure: `call` as a `per_action_max` of that quantity
   on the tool's grant, `calendar_day` as an aggregate of that quantity with `window:
