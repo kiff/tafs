@@ -8057,8 +8057,8 @@ describe("a result whose hand-over failed on a field Coach wrote, as the apps re
     expect(shown[0]!.answer!.outcome).toBeUndefined();
   });
 
-  it("with no retry past the hold, says in the reader's language that it wasn't finished, and to ask Coach", () => {
-    for (const [lang, words] of [["en", "ask Coach in this chat what happened"], ["fr", "demandez à Coach dans ce chat ce qui s'est passé"]] as const) {
+  it("with no retry past the hold, says in the reader's language that Coach's hand-over wasn't finished", () => {
+    for (const [lang, words] of [["en", "Coach's hand-over wasn't finished"], ["fr", "la transmission par Coach n'a pas été terminée"]] as const) {
       const shown = [result("result-1", 1, fixed)];
       retriedResults(shown, new Date("2026-11-26T02:45:00Z"), lang);
       expect(shown[0]!.answer!.outcome).toEqual({ failed: words });
@@ -8074,6 +8074,37 @@ describe("a result whose hand-over failed on a field Coach wrote, as the apps re
     expect(shown[0]!.answer!.outcome).toEqual(owner);
     const lone = [result("result-1", 1, fixed), other];
     retriedResults(lone, new Date("2026-11-26T03:00:00Z"), "en");
-    expect(lone[0]!.answer!.outcome).toEqual({ failed: "ask Coach in this chat what happened" });
+    expect(lone[0]!.answer!.outcome).toEqual({ failed: "Coach's hand-over wasn't finished" });
+  });
+
+  // The apps draw a failed hand-over as "{name} wasn't set up: {why}." and then their fixed "Coach knows, and hands it over
+  // again." (coach.coach_knows), in builds that can't change: the line past the hold is a fact that reads right between them.
+  it("past the hold, the line reads as a fact before the apps' fixed \"Coach knows, and hands it over again.\"", () => {
+    const shown = [result("result-1", 1, fixed)];
+    retriedResults(shown, new Date("2026-11-26T02:45:00Z"), "en");
+    const why = (shown[0]!.answer!.outcome as { failed: string }).failed;
+    expect(`Order rows wasn't set up: ${why}. Coach knows, and hands it over again.`).toBe(
+      "Order rows wasn't set up: Coach's hand-over wasn't finished. Coach knows, and hands it over again.");
+    expect(why).not.toMatch(/\bask\b/i);
+  });
+
+  // An improvement's result (it names the taf it improves): the apps read it as the version made, why none was, or
+  // preparing, with the same fixed line under a failure. A later result that made the version reads for the first one too.
+  it("an improvement whose hand-over failed on Coach's field reads as the version a later result made, or as preparing", () => {
+    const improves = (id: string, seq: number, outcome: unknown, when = at): ThreadComponent => ({
+      at: when, session: "s1", run: "r1", seq,
+      component: { type: "result", id, taf: { agent: "order-rows-x", name: "Order rows", improves: "taf_1" } },
+      answer: { state: "answered", words: "", at: when, outcome: outcome as never },
+    });
+    const made = [improves("result-1", 1, fixed), improves("result-2", 2, { version: 3 }, "2026-11-26T02:34:28Z")];
+    retriedResults(made, new Date("2026-11-26T02:35:00Z"), "en");
+    expect(made[0]!.answer!.outcome).toEqual({ version: 3 });
+    const waiting = [improves("result-1", 1, fixed)];
+    retriedResults(waiting, new Date("2026-11-26T02:40:00Z"), "en");
+    expect(waiting[0]!.answer!.outcome).toBeUndefined();
+    const lapsed = [improves("result-1", 1, fixed)];
+    retriedResults(lapsed, new Date("2026-11-26T02:45:00Z"), "de");
+    expect(lapsed[0]!.answer!.outcome).toEqual({ failed: "die Übergabe von Coach wurde nicht abgeschlossen" });
+    expect(JSON.stringify([made, waiting, lapsed])).not.toContain("check.items");
   });
 });
