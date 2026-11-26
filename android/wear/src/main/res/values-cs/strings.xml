@@ -58,7 +58,7 @@
     <string name="watch_ask">Zeptat se tafs</string>
     <string name="watch_ask_needs_consent">Než se zeptáte tafs, povolte v tafs v telefonu používání AI.</string>
     <string name="watch_ask_not_on">Ptaní z hodinek zatím není zapnuté.</string>
-    <string name="watch_ask_phone_sign_in">Požádat telefon o přihlášení těchto hodinek</string>
+    <string name="watch_ask_phone_sign_in">Požádejte telefon, aby tyto hodinky přihlásil</string>
     <string name="watch_ask_text_only">tafs dostane vaše slova jako text, nikdy váš hlas.</string>
     <string name="watch_asking_phone">Ptám se telefonu…</string>
     <string name="watch_calendar_today">Dnešní kalendář</string>
@@ -154,10 +154,10 @@
     <string name="watch_sent">Odesláno</string>
     <string name="watch_settings_of">%1$s · nastavení</string>
     <string name="watch_sign_in_allow">Povolit</string>
-    <string name="watch_sign_in_denied">Nepřihlášeno. Hodinky zůstávají odhlášené.</string>
+    <string name="watch_sign_in_denied">Nepřihlášeno. Tyto hodinky zůstávají odhlášené.</string>
     <string name="watch_sign_in_deny">Zamítnout</string>
     <string name="watch_sign_in_on_phone">Nejdřív se v telefonu přihlaste do tafs.</string>
-    <string name="watch_sign_in_watch_q">Přihlásit tyto hodinky k vašemu účtu?</string>
+    <string name="watch_sign_in_watch_q">Přihlásit tyto hodinky jako vás?</string>
     <string name="watch_sign_out_q">Odhlásit se na těchto hodinkách?</string>
     <string name="watch_sign_out_sub">Telefon zůstane přihlášený. Tyto hodinky zapomenou vaše tafy, chaty a Doručené.</string>
     <string name="watch_signed_in">Přihlášeno</string>

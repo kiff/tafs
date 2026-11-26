@@ -2882,10 +2882,10 @@
     <string name="watch_sent">გაიგზავნა</string>
     <string name="watch_settings_of">%1$s · პარამეტრები</string>
     <string name="watch_sign_in_allow">დაშვება</string>
-    <string name="watch_sign_in_denied">შესვლა არ მოხდა. საათი გამოსული რჩება.</string>
+    <string name="watch_sign_in_denied">შესვლა არ მოხდა. ეს საათი გამოსული რჩება.</string>
     <string name="watch_sign_in_deny">უარყოფა</string>
     <string name="watch_sign_in_on_phone">ჯერ შედით tafs-ში თქვენს ტელეფონზე.</string>
-    <string name="watch_sign_in_watch_q">შევიდეთ ამ საათში თქვენი ანგარიშით?</string>
+    <string name="watch_sign_in_watch_q">შევიდეს ეს საათი თქვენი სახელით?</string>
     <string name="watch_sign_out_q">გამოხვიდეთ ამ საათზე?</string>
     <string name="watch_sign_out_sub">თქვენი ტელეფონი შესული რჩება. ეს საათი ივიწყებს თქვენს taf-ებს, ჩატებს და შემოსულებს.</string>
     <string name="watch_signed_in">შესულია</string>
@@ -2902,7 +2902,7 @@
     <string name="watch_view_on_phone">ნახეთ ტელეფონზე</string>
     <string name="watch_view_only_phone">ეს ტელეფონი მხოლოდ ნახვას ახერხებს, ამიტომ საათიდან ვერ ჰკითხავთ. შედით ტელეფონზე, რომელსაც დამტკიცება შეუძლია.</string>
     <string name="watch_voice_text_only">Coach თქვენს სიტყვებს იღებს ტექსტად, არასოდეს თქვენს ხმას.</string>
-    <string name="watch_waiting_for_phone">ველოდებით ტელეფონს…</string>
+    <string name="watch_waiting_for_phone">ველოდებით თქვენს ტელეფონს…</string>
     <string name="watch_what_it_does">რას აკეთებს</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s მუშაობს</item>

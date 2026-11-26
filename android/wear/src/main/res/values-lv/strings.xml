@@ -155,7 +155,7 @@
     <string name="watch_settings_of">%1$s · iestatījumi</string>
     <string name="watch_sign_in_allow">Atļaut</string>
     <string name="watch_sign_in_denied">Nav pierakstīts. Šis pulkstenis paliek izrakstīts.</string>
-    <string name="watch_sign_in_deny">Liegt</string>
+    <string name="watch_sign_in_deny">Noraidīt</string>
     <string name="watch_sign_in_on_phone">Vispirms pieraksties tafs savā tālrunī.</string>
     <string name="watch_sign_in_watch_q">Pierakstīt šo pulksteni ar tavu kontu?</string>
     <string name="watch_sign_out_q">Izrakstīties šajā pulkstenī?</string>

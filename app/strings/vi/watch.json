@@ -93,7 +93,7 @@
   "watch.sent": "Đã gửi",
   "watch.settings_of": "{taf} · cài đặt",
   "watch.sign_in_allow": "Cho phép",
-  "watch.sign_in_denied": "Chưa đăng nhập. Đồng hồ này vẫn ở trạng thái đăng xuất.",
+  "watch.sign_in_denied": "Chưa đăng nhập. Đồng hồ này vẫn đăng xuất.",
   "watch.sign_in_deny": "Từ chối",
   "watch.sign_in_on_phone": "Hãy đăng nhập tafs trên điện thoại của bạn trước.",
   "watch.sign_in_watch_q": "Đăng nhập đồng hồ này bằng tài khoản của bạn?",
@@ -113,7 +113,7 @@
   "watch.view_on_phone": "Xem trên điện thoại",
   "watch.view_only_phone": "Điện thoại này chỉ xem được, nên bạn không thể hỏi từ đồng hồ. Hãy đăng nhập trên một điện thoại có thể phê duyệt.",
   "watch.voice_text_only": "Coach nhận lời của bạn dưới dạng văn bản, không bao giờ nhận giọng nói.",
-  "watch.waiting_for_phone": "Đang chờ điện thoại…",
+  "watch.waiting_for_phone": "Đang chờ điện thoại của bạn…",
   "watch.what_it_does": "Việc nó làm",
   "watch.working_count": {
     "other": "{count} đang làm việc"

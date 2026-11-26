@@ -700260,19 +700260,19 @@
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Telefondan bu saata daxil olmasını xahiş edin"
+            "value": "Bu saatın girişi üçün telefonunuzdan icazə istəyin"
           }
         },
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Помолете телефона да впише този часовник"
+            "value": "Помолете телефона си да впише този часовник"
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "এই ঘড়িতে সাইন ইন করতে ফোনকে বলুন"
+            "value": "এই ঘড়িতে সাইন ইন করাতে আপনার ফোনকে বলুন"
           }
         },
         "ca": {
@@ -700284,13 +700284,13 @@
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Požádat telefon o přihlášení těchto hodinek"
+            "value": "Požádejte telefon, aby tyto hodinky přihlásil"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Telefon bitten, diese Uhr anzumelden"
+            "value": "Dein Handy bitten, diese Uhr anzumelden"
           }
         },
         "en": {
@@ -700302,13 +700302,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pedir a tu teléfono que inicie sesión en este reloj"
+            "value": "Pide a tu teléfono que inicie sesión en este reloj"
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Palu telefonil see kell sisse logida"
+            "value": "Palu oma telefonil see kell sisse logida"
           }
         },
         "fr": {
@@ -700326,7 +700326,7 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "इस घड़ी में साइन इन करने के लिए फ़ोन से कहें"
+            "value": "इस घड़ी में साइन इन कराने के लिए अपने फ़ोन से कहें"
           }
         },
         "hr": {
@@ -700338,31 +700338,31 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kérd meg a telefont, hogy jelentkeztesse be ezt az órát"
+            "value": "Kérd meg a telefonodat, hogy jelentkeztesse be ezt az órát"
           }
         },
         "hy": {
           "stringUnit": {
             "state": "translated",
-            "value": "Խնդրեք հեռախոսին մուտք գործել այս ժամացույցով"
+            "value": "Խնդրեք ձեր հեռախոսին մուտք գործել այս ժամացույցով"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Minta ponsel untuk memasukkan jam tangan ini"
+            "value": "Minta ponsel Anda memasukkan jam tangan ini"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chiedi al telefono di collegare questo orologio"
+            "value": "Chiedi al telefono di far accedere questo orologio"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "スマートフォンにこのウォッチのサインインを頼む"
+            "value": "スマートフォンにこのウォッチへのサインインを依頼"
           }
         },
         "ka": {
@@ -700374,25 +700374,25 @@
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "សុំទូរសព្ទឱ្យចូលនាឡិកានេះ"
+            "value": "ស្នើទូរសព្ទរបស់អ្នកឱ្យចូលគណនីនាឡិកានេះ"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴대전화에 이 워치 로그인 요청"
+            "value": "휴대폰에 이 워치 로그인 요청"
           }
         },
         "lo": {
           "stringUnit": {
             "state": "translated",
-            "value": "ຂໍໃຫ້ໂທລະສັບເຂົ້າສູ່ລະບົບໂມງນີ້"
+            "value": "ຂໍໃຫ້ໂທລະສັບຂອງທ່ານເຂົ້າສູ່ລະບົບໂມງນີ້"
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paprašyti telefono prijungti šį laikrodį"
+            "value": "Paprašykite telefono prijungti šį laikrodį"
           }
         },
         "lv": {
@@ -700410,19 +700410,19 @@
         "mn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Энэ цагт нэвтрэхийг утаснаасаа хүсэх"
+            "value": "Энэ цагийг нэвтрүүлэхийг утаснаасаа хүсэх"
           }
         },
         "ne": {
           "stringUnit": {
             "state": "translated",
-            "value": "यो घडीमा साइन इन गर्न फोनलाई भन्नुहोस्"
+            "value": "यो घडीमा साइन इन गराउन आफ्नो फोनलाई भन्नुहोस्"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vraag je telefoon dit horloge aan te melden"
+            "value": "Vraag je telefoon om dit horloge in te loggen"
           }
         },
         "pl": {
@@ -700434,13 +700434,13 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pedir ao telemóvel para iniciar sessão neste relógio"
+            "value": "Peça ao telemóvel para iniciar sessão neste relógio"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pedir ao telemóvel para iniciar sessão neste relógio"
+            "value": "Peça ao seu celular para conectar este relógio"
           }
         },
         "ro": {
@@ -700452,13 +700452,13 @@
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Požiadať telefón o prihlásenie týchto hodiniek"
+            "value": "Požiadajte telefón, aby prihlásil tieto hodinky"
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prosi telefon, naj prijavi to uro"
+            "value": "Prosite telefon, naj prijavi to uro"
           }
         },
         "sq": {
@@ -700476,13 +700476,13 @@
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ขอให้โทรศัพท์ลงชื่อเข้าใช้นาฬิกานี้"
+            "value": "ขอให้โทรศัพท์ลงชื่อเข้าใช้นาฬิกาเรือนนี้"
           }
         },
         "tk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Telefondan bu sagada girmegi soraň"
+            "value": "Telefonyňyzdan bu sagady içeri girizmegi haýyş ediň"
           }
         },
         "tr": {
@@ -700494,7 +700494,7 @@
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "اس گھڑی میں سائن ان کرنے کے لیے فون سے کہیں"
+            "value": "اپنے فون سے کہیں کہ اس گھڑی میں سائن ان کرے"
           }
         },
         "vi": {
@@ -700506,7 +700506,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "請手機為這支手錶登入"
+            "value": "請手機登入這支手錶"
           }
         }
       }
@@ -721700,7 +721700,7 @@
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "אישור"
+            "value": "לאפשר"
           }
         },
         "hi": {
@@ -721897,37 +721897,37 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لم يتم تسجيل الدخول. تبقى هذه الساعة خارج الحساب."
+            "value": "لم يتم تسجيل الدخول. تبقى هذه الساعة مسجَّلة الخروج."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daxil olunmadı. Bu saat çıxışda qalır."
+            "value": "Giriş edilmədi. Bu saat çıxışda qalır."
           }
         },
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не е вписан. Часовникът остава отписан."
+            "value": "Не е вписан. Този часовник остава отписан."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "সাইন ইন হয়নি। এই ঘড়ি সাইন আউট থাকবে।"
+            "value": "সাইন ইন হয়নি। এই ঘড়ি সাইন আউট অবস্থায় থাকবে।"
           }
         },
         "ca": {
           "stringUnit": {
             "state": "translated",
-            "value": "No s'ha iniciat la sessió. Aquest rellotge continua sense sessió."
+            "value": "No s'ha iniciat la sessió. Aquest rellotge continua amb la sessió tancada."
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nepřihlášeno. Hodinky zůstávají odhlášené."
+            "value": "Nepřihlášeno. Tyto hodinky zůstávají odhlášené."
           }
         },
         "de": {
@@ -721945,7 +721945,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se ha iniciado sesión. Este reloj sigue sin sesión."
+            "value": "No se ha iniciado sesión. Este reloj sigue con la sesión cerrada."
           }
         },
         "et": {
@@ -721969,25 +721969,25 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "साइन इन नहीं हुआ। यह घड़ी साइन आउट ही रहेगी।"
+            "value": "साइन इन नहीं हुआ। यह घड़ी साइन आउट रहेगी।"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Niste prijavljeni. Sat ostaje odjavljen."
+            "value": "Nije prijavljeno. Ovaj sat ostaje odjavljen."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nincs bejelentkezve. Az óra kijelentkezve marad."
+            "value": "Nincs bejelentkezve. Ez az óra kijelentkezve marad."
           }
         },
         "hy": {
           "stringUnit": {
             "state": "translated",
-            "value": "Մուտք չի գործվել։ Ժամացույցը մնում է դուրս եկած։"
+            "value": "Մուտք չի կատարվել։ Այս ժամացույցը մնում է ելքի վիճակում։"
           }
         },
         "id": {
@@ -721999,25 +721999,25 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesso non eseguito. L'orologio resta scollegato."
+            "value": "Accesso non eseguito. Questo orologio resta disconnesso."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サインインしていません。このウォッチはサインアウトのままです。"
+            "value": "サインインしていません。このウォッチはサインアウトしたままです。"
           }
         },
         "ka": {
           "stringUnit": {
             "state": "translated",
-            "value": "შესვლა არ მოხდა. საათი გამოსული რჩება."
+            "value": "შესვლა არ მოხდა. ეს საათი გამოსული რჩება."
           }
         },
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "មិនបានចូលទេ។ នាឡិកានេះនៅតែចេញពីគណនី។"
+            "value": "មិនបានចូលគណនីទេ។ នាឡិកានេះនៅតែចាកចេញ។"
           }
         },
         "ko": {
@@ -722035,7 +722035,7 @@
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neprisijungta. Šis laikrodis lieka atjungtas."
+            "value": "Neprijungta. Šis laikrodis lieka atjungtas."
           }
         },
         "lv": {
@@ -722047,7 +722047,7 @@
         "mk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не е најавен. Часовникот останува одјавен."
+            "value": "Не е најавен. Овој часовник останува одјавен."
           }
         },
         "mn": {
@@ -722065,43 +722065,43 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Niet aangemeld. Dit horloge blijft afgemeld."
+            "value": "Niet ingelogd. Dit horloge blijft uitgelogd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie zalogowano. Zegarek pozostaje wylogowany."
+            "value": "Nie zalogowano. Ten zegarek pozostaje wylogowany."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sessão não iniciada. Este relógio continua sem sessão."
+            "value": "Sessão não iniciada. Este relógio continua com a sessão terminada."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sessão não iniciada. Este relógio continua sem sessão."
+            "value": "Não conectado. Este relógio continua desconectado."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nu s-a conectat. Ceasul rămâne deconectat."
+            "value": "Neconectat. Acest ceas rămâne deconectat."
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neprihlásené. Hodinky zostávajú odhlásené."
+            "value": "Neprihlásené. Tieto hodinky zostávajú odhlásené."
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Niste prijavljeni. Ura ostane odjavljena."
+            "value": "Ni prijavljeno. Ta ura ostane odjavljena."
           }
         },
         "sq": {
@@ -722113,25 +722113,25 @@
         "sr-Latn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Niste prijavljeni. Sat ostaje odjavljen."
+            "value": "Nije prijavljeno. Ovaj sat ostaje odjavljen."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ยังไม่ได้ลงชื่อเข้าใช้ นาฬิกานี้ยังคงออกจากระบบ"
+            "value": "ไม่ได้ลงชื่อเข้าใช้ นาฬิกาเรือนนี้ยังคงออกจากระบบอยู่"
           }
         },
         "tk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Girilmedi. Bu sagat çykyşda galýar."
+            "value": "Içeri girilmedi. Bu sagat çykan ýagdaýda galýar."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oturum açılmadı. Bu saatte oturum kapalı kalıyor."
+            "value": "Oturum açılmadı. Bu saat oturumu kapalı kalır."
           }
         },
         "ur": {
@@ -722143,13 +722143,13 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chưa đăng nhập. Đồng hồ này vẫn ở trạng thái đăng xuất."
+            "value": "Chưa đăng nhập. Đồng hồ này vẫn đăng xuất."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "未登入。這支手錶仍保持登出。"
+            "value": "尚未登入。這支手錶仍維持登出。"
           }
         }
       }
@@ -722226,13 +722226,13 @@
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "דחייה"
+            "value": "לדחות"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "अस्वीकार करें"
+            "value": "मना करें"
           }
         },
         "hr": {
@@ -722298,13 +722298,13 @@
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neleisti"
+            "value": "Atmesti"
           }
         },
         "lv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liegt"
+            "value": "Noraidīt"
           }
         },
         "mk": {
@@ -722400,7 +722400,7 @@
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "مسترد کریں"
+            "value": "انکار کریں"
           }
         },
         "vi": {
@@ -722686,37 +722686,37 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هل تريد تسجيل دخول هذه الساعة بحسابك؟"
+            "value": "هل تريد تسجيل دخول هذه الساعة باسمك؟"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu saata hesabınızla daxil olunsun?"
+            "value": "Bu saata öz adınızla daxil olunsun?"
           }
         },
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Да се впише ли този часовник с вашия профил?"
+            "value": "Да се впише ли този часовник като вас?"
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "আপনার অ্যাকাউন্টে এই ঘড়ি সাইন ইন করবেন?"
+            "value": "এই ঘড়িতে আপনার নামে সাইন ইন করবেন?"
           }
         },
         "ca": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vols iniciar la sessió en aquest rellotge amb el teu compte?"
+            "value": "Vols iniciar la sessió en aquest rellotge com a tu?"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Přihlásit tyto hodinky k vašemu účtu?"
+            "value": "Přihlásit tyto hodinky jako vás?"
           }
         },
         "de": {
@@ -722734,13 +722734,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Iniciar sesión en este reloj con tu cuenta?"
+            "value": "¿Iniciar sesión en este reloj como tú?"
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kas logida see kell sinu kontoga sisse?"
+            "value": "Kas logida see kell sinuna sisse?"
           }
         },
         "fr": {
@@ -722752,43 +722752,43 @@
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "לחבר את השעון הזה לחשבון שלך?"
+            "value": "לחבר את השעון הזה בתור את/ה?"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "इस घड़ी में अपने खाते से साइन इन करें?"
+            "value": "इस घड़ी में आपके नाम से साइन इन करें?"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prijaviti ovaj sat vašim računom?"
+            "value": "Prijaviti ovaj sat kao vas?"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bejelentkezteted ezt az órát a fiókoddal?"
+            "value": "Bejelentkezteted ezt az órát a saját fiókoddal?"
           }
         },
         "hy": {
           "stringUnit": {
             "state": "translated",
-            "value": "Մուտք գործե՞լ այս ժամացույցով ձեր հաշվով"
+            "value": "Մուտք գործե՞լ այս ժամացույցով ձեր անունից"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Masukkan jam tangan ini dengan akun Anda?"
+            "value": "Masukkan jam tangan ini sebagai Anda?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Collegare questo orologio al tuo account?"
+            "value": "Far accedere questo orologio con il tuo account?"
           }
         },
         "ja": {
@@ -722800,13 +722800,13 @@
         "ka": {
           "stringUnit": {
             "state": "translated",
-            "value": "შევიდეთ ამ საათში თქვენი ანგარიშით?"
+            "value": "შევიდეს ეს საათი თქვენი სახელით?"
           }
         },
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "ចូលនាឡិកានេះដោយគណនីរបស់អ្នកឬ?"
+            "value": "ចូលគណនីនាឡិកានេះជាអ្នកឬ?"
           }
         },
         "ko": {
@@ -722818,13 +722818,13 @@
         "lo": {
           "stringUnit": {
             "state": "translated",
-            "value": "ເຂົ້າສູ່ລະບົບໂມງນີ້ດ້ວຍບັນຊີຂອງທ່ານບໍ?"
+            "value": "ເຂົ້າສູ່ລະບົບໂມງນີ້ໃນນາມທ່ານບໍ?"
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prijungti šį laikrodį jūsų paskyra?"
+            "value": "Prijungti šį laikrodį jūsų vardu?"
           }
         },
         "lv": {
@@ -722836,31 +722836,31 @@
         "mk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Да се најави ли овој часовник со твојата сметка?"
+            "value": "Да се најави овој часовник како тебе?"
           }
         },
         "mn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Энэ цагт өөрийн бүртгэлээр нэвтрэх үү?"
+            "value": "Энэ цагийг таны нэрээр нэвтрүүлэх үү?"
           }
         },
         "ne": {
           "stringUnit": {
             "state": "translated",
-            "value": "यो घडीमा आफ्नो खाताले साइन इन गर्ने?"
+            "value": "यो घडीमा तपाईंको नाममा साइन इन गर्ने?"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dit horloge aanmelden met jouw account?"
+            "value": "Dit horloge inloggen als jij?"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zalogować ten zegarek na Twoje konto?"
+            "value": "Zalogować ten zegarek jako Ty?"
           }
         },
         "pt": {
@@ -722872,61 +722872,61 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iniciar sessão neste relógio com a sua conta?"
+            "value": "Conectar este relógio com a sua conta?"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectați acest ceas la contul dvs.?"
+            "value": "Conectați acest ceas cu contul dvs.?"
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prihlásiť tieto hodinky k vášmu účtu?"
+            "value": "Prihlásiť tieto hodinky ako vás?"
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Želite to uro prijaviti s svojim računom?"
+            "value": "Prijavim to uro kot vas?"
           }
         },
         "sq": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ta lidhësh këtë orë me llogarinë tënde?"
+            "value": "Ta lidhësh këtë orë si ti?"
           }
         },
         "sr-Latn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prijaviti ovaj sat vašim nalogom?"
+            "value": "Prijaviti ovaj sat kao vas?"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ลงชื่อเข้าใช้นาฬิกานี้ด้วยบัญชีของคุณไหม"
+            "value": "ลงชื่อเข้าใช้นาฬิกาเรือนนี้ในชื่อคุณไหม"
           }
         },
         "tk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu sagada hasabyňyz bilen girilsinmi?"
+            "value": "Bu sagat siziň adyňyzdan içeri girizilsinmi?"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu saatte hesabınızla oturum açılsın mı?"
+            "value": "Bu saatte sizin adınıza oturum açılsın mı?"
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "اس گھڑی میں اپنے اکاؤنٹ سے سائن ان کریں؟"
+            "value": "اس گھڑی میں آپ کے نام سے سائن ان کریں؟"
           }
         },
         "vi": {
@@ -722938,7 +722938,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "要以你的帳戶登入這支手錶嗎？"
+            "value": "要以您的身分登入這支手錶嗎？"
           }
         }
       }
@@ -727157,7 +727157,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "بانتظار هاتفك…"
+            "value": "في انتظار هاتفك…"
           }
         },
         "az": {
@@ -727169,7 +727169,7 @@
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Изчаква се телефонът…"
+            "value": "Изчаква се телефонът ви…"
           }
         },
         "bn": {
@@ -727181,7 +727181,7 @@
         "ca": {
           "stringUnit": {
             "state": "translated",
-            "value": "S'està esperant el telèfon…"
+            "value": "S'espera el telèfon…"
           }
         },
         "cs": {
@@ -727193,7 +727193,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warte auf dein Telefon…"
+            "value": "Warte auf dein Handy …"
           }
         },
         "en": {
@@ -727211,7 +727211,7 @@
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ootan su telefoni…"
+            "value": "Ootan sinu telefoni…"
           }
         },
         "fr": {
@@ -727235,19 +727235,19 @@
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Čeka se telefon…"
+            "value": "Čeka se vaš telefon…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Várakozás a telefonra…"
+            "value": "Várakozás a telefonodra…"
           }
         },
         "hy": {
           "stringUnit": {
             "state": "translated",
-            "value": "Սպասում ենք հեռախոսին…"
+            "value": "Սպասում ենք ձեր հեռախոսին…"
           }
         },
         "id": {
@@ -727271,25 +727271,25 @@
         "ka": {
           "stringUnit": {
             "state": "translated",
-            "value": "ველოდებით ტელეფონს…"
+            "value": "ველოდებით თქვენს ტელეფონს…"
           }
         },
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "កំពុងរង់ចាំទូរសព្ទ…"
+            "value": "កំពុងរង់ចាំទូរសព្ទរបស់អ្នក…"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴대전화를 기다리는 중…"
+            "value": "휴대폰을 기다리는 중…"
           }
         },
         "lo": {
           "stringUnit": {
             "state": "translated",
-            "value": "ກຳລັງລໍໂທລະສັບ…"
+            "value": "ກຳລັງລໍໂທລະສັບຂອງທ່ານ…"
           }
         },
         "lt": {
@@ -727307,19 +727307,19 @@
         "mk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Се чека телефонот…"
+            "value": "Се чека твојот телефон…"
           }
         },
         "mn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Утсыг хүлээж байна…"
+            "value": "Таны утсыг хүлээж байна…"
           }
         },
         "ne": {
           "stringUnit": {
             "state": "translated",
-            "value": "तपाईंको फोनको पर्खाइमा…"
+            "value": "तपाईंको फोन पर्खँदै…"
           }
         },
         "nl": {
@@ -727337,13 +727337,13 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera do telemóvel…"
+            "value": "A aguardar o telemóvel…"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera do telemóvel…"
+            "value": "Aguardando seu celular…"
           }
         },
         "ro": {
@@ -727373,13 +727373,13 @@
         "sr-Latn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Čeka se telefon…"
+            "value": "Čeka se vaš telefon…"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "กำลังรอโทรศัพท์…"
+            "value": "กำลังรอโทรศัพท์ของคุณ…"
           }
         },
         "tk": {
@@ -727403,13 +727403,13 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đang chờ điện thoại…"
+            "value": "Đang chờ điện thoại của bạn…"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在等候手機…"
+            "value": "正在等候您的手機…"
           }
         }
       }
