@@ -73,7 +73,12 @@ tafs cloud stores one agent definition per taf in kiff/agents
 
 When main changes what a definition is built from, the **Upgrade** workflow
 (`.github/workflows/upgrade.yml`, by hand, after kiff/agents' eval passed on the same
-sources) rewrites each running taf's definition, from its next run.
+sources) rewrites each running taf's definition, from its next run. When GitHub won't run
+kiff/agents' Eval, its backup build on AWS CodeBuild can stand for it (the workflow's
+`codebuild_build` input). The gate reads CodeBuild's own record through a read-only role,
+and counts the build only when it ran exactly as its project defines it, is the newest,
+started after the latest Eval on GitHub, and measured a commit on kiff/agents' main
+(`.github/upgrade-codebuild.sh`).
 
 ## Starting a taf
 

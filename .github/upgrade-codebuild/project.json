@@ -1,0 +1,18 @@
+{
+  "name": "agents-eval",
+  "arn": "arn:aws:codebuild:eu-west-1:000000000000:project/agents-eval",
+  "source": {"type": "GITHUB", "location": "https://github.com/kiff/agents.git", "gitCloneDepth": 0, "buildspec": "infra/codebuild/buildspec.yml", "reportBuildStatus": false, "insecureSsl": false},
+  "artifacts": {"type": "NO_ARTIFACTS"},
+  "environment": {"type": "LINUX_CONTAINER", "image": "aws/codebuild/standard:7.0", "computeType": "BUILD_GENERAL1_MEDIUM",
+    "environmentVariables": [
+      {"name": "EVAL_STRIPE_ACCOUNT", "value": "acct_test", "type": "PLAINTEXT"},
+      {"name": "TAFS_YOUR_STEP", "value": "", "type": "PLAINTEXT"},
+      {"name": "REPORTS", "value": "kiff-agents-eval-reports", "type": "PLAINTEXT"},
+      {"name": "AWS_REGION", "value": "eu-west-1", "type": "PLAINTEXT"}],
+    "privilegedMode": false, "imagePullCredentialsType": "CODEBUILD"},
+  "serviceRole": "arn:aws:iam::000000000000:role/agents-eval-codebuild",
+  "timeoutInMinutes": 285,
+  "queuedTimeoutInMinutes": 60,
+  "concurrentBuildLimit": 1,
+  "logsConfig": {"cloudWatchLogs": {"status": "ENABLED", "groupName": "/aws/codebuild/agents-eval"}}
+}

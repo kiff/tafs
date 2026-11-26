@@ -8,6 +8,8 @@ on:
       - .github/upgrade-rule-b/**
       - .github/upgrade-override.sh
       - .github/upgrade-override/**
+      - .github/upgrade-codebuild.sh
+      - .github/upgrade-codebuild/**
       - .github/workflows/upgrade.yml
       - .github/workflows/upgrade-gate.yml
 permissions:
@@ -26,3 +28,4 @@ jobs:
           persist-credentials: false
       - run: bash .github/upgrade-rule-b/test.sh
       - run: bash .github/upgrade-override/test.sh
+      - run: bash .github/upgrade-codebuild/test.sh

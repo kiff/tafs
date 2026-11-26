@@ -31,6 +31,12 @@ on:
         description: "Only with the owner's go on the thread, before launch (until 28 Nov 2026): \"<the latest completed Eval run id> <reason>\", that run read as a report, not a gate (blank: the gate stands)"
         type: string
         default: ""
+      # The Eval's backup run on AWS CodeBuild (kiff/agents' infra/codebuild), for when GitHub won't start eval.yml:
+      # the build's id, read from CodeBuild's own record through a read-only role (the codebuild job below).
+      codebuild_build:
+        description: "The Eval's backup build on CodeBuild, \"agents-eval:<uuid>\", read instead of GitHub's latest Eval (blank: GitHub's)"
+        type: string
+        default: ""
 permissions:
   contents: read
   id-token: write
@@ -38,8 +44,57 @@ concurrency:
   group: upgrade
   cancel-in-progress: false
 jobs:
+  # The backup Eval's record, when codebuild_build names one: CodeBuild's own, read through a read-only role that only
+  # this environment's runs may take (eval-gate, main only). It counts only when the build ran as its project defines
+  # it (.github/upgrade-codebuild.sh, tested on saved records in upgrade-gate.yml), is the project's newest, started
+  # after the latest Eval on GitHub, and measured a commit on kiff/agents' main. Its own job, so the upgrade's role
+  # below is taken as before.
+  codebuild:
+    if: github.ref == 'refs/heads/main' && vars.TAFS_CLOUD == 'on' && inputs.codebuild_build != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: eval-gate
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      agents_sha: ${{ steps.read.outputs.agents_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          # The account id stays out of this public repository.
+          role-to-assume: ${{ secrets.AWS_EVAL_GATE_ROLE }}
+          aws-region: eu-west-1
+      - name: The backup Eval ran as its project defines it, and passed
+        id: read
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD: ${{ inputs.codebuild_build }}
+          RULE_B_RUN: ${{ inputs.rule_b_run }}
+          OWNER_OVERRIDE: ${{ inputs.owner_override }}
+          EVAL_REPORT_ONLY: ${{ inputs.eval_report_only }}
+        run: |
+          set -euo pipefail
+          [ -z "$RULE_B_RUN$OWNER_OVERRIDE$EVAL_REPORT_ONLY" ] || { echo "::error::codebuild_build goes alone, without rule_b_run, owner_override or eval_report_only"; exit 1; }
+          [[ "$BUILD" =~ ^agents-eval:[0-9a-f-]{36}$ ]] || { echo "::error::codebuild_build is \"agents-eval:<uuid>\""; exit 1; }
+          aws codebuild batch-get-projects --names agents-eval --query 'projects[0]' --output json > project.json
+          aws codebuild batch-get-builds --ids "$BUILD" --query 'builds[0]' --output json > build.json
+          newest=$(aws codebuild list-builds-for-project --project-name agents-eval --sort-order DESCENDING --query 'ids[0]' --output text)
+          latest=$(gh api "repos/kiff/agents/actions/workflows/eval.yml/runs?branch=main&status=completed&per_page=1" --jq '.workflow_runs[0].created_at')
+          sha=$(bash .github/upgrade-codebuild.sh project.json build.json "$newest" "$latest") || { echo "::error::$sha"; exit 1; }
+          status=$(gh api "repos/kiff/agents/compare/$sha...main" --jq .status)
+          case "$status" in identical|ahead) ;; *) echo "::error::the build measured kiff/agents@${sha:0:12}, which isn't on main ($status)"; exit 1 ;; esac
+          echo "agents_sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "The backup Eval on CodeBuild passed, as its project defines it, measuring kiff/agents@${sha:0:12}." | tee -a "$GITHUB_STEP_SUMMARY"
   upgrade:
-    if: github.ref == 'refs/heads/main' && vars.TAFS_CLOUD == 'on'
+    needs: codebuild
+    # With codebuild_build, only once its job counted the build; without it, that job is skipped.
+    if: >-
+      always() && github.ref == 'refs/heads/main' && vars.TAFS_CLOUD == 'on' &&
+      ((inputs.codebuild_build == '' && needs.codebuild.result == 'skipped') || (inputs.codebuild_build != '' && needs.codebuild.result == 'success'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -54,6 +109,7 @@ jobs:
           RULE_B_RUN: ${{ inputs.rule_b_run }}
           OWNER_OVERRIDE: ${{ inputs.owner_override }}
           EVAL_REPORT_ONLY: ${{ inputs.eval_report_only }}
+          CODEBUILD_SHA: ${{ needs.codebuild.outputs.agents_sha }}
         run: |
           set -euo pipefail
           # An Eval job's log, as GitHub serves it. Not through gh: its newer releases refuse a response holding the
@@ -62,6 +118,10 @@ jobs:
             "https://api.github.com/repos/kiff/agents/actions/jobs/$1/logs"; }
           run=$(gh api "repos/kiff/agents/actions/workflows/eval.yml/runs?branch=main&status=completed&per_page=1" --jq '.workflow_runs[0] | "\(.conclusion) \(.head_sha) \(.id)"')
           read -r conclusion agents_sha run_id <<<"$run"
+          # The backup Eval, when the codebuild job counted it: its commit stands for the latest Eval's.
+          if [ -n "$CODEBUILD_SHA" ]; then
+            conclusion=success agents_sha=$CODEBUILD_SHA run_id=codebuild
+          fi
           ref=$(gh api "repos/kiff/agents/contents/eval/tafs.ref?ref=$agents_sha" --jq .content | base64 -d | tr -d '[:space:]')
           echo "kiff/agents' latest nightly eval: $conclusion, measuring kiff/tafs@${ref:0:12}"
           git cat-file -e "$ref^{commit}"
