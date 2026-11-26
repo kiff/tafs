@@ -27,7 +27,7 @@ it changes all three.
 | `chrome/src/guard.js` | The act rules, mirroring planque's `browser.Refuse`. |
 | `chrome/src/page.js`, `mask.js` | The content script: reads a page as the taf sees it, masks, does one act. |
 | `chrome/src/dialogs.js` | In a run's tabs only: the page's dialogs stop blocking, and a confirm is never accepted. |
-| `chrome/src/store.js` | What's kept: the key pair and the pairing, nothing else. |
+| `chrome/src/store.js` | What's kept in IndexedDB: the key pair, the pairing, the KIFF session and the begun Coach chats; and this profile's random id in `chrome.storage.local` ("What's kept"). |
 | `chrome/sidepanel/` | Pairing, and while a taf works: what it's doing, Pause, Resume and Stop. |
 | `chrome/_locales/` | The words: English, and de, es, fr, it, nl, pl, pt_PT, pt_BR, ko and ja, in the app's own terms. `core.test.js` checks every locale has English's keys and placeholders, and a description of at most 132 characters, Chrome's limit. |
 
@@ -763,18 +763,23 @@ browser: {
 ## What's kept
 
 - **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
-  key, and the connections a re-pairing carried, `carried`, as the phone signed them), and the ids of the Coach chats a send
-  from this panel went into (`coach_began`, at most 200, newest kept; 0.2.24), so the panel offers Send again and Edit and
-  send only there. No page, step, message or value read is ever written to disk.
+  key, and the connections a re-pairing carried, `carried`, as the phone signed them), the KIFF session (`kiff_session`),
+  and the ids of the Coach chats a send from this panel went into (`coach_began`, at most 200, newest kept; 0.2.24), so the
+  panel offers Send again and Edit and send only there. No page, step, message or value read is ever written to disk.
 - **No sign-in, ever.** The extension has no saved sign-ins and no password field. At a sign-in page, the taf hands the step
   to the person ("A step handed to the person"): they sign in themselves, in their own tab, and press Done. Versions up to
   0.2.3 could save sealed sign-ins; from 0.2.4, every start of the service worker deletes what they kept (`vault` and
   `vault_key`, `store.js` `forgetSavedSignIns`), before it reads anything else.
-- **A code being typed** waits in `chrome.storage.session`, which Chrome keeps in memory only.
+- **A code being typed** waits in `chrome.storage.session`, which Chrome keeps in memory only, as does the extension's own
+  status for the side panel, its step nonces and which of its tabs are drawn or finished.
+- **The sites switched off for Coach** (`aside_off`, sw.js) are in `chrome.storage.local`: the hosts whose page never goes
+  with a message to Coach. Unpairing doesn't wipe them; uninstalling does.
 - **`profile_id`** is 16 random bytes in `chrome.storage.local`, made once: a re-pairing under a new key keeps it, so the
   phone can tell the same Chrome pairing again. Unpairing doesn't wipe it, and it is no secret. It isn't in
   `chrome.storage.sync`, which would copy it to every computer on the Google account; a reinstall makes a new one.
-- **Unpairing wipes it all** and closes every run's tabs (and its window, when it has its own). It happens from the phone (planque closes with `4410`, or
+- **Unpairing wipes everything in IndexedDB and `chrome.storage.session`**, ends the KIFF session, drops the wake-up and
+  closes every run's tabs (and its window, when it has its own). It leaves `profile_id` and the sites switched off for
+  Coach in `chrome.storage.local`; uninstalling removes those too. It happens from the phone (planque closes with `4410`, or
   answers `4410` at the next connect), from the side panel (`POST /v1/extension/unpair`, signed with
   `tafs-chrome/unpair/v1`), or by uninstalling.
 
