@@ -3064,6 +3064,7 @@ object Words {
     val recentChats: String get() = Res.s(R.string.watch_recent_chats)
     val recording: String get() = Res.s(R.string.watch_recording)
     val recordingNotReceived: String get() = Res.s(R.string.watch_recording_not_received)
+    val refuseOnPhone: String get() = Res.s(R.string.watch_refuse_on_phone)
     val refused: String get() = Res.s(R.string.watch_refused)
     val reply: String get() = Res.s(R.string.watch_reply)
     val rerecord: String get() = Res.s(R.string.watch_rerecord)

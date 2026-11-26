@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">Legutóbbi csevegések</string>
     <string name="watch_recording">Felvétel</string>
     <string name="watch_recording_not_received">A felvétel nem érkezett meg a telefonodra. Próbáld újra, vagy írj inkább.</string>
+    <string name="watch_refuse_on_phone">Nincs elutasítva. Utasítsd el a telefonodon.</string>
     <string name="watch_refused">Elutasítva. Semmi sem ment el.</string>
     <string name="watch_reply">Válasz</string>
     <string name="watch_rerecord">Újrafelvétel</string>

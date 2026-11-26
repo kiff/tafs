@@ -138,6 +138,7 @@
     <string name="watch_recent_chats">Naujausi pokalbiai</string>
     <string name="watch_recording">Įrašoma</string>
     <string name="watch_recording_not_received">Įrašas nepasiekė telefono. Bandykite dar kartą arba rašykite.</string>
+    <string name="watch_refuse_on_phone">Neatmesta. Atmeskite tai telefone.</string>
     <string name="watch_refused">Atmesta. Niekas neišsiųsta.</string>
     <string name="watch_reply">Atsakyti</string>
     <string name="watch_rerecord">Įrašyti iš naujo</string>

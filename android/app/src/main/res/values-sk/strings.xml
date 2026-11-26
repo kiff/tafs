@@ -2946,6 +2946,7 @@
     <string name="watch_recent_chats">Nedávne chaty</string>
     <string name="watch_recording">Nahrávam</string>
     <string name="watch_recording_not_received">Nahrávka sa do telefónu nedostala. Skúste to znova, alebo to napíšte.</string>
+    <string name="watch_refuse_on_phone">Neodmietnuté. Odmietnite to v telefóne.</string>
     <string name="watch_refused">Odmietnuté. Nič sa neodoslalo.</string>
     <string name="watch_reply">Odpovedať</string>
     <string name="watch_rerecord">Nahrať znova</string>

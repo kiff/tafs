@@ -206,7 +206,8 @@ class WatchRefuseHaltTest {
       WatchReply.Refused(NotAccepted.MALFORMED),
       relay.answer(WatchLink.REFUSE, """{"made_at":$now,"hold_id":"${call.id}","refusable":true}""".encodeToByteArray()),
     )
-    assertEquals(WatchReply.Failed("Open on phone"), relay.ask(WatchRequest.Refuse(now, call.id)))
+    // Said plainly on the watch (row 2): not refused, and where to refuse it. Nothing reached KIFF.
+    assertEquals(WatchReply.Failed("Not refused. Refuse it on your phone."), relay.ask(WatchRequest.Refuse(now, call.id)))
     assertTrue(transport.requests.none { it.method == "POST" })
     assertEquals(0, signer.signed)
   }

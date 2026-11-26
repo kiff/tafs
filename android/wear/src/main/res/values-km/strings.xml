@@ -126,6 +126,7 @@
     <string name="watch_recent_chats">ការសន្ទនាថ្មីៗ</string>
     <string name="watch_recording">កំពុងថត</string>
     <string name="watch_recording_not_received">ការថតមិនបានទៅដល់ទូរសព្ទរបស់អ្នកទេ។ សូមព្យាយាមម្តងទៀត ឬវាយជំនួស។</string>
+    <string name="watch_refuse_on_phone">មិនទាន់បដិសេធទេ។ សូមបដិសេធនៅលើទូរសព្ទ។</string>
     <string name="watch_refused">បានបដិសេធ។ គ្មានអ្វីត្រូវបានផ្ញើទេ។</string>
     <string name="watch_reply">ឆ្លើយតប</string>
     <string name="watch_rerecord">ថតម្តងទៀត</string>

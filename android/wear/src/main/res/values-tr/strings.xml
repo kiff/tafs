@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">Son sohbetler</string>
     <string name="watch_recording">Kaydediyor</string>
     <string name="watch_recording_not_received">Kayıt telefonunuza ulaşmadı. Tekrar deneyin veya yazın.</string>
+    <string name="watch_refuse_on_phone">Reddedilmedi. Telefonunuzda reddedin.</string>
     <string name="watch_refused">Reddedildi. Hiçbir şey gönderilmedi.</string>
     <string name="watch_reply">Yanıtla</string>
     <string name="watch_rerecord">Yeniden kaydet</string>

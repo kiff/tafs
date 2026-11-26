@@ -2866,6 +2866,7 @@
     <string name="watch_recent_chats">हालका च्याट</string>
     <string name="watch_recording">रेकर्ड हुँदैछ</string>
     <string name="watch_recording_not_received">रेकर्डिङ तपाईंको फोनमा पुगेन। फेरि प्रयास गर्नुहोस्, वा बरु टाइप गर्नुहोस्।</string>
+    <string name="watch_refuse_on_phone">अस्वीकार भएन। फोनमा अस्वीकार गर्नुहोस्।</string>
     <string name="watch_refused">अस्वीकार गरियो। केही पठाइएन।</string>
     <string name="watch_reply">जवाफ दिनुहोस्</string>
     <string name="watch_rerecord">फेरि रेकर्ड गर्नुहोस्</string>

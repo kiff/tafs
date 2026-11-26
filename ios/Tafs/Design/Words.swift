@@ -5685,6 +5685,8 @@ enum Words {
         static var recording: String { Words.line("watch.recording") }
         /// The recording didn't reach your phone. Try again, or type instead.
         static var recordingNotReceived: String { Words.line("watch.recording_not_received") }
+        /// Not refused. Refuse it on your phone.
+        static var refuseOnPhone: String { Words.line("watch.refuse_on_phone") }
         /// Refused. Nothing was sent.
         static var refused: String { Words.line("watch.refused") }
         /// Reply

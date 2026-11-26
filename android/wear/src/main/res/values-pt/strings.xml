@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">Chats recentes</string>
     <string name="watch_recording">A gravar</string>
     <string name="watch_recording_not_received">A gravação não chegou ao telemóvel. Tente novamente ou escreva.</string>
+    <string name="watch_refuse_on_phone">Não foi recusado. Recuse-o no telemóvel.</string>
     <string name="watch_refused">Recusado. Nada foi enviado.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Gravar de novo</string>

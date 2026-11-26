@@ -126,6 +126,7 @@
     <string name="watch_recent_chats">最近のチャット</string>
     <string name="watch_recording">録音中</string>
     <string name="watch_recording_not_received">録音がスマートフォンに届きませんでした。もう一度お試しいただくか、入力してください。</string>
+    <string name="watch_refuse_on_phone">拒否されていません。スマートフォンで拒否してください。</string>
     <string name="watch_refused">拒否しました。何も送信されていません。</string>
     <string name="watch_reply">返信</string>
     <string name="watch_rerecord">録音し直す</string>

@@ -138,6 +138,7 @@
     <string name="watch_recent_chats">Nedavni razgovori</string>
     <string name="watch_recording">Snimanje</string>
     <string name="watch_recording_not_received">Snimka nije stigla do vašeg telefona. Pokušajte ponovo ili tipkajte.</string>
+    <string name="watch_refuse_on_phone">Nije odbijeno. Odbijte to na telefonu.</string>
     <string name="watch_refused">Odbijeno. Ništa nije poslano.</string>
     <string name="watch_reply">Odgovorite</string>
     <string name="watch_rerecord">Snimite ponovo</string>

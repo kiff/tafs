@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">Xats recents</string>
     <string name="watch_recording">Gravant</string>
     <string name="watch_recording_not_received">L\'enregistrament no ha arribat al teu telèfon. Torna-ho a provar, o escriu en lloc d\'això.</string>
+    <string name="watch_refuse_on_phone">No s\'ha rebutjat. Rebutja-ho al telèfon.</string>
     <string name="watch_refused">Rebutjat. No s\'ha enviat res.</string>
     <string name="watch_reply">Respon</string>
     <string name="watch_rerecord">Torna a gravar</string>

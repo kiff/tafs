@@ -2946,6 +2946,7 @@
     <string name="watch_recent_chats">Nesenās sarunas</string>
     <string name="watch_recording">Ieraksta</string>
     <string name="watch_recording_not_received">Ieraksts nesasniedza tālruni. Mēģini vēlreiz vai raksti.</string>
+    <string name="watch_refuse_on_phone">Nav atteikts. Atsaki to savā tālrunī.</string>
     <string name="watch_refused">Atteikts. Nekas netika nosūtīts.</string>
     <string name="watch_reply">Atbildēt</string>
     <string name="watch_rerecord">Ierakstīt vēlreiz</string>

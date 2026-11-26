@@ -126,6 +126,7 @@
     <string name="watch_recent_chats">Obrolan terbaru</string>
     <string name="watch_recording">Merekam</string>
     <string name="watch_recording_not_received">Rekaman tidak sampai ke ponsel Anda. Coba lagi, atau ketik saja.</string>
+    <string name="watch_refuse_on_phone">Tidak ditolak. Tolak di ponsel Anda.</string>
     <string name="watch_refused">Ditolak. Tidak ada yang dikirim.</string>
     <string name="watch_reply">Balas</string>
     <string name="watch_rerecord">Rekam ulang</string>

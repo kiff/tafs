@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">ბოლო ჩატები</string>
     <string name="watch_recording">იწერება</string>
     <string name="watch_recording_not_received">ჩანაწერი თქვენს ტელეფონამდე ვერ მივიდა. სცადეთ ხელახლა ან აკრიფეთ.</string>
+    <string name="watch_refuse_on_phone">არ უარყოფილა. უარყავით ტელეფონზე.</string>
     <string name="watch_refused">უარყოფილია. არაფერი გაიგზავნა.</string>
     <string name="watch_reply">პასუხი</string>
     <string name="watch_rerecord">ხელახლა ჩაწერა</string>

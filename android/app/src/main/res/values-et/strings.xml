@@ -2866,6 +2866,7 @@
     <string name="watch_recent_chats">Viimased vestlused</string>
     <string name="watch_recording">Salvestan</string>
     <string name="watch_recording_not_received">Salvestis ei jõudnud telefoni. Proovi uuesti või kirjuta hoopis.</string>
+    <string name="watch_refuse_on_phone">Ei keeldutud. Keeldu sellest oma telefonis.</string>
     <string name="watch_refused">Keeldutud. Midagi ei saadetud.</string>
     <string name="watch_reply">Vasta</string>
     <string name="watch_rerecord">Salvesta uuesti</string>

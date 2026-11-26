@@ -138,6 +138,7 @@
     <string name="watch_recent_chats">Nedávné chaty</string>
     <string name="watch_recording">Nahrávám</string>
     <string name="watch_recording_not_received">Nahrávka se do telefonu nedostala. Zkuste to znovu, nebo to napište.</string>
+    <string name="watch_refuse_on_phone">Neodmítnuto. Odmítněte to v telefonu.</string>
     <string name="watch_refused">Odmítnuto. Nic se neodeslalo.</string>
     <string name="watch_reply">Odpovědět</string>
     <string name="watch_rerecord">Nahrát znovu</string>

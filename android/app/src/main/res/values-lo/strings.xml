@@ -2786,6 +2786,7 @@
     <string name="watch_recent_chats">ການສົນທະນາຫຼ້າສຸດ</string>
     <string name="watch_recording">ກຳລັງບັນທຶກ</string>
     <string name="watch_recording_not_received">ການບັນທຶກບໍ່ເຖິງໂທລະສັບຂອງທ່ານ. ລອງໃໝ່ ຫຼື ພິມແທນ.</string>
+    <string name="watch_refuse_on_phone">ຍັງບໍ່ໄດ້ປະຕິເສດ. ປະຕິເສດຢູ່ໂທລະສັບຂອງທ່ານ.</string>
     <string name="watch_refused">ປະຕິເສດແລ້ວ. ບໍ່ມີຫຍັງຖືກສົ່ງ.</string>
     <string name="watch_reply">ຕອບ</string>
     <string name="watch_rerecord">ບັນທຶກໃໝ່</string>

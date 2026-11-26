@@ -82,6 +82,7 @@
   "watch.recent_chats": "Recent chats",
   "watch.recording": "Recording",
   "watch.recording_not_received": "The recording didn't reach your phone. Try again, or type instead.",
+  "watch.refuse_on_phone": "Not refused. Refuse it on your phone.",
   "watch.refused": "Refused. Nothing was sent.",
   "watch.reply": "Reply",
   "watch.rerecord": "Re-record",

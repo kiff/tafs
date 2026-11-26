@@ -138,6 +138,7 @@
     <string name="watch_recent_chats">Conversații recente</string>
     <string name="watch_recording">Se înregistrează</string>
     <string name="watch_recording_not_received">Înregistrarea nu a ajuns pe telefon. Încercați din nou sau tastați în schimb.</string>
+    <string name="watch_refuse_on_phone">Nu a fost refuzat. Refuzați-l pe telefon.</string>
     <string name="watch_refused">Refuzat. Nu s-a trimis nimic.</string>
     <string name="watch_reply">Răspundeți</string>
     <string name="watch_rerecord">Reînregistrați</string>

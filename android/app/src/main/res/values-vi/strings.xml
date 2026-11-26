@@ -2786,6 +2786,7 @@
     <string name="watch_recent_chats">Cuộc trò chuyện gần đây</string>
     <string name="watch_recording">Đang ghi âm</string>
     <string name="watch_recording_not_received">Bản ghi âm chưa đến được điện thoại của bạn. Hãy thử lại, hoặc gõ thay thế.</string>
+    <string name="watch_refuse_on_phone">Chưa từ chối. Hãy từ chối trên điện thoại.</string>
     <string name="watch_refused">Đã từ chối. Chưa gửi gì cả.</string>
     <string name="watch_reply">Trả lời</string>
     <string name="watch_rerecord">Ghi âm lại</string>

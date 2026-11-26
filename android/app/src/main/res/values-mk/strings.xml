@@ -2866,6 +2866,7 @@
     <string name="watch_recent_chats">Неодамнешни разговори</string>
     <string name="watch_recording">Снимам</string>
     <string name="watch_recording_not_received">Снимката не стигна до твојот телефон. Обиди се повторно, или пиши наместо тоа.</string>
+    <string name="watch_refuse_on_phone">Не е одбиено. Одбиј го на телефонот.</string>
     <string name="watch_refused">Одбиено. Ништо не е испратено.</string>
     <string name="watch_reply">Одговори</string>
     <string name="watch_rerecord">Сними повторно</string>

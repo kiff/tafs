@@ -3186,6 +3186,7 @@
     <string name="watch_recent_chats">المحادثات الأخيرة</string>
     <string name="watch_recording">جارٍ التسجيل</string>
     <string name="watch_recording_not_received">لم يصل التسجيل إلى هاتفك. حاول مرة أخرى، أو اكتب بدلًا من ذلك.</string>
+    <string name="watch_refuse_on_phone">لم يُرفض. ارفضه من هاتفك.</string>
     <string name="watch_refused">مرفوض. لم يُرسل شيء.</string>
     <string name="watch_reply">رد</string>
     <string name="watch_rerecord">إعادة التسجيل</string>

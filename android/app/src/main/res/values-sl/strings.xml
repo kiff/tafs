@@ -3026,6 +3026,7 @@
     <string name="watch_recent_chats">Nedavni klepeti</string>
     <string name="watch_recording">Snemam</string>
     <string name="watch_recording_not_received">Posnetek ni prišel do telefona. Poskusite znova ali tipkajte.</string>
+    <string name="watch_refuse_on_phone">Ni zavrnjeno. Zavrnite v telefonu.</string>
     <string name="watch_refused">Zavrnjeno. Nič ni bilo poslano.</string>
     <string name="watch_reply">Odgovori</string>
     <string name="watch_rerecord">Posnemi znova</string>

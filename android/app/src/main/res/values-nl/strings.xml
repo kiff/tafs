@@ -2866,6 +2866,7 @@
     <string name="watch_recent_chats">Recente chats</string>
     <string name="watch_recording">Opnemen</string>
     <string name="watch_recording_not_received">De opname is niet op je telefoon aangekomen. Probeer het opnieuw, of typ het.</string>
+    <string name="watch_refuse_on_phone">Niet geweigerd. Weiger het op je telefoon.</string>
     <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
     <string name="watch_reply">Antwoorden</string>
     <string name="watch_rerecord">Opnieuw opnemen</string>

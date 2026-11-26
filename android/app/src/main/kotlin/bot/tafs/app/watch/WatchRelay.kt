@@ -304,7 +304,9 @@ class WatchRelay(
     model.refresh()
     val before = model.state.value
     val call = before.held.firstOrNull { it.id == holdId } ?: return WatchReply.AlreadyAnswered
-    if (!refusableFromWrist(before, call)) return WatchReply.Failed(Words.Watch.openOnPhone)
+    // This phone can't refuse it from here (no KIFF key this session, or no accounting version): said plainly, never a bare
+    // "Open on phone" (watch row 2). Nothing reached KIFF.
+    if (!refusableFromWrist(before, call)) return WatchReply.Failed(Words.Watch.refuseOnPhone)
     val done = model.answer(call, Answer.Refuse, confirmed = true)
     val after = model.state.value
     return when {

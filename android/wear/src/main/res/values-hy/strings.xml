@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">Վերջին զրույցները</string>
     <string name="watch_recording">Ձայնագրվում է</string>
     <string name="watch_recording_not_received">Ձայնագրությունը չհասավ ձեր հեռախոսին։ Փորձեք նորից կամ մուտքագրեք։</string>
+    <string name="watch_refuse_on_phone">Չի մերժվել։ Մերժեք այն հեռախոսում։</string>
     <string name="watch_refused">Մերժված է։ Ոչինչ չուղարկվեց։</string>
     <string name="watch_reply">Պատասխանել</string>
     <string name="watch_rerecord">Նորից ձայնագրել</string>

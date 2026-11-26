@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">Letzte Chats</string>
     <string name="watch_recording">Aufnahme läuft</string>
     <string name="watch_recording_not_received">Die Aufnahme ist nicht auf deinem Handy angekommen. Versuch es erneut oder tippe stattdessen.</string>
+    <string name="watch_refuse_on_phone">Nicht abgelehnt. Lehne es auf deinem Telefon ab.</string>
     <string name="watch_refused">Abgelehnt. Nichts wurde gesendet.</string>
     <string name="watch_reply">Antworten</string>
     <string name="watch_rerecord">Neu aufnehmen</string>

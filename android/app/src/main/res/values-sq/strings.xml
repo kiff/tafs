@@ -2866,6 +2866,7 @@
     <string name="watch_recent_chats">Bisedat e fundit</string>
     <string name="watch_recording">Po regjistron</string>
     <string name="watch_recording_not_received">Regjistrimi nuk arriti te telefoni juaj. Provoni sërish, ose shkruani në vend të kësaj.</string>
+    <string name="watch_refuse_on_phone">Nuk u refuzua. Refuzojeni në telefon.</string>
     <string name="watch_refused">Refuzuar. Asgjë nuk u dërgua.</string>
     <string name="watch_reply">Përgjigjuni</string>
     <string name="watch_rerecord">Regjistroni sërish</string>

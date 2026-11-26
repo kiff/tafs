@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">সাম্প্রতিক চ্যাট</string>
     <string name="watch_recording">রেকর্ড হচ্ছে</string>
     <string name="watch_recording_not_received">রেকর্ডিং আপনার ফোনে পৌঁছায়নি। আবার চেষ্টা করুন, অথবা এর বদলে টাইপ করুন।</string>
+    <string name="watch_refuse_on_phone">প্রত্যাখ্যান হয়নি। ফোনে প্রত্যাখ্যান করুন।</string>
     <string name="watch_refused">প্রত্যাখ্যাত। কিছু পাঠানো হয়নি।</string>
     <string name="watch_reply">উত্তর দিন</string>
     <string name="watch_rerecord">আবার রেকর্ড করুন</string>

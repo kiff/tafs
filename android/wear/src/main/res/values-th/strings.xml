@@ -126,6 +126,7 @@
     <string name="watch_recent_chats">แชตล่าสุด</string>
     <string name="watch_recording">กำลังบันทึกเสียง</string>
     <string name="watch_recording_not_received">การบันทึกเสียงไปไม่ถึงโทรศัพท์ของคุณ ลองอีกครั้ง หรือพิมพ์แทน</string>
+    <string name="watch_refuse_on_phone">ยังไม่ได้ปฏิเสธ ปฏิเสธบนโทรศัพท์ของคุณ</string>
     <string name="watch_refused">ปฏิเสธแล้ว ยังไม่ได้ส่งอะไร</string>
     <string name="watch_reply">ตอบ</string>
     <string name="watch_rerecord">บันทึกใหม่</string>

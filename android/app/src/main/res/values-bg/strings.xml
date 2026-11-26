@@ -2866,6 +2866,7 @@
     <string name="watch_recent_chats">Скорошни чатове</string>
     <string name="watch_recording">Записване</string>
     <string name="watch_recording_not_received">Записът не стигна до телефона ви. Опитайте отново или пишете вместо това.</string>
+    <string name="watch_refuse_on_phone">Не е отказано. Откажете го на телефона.</string>
     <string name="watch_refused">Отказано. Нищо не беше изпратено.</string>
     <string name="watch_reply">Отговор</string>
     <string name="watch_rerecord">Записване отново</string>

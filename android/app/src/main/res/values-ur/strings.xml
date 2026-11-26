@@ -2866,6 +2866,7 @@
     <string name="watch_recent_chats">حالیہ چیٹس</string>
     <string name="watch_recording">ریکارڈنگ</string>
     <string name="watch_recording_not_received">ریکارڈنگ آپ کے فون تک نہیں پہنچی۔ دوبارہ کوشش کریں، یا ٹائپ کریں۔</string>
+    <string name="watch_refuse_on_phone">مسترد نہیں ہوا۔ اپنے فون پر مسترد کریں۔</string>
     <string name="watch_refused">مسترد۔ کچھ نہیں بھیجا گیا۔</string>
     <string name="watch_reply">جواب دیں</string>
     <string name="watch_rerecord">دوبارہ ریکارڈ کریں</string>

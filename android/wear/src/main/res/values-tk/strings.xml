@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">Soňky söhbetdeşlikler</string>
     <string name="watch_recording">Ýazylýar</string>
     <string name="watch_recording_not_received">Ýazgy telefonyňyza ýetmedi. Täzeden synanyşyň, ýa-da ýerine ýazyň.</string>
+    <string name="watch_refuse_on_phone">Ret edilmedi. Ony telefonyňyzda ret ediň.</string>
     <string name="watch_refused">Ret edildi. Hiç zat iberilmedi.</string>
     <string name="watch_reply">Jogap beriň</string>
     <string name="watch_rerecord">Täzeden ýazyň</string>

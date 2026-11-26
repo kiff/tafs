@@ -2866,6 +2866,7 @@
     <string name="watch_recent_chats">Сүүлийн чатууд</string>
     <string name="watch_recording">Бичиж байна</string>
     <string name="watch_recording_not_received">Бичлэг таны утсанд хүрсэнгүй. Дахин оролдох эсвэл оронд нь бичнэ үү.</string>
+    <string name="watch_refuse_on_phone">Татгалзаагүй. Утсан дээрээ татгалзана уу.</string>
     <string name="watch_refused">Татгалзсан. Юу ч илгээгдээгүй.</string>
     <string name="watch_reply">Хариулах</string>
     <string name="watch_rerecord">Дахин бичих</string>

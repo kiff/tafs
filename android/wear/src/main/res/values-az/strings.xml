@@ -132,6 +132,7 @@
     <string name="watch_recent_chats">Son söhbətlər</string>
     <string name="watch_recording">Yazılır</string>
     <string name="watch_recording_not_received">Yazı telefonunuza çatmadı. Yenidən cəhd edin və ya əvəzində yazın.</string>
+    <string name="watch_refuse_on_phone">Rədd edilmədi. Onu telefonunuzda rədd edin.</string>
     <string name="watch_refused">Rədd edildi. Heç nə göndərilmədi.</string>
     <string name="watch_reply">Cavab verin</string>
     <string name="watch_rerecord">Yenidən yazın</string>

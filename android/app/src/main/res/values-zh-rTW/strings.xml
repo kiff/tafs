@@ -2786,6 +2786,7 @@
     <string name="watch_recent_chats">最近的對話</string>
     <string name="watch_recording">錄音中</string>
     <string name="watch_recording_not_received">錄音未傳到您的手機。請再試一次，或改用輸入。</string>
+    <string name="watch_refuse_on_phone">未拒絕。請在手機上拒絕。</string>
     <string name="watch_refused">已拒絕。未傳送任何內容。</string>
     <string name="watch_reply">回覆</string>
     <string name="watch_rerecord">重新錄音</string>

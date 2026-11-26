@@ -2946,6 +2946,7 @@
     <string name="watch_recent_chats">שיחות אחרונות</string>
     <string name="watch_recording">מקליט</string>
     <string name="watch_recording_not_received">ההקלטה לא הגיעה לטלפון שלך. יש לנסות שוב, או להקליד במקום.</string>
+    <string name="watch_refuse_on_phone">לא נדחה. יש לדחות בטלפון.</string>
     <string name="watch_refused">נדחה. שום דבר לא נשלח.</string>
     <string name="watch_reply">מענה</string>
     <string name="watch_rerecord">הקלטה מחדש</string>
