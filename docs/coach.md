@@ -1030,7 +1030,8 @@ the apps they connect can't do their Card's work today.
 
 **The welcome video's link** rides on `GET /v1/recipes` as `video_url` (`welcomeVideo`, `runtime/src/cloud/recipes.ts`): the
 2-minute video the first-run welcome's last card and How tafs works link to. Every person gets it, on every answer, an
-empty list's too. It's the runtime's `TAFS_WELCOME_VIDEO_URL` when that's an https URL; unset, empty or anything else
+empty list's too. It's the runtime's `TAFS_WELCOME_VIDEO_URL` when that's an https URL (a plain address with no query, such as
+https://kiff.dev/tafs/video: `infra/aws.sh` keeps it across reruns and refuses a `,` or `=`, which AWS's shorthand would split); unset, empty or anything else
 sends no `video_url`, and the apps show no link. So the link appears once the video is on kiff.dev/tafs and the setting
 names it, with no app release.
 
