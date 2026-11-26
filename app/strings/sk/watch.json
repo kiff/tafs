@@ -50,7 +50,7 @@
   "watch.menu": "Ponuka",
   "watch.mic_needed": "Ak sa chcete pýtať hlasom, povoľte tafs na týchto hodinkách mikrofón.",
   "watch.more_on_phone": "Zvyšok je v telefóne.",
-  "watch.needs_lock": "Ak chcete z týchto hodiniek odmietať alebo zastavovať, nastavte na nich zámku obrazovky a odomknite ich.",
+  "watch.needs_lock": "Ak chcete z týchto hodiniek odosielať, odmietať alebo zastavovať, nastavte na nich zámku obrazovky a odomknite ich.",
   "watch.needs_you_count": {
     "one": "{count} čaká na vás",
     "few": "{count} čakajú na vás",

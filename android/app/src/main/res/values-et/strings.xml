@@ -2831,7 +2831,7 @@
     <string name="watch_menu">Menüü</string>
     <string name="watch_mic_needed">Häälega küsimiseks luba selles kellas tafsile mikrofon.</string>
     <string name="watch_more_on_phone">Ülejäänu on telefonis.</string>
-    <string name="watch_needs_lock">Sellest kellast keeldumiseks või peatamiseks sea sellele ekraanilukk ja ava see.</string>
+    <string name="watch_needs_lock">Sellest kellast saatmiseks, keeldumiseks või peatamiseks sea sellele ekraanilukk ja ava see.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s vajab sind</item>
         <item quantity="other">%1$s vajab sind</item>

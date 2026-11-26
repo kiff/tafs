@@ -2831,7 +2831,7 @@
     <string name="watch_menu">Menyu</string>
     <string name="watch_mic_needed">Səslə soruşmaq üçün bu saatda tafs-a mikrofon icazəsi verin.</string>
     <string name="watch_more_on_phone">Qalanı telefonunuzdadır.</string>
-    <string name="watch_needs_lock">Bu saatdan rədd etmək və ya dondurmaq üçün onda ekran kilidi qurun və kilidini açın.</string>
+    <string name="watch_needs_lock">Bu saatdan göndərmək, rədd etmək və ya dondurmaq üçün onda ekran kilidi qurun və kilidini açın.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s sizi gözləyir</item>
         <item quantity="other">%1$s sizi gözləyir</item>

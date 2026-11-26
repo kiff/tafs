@@ -50,7 +50,7 @@
   "watch.menu": "Izvēlne",
   "watch.mic_needed": "Lai jautātu balsī, atļauj tafs izmantot mikrofonu šajā pulkstenī.",
   "watch.more_on_phone": "Pārējais ir tavā tālrunī.",
-  "watch.needs_lock": "Lai atteiktu vai apturētu no šī pulksteņa, iestati tam ekrāna bloķēšanu un atbloķē to.",
+  "watch.needs_lock": "Lai sūtītu, atteiktu vai apturētu no šī pulksteņa, iestati tam ekrāna bloķēšanu un atbloķē to.",
   "watch.needs_you_count": {
     "zero": "{count} gaida tevi",
     "one": "{count} gaida tevi",

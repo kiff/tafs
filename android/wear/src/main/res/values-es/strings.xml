@@ -97,7 +97,7 @@
     <string name="watch_menu">Menú</string>
     <string name="watch_mic_needed">Para pedir con la voz, permite el micrófono a tafs en este reloj.</string>
     <string name="watch_more_on_phone">El resto está en tu teléfono.</string>
-    <string name="watch_needs_lock">Para rechazar o bloquear desde este reloj, pon un bloqueo de pantalla y desbloquéalo.</string>
+    <string name="watch_needs_lock">Para enviar, rechazar o bloquear desde este reloj, pon un bloqueo de pantalla y desbloquéalo.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s te necesita</item>
         <item quantity="other">%1$s te necesitan</item>

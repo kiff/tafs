@@ -2831,7 +2831,7 @@
     <string name="watch_menu">Menýu</string>
     <string name="watch_mic_needed">Ses bilen soramak üçin, bu sagatda tafs üçin mikrofona rugsat beriň.</string>
     <string name="watch_more_on_phone">Galany telefonyňyzda.</string>
-    <string name="watch_needs_lock">Bu sagatdan ret etmek ýa-da togtatmak üçin, onda ekran gulpuny guruň we ony açyň.</string>
+    <string name="watch_needs_lock">Bu sagatdan ibermek, ret etmek ýa-da togtatmak üçin, onda ekran gulpuny guruň we ony açyň.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s size zerur</item>
         <item quantity="other">%1$s size zerur</item>

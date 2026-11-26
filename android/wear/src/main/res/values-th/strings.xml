@@ -93,7 +93,7 @@
     <string name="watch_menu">เมนู</string>
     <string name="watch_mic_needed">หากต้องการถามด้วยเสียง ให้อนุญาตไมโครโฟนสำหรับ tafs บนนาฬิกาเรือนนี้</string>
     <string name="watch_more_on_phone">ที่เหลืออยู่บนโทรศัพท์ของคุณ</string>
-    <string name="watch_needs_lock">หากต้องการปฏิเสธหรือระงับจากนาฬิกาเรือนนี้ ให้ตั้งการล็อกหน้าจอและปลดล็อก</string>
+    <string name="watch_needs_lock">หากต้องการส่ง ปฏิเสธ หรือระงับจากนาฬิกาเรือนนี้ ให้ตั้งการล็อกหน้าจอและปลดล็อก</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">%1$s เรื่องต้องการคุณ</item>
     </plurals>

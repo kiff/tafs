@@ -97,7 +97,7 @@
     <string name="watch_menu">Мени</string>
     <string name="watch_mic_needed">За да прашуваш со глас, дозволи му на tafs микрофон на овој часовник.</string>
     <string name="watch_more_on_phone">Остатокот е на твојот телефон.</string>
-    <string name="watch_needs_lock">За да одбиеш или запреш од овој часовник, постави заклучување на екранот на него и отклучи го.</string>
+    <string name="watch_needs_lock">За да испраќаш, одбиеш или запреш од овој часовник, постави заклучување на екранот на него и отклучи го.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s те чека</item>
         <item quantity="other">%1$s те чекаат</item>
