@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { balanceView, type KIFFBalance, waitingWords } from "../src/cloud/credits.js";
+import { balanceView, COACH_JOBS_A_MONTH, type KIFFBalance, SOLO_INCLUDED_CREDITS, soloIncluded, waitingWords } from "../src/cloud/credits.js";
+import { FULL_LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError } from "../src/cloud/agents.js";
 import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -8,7 +9,10 @@ const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities
 const NOW = new Date("2026-11-20T12:00:00Z");
 const NOV = { start: "2026-11-01T00:00:00Z", end: "2026-12-01T00:00:00Z" };
 const REFUNDS = "taf-3f9a1c0b7d2e4a6f8b91";
-const COACH = "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.";
+const COACH = "Solo gives you 500 credits every month for your tafs' runs; a quiet check uses none, and they don't carry over to the next month. Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits. Packs are only for when a month runs out, and they never expire.";
+
+// On a Solo account, the line gives KIFF's own included figure (soloIncluded): the fixture's 1,000.
+const COACH_SOLO = COACH.replace("500 credits", "1,000 credits");
 
 const balance = (over: Partial<KIFFBalance> = {}): KIFFBalance => ({
   kind: "solo", state: "ok", meter_pct: 40, included: 1000, used: 400, left: 600, packs_left: 0, over: 0,
@@ -40,7 +44,7 @@ describe("the balance, in words", () => {
     expect(balanceView(balance({ packs_left: 300, left: 900, over: 12 }))).toEqual({
       balance: { state: "ok", why: null, meter_pct: 40, words: "Solo · 900 credits left this period",
         detail: "300 credits of it in packs, which never expire · 12 credits used past your balance weren't charged",
-        warning: null, raise: null, buy: { solo: false, packs: true, first_month: null, coach: COACH }, credits_panel: true },
+        warning: null, raise: null, buy: { solo: false, packs: true, first_month: null, coach: COACH_SOLO }, credits_panel: true },
       plan_line: "Solo · 900 credits left", plan_tone: "ok", home_line: null,
     });
   });
@@ -104,14 +108,14 @@ describe("the balance, in words", () => {
     expect(noPlan.balance.buy).toEqual({ solo: true, packs: false, first_month: null, coach: COACH });
     // Solo runs: it can be bought, and needs no words.
     expect(balanceView(balance({ can_buy: { solo: false, packs: true, once: true } })).balance.buy)
-      .toEqual({ solo: false, packs: true, first_month: { ready: true, words: null }, coach: COACH });
+      .toEqual({ solo: false, packs: true, first_month: { ready: true, words: null }, coach: COACH_SOLO });
     // Bought, or a KIFF from before the pack: not offered.
-    expect(balanceView(balance({ can_buy: { solo: false, packs: true, once: false } })).balance.buy).toEqual({ solo: false, packs: true, first_month: null, coach: COACH });
-    expect(balanceView(balance({ can_buy: { solo: true, packs: false } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null, coach: COACH });
+    expect(balanceView(balance({ can_buy: { solo: false, packs: true, once: false } })).balance.buy).toEqual({ solo: false, packs: true, first_month: null, coach: COACH_SOLO });
+    expect(balanceView(balance({ can_buy: { solo: true, packs: false } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null, coach: COACH_SOLO });
     // Someone who may buy nothing is offered nothing, whatever KIFF says of the pack.
     expect(balanceView(balance({ can_buy: { solo: false, packs: false, once: true } })).balance.buy).toBeNull();
     // Never alone: Solo running with no packs on offer, or another plan, offers none.
-    expect(balanceView(balance({ can_buy: { solo: true, packs: false, once: true } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null, coach: COACH });
+    expect(balanceView(balance({ can_buy: { solo: true, packs: false, once: true } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null, coach: COACH_SOLO });
     expect(balanceView(balance({ kind: "company", seats: 4, can_buy: { solo: true, packs: false, once: true } })).balance.buy)
       .toEqual({ solo: true, packs: false, first_month: null, coach: COACH });
   });
@@ -192,6 +196,25 @@ async function call(deps: ReturnType<typeof world>, path: string, method = "GET"
   const r = await handle(event(path, method, body), deps);
   return { status: r.statusCode, body: r.body && typeof r.body === "string" && r.body.startsWith("{") ? JSON.parse(r.body) : r.body };
 }
+
+// What Solo gives, under its offer (buy.coach): the owner's iPad feedback (26 Nov), "plans don't say what you get".
+// Its credits are KIFF's own figure, formatted in the person's language; Coach's jobs are COACH_JOBS_A_MONTH.
+describe("what Solo gives, in every language", () => {
+  it("gives KIFF's included credits, and the catalog's 500 before a plan, never 0", () => {
+    expect(soloIncluded({ kind: "solo", included: 500 })).toBe(500);
+    expect(soloIncluded({ kind: "solo", included: 750 })).toBe(750);
+    expect(soloIncluded({ kind: "none", included: 0 })).toBe(SOLO_INCLUDED_CREDITS);
+    expect(soloIncluded({ kind: "company", included: 1500 })).toBe(SOLO_INCLUDED_CREDITS);
+  });
+  it("names the month's credits and Coach's jobs in every language", () => {
+    expect(wordsIn("en").cr_buy_coach("500 credits")).toBe("Solo gives you 500 credits every month for your tafs' runs; a quiet check uses none, and they don't carry over to the next month. Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits. Packs are only for when a month runs out, and they never expire.");
+    for (const lang of FULL_LANGUAGES) {
+      const line = wordsIn(lang).cr_buy_coach("‹N›");
+      expect(line, lang).toContain("‹N›");
+      expect(line, lang).toMatch(new RegExp(`(^|\\D)${COACH_JOBS_A_MONTH}(\\D|$)`));
+    }
+  });
+});
 
 describe("GET /v1/usage/balance", () => {
   // Every app signs out on tafs cloud's 401: only KIFF's 401 may become one. A forbidden read stays a 403, never a 401 or a 503.

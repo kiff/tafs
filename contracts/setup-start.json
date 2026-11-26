@@ -900,11 +900,12 @@
       "words": {
         "lead": "Start gives Coach the tools below. You approve them on this device.",
         "start": "Start",
+        "does": "Coach asks for your fingerprint, face or passkey before it starts, to give Coach its Card, so it can act only within what you approve.",
         "title": "Let Coach build tafs with you",
         "lines": {
           "allows": "This lets Coach look at your tafs, run them, and draft and try new versions, each within the daily limits below. Only while you turn on a drive, it can also see and use the app on this device.",
           "asks": "Installing a version, choosing where a taf's results go, making a mission and saving your business description always wait for you in Needs you. Giving a taf a task or trying a version waits for you past its daily limit; anything else past its limit is refused.",
-          "sign": "Your approval signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
+          "sign": "Your approval uses your fingerprint or face, so Coach can act only within what you approve here. It signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
           "stop": "Halt stops Coach and every taf at once, with one tap."
         },
         "exact": "Exactly what you sign",
@@ -913,7 +914,7 @@
           "face": "Approve with face",
           "passkey": "Approve with your passkey"
         },
-        "sign_passkey": "Your approval signs this with your passkey, whose private key never leaves this computer or your security key. It isn't a payment or a password.",
+        "sign_passkey": "Your approval uses your passkey, so Coach can act only within what you approve here. Its private key never leaves this computer or your security key. It isn't a payment or a password.",
         "locked": "Approve this first, then you can write to Coach."
       }
     }
