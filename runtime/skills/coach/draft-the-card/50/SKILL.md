@@ -28,7 +28,8 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   instructions"), with rules: per tool (by its name in the request), its over (or each figure's) and only
   the owner's figures, as on the Card; its text is the notice, always written out, never empty, never lines or lang, and states every limit the Card will hold, in digits ("10 a day", "1 per order"); then a confirm with agrees: its id, and two options
   only, Agree (value agree) and Change something; never another rule as an option: ask it as its own question
-  first, and put the answer in the rules.
+  first, and put the answer in the rules. The confirm comes right after its notice, in the same turn, and nothing follows
+  them until the owner taps Agree: no planque request, no tools, no draft, no approval.
   A rule that keeps a write to one column ends "(that column is in its instructions)", unless the
   request fixes that column: never the column alone. A rule no Card or connection holds (what it skips,
   tells the owner or how it words things) ends "(in its instructions)". A pin or fixed value is "every

@@ -284,16 +284,22 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
   return { draft: draft as NonNullable<typeof draft> & { version: string } };
 }
 
-/** What a money tool's agreed rules lack for KIFF to sign Cards of them (cardsFromRules), said to Coach. */
-const MONEY_UNBUILT: Record<MoneyUnbuilt, string> = {
+/**
+ * What a money tool's agreed rules lack for KIFF to sign Cards of them (cardsFromRules), said to Coach: only what the rules
+ * need, never that the owner can't have a rule (an Eval, 26 Nov: a refusal's "would let every call under it run unasked"
+ * became Coach telling the owner a cap that asks past it couldn't be set).
+ */
+export const MONEY_UNBUILT: Record<MoneyUnbuilt, string> = {
   refused_total: "its refused limits have no total over a window, and KIFF needs one on every Card: the rules need a day's total that is refused",
   held_bound: "its held Card would limit no amount, and KIFF needs every Card on a money tool to limit its amount: the rules need each call's limit on the amount",
   held_total: "its held limits have no total, and no refused day's total on the amount stands beside them for KIFF's own count: the rules need a day's total on the amount",
   count: "the rules count its calls, and a money tool is limited by its amounts: each call's and a day's total, no count of calls but 0 (every call asks)",
   asks_unnamed: "its rule says its calls ask the owner, but no figure asks, so no Card can hold it: if every call asks, the rules need a count of 0 a calendar day that asks (count, 0, calendar_day, over ask); if none asks, the rule's over is refuse",
-  ask_inherited: "its rule asks, and a figure on it says nothing of its own over, so a cap that asks only past it would let every call under it run unasked: show each figure's over (ask or refuse) in the rules, and every call asking as a count of 0 a calendar day that asks",
   every_call_unheld: "the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks, so calls under its figures would run unasked: the rules need that count (count, 0, calendar_day, over ask), beside its refused figures, or words that say which calls ask",
 };
+
+/** Said with every money refusal: what a refusal names is what the rules need, never a rule the owner can't have. */
+export const MONEY_NEVER_CANT = "Never tell the owner a rule can't be set: this names only what the rules need for KIFF to sign them.";
 
 /** Whether a money tool's held Card carries its refused Card's cap on each call (cardsFromRules), said to Coach as such. */
 function copiedCap(cards: MoneyCard[]): boolean {
@@ -321,7 +327,7 @@ async function moneyChecked(grant: ApprovalGrant, others: ApprovalGrant[], draft
   const off = moneyCardsOff([grant, ...others], draft.cards ?? [], agreement.rules, draft.agent, agreement.text);
   if (!off) return undefined;
   if ("unbuilt" in off) {
-    return { outcome: "answered", answer: `failed: "${off.tool}" moves money, and the rules the owner agreed give it no Cards KIFF signs: ${MONEY_UNBUILT[off.unbuilt]}. Ask the owner that one thing, show the rules again with it, and draft once they tap agree.`, note: W.rulesMissing(off.tool), code: "money_rules" };
+    return { outcome: "answered", answer: `failed: "${off.tool}" moves money, and the rules the owner agreed give it no Cards KIFF signs: ${MONEY_UNBUILT[off.unbuilt]}. Ask the owner that one thing, show the rules again with it, and draft once they tap agree. ${MONEY_NEVER_CANT}`, note: W.rulesMissing(off.tool), code: "money_rules" };
   }
   return { outcome: "answered", answer: `failed: "${off.tool}" moves money, so its Cards are the ones the rules the owner agreed give, and the draft's differ. Draft it again with exactly these Cards in place of every Card covering "${off.action}", the other Cards as they are, and nothing else changed: ${JSON.stringify(off.cards)}.${copiedCap(off.cards) ? " The held Card carries each call's refused cap too: KIFF needs every Card on a money tool to limit its amount, and a call past it is refused." : ""} These are the owner's rules as agreed: never ask them to change a rule for it.`, note: W.rulesFigures(off.tool), code: "money_cards" };
 }

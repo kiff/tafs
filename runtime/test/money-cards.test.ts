@@ -146,8 +146,8 @@ describe("a money tool's Cards are built from the rules the owner agreed (cardsF
     expect(of([EVERY_ONE, DAY])).toMatchObject({ unbuilt: "held_bound" });
     // Ask past €5 a refund, nothing else: no total for the held Card, and no refused day's total for KIFF's count.
     expect(of([{ quantity: "sum(amount)", window: "call", limit: 500, over: "ask" }])).toMatchObject({ unbuilt: "held_total" });
-    // The same figure saying nothing of its own over, under a rule that asks: shown again with its over said.
-    expect(of([{ quantity: "sum(amount)", window: "call", limit: 500 }])).toMatchObject({ unbuilt: "ask_inherited" });
+    // The same figure saying nothing of its own over, under a rule that asks, takes the rule's ask: as above, no total.
+    expect(of([{ quantity: "sum(amount)", window: "call", limit: 500 }])).toMatchObject({ unbuilt: "held_total" });
     // A count of a money tool's calls.
     expect(of([{ quantity: "count", window: "calendar_day", limit: 3 }, DAY])).toMatchObject({ unbuilt: "count" });
   });
@@ -301,13 +301,38 @@ describe("words that say every call asks hold the rule to a count of 0 a day tha
     ]) expect(saysEveryCallAsks(text), text).toBe(false);
   });
 
-  it("a figure inheriting ask gives no Cards in any language; a positive cap that asks gives none under those words", () => {
-    for (const text of [WORDS, "Minden visszatérítés előbb téged kérdez.", ""]) {
-      expect(cardsFromRules([stripe], inherited, AGENT, text)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "ask_inherited" }]);
-    }
+  it("under words that say every call asks, a figure inheriting ask, or a positive cap that asks, gives no Cards", () => {
+    expect(cardsFromRules([stripe], inherited, AGENT, WORDS)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "every_call_unheld" }]);
     const cent: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [{ quantity: "sum(amount)", window: "call", limit: 1, over: "ask" }, EACH, DAY] }, ...reads];
     expect(cardsFromRules([stripe], cent, AGENT, WORDS)).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "every_call_unheld" }]);
-    expect(moneyCardsOff([stripe], [readsCard, limitsCard(), holdCard(cap(5000), [kiffsCount])], inherited, AGENT, WORDS)).toMatchObject({ unbuilt: "ask_inherited" });
+    expect(moneyCardsOff([stripe], [readsCard, limitsCard(), holdCard(cap(5000), [kiffsCount])], inherited, AGENT, WORDS)).toMatchObject({ unbuilt: "every_call_unheld" });
+  });
+
+  // An Eval, 26 Nov, run 2: "Refund a charge: up to €5 each, by itself; over €5 asks you first; past €50 a day it is
+  // refused", agreed with the €5 cap inheriting the rule's ask. It was refused for the inheritance alone (ask_inherited, now
+  // gone), Coach told the owner such a cap couldn't be set, and a €4 refund meant to run by itself was held.
+  it("a cap inheriting the rule's ask is a cap that asks past it: run 2's rules give the refused day and the held cap", () => {
+    const said = "Refund a charge: up to €5 each, by itself; over €5 asks you first; past €50 a day it is refused.";
+    const run2: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [{ quantity: "sum(amount)", window: "call", limit: 500 }, { quantity: "sum(amount)", window: "calendar_day", limit: 5000, over: "refuse" }] }, ...reads];
+    expect(saysEveryCallAsks(said)).toBe(false);
+    const got = cardsFromRules([stripe], run2, AGENT, said)[0]!;
+    expect(got).toEqual({ tool: "Refund a charge in EUR", action: "create_refund", cards: [
+      { id: `${AGENT}-create_refund-refused`, subject: AGENT, domain: "gateway", grants: [{ action: "create_refund" }], aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day" }], on_exceed: "refuse" },
+      { id: `${AGENT}-create_refund-held`, subject: AGENT, domain: "gateway", grants: [{ action: "create_refund", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [kiffsCount], on_exceed: "owner" },
+    ] });
+    const cards = [readsCard, ...("cards" in got ? got.cards : [])];
+    expect(moneyCardsOff([stripe], cards, run2, AGENT, said)).toBeUndefined();
+    expect(kiffDecides(cards, "create_refund", 400)).toBe("runs");
+    expect(kiffDecides(cards, "create_refund", 800)).toBe("held");
+    expect(kiffDecides(cards, "create_refund", 400, { sum: 4800, count: 9 })).toBe("refused");
+    // In a language the words aren't read in, the same: the figure's over is the rule's.
+    expect(cardsFromRules([stripe], run2, AGENT, "Minden visszatérítés 5 euróig magától megy.")[0]).toEqual(got);
+  });
+
+  it("the 25 Nov cases still give no Cards: a rule that asks with no figure that asks, and every call asked in words", () => {
+    const unnamed: AgreedRule[] = [{ tool: "create_refund", over: "ask", limits: [{ ...EACH, over: "refuse" }, DAY] }, ...reads];
+    expect(cardsFromRules([stripe], unnamed, AGENT, "")).toEqual([{ tool: "Refund a charge in EUR", action: "create_refund", unbuilt: "asks_unnamed" }]);
+    expect(cardsFromRules([stripe], inherited, AGENT, "Chaque remboursement attend votre accord.")[0]).toMatchObject({ unbuilt: "every_call_unheld" });
   });
 
   it("with the count of 0 a day that asks, the same words build the held and refused Cards", () => {
