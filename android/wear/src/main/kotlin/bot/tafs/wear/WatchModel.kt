@@ -474,6 +474,26 @@ class WatchModel(
     setWhole(askId, whole)
   }
 
+  /**
+   * Read more on a cut line of the phone's thread (watch row 10): the phone reads that message whole, by its id, from the taf's
+   * chat it holds ([WatchRequest.LineFull]); shown in place, never kept. Not readable: the rest is on the phone, with Open on phone.
+   */
+  suspend fun readMoreLine(lineId: String) {
+    val open = _taf.value ?: return
+    val key = lineKey(lineId)
+    if (open.chat.whole[key] is Whole.Read) return
+    setLineWhole(open.tafId, key, Whole.Reading)
+    val whole = when (val asked = ask(WatchRequest.LineFull(now(), open.tafId, lineId))) {
+      is Asked.Answered -> (asked.reply as? WatchReply.AskFull)?.let { Whole.Read(it.text) } ?: Whole.OnPhone
+      else -> Whole.OnPhone
+    }
+    setLineWhole(open.tafId, key, whole)
+  }
+
+  private fun setLineWhole(tafId: String, key: String, whole: Whole) {
+    _taf.update { open -> open?.takeIf { it.tafId == tafId }?.let { o -> o.copy(chat = o.chat.copy(whole = o.chat.whole + (key to whole))) } ?: open }
+  }
+
   private fun setWhole(askId: String, whole: Whole) {
     _taf.update { open -> open?.takeIf { o -> o.chat.turns.any { t -> t.ask.id == askId } }?.let { o -> o.copy(chat = o.chat.copy(whole = o.chat.whole + (askId to whole))) } ?: open }
   }
@@ -1827,3 +1847,6 @@ fun randomClientId(): String {
 object SeenAsks {
   val ids: MutableSet<String> = java.util.Collections.synchronizedSet(mutableSetOf())
 }
+
+/** Where a phone-thread line's whole is kept in a taf's chat (`TafChat.whole`): apart from the watch's own asks' ids. */
+internal fun lineKey(lineId: String) = "line:$lineId"

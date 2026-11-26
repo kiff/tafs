@@ -73,6 +73,12 @@ sealed interface WatchRequest {
   /** Read more on a taf's answer: the whole answer to the watch's request [askId], read from tafs cloud only on the tap. */
   data class AskFull(override val madeAt: Long, val askId: String) : WatchRequest
 
+  /**
+   * A cut line of a taf's chat as the phone holds it ([ChatLine.more]), whole, for Read more: the taf and the message's own id.
+   * Answered as [WatchReply.AskFull], shown and never kept.
+   */
+  data class LineFull(override val madeAt: Long, val tafId: String, val lineId: String) : WatchRequest
+
   /** The calendar's [day] (`YYYY-MM-DD`, in the account's zone), or today there with [day] null: what the tafs will do then. */
   data class Calendar(override val madeAt: Long, val day: String? = null) : WatchRequest
 
@@ -545,6 +551,9 @@ object WatchLink {
   const val TAF = PREFIX + "taf"
   const val TAF_CHAT = PREFIX + "taf-chat"
   const val ASK_FULL = PREFIX + "ask-full"
+
+  /** A cut line of a taf's chat, whole ([WatchRequest.LineFull]). */
+  const val LINE_FULL = PREFIX + "line-full"
   const val CALENDAR = PREFIX + "calendar"
   const val ACCOUNT = PREFIX + "account"
   const val TRANSCRIBE = PREFIX + "transcribe"
@@ -617,6 +626,7 @@ object WatchLink {
   @Serializable private data class TafBody(@SerialName("made_at") val madeAt: Long, @SerialName("taf_id") val tafId: String)
 
   @Serializable private data class AskFullBody(@SerialName("made_at") val madeAt: Long, @SerialName("ask_id") val askId: String)
+  @Serializable private data class LineFullBody(@SerialName("made_at") val madeAt: Long, @SerialName("taf_id") val tafId: String, @SerialName("line_id") val lineId: String)
 
   @Serializable private data class CalendarBody(@SerialName("made_at") val madeAt: Long, val day: String? = null)
 
@@ -661,6 +671,7 @@ object WatchLink {
       is WatchRequest.Taf -> TAF to json.encodeToString(TafBody.serializer(), TafBody(request.madeAt, request.tafId))
       is WatchRequest.TafChat -> TAF_CHAT to json.encodeToString(TafBody.serializer(), TafBody(request.madeAt, request.tafId))
       is WatchRequest.AskFull -> ASK_FULL to json.encodeToString(AskFullBody.serializer(), AskFullBody(request.madeAt, request.askId))
+      is WatchRequest.LineFull -> LINE_FULL to json.encodeToString(LineFullBody.serializer(), LineFullBody(request.madeAt, request.tafId, request.lineId))
       is WatchRequest.Calendar -> CALENDAR to json.encodeToString(CalendarBody.serializer(), CalendarBody(request.madeAt, request.day))
       is WatchRequest.Account -> ACCOUNT to json.encodeToString(Read.serializer(), Read(request.madeAt))
       is WatchRequest.Transcribe -> TRANSCRIBE to json.encodeToString(TranscribeBody.serializer(), TranscribeBody(request.madeAt, request.voiceId, request.language))
@@ -717,6 +728,7 @@ object WatchLink {
         TAF -> json.decodeFromString(TafBody.serializer(), text).let { WatchRequest.Taf(it.madeAt, it.tafId) }
         TAF_CHAT -> json.decodeFromString(TafBody.serializer(), text).let { WatchRequest.TafChat(it.madeAt, it.tafId) }
         ASK_FULL -> json.decodeFromString(AskFullBody.serializer(), text).let { WatchRequest.AskFull(it.madeAt, it.askId) }
+        LINE_FULL -> json.decodeFromString(LineFullBody.serializer(), text).let { WatchRequest.LineFull(it.madeAt, it.tafId, it.lineId) }
         CALENDAR -> json.decodeFromString(CalendarBody.serializer(), text).let { WatchRequest.Calendar(it.madeAt, it.day) }
         ACCOUNT -> WatchRequest.Account(json.decodeFromString(Read.serializer(), text).madeAt)
         TRANSCRIBE -> json.decodeFromString(TranscribeBody.serializer(), text).let { WatchRequest.Transcribe(it.madeAt, it.voiceId, it.language) }
@@ -746,6 +758,7 @@ object WatchLink {
     is WatchRequest.Taf -> request.tafId.isNotBlank() && request.tafId.length <= 128
     is WatchRequest.TafChat -> request.tafId.isNotBlank() && request.tafId.length <= 128
     is WatchRequest.AskFull -> ID.matches(request.askId)
+    is WatchRequest.LineFull -> request.tafId.isNotBlank() && request.tafId.length <= 128 && request.lineId.isNotBlank() && request.lineId.length <= 128
     is WatchRequest.Calendar -> request.day == null || DAY.matches(request.day)
     is WatchRequest.Transcribe -> CLIENT_ID.matches(request.voiceId) && LANGUAGE.matches(request.language)
     is WatchRequest.InboxMark -> InboxMarkIds.complete(request.read, request.dismissed)

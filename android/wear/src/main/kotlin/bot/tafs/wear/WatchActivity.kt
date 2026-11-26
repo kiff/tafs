@@ -204,6 +204,7 @@ class WatchActivity : ComponentActivity() {
           typeTaf = { taf -> typingFor = taf; type() },
           quickTaf = { taf, text -> model.review(text, tafId = taf) },
           readMore = { id -> lifecycleScope.launch { model.readMore(id) } },
+          readMoreLine = { id -> lifecycleScope.launch { model.readMoreLine(id) } },
           followAnswer = { id -> model.followAnswer(id) },
           keepTrying = { model.keepTrying() },
           rereadTaf = { model.rereadTaf() },
@@ -513,6 +514,8 @@ internal class Actions(
   val quickTaf: (String, String) -> Unit = { _, _ -> },
   /** Read more on a taf's answer, by its request's id. */
   val readMore: (String) -> Unit = {},
+  /** Read more on a cut line of the phone's thread, by its id (row 10). */
+  val readMoreLine: (String) -> Unit = {},
   /** Read more on an answer's card (Coach's or a taf's) that tafs cloud says goes on, by its request's id. */
   val readWhole: (String) -> Unit = {},
   /** While a taf's chat on screen is answering: its answer followed through the phone, bounded ([WatchModel.followAnswer]). */

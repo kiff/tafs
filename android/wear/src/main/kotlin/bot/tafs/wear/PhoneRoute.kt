@@ -76,7 +76,8 @@ internal class PhoneRoute(
       is WatchRequest.Refuse, is WatchRequest.Halt, is WatchRequest.Ask, is WatchRequest.Coach, is WatchRequest.Transcribe,
       is WatchRequest.InboxMark -> false
       is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Asks, is WatchRequest.Brief, is WatchRequest.Taf,
-      is WatchRequest.TafChat, is WatchRequest.AskFull, is WatchRequest.Calendar, is WatchRequest.Account, is WatchRequest.InboxMarks -> true
+      is WatchRequest.TafChat, is WatchRequest.AskFull, is WatchRequest.LineFull, is WatchRequest.Calendar, is WatchRequest.Account,
+      is WatchRequest.InboxMarks -> true
     }
   }
 }
