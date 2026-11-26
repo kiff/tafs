@@ -496,6 +496,11 @@ final class SetupTests: XCTestCase {
         let given = await model.giveCoachTools()
         XCTAssertTrue(given, model.coachToolsError ?? "")
         XCTAssertEqual(signer.prompts, ["tafs.coach-tools.v1|t_01"], "one Face ID")
+        // The sheet says why it asks (the owner's iPad, 26 Nov: a fingerprint asked with no word of why).
+        // This device's own form: the phone's sentence on iPhone and iPad, the Mac's on the Mac target.
+        XCTAssertEqual(signer.reasons, [PromptReason.pick(Words.Coach.Prompt.giveCardWhy, mac: Words.Coach.Prompt.giveCardWhyMac)])
+        XCTAssertEqual(PromptReason.pick(Words.Coach.Prompt.giveCardWhy, mac: Words.Coach.Prompt.giveCardWhyMac, isMac: true),
+                       Words.Coach.Prompt.giveCardWhyMac, "a Mac's Touch ID continues its own 'tafs is trying to'")
         let order = StubProtocol.sent.compactMap { r -> String? in
             guard let p = r.url?.path, r.httpMethod == "POST", ["/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"].contains(p) else { return nil }
             return p

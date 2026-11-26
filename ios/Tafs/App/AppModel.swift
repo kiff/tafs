@@ -2422,7 +2422,9 @@ final class AppModel: ObservableObject {
         }
         // The one confirmation: it gives Coach its Cards, and the connections go under it.
         do {
-            _ = try await signer.sign(Data("tafs.coach-tools.v1|\(tenant)".utf8), reason: Words.Coach.Prompt.giveCard, grants: true)
+            // The sheet says why it asks: the Card bounds what Coach can do. A Mac's Touch ID continues its own "tafs is trying to".
+            _ = try await signer.sign(Data("tafs.coach-tools.v1|\(tenant)".utf8),
+                                      reason: PromptReason.pick(Words.Coach.Prompt.giveCardWhy, mac: Words.Coach.Prompt.giveCardWhyMac), grants: true)
         } catch {
             if gen == accountGeneration { coachToolsError = ApprovalReadiness.notApproved(error, kind: Biometry.kind) }
             return false
