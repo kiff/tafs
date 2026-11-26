@@ -2990,7 +2990,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Aby pytać głosem, zezwól tafs na mikrofon na tym zegarku.</string>
     <string name="watch_more_on_phone">Reszta jest na telefonie.</string>
-    <string name="watch_needs_lock">Aby odrzucać lub blokować z tego zegarka, ustaw blokadę ekranu i odblokuj go.</string>
+    <string name="watch_needs_lock">Aby wysyłać, odrzucać lub blokować z tego zegarka, ustaw blokadę ekranu i odblokuj go.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s czeka na Ciebie</item>
         <item quantity="few">%1$s czekają na Ciebie</item>

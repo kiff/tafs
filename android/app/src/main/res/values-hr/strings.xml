@@ -2912,7 +2912,7 @@
     <string name="watch_menu">Izbornik</string>
     <string name="watch_mic_needed">Da pitate glasom, dopustite mikrofon za tafs na ovom satu.</string>
     <string name="watch_more_on_phone">Ostalo je na vašem telefonu.</string>
-    <string name="watch_needs_lock">Da odbijete ili blokirate s ovog sata, postavite na njemu zaključavanje zaslona i otključajte ga.</string>
+    <string name="watch_needs_lock">Da šaljete, odbijete ili blokirate s ovog sata, postavite na njemu zaključavanje zaslona i otključajte ga.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s čeka vas</item>
         <item quantity="few">%1$s čekaju vas</item>

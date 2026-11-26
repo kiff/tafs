@@ -2834,7 +2834,7 @@
     <string name="watch_menu">مینو</string>
     <string name="watch_mic_needed">آواز سے پوچھنے کے لیے اس گھڑی پر tafs کے لیے مائیکروفون کی اجازت دیں۔</string>
     <string name="watch_more_on_phone">باقی آپ کے فون پر ہے۔</string>
-    <string name="watch_needs_lock">اس گھڑی سے مسترد یا halt کرنے کے لیے اس پر اسکرین لاک لگائیں اور اسے کھولیں۔</string>
+    <string name="watch_needs_lock">اس گھڑی سے بھیجنے، مسترد کرنے یا روکنے کے لیے اس پر اسکرین لاک لگائیں اور اسے کھولیں۔</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s کو آپ کی ضرورت ہے</item>
         <item quantity="other">%1$s کو آپ کی ضرورت ہے</item>

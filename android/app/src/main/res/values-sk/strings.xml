@@ -2912,7 +2912,7 @@
     <string name="watch_menu">Ponuka</string>
     <string name="watch_mic_needed">Ak sa chcete pýtať hlasom, povoľte tafs na týchto hodinkách mikrofón.</string>
     <string name="watch_more_on_phone">Zvyšok je v telefóne.</string>
-    <string name="watch_needs_lock">Ak chcete z týchto hodiniek odmietať alebo zastavovať, nastavte na nich zámku obrazovky a odomknite ich.</string>
+    <string name="watch_needs_lock">Ak chcete z týchto hodiniek odosielať, odmietať alebo zastavovať, nastavte na nich zámku obrazovky a odomknite ich.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s čaká na vás</item>
         <item quantity="few">%1$s čakajú na vás</item>

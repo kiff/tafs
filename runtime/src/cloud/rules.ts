@@ -296,7 +296,7 @@ export interface MoneyCard {
  * every Card), a held Card that would bound no amount, a held Card with no total of its own and no refused day's total
  * beside it for KIFF's count, or a count of a money tool's calls (its limits are its amounts).
  */
-export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count" | "asks_unnamed";
+export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count" | "asks_unnamed" | "ask_inherited" | "every_call_unheld";
 
 /** A money tool's Cards, as the agreed rules give them, or why they can't be. `tool` is named as the connection titles it. */
 export type MoneyCards = { tool: string; action: string } & ({ cards: MoneyCard[] } | { unbuilt: MoneyUnbuilt });
@@ -316,7 +316,8 @@ const summed = (quantity: string) => quantity.startsWith("sum(");
  *   count (kiffsOwnCount), beside the refused day's total.
  * Every other tool is the checks' as before. `agent` is the Cards' subject.
  */
-export function cardsFromRules(grants: readonly ApprovalGrant[], rules: readonly AgreedRule[], agent: string): MoneyCards[] {
+export function cardsFromRules(grants: readonly ApprovalGrant[], rules: readonly AgreedRule[], agent: string, text = ""): MoneyCards[] {
+  const everyCall = saysEveryCallAsks(text);
   const out: MoneyCards[] = [];
   for (const g of grants) {
     const suffix = grantSuffix(g.id);
@@ -326,14 +327,14 @@ export function cardsFromRules(grants: readonly ApprovalGrant[], rules: readonly
       const rule = ruleOf(t, suffix, rules);
       if (!rule?.limits?.some((l) => summed(l.quantity))) continue;
       const tool = t.title || action;
-      const built = moneyCardsOf(rule, action, agent);
+      const built = moneyCardsOf(rule, action, agent, everyCall);
       out.push(typeof built === "string" ? { tool, action, unbuilt: built } : { tool, action, cards: built });
     }
   }
   return out;
 }
 
-function moneyCardsOf(rule: AgreedRule, action: string, agent: string): MoneyCard[] | MoneyUnbuilt {
+function moneyCardsOf(rule: AgreedRule, action: string, agent: string, everyCall = false): MoneyCard[] | MoneyUnbuilt {
   const limits = rule.limits ?? [];
   if (limits.some((l) => l.quantity === "count" && l.limit > 0 && !l.per)) return "count";
   const over = (l: AgreedLimit) => l.over ?? rule.over;
@@ -342,6 +343,14 @@ function moneyCardsOf(rule: AgreedRule, action: string, agent: string): MoneyCar
   // asks you first", agreed as `over: "ask"` beside a refused €50 a refund and €200 a day). It's never guessed either way:
   // the rules are shown again with the figure that asks ("every call asks" is a count of 0 a day), or with nothing asking.
   if (rule.over === "ask" && !limits.some((l) => over(l) === "ask")) return "asks_unnamed";
+  // In any language: a rule that asks says what happens past each of its figures. A figure that inherits the rule's ask is
+  // a cap that asks only past it, whatever the words say, so every call under it runs unasked; it's shown again with
+  // each figure's over said, never read as the owner's.
+  if (rule.over === "ask" && limits.some((l) => l.over === undefined)) return "ask_inherited";
+  // The notice says every call asks, and this rule asks past a figure, but none of them is a count of 0 a day that asks:
+  // a positive cap, or one a figure inherits from the rule's `over`, lets every call under it run unasked.
+  if (everyCall && limits.some((l) => over(l) === "ask") &&
+    !limits.some((l) => over(l) === "ask" && l.quantity === "count" && l.limit === 0 && l.window === "calendar_day" && !l.per)) return "every_call_unheld";
   const cap = (l: AgreedLimit) => ({ quantity: l.quantity, max: l.limit });
   const total = (l: AgreedLimit) => ({ quantity: l.quantity, limit: l.limit, window: l.window, ...(l.per ? { per: l.per } : {}) });
   const card = (kind: "refused" | "held", caps: Array<{ quantity: string; max: number }>, totals: MoneyCard["aggregates"]): MoneyCard => ({
@@ -380,19 +389,51 @@ function moneyCardsOf(rule: AgreedRule, action: string, agent: string): MoneyCar
  * with any other field, or another subject or domain, isn't one the rules give, whatever it limits (a field the check
  * didn't read could widen it: a total's extra room raises its ceiling, its measure changes what it counts, and KIFF
  * checks a money tool's amounts only on a Card in a domain). A Card over this tool and another isn't either. Undefined
- * when every one matches.
+ * when every one matches. The drafted Cards are read as KIFF shows a draft (GET /v1/me/agent-drafts/{id}), so the words
+ * KIFF writes on each for the owner to read are set aside first (kiffShownAside), and only those.
  */
-export function moneyCardsOff(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[], agent: string): MoneyCards | undefined {
-  for (const m of cardsFromRules(grants, rules, agent)) {
+export function moneyCardsOff(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[], agent: string, text = ""): MoneyCards | undefined {
+  for (const m of cardsFromRules(grants, rules, agent, text)) {
     if ("unbuilt" in m) return m;
     const name = fold(m.action);
-    const drafted = cards.filter((raw) => covers(raw, name)).map((c) => limitsKey(c, agent));
+    const drafted = cards.filter((raw) => covers(raw, name)).map((c) => limitsKey(kiffShownAside(c), agent));
     const built = m.cards.map((c) => limitsKey(c, agent));
     if (drafted.some((k) => k === undefined)) return m;
     const [a, b] = [(drafted as string[]).sort(), (built as string[]).sort()];
     if (a.length !== b.length || a.some((k, i) => k !== b[i])) return m;
   }
   return undefined;
+}
+
+/**
+ * What KIFF writes on a draft's Cards as it shows them, for the owner to read, and never reads back as a term (kiff/cloud,
+ * handlers: draftViewFor, withLines, withTitles, withQuantityOf, withUnits, withUnitGaps; a Card's terms are mandateBody's,
+ * which name none of these): on a Card, its lines, and on a revision what it revises and how that reads now; on a grant,
+ * its tool's title; on a total or a cap, what its quantity counts and its amount's unit, scale and pending use. Without
+ * them set aside, every money draft read from KIFF has a field the allowlist doesn't name, and is refused whatever it
+ * holds, the Cards the refusal prescribes included.
+ */
+const KIFF_SHOWN_ON_CARD = ["lines", "revises", "current", "unchanged"];
+const KIFF_SHOWN_ON_GRANT = ["title"];
+const KIFF_SHOWN_ON_LINE = ["quantity_of", "unit", "scale", "pending_text", "unit_missing", "unit_words"];
+
+/** A drafted Card without what KIFF writes on it as it shows it (KIFF_SHOWN_*), each where KIFF writes it; anything else as it is. */
+function kiffShownAside(raw: unknown): unknown {
+  const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+  const without = (o: Record<string, unknown>, fields: readonly string[]) => Object.fromEntries(Object.entries(o).filter(([k]) => !fields.includes(k)));
+  const lines = (v: unknown) => (Array.isArray(v) ? v.map((l) => (isObject(l) ? without(l, KIFF_SHOWN_ON_LINE) : l)) : v);
+  if (!isObject(raw)) return raw;
+  const card = without(raw, KIFF_SHOWN_ON_CARD);
+  if (Array.isArray(card.grants)) {
+    card.grants = card.grants.map((g) => {
+      if (!isObject(g)) return g;
+      const grant = without(g, KIFF_SHOWN_ON_GRANT);
+      if ("per_action_max" in grant) grant.per_action_max = lines(grant.per_action_max);
+      return grant;
+    });
+  }
+  if ("aggregates" in card) card.aggregates = lines(card.aggregates);
+  return card;
 }
 
 /** The fields a money tool's drafted Card may have: the built Cards' own, and a title, which limits nothing. */
@@ -690,3 +731,72 @@ export function unpinnedConnection(grants: readonly ApprovalGrant[], lines: read
   }
   return undefined;
 }
+
+/**
+ * Whether a rules notice's words say every call asks the owner: "every refund asks you first", "chaque remboursement attend
+ * votre accord". Read in the languages tafs cloud speaks to Coach in most (en, fr, de, es, it, nl, pl, pt), as each says it:
+ * a word for every or each, then the verb that asks, with no digit between them, since "every refund over 50 EUR asks" is a
+ * figure that asks, not every call. Used only to hold a money rule that asks to a count of 0 a day (moneyCardsOf); words in
+ * another language aren't read, and the rule's own figures stand, as before.
+ */
+export function saysEveryCallAsks(text: string): boolean {
+  const folded = text.normalize("NFC").toLowerCase();
+  return EVERY_CALL_ASKS.some((re) => re.test(folded));
+}
+
+const between = "[^\\d.;:!?\\n]{1,60}?";
+const EVERY_CALL_ASKS: RegExp[] = [
+  ["every|each", [
+    "(?:will |must |should |always |first )?asks? (?:you|first)",
+    "(?:will |must |should |always )?waits? for (?:your|you)",
+    "(?:will |must |should )?(?:needs?|requires?) (?:your (?:approval|ok|okay|yes|confirmation)|you to (?:approve|confirm|ok))",
+    "(?:is|are|will be|must be|gets?|has to be) (?:approved|confirmed|okayed|ok'?d|checked) by you",
+    "(?:goes|go|will go|is sent|comes|will come) to you first",
+  ].join("|")],
+  ["chaque|tout|toute", [
+    "vous (?:demande|demandera|sera soumise?|est soumise?|est envoyée?)",
+    "(?:attend|attendra|nécessite|nécessitera|requiert|demande|demandera) votre (?:accord|approbation|validation|feu vert)",
+    "(?:est|sera|doit être) (?:validée?|approuvée?|confirmée?) par vous",
+    "passe (?:d'abord |d’abord )?par vous",
+  ].join("|")],
+  ["jede|jeder|jedes|jeden", [
+    "fragt (?:dich|sie)", "wird (?:dich|sie) (?:zuerst )?fragen",
+    "(?:wartet|wird) auf (?:deine|ihre) (?:zustimmung|freigabe|genehmigung)",
+    "(?:braucht|benötigt|erfordert|muss|wird) (?:deine|ihre) (?:zustimmung|freigabe|genehmigung)",
+    "(?:wird|muss) (?:zuerst )?von (?:dir|ihnen) (?:freigegeben|genehmigt|bestätigt)",
+    "geht (?:zuerst )?an (?:dich|sie)",
+  ].join("|")],
+  ["cada|todo|toda", [
+    "(?:te|le) (?:pregunta|preguntará)",
+    "(?:espera|esperará|necesita|necesitará|requiere|requerirá) (?:tu|su) (?:aprobación|visto bueno|autorización|confirmación)",
+    "(?:es|será|debe ser) (?:aprobad[oa]|confirmad[oa]|autorizad[oa]) por (?:ti|usted)",
+    "(?:pasa|pasará|va) (?:primero )?por (?:ti|usted)",
+  ].join("|")],
+  ["ogni", [
+    "(?:ti|le) (?:chiede|chiederà)",
+    "(?:aspetta|aspetterà|attende|attenderà|richiede|richiederà) la (?:tua|sua) (?:approvazione|conferma|autorizzazione)",
+    "ha bisogno della (?:tua|sua) (?:approvazione|conferma)",
+    "(?:è|sarà|deve essere) (?:approvat[oa]|confermat[oa]|autorizzat[oa]) da te",
+    "passa (?:prima )?da te",
+  ].join("|")],
+  ["elke|iedere|ieder", [
+    "vraagt (?:je|jou|u)", "zal (?:je|jou|u) (?:eerst )?vragen",
+    "(?:wacht|zal wachten) op (?:je|jouw|uw) (?:goedkeuring|akkoord|ok)",
+    "(?:heeft|vereist|vraagt) (?:je|jouw|uw) (?:goedkeuring|akkoord)",
+    "(?:wordt|moet worden|zal worden) (?:eerst )?(?:goedgekeurd|bevestigd) door (?:jou|u)",
+    "gaat (?:eerst )?naar (?:jou|u)",
+  ].join("|")],
+  ["każdy|każda|każde|każdego|każdej", [
+    "pyta (?:cię|ciebie|pana|panią)", "zapyta (?:cię|ciebie|pana|panią)",
+    "(?:czeka|będzie czekać) na (?:twoją|pana|pani) (?:zgodę|akceptację|zatwierdzenie)",
+    "(?:wymaga|potrzebuje|będzie wymagać) (?:twojej|pana|pani) (?:zgody|akceptacji|zatwierdzenia)",
+    "(?:jest|będzie|musi być) (?:najpierw )?(?:zatwierdzan[yae]|zatwierdzon[yae]|akceptowan[yae]) przez (?:ciebie|pana|panią)",
+    "trafia (?:najpierw )?do (?:ciebie|pana|pani)",
+  ].join("|")],
+  ["cada|todo|toda", [
+    "(?:lhe|te) (?:pergunta|perguntará)", "(?:pergunta|perguntará)-(?:lhe|te)",
+    "(?:espera|esperará|aguarda|aguardará|precisa|precisará|requer|exige) (?:da |a |pela )?(?:sua|tua) (?:aprovação|autorização|confirmação)",
+    "(?:é|será|tem de ser|deve ser) (?:aprovad[oa]|confirmad[oa]|autorizad[oa]) por (?:você|ti)",
+    "(?:passa|vai) (?:primeiro )?por (?:você|ti)",
+  ].join("|")],
+].map(([every, asks]) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])`, "u"));

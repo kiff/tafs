@@ -2912,7 +2912,7 @@
     <string name="watch_menu">Meniu</string>
     <string name="watch_mic_needed">Pentru a întreba cu vocea, permiteți microfonul pentru tafs pe acest ceas.</string>
     <string name="watch_more_on_phone">Restul este pe telefon.</string>
-    <string name="watch_needs_lock">Pentru a refuza sau a opri de pe acest ceas, setați-i o blocare a ecranului și deblocați-l.</string>
+    <string name="watch_needs_lock">Pentru a trimite, a refuza sau a opri de pe acest ceas, setați-i o blocare a ecranului și deblocați-l.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s vă așteaptă</item>
         <item quantity="few">%1$s vă așteaptă</item>

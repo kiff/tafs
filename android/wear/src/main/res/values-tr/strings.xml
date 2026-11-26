@@ -100,7 +100,7 @@
     <string name="watch_menu">Menü</string>
     <string name="watch_mic_needed">Sesle sormak için bu saatte tafs\'a mikrofon izni verin.</string>
     <string name="watch_more_on_phone">Gerisi telefonunuzda.</string>
-    <string name="watch_needs_lock">Bu saatten reddetmek veya dondurmak için saatte bir ekran kilidi ayarlayın ve kilidini açın.</string>
+    <string name="watch_needs_lock">Bu saatten göndermek, reddetmek veya dondurmak için saatte bir ekran kilidi ayarlayın ve kilidini açın.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s tane sizi bekliyor</item>
         <item quantity="other">%1$s tane sizi bekliyor</item>

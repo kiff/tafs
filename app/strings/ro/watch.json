@@ -53,7 +53,7 @@
   "watch.menu": "Meniu",
   "watch.mic_needed": "Pentru a întreba cu vocea, permiteți microfonul pentru tafs pe acest ceas.",
   "watch.more_on_phone": "Restul este pe telefon.",
-  "watch.needs_lock": "Pentru a refuza sau a opri de pe acest ceas, setați-i o blocare a ecranului și deblocați-l.",
+  "watch.needs_lock": "Pentru a trimite, a refuza sau a opri de pe acest ceas, setați-i o blocare a ecranului și deblocați-l.",
   "watch.needs_you_count": {
     "one": "{count} vă așteaptă",
     "few": "{count} vă așteaptă",

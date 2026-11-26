@@ -100,7 +100,7 @@
     <string name="watch_menu">Menuja</string>
     <string name="watch_mic_needed">Për të pyetur me zë, lejoni mikrofonin për tafs në këtë orë.</string>
     <string name="watch_more_on_phone">Pjesa tjetër është në telefonin tuaj.</string>
-    <string name="watch_needs_lock">Për të refuzuar ose bllokuar nga kjo orë, vendosni një kyçje ekrani në të dhe zhbllokojeni.</string>
+    <string name="watch_needs_lock">Për të dërguar, refuzuar ose bllokuar nga kjo orë, vendosni një kyçje ekrani në të dhe zhbllokojeni.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s ju pret</item>
         <item quantity="other">%1$s ju presin</item>

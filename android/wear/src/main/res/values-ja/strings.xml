@@ -96,7 +96,7 @@
     <string name="watch_menu">メニュー</string>
     <string name="watch_mic_needed">音声で質問するには、このウォッチでtafsのマイク使用を許可してください。</string>
     <string name="watch_more_on_phone">残りはスマートフォンにあります。</string>
-    <string name="watch_needs_lock">このウォッチから拒否や遮断をするには、画面ロックを設定してロックを解除してください。</string>
+    <string name="watch_needs_lock">このウォッチから送信、拒否、遮断をするには、画面ロックを設定してロックを解除してください。</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">要確認%1$s件</item>
     </plurals>

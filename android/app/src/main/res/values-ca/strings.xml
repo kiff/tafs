@@ -2834,7 +2834,7 @@
     <string name="watch_menu">Menú</string>
     <string name="watch_mic_needed">Per preguntar amb la veu, permet que tafs faci servir el micròfon en aquest rellotge.</string>
     <string name="watch_more_on_phone">La resta és al telèfon.</string>
-    <string name="watch_needs_lock">Per rebutjar o bloquejar des d\'aquest rellotge, configura-hi un bloqueig de pantalla i desbloqueja\'l.</string>
+    <string name="watch_needs_lock">Per enviar, rebutjar o bloquejar des d\'aquest rellotge, configura-hi un bloqueig de pantalla i desbloqueja\'l.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s et necessita</item>
         <item quantity="other">%1$s et necessiten</item>

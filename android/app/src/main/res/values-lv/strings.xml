@@ -2912,7 +2912,7 @@
     <string name="watch_menu">Izvēlne</string>
     <string name="watch_mic_needed">Lai jautātu balsī, atļauj tafs izmantot mikrofonu šajā pulkstenī.</string>
     <string name="watch_more_on_phone">Pārējais ir tavā tālrunī.</string>
-    <string name="watch_needs_lock">Lai atteiktu vai apturētu no šī pulksteņa, iestati tam ekrāna bloķēšanu un atbloķē to.</string>
+    <string name="watch_needs_lock">Lai sūtītu, atteiktu vai apturētu no šī pulksteņa, iestati tam ekrāna bloķēšanu un atbloķē to.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="zero">%1$s gaida tevi</item>
         <item quantity="one">%1$s gaida tevi</item>

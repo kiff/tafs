@@ -165,7 +165,7 @@ final class WatchChecksUITests: XCTestCase {
         tap("Its settings", in: app)
         let asked = tap("Halt this taf", in: app)
         confirm("Halt now", after: asked, in: app)
-        shows("To refuse or halt from this watch, set a screen lock on it and unlock it.", in: app)
+        shows("To send, refuse or halt from this watch, set a screen lock on it and unlock it.", in: app)
     }
 
     /// Rows 17 and 18: Account says who is signed in; Sign out, confirmed, signs out this watch alone.

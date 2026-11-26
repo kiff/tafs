@@ -47,7 +47,7 @@
   "watch.menu": "Menu",
   "watch.mic_needed": "Để hỏi bằng giọng nói, hãy cho phép micrô cho tafs trên đồng hồ này.",
   "watch.more_on_phone": "Phần còn lại ở trên điện thoại của bạn.",
-  "watch.needs_lock": "Để từ chối hoặc đóng băng từ đồng hồ này, hãy đặt khóa màn hình cho nó và mở khóa.",
+  "watch.needs_lock": "Để gửi, từ chối hoặc đóng băng từ đồng hồ này, hãy đặt khóa màn hình cho nó và mở khóa.",
   "watch.needs_you_count": {
     "other": "{count} việc cần bạn"
   },

@@ -56,7 +56,7 @@
   "watch.menu": "Meni",
   "watch.mic_needed": "Za glasovna vprašanja dovolite tafs uporabo mikrofona na tej uri.",
   "watch.more_on_phone": "Ostalo je v telefonu.",
-  "watch.needs_lock": "Za zavračanje ali ustavljanje s te ure nastavite na njej zaklepanje zaslona in jo odklenite.",
+  "watch.needs_lock": "Za pošiljanje, zavračanje ali ustavljanje s te ure nastavite na njej zaklepanje zaslona in jo odklenite.",
   "watch.needs_you_count": {
     "one": "{count} čaka na vas",
     "two": "{count} čakata na vas",

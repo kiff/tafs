@@ -50,7 +50,7 @@
   "watch.menu": "Menü",
   "watch.mic_needed": "Sesle sormak için bu saatte tafs'a mikrofon izni verin.",
   "watch.more_on_phone": "Gerisi telefonunuzda.",
-  "watch.needs_lock": "Bu saatten reddetmek veya dondurmak için saatte bir ekran kilidi ayarlayın ve kilidini açın.",
+  "watch.needs_lock": "Bu saatten göndermek, reddetmek veya dondurmak için saatte bir ekran kilidi ayarlayın ve kilidini açın.",
   "watch.needs_you_count": {
     "one": "{count} tane sizi bekliyor",
     "other": "{count} tane sizi bekliyor"

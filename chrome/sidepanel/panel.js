@@ -4,14 +4,24 @@
 import { FRESH, chosen, sendOptions, afterSend, chatTitle, pollDelay, idleDelay, tafOfTab, runOfTab, tafsAtWork, switchDraft, turnOver, stillPending, lapsed, turnFailed, retryOf, failedKey, whyLine } from "../src/coachchat.js";
 import { render as renderWords } from "../src/chatmd.js";
 import { ACCEPT, prepare, upload, readyIDs, uploading, counted, afterSent } from "../src/attach.js";
-
-/** A message's words: the person's as they typed them; a taf's or Coach's with their Markdown drawn, opening no link. */
-function words(li, m) {
-  if (m.from === "taf") li.append(renderWords(document, m.text));
-  else li.textContent = m.text;
-}
+import { startsDay, timeLabel, dayLabel, workLine, workRows, pluralKey, canReport, reportBody, reportOutcome, ownerActions, cardShown, REPORT_NOTE_MAX } from "../src/chatrow.js";
 
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
+// The panel's language, for each message's time and a day's header (chatrow.js), as its words are.
+const LANG = chrome.i18n.getUILanguage();
+
+/**
+ * A message's words, in their own box: the person's as they typed them; a taf's or Coach's with their Markdown drawn, opening
+ * no link, under its run's work folded into one line when it carries it (the phones' `WorkSummary`).
+ */
+function words(li, m) {
+  if (m.from === "taf" && m.work) li.append(workFold(m));
+  const box = document.createElement("div");
+  box.className = "words";
+  if (m.from === "taf") box.append(renderWords(document, m.text));
+  else box.textContent = m.text;
+  li.append(box);
+}
 
 for (const el of document.querySelectorAll("[data-m]")) el.textContent = t(el.dataset.m);
 for (const el of document.querySelectorAll("[data-m-placeholder]")) el.placeholder = t(el.dataset.mPlaceholder);
@@ -98,6 +108,9 @@ function stepLine(s) {
 
 let lastConnections = null;
 let lastRuns = null;
+// The runs whose turn tafs cloud said was over (coachchat.js `turnOver`), each with how many steps it had then: its card gives
+// way to the answer's folded work until a step comes after (chatrow.js `cardShown`).
+const overRuns = new Map();
 
 function draw(state) {
   lastState = state;
@@ -105,7 +118,9 @@ function draw(state) {
   $("menuBtn").hidden = !state.paired;
   if (!state.paired) closeMenu();
   const connections = JSON.stringify(state.connections || []);
-  if (state.paired && connections !== lastConnections) {
+  // The tafs are read again when this Chrome's connections change, and while the last read found no KIFF session yet: the
+  // worker claims it after the phone pairs this Chrome, and says so with a state of its own, never with new connections.
+  if (state.paired && (connections !== lastConnections || tafsNoSession)) {
     lastConnections = connections;
     loadTafs();
   }
@@ -119,7 +134,9 @@ function draw(state) {
   const live = (state.runs || []).filter((r) => !r.stopped);
   // D2: the run of the tab in front first, so the card under the chat is the taf's whose tab this is.
   const here = runOfTab(activeTab, live);
-  const runs = here ? [here, ...live.filter((r) => r !== here)] : live;
+  // A run whose turn tafs cloud says is over shows as its answer's folded work, not as a card too (chatrow.js `cardShown`).
+  for (const id of overRuns.keys()) if (!live.some((r) => r.id === id)) overRuns.delete(id);
+  const runs = (here ? [here, ...live.filter((r) => r !== here)] : live).filter((r) => cardShown(r, overRuns));
   drawAtWork();
   follow();
   $("idle").hidden = runs.length > 0;
@@ -354,9 +371,20 @@ async function renderCoach() {
     return;
   }
   const atEnd = nearEnd();
+  const focused = keyInFocus(list);
   list.textContent = "";
   $("coachEmpty").hidden = r.thread.messages.length > 0 || !!coachPending;
-  drawMessages(list, r.thread, (again) => sendCoach(false, again));
+  // Send again goes as Try again does; Edit and send puts the words back in the box. Both only in a chat begun in this Chrome
+  // (the worker's `began`): a run's chat shown here is read-only to the panel.
+  const session = view.session;
+  drawMessages(list, r.thread, {
+    retry: (again) => sendCoach(false, again),
+    again: (again) => sendCoach(false, again),
+    edit: (text) => editIn($("coachWords"), text),
+    began: r.thread.began === true,
+    session,
+    taf: null,
+  });
   $("coachPhone").hidden = !r.thread.waitsOnPhone;
   // A failed turn ends the turn: no working line under it, whatever the chat still says.
   working = !!r.thread.working && !turnFailed(r.thread);
@@ -369,6 +397,7 @@ async function renderCoach() {
   // What was just sent stays on show until the chat has it, and Coach's working line goes under the last message, as in the app.
   if (coachPending) showPending(list, coachPending.words);
   if (coachPending || working) list.append(workingLine(t("coach_working")));
+  refocus(list, focused);
   if (atEnd) toEnd();
 }
 
@@ -528,6 +557,7 @@ document.addEventListener("click", (e) => {
 });
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
+  if (!$("report").hidden) return closeReport();
   if (!$("pageConsent").hidden) return closeConsent();
   if (!$("menu").hidden) {
     closeMenu();
@@ -635,8 +665,12 @@ let tafLapsed = null;
 
 const tafName = () => (tafs.find((x) => x.id === tafId) || {}).name || "";
 
+/** Whether the last read of the tafs found no KIFF session yet (the worker's claim still to come): the next state reads again. */
+let tafsNoSession = false;
+
 async function loadTafs() {
   const r = await send({ type: "taf_list" });
+  tafsNoSession = r.error === "no_session";
   tafs = r.error ? [] : r.tafs || [];
   const pick = $("tafPick");
   pick.textContent = "";
@@ -677,8 +711,18 @@ async function readTaf() {
   } else {
     const list = $("tafThread");
     const atEnd = nearEnd();
+    const focused = keyInFocus(list);
     list.textContent = "";
-    drawMessages(list, r.thread, (again) => sendTaf(id, again, []));
+    // A taf's chat in the panel is always one this Chrome began (tafs cloud reads it its own newest), so Send again and Edit and
+    // send are there; each answer names its chat for a report.
+    drawMessages(list, r.thread, {
+      retry: (again) => sendTaf(id, again, []),
+      again: (again) => sendTaf(id, again, []),
+      edit: (text) => id === tafId && editIn($("tafWords"), text),
+      began: true,
+      session: null,
+      taf: id,
+    });
     $("tafPhone").hidden = !r.thread.waitsOnPhone;
     // A failed turn ends the turn: no working line under it, whatever the chat still says.
     tafWorking = !!r.thread.working && !turnFailed(r.thread);
@@ -691,9 +735,19 @@ async function readTaf() {
     const pending = tafPending && tafPending.taf === id ? tafPending.words : null;
     if (pending) showPending(list, pending);
     if (pending || tafWorking) list.append(workingLine(t("working", tafName())));
+    refocus(list, focused);
     if (atEnd) toEnd();
-    // The taf's turn is over, in tafs cloud's word: its run here stops saying it works, rather than until the idle sweep.
-    for (const run of turnOver(id, r.thread, (lastState && lastState.runs) || [], tafs)) {
+    // The taf's turn is over, in tafs cloud's word: its run here stops saying it works, rather than until the idle sweep, and its
+    // card gives way to the answer's folded work (`cardShown`) unless a step comes after.
+    const over = turnOver(id, r.thread, (lastState && lastState.runs) || [], tafs);
+    let hidden = false;
+    for (const run of over) {
+      const steps = (((lastState && lastState.runs) || []).find((x) => x.id === run) || {}).steps || [];
+      if (overRuns.get(run) !== steps.length) hidden = true;
+      overRuns.set(run, steps.length);
+    }
+    if (hidden && lastState && lastState.paired) draw(lastState);
+    for (const run of over) {
       quietly({ type: "turn_over", run }).then((out) => {
         // Its last step was a moment ago: the chat is read again once the run has been quiet long enough.
         if (out && out.retryIn > 0 && id === tafId) setTimeout(() => id === tafId && readTaf(), out.retryIn + 500);
@@ -913,20 +967,322 @@ let coachPending = null;
 let tafPending = null;
 
 /**
- * A chat's last 20 messages, as the apps draw them, then its failed run, if any, as its last line: tafs cloud's words, and Try
- * again when it offers one ([retry] sends the words again).
+ * A chat's last 20 messages, as the apps draw them (docs/chat.md): a header where a day starts, each message with its time
+ * under it, an answer's Copy and ⋯ (Report this answer), the person's own message's ⋯ (Copy, and Send again and Edit and send
+ * in a chat begun here); then its failed run, if any, as its last line: tafs cloud's words, and Try again when it offers one.
+ * [chat] is the chat's own: `retry`, `again` and `edit` (each given the words), whether this Chrome `began` it, its `session`
+ * (else each message's own), and the `taf` it is (null for Coach).
  */
-function drawMessages(list, thread, retry) {
-  for (const m of thread.messages.slice(-20)) {
+function drawMessages(list, thread, chat) {
+  const shown = thread.messages.slice(-20);
+  shown.forEach((m, i) => {
+    if (startsDay(shown, i)) list.append(dayHeader(m.at));
     const li = document.createElement("li");
-    li.className = m.from;
+    li.className = m.from + (m.kind === "kickoff" ? " kickoff" : "");
     words(li, m);
     reading(li, m);
     whyUnder(li, m);
+    under(li, m, chat);
+    list.append(li);
+  });
+  if (thread.failed) list.append(failedLine(thread.failed, thread.messages, chat.retry));
+}
+
+/** The header where a day starts: Today, Yesterday, else the date (chatrow.js `dayLabel`). */
+function dayHeader(at) {
+  const li = document.createElement("li");
+  li.className = "day";
+  li.textContent = dayLabel(at, { lang: LANG, today: t("chat_today"), yesterday: t("chat_yesterday") });
+  return li;
+}
+
+// What's open in the chat (a run's steps, a message's ⋯), by key, so a read of the chat every few seconds keeps it open.
+const opened = new Set();
+
+/** A small action under a message, named by its words; `key` lets a redraw give it back the focus. */
+function actButton(text, key) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "act";
+  b.textContent = text;
+  if (key) b.dataset.key = key;
+  return b;
+}
+
+/**
+ * What goes under a message, as on the phones: under an answer, Copy and, where it can be reported, ⋯ with Report this answer;
+ * under the person's own, ⋯ with Copy, and Send again and Edit and send only in a chat begun here; then its time, small.
+ */
+function under(li, m, chat) {
+  const id = m.id || "";
+  // What a redraw keeps open or focused is keyed by the message's id; a message with none keeps nothing.
+  const key = (what) => (id ? what + ":" + id : null);
+  if (m.from === "taf" && (m.kind || "message") === "message" && m.text.trim()) {
+    const row = document.createElement("div");
+    row.className = "actions";
+    const copy = copyButton(m.text, li, key("copy"));
+    copy.setAttribute("aria-label", t("chat_copy_answer"));
+    row.append(copy);
+    const session = m.session || chat.session;
+    if (canReport(m, session)) {
+      const report = actButton(t("report_menu"), key("report"));
+      report.onclick = () => openReport({ taf: chat.taf, message: m.id, session });
+      row.append(moreMenu(key("more"), [report]));
+    }
+    li.append(row);
+  }
+  if (m.from === "owner") {
+    const can = ownerActions(m, chat.began);
+    const items = [];
+    if (can.again) {
+      const again = actButton(t("chat_send_again"), key("again"));
+      // Pressed once: a double click, or a press while the first send is still on its way, sends nothing more.
+      again.onclick = () => {
+        if (again.disabled || resending) return;
+        again.disabled = true;
+        resending = true;
+        closeMore(again);
+        Promise.resolve(chat.again(m.text)).finally(() => {
+          resending = false;
+        });
+      };
+      items.push(again);
+    }
+    if (can.edit) {
+      const edit = actButton(t("chat_edit_and_send"), key("edit"));
+      edit.onclick = () => {
+        closeMore(edit);
+        chat.edit(m.text);
+      };
+      items.push(edit);
+    }
+    if (can.copy) items.push(copyButton(m.text, li, key("copy")));
+    if (items.length) {
+      const row = document.createElement("div");
+      row.className = "actions";
+      row.append(moreMenu(key("more"), items));
+      li.append(row);
+    }
+  }
+  const when = timeLabel(m.at, LANG);
+  if (when) {
+    const time = document.createElement("small");
+    time.className = "time";
+    time.textContent = when;
+    li.append(time);
+  }
+}
+
+// A Send again on its way: another press waits for it, so the same words never go twice from one press and its echo.
+let resending = false;
+
+/**
+ * ⋯ and the actions it holds, shown beside it when pressed, as the conversations' rows have theirs. Opening it sends
+ * nothing; it stays open across the chat's next read.
+ */
+function moreMenu(key, items) {
+  const box = document.createElement("span");
+  box.className = "more";
+  const more = actButton("⋯", key);
+  more.setAttribute("aria-label", t("chat_more"));
+  more.title = t("chat_more");
+  const menu = document.createElement("span");
+  menu.className = "moreItems";
+  menu.append(...items);
+  const set = (open) => {
+    menu.hidden = !open;
+    more.setAttribute("aria-expanded", String(open));
+    if (key && open) opened.add(key);
+    else if (key) opened.delete(key);
+  };
+  set(!!key && opened.has(key));
+  more.onclick = () => {
+    set(menu.hidden);
+    if (!menu.hidden) items[0].focus();
+  };
+  menu.close = () => {
+    set(false);
+    more.focus();
+  };
+  box.append(more, menu);
+  return box;
+}
+
+/** Closes the ⋯ an action was pressed in, the focus back on ⋯. */
+function closeMore(item) {
+  const menu = item.closest(".moreItems");
+  if (menu && menu.close) menu.close();
+}
+
+/**
+ * Copy: the message's words, whole, to the clipboard, from this press (no permission asked for: a press in the panel may
+ * write it), saying "Copied" for a moment. Where the browser refuses, the words are selected instead, and it says to copy
+ * them with the keyboard: a problem is always shown.
+ */
+function copyButton(text, li, key) {
+  const b = actButton(t("chat_copy"), key);
+  b.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      b.textContent = t("chat_copied");
+    } catch {
+      const words = li.querySelector(".words");
+      if (words) {
+        const range = document.createRange();
+        range.selectNodeContents(words);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      b.textContent = t("chat_copy_selected");
+    }
+    setTimeout(() => {
+      if (b.isConnected) b.textContent = t("chat_copy");
+    }, 2000);
+  };
+  return b;
+}
+
+/**
+ * A run's work, folded into one line ("Worked 12 s · 4 steps", chatrow.js `workLine`), which opens to its steps in tafs
+ * cloud's words (`workRows`): a failed one in the failure colour with its reason under it, a step not made marked so, tries
+ * of the same step as one row. A line with no step to show opens nothing.
+ */
+function workFold(m) {
+  const box = document.createElement("div");
+  box.className = "work";
+  const rows = workRows(m.work);
+  const key = m.id ? "work:" + m.id : null;
+  const line = workLine(m.work, LANG, t);
+  if (!rows.length) {
+    const p = document.createElement("span");
+    p.className = "workLine";
+    p.textContent = line;
+    box.append(p);
+    return box;
+  }
+  const b = actButton("", key);
+  b.classList.add("workLine");
+  const list = document.createElement("ol");
+  list.className = "workSteps";
+  for (const r of rows) {
+    const li = document.createElement("li");
+    li.className = r.status;
+    const mark = document.createElement("span");
+    mark.className = "mark";
+    mark.setAttribute("aria-hidden", "true");
+    mark.textContent = r.status === "failed" ? "!" : r.status === "not_made" ? "\u21A9" : "\u2713";
+    li.append(mark, r.words);
+    const more = r.status === "not_made" ? t("chat_work_not_made") : r.tries > 1 ? t(pluralKey("chat_work_tries", r.tries, LANG), new Intl.NumberFormat(LANG).format(r.tries)) : "";
+    if (more) {
+      const s = document.createElement("span");
+      s.className = "tries";
+      s.textContent = " · " + more;
+      li.append(s);
+    }
+    if (r.why) {
+      const why = document.createElement("small");
+      why.className = "why";
+      why.textContent = r.why;
+      li.append(why);
+    }
     list.append(li);
   }
-  if (thread.failed) list.append(failedLine(thread.failed, thread.messages, retry));
+  const set = (open) => {
+    list.hidden = !open;
+    b.textContent = (open ? "\u25BE " : "\u25B8 ") + line;
+    b.setAttribute("aria-expanded", String(open));
+    if (key && open) opened.add(key);
+    else if (key) opened.delete(key);
+  };
+  set(!!key && opened.has(key));
+  b.onclick = () => set(list.hidden);
+  box.append(b, list);
+  return box;
 }
+
+/** Edit and send: the message's words back in the box, to change and send as a new message. */
+function editIn(box, text) {
+  box.value = text;
+  box.focus();
+  box.setSelectionRange(text.length, text.length);
+}
+
+/** What in the chat has the focus, by its key, so the chat's next read can give it back. */
+function keyInFocus(list) {
+  const el = document.activeElement;
+  return el && list.contains(el) && el.dataset ? el.dataset.key || null : null;
+}
+
+function refocus(list, key) {
+  if (!key) return;
+  const el = [...list.querySelectorAll("[data-key]")].find((x) => x.dataset.key === key);
+  if (el && !el.hidden) el.focus({ preventScroll: true });
+}
+
+// Report this answer (docs/chat.md, "Reporting an answer"), as the phones' sheet: tafs cloud's four reasons, a note of at most
+// 1,000 characters, and Send; the chat's session always goes with it, since tafs cloud takes the panel's report only for an
+// answer in a chat it may show. Sent, it thanks, or says it was reported already; not sent, it says why and stays to send again.
+let reporting = null; // {taf, message, session}
+let reportSending = false;
+let reportFrom = null; // what had the focus, to give it back
+
+function openReport(answer) {
+  reporting = answer;
+  reportFrom = document.activeElement;
+  closeMenu();
+  $("reportForm").reset();
+  $("reportForm").hidden = false;
+  $("reportDone").hidden = true;
+  $("reportFailed").hidden = true;
+  reportReady();
+  $("report").hidden = false;
+  $("reportTitle").focus();
+}
+
+function closeReport() {
+  if ($("report").hidden) return;
+  $("report").hidden = true;
+  reporting = null;
+  if (reportFrom && reportFrom.isConnected) reportFrom.focus();
+  reportFrom = null;
+}
+
+/** Send waits for a reason, and for a note no longer than tafs cloud takes, which is said when it is. */
+function reportReady() {
+  const reason = $("reportForm").elements.reason.value;
+  const long = $("reportNote").value.trim().length > REPORT_NOTE_MAX;
+  $("reportNoteLong").hidden = !long;
+  $("reportSend").disabled = reportSending || !reason || long;
+}
+
+$("reportForm").addEventListener("input", reportReady);
+$("reportForm").addEventListener("change", reportReady);
+$("reportCancel").onclick = () => closeReport();
+$("reportClose").onclick = () => closeReport();
+$("reportForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const answer = reporting;
+  const body = answer && reportBody($("reportForm").elements.reason.value, $("reportNote").value, answer.session);
+  if (!body || reportSending) return;
+  reportSending = true;
+  reportReady();
+  $("reportFailed").hidden = true;
+  const r = await send({ type: "report", taf: answer.taf, message: answer.message, ...body }).catch(() => null);
+  reportSending = false;
+  if (reporting !== answer) return; // closed meanwhile
+  const out = reportOutcome(r);
+  if (out.state === "failed") {
+    $("reportFailed").textContent = t("report_not_sent_why", out.words || t(out.key));
+    $("reportFailed").hidden = false;
+    reportReady();
+    return;
+  }
+  $("reportForm").hidden = true;
+  $("reportDoneWords").textContent = t(out.state === "already" ? "report_already" : "report_thanks");
+  $("reportDone").hidden = false;
+  $("reportClose").focus();
+};
 
 /**
  * The failed run's line: tafs cloud's words, as text, whatever its code; Try again only when it offers one (coachchat.js
@@ -984,7 +1340,10 @@ function whyUnder(li, m) {
 function showPending(list, words) {
   const li = document.createElement("li");
   li.className = "owner pending";
-  li.textContent = words;
+  const box = document.createElement("div");
+  box.className = "words";
+  box.textContent = words;
+  li.append(box);
   list.append(li);
 }
 

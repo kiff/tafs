@@ -100,7 +100,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">To ask by voice, allow the microphone for tafs on this watch.</string>
     <string name="watch_more_on_phone">The rest is on your phone.</string>
-    <string name="watch_needs_lock">To refuse or halt from this watch, set a screen lock on it and unlock it.</string>
+    <string name="watch_needs_lock">To send, refuse or halt from this watch, set a screen lock on it and unlock it.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s needs you</item>
         <item quantity="other">%1$s need you</item>

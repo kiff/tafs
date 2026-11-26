@@ -50,7 +50,7 @@
   "watch.menu": "Menýu",
   "watch.mic_needed": "Ses bilen soramak üçin, bu sagatda tafs üçin mikrofona rugsat beriň.",
   "watch.more_on_phone": "Galany telefonyňyzda.",
-  "watch.needs_lock": "Bu sagatdan ret etmek ýa-da togtatmak üçin, onda ekran gulpuny guruň we ony açyň.",
+  "watch.needs_lock": "Bu sagatdan ibermek, ret etmek ýa-da togtatmak üçin, onda ekran gulpuny guruň we ony açyň.",
   "watch.needs_you_count": {
     "one": "{count} size zerur",
     "other": "{count} size zerur"

@@ -1,0 +1,1 @@
+- **Delete conversation also erases your reports of that chat's answers.** tafs cloud kept a report for 180 days, separate from the chat. It now goes with the chat when you delete it. The email that told KIFF's support about a report stays in the support inbox. See [Chat](docs/chat.md).

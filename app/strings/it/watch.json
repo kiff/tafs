@@ -50,7 +50,7 @@
   "watch.menu": "Menu",
   "watch.mic_needed": "Per chiedere a voce, consenti il microfono a tafs su questo orologio.",
   "watch.more_on_phone": "Il resto è sul telefono.",
-  "watch.needs_lock": "Per rifiutare o bloccare da questo orologio, imposta un blocco schermo e sbloccalo.",
+  "watch.needs_lock": "Per inviare, rifiutare o bloccare da questo orologio, imposta un blocco schermo e sbloccalo.",
   "watch.needs_you_count": {
     "one": "{count} ti aspetta",
     "other": "{count} ti aspettano"

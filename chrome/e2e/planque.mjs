@@ -326,8 +326,10 @@ export class FakePlanque extends EventEmitter {
  * and answers a message to that taf (`POST /v1/tafs/{id}/messages`) with the agent run it starts (`run`), which planque's steps
  * then name as `agent_run`. The taf's chat (`GET …/conversation`) has the person's messages (`<run>.in`, as tafs cloud names
  * them) and, when a test sets `failNext` (fields over tafs cloud's own `failed`, contracts/conversation-failed.json), the next
- * message's run failed; a message after it that doesn't fail closes it, as tafs cloud does. Every call must carry the claimed
- * session's bearer. Anything else is 404.
+ * message's run failed; a message after it that doesn't fail closes it, as tafs cloud does. Its messages name their chat
+ * (`session`), and a report of an answer in it (`POST …/messages/{message}/report`) is taken only with that session. Coach's
+ * chats are kept by session (`coachChats`): its list, one chat's thread, and a message into a chat begun here or a new one,
+ * never into a run's chat shown here. Every call must carry the claimed session's bearer. Anything else is 404.
  *
  * It answers on the fixture sites' HTTPS server (sites.mjs `serve`), for the hosts the extension calls (`api.kiff.dev`,
  * `cloud.tafs.kiff.dev`), which the harness maps to that server: nothing leaves the computer.
@@ -349,6 +351,11 @@ export class FakeCloud {
     this.thread = []; // the taf's chat, as tafs cloud reads it
     this.failed = null; // its failed run, as tafs cloud's contract has it
     this.failNext = null; // fields over the contract's `failed` for the next message's run
+    this.session = "ses_e2e"; // the taf's chat in this Chrome, as tafs cloud names it on each of its messages
+    this.reports = []; // every report: {message, body}
+    // Coach's chats as a Chrome sees them (chrome-chats.ts): each by its session, `began` when this Chrome began it, else
+    // listed only for a run that worked here, which takes no message from the panel.
+    this.coachChats = new Map(); // session → {began, title, messages}
   }
 
   /** Serves KIFF's and tafs cloud's hosts on `sites` (a FixtureSites). */
@@ -388,8 +395,24 @@ export class FakeCloud {
     if (taf && taf[1] === this.coachId && taf[2] === "conversation" && req.method === "GET") return send(200, { messages: [], working: null });
     if (taf && taf[1] === this.coachId && taf[2] === "messages" && req.method === "POST") {
       const run = randomId("agr_");
-      this.coachSends.push({ text: body.text, page: body.page || null, run });
-      return send(201, { message: { id: randomId("msg_") }, run });
+      // Into a chat this Chrome began, or a new one; a run's chat shown here is 404 to a message, as tafs cloud answers.
+      const chosen = typeof body.session === "string" ? body.session : "";
+      if (chosen && !(this.coachChats.get(chosen) || {}).began) return send(404, { error: "no such chat" });
+      const session = chosen || (body.new_chat === true ? randomId("ses_") : "");
+      this.coachSends.push({ text: body.text, page: body.page || null, run, session });
+      if (!session) return send(201, { message: { id: randomId("msg_") }, run });
+      const chat = this.coachChats.get(session) || { began: true, title: body.text, messages: [] };
+      chat.messages.push({ id: run + ".in", from: "owner", kind: "message", text: body.text, at: new Date().toISOString(), session });
+      this.coachChats.set(session, chat);
+      return send(201, { message: { id: run + ".in" }, run, session });
+    }
+    if (req.method === "GET" && url.pathname === `/v1/tafs/${this.coachId}/chats`) {
+      return send(200, { chats: [...this.coachChats].reverse().map(([session, c]) => ({ session, title: c.title, updated: new Date().toISOString() })) });
+    }
+    const coachChat = new RegExp(`^/v1/tafs/${this.coachId}/conversation/([^/]+)$`).exec(url.pathname);
+    if (coachChat && req.method === "GET") {
+      const chat = this.coachChats.get(decodeURIComponent(coachChat[1]));
+      return chat ? send(200, { messages: chat.messages, working: null }) : send(404, { error: "no such chat" });
     }
     if (taf && taf[1] === this.tafId && taf[2] === "conversation" && req.method === "GET") return send(200, { messages: this.thread, working: null, ...(this.failed ? { failed: this.failed } : {}) });
     if (taf && taf[1] === this.tafId && taf[2] === "messages" && req.method === "POST") {
@@ -397,10 +420,21 @@ export class FakeCloud {
       const run = randomId("agr_");
       const id = run + ".in";
       this.sends.push({ text: body.text, page: body.page || null, run, clientID: body.client_message_id || null });
-      this.thread.push({ id, from: "owner", kind: "message", text: body.text, at: new Date().toISOString(), ...(body.page ? { reading: new URL(body.page.url).hostname } : {}) });
+      this.thread.push({ id, from: "owner", kind: "message", text: body.text, at: new Date().toISOString(), session: this.session, ...(body.page ? { reading: new URL(body.page.url).hostname } : {}) });
       this.failed = this.failNext ? { ...CONTRACT_FAILED, ...this.failNext, run } : null;
       this.failNext = null;
-      return send(201, { message: { id }, run });
+      return send(201, { message: { id }, run, session: this.session });
+    }
+    // Report this answer, as tafs cloud takes it from a Chrome (handler.ts `reportRoute`): only with the chat's session, only
+    // an answer of the taf's in it; the same answer reported again answers `new: false`.
+    const report = /^\/v1\/tafs\/([^/]+)\/messages\/([^/]+)\/report$/.exec(url.pathname);
+    if (report && report[1] === this.tafId && req.method === "POST") {
+      const message = decodeURIComponent(report[2]);
+      this.reports.push({ message, body });
+      if (body.session !== this.session || !this.thread.some((m) => m.id === message && m.from === "taf")) return send(404, { error: "no answer of the taf's by that id" });
+      if (!["offensive", "harmful", "wrong", "other"].includes(body.reason)) return send(400, { error: "reason is one of offensive, harmful, wrong, other" });
+      const again = this.reports.filter((r) => r.message === message && r.body.session === this.session).length > 1;
+      return send(200, { report: { id: "rep_" + message, at: new Date().toISOString(), new: !again } });
     }
     return send(404, { error: "not_found" });
   }

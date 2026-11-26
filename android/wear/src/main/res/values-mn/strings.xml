@@ -100,7 +100,7 @@
     <string name="watch_menu">Цэс</string>
     <string name="watch_mic_needed">Дуу хоолойгоор асуухын тулд энэ цагт tafs-д микрофоныг зөвшөөрнө үү.</string>
     <string name="watch_more_on_phone">Үлдсэн нь таны утсан дээр байна.</string>
-    <string name="watch_needs_lock">Энэ цагнаас татгалзах эсвэл зогсоохын тулд түүн дээр дэлгэцийн түгжээ тохируулж, түгжээг нь тайлна уу.</string>
+    <string name="watch_needs_lock">Энэ цагнаас илгээх, татгалзах эсвэл зогсоохын тулд түүн дээр дэлгэцийн түгжээ тохируулж, түгжээг нь тайлна уу.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s таныг хүлээж байна</item>
         <item quantity="other">%1$s таныг хүлээж байна</item>

@@ -50,7 +50,7 @@
   "watch.menu": "Menuja",
   "watch.mic_needed": "Për të pyetur me zë, lejoni mikrofonin për tafs në këtë orë.",
   "watch.more_on_phone": "Pjesa tjetër është në telefonin tuaj.",
-  "watch.needs_lock": "Për të refuzuar ose bllokuar nga kjo orë, vendosni një kyçje ekrani në të dhe zhbllokojeni.",
+  "watch.needs_lock": "Për të dërguar, refuzuar ose bllokuar nga kjo orë, vendosni një kyçje ekrani në të dhe zhbllokojeni.",
   "watch.needs_you_count": {
     "one": "{count} ju pret",
     "other": "{count} ju presin"

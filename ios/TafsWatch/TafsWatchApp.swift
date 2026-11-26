@@ -61,6 +61,9 @@ struct TafsWatchApp: App {
             }
         }
         .onChange(of: scenePhase) { _, phase in
+            // Put away, or back after more than two minutes with the wrist lowered: a new open, so nothing kept is drawn until
+            // the phone's mark is heard again, and each page forgets what it showed (`WatchAccountMark.phase`).
+            let newOpen = WatchAccountMark.shared.phase(phase)
             // Signed out on this watch: nothing is read, and there's nothing to forget.
             if WatchV2.on, signIn.signedOutHere { return }
             // In memory only: what was read goes once the app leaves the screen, and is read
@@ -82,6 +85,11 @@ struct TafsWatchApp: App {
                 coach.leave()
             }
             if phase == .active {
+                if newOpen {
+                    needsYou.leave()
+                    tafs.leave()
+                    coach.leave()
+                }
                 Task {
                     await needsYou.load()
                     // A message kept for later goes once the phone answers (v2 only).

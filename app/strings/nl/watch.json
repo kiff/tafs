@@ -50,7 +50,7 @@
   "watch.menu": "Menu",
   "watch.mic_needed": "Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.",
   "watch.more_on_phone": "De rest staat op je telefoon.",
-  "watch.needs_lock": "Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.",
+  "watch.needs_lock": "Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te versturen, te weigeren of stil te zetten.",
   "watch.needs_you_count": {
     "one": "{count} wacht op jou",
     "other": "{count} wachten op jou"

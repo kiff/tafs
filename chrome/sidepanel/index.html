@@ -151,6 +151,33 @@
       </div>
     </section>
 
+    <section id="report" class="sheet" role="dialog" aria-modal="true" aria-labelledby="reportTitle" hidden>
+      <div class="sheetbody">
+        <h2 id="reportTitle" tabindex="-1" data-m="report_menu"></h2>
+        <form id="reportForm">
+          <fieldset class="reasons">
+            <legend data-m="report_what_wrong"></legend>
+            <label><input type="radio" name="reason" value="offensive"> <span data-m="report_reason_offensive"></span></label>
+            <label><input type="radio" name="reason" value="harmful"> <span data-m="report_reason_harmful"></span></label>
+            <label><input type="radio" name="reason" value="wrong"> <span data-m="report_reason_wrong"></span></label>
+            <label><input type="radio" name="reason" value="other"> <span data-m="report_reason_other"></span></label>
+          </fieldset>
+          <textarea id="reportNote" rows="3" data-m-placeholder="report_note_hint" data-m-label="report_note_hint"></textarea>
+          <p id="reportNoteLong" class="note bad" data-m="report_note_most" hidden></p>
+          <p class="note" data-m="report_person_reads"></p>
+          <p id="reportFailed" class="note bad" role="alert" hidden></p>
+          <div class="buttons">
+            <button type="submit" id="reportSend" data-m="report_send"></button>
+            <button type="button" id="reportCancel" class="quiet" data-m="report_cancel"></button>
+          </div>
+        </form>
+        <div id="reportDone" hidden>
+          <p id="reportDoneWords" role="status"></p>
+          <button type="button" id="reportClose" data-m="report_done"></button>
+        </div>
+      </div>
+    </section>
+
     <template id="runTemplate">
       <article class="run">
         <h2 class="taf"></h2>

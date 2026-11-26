@@ -2834,7 +2834,7 @@
     <string name="watch_menu">मेनू</string>
     <string name="watch_mic_needed">आवाज़ से पूछने के लिए, इस घड़ी पर tafs के लिए माइक्रोफ़ोन की अनुमति दें।</string>
     <string name="watch_more_on_phone">बाकी आपके फ़ोन पर है।</string>
-    <string name="watch_needs_lock">इस घड़ी से अस्वीकार या रोकने के लिए, उस पर स्क्रीन लॉक सेट करें और उसे अनलॉक करें।</string>
+    <string name="watch_needs_lock">इस घड़ी से भेजने, अस्वीकार करने या रोकने के लिए, उस पर स्क्रीन लॉक सेट करें और उसे अनलॉक करें।</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s को आपकी ज़रूरत है</item>
         <item quantity="other">%1$s को आपकी ज़रूरत है</item>

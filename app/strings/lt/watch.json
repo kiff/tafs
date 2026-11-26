@@ -53,7 +53,7 @@
   "watch.menu": "Meniu",
   "watch.mic_needed": "Kad galėtumėte klausti balsu, šiame laikrodyje leiskite tafs naudoti mikrofoną.",
   "watch.more_on_phone": "Visa kita – telefone.",
-  "watch.needs_lock": "Kad galėtumėte atmesti ar sustabdyti iš šio laikrodžio, nustatykite jo ekrano užraktą ir jį atrakinkite.",
+  "watch.needs_lock": "Kad galėtumėte siųsti, atmesti ar sustabdyti iš šio laikrodžio, nustatykite jo ekrano užraktą ir jį atrakinkite.",
   "watch.needs_you_count": {
     "one": "{count} laukia jūsų",
     "few": "{count} laukia jūsų",

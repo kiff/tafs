@@ -100,7 +100,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.</string>
     <string name="watch_more_on_phone">De rest staat op je telefoon.</string>
-    <string name="watch_needs_lock">Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.</string>
+    <string name="watch_needs_lock">Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te versturen, te weigeren of stil te zetten.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s wacht op jou</item>
         <item quantity="other">%1$s wachten op jou</item>

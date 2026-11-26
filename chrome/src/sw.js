@@ -13,6 +13,7 @@ import { Relay, MAX_RESULT_BYTES } from "./relay.js";
 import { tafsHere } from "./coachchat.js";
 import { signedSitesOf } from "./protocol.js";
 import { Coach, reusing } from "./coach.js";
+import { withBegan } from "./chatrow.js";
 import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { HandAnswers, handMessage } from "./hand.js";
 import { RunStates, runStateMessage } from "./runstate.js";
@@ -360,6 +361,23 @@ async function pageWithdraw() {
   return { allowed: false };
 }
 
+/**
+ * The Coach chats begun in this Chrome (`chatrow.js` `withBegan`), kept with the pairing in its own store, so unpairing wipes
+ * them. tafs cloud lists a run's chat here too when the run worked in this Chrome, read-only; this list tells them apart, so
+ * the panel offers Send again and Edit and send only where a message from here goes. A chat begun here before this list was
+ * kept joins it at its next message from here.
+ */
+const COACH_BEGAN = "coach_began";
+
+async function coachBegan() {
+  const list = await indexedStore.get(COACH_BEGAN).catch(() => null);
+  return Array.isArray(list) ? list : [];
+}
+
+async function rememberBegan(session) {
+  await indexedStore.set(COACH_BEGAN, withBegan(await coachBegan(), session));
+}
+
 /** "Not on this site": the person's own list of hosts Coach never reads, kept in this Chrome only. */
 async function asideSwitch(host, off) {
   if (!host) return { error: "no_host" };
@@ -395,7 +413,10 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     go_to_run: async () => runner.goTo(String(m.run)),
     coach_thread: async () => {
       claimKiff().catch(() => {});
-      return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
+      const session = typeof m.session === "string" ? m.session : null;
+      const thread = await (await coach()).thread(session);
+      // Whether this Chrome began the chat (it sent into it, `coachBegan`): only there do Send again and Edit and send go.
+      return { thread: thread && { ...thread, began: session ? (await coachBegan()).includes(session) : true } };
     },
     coach_chats: async () => ({ chats: await (await coach()).chats() }),
     coach_archived: async () => ({ chats: await (await coach()).archivedChats() }),
@@ -443,12 +464,25 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       // Files alone go without the page: a page goes only with words.
       const alone = m.alone === true || !String(m.words || "").trim();
       const page = await whyNotSent(await pageForSend({ alone, consent: pageConsentReady, read: () => asideRead(m.tabId, m.windowId) }), m.tabId, m.windowId);
+      const sent = await panels.sent(m.windowId, m.tabId, (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page, attachments: m.attachments }));
+      // tafs cloud takes the panel's message only into a chat this Chrome began, or a new one: the chat it went into is one.
+      if (sent && typeof sent.session === "string") await rememberBegan(sent.session).catch(() => {});
       return {
-        sent: await panels.sent(m.windowId, m.tabId, (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page, attachments: m.attachments })),
+        sent,
         reading: page.page ? page.host : null,
         notReading: page.why || null,
         host: page.host || null,
       };
+    },
+    // Report this answer (docs/chat.md, "Reporting an answer"): Coach's, or a taf's of this Chrome, with the chat's session.
+    // How it went comes back as the answer, never as an error: tafs cloud's words for a refusal, and its status.
+    report: async () => {
+      if (m.taf) await onlyHere(m.taf);
+      try {
+        return { report: await (await coach()).report(m.taf || null, String(m.message || ""), { reason: m.reason, note: m.note, session: m.session }) };
+      } catch (e) {
+        return { failed: { status: (e && e.status) || 0, ...(e && e.words ? { words: e.words } : {}) } };
+      }
     },
     aside_status: async () => ({ ...(await asideStatus(m.tabId, m.windowId, typeof m.taf === "string" ? m.taf : null)), consent: await pageConsentReady() }),
     page_allow: async () => pageAllow(),
