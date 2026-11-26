@@ -2853,6 +2853,7 @@
     <string name="watch_phone_no_answer">El teu telèfon no ha respost a temps. Torna-ho a provar.</string>
     <string name="watch_phone_no_app">tafs no és al teu telèfon. Instal·la\'l allà i torna-ho a provar.</string>
     <string name="watch_phone_not_reachable">El teu telèfon no és a l\'abast. Apropa\'l i torna-ho a provar.</string>
+    <string name="watch_phone_update_app">Actualitza tafs al teu telèfon i torna-ho a provar.</string>
     <string name="watch_play">Reprodueix</string>
     <string name="watch_qr_needs_me_today">Què necessita de mi avui?</string>
     <string name="watch_qr_not_now">Ara no</string>

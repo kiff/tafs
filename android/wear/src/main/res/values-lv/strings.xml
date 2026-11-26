@@ -124,6 +124,7 @@
     <string name="watch_phone_no_answer">Tālrunis laikus neatbildēja. Mēģini vēlreiz.</string>
     <string name="watch_phone_no_app">Tavā tālrunī nav tafs. Instalē to tur, tad mēģini vēlreiz.</string>
     <string name="watch_phone_not_reachable">Tālrunis nav tuvumā. Pienes to tuvāk, tad mēģini vēlreiz.</string>
+    <string name="watch_phone_update_app">Atjaunini tafs savā tālrunī, tad mēģini vēlreiz.</string>
     <string name="watch_play">Atskaņot</string>
     <string name="watch_qr_needs_me_today">Kas mani šodien gaida?</string>
     <string name="watch_qr_not_now">Ne tagad</string>

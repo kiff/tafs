@@ -119,6 +119,7 @@
     <string name="watch_phone_no_answer">Таны утас цагтаа хариулсангүй. Дахин оролдоно уу.</string>
     <string name="watch_phone_no_app">tafs таны утсанд алга. Тэнд суулгаад дахин оролдоно уу.</string>
     <string name="watch_phone_not_reachable">Таны утас ойрхон биш байна. Ойртуулаад дахин оролдоно уу.</string>
+    <string name="watch_phone_update_app">Утсан дээрээ tafs-ыг шинэчлээд дахин оролдоно уу.</string>
     <string name="watch_play">Тоглуулах</string>
     <string name="watch_qr_needs_me_today">Өнөөдөр надаас юу хамааралтай вэ?</string>
     <string name="watch_qr_not_now">Одоо биш</string>

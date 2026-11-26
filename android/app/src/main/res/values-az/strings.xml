@@ -2853,6 +2853,7 @@
     <string name="watch_phone_no_answer">Telefonunuz vaxtında cavab vermədi. Yenidən cəhd edin.</string>
     <string name="watch_phone_no_app">tafs telefonunuzda yoxdur. Onu orada quraşdırın, sonra yenidən cəhd edin.</string>
     <string name="watch_phone_not_reachable">Telefonunuz əlçatan deyil. Onu yaxınlaşdırın, sonra yenidən cəhd edin.</string>
+    <string name="watch_phone_update_app">Telefonunuzda tafs-ı yeniləyin, sonra yenidən cəhd edin.</string>
     <string name="watch_play">Oxudun</string>
     <string name="watch_qr_needs_me_today">Bu gün mənə nə lazımdır?</string>
     <string name="watch_qr_not_now">İndi yox</string>

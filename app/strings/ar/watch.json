@@ -85,6 +85,7 @@
   "watch.phone_no_answer": "لم يرد هاتفك في الوقت المناسب. حاول مرة أخرى.",
   "watch.phone_no_app": "tafs غير مثبّت على هاتفك. ثبّته هناك ثم حاول مرة أخرى.",
   "watch.phone_not_reachable": "هاتفك ليس في المتناول. قرّبه ثم حاول مرة أخرى.",
+  "watch.phone_update_app": "حدّث tafs على هاتفك ثم حاول مرة أخرى.",
   "watch.play": "تشغيل",
   "watch.qr.needs_me_today": "ما الذي يحتاجني اليوم؟",
   "watch.qr.not_now": "ليس الآن",

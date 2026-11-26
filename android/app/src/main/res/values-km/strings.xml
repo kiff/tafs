@@ -2774,6 +2774,7 @@
     <string name="watch_phone_no_answer">ទូរសព្ទរបស់អ្នកមិនបានឆ្លើយទាន់ពេលទេ។ សូមព្យាយាមម្តងទៀត។</string>
     <string name="watch_phone_no_app">tafs មិននៅលើទូរសព្ទរបស់អ្នកទេ។ ដំឡើងវានៅទីនោះ រួចព្យាយាមម្តងទៀត។</string>
     <string name="watch_phone_not_reachable">ទូរសព្ទរបស់អ្នកមិនស្ថិតក្នុងចម្ងាយទេ។ នាំវាមកជិតជាងនេះ រួចព្យាយាមម្តងទៀត។</string>
+    <string name="watch_phone_update_app">ធ្វើបច្ចុប្បន្នភាព tafs នៅលើទូរសព្ទរបស់អ្នក រួចព្យាយាមម្តងទៀត។</string>
     <string name="watch_play">ចាក់</string>
     <string name="watch_qr_needs_me_today">តើអ្វីត្រូវការខ្ញុំថ្ងៃនេះ?</string>
     <string name="watch_qr_not_now">មិនមែនឥឡូវនេះ</string>

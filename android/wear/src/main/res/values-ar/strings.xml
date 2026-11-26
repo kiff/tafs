@@ -139,6 +139,7 @@
     <string name="watch_phone_no_answer">لم يرد هاتفك في الوقت المناسب. حاول مرة أخرى.</string>
     <string name="watch_phone_no_app">tafs غير مثبّت على هاتفك. ثبّته هناك ثم حاول مرة أخرى.</string>
     <string name="watch_phone_not_reachable">هاتفك ليس في المتناول. قرّبه ثم حاول مرة أخرى.</string>
+    <string name="watch_phone_update_app">حدّث tafs على هاتفك ثم حاول مرة أخرى.</string>
     <string name="watch_play">تشغيل</string>
     <string name="watch_qr_needs_me_today">ما الذي يحتاجني اليوم؟</string>
     <string name="watch_qr_not_now">ليس الآن</string>

@@ -65,6 +65,7 @@
   "watch.phone_no_answer": "スマートフォンから時間内に応答がありませんでした。もう一度お試しください。",
   "watch.phone_no_app": "スマートフォンにtafsがインストールされていません。インストールしてから、もう一度お試しください。",
   "watch.phone_not_reachable": "スマートフォンが範囲外です。近づけてから、もう一度お試しください。",
+  "watch.phone_update_app": "スマートフォンの tafs を更新してから、もう一度お試しください。",
   "watch.play": "再生",
   "watch.qr.needs_me_today": "今日確認することは？",
   "watch.qr.not_now": "今はしない",

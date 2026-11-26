@@ -390,6 +390,12 @@ to them:
     mark it signs nothing in: the ask is spent, and the watch says it couldn't talk to the phone. The mark is heard as a checked
     reply's is (`WatchModel.hearMark`; `KeptResults.signInAnswer` with the app closed): another sign-in's wipes everything kept
     first and becomes the one held; the same one wipes nothing.
+  - **The phone keeps the ask until it's answered** (after Android 147): the relay may take it in a process the system ends
+    before the person opens tafs, so its id and time are kept in the app's private preferences (`PreferencesWatchSignInKeep`,
+    `tafs.watch-sign-in`) and asked again when the model starts. Answered, ten minutes old, or the phone signed out, it goes.
+  - **A phone from before the ask** (tafs before Android 147) answers `sign-in-ask` as a path it doesn't serve
+    (`Refused(UNKNOWN_PATH)`): the watch says "Update tafs on your phone, then try again." (`watch.phone_update_app`) instead of
+    the link's line, and nothing waits.
 - **Left out:** "Alerts on this watch". The watch's own notifications are only an ask's result; Needs you's alerts are the
   phone's, which Wear OS bridges, and the watch app doesn't switch them today. A switch with that name would leave those on, so
   it waits until it can switch both.

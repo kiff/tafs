@@ -69,6 +69,7 @@
   "watch.phone_no_answer": "Your phone didn't answer in time. Try again.",
   "watch.phone_no_app": "tafs isn't on your phone. Install it there, then try again.",
   "watch.phone_not_reachable": "Your phone isn't in reach. Bring it closer, then try again.",
+  "watch.phone_update_app": "Update tafs on your phone, then try again.",
   "watch.play": "Play",
   "watch.qr.needs_me_today": "What needs me today?",
   "watch.qr.not_now": "Not now",

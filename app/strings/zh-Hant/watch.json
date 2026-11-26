@@ -65,6 +65,7 @@
   "watch.phone_no_answer": "您的手機沒有及時回應。請再試一次。",
   "watch.phone_no_app": "您的手機上沒有 tafs。請在手機上安裝，然後再試一次。",
   "watch.phone_not_reachable": "您的手機不在範圍內。請靠近一些，然後再試一次。",
+  "watch.phone_update_app": "請更新手機上的 tafs，然後再試一次。",
   "watch.play": "播放",
   "watch.qr.needs_me_today": "今天有什麼需要我處理？",
   "watch.qr.not_now": "暫時不要",

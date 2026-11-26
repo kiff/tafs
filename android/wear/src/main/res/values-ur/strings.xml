@@ -119,6 +119,7 @@
     <string name="watch_phone_no_answer">آپ کے فون نے وقت پر جواب نہیں دیا۔ دوبارہ کوشش کریں۔</string>
     <string name="watch_phone_no_app">tafs آپ کے فون پر نہیں ہے۔ اسے وہاں انسٹال کریں، پھر دوبارہ کوشش کریں۔</string>
     <string name="watch_phone_not_reachable">آپ کا فون پہنچ میں نہیں۔ اسے قریب لائیں، پھر دوبارہ کوشش کریں۔</string>
+    <string name="watch_phone_update_app">اپنے فون پر tafs اپ ڈیٹ کریں، پھر دوبارہ کوشش کریں۔</string>
     <string name="watch_play">چلائیں</string>
     <string name="watch_qr_needs_me_today">آج مجھے کس چیز کی ضرورت ہے؟</string>
     <string name="watch_qr_not_now">ابھی نہیں</string>

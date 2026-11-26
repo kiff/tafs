@@ -108,10 +108,14 @@ class TafsApplication : Application() {
         watchChats.forget()
         watchTafs.forget()
         watchNeedsYou.forget()
+        // A sign-in ask waiting here was this account's: it goes with it.
+        runCatching { model.watchSignInKeep?.clear() }
         background.launch { bot.tafs.app.watch.WatchSignedOut.of(this@TafsApplication).tell(mark) }
       }
       // A watch signed out on itself asks to be signed in again (row 18): the person is told, with the app closed too; the
-      // question itself is asked in the app, behind the phone's lock, never in the notification.
+      // question itself is asked in the app, behind the phone's lock, never in the notification. The ask is kept, so a process
+      // the system ends before the person opens tafs still asks it.
+      model.watchSignInKeep = bot.tafs.app.app.PreferencesWatchSignInKeep(this)
       model.watchSignInAsked = { watchSignInNotice() }
       // Their answer goes to the watch, for that ask alone.
       model.watchSignInAnswered = { ask, allowed, mark ->
