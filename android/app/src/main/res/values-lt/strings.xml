@@ -2866,6 +2866,7 @@
     <string name="watch_ask">Klausti tafs</string>
     <string name="watch_ask_needs_consent">Prieš klausdami tafs, telefone leiskite tafs naudoti AI.</string>
     <string name="watch_ask_not_on">Klausimai iš laikrodžio dar neįjungti.</string>
+    <string name="watch_ask_phone_sign_in">Paprašykite telefono prijungti šį laikrodį</string>
     <string name="watch_ask_text_only">tafs gauna jūsų žodžius kaip tekstą, niekada ne jūsų balsą.</string>
     <string name="watch_asking_phone">Klausiama telefono…</string>
     <string name="watch_calendar_today">Šiandienos kalendorius</string>
@@ -2877,6 +2878,7 @@
     <string name="watch_deleted_nothing_sent">Ištrinta. Niekas neišsiųsta.</string>
     <string name="watch_didnt_catch">Nesupratau. Palieskite ir bandykite dar kartą.</string>
     <string name="watch_dismiss">Paslėpti</string>
+    <string name="watch_edit_words">Palieskite tekstą, kad jį pakeistumėte</string>
     <string name="watch_glance_description">Kiek užklausų jūsų laukia, bet niekada – kokios ar nuo ko.</string>
     <string name="watch_halt_all_q">Sustabdyti visus jūsų taf?</string>
     <plurals name="watch_halt_now_count">
@@ -2894,6 +2896,7 @@
         <item quantity="few">%1$s sulaikytos užklausos laukia jūsų</item>
         <item quantity="other">%1$s sulaikytų užklausų laukia jūsų</item>
     </plurals>
+    <string name="watch_held_channel">Sulaikytos užklausos</string>
     <string name="watch_inbox_empty">Nieko naujo. Čia patenka Coach atsakymai ir jūsų taf pranešimai.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s neskaityta gautuosiuose</item>
@@ -2920,6 +2923,7 @@
     <string name="watch_nothing_sent_until">Niekas nesiunčiama, kol nepatvirtinsite.</string>
     <string name="watch_nothing_waits">Niekas jūsų nelaukia.</string>
     <string name="watch_open_on_phone">Atidaryti telefone</string>
+    <string name="watch_opened_on_phone">Atidaryta telefone</string>
     <string name="watch_page_brief">Suvestinė</string>
     <string name="watch_page_inbox">Gautieji</string>
     <string name="watch_paused_still_answers">Pristabdyta: tvarkaraštis išjungtas. Jis vis tiek atsako į tai, ką siunčiate.</string>
@@ -2944,6 +2948,7 @@
     <string name="watch_recent_chats">Naujausi pokalbiai</string>
     <string name="watch_recording">Įrašoma</string>
     <string name="watch_recording_not_received">Įrašas nepasiekė telefono. Bandykite dar kartą arba rašykite.</string>
+    <string name="watch_refuse_on_phone">Neatmesta. Atmeskite tai telefone.</string>
     <string name="watch_refused">Atmesta. Niekas neišsiųsta.</string>
     <string name="watch_reply">Atsakyti</string>
     <string name="watch_rerecord">Įrašyti iš naujo</string>
@@ -2952,14 +2957,20 @@
     <string name="watch_resume_on_phone">Tęskite telefone</string>
     <string name="watch_retry">Bandyti dar kartą</string>
     <string name="watch_review">Patikrinti prieš siunčiant</string>
+    <string name="watch_seconds_left">Liko %1$s s</string>
     <string name="watch_sending">Siunčiama…</string>
     <string name="watch_sent">Išsiųsta</string>
     <string name="watch_settings_of">%1$s · nustatymai</string>
+    <string name="watch_sign_in_allow">Leisti</string>
+    <string name="watch_sign_in_denied">Neprijungta. Šis laikrodis lieka atjungtas.</string>
+    <string name="watch_sign_in_deny">Atmesti</string>
     <string name="watch_sign_in_on_phone">Pirmiausia prisijunkite prie tafs telefone.</string>
+    <string name="watch_sign_in_watch_q">Prijungti šį laikrodį jūsų vardu?</string>
     <string name="watch_sign_out_q">Atsijungti šiame laikrodyje?</string>
     <string name="watch_sign_out_sub">Telefonas lieka prisijungęs. Šis laikrodis pamirš jūsų taf, pokalbius ir gautuosius.</string>
     <string name="watch_signed_in">Prisijungta</string>
     <string name="watch_signed_out_here">Atsijungta šiame laikrodyje. Telefonas lieka prisijungęs.</string>
+    <string name="watch_stopped_at_limit">Sustabdyta ties %1$s riba. Tai, kas išgirsta, yra žemiau.</string>
     <string name="watch_swipe_settings">Braukite kairėn – jo nustatymai</string>
     <string name="watch_tap_start">Palieskite „Pradėti“ ir kalbėkite. Jūsų žodžiai čia rodomi kalbant.</string>
     <string name="watch_timing">Klausymas %1$s ms · gavimas %2$s ms · rezultatas %3$s ms</string>
@@ -2971,6 +2982,7 @@
     <string name="watch_view_on_phone">Peržiūrėti telefone</string>
     <string name="watch_view_only_phone">Šis telefonas gali tik peržiūrėti, todėl iš laikrodžio klausti negalima. Prisijunkite telefone, kuris gali tvirtinti.</string>
     <string name="watch_voice_text_only">Coach gauna jūsų žodžius kaip tekstą, niekada ne jūsų balsą.</string>
+    <string name="watch_waiting_for_phone">Laukiama jūsų telefono…</string>
     <string name="watch_what_it_does">Ką jis daro</string>
     <plurals name="watch_working_count">
         <item quantity="one">Dirba: %1$s</item>

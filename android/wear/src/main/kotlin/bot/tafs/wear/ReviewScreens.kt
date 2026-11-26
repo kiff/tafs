@@ -39,6 +39,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -139,7 +141,10 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
         }
         RecordButton(recording = start == null, onClick = start ?: act.stop)
       }
-      T("%d:%02d / 0:%02d".format(seconds / 60, seconds % 60, LISTEN_LIMIT_MS / 1000), 13.sp, Look.text, lines = 1)
+      // While recording, the seconds left before the limit stops it (row 25); before, the limit itself.
+      val left = (LISTEN_LIMIT_MS / 1000).toInt() - seconds
+      T(if (start == null) Words.Watch.secondsLeft(left.toString()) else "0:%02d".format(LISTEN_LIMIT_MS / 1000), 13.sp,
+        if (start == null && left <= 5) Look.recording else Look.text, lines = 1, modifier = Modifier.testTag(RECORD_LEFT))
       Spacer(Modifier.height(2.dp))
       // The words as they're heard; before Start, what to do. Two lines: a third would meet the face's curve at its sides. Their
       // width follows the face: on the 40 mm Watch 5 the face is ~151 dp across at the second line, so 150 dp ran to its edge
@@ -187,6 +192,7 @@ internal const val RECORD_START = "record-start"
 internal const val RECORD_STOP = "record-stop"
 internal const val RECORD_STATE = "record-state"
 internal const val RECORD_HEARD = "record-heard"
+internal const val RECORD_LEFT = "record-left"
 
 /** The heard words' width on the recording screen, as a share of the face's. */
 internal const val HEARD_WIDTH_SHARE = 0.68f
@@ -198,6 +204,9 @@ internal val REVIEW_FOOT: Dp = 68.dp
 internal const val REVIEW_DELETE = "review-delete"
 internal const val REVIEW_SEND = "review-send"
 internal const val REVIEW_NOTICE = "review-notice"
+internal const val REVIEW_WORDS = "review-words"
+internal const val REVIEW_EDIT = "review-edit"
+internal const val REVIEW_EDIT_DONE = "review-edit-done"
 internal const val REVIEW_AGAIN = "review-again"
 
 /**
@@ -208,6 +217,9 @@ internal const val REVIEW_AGAIN = "review-again"
  */
 @Composable
 private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: String?, title: String = Words.Watch.review, notice: String? = null) {
+  // Edit before sending: tapping the words opens them in a field, the keyboard up, so one misheard word isn't a new recording.
+  var editing by remember(text) { mutableStateOf(false) }
+  if (editing) return EditWords(text, done = { act.editReview(it); editing = false }, cancel = { editing = false })
   BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
     val top = maxHeight * TOP_INSET_SHARE
     ScalingLazyColumn(
@@ -226,7 +238,12 @@ private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: 
       val playback = act.playback
       if (audio != null && playback != null) item { PlayRow(audio, playback) }
       // Inset from the round edge, so no line of a long transcript is cut where the face curves (#1409).
-      item { Text(text, style = MaterialTheme.typography.bodyMedium, color = Look.send, modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)) }
+      item {
+        Column(Modifier.fillMaxWidth().clickable(onClickLabel = Words.Watch.editWords) { editing = true }.padding(horizontal = 18.dp).testTag(REVIEW_WORDS)) {
+          Text(text, style = MaterialTheme.typography.bodyMedium, color = Look.send)
+          Text(Words.Watch.editWords, style = MaterialTheme.typography.labelSmall, color = Look.dim)
+        }
+      }
       probe?.let { item { Text(it, fontSize = 9.sp, color = Look.faint, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) } }
     }
     // Words scrolled past the top curve, or down into the foot, fade out there rather than being cut by the face's edge.
@@ -236,6 +253,32 @@ private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: 
         .background(Brush.verticalGradient(0f to Color.Transparent, 0.12f to Color.Black)),
     )
     ReviewActions(act, Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
+  }
+}
+
+/**
+ * Edit before sending: the review's words in a field, the watch's keyboard up at once; ✓ puts them back in the review, Cancel
+ * leaves them as they were. Nothing leaves the watch here.
+ */
+@Composable
+private fun EditWords(text: String, done: (String) -> Unit, cancel: () -> Unit) {
+  var value by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(text, androidx.compose.ui.text.TextRange(text.length))) }
+  val focus = remember { androidx.compose.ui.focus.FocusRequester() }
+  LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+  Column(
+    Modifier.fillMaxSize().background(Color.Black).padding(horizontal = 18.dp).padding(top = 28.dp),
+    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp),
+  ) {
+    androidx.compose.foundation.text.BasicTextField(
+      value, { value = it },
+      textStyle = MaterialTheme.typography.bodyMedium.copy(color = Look.send),
+      cursorBrush = androidx.compose.ui.graphics.SolidColor(Look.send),
+      modifier = Modifier.fillMaxWidth().weight(1f, fill = false).focusRequester(focus).testTag(REVIEW_EDIT),
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      QuietButton(Words.Common.cancel, cancel)
+      RoundIcon(Words.Common.done, { done(value.text) }, REVIEW_EDIT_DONE, size = 40.dp, container = Look.send, content = Look.onSend) { sendGlyph(it) }
+    }
   }
 }
 

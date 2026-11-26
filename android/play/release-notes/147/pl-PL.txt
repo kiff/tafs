@@ -1,0 +1,3 @@
+• Oczekujące wywołania od razu trafiają na zegarek.
+• Wylogowany zegarek pozostaje wylogowany, dopóki tu nie zezwolisz.
+• Baner aktualizacji nie proponuje już ponownego uruchomienia, które nic nie robi.

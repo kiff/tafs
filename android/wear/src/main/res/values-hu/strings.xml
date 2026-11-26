@@ -57,6 +57,7 @@
     <string name="watch_ask">Kérdezd a tafst</string>
     <string name="watch_ask_needs_consent">Mielőtt a tafst kérdezed, engedélyezd az MI használatát a tafsben a telefonodon.</string>
     <string name="watch_ask_not_on">Az óráról való kérdezés még nincs bekapcsolva.</string>
+    <string name="watch_ask_phone_sign_in">Kérd meg a telefonodat, hogy jelentkeztesse be ezt az órát</string>
     <string name="watch_ask_text_only">A tafs szövegként kapja meg a szavaidat, soha nem a hangodat.</string>
     <string name="watch_asking_phone">A telefonod kérdezése…</string>
     <string name="watch_calendar_today">A mai naptár</string>
@@ -68,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">Törölve. Semmi sem ment el.</string>
     <string name="watch_didnt_catch">Nem értettem. Koppints az újrapróbáláshoz.</string>
     <string name="watch_dismiss">Elvetés</string>
+    <string name="watch_edit_words">Koppints a szövegre a módosításhoz</string>
     <string name="watch_glance_description">Hány vár rád, soha nem az, hogy mi vagy ki.</string>
     <string name="watch_halt_all_q">Leállítod az összes tafodat?</string>
     <plurals name="watch_halt_now_count">
@@ -83,6 +85,7 @@
         <item quantity="one">%1$s visszatartott hívás vár rád</item>
         <item quantity="other">%1$s visszatartott hívás vár rád</item>
     </plurals>
+    <string name="watch_held_channel">Visszatartott hívások</string>
     <string name="watch_inbox_empty">Nincs semmi új. A Coach válaszai és a tafjaid riasztásai ide érkeznek.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s olvasatlan a Bejövőben</item>
@@ -107,6 +110,7 @@
     <string name="watch_nothing_sent_until">Semmi sem megy el, amíg jóvá nem hagyod.</string>
     <string name="watch_nothing_waits">Semmi sem vár rád.</string>
     <string name="watch_open_on_phone">Megnyitás a telefonon</string>
+    <string name="watch_opened_on_phone">Megnyitva a telefonodon</string>
     <string name="watch_page_brief">Összefoglaló</string>
     <string name="watch_page_inbox">Bejövő</string>
     <string name="watch_paused_still_answers">Szüneteltetve: az ütemezése ki van kapcsolva. Arra, amit küldesz, továbbra is válaszol.</string>
@@ -130,6 +134,7 @@
     <string name="watch_recent_chats">Legutóbbi csevegések</string>
     <string name="watch_recording">Felvétel</string>
     <string name="watch_recording_not_received">A felvétel nem érkezett meg a telefonodra. Próbáld újra, vagy írj inkább.</string>
+    <string name="watch_refuse_on_phone">Nincs elutasítva. Utasítsd el a telefonodon.</string>
     <string name="watch_refused">Elutasítva. Semmi sem ment el.</string>
     <string name="watch_reply">Válasz</string>
     <string name="watch_rerecord">Újrafelvétel</string>
@@ -138,14 +143,20 @@
     <string name="watch_resume_on_phone">Folytatás a telefonodon</string>
     <string name="watch_retry">Újra</string>
     <string name="watch_review">Ellenőrzés küldés előtt</string>
+    <string name="watch_seconds_left">Még %1$s mp</string>
     <string name="watch_sending">Küldés…</string>
     <string name="watch_sent">Elküldve</string>
     <string name="watch_settings_of">%1$s · beállítások</string>
+    <string name="watch_sign_in_allow">Engedélyezés</string>
+    <string name="watch_sign_in_denied">Nincs bejelentkezve. Ez az óra kijelentkezve marad.</string>
+    <string name="watch_sign_in_deny">Elutasítás</string>
     <string name="watch_sign_in_on_phone">Előbb jelentkezz be a tafsbe a telefonodon.</string>
+    <string name="watch_sign_in_watch_q">Bejelentkezteted ezt az órát a saját fiókoddal?</string>
     <string name="watch_sign_out_q">Kijelentkezel ezen az órán?</string>
     <string name="watch_sign_out_sub">A telefonod bejelentkezve marad. Ez az óra elfelejti a tafjaidat, csevegéseidet és a Bejövőt.</string>
     <string name="watch_signed_in">Bejelentkezve</string>
     <string name="watch_signed_out_here">Kijelentkeztél ezen az órán. A telefonod bejelentkezve marad.</string>
+    <string name="watch_stopped_at_limit">Leállt a(z) %1$s korlátnál. Az elhangzottak lent vannak.</string>
     <string name="watch_swipe_settings">Húzd balra a beállításaiért</string>
     <string name="watch_tap_start">Koppints az Indításra, majd beszélj. A szavaid beszéd közben itt jelennek meg.</string>
     <string name="watch_timing">Figyelés %1$s ms · nyugta %2$s ms · eredmény %3$s ms</string>
@@ -157,6 +168,7 @@
     <string name="watch_view_on_phone">Megtekintés a telefonon</string>
     <string name="watch_view_only_phone">Ez a telefon csak megtekinteni tud, ezért az óráról nem kérdezhetsz. Jelentkezz be egy jóváhagyásra képes telefonon.</string>
     <string name="watch_voice_text_only">A Coach szövegként kapja meg a szavaidat, soha nem a hangodat.</string>
+    <string name="watch_waiting_for_phone">Várakozás a telefonodra…</string>
     <string name="watch_what_it_does">Mit csinál</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s dolgozik</item>

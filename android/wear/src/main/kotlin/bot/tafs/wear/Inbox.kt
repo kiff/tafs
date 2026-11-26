@@ -20,6 +20,11 @@ data class InboxItem(
   /** When the watch first saw it, for the order: newest first. */
   val at: Long,
   val read: Boolean = false,
+  /**
+   * A held call's end (ms), in memory only, never written to the Inbox file: past it, the line leaves on the watch's own clock.
+   * Null for an answer, from an older phone, or once read back from the file (the next Needs you read decides then).
+   */
+  val endsAt: Long? = null,
 ) {
   enum class Kind { ASK, HELD }
 
@@ -119,6 +124,7 @@ class KeptInboxStore(private val text: EncryptedText, legacy: android.content.Sh
     private const val DISMISSED = "dismissed"
 
     fun encode(items: List<InboxItem>): String = JSONArray().apply {
+      // Never a held call's end: it's used in memory, to drop the line on the watch's clock, and not kept (the Privacy page).
       for (i in items) put(JSONObject().put("id", i.id).put("kind", i.kind.name).put("title", i.title).put("line", i.line).put("at", i.at).put("read", i.read))
     }.toString()
 

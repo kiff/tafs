@@ -2791,6 +2791,7 @@
     <string name="watch_ask">Попитайте tafs</string>
     <string name="watch_ask_needs_consent">Преди да питате tafs, разрешете използването на ИИ в tafs на телефона си.</string>
     <string name="watch_ask_not_on">Питането от часовника още не е включено.</string>
+    <string name="watch_ask_phone_sign_in">Помолете телефона си да впише този часовник</string>
     <string name="watch_ask_text_only">tafs получава думите ви като текст, никога гласа ви.</string>
     <string name="watch_asking_phone">Питане на телефона ви…</string>
     <string name="watch_calendar_today">Днешният календар</string>
@@ -2802,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Изтрито. Нищо не беше изпратено.</string>
     <string name="watch_didnt_catch">Не разбрах. Докоснете, за да опитате отново.</string>
     <string name="watch_dismiss">Отхвърляне</string>
+    <string name="watch_edit_words">Докоснете текста, за да го промените</string>
     <string name="watch_glance_description">Колко ви чакат, никога какво или кой.</string>
     <string name="watch_halt_all_q">Спиране на всички ваши tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -2817,6 +2819,7 @@
         <item quantity="one">%1$s задържана заявка ви чака</item>
         <item quantity="other">%1$s задържани заявки ви чакат</item>
     </plurals>
+    <string name="watch_held_channel">Задържани заявки</string>
     <string name="watch_inbox_empty">Нищо ново. Отговорите на Coach и известията от вашите tafs идват тук.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s непрочетено във Входящи</item>
@@ -2841,6 +2844,7 @@
     <string name="watch_nothing_sent_until">Нищо не се изпраща, докато не одобрите.</string>
     <string name="watch_nothing_waits">Нищо не ви чака.</string>
     <string name="watch_open_on_phone">Отваряне на телефона</string>
+    <string name="watch_opened_on_phone">Отворено на телефона</string>
     <string name="watch_page_brief">Резюме</string>
     <string name="watch_page_inbox">Входящи</string>
     <string name="watch_paused_still_answers">На пауза: графикът му е изключен. Все пак отговаря на това, което изпращате.</string>
@@ -2864,6 +2868,7 @@
     <string name="watch_recent_chats">Скорошни чатове</string>
     <string name="watch_recording">Записване</string>
     <string name="watch_recording_not_received">Записът не стигна до телефона ви. Опитайте отново или пишете вместо това.</string>
+    <string name="watch_refuse_on_phone">Не е отказано. Откажете го на телефона.</string>
     <string name="watch_refused">Отказано. Нищо не беше изпратено.</string>
     <string name="watch_reply">Отговор</string>
     <string name="watch_rerecord">Записване отново</string>
@@ -2872,14 +2877,20 @@
     <string name="watch_resume_on_phone">Възобновяване на телефона</string>
     <string name="watch_retry">Нов опит</string>
     <string name="watch_review">Проверка преди изпращане</string>
+    <string name="watch_seconds_left">Остават %1$s с</string>
     <string name="watch_sending">Изпращане…</string>
     <string name="watch_sent">Изпратено</string>
     <string name="watch_settings_of">%1$s · настройки</string>
+    <string name="watch_sign_in_allow">Разреши</string>
+    <string name="watch_sign_in_denied">Не е вписан. Този часовник остава отписан.</string>
+    <string name="watch_sign_in_deny">Откажи</string>
     <string name="watch_sign_in_on_phone">Първо влезте в tafs на телефона си.</string>
+    <string name="watch_sign_in_watch_q">Да се впише ли този часовник като вас?</string>
     <string name="watch_sign_out_q">Излизане на този часовник?</string>
     <string name="watch_sign_out_sub">Телефонът ви остава влязъл. Този часовник забравя вашите tafs, чатове и входящи.</string>
     <string name="watch_signed_in">Влезли сте</string>
     <string name="watch_signed_out_here">Излязохте на този часовник. Телефонът ви остава влязъл.</string>
+    <string name="watch_stopped_at_limit">Спряно при лимита от %1$s. Чутото е по-долу.</string>
     <string name="watch_swipe_settings">Плъзнете наляво за настройките му</string>
     <string name="watch_tap_start">Докоснете „Старт“ и говорете. Думите ви се появяват тук, докато говорите.</string>
     <string name="watch_timing">Слушане %1$s ms · разписка %2$s ms · резултат %3$s ms</string>
@@ -2891,6 +2902,7 @@
     <string name="watch_view_on_phone">Преглед на телефона</string>
     <string name="watch_view_only_phone">Този телефон може само да преглежда, така че не можете да питате от часовника. Влезте на телефон, който може да одобрява.</string>
     <string name="watch_voice_text_only">Coach получава думите ви като текст, никога гласа ви.</string>
+    <string name="watch_waiting_for_phone">Изчаква се телефонът ви…</string>
     <string name="watch_what_it_does">Какво прави</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s работи</item>

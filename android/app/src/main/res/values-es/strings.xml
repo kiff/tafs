@@ -2791,6 +2791,7 @@
     <string name="watch_ask">Pedir a tafs</string>
     <string name="watch_ask_needs_consent">Antes de pedir algo a tafs, permite el uso de IA en tafs en tu teléfono.</string>
     <string name="watch_ask_not_on">Pedir desde el reloj aún no está activado.</string>
+    <string name="watch_ask_phone_sign_in">Pide a tu teléfono que inicie sesión en este reloj</string>
     <string name="watch_ask_text_only">tafs recibe tus palabras como texto, nunca tu voz.</string>
     <string name="watch_asking_phone">Preguntando a tu teléfono…</string>
     <string name="watch_calendar_today">Calendario de hoy</string>
@@ -2802,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Eliminado. No se envió nada.</string>
     <string name="watch_didnt_catch">No lo he entendido. Toca para volver a intentarlo.</string>
     <string name="watch_dismiss">Descartar</string>
+    <string name="watch_edit_words">Toca el texto para cambiarlo</string>
     <string name="watch_glance_description">Cuántos te necesitan, nunca qué ni quién.</string>
     <string name="watch_halt_all_q">¿Bloquear todos tus tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -2817,6 +2819,7 @@
         <item quantity="one">%1$s llamada retenida te necesita</item>
         <item quantity="other">%1$s llamadas retenidas te necesitan</item>
     </plurals>
+    <string name="watch_held_channel">Llamadas retenidas</string>
     <string name="watch_inbox_empty">Nada nuevo. Aquí llegan las respuestas de Coach y los avisos de tus tafs.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s sin leer en la Bandeja</item>
@@ -2841,6 +2844,7 @@
     <string name="watch_nothing_sent_until">No se envía nada hasta que apruebes.</string>
     <string name="watch_nothing_waits">Nada te espera.</string>
     <string name="watch_open_on_phone">Abrir en el teléfono</string>
+    <string name="watch_opened_on_phone">Abierto en tu teléfono</string>
     <string name="watch_page_brief">Resumen</string>
     <string name="watch_page_inbox">Bandeja</string>
     <string name="watch_paused_still_answers">En pausa: su programación está detenida. Aun así responde a lo que envías.</string>
@@ -2864,6 +2868,7 @@
     <string name="watch_recent_chats">Chats recientes</string>
     <string name="watch_recording">Grabando</string>
     <string name="watch_recording_not_received">La grabación no llegó a tu teléfono. Vuelve a intentarlo o escribe.</string>
+    <string name="watch_refuse_on_phone">No se ha rechazado. Recházalo en tu teléfono.</string>
     <string name="watch_refused">Rechazada. No se envió nada.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Volver a grabar</string>
@@ -2872,14 +2877,20 @@
     <string name="watch_resume_on_phone">Reanudar en tu teléfono</string>
     <string name="watch_retry">Reintentar</string>
     <string name="watch_review">Revisa antes de enviar</string>
+    <string name="watch_seconds_left">Quedan %1$s s</string>
     <string name="watch_sending">Enviando…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_settings_of">%1$s · ajustes</string>
+    <string name="watch_sign_in_allow">Permitir</string>
+    <string name="watch_sign_in_denied">No se ha iniciado sesión. Este reloj sigue con la sesión cerrada.</string>
+    <string name="watch_sign_in_deny">Denegar</string>
     <string name="watch_sign_in_on_phone">Primero inicia sesión en tafs en tu teléfono.</string>
+    <string name="watch_sign_in_watch_q">¿Iniciar sesión en este reloj como tú?</string>
     <string name="watch_sign_out_q">¿Cerrar sesión en este reloj?</string>
     <string name="watch_sign_out_sub">Tu teléfono sigue con la sesión iniciada. Este reloj olvida tus tafs, chats y bandeja.</string>
     <string name="watch_signed_in">Sesión iniciada</string>
     <string name="watch_signed_out_here">Sesión cerrada en este reloj. Tu teléfono sigue con la sesión iniciada.</string>
+    <string name="watch_stopped_at_limit">Se detuvo en el límite de %1$s. Lo que se oyó está abajo.</string>
     <string name="watch_swipe_settings">Desliza a la izquierda para sus ajustes</string>
     <string name="watch_tap_start">Toca Empezar y habla. Tus palabras aparecen aquí mientras hablas.</string>
     <string name="watch_timing">Escucha %1$s ms · acuse %2$s ms · resultado %3$s ms</string>
@@ -2891,6 +2902,7 @@
     <string name="watch_view_on_phone">Ver en el teléfono</string>
     <string name="watch_view_only_phone">Este teléfono solo puede ver, así que no puedes pedir desde el reloj. Inicia sesión en un teléfono que pueda aprobar.</string>
     <string name="watch_voice_text_only">Coach recibe tus palabras como texto, nunca tu voz.</string>
+    <string name="watch_waiting_for_phone">Esperando a tu teléfono…</string>
     <string name="watch_what_it_does">Qué hace</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s trabajando</item>

@@ -2791,6 +2791,7 @@
     <string name="watch_ask">Küsi tafsilt</string>
     <string name="watch_ask_needs_consent">Enne tafsilt küsimist luba telefonis tafsis tehisintellekti (AI) kasutamine.</string>
     <string name="watch_ask_not_on">Kellast küsimine pole veel sees.</string>
+    <string name="watch_ask_phone_sign_in">Palu oma telefonil see kell sisse logida</string>
     <string name="watch_ask_text_only">tafs saab sinu sõnad tekstina, mitte kunagi sinu häält.</string>
     <string name="watch_asking_phone">Küsin telefonilt…</string>
     <string name="watch_calendar_today">Tänane kalender</string>
@@ -2802,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Kustutatud. Midagi ei saadetud.</string>
     <string name="watch_didnt_catch">Ei saanud aru. Puuduta, et uuesti proovida.</string>
     <string name="watch_dismiss">Kõrvalda</string>
+    <string name="watch_edit_words">Muutmiseks puuduta teksti</string>
     <string name="watch_glance_description">Mitu vajab sind, mitte kunagi mida või kes.</string>
     <string name="watch_halt_all_q">Kas peatada kõik sinu tafid?</string>
     <plurals name="watch_halt_now_count">
@@ -2817,6 +2819,7 @@
         <item quantity="one">%1$s kinni peetud päring vajab sind</item>
         <item quantity="other">%1$s kinni peetud päringut vajab sind</item>
     </plurals>
+    <string name="watch_held_channel">Kinni peetud päringud</string>
     <string name="watch_inbox_empty">Midagi uut pole. Siia jõuavad Coachi vastused ja sinu tafide teavitused.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s lugemata postkastis</item>
@@ -2841,6 +2844,7 @@
     <string name="watch_nothing_sent_until">Midagi ei saadeta enne, kui kinnitad.</string>
     <string name="watch_nothing_waits">Miski ei oota sind.</string>
     <string name="watch_open_on_phone">Ava telefonis</string>
+    <string name="watch_opened_on_phone">Avatud sinu telefonis</string>
     <string name="watch_page_brief">Kokkuvõte</string>
     <string name="watch_page_inbox">Postkast</string>
     <string name="watch_paused_still_answers">Pausil: selle ajakava on väljas. See vastab ikka sellele, mida saadad.</string>
@@ -2864,6 +2868,7 @@
     <string name="watch_recent_chats">Viimased vestlused</string>
     <string name="watch_recording">Salvestan</string>
     <string name="watch_recording_not_received">Salvestis ei jõudnud telefoni. Proovi uuesti või kirjuta hoopis.</string>
+    <string name="watch_refuse_on_phone">Ei keeldutud. Keeldu sellest oma telefonis.</string>
     <string name="watch_refused">Keeldutud. Midagi ei saadetud.</string>
     <string name="watch_reply">Vasta</string>
     <string name="watch_rerecord">Salvesta uuesti</string>
@@ -2872,14 +2877,20 @@
     <string name="watch_resume_on_phone">Jätka telefonis</string>
     <string name="watch_retry">Proovi uuesti</string>
     <string name="watch_review">Kontrolli enne saatmist</string>
+    <string name="watch_seconds_left">Jäänud %1$s s</string>
     <string name="watch_sending">Saatmine…</string>
     <string name="watch_sent">Saadetud</string>
     <string name="watch_settings_of">%1$s · seaded</string>
+    <string name="watch_sign_in_allow">Luba</string>
+    <string name="watch_sign_in_denied">Sisse ei logitud. See kell jääb välja logituks.</string>
+    <string name="watch_sign_in_deny">Keela</string>
     <string name="watch_sign_in_on_phone">Logi kõigepealt telefonis tafsi sisse.</string>
+    <string name="watch_sign_in_watch_q">Kas logida see kell sinuna sisse?</string>
     <string name="watch_sign_out_q">Kas logida selles kellas välja?</string>
     <string name="watch_sign_out_sub">Telefon jääb sisse logituks. See kell unustab sinu tafid, vestlused ja postkasti.</string>
     <string name="watch_signed_in">Sisse logitud</string>
     <string name="watch_signed_out_here">Selles kellas välja logitud. Telefon jääb sisse logituks.</string>
+    <string name="watch_stopped_at_limit">Peatus piiril %1$s. Kuuldu on allpool.</string>
     <string name="watch_swipe_settings">Seadete jaoks pühi vasakule</string>
     <string name="watch_tap_start">Puuduta Alusta ja räägi. Sinu sõnad ilmuvad siia rääkimise ajal.</string>
     <string name="watch_timing">Kuulamine %1$s ms · kviitung %2$s ms · tulemus %3$s ms</string>
@@ -2891,6 +2902,7 @@
     <string name="watch_view_on_phone">Vaata telefonis</string>
     <string name="watch_view_only_phone">See telefon saab ainult vaadata, seega ei saa sa kellast küsida. Logi sisse telefonis, mis saab kinnitada.</string>
     <string name="watch_voice_text_only">Coach saab sinu sõnad tekstina, mitte kunagi sinu häält.</string>
+    <string name="watch_waiting_for_phone">Ootan sinu telefoni…</string>
     <string name="watch_what_it_does">Mida see teeb</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s töötab</item>

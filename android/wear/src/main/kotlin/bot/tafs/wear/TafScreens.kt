@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -191,9 +192,14 @@ private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions,
   shownLines(open).forEach { line ->
     val at = WatchChatTime.instantOf(line.at)
     at?.let(::header)
-    item { ChatBubble(line.text, mine = line.mine, foot = if (line.more) Words.Watch.moreOnPhone else null, time = at?.let { WatchChatTime.time(it) }) }
-    // A cut answer the watch can't read whole (no request of its own here): the phone opens on this chat, and the watch stays.
-    if (line.more && !line.mine) item { OpenChatOnPhone(open, act) }
+    // A taf's cut answer: Read more shows it whole in place, in one tap (row 10); the person's own cut words say the rest is on
+    // the phone, as before.
+    val whole = if (line.more && !line.mine) open.chat.whole[lineKey(line.id)] else null
+    item {
+      ChatBubble((whole as? WatchModel.Whole.Read)?.text ?: line.text, mine = line.mine, foot = if (line.more && line.mine) Words.Watch.moreOnPhone else null,
+        time = at?.let { WatchChatTime.time(it) })
+    }
+    if (line.more && !line.mine) item { LineMore(line.id, whole, open, act) }
   }
   for (turn in open.chat.turns) {
     val at = java.time.Instant.ofEpochMilli(turn.at)
@@ -265,6 +271,31 @@ internal fun shownLines(open: WatchModel.OpenTaf): List<bot.tafs.watchlink.ChatL
   (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.let { lines ->
     KeptThreads.shownLines(lines, open.chat.turns.map { KeptTurn(WatchModel.Said(it.said, it.at), it.ask) })
   }.orEmpty()
+
+/**
+ * Under a taf's cut answer from the phone's thread (row 10): Read more until it's read, "Loading…" while the phone reads it, and,
+ * when it can't be read here, the rest is on the phone with Open on phone. Read whole, nothing.
+ */
+@Composable
+private fun LineMore(lineId: String, whole: WatchModel.Whole?, open: WatchModel.OpenTaf, act: Actions) {
+  Column(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    when (whole) {
+      is WatchModel.Whole.Read -> Unit
+      WatchModel.Whole.Reading -> Text(Words.Common.loading, style = MaterialTheme.typography.labelSmall, color = Look.dim)
+      WatchModel.Whole.OnPhone -> {
+        Text(Words.Watch.moreOnPhone, style = MaterialTheme.typography.labelSmall, color = Look.dim)
+        OpenChatOnPhone(open, act)
+      }
+      null -> {
+        Button(onClick = { act.readMoreLine(lineId) }, modifier = Modifier.fillMaxWidth().testTag(LINE_READ_MORE + lineId), colors = neutralButton()) { Text(Words.Watch.readMore) }
+        OpenChatOnPhone(open, act)
+      }
+    }
+  }
+}
+
+/** Read more under a cut line of the phone's thread, by the line's id, for the screen tests. */
+internal const val LINE_READ_MORE = "line-read-more-"
 
 /** Open on phone, under a cut answer: the phone opens this taf's chat, where the whole answer is; the watch stays where it is. */
 @Composable

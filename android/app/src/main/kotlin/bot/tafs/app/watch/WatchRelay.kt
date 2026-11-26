@@ -117,6 +117,12 @@ class WatchRelay(
       is WatchRequest.Asks -> asks(request.since)
       is WatchRequest.TafChat -> tafChat(request.tafId)
       is WatchRequest.AskFull -> askFull(request.askId)
+      is WatchRequest.LineFull -> lineFull(request.tafId, request.lineId)
+      // Signing a watch in again is the person's to allow, on this phone (row 18): the request only asks them.
+      is WatchRequest.SignInAsk -> {
+        val model = signedIn() ?: return WatchReply.SignedOut
+        if (model.askWatchSignIn(request.ask)) WatchReply.Done(Words.Watch.waitingForPhone) else WatchReply.SignedOut
+      }
       is WatchRequest.Taf -> {
         val model = signedIn() ?: return WatchReply.SignedOut
         // Read again within the floor, as Needs you: today's use is KIFF's now, not what the phone last drew.
@@ -234,6 +240,23 @@ class WatchRelay(
     }
   }
 
+  /**
+   * A cut line of a taf's chat, whole (watch row 10): the taf's own answer by its message id, read from the person's thread with a
+   * taf this phone lists (as the chat view reads it), never kept. Only the taf's words, never the person's own; one that isn't
+   * there (gone, or another taf's) says the rest is on the phone.
+   */
+  private suspend fun lineFull(tafId: String, lineId: String): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    return try {
+      val line = model.watchTafChat(tafId)?.firstOrNull { it.id == lineId && it.from == bot.tafs.app.model.ChatMessage.From.taf }
+      line?.text?.takeIf { it.isNotBlank() }?.let { WatchReply.AskFull(it.take(WHOLE_MAX)) } ?: WatchReply.Failed(Words.Watch.moreOnPhone)
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (_: Exception) {
+      WatchReply.Failed(Words.Watch.moreOnPhone)
+    }
+  }
+
   /** The watch's asks as tafs cloud has them, updated after [since]. */
   private suspend fun asks(since: String?): WatchReply {
     val model = signedIn() ?: return WatchReply.SignedOut
@@ -304,7 +327,9 @@ class WatchRelay(
     model.refresh()
     val before = model.state.value
     val call = before.held.firstOrNull { it.id == holdId } ?: return WatchReply.AlreadyAnswered
-    if (!refusableFromWrist(before, call)) return WatchReply.Failed(Words.Watch.openOnPhone)
+    // This phone can't refuse it from here (no KIFF key this session, or no accounting version): said plainly, never a bare
+    // "Open on phone" (watch row 2). Nothing reached KIFF.
+    if (!refusableFromWrist(before, call)) return WatchReply.Failed(Words.Watch.refuseOnPhone)
     val done = model.answer(call, Answer.Refuse, confirmed = true)
     val after = model.state.value
     return when {
@@ -336,6 +361,9 @@ class WatchRelay(
   }
 
   companion object {
+    /** A taf's line read whole for the watch (Read more), cut to this many characters, as tafs cloud's own whole answer is. */
+    const val WHOLE_MAX = 16_000
+
     /** An ask as the watch draws it: tafs cloud's state and words, the taf's name, and the checked line, as they come. */
     fun lineOf(ask: bot.tafs.app.kiff.WatchAsk): AskLine =
       AskLine(ask.id, ask.clientId, ask.state, ask.taf?.name, ask.line, ask.words, ask.updated, held = ask.held, more = ask.more, kind = ask.kind)
@@ -465,6 +493,7 @@ class WatchRelay(
           amount = call.proposed.amount?.formatted,
           reason = call.reason.takeIf { it.isNotBlank() }?.let(bot.tafs.app.kiff.KiffMapping::visible),
           refusable = refusableFromWrist(state, call),
+          endsAt = call.expiresAt.toEpochMilli(),
         )
       },
     )

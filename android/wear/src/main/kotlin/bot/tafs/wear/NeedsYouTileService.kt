@@ -18,7 +18,7 @@ import com.google.common.util.concurrent.ListenableFuture
  * the count is forgotten. Tapping it opens the watch app, which reads the phone again; its "Ask tafs" opens it listening.
  */
 class NeedsYouTileService : TileService() {
-  private val count by lazy { TileCount(PreferencesTileStore(this)) }
+  private val count by lazy { TileCount(EncryptedTileStore.of(this)) }
 
   override fun onTileRequest(requestParams: RequestBuilders.TileRequest): ListenableFuture<TileBuilders.Tile> {
     val keyguard = getSystemService(android.app.KeyguardManager::class.java)

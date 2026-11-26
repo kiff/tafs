@@ -57,6 +57,7 @@
     <string name="watch_ask">Pregunta a tafs</string>
     <string name="watch_ask_needs_consent">Abans de preguntar a tafs, permet l\'ús de la IA a tafs al telèfon.</string>
     <string name="watch_ask_not_on">Preguntar des del rellotge encara no està activat.</string>
+    <string name="watch_ask_phone_sign_in">Demana al telèfon que iniciï la sessió en aquest rellotge</string>
     <string name="watch_ask_text_only">tafs rep les teves paraules com a text, mai la teva veu.</string>
     <string name="watch_asking_phone">Preguntant al telèfon…</string>
     <string name="watch_calendar_today">El calendari d\'avui</string>
@@ -68,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">Eliminat. No s\'ha enviat res.</string>
     <string name="watch_didnt_catch">No t\'he entès. Toca per tornar-ho a provar.</string>
     <string name="watch_dismiss">Descarta</string>
+    <string name="watch_edit_words">Toca el text per canviar-lo</string>
     <string name="watch_glance_description">Quants et necessiten, mai què ni qui.</string>
     <string name="watch_halt_all_q">Bloquejar tots els teus taf?</string>
     <plurals name="watch_halt_now_count">
@@ -83,6 +85,7 @@
         <item quantity="one">%1$s crida retinguda et necessita</item>
         <item quantity="other">%1$s crides retingudes et necessiten</item>
     </plurals>
+    <string name="watch_held_channel">Crides retingudes</string>
     <string name="watch_inbox_empty">No hi ha res de nou. Les respostes de Coach i les alertes dels teus taf arriben aquí.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s sense llegir a la safata d\'entrada</item>
@@ -107,6 +110,7 @@
     <string name="watch_nothing_sent_until">No s\'envia res fins que ho aprovis.</string>
     <string name="watch_nothing_waits">No t\'espera res.</string>
     <string name="watch_open_on_phone">Obre al telèfon</string>
+    <string name="watch_opened_on_phone">Obert al telèfon</string>
     <string name="watch_page_brief">Resum</string>
     <string name="watch_page_inbox">Safata d\'entrada</string>
     <string name="watch_paused_still_answers">En pausa: la seva programació està desactivada. Encara respon el que li envies.</string>
@@ -130,6 +134,7 @@
     <string name="watch_recent_chats">Xats recents</string>
     <string name="watch_recording">Gravant</string>
     <string name="watch_recording_not_received">L\'enregistrament no ha arribat al teu telèfon. Torna-ho a provar, o escriu en lloc d\'això.</string>
+    <string name="watch_refuse_on_phone">No s\'ha rebutjat. Rebutja-ho al telèfon.</string>
     <string name="watch_refused">Rebutjat. No s\'ha enviat res.</string>
     <string name="watch_reply">Respon</string>
     <string name="watch_rerecord">Torna a gravar</string>
@@ -138,14 +143,20 @@
     <string name="watch_resume_on_phone">Reprèn al telèfon</string>
     <string name="watch_retry">Torna-ho a provar</string>
     <string name="watch_review">Revisa abans d\'enviar</string>
+    <string name="watch_seconds_left">Queden %1$s s</string>
     <string name="watch_sending">Enviant…</string>
     <string name="watch_sent">Enviat</string>
     <string name="watch_settings_of">%1$s · ajustos</string>
+    <string name="watch_sign_in_allow">Permet</string>
+    <string name="watch_sign_in_denied">No s\'ha iniciat la sessió. Aquest rellotge continua amb la sessió tancada.</string>
+    <string name="watch_sign_in_deny">Denega</string>
     <string name="watch_sign_in_on_phone">Primer inicia la sessió a tafs al telèfon.</string>
+    <string name="watch_sign_in_watch_q">Vols iniciar la sessió en aquest rellotge com a tu?</string>
     <string name="watch_sign_out_q">Tancar la sessió en aquest rellotge?</string>
     <string name="watch_sign_out_sub">El teu telèfon manté la sessió iniciada. Aquest rellotge oblida els teus taf, xats i safata d\'entrada.</string>
     <string name="watch_signed_in">Sessió iniciada</string>
     <string name="watch_signed_out_here">S\'ha tancat la sessió en aquest rellotge. El teu telèfon manté la sessió iniciada.</string>
+    <string name="watch_stopped_at_limit">S\'ha aturat al límit de %1$s. El que s\'ha sentit és a sota.</string>
     <string name="watch_swipe_settings">Llisca cap a l\'esquerra per veure\'n els ajustos</string>
     <string name="watch_tap_start">Toca Comença i després parla. Les teves paraules es mostren aquí mentre parles.</string>
     <string name="watch_timing">Escolta %1$s ms · rebut %2$s ms · resultat %3$s ms</string>
@@ -157,6 +168,7 @@
     <string name="watch_view_on_phone">Mira-ho al telèfon</string>
     <string name="watch_view_only_phone">Aquest telèfon només pot veure, així que no pots preguntar des del rellotge. Inicia la sessió en un telèfon que pugui aprovar.</string>
     <string name="watch_voice_text_only">Coach rep les teves paraules com a text, mai la teva veu.</string>
+    <string name="watch_waiting_for_phone">S\'espera el telèfon…</string>
     <string name="watch_what_it_does">El que fa</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s treballant</item>
