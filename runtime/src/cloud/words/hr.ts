@@ -780,7 +780,7 @@ export const hr: Words = {
   start_lead: "Pokretanje daje Coachu alate u nastavku. Vi ih odobravate na ovom uređaju.",
   start_button: "Pokreni",
   plan_needed: "Odaberite plan da biste počeli.",
-  handover_not_finished: "pitajte Coach u ovom razgovoru što se dogodilo",
+  handover_not_finished: "Coachova predaja nije dovršena",
   cts_title: "Dajte Coachu njegove alate",
   cts_intro: "Coach ih treba da bi se brinuo o vašim tafovima.",
   cts_details: "Svaki alat i njegova ograničenja",

@@ -780,7 +780,7 @@ export const sl: Words = {
   start_lead: "Zagon da Coachu spodnja orodja. Odobriš jih na tej napravi.",
   start_button: "Zaženi",
   plan_needed: "Za zagon izberi paket.",
-  handover_not_finished: "vprašaj Coacha v tem klepetu, kaj se je zgodilo",
+  handover_not_finished: "Coachova predaja ni bila dokončana",
   cts_title: "Dajte Coach njegova orodja",
   cts_intro: "Coach jih potrebuje, da skrbi za vaše tafe.",
   cts_details: "Vsako orodje in njegove omejitve",

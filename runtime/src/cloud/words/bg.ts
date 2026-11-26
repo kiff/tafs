@@ -780,7 +780,7 @@ export const bg: Words = {
   start_lead: "Стартът дава на Coach инструментите по-долу. Одобрявате ги на това устройство.",
   start_button: "Старт",
   plan_needed: "Изберете план, за да започнете.",
-  handover_not_finished: "попитайте Coach в този чат какво се е случило",
+  handover_not_finished: "предаването от Coach не беше завършено",
   cts_title: "Дайте на Coach неговите инструменти",
   cts_intro: "Coach има нужда от тях, за да се грижи за вашите tafs.",
   cts_details: "Всеки инструмент и неговите ограничения",

@@ -787,7 +787,7 @@ export const es: Words = {
   start_lead: "Empezar da a Coach las herramientas de abajo. Las apruebas en este dispositivo.",
   start_button: "Empezar",
   plan_needed: "Elige un plan para ponerlo en marcha.",
-  handover_not_finished: "pregunta a Coach en este chat qué ha pasado",
+  handover_not_finished: "la entrega de Coach no se completó",
   cts_title: "Dale a Coach sus herramientas",
   cts_intro: "Coach las necesita para ocuparse de tus tafs.",
   cts_details: "Cada herramienta y sus límites",

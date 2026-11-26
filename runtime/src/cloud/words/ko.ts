@@ -784,7 +784,7 @@ export const ko: Words = {
   start_lead: "시작하면 Coach에게 아래 도구를 줍니다. 이 기기에서 승인합니다.",
   start_button: "시작",
   plan_needed: "시작하려면 요금제를 선택하세요.",
-  handover_not_finished: "무슨 일이 있었는지 이 채팅에서 Coach에게 물어보세요",
+  handover_not_finished: "Coach의 전달이 완료되지 않았습니다",
   cts_title: "Coach에게 도구 주기",
   cts_intro: "Coach가 내 tafs를 관리하려면 이 도구가 필요합니다.",
   cts_details: "각 도구와 한도",

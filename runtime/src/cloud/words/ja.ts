@@ -787,7 +787,7 @@ export const ja: Words = {
   start_lead: "「開始」で、Coachに以下のツールを渡します。承認はこのデバイスで行います。",
   start_button: "開始",
   plan_needed: "開始するにはプランを選択してください。",
-  handover_not_finished: "何があったかはこのチャットで Coach に聞いてください",
+  handover_not_finished: "Coach の引き渡しが完了しませんでした",
   cts_title: "Coachにツールを渡す",
   cts_intro: "Coachがtafsを管理するには、これらが必要です。",
   cts_details: "各ツールとその上限",

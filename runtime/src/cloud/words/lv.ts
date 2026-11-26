@@ -780,7 +780,7 @@ export const lv: Words = {
   start_lead: "Sākot Coach saņem tālāk norādītos rīkus. Tu tos apstiprini šajā ierīcē.",
   start_button: "Sākt",
   plan_needed: "Izvēlies plānu, lai sāktu.",
-  handover_not_finished: "pajautā Coach šajā tērzēšanā, kas notika",
+  handover_not_finished: "Coach nodošana netika pabeigta",
   cts_title: "Dod Coach tā rīkus",
   cts_intro: "Coach tie vajadzīgi, lai pieskatītu tavus taf.",
   cts_details: "Katrs rīks un tā ierobežojumi",
