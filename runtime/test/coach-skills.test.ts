@@ -44,7 +44,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@7", "ask-a-taf@2", "cards-and-holds@3", "connect-an-app@34", "did-this-happen@1", "draft-the-card@50", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@21", "set-up-a-taf@15", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@7", "ask-a-taf@2", "cards-and-holds@3", "connect-an-app@35", "did-this-happen@1", "draft-the-card@51", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@21", "set-up-a-taf@15", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -73,8 +73,11 @@ describe("Coach's skills, as files", () => {
       // replay-intros run 2: the write dropped, added later, a second approval for the sheet).
       // connect-an-app at 2,090 and draft-the-card at 2,220: a key app approved once with its tools, never its key alone to
       // read first, and the rules' confirm right after its notice with nothing until Agree (an Eval, 26 Nov: Replay run 3,
-      // two approvals for the sheet; billing run 2, an approval where the confirm should have been).
-      const budget: Record<string, number> = { "set-up-a-taf": 2000, "connect-an-app": 2090, "draft-the-card": 2220, "name-the-tools": 1900 };
+      // two approvals for the sheet; billing run 2, an approval where the confirm should have been). connect-an-app at 2,130
+      // and draft-the-card at 2,240: a sign-in's setup reads are Coach's own, done before the rules' notice, since "never a key
+      // alone to read first" is about a key and "nothing until Agree" starts at the notice (an Eval, 26 Nov: Setup graded run 3
+      // went from the rules to the draft with no setup read).
+      const budget: Record<string, number> = { "set-up-a-taf": 2000, "connect-an-app": 2130, "draft-the-card": 2240, "name-the-tools": 1900 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -293,7 +296,7 @@ describe("Coach's core", () => {
   it("finds a vendor's published API description with web_read, and loads connect-an-app when it reads a page", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Find the description with web_read on the vendor's docs, or use the owner's; never make one up.");
-    expect(toolSkills("web_read")).toEqual(["connect-an-app@34"]);
+    expect(toolSkills("web_read")).toEqual(["connect-an-app@35"]);
   });
 
   // planque declares a key request's tools to KIFF before the key only when the request names them, and only
@@ -537,17 +540,27 @@ describe("Coach's core", () => {
 
   // An Eval, 26 Nov (billing, run 2): Coach showed the rules notice and the key's approval with the draft, with no confirm
   // between them. tafs cloud refused the draft (rules_unagreed), and the card after the notice was an approval, never the
-  // confirm that agrees to it (draft-the-card@50).
+  // confirm that agrees to it (draft-the-card@51).
   it("shows the rules notice's confirm right after it, and nothing else until the owner agrees", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(body).toContain("The confirm comes right after its notice, in the same turn, and nothing follows them until the owner taps Agree: no planque request, no tools, no draft, no approval.");
   });
 
   // The same Eval (Replay, run 3): Coach asked for the sheet's key alone to read its columns, then the sheet's tools in a
-  // second approval, then the mailbox's with the Card: two approvals for one app (connect-an-app@34).
+  // second approval, then the mailbox's with the Card: two approvals for one app (connect-an-app@35).
   it("approves each key app once, with its tools, never its key alone to read first, and the Card on the last app's", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(body).toContain("Else, key then Card. Never a key alone to read the owner's data first (a sheet's columns): ask the owner, or leave it to the taf's first run. Two apps: the first's approval has its tools, the last's the Card, each once.");
+    expect(body).toContain("Else, key then Card. Never a key alone to read the owner's data first (a sheet's columns): ask the owner, or leave it to the taf's first run. This is about asking for a key. A sign-in's setup_reads are yours: make one read through them after the sign-in, before the rules. Two apps: the first's approval has its tools, the last's the Card, each once.");
+  });
+
+  // An Eval, 26 Nov, Setup graded run 3: Coach went from the rules straight to the draft, with no read through the sign-in's
+  // setup_reads. "Never a key alone to read first" (connect-an-app@34) and "nothing follows them until the owner taps Agree"
+  // (draft-the-card@50) both read as "don't read during setup". Each now says what it's about.
+  it("a sign-in's setup reads are Coach's own, done before the rules' notice, and nothing follows the notice until Agree", () => {
+    const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
+    expect(connect).toContain("This is about asking for a key. A sign-in's setup_reads are yours: make one read through them after the sign-in, before the rules.");
+    const draft = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
+    expect(draft).toContain("Before the notice, your setup reads are done; after it, nothing until Agree. The confirm comes right after its notice, in the same turn, and nothing follows them until the owner taps Agree: no planque request, no tools, no draft, no approval.");
   });
 
   it("has no skill that states a mode or no real money as fact", () => {
@@ -616,15 +629,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   });
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@34", "draft-the-card@50", "halting@1", "name-the-tools@21", "set-up-a-taf@15", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@34", "draft-the-card@50", "improve-a-taf@4", "name-the-tools@21"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@35", "draft-the-card@51", "halting@1", "name-the-tools@21", "set-up-a-taf@15", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@35", "draft-the-card@51", "improve-a-taf@4", "name-the-tools@21"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@34", "draft-the-card@50", "halting@1", "name-the-tools@21", "set-up-a-taf@15", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@34", "draft-the-card@50", "halting@1", "improve-a-taf@4", "name-the-tools@21"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@35", "draft-the-card@51", "halting@1", "name-the-tools@21", "set-up-a-taf@15", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@35", "draft-the-card@51", "halting@1", "improve-a-taf@4", "name-the-tools@21"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });

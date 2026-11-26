@@ -1,0 +1,1 @@
+- **Coach reads your connected app once before it proposes the rules.** After you sign in to an app for a new taf, Coach makes one read through what that sign-in allows for setup, so the rules it proposes fit your account; it still never asks for a key just to look first. See [Coach](docs/coach.md).
