@@ -94,6 +94,9 @@ describe("a taf's definition on kiff/agents", () => {
     expect(SHARED_INSTRUCTIONS).toContain("A chat shows only what was done in it.");
     expect(SHARED_INSTRUCTIONS).toContain("answer from a record that covers that time: your Card's\nuse from kiff_card, or the app's own list through your reads. Say which you\nread.");
     expect(SHARED_INSTRUCTIONS).toContain("Never say something was done another way, or by someone else, because\nthis chat doesn't show it");
+    // kiff_card gives a window's limit and what remains, in the Card's unit, never a list (kiff/agents tool/kiff/room.go).
+    expect(SHARED_INSTRUCTIONS).toContain("what\nwas used is the limit minus what remains, in the Card's unit (an amount is\noften in cents: 4000 is €40.00), for that window only.");
+    expect(SHARED_INSTRUCTIONS).toContain("A time no window covers\n(a week, on a Card that counts a day) needs the app's list.");
     // Every taf carries it, in its chat and its runs.
     for (const job of JOBS) expect(systemPrompt(job)).toContain("A chat shows only what was done in it.");
   });

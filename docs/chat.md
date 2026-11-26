@@ -26,7 +26,9 @@ A chat shows the taf only what was done in it: other chats, its scheduled runs a
 own changes don't show there. So every taf is told (`SHARED_INSTRUCTIONS` in `runtime/src/jobs.ts`)
 to answer a question about a time ("what did you refund today?") from a record that covers it:
 its Card's use from `kiff_card`, or the app's own list through its reads. It says which it read,
-and never puts work this chat doesn't show down to someone else.
+and never puts work this chat doesn't show down to someone else. `kiff_card` gives each window's
+limit and what remains, so what was used is the difference, in the Card's unit (often cents); a time
+no window covers, such as a week, needs the app's list.
 
 Chats are each person's own: nobody else on the account reads them, an admin or the
 account's owner included.
