@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -52,8 +52,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
-import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.FilledIconButton
 import androidx.wear.compose.material3.IconButtonDefaults
@@ -122,7 +120,9 @@ internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Lon
 private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() -> Unit)?) {
   BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
     val heardWidth = (maxWidth * HEARD_WIDTH_SHARE).coerceAtMost(150.dp)
-    Column(Modifier.align(Alignment.TopCenter).padding(top = maxHeight * TOP_INSET_SHARE), horizontalAlignment = Alignment.CenterHorizontally) {
+    // On a small face, the heard words get one line, so they never run into Cancel at the foot.
+    val heardLines = if (maxHeight < SMALL_FACE) 1 else 2
+    Column(Modifier.fillMaxSize().padding(top = maxHeight * TOP_INSET_SHARE, bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
       val state = if (start != null) Words.Watch.ready else "● ${Words.Watch.recording}"
       T("$state · ${limitShort()}", 11.sp, if (start != null) Look.dim else Look.recording, lines = 1,
         modifier = Modifier.semantics { contentDescription = "$state · ${Words.Watch.limit}" }.testTag(RECORD_STATE))
@@ -149,10 +149,17 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
       // The words as they're heard; before Start, what to do. Two lines: a third would meet the face's curve at its sides. Their
       // width follows the face: on the 40 mm Watch 5 the face is ~151 dp across at the second line, so 150 dp ran to its edge
       // (#1439); 44 mm keeps 150.
-      T(heard?.takeIf { it.isNotEmpty() } ?: Words.Watch.tapStart, 12.sp, if (heard.isNullOrEmpty()) Look.dim else Look.send,
-        modifier = Modifier.width(heardWidth).testTag(RECORD_HEARD), lines = 2, lineHeight = 15.sp)
+      // Only the whole lines that fit above Cancel, so at a large font size none is cut or drawn over it.
+      BoxWithConstraints(Modifier.weight(1f).clipToBounds(), contentAlignment = Alignment.TopCenter) {
+        val line = with(androidx.compose.ui.platform.LocalDensity.current) { 15.sp.toDp() }
+        val fit = minOf(heardLines, (maxHeight / line).toInt())
+        if (fit > 0) {
+          T(heard?.takeIf { it.isNotEmpty() } ?: Words.Watch.tapStart, 12.sp, if (heard.isNullOrEmpty()) Look.dim else Look.send,
+            modifier = Modifier.width(heardWidth).testTag(RECORD_HEARD), lines = fit, lineHeight = 15.sp)
+        }
+      }
+      QuietButton(Words.Common.cancel, act.closeVoice)
     }
-    Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp)) { QuietButton(Words.Common.cancel, act.closeVoice) }
   }
 }
 
@@ -194,6 +201,9 @@ internal const val RECORD_STATE = "record-state"
 internal const val RECORD_HEARD = "record-heard"
 internal const val RECORD_LEFT = "record-left"
 
+/** Under this height, a face is small (Play's smallest round is 192 dp): the recording screen's heard words take one line. */
+internal val SMALL_FACE: Dp = 196.dp
+
 /** The heard words' width on the recording screen, as a share of the face's. */
 internal const val HEARD_WIDTH_SHARE = 0.68f
 
@@ -222,12 +232,12 @@ private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: 
   if (editing) return EditWords(text, done = { act.editReview(it); editing = false }, cancel = { editing = false })
   BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
     val top = maxHeight * TOP_INSET_SHARE
-    ScalingLazyColumn(
-      Modifier.fillMaxSize(), state = rememberScalingLazyListState(initialCenterItemIndex = 0),
+    WatchList(
+      Modifier.fillMaxSize(),
       // From below the top curve to above the foot, so the end of a long message can rest clear of the buttons.
       autoCentering = null,
-      contentPadding = PaddingValues(top = top, bottom = REVIEW_FOOT),
-      verticalArrangement = Arrangement.spacedBy(4.dp),
+      top = top,
+      bottom = REVIEW_FOOT,
     ) {
       item { ListHeader { Text(title) } }
       // Why the words came back unsent (row 13): they stay here, with Send, Delete and Re-record, never dropped.
@@ -410,8 +420,7 @@ private fun DrawScope.pauseGlyph(color: Color) {
 /** Quick reply: ready-made lines, each to the review, as words heard are. */
 @Composable
 internal fun QuickReplyScreen(pick: (String) -> Unit, close: () -> Unit) {
-  ScalingLazyColumn(Modifier.fillMaxSize(), state = rememberScalingLazyListState(initialCenterItemIndex = 0),
-    verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList(Modifier.fillMaxSize()) {
     item { ListHeader { Text(Words.Watch.quickReply) } }
     for (line in quickReplies()) item { Button(onClick = { pick(line) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(line) } }
     item { Button(onClick = close, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.cancel) } }

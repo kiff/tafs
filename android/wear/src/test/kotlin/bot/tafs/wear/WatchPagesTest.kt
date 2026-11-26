@@ -409,6 +409,52 @@ class WatchPagesTest {
     assertTrue("the heard words run to the face's edge: $words", insideTheFace(words, androidx.compose.ui.unit.Dp(4f)))
   }
 
+  /**
+   * Play's smallest round face (192 dp): the heard words take one line, inside the face, and end above Cancel; at the largest font
+   * size, only whole lines that fit are drawn, so none runs into Cancel (Wear OS app quality, round-screen fit).
+   */
+  @Test fun theHeardWordsNeverMeetCancelOnASmallFace() {
+    smallFace(1f)
+    show(read, voice = WatchModel.Voice.Listening("Move my call with Nord Atelier to Thursday at ten, and tell Ivo", null, since = System.currentTimeMillis()))
+    val words = compose.onNodeWithTag(RECORD_HEARD).getBoundsInRoot()
+    val cancel = compose.onNodeWithText(Words.Common.cancel).getBoundsInRoot()
+    assertTrue("the heard words run into Cancel: $words, $cancel", words.bottom <= cancel.top)
+    assertTrue("one line on a small face: $words", words.bottom - words.top < androidx.compose.ui.unit.Dp(20f))
+    assertTrue("the heard words run to the face's edge: $words", insideTheFace(words))
+  }
+
+  @Test fun atTheLargestFontTheHeardWordsGiveWayToCancel() {
+    smallFace(WearV2Screenshots.LARGEST_FONT)
+    show(read, voice = WatchModel.Voice.Listening("Move my call with Nord Atelier to Thursday at ten, and tell Ivo", null, since = System.currentTimeMillis()))
+    val cancel = compose.onNodeWithText(Words.Common.cancel).getBoundsInRoot()
+    // The word itself, not the button's wider touch area, is what must sit inside the face.
+    val word = compose.onNodeWithText(Words.Common.cancel, useUnmergedTree = true).getBoundsInRoot()
+    assertTrue("Cancel is cut by the face: $word", insideTheFace(word))
+    compose.onAllNodesWithTag(RECORD_HEARD).fetchSemanticsNodes().forEach {
+      val bottom = with(compose.density) { it.boundsInRoot.bottom.toDp() }
+      assertTrue("the heard words run into Cancel", bottom <= cancel.top)
+    }
+  }
+
+  /** Every list's sides are held in from a round face's edge, and a screen's own top and foot are kept. */
+  @Test fun aListIsHeldInFromTheRoundEdge() {
+    val padding = roundPadding(androidx.compose.ui.unit.Dp(192f), androidx.compose.ui.unit.Dp(192f))
+    val ltr = androidx.compose.ui.unit.LayoutDirection.Ltr
+    assertEquals(192f * SIDE_SHARE, padding.calculateLeftPadding(ltr).value, 0.01f)
+    assertEquals(192f * SIDE_SHARE, padding.calculateRightPadding(ltr).value, 0.01f)
+    assertEquals(19.2f, padding.calculateTopPadding().value, 0.01f)
+    val own = roundPadding(androidx.compose.ui.unit.Dp(225f), androidx.compose.ui.unit.Dp(225f), top = androidx.compose.ui.unit.Dp(8f), bottom = androidx.compose.ui.unit.Dp(36f))
+    assertEquals(8f, own.calculateTopPadding().value, 0.01f)
+    assertEquals(36f, own.calculateBottomPadding().value, 0.01f)
+  }
+
+  /** Play's smallest round face, at a font scale. */
+  private fun smallFace(font: Float) {
+    RuntimeEnvironment.setQualifiers("en-w192dp-h192dp-round-watch-xhdpi")
+    RuntimeEnvironment.setFontScale(font)
+    Res.install(ApplicationProvider.getApplicationContext())
+  }
+
   /** Row 44, D: the last read on screen while a fresh one comes shows one small dot, named for TalkBack; a fresh read, none. */
   @Test fun anUpdatingReadShowsItsDotAndAFreshOneDoesnt() {
     show(read.copy(updating = true))

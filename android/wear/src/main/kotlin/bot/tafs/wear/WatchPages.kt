@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.foundation.pager.HorizontalPager
@@ -180,18 +179,24 @@ internal fun WatchPages(
     BackHandler { menu = false }
     return MenuScreen(shown, pages, act, outcome, open = ::goTo, close = { menu = false })
   }
+  val dotsHalf = with(androidx.compose.ui.platform.LocalDensity.current) { (PAGE_DOTS_ROOM / 2).roundToPx() }
   Box(Modifier.fillMaxSize()) {
     HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
-      ScalingLazyColumn(
-        Modifier.fillMaxWidth(),
+      WatchList(
+        // The list stops above the page dots, so no line ever rests under them (Wear OS app quality).
+        Modifier.fillMaxWidth().padding(bottom = PAGE_DOTS_ROOM),
         // Coach's page opens on the microphone, with the conversation's newest turn just above it (W4); others at the top.
-        state = rememberScalingLazyListState(initialCenterItemIndex = if (pages[i] == Page.Coach) threadItems(thread) else 0).also { list ->
+        // The microphone rests where it did before the list stopped above the dots: half their room lower than the list's centre.
+        state = rememberScalingLazyListState(
+          initialCenterItemIndex = if (pages[i] == Page.Coach) threadItems(thread) else 0,
+          initialCenterItemScrollOffset = if (pages[i] == Page.Coach) -dotsHalf else 0,
+        ).also { list ->
           // A new turn (a send) brings the page back to the microphone, with that turn just above it.
-          if (pages[i] == Page.Coach) LaunchedEffect(thread.size) { if (thread.isNotEmpty()) list.scrollToItem(threadItems(thread)) }
+          if (pages[i] == Page.Coach) LaunchedEffect(thread.size) { if (thread.isNotEmpty()) list.scrollToItem(threadItems(thread), -dotsHalf) }
         },
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        // Room under the last item, so it scrolls clear of the page dots at the foot (#1409).
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 36.dp),
+        // Room under the last item, so it rests clear of the list's foot (#1409); the dots have their own room below it.
+        top = 8.dp,
+        bottom = 16.dp,
       ) {
         val page = pages[i]
         if (page == Page.Coach) {
@@ -453,7 +458,7 @@ private fun ScalingLazyListScope.briefPage(shown: WatchModel.Shown.Read, act: Ac
 @Composable
 private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions, outcome: WatchModel.Outcome?, open: (Page) -> Unit, close: () -> Unit) {
   val tafs = (shown as? WatchModel.Shown.Read)?.tafs
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList {
     item { ListHeader { Text(Words.Watch.menu) } }
     // A Halt confirmed from here comes back here: what came of it, "set a screen lock" included, is said where it was asked.
     outcome?.let { item { OutcomeCard(it, act) } }
