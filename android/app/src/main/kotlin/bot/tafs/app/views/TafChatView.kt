@@ -1069,11 +1069,14 @@ internal fun PageTurnText(text: String, asks: Boolean, live: Boolean = false) {
  */
 internal fun linkAsks(url: String, pageTurn: Boolean): Boolean = pageTurn || !linkOpens(url)
 
-/** A chat refused for no plan: tafs cloud's words, Choose a plan (Plan & usage), and Not now. */
+/**
+ * A chat refused for no plan: tafs cloud's words, what Solo gives (Plan & usage's own line for it), Choose a plan, and Not now.
+ */
 @Composable
 private fun PlanPrompt(words: String, onPlan: () -> Unit, onDismiss: () -> Unit) {
   Panel(Modifier.padding(horizontal = 12.dp).padding(bottom = 6.dp).testTag(PLAN_PROMPT), stroke = Theme.amberText.copy(alpha = 0.45f)) {
     Text(words, style = scaled(14, FontWeight.SemiBold, Theme.amberText))
+    Text(Words.Billing.tafsKiffOnePersonEvery, style = scaled(14, color = Theme.ink))
     OutlineButton(Words.Usage.choosePlan, onPlan, Modifier.fillMaxWidth(), color = Theme.amberText)
     TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text(Words.Common.notNow, style = scaled(14, color = Theme.soft)) }
   }

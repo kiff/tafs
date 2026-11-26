@@ -1,0 +1,1 @@
+- **Android: the no-plan prompt says what Solo gives.** Under tafs cloud's words, the prompt shows Plan & usage's own Solo line ("For one person: 500 credits a month, Coach included.") above Choose a plan (kiff/tafs#2190; docs/accounts.md).
