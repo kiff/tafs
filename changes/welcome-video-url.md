@@ -1,0 +1,1 @@
+- **The welcome's video link comes from tafs cloud (tafs cloud).** `GET /v1/recipes` carries `video_url`, the 2-minute video the first-run welcome's last card and How tafs works link to, only while the runtime's `TAFS_WELCOME_VIDEO_URL` holds an https URL. It's empty for now, so the apps show no link until the video is up. See [Coach](docs/coach.md).

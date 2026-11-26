@@ -258,6 +258,10 @@ the app in sample mode.
     (`AppModel.managesBilling`), as on Android: they see members' open requests, with Raise the
     limit or Approve, and never **Ask an admin**; anyone else sees Ask an admin, or their own
     request waiting. Not KIFF's usage `can_add_tasks`, which it has sent as false since credits.
+  - **Prices are the App Store's, read each time.** Every price shown is StoreKit's `displayPrice`; KIFF
+    sends product ids only. Plan & usage reads them again each time it opens, and a change of the App
+    Store's storefront (`Storefront.updates`) drops every price at once and reads them again, so a price
+    from another storefront is never shown beside Apple's sheet (`Purchases.load`, `storefrontChanged`).
   - **After a purchase.** Solo's page closes and Plan & usage says "Solo is on…" (`billing.solo_on`) only
     once KIFF reads the plan as Solo after the purchase (`AppModel.subscribeSolo`), never on the App
     Store's "purchased" alone; pending, not recorded or cancelled keeps Solo's page with its message.
