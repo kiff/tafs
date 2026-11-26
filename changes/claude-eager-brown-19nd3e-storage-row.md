@@ -1,0 +1,1 @@
+- Chrome store words: the `storage` row names the two things kept on disk in `chrome.storage.local` (a random profile id and the sites switched off for Coach), which unpairing keeps.
