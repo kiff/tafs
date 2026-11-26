@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { balanceView, type KIFFBalance, waitingWords } from "../src/cloud/credits.js";
+import { balanceView, COACH_JOBS_A_MONTH, type KIFFBalance, SOLO_INCLUDED_CREDITS, waitingWords } from "../src/cloud/credits.js";
+import { FULL_LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError } from "../src/cloud/agents.js";
 import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -8,7 +9,7 @@ const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities
 const NOW = new Date("2026-11-20T12:00:00Z");
 const NOV = { start: "2026-11-01T00:00:00Z", end: "2026-12-01T00:00:00Z" };
 const REFUNDS = "taf-3f9a1c0b7d2e4a6f8b91";
-const COACH = "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.";
+const COACH = "Solo gives you 500 credits every month for your tafs' runs, with Coach included to set up about 4 new jobs a month. A month's credits don't carry over. Packs are only for when you run out: they add credits once, and never expire.";
 
 const balance = (over: Partial<KIFFBalance> = {}): KIFFBalance => ({
   kind: "solo", state: "ok", meter_pct: 40, included: 1000, used: 400, left: 600, packs_left: 0, over: 0,
@@ -192,6 +193,19 @@ async function call(deps: ReturnType<typeof world>, path: string, method = "GET"
   const r = await handle(event(path, method, body), deps);
   return { status: r.statusCode, body: r.body && typeof r.body === "string" && r.body.startsWith("{") ? JSON.parse(r.body) : r.body };
 }
+
+// What Solo gives, under its offer (buy.coach): the owner's iPad feedback (26 Nov), "plans don't say what you get".
+// Every language gives KIFF's figures: the credits each month, and the jobs Coach's included help sets up.
+describe("what Solo gives, in every language", () => {
+  it("names the month's credits and Coach's jobs, from KIFF's figures", () => {
+    expect(wordsIn("en").cr_buy_coach).toBe(`Solo gives you ${SOLO_INCLUDED_CREDITS} credits every month for your tafs' runs, with Coach included to set up about ${COACH_JOBS_A_MONTH} new jobs a month. A month's credits don't carry over. Packs are only for when you run out: they add credits once, and never expire.`);
+    for (const lang of FULL_LANGUAGES) {
+      const line = wordsIn(lang).cr_buy_coach;
+      expect(line, lang).toContain(String(SOLO_INCLUDED_CREDITS));
+      expect(line, lang).toMatch(new RegExp(`(^|\\D)${COACH_JOBS_A_MONTH}(\\D|$)`));
+    }
+  });
+});
 
 describe("GET /v1/usage/balance", () => {
   // Every app signs out on tafs cloud's 401: only KIFF's 401 may become one. A forbidden read stays a 403, never a 401 or a 503.

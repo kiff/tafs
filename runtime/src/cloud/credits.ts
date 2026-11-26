@@ -354,6 +354,18 @@ export function tafCreditsView(k: KIFFCredits, page: KIFFRuns, taf: CreditsTaf, 
  */
 export const ACCOUNT_CURRENCY = "EUR";
 
+/**
+ * What Solo includes each month, as KIFF's catalog has it (`meter.SoloIncludedCredits`): the credits every period
+ * starts from, which don't carry over. `buy.coach` (cr_buy_coach) says it, and a test holds every language to it.
+ */
+export const SOLO_INCLUDED_CREDITS = 500;
+
+/**
+ * How many new jobs a month Coach's included help sets up, roughly, as kiff.dev's pricing page and the store listings say
+ * it from KIFF's set-up allowance (its `SetupAllowance` constant). Words only: KIFF counts Coach's allowance, never tafs cloud.
+ */
+export const COACH_JOBS_A_MONTH = 4;
+
 /** Euro cents as the apps show them: "€12", or "€12.34". */
 function euros(cents: number, lang: Lang = "en"): string {
   const whole = cents % 100 === 0;

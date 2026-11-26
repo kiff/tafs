@@ -143,7 +143,10 @@ and iPad in [ios-app.md](ios-app.md)). Before Coach exists, `GET /v1/setup` may 
 wrote it.
 - **Start's screen shows what Coach is given** (Android 1.20, `StartScreen`): `start.words.lead`, then the Cards in KIFF's own
   words (the draft's `card_title` and `cards`), with Coach's tools folded under `coach_tools_step`'s details, then
-  the `start.words.start` button (the lead says what Start does, once: there's no line under the button). There's no second screen, and nothing is signed unread. (1.19 opened
+  the `start.words.start` button, then `start.words.does` under it: why the first message asks for a fingerprint, face or
+  passkey ("Your first message starts Coach. It asks for your fingerprint, face or passkey to give Coach its Card, so
+  nothing moves without you."). Both apps draw `does` when it comes, and Send below is that tap. It never says "once": a
+  first run asks more than once. There's no second screen, and nothing is signed unread. (1.19 opened
   Coach's tools step on the first Send instead.)
 - **Start, or the first Send, starts Coach and gives its tools, behind one fingerprint.** The phone builds each request's message with one
   `signed_at` and signs both hashes once with the approval key (`kiff.requests.v1`). Each request goes with that one signature and

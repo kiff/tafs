@@ -464,8 +464,9 @@ export const en = {
   cr_no_plan_line: "No plan · choose one to start",
   cr_w_again: (day: string) => `they go on when the period starts again on ${day}`,
   cr_w_no_plan: "Choose a plan to start your tafs.",
-  // What Coach's help includes, under the Solo offer in the store (buy.coach).
-  cr_buy_coach: "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.",
+  // What Solo gives, under the Solo offer in the store (buy.coach): its figures are KIFF's (credits.ts SOLO_INCLUDED_CREDITS,
+  // COACH_JOBS_A_MONTH), and a test holds every language's line to them.
+  cr_buy_coach: "Solo gives you 500 credits every month for your tafs' runs, with Coach included to set up about 4 new jobs a month. A month's credits don't carry over. Packs are only for when you run out: they add credits once, and never expire.",
   cr_w_limit_raise: (day: string) => `Spend limit reached. Raise it, or your tafs go on from ${day}.`,
   cr_w_limit_ceiling: (again: string) => `Your tafs are waiting: the spend limit is reached, and it can't go higher from the app. Contact KIFF to raise it further, or ${again}.`,
   cr_w_limit_admin: "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it.",
@@ -858,6 +859,9 @@ export const en = {
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
   start_lead: "Start gives Coach the tools below. You approve them on this device.",
   start_button: "Start",
+  // Why the first message asks for a fingerprint, face or passkey, above the box before it (start.words.does). Never "once":
+  // a first run asks more than once (the first-run walk-through).
+  start_does: "Your first message starts Coach. It asks for your fingerprint, face or passkey to give Coach its Card, so nothing moves without you.",
   plan_needed: "Choose a plan to start it.",
   /** A result Coach handed over that a field of its own kept from being made, past the hand-over's hold: after "{name} wasn't set up:". */
   handover_not_finished: "Coach's hand-over wasn't finished",
