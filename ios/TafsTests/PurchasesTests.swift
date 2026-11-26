@@ -271,6 +271,38 @@ final class PurchasesTests: XCTestCase {
         XCTAssertNil(model.planMessage)
     }
 
+    /// Solo bought and KIFF now reads the plan as Solo: Plan & usage says Solo is on, and Solo's page can close
+    /// (the owner's check, 26 Nov: after Apple's "You're all set" the page stayed, with nothing said).
+    func testSoloIsConfirmedOnceKIFFReadsIt() async throws {
+        let log = StoreLog()
+        let (model, store, _) = await signedIn(log)
+        StubProtocol.responses["POST /v1/me/billing/apple/transactions"] = (200, #"{"recorded":true,"action":"solo"}"#)
+        StubProtocol.responses["GET /v1/me/usage"] = (200, Self.read.replacingOccurrences(of: #""plan":"team""#, with: #""plan":"solo""#))
+        store.bought = store.purchaseNamed(8, product: "bot.tafs.solo.monthly")
+        let on = await model.subscribeSolo()
+        XCTAssertTrue(on)
+        XCTAssertEqual(model.usage?.plan, "solo")
+        XCTAssertEqual(model.planMessage, Words.Billing.soloOn)
+        XCTAssertEqual(log.lines, ["finish 8"])
+    }
+
+    /// Recorded by the App Store but not yet read by KIFF as Solo (or pending, or cancelled): Solo's page stays,
+    /// and "Solo is on" is never said from the App Store's word alone.
+    func testSoloIsNotConfirmedUntilKIFFReadsIt() async throws {
+        let log = StoreLog()
+        let (model, store, _) = await signedIn(log)
+        StubProtocol.responses["POST /v1/me/billing/apple/transactions"] = (200, #"{"recorded":true,"action":"solo"}"#)
+        store.bought = store.purchaseNamed(9, product: "bot.tafs.solo.monthly")
+        let on = await model.subscribeSolo()
+        XCTAssertFalse(on, "KIFF still reads the plan as team")
+        XCTAssertNotEqual(model.planMessage, Words.Billing.soloOn)
+        store.bought = nil
+        store.pending = true
+        let pending = await model.subscribeSolo()
+        XCTAssertFalse(pending)
+        XCTAssertEqual(model.planMessage, Words.Billing.pendingCredits)
+    }
+
     /// A test purchase on an account that takes only real ones: KIFF refuses it, so the app
     /// finishes it, adds nothing, and says so; it isn't sent again at the next launch.
     func testARefusedTestPurchaseIsFinishedAndSaysSo() async throws {

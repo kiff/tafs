@@ -258,6 +258,11 @@ the app in sample mode.
     (`AppModel.managesBilling`), as on Android: they see members' open requests, with Raise the
     limit or Approve, and never **Ask an admin**; anyone else sees Ask an admin, or their own
     request waiting. Not KIFF's usage `can_add_tasks`, which it has sent as false since credits.
+  - **After a purchase.** Solo's page closes and Plan & usage says "Solo is on…" (`billing.solo_on`) only
+    once KIFF reads the plan as Solo after the purchase (`AppModel.subscribeSolo`), never on the App
+    Store's "purchased" alone; pending, not recorded or cancelled keeps Solo's page with its message.
+    Add credits says what credits buy (`billing.credits_buy`) above what packs are for, and each pack's
+    whole row is its button, off until the App Store has priced it.
   - **Restore purchases** stays on Solo's screen and Add credits, as the App Store asks. A
     restore that finds nothing says "Nothing to restore.", never "Purchases restored."
     (`PurchaseOutcome.nothingToRestore`).

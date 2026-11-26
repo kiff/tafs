@@ -4779,9 +4779,15 @@ final class AppModel: ObservableObject {
     // MARK: Buying, raising the limit, and asking an admin
 
     /// Buys Solo through the App Store, for this account.
-    func subscribeSolo() async {
-        guard let store = usage?.store else { return }
-        await buy(store.soloProduct, request: nil)
+    /// Subscribes to Solo through the App Store. True once KIFF reads the account's plan as Solo
+    /// after the purchase, never on the App Store's "purchased" alone: then Plan & usage says so
+    /// (`billing.solo_on`) and Solo's page closes. Anything else keeps Solo's page with its message.
+    @discardableResult
+    func subscribeSolo() async -> Bool {
+        guard let store = usage?.store else { return false }
+        guard await buy(store.soloProduct, request: nil) == .done, usage?.plan == "solo" else { return false }
+        planMessage = Words.Billing.soloOn
+        return true
     }
 
     /// Buys a pack of credits through the App Store; with a member's request, it answers it.
@@ -4789,13 +4795,15 @@ final class AppModel: ObservableObject {
         await buy(pack.appleProduct, request: request)
     }
 
-    private func buy(_ product: String, request: KIFFClient.PackRequest?) async {
+    @discardableResult
+    private func buy(_ product: String, request: KIFFClient.PackRequest?) async -> PurchaseOutcome? {
         planMessage = nil
         guard mode == .kiff, let token = usage?.store?.appAccountToken else {
             planMessage = Words.Billing.onlySomeoneWhoManagesAccount
-            return
+            return nil
         }
-        switch await purchases.buy(product, accountToken: token, requestID: request?.id) {
+        let outcome = await purchases.buy(product, accountToken: token, requestID: request?.id)
+        switch outcome {
         case .done: planMessage = nil
         case .cancelled, .nothingToRestore: break
         case .pending: planMessage = Words.Billing.pendingCredits
@@ -4804,6 +4812,7 @@ final class AppModel: ObservableObject {
         case .failed(let why): planMessage = Words.Billing.notBought(why: "\(why)")
         }
         await refreshUsage()
+        return outcome
     }
 
     /// The packs Plan & usage lists (docs/accounts.md): the First month pack first, only while

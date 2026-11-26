@@ -12,6 +12,8 @@ struct BuyCreditsView: View {
 
     static let title = Words.Usage.buy
     static let explain = Words.Billing.packAddsCreditsOnceNever
+    /// What credits buy, above what packs are for.
+    static let creditsBuy = Words.Billing.creditsBuy
 }
 
 private struct BuyCreditsContent: View {
@@ -23,27 +25,38 @@ private struct BuyCreditsContent: View {
         NavStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    // What credits buy, then what packs are for (the owner's check of Add credits, 26 Nov).
+                    Text(BuyCreditsView.creditsBuy)
+                        .scaledFont(15).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(BuyCreditsView.explain)
                         .scaledFont(15).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                     ForEach(model.offeredPacks) { pack in
-                        Panel {
-                            HStack(alignment: .center, spacing: 12) {
-                                Text(pack.line).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                Spacer()
-                                Button(purchases.products[pack.appleProduct]?.displayPrice ?? "…") {
-                                    Task {
-                                        await model.buyPack(pack)
-                                        if model.planMessage == nil { done() }
-                                    }
-                                }
-                                .scaledFont(15, weight: .semibold)
-                                .foregroundColor(Theme.amberText)
-                                .confirming()
-                                .disabled(purchases.products[pack.appleProduct] == nil || purchases.buying != nil)
+                        // The whole row buys, not only its price (the owner's check, 26 Nov): one tap target, read
+                        // as one button ("500 credits, 12,49 €"), and off until the App Store has priced it.
+                        let price = purchases.products[pack.appleProduct]?.displayPrice
+                        Button {
+                            Task {
+                                await model.buyPack(pack)
+                                if model.planMessage == nil { done() }
                             }
+                        } label: {
+                            Panel {
+                                HStack(alignment: .center, spacing: 12) {
+                                    Text(pack.line).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Spacer()
+                                    Text(price ?? "…").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                                }
+                            }
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityAddTraits(.isButton)
+                        .confirming()
+                        .disabled(price == nil || purchases.buying != nil)
                     }
                     if let message = model.planMessage {
                         Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -193,6 +206,7 @@ struct SoloView: View {
 
 private struct SoloContent: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject var purchases: Purchases
 
     var body: some View {
@@ -209,7 +223,8 @@ private struct SoloContent: View {
                             .scaledFont(15).foregroundColor(Theme.soft)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Button(SoloView.action(product)) { Task { await model.subscribeSolo() } }
+                    // Once KIFF reads Solo, back to Plan & usage, which says Solo is on; else this page stays, with why.
+                    Button(SoloView.action(product)) { Task { if await model.subscribeSolo() { dismiss() } } }
                         .buttonStyle(PrimaryButtonStyle())
                         .confirming()
                         .disabled(purchases.buying != nil)
