@@ -1,0 +1,1 @@
+- **Android and Wear OS: a held call is traced in logcat.** The phone and the watch each write one line (tag `tafs.held`) per step of a held call between them, with counts and seconds left only, never a name, amount or id, so a held call that never reaches the wrist can be followed on any build. See [The Wear OS watch](docs/watch-wear.md).
