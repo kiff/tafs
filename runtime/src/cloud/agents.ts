@@ -231,9 +231,12 @@ export interface Run {
   error?: string;
   /**
    * Why an ERROR run stopped, as a code, when kiff/agents has one with words for people in `error`: `ai_unavailable`,
-   * the AI provider not serving us (our side; none of the person's credits used). Absent on any other run.
+   * the AI provider not serving us (our side; none of the person's credits used); `ai_limit_account`, this account's
+   * share of the day's AI spent; `ai_limit_service`, the whole day's AI capacity spent. Absent on any other run.
    */
   code?: string;
+  /** With `ai_limit_account` and `ai_limit_service`: when the day's limit starts again (RFC 3339). */
+  resets_at?: string;
   cost_micro_usd: number;
   turns: number;
   /**

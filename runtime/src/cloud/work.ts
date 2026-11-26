@@ -141,8 +141,17 @@ function validZone(zone: string): string {
  * apps as they are, so a new code needs no tafs release. A run with no code has none: its error text is never shown
  * as words for people where a code would be. The words are one line, at most 400 characters.
  */
-export function runFailure(r: { status?: unknown; error?: unknown; code?: unknown; tally?: Run["tally"] }, lang: Lang = "en"): { code: string; words: string } | undefined {
+export function runFailure(r: { status?: unknown; error?: unknown; code?: unknown; tally?: Run["tally"]; resets_at?: unknown }, lang: Lang = "en",
+  when: { zone?: string; now?: Date } = {}): { code: string; words: string } | undefined {
   if (r.status !== "ERROR" || typeof r.code !== "string" || !/^[a-z_]{1,40}$/.test(r.code) || typeof r.error !== "string") return undefined;
+  // A day's AI limit says when it goes on, in the person's zone and language; with no time kiff/agents can be read
+  // for, its own words pass through below, never a line with no time in it.
+  const limit = LIMIT_WORDS[r.code];
+  const resets = typeof r.resets_at === "string" ? new Date(r.resets_at) : undefined;
+  if (limit && resets && !Number.isNaN(resets.getTime())) {
+    const time = whenIn(resets, when.zone ?? "UTC", when.now ?? new Date(), lang);
+    return { code: r.code, words: wordsIn(lang)[sentAny(r.tally) ? limit[1] : limit[0]](time) };
+  }
   // A code tafs cloud knows is worded from its own catalog, in the person's language; any other passes
   // kiff/agents' words through, so a new code needs no tafs release (docs/languages.md).
   const own = CODE_WORDS[r.code];
@@ -182,6 +191,19 @@ export function retrySafe(r: { tally?: Run["tally"]; done?: unknown[]; sent?: nu
   return (r.turns ?? 0) === 0 || r.tally !== undefined;
 }
 
+/**
+ * Whether a failed run offers Try again (the thread's `failed.retry`, the stream's `end.retry`): only when sending it
+ * again is safe (retrySafe) and could work. At a day's AI limit (`ai_limit_account`, `ai_limit_service`) it would only
+ * stop at the limit again, so not before kiff/agents' `resets_at`, nor when it gives none to read.
+ */
+export function retryOffered(r: Parameters<typeof retrySafe>[0] & { code?: unknown; resets_at?: unknown }, now: Date): boolean {
+  if (r.code === "ai_limit_account" || r.code === "ai_limit_service") {
+    const resets = Date.parse(typeof r.resets_at === "string" ? r.resets_at : "");
+    if (!(resets <= now.getTime())) return false;
+  }
+  return retrySafe(r);
+}
+
 /** kiff/agents' words for a run whose invocation stopped mid-work: what it did isn't all recorded. */
 const FAILED_LEASE = new Set(["its lease ran out: the invocation crashed or timed out"]);
 
@@ -192,6 +214,12 @@ function sentAny(tally: Run["tally"] | undefined): boolean {
 
 /** The run codes tafs cloud words itself, by catalog key. */
 const CODE_WORDS: Record<string, "code_ai_unavailable"> = { ai_unavailable: "code_ai_unavailable" };
+
+/** The day's AI limits kiff/agents stops a run at, by their lines: before it acted, and partway. */
+const LIMIT_WORDS: Record<string, ["code_ai_limit_account" | "code_ai_limit_service", "code_ai_limit_account_partway" | "code_ai_limit_service_partway"]> = {
+  ai_limit_account: ["code_ai_limit_account", "code_ai_limit_account_partway"],
+  ai_limit_service: ["code_ai_limit_service", "code_ai_limit_service_partway"],
+};
 
 /**
  * kiff/agents' words for how a run failed (runner/runner.go's Failed*, run/runs.go's lease and claim errors): a
@@ -295,7 +323,7 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
     case "CANCELLED":
       return { ...base, state: "stopped", line: w.work_stopped };
     default: {
-      const coded = runFailure(r, lang);
+      const coded = runFailure(r, lang, { zone, now });
       if (coded) return { ...base, state: "failed", line: coded.words, code: coded.code };
       return { ...base, state: "failed", line: failedLine(r.error, lang) };
     }

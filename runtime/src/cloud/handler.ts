@@ -15,7 +15,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, relevantNow, stateOf, summary } from "./home.js";
 import { AGENTS_MAX_INPUT, heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { failedLine, failureCode, retrySafe, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
+import { failedLine, failureCode, retryOffered, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
@@ -4012,7 +4012,7 @@ async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: De
         : null,
       ...(r.stop === "cost_cap" || r.stop === "turn_cap" ? { capped: { run, stop: r.stop } } : {}),
       ...(STOPS_TO_WORD.has(r.stop ?? "") ? { stopped: { run, stop: r.stop as Stopped["stop"] } } : {}),
-      ...(r.status === "ERROR" ? { failed: failedOf(r, lang) } : {}),
+      ...(r.status === "ERROR" ? { failed: failedOf(r, lang, me.timeZone ?? "UTC", deps.now?.() ?? new Date()) } : {}),
     };
   } catch {
     return none;
@@ -4060,10 +4060,11 @@ interface Failed {
   retry_label?: string;
 }
 
-function failedOf(r: Run, lang: Lang): Failed {
+function failedOf(r: Run, lang: Lang, zone = "UTC", now = new Date()): Failed {
   const w = wordsIn(lang);
   const code = failureCode(r);
-  const retry = retrySafe(r);
+  // Safe to send again, and could work: not at a day's AI limit before it starts again (retryOffered).
+  const retry = retryOffered(r, now);
   // Each reason's line, and its partway line once the run had acted: that one claims nothing about credits or "before
   // it changed anything", and offers no Try again. A kiff/agents code tafs cloud doesn't word passes its words on.
   const lines: Record<string, [string, string]> = {
@@ -4072,7 +4073,7 @@ function failedOf(r: Run, lang: Lang): Failed {
     failed: [w.turn_failed_error, w.turn_failed_error_partway],
   };
   const own = lines[code];
-  const words = own ? own[retry ? 0 : 1] : runFailure(r, lang)?.words ?? failedLine(r.error, lang);
+  const words = own ? own[retry ? 0 : 1] : runFailure(r, lang, { zone, now })?.words ?? failedLine(r.error, lang);
   return { run: r.id, code, words, retry, ...(retry ? { retry_label: w.turn_failed_retry } : {}) };
 }
 
@@ -7322,7 +7323,7 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
       throw err;
     }
     // Once the answer ends, what the person wrote that waited for it goes (docs/chat.md).
-    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps, taf), "", langOf(event), pageTurn)), () => settleChats(event, me, taf, deps));
+    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps, taf), "", langOf(event), pageTurn, me.timeZone ?? "UTC")), () => settleChats(event, me, taf, deps));
     return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
@@ -7374,7 +7375,7 @@ async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: D
   async function* body(): AsyncGenerator<string> {
     yield sse("session", { session: answered.session, new_session: false, run: answered.id });
     yield sse("taken", {});
-    yield* relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps, taf, answered.session), answered.id, lang);
+    yield* relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps, taf, answered.session), answered.id, lang, false, me.timeZone ?? "UTC");
   }
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: body() };
 }
@@ -7528,7 +7529,7 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
   } catch (err) {
     throw agentsFailure(err);
   }
-  const body = settleAfter(relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps, taf), runID, langOf(event)), () => settleChats(event, me, taf, deps));
+  const body = settleAfter(relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps, taf), runID, langOf(event), false, me.timeZone ?? "UTC"), () => settleChats(event, me, taf, deps));
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
 }
 
@@ -7755,7 +7756,7 @@ function actionOf(sent: string | undefined): string {
   try { const a = (JSON.parse(sent ?? "null") as { action?: unknown } | null)?.action; return typeof a === "string" ? a : ""; } catch { return ""; }
 }
 
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en", pageTurn = false): AsyncGenerator<string> {
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en", pageTurn = false, zone = "UTC"): AsyncGenerator<string> {
   const steps = new Steps(titles, lang);
   const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
@@ -7865,8 +7866,10 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         heldFailures.clear();
         // A run kiff/agents stopped with a code (`ai_unavailable`) ends with it and its words, for the apps to show as
         // they are; any other failure as before.
-        const coded = runFailure(d, lang);
-        return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done), ...(coded ?? {}) } : {}) });
+        const coded = runFailure(d, lang, { zone, now: new Date(now()) });
+        // `retry`: whether the app offers Try again, by the thread's own rule (retryOffered), so both say the same.
+        return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR"
+          ? { done: wentThrough(d.done), ...(coded ?? {}), retry: retryOffered(d as Parameters<typeof retryOffered>[0], new Date(now())) } : {}) });
       }
       default:
         return undefined;
@@ -11269,7 +11272,7 @@ async function streamAgain(event: HTTPEvent, me: KIFFIdentity, taf: Taf, run: Ru
     throw agentsFailure(err);
   }
   const opening = sse("session", { ...messageAnswer(event, run), repeat: true });
-  const rest = settleAfter(relay(resumed, first, undefined, titles, Date.now, whyKeeper(me, deps, taf, run.session), run.id, langOf(event)), () => settleChats(event, me, taf, deps));
+  const rest = settleAfter(relay(resumed, first, undefined, titles, Date.now, whyKeeper(me, deps, taf, run.session), run.id, langOf(event), false, me.timeZone ?? "UTC"), () => settleChats(event, me, taf, deps));
   const body = (async function* () {
     yield opening;
     yield* rest;

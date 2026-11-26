@@ -220,7 +220,7 @@ never reach the phone.
 | `taken` | `{}` | The run read a message the owner wrote meanwhile: the thread is reloaded |
 | `component` | `{component}` | Something the agent showed: the thread has it |
 | `part` | `{at}` | A resumed run went on after a held call was answered: a fresh live answer starts (resumed streams only) |
-| `end` | `{status, stop, done?, code?, words?}` | The run stopped. A failed run (`ERROR`) adds `done`: each call that acted and went through, as `{tool, resource?, invocation?}`, never its input (kiff/agents#249). One kiff/agents stopped with a code adds `code` and `words`, its words for people, whole, which the apps show as they are: `ai_unavailable` is the AI provider not serving us, on our side, with none of the person's credits used. It isn't a credits refusal, so a chat keeps Not sent with Retry. An app shows a code it doesn't know by its `words`. A failure with no code has neither, and kiff/agents' error text is never passed on as words (`runFailure` in `runtime/src/cloud/work.ts`) |
+| `end` | `{status, stop, done?, code?, words?, retry?}` | The run stopped. A failed run (`ERROR`) adds `done`: each call that acted and went through, as `{tool, resource?, invocation?}`, never its input (kiff/agents#249), and `retry`: whether the app offers Try again, by the thread's own rule for `failed.retry` (`retryOffered`: safe to send again, and not at a day's AI limit before its `resets_at`). One kiff/agents stopped with a code adds `code` and `words`, its words for people, whole, which the apps show as they are: `ai_unavailable` is the AI provider not serving us, on our side, with none of the person's credits used. It isn't a credits refusal, so a chat keeps Not sent with Retry. An app shows a code it doesn't know by its `words`. A failure with no code has neither, and kiff/agents' error text is never passed on as words (`runFailure` in `runtime/src/cloud/work.ts`) |
 | `error` | `{error}` | The stream broke; the thread has the rest |
 
 What a step says comes from tafs cloud, never the tool's name (`steps.ts`): for a tool
@@ -475,7 +475,14 @@ iOS drops its own queue the same way, with the same words.
   latest run, in the person's language, and that run is neither at work nor waiting. A run kiff/agents
   stopped with a code has its `code` and tafs cloud's words for it. `ai_unavailable` says it stopped and
   used none of your credits (a failed run is free); one that had already sent something, so
-  acted, says it stopped partway instead (`code_ai_unavailable_partway`), with no claim about credits. A failure
+  acted, says it stopped partway instead (`code_ai_unavailable_partway`), with no claim about credits.
+  A day's AI limit says when it goes on: `ai_limit_account` (this account's share of the day's AI is
+  spent, `code_ai_limit_account`) and `ai_limit_service` (the whole day's capacity, `code_ai_limit_service`)
+  take kiff/agents' `resets_at` and say it in the person's zone and language (`timeIn`: "18:00", or "Fri
+  01:00" when it isn't today), with partway lines once the run had acted. With no `resets_at` that can be
+  read, kiff/agents' own words pass through. The same words reach the stream's `end` and a request's line on
+  Its work. Neither offers Try again before `resets_at` (nor without one to read): sent then, it would
+  only stop at the limit again. A failure
   with no code says kiff/agents' reason in the person's language, or a plain "It failed", never
   silence (`latestRun` and `runFailure`).
 - A run that **failed** part-way says it stopped part-way, with Retry, which sends its

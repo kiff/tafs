@@ -267,6 +267,37 @@ describe("a failed run's code", () => {
     expect(runFailure({ status: "ERROR", error: "  ", code: "new_code" })).toBeUndefined();
     expect(runFailure({ status: "ERROR", error: words, code: "Ai-Unavailable" })).toBeUndefined();
   });
+
+  // A day's AI limit (kiff/agents' ai_limit_account, ai_limit_service): tafs cloud's words, with when it goes on in the
+  // person's zone and language; partway once the run had acted; kiff/agents' own words when no time can be read.
+  it("says when a day's AI limit goes on, in the person's zone and language", () => {
+    const now = new Date("2026-11-26T18:30:00Z");
+    const account = { status: "ERROR", error: "kiff/agents' words", code: "ai_limit_account", resets_at: "2026-11-27T00:00:00Z" };
+    expect(runFailure(account, "en", { zone: "Europe/Paris", now })).toEqual({ code: "ai_limit_account",
+      words: "This account has reached today's AI limit, so this stopped and used none of your credits. It goes on at Fri 01:00." });
+    expect(runFailure(account, "en", { zone: "America/New_York", now })!.words).toBe(
+      "This account has reached today's AI limit, so this stopped and used none of your credits. It goes on at 19:00.");
+    // Each language says the time with its own "at" (whenIn): never an English weekday or a bare time in a German line.
+    expect(runFailure(account, "de", { zone: "Europe/Paris", now })!.words).toBe(
+      "Dieses Konto hat das heutige KI-Limit erreicht, deshalb wurde das gestoppt, ohne deine Credits zu verbrauchen. Es geht am Fr um 01:00 weiter.");
+    expect(runFailure(account, "fr", { zone: "America/New_York", now })!.words).toContain("Cela reprend à 19:00.");
+    const service = { ...account, code: "ai_limit_service" };
+    expect(runFailure(service, "en", { zone: "Europe/Paris", now })!.words).toBe(
+      "tafs has reached today's AI capacity, so this stopped and used none of your credits. It's on our side, not yours: it goes on at Fri 01:00.");
+    // Partway: it had acted, so nothing about credits.
+    const acted = { tally: { create_refund: { sent: 1 } } };
+    expect(runFailure({ ...account, ...acted }, "en", { zone: "Europe/Paris", now })!.words).toBe(
+      "This account reached today's AI limit partway through, so this stopped. It goes on at Fri 01:00.");
+    expect(runFailure({ ...service, ...acted }, "en", { zone: "Europe/Paris", now })!.words).toBe(
+      "tafs reached today's AI capacity partway through, so this stopped. It's on our side, not yours: it goes on at Fri 01:00.");
+    // No time to read, or a bad one: kiff/agents' own words, as for any code tafs doesn't word.
+    for (const resets_at of [undefined, "", "tomorrow"]) {
+      expect(runFailure({ ...account, resets_at }, "en", { zone: "Europe/Paris", now })).toEqual({ code: "ai_limit_account", words: "kiff/agents' words" });
+    }
+    // The run's line on its request reads the same, in the zone it's given.
+    expect(requestOf(run({ status: "ERROR", error: "x", code: "ai_limit_service", resets_at: "2026-11-27T00:00:00Z" } as Partial<Run>), "Europe/Paris", now))
+      .toMatchObject({ state: "failed", code: "ai_limit_service", line: expect.stringContaining("it goes on at Fri 01:00.") });
+  });
 });
 
 // A taf that checks first wakes the AI only when its read lists something new: a firing that found nothing is quiet,
