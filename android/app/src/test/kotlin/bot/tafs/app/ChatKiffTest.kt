@@ -421,7 +421,38 @@ class ChatKiffTest {
       // Not a "Not sent" row, so no Retry: sending again changes nothing until the tafs go on, and the words say how.
       assertNull(code, m.state.value.chatUnsent["refunds-1"])
       assertTrue(code, m.messages().none { it.text == "refund order 4402" })
+      // Only no plan is a prompt with Choose a plan (kiff/tafs#2190): the others are the plain line.
+      assertEquals(code, if (code == "no_plan") waits else null, m.state.value.planPrompt("refunds-1"))
     }
+  }
+
+  @Test fun aNoPlanPromptStaysUntilDismissedOrSentAgainAndNeverOutlivesItsLine() = runTest {
+    val noPlan = "Choose a plan to start your tafs."
+    suspend fun refusedForNoPlan(): AppModel {
+      readsOf()
+      transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z")))
+      val refusal = """{"error":"no plan","code":"no_plan","words":"$noPlan"}"""
+      transport.answer("POST /v1/tafs/taf_1/messages/stream", 409, refusal)
+      transport.answer("POST /v1/tafs/taf_1/messages", 409, refusal)
+      return model()
+    }
+    // Not now puts it away, its line with it.
+    var m = refusedForNoPlan()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("refund order 4402", "refunds-1"))
+    assertEquals(noPlan, m.state.value.planPrompt("refunds-1"))
+    m.dismissPlanPrompt("refunds-1")
+    assertNull(m.state.value.planPrompt("refunds-1"))
+    assertNull(m.state.value.chatErrors["refunds-1"])
+    // A refusal of another kind after it is the plain line, never the prompt.
+    m = refusedForNoPlan()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("refund order 4402", "refunds-1"))
+    transport.answer("POST /v1/tafs/taf_1/messages/stream", 409, """{"error":"waiting","code":"credits_used_up","words":"Your tafs are waiting: this period's credits are used."}""")
+    transport.answer("POST /v1/tafs/taf_1/messages", 409, """{"error":"waiting","code":"credits_used_up","words":"Your tafs are waiting: this period's credits are used."}""")
+    assertFalse(m.deliverChat("refund order 4402", "refunds-1"))
+    assertEquals("Your tafs are waiting: this period's credits are used.", m.state.value.chatErrors["refunds-1"])
+    assertNull(m.state.value.planPrompt("refunds-1"))
   }
 
   private val why = "You stopped it before it read this."

@@ -148,6 +148,9 @@ const val COACH_CHAT = "#coach"
 /** A taf's card that hands a setting to Coach: its words, and a button that opens Coach on the taf with them written in. */
 const val ASK_COACH = "ask_coach"
 
+/** tafs cloud's code for a run refused because the account has no plan yet. */
+const val NO_PLAN = "no_plan"
+
 /** The id of a failed run's line in a chat ([AppState.chatItems]): this, then the run's id. */
 const val FAILED_LINE = "failed|"
 
@@ -360,6 +363,11 @@ data class AppState(
   /** The tafs a message is on its way to, so one is sent at a time. */
   val chatSending: Set<String> = emptySet(),
   val chatErrors: Map<String, String> = emptyMap(),
+  /**
+   * A chat refused because the account has no plan (`no_plan`): tafs cloud's words for it. While they're still the chat's line,
+   * the line is a prompt with Choose a plan and Not now that stays until the person taps either or sends again (kiff/tafs#2190).
+   */
+  val chatPlanNeeded: Map<String, String> = emptyMap(),
   /**
    * A chat whose latest run ended without an answer, in tafs cloud's words (the thread's `failed`): its last line, until a read
    * carries none. The owner reads that the turn didn't happen, never a chat that seems to be working or waiting on them.
@@ -1038,6 +1046,9 @@ data class AppState(
    * and the field says the next message is written to it while it works.
    */
   fun thinking(tafId: String): Boolean = tafId in chatSending || (mode == Mode.kiff && (tafId in chatWorking || tafId in chatAwaiting || tafId in chatLive))
+
+  /** A chat's Choose a plan prompt: tafs cloud's `no_plan` words, while they're still its line; null otherwise. */
+  fun planPrompt(chat: String): String? = chatPlanNeeded[chat]?.takeIf { it == chatErrors[chat] }
 
   /** Whether the chat takes photos and files: a taf (or Coach) on tafs cloud, signed in; not the sample, nor a trial's chat. */
   fun canAttach(tafId: String): Boolean =
@@ -7137,7 +7148,7 @@ class AppModel(
     }
     if (_state.value.mode == Mode.kiff) return deliverToTafsCloud(words, tafId, withFiles, messageId = messageId ?: newMessageId())
     if (tafId in _state.value.chatSending) return false
-    _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
+    _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId, chatPlanNeeded = it.chatPlanNeeded - tafId) }
     try {
       val pending = ChatMessage(nextStamp(tafId), ChatMessage.From.owner, words, "pending")
       append(tafId, pending)
@@ -7177,7 +7188,7 @@ class AppModel(
     // A message sent again (Retry) goes with its own files; a new one takes the tray's.
     val files = again.ifEmpty { if (withFiles) takeFiles(tafId) else emptyList() }
     val refs = files.mapNotNull { it.ref }
-    _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
+    _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId, chatPlanNeeded = it.chatPlanNeeded - tafId) }
     val generation = accountGeneration
     // A send to a Coach conversation left while it was on its way (another taf's, a new one) goes on at tafs cloud, but nothing
     // of it lands on the conversation now shown.
@@ -7259,6 +7270,7 @@ class AppModel(
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
             // Refused until AI use is allowed: its screen is up and says why, so no line under the box as well.
             chatErrors = if (needsConsent) s.chatErrors - tafId else s.chatErrors + (tafId to (waitsForCredits ?: e.message ?: "")),
+            chatPlanNeeded = if (waitsForCredits != null && (e as? CloudError)?.code == NO_PLAN) s.chatPlanNeeded + (tafId to waitsForCredits) else s.chatPlanNeeded - tafId,
           )
         }
         if (waitsForCredits != null || needsConsent) putBackFiles(files, tafId)
@@ -7603,6 +7615,10 @@ class AppModel(
   private fun sendFailure(e: Exception, name: String): String =
     if (e is CloudError && e.status == 429 && e.words == null) Words.Chat.tooMany(taf = name)
     else Words.Chat.notSent(why = ErrorWords.of(e))
+
+  /** Puts away a chat's Choose a plan prompt (Not now, or Choose a plan on its way to Plan & usage): its line goes with it. */
+  fun dismissPlanPrompt(chat: String) =
+    _state.update { it.copy(chatErrors = it.chatErrors - chat, chatPlanNeeded = it.chatPlanNeeded - chat) }
 
   /**
    * A run refused because the tafs wait on credits (docs/accounts.md#the-balance-read): 409 with `credits_used_up`, `limit_reached`
@@ -10039,7 +10055,7 @@ class AppModel(
 
   companion object {
     /** tafs cloud's codes for a run that waits on credits. */
-    val CREDITS_WAIT = setOf("credits_used_up", "limit_reached", "no_plan")
+    val CREDITS_WAIT = setOf("credits_used_up", "limit_reached", NO_PLAN)
     /** Where the keys of the `not_sent` messages Retry or Edit took are kept, and how many: iOS keeps the same 500. */
     const val NOT_SENT_TAKEN = "tafs.chat.not-sent-taken"
     const val NOT_SENT_KEPT = 500

@@ -125,8 +125,10 @@ class TafActions(
   val sendAgain: suspend (String, String, String) -> Unit = { _, _, _ -> },
   /** Opens Coach about a taf with tafs cloud's words in the message box (taf, words). */
   val askCoachAbout: (String, String) -> Unit = { _, _ -> },
-  /** Plan & usage, from a health fix that asks for credits. */
+  /** Plan & usage, from a health fix that asks for credits, or a chat refused for no plan. */
   val openPlan: () -> Unit = {},
+  /** Puts away a chat's Choose a plan prompt (Not now). */
+  val dismissPlanPrompt: (String) -> Unit = {},
   /** Sets how long a case may wait, in whole hours, or clears it (null). */
   val setPromise: suspend (String, Int?) -> Unit = { _, _ -> },
   /** Opens a request step by step (taf, run). */
