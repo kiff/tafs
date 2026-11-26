@@ -19,7 +19,6 @@ import androidx.wear.compose.material3.openOnPhoneDialogCurvedText
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -567,7 +566,7 @@ internal fun WatchScreen(
     result != null -> return ResultScreen(result, act, timing, whole)
     outcome is WatchModel.Outcome.Halting -> return HaltingScreen(outcome.taf)
   }
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = list, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList(state = list) {
     item { AskHome(status(shown, working, ready), act.listen, opens(working, ready, act)) }
     outcome?.let { item { OutcomeCard(it, act) } }
     when (shown) {

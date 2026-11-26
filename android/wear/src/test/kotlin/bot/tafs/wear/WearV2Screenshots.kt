@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ApplicationProvider
 import androidx.wear.compose.foundation.pager.rememberPagerState
@@ -40,7 +42,7 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], application = WatchApplication::class)
-class WearV2Screenshots(private val size: String, private val dp: Int) {
+class WearV2Screenshots(private val size: String, private val dp: Int, private val font: Float) {
   @get:Rule val compose = createComposeRule()
 
   private val repo = File(System.getProperty("tafs.repo") ?: "../..")
@@ -48,9 +50,12 @@ class WearV2Screenshots(private val size: String, private val dp: Int) {
   private fun shot(name: String, language: String = "en", content: @Composable () -> Unit) {
     // xhdpi: twice the dp in pixels, 396 and 450.
     RuntimeEnvironment.setQualifiers("$language-w${dp}dp-h${dp}dp-round-watch-xhdpi")
+    RuntimeEnvironment.setFontScale(font)
     Res.install(ApplicationProvider.getApplicationContext())
     compose.setContent { WatchTheme { Box(Modifier.fillMaxSize().background(Color.Black)) { content() } } }
-    compose.onRoot().captureRoboImage(File(repo, "android/play/wear-screenshots-v2/$size/$name.png").path)
+    val fit = ROUND_FIT
+    if (fit == null) compose.onRoot().captureRoboImage(File(repo, "android/play/wear-screenshots-v2/$size/$name.png").path)
+    else roundFace(compose.onRoot().captureToImage().asAndroidBitmap(), File(fit, "$size-font$font/$name.png"))
     assertEquals(language, Res.language)
   }
 
@@ -174,9 +179,39 @@ class WearV2Screenshots(private val size: String, private val dp: Int) {
       "until tomorrow morning: the carrier said the scan may come late. If it still hasn't moved by then, send the new parcel and tell " +
       "the customer. And ask Support replies to answer Maria's question about the refund once the parcel is on its way."
 
-    /** The Galaxy Watch 5's two faces, by their size and their width in dp at xhdpi: 396 and 450 px. */
+    /**
+     * Where the round-fit check draws (`-Dtafs.roundFit=<dir>`, or `-PwearRoundFit=<dir>`): every screen at Play's smallest round
+     * face and the Galaxy Watch 5's two, at the default font size and Wear OS's largest, with what falls outside the face shaded.
+     */
+    val ROUND_FIT: String? = System.getProperty("tafs.roundFit")?.takeIf { it.isNotBlank() }
+
+    /** Wear OS's largest font size in Settings, as a scale. */
+    const val LARGEST_FONT = 1.24f
+
+    /** The Galaxy Watch 5's two faces, by their size and their width in dp at xhdpi: 396 and 450 px; for the round-fit check, Play's smallest and both fonts too. */
     @JvmStatic
-    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-    fun sizes(): List<Array<Any>> = listOf(arrayOf("40mm", 198), arrayOf("44mm", 225))
+    @ParameterizedRobolectricTestRunner.Parameters(name = "{0} {2}")
+    fun sizes(): List<Array<Any>> =
+      if (ROUND_FIT == null) listOf(arrayOf<Any>("40mm", 198, 1f), arrayOf<Any>("44mm", 225, 1f))
+      else listOf("small" to 192, "40mm" to 198, "44mm" to 225).flatMap { (n, d) -> listOf(arrayOf<Any>(n, d, 1f), arrayOf<Any>(n, d, LARGEST_FONT)) }
+
+    /**
+     * The screen as a round face shows it: what lies outside the face's circle is shaded red, so a line or button cut at the edge
+     * shows. Written as a PNG at [out].
+     */
+    fun roundFace(drawn: android.graphics.Bitmap, out: File) {
+      val face = drawn.copy(android.graphics.Bitmap.Config.ARGB_8888, true)
+      val r = face.width / 2f
+      for (y in 0 until face.height) for (x in 0 until face.width) {
+        val dx = x + 0.5f - r
+        val dy = y + 0.5f - face.height / 2f
+        if (dx * dx + dy * dy <= r * r) continue
+        val c = face.getPixel(x, y)
+        val red = (android.graphics.Color.red(c) * 0.4f + 160 * 0.6f).toInt()
+        face.setPixel(x, y, android.graphics.Color.rgb(red, (android.graphics.Color.green(c) * 0.4f).toInt(), (android.graphics.Color.blue(c) * 0.4f).toInt()))
+      }
+      out.parentFile.mkdirs()
+      out.outputStream().use { face.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+    }
   }
 }

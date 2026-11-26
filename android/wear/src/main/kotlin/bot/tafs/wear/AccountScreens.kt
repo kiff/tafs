@@ -16,9 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
-import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.ListHeader
@@ -95,7 +93,7 @@ internal fun HeldCallRow(call: HeldLine, open: () -> Unit) {
  */
 @Composable
 private fun HeldCallScreen(call: HeldLine, act: Actions, handoff: () -> Unit, close: () -> Unit) {
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList {
     item { ListHeader { Text(Words.NeedsYou.title, color = Look.held) } }
     item { Text(call.taf, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
     item { Text(call.wants, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
@@ -133,7 +131,7 @@ private fun HeldCallScreen(call: HeldLine, act: Actions, handoff: () -> Unit, cl
  */
 @Composable
 private fun HandoffScreen(ok: () -> Unit) {
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList {
     item { Text(Words.Watch.checkPhoneTitle, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
     item { Text(Words.Watch.checkPhoneSub, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) }
     item { Button(onClick = ok, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.ok) } }
@@ -152,7 +150,7 @@ internal fun ScalingLazyListScope.calendarDoor(open: () -> Unit) = item {
 @Composable
 private fun CalendarScreen(calendar: WatchModel.Reading<WatchModel.DayRead>?, act: Actions, close: () -> Unit) {
   LaunchedEffect(Unit) { act.readCalendar(null) }
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList {
     val read = (calendar as? WatchModel.Reading.Read)?.value
     item { ListHeader { Text(read?.let { if (it.today) Words.Calendar.today else dayTitle(it.day.day) } ?: Words.Calendar.today) } }
     when (calendar) {
@@ -259,7 +257,7 @@ private fun languageName(): String {
 /** Sign out, asked once more: what it does, and that the phone stays signed in. */
 @Composable
 private fun SignOutScreen(confirm: () -> Unit, cancel: () -> Unit) {
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList {
     item { Text(Words.Watch.signOutQ, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
     item { Text(Words.Watch.signOutSub, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) }
     item {
@@ -274,7 +272,7 @@ private fun SignOutScreen(confirm: () -> Unit, cancel: () -> Unit) {
 /** Signed out on this watch: that the phone still is, and Sign in, which reads the phone again. Nothing else is drawn. */
 @Composable
 internal fun SignedOutHereScreen(act: Actions, signIn: WatchModel.SignInAsk? = null) {
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList {
     line(Words.Watch.signedOutHere)
     // Signing in again is asked of the phone's person (row 18): this watch alone never signs itself in.
     when (signIn) {
