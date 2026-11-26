@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "../src/cloud/every-call-words.js";
+import { EVERY_CALL_FIGURE_FIRST, EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "../src/cloud/every-call-words.js";
 import { cardsFromRules, saysEveryCallAsks, type AgreedRule } from "../src/cloud/rules.js";
 import { EVERY_CALL_SAMPLES } from "./every-call-samples.js";
 
@@ -36,6 +36,24 @@ describe("the words that say every call asks, in every app language", () => {
       "रिफ़ंड की सीमा 50 € प्रतिदिन है। हर रिफ़ंड पहले आपसे पूछता है।", "ریفنڈ کی حد 50 € روزانہ ہے۔ ہر ریفنڈ پہلے آپ سے پوچھتا ہے۔",
       "Օրական 50 € սահմանաչափ։ Յուրաքանչյուր վերադարձ նախ ձեզ հարցնում է։",
     ]) expect(saysEveryCallAsks(text), text).toBe(true);
+  });
+
+  // A daily limit, then "and every … asks you", with no comma, reads as every call where the figure comes after the noun:
+  // the guard is only for the languages that put it first (EVERY_CALL_FIGURE_FIRST).
+  it("reads a figure earlier in the sentence as no cap in languages that put the figure after the noun", () => {
+    for (const text of [
+      "Până la 50 € pe zi și fiecare rambursare te întreabă.", "Do 50 € denně a každá platba čeká na vaše schválení.",
+      "Maks 50 € per hari dan setiap pembayaran menunggu persetujuan anda.", "Até 50 € por dia e cada reembolso pergunta a você.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(true);
+    for (const [lang, { yes }] of Object.entries(EVERY_CALL_SAMPLES)) {
+      if (EVERY_CALL_FIGURE_FIRST.has(lang)) continue;
+      expect(saysEveryCallAsks(`50 € ${yes[0]}`), `${lang}: 50 € ${yes[0]}`).toBe(true);
+    }
+  });
+
+  it("reads Turkish and Azerbaijani capitals: İ lower-cased drops its combining dot", () => {
+    expect(saysEveryCallAsks("Her iade önce SİZE sorar.")).toBe(true);
+    expect(saysEveryCallAsks("HER İADE ÖNCE SİZE SORAR.")).toBe(true);
   });
 
   it("keeps the eight languages' figure cases as they were", () => {
