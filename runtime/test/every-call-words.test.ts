@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EVERY_CALL_FIGURE_FIRST, EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "../src/cloud/every-call-words.js";
+import { EVERY_CALL_CLAUSE_STARTS, EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "../src/cloud/every-call-words.js";
 import { cardsFromRules, saysEveryCallAsks, type AgreedRule } from "../src/cloud/rules.js";
 import { EVERY_CALL_SAMPLES } from "./every-call-samples.js";
 
@@ -39,15 +39,38 @@ describe("the words that say every call asks, in every app language", () => {
   });
 
   // A daily limit, then "and every … asks you", with no comma, reads as every call where the figure comes after the noun:
-  // the guard is only for the languages that put it first (EVERY_CALL_FIGURE_FIRST).
+  // the guard is only for the languages that put it first (EVERY_CALL_CLAUSE_STARTS), and there their "and" ends it.
   it("reads a figure earlier in the sentence as no cap in languages that put the figure after the noun", () => {
     for (const text of [
       "Până la 50 € pe zi și fiecare rambursare te întreabă.", "Do 50 € denně a každá platba čeká na vaše schválení.",
       "Maks 50 € per hari dan setiap pembayaran menunggu persetujuan anda.", "Até 50 € por dia e cada reembolso pergunta a você.",
     ]) expect(saysEveryCallAsks(text), text).toBe(true);
     for (const [lang, { yes }] of Object.entries(EVERY_CALL_SAMPLES)) {
-      if (EVERY_CALL_FIGURE_FIRST.has(lang)) continue;
+      if (EVERY_CALL_CLAUSE_STARTS[lang]) continue;
       expect(saysEveryCallAsks(`50 € ${yes[0]}`), `${lang}: 50 € ${yes[0]}`).toBe(true);
+    }
+  });
+
+  // legal-i18n's sentences: "<figure> a day and every … asks you" in each of the 20 figure-after languages, and in each of the
+  // 16 guarded ones with its own "and" (ja and zh-Hant with 、/，).
+  it("reads \"<figure> a day and every … asks you\" as every call in every language, the guarded ones by their own \"and\"", () => {
+    for (const text of [
+      "حتى 50 يورو يوميًا وكل استرداد يسألك أولاً.", "До 50 € на ден и всяко възстановяване първо ви пита.", "Fins a 50 € al dia i cada reemborsament et pregunta primer.",
+      "Do 50 € denně a každá platba čeká na vaše schválení.", "Έως 50 € την ημέρα και κάθε επιστροφή σε ρωτά πρώτα.", "Kuni 50 € päevas ja iga tagasimakse küsib sinult kõigepealt.",
+      "עד 50 € ביום וכל החזר שואל אותך קודם.", "Do 50 € dnevno i svaki povrat vas prvo pita.", "Maksimal 50 € per hari dan setiap pengembalian dana bertanya kepada Anda dulu.",
+      "Iki 50 € per dieną ir kiekvienas grąžinimas pirmiausia klausia jūsų.", "Līdz 50 € dienā un katra atmaksa vispirms jautā jums.", "До 50 € дневно и секое враќање прво ве прашува.",
+      "Până la 50 € pe zi și fiecare rambursare te întreabă.", "Do 50 € denne a každá refundácia sa vás najprv spýta.", "Do 50 € na dan in vsako vračilo vas najprej vpraša.",
+      "Deri në 50 € në ditë dhe çdo rimbursim ju pyet fillimisht.", "Do 50 € dnevno i svaki povraćaj vas prvo pita.", "Tối đa 50 € mỗi ngày và mỗi khoản hoàn tiền đều hỏi bạn trước.",
+      "Até 50 € por dia e cada reembolso pergunta a você.",
+      "Günde en fazla 50 € ve her iade önce size sorar.", "Gündə ən çox 50 € və hər geri ödəniş əvvəlcə sizdən soruşur.", "Günde iň köp 50 € we her yzyna gaýtarma ilki sizden soraýar.",
+      "Օրական մինչև 50 € և յուրաքանչյուր վերադարձ նախ ձեզ հարցնում է։", "დღეში 50 €-მდე და ყოველი დაბრუნება ჯერ გეკითხებათ.", "Өдөрт 50 € хүртэл бөгөөд буцаалт бүр танаас эхлээд асууна.",
+      "Naponta legfeljebb 50 € és minden visszatérítés előbb téged kérdez.", "प्रतिदिन 50 € तक और हर रिफ़ंड पहले आपसे पूछता है।", "দিনে 50 € পর্যন্ত এবং প্রতিটি রিফান্ড আগে আপনাকে জিজ্ঞাসা করে।",
+      "روزانہ 50 € تک اور ہر ریفنڈ پہلے آپ سے پوچھتا ہے۔", "दिनमा 50 € सम्म र हरेक फिर्ता पहिले तपाईंलाई सोध्छ।", "하루 50유로까지이고 모든 환불은 먼저 확인을 받습니다.",
+      "上限は1日50ユーロで、すべての返金はまずあなたに確認します。", "每天上限 50 歐元，每一筆退款都會先詢問您。", "สูงสุด 50 € ต่อวัน และทุกการคืนเงินจะถามคุณก่อน",
+      "ສູງສຸດ 50 € ຕໍ່ມື້ ແລະ ທຸກການຄືນເງິນ ຖາມທ່ານກ່ອນ.", "រហូតដល់ 50 € ក្នុងមួយថ្ងៃ ហើយរាល់ការសងប្រាក់វិញ សួរអ្នកជាមុន។",
+    ]) expect(saysEveryCallAsks(text), text).toBe(true);
+    for (const text of ["Refunds over €5 ask you first.", "Each refund over €5 asks you first.", "Every day, refunds up to €5 run."]) {
+      expect(saysEveryCallAsks(text), text).toBe(false);
     }
   });
 
