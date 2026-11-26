@@ -218,10 +218,10 @@
     <string name="billing_not_restored">No s\'han pogut restaurar les compres: %1$s</string>
     <string name="billing_not_signed_in">No has iniciat la sessió.</string>
     <string name="billing_nothing_to_restore">No hi ha res a restaurar.</string>
-    <string name="billing_one_person_tafs_kiff_your">Una persona: tafs, amb crèdits inclosos cada període.</string>
+    <string name="billing_one_person_tafs_kiff_your">Per a una persona: 500 crèdits cada mes per a les execucions dels teus tafs, amb Coach inclòs per configurar unes 4 feines noves al mes. Els crèdits d\'un mes no passen al següent; els paquets n\'afegeixen més quan se t\'acaben, i no caduquen mai.</string>
     <string name="billing_only_someone_who_manages_account">Només qui gestiona la facturació del compte compra crèdits.</string>
     <string name="billing_open_tafs_to_buy">Obre tafs per comprar.</string>
-    <string name="billing_pack_adds_credits_once_never">Un paquet afegeix crèdits una vegada, i no caduquen mai. Primer s\'utilitzen els crèdits inclosos de cada període i després els dels paquets.</string>
+    <string name="billing_pack_adds_credits_once_never">Els paquets són per a quan s\'acaben els crèdits d\'un mes. Un paquet afegeix crèdits una vegada, i no caduquen mai. Primer s\'utilitzen els crèdits de cada mes i després els dels paquets.</string>
     <string name="billing_pending_credits">La compra està pendent d\'aprovació. Els teus crèdits s\'afegiran quan s\'hagi completat.</string>
     <string name="billing_plan_could_not_read_kiff">No s\'ha pogut llegir el pla de KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play no pot vendre en aquest telèfon, així que aquí no es pot comprar res.</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo no està disponible ara mateix a l\'App Store.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo és una subscripció d\'un %1$s a %2$s, que es carrega al teu compte d\'Apple. Es renova cada %3$s fins que la cancel·lis.</string>
     <string name="billing_starts_free">Comença amb %1$s gratis.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs per a una persona, cada mes.</string>
+    <string name="billing_tafs_kiff_one_person_every">Per a una persona: 500 crèdits al mes, Coach inclòs.</string>
     <string name="billing_team_on_web">Aconsegueix Company a kiff.dev</string>
     <string name="billing_terms_use">Condicions d\'ús</string>
     <string name="billing_test_purchase_credits">Les compres de prova no afegeixen crèdits a aquest compte.</string>

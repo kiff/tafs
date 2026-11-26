@@ -211,6 +211,23 @@ class SharedWords(unittest.TestCase):
                     if lang not in generate.THIS:
                         self.assertNotRegex(text, r"\|[Tt]his\}", f"{lang} {key}: {lang} has no rule for \"this\"; write the word in the line")
 
+    def test_solos_lines_give_kiffs_included_credits_in_every_language(self):
+        # Solo's row and page give its month's credits as a figure: KIFF's (meter.SoloIncludedCredits), which tafs cloud
+        # keeps as SOLO_INCLUDED_CREDITS once it says them too. Every language gives the same figure, in its own digits.
+        want = "500"
+        credits = os.path.join(REPO, "runtime", "src", "cloud", "credits.ts")
+        if os.path.exists(credits):
+            found = re.search(r"SOLO_INCLUDED_CREDITS\s*=\s*(\d+)", open(credits, encoding="utf-8").read())
+            if found:
+                want = found.group(1)
+        for lang, lines in self.lines.items():
+            for key in ("billing.tafs_kiff_one_person_every", "billing.one_person_tafs_kiff_your"):
+                line = lines.get(key)
+                if not isinstance(line, str):
+                    continue
+                digits = "".join(str(unicodedata.digit(c)) if c.isdigit() else " " for c in line).split()
+                self.assertIn(want, digits, f"{lang} {key}: Solo's {want} credits")
+
     def test_a_right_to_left_language_writes_its_menu_arrows_pointing_left(self):
         # "→" doesn't mirror with the text direction, so an Arabic or Hebrew line writes "←" where English writes "→".
         # "‹" and "›" do mirror, and stay as English writes them.

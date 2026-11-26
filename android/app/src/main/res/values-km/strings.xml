@@ -211,10 +211,10 @@
     <string name="billing_not_restored">មិនអាចស្តារការទិញបានទេ៖ %1$s</string>
     <string name="billing_not_signed_in">មិនបានចូលទេ។</string>
     <string name="billing_nothing_to_restore">គ្មានអ្វីត្រូវស្តារទេ។</string>
-    <string name="billing_one_person_tafs_kiff_your">មនុស្សម្នាក់៖ tafs ជាមួយក្រេឌីតរួមបញ្ចូលក្នុងគ្រប់រយៈពេល។</string>
+    <string name="billing_one_person_tafs_kiff_your">សម្រាប់មនុស្សម្នាក់៖ ក្រេឌីត 500 រៀងរាល់ខែ សម្រាប់ការដំណើរការរបស់ tafs របស់អ្នក រួមទាំង Coach ដើម្បីរៀបចំការងារថ្មីប្រហែល 4 ក្នុងមួយខែ។ ក្រេឌីតរបស់ខែមួយមិនផ្ទេរទៅខែបន្ទាប់ទេ ហើយនៅពេលអស់ កញ្ចប់បន្ថែមបានទៀត ហើយវាមិនដែលផុតកំណត់ទេ។</string>
     <string name="billing_only_someone_who_manages_account">មានតែអ្នកដែលគ្រប់គ្រងការចេញវិក្កយបត្រនៃគណនីប៉ុណ្ណោះដែលទិញក្រេឌីត។</string>
     <string name="billing_open_tafs_to_buy">បើក tafs ដើម្បីទិញ។</string>
-    <string name="billing_pack_adds_credits_once_never">កញ្ចប់បន្ថែមក្រេឌីតម្តង ហើយវាមិនដែលផុតកំណត់ទេ។ ក្រេឌីតដែលរួមបញ្ចូលនៃរយៈពេលនីមួយៗត្រូវបានប្រើមុន បន្ទាប់មកនៃកញ្ចប់។</string>
+    <string name="billing_pack_adds_credits_once_never">កញ្ចប់សម្រាប់ពេលដែលក្រេឌីតរបស់ខែអស់។ កញ្ចប់បន្ថែមក្រេឌីតម្តង ហើយវាមិនដែលផុតកំណត់ទេ។ ក្រេឌីតរបស់ខែនីមួយៗត្រូវបានប្រើមុន បន្ទាប់មកនៃកញ្ចប់។</string>
     <string name="billing_pending_credits">ការទិញកំពុងរង់ចាំការអនុម័ត។ ក្រេឌីតរបស់អ្នកត្រូវបានបន្ថែមនៅពេលវារួចរាល់។</string>
     <string name="billing_plan_could_not_read_kiff">មិនអាចអានគម្រោងពី KIFF បានទេ៖ %1$s</string>
     <string name="billing_play_cant_sell">Google Play មិនអាចលក់នៅលើទូរសព្ទនេះទេ ដូច្នេះគ្មានអ្វីអាចទិញនៅទីនេះបានទេ។</string>
@@ -238,7 +238,7 @@
     <string name="billing_solo_not_available_app_store">Solo មិនមានពី App Store ឥឡូវនេះទេ។</string>
     <string name="billing_solo_subscription_one_charged_your">Solo គឺជាការជាវរយៈពេលមួយ%1$s តម្លៃ %2$s គិតលើគណនី Apple របស់អ្នក។ វាបន្តរាល់%3$s រហូតដល់អ្នកបោះបង់។</string>
     <string name="billing_starts_free">ចាប់ផ្តើមដោយឥតគិតថ្លៃ %1$s។</string>
-    <string name="billing_tafs_kiff_one_person_every">taf សម្រាប់មនុស្សម្នាក់ រាល់ខែ។</string>
+    <string name="billing_tafs_kiff_one_person_every">សម្រាប់មនុស្សម្នាក់៖ ក្រេឌីត 500 ក្នុងមួយខែ រួមទាំង Coach។</string>
     <string name="billing_team_on_web">យក Company នៅ kiff.dev</string>
     <string name="billing_terms_use">លក្ខខណ្ឌប្រើប្រាស់</string>
     <string name="billing_test_purchase_credits">ការទិញសាកល្បងមិនបន្ថែមក្រេឌីតទៅគណនីនេះទេ។</string>

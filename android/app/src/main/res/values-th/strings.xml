@@ -211,10 +211,10 @@
     <string name="billing_not_restored">กู้คืนการซื้อไม่ได้: %1$s</string>
     <string name="billing_not_signed_in">ยังไม่ได้เข้าสู่ระบบ</string>
     <string name="billing_nothing_to_restore">ไม่มีอะไรให้กู้คืน</string>
-    <string name="billing_one_person_tafs_kiff_your">หนึ่งคน: tafs พร้อมเครดิตที่รวมในแต่ละรอบ</string>
+    <string name="billing_one_person_tafs_kiff_your">สำหรับหนึ่งคน: 500 เครดิตทุกเดือนสำหรับการทำงานของ taf ของคุณ พร้อม Coach สำหรับตั้งค่างานใหม่ประมาณ 4 งานต่อเดือน เครดิตของแต่ละเดือนไม่ยกไปเดือนถัดไป แพ็กเพิ่มเครดิตได้เมื่อเครดิตหมด และไม่มีวันหมดอายุ</string>
     <string name="billing_only_someone_who_manages_account">เฉพาะผู้ที่จัดการการเรียกเก็บเงินของบัญชีเท่านั้นที่ซื้อเครดิตได้</string>
     <string name="billing_open_tafs_to_buy">เปิด tafs เพื่อซื้อ</string>
-    <string name="billing_pack_adds_credits_once_never">แพ็กเพิ่มเครดิตครั้งเดียวและไม่มีวันหมดอายุ เครดิตที่รวมในแต่ละรอบจะถูกใช้ก่อน แล้วจึงใช้เครดิตของแพ็ก</string>
+    <string name="billing_pack_adds_credits_once_never">แพ็กมีไว้สำหรับตอนที่เครดิตของเดือนหมด แพ็กเพิ่มเครดิตครั้งเดียวและไม่มีวันหมดอายุ เครดิตของแต่ละเดือนจะถูกใช้ก่อน แล้วจึงใช้เครดิตของแพ็ก</string>
     <string name="billing_pending_credits">การซื้อรอการอนุมัติ เครดิตของคุณจะถูกเพิ่มเมื่อเสร็จสิ้น</string>
     <string name="billing_plan_could_not_read_kiff">อ่านแพ็กเกจจาก KIFF ไม่ได้: %1$s</string>
     <string name="billing_play_cant_sell">Google Play ขายบนโทรศัพท์เครื่องนี้ไม่ได้ จึงซื้ออะไรที่นี่ไม่ได้</string>
@@ -238,7 +238,7 @@
     <string name="billing_solo_not_available_app_store">ขณะนี้ Solo ยังไม่มีใน App Store</string>
     <string name="billing_solo_subscription_one_charged_your">Solo เป็นการสมัครใช้งาน %2$s / %1$s เรียกเก็บจากบัญชี Apple ของคุณ ต่ออายุอัตโนมัติเมื่อสิ้นสุดแต่ละรอบ (%3$s) จนกว่าคุณจะยกเลิก</string>
     <string name="billing_starts_free">เริ่มต้นฟรี %1$s</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs สำหรับหนึ่งคน ทุกเดือน</string>
+    <string name="billing_tafs_kiff_one_person_every">สำหรับหนึ่งคน: 500 เครดิตต่อเดือน รวม Coach</string>
     <string name="billing_team_on_web">รับ Company ที่ kiff.dev</string>
     <string name="billing_terms_use">ข้อกำหนดการใช้งาน</string>
     <string name="billing_test_purchase_credits">การซื้อทดสอบไม่เพิ่มเครดิตให้บัญชีนี้</string>

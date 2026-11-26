@@ -143,7 +143,11 @@ and iPad in [ios-app.md](ios-app.md)). Before Coach exists, `GET /v1/setup` may 
 wrote it.
 - **Start's screen shows what Coach is given** (Android 1.20, `StartScreen`): `start.words.lead`, then the Cards in KIFF's own
   words (the draft's `card_title` and `cards`), with Coach's tools folded under `coach_tools_step`'s details, then
-  the `start.words.start` button (the lead says what Start does, once: there's no line under the button). There's no second screen, and nothing is signed unread. (1.19 opened
+  the `start.words.start` button, then `start.words.does` under it: why starting asks for the person ("Coach asks for your
+  fingerprint, face or passkey before it starts, to give Coach its Card, so it can act only within
+  what you approve.", `start_first_send`). Both apps draw `does` when it comes, and Send below is that tap. The Card step most first starts
+  show instead says it in its sign line (`card_step_sign`: "Your approval uses your fingerprint or face, so Coach
+  can act only within what you approve here. …"). There's no second screen, and nothing is signed unread. (1.19 opened
   Coach's tools step on the first Send instead.)
 - **Start, or the first Send, starts Coach and gives its tools, behind one fingerprint.** The phone builds each request's message with one
   `signed_at` and signs both hashes once with the approval key (`kiff.requests.v1`). Each request goes with that one signature and
@@ -1023,6 +1027,13 @@ are suggestions, not finished products: there is no recipe-specific code, and wh
 build one, the gap is fixed generically (a connection, how Coach picks tools, a Card rule), so a
 person can prompt Coach freely. Three of the five starter jobs tafs began with are recipes now. Bill pay and Access aren't, because
 the apps they connect can't do their Card's work today.
+
+**The welcome video's link** rides on `GET /v1/recipes` as `video_url` (`welcomeVideo`, `runtime/src/cloud/recipes.ts`): the
+2-minute video the first-run welcome's last card and How tafs works link to. Every person gets it, on every answer, an
+empty list's too. It's the runtime's `TAFS_WELCOME_VIDEO_URL` when that's an https URL (a plain address with no query, such as
+https://kiff.dev/tafs/video: `infra/aws.sh` keeps it across reruns and refuses a `,` or `=`, which AWS's shorthand would split); unset, empty or anything else
+sends no `video_url`, and the apps show no link. So the link appears once the video is on kiff.dev/tafs and the setting
+names it, with no app release.
 
 The gallery shows only the jobs whose apps connect today (rule 13): each of a recipe's connections needs an
 app in `CONNECTS_TODAY` (`runtime/src/cloud/recipes.ts`), the apps kiff.dev's apps list says work, each

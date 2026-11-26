@@ -211,10 +211,10 @@
     <string name="billing_not_restored">ກູ້ຄືນການຊື້ບໍ່ໄດ້: %1$s</string>
     <string name="billing_not_signed_in">ບໍ່ໄດ້ເຂົ້າສູ່ລະບົບ.</string>
     <string name="billing_nothing_to_restore">ບໍ່ມີຫຍັງໃຫ້ກູ້ຄືນ.</string>
-    <string name="billing_one_person_tafs_kiff_your">ຄົນໜຶ່ງ: tafs, ມີເຄຣດິດລວມໃນແຕ່ລະໄລຍະ.</string>
+    <string name="billing_one_person_tafs_kiff_your">ສຳລັບຄົນໜຶ່ງ: 500 ເຄຣດິດທຸກເດືອນສຳລັບການເຮັດວຽກຂອງ tafs ຂອງທ່ານ, ລວມ Coach ເພື່ອຕັ້ງວຽກໃໝ່ປະມານ 4 ວຽກຕໍ່ເດືອນ. ເຄຣດິດຂອງເດືອນບໍ່ຍົກໄປເດືອນຕໍ່ໄປ; ເມື່ອໝົດ ຊຸດຈະເພີ່ມໃຫ້ອີກ ແລະ ບໍ່ເຄີຍໝົດອາຍຸ.</string>
     <string name="billing_only_someone_who_manages_account">ມີແຕ່ຜູ້ທີ່ຈັດການການເກັບເງິນຂອງບັນຊີທີ່ຊື້ເຄຣດິດ.</string>
     <string name="billing_open_tafs_to_buy">ເປີດ tafs ເພື່ອຊື້.</string>
-    <string name="billing_pack_adds_credits_once_never">ຊຸດເພີ່ມເຄຣດິດຄັ້ງດຽວ ແລະ ບໍ່ເຄີຍໝົດອາຍຸ. ເຄຣດິດທີ່ລວມຂອງແຕ່ລະໄລຍະຖືກໃຊ້ກ່ອນ ແລ້ວຈຶ່ງເປັນຂອງຊຸດ.</string>
+    <string name="billing_pack_adds_credits_once_never">ຊຸດມີໄວ້ສຳລັບເວລາເຄຣດິດຂອງເດືອນໝົດ. ຊຸດເພີ່ມເຄຣດິດຄັ້ງດຽວ ແລະ ບໍ່ເຄີຍໝົດອາຍຸ. ເຄຣດິດຂອງແຕ່ລະເດືອນຖືກໃຊ້ກ່ອນ ແລ້ວຈຶ່ງເປັນຂອງຊຸດ.</string>
     <string name="billing_pending_credits">ການຊື້ກຳລັງລໍຖ້າການອະນຸມັດ. ເຄຣດິດຂອງທ່ານຖືກເພີ່ມເມື່ອສຳເລັດ.</string>
     <string name="billing_plan_could_not_read_kiff">ອ່ານແຜນຈາກ KIFF ບໍ່ໄດ້: %1$s</string>
     <string name="billing_play_cant_sell">Google Play ຂາຍໃນໂທລະສັບນີ້ບໍ່ໄດ້ ສະນັ້ນຊື້ຫຍັງຢູ່ນີ້ບໍ່ໄດ້.</string>
@@ -238,7 +238,7 @@
     <string name="billing_solo_not_available_app_store">Solo ບໍ່ມີຈາກ App Store ດຽວນີ້.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo ແມ່ນການສະໝັກໜຶ່ງ%1$s ລາຄາ %2$s ເກັບຈາກບັນຊີ Apple ຂອງທ່ານ. ມັນຕໍ່ອາຍຸທຸກ%3$s ຈົນກວ່າທ່ານຍົກເລີກ.</string>
     <string name="billing_starts_free">ເລີ່ມຟຣີ %1$s.</string>
-    <string name="billing_tafs_kiff_one_person_every">taf ສຳລັບຄົນໜຶ່ງ, ທຸກເດືອນ.</string>
+    <string name="billing_tafs_kiff_one_person_every">ສຳລັບຄົນໜຶ່ງ: 500 ເຄຣດິດຕໍ່ເດືອນ, ລວມ Coach.</string>
     <string name="billing_team_on_web">ຮັບ Company ທີ່ kiff.dev</string>
     <string name="billing_terms_use">ຂໍ້ກຳນົດການໃຊ້ງານ</string>
     <string name="billing_test_purchase_credits">ການຊື້ທົດລອງບໍ່ເພີ່ມເຄຣດິດໃສ່ບັນຊີນີ້.</string>

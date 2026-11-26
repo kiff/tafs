@@ -218,10 +218,10 @@
     <string name="billing_not_restored">কেনাকাটা পুনরুদ্ধার করা যায়নি: %1$s</string>
     <string name="billing_not_signed_in">সাইন ইন করা নেই।</string>
     <string name="billing_nothing_to_restore">পুনরুদ্ধার করার কিছু নেই।</string>
-    <string name="billing_one_person_tafs_kiff_your">একজন ব্যক্তি: tafs, প্রতি মেয়াদে অন্তর্ভুক্ত ক্রেডিট সহ।</string>
+    <string name="billing_one_person_tafs_kiff_your">একজন ব্যক্তির জন্য: আপনার tafs-এর রানের জন্য প্রতি মাসে ৫০০ ক্রেডিট, সঙ্গে Coach, মাসে প্রায় ৪টি নতুন কাজ সেট আপ করার জন্য। এক মাসের ক্রেডিট পরের মাসে যায় না; ক্রেডিট শেষ হলে প্যাক আরও যোগ করে, এবং সেগুলোর মেয়াদ শেষ হয় না।</string>
     <string name="billing_only_someone_who_manages_account">শুধু যিনি অ্যাকাউন্টের বিলিং পরিচালনা করেন তিনিই ক্রেডিট কেনেন।</string>
     <string name="billing_open_tafs_to_buy">কিনতে tafs খুলুন।</string>
-    <string name="billing_pack_adds_credits_once_never">একটি প্যাক একবার ক্রেডিট যোগ করে, এবং সেগুলোর মেয়াদ শেষ হয় না। প্রতি মেয়াদের অন্তর্ভুক্ত ক্রেডিট আগে ব্যবহার হয়, তারপর প্যাকের।</string>
+    <string name="billing_pack_adds_credits_once_never">মাসের ক্রেডিট শেষ হয়ে গেলে প্যাক কাজে আসে। একটি প্যাক একবার ক্রেডিট যোগ করে, এবং সেগুলোর মেয়াদ শেষ হয় না। প্রতি মাসের ক্রেডিট আগে ব্যবহার হয়, তারপর প্যাকের।</string>
     <string name="billing_pending_credits">কেনাকাটা অনুমোদনের অপেক্ষায় আছে। সম্পন্ন হলে আপনার ক্রেডিট যোগ হবে।</string>
     <string name="billing_plan_could_not_read_kiff">KIFF থেকে পরিকল্পনা পড়া যায়নি: %1$s</string>
     <string name="billing_play_cant_sell">এই ফোনে Google Play বিক্রি করতে পারে না, তাই এখানে কিছু কেনা যায় না।</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo এখন App Store থেকে পাওয়া যাচ্ছে না।</string>
     <string name="billing_solo_subscription_one_charged_your">Solo হলো এক %1$s-এর %2$s দামের সাবস্ক্রিপশন, আপনার Apple অ্যাকাউন্ট থেকে কাটা হয়। আপনি বাতিল না করা পর্যন্ত প্রতি %3$s নবায়ন হয়।</string>
     <string name="billing_starts_free">%1$s বিনামূল্যে দিয়ে শুরু।</string>
-    <string name="billing_tafs_kiff_one_person_every">একজন ব্যক্তির জন্য tafs, প্রতি মাসে।</string>
+    <string name="billing_tafs_kiff_one_person_every">একজন ব্যক্তির জন্য: মাসে ৫০০ ক্রেডিট, Coach সহ।</string>
     <string name="billing_team_on_web">kiff.dev-এ Company নিন</string>
     <string name="billing_terms_use">ব্যবহারের শর্তাবলী</string>
     <string name="billing_test_purchase_credits">পরীক্ষামূলক কেনাকাটা এই অ্যাকাউন্টে ক্রেডিট যোগ করে না।</string>
