@@ -25,7 +25,7 @@ private struct BuyCreditsContent: View {
         NavStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // What credits buy, then what packs are for (the owner's check of Add credits, 26 Nov).
+                    // What credits buy, then what packs are for.
                     Text(BuyCreditsView.creditsBuy)
                         .scaledFont(15).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
@@ -33,8 +33,8 @@ private struct BuyCreditsContent: View {
                         .scaledFont(15).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                     ForEach(model.offeredPacks) { pack in
-                        // The whole row buys, not only its price (the owner's check, 26 Nov): one tap target, read
-                        // as one button ("500 credits, 12,49 €"), and off until the App Store has priced it.
+                        // The whole row buys, not only its price: one tap target, read as one button
+                        // ("500 credits, 12,49 €"), and off until the App Store has priced it.
                         let price = purchases.products[pack.appleProduct]?.displayPrice
                         Button {
                             Task {

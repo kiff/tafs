@@ -272,7 +272,7 @@ final class PurchasesTests: XCTestCase {
     }
 
     /// Solo bought and KIFF now reads the plan as Solo: Plan & usage says Solo is on, and Solo's page can close
-    /// (the owner's check, 26 Nov: after Apple's "You're all set" the page stayed, with nothing said).
+    /// (before, after Apple's "You're all set" the page stayed, with nothing said).
     func testSoloIsConfirmedOnceKIFFReadsIt() async throws {
         let log = StoreLog()
         let (model, store, _) = await signedIn(log)
