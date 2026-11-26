@@ -427,6 +427,10 @@ function heldNotification(body: AlertBody, holdID: string, now: Date, lang: Lang
         // The phone fills in the taf, the amount and the deadline, read from KIFF
         // with its own session: KIFF never sends a call's parameters through Apple.
         "mutable-content": 1,
+        // It also wakes the iPhone app in the background, so the app reads Needs you and hands the held call to the
+        // Apple Watch (`WatchPushRelay.holds`) with tafs closed, as an answered hold's silent push already does.
+        // Android reads only the alert's own fields (fcmMessage), so this changes nothing there.
+        "content-available": 1,
         ...apsFor(levelOf("hold", false)),
       },
       open: "needs-you",
