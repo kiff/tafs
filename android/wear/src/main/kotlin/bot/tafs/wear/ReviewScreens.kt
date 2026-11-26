@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -75,16 +76,16 @@ internal const val DELETED_SHOWN_MS = 2_000L
 internal const val TOP_INSET_SHARE = 0.12f
 
 /**
- * The recording screen's top line: "[state] · [limit]" when it fits the round face's width where it's drawn ([top] down a face
- * [faceWidth] across, less a margin each side), else [state] alone.
+ * The recording screen's top line: "[state] · [limit]" when it fits the [room] the round face has where it's drawn, measured in
+ * the style it's drawn in (the theme's text style at 11 sp), else [state] alone.
  */
 @Composable
-internal fun stateLine(state: String, limit: String, faceWidth: Dp, top: Dp): String {
+internal fun stateLine(state: String, limit: String, room: Dp): String {
   val full = "$state · $limit"
   val measurer = androidx.compose.ui.text.rememberTextMeasurer()
   val density = androidx.compose.ui.platform.LocalDensity.current
-  val room = roomAt(faceWidth, top) - STATE_MARGIN * 2
-  val width = with(density) { measurer.measure(full, androidx.compose.ui.text.TextStyle(fontSize = 11.sp)).size.width.toDp() }
+  val style = androidx.wear.compose.material3.LocalTextStyle.current.merge(androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
+  val width = with(density) { measurer.measure(full, style, maxLines = 1, softWrap = false).size.width.toDp() }
   return if (width <= room) full else state
 }
 
@@ -153,9 +154,11 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
       val state = if (start != null) Words.Watch.ready else "● ${Words.Watch.recording}"
       // The line sits where the round face is narrowest: in a longer language or at a large font size, "· 30 s" goes rather than
       // the line run past the curve (Wear OS app quality). The seconds left show under the button, and TalkBack reads it in full.
-      val line = stateLine(state, limitShort(), faceWidth = faceWidth, top = lineTop)
+      val room = roomAt(faceWidth, lineTop) - STATE_MARGIN * 2
+      val line = stateLine(state, limitShort(), room)
+      // Bounded by the room too, so even the state alone ends in an ellipsis inside the curve rather than past it.
       T(line, 11.sp, if (start != null) Look.dim else Look.recording, lines = 1,
-        modifier = Modifier.semantics { contentDescription = "$state · ${Words.Watch.limit}" }.testTag(RECORD_STATE))
+        modifier = Modifier.widthIn(max = room).semantics { contentDescription = "$state · ${Words.Watch.limit}" }.testTag(RECORD_STATE))
       Spacer(Modifier.height(2.dp))
       Box(Modifier.size(78.dp), contentAlignment = Alignment.Center) {
         // The ring fills to the limit.
