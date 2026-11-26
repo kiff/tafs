@@ -2577,10 +2577,11 @@ describe("Setup (kiff/agents#91)", () => {
       // sign line; on the older Start screen, in `does`. Each says why, and neither says the first message starts Coach,
       // since on the Card step its button does.
       expect(en.card_step_sign).toMatch(/^Your approval uses your fingerprint or face, so Coach can act only within what you approve here\. /);
+      expect(en.card_step_sign_passkey).toMatch(/^Your approval uses your passkey, so Coach can act only within what you approve here\. /);
       expect(en.start_first_send).toBe("Coach asks for your fingerprint, face or passkey before it starts, to give Coach its Card, so it can act only within what you approve.");
       expect(en.start_first_send).not.toMatch(/first message/i);
       // A promise about control holds to what's approved: Coach acts within its Card without asking each time.
-      for (const line of [en.card_step_sign, en.start_first_send]) expect(line).not.toMatch(/nothing moves without you/i);
+      for (const line of [en.card_step_sign, en.card_step_sign_passkey, en.start_first_send]) expect(line).not.toMatch(/nothing moves without you/i);
       for (const lang of FULL_LANGUAGES) expect(wordsIn(lang).start_first_send, lang).toContain("Coach");
       // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
       // (#852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.

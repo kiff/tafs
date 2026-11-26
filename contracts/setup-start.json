@@ -914,7 +914,7 @@
           "face": "Approve with face",
           "passkey": "Approve with your passkey"
         },
-        "sign_passkey": "Your approval signs this with your passkey, whose private key never leaves this computer or your security key. It isn't a payment or a password.",
+        "sign_passkey": "Your approval uses your passkey, so Coach can act only within what you approve here. Its private key never leaves this computer or your security key. It isn't a payment or a password.",
         "locked": "Approve this first, then you can write to Coach."
       }
     }
