@@ -47,15 +47,24 @@ struct WatchRequest: Codable, Equatable, Sendable {
         /// instead (Approve on your phone), Needs you at that held call, once the phone's own fresh read still lists it under
         /// the account it's signed in to; else Needs you with nothing chosen. Only the hold's id goes: nothing to sign.
         case openOnPhone = "open_on_phone"
+        /// Ask your phone to sign this watch in (row 18): from a watch signed out on itself, with a one-time id in `message`.
+        /// The phone asks its owner, "Sign this watch in as you?", with Allow behind the phone's own lock, and answers this
+        /// request only that it asked. The watch signs in only on the phone's Allow for that id (`WatchPush.Kind.signIn`).
+        case signInWatch = "sign_in_watch"
+        /// Read more on a cut line of a taf's chat from before this visit (row 10, Wear OS's `line-full`): the taf in `taf` and
+        /// the line's id in `message`. The phone reads that taf's chat with its session and answers that one message whole, the
+        /// taf's words only, never the person's. Read only, shown in place, never kept.
+        case lineFull = "line_full"
 
         /// A read changes nothing, so one whose send failed may go once more (`PhoneRoute`). A write (Refuse, Halt, Halt
         /// all, a Coach message) is never sent twice: a send that failed may still have arrived. Nor is a recording's
         /// `transcribe`: the phone erases the file once it's read, so a second ask would find nothing.
         var isRead: Bool {
             switch self {
-            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks, .openOnPhone:
+            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks, .openOnPhone,
+                 .lineFull:
                 return true
-            case .refuse, .halt, .haltAll, .coach, .coachSend, .transcribe, .inboxMark: return false
+            case .refuse, .halt, .haltAll, .coach, .coachSend, .transcribe, .inboxMark, .signInWatch: return false
             }
         }
 
@@ -66,8 +75,9 @@ struct WatchRequest: Codable, Equatable, Sendable {
             switch self {
             // Opening on the phone is the person's act too: a phone signed in as someone else since opens nothing of theirs.
             case .refuse, .halt, .haltAll, .coach, .coachSend, .inboxMark, .openOnPhone: return true
+            // A watch signed out on itself asks with no account: the phone's own owner answers it.
             case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks,
-                 .transcribe: return false
+                 .transcribe, .signInWatch, .lineFull: return false
             }
         }
     }
@@ -140,10 +150,13 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .transcribe: return WatchVoice.isID(message)
         case .inboxMarks: return true
         case .inboxMark: return marks?.isComplete ?? false
+        case .lineFull:
+            return given(taf) && (taf ?? "").count <= Self.tafIDLimit && WatchChatLine.isID(message)
         case .openOnPhone:
             // A chat or a held call, never both; a hold's id as KIFF writes them.
             if let hold { return taf == nil && WatchInboxMarks.isID(hold) }
             return taf.map { given($0) && $0.count <= Self.tafIDLimit } ?? true
+        case .signInWatch: return WatchVoice.isID(message)
         }
     }
 }
@@ -289,6 +302,13 @@ struct WatchChatLine: Codable, Equatable, Sendable, Identifiable {
 
     /// The most turns the wrist shows from before this visit.
     static let last = 6
+
+    /// A line's id as the phone makes it from a chat message (`TafsCloud.ChatMessage.id`, e.g. `s1|1763600005.0|taf|message`):
+    /// 1 to 200 letters, digits, `_`, `-`, `.`, `:` or `|`.
+    static func isID(_ value: String?) -> Bool {
+        guard let value else { return false }
+        return value.range(of: #"^[A-Za-z0-9_.:|-]{1,200}$"#, options: .regularExpression) != nil
+    }
 }
 
 /// Where Coach's answer to the words the watch sent will be (v2's Send, W2): Coach's chat, the conversation the words
@@ -529,6 +549,13 @@ struct WatchHolds: Codable, Equatable, Sendable {
     func sameAs(_ other: WatchHolds) -> Bool { count == other.count && calls == other.calls }
 }
 
+/// The phone owner's answer to a watch's Ask your phone to sign this watch in (row 18): the id the watch asked with, and
+/// Allow (true) or Deny. Nothing else of the account.
+struct WatchSignInAnswer: Codable, Equatable, Sendable {
+    var id: String
+    var allowed: Bool
+}
+
 /// What the phone hands its watch on its own (docs/watch-app.md, "Kept and pushed"): a watch request's new state, a taf chat
 /// that changed, or the Inbox's marks, as tafs cloud's silent push told the phone and the phone read with its session.
 /// It goes with WatchConnectivity's `transferUserInfo`, queued and delivered in order even while the watch app is put away
@@ -552,6 +579,9 @@ struct WatchPush: Codable, Equatable, Sendable {
         /// The phone's held calls changed (a hold came, was answered on any device, or ended): `holds`, for the Inbox's lines
         /// at the top and Needs you on screen. Under the account mark, like the rest.
         case needsYou = "needs_you"
+        /// The phone's owner answered a watch's Ask your phone to sign this watch in: `signIn`, its id and Allow or Deny, under
+        /// the phone's mark now. Heard by a watch signed out on itself, and only for the id it asked with.
+        case signIn = "sign_in"
     }
 
     /// The `userInfo` key its bytes go under.
@@ -563,17 +593,20 @@ struct WatchPush: Codable, Equatable, Sendable {
     var reply: WatchReply?
     /// `needsYou`: the held calls, as the watch may keep them.
     var holds: WatchHolds?
+    /// `signIn`: the phone owner's answer to a watch's ask.
+    var signIn: WatchSignInAnswer?
     var at: Date
     /// Whose push this is (`WatchMark`), as on a reply: set by the phone as it hands the push on, none once signed out.
     var mark: String?
 
-    init(_ kind: Kind, ask: String? = nil, taf: String? = nil, reply: WatchReply? = nil, holds: WatchHolds? = nil, at: Date,
-         mark: String? = nil) {
+    init(_ kind: Kind, ask: String? = nil, taf: String? = nil, reply: WatchReply? = nil, holds: WatchHolds? = nil,
+         signIn: WatchSignInAnswer? = nil, at: Date, mark: String? = nil) {
         self.kind = kind
         self.ask = ask
         self.taf = taf
         self.reply = reply
         self.holds = holds
+        self.signIn = signIn
         self.at = at
         self.mark = mark
     }

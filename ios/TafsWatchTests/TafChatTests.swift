@@ -27,6 +27,8 @@ final class TafChatTests: XCTestCase {
         var asked: [WatchRequest] = []
         var full: WatchReply?
         var history: [WatchChatLine] = []
+        /// What Read more on a line from before this visit is answered.
+        var line: WatchReply?
         init(full: WatchReply?) { self.full = full }
         func ask(_ request: WatchRequest) async -> WatchReply? {
             asked.append(request)
@@ -35,6 +37,7 @@ final class TafChatTests: XCTestCase {
             case .coachRead: return WatchReply(.ok, coach: TafChatTests.part, answering: false)
             case .askFull: return full
             case .tafChat: return WatchReply(.ok, chat: history)
+            case .lineFull: return line
             default: return WatchReply(.refused)
             }
         }
@@ -139,6 +142,66 @@ final class TafChatTests: XCTestCase {
         let before = phone.asked.count
         await coach.loadHistory()
         XCTAssertEqual(phone.asked.count, before, "Coach's model reads no taf's chat")
+    }
+
+    /// Row 28: View on phone says "Opened on your phone" for a moment once the phone answers that it opened the chat; not
+    /// reached, nothing.
+    func testViewOnPhoneSaysItOpened() async {
+        WatchOpenedNotice.shared.reset()
+        defer { WatchOpenedNotice.shared.reset() }
+        final class Opens: PhoneAsking {
+            var reply: WatchReply?
+            func ask(_ request: WatchRequest) async -> WatchReply? { reply }
+        }
+        let phone = Opens()
+        let model = CoachModel(phone: phone, taf: Self.tafID, clock: { self.now }, lock: Unlocked(), pause: {})
+        await model.openOnPhone()
+        XCTAssertNil(WatchOpenedNotice.shared.key)
+        phone.reply = WatchReply(.ok)
+        await model.openOnPhone()
+        XCTAssertEqual(WatchOpenedNotice.shared.key, WatchOpenedNotice.chat)
+    }
+
+    /// Row 10, as Wear OS's `line-full`: a taf's cut line from before this visit offers Read more, and the tap reads it whole
+    /// by the taf and the line's id, shown in place, once. The person's own cut line, Coach's chat, or a phone that can't give
+    /// it: the rest is on the phone. Nothing read stays once the app leaves.
+    func testReadMoreOnALineFromBeforeThisVisit() async {
+        let phone = Phone(full: nil)
+        let cut = WatchChatLine(id: "s1|1763600005.0|taf|message", mine: false, at: now.addingTimeInterval(-3600),
+                                text: "This week: 31 refunds paid…", more: true)
+        let mineCut = WatchChatLine(id: "s1|owner|m2", mine: true, at: now.addingTimeInterval(-3500), text: "A long ask…", more: true)
+        phone.history = [cut, mineCut]
+        phone.line = WatchReply(.ok, coach: Self.all)
+        let model = CoachModel(phone: phone, taf: Self.tafID, clock: { self.now }, lock: Unlocked(), pause: {})
+        await model.loadHistory()
+        XCTAssertEqual(TafChatLineRow.foot(cut, whole: model.whole[cut.id], canRead: true), .readMore)
+        XCTAssertFalse(phone.asked.contains { $0.kind == .lineFull }, "nothing is read before the tap")
+        await model.readMoreLine(cut.id)
+        XCTAssertEqual(phone.asked.last, WatchRequest(.lineFull, made: now, taf: Self.tafID, message: cut.id))
+        XCTAssertTrue(phone.asked.last!.isComplete)
+        XCTAssertEqual(model.whole[cut.id], .read(Self.all))
+        XCTAssertEqual(TafChatLineRow.shown(cut, whole: model.whole[cut.id]), Self.all.text)
+        XCTAssertNil(TafChatLineRow.foot(cut, whole: model.whole[cut.id], canRead: true), "whole: nothing under it")
+        await model.readMoreLine(cut.id)
+        XCTAssertEqual(phone.asked.filter { $0.kind == .lineFull }.count, 1, "read once")
+
+        await model.readMoreLine(mineCut.id)
+        XCTAssertEqual(model.whole[mineCut.id], .onPhone, "the person's own words are never asked for")
+        XCTAssertEqual(TafChatLineRow.foot(mineCut, whole: nil, canRead: true), .onPhone)
+        XCTAssertEqual(TafChatLineRow.foot(cut, whole: nil, canRead: false), .onPhone, "Coach's chat has no taf to read")
+        XCTAssertEqual(phone.asked.filter { $0.kind == .lineFull }.count, 1)
+        XCTAssertFalse(WatchRequest(.lineFull, made: now, taf: Self.tafID, message: "not an id!").isComplete)
+        XCTAssertFalse(WatchRequest(.lineFull, made: now, message: cut.id).isComplete, "a taf is named")
+
+        for reply in [nil, WatchReply(.notYet), WatchReply(.failed, line: "x")] as [WatchReply?] {
+            phone.line = reply
+            let other = CoachModel(phone: phone, taf: Self.tafID, clock: { self.now }, lock: Unlocked(), pause: {})
+            await other.loadHistory()
+            await other.readMoreLine(cut.id)
+            XCTAssertEqual(other.whole[cut.id], .onPhone)
+        }
+        model.leave()
+        XCTAssertNil(model.whole[cut.id], "nothing read is kept")
     }
 
     /// On once the privacy paragraph is live; tafs cloud's switch still gates each account.

@@ -836,6 +836,31 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertTrue(reading.untouched)
     }
 
+    /// Row 10: Read more on a cut line from before this visit answers the taf's message whole, by the id the line was given;
+    /// never the person's own words, nor anything that isn't a message. A request naming no taf is refused unread.
+    func testReadMoreOnAChatLineGivesTheTafsMessageWhole() async {
+        let at = Date(timeIntervalSince1970: 1_763_600_000)
+        let long = String(repeating: "word ", count: 100)
+        let taf = TafsCloud.ChatMessage(at: at, from: .taf, kind: .message, text: long, session: "s1", serverID: nil)
+        let mine = TafsCloud.ChatMessage(at: at.addingTimeInterval(1), from: .owner, kind: .message, text: long, session: "s1", serverID: "m1")
+        let kickoff = TafsCloud.ChatMessage(at: at.addingTimeInterval(2), from: .taf, kind: .kickoff, text: long, session: "s1", serverID: nil)
+        let lines = KeptWatchReading.chatLines([taf, mine])
+        XCTAssertEqual(lines.first?.more, true)
+        XCTAssertTrue(WatchChatLine.isID(lines.first?.id), "the watch can name it back")
+        XCTAssertTrue(WatchChatLine.isID(lines.last?.id))
+        let whole = KeptWatchReading.wholeLine([taf, mine, kickoff], id: taf.id)
+        XCTAssertEqual(whole?.text, long.trimmingCharacters(in: .whitespacesAndNewlines))
+        XCTAssertEqual(whole?.more, false)
+        XCTAssertEqual(whole?.at, at)
+        XCTAssertNil(KeptWatchReading.wholeLine([taf, mine], id: mine.id), "never the person's own words")
+        XCTAssertNil(KeptWatchReading.wholeLine([kickoff], id: kickoff.id))
+        XCTAssertNil(KeptWatchReading.wholeLine([taf], id: "s1|nope"))
+        let reading = Reading(at: now)
+        let none = await send(WatchRequest(.lineFull, made: now, taf: " ", message: taf.id), reading: reading)
+        XCTAssertEqual(none, WatchReply(.refused))
+        XCTAssertTrue(reading.untouched)
+    }
+
     /// Read more names a watch request's ticket, or it's refused before anything is read.
     func testReadMoreNamesARequest() async {
         let reading = Reading(at: now)

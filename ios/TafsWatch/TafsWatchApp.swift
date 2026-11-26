@@ -23,7 +23,7 @@ struct TafsWatchApp: App {
     /// v2: signed out on this watch alone (Account's Sign out), kept across restarts; the demo's in its own folder.
     @StateObject private var signIn = WatchDemo.on
         ? WatchSignIn(store: WatchSignIn.FileStore(url: WatchDemo.folder.appendingPathComponent("signed-out")))
-        : WatchSignIn()
+        : WatchSignIn(phone: PhoneLink.shared, account: { mark, at in WatchAccountMark.shared.heardAccount(mark, at: at) })
     @Environment(\.scenePhase) private var scenePhase
 
     init() {

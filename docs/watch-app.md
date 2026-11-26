@@ -117,6 +117,11 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   - **The last turns:** the chat opens on the last six turns of the person's own chat with the taf (`taf_chat`), read
     through the phone from `GET /v1/tafs/{id}/conversation` for a taf it lists, messages only, each cut as an answer is.
     This visit's turns show below them, once. Nothing is kept on the watch.
+  - **Read more on a line from before this visit (row 10, as Wear OS's `line-full`):** a taf's cut line has Read more, with
+    View on phone still under it. One tap asks the phone for that message whole (`line_full`: the taf and the line's id,
+    `CoachModel.readMoreLine`). The phone reads the taf's chat with its own session and answers the taf's words only, never
+    the person's, at most 16 KB (`KeptWatchReading.wholeLine`). It's shown in place, once, and forgotten when the app leaves.
+    The person's own cut line, Coach's chat, or a phone that can't give it: "The rest is on your phone."
   - **"From your watch" on the phone (W11)** leaves out a message to a taf (`kind: "taf"`): it's already in
     that taf's own chat on the phone.
   - **The words:** `watch.paused_still_answers` ("Paused: its schedule is off. It still answers what you send.", true to
@@ -252,6 +257,8 @@ Nothing leaves the watch before Send:
   shows only while Needs you holds the call, in memory, and is never kept on the watch. Coach's answer comes in read, since
   the person saw it arrive, and is kept with its amounts taken out the same way (`WatchAmount.strip`, which the phone's
   summary uses too), so no line kept on the watch has an amount; on screen it shows whole, in memory. Coach's home counts the unread lines ("2 unread in Inbox"), and shows no line with none.
+- **Needs you on screen** leaves out a held call past its end on the watch's own clock, and its count, as the Inbox does,
+  before the phone's next push or read (`NeedsYouModel.shown`).
 - **Opened, it's read.** A held call shows whole while Needs you still holds it, with Refuse and Approve on your phone as Needs
   you has them; else "Already answered, or it ended.". Coach's answer shows whole.
 - **Approve on your phone** is a button wherever a held call is shown whole (Needs you, the Inbox, the brief's held call). It
@@ -335,11 +342,27 @@ Nothing leaves the watch before Send:
   and inbox."). It's on this watch alone: nothing is sent to the phone, and it works with the phone out of reach. The watch
   forgets everything it holds: its Inbox (the ids taken away too) and what each page showed. It keeps one flag, an empty file
   `tafs.signed_out_here` in its Application Support, and shows only "Signed out on this watch. Your phone stays signed in."
-  with **Sign in with your phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing, and the
+  with **Ask your phone to sign this watch in**, across restarts, until the phone's owner says yes (row 18, below). Meanwhile it reads and sends nothing, and the
   phone's pushes, which keep coming since the phone isn't told, are dropped as they arrive: a thread, the Inbox's marks or a
   held call is never kept again (`WatchSignIn.takesData`, in `PhoneLink` and the Inbox's `mayDraw`). Nothing from the phone
-  signs it back in; only the phone's own sign-out or account change is still heard, since it can only wipe. Sign in
-  takes the flag away and reads the phone again. The privacy text names the flag ("…and whether you signed out on the
+  signs it back in; only the phone's own sign-out or account change is still heard, since it can only wipe.
+- **Signing this watch in again needs the phone's yes** (row 18, since 26 Nov; `WatchSignIn.askPhone`,
+  `WatchSignInAsk`; tested in `WatchSignInTests`, `AlertAnswersTests`, `WatchInboxMarksTests`). A watch is signed out so that
+  whoever holds it next can't use the account, so a tap on the watch alone never signs it in:
+  - **The watch** sends `sign_in_watch` with a one-time id and nothing of the account, and shows "Waiting for your phone…".
+    The flag stays.
+  - **The phone** asks its owner with a notification, "Sign this watch in as you?". **Allow** is let through only once the
+    phone is unlocked (`.authenticationRequired`); **Deny** is a plain no, and so is a swipe away (`.customDismissAction`).
+    A tap that only opens tafs answers nothing. A signed-out phone asks no one, and a phone whose tafs notifications are
+    off says so to the watch ("Allow notifications for tafs in Settings, then try again.") rather than asking no one.
+  - **Only Allow signs it in:** the phone's answer (`WatchPush.Kind.signIn`) is taken only for the id the watch asked with,
+    within ten minutes (`answerWithin`), and with a mark the phone makes. Its mark is heard as an account change, so another
+    account's wipes first. Then the flag goes and the watch reads fresh: nothing from before the sign-out comes back.
+  - **Deny** says "Not signed in. This watch stays signed out." Out of reach, a phone signed out, or an older phone: the
+    watch says why and stays signed out. **Never stuck waiting:** the button stays while it waits (a new ask, a new id), and
+    an ask with no answer lapses after ten minutes (`lapse`), so the wait goes and a late Allow is ignored. An app ended
+    mid-ask asks again.
+  - **The demo** has no phone, so its watch signs in on the tap. The privacy text names the flag ("…and whether you signed out on the
   watch"), which ships with the switch.
 - **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`,
   `watch.sign_out_q`, `watch.sign_out_sub`, `watch.signed_out_here`; the phone's `calendar.today`, `calendar.previous_day`,
@@ -635,7 +658,9 @@ The watch follows the phone's thread without asking it each time, and never asks
 - **View on phone (call 5).** Where the rest of an answer is on the phone, or a call waits to be approved there, View on phone
   sits inline (`ViewOnPhone`). The watch can't bring an app to the front of the iPhone. So it asks the phone
   (`open_on_phone`), and the phone opens the chat if tafs is in front. Otherwise the phone posts "From your watch", and a tap
-  opens the chat (`WatchOpen`). Nothing is read or changed.
+  opens the chat (`WatchOpen`). Nothing is read or changed. Once the phone answers that it did, View on phone says
+  **"Opened on your phone"** for a moment (row 28, as Wear OS's confirmation; `WatchOpenedNotice`), and so does Approve on
+  your phone, on that held call. Not reached, nothing is said and the button stays.
 - **Linking tafs, never Try again (call 6).** When the phone is out of reach, slow to answer, or the link fails, the watch
   says one calm line: "Linking tafs. Keep your phone nearby and connected." (`PhoneFailure.waiting`). Then it reads again by
   itself after 3 s, then twice as long each time, every 30 s at most (`WatchRetry`). A Send the phone didn't answer goes

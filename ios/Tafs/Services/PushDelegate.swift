@@ -58,6 +58,14 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                             withCompletionHandler completionHandler: @escaping () -> Void) {
         let info = response.notification.request.content.userInfo
+        // A watch's Ask your phone to sign this watch in: Allow (only once the phone is unlocked) or Deny, by the watch's id.
+        if response.notification.request.content.categoryIdentifier == WatchSignInAsk.categoryID {
+            let id = info[WatchSignInAsk.idKey] as? String ?? ""
+            let action = response.actionIdentifier
+            completionHandler()
+            Task { @MainActor in WatchSignInAsk.respond(action: action, id: id) }
+            return
+        }
         let destination = info["open"] as? String
         let hold = info["hold_id"] as? String
         let action = response.actionIdentifier
