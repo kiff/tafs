@@ -1,0 +1,1 @@
+- **Allowing your Apple Watch to sign in works even when tafs wasn't running on your iPhone.** If iOS had closed tafs and you tapped Allow on "Sign this watch in as you?", the answer could be lost before the iPhone reached the watch, and the watch kept waiting. The iPhone now holds the answer until it can reach the watch, then sends it. See [Apple Watch](docs/watch-app.md).

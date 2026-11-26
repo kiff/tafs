@@ -355,6 +355,9 @@ Nothing leaves the watch before Send:
     phone is unlocked (`.authenticationRequired`); **Deny** is a plain no, and so is a swipe away (`.customDismissAction`).
     A tap that only opens tafs answers nothing. A signed-out phone asks no one, and a phone whose tafs notifications are
     off says so to the watch ("Allow notifications for tafs in Settings, then try again.") rather than asking no one.
+    The question and its id live in the notification itself (`userInfo`), so they survive tafs being killed. An Allow that
+    launches tafs is made before WatchConnectivity has finished activating, so it's held (`WaitingWatchPushes`) and sent
+    once activation completes, the mark checked again then, rather than dropped.
   - **Only Allow signs it in:** the phone's answer (`WatchPush.Kind.signIn`) is taken only for the id the watch asked with,
     within ten minutes (`answerWithin`), and with a mark the phone makes. Its mark is heard as an account change, so another
     account's wipes first. Then the flag goes and the watch reads fresh: nothing from before the sign-out comes back.
