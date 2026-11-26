@@ -1,0 +1,1 @@
+- iPhone, iPad and Mac: when Coach stops while you watch it answer, its line now says why in tafs cloud's words, such as reaching today's AI limit and when it goes on, rather than only that it stopped part-way.

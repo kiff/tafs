@@ -114,7 +114,12 @@ and Retry (`ChatState.ended`, `endedRun`), so the thread's line for that run isn
 `contracts/conversation-failed.json`. Coach's chat draws it by the same rules (`SetupThread.failed`,
 `AppModel.setupRunFailedLine`): last, after everything else; none while Coach's answer streams or a message is being sent,
 and none in a new conversation; a run this chat followed live and saw fail (`setupEnded`, with Retry, and `setupEndedRun`)
-isn't said twice. `SetupTests` reads the same contract.
+isn't said twice. That run's own line (`setupFailedLine`) says tafs cloud's words for why, as a taf's chat does: the
+stream's `end` words (a daily AI limit and when it goes on, `ai_limit_account` / `ai_limit_service`, or the provider), or
+the thread's `failed` for that run, and the app's "This stopped part-way, before it finished." only when tafs cloud sent
+none. The stream's `end` also carries `retry` (the thread's `failed.retry` rule, false for a daily limit until it
+resets): false hides Try again at once, in Coach's chat and a taf's, before the thread is read; with none, the thread
+decides. `SetupTests` reads the same contract.
 
 **A connection that was refused** (`TafsCloud.ChatMessage.refusedLines`, `RefusedLines`): a taf's message
 may carry tafs cloud's `refused` ([chat.md](chat.md)), the failed step's words, the server's reason ("Why:

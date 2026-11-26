@@ -1865,8 +1865,10 @@ final class TafsCloud {
         /// The run stopped: its status, and why. A failed run also says what went through
         /// before it stopped (kiff/agents#249): each call that acted, by tool and what it
         /// acted on. `code` and `words` are tafs cloud's, on a run that failed for a reason it
-        /// names (`ai_unavailable`): said as they are.
-        case end(status: String, stop: String, done: [DoneCall] = [], code: String? = nil, words: String? = nil)
+        /// names (`ai_unavailable`, `ai_limit_*`): said as they are. `retry`: whether sending the message again is safe, by
+        /// the thread's `failed.retry` rule (false for a daily AI limit until it resets); nil from a tafs cloud that doesn't
+        /// send it, and then the thread decides.
+        case end(status: String, stop: String, done: [DoneCall] = [], code: String? = nil, words: String? = nil, retry: Bool? = nil)
         /// The stream broke on tafs cloud's side; the conversation has the rest.
         case broken
         /// The run read a message the owner wrote to it while it went (kiff/tafs#64).
@@ -1973,7 +1975,8 @@ final class TafsCloud {
                 (c["tool"] as? String).map { DoneCall(tool: $0, resource: c["resource"] as? String, invocation: c["invocation"] as? String) }
             }
             let said = { (key: String) in (o[key] as? String).flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 } }
-            return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "", done: done, code: said("code"), words: said("words"))
+            return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "", done: done, code: said("code"), words: said("words"),
+                        retry: o["retry"] as? Bool)
         case "error": return .broken
         case "held": return .held(exception: o["exception"] as? String ?? "", invocation: o["invocation"] as? String ?? "")
         default: return nil
