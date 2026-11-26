@@ -360,7 +360,12 @@ includes, tafs cloud's sentence as kiff.dev says it; none sent, no line. Above t
 packs are offered and Play lists at least one, a line says what they're for, as iOS's Add credits
 does (`packsExplainer`, `billing.pack_adds_credits_once_never`): "Packs are for when a month's
 credits run out. A pack adds credits once, and they never expire. Each month's credits are used
-first, then the packs'."
+first, then the packs'.", after a line on what credits buy (`billing.credits_buy`). **Each pack's
+whole row is its button** (`packRowTag`), not only its price. **After Solo goes through**, once
+KIFF records it and Plan & usage reads again, the panel says "Solo is on: 500 credits every month
+for your tafs' runs, Coach included." (`billing.solo_on`, `PurchaseNote.SOLO_ON`), only when the
+balance read again offers packs and no longer Solo, which KIFF does only on Solo. Pending, not
+recorded or cancelled keep their own words (`PurchasesTest`, `PlanBuyPanelTest`).
 - **Restore purchases** shows only while Play knows a purchase not finished yet, or couldn't say, or
   after one KIFF didn't record (`AppState.restoreShown`, read with Play's offers). Launch and sign-in
   already send what's unfinished, so an account that bought nothing has no Restore. A restore that

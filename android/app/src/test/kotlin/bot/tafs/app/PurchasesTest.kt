@@ -234,6 +234,21 @@ class PurchasesTest {
     assertNull(m.state.value.tasksMessage)
   }
 
+  /** The owner's gap 1: after Solo goes through, "Solo is on" only once KIFF reads it so (the balance offers packs, not Solo). */
+  @Test fun soloIsOnOnlyOnceKiffReadsItSo() = runTest {
+    val m = model(playBilling = true)
+    transport.answer("GET /v1/usage/balance", 200, """{"balance":{"state":"ok","words":"Solo","buy":{"solo":false,"packs":true}},"plan_line":"Solo"}""")
+    m.buy("solo_monthly")
+    assertEquals(bot.tafs.app.app.PurchaseNote(bot.tafs.app.app.PurchaseNote.SOLO_ON, bot.tafs.app.model.Words.Billing.soloOn), m.state.value.purchaseNote)
+  }
+
+  @Test fun soloNotYetReadAsOnClaimsNothing() = runTest {
+    val m = model(playBilling = true)
+    // KIFF still offers Solo: it hasn't read the plan as Solo yet, so nothing says it's on.
+    m.buy("solo_monthly")
+    assertNull(m.state.value.purchaseNote)
+  }
+
   @Test fun aPurchaseKiffHasntRecordedSaysSoUnderWhatWasTappedWithRestoreRightThere() = runTest {
     val m = model(playBilling = true, records = 500)
     val before = play.reads

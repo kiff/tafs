@@ -120,11 +120,13 @@ class PlayOffersTest {
     val note = bot.tafs.app.app.PurchaseNote("pack_rayo", "Bought. KIFF hasn't added it yet: tafs tries again when it opens.", offersRestore = true)
     show(google = true, note = note, restore = true)
     // Right under the pack's row, above the panel's own Restore purchases.
-    val line = rule.onNodeWithText(note.words).performScrollTo().assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-    val pack = rule.onNodeWithText("Pack · 500 credits").fetchSemanticsNode().boundsInRoot
-    val restores = rule.onAllNodes(androidx.compose.ui.test.hasText("Restore purchases")).fetchSemanticsNodes().map { it.boundsInRoot }.sortedBy { it.top }
+    // Where each sits in the panel, scrolled out of view or not: the panel is taller than the screen now that it says what Solo gives
+    // and what packs are for, and a clipped node's bounds read as empty.
+    val line = rule.onNodeWithText(note.words).performScrollTo().assertIsDisplayed().fetchSemanticsNode().positionInRoot.y
+    val pack = rule.onNodeWithText("Pack · 500 credits", useUnmergedTree = true).fetchSemanticsNode().positionInRoot.y
+    val restores = rule.onAllNodes(androidx.compose.ui.test.hasText("Restore purchases")).fetchSemanticsNodes().map { it.positionInRoot.y }.sorted()
     assertEquals(2, restores.size)
-    assertEquals(true, line.top > pack.top && line.top < restores.last().top)
+    assertEquals(true, line > pack && line < restores.last())
     // The Restore offered with it is the one just under it.
     rule.onAllNodes(androidx.compose.ui.test.hasText("Restore purchases"))[0].performClick()
     rule.waitUntil(5_000) { bought.isNotEmpty() }
@@ -146,9 +148,9 @@ class PlayOffersTest {
 
   @Test fun onceSoloRunsTheFirstMonthPackIsBoughtAtPlaysPrice() {
     show(google = true, solo = false, packs = true, firstMonth = """{"ready":true,"words":null}""")
-    val first = rule.onNodeWithText("First month pack · 7,000 credits").performScrollTo().assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-    // First among the packs.
-    assertEquals(true, first.top < rule.onNodeWithText("Pack · 500 credits").fetchSemanticsNode().boundsInRoot.top)
+    val first = rule.onNodeWithText("First month pack · 7,000 credits").performScrollTo().assertIsDisplayed().fetchSemanticsNode().positionInRoot.y
+    // First among the packs (where each sits, in view or not).
+    assertEquals(true, first < rule.onNodeWithText("Pack · 500 credits", useUnmergedTree = true).fetchSemanticsNode().positionInRoot.y)
     rule.onNodeWithText("€99.99").assertIsDisplayed().performClick()
     rule.waitUntil(5_000) { bought.isNotEmpty() }
     assertEquals(listOf("bot.tafs.credits.firstmonth"), bought)

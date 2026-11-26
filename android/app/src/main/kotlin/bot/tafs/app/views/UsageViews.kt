@@ -129,6 +129,9 @@ internal fun BalancePanel(state: AppState, actions: AccountActions) {
   }
 }
 
+/** Test tag for a pack's row, which is its button. */
+internal fun packRowTag(product: String) = "pack-row-$product"
+
 /** Test tag for Solo's one line of what it gives. */
 internal const val SOLO_GIVES = "solo-gives"
 
@@ -152,6 +155,8 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
   Panel {
     // The plan while Solo is offered; credits once it runs.
     Eyebrow(if (offer.offers("solo")) UsageWords.CHOOSE_PLAN else UsageWords.BUY)
+    // "Solo is on", once KIFF reads it so after the purchase (gap 1).
+    PurchaseNoteLine(state, bot.tafs.app.app.PurchaseNote.SOLO_ON, actions)
     if (offer.offers("solo")) {
       store.googleSoloProduct?.let { id ->
         state.storeProducts[id]?.let { solo ->
@@ -175,7 +180,12 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
       val pack = store.firstMonthPack ?: return@let
       val id = pack.googleProduct ?: return@let
       val product = state.storeProducts[id] ?: return@let
-      Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+      // The whole row is the button, not only its price (the owner's gap 2), read as one by TalkBack.
+      Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).confirms().tapping(enabled = state.buying == null) { scope.launch { actions.buy(id) } }
+          .testTag(packRowTag(id)),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
         Column(Modifier.weight(1f)) {
           Text(pack.line.ifEmpty { pack.name }, style = scaled(15, FontWeight.SemiBold, Theme.ink))
           first.words?.let { Text(it, style = scaled(12, color = Theme.dim)) }
@@ -183,17 +193,26 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
         Text(
           if (state.buying == id) Words.Usage.buying else product.price,
           style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
-          modifier = Modifier.confirms().tapping(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
+          modifier = Modifier.padding(8.dp),
         )
       }
       PurchaseNoteLine(state, id, actions)
     }
     // What packs are for, above them, as on iOS: only once a month's credits run out, and they never expire (the owner's item).
-    packsExplainer(offer.offers("packs"), store, state.storeProducts.keys)?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+    packsExplainer(offer.offers("packs"), store, state.storeProducts.keys)?.let {
+      // What credits buy, then what packs are for (the owner's gap 3), as iOS's Add credits says them.
+      Text(Words.Billing.creditsBuy, style = scaled(13, color = Theme.ink))
+      Text(it, style = scaled(13, color = Theme.soft))
+    }
     if (offer.offers("packs")) store.repeatPacks.forEach { pack ->
       val id = pack.googleProduct ?: return@forEach
       val product = state.storeProducts[id] ?: return@forEach
-      Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+      // The whole row is the button, not only its price (the owner's gap 2), read as one by TalkBack.
+      Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).confirms().tapping(enabled = state.buying == null) { scope.launch { actions.buy(id) } }
+          .testTag(packRowTag(id)),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
         Column(Modifier.weight(1f)) {
           Text(pack.line.ifEmpty { pack.name }, style = scaled(15, FontWeight.SemiBold, Theme.ink))
           Text(UsageWords.PACKS_KEEP, style = scaled(12, color = Theme.dim))
@@ -201,7 +220,7 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
         Text(
           if (state.buying == id) Words.Usage.buying else product.price,
           style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
-          modifier = Modifier.confirms().tapping(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
+          modifier = Modifier.padding(8.dp),
         )
       }
       PurchaseNoteLine(state, id, actions)
