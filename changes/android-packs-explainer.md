@@ -1,1 +1,1 @@
-- **Android: Plan & usage says what credit packs are for.** Above the packs, a line says they're for when a month's credits run out, add credits once and never expire, as on iPhone. See [The Android app](docs/android-app.md).
+- **Android: Plan & usage says what Solo gives and what credit packs are for.** Under Solo, one line gives who it's for, its monthly credits and Coach; above the packs, a line says they're for when a month's credits run out and never expire, as on iPhone. See [The Android app](docs/android-app.md).

@@ -35,6 +35,7 @@ import bot.tafs.app.design.LocalBiometry
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
@@ -128,6 +129,9 @@ internal fun BalancePanel(state: AppState, actions: AccountActions) {
   }
 }
 
+/** Test tag for Solo's one line of what it gives. */
+internal const val SOLO_GIVES = "solo-gives"
+
 /**
  * The line above the packs: what they're for (when a month's credits run out) and that they never expire, as iOS's Add credits
  * says. Only while packs are offered and Play lists at least one of them, so it never stands over an empty list.
@@ -152,6 +156,8 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
       store.googleSoloProduct?.let { id ->
         state.storeProducts[id]?.let { solo ->
           Text(Words.Usage.solo, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+          // What Solo gives, in one line, as iOS's Solo row says it (the owner's item): who it's for, the month's credits, Coach.
+          Text(Words.Billing.tafsKiffOnePersonEvery, style = scaled(14, color = Theme.ink), modifier = Modifier.testTag(SOLO_GIVES))
           Text(UsageWords.soloTerms(solo.price, solo.period, solo.freeTrial), style = scaled(13, color = Theme.soft))
           // What Coach's help includes, in tafs cloud's words: the same sentence kiff.dev says.
           offer.coachIncluded?.let { Text(it, style = scaled(13, color = Theme.soft)) }
