@@ -1,0 +1,1 @@
+- **Android: Plan & usage says what you get, and buying is simpler.** Under Solo, one line gives its monthly credits and Coach; Add credits says what credits buy and what packs are for; a pack's whole row buys it; and after Solo goes through, Plan & usage says "Solo is on". See [The Android app](docs/android-app.md).

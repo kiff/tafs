@@ -354,8 +354,18 @@ Solo and packs of credits, which never expire, at Play's prices, where the balan
 them to this person, and only once KIFF's usage names their Play products and the account's token.
 KIFF records each purchase before Play is told it's done, and Restore purchases sends again what
 wasn't. The panel's title is **Choose a plan** while Solo is offered (`buy.solo`), and **Add
-credits** once it runs. Under Solo's terms, the balance's `buy.coach` says what Coach's help
-includes, tafs cloud's sentence as kiff.dev says it; none sent, no line.
+credits** once it runs. Under "Solo", one line says what it gives, as iOS's Solo row does
+(`billing.tafs_kiff_one_person_every`: "For one person: 500 credits a month, Coach included."). Under Solo's terms, the balance's `buy.coach` says what Coach's help
+includes, tafs cloud's sentence as kiff.dev says it; none sent, no line. Above the packs, while
+packs are offered and Play lists at least one, a line says what they're for, as iOS's Add credits
+does (`packsExplainer`, `billing.pack_adds_credits_once_never`): "Packs are for when a month's
+credits run out. A pack adds credits once, and they never expire. Each month's credits are used
+first, then the packs'.", after a line on what credits buy (`billing.credits_buy`). **Each pack's
+whole row is its button** (`packRowTag`), not only its price. **After Solo goes through**, once
+KIFF records it and Plan & usage reads again, the panel says "Solo is on: 500 credits every month
+for your tafs' runs, Coach included." (`billing.solo_on`, `PurchaseNote.SOLO_ON`), only when the
+balance read again offers packs and no longer Solo, which KIFF does only on Solo. Pending, not
+recorded or cancelled keep their own words (`PurchasesTest`, `PlanBuyPanelTest`).
 - **Restore purchases** shows only while Play knows a purchase not finished yet, or couldn't say, or
   after one KIFF didn't record (`AppState.restoreShown`, read with Play's offers). Launch and sign-in
   already send what's unfinished, so an account that bought nothing has no Restore. A restore that

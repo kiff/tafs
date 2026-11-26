@@ -201,6 +201,8 @@ data class ChatRun(val session: String, val run: String? = null)
 data class PurchaseNote(val at: String, val words: String, val offersRestore: Boolean = false) {
   companion object {
     const val RESTORE = "restore"
+    /** Solo's confirmation, at the top of the panel: Solo's own row is gone once it runs. */
+    const val SOLO_ON = "solo_on"
   }
 }
 
@@ -9730,8 +9732,14 @@ class AppModel(
     _state.update { it.copy(buying = product) }
     val outcome = purchases.buy(product, token, requestId)
     val words = buyWords(outcome)
+    // Solo is on only once KIFF reads it so: the balance, read again once KIFF recorded the purchase, offers packs and no longer
+    // Solo (KIFF offers packs only on Solo). Then its own line says so, as iOS's does (the owner's gap 1); pending, not recorded
+    // or cancelled keep their own words.
+    val soloOn = outcome == PurchaseOutcome.Done && product == _state.value.usage?.store?.googleSoloProduct &&
+      _state.value.balance?.balance?.let { it.offers("packs") && !it.offers("solo") } == true
     _state.update {
       if (requestId != null) it.copy(buying = null, tasksMessage = words ?: it.tasksMessage)
+      else if (soloOn) it.copy(buying = null, purchaseNote = PurchaseNote(PurchaseNote.SOLO_ON, Words.Billing.soloOn))
       else it.copy(buying = null, purchaseNote = words?.let { w -> PurchaseNote(product, w, offersRestore = outcome is PurchaseOutcome.NotRecorded) })
     }
     loadStore()

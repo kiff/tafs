@@ -132,7 +132,8 @@ class DriveContractTest {
     // Controls that aren't buttons carry it on the modifier that takes the touch.
     val onModifiers = listOf(
       "views/DeleteAccountView.kt" to "heightIn(min = 48.dp).confirms()\n            .tapping(enabled = !busy) { scope.launch { if (delete()) onClose() } }",
-      "views/UsageViews.kt" to "Modifier.confirms().tapping(enabled = state.buying == null) { scope.launch { actions.buy(id) } }",
+      // A pack's whole row buys it, so the row carries the mark.
+      "views/UsageViews.kt" to "heightIn(min = 48.dp).confirms().tapping(enabled = state.buying == null) { scope.launch { actions.buy(id) } }",
       "views/DevicesView.kt" to "scope.launch { remove(device) } }, modifier = Modifier.confirms())",
       "views/ConnectAppsViews.kt" to "Modifier.heightIn(min = 44.dp).confirms().tapping(enabled = state.connecting == null) { act(g) }",
       // Setting a waiting Coach chat aside ends it: the button, the swipe, Set all aside and its ask's yes.
@@ -141,7 +142,7 @@ class DriveContractTest {
       "views/NeedsYouView.kt" to ".confirms().tapping(enabled = state.settingAside.isEmpty()) {",
       "views/NeedsYouView.kt" to "onSetAside?.invoke(null) }, modifier = Modifier.confirms())",
     ).filter { (file, marked) -> marked !in File(sources, file).text() }
-    assertTrue("Delete account, a pack's price, signing out another device and a connection's fix confirm: $onModifiers", onModifiers.isEmpty())
+    assertTrue("Delete account, a pack's row, signing out another device and a connection's fix confirm: $onModifiers", onModifiers.isEmpty())
     // And everything ApprovalGate holds is inside it: the approvals, extra room, "Did this happen?", install, resume.
     val gated = files().sumOf { Regex("""ApprovalGate \{""").findAll(it.text()).count() }
     assertTrue("the approval gate is in use", gated >= 10)
