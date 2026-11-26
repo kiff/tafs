@@ -73,6 +73,7 @@
   "watch.phone_no_answer": "Tālrunis laikus neatbildēja. Mēģini vēlreiz.",
   "watch.phone_no_app": "Tavā tālrunī nav tafs. Instalē to tur, tad mēģini vēlreiz.",
   "watch.phone_not_reachable": "Tālrunis nav tuvumā. Pienes to tuvāk, tad mēģini vēlreiz.",
+  "watch.phone_update_app": "Atjaunini tafs savā tālrunī, tad mēģini vēlreiz.",
   "watch.play": "Atskaņot",
   "watch.qr.needs_me_today": "Kas mani šodien gaida?",
   "watch.qr.not_now": "Ne tagad",

@@ -2853,6 +2853,7 @@
     <string name="watch_phone_no_answer">Telefonyňyz wagtynda jogap bermedi. Täzeden synanyşyň.</string>
     <string name="watch_phone_no_app">tafs telefonyňyzda ýok. Ony şol ýerde guruň, soňra täzeden synanyşyň.</string>
     <string name="watch_phone_not_reachable">Telefonyňyz elýeterli däl. Ony ýakynlaşdyryň, soňra täzeden synanyşyň.</string>
+    <string name="watch_phone_update_app">Telefonyňyzdaky tafs-y täzeläň, soňra täzeden synanyşyň.</string>
     <string name="watch_play">Oýnaň</string>
     <string name="watch_qr_needs_me_today">Şu gün maňa näme zerur?</string>
     <string name="watch_qr_not_now">Häzir däl</string>

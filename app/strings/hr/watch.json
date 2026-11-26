@@ -73,6 +73,7 @@
   "watch.phone_no_answer": "Vaš telefon nije odgovorio na vrijeme. Pokušajte ponovno.",
   "watch.phone_no_app": "tafs nije na vašem telefonu. Instalirajte ga tamo, pa pokušajte ponovno.",
   "watch.phone_not_reachable": "Vaš telefon nije u dometu. Približite ga, pa pokušajte ponovno.",
+  "watch.phone_update_app": "Ažurirajte tafs na telefonu, pa pokušajte ponovno.",
   "watch.play": "Pustite",
   "watch.qr.needs_me_today": "Što me čeka danas?",
   "watch.qr.not_now": "Ne sada",

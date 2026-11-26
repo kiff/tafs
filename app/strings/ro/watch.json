@@ -73,6 +73,7 @@
   "watch.phone_no_answer": "Telefonul nu a răspuns la timp. Încercați din nou.",
   "watch.phone_no_app": "tafs nu este pe telefon. Instalați-l acolo, apoi încercați din nou.",
   "watch.phone_not_reachable": "Telefonul nu este în apropiere. Apropiați-l, apoi încercați din nou.",
+  "watch.phone_update_app": "Actualizați tafs pe telefon, apoi încercați din nou.",
   "watch.play": "Redați",
   "watch.qr.needs_me_today": "Ce mă așteaptă azi?",
   "watch.qr.not_now": "Nu acum",

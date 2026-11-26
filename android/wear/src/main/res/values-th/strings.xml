@@ -114,6 +114,7 @@
     <string name="watch_phone_no_answer">โทรศัพท์ของคุณไม่ตอบทันเวลา ลองอีกครั้ง</string>
     <string name="watch_phone_no_app">tafs ไม่ได้อยู่บนโทรศัพท์ของคุณ ติดตั้งที่นั่น แล้วลองอีกครั้ง</string>
     <string name="watch_phone_not_reachable">โทรศัพท์ของคุณอยู่นอกระยะ ขยับเข้ามาใกล้ขึ้น แล้วลองอีกครั้ง</string>
+    <string name="watch_phone_update_app">อัปเดต tafs บนโทรศัพท์ของคุณ แล้วลองอีกครั้ง</string>
     <string name="watch_play">เล่น</string>
     <string name="watch_qr_needs_me_today">วันนี้มีอะไรต้องการฉัน</string>
     <string name="watch_qr_not_now">ไม่ใช่ตอนนี้</string>

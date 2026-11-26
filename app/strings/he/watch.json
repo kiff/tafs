@@ -73,6 +73,7 @@
   "watch.phone_no_answer": "הטלפון שלך לא ענה בזמן. יש לנסות שוב.",
   "watch.phone_no_app": "tafs לא מותקן בטלפון שלך. יש להתקין אותו שם ולנסות שוב.",
   "watch.phone_not_reachable": "הטלפון שלך לא בטווח. יש להקרב אליו ולנסות שוב.",
+  "watch.phone_update_app": "יש לעדכן את tafs בטלפון שלך ולנסות שוב.",
   "watch.play": "הפעלה",
   "watch.qr.needs_me_today": "מה צריך ממני היום?",
   "watch.qr.not_now": "לא עכשיו",

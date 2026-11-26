@@ -119,6 +119,7 @@
     <string name="watch_phone_no_answer">Votre téléphone n\'a pas répondu à temps. Réessayez.</string>
     <string name="watch_phone_no_app">tafs n\'est pas installé sur votre téléphone. Installez-le, puis réessayez.</string>
     <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
+    <string name="watch_phone_update_app">Mettez à jour tafs sur votre téléphone, puis réessayez.</string>
     <string name="watch_play">Lire</string>
     <string name="watch_qr_needs_me_today">Qu\'est-ce qui m\'attend aujourd\'hui ?</string>
     <string name="watch_qr_not_now">Pas maintenant</string>

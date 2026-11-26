@@ -3011,6 +3011,7 @@
     <string name="watch_phone_no_answer">Telefon nie odpowiedział na czas. Spróbuj ponownie.</string>
     <string name="watch_phone_no_app">Na telefonie nie ma aplikacji tafs. Zainstaluj ją, a potem spróbuj ponownie.</string>
     <string name="watch_phone_not_reachable">Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie.</string>
+    <string name="watch_phone_update_app">Zaktualizuj aplikację tafs na telefonie, a potem spróbuj ponownie.</string>
     <string name="watch_play">Odtwórz</string>
     <string name="watch_qr_needs_me_today">Co dziś na mnie czeka?</string>
     <string name="watch_qr_not_now">Nie teraz</string>

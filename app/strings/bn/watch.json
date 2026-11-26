@@ -69,6 +69,7 @@
   "watch.phone_no_answer": "আপনার ফোন সময়মতো সাড়া দেয়নি। আবার চেষ্টা করুন।",
   "watch.phone_no_app": "tafs আপনার ফোনে নেই। সেখানে ইনস্টল করুন, তারপর আবার চেষ্টা করুন।",
   "watch.phone_not_reachable": "আপনার ফোন নাগালে নেই। কাছে আনুন, তারপর আবার চেষ্টা করুন।",
+  "watch.phone_update_app": "আপনার ফোনে tafs আপডেট করুন, তারপর আবার চেষ্টা করুন।",
   "watch.play": "চালান",
   "watch.qr.needs_me_today": "আজ আমার কী করা দরকার?",
   "watch.qr.not_now": "এখন নয়",

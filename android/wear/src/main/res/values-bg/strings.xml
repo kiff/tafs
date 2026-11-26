@@ -119,6 +119,7 @@
     <string name="watch_phone_no_answer">Телефонът ви не отговори навреме. Опитайте отново.</string>
     <string name="watch_phone_no_app">tafs не е на телефона ви. Инсталирайте го там и опитайте отново.</string>
     <string name="watch_phone_not_reachable">Телефонът ви не е наблизо. Приближете го и опитайте отново.</string>
+    <string name="watch_phone_update_app">Обновете tafs на телефона си и опитайте отново.</string>
     <string name="watch_play">Възпроизвеждане</string>
     <string name="watch_qr_needs_me_today">Какво ме чака днес?</string>
     <string name="watch_qr_not_now">Не сега</string>

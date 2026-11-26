@@ -69,6 +69,7 @@
   "watch.phone_no_answer": "Telefonunuz zamanında yanıt vermedi. Tekrar deneyin.",
   "watch.phone_no_app": "tafs telefonunuzda yok. Orada kurun, sonra tekrar deneyin.",
   "watch.phone_not_reachable": "Telefonunuz erişilebilir değil. Yaklaştırın, sonra tekrar deneyin.",
+  "watch.phone_update_app": "Telefonunuzdaki tafs'ı güncelleyin, sonra tekrar deneyin.",
   "watch.play": "Oynat",
   "watch.qr.needs_me_today": "Bugün neye ihtiyacım var?",
   "watch.qr.not_now": "Şimdi değil",

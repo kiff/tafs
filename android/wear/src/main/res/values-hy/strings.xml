@@ -119,6 +119,7 @@
     <string name="watch_phone_no_answer">Ձեր հեռախոսը ժամանակին չպատասխանեց։ Փորձեք նորից։</string>
     <string name="watch_phone_no_app">tafs-ը ձեր հեռախոսում չէ։ Տեղադրեք այնտեղ, ապա նորից փորձեք։</string>
     <string name="watch_phone_not_reachable">Ձեր հեռախոսը հասանելի չէ։ Մոտեցրեք, ապա նորից փորձեք։</string>
+    <string name="watch_phone_update_app">Թարմացրեք tafs-ը ձեր հեռախոսում, ապա նորից փորձեք։</string>
     <string name="watch_play">Նվագարկել</string>
     <string name="watch_qr_needs_me_today">Ինչ է պետք ինձ այսօր։</string>
     <string name="watch_qr_not_now">Ոչ հիմա</string>

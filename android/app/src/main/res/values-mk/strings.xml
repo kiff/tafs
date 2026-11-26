@@ -2853,6 +2853,7 @@
     <string name="watch_phone_no_answer">Твојот телефон не одговори навреме. Обиди се повторно.</string>
     <string name="watch_phone_no_app">tafs не е на твојот телефон. Инсталирај го таму, па обиди се повторно.</string>
     <string name="watch_phone_not_reachable">Телефонот не е на дофат. Донеси го поблиску, па обиди се повторно.</string>
+    <string name="watch_phone_update_app">Ажурирај го tafs на твојот телефон, па обиди се повторно.</string>
     <string name="watch_play">Пушти</string>
     <string name="watch_qr_needs_me_today">Што ме чека денес?</string>
     <string name="watch_qr_not_now">Не сега</string>

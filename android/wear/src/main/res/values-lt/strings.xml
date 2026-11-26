@@ -124,6 +124,7 @@
     <string name="watch_phone_no_answer">Telefonas laiku neatsakė. Bandykite dar kartą.</string>
     <string name="watch_phone_no_app">Jūsų telefone nėra tafs. Įdiekite ją ten ir bandykite dar kartą.</string>
     <string name="watch_phone_not_reachable">Telefonas nepasiekiamas. Priartinkite jį ir bandykite dar kartą.</string>
+    <string name="watch_phone_update_app">Atnaujinkite tafs savo telefone ir bandykite dar kartą.</string>
     <string name="watch_play">Leisti</string>
     <string name="watch_qr_needs_me_today">Kas manęs laukia šiandien?</string>
     <string name="watch_qr_not_now">Ne dabar</string>

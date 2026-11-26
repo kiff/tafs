@@ -1853,11 +1853,14 @@ class WatchModel(
     today = null
   }
 
-  /** Signing in again, asked of the phone's person (row 18): waiting on them, denied, or the phone not reached. */
+  /** Signing in again, asked of the phone's person (row 18): waiting on them, denied, the phone not reached, or too old to ask. */
   sealed interface SignInAsk {
     data object Waiting : SignInAsk
     data object Denied : SignInAsk
     data class NotReached(val why: LinkFailure) : SignInAsk
+
+    /** The phone answered, but doesn't know the ask (tafs there from before Android 147): it needs updating first. */
+    data object PhoneTooOld : SignInAsk
   }
 
   private val _signInAsk = MutableStateFlow<SignInAsk?>(if (signIn?.asked() != null) SignInAsk.Waiting else null)
@@ -1876,7 +1879,9 @@ class WatchModel(
     val sent = asked is Asked.Answered && asked.reply is WatchReply.Done
     if (!sent) {
       signIn?.forgetAsk()
-      _signInAsk.value = SignInAsk.NotReached((asked as? Asked.Unreachable)?.why ?: LinkFailure.Link)
+      // A phone from before the ask answers it as a path it doesn't serve: it's reached, but tafs there needs updating.
+      val tooOld = asked is Asked.Answered && (asked.reply as? WatchReply.Refused)?.reason == bot.tafs.watchlink.NotAccepted.UNKNOWN_PATH
+      _signInAsk.value = if (tooOld) SignInAsk.PhoneTooOld else SignInAsk.NotReached((asked as? Asked.Unreachable)?.why ?: LinkFailure.Link)
     }
   }
 

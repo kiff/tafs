@@ -114,6 +114,7 @@
     <string name="watch_phone_no_answer">スマートフォンから時間内に応答がありませんでした。もう一度お試しください。</string>
     <string name="watch_phone_no_app">スマートフォンにtafsがインストールされていません。インストールしてから、もう一度お試しください。</string>
     <string name="watch_phone_not_reachable">スマートフォンが範囲外です。近づけてから、もう一度お試しください。</string>
+    <string name="watch_phone_update_app">スマートフォンの tafs を更新してから、もう一度お試しください。</string>
     <string name="watch_play">再生</string>
     <string name="watch_qr_needs_me_today">今日確認することは？</string>
     <string name="watch_qr_not_now">今はしない</string>

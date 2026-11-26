@@ -98,6 +98,44 @@ class WatchRefuseHaltTest {
     assertTrue("Allow carries the account mark", answers.last().second && answers.last().third == m.watchMark())
   }
 
+  private class Keep : bot.tafs.app.app.WatchSignInKeep {
+    var kept: Pair<String, Long>? = null
+    override fun keep(ask: String, at: Long) { kept = ask to at }
+    override fun waiting(now: Long): String? = kept?.takeIf { now - it.second in 0..bot.tafs.app.app.WatchSignInKeep.WAITS_MS }?.first
+    override fun clear() { kept = null }
+  }
+
+  /**
+   * Row 18 on a real phone: the relay may take a watch's ask in a process the system then ends. The ask is kept, so the model the
+   * person opens next still asks "Sign this watch in as you?"; answered, it's gone. One older than ten minutes isn't asked.
+   */
+  @Test fun aWatchsSignInAskOutlivesTheProcessThatTookIt() = runTest {
+    reads()
+    val keep = Keep()
+    val first = model()
+    first.watchSignInKeep = keep
+    val relay = WatchRelay(model = { first }, now = { now })
+    relay.ask(WatchRequest.SignInAsk(now, "w_0000cc33"))
+    assertEquals("w_0000cc33", keep.kept?.first)
+    // A new process: a new model, the same keep.
+    reads()
+    val next = model()
+    assertEquals(null, next.state.value.watchSignInAsk)
+    next.watchSignInKeep = keep
+    assertEquals("w_0000cc33", next.state.value.watchSignInAsk)
+    val answers = mutableListOf<Pair<String, Boolean>>()
+    next.watchSignInAnswered = { ask, allowed, _ -> answers += ask to allowed }
+    next.answerWatchSignIn(true)
+    assertEquals(listOf("w_0000cc33" to true), answers)
+    assertEquals(null, keep.kept)
+    // Past ten minutes: not asked again.
+    keep.keep("w_0000dd44", 0L)
+    reads()
+    val late = model()
+    late.watchSignInKeep = keep
+    assertEquals(null, late.state.value.watchSignInAsk)
+  }
+
   /** Row 10: a cut line of a taf's chat, whole, by its message id: the taf's own words, never the person's, never kept. */
   @Test fun aCutLineIsReadWholeByItsId() = runTest {
     reads()

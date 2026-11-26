@@ -281,6 +281,7 @@ internal fun SignedOutHereScreen(act: Actions, signIn: WatchModel.SignInAsk? = n
       WatchModel.SignInAsk.Waiting -> line(Words.Watch.waitingForPhone)
       WatchModel.SignInAsk.Denied -> line(Words.Watch.signInDenied)
       is WatchModel.SignInAsk.NotReached -> line(signIn.why.line)
+      WatchModel.SignInAsk.PhoneTooOld -> line(Words.Watch.phoneUpdateApp)
       null -> Unit
     }
     if (signIn != WatchModel.SignInAsk.Waiting) {

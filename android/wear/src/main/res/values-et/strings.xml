@@ -119,6 +119,7 @@
     <string name="watch_phone_no_answer">Telefon ei vastanud õigel ajal. Proovi uuesti.</string>
     <string name="watch_phone_no_app">tafsi pole telefonis. Paigalda see sinna ja proovi uuesti.</string>
     <string name="watch_phone_not_reachable">Telefon pole käeulatuses. Too see lähemale ja proovi uuesti.</string>
+    <string name="watch_phone_update_app">Uuenda tafsi telefonis ja proovi uuesti.</string>
     <string name="watch_play">Esita</string>
     <string name="watch_qr_needs_me_today">Mis mind täna vajab?</string>
     <string name="watch_qr_not_now">Mitte praegu</string>

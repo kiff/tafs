@@ -119,6 +119,7 @@
     <string name="watch_phone_no_answer">A telefonod nem válaszolt időben. Próbáld újra.</string>
     <string name="watch_phone_no_app">A tafs nincs a telefonodon. Telepítsd ott, majd próbáld újra.</string>
     <string name="watch_phone_not_reachable">A telefonod nincs elérhető közelségben. Hozd közelebb, majd próbáld újra.</string>
+    <string name="watch_phone_update_app">Frissítsd a tafst a telefonodon, majd próbáld újra.</string>
     <string name="watch_play">Lejátszás</string>
     <string name="watch_qr_needs_me_today">Mi vár rám ma?</string>
     <string name="watch_qr_not_now">Most nem</string>
