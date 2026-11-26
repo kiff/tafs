@@ -832,7 +832,10 @@
     <string name="coach_prompt_connect_tools">Pievieno savas lietotnes</string>
     <string name="coach_prompt_connect_tools_mac">pievienot savas lietotnes</string>
     <string name="coach_prompt_give_card">Dot Coach tā Card</string>
+    <string name="coach_prompt_give_card_why">Dot Coach tā Card, lai tas varētu rīkoties tikai tajās robežās, ko tu apstiprini.</string>
+    <string name="coach_prompt_give_card_why_mac">dot Coach tā Card, lai tas varētu rīkoties tikai tajās robežās, ko tu apstiprini</string>
     <string name="coach_prompt_start">Sākt Coach</string>
+    <string name="coach_prompt_why">Coach var rīkoties tikai tajās robežās, ko tu apstiprini.</string>
     <string name="coach_puts_words_message_box">Ieliek tā vārdus ziņas laukā</string>
     <string name="coach_questions_answered_of">Atbildēti %1$s no %2$s</string>
     <string name="coach_questions_chat_about">Apspriest šo</string>

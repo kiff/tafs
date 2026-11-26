@@ -766,7 +766,10 @@
     <string name="coach_prompt_connect_tools">連接您的 App</string>
     <string name="coach_prompt_connect_tools_mac">連接您的 App</string>
     <string name="coach_prompt_give_card">發給 Coach 它的 Card</string>
+    <string name="coach_prompt_give_card_why">發給 Coach 它的 Card，讓它只能在您核准的範圍內行動。</string>
+    <string name="coach_prompt_give_card_why_mac">發給 Coach 它的 Card，讓它只能在您核准的範圍內行動</string>
     <string name="coach_prompt_start">開始 Coach</string>
+    <string name="coach_prompt_why">Coach 只能在您核准的範圍內行動。</string>
     <string name="coach_puts_words_message_box">將它的文字放入訊息框</string>
     <string name="coach_questions_answered_of">已回覆 %1$s / %2$s</string>
     <string name="coach_questions_chat_about">討論這個問題</string>

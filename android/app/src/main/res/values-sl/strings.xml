@@ -865,7 +865,10 @@
     <string name="coach_prompt_connect_tools">Poveži vaše aplikacije</string>
     <string name="coach_prompt_connect_tools_mac">povezati vaše aplikacije</string>
     <string name="coach_prompt_give_card">Daj Coachu njegovo Card</string>
+    <string name="coach_prompt_give_card_why">Dajte Coachu njegovo Card, da lahko deluje le v okviru tega, kar odobrite.</string>
+    <string name="coach_prompt_give_card_why_mac">dati Coachu njegovo Card, da lahko deluje le v okviru tega, kar odobrite</string>
     <string name="coach_prompt_start">Zaženi Coacha</string>
+    <string name="coach_prompt_why">Coach lahko deluje le v okviru tega, kar odobrite.</string>
     <string name="coach_puts_words_message_box">Vstavi njegove besede v polje za sporočilo</string>
     <string name="coach_questions_answered_of">Odgovorjeno %1$s od %2$s</string>
     <string name="coach_questions_chat_about">Pogovori se o tem</string>

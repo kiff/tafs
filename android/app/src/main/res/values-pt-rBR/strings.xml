@@ -799,7 +799,10 @@
     <string name="coach_prompt_connect_tools">Conectar os seus apps</string>
     <string name="coach_prompt_connect_tools_mac">conectar os seus apps</string>
     <string name="coach_prompt_give_card">Dar ao Coach o seu Card</string>
+    <string name="coach_prompt_give_card_why">Dar ao Coach o Card dele, para que ele só possa agir dentro do que você aprova.</string>
+    <string name="coach_prompt_give_card_why_mac">dar ao Coach o Card dele, para que ele só possa agir dentro do que você aprova</string>
     <string name="coach_prompt_start">Iniciar o Coach</string>
+    <string name="coach_prompt_why">O Coach só pode agir dentro do que você aprova.</string>
     <string name="coach_puts_words_message_box">Coloca as palavras na caixa de mensagem</string>
     <string name="coach_questions_answered_of">%1$s de %2$s respondidas</string>
     <string name="coach_questions_chat_about">Conversar sobre isto</string>

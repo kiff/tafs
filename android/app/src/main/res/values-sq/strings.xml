@@ -799,7 +799,10 @@
     <string name="coach_prompt_connect_tools">Lidhni aplikacionet tuaja</string>
     <string name="coach_prompt_connect_tools_mac">lidhni aplikacionet tuaja</string>
     <string name="coach_prompt_give_card">Jepini Coach Card-in e tij</string>
+    <string name="coach_prompt_give_card_why">Jepini Coach Card-in e tij, që të mund të veprojë vetëm brenda asaj që miratoni.</string>
+    <string name="coach_prompt_give_card_why_mac">jepini Coach Card-in e tij, që të mund të veprojë vetëm brenda asaj që miratoni</string>
     <string name="coach_prompt_start">Nisni Coach</string>
+    <string name="coach_prompt_why">Coach mund të veprojë vetëm brenda asaj që miratoni.</string>
     <string name="coach_puts_words_message_box">I vendos fjalët e tij në kutinë e mesazhit</string>
     <string name="coach_questions_answered_of">%1$s nga %2$s u përgjigjën</string>
     <string name="coach_questions_chat_about">Bisedoni për këtë</string>

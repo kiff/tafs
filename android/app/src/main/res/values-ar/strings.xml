@@ -931,7 +931,10 @@
     <string name="coach_prompt_connect_tools">اربط تطبيقاتك</string>
     <string name="coach_prompt_connect_tools_mac">اربط تطبيقاتك</string>
     <string name="coach_prompt_give_card">امنح Coach الـ Card الخاصة به</string>
+    <string name="coach_prompt_give_card_why">امنح Coach الـ Card الخاصة به، حتى لا يتصرف إلا في حدود ما توافق عليه.</string>
+    <string name="coach_prompt_give_card_why_mac">امنح Coach الـ Card الخاصة به، حتى لا يتصرف إلا في حدود ما توافق عليه</string>
     <string name="coach_prompt_start">ابدأ Coach</string>
+    <string name="coach_prompt_why">لا يمكن لـ Coach أن يتصرف إلا في حدود ما توافق عليه.</string>
     <string name="coach_puts_words_message_box">يضع كلماته في مربع الرسالة</string>
     <string name="coach_questions_answered_of">تم الرد على %1$s من %2$s</string>
     <string name="coach_questions_chat_about">تحدّث عن هذا</string>

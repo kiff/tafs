@@ -799,7 +799,10 @@
     <string name="coach_prompt_connect_tools">अपने ऐप जोड़ें</string>
     <string name="coach_prompt_connect_tools_mac">अपने ऐप जोड़ें</string>
     <string name="coach_prompt_give_card">Coach को उसका Card दें</string>
+    <string name="coach_prompt_give_card_why">Coach को उसका Card दें, ताकि वह सिर्फ़ उसी दायरे में काम कर सके जिसे आप मंज़ूर करते हैं।</string>
+    <string name="coach_prompt_give_card_why_mac">उसका Card Coach को दें, ताकि वह सिर्फ़ उसी दायरे में काम कर सके जिसे आप मंज़ूर करते हैं</string>
     <string name="coach_prompt_start">Coach शुरू करें</string>
+    <string name="coach_prompt_why">Coach सिर्फ़ उसी दायरे में काम कर सकता है जिसे आप मंज़ूर करते हैं।</string>
     <string name="coach_puts_words_message_box">उसके शब्द संदेश बॉक्स में रखता है</string>
     <string name="coach_questions_answered_of">%2$s में से %1$s के उत्तर दिए</string>
     <string name="coach_questions_chat_about">इस पर बात करें</string>
