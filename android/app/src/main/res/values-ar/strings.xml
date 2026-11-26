@@ -3202,10 +3202,10 @@
     <string name="watch_sent">أُرسل</string>
     <string name="watch_settings_of">%1$s · الإعدادات</string>
     <string name="watch_sign_in_allow">السماح</string>
-    <string name="watch_sign_in_denied">لم يتم تسجيل الدخول. تبقى هذه الساعة خارج الحساب.</string>
+    <string name="watch_sign_in_denied">لم يتم تسجيل الدخول. تبقى هذه الساعة مسجَّلة الخروج.</string>
     <string name="watch_sign_in_deny">الرفض</string>
     <string name="watch_sign_in_on_phone">سجّل الدخول إلى tafs على هاتفك أولًا.</string>
-    <string name="watch_sign_in_watch_q">هل تريد تسجيل دخول هذه الساعة بحسابك؟</string>
+    <string name="watch_sign_in_watch_q">هل تريد تسجيل دخول هذه الساعة باسمك؟</string>
     <string name="watch_sign_out_q">تسجيل الخروج على هذه الساعة؟</string>
     <string name="watch_sign_out_sub">يبقى هاتفك مسجّل الدخول. وتنسى هذه الساعة tafs لديك ومحادثاتك ووارداتك.</string>
     <string name="watch_signed_in">تم تسجيل الدخول</string>
@@ -3222,7 +3222,7 @@
     <string name="watch_view_on_phone">عرض على الهاتف</string>
     <string name="watch_view_only_phone">هذا الهاتف للعرض فقط، لذا لا يمكنك السؤال من الساعة. سجّل الدخول على هاتف يستطيع الموافقة.</string>
     <string name="watch_voice_text_only">يتلقى Coach كلماتك كنص، وليس صوتك أبدًا.</string>
-    <string name="watch_waiting_for_phone">بانتظار هاتفك…</string>
+    <string name="watch_waiting_for_phone">في انتظار هاتفك…</string>
     <string name="watch_what_it_does">ما الذي يفعله</string>
     <plurals name="watch_working_count">
         <item quantity="zero">لا يعمل شيء</item>

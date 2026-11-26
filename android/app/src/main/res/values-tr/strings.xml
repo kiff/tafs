@@ -2882,10 +2882,10 @@
     <string name="watch_sent">Gönderildi</string>
     <string name="watch_settings_of">%1$s · ayarlar</string>
     <string name="watch_sign_in_allow">İzin ver</string>
-    <string name="watch_sign_in_denied">Oturum açılmadı. Bu saatte oturum kapalı kalıyor.</string>
+    <string name="watch_sign_in_denied">Oturum açılmadı. Bu saat oturumu kapalı kalır.</string>
     <string name="watch_sign_in_deny">Reddet</string>
     <string name="watch_sign_in_on_phone">Önce telefonunuzda tafs\'ta oturum açın.</string>
-    <string name="watch_sign_in_watch_q">Bu saatte hesabınızla oturum açılsın mı?</string>
+    <string name="watch_sign_in_watch_q">Bu saatte sizin adınıza oturum açılsın mı?</string>
     <string name="watch_sign_out_q">Bu saatte oturum kapatılsın mı?</string>
     <string name="watch_sign_out_sub">Telefonunuzda oturum açık kalır. Bu saat tafs\'larınızı, sohbetlerinizi ve gelen kutunuzu unutur.</string>
     <string name="watch_signed_in">Oturum açık</string>

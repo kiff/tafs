@@ -160,10 +160,10 @@
     <string name="watch_sent">Wysłano</string>
     <string name="watch_settings_of">%1$s · ustawienia</string>
     <string name="watch_sign_in_allow">Zezwól</string>
-    <string name="watch_sign_in_denied">Nie zalogowano. Zegarek pozostaje wylogowany.</string>
+    <string name="watch_sign_in_denied">Nie zalogowano. Ten zegarek pozostaje wylogowany.</string>
     <string name="watch_sign_in_deny">Odmów</string>
     <string name="watch_sign_in_on_phone">Najpierw zaloguj się do tafs na telefonie.</string>
-    <string name="watch_sign_in_watch_q">Zalogować ten zegarek na Twoje konto?</string>
+    <string name="watch_sign_in_watch_q">Zalogować ten zegarek jako Ty?</string>
     <string name="watch_sign_out_q">Wylogować na tym zegarku?</string>
     <string name="watch_sign_out_sub">Telefon pozostaje zalogowany. Ten zegarek zapomina Twoje tafs, czaty i Skrzynkę.</string>
     <string name="watch_signed_in">Zalogowano</string>

@@ -2885,7 +2885,7 @@
     <string name="watch_sign_in_denied">Nuk u lidh. Kjo orë mbetet e shkëputur.</string>
     <string name="watch_sign_in_deny">Refuzo</string>
     <string name="watch_sign_in_on_phone">Së pari hyni në tafs në telefonin tuaj.</string>
-    <string name="watch_sign_in_watch_q">Ta lidhësh këtë orë me llogarinë tënde?</string>
+    <string name="watch_sign_in_watch_q">Ta lidhësh këtë orë si ti?</string>
     <string name="watch_sign_out_q">Të dilni nga kjo orë?</string>
     <string name="watch_sign_out_sub">Telefoni juaj mbetet i hyrë. Kjo orë harron tafs-et, bisedat dhe kutinë tuaj hyrëse.</string>
     <string name="watch_signed_in">I hyrë</string>

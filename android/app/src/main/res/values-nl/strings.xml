@@ -2791,7 +2791,7 @@
     <string name="watch_ask">Vraag tafs</string>
     <string name="watch_ask_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je tafs iets vraagt.</string>
     <string name="watch_ask_not_on">Vragen vanaf je horloge staat nog niet aan.</string>
-    <string name="watch_ask_phone_sign_in">Vraag je telefoon dit horloge aan te melden</string>
+    <string name="watch_ask_phone_sign_in">Vraag je telefoon om dit horloge in te loggen</string>
     <string name="watch_ask_text_only">tafs krijgt je woorden als tekst, nooit je stem.</string>
     <string name="watch_asking_phone">Je telefoon vragen…</string>
     <string name="watch_calendar_today">Agenda van vandaag</string>
@@ -2882,10 +2882,10 @@
     <string name="watch_sent">Verstuurd</string>
     <string name="watch_settings_of">%1$s · instellingen</string>
     <string name="watch_sign_in_allow">Toestaan</string>
-    <string name="watch_sign_in_denied">Niet aangemeld. Dit horloge blijft afgemeld.</string>
+    <string name="watch_sign_in_denied">Niet ingelogd. Dit horloge blijft uitgelogd.</string>
     <string name="watch_sign_in_deny">Weigeren</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
-    <string name="watch_sign_in_watch_q">Dit horloge aanmelden met jouw account?</string>
+    <string name="watch_sign_in_watch_q">Dit horloge inloggen als jij?</string>
     <string name="watch_sign_out_q">Uitloggen op dit horloge?</string>
     <string name="watch_sign_out_sub">Je telefoon blijft ingelogd. Dit horloge vergeet je tafs, chats en Inbox.</string>
     <string name="watch_signed_in">Ingelogd</string>

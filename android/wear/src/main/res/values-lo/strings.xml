@@ -56,7 +56,7 @@
     <string name="watch_ask">ຖາມ tafs</string>
     <string name="watch_ask_needs_consent">ກ່ອນຖາມ tafs ໃຫ້ອະນຸຍາດການໃຊ້ AI ໃນ tafs ໃນໂທລະສັບຂອງທ່ານ.</string>
     <string name="watch_ask_not_on">ການຖາມຈາກໂມງຂອງທ່ານຍັງບໍ່ໄດ້ເປີດ.</string>
-    <string name="watch_ask_phone_sign_in">ຂໍໃຫ້ໂທລະສັບເຂົ້າສູ່ລະບົບໂມງນີ້</string>
+    <string name="watch_ask_phone_sign_in">ຂໍໃຫ້ໂທລະສັບຂອງທ່ານເຂົ້າສູ່ລະບົບໂມງນີ້</string>
     <string name="watch_ask_text_only">tafs ໄດ້ຮັບຄຳເວົ້າຂອງທ່ານເປັນຂໍ້ຄວາມ, ບໍ່ເຄີຍເປັນສຽງ.</string>
     <string name="watch_asking_phone">ກຳລັງຖາມໂທລະສັບຂອງທ່ານ…</string>
     <string name="watch_calendar_today">ປະຕິທິນມື້ນີ້</string>
@@ -145,7 +145,7 @@
     <string name="watch_sign_in_denied">ບໍ່ໄດ້ເຂົ້າສູ່ລະບົບ. ໂມງນີ້ຍັງອອກຈາກລະບົບຢູ່.</string>
     <string name="watch_sign_in_deny">ປະຕິເສດ</string>
     <string name="watch_sign_in_on_phone">ເຂົ້າສູ່ລະບົບ tafs ໃນໂທລະສັບຂອງທ່ານກ່ອນ.</string>
-    <string name="watch_sign_in_watch_q">ເຂົ້າສູ່ລະບົບໂມງນີ້ດ້ວຍບັນຊີຂອງທ່ານບໍ?</string>
+    <string name="watch_sign_in_watch_q">ເຂົ້າສູ່ລະບົບໂມງນີ້ໃນນາມທ່ານບໍ?</string>
     <string name="watch_sign_out_q">ອອກຈາກລະບົບໃນໂມງນີ້ບໍ?</string>
     <string name="watch_sign_out_sub">ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່. ໂມງນີ້ລືມ taf, ການສົນທະນາ ແລະ ກ່ອງຂໍ້ຄວາມຂອງທ່ານ.</string>
     <string name="watch_signed_in">ເຂົ້າສູ່ລະບົບແລ້ວ</string>
@@ -162,7 +162,7 @@
     <string name="watch_view_on_phone">ເບິ່ງໃນໂທລະສັບ</string>
     <string name="watch_view_only_phone">ໂທລະສັບນີ້ເບິ່ງໄດ້ຢ່າງດຽວ ສະນັ້ນທ່ານຖາມຈາກໂມງບໍ່ໄດ້. ເຂົ້າສູ່ລະບົບໃນໂທລະສັບທີ່ອະນຸມັດໄດ້.</string>
     <string name="watch_voice_text_only">Coach ໄດ້ຮັບຄຳເວົ້າຂອງທ່ານເປັນຂໍ້ຄວາມ, ບໍ່ເຄີຍເປັນສຽງ.</string>
-    <string name="watch_waiting_for_phone">ກຳລັງລໍໂທລະສັບ…</string>
+    <string name="watch_waiting_for_phone">ກຳລັງລໍໂທລະສັບຂອງທ່ານ…</string>
     <string name="watch_what_it_does">ມັນເຮັດຫຍັງ</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s ກຳລັງເຮັດວຽກ</item>

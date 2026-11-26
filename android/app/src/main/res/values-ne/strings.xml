@@ -2791,7 +2791,7 @@
     <string name="watch_ask">tafs लाई सोध्नुहोस्</string>
     <string name="watch_ask_needs_consent">tafs लाई सोध्नुअघि आफ्नो फोनमा tafs मा AI प्रयोगलाई अनुमति दिनुहोस्।</string>
     <string name="watch_ask_not_on">घडीबाट सोध्ने सुविधा अहिलेसम्म खुलेको छैन।</string>
-    <string name="watch_ask_phone_sign_in">यो घडीमा साइन इन गर्न फोनलाई भन्नुहोस्</string>
+    <string name="watch_ask_phone_sign_in">यो घडीमा साइन इन गराउन आफ्नो फोनलाई भन्नुहोस्</string>
     <string name="watch_ask_text_only">tafs ले तपाईंका शब्द पाठका रूपमा पाउँछ, आवाज कहिल्यै होइन।</string>
     <string name="watch_asking_phone">तपाईंको फोनलाई सोधिँदैछ…</string>
     <string name="watch_calendar_today">आजको पात्रो</string>
@@ -2885,7 +2885,7 @@
     <string name="watch_sign_in_denied">साइन इन भएन। यो घडी साइन आउट नै रहन्छ।</string>
     <string name="watch_sign_in_deny">अस्वीकार गर्नुहोस्</string>
     <string name="watch_sign_in_on_phone">पहिले आफ्नो फोनमा tafs मा साइन इन गर्नुहोस्।</string>
-    <string name="watch_sign_in_watch_q">यो घडीमा आफ्नो खाताले साइन इन गर्ने?</string>
+    <string name="watch_sign_in_watch_q">यो घडीमा तपाईंको नाममा साइन इन गर्ने?</string>
     <string name="watch_sign_out_q">यो घडीमा साइन आउट गर्ने?</string>
     <string name="watch_sign_out_sub">तपाईंको फोन साइन इन रहन्छ। यो घडीले तपाईंका taf, च्याट र इनबक्स बिर्सन्छ।</string>
     <string name="watch_signed_in">साइन इन गरियो</string>
@@ -2902,7 +2902,7 @@
     <string name="watch_view_on_phone">फोनमा हेर्नुहोस्</string>
     <string name="watch_view_only_phone">यो फोनले हेर्न मात्र मिल्छ, त्यसैले घडीबाट सोध्न सकिँदैन। स्वीकृत गर्न सक्ने फोनमा साइन इन गर्नुहोस्।</string>
     <string name="watch_voice_text_only">Coach ले तपाईंका शब्द पाठका रूपमा पाउँछ, आवाज कहिल्यै होइन।</string>
-    <string name="watch_waiting_for_phone">तपाईंको फोनको पर्खाइमा…</string>
+    <string name="watch_waiting_for_phone">तपाईंको फोन पर्खँदै…</string>
     <string name="watch_what_it_does">यसले के गर्छ</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s काम गर्दैछ</item>

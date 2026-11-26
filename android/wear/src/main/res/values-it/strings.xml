@@ -57,7 +57,7 @@
     <string name="watch_ask">Chiedi a tafs</string>
     <string name="watch_ask_needs_consent">Prima di chiedere a tafs, consenti l\'uso dell\'IA in tafs sul telefono.</string>
     <string name="watch_ask_not_on">Chiedere dall\'orologio non è ancora attivo.</string>
-    <string name="watch_ask_phone_sign_in">Chiedi al telefono di collegare questo orologio</string>
+    <string name="watch_ask_phone_sign_in">Chiedi al telefono di far accedere questo orologio</string>
     <string name="watch_ask_text_only">tafs riceve le tue parole come testo, mai la tua voce.</string>
     <string name="watch_asking_phone">Chiedo al telefono…</string>
     <string name="watch_calendar_today">Calendario di oggi</string>
@@ -148,10 +148,10 @@
     <string name="watch_sent">Inviato</string>
     <string name="watch_settings_of">%1$s · impostazioni</string>
     <string name="watch_sign_in_allow">Consenti</string>
-    <string name="watch_sign_in_denied">Accesso non eseguito. L\'orologio resta scollegato.</string>
+    <string name="watch_sign_in_denied">Accesso non eseguito. Questo orologio resta disconnesso.</string>
     <string name="watch_sign_in_deny">Nega</string>
     <string name="watch_sign_in_on_phone">Prima accedi a tafs sul telefono.</string>
-    <string name="watch_sign_in_watch_q">Collegare questo orologio al tuo account?</string>
+    <string name="watch_sign_in_watch_q">Far accedere questo orologio con il tuo account?</string>
     <string name="watch_sign_out_q">Uscire su questo orologio?</string>
     <string name="watch_sign_out_sub">Il telefono resta connesso. Questo orologio dimentica i tuoi tafs, le chat e In arrivo.</string>
     <string name="watch_signed_in">Accesso effettuato</string>

@@ -7,7 +7,7 @@
   "watch.ask": "tafs fragen",
   "watch.ask_needs_consent": "Bevor du tafs fragst, erlaube die KI-Nutzung in tafs auf deinem Handy.",
   "watch.ask_not_on": "Fragen von der Uhr aus ist noch nicht an.",
-  "watch.ask_phone_sign_in": "Telefon bitten, diese Uhr anzumelden",
+  "watch.ask_phone_sign_in": "Dein Handy bitten, diese Uhr anzumelden",
   "watch.ask_text_only": "tafs bekommt deine Worte als Text, nie deine Stimme.",
   "watch.asking_phone": "Fragt dein Handy…",
   "watch.calendar_today": "Heutiger Kalender",
@@ -118,7 +118,7 @@
   "watch.view_on_phone": "Auf dem Handy ansehen",
   "watch.view_only_phone": "Dieses Handy kann nur ansehen, daher kannst du nicht von der Uhr aus fragen. Melde dich auf einem Handy an, das genehmigen kann.",
   "watch.voice_text_only": "Coach bekommt deine Worte als Text, nie deine Stimme.",
-  "watch.waiting_for_phone": "Warte auf dein Telefon…",
+  "watch.waiting_for_phone": "Warte auf dein Handy …",
   "watch.what_it_does": "Was er tut",
   "watch.working_count": {
     "one": "{count} arbeitet",

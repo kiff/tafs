@@ -57,7 +57,7 @@
     <string name="watch_ask">tafs fragen</string>
     <string name="watch_ask_needs_consent">Bevor du tafs fragst, erlaube die KI-Nutzung in tafs auf deinem Handy.</string>
     <string name="watch_ask_not_on">Fragen von der Uhr aus ist noch nicht an.</string>
-    <string name="watch_ask_phone_sign_in">Telefon bitten, diese Uhr anzumelden</string>
+    <string name="watch_ask_phone_sign_in">Dein Handy bitten, diese Uhr anzumelden</string>
     <string name="watch_ask_text_only">tafs bekommt deine Worte als Text, nie deine Stimme.</string>
     <string name="watch_asking_phone">Fragt dein Handy…</string>
     <string name="watch_calendar_today">Heutiger Kalender</string>
@@ -168,7 +168,7 @@
     <string name="watch_view_on_phone">Auf dem Handy ansehen</string>
     <string name="watch_view_only_phone">Dieses Handy kann nur ansehen, daher kannst du nicht von der Uhr aus fragen. Melde dich auf einem Handy an, das genehmigen kann.</string>
     <string name="watch_voice_text_only">Coach bekommt deine Worte als Text, nie deine Stimme.</string>
-    <string name="watch_waiting_for_phone">Warte auf dein Telefon…</string>
+    <string name="watch_waiting_for_phone">Warte auf dein Handy …</string>
     <string name="watch_what_it_does">Was er tut</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s arbeitet</item>

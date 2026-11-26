@@ -57,7 +57,7 @@
     <string name="watch_ask">Kérdezd a tafst</string>
     <string name="watch_ask_needs_consent">Mielőtt a tafst kérdezed, engedélyezd az MI használatát a tafsben a telefonodon.</string>
     <string name="watch_ask_not_on">Az óráról való kérdezés még nincs bekapcsolva.</string>
-    <string name="watch_ask_phone_sign_in">Kérd meg a telefont, hogy jelentkeztesse be ezt az órát</string>
+    <string name="watch_ask_phone_sign_in">Kérd meg a telefonodat, hogy jelentkeztesse be ezt az órát</string>
     <string name="watch_ask_text_only">A tafs szövegként kapja meg a szavaidat, soha nem a hangodat.</string>
     <string name="watch_asking_phone">A telefonod kérdezése…</string>
     <string name="watch_calendar_today">A mai naptár</string>
@@ -148,10 +148,10 @@
     <string name="watch_sent">Elküldve</string>
     <string name="watch_settings_of">%1$s · beállítások</string>
     <string name="watch_sign_in_allow">Engedélyezés</string>
-    <string name="watch_sign_in_denied">Nincs bejelentkezve. Az óra kijelentkezve marad.</string>
+    <string name="watch_sign_in_denied">Nincs bejelentkezve. Ez az óra kijelentkezve marad.</string>
     <string name="watch_sign_in_deny">Elutasítás</string>
     <string name="watch_sign_in_on_phone">Előbb jelentkezz be a tafsbe a telefonodon.</string>
-    <string name="watch_sign_in_watch_q">Bejelentkezteted ezt az órát a fiókoddal?</string>
+    <string name="watch_sign_in_watch_q">Bejelentkezteted ezt az órát a saját fiókoddal?</string>
     <string name="watch_sign_out_q">Kijelentkezel ezen az órán?</string>
     <string name="watch_sign_out_sub">A telefonod bejelentkezve marad. Ez az óra elfelejti a tafjaidat, csevegéseidet és a Bejövőt.</string>
     <string name="watch_signed_in">Bejelentkezve</string>
@@ -168,7 +168,7 @@
     <string name="watch_view_on_phone">Megtekintés a telefonon</string>
     <string name="watch_view_only_phone">Ez a telefon csak megtekinteni tud, ezért az óráról nem kérdezhetsz. Jelentkezz be egy jóváhagyásra képes telefonon.</string>
     <string name="watch_voice_text_only">A Coach szövegként kapja meg a szavaidat, soha nem a hangodat.</string>
-    <string name="watch_waiting_for_phone">Várakozás a telefonra…</string>
+    <string name="watch_waiting_for_phone">Várakozás a telefonodra…</string>
     <string name="watch_what_it_does">Mit csinál</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s dolgozik</item>

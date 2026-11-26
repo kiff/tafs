@@ -7,7 +7,7 @@
   "watch.ask": "ຖາມ tafs",
   "watch.ask_needs_consent": "ກ່ອນຖາມ tafs ໃຫ້ອະນຸຍາດການໃຊ້ AI ໃນ tafs ໃນໂທລະສັບຂອງທ່ານ.",
   "watch.ask_not_on": "ການຖາມຈາກໂມງຂອງທ່ານຍັງບໍ່ໄດ້ເປີດ.",
-  "watch.ask_phone_sign_in": "ຂໍໃຫ້ໂທລະສັບເຂົ້າສູ່ລະບົບໂມງນີ້",
+  "watch.ask_phone_sign_in": "ຂໍໃຫ້ໂທລະສັບຂອງທ່ານເຂົ້າສູ່ລະບົບໂມງນີ້",
   "watch.ask_text_only": "tafs ໄດ້ຮັບຄຳເວົ້າຂອງທ່ານເປັນຂໍ້ຄວາມ, ບໍ່ເຄີຍເປັນສຽງ.",
   "watch.asking_phone": "ກຳລັງຖາມໂທລະສັບຂອງທ່ານ…",
   "watch.calendar_today": "ປະຕິທິນມື້ນີ້",
@@ -96,7 +96,7 @@
   "watch.sign_in_denied": "ບໍ່ໄດ້ເຂົ້າສູ່ລະບົບ. ໂມງນີ້ຍັງອອກຈາກລະບົບຢູ່.",
   "watch.sign_in_deny": "ປະຕິເສດ",
   "watch.sign_in_on_phone": "ເຂົ້າສູ່ລະບົບ tafs ໃນໂທລະສັບຂອງທ່ານກ່ອນ.",
-  "watch.sign_in_watch_q": "ເຂົ້າສູ່ລະບົບໂມງນີ້ດ້ວຍບັນຊີຂອງທ່ານບໍ?",
+  "watch.sign_in_watch_q": "ເຂົ້າສູ່ລະບົບໂມງນີ້ໃນນາມທ່ານບໍ?",
   "watch.sign_out_q": "ອອກຈາກລະບົບໃນໂມງນີ້ບໍ?",
   "watch.sign_out_sub": "ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່. ໂມງນີ້ລືມ taf, ການສົນທະນາ ແລະ ກ່ອງຂໍ້ຄວາມຂອງທ່ານ.",
   "watch.signed_in": "ເຂົ້າສູ່ລະບົບແລ້ວ",
@@ -113,7 +113,7 @@
   "watch.view_on_phone": "ເບິ່ງໃນໂທລະສັບ",
   "watch.view_only_phone": "ໂທລະສັບນີ້ເບິ່ງໄດ້ຢ່າງດຽວ ສະນັ້ນທ່ານຖາມຈາກໂມງບໍ່ໄດ້. ເຂົ້າສູ່ລະບົບໃນໂທລະສັບທີ່ອະນຸມັດໄດ້.",
   "watch.voice_text_only": "Coach ໄດ້ຮັບຄຳເວົ້າຂອງທ່ານເປັນຂໍ້ຄວາມ, ບໍ່ເຄີຍເປັນສຽງ.",
-  "watch.waiting_for_phone": "ກຳລັງລໍໂທລະສັບ…",
+  "watch.waiting_for_phone": "ກຳລັງລໍໂທລະສັບຂອງທ່ານ…",
   "watch.what_it_does": "ມັນເຮັດຫຍັງ",
   "watch.working_count": {
     "other": "{count} ກຳລັງເຮັດວຽກ"
