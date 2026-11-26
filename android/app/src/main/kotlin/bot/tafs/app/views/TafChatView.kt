@@ -503,11 +503,13 @@ private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, m
       }
     }
 
-    // Refused for no plan: tafs cloud's words stay as a prompt, with Plan & usage one tap away, until the person acts on it or
-    // dismisses it (kiff/tafs#2190). Coach's goes there from Coach's own sheet, which closes on the way.
+    // Refused for no plan: tafs cloud's words stay as a prompt, with Plan & usage one tap away, until the person taps either
+    // button or sends again (kiff/tafs#2190). Choose a plan puts it away too, so it's gone when they come back with a plan.
+    // Coach's goes there from Coach's own sheet, which closes on the way.
     val planPrompt = state.planPrompt(tafId)
     if (planPrompt != null) {
-      PlanPrompt(planPrompt, onPlan = if (tafId == COACH_CHAT) actions.coach.openPlan else actions.openPlan, onDismiss = { actions.dismissPlanPrompt(tafId) })
+      val openPlan = if (tafId == COACH_CHAT) actions.coach.openPlan else actions.openPlan
+      PlanPrompt(planPrompt, onPlan = { actions.dismissPlanPrompt(tafId); openPlan() }, onDismiss = { actions.dismissPlanPrompt(tafId) })
     } else state.chatErrors[tafId]?.let { error ->
       Text(error, style = scaled(13, color = Theme.no), modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 4.dp))
     }

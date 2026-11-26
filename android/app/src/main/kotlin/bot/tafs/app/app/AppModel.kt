@@ -365,7 +365,7 @@ data class AppState(
   val chatErrors: Map<String, String> = emptyMap(),
   /**
    * A chat refused because the account has no plan (`no_plan`): tafs cloud's words for it. While they're still the chat's line,
-   * the line is a prompt with Choose a plan that stays until the person opens it, dismisses it or sends again (kiff/tafs#2190).
+   * the line is a prompt with Choose a plan and Not now that stays until the person taps either or sends again (kiff/tafs#2190).
    */
   val chatPlanNeeded: Map<String, String> = emptyMap(),
   /**
@@ -7616,14 +7616,14 @@ class AppModel(
     if (e is CloudError && e.status == 429 && e.words == null) Words.Chat.tooMany(taf = name)
     else Words.Chat.notSent(why = ErrorWords.of(e))
 
+  /** Puts away a chat's Choose a plan prompt (Not now, or Choose a plan on its way to Plan & usage): its line goes with it. */
+  fun dismissPlanPrompt(chat: String) =
+    _state.update { it.copy(chatErrors = it.chatErrors - chat, chatPlanNeeded = it.chatPlanNeeded - chat) }
+
   /**
    * A run refused because the tafs wait on credits (docs/accounts.md#the-balance-read): 409 with `credits_used_up`, `limit_reached`
    * or `no_plan`, and tafs cloud's words, which say what lets them go on. Shown as they are; null for any other refusal.
    */
-  /** Puts away a chat's Choose a plan prompt (Not now): its line goes with it. */
-  fun dismissPlanPrompt(chat: String) =
-    _state.update { it.copy(chatErrors = it.chatErrors - chat, chatPlanNeeded = it.chatPlanNeeded - chat) }
-
   private fun creditsRefusal(e: Exception): String? =
     (e as? CloudError)?.takeIf { it.status == 409 && it.code in CREDITS_WAIT }?.words
 
