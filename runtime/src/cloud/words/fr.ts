@@ -434,7 +434,7 @@ export const fr: Words = {
   cr_no_plan_line: "Aucun forfait · choisissez-en un pour commencer",
   cr_w_again: (day) => `ils reprennent au début de la prochaine période, le ${day}`,
   cr_w_no_plan: "Choisissez un forfait pour lancer vos tafs.",
-  cr_buy_coach: "Coach est inclus : de quoi mettre en place environ 4 nouvelles tâches par mois. Au-delà, l'aide de Coach utilise vos crédits.",
+  cr_buy_coach: (credits: string) => `Solo vous donne ${credits} chaque mois pour les exécutions de vos tafs ; une vérification calme, quand rien n'est nouveau, n'en utilise aucun, et ils ne sont pas reportés au mois suivant. Coach est inclus : de quoi mettre en place environ 4 nouvelles tâches par mois. Au-delà, l'aide de Coach utilise vos crédits. Les packs servent seulement quand un mois est épuisé, et ils n'expirent jamais.`,
   cr_w_limit_raise: (day) => `Plafond de dépenses atteint. Relevez-le, ou vos tafs reprennent le ${day}.`,
   cr_w_limit_ceiling: (again) => `Vos tafs attendent : le plafond de dépenses est atteint et ne peut plus être relevé depuis l'app. Contactez KIFF pour aller au-delà, sinon ${again}.`,
   cr_w_limit_admin: "Vos tafs attendent : le plafond de dépenses est atteint. Un administrateur de ce compte peut le relever.",
@@ -786,6 +786,7 @@ export const fr: Words = {
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
   start_lead: "Commencer donne à Coach les outils ci-dessous. Vous les approuvez sur cet appareil.",
   start_button: "Commencer",
+  start_first_send: "Votre premier message démarre Coach. Il demande une fois votre empreinte ou votre visage, pour donner sa Card à Coach : ainsi rien ne bouge sans vous.",
   plan_needed: "Choisissez un forfait pour le lancer.",
   handover_not_finished: "la transmission par Coach n'a pas été terminée",
   cts_title: "Donner ses outils à Coach",

@@ -434,7 +434,7 @@ export const de: Words = {
   cr_no_plan_line: "Kein Tarif · wähle einen, um zu starten",
   cr_w_again: (day) => `sie arbeiten weiter, wenn der Zeitraum am ${day} neu beginnt`,
   cr_w_no_plan: "Wähle einen Tarif, um deine tafs zu starten.",
-  cr_buy_coach: "Coach ist inklusive: genug, um etwa 4 neue Aufgaben im Monat einzurichten. Darüber hinaus nutzt die Hilfe von Coach deine Credits.",
+  cr_buy_coach: (credits: string) => `Solo gibt dir jeden Monat ${credits} für die Läufe deiner tafs; eine ruhige Prüfung, wenn nichts neu ist, braucht keine, und sie werden nicht in den nächsten Monat übertragen. Coach ist inklusive: genug, um etwa 4 neue Aufgaben im Monat einzurichten. Darüber hinaus nutzt die Hilfe von Coach deine Credits. Packs sind nur für den Fall, dass ein Monat aufgebraucht ist, und sie verfallen nie.`,
   cr_w_limit_raise: (day) => `Ausgabenlimit erreicht. Erhöhe es, oder deine tafs arbeiten ab dem ${day} weiter.`,
   cr_w_limit_ceiling: (again) => `Deine tafs warten: das Ausgabenlimit ist erreicht und lässt sich in der App nicht weiter erhöhen. Wende dich an KIFF, oder ${again}.`,
   cr_w_limit_admin: "Deine tafs warten: das Ausgabenlimit ist erreicht. Ein Admin dieses Kontos kann es erhöhen.",
@@ -786,6 +786,7 @@ export const de: Words = {
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
   start_lead: "Starten gibt Coach die Werkzeuge unten. Du genehmigst sie auf diesem Gerät.",
   start_button: "Starten",
+  start_first_send: "Deine erste Nachricht startet Coach. Er fragt einmal nach deinem Fingerabdruck oder Gesicht, um Coach seine Card zu geben, damit sich nichts ohne dich bewegt.",
   plan_needed: "Wähle einen Tarif, um ihn zu starten.",
   handover_not_finished: "die Übergabe von Coach wurde nicht abgeschlossen",
   cts_title: "Gib Coach seine Werkzeuge",

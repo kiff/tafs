@@ -2553,7 +2553,7 @@ describe("Setup (kiff/agents#91)", () => {
       // lines, the fold's label over KIFF's own words, and a whole-sentence button for each way a device approves, which the
       // app picks by its lock; a passkey's device says sign_passkey for sign. Every one in the person's language.
       const en = wordsIn("en");
-      expect(first.words).toEqual({ lead: en.start_lead, start: en.start_button, does: en.start_does, title: en.card_step_title,
+      expect(first.words).toEqual({ lead: en.start_lead, start: en.start_button, does: en.start_first_send, title: en.card_step_title,
         lines: { allows: en.card_step_allows, asks: en.card_step_asks, sign: en.card_step_sign, stop: en.card_step_stop },
         exact: en.card_step_exact, buttons: { fingerprint: en.card_step_give_fingerprint, face: en.card_step_give_face, passkey: en.card_step_give_passkey },
         sign_passkey: en.card_step_sign_passkey, locked: en.card_step_locked });
@@ -2572,11 +2572,10 @@ describe("Setup (kiff/agents#91)", () => {
       expect(listed.map((t) => t.tool).sort()).toEqual(signed.flatMap((c) => c.grants.map((g) => g.action)).sort());
       for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
         expect(wordsIn(lang).start_lead, lang).not.toMatch(/\b(once|einmal|une fois|una vez|una volta|uma vez|één keer|raz)\b/i);
-        expect(wordsIn(lang).start_does, lang).not.toMatch(/\b(once|einmal|une fois|una vez|una volta|uma vez|één keer|raz)\b/i);
       }
-      // Why the first message asks for the person, under Start (the owner's iPad feedback, 26 Nov): every way a device
-      // approves is named, since the same words reach a phone and a computer, and it says what's given and why.
-      expect(en.start_does).toBe("Your first message starts Coach. It asks for your fingerprint, face or passkey to give Coach its Card, so nothing moves without you.");
+      // Why the first message asks for the person, under Start (the owner's iPad feedback, 26 Nov): what it gives, and why.
+      expect(en.start_first_send).toBe("Your first message starts Coach. It asks for your fingerprint or face once, to give Coach its Card, so nothing moves without you.");
+      for (const lang of FULL_LANGUAGES) expect(wordsIn(lang).start_first_send, lang).toContain("Coach");
       // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
       // (#852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
       expect(draft.card_title).toBe("Coach's Card");

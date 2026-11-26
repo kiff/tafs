@@ -356,9 +356,18 @@ export const ACCOUNT_CURRENCY = "EUR";
 
 /**
  * What Solo includes each month, as KIFF's catalog has it (`meter.SoloIncludedCredits`): the credits every period
- * starts from, which don't carry over. `buy.coach` (cr_buy_coach) says it, and a test holds every language to it.
+ * starts from, which don't carry over. Only where KIFF's balance doesn't say it (soloIncluded).
  */
 export const SOLO_INCLUDED_CREDITS = 500;
+
+/**
+ * The credits Solo includes each month, for `buy.coach`: KIFF's own figure on a Solo account's balance, so the line never
+ * drifts from KIFF; on any other (no plan yet, where KIFF's `included` is 0), KIFF's catalog figure, so the offer never
+ * reads "0 credits".
+ */
+export function soloIncluded(b: Pick<KIFFBalance, "kind" | "included">): number {
+  return b.kind === "solo" && b.included > 0 ? b.included : SOLO_INCLUDED_CREDITS;
+}
 
 /**
  * How many new jobs a month Coach's included help sets up, roughly, as kiff.dev's pricing page and the store listings say
@@ -453,7 +462,7 @@ export function balanceView(b: KIFFBalance, lang: Lang = "en", ranLately = true)
   // packs: before a plan, a lone pack that can't be bought only reads as an upsell.
   const firstMonth = b.can_buy?.once === true && b.kind === "solo" && b.can_buy.packs === true ? { ready: true, words: null } : null;
   const buy = b.can_buy && (b.can_buy.solo || b.can_buy.packs)
-    ? { solo: b.can_buy.solo === true, packs: b.can_buy.packs === true, first_month: firstMonth, coach: w.cr_buy_coach } : null;
+    ? { solo: b.can_buy.solo === true, packs: b.can_buy.packs === true, first_month: firstMonth, coach: w.cr_buy_coach(c(soloIncluded(b))) } : null;
   let words: string, detail: string | null = null, warning: string | null = null, plan: string, home: string | null = null;
   switch (b.kind) {
     case "solo": {

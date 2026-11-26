@@ -434,7 +434,7 @@ export const nl: Words = {
   cr_no_plan_line: "Geen abonnement · kies er een om te beginnen",
   cr_w_again: (day) => `ze gaan verder wanneer de periode op ${day} opnieuw begint`,
   cr_w_no_plan: "Kies een abonnement om je tafs te starten.",
-  cr_buy_coach: "Coach is inbegrepen: genoeg om zo'n 4 nieuwe taken per maand in te stellen. Daarboven gebruikt de hulp van Coach je credits.",
+  cr_buy_coach: (credits: string) => `Solo geeft je elke maand ${credits} voor de runs van je tafs; een rustige check, als er niets nieuws is, gebruikt er geen, en ze gaan niet mee naar de volgende maand. Coach is inbegrepen: genoeg om zo'n 4 nieuwe taken per maand in te stellen. Daarboven gebruikt de hulp van Coach je credits. Packs zijn alleen voor als een maand op is, en ze verlopen nooit.`,
   cr_w_limit_raise: (day) => `Uitgavenlimiet bereikt. Verhoog die, of je tafs gaan op ${day} verder.`,
   cr_w_limit_ceiling: (again) => `Je tafs wachten: de uitgavenlimiet is bereikt en kan in de app niet hoger. Neem contact op met KIFF om die te verhogen, of ${again}.`,
   cr_w_limit_admin: "Je tafs wachten: de uitgavenlimiet is bereikt. Een beheerder van dit account kan die verhogen.",
@@ -786,6 +786,7 @@ export const nl: Words = {
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
   start_lead: "Starten geeft Coach de tools hieronder. Je keurt ze goed op dit apparaat.",
   start_button: "Starten",
+  start_first_send: "Je eerste bericht start Coach. Die vraagt één keer je vingerafdruk of gezicht, om Coach zijn Card te geven, zodat er niets gebeurt zonder jou.",
   plan_needed: "Kies een abonnement om het te starten.",
   handover_not_finished: "de overdracht door Coach is niet afgerond",
   cts_title: "Geef Coach zijn tools",

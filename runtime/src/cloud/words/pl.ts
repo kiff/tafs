@@ -434,7 +434,7 @@ export const pl: Words = {
   cr_no_plan_line: "Brak planu · wybierz plan, aby zacząć",
   cr_w_again: (day) => `wznowią pracę, gdy okres zacznie się od nowa ${day}`,
   cr_w_no_plan: "Wybierz plan, aby uruchomić swoje tafs.",
-  cr_buy_coach: "Coach jest w cenie: wystarczy, by skonfigurować około 4 nowych zadań miesięcznie. Powyżej tego pomoc Coacha używa Twoich kredytów.",
+  cr_buy_coach: (credits: string) => `Solo daje Ci ${credits} co miesiąc na uruchomienia Twoich tafów; spokojne sprawdzenie, gdy nic nowego nie ma, nie zużywa żadnych, a niewykorzystane nie przechodzą na następny miesiąc. Coach jest w cenie: wystarczy, by skonfigurować około 4 nowych zadań miesięcznie. Powyżej tego pomoc Coacha używa Twoich kredytów. Pakiety są tylko na wypadek, gdy miesiąc się skończy, i nigdy nie wygasają.`,
   cr_w_limit_raise: (day) => `Osiągnięto limit wydatków. Podnieś go albo Twoje tafs ruszą ${day}.`,
   cr_w_limit_ceiling: (again) => `Twoje tafs czekają: osiągnięto limit wydatków i nie można go podnieść w aplikacji. Skontaktuj się z KIFF, aby go podnieść, albo ${again}.`,
   cr_w_limit_admin: "Twoje tafs czekają: osiągnięto limit wydatków. Może go podnieść administrator tego konta.",
@@ -786,6 +786,7 @@ export const pl: Words = {
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
   start_lead: "Zacznij daje Coachowi narzędzia poniżej. Zatwierdzasz je na tym urządzeniu.",
   start_button: "Zacznij",
+  start_first_send: "Twoja pierwsza wiadomość uruchamia Coacha. Raz prosi o odcisk palca lub twarz, aby dać Coachowi jego Card, więc nic nie dzieje się bez Ciebie.",
   plan_needed: "Wybierz plan, aby go uruchomić.",
   handover_not_finished: "przekazanie przez Coacha nie zostało dokończone",
   cts_title: "Daj Coachowi jego narzędzia",

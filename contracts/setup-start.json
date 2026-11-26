@@ -900,6 +900,7 @@
       "words": {
         "lead": "Start gives Coach the tools below. You approve them on this device.",
         "start": "Start",
+        "does": "Your first message starts Coach. It asks for your fingerprint or face once, to give Coach its Card, so nothing moves without you.",
         "title": "Let Coach build tafs with you",
         "lines": {
           "allows": "This lets Coach look at your tafs, run them, and draft and try new versions, each within the daily limits below. Only while you turn on a drive, it can also see and use the app on this device.",

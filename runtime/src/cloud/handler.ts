@@ -2333,7 +2333,7 @@ function startWords(lang: Lang): StartWords {
   // What Start gives is the lead's to say; `does` says only why the first message asks for the person (the owner's iPad
   // feedback, 26 Nov: a fingerprint asked with no word of why).
   return {
-    lead: w.start_lead, start: w.start_button, does: w.start_does, title: w.card_step_title,
+    lead: w.start_lead, start: w.start_button, does: w.start_first_send, title: w.card_step_title,
     lines: { allows: w.card_step_allows, asks: w.card_step_asks, sign: w.card_step_sign, stop: w.card_step_stop },
     exact: w.card_step_exact, buttons: { fingerprint: w.card_step_give_fingerprint, face: w.card_step_give_face, passkey: w.card_step_give_passkey },
     sign_passkey: w.card_step_sign_passkey, locked: w.card_step_locked,
@@ -2344,7 +2344,7 @@ function startWords(lang: Lang): StartWords {
 export interface StartWords {
   lead: string;
   start: string;
-  /** Why the first message asks for a fingerprint, face or passkey: both apps draw it under Start, where Send is that tap. */
+  /** Why the first message asks for a fingerprint or face: both apps draw it under Start, where Send is that tap. */
   does: string;
   title: string;
   lines: { allows: string; asks: string; sign: string; stop: string };
