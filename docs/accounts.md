@@ -432,9 +432,16 @@ the spend limit, which the samples here leave out:
     once bought, or when KIFF lists none. Its row is the entry of KIFF's `store.packs[]` marked
     `once`, which KIFF drops once the account has bought it. (`ready` false with `words` came
     from tafs cloud before 10 Nov 2026; apps still read it as before.)
-  - `coach` says what Coach's help includes, in the person's language, for the app to show under
-    the Solo offer: "Coach is included: enough to set up about 4 new jobs a month. Past that,
-    Coach's help uses your credits." It's the same sentence kiff.dev/tafs and /pricing say.
+  - `coach` says what Solo gives, in the person's language, for the app to show under the Solo
+    offer: "Solo gives you 500 credits every month for your tafs' runs; a quiet check uses none,
+    and they don't carry over to the next month. Coach is included: enough to set up about 4 new
+    jobs a month. Past that, Coach's help uses your credits. Packs are only for when a month runs
+    out, and they never expire." The credits are KIFF's own figure (`soloIncluded`): a Solo
+    account's `included`, or, before a plan, where KIFF says 0, KIFF's catalog figure
+    (`SOLO_INCLUDED_CREDITS`, 500, KIFF's `meter.SoloIncludedCredits`), so the offer never reads
+    "0 credits". About 4 jobs is Coach's included set-up as kiff.dev/tafs and /pricing say it
+    (`COACH_JOBS_A_MONTH`); a test holds every language to it. Both apps draw the line as sent, so
+    a change to it needs no build.
 - `credits_panel` is whether Plan & usage shows the Credits panel. It's false only with no plan
   and no run this period or the last, the two periods the panel shows: an account just made has
   nothing there. If last period can't be read, it's true. An app that predates the flag shows

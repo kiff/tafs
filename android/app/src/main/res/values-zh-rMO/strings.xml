@@ -211,10 +211,10 @@
     <string name="billing_not_restored">無法回復購買項目：%1$s</string>
     <string name="billing_not_signed_in">尚未登入。</string>
     <string name="billing_nothing_to_restore">沒有可回復的項目。</string>
-    <string name="billing_one_person_tafs_kiff_your">一個人：tafs，每個期間包含一定的點數。</string>
+    <string name="billing_one_person_tafs_kiff_your">供一個人使用：每月 500 點，供您的 taf 執行使用，並包含 Coach，足以每月設定約 4 項新工作。當月點數不會累積到下個月；點數用完時可用點數包增加，且永不過期。</string>
     <string name="billing_only_someone_who_manages_account">只有管理帳號計費的人才能購買點數。</string>
     <string name="billing_open_tafs_to_buy">請開啟 tafs 進行購買。</string>
-    <string name="billing_pack_adds_credits_once_never">點數包一次性增加點數，且永不過期。每期包含的點數會先使用，然後才使用點數包的點數。</string>
+    <string name="billing_pack_adds_credits_once_never">點數包是在當月點數用完時使用的。點數包一次性增加點數，且永不過期。每月的點數會先使用，然後才使用點數包的點數。</string>
     <string name="billing_pending_credits">購買正在等待核准。完成後會加入您的點數。</string>
     <string name="billing_plan_could_not_read_kiff">無法從 KIFF 讀取方案：%1$s</string>
     <string name="billing_play_cant_sell">Google Play 無法在這部手機上銷售，因此這裡無法購買任何項目。</string>
@@ -238,7 +238,7 @@
     <string name="billing_solo_not_available_app_store">App Store 目前未提供 Solo。</string>
     <string name="billing_solo_subscription_one_charged_your">Solo 為 %2$s / %1$s 的訂閱，費用會從您的 Apple 帳號扣款。每期結束時（%3$s）自動續訂，直到您取消為止。</string>
     <string name="billing_starts_free">從免費%1$s開始。</string>
-    <string name="billing_tafs_kiff_one_person_every">供一個人使用的 tafs，每個月。</string>
+    <string name="billing_tafs_kiff_one_person_every">供一個人使用：每月 500 點，包含 Coach。</string>
     <string name="billing_team_on_web">在 kiff.dev 取得 Company</string>
     <string name="billing_terms_use">使用條款</string>
     <string name="billing_test_purchase_credits">測試購買不會為此帳號增加點數。</string>

@@ -246,10 +246,10 @@
     <string name="billing_not_restored">تعذّرت استعادة المشتريات: %1$s</string>
     <string name="billing_not_signed_in">لم تسجّل الدخول.</string>
     <string name="billing_nothing_to_restore">لا شيء لاستعادته.</string>
-    <string name="billing_one_person_tafs_kiff_your">شخص واحد: tafs، مع أرصدة مضمّنة في كل فترة.</string>
+    <string name="billing_one_person_tafs_kiff_your">لشخص واحد: 500 رصيد كل شهر لتشغيلات tafs الخاصة بك، مع Coach مضمّن لإعداد نحو 4 مهام جديدة شهريًا. لا تنتقل أرصدة الشهر إلى الشهر التالي؛ وتضيف الحزم المزيد عند نفادها، ولا تنتهي صلاحيتها أبدًا.</string>
     <string name="billing_only_someone_who_manages_account">لا يشتري الأرصدة إلا من يدير فوترة الحساب.</string>
     <string name="billing_open_tafs_to_buy">افتح tafs للشراء.</string>
-    <string name="billing_pack_adds_credits_once_never">تضيف الحزمة أرصدة مرة واحدة ولا تنتهي صلاحيتها أبدًا. تُستهلك أرصدة كل فترة المضمّنة أولًا، ثم أرصدة الحزم.</string>
+    <string name="billing_pack_adds_credits_once_never">الحزم مخصّصة لحين نفاد أرصدة الشهر. تضيف الحزمة أرصدة مرة واحدة ولا تنتهي صلاحيتها أبدًا. تُستهلك أرصدة كل شهر أولًا، ثم أرصدة الحزم.</string>
     <string name="billing_pending_credits">عملية الشراء بانتظار الموافقة. تُضاف أرصدتك بمجرد اكتمالها.</string>
     <string name="billing_plan_could_not_read_kiff">تعذّرت قراءة الخطة من KIFF: %1$s</string>
     <string name="billing_play_cant_sell">لا يستطيع Google Play البيع على هذا الهاتف، لذا لا يمكن شراء شيء هنا.</string>
@@ -273,7 +273,7 @@
     <string name="billing_solo_not_available_app_store">Solo غير متاح من App Store الآن.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo اشتراك بسعر %2$s / %1$s، يُخصم من حساب Apple الخاص بك. يتجدد في نهاية كل فترة (%3$s) حتى تلغيه.</string>
     <string name="billing_starts_free">يبدأ بفترة مجانية: %1$s.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs لشخص واحد، كل شهر.</string>
+    <string name="billing_tafs_kiff_one_person_every">لشخص واحد: 500 رصيد شهريًا، مع Coach.</string>
     <string name="billing_team_on_web">احصل على Company من kiff.dev</string>
     <string name="billing_terms_use">شروط الاستخدام</string>
     <string name="billing_test_purchase_credits">لا تضيف عمليات الشراء التجريبية أرصدة إلى هذا الحساب.</string>

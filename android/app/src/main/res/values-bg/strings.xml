@@ -218,10 +218,10 @@
     <string name="billing_not_restored">Покупките не можаха да бъдат възстановени: %1$s</string>
     <string name="billing_not_signed_in">Не сте влезли.</string>
     <string name="billing_nothing_to_restore">Няма какво да се възстанови.</string>
-    <string name="billing_one_person_tafs_kiff_your">Един човек: tafs с включени кредити всеки период.</string>
+    <string name="billing_one_person_tafs_kiff_your">За един човек: 500 кредита всеки месец за изпълненията на вашите tafs, като Coach е включен за настройване на около 4 нови задачи на месец. Кредитите от един месец не се прехвърлят; пакетите добавят още, когато свършат, и никога не изтичат.</string>
     <string name="billing_only_someone_who_manages_account">Само човек, който управлява таксуването на акаунта, купува кредити.</string>
     <string name="billing_open_tafs_to_buy">Отворете tafs, за да купите.</string>
-    <string name="billing_pack_adds_credits_once_never">Пакетът добавя кредити веднъж и те никога не изтичат. Първо се използват включените за периода кредити, после тези от пакетите.</string>
+    <string name="billing_pack_adds_credits_once_never">Пакетите са за когато кредитите за месеца свършат. Пакетът добавя кредити веднъж и те никога не изтичат. Първо се използват кредитите за всеки месец, после тези от пакетите.</string>
     <string name="billing_pending_credits">Покупката чака одобрение. Кредитите ви се добавят, щом приключи.</string>
     <string name="billing_plan_could_not_read_kiff">Планът не можа да бъде прочетен от KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play не може да продава на този телефон, така че нищо не може да се купи тук.</string>
@@ -245,7 +245,7 @@
     <string name="billing_solo_not_available_app_store">Solo не е наличен в App Store в момента.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo е абонамент за един %1$s на цена %2$s, таксуван в акаунта ви в Apple. Подновява се всеки %3$s, докато не го анулирате.</string>
     <string name="billing_starts_free">Започва с %1$s безплатно.</string>
-    <string name="billing_tafs_kiff_one_person_every">Tafs за един човек, всеки месец.</string>
+    <string name="billing_tafs_kiff_one_person_every">За един човек: 500 кредита на месец, Coach е включен.</string>
     <string name="billing_team_on_web">Вземете Company в kiff.dev</string>
     <string name="billing_terms_use">Условия за ползване</string>
     <string name="billing_test_purchase_credits">Тестовите покупки не добавят кредити към този акаунт.</string>

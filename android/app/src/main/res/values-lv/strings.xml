@@ -225,10 +225,10 @@
     <string name="billing_not_restored">Pirkumus nevarēja atjaunot: %1$s</string>
     <string name="billing_not_signed_in">Neesi pierakstījies.</string>
     <string name="billing_nothing_to_restore">Nav ko atjaunot.</string>
-    <string name="billing_one_person_tafs_kiff_your">Vienai personai: tafs ar kredītiem, kas iekļauti katrā periodā.</string>
+    <string name="billing_one_person_tafs_kiff_your">Vienai personai: katru mēnesi 500 kredītu tavu tafu palaišanām, un Coach ir iekļauts, lai iestatītu aptuveni 4 jaunus darbus mēnesī. Mēneša kredīti netiek pārnesti; paketes pievieno vairāk, kad kredīti beidzas, un tām nav derīguma termiņa.</string>
     <string name="billing_only_someone_who_manages_account">Kredītus pērk tikai tas, kurš pārvalda konta norēķinus.</string>
     <string name="billing_open_tafs_to_buy">Atver tafs, lai pirktu.</string>
-    <string name="billing_pack_adds_credits_once_never">Pakete pievieno kredītus vienreiz, un tiem nav derīguma termiņa. Vispirms tiek izmantoti katrā periodā iekļautie kredīti, pēc tam pakešu kredīti.</string>
+    <string name="billing_pack_adds_credits_once_never">Paketes ir tam, kad mēneša kredīti beidzas. Pakete pievieno kredītus vienreiz, un tiem nav derīguma termiņa. Vispirms tiek izmantoti katra mēneša kredīti, pēc tam pakešu kredīti.</string>
     <string name="billing_pending_credits">Pirkums gaida apstiprinājumu. Tavi kredīti tiks pievienoti, kad tas būs pabeigts.</string>
     <string name="billing_plan_could_not_read_kiff">Plānu nevarēja nolasīt no KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play šajā tālrunī nevar pārdot, tāpēc šeit neko nevar nopirkt.</string>
@@ -252,7 +252,7 @@
     <string name="billing_solo_not_available_app_store">Solo pašlaik nav pieejams App Store.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo ir abonements par %2$s reizi %1$s, ko iekasē no tava Apple konta. Tas atjaunojas reizi %3$s, līdz tu to atcel.</string>
     <string name="billing_starts_free">Sākumā %1$s bez maksas.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs vienai personai, katru mēnesi.</string>
+    <string name="billing_tafs_kiff_one_person_every">Vienai personai: 500 kredītu mēnesī, Coach iekļauts.</string>
     <string name="billing_team_on_web">Iegūt Company vietnē kiff.dev</string>
     <string name="billing_terms_use">Lietošanas noteikumi</string>
     <string name="billing_test_purchase_credits">Testa pirkumi šim kontam kredītus nepievieno.</string>

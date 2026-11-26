@@ -232,10 +232,10 @@
     <string name="billing_not_restored">Nie udało się przywrócić zakupów: %1$s</string>
     <string name="billing_not_signed_in">Nie zalogowano.</string>
     <string name="billing_nothing_to_restore">Brak zakupów do przywrócenia.</string>
-    <string name="billing_one_person_tafs_kiff_your">Jedna osoba: tafs, z kredytami w każdym okresie.</string>
+    <string name="billing_one_person_tafs_kiff_your">Dla jednej osoby: 500 kredytów co miesiąc na uruchomienia Twoich tafów, z Coachem w cenie, by skonfigurować około 4 nowych zadań miesięcznie. Kredyty z danego miesiąca nie przechodzą na następny; pakiety dodają więcej, gdy się skończą, i nigdy nie wygasają.</string>
     <string name="billing_only_someone_who_manages_account">Kredyty kupuje tylko osoba zarządzająca rozliczeniami konta.</string>
     <string name="billing_open_tafs_to_buy">Otwórz tafs, aby kupić.</string>
-    <string name="billing_pack_adds_credits_once_never">Pakiet dodaje kredyty jednorazowo i nigdy nie wygasają. Najpierw zużywane są kredyty z okresu, potem z pakietów.</string>
+    <string name="billing_pack_adds_credits_once_never">Pakiety są na wypadek, gdy skończą się kredyty z danego miesiąca. Pakiet dodaje kredyty jednorazowo i nigdy nie wygasają. Najpierw zużywane są kredyty z miesiąca, potem z pakietów.</string>
     <string name="billing_pending_credits">Zakup czeka na zatwierdzenie. Twoje kredyty zostaną dodane, gdy się zakończy.</string>
     <string name="billing_plan_could_not_read_kiff">Nie udało się odczytać planu z KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play nie może sprzedawać na tym telefonie, więc nic nie można tu kupić.</string>
@@ -259,7 +259,7 @@
     <string name="billing_solo_not_available_app_store">Solo nie jest teraz dostępne w App Store.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo to subskrypcja na okres %1$s za %2$s, pobierana z Twojego konta Apple. Odnawia się co %3$s, dopóki jej nie anulujesz.</string>
     <string name="billing_starts_free">Zaczyna się od %1$s za darmo.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs dla jednej osoby, co miesiąc.</string>
+    <string name="billing_tafs_kiff_one_person_every">Dla jednej osoby: 500 kredytów miesięcznie, Coach w cenie.</string>
     <string name="billing_team_on_web">Przejdź na Company w kiff.dev</string>
     <string name="billing_terms_use">Warunki korzystania</string>
     <string name="billing_test_purchase_credits">Zakupy testowe nie dodają kredytów do tego konta.</string>

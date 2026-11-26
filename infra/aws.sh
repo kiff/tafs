@@ -179,11 +179,12 @@ for v in FCM_PROJECT_ID FCM_SECRET_ID; do
   fi
   [ -n "${!v}" ] && FCM_ENV="$FCM_ENV,$v=${!v}"
 done
-# tafs cloud's feature flags (TAFS_KEY_AND_CARDS, TAFS_TOOLS_AND_CARDS, TAFS_SIGNED_REMOVE, TAFS_YOUR_STEP, TAFS_COACH_START_ONE, TAFS_SWEEP_LEFTOVERS, TAFS_RULES_REQUIRED, TAFS_RULES_PER, TAFS_BRIEF_PUSH, TAFS_BRIEF_HELD_WAIT, TAFS_PROVED_FROM_CATALOG, TAFS_WATCH_ASK, TAFS_WATCH_TAF_CHAT, TAFS_API_DOORS: each "on" or unset), kept
+# tafs cloud's feature flags (TAFS_KEY_AND_CARDS, TAFS_TOOLS_AND_CARDS, TAFS_SIGNED_REMOVE, TAFS_YOUR_STEP, TAFS_COACH_START_ONE, TAFS_SWEEP_LEFTOVERS, TAFS_RULES_REQUIRED, TAFS_RULES_PER, TAFS_BRIEF_PUSH, TAFS_BRIEF_HELD_WAIT, TAFS_PROVED_FROM_CATALOG, TAFS_WATCH_ASK, TAFS_WATCH_TAF_CHAT, TAFS_API_DOORS: each "on" or unset; and
+# TAFS_WELCOME_VIDEO_URL, the welcome video's https address, or unset), kept
 # from tafs-cloud on a rerun like the doors' settings, so a rerun never turns one off. runtime/test checks every
 # TAFS_ flag the code reads is named here.
 FLAGS_ENV=""
-for v in TAFS_KEY_AND_CARDS TAFS_TOOLS_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_STEP TAFS_COACH_START_ONE TAFS_SWEEP_LEFTOVERS TAFS_RULES_REQUIRED TAFS_RULES_PER TAFS_BRIEF_PUSH TAFS_BRIEF_HELD_WAIT TAFS_PROVED_FROM_CATALOG TAFS_WATCH_ASK TAFS_WATCH_TAF_CHAT TAFS_API_DOORS; do
+for v in TAFS_KEY_AND_CARDS TAFS_TOOLS_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_STEP TAFS_COACH_START_ONE TAFS_SWEEP_LEFTOVERS TAFS_RULES_REQUIRED TAFS_RULES_PER TAFS_BRIEF_PUSH TAFS_BRIEF_HELD_WAIT TAFS_PROVED_FROM_CATALOG TAFS_WATCH_ASK TAFS_WATCH_TAF_CHAT TAFS_API_DOORS TAFS_WELCOME_VIDEO_URL; do
   if [ -z "${!v:-}" ]; then
     kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
     [ "$kept" = None ] && kept=""
@@ -191,6 +192,11 @@ for v in TAFS_KEY_AND_CARDS TAFS_TOOLS_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_ST
   fi
   [ -n "${!v}" ] && FLAGS_ENV="$FLAGS_ENV,$v=${!v}"
 done
+# The Lambda's environment goes as AWS's shorthand, where a "," or "=" in a value would split it: the welcome video's
+# address is a plain https one, such as https://kiff.dev/tafs/video, with no query.
+case "${TAFS_WELCOME_VIDEO_URL:-}" in
+  *,*|*=*) echo "TAFS_WELCOME_VIDEO_URL can't hold \",\" or \"=\": give a plain https address, with no query" >&2; exit 1 ;;
+esac
 # tafs cloud may read its one secret, nothing more.
 TAFS_SECRET_READ=""
 if [ -n "$TAFS_SECRET_ID" ]; then

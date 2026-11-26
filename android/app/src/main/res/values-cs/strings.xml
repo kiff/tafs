@@ -225,10 +225,10 @@
     <string name="billing_not_restored">Nákupy se nepodařilo obnovit: %1$s</string>
     <string name="billing_not_signed_in">Nepřihlášeno.</string>
     <string name="billing_nothing_to_restore">Není co obnovit.</string>
-    <string name="billing_one_person_tafs_kiff_your">Jeden člověk: tafs s kredity v ceně za každé období.</string>
+    <string name="billing_one_person_tafs_kiff_your">Pro jednoho člověka: každý měsíc 500 kreditů na běhy vašich tafů, s Coachem v ceně na nastavení asi 4 nových úloh měsíčně. Kredity z jednoho měsíce nepřecházejí do dalšího; balíčky přidají další, když vám dojdou, a nikdy nevyprší.</string>
     <string name="billing_only_someone_who_manages_account">Kredity kupuje jen ten, kdo spravuje fakturaci účtu.</string>
     <string name="billing_open_tafs_to_buy">Pro nákup otevřete tafs.</string>
-    <string name="billing_pack_adds_credits_once_never">Balíček přidá kredity jednou a nikdy nevyprší. Nejdřív se čerpají kredity v ceně období, pak kredity z balíčků.</string>
+    <string name="billing_pack_adds_credits_once_never">Balíčky jsou pro případ, že dojdou kredity daného měsíce. Balíček přidá kredity jednou a nikdy nevyprší. Nejdřív se čerpají kredity každého měsíce, pak kredity z balíčků.</string>
     <string name="billing_pending_credits">Nákup čeká na schválení. Kredity se přidají, až bude hotový.</string>
     <string name="billing_plan_could_not_read_kiff">Tarif se nepodařilo načíst z KIFF: %1$s</string>
     <string name="billing_play_cant_sell">Google Play v tomto telefonu nemůže prodávat, takže tu nelze nic koupit.</string>
@@ -252,7 +252,7 @@
     <string name="billing_solo_not_available_app_store">Solo teď v App Storu není k dispozici.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo je předplatné na jeden %1$s za %2$s, účtované na váš účet Apple. Obnovuje se každý %3$s, dokud ho nezrušíte.</string>
     <string name="billing_starts_free">Začíná %1$s zdarma.</string>
-    <string name="billing_tafs_kiff_one_person_every">Tafs pro jednoho člověka, každý měsíc.</string>
+    <string name="billing_tafs_kiff_one_person_every">Pro jednoho člověka: 500 kreditů měsíčně, Coach v ceně.</string>
     <string name="billing_team_on_web">Získat Company na kiff.dev</string>
     <string name="billing_terms_use">Podmínky použití</string>
     <string name="billing_test_purchase_credits">Testovací nákupy k tomuto účtu nepřidávají kredity.</string>
