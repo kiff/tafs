@@ -26,7 +26,7 @@
  * agreed figures it carries (the tool's for one that carries none), so two figures with different answers are never on
  * one Card: one Card has one `on_exceed`.
  */
-import { EVERY_CALL_CONDITIONS, EVERY_CALL_JOINS, EVERY_CALL_THRESHOLDS } from "./every-call-thresholds.js";
+import { EVERY_CALL_AMOUNTS, EVERY_CALL_AMOUNTS_AFTER, EVERY_CALL_CONDITIONS, EVERY_CALL_JOINS } from "./every-call-thresholds.js";
 import { EVERY_CALL_CLAUSE_STARTS, EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "./every-call-words.js";
 import type { ApprovalGrant } from "./approval.js";
 
@@ -767,8 +767,9 @@ export function unpinnedConnection(grants: readonly ApprovalGrant[], lines: read
  * Whether a rules notice's words say every call asks the owner: "every refund asks you first", "chaque remboursement attend
  * votre accord". Read in the languages tafs cloud speaks to Coach in most (en, fr, de, es, it, nl, pl, pt), as each says it:
  * a word for every or each, then the verb that asks, with no digit between them, since "every refund over 50 EUR asks" is a
- * figure that asks, not every call; nor after the verb behind a word that sets a threshold in the same clause ("every refund
- * asks you first when it's over 5 EUR"), up to a comma or the language's "and" or "but". Used only to hold a money rule that asks to a count of 0 a day (moneyCardsOf); words in
+ * figure that asks, not every call; nor with a figure after the verb set by an amount word right beside it, in the same clause
+ * ("every refund asks you first when it's over 5 EUR"; "over the phone" and a condition word alone set nothing), up to a
+ * comma or the language's "and" or "but". Used only to hold a money rule that asks to a count of 0 a day (moneyCardsOf); words in
  * another language aren't read, and the rule's own figures stand, as before.
  */
 export function saysEveryCallAsks(text: string): boolean {
@@ -779,19 +780,26 @@ export function saysEveryCallAsks(text: string): boolean {
 }
 
 const between = "[^\\d.;:!?\\n]{1,60}?";
-// Words that set a threshold, in the same order as the languages below: one of them with a figure after the verb, in the
-// same clause, is a figure that asks, not every call ("every refund asks you first when it's over 5 EUR"; an Eval, 26 Nov,
-// read it as every call, the rules were held to a count of 0 a day, and a €4 refund was held). "up to €50 a day" names no
-// threshold, so "every refund asks you first up to €50 a day" still reads as every call.
-const THRESHOLDS = [
-  "when|whenever|if|once|over|above|past|beyond|more than|greater than|exceeds?|exceeding",
-  "quand|si|s'il|s’il|dès que|dès qu'il|dès qu’il|lorsque|lorsqu'il|lorsqu’il|au-delà de|au-dessus de|plus de|dépasse|dépassant|supérieure? à",
-  "wenn|falls|sobald|über|ab|mehr als|übersteigt|oberhalb von|höher als",
-  "cuando|si|una vez que|más de|por encima de|supera|superior a|a partir de",
-  "quando|se|oltre|sopra|più di|supera|superiore a|una volta che",
-  "als|wanneer|zodra|boven|meer dan|vanaf|overschrijdt|hoger dan",
-  "gdy|jeśli|jeżeli|kiedy|powyżej|ponad|więcej niż|przekracza|przekroczy",
-  "quando|se|acima de|mais de|ultrapassa|ultrapassar|superior a|passar de|a partir de",
+// Words that set an amount's threshold with the figure right beside them, in the same order as the languages below: one
+// with its figure after the verb, in the same clause, is a figure that asks, not every call ("every refund asks you first
+// when it's over 5 EUR"; an Eval, 26 Nov, read it as every call, the rules were held to a count of 0 a day, and a €4 refund
+// was held). A condition word ("when", "if") sets nothing alone, nor an amount word with no figure right after it: "every
+// refund asks you first over the phone, up to €50 a day" is every call ("over the phone", "über das Handy" read as a
+// threshold whenever any figure followed, which failed open). "up to €50 a day" names no threshold either.
+const AMOUNTS = [
+  "over|above|past|beyond|more than|greater than|exceeds?|exceeding",
+  "au-delà de|au-dessus de|plus de|dépasse|dépassant|supérieure? à",
+  "über|ab|mehr als|übersteigt|oberhalb von|höher als",
+  "más de|por encima de|supera|superior a|a partir de",
+  "oltre|sopra|più di|supera|superiore a",
+  "boven|meer dan|vanaf|overschrijdt|hoger dan",
+  "powyżej|ponad|więcej niż|przekracza|przekroczy",
+  "acima de|mais de|ultrapassa|ultrapassar|superior a|passa de|passar de|a partir de",
+];
+// The same with the figure right before them ("€5 or more", "wenn sie 5 € übersteigt").
+const AMOUNTS_AFTER = [
+  "or more|or above|or over|and (?:more|above|over|up)", "ou plus|et plus|et au-delà", "oder mehr|und mehr|übersteigt|überschreitet",
+  "o más|y más", "o più|e oltre", "of meer|en meer|overschrijdt|overstijgt", "lub więcej|i więcej", "ou mais|e acima",
 ];
 // Where the clause after the verb ends for that look: a comma (unless a word that opens a condition follows it), or the
 // language's "and" or "but", as well as a stop. So
@@ -806,8 +814,25 @@ const CONDITIONS = [
   "when|whenever|if|once(?= (?:it|they|its|the|that|this|a refund|a payment)(?![\\p{L}\\p{N}]))", "quand|si|s'il|s’il|dès que|dès qu'il|dès qu’il|lorsque|lorsqu'il|lorsqu’il", "wenn|falls|sobald",
   "cuando|si|una vez que", "quando|se|una volta che", "als|wanneer|zodra", "gdy|jeśli|jeżeli|kiedy", "quando|se|caso",
 ];
-const figureAfter = (thresholds: string, joins: string, conditions: string) =>
-  `(?!(?:(?!(?<![\\p{L}\\p{N}])(?:${joins})(?![\\p{L}\\p{N}]))(?:[^.,;:!?\\n]|,(?=\\s*(?:${conditions})(?![\\p{L}\\p{N}])))){0,80}?(?<![\\p{L}\\p{N}])(?:${thresholds})(?![\\p{L}\\p{N}])[^\\d.,;:!?\\n]{0,30}?\\d)`;
+// A clause's end in each script's own punctuation too: ، ؛ ؟ ۔ । ॥, Armenian ։, Khmer ។ ៕, full-width ； ：, and the Greek
+// semicolon (U+0387, which NFC writes as U+00B7, the form read here).
+const CLAUSE_ENDS = "،؛؟۔।॥։។៕；：\\u00b7";
+const COMMAS = ",،、，";
+const STOPS = `.;:!?\\n。．！？；：${CLAUSE_ENDS}`;
+const wordIn = (w: string, unspaced = false) => (unspaced ? `(?:${w})` : `(?<![\\p{L}\\p{N}])(?:${w})(?![\\p{L}\\p{N}])`);
+// Between an amount word and its figure: a currency sign or code, and a word of up to three letters (an article: "τα 5 €").
+const TO_FIGURE = `\\s{0,2}(?:\\p{L}{1,3}\\s{1,2})?(?:[^\\p{L}\\p{Nd}\\s${COMMAS}${STOPS}]{1,2}\\s{0,2}|(?:eur|euros?|usd|gbp|chf)\\s{0,2})?\\p{Nd}`;
+interface AmountWords { amounts?: string; after?: string; joins: string; conditions: string; unspaced?: boolean }
+// After the verb that asks: an amount word with its figure, in the same clause. The look ends at a stop, at a comma unless a
+// condition word follows it, and at the language's "and" or "but" (joins, a whole pattern).
+const amountLook = ({ amounts, after, joins, conditions, unspaced }: AmountWords) => {
+  const sets = [
+    amounts ? `${wordIn(amounts, unspaced)}${TO_FIGURE}` : "",
+    after ? `\\p{Nd}[^\\p{Nd}${COMMAS}${STOPS}]{0,15}?${wordIn(after, unspaced)}` : "",
+  ].filter(Boolean);
+  if (!sets.length) return "";
+  return `(?!(?:(?!${joins})(?:[^${COMMAS}${STOPS}]|[${COMMAS}](?=\\s*${wordIn(conditions, unspaced)}))){0,80}?(?:${sets.join("|")}))`;
+};
 const EVERY_CALL_ASKS: RegExp[] = [
   ["every|each", [
     "(?:will |must |should |always |first )?asks? (?:you|first)",
@@ -862,38 +887,27 @@ const EVERY_CALL_ASKS: RegExp[] = [
     "(?:é|será|tem de ser|deve ser) (?:aprovad[oa]|confirmad[oa]|autorizad[oa]) por (?:você|ti)",
     "(?:passa|vai) (?:primeiro )?por (?:você|ti)",
   ].join("|")],
-].map(([every, asks], i) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])${figureAfter(THRESHOLDS[i]!, CLAUSE_JOINS[i]!, CONDITIONS[i]!)}`, "u"));
+].map(([every, asks], i) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])${amountLook({ amounts: AMOUNTS[i]!, after: AMOUNTS_AFTER[i]!, joins: wordIn(CLAUSE_JOINS[i]!), conditions: CONDITIONS[i]! })}`, "u"));
 
 // The other 35 app languages, and pt-BR's own forms (every-call-words.ts): a gap that may be empty (Mongolian's "бүр" sits
 // right before the verb), and, in scripts written without spaces, no word boundaries, within 40 characters of one clause.
 // In the languages that put "over €5" before the noun (EVERY_CALL_CLAUSE_STARTS), never after a figure earlier in the same
 // clause. Elsewhere the gap's refusal of a digit already keeps "every refund over €5 asks you" a cap, and a guard would miss
 // "€50 a day and every refund asks you first".
-// A figure in any script's digits (٥, ५, ５…), and a clause's end in its own punctuation too: ، ؛ ؟ ۔ । ॥, Armenian ։,
-// Khmer ។ ៕, full-width ； ：, and the Greek semicolon (U+0387, which NFC writes as U+00B7, the form read here).
-const CLAUSE_ENDS = "،؛؟۔।॥։។៕；：\\u00b7";
+// A figure in any script's digits (٥, ५, ５…), and a clause's end in its own punctuation (CLAUSE_ENDS).
 // The guard: no figure within 30 characters before "every", unless a stop or the language's "and" or "but" comes between.
 const noFigureBefore = (starts: string) => `(?<!\\p{Nd}(?:(?!${starts})[^\\p{Nd}.,;:!?\\n、，。．！？${CLAUSE_ENDS}]){0,30})`;
 const betweenOrNone = `[^\\p{Nd}.;:!?\\n${CLAUSE_ENDS}]{0,60}?`;
 const guardFor = (lang: string) => (EVERY_CALL_CLAUSE_STARTS[lang] ? noFigureBefore(EVERY_CALL_CLAUSE_STARTS[lang]!) : "");
-// After the verb: a figure behind a word that sets a threshold, in the same clause, is a cap, not every call ("every refund
-// asks you first when it's over 5 EUR"), as figureAfter reads it for the eight (every-call-thresholds.ts). The look ends at
-// a stop, at a comma unless a word that opens a condition follows it, and at the language's "and" or "but". Words are
-// matched whole, except in scripts written without spaces. ja and ko have none: their condition comes before the verb,
-// where the figure already sits between "every" and the verb.
+// After the verb, as for the eight (amountLook), in each language's own words (every-call-thresholds.ts).
 const UNSPACED_THRESHOLDS = new Set(["zh-Hant", "th", "lo", "km"]);
-const COMMAS = ",،、，";
-const STOPS = `.;:!?\\n。．！？；：${CLAUSE_ENDS}`;
-const thresholdAfter = (lang: string) => {
-  const t = EVERY_CALL_THRESHOLDS[lang];
-  if (!t) return "";
-  const whole = (w: string) => (UNSPACED_THRESHOLDS.has(lang) ? `(?:${w})` : `(?<![\\p{L}\\p{N}])(?:${w})(?![\\p{L}\\p{N}])`);
-  const cond = EVERY_CALL_CONDITIONS[lang]!, join = EVERY_CALL_JOINS[lang]!;
-  return `(?!(?:(?!${join})(?:[^${COMMAS}${STOPS}]|[${COMMAS}](?=\\s*${whole(cond)}))){0,80}?${whole(t)}[^\\p{Nd}${COMMAS}${STOPS}]{0,30}?\\p{Nd})`;
-};
+const lookFor = (lang: string) => amountLook({
+  amounts: EVERY_CALL_AMOUNTS[lang], after: EVERY_CALL_AMOUNTS_AFTER[lang], joins: EVERY_CALL_JOINS[lang] ?? "(?!)",
+  conditions: EVERY_CALL_CONDITIONS[lang] ?? "(?!)", unspaced: UNSPACED_THRESHOLDS.has(lang),
+});
 EVERY_CALL_ASKS.push(
   ...Object.entries(EVERY_CALL_SPACED).map(([lang, [every, asks]]) =>
-    new RegExp(`${guardFor(lang)}(?<![\\p{L}\\p{N}])(?:${every})\\s${betweenOrNone}(?:${asks.join("|")})(?![\\p{L}\\p{N}])${thresholdAfter(lang)}`, "u")),
+    new RegExp(`${guardFor(lang)}(?<![\\p{L}\\p{N}])(?:${every})\\s${betweenOrNone}(?:${asks.join("|")})(?![\\p{L}\\p{N}])${lookFor(lang)}`, "u")),
   ...Object.entries(EVERY_CALL_UNSPACED).map(([lang, [every, asks]]) =>
-    new RegExp(`${guardFor(lang)}(?:${every})[^\\p{Nd}。．！？!?.\\n${CLAUSE_ENDS}]{0,40}?(?:${asks.join("|")})${thresholdAfter(lang)}`, "u")),
+    new RegExp(`${guardFor(lang)}(?:${every})[^\\p{Nd}。．！？!?.\\n${CLAUSE_ENDS}]{0,40}?(?:${asks.join("|")})${lookFor(lang)}`, "u")),
 );

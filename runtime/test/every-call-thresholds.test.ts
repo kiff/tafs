@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EVERY_CALL_CONDITIONS, EVERY_CALL_JOINS, EVERY_CALL_THRESHOLDS } from "../src/cloud/every-call-thresholds.js";
+import { EVERY_CALL_AMOUNTS, EVERY_CALL_AMOUNTS_AFTER, EVERY_CALL_CONDITIONS, EVERY_CALL_JOINS } from "../src/cloud/every-call-thresholds.js";
 import { EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "../src/cloud/every-call-words.js";
 import { saysEveryCallAsks } from "../src/cloud/rules.js";
 
@@ -64,15 +64,41 @@ const JOIN_YES = [
 ];
 
 describe("a threshold after the verb that asks, in the 36 other languages", () => {
-  it("has the three maps for every language it reads, but ja and ko", () => {
+  it("has amount words, conditions and joins for every language it reads, but ja and ko", () => {
     for (const lang of [...Object.keys(EVERY_CALL_SPACED), ...Object.keys(EVERY_CALL_UNSPACED)]) {
       if (lang === "ja" || lang === "ko") continue;
-      expect(EVERY_CALL_THRESHOLDS[lang], lang).toBeTruthy();
+      expect(EVERY_CALL_AMOUNTS[lang] ?? EVERY_CALL_AMOUNTS_AFTER[lang], lang).toBeTruthy();
       expect(EVERY_CALL_CONDITIONS[lang], lang).toBeTruthy();
       expect(EVERY_CALL_JOINS[lang], lang).toBeTruthy();
     }
-    expect(EVERY_CALL_THRESHOLDS.ja).toBeUndefined();
-    expect(EVERY_CALL_THRESHOLDS.ko).toBeUndefined();
+    for (const lang of ["ja", "ko"]) expect(EVERY_CALL_AMOUNTS[lang] ?? EVERY_CALL_AMOUNTS_AFTER[lang], lang).toBeUndefined();
+  });
+
+  // A review, 26 Nov: an amount word read as a threshold whenever any figure followed in the clause, another rule's day cap
+  // included, so these read as not every call (open since the eight's look, and in the 36). A condition word alone, or an
+  // amount word with no figure right after it, sets nothing now.
+  it("reads no threshold in an amount word without its figure, or in a condition word alone", () => {
+    for (const text of [
+      "Every refund asks you first over the phone up to €50 a day.",
+      "Jede Erstattung fragt dich zuerst über das Handy bis 50 € am Tag.",
+      "Jede Erstattung fragt dich ab sofort zuerst bis 50 € am Tag.",
+      "Mỗi khoản hoàn tiền đều hỏi bạn trước trên điện thoại tối đa 50 € mỗi ngày.",
+      "Svaki povraćaj vas prvo pita preko telefona do 50 € dnevno.",
+      "Svaki povrat vas prvo pita preko telefona do 50 € dnevno.",
+      "Každá refundace se vás nejdřív zeptá přes telefon do 50 € denně.",
+      "Setiap pengembalian dana bertanya kepada Anda dulu saat ini hingga 50 € per hari.",
+      "Every refund asks you first when you're away, up to €50 a day.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(true);
+  });
+
+  it("still reads an amount word with its figure as a cap", () => {
+    for (const text of [
+      "Mỗi khoản hoàn tiền đều hỏi bạn trước khi trên 5 €.", "Svaki povrat vas prvo pita kada je preko 5 €.",
+      "Každá refundace se vás nejdřív zeptá, když je přes 5 €.", "Every refund asks you first if it is over €5.",
+      "Every refund asks you first if it's €5 or more.", "Jede Erstattung fragt dich zuerst, wenn sie 5 € übersteigt.",
+      "Κάθε επιστροφή σε ρωτά πρώτα όταν ξεπερνά τα 5 €.", "Minden visszatérítés előbb téged kérdez, ha 5 € felett van.",
+      "Every refund asks you first over EUR 5.",
+    ]) expect(saysEveryCallAsks(text), text).toBe(false);
   });
 
   for (const [lang, texts] of Object.entries(AFTER_NO)) {

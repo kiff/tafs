@@ -1,28 +1,46 @@
-// A figure after the verb that asks, behind a word that sets a threshold in the same clause, is a cap, not every call
+// A figure after the verb that asks, set by an amount word right beside it in the same clause, is a cap, not every call
 // ("every refund asks you first when it's over 5 EUR"), in the 35 app languages beyond the eight and pt-BR's own forms.
-// The look ends at a stop, at a comma unless a word that opens a condition follows it (EVERY_CALL_CONDITIONS: German-style
-// grammars set a comma before "if"/"when" by rule), and at the language's "and"/"but" (EVERY_CALL_JOINS, whole patterns, as
-// EVERY_CALL_CLAUSE_STARTS), so "every refund asks you first, and refunds over €200 a day are refused" stays every call.
-// Words are matched whole, except in scripts written without spaces (zh-Hant, th, lo, km). ja and ko put a condition before
-// the verb ("5ユーロを超える場合"), where the figure already sits between "every" and the verb, so they have none.
-export const EVERY_CALL_THRESHOLDS: Record<string, string> = {
-  "pt-BR": "quando|se|caso|assim que|acima de|mais de|ultrapassa|ultrapassar|excede|superior a|passa de|passar de|a partir de",
-  ar: "إذا|اذا|إن|عندما|متى|حين|فوق|أكثر من|اكثر من|يتجاوز|تتجاوز|يزيد عن|تزيد عن|يزيد على|تزيد على",
-  bg: "когато|ако|щом|над|повече от|надвишава|надхвърля", ca: "quan|si|un cop|més de|per sobre de|supera|superior a|a partir de",
-  cs: "když|pokud|jakmile|jestliže|nad|přes|více než|víc než|přesáhne|přesahuje|překročí",
-  el: "όταν|αν|εάν|μόλις|πάνω από|άνω των|άνω του|περισσότερο από|ξεπερνά|ξεπερνάει|υπερβαίνει",
-  et: "kui|üle|rohkem kui|ületab", he: "כאשר|כש\\p{L}*|אם|ברגע ש\\p{L}*|מעל|יותר מ\\p{L}*|עולה על|חורג מ\\p{L}*",
-  hr: "kada|kad|ako|čim|iznad|preko|više od|premašuje|prelazi", hu: "ha|amikor|amint|amennyiben|több mint|meghaladja|túllépi",
-  id: "jika|kalau|apabila|bila|ketika|saat|di atas|lebih dari|melebihi", lt: "kai|jei|jeigu|vos tik|virš|daugiau nei|daugiau kaip|viršija",
-  lv: "kad|ja|tiklīdz|virs|vairāk nekā|pārsniedz", mk: "кога|ако|штом|над|повеќе од|надминува",
-  ro: "când|dacă|odată ce|peste|mai mult de|mai mare de|depășește", sk: "keď|ak|akonáhle|nad|viac ako|viac než|presiahne|prekročí",
-  sl: "ko|če|takoj ko|nad|več kot|presega|preseže", sq: "kur|nëse|sapo|mbi|më shumë se|më tepër se|kalon|tejkalon",
-  "sr-Latn": "kada|kad|ako|čim|iznad|preko|više od|premašuje|prelazi", vi: "khi|nếu|một khi|trên|hơn|vượt quá|vượt|lớn hơn|quá",
-  tr: "eğer|şayet", az: "əgər", tk: "eger", hy: "եթե|երբ", ka: "თუ|როცა|როდესაც", mn: "хэрэв",
-  hi: "अगर|जब|यदि", ur: "اگر|جب", ne: "यदि|जब", bn: "যদি|যখন",
-  "zh-Hant": "如果|若|當|超過|高於|大於", th: "ถ้า|หาก|เมื่อ|เกิน|มากกว่า", lo: "ຖ້າ|ເມື່ອ|ເກີນ|ຫຼາຍກວ່າ", km: "ប្រសិនបើ|បើ|ពេល|លើស|ច្រើនជាង",
+// A condition word ("when", "if") sets nothing alone: "every refund asks you first over the phone, up to €50 a day" is
+// every call. The look ends at a stop, at a comma unless a word that opens a condition follows it (EVERY_CALL_CONDITIONS:
+// German-style grammars set a comma before "if"/"when" by rule), and at the language's "and"/"but" (EVERY_CALL_JOINS, whole
+// patterns, as EVERY_CALL_CLAUSE_STARTS), so "every refund asks you first, and refunds over €200 a day are refused" stays
+// every call. Words are matched whole, except in scripts written without spaces (zh-Hant, th, lo, km). ja and ko put a
+// condition before the verb ("5ユーロを超える場合"), where the figure already sits between "every" and the verb, so they have
+// none. A word this misses reads as every call: the rules are shown again, the safe side.
+/**
+ * The words that set an amount's threshold with the figure right after them ("over €5", "über 5 €", "trên 5 €"): only a
+ * currency sign or code, or a word of up to three letters (an article: "τα 5 €"), may come between. Alone, or before other
+ * words, they set nothing: "over the phone", "über das Handy", "preko telefona" and "přes telefon" are no threshold.
+ */
+export const EVERY_CALL_AMOUNTS: Record<string, string> = {
+  "pt-BR": "acima de|mais de|ultrapassa|ultrapassar|excede|superior a|passa de|passar de|a partir de",
+  ar: "فوق|أكثر من|اكثر من|يتجاوز|تتجاوز|تجاوز|تجاوزت|يزيد عن|تزيد عن|يزيد على|تزيد على",
+  bg: "над|повече от|надвишава|надхвърля", ca: "més de|per sobre de|supera|superior a|a partir de",
+  cs: "nad|přes|více než|víc než|přesáhne|přesahuje|překročí",
+  el: "πάνω από|άνω των|άνω του|περισσότερο από|ξεπερνά|ξεπερνάει|υπερβαίνει", et: "üle|rohkem kui|ületab",
+  he: "מעל|יותר מ\\p{L}*|עולה על|חורג מ\\p{L}*", hr: "iznad|preko|više od|premašuje|prelazi",
+  hu: "több mint|meghaladja|túllépi", id: "di atas|lebih dari|melebihi", lt: "virš|daugiau nei|daugiau kaip|viršija",
+  lv: "virs|vairāk nekā|pārsniedz", mk: "над|повеќе од|надминува", ro: "peste|mai mult de|mai mare de|depășește",
+  sk: "nad|viac ako|viac než|presiahne|prekročí", sl: "nad|več kot|presega|preseže",
+  sq: "mbi|më shumë se|më tepër se|kalon|tejkalon", "sr-Latn": "iznad|preko|više od|premašuje|prelazi",
+  vi: "trên|hơn|vượt quá|vượt|lớn hơn|quá", "zh-Hant": "超過|高於|大於", th: "เกิน|มากกว่า", lo: "ເກີນ|ຫຼາຍກວ່າ",
+  km: "លើស|ច្រើនជាង",
 };
-/** The words that open a condition, which a comma before them doesn't end the look at. */
+
+/**
+ * The words that set it with the figure right before them, in languages that put the figure first ("5 € से ज़्यादा",
+ * "5 €'yu aşarsa", "5 € felett"): within 15 characters of it, in the same clause.
+ */
+export const EVERY_CALL_AMOUNTS_AFTER: Record<string, string> = {
+  hu: "felett|fölött|feletti|fölötti|felül|meghaladja|túllépi",
+  tr: "aşarsa|aşıyorsa|aşan|aşınca|üzerindeyse|üzerinde|üstündeyse|fazlaysa|fazla",
+  az: "keçərsə|keçdikdə|artıq|çox|üzərində", tk: "geçse|geçende|köp|artyk|ýokary",
+  hy: "ավելի|գերազանցի|գերազանցում|գերազանցելիս", ka: "მეტი|მეტია|აღემატება|გადააჭარბებს|ზემოთ",
+  mn: "их|илүү|хэтэрвэл|давбал|давсан", hi: "से ज़्यादा|से ज्यादा|से अधिक|से ऊपर|के पार",
+  ur: "سے زیادہ|سے اوپر|سے زائد", ne: "भन्दा बढी|भन्दा माथि|भन्दा धेरै|नाघे",
+  bn: "বেশি|অধিক|ছাড়ালে|ছাড়িয়ে গেলে|অতিক্রম",
+};
+/** The words that open a condition, which a comma before them doesn't end the look at. They set no threshold alone. */
 export const EVERY_CALL_CONDITIONS: Record<string, string> = {
   "pt-BR": "quando|se|caso|assim que", ar: "إذا|اذا|إن|عندما|متى", bg: "когато|ако|щом", ca: "quan|si|un cop", cs: "když|pokud|jakmile|jestliže",
   el: "όταν|αν|εάν|μόλις", et: "kui", he: "כאשר|כש\\p{L}*|אם", hr: "kada|kad|ako|čim", hu: "ha|amikor|amint|amennyiben",
