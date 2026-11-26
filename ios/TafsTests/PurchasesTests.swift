@@ -43,6 +43,11 @@ final class FakeStore: StoreFront {
     func unfinished() async -> [StorePurchase] { left }
 
     func restore() async throws -> [StorePurchase] { restored }
+
+    private var fronts: AsyncStream<String>.Continuation?
+    func storefronts() -> AsyncStream<String> { AsyncStream { self.fronts = $0 } }
+    /// The App Store's storefront changes, as when a TestFlight build buys with another country's account.
+    func switchStorefront(to id: String) { fronts?.yield(id) }
 }
 
 @MainActor
@@ -120,6 +125,54 @@ final class PurchasesTests: XCTestCase {
         store.left = [store.purchaseNamed(6)]
         await p.sendUnfinished()
         XCTAssertEqual(log.lines.suffix(2), ["kiff jws-6 -", "finish 6"])
+        p.stop()
+    }
+
+    // MARK: Prices, always the storefront's that sells
+
+    private static let solo = "bot.tafs.solo.monthly", pack = "bot.tafs.credits.500"
+    private static func priced(_ id: String, _ price: String) -> StoreProduct {
+        StoreProduct(id: id, displayName: id, displayPrice: price, subscription: id == solo ? .init(period: "month") : nil)
+    }
+
+    /// Plan & usage reads the prices each time it opens, not once a session: an iPad (26 Nov) showed "9,99 $US"
+    /// read under one storefront while Apple's sheet charged "12,49 €" under another (App Review 3.1.2).
+    func testPricesAreReadAgainEachTime() async {
+        let (p, store) = purchases(recording: StoreLog())
+        store.sold = [Self.priced(Self.solo, "9,99 $US")]
+        await p.load([Self.solo])
+        XCTAssertEqual(p.products[Self.solo]?.displayPrice, "9,99 $US")
+        store.sold = [Self.priced(Self.solo, "12,49 €")]
+        await p.load([Self.solo])
+        XCTAssertEqual(p.products[Self.solo]?.displayPrice, "12,49 €")
+    }
+
+    /// A change of storefront drops every price at once and reads them again there: a product the new storefront
+    /// doesn't sell is left unpriced, never shown at the old storefront's price.
+    func testAStorefrontChangeDropsTheOldPricesAndReadsThemAgain() async {
+        let (p, store) = purchases(recording: StoreLog())
+        p.start()
+        store.sold = [Self.priced(Self.solo, "9,99 $US"), Self.priced(Self.pack, "4,99 $US")]
+        await p.load([Self.solo, Self.pack])
+        XCTAssertEqual(p.products.count, 2)
+        store.sold = [Self.priced(Self.solo, "12,49 €")]
+        store.switchStorefront(to: "FRA")
+        for _ in 0..<100 where p.products[Self.solo]?.displayPrice != "12,49 €" { await Task.yield() }
+        XCTAssertEqual(p.products[Self.solo]?.displayPrice, "12,49 €")
+        XCTAssertNil(p.products[Self.pack], "a price from the old storefront is never offered")
+        p.stop()
+    }
+
+    /// The screenshots' sample prices are never replaced by the App Store's, nor dropped by a storefront change.
+    func testSamplePricesStayAsShown() async {
+        let (p, store) = purchases(recording: StoreLog())
+        p.start()
+        p.showSample([Self.priced(Self.solo, "10,99 €")])
+        store.sold = [Self.priced(Self.solo, "9,99 $US")]
+        await p.load([Self.solo])
+        store.switchStorefront(to: "USA")
+        for _ in 0..<20 { await Task.yield() }
+        XCTAssertEqual(p.products[Self.solo]?.displayPrice, "10,99 €")
         p.stop()
     }
 
