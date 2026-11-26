@@ -835,6 +835,10 @@ message and a line where a day starts, with none of its code). Coach's chat is t
 - **Under each message, its time, small:** the person's under their bubble on the right, the taf's or Coach's under its words on
   the left; a run's kickoff keeps its own line. It's `at` from the thread, in the account's zone, in the device's 12- or 24-hour
   setting and the app's language ("14:05", "2:05 PM").
+- **Every other time of day on a screen follows the same setting** (kiff/tafs#2195): the decision line under a held call
+  ("Approved once by you · 10:22 PM"), "next run at", "halted since" and the rest, so one screen never shows two clock styles.
+  Android: `shortTime` (`model/AccountTime.kt`) reads the device's setting when the app starts and each time it comes back
+  (`ShortTimeClockTest`); a line already stored keeps the time it was written with. iOS follows.
 - **A header where a day starts:** over the chat's first message and each first message of a new day: **Today**
   (`calendar.today`), **Yesterday** (`chat.day.yesterday`), then the date in the language's own order from the platform's
   skeleton (`EEEMMMd`: "Wed, Nov 18", "Mi., 18. Nov."), with the year (`EEEMMMdy`) when it isn't this one. It replaces the

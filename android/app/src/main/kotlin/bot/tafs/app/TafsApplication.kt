@@ -37,6 +37,8 @@ class TafsApplication : Application() {
     bot.tafs.app.model.Res.install(bot.tafs.app.design.AndroidWords(this))
     // The lines that name this device say tablet on a large screen, as Android's own sw600dp does.
     bot.tafs.app.model.ThisDevice.tablet = resources.configuration.smallestScreenWidthDp >= 600
+    // Times of day follow the device's 12- or 24-hour clock, as the chat's stamps do (kiff/tafs#2195).
+    bot.tafs.app.model.AccountTime.is24Hour = android.text.format.DateFormat.is24HourFormat(this)
   }
 
   val authenticator: BiometricAuthenticator by lazy { BiometricAuthenticator(this) }

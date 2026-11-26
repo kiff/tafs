@@ -10,6 +10,12 @@ import java.util.Locale
 object AccountTime {
   @Volatile var accountZone: ZoneId? = null
 
+  /**
+   * Whether this device counts 24 hours (its clock setting), read when the app starts and each time it comes back; null before
+   * it's read (tests, the watch), where times stay 24-hour as before.
+   */
+  @Volatile var is24Hour: Boolean? = null
+
   /** Uses the account's zone (UTC when KIFF names none), or with none this device's again. */
   fun use(id: String?) {
     accountZone = id?.let { runCatching { ZoneId.of(it) }.getOrNull() ?: ZoneId.of("UTC") }
@@ -19,8 +25,15 @@ object AccountTime {
 /** The time every screen draws in: the KIFF account's, else this device's (signed out, or the sample). */
 val zone: ZoneId get() = AccountTime.accountZone ?: ZoneId.systemDefault()
 
-/** The time of day, as 14:05, as iOS's `shortTime`. */
-fun shortTime(at: Instant): String = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()).format(at.atZone(zone))
+/**
+ * The time of day, in the device's 12- or 24-hour setting as the chat's stamps are (kiff/tafs#2195): "14:05", or "2:05 PM" where
+ * the device counts 12 hours. So a decision line, "next run at" and "halted since" never show a second clock style beside the
+ * chat's. A line already stored with its time keeps the style it was written in.
+ */
+fun shortTime(at: Instant): String =
+  AccountTime.is24Hour?.let { messageTime(at, is24 = it) }
+    // Not read yet (tests, the watch): 24-hour, as before.
+    ?: DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()).format(at.atZone(zone))
 
 /** A date as "28 Oct 2026", as iOS's abbreviated date style. */
 fun shownDate(at: Instant): String = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()).format(at.atZone(zone))
