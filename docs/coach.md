@@ -1037,10 +1037,11 @@ names it, with no app release.
 
 The gallery shows only the jobs whose apps connect today (rule 13): each of a recipe's connections needs an
 app in `CONNECTS_TODAY` (`runtime/src/cloud/recipes.ts`), the apps kiff.dev's apps list says work, each
-proved by a check that connected it. A job whose app can't connect yet ("Chase overdue invoices",
-"Answer questions about orders") stays out, and comes back with no other change once its app is
-added there, as "Follow up new leads within the hour" did when Typeform was proved, and "Book and
-move appointments" when Google Calendar was. "File receipts" waits for Google Sheets, whose sign-in
+proved by a check that connected it. A job whose app can't connect yet ("Answer questions about orders")
+stays out, and comes back with no other change once its app is added there, as "Follow up new leads
+within the hour" did when Typeform was proved, "Book and move appointments" when Google Calendar was,
+and "Chase overdue invoices" when Moneybird was proved by its key (26 Nov, a read of the sales invoices
+on a test account's books returned data). "File receipts" waits for Google Sheets, whose sign-in
 Coach must never call read-only first.
 
 **How an app is proved.** An app joins `CONNECTS_TODAY` only after one of two checks has connected it:

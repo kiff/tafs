@@ -235,7 +235,6 @@ Bezahle meine Rechnungen unter 100 EUR.
   // can't connect yet stays out, and comes back once its app is added to CONNECTS_TODAY after a check proves it.
   it("lists only the jobs whose every connection has an app that connects today", () => {
     const ids = recipesFor(undefined).recipes.map((r) => r.id);
-    expect(ids).not.toContain("chase-overdue-invoices");
     for (const id of ids) expect(connectsToday(RECIPES.find((r) => r.id === id)!), id).toBe(true);
     expect(ids).toEqual(expect.arrayContaining(["ship-when-green", "refunds-within-a-limit", "save-a-customer-who-cancels", "acknowledge-every-ticket"]));
     // Once an app is proved, its jobs come back with no other change: Typeform was proved by a sign-in on a phone
@@ -249,6 +248,11 @@ Bezahle meine Rechnungen unter 100 EUR.
     expect(ids).not.toContain("file-receipts");
     const withSheets = new Set([...CONNECTS_TODAY, "googlesheets"]);
     expect(recipesFor(undefined, "en", true, withSheets).recipes.map((r) => r.id)).toContain("file-receipts");
+    // Moneybird was proved by its key, with a read of the sales invoices on a test account's books returning data
+    // (26 Nov): chasing overdue invoices is listed; without it, it isn't.
+    expect(ids).toContain("chase-overdue-invoices");
+    const noMoneybird = new Set([...CONNECTS_TODAY].filter((v) => v !== "moneybird"));
+    expect(recipesFor(undefined, "en", true, noMoneybird).recipes.map((r) => r.id)).not.toContain("chase-overdue-invoices");
   });
 
   // Three jobs for small shops that need only apps that connect today: listed now, with no proof run.

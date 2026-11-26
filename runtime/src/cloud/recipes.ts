@@ -179,7 +179,7 @@ function fold(name: string): string {
  * one of these (rule 13): a job whose app can't connect yet stays out, and comes back once its app is added
  * here, after a check proves it.
  */
-export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail", "typeform", "googlecalendar", "googledrive"]);
+export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail", "typeform", "googlecalendar", "googledrive", "moneybird"]);
 
 /**
  * The apps that connect today, read from planque's catalog: every app a check connected (rule 13), from the read's

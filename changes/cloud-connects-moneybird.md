@@ -1,0 +1,1 @@
+- **tafs cloud: "Chase overdue invoices" is offered.** Moneybird connects today (proved by its key, with a read of the sales invoices returning data), so the gallery lists the job. See [Coach](docs/coach.md).
