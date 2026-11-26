@@ -6,6 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.heightIn
+import androidx.wear.compose.foundation.rotary.rotaryScrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -43,7 +46,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.CircularProgressIndicator
@@ -329,10 +331,28 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
 
 @Composable
 internal fun Centered(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-  // Centred on the face while it fits; at a large font size it scrolls, with the scroll indicator, rather than run past the edge.
-  WatchList(modifier.fillMaxSize(), autoCentering = AutoCenteringParams(itemIndex = 0), flat = true) {
-    item { Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) { content() } }
+  // Centred on the face while it fits; at a large font size it opens at its top and scrolls (crown or swipe), with the scroll
+  // indicator, rather than run past the edge.
+  val scroll = androidx.compose.foundation.rememberScrollState()
+  val focus = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
+  androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxSize()) {
+    val face = maxHeight
+    val screen = androidx.compose.ui.platform.LocalConfiguration.current
+    androidx.wear.compose.material3.ScreenScaffold(scrollState = scroll, contentPadding = roundPadding(screen.screenWidthDp.dp, screen.screenHeightDp.dp)) { padding ->
+      Column(
+        Modifier.fillMaxSize()
+          .rotaryScrollable(androidx.wear.compose.foundation.rotary.RotaryScrollableDefaults.behavior(scroll), focus)
+          .verticalScroll(scroll),
+      ) {
+        Column(
+          Modifier.fillMaxWidth().heightIn(min = face).padding(padding),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.Center,
+        ) { content() }
+      }
+    }
   }
+  androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 }
 
 @Composable

@@ -62,6 +62,9 @@ internal fun roundPadding(width: Dp, height: Dp, top: Dp? = null, bottom: Dp? = 
   bottom = bottom ?: (height * END_SHARE),
 )
 
+/** The foot a paged screen keeps for its page dots: its lists stop above it, so no line rests under a dot. */
+internal val PAGE_DOTS_ROOM: Dp = 20.dp
+
 /** Wear's list margin on a round face, as a share of its width. */
 internal const val SIDE_SHARE = 0.052f
 

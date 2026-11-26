@@ -27,6 +27,7 @@ import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.Card
+import androidx.wear.compose.material3.HorizontalPageIndicator
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.SwitchButton
@@ -80,20 +81,25 @@ internal fun TafScreen(
   // While its chat is answering, on screen: the answer followed through the phone, bounded, and stopped when the screen goes.
   val answering = chat && open.chat.answering
   androidx.compose.runtime.LaunchedEffect(open.tafId, answering) { if (answering) act.followAnswer(open.tafId) }
-  HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
-    // 1A: its chat first, then its page, then its settings; with the switch off, its page and settings as before.
-    val page = if (chat) i - 1 else i
-    // The chat opens on its newest message, with the send bar under it, as a chat app does; older ones are above (the owner's call).
-    val latest = if (page < 0) tafChatFocus(open) else 0
-    val list = rememberScalingLazyListState(initialCenterItemIndex = latest)
-    if (page < 0) androidx.compose.runtime.LaunchedEffect(latest) { list.scrollToItem(latest) }
-    WatchList(state = list) {
-      when {
-        page < 0 -> tafChat(open, act, chatOff)
-        page == 0 -> tafPage(open, outcome, act, openInbox, settings = { scope.launch { pager.animateScrollToPage(pager.pageCount - 1) } })
-        else -> tafSettings(open, outcome, act, halt = { confirming = true })
+  // Its pages' dots at the foot, as the main pages have, so it's plain there are more to the side (Wear OS app quality).
+  androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
+    HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
+      // 1A: its chat first, then its page, then its settings; with the switch off, its page and settings as before.
+      val page = if (chat) i - 1 else i
+      // The chat opens on its newest message, with the send bar under it, as a chat app does; older ones are above (the owner's call).
+      val latest = if (page < 0) tafChatFocus(open) else 0
+      val list = rememberScalingLazyListState(initialCenterItemIndex = latest)
+      if (page < 0) androidx.compose.runtime.LaunchedEffect(latest) { list.scrollToItem(latest) }
+      // The list stops above the page dots, as on the main pages, so no line ever rests under them.
+      WatchList(Modifier.fillMaxWidth().padding(bottom = PAGE_DOTS_ROOM), state = list, bottom = 16.dp) {
+        when {
+          page < 0 -> tafChat(open, act, chatOff)
+          page == 0 -> tafPage(open, outcome, act, openInbox, settings = { scope.launch { pager.animateScrollToPage(pager.pageCount - 1) } })
+          else -> tafSettings(open, outcome, act, halt = { confirming = true })
+        }
       }
     }
+    HorizontalPageIndicator(pager, Modifier.align(androidx.compose.ui.Alignment.BottomCenter))
   }
 }
 
