@@ -3,7 +3,6 @@ package bot.tafs.wear
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,6 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.CircularProgressIndicator
@@ -283,7 +282,7 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
           }
           Spacer(Modifier.height(8.dp))
         }
-        T(Words.Watch.notSure, 15.sp, Look.text, FontWeight.SemiBold, Modifier.width(150.dp), lines = 1)
+        T(Words.Watch.notSure, 15.sp, Look.text, FontWeight.SemiBold, Modifier.width(150.dp), lines = 2)
         Spacer(Modifier.height(3.dp))
         T(Words.Watch.checkPhone, 12.sp, Look.dim, modifier = Modifier.width(140.dp), lineHeight = 15.sp)
         Spacer(Modifier.height(10.dp))
@@ -330,7 +329,10 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
 
 @Composable
 internal fun Centered(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-  Column(modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) { content() }
+  // Centred on the face while it fits; at a large font size it scrolls, with the scroll indicator, rather than run past the edge.
+  WatchList(modifier.fillMaxSize(), autoCentering = AutoCenteringParams(itemIndex = 0), flat = true) {
+    item { Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) { content() } }
+  }
 }
 
 @Composable
@@ -367,12 +369,11 @@ internal fun stateLine(ask: AskLine): String = listOfNotNull(ask.tafName, ask.wo
 internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null, whole: WatchModel.Whole? = null) {
   Box(Modifier.fillMaxSize().background(Color.Black)) {
     // A ScalingLazyColumn, so the crown or bezel scrolls it as a swipe does (a plain scrolling column takes no rotary input).
-    androidx.wear.compose.foundation.lazy.ScalingLazyColumn(
+    WatchList(
       Modifier.fillMaxSize().testTag(RESULT_SCREEN),
-      state = androidx.wear.compose.foundation.lazy.rememberScalingLazyListState(initialCenterItemIndex = 0),
-      contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 22.dp, bottom = 28.dp),
+      top = 22.dp,
+      bottom = 28.dp,
       autoCentering = null,
-      horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       item { T(ask.tafName ?: "", 12.sp, Look.coach, FontWeight.Medium, lines = 1) }
       // tafs cloud's checked line (up to 140 characters); with none, its word for the state. Whole, however many lines.

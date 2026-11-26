@@ -1,0 +1,1 @@
+- **Wear OS: every screen that scrolls shows a scroll indicator, and every screen fits a round face.** Lists are held in from the round edge, screens laid out as one piece scroll at a large font size instead of being cut, and the recording screen's words never run into Cancel. See [The Wear OS watch](docs/watch-wear.md).

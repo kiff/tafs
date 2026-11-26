@@ -131,4 +131,6 @@ dependencies {
 tasks.withType<Test>().configureEach {
   systemProperty("roborazzi.test.record", if (project.hasProperty("wearScreenshots")) "true" else "false")
   systemProperty("tafs.repo", rootProject.projectDir.parentFile.absolutePath)
+  // The round-fit check (WearV2Screenshots): every screen at three round sizes and two font sizes, into this folder.
+  systemProperty("tafs.roundFit", (project.findProperty("wearRoundFit") as String?) ?: "")
 }

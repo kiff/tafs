@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.foundation.pager.HorizontalPager
@@ -182,16 +181,15 @@ internal fun WatchPages(
   }
   Box(Modifier.fillMaxSize()) {
     HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
-      ScalingLazyColumn(
-        Modifier.fillMaxWidth(),
+      WatchList(
         // Coach's page opens on the microphone, with the conversation's newest turn just above it (W4); others at the top.
         state = rememberScalingLazyListState(initialCenterItemIndex = if (pages[i] == Page.Coach) threadItems(thread) else 0).also { list ->
           // A new turn (a send) brings the page back to the microphone, with that turn just above it.
           if (pages[i] == Page.Coach) LaunchedEffect(thread.size) { if (thread.isNotEmpty()) list.scrollToItem(threadItems(thread)) }
         },
-        verticalArrangement = Arrangement.spacedBy(4.dp),
         // Room under the last item, so it scrolls clear of the page dots at the foot (#1409).
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 36.dp),
+        top = 8.dp,
+        bottom = 36.dp,
       ) {
         val page = pages[i]
         if (page == Page.Coach) {
@@ -453,7 +451,7 @@ private fun ScalingLazyListScope.briefPage(shown: WatchModel.Shown.Read, act: Ac
 @Composable
 private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions, outcome: WatchModel.Outcome?, open: (Page) -> Unit, close: () -> Unit) {
   val tafs = (shown as? WatchModel.Shown.Read)?.tafs
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList {
     item { ListHeader { Text(Words.Watch.menu) } }
     // A Halt confirmed from here comes back here: what came of it, "set a screen lock" included, is said where it was asked.
     outcome?.let { item { OutcomeCard(it, act) } }

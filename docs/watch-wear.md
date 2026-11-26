@@ -788,6 +788,15 @@ watch doesn't know is shown as Open on phone, never guessed at.
 
 ## The rules it's built to
 
+- **Every screen that scrolls shows where you are, and fits a round face** (Wear OS app quality; parity row 34). Each list is a
+  `WatchList`: Wear's `ScreenScaffold` draws its scroll indicator at the edge, and the list is held in from the face's edge, the
+  sides at 5.2 % of the width and the top and foot at 10 % of the height unless the screen sets its own (`roundPadding`). Screens
+  laid out as one piece (Not sure it arrived, Not sent, Transcribing, Deleted: `Centered`) stay centred while they fit and scroll,
+  with the indicator, at a large font size. On the recording screen the heard words take only the whole lines left above Cancel:
+  one on a face under 196 dp (`SMALL_FACE`), two on a larger one, none at the largest font size on a small face (they're still
+  heard, and shown on the review). The **round-fit check** draws every screen of `WearV2Screenshots` at Play's smallest round face
+  (192 dp) and the Galaxy Watch 5's two (198 and 225 dp), at the default and the largest font size (1.24), with what falls outside
+  the face shaded red: `./gradlew :wear:testDebugUnitTest --tests 'bot.tafs.wear.WearV2Screenshots' -PwearRoundFit=<folder>`.
 - **Refuse and Halt from the wrist** are signed by the phone with its signing key and no prompt of its own, as a
   notification's Refuse on iPhone: they only take authority away. The phone acts only on a message from the paired watch
   running this app, and the watch sends one only while it has a screen lock and is unlocked; otherwise it says to set one

@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.foundation.pager.HorizontalPager
@@ -88,11 +87,7 @@ internal fun TafScreen(
     val latest = if (page < 0) tafChatFocus(open) else 0
     val list = rememberScalingLazyListState(initialCenterItemIndex = latest)
     if (page < 0) androidx.compose.runtime.LaunchedEffect(latest) { list.scrollToItem(latest) }
-    ScalingLazyColumn(
-      Modifier.fillMaxWidth(),
-      state = list,
-      verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
+    WatchList(state = list) {
       when {
         page < 0 -> tafChat(open, act, chatOff)
         page == 0 -> tafPage(open, outcome, act, openInbox, settings = { scope.launch { pager.animateScrollToPage(pager.pageCount - 1) } })
@@ -409,7 +404,7 @@ private fun CardFace(card: CardLine) {
 /** Asked once more on the wrist, before anything goes to the phone: what's halted, what halting does, Halt now and Cancel. */
 @Composable
 private fun HaltQuestion(title: String, what: String, explain: String, halt: () -> Unit, cancel: () -> Unit) {
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList {
     item { ListHeader { Text(title, textAlign = TextAlign.Center) } }
     item { Text(what, style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
     item {
@@ -437,7 +432,7 @@ internal fun HaltPickScreen(pick: WatchModel.HaltPick, act: Actions) {
       cancel = act.cancelPick,
     )
   }
-  ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+  WatchList {
     item { ListHeader { Text(Words.Watch.haltPickTitle, textAlign = TextAlign.Center) } }
     item {
       SwitchButton(checked = pick.all, onCheckedChange = { act.togglePickAll() }, modifier = Modifier.fillMaxWidth(), colors = haltPickColors(),
