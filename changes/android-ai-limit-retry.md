@@ -1,0 +1,1 @@
+- **Android: an AI limit offers no Retry.** When a reply stops at an AI limit, the chat shows tafs cloud's words with no Retry until the limit resets, then Try again comes back as tafs cloud says. See [The Android app](docs/android-app.md).

@@ -166,7 +166,7 @@ class ChatStreamTest {
     reads()
     transport.answer(stream, 200, sse(
       "session" to """{"session":"s1","run":"run_1"}""",
-      "end" to """{"status":"ERROR","stop":"error","done":[{"tool":"create_refund","resource":"ch_1"}]}""",
+      "end" to """{"status":"ERROR","stop":"error","done":[{"tool":"create_refund","resource":"ch_1"}],"retry":true}""",
     ))
     val m = model()
     m.deliverChat("Refund Ana", "refunds-1")
@@ -180,7 +180,7 @@ class ChatStreamTest {
     val words = "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later."
     transport.answer(stream, 200, sse(
       "session" to """{"session":"s1","run":"run_1"}""",
-      "end" to """{"status":"ERROR","stop":"error","done":[],"code":"ai_unavailable","words":"$words"}""",
+      "end" to """{"status":"ERROR","stop":"error","done":[],"code":"ai_unavailable","words":"$words","retry":true}""",
     ))
     val m = model()
     m.deliverChat("Refund Ana", "refunds-1")
@@ -190,6 +190,31 @@ class ChatStreamTest {
     assertEquals(words, AppModel.failedWords("Refunds", end.done, end.words))
     // What went through before it stopped still follows the words.
     assertEquals("$words This went through: create refund on ch_1.", AppModel.failedWords("Refunds", listOf(DoneCall("create_refund", "ch_1")), words))
+  }
+
+  /** An AI limit (tafs cloud's `end.retry: false`): its words, and no Retry, so a tap never meets the same limit again. */
+  @Test fun aRunStoppedByAnAiLimitSaysItsWordsWithNoRetry() = runTest {
+    reads()
+    val words = "This account's AI use for today is used up. It starts again at 01:00, and nothing was charged."
+    transport.answer(stream, 200, sse(
+      "session" to """{"session":"s1","run":"run_1"}""",
+      "end" to """{"status":"ERROR","stop":"error","done":[],"code":"ai_limit_account","words":"$words","retry":false}""",
+    ))
+    val m = model()
+    m.deliverChat("Refund Ana", "refunds-1")
+    settle()
+    val end = m.state.value.chatEnded["refunds-1"] as ChatEnd.Failed
+    assertEquals(words, AppModel.failedWords("Refunds", end.done, end.words))
+    assertEquals(false, end.retryable)
+  }
+
+  @Test fun anEndReadsTafsCloudsRetryAndANoneIsAsBefore() {
+    val end = bot.tafs.app.kiff.StreamEvent.of("end", """{"status":"ERROR","stop":"error","code":"ai_limit_service"}""") as bot.tafs.app.kiff.StreamEvent.End
+    // No `retry` (a tafs cloud before it): Retry as before, as on iOS; only an explicit false hides it.
+    assertEquals(null, end.retry)
+    assertEquals(true, (bot.tafs.app.kiff.StreamEvent.of("end", """{"status":"ERROR","stop":"error","retry":true}""") as bot.tafs.app.kiff.StreamEvent.End).retry)
+    // Try again on the thread's failed line comes back after the reset, where tafs cloud then says retry: true.
+    assertTrue("ai_limit_account" in bot.tafs.app.app.FAILED_RETRY_CODES && "ai_limit_service" in bot.tafs.app.app.FAILED_RETRY_CODES)
   }
 
   @Test fun aRunStoppedAtACapSaysWhy() = runTest {
