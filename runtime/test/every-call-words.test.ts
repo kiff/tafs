@@ -20,7 +20,7 @@ describe("the words that say every call asks, in every app language", () => {
     });
   }
 
-  // A figure in the script's own digits is a figure, and a clause ends at the script's own punctuation (، ؛ ؟ ۔ । ॥).
+  // A figure in the script's own digits is a figure, and a clause ends at the script's own punctuation (، ؛ ؟ ۔ । ॥ ։ ។ ៕ ； ：).
   it("reads a figure in each script's own digits, and stops a clause at each script's own punctuation", () => {
     for (const text of [
       "كل استرداد فوق ٥ يورو يسألك أولاً.", "۵ یورو سے زیادہ ہر رقم کی واپسی آپ سے پوچھتی ہے۔",
@@ -28,10 +28,13 @@ describe("the words that say every call asks, in every app language", () => {
       "५ यूरोभन्दा माथिको हरेक फिर्ता तपाईंलाई सोध्छ।", "৫ ইউরোর বেশি প্রতিটি রিফান্ড আপনাকে জিজ্ঞাসা করে।",
       "５ユーロを超えるすべての返金はあなたに確認します。", "超過５歐元的每筆退款都需要您的核准。",
       "การคืนเงินทุกรายการที่เกิน ๕ ยูโรถามคุณก่อน", "រាល់ការសងប្រាក់លើស ៥ អឺរ៉ូសួរអ្នក", "ທຸກການຄືນເງິນເກີນ ໕ ເອີໂຣຖາມທ່ານ",
+      "ការសងប្រាក់វិញលើស ៥ € សួរអ្នកជាមុន។",
     ]) expect(saysEveryCallAsks(text), text).toBe(false);
     for (const text of [
       "प्रति दिन 50 € तक। हर रिफ़ंड पहले आपसे पूछता है।", "روزانہ 50 یورو تک۔ ہر رقم کی واپسی آپ سے پوچھتی ہے۔",
       "حتى 50 يورو يوميًا، وكل استرداد يسألك أولاً.",
+      "रिफ़ंड की सीमा 50 € प्रतिदिन है। हर रिफ़ंड पहले आपसे पूछता है।", "ریفنڈ کی حد 50 € روزانہ ہے۔ ہر ریفنڈ پہلے آپ سے پوچھتا ہے۔",
+      "Օրական 50 € սահմանաչափ։ Յուրաքանչյուր վերադարձ նախ ձեզ հարցնում է։",
     ]) expect(saysEveryCallAsks(text), text).toBe(true);
   });
 

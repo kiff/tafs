@@ -805,12 +805,14 @@ const EVERY_CALL_ASKS: RegExp[] = [
 // The other 35 app languages, and pt-BR's own forms (every-call-words.ts): never after a figure earlier in the same clause,
 // since many put "over €5" before the noun; a gap that may be empty (Mongolian's "бүр" sits right before the verb); and, in
 // scripts written without spaces, no word boundaries, within 40 characters of one clause.
-// A figure in any script's digits (٥, ५, ５…), and a clause's end in its own punctuation (، ؛ ؟ ۔ । ॥ too).
-const noFigureBefore = "(?<!\\p{Nd}[^\\p{Nd}.,;:!?\\n、，。．！？،؛؟۔।॥]{0,30})";
-const betweenOrNone = "[^\\p{Nd}.;:!?\\n،؛؟۔।॥]{0,60}?";
+// A figure in any script's digits (٥, ५, ５…), and a clause's end in its own punctuation too: ، ؛ ؟ ۔ । ॥, Armenian ։,
+// Khmer ។ ៕, full-width ； ：, and the Greek semicolon (U+0387).
+const CLAUSE_ENDS = "،؛؟۔।॥։។៕；：\\u0387";
+const noFigureBefore = `(?<!\\p{Nd}[^\\p{Nd}.,;:!?\\n、，。．！？${CLAUSE_ENDS}]{0,30})`;
+const betweenOrNone = `[^\\p{Nd}.;:!?\\n${CLAUSE_ENDS}]{0,60}?`;
 EVERY_CALL_ASKS.push(
   ...Object.values(EVERY_CALL_SPACED).map(([every, asks]) =>
     new RegExp(`${noFigureBefore}(?<![\\p{L}\\p{N}])(?:${every})\\s${betweenOrNone}(?:${asks.join("|")})(?![\\p{L}\\p{N}])`, "u")),
   ...Object.values(EVERY_CALL_UNSPACED).map(([every, asks]) =>
-    new RegExp(`${noFigureBefore}(?:${every})[^\\p{Nd}。．！？!?.\\n]{0,40}?(?:${asks.join("|")})`, "u")),
+    new RegExp(`${noFigureBefore}(?:${every})[^\\p{Nd}。．！？!?.\\n${CLAUSE_ENDS}]{0,40}?(?:${asks.join("|")})`, "u")),
 );
