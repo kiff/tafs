@@ -760,15 +760,20 @@ const THRESHOLDS = [
   "gdy|jeśli|jeżeli|kiedy|powyżej|ponad|więcej niż|przekracza|przekroczy",
   "quando|se|acima de|mais de|ultrapassa|ultrapassar|superior a|passar de|a partir de",
 ];
-// Where the clause after the verb ends for that look: a comma (unless a threshold word follows it), or the language's "and"
-// or "but", as well as a stop. So
+// Where the clause after the verb ends for that look: a comma (unless a word that opens a condition follows it), or the
+// language's "and" or "but", as well as a stop. So
 // "every refund asks you first, and refunds over €200 a day are refused" still reads as every call: that figure is another
 // rule's.
 const CLAUSE_JOINS = ["and|but|while", "et|mais", "und|aber", "y|pero", "e|ma", "en|maar", "i|a|ale", "e|mas"];
-// A comma followed straight away by a threshold word goes on with the clause: German and Polish always set one before
-// "wenn" and "gdy" ("jede Erstattung fragt dich zuerst, wenn sie über 5 € liegt").
-const figureAfter = (thresholds: string, joins: string) =>
-  `(?!(?:(?!(?<![\\p{L}\\p{N}])(?:${joins})(?![\\p{L}\\p{N}]))[^.,;:!?\\n]|,\\s*(?=(?:${thresholds})(?![\\p{L}\\p{N}]))){0,80}?(?<![\\p{L}\\p{N}])(?:${thresholds})(?![\\p{L}\\p{N}])[^\\d.,;:!?\\n]{0,30}?\\d)`;
+// The words that open a condition after a comma ("…asks you first, when it's over 5 EUR"): German and Polish put a comma
+// there by rule, and the others often do, so a comma ends the look only when what follows isn't one of these. A comma
+// before "over …" or anything else still ends it, so "…, over a day refunds stop at 50 EUR" stays every call.
+const CONDITIONS = [
+  "when|whenever|if|once", "quand|si|s'il|s’il|dès que|dès qu'il|dès qu’il|lorsque|lorsqu'il|lorsqu’il", "wenn|falls|sobald",
+  "cuando|si|una vez que", "quando|se|una volta che", "als|wanneer|zodra", "gdy|jeśli|jeżeli|kiedy", "quando|se|caso",
+];
+const figureAfter = (thresholds: string, joins: string, conditions: string) =>
+  `(?!(?:(?!(?<![\\p{L}\\p{N}])(?:${joins})(?![\\p{L}\\p{N}]))(?:[^.,;:!?\\n]|,(?=\\s*(?:${conditions})(?![\\p{L}\\p{N}])))){0,80}?(?<![\\p{L}\\p{N}])(?:${thresholds})(?![\\p{L}\\p{N}])[^\\d.,;:!?\\n]{0,30}?\\d)`;
 const EVERY_CALL_ASKS: RegExp[] = [
   ["every|each", [
     "(?:will |must |should |always |first )?asks? (?:you|first)",
@@ -823,4 +828,4 @@ const EVERY_CALL_ASKS: RegExp[] = [
     "(?:é|será|tem de ser|deve ser) (?:aprovad[oa]|confirmad[oa]|autorizad[oa]) por (?:você|ti)",
     "(?:passa|vai) (?:primeiro )?por (?:você|ti)",
   ].join("|")],
-].map(([every, asks], i) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])${figureAfter(THRESHOLDS[i]!, CLAUSE_JOINS[i]!)}`, "u"));
+].map(([every, asks], i) => new RegExp(`(?<![\\p{L}\\p{N}])(?:${every})\\s${between}(?:${asks})(?![\\p{L}\\p{N}])${figureAfter(THRESHOLDS[i]!, CLAUSE_JOINS[i]!, CONDITIONS[i]!)}`, "u"));
